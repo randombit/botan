@@ -50,7 +50,6 @@ class TLS_Session_Tests final : public Test
                                      std::vector<Botan::X509_Certificate>(),
                                      std::vector<uint8_t>(),
                                      Botan::TLS::Server_Information("server"),
-                                     "SRP username",
                                      0x0000);
 
          const std::string pem = session.PEM_encode();
@@ -73,7 +72,6 @@ class TLS_Session_Tests final : public Test
                         ctext2.data(), 12, expected_hdr.data(), 12);
 
          Botan::TLS::Session dsession = Botan::TLS::Session::decrypt(ctext1.data(), ctext1.size(), key);
-         result.test_eq("Decrypted session access works", dsession.srp_identifier(), "SRP username");
 
          Fixed_Output_RNG frng1("00112233445566778899AABBCCDDEEFF802802802802802802802802");
          const std::vector<uint8_t> ctextf1 = session.encrypt(key, frng1);
@@ -466,7 +464,6 @@ class Test_TLS_Algo_Strings : public Test
             Botan::TLS::Kex_Algo::DH,
             Botan::TLS::Kex_Algo::ECDH,
             Botan::TLS::Kex_Algo::CECPQ1,
-            Botan::TLS::Kex_Algo::SRP_SHA,
             Botan::TLS::Kex_Algo::PSK,
             Botan::TLS::Kex_Algo::DHE_PSK,
             Botan::TLS::Kex_Algo::ECDHE_PSK

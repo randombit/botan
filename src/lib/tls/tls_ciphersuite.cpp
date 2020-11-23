@@ -199,13 +199,7 @@ bool Ciphersuite::is_usable() const
          return false;
       }
 
-   if(kex_method() == Kex_Algo::SRP_SHA)
-      {
-#if !defined(BOTAN_HAS_SRP6)
-      return false;
-#endif
-      }
-   else if(kex_method() == Kex_Algo::ECDH || kex_method() == Kex_Algo::ECDHE_PSK)
+   if(kex_method() == Kex_Algo::ECDH || kex_method() == Kex_Algo::ECDHE_PSK)
       {
 #if !defined(BOTAN_HAS_ECDH)
       return false;

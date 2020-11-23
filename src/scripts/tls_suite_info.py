@@ -176,11 +176,6 @@ def process_command_line(args):
     parser.add_option('--without-cecpq1', action='store_false', dest='with_cecpq1',
                       help='disable CECPQ1 suites')
 
-    parser.add_option('--with-srp-aead', action='store_true', default=False,
-                      help='add SRP AEAD suites')
-    parser.add_option('--without-srp-aead', action='store_false', dest='with_srp_aead',
-                      help='disable SRP AEAD suites')
-
     parser.add_option('--save-download', action='store_true', default=False,
                       help='save downloaded tls-parameters.txt to cwd')
 
@@ -194,11 +189,12 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
-    weak_crypto = ['EXPORT', 'RC2', 'IDEA', 'RC4', '_DES_', 'WITH_NULL', 'GOST', '_anon_', '_DSS_']
+    weak_crypto = ['EXPORT', 'RC2', 'IDEA', 'RC4', '_DES_', 'WITH_NULL', 'GOST', '_anon_']
     static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA'] # not supported
+    removed_algos = ['_DSS_', 'SRP_']
     protocol_goop = ['SCSV', 'KRB5']
     maybe_someday = ['RSA_PSK', 'ECCPWD']
-    not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday
+    not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday + removed_algos
 
     (options, args) = process_command_line(args)
 
@@ -268,19 +264,6 @@ def main(args = None):
         define_custom_ciphersuite('CECPQ1_RSA_WITH_AES_256_OCB_SHA256', 'FFCC')
         define_custom_ciphersuite('CECPQ1_ECDSA_WITH_AES_256_OCB_SHA256', 'FFCD')
         #define_custom_ciphersuite('CECPQ1_PSK_WITH_AES_256_OCB_SHA256', 'FFCE')
-
-    if options.with_srp_aead:
-        # SRP using GCM or OCB - Botan extension
-        define_custom_ciphersuite('SRP_SHA_WITH_AES_256_GCM_SHA384', 'FFA0')
-        define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_GCM_SHA384', 'FFA1')
-        define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_GCM_SHA384', 'FFA2')
-        define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_GCM_SHA384', 'FFA3')
-
-        if options.with_ocb:
-            define_custom_ciphersuite('SRP_SHA_WITH_AES_256_OCB_SHA256', 'FFA4')
-            define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_OCB_SHA256', 'FFA5')
-            define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_OCB_SHA256', 'FFA6')
-            define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_OCB_SHA256', 'FFA7')
 
     suite_info = ''
 

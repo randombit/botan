@@ -24,11 +24,6 @@ Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size,
       case TLSEXT_SERVER_NAME_INDICATION:
          return new Server_Name_Indicator(reader, size);
 
-#if defined(BOTAN_HAS_SRP6)
-      case TLSEXT_SRP_IDENTIFIER:
-         return new SRP_Identifier(reader, size);
-#endif
-
       case TLSEXT_SUPPORTED_GROUPS:
          return new Supported_Groups(reader, size);
 
@@ -212,27 +207,6 @@ std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side /*whoami*/
 
    return buf;
    }
-
-#if defined(BOTAN_HAS_SRP6)
-
-SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader,
-                               uint16_t extension_size) : m_srp_identifier(reader.get_string(1, 1, 255))
-   {
-   if(m_srp_identifier.size() + 1 != extension_size)
-      throw Decoding_Error("Bad encoding for SRP identifier extension");
-   }
-
-std::vector<uint8_t> SRP_Identifier::serialize(Connection_Side /*whoami*/) const
-   {
-   std::vector<uint8_t> buf;
-
-   const uint8_t* srp_bytes = cast_char_ptr_to_uint8(m_srp_identifier.data());
-   append_tls_length_value(buf, srp_bytes, m_srp_identifier.size(), 1);
-
-   return buf;
-   }
-
-#endif
 
 Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader,
                                                  uint16_t extension_size) : m_reneg_data(reader.get_range<uint8_t>(1, 0, 255))

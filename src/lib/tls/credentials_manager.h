@@ -121,48 +121,6 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       /**
       * @param type specifies the type of operation occurring
       * @param context specifies a context relative to type.
-      * @return true if we should attempt SRP authentication
-      */
-      virtual bool attempt_srp(const std::string& type,
-                               const std::string& context);
-
-      /**
-      * @param type specifies the type of operation occurring
-      * @param context specifies a context relative to type.
-      * @return identifier for client-side SRP auth, if available
-                for this type/context. Should return empty string
-                if password auth not desired/available.
-      */
-      virtual std::string srp_identifier(const std::string& type,
-                                         const std::string& context);
-
-      /**
-      * @param type specifies the type of operation occurring
-      * @param context specifies a context relative to type.
-      * @param identifier specifies what identifier we want the
-      *        password for. This will be a value previously returned
-      *        by srp_identifier.
-      * @return password for client-side SRP auth, if available
-                for this identifier/type/context.
-      */
-      virtual std::string srp_password(const std::string& type,
-                                       const std::string& context,
-                                       const std::string& identifier);
-
-      /**
-      * Retrieve SRP verifier parameters
-      */
-      virtual bool srp_verifier(const std::string& type,
-                                const std::string& context,
-                                const std::string& identifier,
-                                std::string& group_name,
-                                BigInt& verifier,
-                                std::vector<uint8_t>& salt,
-                                bool generate_fake_on_unknown);
-
-      /**
-      * @param type specifies the type of operation occurring
-      * @param context specifies a context relative to type.
       * @return the PSK identity hint for this type/context
       */
       virtual std::string psk_identity_hint(const std::string& type,

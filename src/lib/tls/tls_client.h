@@ -75,7 +75,6 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
       void send_client_hello(Handshake_State& state,
                              bool force_full_renegotiation,
                              Protocol_Version version,
-                             const std::string& srp_identifier = "",
                              const std::vector<std::string>& next_protocols = {});
 
       void process_handshake_msg(const Handshake_State* active_state,

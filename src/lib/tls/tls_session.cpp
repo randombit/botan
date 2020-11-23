@@ -29,7 +29,6 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
                  const std::vector<X509_Certificate>& certs,
                  const std::vector<uint8_t>& ticket,
                  const Server_Information& server_info,
-                 const std::string& srp_identifier,
                  uint16_t srtp_profile) :
    m_start_time(std::chrono::system_clock::now()),
    m_identifier(session_identifier),
@@ -42,8 +41,7 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
    m_extended_master_secret(extended_master_secret),
    m_encrypt_then_mac(encrypt_then_mac),
    m_peer_certs(certs),
-   m_server_info(server_info),
-   m_srp_identifier(srp_identifier)
+   m_server_info(server_info)
    {
    }
 
@@ -124,8 +122,6 @@ Session::Session(const uint8_t ber[], size_t ber_len)
                                       server_service.value(),
                                       static_cast<uint16_t>(server_port));
 
-   m_srp_identifier = srp_identifier_str.value();
-
    if(!peer_cert_bits.empty())
       {
       DataSource_Memory certs(peer_cert_bits.data(), peer_cert_bits.size());
@@ -160,7 +156,7 @@ secure_vector<uint8_t> Session::DER_encode() const
          .encode(ASN1_String(m_server_info.hostname(), UTF8_STRING))
          .encode(ASN1_String(m_server_info.service(), UTF8_STRING))
          .encode(static_cast<size_t>(m_server_info.port()))
-         .encode(ASN1_String(m_srp_identifier, UTF8_STRING))
+         .encode(ASN1_String("", UTF8_STRING)) // old srp identifier
          .encode(static_cast<size_t>(m_srtp_profile))
       .end_cons()
    .get_contents();

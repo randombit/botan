@@ -21,18 +21,13 @@ class Fuzzer_TLS_Client_Creds : public Botan::Credentials_Manager
 class Fuzzer_TLS_Policy : public Botan::TLS::Policy
    {
    public:
-      std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version version,
-                                             bool have_srp) const override
+      std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version version) const override
          {
          std::vector<uint16_t> ciphersuites;
 
          for(auto&& suite : Botan::TLS::Ciphersuite::all_known_ciphersuites())
             {
             if(suite.valid() == false)
-               continue;
-
-            // Are we doing SRP?
-            if(!have_srp && suite.kex_method() == Botan::TLS::Kex_Algo::SRP_SHA)
                continue;
 
             if(!version.supports_aead_modes())

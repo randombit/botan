@@ -282,11 +282,9 @@ available:
    .. cpp:function:: std::vector<X509_Certificate> peer_cert_chain()
 
       Returns the certificate chain of the counterparty. When acting
-      as a client, this value will be non-empty unless the client's
-      policy allowed anonymous connections and the server then chose
-      an anonymous ciphersuite. Acting as a server, this value will
-      ordinarily be empty, unless the server requested a certificate
-      and the client responded with one.
+      as a client, this value will be non-empty. Acting as a server,
+      this value will ordinarily be empty, unless the server requested
+      a certificate and the client responded with one.
 
    .. cpp:function:: SymmetricKey key_material_export( \
           const std::string& label, \
@@ -335,8 +333,8 @@ TLS Clients
    :ref:`tls_session_managers` for more about session managers.
 
    The *credentials_manager* is an interface that will be called to
-   retrieve any certificates, secret keys, pre-shared keys, or SRP
-   information; see :doc:`credentials_manager` for more information.
+   retrieve any certificates, private keys, or pre-shared keys; see
+   :doc:`credentials_manager` for more information.
 
    Use the optional *server_info* to specify the DNS name of the
    server you are attempting to connect to, if you know it. This helps
@@ -698,11 +696,6 @@ information about that session:
 
        Returns the certificate chain of the peer
 
-   .. cpp:function:: std::string srp_identifier() const
-
-       If an SRP ciphersuite was used, then this is the identifier
-       that was used for authentication.
-
    .. cpp:function:: bool secure_renegotiation() const
 
       Returns ``true`` if the connection was negotiated with the
@@ -924,7 +917,7 @@ policy settings from a file.
         the benefit of post quantum security) so if CECPQ1 is being disabled for
         traffic overhead reasons, DH should also be avoided.
 
-     Also allowed: "RSA", "SRP_SHA", "ECDHE_PSK", "DHE_PSK", "PSK"
+     Also allowed: "RSA", "ECDHE_PSK", "DHE_PSK", "PSK"
 
      .. note::
 
@@ -936,7 +929,7 @@ policy settings from a file.
 
      .. note::
 
-        In order to enable RSA, SRP, or PSK ciphersuites one must also enable
+        In order to enable RSA or PSK ciphersuites one must also enable
         authentication method "IMPLICIT", see :cpp:func:`allowed_signature_methods`.
 
  .. cpp:function:: std::vector<std::string> allowed_signature_hashes() const
@@ -958,19 +951,11 @@ policy settings from a file.
 
      Default: "ECDSA", "RSA"
 
-     Also allowed (disabled by default): "DSA", "IMPLICIT", "ANONYMOUS"
+     Also allowed (disabled by default): "IMPLICIT"
 
      "IMPLICIT" enables ciphersuites which are authenticated not by a signature
      but through a side-effect of the key exchange. In particular this setting
-     is required to enable PSK, SRP, and static RSA ciphersuites.
-
-     "ANONYMOUS" allows purely anonymous DH/ECDH key exchanges. **Enabling this
-     is not recommended**
-
-     .. note::
-
-        Both DSA authentication and anonymous DH ciphersuites are deprecated,
-        and will be removed in a future release.
+     is required to enable PSK and static RSA ciphersuites.
 
  .. cpp:function:: std::vector<Group_Params> key_exchange_groups() const
 
@@ -1132,7 +1117,7 @@ policy settings from a file.
 
  .. cpp:function:: bool hide_unknown_users() const
 
-     The SRP and PSK suites work using an identifier along with a
+     The PSK suites work using an identifier along with a
      shared secret. If this function returns true, when an identifier
      that the server does not recognize is provided by a client, a
      random shared secret will be generated in such a way that a

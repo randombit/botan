@@ -1009,8 +1009,7 @@ class Shim_Policy final : public Botan::TLS::Policy
          return true;
          }
 
-      std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version version,
-                                             bool have_srp) const override;
+      std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version version) const override;
 
       size_t dtls_default_mtu() const override
          {
@@ -1044,8 +1043,7 @@ class Shim_Policy final : public Botan::TLS::Policy
       size_t m_sessions;
    };
 
-std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version version,
-                                                    bool have_srp) const
+std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version version) const
    {
    std::vector<uint16_t> ciphersuite_codes;
 
@@ -1078,10 +1076,6 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
          const auto suite = *i;
          // Can we use it?
          if(suite.valid() == false)
-            continue;
-
-         // Are we doing SRP?
-         if(!have_srp && suite.kex_method() == Botan::TLS::Kex_Algo::SRP_SHA)
             continue;
 
          if(cipher_limit != "")

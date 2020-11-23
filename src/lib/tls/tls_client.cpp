@@ -75,11 +75,8 @@ Client::Client(Callbacks& callbacks,
    m_creds(creds),
    m_info(info)
    {
-   const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
-
    Handshake_State& state = create_handshake_state(offer_version);
-   send_client_hello(state, false, offer_version,
-                     srp_identifier, next_protocols);
+   send_client_hello(state, false, offer_version, next_protocols);
    }
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
@@ -113,7 +110,6 @@ void Client::initiate_handshake(Handshake_State& state,
 void Client::send_client_hello(Handshake_State& state_base,
                                bool force_full_renegotiation,
                                Protocol_Version version,
-                               const std::string& srp_identifier,
                                const std::vector<std::string>& next_protocols)
    {
    Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
@@ -140,27 +136,24 @@ void Client::send_client_hello(Handshake_State& state_base,
 
          if(policy().acceptable_ciphersuite(session_info->ciphersuite()) && session_version_ok)
             {
-            if(srp_identifier == "" || session_info->srp_identifier() == srp_identifier)
-               {
-               state.client_hello(
-                  new Client_Hello(state.handshake_io(),
-                                   state.hash(),
-                                   policy(),
-                                   callbacks(),
-                                   rng(),
-                                   secure_renegotiation_data_for_client_hello(),
-                                   *session_info,
-                                   next_protocols));
+            state.client_hello(
+               new Client_Hello(state.handshake_io(),
+                                state.hash(),
+                                policy(),
+                                callbacks(),
+                                rng(),
+                                secure_renegotiation_data_for_client_hello(),
+                                *session_info,
+                                next_protocols));
 
-               state.resumed_session = std::move(session_info);
-               }
+            state.resumed_session = std::move(session_info);
             }
          }
       }
 
    if(!state.client_hello()) // not resuming
       {
-      Client_Hello::Settings client_settings(version, m_info.hostname(), srp_identifier);
+      Client_Hello::Settings client_settings(version, m_info.hostname());
       state.client_hello(new Client_Hello(
          state.handshake_io(),
          state.hash(),
@@ -709,7 +702,6 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          get_peer_cert_chain(state),
          session_ticket,
          m_info,
-         "",
          state.server_hello()->srtp_profile()
          );
 

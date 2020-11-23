@@ -26,10 +26,6 @@
   #include <botan/cecpq1.h>
 #endif
 
-#if defined(BOTAN_HAS_SRP6)
-  #include <botan/srp6.h>
-#endif
-
 namespace Botan {
 
 namespace TLS {
@@ -137,37 +133,6 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       append_tls_length_value(m_params, ecdh_public_val, 1);
       }
-#if defined(BOTAN_HAS_SRP6)
-   else if(kex_algo == Kex_Algo::SRP_SHA)
-      {
-      const std::string srp_identifier = state.client_hello()->srp_identifier();
-
-      std::string group_id;
-      BigInt v;
-      std::vector<uint8_t> salt;
-
-      const bool found = creds.srp_verifier("tls-server", hostname,
-                                            srp_identifier,
-                                            group_id, v, salt,
-                                            policy.hide_unknown_users());
-
-      if(!found)
-         throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
-                             "Unknown SRP user " + srp_identifier);
-
-      m_srp_params.reset(new SRP6_Server_Session);
-
-      BigInt B = m_srp_params->step1(v, group_id,
-                                     "SHA-1", rng);
-
-      DL_Group group(group_id);
-
-      append_tls_length_value(m_params, BigInt::encode(group.get_p()), 2);
-      append_tls_length_value(m_params, BigInt::encode(group.get_g()), 2);
-      append_tls_length_value(m_params, salt, 1);
-      append_tls_length_value(m_params, BigInt::encode(B), 2);
-      }
-#endif
 #if defined(BOTAN_HAS_CECPQ1)
    else if(kex_algo == Kex_Algo::CECPQ1)
       {
@@ -238,15 +203,6 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
       reader.get_byte(); // curve type
       reader.get_uint16_t(); // curve id
       reader.get_range<uint8_t>(1, 1, 255); // public key
-      }
-   else if(kex_algo == Kex_Algo::SRP_SHA)
-      {
-      // 2 bigints (N,g) then salt, then server B
-
-      reader.get_range<uint8_t>(2, 1, 65535);
-      reader.get_range<uint8_t>(2, 1, 65535);
-      reader.get_range<uint8_t>(1, 1, 255);
-      reader.get_range<uint8_t>(2, 1, 65535);
       }
    else if(kex_algo == Kex_Algo::CECPQ1)
       {
