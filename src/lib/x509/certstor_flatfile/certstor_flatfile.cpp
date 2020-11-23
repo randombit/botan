@@ -49,7 +49,7 @@ Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file, 
 
    for(const std::vector<uint8_t>& der : decode_all_certificates(file_stream))
       {
-      std::shared_ptr<const X509_Certificate> cert = std::make_shared<const X509_Certificate>(der.data(), der.size());
+      X509_Certificate cert(der);
 
       /*
       * Various weird or misconfigured system roots include intermediate certificates,
@@ -57,16 +57,16 @@ Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file, 
       * Previously this code would error on such cases as an obvious misconfiguration,
       * but we cannot fix the trust store. So instead just ignore any such certificate.
       */
-      if(cert->is_self_signed() && cert->is_CA_cert())
+      if(cert.is_self_signed() && cert.is_CA_cert())
          {
-         m_all_subjects.push_back(cert->subject_dn());
-         m_dn_to_cert[cert->subject_dn()].push_back(cert);
-         m_pubkey_sha1_to_cert.emplace(cert->subject_public_key_bitstring_sha1(), cert);
-         m_subject_dn_sha256_to_cert.emplace(cert->raw_subject_dn_sha256(), cert);
+         m_all_subjects.push_back(cert.subject_dn());
+         m_dn_to_cert[cert.subject_dn()].push_back(cert);
+         m_pubkey_sha1_to_cert.emplace(cert.subject_public_key_bitstring_sha1(), cert);
+         m_subject_dn_sha256_to_cert.emplace(cert.raw_subject_dn_sha256(), cert);
          }
       else if(!ignore_non_ca)
          {
-         throw Invalid_Argument("Flatfile_Certificate_Store received non CA cert " + cert->subject_dn().to_string());
+         throw Invalid_Argument("Flatfile_Certificate_Store received non CA cert " + cert.subject_dn().to_string());
          }
       }
 
@@ -81,18 +81,18 @@ std::vector<X509_DN> Flatfile_Certificate_Store::all_subjects() const
    return m_all_subjects;
    }
 
-std::vector<std::shared_ptr<const X509_Certificate>> Flatfile_Certificate_Store::find_all_certs(
+std::vector<X509_Certificate> Flatfile_Certificate_Store::find_all_certs(
          const X509_DN& subject_dn,
          const std::vector<uint8_t>& key_id) const
    {
-   std::vector<std::shared_ptr<const X509_Certificate>> found_certs;
+   std::vector<X509_Certificate> found_certs;
    try
       {
       const auto certs = m_dn_to_cert.at(subject_dn);
 
       for(auto cert : certs)
          {
-         if(key_id.empty() || key_id == cert->subject_key_id())
+         if(key_id.empty() || key_id == cert.subject_key_id())
             {
             found_certs.push_back(cert);
             }
@@ -106,7 +106,7 @@ std::vector<std::shared_ptr<const X509_Certificate>> Flatfile_Certificate_Store:
    return found_certs;
    }
 
-std::shared_ptr<const X509_Certificate>
+std::optional<X509_Certificate>
 Flatfile_Certificate_Store::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const
    {
    if(key_hash.size() != 20)
@@ -121,10 +121,10 @@ Flatfile_Certificate_Store::find_cert_by_pubkey_sha1(const std::vector<uint8_t>&
       return found_cert->second;
       }
 
-   return nullptr;
+   return std::nullopt;
    }
 
-std::shared_ptr<const X509_Certificate>
+std::optional<X509_Certificate>
 Flatfile_Certificate_Store::find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const
    {
    if(subject_hash.size() != 32)
@@ -137,10 +137,10 @@ Flatfile_Certificate_Store::find_cert_by_raw_subject_dn_sha256(const std::vector
       return found_cert->second;
       }
 
-   return nullptr;
+   return std::nullopt;
    }
 
-std::shared_ptr<const X509_CRL> Flatfile_Certificate_Store::find_crl_for(const X509_Certificate& subject) const
+std::optional<X509_CRL> Flatfile_Certificate_Store::find_crl_for(const X509_Certificate& subject) const
    {
    BOTAN_UNUSED(subject);
    return {};

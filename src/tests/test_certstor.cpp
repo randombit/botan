@@ -88,8 +88,8 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
                }
             else
                {
-               const bool found = std::any_of(rev_certs.begin(),
-               rev_certs.end(), [&](std::shared_ptr<const Botan::X509_Certificate> c) { return c->fingerprint() == cert.fingerprint(); });
+               const bool found = std::any_of(rev_certs.begin(), rev_certs.end(),
+                                              [&](const Botan::X509_Certificate& c) { return c.fingerprint() == cert.fingerprint(); });
 
                result.test_eq("Got wrong/no certificate", found, true);
                }
@@ -247,7 +247,7 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
             std::stringstream a_ss;
             a_ss << a.certificate.subject_dn();
             std::stringstream res_ss;
-            res_ss << res_vec.at(0)->subject_dn();
+            res_ss << res_vec.at(0).subject_dn();
             result.test_eq("Check subject " + a_ss.str(), a_ss.str(), res_ss.str());
             }
          }
@@ -271,10 +271,10 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
          std::stringstream cert_ss;
          cert_ss << same_dn_1.subject_dn();
          std::stringstream res_ss;
-         res_ss << res_vec.at(0)->subject_dn();
+         res_ss << res_vec.at(0).subject_dn();
          result.test_eq("Check subject " + cert_ss.str(), cert_ss.str(), res_ss.str());
          res_ss.str("");
-         res_ss << res_vec.at(1)->subject_dn();
+         res_ss << res_vec.at(1).subject_dn();
          result.test_eq("Check subject " + cert_ss.str(), cert_ss.str(), res_ss.str());
          }
       }
@@ -349,8 +349,8 @@ Test::Result test_certstor_load_allcert()
       Botan::X509_Certificate root_cert(Test::data_dir() + "/x509/x509test/root.pem");
       Botan::X509_Certificate valid_cert(Test::data_dir() + "/x509/x509test/ValidCert.pem");
       std::vector<uint8_t> key_id;
-      result.confirm("Root cert found", store.find_cert(root_cert.subject_dn(), key_id) != nullptr);
-      result.confirm("ValidCert found", store.find_cert(valid_cert.subject_dn(), key_id) != nullptr);
+      result.confirm("Root cert found", store.find_cert(root_cert.subject_dn(), key_id) != std::nullopt);
+      result.confirm("ValidCert found", store.find_cert(valid_cert.subject_dn(), key_id) != std::nullopt);
       return result;
       }
    catch(std::exception& e)

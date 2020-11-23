@@ -23,8 +23,6 @@
 namespace Botan {
 namespace {
 
-using Cert_Pointer = std::shared_ptr<const Botan::X509_Certificate>;
-using Cert_Vector = std::vector<Cert_Pointer>;
 const std::array<const char*, 2> cert_store_names{"Root", "CA"};
 
 /**
@@ -119,11 +117,12 @@ HCERTSTORE open_cert_store(const char* cert_store_name)
    return store;
    }
 
-Cert_Vector search_cert_stores(const _CRYPTOAPI_BLOB& blob, const DWORD& find_type,
-                               std::function<bool(const Cert_Vector& certs, Cert_Pointer cert)> filter,
-                               bool return_on_first_found)
+std::vector<X509_Certificate> search_cert_stores(
+   const _CRYPTOAPI_BLOB& blob, const DWORD& find_type,
+   std::function<bool (const std::vector<X509_Certificate>& certs, const X509_Certificate& cert)> filter,
+   bool return_on_first_found)
    {
-   Cert_Vector certs;
+   std::vector<X509_Certificate> certs;
    for(const auto store_name : cert_store_names)
       {
       Handle_Guard<HCERTSTORE> windows_cert_store = open_cert_store(store_name);
@@ -133,7 +132,7 @@ Cert_Vector search_cert_stores(const _CRYPTOAPI_BLOB& blob, const DWORD& find_ty
                                    WINCRYPT_UNUSED_PARAM, find_type,
                                    &blob, cert_context.get())))
          {
-         auto cert = std::make_shared<X509_Certificate>(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
+         X509_Certificate cert(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
          if(filter(certs, cert))
             {
             if(return_on_first_found)
@@ -148,15 +147,15 @@ Cert_Vector search_cert_stores(const _CRYPTOAPI_BLOB& blob, const DWORD& find_ty
    return certs;
    }
 
-bool already_contains_certificate(const Cert_Vector& certs, Cert_Pointer cert)
+bool already_contains_certificate(const std::vector<X509_Certificate>& certs, X509_Certificate cert)
    {
-   return std::any_of(certs.begin(), certs.end(), [&](std::shared_ptr<const Botan::X509_Certificate> c)
+   return std::any_of(certs.begin(), certs.end(), [&](const X509_Certificate& c)
       {
-      return *c == *cert;
+      return c == cert;
       });
    }
 
-Cert_Vector find_cert_by_dn_and_key_id(const Botan::X509_DN& subject_dn,
+std::vector<X509_Certificate> find_cert_by_dn_and_key_id(const Botan::X509_DN& subject_dn,
                                        const std::vector<uint8_t>& key_id,
                                        bool return_on_first_found)
    {
@@ -179,9 +178,9 @@ Cert_Vector find_cert_by_dn_and_key_id(const Botan::X509_DN& subject_dn,
       blob.pbData = const_cast<BYTE*>(key_id.data());
       }
 
-   auto filter = [&](const Cert_Vector& certs, Cert_Pointer cert)
+   auto filter = [&](const std::vector<X509_Certificate>& certs, const X509_Certificate& cert)
       {
-      return !already_contains_certificate(certs, cert) && (key_id.empty() || cert->subject_dn() == subject_dn);
+      return !already_contains_certificate(certs, cert) && (key_id.empty() || cert.subject_dn() == subject_dn);
       };
 
    return search_cert_stores(blob, find_type, filter, return_on_first_found);
@@ -210,21 +209,26 @@ std::vector<X509_DN> Certificate_Store_Windows::all_subjects() const
    return subject_dns;
    }
 
-Cert_Pointer Certificate_Store_Windows::find_cert(const Botan::X509_DN& subject_dn,
-      const std::vector<uint8_t>& key_id) const
+std::optional<X509_Certificate>
+Certificate_Store_Windows::find_cert(const Botan::X509_DN& subject_dn,
+                                     const std::vector<uint8_t>& key_id) const
    {
    const auto certs = find_cert_by_dn_and_key_id(subject_dn, key_id, true);
-   return certs.empty() ? nullptr : certs.front();
+   if(certs.empty())
+      return std::nullopt;
+   else
+      return certs.front();
    }
 
-Cert_Vector Certificate_Store_Windows::find_all_certs(
+std::vector<X509_Certificate> Certificate_Store_Windows::find_all_certs(
    const X509_DN& subject_dn,
    const std::vector<uint8_t>& key_id) const
    {
    return find_cert_by_dn_and_key_id(subject_dn, key_id, false);
    }
 
-Cert_Pointer Certificate_Store_Windows::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const
+std::optional<X509_Certificate>
+Certificate_Store_Windows::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const
    {
    if(key_hash.size() != 20)
       {
@@ -235,23 +239,27 @@ Cert_Pointer Certificate_Store_Windows::find_cert_by_pubkey_sha1(const std::vect
    blob.cbData = static_cast<DWORD>(key_hash.size());
    blob.pbData = const_cast<BYTE*>(key_hash.data());
 
-   auto filter = [](const Cert_Vector&, Cert_Pointer) { return true; };
+   auto filter = [&](const std::vector<X509_Certificate>&, const X509_Certificate&) { return true; };
 
    const auto certs = search_cert_stores(blob, CERT_FIND_KEY_IDENTIFIER, filter, true);
-   return certs.empty() ? nullptr : certs.front();
+   if(certs.empty())
+      return std::nullopt;
+   else
+      return certs.front();
    }
 
-Cert_Pointer Certificate_Store_Windows::find_cert_by_raw_subject_dn_sha256(
+std::optional<X509_Certificate>
+Certificate_Store_Windows::find_cert_by_raw_subject_dn_sha256(
    const std::vector<uint8_t>& subject_hash) const
    {
    BOTAN_UNUSED(subject_hash);
    throw Not_Implemented("Certificate_Store_Windows::find_cert_by_raw_subject_dn_sha256");
    }
 
-std::shared_ptr<const X509_CRL> Certificate_Store_Windows::find_crl_for(const X509_Certificate& subject) const
+std::optional<X509_CRL> Certificate_Store_Windows::find_crl_for(const X509_Certificate& subject) const
    {
    // TODO: this could be implemented by using the CertFindCRLInStore function
    BOTAN_UNUSED(subject);
-   return {};
+   return std::nullopt;
    }
 }

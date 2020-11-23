@@ -67,9 +67,9 @@ class Trust_Root_Info final : public Command
                      output() << "# " << dn << "\n";
 
                   if(flag_set("display"))
-                     output() << cert->to_string() << "\n";
+                     output() << cert.to_string() << "\n";
 
-                  output() << cert->PEM_encode() << "\n";
+                  output() << cert.PEM_encode() << "\n";
                   }
                }
 

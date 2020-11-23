@@ -292,7 +292,7 @@ class Client : public Side
    {
       static void accept_all(
          const std::vector<Botan::X509_Certificate>&,
-         const std::vector<std::shared_ptr<const Botan::OCSP::Response>>&,
+         const std::vector<std::optional<Botan::OCSP::Response>>&,
          const std::vector<Botan::Certificate_Store*>&, Botan::Usage_Type,
          const std::string&, const Botan::TLS::Policy&) {}
 

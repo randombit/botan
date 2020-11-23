@@ -21,6 +21,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
 namespace Botan {
 
@@ -269,6 +270,15 @@ class Test
                   return test_failure(what + " was null");
                else
                   return test_success(what + " was not null");
+               }
+
+            template<typename T>
+            bool test_not_nullopt(const std::string& what, std::optional<T> val)
+               {
+               if(val == std::nullopt)
+                  return test_failure(what + " was nullopt");
+               else
+                  return test_success(what + " was not nullopt");
                }
 
             bool test_eq(const std::string& what, const char* produced, const char* expected);

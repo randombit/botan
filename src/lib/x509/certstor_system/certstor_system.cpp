@@ -31,32 +31,32 @@ System_Certificate_Store::System_Certificate_Store()
 #endif
    }
 
-std::shared_ptr<const X509_Certificate>
+std::optional<X509_Certificate>
 System_Certificate_Store::find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const
    {
    return m_system_store->find_cert(subject_dn, key_id);
    }
 
-std::vector<std::shared_ptr<const X509_Certificate>>
+std::vector<X509_Certificate>
 System_Certificate_Store::find_all_certs(const X509_DN& subject_dn,
                                          const std::vector<uint8_t>& key_id) const
    {
    return m_system_store->find_all_certs(subject_dn, key_id);
    }
 
-std::shared_ptr<const X509_Certificate>
+std::optional<X509_Certificate>
 System_Certificate_Store::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const
    {
    return m_system_store->find_cert_by_pubkey_sha1(key_hash);
    }
 
-std::shared_ptr<const X509_Certificate>
+std::optional<X509_Certificate>
 System_Certificate_Store::find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const
    {
    return m_system_store->find_cert_by_raw_subject_dn_sha256(subject_hash);
    }
 
-std::shared_ptr<const X509_CRL>
+std::optional<X509_CRL>
 System_Certificate_Store::find_crl_for(const X509_Certificate& subject) const
    {
    return m_system_store->find_crl_for(subject);

@@ -291,24 +291,27 @@ class Certificate_Store_MacOS_Impl
          check_notnull(m_keychains, "initialize keychain array");
          }
 
-      std::shared_ptr<const X509_Certificate> findOne(Query query) const
+      std::optional<X509_Certificate> findOne(Query query) const
          {
          query.addParameter(kSecMatchLimit, kSecMatchLimitOne);
 
          scoped_CFType<CFTypeRef> result(nullptr);
          search(std::move(query), &result.get());
 
-         return (result) ? readCertificate(result.get()) : nullptr;
+         if(result)
+            return readCertificate(result.get());
+         else
+            return std::nullopt;
          }
 
-      std::vector<std::shared_ptr<const X509_Certificate>> findAll(Query query) const
+      std::vector<X509_Certificate> findAll(Query query) const
          {
          query.addParameter(kSecMatchLimit, kSecMatchLimitAll);
 
          scoped_CFType<CFArrayRef> result(nullptr);
          search(std::move(query), (CFTypeRef*)&result.get());
 
-         std::vector<std::shared_ptr<const X509_Certificate>> output;
+         std::vector<X509_Certificate> output;
 
          if(result)
             {
@@ -344,7 +347,7 @@ class Certificate_Store_MacOS_Impl
       /**
        * Convert a CFTypeRef object into a Botan::X509_Certificate
        */
-      std::shared_ptr<const X509_Certificate> readCertificate(CFTypeRef object) const
+      X509_Certificate readCertificate(CFTypeRef object) const
          {
          if(!object || CFGetTypeID(object) != SecCertificateGetTypeID())
             {
@@ -360,7 +363,7 @@ class Certificate_Store_MacOS_Impl
          const auto length = CFDataGetLength(derData.get());
 
          DataSource_Memory ds(data, length);
-         return std::make_shared<Botan::X509_Certificate>(ds);
+         return X509_Certificate(ds);
          }
 
       CFArrayRef keychains() const { return m_keychains.get(); }
@@ -398,7 +401,7 @@ std::vector<X509_DN> Certificate_Store_MacOS::all_subjects() const
    std::vector<X509_DN> output;
    std::transform(certificates.cbegin(), certificates.cend(),
                   std::back_inserter(output),
-                  [](const std::shared_ptr<const X509_Certificate> cert)
+                  [](const std::optional<X509_Certificate> cert)
       {
       return cert->subject_dn();
       });
@@ -406,7 +409,7 @@ std::vector<X509_DN> Certificate_Store_MacOS::all_subjects() const
    return output;
    }
 
-std::shared_ptr<const X509_Certificate>
+std::optional<X509_Certificate>
 Certificate_Store_MacOS::find_cert(const X509_DN& subject_dn,
                                    const std::vector<uint8_t>& key_id) const
    {
@@ -421,7 +424,7 @@ Certificate_Store_MacOS::find_cert(const X509_DN& subject_dn,
    return m_impl->findOne(std::move(query));
    }
 
-std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_MacOS::find_all_certs(
+std::vector<X509_Certificate> Certificate_Store_MacOS::find_all_certs(
          const X509_DN& subject_dn,
          const std::vector<uint8_t>& key_id) const
    {
@@ -436,7 +439,7 @@ std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_MacOS::fi
    return m_impl->findAll(std::move(query));
    }
 
-std::shared_ptr<const X509_Certificate>
+std::optional<X509_Certificate>
 Certificate_Store_MacOS::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const
    {
    if(key_hash.size() != 20)
@@ -450,14 +453,14 @@ Certificate_Store_MacOS::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& ke
    return m_impl->findOne(std::move(query));
    }
 
-std::shared_ptr<const X509_Certificate>
+std::optional<X509_Certificate>
 Certificate_Store_MacOS::find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const
    {
    BOTAN_UNUSED(subject_hash);
    throw Not_Implemented("Certificate_Store_MacOS::find_cert_by_raw_subject_dn_sha256");
    }
 
-std::shared_ptr<const X509_CRL> Certificate_Store_MacOS::find_crl_for(const X509_Certificate& subject) const
+std::optional<X509_CRL> Certificate_Store_MacOS::find_crl_for(const X509_Certificate& subject) const
    {
    BOTAN_UNUSED(subject);
    return {};

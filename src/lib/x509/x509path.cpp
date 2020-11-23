@@ -29,7 +29,7 @@ namespace Botan {
 * PKIX path validation
 */
 CertificatePathStatusCodes
-PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
                   std::chrono::system_clock::time_point ref_time,
                   const std::string& hostname,
                   Usage_Type usage,
@@ -45,14 +45,14 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
 
    CertificatePathStatusCodes cert_status(cert_path.size());
 
-   if(!hostname.empty() && !cert_path[0]->matches_dns_name(hostname))
+   if(!hostname.empty() && !cert_path[0].matches_dns_name(hostname))
       cert_status[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
 
-   if(!cert_path[0]->allowed_usage(usage))
+   if(!cert_path[0].allowed_usage(usage))
       cert_status[0].insert(Certificate_Status_Code::INVALID_USAGE);
 
-   if(cert_path[0]->is_CA_cert() == false &&
-      cert_path[0]->has_constraints(KEY_CERT_SIGN))
+   if(cert_path[0].is_CA_cert() == false &&
+      cert_path[0].has_constraints(KEY_CERT_SIGN))
       {
       /*
       "If the keyCertSign bit is asserted, then the cA bit in the
@@ -71,9 +71,9 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
 
       const bool at_self_signed_root = (i == cert_path.size() - 1);
 
-      const std::shared_ptr<const X509_Certificate>& subject = cert_path[i];
+      const std::optional<X509_Certificate>& subject = cert_path[i];
 
-      const std::shared_ptr<const X509_Certificate>& issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
+      const std::optional<X509_Certificate>& issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
 
       if(at_self_signed_root && (issuer->is_self_signed() == false))
          {
@@ -179,7 +179,7 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
    for(size_t i = cert_path.size() - 1; i > 0 ; --i)
       {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
-      const std::shared_ptr<const X509_Certificate>& subject = cert_path[i];
+      const std::optional<X509_Certificate>& subject = cert_path[i];
 
       /*
       * If the certificate was not self-issued, verify that max_path_length is
@@ -211,8 +211,8 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
    }
 
 CertificatePathStatusCodes
-PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
-                 const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
+PKIX::check_ocsp(const std::vector<X509_Certificate>& cert_path,
+                 const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
                  const std::vector<Certificate_Store*>& trusted_certstores,
                  std::chrono::system_clock::time_point ref_time,
                  std::chrono::seconds max_ocsp_age)
@@ -226,10 +226,10 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
       {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
 
-      std::shared_ptr<const X509_Certificate> subject = cert_path.at(i);
-      std::shared_ptr<const X509_Certificate> ca = cert_path.at(i+1);
+      std::optional<X509_Certificate> subject = cert_path.at(i);
+      std::optional<X509_Certificate> ca = cert_path.at(i+1);
 
-      if(i < ocsp_responses.size() && (ocsp_responses.at(i) != nullptr)
+      if(i < ocsp_responses.size() && (ocsp_responses.at(i) != std::nullopt)
             && (ocsp_responses.at(i)->status() == OCSP::Response_Status_Code::Successful))
          {
          try
@@ -262,8 +262,8 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
    }
 
 CertificatePathStatusCodes
-PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
-                const std::vector<std::shared_ptr<const X509_CRL>>& crls,
+PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
+                const std::vector<std::optional<X509_CRL>>& crls,
                 std::chrono::system_clock::time_point ref_time)
    {
    if(cert_path.empty())
@@ -276,10 +276,10 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
       {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
 
-      if(i < crls.size() && crls.at(i))
+      if(i < crls.size() && crls[i].has_value())
          {
-         std::shared_ptr<const X509_Certificate> subject = cert_path.at(i);
-         std::shared_ptr<const X509_Certificate> ca = cert_path.at(i+1);
+         std::optional<X509_Certificate> subject = cert_path.at(i);
+         std::optional<X509_Certificate> ca = cert_path.at(i+1);
 
          if(!ca->allowed_usage(CRL_SIGN))
             status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER);
@@ -332,7 +332,7 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
    }
 
 CertificatePathStatusCodes
-PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                 const std::vector<Certificate_Store*>& certstores,
                 std::chrono::system_clock::time_point ref_time)
    {
@@ -342,14 +342,13 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
    if(certstores.empty())
       throw Invalid_Argument("PKIX::check_crl certstores empty");
 
-   std::vector<std::shared_ptr<const X509_CRL>> crls(cert_path.size());
+   std::vector<std::optional<X509_CRL>> crls(cert_path.size());
 
    for(size_t i = 0; i != cert_path.size(); ++i)
       {
-      BOTAN_ASSERT_NONNULL(cert_path[i]);
       for(size_t c = 0; c != certstores.size(); ++c)
          {
-         crls[i] = certstores[c]->find_crl_for(*cert_path[i]);
+         crls[i] = certstores[c]->find_crl_for(cert_path[i]);
          if(crls[i])
             break;
          }
@@ -361,7 +360,7 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
 
 CertificatePathStatusCodes
-PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+PKIX::check_ocsp_online(const std::vector<X509_Certificate>& cert_path,
                         const std::vector<Certificate_Store*>& trusted_certstores,
                         std::chrono::system_clock::time_point ref_time,
                         std::chrono::milliseconds timeout,
@@ -371,7 +370,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
    if(cert_path.empty())
       throw Invalid_Argument("PKIX::check_ocsp_online cert_path empty");
 
-   std::vector<std::future<std::shared_ptr<const OCSP::Response>>> ocsp_response_futures;
+   std::vector<std::future<std::optional<OCSP::Response>>> ocsp_response_futures;
 
    size_t to_ocsp = 1;
 
@@ -382,18 +381,18 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
 
    for(size_t i = 0; i < to_ocsp; ++i)
       {
-      const std::shared_ptr<const X509_Certificate>& subject = cert_path.at(i);
-      const std::shared_ptr<const X509_Certificate>& issuer = cert_path.at(i+1);
+      const std::optional<X509_Certificate>& subject = cert_path.at(i);
+      const std::optional<X509_Certificate>& issuer = cert_path.at(i+1);
 
       if(subject->ocsp_responder() == "")
          {
-         ocsp_response_futures.emplace_back(std::async(std::launch::deferred, [&]() -> std::shared_ptr<const OCSP::Response> {
-                  return std::make_shared<const OCSP::Response>(Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
+         ocsp_response_futures.emplace_back(std::async(std::launch::deferred, [&]() -> std::optional<OCSP::Response> {
+                  return OCSP::Response(Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
                   }));
          }
       else
          {
-         ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]() -> std::shared_ptr<const OCSP::Response> {
+         ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]() -> std::optional<OCSP::Response> {
                OCSP::Request req(*issuer, BigInt::decode(subject->serial_number()));
 
                HTTP::Response http;
@@ -410,15 +409,15 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
                   // log e.what() ?
                   }
                if (http.status_code() != 200)
-                  return std::make_shared<const OCSP::Response>(Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
+                  return OCSP::Response(Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
                // Check the MIME type?
 
-               return std::make_shared<const OCSP::Response>(http.body());
+               return OCSP::Response(http.body());
                }));
          }
       }
 
-   std::vector<std::shared_ptr<const OCSP::Response>> ocsp_responses;
+   std::vector<std::optional<OCSP::Response>> ocsp_responses;
 
    for(size_t i = 0; i < ocsp_response_futures.size(); ++i)
       {
@@ -429,7 +428,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
    }
 
 CertificatePathStatusCodes
-PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+PKIX::check_crl_online(const std::vector<X509_Certificate>& cert_path,
                        const std::vector<Certificate_Store*>& certstores,
                        Certificate_Store_In_Memory* crl_store,
                        std::chrono::system_clock::time_point ref_time,
@@ -440,16 +439,16 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
    if(certstores.empty())
       throw Invalid_Argument("PKIX::check_crl_online certstores empty");
 
-   std::vector<std::future<std::shared_ptr<const X509_CRL>>> future_crls;
-   std::vector<std::shared_ptr<const X509_CRL>> crls(cert_path.size());
+   std::vector<std::future<std::optional<X509_CRL>>> future_crls;
+   std::vector<std::optional<X509_CRL>> crls(cert_path.size());
 
    for(size_t i = 0; i != cert_path.size(); ++i)
       {
-      const std::shared_ptr<const X509_Certificate>& cert = cert_path.at(i);
+      const std::optional<X509_Certificate>& cert = cert_path.at(i);
       for(size_t c = 0; c != certstores.size(); ++c)
          {
          crls[i] = certstores[c]->find_crl_for(*cert);
-         if(crls[i])
+         if(crls[i].has_value())
             break;
          }
 
@@ -462,24 +461,24 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
          We already have a CRL, so just insert this empty one to hold a place in the vector
          so that indexes match up
          */
-         future_crls.emplace_back(std::future<std::shared_ptr<const X509_CRL>>());
+         future_crls.emplace_back(std::future<std::optional<X509_CRL>>());
          }
       else if(cert->crl_distribution_point() == "")
          {
          // Avoid creating a thread for this case
-         future_crls.emplace_back(std::async(std::launch::deferred, [&]() -> std::shared_ptr<const X509_CRL> {
+         future_crls.emplace_back(std::async(std::launch::deferred, [&]() -> std::optional<X509_CRL> {
                throw Not_Implemented("No CRL distribution point for this certificate");
                }));
          }
       else
          {
-         future_crls.emplace_back(std::async(std::launch::async, [&]() -> std::shared_ptr<const X509_CRL> {
+         future_crls.emplace_back(std::async(std::launch::async, [&]() -> std::optional<X509_CRL> {
                auto http = HTTP::GET_sync(cert->crl_distribution_point(),
                                           /*redirects*/ 1, timeout);
 
                http.throw_unless_ok();
                // check the mime type?
-               return std::make_shared<const X509_CRL>(http.body());
+               return X509_CRL(http.body());
                }));
          }
       }
@@ -509,8 +508,8 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
          if(crl_status[i].count(Certificate_Status_Code::VALID_CRL_CHECKED))
             {
             // better be non-null, we supposedly validated it
-            BOTAN_ASSERT_NONNULL(crls[i]);
-            crl_store->add_crl(crls[i]);
+            BOTAN_ASSERT_NOMSG(crls[i].has_value());
+            crl_store->add_crl(*crls[i]);
             }
          }
       }
@@ -521,12 +520,12 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
 #endif
 
 Certificate_Status_Code
-PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+PKIX::build_certificate_path(std::vector<X509_Certificate>& cert_path,
                              const std::vector<Certificate_Store*>& trusted_certstores,
-                             const std::shared_ptr<const X509_Certificate>& end_entity,
-                             const std::vector<std::shared_ptr<const X509_Certificate>>& end_entity_extra)
+                             const X509_Certificate& end_entity,
+                             const std::vector<X509_Certificate>& end_entity_extra)
    {
-   if(end_entity->is_self_signed())
+   if(end_entity.is_self_signed())
       {
       return Certificate_Status_Code::CANNOT_ESTABLISH_TRUST;
       }
@@ -540,7 +539,7 @@ PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>
    std::set<std::string> certs_seen;
 
    cert_path.push_back(end_entity);
-   certs_seen.insert(end_entity->fingerprint("SHA-256"));
+   certs_seen.insert(end_entity.fingerprint("SHA-256"));
 
    Certificate_Store_In_Memory ee_extras;
    for(size_t i = 0; i != end_entity_extra.size(); ++i)
@@ -549,11 +548,11 @@ PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>
    // iterate until we reach a root or cannot find the issuer
    for(;;)
       {
-      const X509_Certificate& last = *cert_path.back();
+      const X509_Certificate& last = cert_path.back();
       const X509_DN issuer_dn = last.issuer_dn();
       const std::vector<uint8_t> auth_key_id = last.authority_key_id();
 
-      std::shared_ptr<const X509_Certificate> issuer;
+      std::optional<X509_Certificate> issuer;
       bool trusted_issuer = false;
 
       for(Certificate_Store* store : trusted_certstores)
@@ -583,7 +582,7 @@ PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>
          }
 
       certs_seen.insert(fprint);
-      cert_path.push_back(issuer);
+      cert_path.push_back(*issuer);
 
       if(issuer->is_self_signed())
          {
@@ -605,7 +604,7 @@ PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>
 namespace
 {
 // <certificate, trusted?>
-using cert_maybe_trusted = std::pair<std::shared_ptr<const X509_Certificate>,bool>;
+using cert_maybe_trusted = std::pair<std::optional<X509_Certificate>,bool>;
 }
 
 /**
@@ -626,10 +625,10 @@ using cert_maybe_trusted = std::pair<std::shared_ptr<const X509_Certificate>,boo
  *
  */
 Certificate_Status_Code
-PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const X509_Certificate>>>& cert_paths_out,
+PKIX::build_all_certificate_paths(std::vector<std::vector<X509_Certificate>>& cert_paths_out,
                                   const std::vector<Certificate_Store*>& trusted_certstores,
-                                  const std::shared_ptr<const X509_Certificate>& end_entity,
-                                  const std::vector<std::shared_ptr<const X509_Certificate>>& end_entity_extra)
+                                  const std::optional<X509_Certificate>& end_entity,
+                                  const std::vector<X509_Certificate>& end_entity_extra)
    {
    if(!cert_paths_out.empty())
       {
@@ -662,26 +661,26 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const 
 
    // new certs are added and removed from the path during the DFS
    // it is copied into cert_paths_out when we encounter a trusted root
-   std::vector<std::shared_ptr<const X509_Certificate>> path_so_far;
+   std::vector<X509_Certificate> path_so_far;
 
    // todo can we assume that the end certificate is not trusted?
    std::vector<cert_maybe_trusted> stack = { {end_entity, false} };
 
    while(!stack.empty())
       {
+      std::optional<X509_Certificate> last = stack.back().first;
       // found a deletion marker that guides the DFS, backtracing
-      if(stack.back().first == nullptr)
+      if(last == std::nullopt)
          {
          stack.pop_back();
-         std::string fprint = path_so_far.back()->fingerprint("SHA-256");
+         std::string fprint = path_so_far.back().fingerprint("SHA-256");
          certs_seen.erase(fprint);
          path_so_far.pop_back();
          }
       // process next cert on the path
       else
          {
-         std::shared_ptr<const X509_Certificate> last = stack.back().first;
-         bool trusted = stack.back().second;
+         const bool trusted = stack.back().second;
          stack.pop_back();
 
          // certificate already seen?
@@ -700,7 +699,7 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const 
             if(trusted)
                {
                cert_paths_out.push_back(path_so_far);
-               cert_paths_out.back().push_back(last);
+               cert_paths_out.back().push_back(*last);
 
                continue;
                }
@@ -716,7 +715,7 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const 
          const std::vector<uint8_t> auth_key_id = last->authority_key_id();
 
          // search for trusted issuers
-         std::vector<std::shared_ptr<const X509_Certificate>> trusted_issuers;
+         std::vector<X509_Certificate> trusted_issuers;
          for(Certificate_Store* store : trusted_certstores)
             {
             auto new_issuers = store->find_all_certs(issuer_dn, auth_key_id);
@@ -724,7 +723,7 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const 
             }
 
          // search the supplemental certs
-         std::vector<std::shared_ptr<const X509_Certificate>> misc_issuers =
+         std::vector<X509_Certificate> misc_issuers =
             ee_extras.find_all_certs(issuer_dn, auth_key_id);
 
          // if we could not find any issuers, the current path ends here
@@ -735,11 +734,11 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const 
             }
 
          // push the latest certificate onto the path_so_far
-         path_so_far.push_back(last);
+         path_so_far.push_back(*last);
          certs_seen.emplace(fprint);
 
          // push a deletion marker on the stack for backtracing later
-         stack.push_back({std::shared_ptr<const X509_Certificate>(nullptr),false});
+         stack.push_back({std::optional<X509_Certificate>(), false});
 
          for(const auto& trusted_cert : trusted_issuers)
             {
@@ -851,21 +850,21 @@ Path_Validation_Result x509_path_validate(
    Usage_Type usage,
    std::chrono::system_clock::time_point ref_time,
    std::chrono::milliseconds ocsp_timeout,
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp)
+   const std::vector<std::optional<OCSP::Response>>& ocsp_resp)
    {
    if(end_certs.empty())
       {
       throw Invalid_Argument("x509_path_validate called with no subjects");
       }
 
-   std::shared_ptr<const X509_Certificate> end_entity(std::make_shared<const X509_Certificate>(end_certs[0]));
-   std::vector<std::shared_ptr<const X509_Certificate>> end_entity_extra;
+   X509_Certificate end_entity = end_certs[0];
+   std::vector<X509_Certificate> end_entity_extra;
    for(size_t i = 1; i < end_certs.size(); ++i)
       {
-      end_entity_extra.push_back(std::make_shared<const X509_Certificate>(end_certs[i]));
+      end_entity_extra.push_back(end_certs[i]);
       }
 
-   std::vector<std::vector<std::shared_ptr<const X509_Certificate>>> cert_paths;
+   std::vector<std::vector<X509_Certificate>> cert_paths;
    Certificate_Status_Code path_building_result = PKIX::build_all_certificate_paths(cert_paths, trusted_roots, end_entity, end_entity_extra);
 
    // If we cannot successfully build a chain to a trusted self-signed root, stop now
@@ -930,7 +929,7 @@ Path_Validation_Result x509_path_validate(
    Usage_Type usage,
    std::chrono::system_clock::time_point when,
    std::chrono::milliseconds ocsp_timeout,
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp)
+   const std::vector<std::optional<OCSP::Response>>& ocsp_resp)
    {
    std::vector<X509_Certificate> certs;
    certs.push_back(end_cert);
@@ -945,7 +944,7 @@ Path_Validation_Result x509_path_validate(
    Usage_Type usage,
    std::chrono::system_clock::time_point when,
    std::chrono::milliseconds ocsp_timeout,
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp)
+   const std::vector<std::optional<OCSP::Response>>& ocsp_resp)
    {
    std::vector<Certificate_Store*> trusted_roots;
    trusted_roots.push_back(const_cast<Certificate_Store*>(&store));
@@ -961,7 +960,7 @@ Path_Validation_Result x509_path_validate(
    Usage_Type usage,
    std::chrono::system_clock::time_point when,
    std::chrono::milliseconds ocsp_timeout,
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp)
+   const std::vector<std::optional<OCSP::Response>>& ocsp_resp)
    {
    std::vector<X509_Certificate> certs;
    certs.push_back(end_cert);
@@ -1012,7 +1011,7 @@ CertificatePathStatusCodes find_warnings(const CertificatePathStatusCodes& all_s
 }
 
 Path_Validation_Result::Path_Validation_Result(CertificatePathStatusCodes status,
-                                               std::vector<std::shared_ptr<const X509_Certificate>>&& cert_chain) :
+                                               std::vector<X509_Certificate>&& cert_chain) :
    m_all_status(status),
    m_warnings(find_warnings(m_all_status)),
    m_cert_path(cert_chain),
@@ -1027,14 +1026,14 @@ const X509_Certificate& Path_Validation_Result::trust_root() const
    if(result() != Certificate_Status_Code::VERIFIED)
       throw Invalid_State("Path_Validation_Result::trust_root meaningless with invalid status");
 
-   return *m_cert_path[m_cert_path.size()-1];
+   return m_cert_path[m_cert_path.size()-1];
    }
 
 std::set<std::string> Path_Validation_Result::trusted_hashes() const
    {
    std::set<std::string> hashes;
    for(size_t i = 0; i != m_cert_path.size(); ++i)
-      hashes.insert(m_cert_path[i]->hash_used_for_signature());
+      hashes.insert(m_cert_path[i].hash_used_for_signature());
    return hashes;
    }
 
