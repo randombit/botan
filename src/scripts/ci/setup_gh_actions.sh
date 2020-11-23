@@ -28,11 +28,7 @@ if type -p "apt-get"; then
         sudo apt-get -qq install wine-development g++-mingw-w64-x86-64
 
     elif [ "$TARGET" = "cross-arm32" ]; then
-        sudo dpkg --add-architecture armhf
-        # need to re-update after --add-architecture
-        sudo apt-get -qq update
-        sudo apt-get -qq install g++-arm-linux-gnueabihf
-        sudo apt-get -qq install -o APT::Immediate-Configure=0 libc6:armhf libstdc++6:armhf
+        sudo apt-get -qq install qemu-user g++-arm-linux-gnueabihf
 
     elif [ "$TARGET" = "cross-arm64" ]; then
         sudo apt-get -qq install qemu-user g++-aarch64-linux-gnu
@@ -56,7 +52,7 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "coverage" ]; then
         sudo apt-get -qq install g++-8 softhsm2 libtspi-dev lcov python-coverage libboost-all-dev gdb
         pip install --user codecov
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
         git clone --depth 1 --branch runner-changes https://github.com/randombit/boringssl.git
 
@@ -64,7 +60,7 @@ if type -p "apt-get"; then
         sudo chmod g+w /var/lib/softhsm/tokens
 
         softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
-        echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
+        echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
 
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq install doxygen python-docutils python3-sphinx
