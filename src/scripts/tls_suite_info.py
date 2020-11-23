@@ -191,7 +191,7 @@ def main(args = None):
 
     weak_crypto = ['EXPORT', 'RC2', 'IDEA', 'RC4', '_DES_', 'WITH_NULL', 'GOST', '_anon_']
     static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA'] # not supported
-    removed_algos = ['_DSS_', 'SRP_', 'SEED']
+    removed_algos = ['_DSS_', 'SRP_', 'SEED', 'CAMELLIA_128_CBC', 'CAMELLIA_256_CBC']
     protocol_goop = ['SCSV', 'KRB5']
     maybe_someday = ['RSA_PSK', 'ECCPWD']
     not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday + removed_algos

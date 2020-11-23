@@ -57,8 +57,6 @@ std::vector<std::string> Policy::allowed_ciphers() const
       //"ARIA-128/GCM",
       //"AES-256",
       //"AES-128",
-      //"Camellia-256",
-      //"Camellia-128",
       //"3DES",
       };
    }
