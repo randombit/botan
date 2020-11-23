@@ -232,8 +232,11 @@ For Android
 ---------------------
 
 Modern versions of Android NDK use Clang and support C++17. Simply
-configure using the appropriate NDK compiler::
+configure using the appropriate NDK compiler and ``ar`` (``ar`` only
+needed if building the static library). Here we build for Aarch64
+targeting Android API 28::
 
+  $ export AR=/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar
   $ export CXX=/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++
   $ ./configure.py --os=android --cc=clang --cpu=arm64
 
