@@ -56,7 +56,7 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "coverage" ]; then
         sudo apt-get -qq install g++-8 softhsm2 libtspi-dev lcov python-coverage libboost-all-dev gdb
         pip install --user codecov
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
         git clone --depth 1 --branch runner-changes https://github.com/randombit/boringssl.git
 
@@ -64,7 +64,7 @@ if type -p "apt-get"; then
         sudo chmod g+w /var/lib/softhsm/tokens
 
         softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
-        echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
+        echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
 
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq install doxygen python-docutils python3-sphinx
