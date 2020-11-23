@@ -122,7 +122,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             'dl_group_gen', 'dlies', 'dsa_param', 'ecc_basemul',
             'ecdsa_verify_wycheproof', 'mce_keygen', 'passhash9',
             'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
-            'srp6a_kat', 'x509_path_bsi', 'xmss_keygen', 'xmss_sign']
+            'srp6_kat', 'x509_path_bsi', 'xmss_keygen', 'xmss_sign',
+            'pbkdf', 'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression',
+            'ed25519_sign', 'elgamal_keygen', 'x509_path_rsa_pss']
+
         test_cmd += ['--skip-tests=%s' % (','.join(slow_tests))]
 
     if target == 'fuzzers':
