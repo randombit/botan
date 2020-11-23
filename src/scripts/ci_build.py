@@ -74,12 +74,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
-    essential_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
-                       'hmac_drbg', 'hmac_drbg_unit', 'tls',
-                       'rsa_sign', 'rsa_verify', 'dh_kat',
-                       'ecc_randomized', 'ecdh_kat', 'ecdsa_sign', 'curve25519_scalar',
-                       'cpuid', 'simd_32', 'os_utils', 'util', 'util_dates']
-
     install_prefix = os.path.join(tempfile.gettempdir(), 'botan-install')
 
     flags = ['--prefix=%s' % (install_prefix),
@@ -118,13 +112,21 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         flags += ['--with-coverage-info', '--with-debug-info', '--test-mode']
 
     if target == 'valgrind':
-        # valgrind in 16.04 has a bug with rdrand handling
-        flags += ['--with-valgrind', '--disable-rdrand']
+        flags += ['--with-valgrind']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
         # valgrind is single threaded anyway
         test_cmd += ['--test-threads=1']
         # valgrind is slow
-        test_cmd += essential_tests
+        slow_tests = [
+            'cryptobox', 'dh_invalid', 'dh_kat', 'dh_keygen',
+            'dl_group_gen', 'dlies', 'dsa_param', 'ecc_basemul',
+            'ecdsa_verify_wycheproof', 'mce_keygen', 'passhash9',
+            'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
+            'srp6_kat', 'x509_path_bsi', 'xmss_keygen', 'xmss_sign',
+            'pbkdf', 'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression',
+            'ed25519_sign', 'elgamal_keygen', 'x509_path_rsa_pss']
+
+        test_cmd += ['--skip-tests=%s' % (','.join(slow_tests))]
 
     if target == 'fuzzers':
         flags += ['--unsafe-fuzzer-mode']
@@ -195,9 +197,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             test_cmd = [os.path.join(root_dir, 'botan-test.exe')] + test_cmd[1:]
             test_prefix = ['wine']
         else:
-            # Build everything but restrict what is run
-            test_cmd += essential_tests
-
             if target == 'cross-arm32':
                 flags += ['--cpu=armv7']
                 cc_bin = 'arm-linux-gnueabihf-g++'
