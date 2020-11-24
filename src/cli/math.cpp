@@ -43,7 +43,7 @@ BOTAN_REGISTER_COMMAND("mod_inverse", Modular_Inverse);
 class Gen_Prime final : public Command
    {
    public:
-      Gen_Prime() : Command("gen_prime --count=1 bits") {}
+      Gen_Prime() : Command("gen_prime --hex --count=1 bits") {}
 
       std::string group() const override
          {
@@ -59,11 +59,16 @@ class Gen_Prime final : public Command
          {
          const size_t bits = get_arg_sz("bits");
          const size_t cnt = get_arg_sz("count");
+         const bool hex = flag_set("hex");
 
          for(size_t i = 0; i != cnt; ++i)
             {
             const Botan::BigInt p = Botan::random_prime(rng(), bits);
-            output() << p << "\n";
+
+            if(hex)
+               output() << "0x" << std::hex << p << "\n";
+            else
+               output() << p << "\n";
             }
          }
    };
