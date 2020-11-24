@@ -666,14 +666,6 @@ class Stream
       //! @brief Mark bytes in the send buffer as consumed, removing them from the buffer
       void consume_send_buffer(std::size_t bytesConsumed) { m_send_buffer.consume(bytesConsumed); }
 
-      // This is a helper construct to allow mocking the native_handle in test code. It is activated by explicitly
-      // specifying a (mocked) channel type template parameter when constructing the stream and does not attempt to
-      // instantiate the native_handle.
-      // Note: once we have C++17 we can achieve this much more elegantly using constexpr if.
-      template<class T = ChannelT>
-      typename std::enable_if<!std::is_same<Channel, T>::value>::type
-      setup_native_handle(Connection_Side, boost::system::error_code&) {}
-
       /**
        * @brief Create the native handle.
        *
@@ -683,34 +675,39 @@ class Stream
        * @param side The desired connection side (client or server)
        * @param ec Set to indicate what error occurred, if any.
        */
-      template<class T = ChannelT>
-      typename std::enable_if<std::is_same<Channel, T>::value>::type
-      setup_native_handle(Connection_Side side, boost::system::error_code& ec)
+      void setup_native_handle(Connection_Side side, boost::system::error_code& ec)
          {
-         try_with_error_code([&]
+         BOTAN_UNUSED(side);  // workaround: GCC 9 produces a warning claiming side is unused
+
+         // Do not attempt to instantiate the native_handle when a custom (mocked) channel type template parameter has
+         // been specified. This allows mocking the native_handle in test code.
+         if constexpr(std::is_same<ChannelT, Channel>::value)
             {
-            if(side == CLIENT)
+            try_with_error_code([&]
                {
-               m_native_handle = std::unique_ptr<Client>(
-                  new Client(m_core,
-                             m_context.m_session_manager,
-                             m_context.m_credentials_manager,
-                             m_context.m_policy,
-                             m_context.m_rng,
-                             m_context.m_server_info,
-                             Protocol_Version::latest_tls_version()));
-               }
-            else
-               {
-               m_native_handle = std::unique_ptr<Server>(
-                  new Server(m_core,
-                             m_context.m_session_manager,
-                             m_context.m_credentials_manager,
-                             m_context.m_policy,
-                             m_context.m_rng,
-                             false /* no DTLS */));
-               }
-            }, ec);
+               if(side == CLIENT)
+                  {
+                  m_native_handle = std::unique_ptr<Client>(
+                     new Client(m_core,
+                                m_context.m_session_manager,
+                                m_context.m_credentials_manager,
+                                m_context.m_policy,
+                                m_context.m_rng,
+                                m_context.m_server_info,
+                                Protocol_Version::latest_tls_version()));
+                  }
+               else
+                  {
+                  m_native_handle = std::unique_ptr<Server>(
+                     new Server(m_core,
+                                m_context.m_session_manager,
+                                m_context.m_credentials_manager,
+                                m_context.m_policy,
+                                m_context.m_rng,
+                                false /* no DTLS */));
+                  }
+               }, ec);
+            }
          }
 
       /** @brief Synchronously write encrypted data from the send buffer to the next layer.

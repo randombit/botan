@@ -209,16 +209,13 @@ class Certificate_Store_MacOS_Impl
 
             void addParameter(CFStringRef key, std::vector<uint8_t> value)
                {
-               // TODO C++17: std::vector::emplace_back will return the reference
-               //             to the inserted object straight away.
-               m_data_store.emplace_back(std::move(value));
-               const auto& data = m_data_store.back();
+               const auto& data = m_data_store.emplace_back(std::move(value));
 
-               m_data_refs.emplace_back(CFDataCreateWithBytesNoCopy(kCFAllocatorDefault,
-                                        data.data(),
-                                        data.size(),
-                                        kCFAllocatorNull));
-               const auto& data_ref = m_data_refs.back();
+               const auto& data_ref = m_data_refs.emplace_back(
+                                         CFDataCreateWithBytesNoCopy(kCFAllocatorDefault,
+                                               data.data(),
+                                               data.size(),
+                                               kCFAllocatorNull));
                check_notnull(data_ref, "create CFDataRef of search object failed");
 
                addParameter(key, data_ref.get());
