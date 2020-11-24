@@ -1,6 +1,6 @@
 /*
 * SRP-6a (RFC 5054 compatatible)
-* (C) 2011,2012,2019 Jack Lloyd
+* (C) 2011,2012,2019,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,36 +14,32 @@ namespace Botan {
 
 namespace {
 
-BigInt hash_seq(const std::string& hash_id,
+BigInt hash_seq(HashFunction& hash_fn,
                 size_t pad_to,
                 const BigInt& in1,
                 const BigInt& in2)
    {
-   std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_id));
+   hash_fn.update(BigInt::encode_1363(in1, pad_to));
+   hash_fn.update(BigInt::encode_1363(in2, pad_to));
 
-   hash_fn->update(BigInt::encode_1363(in1, pad_to));
-   hash_fn->update(BigInt::encode_1363(in2, pad_to));
-
-   return BigInt::decode(hash_fn->final());
+   return BigInt::decode(hash_fn.final());
    }
 
-BigInt compute_x(const std::string& hash_id,
+BigInt compute_x(HashFunction& hash_fn,
                  const std::string& identifier,
                  const std::string& password,
                  const std::vector<uint8_t>& salt)
    {
-   std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_id));
+   hash_fn.update(identifier);
+   hash_fn.update(":");
+   hash_fn.update(password);
 
-   hash_fn->update(identifier);
-   hash_fn->update(":");
-   hash_fn->update(password);
+   secure_vector<uint8_t> inner_h = hash_fn.final();
 
-   secure_vector<uint8_t> inner_h = hash_fn->final();
+   hash_fn.update(salt);
+   hash_fn.update(inner_h);
 
-   hash_fn->update(salt);
-   hash_fn->update(inner_h);
-
-   secure_vector<uint8_t> outer_h = hash_fn->final();
+   secure_vector<uint8_t> outer_h = hash_fn.final();
 
    return BigInt::decode(outer_h);
    }
@@ -106,18 +102,24 @@ srp6_client_agree(const std::string& identifier,
    if(B <= 0 || B >= p)
       throw Decoding_Error("Invalid SRP parameter from server");
 
-   const BigInt k = hash_seq(hash_id, p_bytes, p, g);
+   std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_id));
+
+   const BigInt k = hash_seq(*hash_fn, p_bytes, p, g);
 
    const BigInt a(rng, a_bits);
 
    const BigInt A = group.power_g_p(a, a_bits);
 
-   const BigInt u = hash_seq(hash_id, p_bytes, A, B);
+   const BigInt u = hash_seq(*hash_fn, p_bytes, A, B);
 
-   const BigInt x = compute_x(hash_id, identifier, password, salt);
+   const BigInt x = compute_x(*hash_fn, identifier, password, salt);
 
-   const BigInt S = power_mod(group.mod_p(B - (k * power_mod(g, x, p))),
-                              group.mod_p(a + (u * x)), p);
+   const BigInt g_x_p = group.power_g_p(x, hash_fn->output_length()*8);
+
+   const BigInt B_k_g_x_p = group.mod_p(B - (k * g_x_p));
+   const BigInt a_ux = group.mod_p(a + (u * x));
+
+   const BigInt S = group.power_b_p(B_k_g_x_p, a_ux, group.p_bits());
 
    const SymmetricKey Sk(BigInt::encode_1363(S, p_bytes));
 
@@ -140,9 +142,9 @@ BigInt generate_srp6_verifier(const std::string& identifier,
                               const DL_Group& group,
                               const std::string& hash_id)
    {
-   const BigInt x = compute_x(hash_id, identifier, password, salt);
-   // FIXME: x should be size of hash fn so avoid computing x.bits() here
-   return group.power_g_p(x, x.bits());
+   std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_id));
+   const BigInt x = compute_x(*hash_fn, identifier, password, salt);
+   return group.power_g_p(x, hash_fn->output_length() * 8);
    }
 
 BigInt SRP6_Server_Session::step1(const BigInt& v,
@@ -152,7 +154,6 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
    {
    DL_Group group(group_id);
    const size_t b_bits = group.exponent_bits();
-
    return this->step1(v, group, hash_id, b_bits, rng);
    }
 
@@ -171,7 +172,9 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
    m_p = p;
    m_hash_id = hash_id;
 
-   const BigInt k = hash_seq(hash_id, m_p_bytes, p, g);
+   std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_id));
+
+   const BigInt k = hash_seq(*hash_fn, m_p_bytes, p, g);
 
    m_B = group.mod_p(v*k + group.power_g_p(m_b, b_bits));
 
@@ -183,7 +186,8 @@ SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
    if(A <= 0 || A >= m_p)
       throw Decoding_Error("Invalid SRP parameter from client");
 
-   const BigInt u = hash_seq(m_hash_id, m_p_bytes, A, m_B);
+   std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(m_hash_id));
+   const BigInt u = hash_seq(*hash_fn, m_p_bytes, A, m_B);
 
    const BigInt S = power_mod(A * power_mod(m_v, u, m_p), m_b, m_p);
 
