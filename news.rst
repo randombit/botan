@@ -16,7 +16,8 @@ Version 3.0.0, Not Yet Released
   DESX, XTEA, PBKDF1, MCEIES, CBC-MAC and Tiger (GH #2434)
 
 * Remove several deprecated features in TLS including DSA ciphersuites (GH #2505),
-  anonymous ciphersuites (GH #2497), SRP ciphersuite (GH #2506)
+  anonymous ciphersuites (GH #2497), SRP ciphersuites (GH #2506),
+  SEED ciphersuites (GH #2509), Camellia CBC ciphersuites (GH #2509)
 
 * Resolve an issue in the modular square root function which could cause
   a near-infinite loop if used with a composite modulus of a certain form
