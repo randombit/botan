@@ -895,7 +895,7 @@ class TLS_Unit_Tests final : public Test
 #endif
 
 #if defined(BOTAN_HAS_AEAD_OCB)
-         test_modern_versions("AES-128/OCB ECDH", results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/OCB(12)");
+         test_modern_versions("AES-256/OCB ECDH", results, *client_ses, *server_ses, *creds, "ECDH", "AES-256/OCB(12)");
 #endif
 
          server_ses->remove_all();

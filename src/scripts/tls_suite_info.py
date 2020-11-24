@@ -245,18 +245,9 @@ def main(args = None):
 
     if options.with_ocb:
         # OCB ciphersuites draft-zauner-tls-aes-ocb-04
-        define_custom_ciphersuite('DHE_RSA_WITH_AES_128_OCB_SHA256', 'FFC0')
-        define_custom_ciphersuite('DHE_RSA_WITH_AES_256_OCB_SHA256', 'FFC1')
-        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FFC2')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA256', 'FFC3')
-        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_OCB_SHA256', 'FFC4')
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_OCB_SHA256', 'FFC5')
-
-        define_custom_ciphersuite('PSK_WITH_AES_128_OCB_SHA256', 'FFC6')
         define_custom_ciphersuite('PSK_WITH_AES_256_OCB_SHA256', 'FFC7')
-        define_custom_ciphersuite('DHE_PSK_WITH_AES_128_OCB_SHA256', 'FFC8')
-        define_custom_ciphersuite('DHE_PSK_WITH_AES_256_OCB_SHA256', 'FFC9')
-        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_128_OCB_SHA256', 'FFCA')
         define_custom_ciphersuite('ECDHE_PSK_WITH_AES_256_OCB_SHA256', 'FFCB')
 
     if options.with_cecpq1 and options.with_ocb:

@@ -3,7 +3,7 @@
 *
 * This file was automatically generated from the IANA assignments
 * (tls-parameters.txt sha256 6412d7a966151d409d463681e5427e706cd9066f13d34ca7a89f8cc2f7dff4b2)
-* by ./src/scripts/tls_suite_info.py on 2020-11-23
+* by ./src/scripts/tls_suite_info.py on 2020-11-24
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -122,17 +122,9 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
       Ciphersuite(0xD002, "ECDHE_PSK_WITH_AES_256_GCM_SHA384", Auth_Method::IMPLICIT, Kex_Algo::ECDHE_PSK, "AES-256/GCM", 32, "AEAD", 0, KDF_Algo::SHA_384, Nonce_Format::AEAD_IMPLICIT_4),
       Ciphersuite(0xD003, "ECDHE_PSK_WITH_AES_128_CCM_8_SHA256", Auth_Method::IMPLICIT, Kex_Algo::ECDHE_PSK, "AES-128/CCM(8)", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_IMPLICIT_4),
       Ciphersuite(0xD005, "ECDHE_PSK_WITH_AES_128_CCM_SHA256", Auth_Method::IMPLICIT, Kex_Algo::ECDHE_PSK, "AES-128/CCM", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_IMPLICIT_4),
-      Ciphersuite(0xFFC0, "DHE_RSA_WITH_AES_128_OCB_SHA256", Auth_Method::RSA, Kex_Algo::DH, "AES-128/OCB(12)", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0xFFC1, "DHE_RSA_WITH_AES_256_OCB_SHA256", Auth_Method::RSA, Kex_Algo::DH, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0xFFC2, "ECDHE_RSA_WITH_AES_128_OCB_SHA256", Auth_Method::RSA, Kex_Algo::ECDH, "AES-128/OCB(12)", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0xFFC3, "ECDHE_RSA_WITH_AES_256_OCB_SHA256", Auth_Method::RSA, Kex_Algo::ECDH, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0xFFC4, "ECDHE_ECDSA_WITH_AES_128_OCB_SHA256", Auth_Method::ECDSA, Kex_Algo::ECDH, "AES-128/OCB(12)", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0xFFC5, "ECDHE_ECDSA_WITH_AES_256_OCB_SHA256", Auth_Method::ECDSA, Kex_Algo::ECDH, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0xFFC6, "PSK_WITH_AES_128_OCB_SHA256", Auth_Method::IMPLICIT, Kex_Algo::PSK, "AES-128/OCB(12)", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0xFFC7, "PSK_WITH_AES_256_OCB_SHA256", Auth_Method::IMPLICIT, Kex_Algo::PSK, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0xFFC8, "DHE_PSK_WITH_AES_128_OCB_SHA256", Auth_Method::IMPLICIT, Kex_Algo::DHE_PSK, "AES-128/OCB(12)", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0xFFC9, "DHE_PSK_WITH_AES_256_OCB_SHA256", Auth_Method::IMPLICIT, Kex_Algo::DHE_PSK, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0xFFCA, "ECDHE_PSK_WITH_AES_128_OCB_SHA256", Auth_Method::IMPLICIT, Kex_Algo::ECDHE_PSK, "AES-128/OCB(12)", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0xFFCB, "ECDHE_PSK_WITH_AES_256_OCB_SHA256", Auth_Method::IMPLICIT, Kex_Algo::ECDHE_PSK, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0xFFCC, "CECPQ1_RSA_WITH_AES_256_OCB_SHA256", Auth_Method::RSA, Kex_Algo::CECPQ1, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0xFFCD, "CECPQ1_ECDSA_WITH_AES_256_OCB_SHA256", Auth_Method::ECDSA, Kex_Algo::CECPQ1, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),

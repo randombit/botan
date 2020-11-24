@@ -40,8 +40,6 @@ in a future major release:
 
 - All ciphersuites using static RSA key exchange
 
-- OCB ciphersuites using 128-bit keys
-
 Deprecated Functionality
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
