@@ -8,10 +8,10 @@
 #define BOTAN_MONTY_EXP_H_
 
 #include <memory>
+#include <botan/bigint.h>
 
 namespace Botan {
 
-class BigInt;
 class Modular_Reducer;
 
 class Montgomery_Params;
@@ -39,6 +39,22 @@ BigInt monty_execute(const Montgomery_Exponentation_State& precomputed_state,
 */
 BigInt monty_execute_vartime(const Montgomery_Exponentation_State& precomputed_state,
                              const BigInt& k);
+
+inline
+BigInt monty_exp(std::shared_ptr<const Montgomery_Params> params_p,
+                 const BigInt& g, const BigInt& k, size_t max_k_bits)
+   {
+   auto precomputed = monty_precompute(params_p, g, 4, true);
+   return monty_execute(*precomputed, k, max_k_bits);
+   }
+
+inline
+BigInt monty_exp_vartime(std::shared_ptr<const Montgomery_Params> params_p,
+                         const BigInt& g, const BigInt& k)
+   {
+   auto precomputed = monty_precompute(params_p, g, 4, false);
+   return monty_execute_vartime(*precomputed, k);
+   }
 
 /**
 * Return (x^z1 * y^z2) % p

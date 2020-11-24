@@ -55,9 +55,12 @@ BigInt ressol(const BigInt& a, const BigInt& p)
    if(jacobi(a, p) != 1) // not a quadratic residue
       return -BigInt(1);
 
+   Modular_Reducer mod_p(p);
+   auto monty_p = std::make_shared<Montgomery_Params>(p, mod_p);
+
    if(p % 4 == 3) // The easy case
       {
-      return power_mod(a, ((p+1) >> 2), p);
+      return monty_exp_vartime(monty_p, a, ((p+1) >> 2));
       }
 
    size_t s = low_zero_bits(p - 1);
@@ -66,9 +69,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
    q -= 1;
    q >>= 1;
 
-   Modular_Reducer mod_p(p);
-
-   BigInt r = power_mod(a, q, p);
+   BigInt r = monty_exp_vartime(monty_p, a, q);
    BigInt n = mod_p.multiply(a, mod_p.square(r));
    r = mod_p.multiply(r, a);
 
@@ -93,7 +94,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
          return -BigInt(1);
       }
 
-   BigInt c = power_mod(z, (q << 1) + 1, p);
+   BigInt c = monty_exp_vartime(monty_p, z, (q << 1) + 1);
 
    while(n > 1)
       {
@@ -111,7 +112,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
             }
          }
 
-      c = power_mod(c, BigInt::power_of_2(s-i-1), p);
+      c = monty_exp_vartime(monty_p, c, BigInt::power_of_2(s-i-1));
       r = mod_p.multiply(r, c);
       c = mod_p.square(c);
       n = mod_p.multiply(n, c);
@@ -289,11 +290,8 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
 
    if(mod.is_odd())
       {
-      const size_t powm_window = 4;
-
-      auto monty_mod = std::make_shared<Montgomery_Params>(mod, reduce_mod);
-      auto powm_base_mod = monty_precompute(monty_mod, reduce_mod.reduce(base), powm_window);
-      return monty_execute(*powm_base_mod, exp, exp_bits);
+      auto monty_params = std::make_shared<Montgomery_Params>(mod, reduce_mod);
+      return monty_exp(monty_params, reduce_mod.reduce(base), exp, exp_bits);
       }
 
    /*

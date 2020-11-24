@@ -251,6 +251,16 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       BigInt power_g_p(const BigInt& x, size_t max_x_bits) const;
 
       /**
+      * Modular exponentiation
+      * @param b the base
+      * @param x the exponent
+      * @param max_x_bits x is assumed to be at most this many bits long.
+      *
+      * @return (b^x) % p
+      */
+      BigInt power_b_p(const BigInt& b, const BigInt& x, size_t max_x_bits) const;
+
+      /**
       * Multi-exponentiate
       * Return (g^x * y^z) % p
       */
