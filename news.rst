@@ -17,7 +17,8 @@ Version 3.0.0, Not Yet Released
 
 * Remove several deprecated features in TLS including DSA ciphersuites (GH #2505),
   anonymous ciphersuites (GH #2497), SRP ciphersuites (GH #2506),
-  SEED ciphersuites (GH #2509), Camellia CBC ciphersuites (GH #2509)
+  SEED ciphersuites (GH #2509), Camellia CBC ciphersuites (GH #2509),
+  AES-128 OCB ciphersuites (GH #2511)
 
 * Resolve an issue in the modular square root function which could cause
   a near-infinite loop if used with a composite modulus of a certain form
