@@ -854,8 +854,7 @@ policy settings from a file.
 
      Also allowed: "AES-256", "AES-128",
      "AES-256/CCM", "AES-128/CCM", "AES-256/CCM(8)", "AES-128/CCM(8)",
-     "Camellia-256/GCM", "Camellia-128/GCM", "ARIA-256/GCM", "ARIA-128/GCM",
-     "Camellia-256", "Camellia-128"
+     "Camellia-256/GCM", "Camellia-128/GCM", "ARIA-256/GCM", "ARIA-128/GCM"
 
      Also allowed (though currently experimental): "AES-128/OCB(12)",
      "AES-256/OCB(12)"
@@ -863,7 +862,7 @@ policy settings from a file.
      In versions up to 2.8.0, the CBC and CCM ciphersuites "AES-256",
      "AES-128", "AES-256/CCM" and "AES-128/CCM" were enabled by default.
 
-     Also allowed (although **not recommended**): "SEED", "3DES"
+     Also allowed (although **not recommended**): "3DES"
 
      .. note::
 
@@ -877,7 +876,7 @@ policy settings from a file.
 
      .. note::
 
-        SEED and 3DES are deprecated and will be removed in a future release.
+        All CBC ciphersuites are deprecated and will be removed in a future release.
 
  .. cpp:function:: std::vector<std::string> allowed_macs() const
 
