@@ -23,7 +23,6 @@ enum class Cipher_Algo {
    AES_128_GCM,
    AES_256_GCM,
 
-   AES_128_OCB,
    AES_256_OCB,
 
    CAMELLIA_128_GCM,

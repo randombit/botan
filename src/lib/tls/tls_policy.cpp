@@ -43,7 +43,6 @@ std::vector<std::string> Policy::allowed_ciphers() const
    {
    return {
       //"AES-256/OCB(12)",
-      //"AES-128/OCB(12)",
       "ChaCha20Poly1305",
       "AES-256/GCM",
       "AES-128/GCM",
