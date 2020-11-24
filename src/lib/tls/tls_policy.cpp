@@ -89,7 +89,6 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    return {
       //"ECDHE_PSK",
-      //"DHE_PSK",
       //"PSK",
       "CECPQ1",
       "ECDH",

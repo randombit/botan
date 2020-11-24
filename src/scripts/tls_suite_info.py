@@ -110,6 +110,12 @@ def to_ciphersuite_info(code, name):
     if kex_algo == 'RSA':
         kex_algo = 'STATIC_RSA'
 
+    if sig_algo in ['DSA']:
+        return None
+
+    if kex_algo in ['SRP_SHA', 'DHE_PSK']:
+        return None
+
     (cipher_algo, cipher_keylen) = cipher_info[cipher[0]]
 
     if cipher_keylen is None:
@@ -191,7 +197,7 @@ def main(args = None):
 
     weak_crypto = ['EXPORT', 'RC2', 'IDEA', 'RC4', '_DES_', 'WITH_NULL', 'GOST', '_anon_']
     static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA'] # not supported
-    removed_algos = ['_DSS_', 'SRP_', 'SEED', 'CAMELLIA_128_CBC', 'CAMELLIA_256_CBC']
+    removed_algos = ['SEED', 'CAMELLIA_128_CBC', 'CAMELLIA_256_CBC']
     protocol_goop = ['SCSV', 'KRB5']
     maybe_someday = ['RSA_PSK', 'ECCPWD']
     not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday + removed_algos
@@ -222,7 +228,9 @@ def main(args = None):
                     should_use = False
 
             if should_use and name.find('_WITH_') > 0:
-                suites[code] = to_ciphersuite_info(code, name)
+                info = to_ciphersuite_info(code, name)
+                if info is not None:
+                    suites[code] = info
 
     sha256 = hashlib.sha256()
     sha256.update(contents.encode('utf8'))
@@ -234,7 +242,9 @@ def main(args = None):
         out.close()
 
     def define_custom_ciphersuite(name, code):
-        suites[code] = to_ciphersuite_info(code, name)
+        info = to_ciphersuite_info(code, name)
+        if info is not None:
+            suites[code] = info
 
     if options.with_cecpq1:
         # CECPQ1 key exchange

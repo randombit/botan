@@ -136,7 +136,6 @@ enum class Kex_Algo {
    ECDH,
    CECPQ1,
    PSK,
-   DHE_PSK,
    ECDHE_PSK,
 };
 
@@ -146,7 +145,6 @@ Kex_Algo BOTAN_TEST_API kex_method_from_string(const std::string& str);
 inline bool key_exchange_is_psk(Kex_Algo m)
    {
    return (m == Kex_Algo::PSK ||
-           m == Kex_Algo::DHE_PSK ||
            m == Kex_Algo::ECDHE_PSK);
    }
 

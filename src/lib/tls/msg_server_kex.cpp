@@ -43,7 +43,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    const std::string hostname = state.client_hello()->sni_hostname();
    const Kex_Algo kex_algo = state.ciphersuite().kex_method();
 
-   if(kex_algo == Kex_Algo::PSK || kex_algo == Kex_Algo::DHE_PSK || kex_algo == Kex_Algo::ECDHE_PSK)
+   if(kex_algo == Kex_Algo::PSK || kex_algo == Kex_Algo::ECDHE_PSK)
       {
       std::string identity_hint =
          creds.psk_identity_hint("tls-server", hostname);
@@ -51,7 +51,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, identity_hint, 2);
       }
 
-   if(kex_algo == Kex_Algo::DH || kex_algo == Kex_Algo::DHE_PSK)
+   if(kex_algo == Kex_Algo::DH)
       {
       const std::vector<Group_Params> dh_groups = state.client_hello()->supported_dh_groups();
 
@@ -184,12 +184,12 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
    * is prepared.
    */
 
-   if(kex_algo == Kex_Algo::PSK || kex_algo == Kex_Algo::DHE_PSK || kex_algo == Kex_Algo::ECDHE_PSK)
+   if(kex_algo == Kex_Algo::PSK || kex_algo == Kex_Algo::ECDHE_PSK)
       {
       reader.get_string(2, 0, 65535); // identity hint
       }
 
-   if(kex_algo == Kex_Algo::DH || kex_algo == Kex_Algo::DHE_PSK)
+   if(kex_algo == Kex_Algo::DH)
       {
       // 3 bigints, DH p, g, Y
 

@@ -916,7 +916,7 @@ policy settings from a file.
         the benefit of post quantum security) so if CECPQ1 is being disabled for
         traffic overhead reasons, DH should also be avoided.
 
-     Also allowed: "RSA", "ECDHE_PSK", "DHE_PSK", "PSK"
+     Also allowed: "RSA", "ECDHE_PSK", "PSK"
 
      .. note::
 
