@@ -677,6 +677,8 @@ class Stream
        */
       void setup_native_handle(Connection_Side side, boost::system::error_code& ec)
          {
+         BOTAN_UNUSED(side);  // workaround: GCC 9 produces a warning claiming side is unused
+
          // Do not attempt to instantiate the native_handle when a custom (mocked) channel type template parameter has
          // been specified. This allows mocking the native_handle in test code.
          if constexpr(std::is_same<ChannelT, Channel>::value)
