@@ -7,5 +7,6 @@ ppc64
 </arch>
 
 <isa>
+vsx
 powercrypto
 </isa>
