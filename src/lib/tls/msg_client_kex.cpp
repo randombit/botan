@@ -217,7 +217,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
       if(!server_rsa_kex_key)
          throw Internal_Error("Expected RSA kex but no server kex key set");
 
-      if(!dynamic_cast<const RSA_PrivateKey*>(server_rsa_kex_key))
+      if(server_rsa_kex_key->algo_name() != "RSA")
          throw Internal_Error("Expected RSA key but got " + server_rsa_kex_key->algo_name());
 
       TLS_Data_Reader reader("ClientKeyExchange", contents);
