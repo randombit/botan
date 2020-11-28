@@ -64,7 +64,7 @@ rdseed  -> "-mrdseed"
 sha     -> "-msha"
 altivec -> "-maltivec"
 
-powercrypto -> "-mcrypto"
+powercrypto -> "-mcrypto -mvsx"
 ppc64:power9 -> "-mcpu=power9"
 
 arm64:armv8crypto -> ""
