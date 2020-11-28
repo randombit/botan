@@ -9,14 +9,11 @@
 #define BOTAN_X509_PUBLIC_KEY_H_
 
 #include <botan/pk_keys.h>
-#include <botan/types.h>
+#include <botan/data_src.h>
 #include <string>
 #include <vector>
 
 namespace Botan {
-
-class RandomNumberGenerator;
-class DataSource;
 
 /**
 * This namespace contains functions for handling X.509 public keys
@@ -28,7 +25,10 @@ namespace X509 {
 * @param key the public key to encode
 * @return BER encoding of this key
 */
-BOTAN_PUBLIC_API(2,0) std::vector<uint8_t> BER_encode(const Public_Key& key);
+inline std::vector<uint8_t> BER_encode(const Public_Key& key)
+   {
+   return key.subject_public_key();
+   }
 
 /**
 * PEM encode a public key into a string.
@@ -50,7 +50,11 @@ BOTAN_PUBLIC_API(2,0) Public_Key* load_key(DataSource& source);
 * @param filename pathname to the file to load
 * @return new public key object
 */
-BOTAN_PUBLIC_API(2,0) Public_Key* load_key(const std::string& filename);
+inline Public_Key* load_key(const std::string& filename)
+   {
+   DataSource_Stream source(filename, true);
+   return X509::load_key(source);
+   }
 #endif
 
 /**
@@ -58,14 +62,22 @@ BOTAN_PUBLIC_API(2,0) Public_Key* load_key(const std::string& filename);
 * @param enc the memory region containing the DER or PEM encoded key
 * @return new public key object
 */
-BOTAN_PUBLIC_API(2,0) Public_Key* load_key(const std::vector<uint8_t>& enc);
+inline Public_Key* load_key(const std::vector<uint8_t>& enc)
+   {
+   DataSource_Memory source(enc);
+   return X509::load_key(source);
+   }
 
 /**
 * Copy a key.
 * @param key the public key to copy
 * @return new public key object
 */
-BOTAN_PUBLIC_API(2,0) Public_Key* copy_key(const Public_Key& key);
+inline Public_Key* copy_key(const Public_Key& key)
+   {
+   DataSource_Memory source(PEM_encode(key));
+   return X509::load_key(source);
+   }
 
 }
 
