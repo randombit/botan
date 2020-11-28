@@ -37,13 +37,11 @@ class SP800_56C final : public KDF
       * @param salt_len size of s in bytes
       * @param label label for the expansion step
       * @param label_len size of label in bytes
-      *
-      * @throws Invalid_Argument key_len > 2^32
       */
-      size_t kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[], size_t key_len,
+               const uint8_t secret[], size_t secret_len,
+               const uint8_t salt[], size_t salt_len,
+               const uint8_t label[], size_t label_len) const override;
 
       /**
       * @param mac MAC algorithm used for randomness extraction

@@ -29,10 +29,10 @@ class HKDF final : public KDF
 
       std::string name() const override { return "HKDF(" + m_prf->name() + ")"; }
 
-      size_t kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[], size_t key_len,
+               const uint8_t secret[], size_t secret_len,
+               const uint8_t salt[], size_t salt_len,
+               const uint8_t label[], size_t label_len) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
@@ -53,10 +53,10 @@ class HKDF_Extract final : public KDF
 
       std::string name() const override { return "HKDF-Extract(" + m_prf->name() + ")"; }
 
-      size_t kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[], size_t key_len,
+               const uint8_t secret[], size_t secret_len,
+               const uint8_t salt[], size_t salt_len,
+               const uint8_t label[], size_t label_len) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
@@ -77,10 +77,10 @@ class HKDF_Expand final : public KDF
 
       std::string name() const override { return "HKDF-Expand(" + m_prf->name() + ")"; }
 
-      size_t kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[], size_t key_len,
+               const uint8_t secret[], size_t secret_len,
+               const uint8_t salt[], size_t salt_len,
+               const uint8_t label[], size_t label_len) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;

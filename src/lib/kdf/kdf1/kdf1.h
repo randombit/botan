@@ -19,14 +19,14 @@ namespace Botan {
 class KDF1 final : public KDF
    {
    public:
-      std::string name() const override { return "KDF1(" + m_hash->name() + ")"; }
+      std::string name() const override;
 
-      KDF* clone() const override { return new KDF1(m_hash->clone()); }
+      KDF* clone() const override;
 
-      size_t kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[], size_t key_len,
+               const uint8_t secret[], size_t secret_len,
+               const uint8_t salt[], size_t salt_len,
+               const uint8_t label[], size_t label_len) const override;
 
       /**
       * @param h hash function to use

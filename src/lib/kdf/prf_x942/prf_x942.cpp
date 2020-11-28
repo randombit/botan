@@ -30,11 +30,19 @@ std::vector<uint8_t> encode_x942_int(uint32_t n)
 
 }
 
-size_t X942_PRF::kdf(uint8_t key[], size_t key_len,
-                     const uint8_t secret[], size_t secret_len,
-                     const uint8_t salt[], size_t salt_len,
-                     const uint8_t label[], size_t label_len) const
+void X942_PRF::kdf(uint8_t key[], size_t key_len,
+                   const uint8_t secret[], size_t secret_len,
+                   const uint8_t salt[], size_t salt_len,
+                   const uint8_t label[], size_t label_len) const
    {
+   if(key_len == 0)
+      return;
+
+   const size_t blocks_required = key_len / 20; // Fixed to use SHA-1
+
+   if(blocks_required >= 0xFFFFFFFE)
+      throw Invalid_Argument("X942_PRF maximum output length exceeeded");
+
    std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
 
    secure_vector<uint8_t> h;
@@ -78,10 +86,8 @@ size_t X942_PRF::kdf(uint8_t key[], size_t key_len,
       offset += copied;
 
       ++counter;
+      BOTAN_ASSERT_NOMSG(counter != 0);
       }
-
-   // FIXME: returns truncated output
-   return offset;
    }
 
 std::string X942_PRF::name() const

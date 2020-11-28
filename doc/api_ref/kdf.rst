@@ -12,12 +12,17 @@ shared secret created using Diffie-Hellman key agreement.
 .. cpp:class:: KDF
 
   .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const std::vector<uint8_t>& secret, \
-     const std::string& salt = "") const
+                                    const uint8_t secret[], \
+                                    size_t secret_len, \
+                                    const uint8_t salt[], \
+                                    size_t salt_len, \
+                                    const uint8_t label[] \
+                                    size_t label_len) const
 
   .. cpp:function:: secure_vector<uint8_t> derive_key( \
      size_t key_len, const std::vector<uint8_t>& secret, \
-     const std::vector<uint8_t>& salt) const
+     const std::vector<uint8_t>& salt, \
+     const std::vector<uint8_t>& lable) const
 
   .. cpp:function:: secure_vector<uint8_t> derive_key( \
      size_t key_len, const std::vector<uint8_t>& secret, \
@@ -28,8 +33,12 @@ shared secret created using Diffie-Hellman key agreement.
      const std::string& salt) const
 
    All variations on the same theme. Deterministically creates a
-   uniform random value from *secret* and *salt*. Typically *salt* is
-   a label or identifier, such as a session id.
+   uniform random value from *secret*, *salt*, and *label*.
+
+   Typically *label* is a fixed used to identity a protocol context,
+   for example "FooProtocol v1.0 key derivation", and *salt* is chosen
+   randomly or is some string associated with the current protocol
+   instance, for example a session identifier.
 
 You can create a :cpp:class:`KDF` using
 
@@ -39,10 +48,11 @@ You can create a :cpp:class:`KDF` using
 Available KDFs
 -------------------
 
-Botan includes many different KDFs simply because different protocols and
+Botan includes many different KDFs simply because different protocols and.
 standards have created subtly different approaches to this problem. For new
 code, use HKDF which is conservative, well studied, widely implemented and NIST
-approved.
+approved. There is no technical reason (besides compatability) to choose any
+other KDF.
 
 HKDF
 ~~~~~
@@ -79,9 +89,13 @@ Available if ``BOTAN_HAS_KDF1`` is defined.
 X9.42 PRF
 ~~~~~~~~~~
 
-A KDF from ANSI X9.42. Sometimes used for Diffie-Hellman.
+A KDF from ANSI X9.42. Sometimes used for Diffie-Hellman. However it is
+overly complicated and is fixed to use only SHA-1.
 
 Available if ``BOTAN_HAS_X942_PRF`` is defined.
+
+.. warning::
+   X9.42 PRF is deprecated and will be removed in a future major release.
 
 SP800-108
 ~~~~~~~~~~

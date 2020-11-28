@@ -6,28 +6,46 @@
 */
 
 #include <botan/internal/kdf1.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
-size_t KDF1::kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const
+std::string KDF1::name() const
    {
+   return "KDF1(" + m_hash->name() + ")";
+   }
+
+KDF* KDF1::clone() const
+   {
+   return new KDF1(m_hash->clone());
+   }
+
+void KDF1::kdf(uint8_t key[], size_t key_len,
+               const uint8_t secret[], size_t secret_len,
+               const uint8_t salt[], size_t salt_len,
+               const uint8_t label[], size_t label_len) const
+   {
+   if(key_len == 0)
+      return;
+
+   if(key_len > m_hash->output_length())
+      throw Invalid_Argument("KDF1 maximum output length exceeeded");
+
    m_hash->update(secret, secret_len);
    m_hash->update(label, label_len);
    m_hash->update(salt, salt_len);
 
-   if(key_len < m_hash->output_length())
+   if(key_len == m_hash->output_length())
       {
+      // In this case we can hash directly into the output buffer
+      m_hash->final(key);
+      }
+   else
+      {
+      // Otherwise a copy is required
       secure_vector<uint8_t> v = m_hash->final();
       copy_mem(key, v.data(), key_len);
-      return key_len;
       }
-
-   m_hash->final(key);
-   // FIXME: returns truncated output
-   return m_hash->output_length();
    }
 
 }

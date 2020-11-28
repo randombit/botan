@@ -43,10 +43,10 @@ class SP800_56A_Hash final : public KDF
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      size_t kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[], size_t key_len,
+               const uint8_t secret[], size_t secret_len,
+               const uint8_t salt[], size_t salt_len,
+               const uint8_t label[], size_t label_len) const override;
 
       /**
       * @param hash the hash function to use as the auxiliary function
@@ -83,10 +83,10 @@ class SP800_56A_HMAC final : public KDF
       *
       * @throws Invalid_Argument key_len > 2^32 or MAC is not a HMAC
       */
-      size_t kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[], size_t key_len,
+               const uint8_t secret[], size_t secret_len,
+               const uint8_t salt[], size_t salt_len,
+               const uint8_t label[], size_t label_len) const override;
 
       /**
       * @param mac the HMAC to use as the auxiliary function

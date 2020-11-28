@@ -50,6 +50,8 @@ in a future major release.
 
 - Hash function GOST 34.11-94
 
+- X9.42 KDF
+
 - DLIES
 
 - GCM support for 64-bit tags
@@ -96,12 +98,6 @@ Deprecated Headers
 
 Other API deprecations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- Currently, for certain KDFs, if KDF interface is invoked with a
-  requested output length larger than supported by the KDF, it returns
-  instead a truncated key. In a future major release, instead if KDF
-  is called with a length larger than it supports an exception will be
-  thrown.
 
 - The ``Buffered_Computation`` base class. In a future release the
   class will be removed, and all of member functions instead declared

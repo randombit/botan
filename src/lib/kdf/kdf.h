@@ -62,12 +62,11 @@ class BOTAN_PUBLIC_API(2,0) KDF
       * @param salt_len size of salt in bytes
       * @param label purpose for the derived keying material
       * @param label_len size of label in bytes
-      * @return the derived key
       */
-      virtual size_t kdf(uint8_t key[], size_t key_len,
-                         const uint8_t secret[], size_t secret_len,
-                         const uint8_t salt[], size_t salt_len,
-                         const uint8_t label[], size_t label_len) const = 0;
+      virtual void kdf(uint8_t key[], size_t key_len,
+                       const uint8_t secret[], size_t secret_len,
+                       const uint8_t salt[], size_t salt_len,
+                       const uint8_t label[], size_t label_len) const = 0;
 
       /**
       * Derive a key
@@ -89,7 +88,7 @@ class BOTAN_PUBLIC_API(2,0) KDF
                                     size_t label_len = 0) const
          {
          secure_vector<uint8_t> key(key_len);
-         key.resize(kdf(key.data(), key.size(), secret, secret_len, salt, salt_len, label, label_len));
+         kdf(key.data(), key.size(), secret, secret_len, salt, salt_len, label, label_len);
          return key;
          }
 
