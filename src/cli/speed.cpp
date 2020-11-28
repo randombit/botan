@@ -1201,11 +1201,11 @@ class Speed final : public Command
 
       void bench_os2ecp(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime)
          {
-         std::unique_ptr<Timer> uncmp_timer = make_timer("OS2ECP uncompressed");
-         std::unique_ptr<Timer> cmp_timer = make_timer("OS2ECP compressed");
-
          for(std::string group_name : groups)
             {
+            std::unique_ptr<Timer> uncmp_timer = make_timer("OS2ECP uncompressed " + group_name);
+            std::unique_ptr<Timer> cmp_timer = make_timer("OS2ECP compressed " + group_name);
+
             const Botan::EC_Group ec_group(group_name);
 
             while(uncmp_timer->under(runtime) && cmp_timer->under(runtime))

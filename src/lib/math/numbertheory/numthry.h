@@ -81,8 +81,11 @@ BigInt BOTAN_PUBLIC_API(2,0) power_mod(const BigInt& b,
                                        const BigInt& m);
 
 /**
-* Compute the square root of x modulo a prime using the
-* Tonelli-Shanks algorithm
+* Compute the square root of x modulo a prime using the Tonelli-Shanks
+* algorithm. This algorithm is primarily used for EC point
+* decompression which takes only public inputs, as a consequence it is
+* not written to be constant-time and may leak side-channel information
+* about its arguments.
 *
 * @param x the input
 * @param p the prime

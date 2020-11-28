@@ -81,6 +81,21 @@ class DL_Group_Data final
          return monty_execute(*m_monty, k, max_k_bits);
          }
 
+      BigInt power_g_p_vartime(const BigInt& k) const
+         {
+         return monty_execute_vartime(*m_monty, k);
+         }
+
+      BigInt power_b_p(const BigInt& b, const BigInt& k, size_t max_k_bits) const
+         {
+         return monty_exp(m_monty_params, b, k, max_k_bits);
+         }
+
+      BigInt power_b_p_vartime(const BigInt& b, const BigInt& k) const
+         {
+         return monty_exp_vartime(m_monty_params, b, k);
+         }
+
       bool q_is_set() const { return m_q_bits > 0; }
 
       void assert_q_is_set(const std::string& function) const
@@ -355,7 +370,7 @@ bool DL_Group::verify_public_element(const BigInt& y) const
 
    if(q.is_zero() == false)
       {
-      if(power_mod(y, q, p) != 1)
+      if(data().power_b_p_vartime(y, q) != 1)
          return false;
       }
 
@@ -369,7 +384,7 @@ bool DL_Group::verify_element_pair(const BigInt& y, const BigInt& x) const
    if(y <= 1 || y >= p || x <= 1 || x >= p)
       return false;
 
-   if(y != power_g_p(x))
+   if(y != this->power_g_p(x))
       return false;
 
    return true;
@@ -396,13 +411,18 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng,
    const size_t test_prob = 128;
    const bool is_randomly_generated = (source() != DL_Group_Source::ExternalSource);
 
+   if(!is_prime(p, rng, test_prob, is_randomly_generated))
+      {
+      return false;
+      }
+
    if(q != 0)
       {
       if((p - 1) % q != 0)
          {
          return false;
          }
-      if(this->power_g_p(q) != 1)
+      if(data().power_g_p_vartime(q) != 1)
          {
          return false;
          }
@@ -411,10 +431,23 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng,
          return false;
          }
       }
-
-   if(!is_prime(p, rng, test_prob, is_randomly_generated))
+   else
       {
-      return false;
+      if(!from_builtin && !is_randomly_generated)
+         {
+         // If we got this p,g from some unknown source, try to verify
+         // that the group order is not too absurdly small.
+
+         const size_t upper_bound = strong ? 1000 : 100;
+
+         for(size_t i = 2; i != upper_bound; ++i)
+            {
+            if(data().power_g_p_vartime(i) == 1)
+               {
+               return false;
+               }
+            }
+         }
       }
 
    return true;
@@ -541,6 +574,11 @@ BigInt DL_Group::power_g_p(const BigInt& x) const
 BigInt DL_Group::power_g_p(const BigInt& x, size_t max_x_bits) const
    {
    return data().power_g_p(x, max_x_bits);
+   }
+
+BigInt DL_Group::power_b_p(const BigInt& b, const BigInt& x, size_t max_x_bits) const
+   {
+   return data().power_b_p(b, x, max_x_bits);
    }
 
 DL_Group_Source DL_Group::source() const

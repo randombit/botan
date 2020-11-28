@@ -30,7 +30,6 @@ class Montgomery_Exponentation_State
       std::shared_ptr<const Montgomery_Params> m_params;
       std::vector<Montgomery_Int> m_g;
       size_t m_window_bits;
-      bool m_const_time;
    };
 
 Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<const Montgomery_Params> params,
@@ -38,8 +37,7 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<c
                                                                size_t window_bits,
                                                                bool const_time) :
    m_params(params),
-   m_window_bits(window_bits == 0 ? 4 : window_bits),
-   m_const_time(const_time)
+   m_window_bits(window_bits == 0 ? 4 : window_bits)
    {
    BOTAN_ARG_CHECK(g < m_params->p(), "Montgomery base too big");
 
@@ -129,8 +127,6 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar, size
 
 BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scalar) const
    {
-   BOTAN_ASSERT_NOMSG(m_const_time == false);
-
    const size_t exp_nibbles = (scalar.bits() + m_window_bits - 1) / m_window_bits;
 
    secure_vector<word> ws;
