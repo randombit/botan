@@ -58,6 +58,7 @@ rdseed -> "-mrdseed"
 sha    -> "-msha"
 altivec -> "-maltivec"
 
+ppc64:vsx -> "-mvsx"
 ppc64:powercrypto -> "-mcrypto"
 ppc64:power9 -> "-mcpu=power9"
 
