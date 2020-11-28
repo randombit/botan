@@ -200,43 +200,35 @@ uint16_t choose_ciphersuite(
             continue;
             }
 
-         if(version.supports_negotiable_signature_algorithms())
+         const std::vector<Signature_Scheme> allowed =
+            policy.allowed_signature_schemes();
+
+         std::vector<Signature_Scheme> client_sig_methods =
+            client_hello.signature_schemes();
+
+         /*
+         Contrary to the wording of draft-ietf-tls-md5-sha1-deprecate we do
+         not enforce that clients do not offer support SHA-1 or MD5
+         signatures; we just ignore it.
+         */
+         bool we_support_some_hash_by_client = false;
+
+         for(Signature_Scheme scheme : client_sig_methods)
             {
-            const std::vector<Signature_Scheme> client_sig_methods =
-               client_hello.signature_schemes();
+            if(signature_scheme_is_known(scheme) == false)
+               continue;
 
-            /*
-            If the vector is empty (eg because the client did not send the
-            extension), then the loop will fail to find a match and we will
-            reject with a handshake failure.
-
-            The TLS v1.2 logic said that a client not sending the extension implicitly
-            supported SHA-1 but with draft-ietf-tls-md5-sha1-deprecate instead we
-            are removing support for SHA-1 signatures entirely.
-
-            Contrary to the wording of draft-ietf-tls-md5-sha1-deprecate we do
-            not enforce that clients do not offer support SHA-1 or MD5
-            signatures; we just ignore it.
-            */
-            bool we_support_some_hash_by_client = false;
-
-            for(Signature_Scheme scheme : client_sig_methods)
+            if(signature_algorithm_of_scheme(scheme) == suite.sig_algo() &&
+               policy.allowed_signature_hash(hash_function_of_scheme(scheme)))
                {
-               if(signature_scheme_is_known(scheme) == false)
-                  continue;
-
-               if(signature_algorithm_of_scheme(scheme) == suite.sig_algo() &&
-                  policy.allowed_signature_hash(hash_function_of_scheme(scheme)))
-                  {
-                  we_support_some_hash_by_client = true;
-                  }
+               we_support_some_hash_by_client = true;
                }
+            }
 
-            if(we_support_some_hash_by_client == false)
-               {
-               throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                   "Policy does not accept any hash function supported by client");
-               }
+         if(we_support_some_hash_by_client == false)
+            {
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                "Policy does not accept any hash function supported by client");
             }
          }
 
@@ -343,22 +335,12 @@ Protocol_Version select_version(const Botan::TLS::Policy& policy,
          {
          if(policy.allow_dtls12() && value_exists(supported_versions, Protocol_Version(Protocol_Version::DTLS_V12)))
             return Protocol_Version::DTLS_V12;
-#if defined(BOTAN_HAS_TLS_V10)
-         if(policy.allow_dtls10() && value_exists(supported_versions, Protocol_Version(Protocol_Version::DTLS_V10)))
-            return Protocol_Version::DTLS_V10;
-#endif
          throw TLS_Exception(Alert::PROTOCOL_VERSION, "No shared DTLS version");
          }
       else
          {
          if(policy.allow_tls12() && value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V12)))
             return Protocol_Version::TLS_V12;
-#if defined(BOTAN_HAS_TLS_V10)
-         if(policy.allow_tls11() && value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V11)))
-            return Protocol_Version::TLS_V11;
-         if(policy.allow_tls10() && value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V10)))
-            return Protocol_Version::TLS_V10;
-#endif
          throw TLS_Exception(Alert::PROTOCOL_VERSION, "No shared TLS version");
          }
       }
@@ -601,7 +583,7 @@ void Server::process_certificate_verify_msg(Server_Handshake_State& pending_stat
                                             Handshake_Type type,
                                             const std::vector<uint8_t>& contents)
    {
-   pending_state.client_verify(new Certificate_Verify(contents, pending_state.version()));
+   pending_state.client_verify(new Certificate_Verify(contents));
 
    const std::vector<X509_Certificate>& client_certs =
       pending_state.client_certs()->cert_chain();
@@ -956,8 +938,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
          new Certificate_Req(pending_state.handshake_io(),
                              pending_state.hash(),
                              policy(),
-                             client_auth_CAs,
-                             pending_state.version()));
+                             client_auth_CAs));
 
       /*
       SSLv3 allowed clients to skip the Certificate message entirely

@@ -54,24 +54,18 @@ uint8_t cert_type_name_to_code(const std::string& name)
 Certificate_Req::Certificate_Req(Handshake_IO& io,
                                  Handshake_Hash& hash,
                                  const Policy& policy,
-                                 const std::vector<X509_DN>& ca_certs,
-                                 Protocol_Version version) :
+                                 const std::vector<X509_DN>& ca_certs) :
    m_names(ca_certs),
    m_cert_key_types({ "RSA", "ECDSA", "DSA" })
    {
-   if(version.supports_negotiable_signature_algorithms())
-      {
-      m_schemes = policy.acceptable_signature_schemes();
-      }
-
+   m_schemes = policy.acceptable_signature_schemes();
    hash.update(io.send(*this));
    }
 
 /**
 * Deserialize a Certificate Request message
 */
-Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf,
-                                 Protocol_Version version)
+Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf)
    {
    if(buf.size() < 4)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
@@ -90,17 +84,14 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf,
       m_cert_key_types.emplace_back(cert_type_name);
       }
 
-   if(version.supports_negotiable_signature_algorithms())
+   const std::vector<uint8_t> algs = reader.get_range_vector<uint8_t>(2, 2, 65534);
+
+   if(algs.size() % 2 != 0)
+      throw Decoding_Error("Bad length for signature IDs in certificate request");
+
+   for(size_t i = 0; i != algs.size(); i += 2)
       {
-      const std::vector<uint8_t> algs = reader.get_range_vector<uint8_t>(2, 2, 65534);
-
-      if(algs.size() % 2 != 0)
-         throw Decoding_Error("Bad length for signature IDs in certificate request");
-
-      for(size_t i = 0; i != algs.size(); i += 2)
-         {
-         m_schemes.push_back(static_cast<Signature_Scheme>(make_uint16(algs[i], algs[i+1])));
-         }
+      m_schemes.push_back(static_cast<Signature_Scheme>(make_uint16(algs[i], algs[i+1])));
       }
 
    const uint16_t purported_size = reader.get_uint16_t();

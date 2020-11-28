@@ -45,24 +45,9 @@ bool Text_Policy::use_ecc_point_compression() const
    return get_bool("use_ecc_point_compression", Policy::use_ecc_point_compression());
    }
 
-bool Text_Policy::allow_tls10() const
-   {
-   return get_bool("allow_tls10", Policy::allow_tls10());
-   }
-
-bool Text_Policy::allow_tls11() const
-   {
-   return get_bool("allow_tls11", Policy::allow_tls11());
-   }
-
 bool Text_Policy::allow_tls12() const
    {
    return get_bool("allow_tls12", Policy::allow_tls12());
-   }
-
-bool Text_Policy::allow_dtls10() const
-   {
-   return get_bool("allow_dtls10", Policy::allow_dtls10());
    }
 
 bool Text_Policy::allow_dtls12() const

@@ -190,8 +190,6 @@ class TLS_All_Policy final : public Botan::TLS::Policy
          return { "ECDSA", "RSA", "DSA", "IMPLICIT" };
          }
 
-      bool allow_tls10() const override { return true; }
-      bool allow_tls11() const override { return true; }
       bool allow_tls12() const override { return true; }
    };
 

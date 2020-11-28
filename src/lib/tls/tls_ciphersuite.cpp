@@ -39,19 +39,11 @@ size_t Ciphersuite::nonce_bytes_from_handshake() const
 
 size_t Ciphersuite::nonce_bytes_from_record(Protocol_Version version) const
    {
+   BOTAN_UNUSED(version);
    switch(m_nonce_format)
       {
       case Nonce_Format::CBC_MODE:
-         {
-         if(version.supports_explicit_cbc_ivs())
-            {
-            return cipher_algo() == "3DES" ? 8 : 16;
-            }
-         else
-            {
-            return 0;
-            }
-         }
+         return cipher_algo() == "3DES" ? 8 : 16;
       case Nonce_Format::AEAD_IMPLICIT_4:
          return 8;
       case Nonce_Format::AEAD_XOR_12:
@@ -82,13 +74,7 @@ bool Ciphersuite::ecc_ciphersuite() const
 
 bool Ciphersuite::usable_in_version(Protocol_Version version) const
    {
-   if(!version.supports_aead_modes())
-      {
-      // Old versions do not support AEAD, or any MAC but SHA-1
-      if(mac_algo() != "SHA-1")
-         return false;
-      }
-
+   BOTAN_UNUSED(version);
    return true;
    }
 

@@ -40,7 +40,7 @@ TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir dir,
    m_tag_size = mac->output_length();
    m_block_size = cipher->block_size();
 
-   m_iv_size = version.supports_explicit_cbc_ivs() ? m_block_size : 0;
+   m_iv_size = m_block_size;
 
    m_is_datagram = version.is_datagram_protocol();
 

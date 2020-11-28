@@ -217,11 +217,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
 
    if(auth_method != Auth_Method::IMPLICIT)
       {
-      if(version.supports_negotiable_signature_algorithms())
-         {
-         m_scheme = static_cast<Signature_Scheme>(reader.get_uint16_t());
-         }
-
+      m_scheme = static_cast<Signature_Scheme>(reader.get_uint16_t());
       m_signature = reader.get_range<uint8_t>(2, 0, 65535);
       }
 

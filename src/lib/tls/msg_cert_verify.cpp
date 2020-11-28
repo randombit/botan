@@ -40,16 +40,11 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
 /*
 * Deserialize a Certificate Verify message
 */
-Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf,
-                                       Protocol_Version version)
+Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf)
    {
    TLS_Data_Reader reader("CertificateVerify", buf);
 
-   if(version.supports_negotiable_signature_algorithms())
-      {
-      m_scheme = static_cast<Signature_Scheme>(reader.get_uint16_t());
-      }
-
+   m_scheme = static_cast<Signature_Scheme>(reader.get_uint16_t());
    m_signature = reader.get_range<uint8_t>(2, 0, 65535);
    reader.assert_done();
    }
