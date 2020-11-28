@@ -90,6 +90,8 @@ class BOTAN_PUBLIC_API(2,0) GOST_3410_PrivateKey final :
                            const EC_Group& domain,
                            const BigInt& x = 0);
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       AlgorithmIdentifier pkcs8_algorithm_identifier() const override
          { return EC_PublicKey::algorithm_identifier(); }
 

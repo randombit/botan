@@ -313,6 +313,11 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
                         std::move(d1), std::move(d2), std::move(c));
    }
 
+std::unique_ptr<Public_Key> RSA_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new RSA_PublicKey(get_n(), get_e()));
+   }
+
 /*
 * Check Private RSA Parameters
 */

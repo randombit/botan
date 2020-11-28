@@ -22,6 +22,11 @@ std::string SM2_PublicKey::algo_name() const
    return "SM2";
    }
 
+std::unique_ptr<Public_Key> SM2_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new SM2_Signature_PublicKey(domain(), public_point()));
+   }
+
 bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng,
                                bool strong) const
    {

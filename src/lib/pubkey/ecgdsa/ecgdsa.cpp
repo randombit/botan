@@ -14,6 +14,11 @@
 
 namespace Botan {
 
+std::unique_ptr<Public_Key> ECGDSA_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new ECGDSA_PublicKey(domain(), public_point()));
+   }
+
 bool ECGDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
                                  bool strong) const
    {

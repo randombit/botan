@@ -536,6 +536,11 @@ class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
          set_key_data(generate(private_seed));
          }
 
+      std::unique_ptr<Public_Key> public_key() const override
+         {
+         throw Not_Implemented("Not possible to derive WOTS public key from private key");
+         }
+
       /**
        * Retrieves the i-th WOTS private key using pseudo random key
        * (re-)generation.

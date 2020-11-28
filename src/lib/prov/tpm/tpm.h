@@ -138,7 +138,7 @@ class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey final : public Private_Key
       /**
       * Returns a copy of the public key
       */
-      std::unique_ptr<Public_Key> public_key() const;
+      std::unique_ptr<Public_Key> public_key() const override;
 
       std::vector<uint8_t> export_blob() const;
 

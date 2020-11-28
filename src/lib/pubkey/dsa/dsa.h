@@ -74,6 +74,8 @@ class BOTAN_PUBLIC_API(2,0) DSA_PrivateKey final : public DSA_PublicKey,
                      const DL_Group& group,
                      const BigInt& private_key = 0);
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<PK_Ops::Signature>

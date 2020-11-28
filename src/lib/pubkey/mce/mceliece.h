@@ -116,6 +116,8 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_
 
       secure_vector<uint8_t> private_key_bits() const override;
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       bool operator==(const McEliece_PrivateKey & other) const;
 
       bool operator!=(const McEliece_PrivateKey& other) const { return !(*this == other); }

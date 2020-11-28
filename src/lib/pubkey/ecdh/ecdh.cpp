@@ -17,6 +17,11 @@
 
 namespace Botan {
 
+std::unique_ptr<Public_Key> ECDH_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new ECDH_PublicKey(domain(), public_point()));
+   }
+
 namespace {
 
 /**

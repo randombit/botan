@@ -66,6 +66,11 @@ DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
       }
    }
 
+std::unique_ptr<Public_Key> DH_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new DH_PublicKey(get_group(), get_y()));
+   }
+
 /*
 * Return the public value for key agreement
 */

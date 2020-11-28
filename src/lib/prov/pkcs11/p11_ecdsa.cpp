@@ -52,6 +52,11 @@ secure_vector<uint8_t> PKCS11_ECDSA_PrivateKey::private_key_bits() const
    return export_key().private_key_bits();
    }
 
+std::unique_ptr<Public_Key> PKCS11_ECDSA_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new ECDSA_PublicKey(domain(), public_point()));
+   }
+
 namespace {
 
 class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature

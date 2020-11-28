@@ -292,6 +292,13 @@ bool McEliece_PrivateKey::operator==(const McEliece_PrivateKey & other) const
    return true;
    }
 
+std::unique_ptr<Public_Key> McEliece_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new McEliece_PublicKey(
+                                         get_public_matrix(),
+                                         get_t(), get_code_length()));
+   }
+
 bool McEliece_PublicKey::operator==(const McEliece_PublicKey& other) const
    {
    if(m_public_matrix != other.m_public_matrix)

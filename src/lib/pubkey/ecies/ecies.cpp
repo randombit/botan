@@ -40,6 +40,11 @@ class ECIES_PrivateKey final : public EC_PrivateKey, public PK_Key_Agreement_Key
          return "ECIES";
          }
 
+      std::unique_ptr<Public_Key> public_key() const override
+         {
+         return m_key.public_key();
+         }
+
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,
                                  const std::string& params,

@@ -83,6 +83,8 @@ class BOTAN_PUBLIC_API(2,0) ECGDSA_PrivateKey final : public ECGDSA_PublicKey,
                        const BigInt& x = 0) :
          EC_PrivateKey(rng, domain, x, true) {}
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
       std::unique_ptr<PK_Ops::Signature>

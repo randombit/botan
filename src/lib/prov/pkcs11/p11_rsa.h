@@ -200,6 +200,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
 
       secure_vector<uint8_t> private_key_bits() const override;
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,
                               const std::string& params,

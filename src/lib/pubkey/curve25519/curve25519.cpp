@@ -87,6 +87,11 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
    curve25519_basepoint(m_public.data(), m_private.data());
    }
 
+std::unique_ptr<Public_Key> Curve25519_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new Curve25519_PublicKey(public_value()));
+   }
+
 secure_vector<uint8_t> Curve25519_PrivateKey::private_key_bits() const
    {
    return DER_Encoder().encode(m_private, OCTET_STRING).get_contents();

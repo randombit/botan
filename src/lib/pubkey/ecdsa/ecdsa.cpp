@@ -109,6 +109,11 @@ uint8_t ECDSA_PublicKey::recovery_param(const std::vector<uint8_t>& msg,
    throw Internal_Error("Could not determine ECDSA recovery parameter");
    }
 
+std::unique_ptr<Public_Key> ECDSA_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new ECDSA_PublicKey(domain(), public_point()));
+   }
+
 bool ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
                                  bool strong) const
    {

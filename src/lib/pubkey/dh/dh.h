@@ -70,6 +70,8 @@ class BOTAN_PUBLIC_API(2,0) DH_PrivateKey final : public DH_PublicKey,
       DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& grp,
                     const BigInt& x = 0);
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,
                                  const std::string& params,
