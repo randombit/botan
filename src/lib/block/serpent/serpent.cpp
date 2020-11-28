@@ -11,7 +11,7 @@
 #include <botan/internal/serpent_sbox.h>
 
 #if defined(BOTAN_HAS_SERPENT_SIMD) || defined(BOTAN_HAS_SERPENT_AVX2)
-  #include <botan/cpuid.h>
+  #include <botan/internal/cpuid.h>
 #endif
 
 namespace Botan {

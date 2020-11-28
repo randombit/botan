@@ -18,7 +18,7 @@
 
 // Always available:
 #include <botan/entropy_src.h>
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/timer.h>
 #include <botan/version.h>

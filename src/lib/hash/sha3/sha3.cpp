@@ -9,7 +9,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/exceptn.h>
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 
 namespace Botan {
 

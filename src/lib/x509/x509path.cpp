@@ -20,7 +20,7 @@
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
   #include <future>
-  #include <botan/http_util.h>
+  #include <botan/internal/http_util.h>
 #endif
 
 namespace Botan {

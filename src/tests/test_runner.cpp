@@ -9,7 +9,7 @@
 
 #include <botan/version.h>
 #include <botan/internal/loadstor.h>
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/thread_pool.h>

@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>
 

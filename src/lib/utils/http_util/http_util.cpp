@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/http_util.h>
+#include <botan/internal/http_util.h>
 #include <botan/internal/parsing.h>
 #include <botan/hex.h>
 #include <botan/internal/os_utils.h>

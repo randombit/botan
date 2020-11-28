@@ -13,8 +13,6 @@
 #include <string>
 #include <iosfwd>
 
-BOTAN_FUTURE_INTERNAL_HEADER(cpuid.h)
-
 namespace Botan {
 
 /**

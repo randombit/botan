@@ -8,7 +8,7 @@
 #include <botan/internal/sha160.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 
 namespace Botan {
 

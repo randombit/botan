@@ -8,14 +8,14 @@
 #include "cli.h"
 
 #include <botan/version.h>
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/os_utils.h>
 #include <sstream>
 #include <iomanip>
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
-   #include <botan/http_util.h>
+   #include <botan/internal/http_util.h>
 #endif
 
 #if defined(BOTAN_HAS_UUID)

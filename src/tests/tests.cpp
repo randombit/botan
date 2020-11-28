@@ -13,7 +13,7 @@
 #include <botan/internal/parsing.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/stl_util.h>
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/bigint.h>

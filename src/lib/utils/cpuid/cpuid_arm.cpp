@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
 
