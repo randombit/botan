@@ -1,5 +1,5 @@
 /*
-* TLS v1.0 and v1.2 PRFs
+* TLSv1.2 PRF
 * (C) 2004-2010 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -9,12 +9,6 @@
 #include <botan/exceptn.h>
 
 namespace Botan {
-
-TLS_PRF::TLS_PRF() :
-   TLS_PRF(MessageAuthenticationCode::create_or_throw("HMAC(MD5)"),
-           MessageAuthenticationCode::create_or_throw("HMAC(SHA-1)"))
-   {
-   }
 
 namespace {
 
@@ -57,25 +51,6 @@ void P_hash(uint8_t out[], size_t out_len,
    }
 
 }
-
-void TLS_PRF::kdf(uint8_t key[], size_t key_len,
-                  const uint8_t secret[], size_t secret_len,
-                  const uint8_t salt[], size_t salt_len,
-                  const uint8_t label[], size_t label_len) const
-   {
-   const size_t S1_len = (secret_len + 1) / 2,
-                S2_len = (secret_len + 1) / 2;
-   const uint8_t* S1 = secret;
-   const uint8_t* S2 = secret + (secret_len - S2_len);
-   secure_vector<uint8_t> msg;
-
-   msg.reserve(label_len + salt_len);
-   msg += std::make_pair(label, label_len);
-   msg += std::make_pair(salt, salt_len);
-
-   P_hash(key, key_len, *m_hmac_md5,  S1, S1_len, msg.data(), msg.size());
-   P_hash(key, key_len, *m_hmac_sha1, S2, S2_len, msg.data(), msg.size());
-   }
 
 void TLS_12_PRF::kdf(uint8_t key[], size_t key_len,
                      const uint8_t secret[], size_t secret_len,
