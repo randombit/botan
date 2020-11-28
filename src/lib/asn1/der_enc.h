@@ -58,7 +58,8 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
       * contructor of DER_Encoder where the output will be placed. This
       * avoids several unecessary copies.
       */
-      std::vector<uint8_t> BOTAN_DEPRECATED("Use DER_Encoder(vector) instead") get_contents_unlocked();
+      BOTAN_DEPRECATED("Use DER_Encoder(vector) instead")
+      std::vector<uint8_t> get_contents_unlocked();
 
       DER_Encoder& start_cons(ASN1_Tag type_tag,
                               ASN1_Tag class_tag = UNIVERSAL);
