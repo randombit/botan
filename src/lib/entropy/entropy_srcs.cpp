@@ -16,16 +16,8 @@
   #include <botan/processor_rng.h>
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
-  #include <botan/internal/rdrand.h>
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
   #include <botan/internal/rdseed.h>
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_DARN)
-  #include <botan/internal/p9_darn.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
