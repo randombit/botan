@@ -68,8 +68,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       SymmetricKey psk;
 
-      if(kex_algo == Kex_Algo::DHE_PSK ||
-         kex_algo == Kex_Algo::ECDHE_PSK)
+      if(kex_algo == Kex_Algo::ECDHE_PSK)
          {
          std::string identity_hint = reader.get_string(2, 0, 65535);
 
@@ -81,8 +80,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          psk = creds.psk("tls-client", hostname, psk_identity);
          }
 
-      if(kex_algo == Kex_Algo::DH ||
-         kex_algo == Kex_Algo::DHE_PSK)
+      if(kex_algo == Kex_Algo::DH)
          {
          const std::vector<uint8_t> modulus = reader.get_range<uint8_t>(2, 1, 65535);
          const std::vector<uint8_t> generator = reader.get_range<uint8_t>(2, 1, 65535);
@@ -293,7 +291,6 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
          }
 #endif
       else if(kex_algo == Kex_Algo::DH ||
-              kex_algo == Kex_Algo::DHE_PSK ||
               kex_algo == Kex_Algo::ECDH ||
               kex_algo == Kex_Algo::ECDHE_PSK)
          {
@@ -326,8 +323,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             if(ka_key->algo_name() == "DH")
                shared_secret = CT::strip_leading_zeros(shared_secret);
 
-            if(kex_algo == Kex_Algo::DHE_PSK ||
-               kex_algo == Kex_Algo::ECDHE_PSK)
+            if(kex_algo == Kex_Algo::ECDHE_PSK)
                {
                append_tls_length_value(m_pre_master, shared_secret, 2);
                append_tls_length_value(m_pre_master, psk.bits_of(), 2);

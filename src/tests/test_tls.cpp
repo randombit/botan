@@ -465,7 +465,6 @@ class Test_TLS_Algo_Strings : public Test
             Botan::TLS::Kex_Algo::ECDH,
             Botan::TLS::Kex_Algo::CECPQ1,
             Botan::TLS::Kex_Algo::PSK,
-            Botan::TLS::Kex_Algo::DHE_PSK,
             Botan::TLS::Kex_Algo::ECDHE_PSK
             });
 

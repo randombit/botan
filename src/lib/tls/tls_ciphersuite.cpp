@@ -70,7 +70,6 @@ bool Ciphersuite::is_scsv(uint16_t suite)
 bool Ciphersuite::psk_ciphersuite() const
    {
    return kex_method() == Kex_Algo::PSK ||
-          kex_method() == Kex_Algo::DHE_PSK ||
           kex_method() == Kex_Algo::ECDHE_PSK;
    }
 
@@ -205,7 +204,7 @@ bool Ciphersuite::is_usable() const
       return false;
 #endif
       }
-   else if(kex_method() == Kex_Algo::DH || kex_method() == Kex_Algo::DHE_PSK)
+   else if(kex_method() == Kex_Algo::DH)
       {
 #if !defined(BOTAN_HAS_DIFFIE_HELLMAN)
       return false;

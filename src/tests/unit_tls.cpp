@@ -911,11 +911,7 @@ class TLS_Unit_Tests final : public Test
          test_modern_versions("AES-128/CCM-8 PSK", results, *client_ses, *server_ses, *creds, "PSK", "AES-128/CCM(8)");
 #endif
 
-#if defined(BOTAN_HAS_TLS_CBC)
-         // For whatever reason no (EC)DHE_PSK GCM ciphersuites are defined
-         test_modern_versions("AES-128 ECDHE_PSK", results, *client_ses, *server_ses, *creds, "ECDHE_PSK", "AES-128", "SHA-256");
-         test_modern_versions("AES-128 DHE_PSK", results, *client_ses, *server_ses, *creds, "DHE_PSK", "AES-128", "SHA-1");
-#endif
+         test_modern_versions("AES-128/GCM ECDHE_PSK", results, *client_ses, *server_ses, *creds, "ECDHE_PSK", "AES-128/GCM");
 
          // Test with a custom curve
 
