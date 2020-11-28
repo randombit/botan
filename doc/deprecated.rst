@@ -92,8 +92,6 @@ Deprecated Headers
   the library API and most are just sufficient for what the library needs
   to implement other functionality.
   ``compiler.h``,
-  ``cpuid.h``,
-  ``http_util.h``,
   ``uuid.h``,
 
 Other API deprecations
@@ -104,9 +102,6 @@ Other API deprecations
   instead a truncated key. In a future major release, instead if KDF
   is called with a length larger than it supports an exception will be
   thrown.
-
-- The TLS constructors taking ``std::function`` for callbacks. Instead
-  use the ``TLS::Callbacks`` interface.
 
 - The ``Buffered_Computation`` base class. In a future release the
   class will be removed, and all of member functions instead declared
