@@ -78,16 +78,20 @@
 */
 #if !defined(BOTAN_NO_DEPRECATED_WARNINGS) && !defined(BOTAN_IS_BEING_BUILT) && !defined(BOTAN_AMALGAMATION_H_)
 
-  #define BOTAN_DEPRECATED(msg) [[deprecated(msg)]]
+  #if defined(__cplusplus)
+    #define BOTAN_DEPRECATED(msg) [[deprecated(msg)]]
+  #elif defined(__clang__) || defined(__GNUC__)
+    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
+  #elif defined(_MSC_VER)
+    #define BOTAN_DEPRECATED(msg) __declspec(deprecated(msg))
+  #endif
 
   #if defined(__clang__)
     #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("message \"this header is deprecated\"")
     #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) _Pragma("message \"this header will be made internal in the future\"")
-
   #elif defined(_MSC_VER)
     #define BOTAN_DEPRECATED_HEADER(hdr) __pragma(message("this header is deprecated"))
     #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) __pragma(message("this header will be made internal in the future"))
-
   #elif defined(__GNUC__)
     #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("GCC warning \"this header is deprecated\"")
     #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) _Pragma("GCC warning \"this header will be made internal in the future\"")
