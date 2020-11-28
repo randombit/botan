@@ -8,31 +8,39 @@
 
 #include <botan/internal/hkdf.h>
 #include <botan/internal/loadstor.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
-size_t HKDF::kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const
+void HKDF::kdf(uint8_t key[], size_t key_len,
+               const uint8_t secret[], size_t secret_len,
+               const uint8_t salt[], size_t salt_len,
+               const uint8_t label[], size_t label_len) const
    {
    HKDF_Extract extract(m_prf->clone());
    HKDF_Expand expand(m_prf->clone());
    secure_vector<uint8_t> prk(m_prf->output_length());
 
    extract.kdf(prk.data(), prk.size(), secret, secret_len, salt, salt_len, nullptr, 0);
-   return expand.kdf(key, key_len, prk.data(), prk.size(), nullptr, 0, label, label_len);
+   expand.kdf(key, key_len, prk.data(), prk.size(), nullptr, 0, label, label_len);
    }
 
-size_t HKDF_Extract::kdf(uint8_t key[], size_t key_len,
-                         const uint8_t secret[], size_t secret_len,
-                         const uint8_t salt[], size_t salt_len,
-                         const uint8_t[], size_t) const
+void HKDF_Extract::kdf(uint8_t key[], size_t key_len,
+                       const uint8_t secret[], size_t secret_len,
+                       const uint8_t salt[], size_t salt_len,
+                       const uint8_t[], size_t) const
    {
-   secure_vector<uint8_t> prk;
+   if(key_len == 0)
+      return;
+
+   const size_t prf_output_len = m_prf->output_length();
+
+   if(key_len > prf_output_len)
+      throw Invalid_Argument("HKDF-Extract maximum output length exceeeded");
+
    if(salt_len == 0)
       {
-      m_prf->set_key(std::vector<uint8_t>(m_prf->output_length()));
+      m_prf->set_key(std::vector<uint8_t>(prf_output_len));
       }
    else
       {
@@ -40,26 +48,39 @@ size_t HKDF_Extract::kdf(uint8_t key[], size_t key_len,
       }
 
    m_prf->update(secret, secret_len);
-   m_prf->final(prk);
 
-   const size_t written = std::min(prk.size(), key_len);
-   copy_mem(&key[0], prk.data(), written);
-   // FIXME: returns truncated output
-   return written;
+   if(key_len == prf_output_len)
+      {
+      m_prf->final(key);
+      }
+   else
+      {
+      secure_vector<uint8_t> prk;
+      m_prf->final(prk);
+      copy_mem(&key[0], prk.data(), key_len);
+      }
    }
 
-size_t HKDF_Expand::kdf(uint8_t key[], size_t key_len,
-                        const uint8_t secret[], size_t secret_len,
-                        const uint8_t salt[], size_t salt_len,
-                        const uint8_t label[], size_t label_len) const
+void HKDF_Expand::kdf(uint8_t key[], size_t key_len,
+                      const uint8_t secret[], size_t secret_len,
+                      const uint8_t salt[], size_t salt_len,
+                      const uint8_t label[], size_t label_len) const
    {
+   if(key_len == 0)
+      return;
+
+   const size_t blocks_required = key_len / m_prf->output_length();
+
+   if(blocks_required >= 0xFF)
+      throw Invalid_Argument("HKDF-Expand maximum output length exceeeded");
+
    m_prf->set_key(secret, secret_len);
 
    uint8_t counter = 1;
    secure_vector<uint8_t> h;
    size_t offset = 0;
 
-   while(offset != key_len && counter != 0)
+   while(offset != key_len)
       {
       m_prf->update(h);
       m_prf->update(label, label_len);
@@ -71,9 +92,6 @@ size_t HKDF_Expand::kdf(uint8_t key[], size_t key_len,
       copy_mem(&key[offset], h.data(), written);
       offset += written;
       }
-
-   // FIXME: returns truncated output
-   return offset;
    }
 
 secure_vector<uint8_t>

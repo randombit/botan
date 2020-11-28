@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-size_t SP800_108_Counter::kdf(uint8_t key[], size_t key_len,
+void SP800_108_Counter::kdf(uint8_t key[], size_t key_len,
                               const uint8_t secret[], size_t secret_len,
                               const uint8_t salt[], size_t salt_len,
                               const uint8_t label[], size_t label_len) const
@@ -55,11 +55,9 @@ size_t SP800_108_Counter::kdf(uint8_t key[], size_t key_len,
       ++counter;
       BOTAN_ASSERT(counter != 0, "No counter overflow");
       }
-
-   return key_len;
    }
 
-size_t SP800_108_Feedback::kdf(uint8_t key[], size_t key_len,
+void SP800_108_Feedback::kdf(uint8_t key[], size_t key_len,
                                const uint8_t secret[], size_t secret_len,
                                const uint8_t salt[], size_t salt_len,
                                const uint8_t label[], size_t label_len) const
@@ -105,11 +103,9 @@ size_t SP800_108_Feedback::kdf(uint8_t key[], size_t key_len,
 
       BOTAN_ASSERT(counter != 0, "No overflow");
       }
-
-   return key_len;
    }
 
-size_t SP800_108_Pipeline::kdf(uint8_t key[], size_t key_len,
+void SP800_108_Pipeline::kdf(uint8_t key[], size_t key_len,
                                const uint8_t secret[], size_t secret_len,
                                const uint8_t salt[], size_t salt_len,
                                const uint8_t label[], size_t label_len) const
@@ -164,7 +160,5 @@ size_t SP800_108_Pipeline::kdf(uint8_t key[], size_t key_len,
 
       BOTAN_ASSERT(counter != 0, "No overflow");
       }
-
-   return key_len;
    }
 }

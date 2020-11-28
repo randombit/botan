@@ -58,10 +58,10 @@ void P_hash(uint8_t out[], size_t out_len,
 
 }
 
-size_t TLS_PRF::kdf(uint8_t key[], size_t key_len,
-                    const uint8_t secret[], size_t secret_len,
-                    const uint8_t salt[], size_t salt_len,
-                    const uint8_t label[], size_t label_len) const
+void TLS_PRF::kdf(uint8_t key[], size_t key_len,
+                  const uint8_t secret[], size_t secret_len,
+                  const uint8_t salt[], size_t salt_len,
+                  const uint8_t label[], size_t label_len) const
    {
    const size_t S1_len = (secret_len + 1) / 2,
                 S2_len = (secret_len + 1) / 2;
@@ -75,13 +75,12 @@ size_t TLS_PRF::kdf(uint8_t key[], size_t key_len,
 
    P_hash(key, key_len, *m_hmac_md5,  S1, S1_len, msg.data(), msg.size());
    P_hash(key, key_len, *m_hmac_sha1, S2, S2_len, msg.data(), msg.size());
-   return key_len;
    }
 
-size_t TLS_12_PRF::kdf(uint8_t key[], size_t key_len,
-                       const uint8_t secret[], size_t secret_len,
-                       const uint8_t salt[], size_t salt_len,
-                       const uint8_t label[], size_t label_len) const
+void TLS_12_PRF::kdf(uint8_t key[], size_t key_len,
+                     const uint8_t secret[], size_t secret_len,
+                     const uint8_t salt[], size_t salt_len,
+                     const uint8_t label[], size_t label_len) const
    {
    secure_vector<uint8_t> msg;
 
@@ -90,7 +89,6 @@ size_t TLS_12_PRF::kdf(uint8_t key[], size_t key_len,
    msg += std::make_pair(salt, salt_len);
 
    P_hash(key, key_len, *m_mac, secret, secret_len, msg.data(), msg.size());
-   return key_len;
    }
 
 }

@@ -40,7 +40,7 @@ class SP800_108_Counter final : public KDF
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      size_t kdf(uint8_t key[], size_t key_len,
+      void kdf(uint8_t key[], size_t key_len,
                  const uint8_t secret[], size_t secret_len,
                  const uint8_t salt[], size_t salt_len,
                  const uint8_t label[], size_t label_len) const override;
@@ -80,7 +80,7 @@ class SP800_108_Feedback final : public KDF
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      size_t kdf(uint8_t key[], size_t key_len,
+      void kdf(uint8_t key[], size_t key_len,
                  const uint8_t secret[], size_t secret_len,
                  const uint8_t salt[], size_t salt_len,
                  const uint8_t label[], size_t label_len) const override;
@@ -117,7 +117,7 @@ class SP800_108_Pipeline final : public KDF
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      size_t kdf(uint8_t key[], size_t key_len,
+      void kdf(uint8_t key[], size_t key_len,
                  const uint8_t secret[], size_t secret_len,
                  const uint8_t salt[], size_t salt_len,
                  const uint8_t label[], size_t label_len) const override;
