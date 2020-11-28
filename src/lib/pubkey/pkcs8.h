@@ -11,13 +11,13 @@
 #include <botan/pk_keys.h>
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
+#include <botan/data_src.h>
 #include <functional>
 #include <chrono>
 #include <memory>
 
 namespace Botan {
 
-class DataSource;
 class RandomNumberGenerator;
 
 /**
@@ -40,7 +40,10 @@ namespace PKCS8 {
 * @param key the private key to encode
 * @return BER encoded key
 */
-BOTAN_PUBLIC_API(2,0) secure_vector<uint8_t> BER_encode(const Private_Key& key);
+inline secure_vector<uint8_t> BER_encode(const Private_Key& key)
+   {
+   return key.private_key_info();
+   }
 
 /**
 * Get a string containing a PEM encoded private key.
@@ -180,76 +183,6 @@ PEM_encode_encrypted_pbkdf_msec(const Private_Key& key,
 /**
 * Load an encrypted key from a data source.
 * @param source the data source providing the encoded key
-* @param rng ignored for compatibility
-* @param get_passphrase a function that returns passphrases
-* @return loaded private key object
-*/
-BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
-                                            RandomNumberGenerator& rng,
-                                            std::function<std::string ()> get_passphrase);
-
-/** Load an encrypted key from a data source.
-* @param source the data source providing the encoded key
-* @param rng ignored for compatibility
-* @param pass the passphrase to decrypt the key
-* @return loaded private key object
-*/
-BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
-                                            RandomNumberGenerator& rng,
-                                            const std::string& pass);
-
-/** Load an unencrypted key from a data source.
-* @param source the data source providing the encoded key
-* @param rng ignored for compatibility
-* @return loaded private key object
-*/
-BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
-                                            RandomNumberGenerator& rng);
-
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-/**
-* Load an encrypted key from a file.
-* @param filename the path to the file containing the encoded key
-* @param rng ignored for compatibility
-* @param get_passphrase a function that returns passphrases
-* @return loaded private key object
-*/
-BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
-                                            RandomNumberGenerator& rng,
-                                            std::function<std::string ()> get_passphrase);
-
-/** Load an encrypted key from a file.
-* @param filename the path to the file containing the encoded key
-* @param rng ignored for compatibility
-* @param pass the passphrase to decrypt the key
-* @return loaded private key object
-*/
-BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
-                                            RandomNumberGenerator& rng,
-                                            const std::string& pass);
-
-/** Load an unencrypted key from a file.
-* @param filename the path to the file containing the encoded key
-* @param rng ignored for compatibility
-* @return loaded private key object
-*/
-BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
-                                            RandomNumberGenerator& rng);
-#endif
-
-/**
-* Copy an existing encoded key object.
-* @param key the key to copy
-* @param rng ignored for compatibility
-* @return new copy of the key
-*/
-BOTAN_PUBLIC_API(2,0) Private_Key* copy_key(const Private_Key& key,
-                                            RandomNumberGenerator& rng);
-
-
-/**
-* Load an encrypted key from a data source.
-* @param source the data source providing the encoded key
 * @param get_passphrase a function that returns passphrases
 * @return loaded private key object
 */
@@ -278,8 +211,122 @@ std::unique_ptr<Private_Key> load_key(DataSource& source);
 * @param key the key to copy
 * @return new copy of the key
 */
-BOTAN_PUBLIC_API(2,3)
-std::unique_ptr<Private_Key> copy_key(const Private_Key& key);
+inline std::unique_ptr<Private_Key> copy_key(const Private_Key& key)
+   {
+   DataSource_Memory source(key.private_key_info());
+   return PKCS8::load_key(source);
+   }
+
+// Deprecated functions follow
+
+/**
+* Load an encrypted key from a data source.
+* @param source the data source providing the encoded key
+* @param rng ignored for compatibility
+* @param get_passphrase a function that returns passphrases
+* @return loaded private key object
+*/
+BOTAN_DEPRECATED("Use version that doesn't take an RNG")
+inline Private_Key* load_key(DataSource& source,
+                             RandomNumberGenerator& rng,
+                             std::function<std::string ()> get_passphrase)
+   {
+   BOTAN_UNUSED(rng);
+   return PKCS8::load_key(source, get_passphrase).release();
+   }
+
+/** Load an encrypted key from a data source.
+* @param source the data source providing the encoded key
+* @param rng ignored for compatibility
+* @param pass the passphrase to decrypt the key
+* @return loaded private key object
+*/
+BOTAN_DEPRECATED("Use version that doesn't take an RNG")
+inline Private_Key* load_key(DataSource& source,
+                             RandomNumberGenerator& rng,
+                             const std::string& pass)
+   {
+   BOTAN_UNUSED(rng);
+   return PKCS8::load_key(source, pass).release();
+   }
+
+/** Load an unencrypted key from a data source.
+* @param source the data source providing the encoded key
+* @param rng ignored for compatibility
+* @return loaded private key object
+*/
+BOTAN_DEPRECATED("Use version that doesn't take an RNG")
+inline Private_Key* load_key(DataSource& source,
+                             RandomNumberGenerator& rng)
+   {
+   BOTAN_UNUSED(rng);
+   return PKCS8::load_key(source).release();
+   }
+
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+/**
+* Load an encrypted key from a file.
+* @param filename the path to the file containing the encoded key
+* @param rng ignored for compatibility
+* @param get_passphrase a function that returns passphrases
+* @return loaded private key object
+*/
+BOTAN_DEPRECATED("Use DataSource_Stream and another load_key variant")
+inline Private_Key* load_key(const std::string& filename,
+                             RandomNumberGenerator& rng,
+                             std::function<std::string ()> get_passphrase)
+   {
+   BOTAN_UNUSED(rng);
+   DataSource_Stream in(filename);
+   return PKCS8::load_key(in, get_passphrase).release();
+   }
+
+/** Load an encrypted key from a file.
+* @param filename the path to the file containing the encoded key
+* @param rng ignored for compatibility
+* @param pass the passphrase to decrypt the key
+* @return loaded private key object
+*/
+BOTAN_DEPRECATED("Use DataSource_Stream and another load_key variant")
+inline Private_Key* load_key(const std::string& filename,
+                             RandomNumberGenerator& rng,
+                             const std::string& pass)
+   {
+   BOTAN_UNUSED(rng);
+   DataSource_Stream in(filename);
+   // We need to use bind rather than a lambda capturing `pass` here in order to avoid a Clang 8 bug.
+   // See https://github.com/randombit/botan/issues/2255.
+   return PKCS8::load_key(in, std::bind([](const std::string p) { return p; }, pass)).release();
+   }
+
+/** Load an unencrypted key from a file.
+* @param filename the path to the file containing the encoded key
+* @param rng ignored for compatibility
+* @return loaded private key object
+*/
+BOTAN_DEPRECATED("Use DataSource_Stream and another load_key variant")
+inline Private_Key* load_key(const std::string& filename,
+                             RandomNumberGenerator& rng)
+   {
+   BOTAN_UNUSED(rng);
+   DataSource_Stream in(filename);
+   return PKCS8::load_key(in).release();
+   }
+#endif
+
+/**
+* Copy an existing encoded key object.
+* @param key the key to copy
+* @param rng ignored for compatibility
+* @return new copy of the key
+*/
+BOTAN_DEPRECATED("Use version that doesn't take an RNG")
+inline Private_Key* copy_key(const Private_Key& key,
+                             RandomNumberGenerator& rng)
+   {
+   BOTAN_UNUSED(rng);
+   return PKCS8::copy_key(key).release();
+   }
 
 }
 

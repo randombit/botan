@@ -16,12 +16,6 @@ namespace Botan {
 
 namespace X509 {
 
-std::vector<uint8_t> BER_encode(const Public_Key& key)
-   {
-   // keeping it around for compat
-   return key.subject_public_key();
-   }
-
 /*
 * PEM encode a X.509 public key
 */
@@ -70,35 +64,6 @@ Public_Key* load_key(DataSource& source)
       {
       throw Decoding_Error("X.509 public key decoding", e);
       }
-   }
-
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-/*
-* Extract a public key and return it
-*/
-Public_Key* load_key(const std::string& fsname)
-   {
-   DataSource_Stream source(fsname, true);
-   return X509::load_key(source);
-   }
-#endif
-
-/*
-* Extract a public key and return it
-*/
-Public_Key* load_key(const std::vector<uint8_t>& mem)
-   {
-   DataSource_Memory source(mem);
-   return X509::load_key(source);
-   }
-
-/*
-* Make a copy of this public key
-*/
-Public_Key* copy_key(const Public_Key& key)
-   {
-   DataSource_Memory source(PEM_encode(key));
-   return X509::load_key(source);
    }
 
 }
