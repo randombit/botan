@@ -10,7 +10,7 @@
    #include <botan/internal/simd_32.h>
    #include <botan/internal/bswap.h>
    #include <botan/internal/rotate.h>
-   #include <botan/cpuid.h>
+   #include <botan/internal/cpuid.h>
    #include <botan/internal/loadstor.h>
 #endif
 

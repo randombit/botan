@@ -19,7 +19,7 @@
 #include <botan/internal/aria.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 
 namespace Botan {
 

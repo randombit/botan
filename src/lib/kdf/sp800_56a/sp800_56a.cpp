@@ -7,7 +7,7 @@
 */
 
 #include <botan/internal/sp800_56a.h>
-#include <botan/scan_name.h>
+#include <botan/internal/scan_name.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

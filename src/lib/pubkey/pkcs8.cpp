@@ -12,7 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
-#include <botan/scan_name.h>
+#include <botan/internal/scan_name.h>
 #include <botan/pk_algs.h>
 
 #if defined(BOTAN_HAS_PKCS5_PBES2)

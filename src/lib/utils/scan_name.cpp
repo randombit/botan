@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/scan_name.h>
+#include <botan/internal/scan_name.h>
 #include <botan/internal/parsing.h>
 #include <botan/exceptn.h>
 

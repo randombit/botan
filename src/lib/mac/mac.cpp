@@ -7,7 +7,7 @@
 
 #include <botan/mac.h>
 #include <botan/exceptn.h>
-#include <botan/scan_name.h>
+#include <botan/internal/scan_name.h>
 #include <botan/mem_ops.h>
 
 #if defined(BOTAN_HAS_CMAC)

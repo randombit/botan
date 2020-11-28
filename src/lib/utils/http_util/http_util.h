@@ -16,8 +16,6 @@
 #include <functional>
 #include <chrono>
 
-BOTAN_FUTURE_INTERNAL_HEADER(http_util.h)
-
 namespace Botan {
 
 namespace HTTP {

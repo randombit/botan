@@ -7,7 +7,7 @@
 
 #include <botan/internal/idea.h>
 #include <botan/internal/loadstor.h>
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {

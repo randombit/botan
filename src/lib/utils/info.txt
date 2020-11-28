@@ -32,6 +32,7 @@ parsing.h
 rotate.h
 rounding.h
 safeint.h
+scan_name.h
 stl_util.h
 timer.h
 </header:internal>

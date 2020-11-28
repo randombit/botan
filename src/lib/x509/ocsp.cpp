@@ -16,7 +16,7 @@
 #include <botan/internal/parsing.h>
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
-  #include <botan/http_util.h>
+  #include <botan/internal/http_util.h>
 #endif
 
 namespace Botan {

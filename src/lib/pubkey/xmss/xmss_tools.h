@@ -8,7 +8,7 @@
 #ifndef BOTAN_XMSS_TOOLS_H_
 #define BOTAN_XMSS_TOOLS_H_
 
-#include <botan/cpuid.h>
+#include <botan/internal/cpuid.h>
 #include <botan/secmem.h>
 #include <iterator>
 #include <type_traits>
