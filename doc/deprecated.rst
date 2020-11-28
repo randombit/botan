@@ -46,7 +46,7 @@ Deprecated Functionality
 This section lists cryptographic functionality which will be removed
 in a future major release.
 
-- Block cipher GOST 28147
+- Block cipher GOST 28147, Noekeon
 
 - Hash function GOST 34.11-94
 

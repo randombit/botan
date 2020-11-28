@@ -267,9 +267,12 @@ Noekeon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A fast 128-bit cipher by the designers of AES. Easily secured against side
-channels.
+channels. Quite obscure however.
 
 Available if ``BOTAN_HAS_NOEKEON`` is defined.
+
+.. warning::
+   Noekeon support is deprecated and will be removed in a future major release.
 
 SEED
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
