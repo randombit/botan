@@ -581,6 +581,28 @@ BigInt DL_Group::power_b_p(const BigInt& b, const BigInt& x, size_t max_x_bits) 
    return data().power_b_p(b, x, max_x_bits);
    }
 
+size_t DL_Group::random_exponent_bits() const
+   {
+   const size_t qb = q_bits();
+   const size_t pb = p_bits();
+
+   const size_t dl_p = dl_exponent_size(pb);
+
+   if(qb > 0 && qb <= 512)
+      {
+      return qb;
+      }
+   else
+      {
+      return dl_p;
+      }
+   }
+
+BigInt DL_Group::random_exponent(RandomNumberGenerator& rng) const
+   {
+   return BigInt(rng, random_exponent_bits(), false);
+   }
+
 DL_Group_Source DL_Group::source() const
    {
    return data().source();

@@ -116,6 +116,8 @@ class BOTAN_PUBLIC_API(2,0) DL_Scheme_PrivateKey : public virtual DL_Scheme_Publ
 
       DL_Scheme_PrivateKey& operator=(const DL_Scheme_PrivateKey& other) = default;
 
+      DL_Scheme_PrivateKey() = delete;
+
    protected:
       /**
       * Create a private key.
@@ -127,7 +129,14 @@ class BOTAN_PUBLIC_API(2,0) DL_Scheme_PrivateKey : public virtual DL_Scheme_Publ
                            const secure_vector<uint8_t>& key_bits,
                            DL_Group::Format group_format);
 
-      DL_Scheme_PrivateKey() = default;
+      DL_Scheme_PrivateKey(const DL_Group& group, const BigInt& x);
+
+      DL_Scheme_PrivateKey(const DL_Group& group, RandomNumberGenerator& rng);
+
+      // Old format deprecated constructor
+      DL_Scheme_PrivateKey(RandomNumberGenerator& rng,
+                           const DL_Group& group,
+                           const BigInt& x);
 
       /**
       * The DL private key

@@ -35,10 +35,12 @@ class BOTAN_PUBLIC_API(2,0) DH_PublicKey : public virtual DL_Scheme_PublicKey
 
       /**
       * Construct a public key with the specified parameters.
-      * @param grp the DL group to use in the key
+      * @param group the DL group to use in the key
       * @param y the public value y
       */
-      DH_PublicKey(const DL_Group& grp, const BigInt& y);
+      DH_PublicKey(const DL_Group& group, const BigInt& y) :
+         DL_Scheme_PublicKey(group, y) {}
+
    protected:
       DH_PublicKey() = default;
    };
@@ -64,11 +66,29 @@ class BOTAN_PUBLIC_API(2,0) DH_PrivateKey final : public DH_PublicKey,
       /**
       * Create a private key.
       * @param rng random number generator to use
-      * @param grp the group to be used in the key
+      * @param group the group to be used in the key
       * @param x the key's secret value (or if zero, generate a new key)
       */
-      DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& grp,
-                    const BigInt& x = 0);
+      BOTAN_DEPRECATED("Use a different constructor")
+      DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group,
+                    const BigInt& x = 0) :
+         DL_Scheme_PrivateKey(rng, group, x) {}
+
+      /**
+      * Load a private key.
+      * @param group the group to be used in the key
+      * @param x the key's secret value
+      */
+      DH_PrivateKey(const DL_Group& group, const BigInt& x) :
+         DL_Scheme_PrivateKey(group, x) {}
+
+      /**
+      * Create a private key.
+      * @param group the group to be used in the key
+      * @param x the key's secret value (or if zero, generate a new key)
+      */
+      DH_PrivateKey(const DL_Group& group, RandomNumberGenerator& rng) :
+         DL_Scheme_PrivateKey(group, rng) {}
 
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,

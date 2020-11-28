@@ -13,44 +13,11 @@
 namespace Botan {
 
 /*
-* DH_PublicKey Constructor
-*/
-DH_PublicKey::DH_PublicKey(const DL_Group& grp, const BigInt& y1)
-   {
-   m_group = grp;
-   m_y = y1;
-   }
-
-/*
 * Return the public value for key agreement
 */
 std::vector<uint8_t> DH_PublicKey::public_value() const
    {
    return unlock(BigInt::encode_1363(m_y, group_p().bytes()));
-   }
-
-/*
-* Create a DH private key
-*/
-DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
-                             const DL_Group& grp,
-                             const BigInt& x_arg)
-   {
-   m_group = grp;
-
-   if(x_arg == 0)
-      {
-      const size_t exp_bits = grp.exponent_bits();
-      m_x.randomize(rng, exp_bits);
-      m_y = m_group.power_g_p(m_x, exp_bits);
-      }
-   else
-      {
-      m_x = x_arg;
-
-      if(m_y == 0)
-         m_y = m_group.power_g_p(m_x, grp.p_bits());
-      }
    }
 
 /*
@@ -60,10 +27,7 @@ DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
                              const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
-   if(m_y.is_zero())
-      {
-      m_y = m_group.power_g_p(m_x, m_group.p_bits());
-      }
+   m_y = m_group.power_g_p(m_x, m_group.p_bits());
    }
 
 /*

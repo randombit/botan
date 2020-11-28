@@ -20,32 +20,6 @@
 
 namespace Botan {
 
-/*
-* DSA_PublicKey Constructor
-*/
-DSA_PublicKey::DSA_PublicKey(const DL_Group& grp, const BigInt& y1)
-   {
-   m_group = grp;
-   m_y = y1;
-   }
-
-/*
-* Create a DSA private key
-*/
-DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
-                               const DL_Group& grp,
-                               const BigInt& x_arg)
-   {
-   m_group = grp;
-
-   if(x_arg == 0)
-      m_x = BigInt::random_integer(rng, 2, group_q());
-   else
-      m_x = x_arg;
-
-   m_y = m_group.power_g_p(m_x, m_group.q_bits());
-   }
-
 DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                                const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)

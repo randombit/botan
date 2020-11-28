@@ -267,6 +267,16 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       BigInt multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const;
 
       /**
+      * Return a random secret exponent suitable for use with this group
+      */
+      BigInt random_exponent(RandomNumberGenerator& rng) const;
+
+      /**
+      * Return the size in bits of a random exponent
+      */
+      size_t random_exponent_bits() const;
+
+      /**
       * Return parameters for Montgomery reduction/exponentiation mod p
       */
       std::shared_ptr<const Montgomery_Params> monty_params_p() const;

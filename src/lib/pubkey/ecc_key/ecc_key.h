@@ -124,6 +124,19 @@ class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
                                 public virtual Private_Key
    {
    public:
+      secure_vector<uint8_t> private_key_bits() const override;
+
+      /**
+      * Get the private key value of this key object.
+      * @result the private key value of this key object
+      */
+      const BigInt& private_value() const;
+
+      EC_PrivateKey() = delete;
+      EC_PrivateKey(const EC_PrivateKey& other) = default;
+      EC_PrivateKey& operator=(const EC_PrivateKey& other) = default;
+      ~EC_PrivateKey() = default;
+   protected:
       /*
       * If x=0, creates a new private key in the domain
       * using the given rng. If with_modular_inverse is set,
@@ -149,20 +162,6 @@ class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
       EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                     const secure_vector<uint8_t>& key_bits,
                     bool with_modular_inverse=false);
-
-      secure_vector<uint8_t> private_key_bits() const override;
-
-      /**
-      * Get the private key value of this key object.
-      * @result the private key value of this key object
-      */
-      const BigInt& private_value() const;
-
-      EC_PrivateKey(const EC_PrivateKey& other) = default;
-      EC_PrivateKey& operator=(const EC_PrivateKey& other) = default;
-      ~EC_PrivateKey() = default;
-   protected:
-      EC_PrivateKey() = default;
 
       BigInt m_private_key;
    };

@@ -31,16 +31,15 @@ class BOTAN_PUBLIC_API(2,0) DSA_PublicKey : public virtual DL_Scheme_PublicKey
       */
       DSA_PublicKey(const AlgorithmIdentifier& alg_id,
                     const std::vector<uint8_t>& key_bits) :
-         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
-         {
-         }
+         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57) {}
 
       /**
       * Create a public key.
       * @param group the underlying DL group
       * @param y the public value y = g^x mod p
       */
-      DSA_PublicKey(const DL_Group& group, const BigInt& y);
+      DSA_PublicKey(const DL_Group& group, const BigInt& y) :
+         DL_Scheme_PublicKey(group, y) {}
 
       std::unique_ptr<PK_Ops::Verification>
          create_verification_op(const std::string& params,
@@ -70,9 +69,27 @@ class BOTAN_PUBLIC_API(2,0) DSA_PrivateKey final : public DSA_PublicKey,
       * @param group the underlying DL group
       * @param private_key the private key (if zero, a new random key is generated)
       */
+      BOTAN_DEPRECATED("Use a different constructor")
       DSA_PrivateKey(RandomNumberGenerator& rng,
                      const DL_Group& group,
-                     const BigInt& private_key = 0);
+                     const BigInt& private_key = 0) :
+         DL_Scheme_PrivateKey(rng, group, private_key) {}
+
+      /**
+      * Load a private key.
+      * @param group the group to be used in the key
+      * @param x the key's secret value
+      */
+      DSA_PrivateKey(const DL_Group& group, const BigInt& x) :
+         DL_Scheme_PrivateKey(group, x) {}
+
+      /**
+      * Create a private key.
+      * @param group the group to be used in the key
+      * @param x the key's secret value (or if zero, generate a new key)
+      */
+      DSA_PrivateKey(const DL_Group& group, RandomNumberGenerator& rng) :
+         DL_Scheme_PrivateKey(group, rng) {}
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 

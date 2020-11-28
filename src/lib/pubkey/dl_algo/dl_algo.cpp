@@ -81,4 +81,22 @@ bool DL_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
    return m_group.verify_group(rng, strong) && m_group.verify_element_pair(m_y, m_x);
    }
 
+DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const DL_Group& group, const BigInt& x) :
+   DL_Scheme_PublicKey(group, group.power_g_p(x, group.p_bits())),
+   m_x(x)
+   {
+   }
+
+DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const DL_Group& group, RandomNumberGenerator& rng) :
+   DL_Scheme_PrivateKey(group, group.random_exponent(rng))
+   {
+   }
+
+DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(RandomNumberGenerator& rng,
+                                           const DL_Group& group,
+                                           const BigInt& x) :
+   DL_Scheme_PrivateKey(group, x > 0 ? x : group.random_exponent(rng))
+   {
+   }
+
 }

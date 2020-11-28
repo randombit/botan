@@ -13,36 +13,6 @@
 
 namespace Botan {
 
-/*
-* ElGamal_PublicKey Constructor
-*/
-ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& group, const BigInt& y) :
-   DL_Scheme_PublicKey(group, y)
-   {
-   }
-
-/*
-* ElGamal_PrivateKey Constructor
-*/
-ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
-                                       const DL_Group& group,
-                                       const BigInt& x)
-   {
-   m_x = x;
-   m_group = group;
-
-   if(m_x.is_zero())
-      {
-      const size_t exp_bits = m_group.exponent_bits();
-      m_x.randomize(rng, exp_bits);
-      m_y = m_group.power_g_p(m_x, exp_bits);
-      }
-   else
-      {
-      m_y = m_group.power_g_p(m_x, m_group.p_bits());
-      }
-   }
-
 ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
                                        const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)

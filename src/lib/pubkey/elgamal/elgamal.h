@@ -36,7 +36,8 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PublicKey : public virtual DL_Scheme_PublicK
       * @param group the underlying DL group
       * @param y the public value y = g^x mod p
       */
-      ElGamal_PublicKey(const DL_Group& group, const BigInt& y);
+      ElGamal_PublicKey(const DL_Group& group, const BigInt& y) :
+         DL_Scheme_PublicKey(group, y) {}
 
       std::unique_ptr<PK_Ops::Encryption>
          create_encryption_op(RandomNumberGenerator& rng,
@@ -70,9 +71,27 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey final : public ElGamal_PublicKey,
       * @param group the group to be used in the key
       * @param priv_key the key's secret value (or if zero, generate a new key)
       */
-      ElGamal_PrivateKey(RandomNumberGenerator& rng,
+      BOTAN_DEPRECATED("Use a different constructor")
+         ElGamal_PrivateKey(RandomNumberGenerator& rng,
                          const DL_Group& group,
-                         const BigInt& priv_key = 0);
+                            const BigInt& priv_key = 0) :
+         DL_Scheme_PrivateKey(rng, group, priv_key) {}
+
+      /**
+      * Load a private key.
+      * @param group the group to be used in the key
+      * @param x the key's secret value
+      */
+      ElGamal_PrivateKey(const DL_Group& group, const BigInt& x) :
+         DL_Scheme_PrivateKey(group, x) {}
+
+      /**
+      * Create a private key.
+      * @param group the group to be used in the key
+      * @param x the key's secret value (or if zero, generate a new key)
+      */
+      ElGamal_PrivateKey(const DL_Group& group, RandomNumberGenerator& rng) :
+         DL_Scheme_PrivateKey(group, rng) {}
 
       std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,
