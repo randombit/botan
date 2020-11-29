@@ -29,6 +29,8 @@ Version 3.0.0, Not Yet Released
 
 * Add new ``X509_DN::DER_encode`` function. (GH #2472)
 
+* Add support for keyed BLAKE2b (GH #2524)
+
 * Re-enable support for CLMUL instruction on Visual C++, which was accidentally
   disabled starting in 2.12.0
 
