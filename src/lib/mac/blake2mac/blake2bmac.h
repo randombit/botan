@@ -18,43 +18,44 @@ namespace Botan {
 * BLAKE2b MAC
 */
 class BLAKE2bMAC final : public MessageAuthenticationCode
-{
-public:
-   std::string name() const override { return m_blake.name(); }
-   size_t output_length() const override { return m_blake.output_length(); }
-   MessageAuthenticationCode* clone() const override;
+   {
+   public:
+      explicit BLAKE2bMAC(size_t output_bits = 512);
 
-   void clear() override;
+      BLAKE2bMAC(const BLAKE2bMAC&) = delete;
+      BLAKE2bMAC& operator=(const BLAKE2bMAC&) = delete;
 
-   Key_Length_Specification key_spec() const override
-      {
-      return m_blake.key_spec();
-      }
+      std::string name() const override { return m_blake.name(); }
+      size_t output_length() const override { return m_blake.output_length(); }
+      MessageAuthenticationCode* clone() const override;
 
-   void key_schedule(const uint8_t key[], size_t length) override
-      {
-       m_blake.key_schedule(key, length);
-      }
+      void clear() override;
 
-   void add_data(const uint8_t input[], size_t length) override
-      {
-      verify_key_set(m_blake.key_size() > 0);
-      m_blake.add_data(input, length);
-      }
+      Key_Length_Specification key_spec() const override
+         {
+         return m_blake.key_spec();
+         }
 
-   void final_result(uint8_t out[]) override
-      {
-      verify_key_set(m_blake.key_size() > 0);
-      m_blake.final_result(out);
-      }
+   private:
+      void key_schedule(const uint8_t key[], size_t length) override
+         {
+         m_blake.set_key(key, length);
+         }
 
-   explicit BLAKE2bMAC(size_t output_bits = 512);
+      void add_data(const uint8_t input[], size_t length) override
+         {
+         verify_key_set(m_blake.key_size() > 0);
+         m_blake.update(input, length);
+         }
 
-   BLAKE2bMAC(const BLAKE2bMAC&) = delete;
-   BLAKE2bMAC& operator=(const BLAKE2bMAC&) = delete;
-private:
-   BLAKE2b m_blake;
-};
+      void final_result(uint8_t out[]) override
+         {
+         verify_key_set(m_blake.key_size() > 0);
+         m_blake.final(out);
+         }
+
+      BLAKE2b m_blake;
+   };
 
 typedef BLAKE2bMAC Blake2bMac;
 
