@@ -1,0 +1,7 @@
+<defines>
+BLAKE2BMAC -> 20201123
+</defines>
+
+<requires>
+blake2
+</requires>

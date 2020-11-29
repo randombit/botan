@@ -35,7 +35,8 @@ BLAKE2b::BLAKE2b(size_t output_bits) :
    m_output_bits(output_bits),
    m_buffer(BLAKE2B_BLOCKBYTES),
    m_bufpos(0),
-   m_H(BLAKE2B_IVU64COUNT)
+   m_H(BLAKE2B_IVU64COUNT),
+   m_key_size(0)
    {
    if(output_bits == 0 || output_bits > 512 || output_bits % 8 != 0)
       {
@@ -48,10 +49,20 @@ BLAKE2b::BLAKE2b(size_t output_bits) :
 void BLAKE2b::state_init()
    {
    copy_mem(m_H.data(), blake2b_IV, BLAKE2B_IVU64COUNT);
-   m_H[0] ^= 0x01010000 ^ static_cast<uint8_t>(output_length());
+   m_H[0] ^= (0x01010000 | (static_cast<uint8_t>(m_key_size) << 8) | static_cast<uint8_t>(output_length()));
    m_T[0] = m_T[1] = 0;
    m_F[0] = m_F[1] = 0;
-   m_bufpos = 0;
+
+   if(m_key_size == 0)
+      {
+      m_bufpos = 0;
+      }
+   else
+      {
+      BOTAN_ASSERT_NOMSG(m_padded_key_buffer.size() == m_buffer.size());
+      copy_mem(m_buffer.data(), m_padded_key_buffer.data(), m_padded_key_buffer.size());
+      m_bufpos = m_padded_key_buffer.size();
+      }
    }
 
 namespace {
@@ -181,6 +192,11 @@ void BLAKE2b::final_result(uint8_t output[])
    state_init();
    }
 
+Key_Length_Specification BLAKE2b::key_spec() const
+   {
+   return Key_Length_Specification(0, 64);
+   }
+
 std::string BLAKE2b::name() const
    {
    return "BLAKE2b(" + std::to_string(m_output_bits) + ")";
@@ -196,11 +212,30 @@ std::unique_ptr<HashFunction> BLAKE2b::copy_state() const
    return std::unique_ptr<HashFunction>(new BLAKE2b(*this));
    }
 
+void BLAKE2b::key_schedule(const uint8_t key[], size_t length)
+   {
+   BOTAN_ASSERT_NOMSG(length <= m_buffer.size());
+
+   m_key_size = length;
+   m_padded_key_buffer.resize(m_buffer.size());
+
+   if(m_padded_key_buffer.size() > length)
+      {
+      size_t padding = m_padded_key_buffer.size() - length;
+      clear_mem(m_padded_key_buffer.data() + length, padding);
+      }
+
+   copy_mem(m_padded_key_buffer.data(), key, length);
+   state_init();
+   }
+
 void BLAKE2b::clear()
    {
    zeroise(m_H);
    zeroise(m_buffer);
+   zeroise(m_padded_key_buffer);
    m_bufpos = 0;
+   m_key_size = 0;
    state_init();
    }
 
