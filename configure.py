@@ -900,7 +900,14 @@ class ModuleInfo(InfoObject):
             if not re.match('^[0-9A-Za-z_]{3,30}$', key):
                 raise InternalError('Module defines key has invalid format: "%s"' % key)
             if not re.match('^20[0-9]{6}$', value):
-                raise InternalError('Module defines value has invalid format: "%s"' % value)
+                raise InternalError('Module defines value has invalid format: "%s" (should be YYYYMMDD)' % value)
+
+            year = int(value[0:4])
+            month = int(value[4:6])
+            day = int(value[6:])
+
+            if year < 2013 or month == 0 or month > 12 or day == 0 or day > 31:
+                raise InternalError('Module defines value has invalid format: "%s" (should be YYYYMMDD)' % value)
 
     def cross_check(self, arch_info, cc_info, all_os_features, all_isa_extn):
 
