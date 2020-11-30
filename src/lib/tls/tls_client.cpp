@@ -677,8 +677,9 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       state.hash().update(state.handshake_io().format(contents, type));
 
-      if(!state.client_finished()) // session resume case
+      if(!state.client_finished())
          {
+         // session resume case
          state.handshake_io().send(Change_Cipher_Spec());
          change_cipher_spec_writer(CLIENT);
          state.client_finished(new Finished(state.handshake_io(), state, CLIENT));
