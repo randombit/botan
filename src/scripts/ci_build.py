@@ -295,7 +295,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         else:
             run_test_command = test_prefix + test_cmd
 
-    return flags, run_test_command, make_prefix
+    return flags, run_test_command, make_prefix, install_prefix
 
 def run_cmd(cmd, root_dir):
     """
@@ -501,6 +501,7 @@ def main(args=None):
             'src/python/botan2.py',
             'src/scripts/ci_build.py',
             'src/scripts/install.py',
+            'src/scripts/ci_check_install.py',
             'src/scripts/dist.py',
             'src/scripts/cleanup.py',
             'src/scripts/check.py',
@@ -522,7 +523,7 @@ def main(args=None):
             cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags] + full_paths)
 
     else:
-        config_flags, run_test_command, make_prefix = determine_flags(
+        config_flags, run_test_command, make_prefix, install_prefix = determine_flags(
             target, options.os, options.cpu, options.cc,
             options.cc_bin, options.compiler_cache, root_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
@@ -606,6 +607,7 @@ def main(args=None):
 
         if target in ['shared', 'static', 'bsi', 'nist']:
             cmds.append(make_cmd + ['install'])
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), install_prefix])
 
         if target in ['sonar']:
 
