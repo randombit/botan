@@ -237,7 +237,9 @@ PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const V
                   }
                }
             else
-               result.test_eq("incorrect signature invalid", verified, false);
+               {
+               result.confirm("incorrect signature is rejected", verified == false);
+               }
             }
          catch(std::exception& e)
             {

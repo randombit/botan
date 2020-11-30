@@ -321,6 +321,12 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
 PointGFp_Multi_Point_Precompute::PointGFp_Multi_Point_Precompute(const PointGFp& x,
                                                                  const PointGFp& y)
    {
+   if(x.on_the_curve() == false || y.on_the_curve() == false)
+      {
+      m_M.push_back(x.zero());
+      return;
+      }
+
    std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
 
    PointGFp x2 = x;
@@ -372,6 +378,9 @@ PointGFp_Multi_Point_Precompute::PointGFp_Multi_Point_Precompute(const PointGFp&
 PointGFp PointGFp_Multi_Point_Precompute::multi_exp(const BigInt& z1,
                                                     const BigInt& z2) const
    {
+   if(m_M.size() == 1)
+      return m_M[0];
+
    std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
 
    const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);

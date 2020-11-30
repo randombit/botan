@@ -27,7 +27,8 @@ class ECDSA_Verification_Tests final : public PK_Signature_Verification_Test
       ECDSA_Verification_Tests() : PK_Signature_Verification_Test(
             "ECDSA",
             "pubkey/ecdsa_verify.vec",
-            "Group,Px,Py,Hash,Msg,Signature") {}
+            "Group,Px,Py,Hash,Msg,Signature",
+            "Valid") {}
 
       bool clear_between_callbacks() const override
          {
