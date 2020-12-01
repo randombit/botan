@@ -23,7 +23,7 @@ void SHA_160::sha1_compress_x86(secure_vector<uint32_t>& digest,
                                 const uint8_t input[],
                                 size_t blocks)
    {
-   const __m128i MASK = _mm_set_epi64x(0x0001020304050607ULL, 0x08090a0b0c0d0e0fULL);
+   const __m128i MASK = _mm_set_epi64x(0x0001020304050607, 0x08090a0b0c0d0e0f);
    const __m128i* input_mm = reinterpret_cast<const __m128i*>(input);
 
    uint32_t* state = digest.data();

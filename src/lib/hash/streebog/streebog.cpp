@@ -156,7 +156,7 @@ void Streebog::compress(const uint8_t input[], bool last_block)
 
 void Streebog::compress_64(const uint64_t M[], bool last_block)
    {
-   uint64_t N = force_le(last_block ? 0ULL : m_count);
+   const uint64_t N = last_block ? 0 : force_le(m_count);
 
    uint64_t hN[8];
    uint64_t A[8];
