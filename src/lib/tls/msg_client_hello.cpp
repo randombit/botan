@@ -120,7 +120,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
 
    if(m_version.supports_negotiable_signature_algorithms())
-      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_schemes()));
+      m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
 
    if(m_version.is_datagram_protocol())
       m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
@@ -193,7 +193,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Encrypt_then_MAC);
 
    if(m_version.supports_negotiable_signature_algorithms())
-      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_schemes()));
+      m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
 
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));

@@ -61,7 +61,7 @@ Certificate_Req::Certificate_Req(Handshake_IO& io,
    {
    if(version.supports_negotiable_signature_algorithms())
       {
-      m_schemes = policy.allowed_signature_schemes();
+      m_schemes = policy.acceptable_signature_schemes();
       }
 
    hash.update(io.send(*this));

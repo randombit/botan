@@ -564,6 +564,11 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       {
       state.server_hello_done(new Server_Hello_Done(contents));
 
+      if(state.handshake_io().have_more_data())
+         throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                             "Have data remaining in buffer after ServerHelloDone");
+
+
       if(state.server_certs() != nullptr &&
          state.server_hello()->supports_certificate_status_message())
          {
@@ -669,6 +674,10 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == FINISHED)
       {
+      if(state.handshake_io().have_more_data())
+         throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                             "Have data remaining in buffer after Finished");
+
       state.server_finished(new Finished(contents));
 
       if(!state.server_finished()->verify(state, SERVER))

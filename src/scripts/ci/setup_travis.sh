@@ -44,17 +44,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get -qq update
         sudo apt-get install pylint
 
-    elif [ "$TARGET" = "coverage" ]; then
-        sudo apt-get -qq update
-        sudo apt-get install g++-8 softhsm2 libtspi-dev lcov python-coverage libboost-all-dev gdb
-        pip install --user codecov
-        git clone --depth 1 --branch runner-changes-golang1.10 https://github.com/randombit/boringssl.git
-
-        sudo chgrp -R "$(id -g)" /var/lib/softhsm/ /etc/softhsm
-        sudo chmod g+w /var/lib/softhsm/tokens
-
-        softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
-
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq update
         sudo apt-get install doxygen python-docutils python3-sphinx
