@@ -1994,7 +1994,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     def choose_python_exe():
         exe = sys.executable
 
-        if exe[1] == ':': # Windows style paths
+        if options.os == 'mingw':  # mingw doesn't handle the backslashes in the absolute path well
             return exe.replace('\\', '/')
 
         return exe
