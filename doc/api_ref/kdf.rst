@@ -16,13 +16,13 @@ shared secret created using Diffie-Hellman key agreement.
                                     size_t secret_len, \
                                     const uint8_t salt[], \
                                     size_t salt_len, \
-                                    const uint8_t label[] \
+                                    const uint8_t label[], \
                                     size_t label_len) const
 
   .. cpp:function:: secure_vector<uint8_t> derive_key( \
      size_t key_len, const std::vector<uint8_t>& secret, \
      const std::vector<uint8_t>& salt, \
-     const std::vector<uint8_t>& lable) const
+     const std::vector<uint8_t>& label) const
 
   .. cpp:function:: secure_vector<uint8_t> derive_key( \
      size_t key_len, const std::vector<uint8_t>& secret, \
