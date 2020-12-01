@@ -55,10 +55,10 @@ template<typename KDF_Type>
 std::unique_ptr<KDF>
 kdf_create_mac_or_hash(const std::string& nm)
    {
-   if(auto mac = MessageAuthenticationCode::create(nm))
+   if(auto mac = MessageAuthenticationCode::create("HMAC(" + nm + ")"))
       return std::unique_ptr<KDF>(new KDF_Type(mac.release()));
 
-   if(auto mac = MessageAuthenticationCode::create("HMAC(" + nm + ")"))
+   if(auto mac = MessageAuthenticationCode::create(nm))
       return std::unique_ptr<KDF>(new KDF_Type(mac.release()));
 
    return nullptr;

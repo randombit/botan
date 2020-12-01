@@ -31,10 +31,10 @@ std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
 
       if(provider.empty() || provider == "base")
          {
-         if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
             return std::unique_ptr<PBKDF>(new PKCS5_PBKDF2(mac.release()));
 
-         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
+         if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
             return std::unique_ptr<PBKDF>(new PKCS5_PBKDF2(mac.release()));
          }
 
