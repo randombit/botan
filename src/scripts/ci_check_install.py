@@ -14,7 +14,7 @@ import os
 import sys
 
 def has_extension(filename, extensions):
-    for ext in [ext for ext in extensions]:
+    for ext in extensions:
         if filename.endswith(".%s" % ext):
             return True
     return False
@@ -48,7 +48,7 @@ def main():
             return 0
 
     print("Error: installation incomplete. Found headers: %s. Found libs: %s. install_prefix was %s"
-            % (found_headers, found_libs, install_prefix))
+          % (found_headers, found_libs, install_prefix))
     return 1
 
 
