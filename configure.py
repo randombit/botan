@@ -2034,6 +2034,10 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'all_targets': ' '.join(all_targets(options)),
         'install_targets': ' '.join(install_targets(options)),
 
+        'public_headers': sorted([os.path.basename(h) for h in build_paths.public_headers]),
+        'internal_headers': sorted([os.path.basename(h) for h in build_paths.internal_headers]),
+        'external_headers':  sorted([os.path.basename(h) for h in build_paths.external_headers]),
+
         'abs_root_dir': os.path.dirname(os.path.realpath(__file__)),
 
         'base_dir': source_paths.base_dir,

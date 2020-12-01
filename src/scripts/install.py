@@ -144,7 +144,9 @@ def main(args):
         logging.debug('Make %s executable' % dst)
         os.chmod(dst, exe_mode)
 
-    with open(os.path.join(options.build_dir, 'build_config.json')) as f:
+    build_dir = options.build_dir
+
+    with open(os.path.join(build_dir, 'build_config.json')) as f:
         cfg = json.load(f)
 
     ver_major = int(cfg['version_major'])
@@ -166,19 +168,15 @@ def main(args):
     for d in [options.prefix, lib_dir, bin_dir, target_include_dir]:
         makedirs(prepend_destdir(d))
 
-    build_include_dir = os.path.join(options.build_dir, 'include', 'botan')
+    for header in cfg['public_headers']:
+        full_header_path = os.path.join(build_dir, 'include', 'botan', header)
+        copy_file(full_header_path,
+                  prepend_destdir(os.path.join(target_include_dir, header)))
 
-    for include in sorted(os.listdir(build_include_dir)):
-        if include == 'internal':
-            continue
-        copy_file(os.path.join(build_include_dir, include),
-                  prepend_destdir(os.path.join(target_include_dir, include)))
-
-    build_external_include_dir = os.path.join(options.build_dir, 'include', 'external')
-
-    for include in sorted(os.listdir(build_external_include_dir)):
-        copy_file(os.path.join(build_external_include_dir, include),
-                  prepend_destdir(os.path.join(target_include_dir, include)))
+    for header in cfg['external_headers']:
+        full_header_path = os.path.join(build_dir, 'include', 'external', header)
+        copy_file(full_header_path,
+                  prepend_destdir(os.path.join(target_include_dir, header)))
 
     if build_static_lib or target_os == 'windows':
         static_lib = cfg['static_lib_name']
