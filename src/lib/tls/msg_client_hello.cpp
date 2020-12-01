@@ -27,7 +27,6 @@ namespace TLS {
 
 enum {
    TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF,
-   TLS_FALLBACK_SCSV                        = 0x5600
 };
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
@@ -134,9 +133,6 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(supported_groups.release());
 
    cb.tls_modify_extensions(m_extensions, CLIENT);
-
-   if(policy.send_fallback_scsv(client_settings.protocol_version()))
-      m_suites.push_back(TLS_FALLBACK_SCSV);
 
    hash.update(io.send(*this));
    }

@@ -314,20 +314,12 @@ namespace {
 Protocol_Version select_version(const Botan::TLS::Policy& policy,
                                 Protocol_Version client_offer,
                                 Protocol_Version active_version,
-                                bool is_fallback,
                                 const std::vector<Protocol_Version>& supported_versions)
    {
    const bool is_datagram = client_offer.is_datagram_protocol();
    const bool initial_handshake = (active_version.valid() == false);
 
    const Protocol_Version latest_supported = policy.latest_supported_version(is_datagram);
-
-   if(is_fallback)
-      {
-      if(latest_supported > client_offer)
-         throw TLS_Exception(Alert::INAPPROPRIATE_FALLBACK,
-                              "Client signalled fallback SCSV, possible attack");
-      }
 
    if(supported_versions.size() > 0)
       {
@@ -454,7 +446,6 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
    const Protocol_Version negotiated_version =
       select_version(policy(), client_offer,
                      active_state ? active_state->version() : Protocol_Version(),
-                     pending_state.client_hello()->sent_fallback_scsv(),
                      pending_state.client_hello()->supported_versions());
 
    pending_state.set_version(negotiated_version);

@@ -233,13 +233,6 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual Protocol_Version latest_supported_version(bool datagram) const;
 
       /**
-      * When offering this version, should we send a fallback SCSV?
-      * Default returns true iff version is not the latest version the
-      * policy allows, exists to allow override in case of interop problems.
-      */
-      virtual bool send_fallback_scsv(Protocol_Version version) const;
-
-      /**
       * Allows policy to reject any ciphersuites which are undesirable
       * for whatever reason without having to reimplement ciphersuite_list
       */

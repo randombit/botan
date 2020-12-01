@@ -257,11 +257,6 @@ uint32_t Policy::session_ticket_lifetime() const
    return 86400; // ~1 day
    }
 
-bool Policy::send_fallback_scsv(Protocol_Version version) const
-   {
-   return version != latest_supported_version(version.is_datagram_protocol());
-   }
-
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    if(version == Protocol_Version::TLS_V12 && allow_tls12())
