@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf8
 
 """
 Botan CI check installation script
