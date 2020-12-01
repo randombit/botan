@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 
-"""This script is used to validate the results of `make install`"""
+"""
+Botan CI check installation script
+This script is used to validate the results of `make install`
+
+(C) 2020 Jack Lloyd, René Meusel, Hannes Rantzsch
+
+Botan is released under the Simplified BSD License (see license.txt)
+"""
 
 import os
 import sys
 
 def has_extension(filename, extensions):
-    for ext in [ext for ext in extensions if ext != ""]:
+    for ext in [ext for ext in extensions]:
         if filename.endswith(".%s" % ext):
             return True
     return False
@@ -20,12 +27,12 @@ def is_header_file(filename):
 def main():
     if len(sys.argv) < 2:
         print("Usage: %s <install_prefix>" % sys.argv[0])
-        sys.exit(1)
+        return 1
     install_prefix = sys.argv[1]
 
     if not os.path.isdir(install_prefix):
         print('Error: install_prefix "%s" is not a directory' % install_prefix)
-        sys.exit(1)
+        return 1
 
     found_libs = False
     found_headers = False
