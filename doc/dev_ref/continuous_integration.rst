@@ -4,7 +4,7 @@ Continuous Integration and Automated Testing
 CI Build Script
 ----------------
 
-The Github Actions and AppVeyor builds are orchestrated using a script
+The Github Actions, AppVeyor and Travis builds are orchestrated using a script
 ``src/scripts/ci_build.py``. This allows one to easily reproduce the CI process
 on a local machine.
 
@@ -19,6 +19,14 @@ and a build that produces the coverage report.
 The Github Actions configuration is in ``.github/workflows/ci.yml``
 which executes a setup script ``src/scripts/ci/setup_gh_actions.sh`` to
 install needed packages.  Then ``src/scripts/ci_build.py`` is invoked.
+
+Travis CI
+----------
+
+https://travis-ci.com/github/randombit/botan
+
+This CI is primarily used to run builds which cannot be run on Github Actions,
+specifically native builds for s390x, ppc64le, aarch64 and armv7.
 
 AppVeyor
 ----------
