@@ -2191,8 +2191,13 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'test_mode': options.test_mode,
         'optimize_for_size': options.optimize_for_size,
 
-        'mod_list': sorted([m.basename for m in modules])
+        'mod_list': sorted([m.basename for m in modules]),
     }
+
+    variables['installed_include_dir'] = os.path.join(
+        variables['prefix'],
+        variables['includedir'],
+        'botan-%d' % (Version.major()), 'botan')
 
     if cc.basename == 'msvc' and variables['cxx_abi_flags'] != '':
         # MSVC linker doesn't support/need the ABI options,
