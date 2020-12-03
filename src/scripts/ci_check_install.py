@@ -23,7 +23,16 @@ def verify_library(build_config):
 
     found_libs = set([])
 
-    lib_re = re.compile(r'^(lib)?botan-3\.(so|a|dll|dylib|lib)$')
+    major_version = int(build_config["version_major"])
+
+    if build_config['compiler'] == 'msvc':
+        expected_lib_format = r'^botan\.(dll|lib)$'
+    elif build_config['os'] == 'macos':
+        expected_lib_format = r'^libbotan-%d\.(a|dylib)$' % (major_version)
+    else:
+        expected_lib_format = r'^libbotan-%d\.(a|so)$' % (major_version)
+
+    lib_re = re.compile(expected_lib_format)
 
     # Unlike the include dir this may have other random libs in it
     for (_, _, filenames) in os.walk(lib_dir):
@@ -57,8 +66,11 @@ def verify_includes(build_config):
         missing = expected_headers - found_headers
         extra = found_headers - expected_headers
 
-        print("Missing expected headers: %s" % (" ".join(sorted(missing))))
-        print("Have unexpected headers: %s" % (" ".join(sorted(extra))))
+        if len(missing) > 0:
+            print("Missing expected headers: %s" % (" ".join(sorted(missing))))
+
+        if len(extra) > 0:
+            print("Have unexpected headers: %s" % (" ".join(sorted(extra))))
         return False
 
     return True
@@ -87,7 +99,6 @@ def main(args=None):
         return 1
 
     return 0
-
 
 if __name__ == '__main__':
     sys.exit(main())
