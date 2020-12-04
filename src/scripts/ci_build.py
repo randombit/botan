@@ -74,7 +74,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
-    install_prefix = os.path.join(tempfile.gettempdir(), 'botan-install')
+    install_prefix = tempfile.mkdtemp(prefix='botan-install-')
 
     flags = ['--prefix=%s' % (install_prefix),
              '--cc=%s' % (target_cc),
@@ -274,7 +274,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         else:
             run_test_command = test_prefix + test_cmd
 
-    return flags, run_test_command, make_prefix, install_prefix
+    return flags, run_test_command, make_prefix
 
 def run_cmd(cmd, root_dir):
     """
@@ -486,7 +486,7 @@ def main(args=None):
             cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags] + full_paths)
 
     else:
-        config_flags, run_test_command, make_prefix, install_prefix = determine_flags(
+        config_flags, run_test_command, make_prefix = determine_flags(
             target, options.os, options.cpu, options.cc,
             options.cc_bin, options.compiler_cache, root_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
@@ -560,7 +560,8 @@ def main(args=None):
 
         if target in ['shared', 'static', 'bsi', 'nist']:
             cmds.append(make_cmd + ['install'])
-            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), install_prefix])
+            build_config = os.path.join(root_dir, 'build', 'build_config.json')
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), build_config])
 
         if target in ['coverage']:
             if not have_prog('lcov'):
