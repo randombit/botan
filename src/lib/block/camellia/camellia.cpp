@@ -261,13 +261,17 @@ void decrypt(const uint8_t in[], uint8_t out[], size_t blocks,
       }
    }
 
-uint64_t left_rot_hi(uint64_t h, uint64_t l, size_t shift)
+inline uint64_t left_rot_hi(uint64_t h, uint64_t l, size_t shift)
    {
+   if(shift >= 64)
+      shift -= 64;
    return (h << shift) | (l >> (64-shift));
    }
 
-uint64_t left_rot_lo(uint64_t h, uint64_t l, size_t shift)
+inline uint64_t left_rot_lo(uint64_t h, uint64_t l, size_t shift)
    {
+   if(shift >= 64)
+      shift -= 64;
    return (h >> (64-shift)) | (l << shift);
    }
 
@@ -330,16 +334,16 @@ void key_schedule(secure_vector<uint64_t>& SK, const uint8_t key[], size_t lengt
       SK[13] = left_rot_lo(KL_H, KL_L,  60);
       SK[14] = left_rot_hi(KA_H, KA_L,  60);
       SK[15] = left_rot_lo(KA_H, KA_L,  60);
-      SK[16] = left_rot_lo(KL_H, KL_L,  77-64);
-      SK[17] = left_rot_hi(KL_H, KL_L,  77-64);
-      SK[18] = left_rot_lo(KL_H, KL_L,  94-64);
-      SK[19] = left_rot_hi(KL_H, KL_L,  94-64);
-      SK[20] = left_rot_lo(KA_H, KA_L,  94-64);
-      SK[21] = left_rot_hi(KA_H, KA_L,  94-64);
-      SK[22] = left_rot_lo(KL_H, KL_L, 111-64);
-      SK[23] = left_rot_hi(KL_H, KL_L, 111-64);
-      SK[24] = left_rot_lo(KA_H, KA_L, 111-64);
-      SK[25] = left_rot_hi(KA_H, KA_L, 111-64);
+      SK[16] = left_rot_lo(KL_H, KL_L,  77);
+      SK[17] = left_rot_hi(KL_H, KL_L,  77);
+      SK[18] = left_rot_lo(KL_H, KL_L,  94);
+      SK[19] = left_rot_hi(KL_H, KL_L,  94);
+      SK[20] = left_rot_lo(KA_H, KA_L,  94);
+      SK[21] = left_rot_hi(KA_H, KA_L,  94);
+      SK[22] = left_rot_lo(KL_H, KL_L, 111);
+      SK[23] = left_rot_hi(KL_H, KL_L, 111);
+      SK[24] = left_rot_lo(KA_H, KA_L, 111);
+      SK[25] = left_rot_hi(KA_H, KA_L, 111);
       }
    else
       {
@@ -372,19 +376,19 @@ void key_schedule(secure_vector<uint64_t>& SK, const uint8_t key[], size_t lengt
       SK[20] = left_rot_hi(KB_H, KB_L, 60);
       SK[21] = left_rot_lo(KB_H, KB_L, 60);
 
-      SK[22] = left_rot_lo(KL_H, KL_L,  77-64);
-      SK[23] = left_rot_hi(KL_H, KL_L,  77-64);
-      SK[24] = left_rot_lo(KA_H, KA_L,  77-64);
-      SK[25] = left_rot_hi(KA_H, KA_L,  77-64);
+      SK[22] = left_rot_lo(KL_H, KL_L,  77);
+      SK[23] = left_rot_hi(KL_H, KL_L,  77);
+      SK[24] = left_rot_lo(KA_H, KA_L,  77);
+      SK[25] = left_rot_hi(KA_H, KA_L,  77);
 
-      SK[26] = left_rot_lo(KR_H, KR_L,  94-64);
-      SK[27] = left_rot_hi(KR_H, KR_L,  94-64);
-      SK[28] = left_rot_lo(KA_H, KA_L,  94-64);
-      SK[29] = left_rot_hi(KA_H, KA_L,  94-64);
-      SK[30] = left_rot_lo(KL_H, KL_L, 111-64);
-      SK[31] = left_rot_hi(KL_H, KL_L, 111-64);
-      SK[32] = left_rot_lo(KB_H, KB_L, 111-64);
-      SK[33] = left_rot_hi(KB_H, KB_L, 111-64);
+      SK[26] = left_rot_lo(KR_H, KR_L,  94);
+      SK[27] = left_rot_hi(KR_H, KR_L,  94);
+      SK[28] = left_rot_lo(KA_H, KA_L,  94);
+      SK[29] = left_rot_hi(KA_H, KA_L,  94);
+      SK[30] = left_rot_lo(KL_H, KL_L, 111);
+      SK[31] = left_rot_hi(KL_H, KL_L, 111);
+      SK[32] = left_rot_lo(KB_H, KB_L, 111);
+      SK[33] = left_rot_hi(KB_H, KB_L, 111);
       }
    }
 
