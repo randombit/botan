@@ -5,6 +5,11 @@ compiler: gcc
 
 jobs:
   include:
+    - name: Linux s390x (GCC)
+      arch: s390x
+      env:
+       - TARGET="shared"
+
     - name: Linux ppc64le (GCC)
       arch: ppc64le
       env:
@@ -15,11 +20,16 @@ jobs:
       env:
        - TARGET="shared"
 
+    - name: Linux arm32 cross (GCC)
+      arch: arm64
+      env:
+       - TARGET="cross-arm32"
+
 install:
   - ./src/scripts/ci/setup_travis.sh
 
 script:
-  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --without-pylint3 --pkcs11-lib=$PKCS11_LIB $EXTRA_FLAGS $TARGET
+  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --without-pylint3 $EXTRA_FLAGS $TARGET
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:

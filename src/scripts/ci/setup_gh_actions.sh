@@ -27,13 +27,6 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-win64" ]; then
         sudo apt-get -qq install wine-development g++-mingw-w64-x86-64
 
-    elif [ "$TARGET" = "cross-arm32" ]; then
-        sudo dpkg --add-architecture armhf
-        # need to re-update after --add-architecture
-        sudo apt-get -qq update
-        sudo apt-get -qq install g++-arm-linux-gnueabihf
-        sudo apt-get -qq install -o APT::Immediate-Configure=0 libc6:armhf libstdc++6:armhf
-
     elif [ "$TARGET" = "cross-arm64" ]; then
         sudo apt-get -qq install qemu-user g++-aarch64-linux-gnu
 

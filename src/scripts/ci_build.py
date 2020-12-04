@@ -200,7 +200,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             if target == 'cross-arm32':
                 flags += ['--cpu=armv7']
                 cc_bin = 'arm-linux-gnueabihf-g++'
-                test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
+                # Currently arm32 CI only runs on native AArch64
+                #test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
             elif target == 'cross-arm64':
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
