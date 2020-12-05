@@ -1,6 +1,17 @@
 Release Notes
 ========================================
 
+Version 2.17.3, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix an install problem introduced in 2.17.2 affecting MSVC 2015
+
+* Fix use of -L flag in linking when configured using ``--with-external-libdir``
+  (GH #2496)
+
+* Fix a build problem on big-endian PowerPC related to VSX instructions
+  in the AES code. (GH #2515)
+
 Version 2.17.2, 2020-11-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
