@@ -83,6 +83,9 @@ A KDF from ANSI X9.42. Sometimes used for Diffie-Hellman.
 
 Available if ``BOTAN_HAS_X942_PRF`` is defined.
 
+.. warning::
+   Support for X9.42 KDF is deprecated and will be removed in a future major release.
+
 SP800-108
 ~~~~~~~~~~
 

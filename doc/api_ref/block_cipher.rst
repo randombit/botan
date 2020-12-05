@@ -304,6 +304,9 @@ channels.
 
 Available if ``BOTAN_HAS_NOEKEON`` is defined.
 
+.. warning::
+   Support for Noekeon is deprecated and will be removed in a future major release.
+
 SEED
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
