@@ -169,6 +169,11 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx)
       }
    }
 
+bool Datagram_Handshake_IO::have_more_data() const
+   {
+   return false;
+   }
+
 bool Datagram_Handshake_IO::timeout_check()
    {
    if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty()))

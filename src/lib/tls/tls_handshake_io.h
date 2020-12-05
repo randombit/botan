@@ -37,6 +37,8 @@ class Handshake_IO
 
       virtual bool timeout_check() = 0;
 
+      virtual bool have_more_data() const = 0;
+
       virtual std::vector<uint8_t> format(
          const std::vector<uint8_t>& handshake_msg,
          Handshake_Type handshake_type) const = 0;
@@ -74,6 +76,8 @@ class Stream_Handshake_IO final : public Handshake_IO
       Protocol_Version initial_record_version() const override;
 
       bool timeout_check() override { return false; }
+
+      bool have_more_data() const override { return m_queue.empty() == false; }
 
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
 
@@ -117,6 +121,8 @@ class Datagram_Handshake_IO final : public Handshake_IO
       Protocol_Version initial_record_version() const override;
 
       bool timeout_check() override;
+
+      bool have_more_data() const override;
 
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
 

@@ -39,6 +39,11 @@ std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const
    return schemes;
    }
 
+std::vector<Signature_Scheme> Policy::acceptable_signature_schemes() const
+   {
+   return this->allowed_signature_schemes();
+   }
+
 std::vector<std::string> Policy::allowed_ciphers() const
    {
    return {

@@ -55,11 +55,16 @@ class BOTAN_PUBLIC_API(2,0) Policy
 
       /**
       * Returns a list of signature algorithms we are willing to
-      * use, in order of preference. Allowed values RSA and DSA.
+      * use, in order of preference.
       */
       virtual std::vector<std::string> allowed_signature_methods() const;
 
       virtual std::vector<Signature_Scheme> allowed_signature_schemes() const;
+
+      /**
+      * Return a list of schemes we are willing to accept
+      */
+      virtual std::vector<Signature_Scheme> acceptable_signature_schemes() const;
 
       /**
       * The minimum signature strength we will accept

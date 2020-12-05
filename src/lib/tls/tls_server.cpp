@@ -435,6 +435,10 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
       return;
       }
 
+   if(pending_state.handshake_io().have_more_data())
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                          "Have data remaining in buffer after ClientHello");
+
    pending_state.client_hello(new Client_Hello(contents));
    const Protocol_Version client_offer = pending_state.client_hello()->version();
    const bool datagram = client_offer.is_datagram_protocol();
@@ -599,6 +603,12 @@ void Server::process_certificate_verify_msg(Server_Handshake_State& pending_stat
    const std::vector<X509_Certificate>& client_certs =
       pending_state.client_certs()->cert_chain();
 
+   if(client_certs.empty())
+      throw TLS_Exception(Alert::DECODE_ERROR, "No client certificate sent");
+
+   if(!client_certs[0].allowed_usage(DIGITAL_SIGNATURE))
+      throw TLS_Exception(Alert::BAD_CERTIFICATE, "Client certificate does not support signing");
+
    const bool sig_valid =
       pending_state.client_verify()->verify(client_certs[0], pending_state, policy());
 
@@ -637,6 +647,10 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
                                   const std::vector<uint8_t>& contents)
    {
    pending_state.set_expected_next(HANDSHAKE_NONE);
+
+   if(pending_state.handshake_io().have_more_data())
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                          "Have data remaining in buffer after Finished");
 
    pending_state.client_finished(new Finished(contents));
 

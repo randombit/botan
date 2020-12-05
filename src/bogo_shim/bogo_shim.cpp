@@ -93,9 +93,10 @@ std::string map_to_bogo_error(const std::string& e)
          { "Certificate: Message malformed", ":DECODE_ERROR:" },
          { "Channel::key_material_export cannot export during renegotiation", "failed to export keying material" },
          { "Client cert verify failed", ":BAD_SIGNATURE:" },
+         { "Client certificate does not support signing", ":KEY_USAGE_BIT_INCORRECT:" },
          { "Client did not offer NULL compression", ":INVALID_COMPRESSION_LIST:" },
-         { "Client offered TLS version with major version under 3", ":UNSUPPORTED_PROTOCOL:" },
          { "Client offered DTLS version with major version 0xFF",  ":UNSUPPORTED_PROTOCOL:" },
+         { "Client offered TLS version with major version under 3", ":UNSUPPORTED_PROTOCOL:" },
          { "Client policy prohibits insecure renegotiation", ":RENEGOTIATION_MISMATCH:" },
          { "Client policy prohibits renegotiation", ":NO_RENEGOTIATION:" },
          { "Client resumed extended ms session without sending extension", ":RESUMED_EMS_SESSION_WITHOUT_EMS_EXTENSION:" },
@@ -110,6 +111,9 @@ std::string map_to_bogo_error(const std::string& e)
          { "Encoding error: Cannot encode PSS string, output length too small", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Expected TLS but got a record with DTLS version", ":WRONG_VERSION_NUMBER:" },
          { "Finished message didn't verify", ":DIGEST_CHECK_FAILED:" },
+         { "Have data remaining in buffer after ClientHello", ":EXCESS_HANDSHAKE_DATA:" },
+         { "Have data remaining in buffer after Finished", ":EXCESS_HANDSHAKE_DATA:" },
+         { "Have data remaining in buffer after ServerHelloDone", ":EXCESS_HANDSHAKE_DATA:" },
          { "Inconsistent length in certificate request", ":DECODE_ERROR:" },
          { "Inconsistent values in fragmented DTLS handshake header", ":FRAGMENT_MISMATCH:" },
          { "Invalid CertificateRequest: Length field outside parameters", ":DECODE_ERROR:" },
@@ -123,11 +127,11 @@ std::string map_to_bogo_error(const std::string& e)
          { "Invalid authentication tag: ChaCha20Poly1305 tag check failed", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
          { "Invalid authentication tag: GCM tag check failed", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
          { "Message authentication failure", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
-         { "No shared TLS version", ":UNSUPPORTED_PROTOCOL:" },
          { "No shared DTLS version", ":UNSUPPORTED_PROTOCOL:" },
+         { "No shared TLS version", ":UNSUPPORTED_PROTOCOL:" },
          { "OS2ECP: Unknown format type 251", ":BAD_ECPOINT:" },
-         { "Policy forbids all available TLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
          { "Policy forbids all available DTLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
+         { "Policy forbids all available TLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
          { "Policy refuses to accept signing with any hash supported by peer", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Policy requires client send a certificate, but it did not", ":PEER_DID_NOT_RETURN_A_CERTIFICATE:" },
          { "Received a record that exceeds maximum size", ":ENCRYPTED_LENGTH_TOO_LONG:" },
@@ -804,6 +808,22 @@ class Shim_Policy final : public Botan::TLS::Policy
 
          }
 
+      std::vector<Botan::TLS::Signature_Scheme> acceptable_signature_schemes() const override
+         {
+         if(m_args.option_used("verify-prefs"))
+            {
+            std::vector<Botan::TLS::Signature_Scheme> schemes;
+            for(size_t pref : m_args.get_int_vec_opt("verify-prefs"))
+               {
+               schemes.push_back(static_cast<Botan::TLS::Signature_Scheme>(pref));
+               }
+
+            return schemes;
+            }
+
+         return Botan::TLS::Policy::acceptable_signature_schemes();
+         }
+
       std::vector<Botan::TLS::Signature_Scheme> allowed_signature_schemes() const override
          {
          if(m_args.option_used("signing-prefs"))
@@ -819,17 +839,6 @@ class Shim_Policy final : public Botan::TLS::Policy
                {
                schemes.push_back(Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA256);
                schemes.push_back(Botan::TLS::Signature_Scheme::ECDSA_SHA256);
-               }
-
-            return schemes;
-            }
-
-         if(m_args.option_used("verify-prefs"))
-            {
-            std::vector<Botan::TLS::Signature_Scheme> schemes;
-            for(size_t pref : m_args.get_int_vec_opt("verify-prefs"))
-               {
-               schemes.push_back(static_cast<Botan::TLS::Signature_Scheme>(pref));
                }
 
             return schemes;
@@ -1332,10 +1341,13 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
                                             "Simulated OCSP callback failure");
             }
 
-         if(m_args.flag_set("verify-peer") && m_args.flag_set("verify-fail"))
+         if(m_args.flag_set("verify-fail"))
             {
-            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::BAD_CERTIFICATE,
-                                            "Test requires rejecting cert");
+            auto alert = Botan::TLS::Alert::HANDSHAKE_FAILURE;
+            if(m_args.flag_set("use-custom-verify-callback"))
+               alert = Botan::TLS::Alert::CERTIFICATE_UNKNOWN;
+
+            throw Botan::TLS::TLS_Exception(alert, "Test requires rejecting cert");
             }
          }
 
