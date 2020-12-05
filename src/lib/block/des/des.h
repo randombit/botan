@@ -48,18 +48,6 @@ class TripleDES final : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
       secure_vector<uint32_t> m_round_key;
    };
 
-/*
-* DES Tables
-*/
-extern const uint32_t DES_SPBOX1[256];
-extern const uint32_t DES_SPBOX2[256];
-extern const uint32_t DES_SPBOX3[256];
-extern const uint32_t DES_SPBOX4[256];
-extern const uint32_t DES_SPBOX5[256];
-extern const uint32_t DES_SPBOX6[256];
-extern const uint32_t DES_SPBOX7[256];
-extern const uint32_t DES_SPBOX8[256];
-
 }
 
 #endif
