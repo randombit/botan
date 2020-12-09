@@ -31,8 +31,8 @@ in a future major release:
 
 - Support for using SHA-1 to sign TLS v1.2 ServerKeyExchange.
 
-- All CBC mode ciphersuites. This includes all available 3DES and SEED
-  ciphersuites. This implies also removing Encrypt-then-MAC extension.
+- All CBC mode ciphersuites. This includes all available 3DES ciphersuites.
+  This implies also removing Encrypt-then-MAC extension.
 
 - All DHE-RSA ciphersuites
 
