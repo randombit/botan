@@ -453,7 +453,7 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
       if(client_offer.major_version() < 3)
          throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered TLS version with major version under 3");
       if(client_offer.major_version() == 3 && client_offer.minor_version() == 0)
-         throw TLS_Exception(Alert::PROTOCOL_VERSION, "SSLv3 is not supported");
+         throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered SSLv3 which is not supported");
       }
 
    /*

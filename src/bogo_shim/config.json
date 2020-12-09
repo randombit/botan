@@ -35,9 +35,6 @@
         "Downgrade-*-Client-Ignore": "Not possible to ignore downgrade indicator",
         "Downgrade-TLS12-*": "Not a downgrade when we don't support v1.3",
 
-        "*SSL3*": "No SSLv3",
-        "*SSLv3*": "No SSLv3",
-
         "*QUIC*": "No QUIC",
         "ALPS*": "No ALPS",
 
