@@ -183,7 +183,7 @@ def main(args):
             copy_executable(os.path.join(out_dir, soname_patch),
                             prepend_destdir(os.path.join(lib_dir, soname_patch)))
 
-            if target_os != "openbsd":
+            if cfg['symlink_shared_lib']:
                 prev_cwd = os.getcwd()
                 try:
                     os.chdir(prepend_destdir(lib_dir))

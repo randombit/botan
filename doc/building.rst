@@ -239,6 +239,10 @@ targeting Android API 28::
   $ export AR=/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar
   $ export CXX=/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++
   $ ./configure.py --os=android --cc=clang --cpu=arm64
+  $ make
+
+If you are building for mobile development consider restricting the build
+to only what you need (see :ref:`minimized_builds`)
 
 Docker
 ^^^^^^^^^^^
@@ -246,7 +250,7 @@ Docker
 To build android version, there is the possibility to use
 the docker way::
 
-  sudo ANDROID_SDK_VER=21 ANDROID_ARCH=arm64 src/scripts/docker-android.sh
+  sudo ANDROID_SDK_VER=29 ANDROID_ARCH=aarch64 src/scripts/docker-android.sh
 
 This will produce the docker-builds/android folder containing
 each architecture compiled.
