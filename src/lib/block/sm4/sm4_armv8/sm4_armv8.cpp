@@ -11,11 +11,11 @@ namespace Botan {
 
 namespace {
 
-static const uint8_t qswap_tbl[16] = {
+alignas(16) static const uint8_t qswap_tbl[16] = {
    12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3
 };
 
-static const uint8_t bswap_tbl[16] = {
+alignas(16) static const uint8_t bswap_tbl[16] = {
    15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 };
 
