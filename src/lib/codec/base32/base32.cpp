@@ -125,8 +125,7 @@ class Base32 final
       static const uint8_t m_base32_to_bin[256];
    };
 
-const uint8_t Base32::m_bin_to_base32[32] =
-   {
+alignas(64) const uint8_t Base32::m_bin_to_base32[32] = {
    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
    '2', '3', '4', '5', '6', '7'
@@ -136,8 +135,7 @@ const uint8_t Base32::m_bin_to_base32[32] =
 * base32 Decoder Lookup Table
 * Warning: assumes ASCII encodings
 */
-const uint8_t Base32::m_base32_to_bin[256] =
-   {
+alignas(256) const uint8_t Base32::m_base32_to_bin[256] = {
    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
    0x80, 0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
