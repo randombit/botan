@@ -16,11 +16,11 @@ void hex_encode(char output[],
                 size_t input_length,
                 bool uppercase)
    {
-   static const uint8_t BIN_TO_HEX_UPPER[16] = {
+   alignas(64) static const uint8_t BIN_TO_HEX_UPPER[16] = {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
       'A', 'B', 'C', 'D', 'E', 'F' };
 
-   static const uint8_t BIN_TO_HEX_LOWER[16] = {
+   alignas(64) static const uint8_t BIN_TO_HEX_LOWER[16] = {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
       'a', 'b', 'c', 'd', 'e', 'f' };
 
@@ -61,7 +61,7 @@ size_t hex_decode(uint8_t output[],
    * Warning: this table assumes ASCII character encodings
    */
 
-   static const uint8_t HEX_TO_BIN[256] = {
+   alignas(64) static const uint8_t HEX_TO_BIN[256] = {
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
       0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
