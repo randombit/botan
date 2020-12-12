@@ -280,15 +280,15 @@ mFvAZ/8wal0=
 
     test_cli("gen_dl_group", "--pbits=1043", pem)
 
-    dsa_grp = """-----BEGIN X9.42 DH PARAMETERS-----
+    dsa_grp = """-----BEGIN DSA PARAMETERS-----
 MIIBHgKBgQCyP1vosC/axliM2hmJ9EOSdd1zBkuzMP25CYD8PFkRVrPLr1ClSUtn
 eXTIsHToJ7d7sRwtidQGW9BrvUEyiAWE06W/wnLPxB3/g2/l/P2EhbNmNHAO7rV7
-ZVz/uKR4Xcvzxg9uk5MpT1VsxA8H6VEwzefNF1Rya92rqGgBTNT3/wKBgC7HLL8A
-Gu3tqJxTk1iNgojjOiSreLn6ihA8R8kQnRXDTNtDKz996KHGInfMBurUI1zPM3xq
-bHc0CvU1Nf87enhPIretzJcFgiCWrNFUIC25zPEjp0s3/ERHT4Bi1TABZ3j6YUEQ
-fnnj+9XriKKHf2WtX0T4FXorvnKq30m934rzAhUAvwhWDK3yZEmphc7dwl4/J3Zp
-+MU=
------END X9.42 DH PARAMETERS-----"""
+ZVz/uKR4Xcvzxg9uk5MpT1VsxA8H6VEwzefNF1Rya92rqGgBTNT3/wIVAL8IVgyt
+8mRJqYXO3cJePyd2afjFAoGALscsvwAa7e2onFOTWI2CiOM6JKt4ufqKEDxHyRCd
+FcNM20MrP33oocYid8wG6tQjXM8zfGpsdzQK9TU1/zt6eE8it63MlwWCIJas0VQg
+LbnM8SOnSzf8REdPgGLVMAFnePphQRB+eeP71euIood/Za1fRPgVeiu+cqrfSb3f
+ivM=
+-----END DSA PARAMETERS-----"""
 
     test_cli("gen_dl_group", ["--type=dsa", "--pbits=1024"], dsa_grp)
 

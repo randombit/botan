@@ -528,13 +528,13 @@ class Gen_DL_Group final : public Command
             if(seed_str.empty())
                {
                Botan::DL_Group grp(rng(), Botan::DL_Group::DSA_Kosherizer, pbits, dsa_qbits);
-               output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
+               output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_57);
                }
             else
                {
                const std::vector<uint8_t> seed = Botan::hex_decode(seed_str);
                Botan::DL_Group grp(rng(), seed, pbits, dsa_qbits);
-               output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
+               output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_57);
                }
 
             }
