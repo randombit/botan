@@ -10,14 +10,9 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> CRC32::copy_state() const
-   {
-   return std::unique_ptr<HashFunction>(new CRC32(*this));
-   }
-
 namespace {
 
-alignas(256) const uint32_t TABLE[256] = {
+alignas(256) const uint32_t CRC32_T0[256] = {
    0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F,
    0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988,
    0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2,
@@ -72,28 +67,28 @@ void CRC32::add_data(const uint8_t input[], size_t length)
    uint32_t tmp = m_crc;
    while(length >= 16)
       {
-      tmp = TABLE[(tmp ^ input[ 0]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[ 1]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[ 2]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[ 3]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[ 4]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[ 5]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[ 6]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[ 7]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[ 8]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[ 9]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[10]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[11]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[12]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[13]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[14]) & 0xFF] ^ (tmp >> 8);
-      tmp = TABLE[(tmp ^ input[15]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 0]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 1]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 2]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 3]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 4]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 5]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 6]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 7]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 8]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[ 9]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[10]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[11]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[12]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[13]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[14]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[15]) & 0xFF] ^ (tmp >> 8);
       input += 16;
       length -= 16;
       }
 
    for(size_t i = 0; i != length; ++i)
-      tmp = TABLE[(tmp ^ input[i]) & 0xFF] ^ (tmp >> 8);
+      tmp = CRC32_T0[(tmp ^ input[i]) & 0xFF] ^ (tmp >> 8);
 
    m_crc = tmp;
    }
@@ -106,6 +101,11 @@ void CRC32::final_result(uint8_t output[])
    m_crc ^= 0xFFFFFFFF;
    store_be(m_crc, output);
    clear();
+   }
+
+std::unique_ptr<HashFunction> CRC32::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new CRC32(*this));
    }
 
 }
