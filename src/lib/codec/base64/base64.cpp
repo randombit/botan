@@ -119,7 +119,7 @@ class Base64 final
       static const uint8_t m_base64_to_bin[256];
    };
 
-const uint8_t Base64::m_bin_to_base64[64] =
+alignas(64) const uint8_t Base64::m_bin_to_base64[64] =
    {
    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
@@ -132,7 +132,7 @@ const uint8_t Base64::m_bin_to_base64[64] =
 * base64 Decoder Lookup Table
 * Warning: assumes ASCII encodings
 */
-const uint8_t Base64::m_base64_to_bin[256] =
+alignas(64) const uint8_t Base64::m_base64_to_bin[256] =
    {
    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
    0x80, 0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
