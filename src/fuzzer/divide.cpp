@@ -20,7 +20,7 @@ void fuzz(const uint8_t in[], size_t len)
    if(y == 0)
       return;
 
-   Botan::divide(x, y, q, r);
+   Botan::vartime_divide(x, y, q, r);
 
    FUZZER_ASSERT_TRUE(r < y);
 
@@ -38,7 +38,7 @@ void fuzz(const uint8_t in[], size_t len)
    y = y.byte_at(0);
    if(y == 0)
       y = 251;
-   Botan::divide(x, y, q, r);
+   Botan::vartime_divide(x, y, q, r);
 
    z = q*y + r;
    FUZZER_ASSERT_EQUAL(z, x);
