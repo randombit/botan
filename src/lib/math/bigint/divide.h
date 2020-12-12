@@ -42,14 +42,6 @@ void ct_divide(const BigInt& x,
                BigInt& q,
                BigInt& r);
 
-inline void divide(const BigInt& x,
-                   const BigInt& y,
-                   BigInt& q,
-                   BigInt& r)
-   {
-   ct_divide(x, y, q, r);
-   }
-
 /**
 * BigInt division, const time variant
 *
