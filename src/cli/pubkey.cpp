@@ -478,7 +478,7 @@ BOTAN_REGISTER_COMMAND("pk_workfactor", PK_Workfactor);
 class Gen_DL_Group final : public Command
    {
    public:
-      Gen_DL_Group() : Command("gen_dl_group --pbits=1024 --qbits=0 --seed= --type=subgroup") {}
+      Gen_DL_Group() : Command("gen_dl_group --pbits=2048 --qbits=0 --seed= --type=subgroup") {}
 
       std::string group() const override
          {
