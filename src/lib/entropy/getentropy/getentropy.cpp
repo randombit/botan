@@ -7,7 +7,7 @@
 
 #include <botan/internal/getentropy.h>
 
-#if defined(BOTAN_TARGET_OS_IS_OPENBSD) || defined(BOTAN_TARGET_OS_IS_FREEBSD)
+#if defined(BOTAN_TARGET_OS_IS_OPENBSD) || defined(BOTAN_TARGET_OS_IS_FREEBSD) || defined(BOTAN_TARGET_OS_IS_SOLARIS)
    #include <unistd.h>
 #else
    #include <sys/random.h>
