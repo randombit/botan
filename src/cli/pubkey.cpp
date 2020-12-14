@@ -309,11 +309,11 @@ class PKCS8_Tool final : public Command
 
          if(pass_in.empty())
             {
-            key.reset(Botan::PKCS8::load_key(key_src, rng()));
+            key = Botan::PKCS8::load_key(key_src);
             }
          else
             {
-            key.reset(Botan::PKCS8::load_key(key_src, rng(), pass_in));
+            key = Botan::PKCS8::load_key(key_src, pass_in);
             }
 
          const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));

@@ -202,7 +202,7 @@ std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509
       {
       auto blob = stmt->get_blob(0);
       DataSource_Memory src(blob.first,blob.second);
-      key.reset(PKCS8::load_key(src, m_rng, m_password));
+      key = PKCS8::load_key(src, m_password);
       }
 
    return key;

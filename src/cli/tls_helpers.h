@@ -55,13 +55,13 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
 #endif
          }
 
-      Basic_Credentials_Manager(Botan::RandomNumberGenerator& rng,
-                                const std::string& server_crt,
+      Basic_Credentials_Manager(const std::string& server_crt,
                                 const std::string& server_key)
          {
          Certificate_Info cert;
 
-         cert.key.reset(Botan::PKCS8::load_key(server_key, rng));
+         Botan::DataSource_Stream key_in(server_key);
+         cert.key = Botan::PKCS8::load_key(key_in);
 
          Botan::DataSource_Stream in(server_crt);
          while(!in.end_of_data())

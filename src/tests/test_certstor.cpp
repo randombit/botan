@@ -395,14 +395,14 @@ class Certstor_Tests final : public Test
             return {result};
             }
 
-         auto& rng = Test::rng();
          std::vector<CertificateAndKey> certsandkeys;
 
          for(const auto& certandkey_filenames : certsandkeys_filenames)
             {
             const Botan::X509_Certificate certificate(test_dir + "/" + certandkey_filenames.certificate);
-            std::shared_ptr<Botan::Private_Key> private_key(Botan::PKCS8::load_key(test_dir + "/" +
-                  certandkey_filenames.private_key, rng));
+
+            Botan::DataSource_Stream key_stream(test_dir + "/" + certandkey_filenames.private_key);
+            std::shared_ptr<Botan::Private_Key> private_key = Botan::PKCS8::load_key(key_stream);
 
             if(!private_key)
                {

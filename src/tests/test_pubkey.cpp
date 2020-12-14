@@ -611,8 +611,8 @@ void test_pbe_roundtrip(Test::Result& result,
                                   std::chrono::milliseconds(10),
                                   pbe_algo));
 
-      std::unique_ptr<Botan::Private_Key> loaded(
-         Botan::PKCS8::load_key(data_src, Test::rng(), passphrase));
+      std::unique_ptr<Botan::Private_Key> loaded =
+         Botan::PKCS8::load_key(data_src, passphrase);
 
       result.confirm("recovered private key from encrypted blob", loaded.get() != nullptr);
       result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
@@ -630,8 +630,8 @@ void test_pbe_roundtrip(Test::Result& result,
                                   std::chrono::milliseconds(10),
                                   pbe_algo));
 
-      std::unique_ptr<Botan::Private_Key> loaded(
-         Botan::PKCS8::load_key(data_src, Test::rng(), passphrase));
+      std::unique_ptr<Botan::Private_Key> loaded =
+         Botan::PKCS8::load_key(data_src, passphrase);
 
       result.confirm("recovered private key from BER blob", loaded.get() != nullptr);
       result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
@@ -735,8 +735,8 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
             {
             const auto ber = key.private_key_info();
             Botan::DataSource_Memory data_src(ber);
-            std::unique_ptr<Botan::Private_Key> loaded(
-               Botan::PKCS8::load_key(data_src, Test::rng()));
+            std::unique_ptr<Botan::Private_Key> loaded =
+               Botan::PKCS8::load_key(data_src);
 
             result.confirm("recovered private key from PEM blob", loaded.get() != nullptr);
             result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
@@ -750,7 +750,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
          try
             {
             Botan::DataSource_Memory data_src(Botan::PKCS8::BER_encode(key));
-            std::unique_ptr<Botan::Public_Key> loaded(Botan::PKCS8::load_key(data_src, Test::rng()));
+            std::unique_ptr<Botan::Public_Key> loaded = Botan::PKCS8::load_key(data_src);
 
             result.confirm("recovered public key from private", loaded.get() != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());

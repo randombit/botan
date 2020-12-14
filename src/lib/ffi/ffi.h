@@ -544,8 +544,8 @@ BOTAN_PUBLIC_API(2,0) int botan_cipher_destroy(botan_cipher_t cipher);
 *  botan_pwdhash(pbkdf_algo, iterations, 0, 0, out, out_len,
 *                passphrase, 0, salt, salt_len);
 */
-BOTAN_PUBLIC_API(2,0) int
 BOTAN_DEPRECATED("Use botan_pwdhash")
+BOTAN_PUBLIC_API(2,0) int
 botan_pbkdf(const char* pbkdf_algo,
             uint8_t out[], size_t out_len,
             const char* passphrase,
@@ -645,8 +645,8 @@ int BOTAN_PUBLIC_API(2,8) botan_pwdhash_timed(
 * Deprecated; use
 * botan_pwdhash("Scrypt", N, r, p, out, out_len, password, 0, salt, salt_len);
 */
-BOTAN_PUBLIC_API(2,8) int
 BOTAN_DEPRECATED("Use botan_pwdhash")
+BOTAN_PUBLIC_API(2,8) int
 botan_scrypt(uint8_t out[], size_t out_len,
              const char* passphrase,
              const uint8_t salt[], size_t salt_len,

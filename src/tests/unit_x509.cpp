@@ -637,8 +637,8 @@ Test::Result test_verify_gost2012_cert()
    // Throughout the test, some synonyms for EMSA4 are used, e.g. PSSR, EMSA-PSS
    Test::Result test_result("X509 Padding Config");
 
-   std::unique_ptr<Botan::Private_Key> sk(Botan::PKCS8::load_key(
-      Test::data_file("x509/misc/rsa_key.pem"), Test::rng()));
+   Botan::DataSource_Stream key_stream(Test::data_file("x509/misc/rsa_key.pem"));
+   std::unique_ptr<Botan::Private_Key> sk = Botan::PKCS8::load_key(key_stream);
 
    // Create X509 CA certificate; EMSA3 is used for signing by default
    Botan::X509_Cert_Options opt("TESTCA");

@@ -109,13 +109,14 @@ class Sign_Cert final : public Command
          const std::string hash = get_arg("hash");
 
          std::unique_ptr<Botan::Private_Key> key;
+         Botan::DataSource_Stream key_stream(key_file);
          if(!pass.empty())
             {
-            key.reset(Botan::PKCS8::load_key(key_file, rng(), pass));
+            key = Botan::PKCS8::load_key(key_stream, pass);
             }
          else
             {
-            key.reset(Botan::PKCS8::load_key(key_file, rng()));
+            key = Botan::PKCS8::load_key(key_stream);
             }
 
          if(!key)
@@ -312,7 +313,8 @@ class Gen_Self_Signed final : public Command
          {
          const std::string key_file = get_arg("key");
          const std::string passphrase = get_passphrase_arg("Passphrase for " + key_file, "key-pass");
-         std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(key_file, rng(), passphrase));
+         Botan::DataSource_Stream key_stream(key_file);
+         std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(key_stream, passphrase);
 
          if(!key)
             {
@@ -373,7 +375,8 @@ class Generate_PKCS10 final : public Command
 
       void go() override
          {
-         std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(get_arg("key"), rng(), get_arg("key-pass")));
+         Botan::DataSource_Stream key_stream(get_arg("key"));
+         std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(key_stream, get_arg("key-pass"));
 
          if(!key)
             {
