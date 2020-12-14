@@ -48,7 +48,7 @@ in a future major release.
 
 - Block cipher GOST 28147, Noekeon
 
-- Hash function GOST 34.11-94
+- Hash function GOST 34.11-94, MD4
 
 - X9.42 KDF
 
