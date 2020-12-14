@@ -61,7 +61,7 @@ in a future major release.
 
 - Block ciphers CAST-256, GOST 28147, Kasumi, MISTY1, DESX, XTEA, Noekeon
 
-- Hash functions GOST 34.11-94 and Tiger
+- Hash functions GOST 34.11-94, Tiger, MD4
 
 - X9.42 KDF
 
