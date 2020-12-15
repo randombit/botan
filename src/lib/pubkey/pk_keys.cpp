@@ -39,9 +39,9 @@ std::vector<uint8_t> Public_Key::subject_public_key() const
    {
    std::vector<uint8_t> output;
 
-   DER_Encoder(output).start_cons(SEQUENCE)
+   DER_Encoder(output).start_sequence()
          .encode(algorithm_identifier())
-         .encode(public_key_bits(), BIT_STRING)
+         .encode(public_key_bits(), ASN1_Tag::BIT_STRING)
       .end_cons();
 
    return output;
@@ -63,10 +63,10 @@ secure_vector<uint8_t> Private_Key::private_key_info() const
    const size_t PKCS8_VERSION = 0;
 
    return DER_Encoder()
-         .start_cons(SEQUENCE)
+         .start_sequence()
             .encode(PKCS8_VERSION)
             .encode(pkcs8_algorithm_identifier())
-            .encode(private_key_bits(), OCTET_STRING)
+            .encode(private_key_bits(), ASN1_Tag::OCTET_STRING)
          .end_cons()
       .get_contents();
    }

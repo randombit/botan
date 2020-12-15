@@ -254,10 +254,10 @@ void Extensions::encode_into(DER_Encoder& to_object) const
          const bool is_critical = ext_info.second.is_critical();
          const std::vector<uint8_t>& ext_value = ext_info.second.bits();
 
-         to_object.start_cons(SEQUENCE)
+         to_object.start_sequence()
                .encode(oid)
                .encode_optional(is_critical, false)
-               .encode(ext_value, OCTET_STRING)
+               .encode(ext_value, ASN1_Tag::OCTET_STRING)
             .end_cons();
          }
       }
@@ -271,7 +271,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
    m_extension_oids.clear();
    m_extension_info.clear();
 
-   BER_Decoder sequence = from_source.start_cons(SEQUENCE);
+   BER_Decoder sequence = from_source.start_sequence();
 
    while(sequence.more_items())
       {
@@ -279,10 +279,10 @@ void Extensions::decode_from(BER_Decoder& from_source)
       bool critical;
       std::vector<uint8_t> bits;
 
-      sequence.start_cons(SEQUENCE)
+      sequence.start_sequence()
          .decode(oid)
-         .decode_optional(critical, BOOLEAN, UNIVERSAL, false)
-         .decode(bits, OCTET_STRING)
+         .decode_optional(critical, ASN1_Tag::BOOLEAN, ASN1_Tag::UNIVERSAL, false)
+         .decode(bits, ASN1_Tag::OCTET_STRING)
       .end_cons();
 
       std::unique_ptr<Certificate_Extension> obj = create_extn_obj(oid, critical, bits);
@@ -313,7 +313,7 @@ std::vector<uint8_t> Basic_Constraints::encode_inner() const
    {
    std::vector<uint8_t> output;
    DER_Encoder(output)
-      .start_cons(SEQUENCE)
+      .start_sequence()
       .encode_if(m_is_ca,
                  DER_Encoder()
                     .encode(m_is_ca)
@@ -329,9 +329,9 @@ std::vector<uint8_t> Basic_Constraints::encode_inner() const
 void Basic_Constraints::decode_inner(const std::vector<uint8_t>& in)
    {
    BER_Decoder(in)
-      .start_cons(SEQUENCE)
-         .decode_optional(m_is_ca, BOOLEAN, UNIVERSAL, false)
-         .decode_optional(m_path_limit, INTEGER, UNIVERSAL, NO_CERT_PATH_LIMIT)
+      .start_sequence()
+         .decode_optional(m_is_ca, ASN1_Tag::BOOLEAN, ASN1_Tag::UNIVERSAL, false)
+         .decode_optional(m_path_limit, ASN1_Tag::INTEGER, ASN1_Tag::UNIVERSAL, NO_CERT_PATH_LIMIT)
       .end_cons();
 
    if(m_is_ca == false)
@@ -349,7 +349,7 @@ std::vector<uint8_t> Key_Usage::encode_inner() const
    const size_t unused_bits = ctz(static_cast<uint32_t>(m_constraints));
 
    std::vector<uint8_t> der;
-   der.push_back(BIT_STRING);
+   der.push_back(static_cast<uint8_t>(ASN1_Tag::BIT_STRING));
    der.push_back(2 + ((unused_bits < 8) ? 1 : 0));
    der.push_back(unused_bits % 8);
    der.push_back((m_constraints >> 8) & 0xFF);
@@ -368,7 +368,7 @@ void Key_Usage::decode_inner(const std::vector<uint8_t>& in)
 
    BER_Object obj = ber.get_next_object();
 
-   obj.assert_is_a(BIT_STRING, UNIVERSAL, "usage constraint");
+   obj.assert_is_a(ASN1_Tag::BIT_STRING, ASN1_Tag::UNIVERSAL, "usage constraint");
 
    if(obj.length() != 2 && obj.length() != 3)
       throw BER_Decoding_Error("Bad size for BITSTRING in usage constraint");
@@ -400,7 +400,7 @@ void Key_Usage::decode_inner(const std::vector<uint8_t>& in)
 std::vector<uint8_t> Subject_Key_ID::encode_inner() const
    {
    std::vector<uint8_t> output;
-   DER_Encoder(output).encode(m_key_id, OCTET_STRING);
+   DER_Encoder(output).encode(m_key_id, ASN1_Tag::OCTET_STRING);
    return output;
    }
 
@@ -409,7 +409,7 @@ std::vector<uint8_t> Subject_Key_ID::encode_inner() const
 */
 void Subject_Key_ID::decode_inner(const std::vector<uint8_t>& in)
    {
-   BER_Decoder(in).decode(m_key_id, OCTET_STRING).verify_end();
+   BER_Decoder(in).decode(m_key_id, ASN1_Tag::OCTET_STRING).verify_end();
    }
 
 /*
@@ -437,8 +437,8 @@ std::vector<uint8_t> Authority_Key_ID::encode_inner() const
    {
    std::vector<uint8_t> output;
    DER_Encoder(output)
-      .start_cons(SEQUENCE)
-         .encode(m_key_id, OCTET_STRING, ASN1_Tag(0), CONTEXT_SPECIFIC)
+      .start_sequence()
+         .encode(m_key_id, ASN1_Tag::OCTET_STRING, ASN1_Tag(0), ASN1_Tag::CONTEXT_SPECIFIC)
       .end_cons();
    return output;
    }
@@ -449,8 +449,8 @@ std::vector<uint8_t> Authority_Key_ID::encode_inner() const
 void Authority_Key_ID::decode_inner(const std::vector<uint8_t>& in)
    {
    BER_Decoder(in)
-      .start_cons(SEQUENCE)
-      .decode_optional_string(m_key_id, OCTET_STRING, 0);
+      .start_sequence()
+      .decode_optional_string(m_key_id, ASN1_Tag::OCTET_STRING, 0);
    }
 
 /*
@@ -496,7 +496,7 @@ std::vector<uint8_t> Extended_Key_Usage::encode_inner() const
    {
    std::vector<uint8_t> output;
    DER_Encoder(output)
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .encode_list(m_oids)
       .end_cons();
    return output;
@@ -526,22 +526,22 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in)
    {
    std::vector<GeneralSubtree> permit, exclude;
    BER_Decoder ber(in);
-   BER_Decoder ext = ber.start_cons(SEQUENCE);
+   BER_Decoder ext = ber.start_sequence();
    BER_Object per = ext.get_next_object();
 
    ext.push_back(per);
-   if(per.is_a(0, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
+   if(per.is_a(0, ASN1_Tag::CONSTRUCTED | ASN1_Tag::CONTEXT_SPECIFIC))
       {
-      ext.decode_list(permit,ASN1_Tag(0),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+      ext.decode_list(permit, ASN1_Tag(0), ASN1_Tag::CONSTRUCTED | ASN1_Tag::CONTEXT_SPECIFIC);
       if(permit.empty())
          throw Encoding_Error("Empty Name Contraint list");
       }
 
    BER_Object exc = ext.get_next_object();
    ext.push_back(exc);
-   if(per.is_a(1, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
+   if(per.is_a(1, ASN1_Tag::CONSTRUCTED | ASN1_Tag::CONTEXT_SPECIFIC))
       {
-      ext.decode_list(exclude,ASN1_Tag(1),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+      ext.decode_list(exclude, ASN1_Tag(1), ASN1_Tag::CONSTRUCTED | ASN1_Tag::CONTEXT_SPECIFIC);
       if(exclude.empty())
          throw Encoding_Error("Empty Name Contraint list");
       }
@@ -634,14 +634,14 @@ class Policy_Information final : public ASN1_Object
 
       void encode_into(DER_Encoder& codec) const override
          {
-         codec.start_cons(SEQUENCE)
+         codec.start_sequence()
             .encode(m_oid)
             .end_cons();
          }
 
       void decode_from(BER_Decoder& codec) override
          {
-         codec.start_cons(SEQUENCE)
+         codec.start_sequence()
             .decode(m_oid)
             .discard_remaining()
             .end_cons();
@@ -665,7 +665,7 @@ std::vector<uint8_t> Certificate_Policies::encode_inner() const
 
    std::vector<uint8_t> output;
    DER_Encoder(output)
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .encode_list(policies)
       .end_cons();
    return output;
@@ -700,14 +700,14 @@ void Certificate_Policies::validate(
 
 std::vector<uint8_t> Authority_Information_Access::encode_inner() const
    {
-   ASN1_String url(m_ocsp_responder, IA5_STRING);
+   ASN1_String url(m_ocsp_responder, ASN1_Tag::IA5_STRING);
 
    std::vector<uint8_t> output;
    DER_Encoder(output)
-      .start_cons(SEQUENCE)
-      .start_cons(SEQUENCE)
+      .start_sequence()
+      .start_sequence()
       .encode(OID::from_string("PKIX.OCSP"))
-      .add_object(ASN1_Tag(6), CONTEXT_SPECIFIC, url.value())
+      .add_object(ASN1_Tag(6), ASN1_Tag::CONTEXT_SPECIFIC, url.value())
       .end_cons()
       .end_cons();
    return output;
@@ -715,13 +715,13 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const
 
 void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
    {
-   BER_Decoder ber = BER_Decoder(in).start_cons(SEQUENCE);
+   BER_Decoder ber = BER_Decoder(in).start_sequence();
 
    while(ber.more_items())
       {
       OID oid;
 
-      BER_Decoder info = ber.start_cons(SEQUENCE);
+      BER_Decoder info = ber.start_sequence();
 
       info.decode(oid);
 
@@ -729,7 +729,7 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
          {
          BER_Object name = info.get_next_object();
 
-         if(name.is_a(6, CONTEXT_SPECIFIC))
+         if(name.is_a(6, ASN1_Tag::CONTEXT_SPECIFIC))
             {
             m_ocsp_responder = ASN1::to_string(name);
             }
@@ -739,7 +739,7 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
          {
          BER_Object name = info.get_next_object();
 
-         if(name.is_a(6, CONTEXT_SPECIFIC))
+         if(name.is_a(6, ASN1_Tag::CONTEXT_SPECIFIC))
             {
             m_ca_issuers.push_back(ASN1::to_string(name));
             }
@@ -792,7 +792,7 @@ void CRL_Number::decode_inner(const std::vector<uint8_t>& in)
 std::vector<uint8_t> CRL_ReasonCode::encode_inner() const
    {
    std::vector<uint8_t> output;
-   DER_Encoder(output).encode(static_cast<size_t>(m_reason), ENUMERATED, UNIVERSAL);
+   DER_Encoder(output).encode(static_cast<size_t>(m_reason), ASN1_Tag::ENUMERATED, ASN1_Tag::UNIVERSAL);
    return output;
    }
 
@@ -802,7 +802,7 @@ std::vector<uint8_t> CRL_ReasonCode::encode_inner() const
 void CRL_ReasonCode::decode_inner(const std::vector<uint8_t>& in)
    {
    size_t reason_code = 0;
-   BER_Decoder(in).decode(reason_code, ENUMERATED, UNIVERSAL);
+   BER_Decoder(in).decode(reason_code, ASN1_Tag::ENUMERATED, ASN1_Tag::UNIVERSAL);
    m_reason = static_cast<CRL_Code>(reason_code);
    }
 
@@ -839,11 +839,11 @@ void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&
 
 void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder& ber)
    {
-   ber.start_cons(SEQUENCE)
-      .start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC)
+   ber.start_sequence()
+      .start_cons(ASN1_Tag(0), ASN1_Tag::CONTEXT_SPECIFIC)
         .decode_optional_implicit(m_point, ASN1_Tag(0),
-                                  ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED),
-                                  SEQUENCE, CONSTRUCTED)
+                                  ASN1_Tag::CONTEXT_SPECIFIC | ASN1_Tag::CONSTRUCTED,
+                                  ASN1_Tag::SEQUENCE, ASN1_Tag::CONSTRUCTED)
       .end_cons().end_cons();
    }
 

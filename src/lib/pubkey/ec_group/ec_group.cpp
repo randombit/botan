@@ -299,36 +299,36 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
    BER_Decoder ber(bits, len);
    BER_Object obj = ber.get_next_object();
 
-   if(obj.type() == NULL_TAG)
+   if(obj.type() == ASN1_Tag::NULL_TAG)
       {
       throw Decoding_Error("Cannot handle ImplicitCA ECC parameters");
       }
-   else if(obj.type() == OBJECT_ID)
+   else if(obj.type() == ASN1_Tag::OBJECT_ID)
       {
       OID dom_par_oid;
       BER_Decoder(bits, len).decode(dom_par_oid);
       return ec_group_data().lookup(dom_par_oid);
       }
-   else if(obj.type() == SEQUENCE)
+   else if(obj.type() == ASN1_Tag::SEQUENCE)
       {
       BigInt p, a, b, order, cofactor;
       std::vector<uint8_t> base_pt;
       std::vector<uint8_t> seed;
 
       BER_Decoder(bits, len)
-         .start_cons(SEQUENCE)
+         .start_sequence()
            .decode_and_check<size_t>(1, "Unknown ECC param version code")
-           .start_cons(SEQUENCE)
+           .start_sequence()
             .decode_and_check(OID("1.2.840.10045.1.1"),
                               "Only prime ECC fields supported")
              .decode(p)
            .end_cons()
-           .start_cons(SEQUENCE)
+           .start_sequence()
              .decode_octet_string_bigint(a)
              .decode_octet_string_bigint(b)
-             .decode_optional_string(seed, BIT_STRING, BIT_STRING)
+             .decode_optional_string(seed, ASN1_Tag::BIT_STRING, ASN1_Tag::BIT_STRING)
            .end_cons()
-           .decode(base_pt, OCTET_STRING)
+           .decode(base_pt, ASN1_Tag::OCTET_STRING)
            .decode(order)
            .decode(cofactor)
          .end_cons()
@@ -619,19 +619,19 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
 
       const size_t p_bytes = get_p_bytes();
 
-      der.start_cons(SEQUENCE)
+      der.start_sequence()
             .encode(ecpVers1)
-            .start_cons(SEQUENCE)
+            .start_sequence()
                .encode(curve_type)
                .encode(get_p())
             .end_cons()
-            .start_cons(SEQUENCE)
+            .start_sequence()
                .encode(BigInt::encode_1363(get_a(), p_bytes),
-                       OCTET_STRING)
+                       ASN1_Tag::OCTET_STRING)
                .encode(BigInt::encode_1363(get_b(), p_bytes),
-                       OCTET_STRING)
+                       ASN1_Tag::OCTET_STRING)
             .end_cons()
-              .encode(get_base_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING)
+              .encode(get_base_point().encode(PointGFp::UNCOMPRESSED), ASN1_Tag::OCTET_STRING)
             .encode(get_order())
             .encode(get_cofactor())
          .end_cons();

@@ -37,7 +37,7 @@ secure_vector<uint8_t> extract_raw_key(const secure_vector<uint8_t>& key_bits)
    secure_vector<uint8_t> raw_key;
    try
       {
-      BER_Decoder(key_bits).decode(raw_key, OCTET_STRING);
+      BER_Decoder(key_bits).decode(raw_key, ASN1_Tag::OCTET_STRING);
       }
    catch(Decoding_Error&)
       {
@@ -318,7 +318,7 @@ XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
 
 secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const
    {
-   return DER_Encoder().encode(raw_private_key(), OCTET_STRING).get_contents();
+   return DER_Encoder().encode(raw_private_key(), ASN1_Tag::OCTET_STRING).get_contents();
    }
 
 std::shared_ptr<Atomic<size_t>>

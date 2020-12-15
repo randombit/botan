@@ -255,7 +255,7 @@ std::vector<uint8_t> der_encode_signature(const std::vector<uint8_t>& sig,
 
    std::vector<uint8_t> output;
    DER_Encoder(output)
-      .start_cons(SEQUENCE)
+      .start_sequence()
       .encode_list(sig_parts)
       .end_cons();
    return output;
@@ -340,7 +340,7 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
          {
          std::vector<uint8_t> real_sig;
          BER_Decoder decoder(sig, length);
-         BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
+         BER_Decoder ber_sig = decoder.start_sequence();
 
          BOTAN_ASSERT_NOMSG(m_parts != 0 && m_part_size != 0);
 

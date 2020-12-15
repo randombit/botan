@@ -354,7 +354,7 @@ std::vector<uint8_t> TPM_PrivateKey::public_key_bits() const
    {
    std::vector<uint8_t> bits;
    DER_Encoder(bits)
-      .start_cons(SEQUENCE)
+      .start_sequence()
         .encode(get_n())
         .encode(get_e())
       .end_cons();

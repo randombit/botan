@@ -20,9 +20,8 @@ class DER_Encoder;
 
 /**
 * ASN.1 Type and Class Tags
-* This will become an enum class in a future major release
 */
-enum ASN1_Tag : uint32_t {
+enum class ASN1_Tag : uint32_t {
    UNIVERSAL        = 0x00,
    APPLICATION      = 0x40,
    CONTEXT_SPECIFIC = 0x80,
@@ -58,6 +57,16 @@ enum ASN1_Tag : uint32_t {
    NO_OBJECT        = 0xFF00,
    DIRECTORY_STRING = 0xFF01
 };
+
+inline bool intersects(ASN1_Tag x, ASN1_Tag y)
+   {
+   return static_cast<uint32_t>(x) & static_cast<uint32_t>(y);
+   }
+
+inline ASN1_Tag operator|(ASN1_Tag x, ASN1_Tag y)
+   {
+   return static_cast<ASN1_Tag>(static_cast<uint32_t>(x) | static_cast<uint32_t>(y));
+   }
 
 std::string BOTAN_UNSTABLE_API asn1_tag_to_string(ASN1_Tag type);
 std::string BOTAN_UNSTABLE_API asn1_class_to_string(ASN1_Tag type);
@@ -99,7 +108,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Object
 class BOTAN_PUBLIC_API(2,0) BER_Object final
    {
    public:
-      BER_Object() : m_type_tag(NO_OBJECT), m_class_tag(UNIVERSAL) {}
+      BER_Object() : m_type_tag(ASN1_Tag::NO_OBJECT), m_class_tag(ASN1_Tag::UNIVERSAL) {}
 
       BER_Object(const BER_Object& other) = default;
 
@@ -109,9 +118,9 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
 
       BER_Object& operator=(BER_Object&& other) = default;
 
-      bool is_set() const { return m_type_tag != NO_OBJECT; }
+      bool is_set() const { return m_type_tag != ASN1_Tag::NO_OBJECT; }
 
-      ASN1_Tag tagging() const { return ASN1_Tag(type() | get_class()); }
+      ASN1_Tag tagging() const { return type_tag() | class_tag(); }
 
       ASN1_Tag type_tag() const { return m_type_tag; }
       ASN1_Tag class_tag() const { return m_class_tag; }
@@ -341,7 +350,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Time final : public ASN1_Object
       uint32_t m_hour = 0;
       uint32_t m_minute = 0;
       uint32_t m_second = 0;
-      ASN1_Tag m_tag = NO_OBJECT;
+      ASN1_Tag m_tag = ASN1_Tag::NO_OBJECT;
    };
 
 /*

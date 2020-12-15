@@ -868,7 +868,7 @@ Code example:
       // import to card
       Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props( priv_key_sw.DER_domain(),
          Botan::DER_Encoder().encode(priv_key_sw.public_point().encode(Botan::PointGFp::Compression_Type::UNCOMPRESSED ),
-         Botan::OCTET_STRING ).get_contents_unlocked() );
+         Botan::ASN1_Tag::OCTET_STRING ).get_contents_unlocked() );
 
       pub_import_props.set_token( true );
       pub_import_props.set_verify( true );
@@ -1020,7 +1020,7 @@ Code example:
       Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props( priv_key_sw.DER_domain(),
          Botan::DER_Encoder().encode(
            priv_key_sw.public_point().encode(Botan::PointGFp::Compression_Type::UNCOMPRESSED ),
-           Botan::OCTET_STRING ).get_contents_unlocked() );
+           Botan::ASN1_Tag::OCTET_STRING ).get_contents_unlocked() );
 
       pub_import_props.set_token( true );
       pub_import_props.set_private( false );

@@ -33,19 +33,19 @@ void BER_Object::assert_is_a(ASN1_Tag expected_type_tag, ASN1_Tag expected_class
 
       msg << "Tag mismatch when decoding " << descr << " got ";
 
-      if(m_class_tag == NO_OBJECT && m_type_tag == NO_OBJECT)
+      if(m_class_tag == ASN1_Tag::NO_OBJECT && m_type_tag == ASN1_Tag::NO_OBJECT)
          {
          msg << "EOF";
          }
       else
          {
-         if(m_class_tag == UNIVERSAL || m_class_tag == CONSTRUCTED)
+         if(m_class_tag == ASN1_Tag::UNIVERSAL || m_class_tag == ASN1_Tag::CONSTRUCTED)
             {
             msg << asn1_tag_to_string(m_type_tag);
             }
          else
             {
-            msg << std::to_string(m_type_tag);
+            msg << std::to_string(static_cast<uint32_t>(m_type_tag));
             }
 
          msg << "/" << asn1_class_to_string(m_class_tag);
@@ -53,13 +53,13 @@ void BER_Object::assert_is_a(ASN1_Tag expected_type_tag, ASN1_Tag expected_class
 
       msg << " expected ";
 
-      if(expected_class_tag == UNIVERSAL || expected_class_tag == CONSTRUCTED)
+      if(expected_class_tag == ASN1_Tag::UNIVERSAL || expected_class_tag == ASN1_Tag::CONSTRUCTED)
          {
          msg << asn1_tag_to_string(expected_type_tag);
          }
       else
          {
-         msg << std::to_string(expected_type_tag);
+         msg << std::to_string(static_cast<uint32_t>(expected_type_tag));
          }
 
       msg << "/" << asn1_class_to_string(expected_class_tag);
@@ -88,17 +88,17 @@ std::string asn1_class_to_string(ASN1_Tag type)
    {
    switch(type)
       {
-      case UNIVERSAL:
+      case ASN1_Tag::UNIVERSAL:
          return "UNIVERSAL";
-      case CONSTRUCTED:
+      case ASN1_Tag::CONSTRUCTED:
          return "CONSTRUCTED";
-      case CONTEXT_SPECIFIC:
+      case ASN1_Tag::CONTEXT_SPECIFIC:
          return "CONTEXT_SPECIFIC";
-      case APPLICATION:
+      case ASN1_Tag::APPLICATION:
          return "APPLICATION";
-      case CONSTRUCTED | CONTEXT_SPECIFIC:
+      case ASN1_Tag::PRIVATE:
          return "PRIVATE";
-      case Botan::NO_OBJECT:
+      case ASN1_Tag::NO_OBJECT:
          return "NO_OBJECT";
       default:
          return "CLASS(" + std::to_string(static_cast<size_t>(type)) + ")";
@@ -109,68 +109,68 @@ std::string asn1_tag_to_string(ASN1_Tag type)
    {
    switch(type)
       {
-      case Botan::SEQUENCE:
+      case ASN1_Tag::SEQUENCE:
          return "SEQUENCE";
 
-      case Botan::SET:
+      case ASN1_Tag::SET:
          return "SET";
 
-      case Botan::PRINTABLE_STRING:
+      case ASN1_Tag::PRINTABLE_STRING:
          return "PRINTABLE STRING";
 
-      case Botan::NUMERIC_STRING:
+      case ASN1_Tag::NUMERIC_STRING:
          return "NUMERIC STRING";
 
-      case Botan::IA5_STRING:
+      case ASN1_Tag::IA5_STRING:
          return "IA5 STRING";
 
-      case Botan::T61_STRING:
+      case ASN1_Tag::T61_STRING:
          return "T61 STRING";
 
-      case Botan::UTF8_STRING:
+      case ASN1_Tag::UTF8_STRING:
          return "UTF8 STRING";
 
-      case Botan::VISIBLE_STRING:
+      case ASN1_Tag::VISIBLE_STRING:
          return "VISIBLE STRING";
 
-      case Botan::BMP_STRING:
+      case ASN1_Tag::BMP_STRING:
          return "BMP STRING";
 
-      case Botan::UNIVERSAL_STRING:
+      case ASN1_Tag::UNIVERSAL_STRING:
          return "UNIVERSAL STRING";
 
-      case Botan::UTC_TIME:
+      case ASN1_Tag::UTC_TIME:
          return "UTC TIME";
 
-      case Botan::GENERALIZED_TIME:
+      case ASN1_Tag::GENERALIZED_TIME:
          return "GENERALIZED TIME";
 
-      case Botan::OCTET_STRING:
+      case ASN1_Tag::OCTET_STRING:
          return "OCTET STRING";
 
-      case Botan::BIT_STRING:
+      case ASN1_Tag::BIT_STRING:
          return "BIT STRING";
 
-      case Botan::ENUMERATED:
+      case ASN1_Tag::ENUMERATED:
          return "ENUMERATED";
 
-      case Botan::INTEGER:
+      case ASN1_Tag::INTEGER:
          return "INTEGER";
 
-      case Botan::NULL_TAG:
+      case ASN1_Tag::NULL_TAG:
          return "NULL";
 
-      case Botan::OBJECT_ID:
+      case ASN1_Tag::OBJECT_ID:
          return "OBJECT";
 
-      case Botan::BOOLEAN:
+      case ASN1_Tag::BOOLEAN:
          return "BOOLEAN";
 
-      case Botan::NO_OBJECT:
+      case ASN1_Tag::NO_OBJECT:
          return "NO_OBJECT";
 
       default:
-         return "TAG(" + std::to_string(static_cast<size_t>(type)) + ")";
+         return "TAG(" + std::to_string(static_cast<uint32_t>(type)) + ")";
       }
    }
 
@@ -181,11 +181,13 @@ BER_Decoding_Error::BER_Decoding_Error(const std::string& str) :
    Decoding_Error("BER: " + str) {}
 
 BER_Bad_Tag::BER_Bad_Tag(const std::string& str, ASN1_Tag tag) :
-      BER_Decoding_Error(str + ": " + std::to_string(tag)) {}
+   BER_Decoding_Error(str + ": " + std::to_string(static_cast<uint32_t>(tag))) {}
 
 BER_Bad_Tag::BER_Bad_Tag(const std::string& str,
                          ASN1_Tag tag1, ASN1_Tag tag2) :
-   BER_Decoding_Error(str + ": " + std::to_string(tag1) + "/" + std::to_string(tag2)) {}
+   BER_Decoding_Error(str + ": " +
+                      std::to_string(static_cast<uint32_t>(tag1)) + "/" +
+                      std::to_string(static_cast<uint32_t>(tag2))) {}
 
 namespace ASN1 {
 
@@ -201,7 +203,7 @@ std::vector<uint8_t> put_in_sequence(const uint8_t bits[], size_t len)
    {
    std::vector<uint8_t> output;
    DER_Encoder(output)
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .raw_bytes(bits, len)
       .end_cons();
    return output;
@@ -228,7 +230,8 @@ bool maybe_BER(DataSource& source)
       throw Stream_IO_Error("ASN1::maybe_BER: Source was empty");
       }
 
-   if(first_u8 == (SEQUENCE | CONSTRUCTED))
+   // CONSTRUCTED SEQUENCE
+   if(first_u8 == 0x30)
       return true;
    return false;
    }

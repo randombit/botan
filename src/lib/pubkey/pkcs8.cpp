@@ -34,9 +34,9 @@ secure_vector<uint8_t> PKCS8_extract(DataSource& source,
    secure_vector<uint8_t> key_data;
 
    BER_Decoder(source)
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .decode(pbe_alg_id)
-         .decode(key_data, OCTET_STRING)
+         .decode(key_data, ASN1_Tag::OCTET_STRING)
       .verify_end();
 
    return key_data;
@@ -117,10 +117,10 @@ secure_vector<uint8_t> PKCS8_decode(
          key = key_data;
 
       BER_Decoder(key)
-         .start_cons(SEQUENCE)
+         .start_sequence()
             .decode_and_check<size_t>(0, "Unknown PKCS #8 version number")
             .decode(pk_alg_id)
-            .decode(key, OCTET_STRING)
+            .decode(key, ASN1_Tag::OCTET_STRING)
             .discard_remaining()
          .end_cons();
       }
@@ -203,9 +203,9 @@ std::vector<uint8_t> BER_encode(const Private_Key& key,
 
    std::vector<uint8_t> output;
    DER_Encoder der(output);
-   der.start_cons(SEQUENCE)
+   der.start_sequence()
          .encode(pbe_info.first)
-         .encode(pbe_info.second, OCTET_STRING)
+         .encode(pbe_info.second, ASN1_Tag::OCTET_STRING)
       .end_cons();
 
    return output;
@@ -251,9 +251,9 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
 
    std::vector<uint8_t> output;
    DER_Encoder der(output);
-   der.start_cons(SEQUENCE)
+   der.start_sequence()
          .encode(pbe_info.first)
-         .encode(pbe_info.second, OCTET_STRING)
+         .encode(pbe_info.second, ASN1_Tag::OCTET_STRING)
       .end_cons();
 
    return output;
@@ -300,9 +300,9 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
 
    std::vector<uint8_t> output;
    DER_Encoder(output)
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .encode(pbe_info.first)
-         .encode(pbe_info.second, OCTET_STRING)
+         .encode(pbe_info.second, ASN1_Tag::OCTET_STRING)
       .end_cons();
 
    return output;

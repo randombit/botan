@@ -21,7 +21,7 @@ namespace {
 PointGFp decode_public_point(const secure_vector<uint8_t>& ec_point_data, const EC_Group& group)
    {
    secure_vector<uint8_t> ec_point;
-   BER_Decoder(ec_point_data).decode(ec_point, OCTET_STRING);
+   BER_Decoder(ec_point_data).decode(ec_point, ASN1_Tag::OCTET_STRING);
    return group.OS2ECP(ec_point);
    }
 }
@@ -55,7 +55,7 @@ PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImp
    m_domain_params = EC_Group(props.ec_params());
 
    secure_vector<uint8_t> ec_point;
-   BER_Decoder(props.ec_point()).decode(ec_point, OCTET_STRING);
+   BER_Decoder(props.ec_point()).decode(ec_point, ASN1_Tag::OCTET_STRING);
    m_public_key = m_domain_params.OS2ECP(ec_point);
    m_domain_encoding = EC_Group_Encoding::Explicit;
    }

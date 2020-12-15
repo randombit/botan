@@ -41,11 +41,11 @@ SymmetricKey derive_key(const std::string& passphrase,
 
       AlgorithmIdentifier prf_algo;
       BER_Decoder(kdf_algo.get_parameters())
-         .start_cons(SEQUENCE)
-         .decode(salt, OCTET_STRING)
+         .start_sequence()
+         .decode(salt, ASN1_Tag::OCTET_STRING)
          .decode(iterations)
-         .decode_optional(key_length, INTEGER, UNIVERSAL)
-         .decode_optional(prf_algo, SEQUENCE, CONSTRUCTED,
+         .decode_optional(key_length, ASN1_Tag::INTEGER, ASN1_Tag::UNIVERSAL)
+         .decode_optional(prf_algo, ASN1_Tag::SEQUENCE, ASN1_Tag::CONSTRUCTED,
                           AlgorithmIdentifier("HMAC(SHA-160)",
                                               AlgorithmIdentifier::USE_NULL_PARAM))
          .end_cons();
@@ -69,12 +69,12 @@ SymmetricKey derive_key(const std::string& passphrase,
 
       AlgorithmIdentifier prf_algo;
       BER_Decoder(kdf_algo.get_parameters())
-         .start_cons(SEQUENCE)
-         .decode(salt, OCTET_STRING)
+         .start_sequence()
+         .decode(salt, ASN1_Tag::OCTET_STRING)
          .decode(N)
          .decode(r)
          .decode(p)
-         .decode_optional(key_length, INTEGER, UNIVERSAL)
+         .decode_optional(key_length, ASN1_Tag::INTEGER, ASN1_Tag::UNIVERSAL)
          .end_cons();
 
       if(key_length == 0)
@@ -134,8 +134,8 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
 
       std::vector<uint8_t> scrypt_params;
       DER_Encoder(scrypt_params)
-         .start_cons(SEQUENCE)
-            .encode(salt, OCTET_STRING)
+         .start_sequence()
+            .encode(salt, ASN1_Tag::OCTET_STRING)
             .encode(N)
             .encode(r)
             .encode(p)
@@ -182,8 +182,8 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
          *msec_in_iterations_out = iterations;
 
       DER_Encoder(pbkdf2_params)
-         .start_cons(SEQUENCE)
-            .encode(salt, OCTET_STRING)
+         .start_sequence()
+            .encode(salt, ASN1_Tag::OCTET_STRING)
             .encode(iterations)
             .encode(key_length)
             .encode_if(prf != "HMAC(SHA-160)",
@@ -240,11 +240,11 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    enc->finish(ctext);
 
    std::vector<uint8_t> encoded_iv;
-   DER_Encoder(encoded_iv).encode(iv, OCTET_STRING);
+   DER_Encoder(encoded_iv).encode(iv, ASN1_Tag::OCTET_STRING);
 
    std::vector<uint8_t> pbes2_params;
    DER_Encoder(pbes2_params)
-      .start_cons(SEQUENCE)
+      .start_sequence()
       .encode(kdf_algo)
       .encode(AlgorithmIdentifier(cipher, encoded_iv))
       .end_cons();
@@ -307,7 +307,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
    AlgorithmIdentifier kdf_algo, enc_algo;
 
    BER_Decoder(params)
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .decode(kdf_algo)
          .decode(enc_algo)
       .end_cons();
@@ -320,7 +320,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
    secure_vector<uint8_t> iv;
-   BER_Decoder(enc_algo.get_parameters()).decode(iv, OCTET_STRING).verify_end();
+   BER_Decoder(enc_algo.get_parameters()).decode(iv, ASN1_Tag::OCTET_STRING).verify_end();
 
    std::unique_ptr<Cipher_Mode> dec = Cipher_Mode::create(cipher, DECRYPTION);
    if(!dec)

@@ -183,7 +183,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
    // clang-format off
    return X509_Certificate(X509_Object::make_signed(
       signer, rng, sig_algo,
-      DER_Encoder().start_cons(SEQUENCE)
+      DER_Encoder().start_sequence()
          .start_explicit(0)
             .encode(X509_CERT_VERSION-1)
          .end_explicit()
@@ -193,7 +193,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
          .encode(sig_algo)
          .encode(issuer_dn)
 
-         .start_cons(SEQUENCE)
+         .start_sequence()
             .encode(not_before)
             .encode(not_after)
          .end_cons()
@@ -202,7 +202,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
          .raw_bytes(pub_key)
 
          .start_explicit(3)
-            .start_cons(SEQUENCE)
+            .start_sequence()
                .encode(extensions)
              .end_cons()
          .end_explicit()
@@ -279,7 +279,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    // clang-format off
    const std::vector<uint8_t> crl = X509_Object::make_signed(
       m_signer.get(), rng, m_ca_sig_algo,
-      DER_Encoder().start_cons(SEQUENCE)
+      DER_Encoder().start_sequence()
          .encode(X509_CRL_VERSION-1)
          .encode(m_ca_sig_algo)
          .encode(m_ca_cert.subject_dn())
@@ -287,12 +287,12 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
          .encode(X509_Time(expire_time))
          .encode_if(revoked.size() > 0,
               DER_Encoder()
-                 .start_cons(SEQUENCE)
+                 .start_sequence()
                     .encode_list(revoked)
                  .end_cons()
             )
          .start_explicit(0)
-            .start_cons(SEQUENCE)
+            .start_sequence()
                .encode(extensions)
             .end_cons()
          .end_explicit()

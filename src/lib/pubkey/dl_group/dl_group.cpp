@@ -129,7 +129,7 @@ std::shared_ptr<DL_Group_Data> DL_Group::BER_decode_DL_group(const uint8_t data[
    BigInt p, q, g;
 
    BER_Decoder decoder(data, data_len);
-   BER_Decoder ber = decoder.start_cons(SEQUENCE);
+   BER_Decoder ber = decoder.start_sequence();
 
    if(format == DL_Group_Format::ANSI_X9_57)
       {
@@ -599,7 +599,7 @@ std::vector<uint8_t> DL_Group::DER_encode(DL_Group_Format format) const
 
    if(format == DL_Group_Format::ANSI_X9_57)
       {
-      der.start_cons(SEQUENCE)
+      der.start_sequence()
             .encode(get_p())
             .encode(get_q())
             .encode(get_g())
@@ -607,7 +607,7 @@ std::vector<uint8_t> DL_Group::DER_encode(DL_Group_Format format) const
       }
    else if(format == DL_Group_Format::ANSI_X9_42)
       {
-      der.start_cons(SEQUENCE)
+      der.start_sequence()
             .encode(get_p())
             .encode(get_g())
             .encode(get_q())
@@ -615,7 +615,7 @@ std::vector<uint8_t> DL_Group::DER_encode(DL_Group_Format format) const
       }
    else if(format == DL_Group_Format::PKCS_3)
       {
-      der.start_cons(SEQUENCE)
+      der.start_sequence()
             .encode(get_p())
             .encode(get_g())
          .end_cons();

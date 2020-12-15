@@ -89,7 +89,7 @@ bool operator!=(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
 */
 void AlgorithmIdentifier::encode_into(DER_Encoder& codec) const
    {
-   codec.start_cons(SEQUENCE)
+   codec.start_sequence()
       .encode(oid())
       .raw_bytes(parameters())
    .end_cons();
@@ -100,7 +100,7 @@ void AlgorithmIdentifier::encode_into(DER_Encoder& codec) const
 */
 void AlgorithmIdentifier::decode_from(BER_Decoder& codec)
    {
-   codec.start_cons(SEQUENCE)
+   codec.start_sequence()
       .decode(m_oid)
       .raw_bytes(m_parameters)
    .end_cons();
