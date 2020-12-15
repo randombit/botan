@@ -64,7 +64,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Scheme_PublicKey : public virtual Public_Key
       * Get the underlying groups encoding format.
       * @return encoding format
       */
-      virtual DL_Group::Format group_format() const = 0;
+      virtual DL_Group_Format group_format() const = 0;
 
       size_t key_length() const override;
       size_t estimated_strength() const override;
@@ -82,7 +82,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Scheme_PublicKey : public virtual Public_Key
       */
       DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
                           const std::vector<uint8_t>& key_bits,
-                          DL_Group::Format group_format);
+                          DL_Group_Format group_format);
 
       DL_Scheme_PublicKey(const DL_Group& group, const BigInt& y);
 
@@ -125,7 +125,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Scheme_PrivateKey : public virtual DL_Scheme_Publ
       */
       DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
                            const secure_vector<uint8_t>& key_bits,
-                           DL_Group::Format group_format);
+                           DL_Group_Format group_format);
 
       DL_Scheme_PrivateKey() = default;
 

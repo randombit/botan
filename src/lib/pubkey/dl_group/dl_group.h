@@ -22,6 +22,20 @@ enum class DL_Group_Source {
 };
 
 /**
+* The DL group encoding format variants.
+*/
+enum class DL_Group_Format {
+   ANSI_X9_42,
+   ANSI_X9_57,
+   PKCS_3,
+
+   DSA_PARAMETERS = ANSI_X9_57,
+   DH_PARAMETERS = ANSI_X9_42,
+   ANSI_X9_42_DH_PARAMETERS = ANSI_X9_42,
+   PKCS3_DH_PARAMETERS = PKCS_3
+};
+
+/**
 * This class represents discrete logarithm groups. It holds a prime
 * modulus p, a generator g, and (optionally) a prime q which is a
 * factor of (p-1). In most cases g generates the order-q subgroup.
@@ -34,19 +48,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       */
       enum PrimeType { Strong, Prime_Subgroup, DSA_Kosherizer };
 
-      /**
-      * The DL group encoding format variants.
-      */
-      enum Format {
-         ANSI_X9_42,
-         ANSI_X9_57,
-         PKCS_3,
-
-         DSA_PARAMETERS = ANSI_X9_57,
-         DH_PARAMETERS = ANSI_X9_42,
-         ANSI_X9_42_DH_PARAMETERS = ANSI_X9_42,
-         PKCS3_DH_PARAMETERS = PKCS_3
-      };
+      using Format = DL_Group_Format;
 
       /**
       * Construct a DL group with uninitialized internal value.
@@ -115,13 +117,13 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       /**
       * Decode a BER-encoded DL group param
       */
-      DL_Group(const uint8_t ber[], size_t ber_len, Format format);
+      DL_Group(const uint8_t ber[], size_t ber_len, DL_Group_Format format);
 
       /**
       * Decode a BER-encoded DL group param
       */
       template<typename Alloc>
-         DL_Group(const std::vector<uint8_t, Alloc>& ber, Format format) :
+         DL_Group(const std::vector<uint8_t, Alloc>& ber, DL_Group_Format format) :
          DL_Group(ber.data(), ber.size(), format) {}
 
       /**
@@ -170,14 +172,14 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * @param format the encoding format
       * @return string holding the PEM encoded group
       */
-      std::string PEM_encode(Format format) const;
+      std::string PEM_encode(DL_Group_Format format) const;
 
       /**
       * Encode this group into a string using DER encoding.
       * @param format the encoding format
       * @return string holding the DER encoded group
       */
-      std::vector<uint8_t> DER_encode(Format format) const;
+      std::vector<uint8_t> DER_encode(DL_Group_Format format) const;
 
       /**
       * Reduce an integer modulo p
@@ -324,7 +326,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       *
       * @warning avoid this. Instead use the DL_Group constructor
       */
-      void BER_decode(const std::vector<uint8_t>& ber, Format format);
+      void BER_decode(const std::vector<uint8_t>& ber, DL_Group_Format format);
 
       DL_Group_Source source() const;
 
@@ -343,7 +345,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
 
       static std::shared_ptr<DL_Group_Data>
          BER_decode_DL_group(const uint8_t data[], size_t data_len,
-                             DL_Group::Format format,
+                             DL_Group_Format format,
                              DL_Group_Source source);
 
       const DL_Group_Data& data() const;

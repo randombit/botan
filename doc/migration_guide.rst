@@ -54,3 +54,9 @@ to query information about extensions. This is not longer the case; instead you
 should either call a specific function on ``X509_Certificate`` which returns the
 same information, or lacking that, iterate over the result of
 ``X509_Certificate::v3_extensions``.
+
+Use of ``enum class``
+--------------------------------
+
+Several enumerations where modified to become ``enum class``, including
+``DL_Group::Format``
