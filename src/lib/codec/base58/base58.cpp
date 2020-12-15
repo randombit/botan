@@ -1,5 +1,5 @@
 /*
-* (C) 2018 Jack Lloyd
+* (C) 2018,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +9,7 @@
 #include <botan/bigint.h>
 #include <botan/divide.h>
 #include <botan/loadstor.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/hash.h>
 
 namespace Botan {
@@ -30,73 +31,52 @@ uint32_t sha256_d_checksum(const uint8_t input[], size_t input_length)
    return load_be<uint32_t>(checksum.data(), 0);
    }
 
-class Character_Table
+char lookup_base58_char(uint8_t x)
    {
-   public:
-      // This must be a literal constant
-      Character_Table(const char* alphabet) :
-         m_alphabet(alphabet)
-         {
-         const size_t alpha_len = std::strlen(alphabet);
+   // "123456789 ABCDEFGH JKLMN PQRSTUVWXYZ abcdefghijk mnopqrstuvwxyz"
+   BOTAN_DEBUG_ASSERT(x < 58);
 
-         // 128 or up would flow into 0x80 invalid bit
-         if(alpha_len == 0 || alpha_len >= 128)
-            throw Invalid_Argument("Bad Character_Table string");
+   const auto is_dec_19      = CT::Mask<uint8_t>::is_lte(x, 8);
+   const auto is_alpha_AH    = CT::Mask<uint8_t>::is_within_range(x, 9, 16);
+   const auto is_alpha_JN    = CT::Mask<uint8_t>::is_within_range(x, 17, 21);
+   const auto is_alpha_PZ    = CT::Mask<uint8_t>::is_within_range(x, 22, 32);
+   const auto is_alpha_ak    = CT::Mask<uint8_t>::is_within_range(x, 33, 43);
+   // otherwise in 'm'-'z'
 
-         m_alphabet_len = static_cast<uint8_t>(alpha_len);
+   const char c_19 = '1' + x;
+   const char c_AH = 'A' + (x - 9);
+   const char c_JN = 'J' + (x - 17);
+   const char c_PZ = 'P' + (x - 22);
+   const char c_ak = 'a' + (x - 33);
+   const char c_mz = 'm' + (x - 44);
 
-         set_mem(m_tab, 256, 0x80);
+   char ret = c_mz;
+   ret = is_dec_19.select(c_19, ret);
+   ret = is_alpha_AH.select(c_AH, ret);
+   ret = is_alpha_JN.select(c_JN, ret);
+   ret = is_alpha_PZ.select(c_PZ, ret);
+   ret = is_alpha_ak.select(c_ak, ret);
 
-         for(size_t i = 0; m_alphabet[i]; ++i)
-            {
-            const uint8_t b = static_cast<uint8_t>(m_alphabet[i]);
-            BOTAN_ASSERT(m_tab[b] == 0x80, "No duplicate chars");
-            m_tab[b] = static_cast<uint8_t>(i);
-            }
-         }
-
-      uint8_t radix() const { return m_alphabet_len; }
-
-      char operator[](size_t i) const
-         {
-         BOTAN_ASSERT(i < m_alphabet_len, "Character in range");
-         return m_alphabet[i];
-         }
-
-      uint8_t code_for(char c) const
-         {
-         return m_tab[static_cast<uint8_t>(c)];
-         }
-
-   private:
-      const char* m_alphabet;
-      uint8_t m_alphabet_len;
-      uint8_t m_tab[256];
-   };
-
-static const Character_Table& BASE58_ALPHA()
-   {
-   static const Character_Table base58_alpha("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz");
-   return base58_alpha;
+   return ret;
    }
 
 std::string base58_encode(BigInt v, size_t leading_zeros)
    {
-   const auto base58 = BASE58_ALPHA();
+   const uint8_t radix = 58;
 
    std::string result;
    BigInt q;
-   uint8_t r;
 
    while(v.is_nonzero())
       {
-      ct_divide_u8(v, base58.radix(), q, r);
-      result.push_back(base58[r]);
+      uint8_t r;
+      ct_divide_u8(v, radix, q, r);
+      result.push_back(lookup_base58_char(r));
       v.swap(q);
       }
 
    for(size_t i = 0; i != leading_zeros; ++i)
-      result.push_back(base58[0]);
+      result.push_back('1'); // 'zero' byte
 
    return std::string(result.rbegin(), result.rend());
    }
@@ -110,6 +90,39 @@ size_t count_leading_zeros(const T input[], size_t input_length, Z zero)
       leading_zeros += 1;
 
    return leading_zeros;
+   }
+
+uint8_t base58_value_of(char input)
+   {
+   // "123456789 ABCDEFGH JKLMN PQRSTUVWXYZ abcdefghijk mnopqrstuvwxyz"
+
+   const uint8_t c = static_cast<uint8_t>(input);
+
+   const auto is_dec_19      = CT::Mask<uint8_t>::is_within_range(c, uint8_t('1'), uint8_t('9'));
+   const auto is_alpha_AH    = CT::Mask<uint8_t>::is_within_range(c, uint8_t('A'), uint8_t('H'));
+   const auto is_alpha_JN    = CT::Mask<uint8_t>::is_within_range(c, uint8_t('J'), uint8_t('N'));
+   const auto is_alpha_PZ    = CT::Mask<uint8_t>::is_within_range(c, uint8_t('P'), uint8_t('Z'));
+
+   const auto is_alpha_ak    = CT::Mask<uint8_t>::is_within_range(c, uint8_t('a'), uint8_t('k'));
+   const auto is_alpha_mz    = CT::Mask<uint8_t>::is_within_range(c, uint8_t('m'), uint8_t('z'));
+
+   const uint8_t c_dec_19 = c - uint8_t('1');
+   const uint8_t c_AH     = c - uint8_t('A') + 9;
+   const uint8_t c_JN     = c - uint8_t('J') + 17;
+   const uint8_t c_PZ     = c - uint8_t('P') + 22;
+
+   const uint8_t c_ak     = c - uint8_t('a') + 33;
+   const uint8_t c_mz     = c - uint8_t('m') + 44;
+
+   uint8_t ret = 0xFF; // default value
+
+   ret = is_dec_19.select(c_dec_19, ret);
+   ret = is_alpha_AH.select(c_AH, ret);
+   ret = is_alpha_JN.select(c_JN, ret);
+   ret = is_alpha_PZ.select(c_PZ, ret);
+   ret = is_alpha_ak.select(c_ak, ret);
+   ret = is_alpha_mz.select(c_mz, ret);
+   return ret;
    }
 
 }
@@ -130,9 +143,7 @@ std::string base58_check_encode(const uint8_t input[], size_t input_length)
 
 std::vector<uint8_t> base58_decode(const char input[], size_t input_length)
    {
-   const auto base58 = BASE58_ALPHA();
-
-   const size_t leading_zeros = count_leading_zeros(input, input_length, base58[0]);
+   const size_t leading_zeros = count_leading_zeros(input, input_length, '1');
 
    BigInt v;
 
@@ -143,12 +154,12 @@ std::vector<uint8_t> base58_decode(const char input[], size_t input_length)
       if(c == ' ' || c == '\n')
          continue;
 
-      const size_t idx = base58.code_for(c);
+      const uint8_t idx = base58_value_of(c);
 
-      if(idx == 0x80)
+      if(idx == 0xFF)
          throw Decoding_Error("Invalid base58");
 
-      v *= base58.radix();
+      v *= 58;
       v += idx;
       }
 

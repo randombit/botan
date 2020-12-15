@@ -1,7 +1,7 @@
 /*
 * Base32 Encoding and Decoding
 * (C) 2018 Erwan Chaussy
-* (C) 2018 Jack Lloyd
+* (C) 2018,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +9,7 @@
 #include <botan/base32.h>
 #include <botan/internal/codec_base.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -58,45 +59,11 @@ class Base32 final
          return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
          }
 
-      static void encode(char out[8], const uint8_t in[5]) noexcept
-         {
-         out[0] = Base32::m_bin_to_base32[(in[0] & 0xF8) >> 3];
-         out[1] = Base32::m_bin_to_base32[((in[0] & 0x07) << 2) | (in[1] >> 6)];
-         out[2] = Base32::m_bin_to_base32[((in[1] & 0x3E) >> 1)];
-         out[3] = Base32::m_bin_to_base32[((in[1] & 0x01) << 4) | (in[2] >> 4)];
-         out[4] = Base32::m_bin_to_base32[((in[2] & 0x0F) << 1) | (in[3] >> 7)];
-         out[5] = Base32::m_bin_to_base32[((in[3] & 0x7C) >> 2)];
-         out[6] = Base32::m_bin_to_base32[((in[3] & 0x03) << 3) | (in[4] >> 5)];
-         out[7] = Base32::m_bin_to_base32[in[4] & 0x1F];
-         }
+      static void encode(char out[8], const uint8_t in[5]) noexcept;
 
-      static inline uint8_t lookup_binary_value(char input) noexcept
-         {
-         return Base32::m_base32_to_bin[static_cast<uint8_t>(input)];
-         }
+      static uint8_t lookup_binary_value(char input) noexcept;
 
-      static inline bool check_bad_char(uint8_t bin, char input, bool ignore_ws)
-         {
-         if(bin <= 0x1F)
-            {
-            return true;
-            }
-         else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
-            {
-            std::string bad_char(1, input);
-            if(bad_char == "\t")
-               { bad_char = "\\t"; }
-            else if(bad_char == "\n")
-               { bad_char = "\\n"; }
-            else if(bad_char == "\r")
-               { bad_char = "\\r"; }
-
-            throw Invalid_Argument(
-               std::string("base32_decode: invalid base32 character '") +
-               bad_char + "'");
-            }
-         return false;
-         }
+      static bool check_bad_char(uint8_t bin, char input, bool ignore_ws);
 
       static void decode(uint8_t* out_ptr, const uint8_t decode_buf[8])
          {
@@ -116,55 +83,97 @@ class Base32 final
       static const size_t m_encoding_bits = 5;
       static const size_t m_remaining_bits_before_padding = 6;
 
-
       static const size_t m_encoding_bytes_in = 5;
       static const size_t m_encoding_bytes_out = 8;
-
-
-      static const uint8_t m_bin_to_base32[32];
-      static const uint8_t m_base32_to_bin[256];
    };
 
-alignas(64) const uint8_t Base32::m_bin_to_base32[32] =
+namespace {
+
+char lookup_base32_char(uint8_t x)
    {
-   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-   'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-   '2', '3', '4', '5', '6', '7'
-   };
+   BOTAN_DEBUG_ASSERT(x < 32);
 
-/*
-* base32 Decoder Lookup Table
-* Warning: assumes ASCII encodings
-*/
-alignas(64) const uint8_t Base32::m_base32_to_bin[256] =
+   const auto in_AZ = CT::Mask<uint8_t>::is_lt(x, 26);
+
+   const char c_AZ = 'A' + x;
+   const char c_27 = '2' + (x - 26);
+
+   return in_AZ.select(c_AZ, c_27);
+   }
+
+}
+
+//static
+void Base32::encode(char out[8], const uint8_t in[5]) noexcept
    {
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
-   0x80, 0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04,
-   0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
-   0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-   0x19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
-   };
+   const uint8_t b0 = (in[0] & 0xF8) >> 3;
+   const uint8_t b1 = ((in[0] & 0x07) << 2) | (in[1] >> 6);
+   const uint8_t b2 = ((in[1] & 0x3E) >> 1);
+   const uint8_t b3 = ((in[1] & 0x01) << 4) | (in[2] >> 4);
+   const uint8_t b4 = ((in[2] & 0x0F) << 1) | (in[3] >> 7);
+   const uint8_t b5 = ((in[3] & 0x7C) >> 2);
+   const uint8_t b6 = ((in[3] & 0x03) << 3) | (in[4] >> 5);
+   const uint8_t b7 = in[4] & 0x1F;
+
+   out[0] = lookup_base32_char(b0);
+   out[1] = lookup_base32_char(b1);
+   out[2] = lookup_base32_char(b2);
+   out[3] = lookup_base32_char(b3);
+   out[4] = lookup_base32_char(b4);
+   out[5] = lookup_base32_char(b5);
+   out[6] = lookup_base32_char(b6);
+   out[7] = lookup_base32_char(b7);
+   }
+
+//static
+uint8_t Base32::lookup_binary_value(char input) noexcept
+   {
+   const uint8_t c = static_cast<uint8_t>(input);
+
+   const auto is_alpha_upper = CT::Mask<uint8_t>::is_within_range(c, uint8_t('A'), uint8_t('Z'));
+   const auto is_decimal     = CT::Mask<uint8_t>::is_within_range(c, uint8_t('2'), uint8_t('7'));
+
+   const auto is_equal       = CT::Mask<uint8_t>::is_equal(c, uint8_t('='));
+   const auto is_whitespace  = CT::Mask<uint8_t>::is_any_of(c, {
+         uint8_t(' '), uint8_t('\t'), uint8_t('\n'), uint8_t('\r')
+      });
+
+   const uint8_t c_upper = c - uint8_t('A');
+   const uint8_t c_decim = c - uint8_t('2') + 26;
+
+   uint8_t ret = 0xFF; // default value
+
+   ret = is_alpha_upper.select(c_upper, ret);
+   ret = is_decimal.select(c_decim, ret);
+   ret = is_equal.select(0x81, ret);
+   ret = is_whitespace.select(0x80, ret);
+
+   return ret;
+   }
+
+//static
+bool Base32::check_bad_char(uint8_t bin, char input, bool ignore_ws)
+   {
+   if(bin <= 0x1F)
+      {
+      return true;
+      }
+   else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
+      {
+      std::string bad_char(1, input);
+      if(bad_char == "\t")
+         { bad_char = "\\t"; }
+      else if(bad_char == "\n")
+         { bad_char = "\\n"; }
+      else if(bad_char == "\r")
+         { bad_char = "\\r"; }
+
+      throw Invalid_Argument(
+         std::string("base32_decode: invalid base32 character '") +
+         bad_char + "'");
+      }
+   return false;
+   }
 
 }
 
