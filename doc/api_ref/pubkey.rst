@@ -167,66 +167,24 @@ Unencrypted serialization is also supported.
 Last but not least, there are some functions that will load (and
 decrypt, if necessary) a PKCS #8 private key:
 
-.. cpp:function:: Private_Key* PKCS8::load_key(DataSource& in, \
-   RandomNumberGenerator& rng, const User_Interface& ui)
-
-.. cpp:function:: Private_Key* PKCS8::load_key(DataSource& in, \
-   RandomNumberGenerator& rng, std::string passphrase = "")
-
-.. cpp:function:: Private_Key* PKCS8::load_key(const std::string& filename, \
-   RandomNumberGenerator& rng, const User_Interface& ui)
-
-.. cpp:function:: Private_Key* PKCS8::load_key(const std::string& filename, \
-   RandomNumberGenerator& rng, const std::string& passphrase = "")
+.. cpp:function:: std::unique_ptr<Private_Key> load_key(DataSource& source, \
+                                      std::function<std::string ()> get_passphrase)
+.. cpp:function:: std::unique_ptr<Private_Key> load_key(DataSource& source, \
+                                      const std::string& pass)
+.. cpp:function:: std::unique_ptr<Private_Key> load_key(DataSource& source)
 
 These functions will return an object allocated key object based on the data
 from whatever source it is using (assuming, of course, the source is in fact
 storing a representation of a private key, and the decryption was
 successful). The encoding used (PEM or BER) need not be specified; the format
-will be detected automatically. The key is allocated with ``new``, and should
-be released with ``delete`` when you are done with it. The first takes a
-generic ``DataSource`` that you have to create - the other is a simple wrapper
-functions that take either a filename or a memory buffer and create the
-appropriate ``DataSource``.
+will be detected automatically. The ``DataSource`` is usually a
+``DataSource_Stream`` to read from a file or ``DataSource_Memory`` for an
+in-memory buffer.
 
 The versions taking a ``std::string`` attempt to decrypt using the password
 given (if the key is encrypted; if it is not, the passphase value will be
 ignored). If the passphrase does not decrypt the key, an exception will be
 thrown.
-
-The ones taking a ``User_Interface`` provide a simple callback interface which
-makes handling incorrect passphrases and such a bit simpler. A
-``User_Interface`` has very little to do with talking to users; it's just a
-way to glue together Botan and whatever user interface you happen to be using.
-
-.. note::
-
-  In a future version, it is likely that ``User_Interface`` will be
-  replaced by a simple callback using ``std::function``.
-
-To use ``User_Interface``, derive a subclass and implement:
-
-.. cpp:function:: std::string User_Interface::get_passphrase(const std::string& what, \
-   const std::string& source, UI_Result& result) const
-
-  The ``what`` argument specifies what the passphrase is needed for (for
-  example, PKCS #8 key loading passes ``what`` as "PKCS #8 private key"). This
-  lets you provide the user with some indication of *why* your application is
-  asking for a passphrase; feel free to pass the string through ``gettext(3)``
-  or moral equivalent for i18n purposes. Similarly, ``source`` specifies where
-  the data in question came from, if available (for example, a file name). If
-  the source is not available for whatever reason, then ``source`` will be an
-  empty string; be sure to account for this possibility.
-
-  The function returns the passphrase as the return value, and a status code
-  in ``result`` (either ``OK`` or ``CANCEL_ACTION``). If ``CANCEL_ACTION`` is
-  returned in ``result``, then the return value will be ignored, and the
-  caller will take whatever action is necessary (typically, throwing an
-  exception stating that the passphrase couldn't be determined). In the
-  specific case of PKCS #8 key decryption, a ``Decoding_Error`` exception will
-  be thrown; your UI should assume this can happen, and provide appropriate
-  error handling (such as putting up a dialog box informing the user of the
-  situation, and canceling the operation in progress).
 
 .. _serializing_public_keys:
 

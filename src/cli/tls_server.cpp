@@ -82,7 +82,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
 
          Botan::TLS::Session_Manager_In_Memory session_manager(rng()); // TODO sqlite3
 
-         Basic_Credentials_Manager creds(rng(), server_crt, server_key);
+         Basic_Credentials_Manager creds(server_crt, server_key);
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
 

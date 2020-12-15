@@ -528,7 +528,7 @@ class TLS_HTTP_Server final : public Command
          const size_t num_threads = thread_count();
          const size_t max_clients = get_arg_sz("max-clients");
 
-         Basic_Credentials_Manager creds(rng(), server_crt, server_key);
+         Basic_Credentials_Manager creds(server_crt, server_key);
 
          auto policy = load_tls_policy(get_arg("policy"));
 

@@ -54,7 +54,7 @@ class Side
            m_ctx(m_credentials_manager, m_rng, m_session_mgr, m_policy, Botan::TLS::Server_Information()) {}
 
       Side(const std::string& server_cert, const std::string& server_key)
-         : m_credentials_manager(m_rng, server_cert, server_key),
+         : m_credentials_manager(server_cert, server_key),
            m_ctx(m_credentials_manager, m_rng, m_session_mgr, m_policy, Botan::TLS::Server_Information()) {}
 
       virtual ~Side() {}
