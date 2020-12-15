@@ -24,20 +24,26 @@ ParamSize = 14400
 Workfactor = 256
 
 [DL_Exponent_Size]
+ParamSize = 192
+Workfactor = 191
+
+ParamSize = 512
+Workfactor = 192
+
 ParamSize = 1024
-Workfactor = 86
+Workfactor = 192
 
 ParamSize = 1536
-Workfactor = 103
+Workfactor = 224
 
 ParamSize = 2048
-Workfactor = 116
+Workfactor = 256
 
 ParamSize = 3072
-Workfactor = 138
+Workfactor = 384
 
 ParamSize = 4096
-Workfactor = 156
+Workfactor = 384
 
 ParamSize = 8192
-Workfactor = 208
+Workfactor = 512

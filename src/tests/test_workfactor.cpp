@@ -34,7 +34,7 @@ class PK_Workfactor_Tests final : public Text_Based_Test
             }
          else if(type == "DL_Exponent_Size")
             {
-            output = Botan::dl_exponent_size(param_size) / 2;
+            output = Botan::dl_exponent_size(param_size);
             }
 
          Test::Result result(type + " work factor calculation");

@@ -51,16 +51,19 @@ size_t dl_work_factor(size_t bits)
 
 size_t dl_exponent_size(size_t bits)
    {
-   /*
-   This uses a slightly tweaked version of the standard work factor
-   function above. It assumes k is 1 (thus overestimating the strength
-   of the prime group by 5-6 bits), and always returns at least 128 bits
-   (this only matters for very small primes).
-   */
-   const size_t min_workfactor = 64;
-   const double log2_k = 0;
-
-   return 2 * std::max<size_t>(min_workfactor, nfs_workfactor(bits, log2_k));
+   if(bits == 0)
+      return 0;
+   if(bits <= 256)
+      return bits - 1;
+   if(bits <= 1024)
+      return 192;
+   if(bits <= 1536)
+      return 224;
+   if(bits <= 2048)
+      return 256;
+   if(bits <= 4096)
+      return 384;
+   return 512;
    }
 
 }

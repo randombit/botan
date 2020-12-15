@@ -278,7 +278,7 @@ huVYFicDNQGzi+nEKAzrZ1L/VxtiSiw/qw0IyOuVtz8CFjgPiPatvmWssQw2AuZ9
 mFvAZ/8wal0=
 -----END X9.42 DH PARAMETERS-----"""
 
-    test_cli("gen_dl_group", "--pbits=1043", pem)
+    test_cli("gen_dl_group", ["--pbits=1043", "--qbits=174"], pem)
 
     dsa_grp = """-----BEGIN DSA PARAMETERS-----
 MIIBHgKBgQCyP1vosC/axliM2hmJ9EOSdd1zBkuzMP25CYD8PFkRVrPLr1ClSUtn
@@ -679,7 +679,7 @@ def cli_pk_workfactor_tests(_tmp_dir):
     test_cli("pk_workfactor", "2048", "111")
     test_cli("pk_workfactor", ["--type=rsa", "512"], "58")
     test_cli("pk_workfactor", ["--type=dl", "512"], "58")
-    test_cli("pk_workfactor", ["--type=dl_exp", "512"], "128")
+    test_cli("pk_workfactor", ["--type=dl_exp", "512"], "192")
 
 def cli_dl_group_info_tests(_tmp_dir):
 
