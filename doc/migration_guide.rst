@@ -59,4 +59,4 @@ Use of ``enum class``
 --------------------------------
 
 Several enumerations where modified to become ``enum class``, including
-``DL_Group::Format``
+``DL_Group::Format``, ``CRL_Code``,

@@ -917,7 +917,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    store.add_crl(crl1);
 
    std::vector<Botan::CRL_Entry> revoked;
-   revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::CESSATION_OF_OPERATION));
+   revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::CRL_Code::CESSATION_OF_OPERATION));
    revoked.push_back(user2_cert);
 
    const Botan::X509_CRL crl2 = ca.update_crl(crl1, revoked, Test::rng());
@@ -934,7 +934,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result.test_eq("user 1 revoked", result_u2.result_string(), revoked_str);
 
    revoked.clear();
-   revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::REMOVE_FROM_CRL));
+   revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::CRL_Code::REMOVE_FROM_CRL));
    Botan::X509_CRL crl3 = ca.update_crl(crl2, revoked, Test::rng());
 
    store.add_crl(crl3);
