@@ -33,7 +33,7 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 
       void clear() override
          {
-         m_a = m_b = m_c = m_d = 0;
+         m_x = 0;
          }
 
       bool accepts_input() const override { return true; }
@@ -42,9 +42,7 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
          {
          for(size_t i = 0; i != len; ++i)
             {
-            m_a ^= data[i];
-            m_b ^= i;
-            mix();
+            mix(data[i]);
             }
          }
 
@@ -57,38 +55,25 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
          {
          for(size_t i = 0; i != len; ++i)
             {
-            out[i] = static_cast<uint8_t>(m_a);
-            mix();
+            out[i] = mix();
             }
          }
 
-      Testsuite_RNG(const std::vector<uint8_t>& seed, size_t test_counter = 0)
+      Testsuite_RNG(const std::vector<uint8_t>& seed, uint64_t test_counter)
          {
-         m_d = static_cast<uint32_t>(test_counter);
-
+         m_x = ~test_counter;
          add_entropy(seed.data(), seed.size());
          }
    private:
-      void mix()
+      uint8_t mix(uint8_t input = 0)
          {
-         const size_t ROUNDS = 3;
-
-         for(size_t i = 0; i != ROUNDS; ++i)
-            {
-            m_a += static_cast<uint32_t>(i ^ 0x5555);
-
-            m_a *= 0x9e3779b9;
-            m_b ^= m_a;
-            m_d ^= m_c;
-
-            m_a += m_d;
-            m_c += m_b;
-
-            m_c += (m_c >> 17);
-            }
+         m_x ^= input;
+         m_x *= 0xF2E16957;
+         m_x += 0xE50B590F;
+         return static_cast<uint8_t>(m_x >> 27);
          }
 
-      uint32_t m_a = 0, m_b = 0, m_c = 0, m_d = 0;
+      uint64_t m_x;
    };
 
 }
