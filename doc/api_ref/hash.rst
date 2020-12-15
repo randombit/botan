@@ -154,6 +154,9 @@ Available if ``BOTAN_HAS_MD4`` is defined.
 An old hash function that is now known to be trivially breakable. It is very
 fast, and may still be suitable as a (non-cryptographic) checksum.
 
+.. warning::
+   Support for MD4 is deprecated and will be removed in a future major release.
+
 MD5
 ^^^^^^^^^
 
