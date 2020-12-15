@@ -46,7 +46,7 @@ PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, ObjectHandle handle)
    secure_vector<uint8_t> ec_parameters = get_attribute_value(AttributeType::EcParams);
    m_domain_params = EC_Group(unlock(ec_parameters));
    m_public_key = decode_public_point(get_attribute_value(AttributeType::EcPoint), m_domain_params);
-   m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
+   m_domain_encoding = EC_Group_Encoding::Explicit;
    }
 
 PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImportProperties& props)
@@ -57,7 +57,7 @@ PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImp
    secure_vector<uint8_t> ec_point;
    BER_Decoder(props.ec_point()).decode(ec_point, OCTET_STRING);
    m_public_key = m_domain_params.OS2ECP(ec_point);
-   m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
+   m_domain_encoding = EC_Group_Encoding::Explicit;
    }
 
 EC_PrivateKeyImportProperties::EC_PrivateKeyImportProperties(const std::vector<uint8_t>& ec_params, const BigInt& value)
@@ -127,7 +127,7 @@ bool PKCS11_EC_PrivateKey::check_key(RandomNumberGenerator&, bool) const
 
 AlgorithmIdentifier PKCS11_EC_PrivateKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), domain().DER_encode(EC_DOMPAR_ENC_EXPLICIT));
+   return AlgorithmIdentifier(get_oid(), domain().DER_encode(EC_Group_Encoding::Explicit));
    }
 }
 

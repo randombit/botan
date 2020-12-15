@@ -930,7 +930,6 @@ Test::Result test_ecdsa_privkey_import()
    // create ecdsa private key
    ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
    result.confirm("Key self test OK", priv_key.check_key(Test::rng(), true));
-   priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    // import to card
    EC_PrivateKeyImportProperties props(priv_key.DER_domain(), priv_key.private_value());
@@ -959,7 +958,6 @@ Test::Result test_ecdsa_privkey_export()
 
    // create private key
    ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
-   priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    result.confirm("Check ECDSA key", priv_key.check_key(Test::rng(), true));
    // import to card
@@ -994,7 +992,6 @@ Test::Result test_ecdsa_pubkey_import()
 
    // create ecdsa private key
    ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
-   priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
@@ -1023,7 +1020,6 @@ Test::Result test_ecdsa_pubkey_export()
 
    // create public key from private key
    ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
-   priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
@@ -1058,7 +1054,7 @@ Test::Result test_ecdsa_generate_private_key()
    props.set_sign(true);
 
    PKCS11_ECDSA_PrivateKey pk(test_session.session(),
-                              EC_Group("secp256r1").DER_encode(EC_Group_Encoding::EC_DOMPAR_ENC_OID), props);
+                              EC_Group("secp256r1").DER_encode(EC_Group_Encoding::NamedCurve), props);
    result.test_success("ECDSA private key generation was successful");
 
    pk.destroy();
@@ -1098,7 +1094,7 @@ Test::Result test_ecdsa_generate_keypair()
 
    for(auto &curve : curves)
        {
-       PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve, EC_DOMPAR_ENC_OID);
+       PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve, EC_Group_Encoding::NamedCurve);
 
        keypair.first.destroy();
        keypair.second.destroy();
@@ -1171,14 +1167,14 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding ec_dompar_enc, std::s
 
 Test::Result test_ecdsa_sign_verify()
     {
-        // pass the curve OID to the PKCS#11 library
-        return test_ecdsa_sign_verify_core(EC_DOMPAR_ENC_OID, "PKCS11 ECDSA sign and verify");
+    // pass the curve OID to the PKCS#11 library
+    return test_ecdsa_sign_verify_core(EC_Group_Encoding::NamedCurve, "PKCS11 ECDSA sign and verify");
     }
 
 Test::Result test_ecdsa_curve_import()
     {
-        // pass the curve parameters to the PKCS#11 library and perform sign/verify to test them
-        return test_ecdsa_sign_verify_core(EC_DOMPAR_ENC_EXPLICIT, "PKCS11 ECDSA sign and verify with imported curve");
+    // pass the curve parameters to the PKCS#11 library and perform sign/verify to test them
+    return test_ecdsa_sign_verify_core(EC_Group_Encoding::Explicit, "PKCS11 ECDSA sign and verify with imported curve");
     }
 
 class PKCS11_ECDSA_Tests final : public Test
@@ -1217,7 +1213,6 @@ Test::Result test_ecdh_privkey_import()
 
    // create ecdh private key
    ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
-   priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    // import to card
    EC_PrivateKeyImportProperties props(priv_key.DER_domain(), priv_key.private_value());
@@ -1244,7 +1239,6 @@ Test::Result test_ecdh_privkey_export()
 
    // create private key
    ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
-   priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    // import to card
    EC_PrivateKeyImportProperties props(priv_key.DER_domain(), priv_key.private_value());
@@ -1274,7 +1268,6 @@ Test::Result test_ecdh_pubkey_import()
 
    // create ECDH private key
    ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
-   priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
@@ -1303,7 +1296,6 @@ Test::Result test_ecdh_pubkey_export()
 
    // create public key from private key
    ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
-   priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
@@ -1338,7 +1330,7 @@ Test::Result test_ecdh_generate_private_key()
    props.set_derive(true);
 
    PKCS11_ECDH_PrivateKey pk(test_session.session(),
-                             EC_Group("secp256r1").DER_encode(EC_Group_Encoding::EC_DOMPAR_ENC_OID), props);
+                             EC_Group("secp256r1").DER_encode(EC_Group_Encoding::NamedCurve), props);
    result.test_success("ECDH private key generation was successful");
 
    pk.destroy();
@@ -1348,8 +1340,8 @@ Test::Result test_ecdh_generate_private_key()
 
 PKCS11_ECDH_KeyPair generate_ecdh_keypair(const TestSession& test_session, const std::string& label)
    {
-   EC_PublicKeyGenerationProperties pub_props(EC_Group("secp256r1").DER_encode(
-            EC_Group_Encoding::EC_DOMPAR_ENC_OID));
+   EC_PublicKeyGenerationProperties pub_props(
+      EC_Group("secp256r1").DER_encode(EC_Group_Encoding::NamedCurve));
    pub_props.set_label(label + "_PUB_KEY");
    pub_props.set_token(true);
    pub_props.set_derive(true);

@@ -108,7 +108,7 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
       size_t estimated_strength() const override;
 
    protected:
-      EC_PublicKey() : m_domain_params{}, m_public_key{}, m_domain_encoding(EC_DOMPAR_ENC_EXPLICIT)
+      EC_PublicKey() : m_domain_params{}, m_public_key{}, m_domain_encoding(EC_Group_Encoding::Explicit)
       {}
 
       EC_Group m_domain_params;

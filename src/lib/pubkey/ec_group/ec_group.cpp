@@ -612,7 +612,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
 
    DER_Encoder der(output);
 
-   if(form == EC_DOMPAR_ENC_EXPLICIT)
+   if(form == EC_Group_Encoding::Explicit)
       {
       const size_t ecpVers1 = 1;
       const OID curve_type("1.2.840.10045.1.1"); // prime field
@@ -636,7 +636,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
             .encode(get_cofactor())
          .end_cons();
       }
-   else if(form == EC_DOMPAR_ENC_OID)
+   else if(form == EC_Group_Encoding::NamedCurve)
       {
       const OID oid = get_curve_oid();
       if(oid.empty())
@@ -645,7 +645,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
          }
       der.encode(oid);
       }
-   else if(form == EC_DOMPAR_ENC_IMPLICITCA)
+   else if(form == EC_Group_Encoding::ImplicitCA)
       {
       der.encode_null();
       }
@@ -659,7 +659,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
 
 std::string EC_Group::PEM_encode() const
    {
-   const std::vector<uint8_t> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
+   const std::vector<uint8_t> der = DER_encode(EC_Group_Encoding::Explicit);
    return PEM_Code::encode(der, "EC PARAMETERS");
    }
 
