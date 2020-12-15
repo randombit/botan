@@ -30,6 +30,12 @@ Version 3.0.0, Not Yet Released
 * Use smaller tables in the implementations of Camellia, ARIA, SEED, and DES
   (GH #2534)
 
+* Convert base64, base58, base32 and hex encoding/decoding to be constant
+  time (GH #2543)
+
+* Change how DL exponents are sized; now exponents are slightly larger and
+  are always chosen to be 8-bit aligned. (GH #2545)
+
 * Add new ``X509_DN::DER_encode`` function. (GH #2472)
 
 * Add support for keyed BLAKE2b (GH #2524)
