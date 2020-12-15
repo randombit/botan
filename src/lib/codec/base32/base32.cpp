@@ -87,15 +87,25 @@ class Base32 final
       static const size_t m_encoding_bytes_out = 8;
    };
 
+namespace {
+
+char lookup_base32_char(uint8_t x)
+   {
+   BOTAN_DEBUG_ASSERT(x < 32);
+
+   const auto in_AZ = CT::Mask<uint8_t>::is_lt(x, 26);
+
+   const char c_AZ = 'A' + x;
+   const char c_27 = '2' + (x - 26);
+
+   return in_AZ.select(c_AZ, c_27);
+   }
+
+}
+
 //static
 void Base32::encode(char out[8], const uint8_t in[5]) noexcept
    {
-   alignas(64) static const uint8_t BIN_TO_BASE32[32] = {
-      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-      'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-      '2', '3', '4', '5', '6', '7'
-   };
-
    const uint8_t b0 = (in[0] & 0xF8) >> 3;
    const uint8_t b1 = ((in[0] & 0x07) << 2) | (in[1] >> 6);
    const uint8_t b2 = ((in[1] & 0x3E) >> 1);
@@ -105,14 +115,14 @@ void Base32::encode(char out[8], const uint8_t in[5]) noexcept
    const uint8_t b6 = ((in[3] & 0x03) << 3) | (in[4] >> 5);
    const uint8_t b7 = in[4] & 0x1F;
 
-   out[0] = BIN_TO_BASE32[b0];
-   out[1] = BIN_TO_BASE32[b1];
-   out[2] = BIN_TO_BASE32[b2];
-   out[3] = BIN_TO_BASE32[b3];
-   out[4] = BIN_TO_BASE32[b4];
-   out[5] = BIN_TO_BASE32[b5];
-   out[6] = BIN_TO_BASE32[b6];
-   out[7] = BIN_TO_BASE32[b7];
+   out[0] = lookup_base32_char(b0);
+   out[1] = lookup_base32_char(b1);
+   out[2] = lookup_base32_char(b2);
+   out[3] = lookup_base32_char(b3);
+   out[4] = lookup_base32_char(b4);
+   out[5] = lookup_base32_char(b5);
+   out[6] = lookup_base32_char(b6);
+   out[7] = lookup_base32_char(b7);
    }
 
 //static

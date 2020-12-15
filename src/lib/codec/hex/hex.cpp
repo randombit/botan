@@ -12,26 +12,34 @@
 
 namespace Botan {
 
+namespace {
+
+char hex_encode_nibble(uint8_t n, bool uppercase)
+   {
+   BOTAN_DEBUG_ASSERT(n <= 15);
+
+   const auto in_09 = CT::Mask<uint8_t>::is_lt(n, 10);
+
+   const char c_09 = n + '0';
+   const char c_af = n + (uppercase ? 'A' : 'a') - 10;
+
+   return in_09.select(c_09, c_af);
+   }
+
+}
+
 void hex_encode(char output[],
                 const uint8_t input[],
                 size_t input_length,
                 bool uppercase)
    {
-   alignas(64) static const uint8_t BIN_TO_HEX_UPPER[16] = {
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-      'A', 'B', 'C', 'D', 'E', 'F' };
-
-   alignas(64) static const uint8_t BIN_TO_HEX_LOWER[16] = {
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-      'a', 'b', 'c', 'd', 'e', 'f' };
-
-   const uint8_t* tbl = uppercase ? BIN_TO_HEX_UPPER : BIN_TO_HEX_LOWER;
-
    for(size_t i = 0; i != input_length; ++i)
       {
-      uint8_t x = input[i];
-      output[2*i  ] = tbl[(x >> 4) & 0x0F];
-      output[2*i+1] = tbl[(x     ) & 0x0F];
+      const uint8_t n0 = (input[i] >> 4) & 0xF;
+      const uint8_t n1 = (input[i]     ) & 0xF;
+
+      output[2*i  ] = hex_encode_nibble(n0, uppercase);
+      output[2*i+1] = hex_encode_nibble(n1, uppercase);
       }
    }
 

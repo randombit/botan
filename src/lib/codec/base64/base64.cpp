@@ -85,25 +85,41 @@ class Base64 final
       static const size_t m_encoding_bytes_out = 4;
    };
 
+char lookup_base64_char(uint8_t x)
+   {
+   BOTAN_DEBUG_ASSERT(x < 64);
+
+   const auto in_az = CT::Mask<uint8_t>::is_within_range(x, 26, 51);
+   const auto in_09 = CT::Mask<uint8_t>::is_within_range(x, 52, 61);
+   const auto eq_plus = CT::Mask<uint8_t>::is_equal(x, 62);
+   const auto eq_slash = CT::Mask<uint8_t>::is_equal(x, 63);
+
+   const char c_AZ = 'A' + x;
+   const char c_az = 'a' + (x - 26);
+   const char c_09 = '0' + (x - 2*26);
+   const char c_plus = '+';
+   const char c_slash = '/';
+
+   char ret = c_AZ;
+   ret = in_az.select(c_az, ret);
+   ret = in_09.select(c_09, ret);
+   ret = eq_plus.select(c_plus, ret);
+   ret = eq_slash.select(c_slash, ret);
+
+   return ret;
+   }
+
 //static
 void Base64::encode(char out[8], const uint8_t in[5]) noexcept
    {
-   alignas(64) static const uint8_t BIN_TO_BASE64[64] = {
-      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-      'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
-   };
-
    const uint8_t b0 = (in[0] & 0xFC) >> 2;
    const uint8_t b1 = ((in[0] & 0x03) << 4) | (in[1] >> 4);
    const uint8_t b2 = ((in[1] & 0x0F) << 2) | (in[2] >> 6);
    const uint8_t b3 = in[2] & 0x3F;
-   out[0] = BIN_TO_BASE64[b0];
-   out[1] = BIN_TO_BASE64[b1];
-   out[2] = BIN_TO_BASE64[b2];
-   out[3] = BIN_TO_BASE64[b3];
+   out[0] = lookup_base64_char(b0);
+   out[1] = lookup_base64_char(b1);
+   out[2] = lookup_base64_char(b2);
+   out[3] = lookup_base64_char(b3);
    }
 
 //static
