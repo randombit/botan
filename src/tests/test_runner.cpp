@@ -59,10 +59,9 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
             }
          }
 
-      Testsuite_RNG(const std::vector<uint8_t>& seed, size_t test_counter = 0) : m_x(0)
+      Testsuite_RNG(const std::vector<uint8_t>& seed, uint64_t test_counter)
          {
-         mix(test_counter);
-
+         m_x = ~test_counter;
          add_entropy(seed.data(), seed.size());
          }
    private:
