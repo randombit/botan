@@ -429,7 +429,7 @@ class DL_Group_Info final : public Command
 
          if(flag_set("pem"))
             {
-            output() << dl_group.PEM_encode(Botan::DL_Group::ANSI_X9_42_DH_PARAMETERS);
+            output() << dl_group.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42_DH_PARAMETERS);
             }
          else
             {
@@ -503,14 +503,14 @@ class Gen_DL_Group final : public Command
             if(seed_str.size() > 0)
                { throw CLI_Usage_Error("Seed only supported for DSA param gen"); }
             Botan::DL_Group grp(rng(), Botan::DL_Group::Strong, pbits);
-            output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
+            output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
             }
          else if(type == "subgroup")
             {
             if(seed_str.size() > 0)
                { throw CLI_Usage_Error("Seed only supported for DSA param gen"); }
             Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
-            output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
+            output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
             }
          else if(type == "dsa")
             {
@@ -528,13 +528,13 @@ class Gen_DL_Group final : public Command
             if(seed_str.empty())
                {
                Botan::DL_Group grp(rng(), Botan::DL_Group::DSA_Kosherizer, pbits, dsa_qbits);
-               output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_57);
+               output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_57);
                }
             else
                {
                const std::vector<uint8_t> seed = Botan::hex_decode(seed_str);
                Botan::DL_Group grp(rng(), seed, pbits, dsa_qbits);
-               output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_57);
+               output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_57);
                }
 
             }

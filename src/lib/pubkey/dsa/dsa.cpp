@@ -48,7 +48,7 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
 
 DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                                const secure_vector<uint8_t>& key_bits) :
-   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
+   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group_Format::ANSI_X9_57)
    {
    m_y = m_group.power_g_p(m_x, m_group.q_bits());
    }

@@ -270,7 +270,7 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
          "INSERT OR REPLACE INTO " + m_prefix + "revoked ( fingerprint, reason, time ) VALUES ( ?1, ?2, ?3 )");
 
    stmt1->bind(1,cert.fingerprint("SHA-256"));
-   stmt1->bind(2,code);
+   stmt1->bind(2,static_cast<uint32_t>(code));
 
    if(time.time_is_set())
       {

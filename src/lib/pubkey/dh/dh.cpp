@@ -58,7 +58,7 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
 */
 DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
                              const secure_vector<uint8_t>& key_bits) :
-   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
+   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group_Format::ANSI_X9_42)
    {
    if(m_y.is_zero())
       {

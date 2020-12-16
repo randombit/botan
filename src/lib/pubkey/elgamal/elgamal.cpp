@@ -45,7 +45,7 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
 
 ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
                                        const secure_vector<uint8_t>& key_bits) :
-   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
+   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group_Format::ANSI_X9_42)
    {
    m_y = m_group.power_g_p(m_x, m_group.p_bits());
    }

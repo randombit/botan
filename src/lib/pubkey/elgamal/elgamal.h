@@ -19,7 +19,7 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PublicKey : public virtual DL_Scheme_PublicK
    {
    public:
       std::string algo_name() const override { return "ElGamal"; }
-      DL_Group::Format group_format() const override { return DL_Group::ANSI_X9_42; }
+      DL_Group_Format group_format() const override { return DL_Group_Format::ANSI_X9_42; }
 
       /**
       * Load a public key.
@@ -28,7 +28,7 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PublicKey : public virtual DL_Scheme_PublicK
       */
       ElGamal_PublicKey(const AlgorithmIdentifier& alg_id,
                         const std::vector<uint8_t>& key_bits) :
-         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
+         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group_Format::ANSI_X9_42)
          {}
 
       /**

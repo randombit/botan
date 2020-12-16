@@ -20,10 +20,14 @@ namespace Botan {
 /**
 * This class represents elliptic curce domain parameters
 */
-enum EC_Group_Encoding {
-   EC_DOMPAR_ENC_EXPLICIT = 0,
-   EC_DOMPAR_ENC_IMPLICITCA = 1,
-   EC_DOMPAR_ENC_OID = 2
+enum class EC_Group_Encoding {
+   Explicit,
+   ImplicitCA,
+   NamedCurve,
+
+   EC_DOMPAR_ENC_EXPLICIT = Explicit,
+   EC_DOMPAR_ENC_IMPLICITCA = ImplicitCA,
+   EC_DOMPAR_ENC_OID = NamedCurve
 };
 
 enum class EC_Group_Source {

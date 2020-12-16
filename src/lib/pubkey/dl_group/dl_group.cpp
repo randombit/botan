@@ -123,7 +123,7 @@ class DL_Group_Data final
 
 //static
 std::shared_ptr<DL_Group_Data> DL_Group::BER_decode_DL_group(const uint8_t data[], size_t data_len,
-                                                             DL_Group::Format format,
+                                                             DL_Group_Format format,
                                                              DL_Group_Source source)
    {
    BigInt p, q, g;
@@ -131,21 +131,21 @@ std::shared_ptr<DL_Group_Data> DL_Group::BER_decode_DL_group(const uint8_t data[
    BER_Decoder decoder(data, data_len);
    BER_Decoder ber = decoder.start_cons(SEQUENCE);
 
-   if(format == DL_Group::ANSI_X9_57)
+   if(format == DL_Group_Format::ANSI_X9_57)
       {
       ber.decode(p)
          .decode(q)
          .decode(g)
          .verify_end();
       }
-   else if(format == DL_Group::ANSI_X9_42)
+   else if(format == DL_Group_Format::ANSI_X9_42)
       {
       ber.decode(p)
          .decode(g)
          .decode(q)
          .discard_remaining();
       }
-   else if(format == DL_Group::PKCS_3)
+   else if(format == DL_Group_Format::PKCS_3)
       {
       // q is left as zero
       ber.decode(p)
@@ -153,7 +153,7 @@ std::shared_ptr<DL_Group_Data> DL_Group::BER_decode_DL_group(const uint8_t data[
          .discard_remaining();
       }
    else
-      throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
+      throw Invalid_Argument("Unknown DL_Group encoding");
 
    return std::make_shared<DL_Group_Data>(p, q, g, source);
    }
@@ -185,14 +185,14 @@ DL_Group::load_DL_group_info(const char* p_str,
 
 namespace {
 
-DL_Group::Format pem_label_to_dl_format(const std::string& label)
+DL_Group_Format pem_label_to_dl_format(const std::string& label)
    {
    if(label == "DH PARAMETERS")
-      return DL_Group::PKCS_3;
+      return DL_Group_Format::PKCS_3;
    else if(label == "DSA PARAMETERS")
-      return DL_Group::ANSI_X9_57;
+      return DL_Group_Format::ANSI_X9_57;
    else if(label == "X942 DH PARAMETERS" || label == "X9.42 DH PARAMETERS")
-      return DL_Group::ANSI_X9_42;
+      return DL_Group_Format::ANSI_X9_42;
    else
       throw Decoding_Error("DL_Group: Invalid PEM label " + label);
    }
@@ -213,7 +213,7 @@ DL_Group::DL_Group(const std::string& str)
          {
          std::string label;
          const std::vector<uint8_t> ber = unlock(PEM_Code::decode(str, label));
-         Format format = pem_label_to_dl_format(label);
+         DL_Group_Format format = pem_label_to_dl_format(label);
 
          m_data = BER_decode_DL_group(ber.data(), ber.size(), format, DL_Group_Source::ExternalSource);
          }
@@ -589,15 +589,15 @@ DL_Group_Source DL_Group::source() const
 /*
 * DER encode the parameters
 */
-std::vector<uint8_t> DL_Group::DER_encode(Format format) const
+std::vector<uint8_t> DL_Group::DER_encode(DL_Group_Format format) const
    {
-   if(get_q().is_zero() && (format == ANSI_X9_57 || format == ANSI_X9_42))
+   if(get_q().is_zero() && (format != DL_Group_Format::PKCS_3))
       throw Encoding_Error("Cannot encode DL_Group in ANSI formats when q param is missing");
 
    std::vector<uint8_t> output;
    DER_Encoder der(output);
 
-   if(format == ANSI_X9_57)
+   if(format == DL_Group_Format::ANSI_X9_57)
       {
       der.start_cons(SEQUENCE)
             .encode(get_p())
@@ -605,7 +605,7 @@ std::vector<uint8_t> DL_Group::DER_encode(Format format) const
             .encode(get_g())
          .end_cons();
       }
-   else if(format == ANSI_X9_42)
+   else if(format == DL_Group_Format::ANSI_X9_42)
       {
       der.start_cons(SEQUENCE)
             .encode(get_p())
@@ -613,7 +613,7 @@ std::vector<uint8_t> DL_Group::DER_encode(Format format) const
             .encode(get_q())
          .end_cons();
       }
-   else if(format == PKCS_3)
+   else if(format == DL_Group_Format::PKCS_3)
       {
       der.start_cons(SEQUENCE)
             .encode(get_p())
@@ -621,7 +621,7 @@ std::vector<uint8_t> DL_Group::DER_encode(Format format) const
          .end_cons();
       }
    else
-      throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
+      throw Invalid_Argument("Unknown DL_Group encoding");
 
    return output;
    }
@@ -629,26 +629,26 @@ std::vector<uint8_t> DL_Group::DER_encode(Format format) const
 /*
 * PEM encode the parameters
 */
-std::string DL_Group::PEM_encode(Format format) const
+std::string DL_Group::PEM_encode(DL_Group_Format format) const
    {
    const std::vector<uint8_t> encoding = DER_encode(format);
 
-   if(format == PKCS_3)
+   if(format == DL_Group_Format::PKCS_3)
       return PEM_Code::encode(encoding, "DH PARAMETERS");
-   else if(format == ANSI_X9_57)
+   else if(format == DL_Group_Format::ANSI_X9_57)
       return PEM_Code::encode(encoding, "DSA PARAMETERS");
-   else if(format == ANSI_X9_42)
+   else if(format == DL_Group_Format::ANSI_X9_42)
       return PEM_Code::encode(encoding, "X9.42 DH PARAMETERS");
    else
-      throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
+      throw Invalid_Argument("Unknown DL_Group encoding");
    }
 
-DL_Group::DL_Group(const uint8_t ber[], size_t ber_len, Format format)
+DL_Group::DL_Group(const uint8_t ber[], size_t ber_len, DL_Group_Format format)
    {
    m_data = BER_decode_DL_group(ber, ber_len, format, DL_Group_Source::ExternalSource);
    }
 
-void DL_Group::BER_decode(const std::vector<uint8_t>& ber, Format format)
+void DL_Group::BER_decode(const std::vector<uint8_t>& ber, DL_Group_Format format)
    {
    m_data = BER_decode_DL_group(ber.data(), ber.size(), format, DL_Group_Source::ExternalSource);
    }
@@ -658,7 +658,7 @@ DL_Group DL_Group::DL_Group_from_PEM(const std::string& pem)
    {
    std::string label;
    const std::vector<uint8_t> ber = unlock(PEM_Code::decode(pem, label));
-   Format format = pem_label_to_dl_format(label);
+   DL_Group_Format format = pem_label_to_dl_format(label);
    return DL_Group(ber, format);
    }
 

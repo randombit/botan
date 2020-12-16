@@ -20,7 +20,7 @@ class BOTAN_PUBLIC_API(2,0) DSA_PublicKey : public virtual DL_Scheme_PublicKey
    public:
       std::string algo_name() const override { return "DSA"; }
 
-      DL_Group::Format group_format() const override { return DL_Group::ANSI_X9_57; }
+      DL_Group_Format group_format() const override { return DL_Group_Format::ANSI_X9_57; }
       size_t message_parts() const override { return 2; }
       size_t message_part_size() const override { return group_q().bytes(); }
 
@@ -31,7 +31,7 @@ class BOTAN_PUBLIC_API(2,0) DSA_PublicKey : public virtual DL_Scheme_PublicKey
       */
       DSA_PublicKey(const AlgorithmIdentifier& alg_id,
                     const std::vector<uint8_t>& key_bits) :
-         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
+         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group_Format::ANSI_X9_57)
          {
          }
 

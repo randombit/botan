@@ -118,9 +118,8 @@ enum Key_Constraints {
 
 /**
 * X.509v2 CRL Reason Code.
-* This will become an enum class in a future major release
 */
-enum CRL_Code : uint32_t {
+enum class CRL_Code : uint32_t {
    UNSPECIFIED            = 0,
    KEY_COMPROMISE         = 1,
    CA_COMPROMISE          = 2,

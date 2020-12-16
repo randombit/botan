@@ -56,9 +56,9 @@ class DL_Group_Tests final : public Test
 
          const Botan::DL_Group orig("modp/ietf/1024");
 
-         const std::string pem1 = orig.PEM_encode(Botan::DL_Group::ANSI_X9_42);
-         const std::string pem2 = orig.PEM_encode(Botan::DL_Group::ANSI_X9_57);
-         const std::string pem3 = orig.PEM_encode(Botan::DL_Group::PKCS_3);
+         const std::string pem1 = orig.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
+         const std::string pem2 = orig.PEM_encode(Botan::DL_Group_Format::ANSI_X9_57);
+         const std::string pem3 = orig.PEM_encode(Botan::DL_Group_Format::PKCS_3);
 
          Botan::DL_Group group1(pem1);
 

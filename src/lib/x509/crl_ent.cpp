@@ -18,7 +18,7 @@ struct CRL_Entry_Data
    {
    std::vector<uint8_t> m_serial;
    X509_Time m_time;
-   CRL_Code m_reason = UNSPECIFIED;
+   CRL_Code m_reason = CRL_Code::UNSPECIFIED;
    Extensions m_extensions;
    };
 
@@ -32,7 +32,7 @@ CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why)
    m_data->m_time = X509_Time(std::chrono::system_clock::now());
    m_data->m_reason = why;
 
-   if(why != UNSPECIFIED)
+   if(why != CRL_Code::UNSPECIFIED)
       {
       m_data->m_extensions.add(new Cert_Extension::CRL_ReasonCode(why));
       }
@@ -97,7 +97,7 @@ void CRL_Entry::decode_from(BER_Decoder& source)
          }
       else
          {
-         data->m_reason = UNSPECIFIED;
+         data->m_reason = CRL_Code::UNSPECIFIED;
          }
       }
 
