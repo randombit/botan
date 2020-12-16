@@ -18,6 +18,7 @@ x86_64:aesni
 arm64:neon
 arm64:armv8crypto
 ppc64:powercrypto
+ppc64:vsx
 </isa>
 
 <arch>

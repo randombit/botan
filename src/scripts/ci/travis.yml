@@ -15,6 +15,12 @@ jobs:
       env:
        - TARGET="shared"
 
+    - name: Linux ppc64le (Clang)
+      arch: ppc64le
+      compiler: clang
+      env:
+       - TARGET="shared"
+
     - name: Linux arm64 (GCC)
       arch: arm64
       env:
