@@ -969,7 +969,7 @@ class ModuleInfo(InfoObject):
 
     def compatible_cpu(self, archinfo, options):
         arch_name = archinfo.basename
-        cpu_name = options.cpu
+        cpu_name = options.arch
 
         if self.endian != 'any':
             if self.endian != options.with_endian:
@@ -1330,7 +1330,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                     yield all_except
 
             yield options.os
-            yield options.cpu
+            yield options.arch
 
         abi_link = set()
         for what in mach_abi_groups():
