@@ -7,6 +7,8 @@ Version 2.17.3, Not Yet Released
 * Change base64, base58, base32, and hex encoding and decoding opearations
   to run in constant time (GH #2549)
 
+* Fix a build problem on PPC64 building with Clang (GH #2547)
+
 * Fix an install problem introduced in 2.17.2 affecting MSVC 2015
 
 * Fix use of -L flag in linking when configured using ``--with-external-libdir``
