@@ -68,10 +68,16 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) clmul(const SIMD_4x
       i2 = mask_lo.andc(i2);
       }
 
-   return SIMD_4x32((__vector unsigned int)__builtin_crypto_vpmsumd(
-                       (__vector unsigned long)i1.raw(),
-                       (__vector unsigned long)i2.raw())
-      );
+   auto i1v = reinterpret_cast<__vector unsigned long long>(i1.raw());
+   auto i2v = reinterpret_cast<__vector unsigned long long>(i2.raw());
+
+#if defined(__clang__)
+   auto rv = __builtin_altivec_crypto_vpmsumd(i1v, i2v);
+#else
+   auto rv = __builtin_crypto_vpmsumd(i1v, i2v);
+#endif
+
+   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(rv));
 #endif
    }
 
