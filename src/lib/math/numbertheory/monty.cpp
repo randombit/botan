@@ -58,8 +58,7 @@ Montgomery_Params::Montgomery_Params(const BigInt& p,
 
 Montgomery_Params::Montgomery_Params(const BigInt& p)
    {
-
-   if(p.is_negative() || p.is_even())
+   if(p.is_even() || p < 3)
       throw Invalid_Argument("Montgomery_Params invalid modulus");
 
    m_p = p;

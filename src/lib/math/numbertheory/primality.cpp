@@ -91,6 +91,9 @@ bool is_lucas_probable_prime(const BigInt& C, const Modular_Reducer& mod_C)
 
 bool is_bailie_psw_probable_prime(const BigInt& n, const Modular_Reducer& mod_n)
    {
+   if(n < 3 || n.is_even())
+      return false;
+
    auto monty_n = std::make_shared<Montgomery_Params>(n, mod_n);
    return passes_miller_rabin_test(n, mod_n, monty_n, 2) && is_lucas_probable_prime(n, mod_n);
    }
@@ -106,6 +109,9 @@ bool passes_miller_rabin_test(const BigInt& n,
                               const std::shared_ptr<Montgomery_Params>& monty_n,
                               const BigInt& a)
    {
+   if(n < 3 || n.is_even())
+      return false;
+
    BOTAN_ASSERT_NOMSG(n > 1);
 
    const BigInt n_minus_1 = n - 1;
@@ -145,7 +151,8 @@ bool is_miller_rabin_probable_prime(const BigInt& n,
                                     RandomNumberGenerator& rng,
                                     size_t test_iterations)
    {
-   BOTAN_ASSERT_NOMSG(n > 1);
+   if(n < 3 || n.is_even())
+      return false;
 
    auto monty_n = std::make_shared<Montgomery_Params>(n, mod_n);
 
