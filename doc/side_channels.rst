@@ -65,6 +65,18 @@ attacker than a BellCore style attack, which is possible if any error at all
 occurs during either modular exponentiation involved in the RSA signature
 operation.
 
+RSA key generation is also prone to side channel vulnerabilities due to the need
+to calculate the CRT parameters. The GCD computation, LCM computations, modulo,
+and inversion of ``q`` modulo ``p`` are all done via constant time algorithms.
+An additional inversion, of ``e`` modulo ``phi(n)``, is also required. This one
+is somewhat more complicated because ``phi(n)`` is even and the primary constant
+time algorithm for inversions only works for odd moduli. This is worked around
+by a technique based on the CRT - ``phi(n)`` is factored to ``2**e * z`` for
+some ``e`` > 1 and some odd ``z``. Then ``e`` is inverted modulo ``2**e`` and
+also modulo ``z``. The inversion modulo ``2**e`` is done via a specialized
+constant-time algoirthm which only works for powers of 2. Then the two
+inversions are combined using the CRT.
+
 See blinding.cpp and rsa.cpp.
 
 If the OpenSSL provider is enabled, then no explicit blinding is done; we assume
@@ -239,6 +251,14 @@ In theory, any good protocol protects CBC ciphertexts with a MAC. But in
 practice, some protocols are not good and cannot be fixed immediately. To avoid
 making a bad problem worse, the code to handle decoding CBC ciphertext padding
 bytes runs in constant time, depending only on the block size of the cipher.
+
+base64 decoding
+----------------------
+
+Base64 (and related encodings base32, base58 and hex) are sometimes used to
+encode or decode secret data. To avoid possible side channels which might leak
+key material during the encoding or decoding process, these functions avoid any
+input-dependent table lookups.
 
 AES
 ----------------------
