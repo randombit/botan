@@ -275,12 +275,9 @@ inline void des_decrypt_x2(uint32_t& L0r, uint32_t& R0r,
    R1r = R1;
    }
 
-inline void des_IP(uint32_t& L, uint32_t& R, const uint8_t block[])
+inline void des_IP(uint32_t& L, uint32_t& R)
    {
    // IP sequence by Wei Dai, taken from public domain Crypto++
-   L = load_be<uint32_t>(block, 0);
-   R = load_be<uint32_t>(block, 1);
-
    uint32_t T;
    R = rotl<4>(R);
    T = (L ^ R) & 0xF0F0F0F0;
@@ -300,7 +297,16 @@ inline void des_IP(uint32_t& L, uint32_t& R, const uint8_t block[])
    R ^= T;
    }
 
-inline void des_FP(uint32_t L, uint32_t R, uint8_t out[])
+inline void des_IP(uint32_t& L, uint32_t& R, const uint8_t block[])
+   {
+   // IP sequence by Wei Dai, taken from public domain Crypto++
+   L = load_be<uint32_t>(block, 0);
+   R = load_be<uint32_t>(block, 1);
+
+   des_IP(L, R);
+   }
+
+inline void des_FP(uint32_t& L, uint32_t& R)
    {
    // FP sequence by Wei Dai, taken from public domain Crypto++
    uint32_t T;
@@ -321,7 +327,11 @@ inline void des_FP(uint32_t L, uint32_t R, uint8_t out[])
    T = (L ^ R) & 0xF0F0F0F0;
    R ^= T;
    L = rotr<4>(L ^ T);
+   }
 
+inline void des_FP(uint32_t L, uint32_t R, uint8_t out[])
+   {
+   des_FP(L, R);
    store_be(out, R, L);
    }
 
@@ -336,28 +346,38 @@ void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
    while(blocks >= 2)
       {
-      uint32_t L0, R0;
-      uint32_t L1, R1;
+      uint32_t L0 = load_be<uint32_t>(in, 0);
+      uint32_t R0 = load_be<uint32_t>(in, 1);
+      uint32_t L1 = load_be<uint32_t>(in, 2);
+      uint32_t R1 = load_be<uint32_t>(in, 3);
 
-      des_IP(L0, R0, in);
-      des_IP(L1, R1, in + BLOCK_SIZE);
+      des_IP(L0, R0);
+      des_IP(L1, R1);
 
       des_encrypt_x2(L0, R0, L1, R1, m_round_key.data());
 
-      des_FP(L0, R0, out);
-      des_FP(L1, R1, out + BLOCK_SIZE);
+      des_FP(L0, R0);
+      des_FP(L1, R1);
+
+      store_be(out, R0, L0, R1, L1);
 
       in += 2*BLOCK_SIZE;
       out += 2*BLOCK_SIZE;
       blocks -= 2;
       }
 
-   for(size_t i = 0; i < blocks; ++i)
+   while(blocks > 0)
       {
-      uint32_t L, R;
-      des_IP(L, R, in + BLOCK_SIZE*i);
-      des_encrypt(L, R, m_round_key.data());
-      des_FP(L, R, out + BLOCK_SIZE*i);
+      uint32_t L0 = load_be<uint32_t>(in, 0);
+      uint32_t R0 = load_be<uint32_t>(in, 1);
+      des_IP(L0, R0);
+      des_encrypt(L0, R0, m_round_key.data());
+      des_FP(L0, R0);
+      store_be(out, R0, L0);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      blocks -= 1;
       }
    }
 
@@ -370,28 +390,38 @@ void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
    while(blocks >= 2)
       {
-      uint32_t L0, R0;
-      uint32_t L1, R1;
+      uint32_t L0 = load_be<uint32_t>(in, 0);
+      uint32_t R0 = load_be<uint32_t>(in, 1);
+      uint32_t L1 = load_be<uint32_t>(in, 2);
+      uint32_t R1 = load_be<uint32_t>(in, 3);
 
-      des_IP(L0, R0, in);
-      des_IP(L1, R1, in + BLOCK_SIZE);
+      des_IP(L0, R0);
+      des_IP(L1, R1);
 
       des_decrypt_x2(L0, R0, L1, R1, m_round_key.data());
 
-      des_FP(L0, R0, out);
-      des_FP(L1, R1, out + BLOCK_SIZE);
+      des_FP(L0, R0);
+      des_FP(L1, R1);
+
+      store_be(out, R0, L0, R1, L1);
 
       in += 2*BLOCK_SIZE;
       out += 2*BLOCK_SIZE;
       blocks -= 2;
       }
 
-   for(size_t i = 0; i < blocks; ++i)
+   while(blocks > 0)
       {
-      uint32_t L, R;
-      des_IP(L, R, in + BLOCK_SIZE*i);
-      des_decrypt(L, R, m_round_key.data());
-      des_FP(L, R, out + BLOCK_SIZE*i);
+      uint32_t L0 = load_be<uint32_t>(in, 0);
+      uint32_t R0 = load_be<uint32_t>(in, 1);
+      des_IP(L0, R0);
+      des_decrypt(L0, R0, m_round_key.data());
+      des_FP(L0, R0);
+      store_be(out, R0, L0);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      blocks -= 1;
       }
    }
 
@@ -418,34 +448,44 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
 
    while(blocks >= 2)
       {
-      uint32_t L0, R0;
-      uint32_t L1, R1;
+      uint32_t L0 = load_be<uint32_t>(in, 0);
+      uint32_t R0 = load_be<uint32_t>(in, 1);
+      uint32_t L1 = load_be<uint32_t>(in, 2);
+      uint32_t R1 = load_be<uint32_t>(in, 3);
 
-      des_IP(L0, R0, in);
-      des_IP(L1, R1, in + BLOCK_SIZE);
+      des_IP(L0, R0);
+      des_IP(L1, R1);
 
       des_encrypt_x2(L0, R0, L1, R1, &m_round_key[0]);
       des_decrypt_x2(R0, L0, R1, L1, &m_round_key[32]);
       des_encrypt_x2(L0, R0, L1, R1, &m_round_key[64]);
 
-      des_FP(L0, R0, out);
-      des_FP(L1, R1, out + BLOCK_SIZE);
+      des_FP(L0, R0);
+      des_FP(L1, R1);
+
+      store_be(out, R0, L0, R1, L1);
 
       in += 2*BLOCK_SIZE;
       out += 2*BLOCK_SIZE;
       blocks -= 2;
       }
 
-   for(size_t i = 0; i != blocks; ++i)
+   while(blocks > 0)
       {
-      uint32_t L, R;
-      des_IP(L, R, in + BLOCK_SIZE*i);
+      uint32_t L0 = load_be<uint32_t>(in, 0);
+      uint32_t R0 = load_be<uint32_t>(in, 1);
 
-      des_encrypt(L, R, &m_round_key[0]);
-      des_decrypt(R, L, &m_round_key[32]);
-      des_encrypt(L, R, &m_round_key[64]);
+      des_IP(L0, R0);
+      des_encrypt(L0, R0, &m_round_key[0]);
+      des_decrypt(R0, L0, &m_round_key[32]);
+      des_encrypt(L0, R0, &m_round_key[64]);
+      des_FP(L0, R0);
 
-      des_FP(L, R, out + BLOCK_SIZE*i);
+      store_be(out, R0, L0);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      blocks -= 1;
       }
    }
 
@@ -458,34 +498,44 @@ void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
 
    while(blocks >= 2)
       {
-      uint32_t L0, R0;
-      uint32_t L1, R1;
+      uint32_t L0 = load_be<uint32_t>(in, 0);
+      uint32_t R0 = load_be<uint32_t>(in, 1);
+      uint32_t L1 = load_be<uint32_t>(in, 2);
+      uint32_t R1 = load_be<uint32_t>(in, 3);
 
-      des_IP(L0, R0, in);
-      des_IP(L1, R1, in + BLOCK_SIZE);
+      des_IP(L0, R0);
+      des_IP(L1, R1);
 
       des_decrypt_x2(L0, R0, L1, R1, &m_round_key[64]);
       des_encrypt_x2(R0, L0, R1, L1, &m_round_key[32]);
       des_decrypt_x2(L0, R0, L1, R1, &m_round_key[0]);
 
-      des_FP(L0, R0, out);
-      des_FP(L1, R1, out + BLOCK_SIZE);
+      des_FP(L0, R0);
+      des_FP(L1, R1);
+
+      store_be(out, R0, L0, R1, L1);
 
       in += 2*BLOCK_SIZE;
       out += 2*BLOCK_SIZE;
       blocks -= 2;
       }
 
-   for(size_t i = 0; i != blocks; ++i)
+   while(blocks > 0)
       {
-      uint32_t L, R;
-      des_IP(L, R, in + BLOCK_SIZE*i);
+      uint32_t L0 = load_be<uint32_t>(in, 0);
+      uint32_t R0 = load_be<uint32_t>(in, 1);
 
-      des_decrypt(L, R, &m_round_key[64]);
-      des_encrypt(R, L, &m_round_key[32]);
-      des_decrypt(L, R, &m_round_key[0]);
+      des_IP(L0, R0);
+      des_decrypt(L0, R0, &m_round_key[64]);
+      des_encrypt(R0, L0, &m_round_key[32]);
+      des_decrypt(L0, R0, &m_round_key[0]);
+      des_FP(L0, R0);
 
-      des_FP(L, R, out + BLOCK_SIZE*i);
+      store_be(out, R0, L0);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      blocks -= 1;
       }
    }
 
