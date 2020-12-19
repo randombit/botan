@@ -297,15 +297,6 @@ inline void des_IP(uint32_t& L, uint32_t& R)
    R ^= T;
    }
 
-inline void des_IP(uint32_t& L, uint32_t& R, const uint8_t block[])
-   {
-   // IP sequence by Wei Dai, taken from public domain Crypto++
-   L = load_be<uint32_t>(block, 0);
-   R = load_be<uint32_t>(block, 1);
-
-   des_IP(L, R);
-   }
-
 inline void des_FP(uint32_t& L, uint32_t& R)
    {
    // FP sequence by Wei Dai, taken from public domain Crypto++
@@ -327,12 +318,6 @@ inline void des_FP(uint32_t& L, uint32_t& R)
    T = (L ^ R) & 0xF0F0F0F0;
    R ^= T;
    L = rotr<4>(L ^ T);
-   }
-
-inline void des_FP(uint32_t L, uint32_t R, uint8_t out[])
-   {
-   des_FP(L, R);
-   store_be(out, R, L);
    }
 
 }
