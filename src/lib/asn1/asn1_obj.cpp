@@ -230,8 +230,8 @@ bool maybe_BER(DataSource& source)
       throw Stream_IO_Error("ASN1::maybe_BER: Source was empty");
       }
 
-   // CONSTRUCTED SEQUENCE
-   if(first_u8 == 0x30)
+   const auto cons_seq = ASN1_Tag::CONSTRUCTED | ASN1_Tag::SEQUENCE;
+   if(first_u8 == static_cast<uint8_t>(cons_seq))
       return true;
    return false;
    }
