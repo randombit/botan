@@ -109,15 +109,19 @@ class SIMD_8x32 final
          return this->rotl<32-ROT>();
          }
 
-      template<size_t ROT1, size_t ROT2, size_t ROT3>
-      SIMD_8x32 BOTAN_FUNC_ISA("avx2") rho() const
+      SIMD_8x32 BOTAN_FUNC_ISA("avx2") sigma0() const
          {
-         SIMD_8x32 res;
+         const SIMD_8x32 rot1 = this->rotr<2>();
+         const SIMD_8x32 rot2 = this->rotr<13>();
+         const SIMD_8x32 rot3 = this->rotr<22>();
+         return rot1 ^ rot2 ^ rot3;
+         }
 
-         const SIMD_8x32 rot1 = this->rotr<ROT1>();
-         const SIMD_8x32 rot2 = this->rotr<ROT2>();
-         const SIMD_8x32 rot3 = this->rotr<ROT3>();
-
+      SIMD_8x32 BOTAN_FUNC_ISA("avx2") sigma1() const
+         {
+         const SIMD_8x32 rot1 = this->rotr<6>();
+         const SIMD_8x32 rot2 = this->rotr<11>();
+         const SIMD_8x32 rot3 = this->rotr<25>();
          return rot1 ^ rot2 ^ rot3;
          }
 
@@ -261,6 +265,18 @@ class SIMD_8x32 final
          swap_tops(B1, B5);
          swap_tops(B2, B6);
          swap_tops(B3, B7);
+         }
+
+      BOTAN_FUNC_ISA("avx2")
+      static SIMD_8x32 choose(const SIMD_8x32& mask, const SIMD_8x32& a, const SIMD_8x32& b)
+         {
+         return (mask & a) ^ mask.andc(b);
+         }
+
+      BOTAN_FUNC_ISA("avx2")
+      static SIMD_8x32 majority(const SIMD_8x32& x, const SIMD_8x32& y, const SIMD_8x32& z)
+         {
+         return SIMD_8x32::choose(x ^ y, z, y);
          }
 
       BOTAN_FUNC_ISA("avx2")

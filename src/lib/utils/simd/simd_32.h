@@ -262,15 +262,32 @@ class SIMD_4x32 final
 
       /*
       * This is used for SHA-2/SHACAL2
-      * Return rotr(ROT1) ^ rotr(ROT2) ^ rotr(ROT3)
       */
-      template<size_t ROT1, size_t ROT2, size_t ROT3>
-      SIMD_4x32 rho() const
+      SIMD_4x32 sigma0() const
          {
-         const SIMD_4x32 rot1 = this->rotr<ROT1>();
-         const SIMD_4x32 rot2 = this->rotr<ROT2>();
-         const SIMD_4x32 rot3 = this->rotr<ROT3>();
+#if defined(__GNUC__) && defined(_ARCH_PWR8)
+         return SIMD_4x32(__builtin_crypto_vshasigmaw(raw(), 1, 0));
+#else
+         const SIMD_4x32 rot1 = this->rotr<2>();
+         const SIMD_4x32 rot2 = this->rotr<13>();
+         const SIMD_4x32 rot3 = this->rotr<22>();
          return (rot1 ^ rot2 ^ rot3);
+#endif
+         }
+
+      /*
+      * This is used for SHA-2/SHACAL2
+      */
+      SIMD_4x32 sigma1() const
+         {
+#if defined(__GNUC__) && defined(_ARCH_PWR8)
+         return SIMD_4x32(__builtin_crypto_vshasigmaw(raw(), 1, 0xF));
+#else
+         const SIMD_4x32 rot1 = this->rotr<6>();
+         const SIMD_4x32 rot2 = this->rotr<11>();
+         const SIMD_4x32 rot3 = this->rotr<25>();
+         return (rot1 ^ rot2 ^ rot3);
+#endif
          }
 
       /**
@@ -609,7 +626,23 @@ class SIMD_4x32 final
 #endif
          }
 
-      native_simd_type raw() const BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) { return m_simd; }
+      static inline SIMD_4x32 choose(const SIMD_4x32& mask, const SIMD_4x32& a, const SIMD_4x32& b)
+         {
+#if defined(BOTAN_SIMD_USE_ALTIVEC)
+         return SIMD_4x32(vec_sel(b.raw(), a.raw(), mask.raw()));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_4x32(vbslq_u32(mask.raw(), a.raw(), b.raw()));
+#else
+         return (mask & a) ^ mask.andc(b);
+#endif
+         }
+
+      static inline SIMD_4x32 majority(const SIMD_4x32& x, const SIMD_4x32& y, const SIMD_4x32& z)
+         {
+         return SIMD_4x32::choose(x ^ y, z, y);
+         }
+
+      native_simd_type raw() const { return m_simd; }
 
       explicit SIMD_4x32(native_simd_type x) : m_simd(x) {}
    private:
