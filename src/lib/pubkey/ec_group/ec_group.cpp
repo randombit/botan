@@ -668,15 +668,13 @@ bool EC_Group::operator==(const EC_Group& other) const
    if(m_data == other.m_data)
       return true; // same shared rep
 
-   /*
-   * No point comparing order/cofactor as they are uniquely determined
-   * by the curve equation (p,a,b) and the base point.
-   */
    return (get_p() == other.get_p() &&
            get_a() == other.get_a() &&
            get_b() == other.get_b() &&
            get_g_x() == other.get_g_x() &&
-           get_g_y() == other.get_g_y());
+           get_g_y() == other.get_g_y() &&
+           get_order() == other.get_order() &&
+           get_cofactor() == other.get_cofactor());
    }
 
 bool EC_Group::verify_public_element(const PointGFp& point) const

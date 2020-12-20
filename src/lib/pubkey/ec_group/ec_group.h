@@ -192,6 +192,12 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       */
       const BigInt& get_order() const;
 
+      /**
+      * Return the cofactor
+      * @result the cofactor
+      */
+      const BigInt& get_cofactor() const;
+
       /*
       * Reduce x modulo the order
       */
@@ -216,12 +222,6 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * Reduce (x*y*z) modulo the order
       */
       BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const;
-
-      /**
-      * Return the cofactor
-      * @result the cofactor
-      */
-      const BigInt& get_cofactor() const;
 
       /**
       * Check if y is a plausible point on the curve
