@@ -16,7 +16,7 @@ namespace Botan {
 BOTAN_FUNC_ISA("sha,sse4.1,ssse3")
 void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
    {
-   static const uint32_t K[] = {
+   alignas(64) static const uint32_t K[] = {
       0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
       0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
       0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
@@ -53,7 +53,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
    STATE1 = _mm_blend_epi16(STATE1, STATE0, 0xF0); // CDGH
    STATE0 = TMP;
 
-   while (blocks)
+   while(blocks > 0)
       {
       // Save current state
       const __m128i ABEF_SAVE = STATE0;
@@ -67,26 +67,26 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       __m128i TMSG3 = _mm_shuffle_epi8(_mm_loadu_si128(input_mm + 3), MASK);
 
       // Rounds 0-3
-      MSG = _mm_add_epi32(TMSG0, _mm_loadu_si128(K_mm));
+      MSG = _mm_add_epi32(TMSG0, _mm_load_si128(K_mm));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
       // Rounds 4-7
-      MSG = _mm_add_epi32(TMSG1, _mm_loadu_si128(K_mm + 1));
+      MSG = _mm_add_epi32(TMSG1, _mm_load_si128(K_mm + 1));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
       TMSG0 = _mm_sha256msg1_epu32(TMSG0, TMSG1);
 
       // Rounds 8-11
-      MSG = _mm_add_epi32(TMSG2, _mm_loadu_si128(K_mm + 2));
+      MSG = _mm_add_epi32(TMSG2, _mm_load_si128(K_mm + 2));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
       TMSG1 = _mm_sha256msg1_epu32(TMSG1, TMSG2);
 
       // Rounds 12-15
-      MSG = _mm_add_epi32(TMSG3, _mm_loadu_si128(K_mm + 3));
+      MSG = _mm_add_epi32(TMSG3, _mm_load_si128(K_mm + 3));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -95,7 +95,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG2 = _mm_sha256msg1_epu32(TMSG2, TMSG3);
 
       // Rounds 16-19
-      MSG = _mm_add_epi32(TMSG0, _mm_loadu_si128(K_mm + 4));
+      MSG = _mm_add_epi32(TMSG0, _mm_load_si128(K_mm + 4));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -104,7 +104,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG3 = _mm_sha256msg1_epu32(TMSG3, TMSG0);
 
       // Rounds 20-23
-      MSG = _mm_add_epi32(TMSG1, _mm_loadu_si128(K_mm + 5));
+      MSG = _mm_add_epi32(TMSG1, _mm_load_si128(K_mm + 5));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -113,7 +113,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG0 = _mm_sha256msg1_epu32(TMSG0, TMSG1);
 
       // Rounds 24-27
-      MSG = _mm_add_epi32(TMSG2, _mm_loadu_si128(K_mm + 6));
+      MSG = _mm_add_epi32(TMSG2, _mm_load_si128(K_mm + 6));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -122,7 +122,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG1 = _mm_sha256msg1_epu32(TMSG1, TMSG2);
 
       // Rounds 28-31
-      MSG = _mm_add_epi32(TMSG3, _mm_loadu_si128(K_mm + 7));
+      MSG = _mm_add_epi32(TMSG3, _mm_load_si128(K_mm + 7));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -131,7 +131,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG2 = _mm_sha256msg1_epu32(TMSG2, TMSG3);
 
       // Rounds 32-35
-      MSG = _mm_add_epi32(TMSG0, _mm_loadu_si128(K_mm + 8));
+      MSG = _mm_add_epi32(TMSG0, _mm_load_si128(K_mm + 8));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -140,7 +140,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG3 = _mm_sha256msg1_epu32(TMSG3, TMSG0);
 
       // Rounds 36-39
-      MSG = _mm_add_epi32(TMSG1, _mm_loadu_si128(K_mm + 9));
+      MSG = _mm_add_epi32(TMSG1, _mm_load_si128(K_mm + 9));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -149,7 +149,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG0 = _mm_sha256msg1_epu32(TMSG0, TMSG1);
 
       // Rounds 40-43
-      MSG = _mm_add_epi32(TMSG2, _mm_loadu_si128(K_mm + 10));
+      MSG = _mm_add_epi32(TMSG2, _mm_load_si128(K_mm + 10));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -158,7 +158,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG1 = _mm_sha256msg1_epu32(TMSG1, TMSG2);
 
       // Rounds 44-47
-      MSG = _mm_add_epi32(TMSG3, _mm_loadu_si128(K_mm + 11));
+      MSG = _mm_add_epi32(TMSG3, _mm_load_si128(K_mm + 11));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -167,7 +167,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG2 = _mm_sha256msg1_epu32(TMSG2, TMSG3);
 
       // Rounds 48-51
-      MSG = _mm_add_epi32(TMSG0, _mm_loadu_si128(K_mm + 12));
+      MSG = _mm_add_epi32(TMSG0, _mm_load_si128(K_mm + 12));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -176,7 +176,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG3 = _mm_sha256msg1_epu32(TMSG3, TMSG0);
 
       // Rounds 52-55
-      MSG = _mm_add_epi32(TMSG1, _mm_loadu_si128(K_mm + 13));
+      MSG = _mm_add_epi32(TMSG1, _mm_load_si128(K_mm + 13));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -184,7 +184,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG2 = _mm_sha256msg2_epu32(TMSG2, TMSG1);
 
       // Rounds 56-59
-      MSG = _mm_add_epi32(TMSG2, _mm_loadu_si128(K_mm + 14));
+      MSG = _mm_add_epi32(TMSG2, _mm_load_si128(K_mm + 14));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
@@ -192,7 +192,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
       TMSG3 = _mm_sha256msg2_epu32(TMSG3, TMSG2);
 
       // Rounds 60-63
-      MSG = _mm_add_epi32(TMSG3, _mm_loadu_si128(K_mm + 15));
+      MSG = _mm_add_epi32(TMSG3, _mm_load_si128(K_mm + 15));
       STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
       STATE0 = _mm_sha256rnds2_epu32(STATE0, STATE1, _mm_shuffle_epi32(MSG, 0x0E));
 
