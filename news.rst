@@ -40,6 +40,11 @@ Version 3.0.0, Not Yet Released
 
 * Add support for keyed BLAKE2b (GH #2524)
 
+* Optimizations for SHACAL2, especially improving NEON and POWER (GH #2556)
+
+* Several enums including ``DL_Group::Format``, ``EC_Group_Formatting``, and
+  ``CRL_Code`` are now ``enum class``. (GH #2551)
+
 * Re-enable support for CLMUL instruction on Visual C++, which was accidentally
   disabled starting in 2.12.0
 
