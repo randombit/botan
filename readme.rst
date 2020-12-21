@@ -78,7 +78,7 @@ Transport Layer Security (TLS) Protocol
 * DTLS v1.0 and v1.2 are adaptations of TLS to datagram operation.
 * Supported extensions include session tickets, SNI, ALPN, OCSP stapling,
   encrypt-then-mac CBC, and extended master secret.
-* Supports authentication using preshared keys (PSK) or passwords (SRP)
+* Supports authentication using certificates or preshared keys (PSK)
 * Supports record encryption with ChaCha20Poly1305, AES/OCB, AES/GCM, AES/CCM,
   Camellia/GCM as well as legacy CBC ciphersuites.
 * Key exchange using CECPQ1, ECDH, FFDHE, or RSA
