@@ -1975,6 +1975,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
     def all_targets(options):
         yield 'libs'
+        if options.with_documentation:
+            yield 'docs'
         if 'cli' in options.build_targets:
             yield 'cli'
         if 'tests' in options.build_targets:
@@ -1983,8 +1985,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             yield 'fuzzers'
         if 'bogo_shim' in options.build_targets:
             yield 'bogo_shim'
-        if options.with_documentation:
-            yield 'docs'
 
     def install_targets(options):
         yield 'libs'
