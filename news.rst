@@ -75,6 +75,22 @@ Version 3.0.0, Not Yet Released
 
 * Generate a ``compile_commands.json`` for use with Clang tooling.
 
+Version 2.17.3, 2020-12-21
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Change base64, base58, base32, and hex encoding and decoding opearations
+  to run in constant time (GH #2549)
+
+* Fix a build problem on PPC64 building with Clang (GH #2547)
+
+* Fix an install problem introduced in 2.17.2 affecting MSVC 2015
+
+* Fix use of -L flag in linking when configured using ``--with-external-libdir``
+  (GH #2496)
+
+* Fix a build problem on big-endian PowerPC related to VSX instructions
+  in the AES code. (GH #2515)
+
 Version 2.17.2, 2020-11-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
