@@ -57,20 +57,20 @@ bool CertID::is_id_for(const X509_Certificate& issuer,
 
 void CertID::encode_into(class DER_Encoder& to) const
    {
-   to.start_cons(SEQUENCE)
+   to.start_sequence()
       .encode(m_hash_id)
-      .encode(m_issuer_dn_hash, OCTET_STRING)
-      .encode(m_issuer_key_hash, OCTET_STRING)
+      .encode(m_issuer_dn_hash, ASN1_Tag::OCTET_STRING)
+      .encode(m_issuer_key_hash, ASN1_Tag::OCTET_STRING)
       .encode(m_subject_serial)
       .end_cons();
    }
 
 void CertID::decode_from(class BER_Decoder& from)
    {
-   from.start_cons(SEQUENCE)
+   from.start_sequence()
       .decode(m_hash_id)
-      .decode(m_issuer_dn_hash, OCTET_STRING)
-      .decode(m_issuer_key_hash, OCTET_STRING)
+      .decode(m_issuer_dn_hash, ASN1_Tag::OCTET_STRING)
+      .decode(m_issuer_key_hash, ASN1_Tag::OCTET_STRING)
       .decode(m_subject_serial)
       .end_cons();
 
@@ -86,18 +86,31 @@ void SingleResponse::decode_from(class BER_Decoder& from)
    BER_Object cert_status;
    Extensions extensions;
 
-   from.start_cons(SEQUENCE)
+   from.start_sequence()
       .decode(m_certid)
       .get_next(cert_status)
       .decode(m_thisupdate)
       .decode_optional(m_nextupdate, ASN1_Tag(0),
-                       ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED))
+                       ASN1_Tag::CONTEXT_SPECIFIC | ASN1_Tag::CONSTRUCTED)
       .decode_optional(extensions,
                        ASN1_Tag(1),
-                       ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED))
+                       ASN1_Tag::CONTEXT_SPECIFIC | ASN1_Tag::CONSTRUCTED)
       .end_cons();
 
-   m_cert_status = cert_status.type();
+   /* CertStatus ::= CHOICE {
+       good        [0]     IMPLICIT NULL,
+       revoked     [1]     IMPLICIT RevokedInfo,
+       unknown     [2]     IMPLICIT UnknownInfo }
+
+   RevokedInfo ::= SEQUENCE {
+       revocationTime              GeneralizedTime,
+       revocationReason    [0]     EXPLICIT CRLReason OPTIONAL }
+
+   UnknownInfo ::= NULL
+
+   We should verify the expected body and decode the RevokedInfo
+   */
+   m_cert_status = static_cast<uint32_t>(cert_status.type());
    }
 
 }

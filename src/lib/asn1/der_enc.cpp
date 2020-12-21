@@ -20,8 +20,11 @@ namespace {
 * DER encode an ASN.1 type tag
 */
 void encode_tag(std::vector<uint8_t>& encoded_tag,
-                ASN1_Tag type_tag, ASN1_Tag class_tag)
+                ASN1_Tag type_tag_e, ASN1_Tag class_tag_e)
    {
+   const uint32_t type_tag = static_cast<uint32_t>(type_tag_e);
+   const uint32_t class_tag = static_cast<uint32_t>(class_tag_e);
+
    if((class_tag | 0xE0) != 0xE0)
       throw Encoding_Error("DER_Encoder: Invalid class tag " +
                            std::to_string(class_tag));
@@ -87,9 +90,9 @@ DER_Encoder::DER_Encoder(std::vector<uint8_t>& vec)
 */
 void DER_Encoder::DER_Sequence::push_contents(DER_Encoder& der)
    {
-   const ASN1_Tag real_class_tag = ASN1_Tag(m_class_tag | CONSTRUCTED);
+   const ASN1_Tag real_class_tag = ASN1_Tag(m_class_tag) | ASN1_Tag::CONSTRUCTED;
 
-   if(m_type_tag == SET)
+   if(m_type_tag == ASN1_Tag::SET)
       {
       std::sort(m_set_contents.begin(), m_set_contents.end());
       for(size_t i = 0; i != m_set_contents.size(); ++i)
@@ -106,7 +109,7 @@ void DER_Encoder::DER_Sequence::push_contents(DER_Encoder& der)
 */
 void DER_Encoder::DER_Sequence::add_bytes(const uint8_t data[], size_t length)
    {
-   if(m_type_tag == SET)
+   if(m_type_tag == ASN1_Tag::SET)
       m_set_contents.push_back(secure_vector<uint8_t>(data, data + length));
    else
       m_contents += std::make_pair(data, length);
@@ -115,7 +118,7 @@ void DER_Encoder::DER_Sequence::add_bytes(const uint8_t data[], size_t length)
 void DER_Encoder::DER_Sequence::add_bytes(const uint8_t hdr[], size_t hdr_len,
                                           const uint8_t val[], size_t val_len)
    {
-   if(m_type_tag == SET)
+   if(m_type_tag == ASN1_Tag::SET)
       {
       secure_vector<uint8_t> m;
       m.reserve(hdr_len + val_len);
@@ -208,10 +211,10 @@ DER_Encoder& DER_Encoder::start_explicit(uint16_t type_no)
    ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
 
    // This would confuse DER_Sequence
-   if(type_tag == SET)
+   if(type_tag == ASN1_Tag::SET)
       throw Internal_Error("DER_Encoder.start_explicit(SET) not supported");
 
-   return start_cons(type_tag, CONTEXT_SPECIFIC);
+   return start_cons(type_tag, ASN1_Tag::CONTEXT_SPECIFIC);
    }
 
 /*
@@ -276,7 +279,7 @@ DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
 */
 DER_Encoder& DER_Encoder::encode_null()
    {
-   return add_object(NULL_TAG, UNIVERSAL, nullptr, 0);
+   return add_object(ASN1_Tag::NULL_TAG, ASN1_Tag::UNIVERSAL, nullptr, 0);
    }
 
 /*
@@ -284,7 +287,7 @@ DER_Encoder& DER_Encoder::encode_null()
 */
 DER_Encoder& DER_Encoder::encode(bool is_true)
    {
-   return encode(is_true, BOOLEAN, UNIVERSAL);
+   return encode(is_true, ASN1_Tag::BOOLEAN, ASN1_Tag::UNIVERSAL);
    }
 
 /*
@@ -292,7 +295,7 @@ DER_Encoder& DER_Encoder::encode(bool is_true)
 */
 DER_Encoder& DER_Encoder::encode(size_t n)
    {
-   return encode(BigInt(n), INTEGER, UNIVERSAL);
+   return encode(BigInt(n), ASN1_Tag::INTEGER, ASN1_Tag::UNIVERSAL);
    }
 
 /*
@@ -300,7 +303,7 @@ DER_Encoder& DER_Encoder::encode(size_t n)
 */
 DER_Encoder& DER_Encoder::encode(const BigInt& n)
    {
-   return encode(n, INTEGER, UNIVERSAL);
+   return encode(n, ASN1_Tag::INTEGER, ASN1_Tag::UNIVERSAL);
    }
 
 /*
@@ -309,7 +312,7 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n)
 DER_Encoder& DER_Encoder::encode(const uint8_t bytes[], size_t length,
                                  ASN1_Tag real_type)
    {
-   return encode(bytes, length, real_type, real_type, UNIVERSAL);
+   return encode(bytes, length, real_type, real_type, ASN1_Tag::UNIVERSAL);
    }
 
 /*
@@ -362,10 +365,10 @@ DER_Encoder& DER_Encoder::encode(const uint8_t bytes[], size_t length,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
-   if(real_type != OCTET_STRING && real_type != BIT_STRING)
+   if(real_type != ASN1_Tag::OCTET_STRING && real_type != ASN1_Tag::BIT_STRING)
       throw Invalid_Argument("DER_Encoder: Invalid tag for byte/bit string");
 
-   if(real_type == BIT_STRING)
+   if(real_type == ASN1_Tag::BIT_STRING)
       {
       secure_vector<uint8_t> encoded;
       encoded.push_back(0);

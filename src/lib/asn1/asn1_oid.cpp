@@ -168,7 +168,7 @@ void OID::encode_into(DER_Encoder& der) const
          encoding.push_back(m_id[i] & 0x7F);
          }
       }
-   der.add_object(OBJECT_ID, UNIVERSAL, encoding);
+   der.add_object(ASN1_Tag::OBJECT_ID, ASN1_Tag::UNIVERSAL, encoding);
    }
 
 /*
@@ -177,7 +177,7 @@ void OID::encode_into(DER_Encoder& der) const
 void OID::decode_from(BER_Decoder& decoder)
    {
    BER_Object obj = decoder.get_next_object();
-   if(obj.tagging() != OBJECT_ID)
+   if(obj.tagging() != ASN1_Tag::OBJECT_ID)
       throw BER_Bad_Tag("Error decoding OID, unknown tag", obj.tagging());
 
    const size_t length = obj.length();

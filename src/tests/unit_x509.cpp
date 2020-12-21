@@ -1356,14 +1356,14 @@ class String_Extension final : public Botan::Certificate_Extension
       std::vector<uint8_t> encode_inner() const override
          {
          std::vector<uint8_t> bits;
-         Botan::DER_Encoder(bits).encode(Botan::ASN1_String(m_contents, Botan::UTF8_STRING));
+         Botan::DER_Encoder(bits).encode(Botan::ASN1_String(m_contents, Botan::ASN1_Tag::UTF8_STRING));
          return bits;
          }
 
       void decode_inner(const std::vector<uint8_t>& in) override
          {
          Botan::ASN1_String str;
-         Botan::BER_Decoder(in).decode(str, Botan::UTF8_STRING).verify_end();
+         Botan::BER_Decoder(in).decode(str, Botan::ASN1_Tag::UTF8_STRING).verify_end();
          m_contents = str.value();
          }
 
@@ -1391,8 +1391,8 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
    const Botan::OID attr1(Botan::OID("1.3.6.1.4.1.25258.9.1.1"));
    const Botan::OID attr2(Botan::OID("1.3.6.1.4.1.25258.9.1.2"));
-   const Botan::ASN1_String val1("Custom Attr 1", Botan::PRINTABLE_STRING);
-   const Botan::ASN1_String val2("12345", Botan::UTF8_STRING);
+   const Botan::ASN1_String val1("Custom Attr 1", Botan::ASN1_Tag::PRINTABLE_STRING);
+   const Botan::ASN1_String val2("12345", Botan::ASN1_Tag::UTF8_STRING);
 
    subject_dn.add_attribute(attr1, val1);
    subject_dn.add_attribute(attr2, val2);
@@ -1418,8 +1418,8 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
    result.confirm("Attr1 tag matches encoded", req_val1.tagging() == val1.tagging());
    result.confirm("Attr2 tag matches encoded", req_val2.tagging() == val2.tagging());
 
-   Botan::X509_Time not_before("100301123001Z", Botan::UTC_TIME);
-   Botan::X509_Time not_after("300301123001Z", Botan::UTC_TIME);
+   Botan::X509_Time not_before("100301123001Z", Botan::ASN1_Tag::UTC_TIME);
+   Botan::X509_Time not_after("300301123001Z", Botan::ASN1_Tag::UTC_TIME);
 
    auto cert = ca.sign_request(req, Test::rng(), not_before, not_after);
 

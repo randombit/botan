@@ -91,11 +91,11 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
          hash->final(C3.data());
 
          return DER_Encoder()
-            .start_cons(SEQUENCE)
+            .start_sequence()
             .encode(x1)
             .encode(y1)
-            .encode(C3, OCTET_STRING)
-            .encode(masked_msg, OCTET_STRING)
+            .encode(C3, ASN1_Tag::OCTET_STRING)
+            .encode(masked_msg, ASN1_Tag::OCTET_STRING)
             .end_cons()
             .get_contents();
          }
@@ -160,21 +160,21 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
          secure_vector<uint8_t> C3, masked_msg;
 
          BER_Decoder(ciphertext, ciphertext_len)
-            .start_cons(SEQUENCE)
+            .start_sequence()
             .decode(x1)
             .decode(y1)
-            .decode(C3, OCTET_STRING)
-            .decode(masked_msg, OCTET_STRING)
+            .decode(C3, ASN1_Tag::OCTET_STRING)
+            .decode(masked_msg, ASN1_Tag::OCTET_STRING)
             .end_cons()
             .verify_end();
 
          std::vector<uint8_t> recode_ctext;
          DER_Encoder(recode_ctext)
-            .start_cons(SEQUENCE)
+            .start_sequence()
             .encode(x1)
             .encode(y1)
-            .encode(C3, OCTET_STRING)
-            .encode(masked_msg, OCTET_STRING)
+            .encode(C3, ASN1_Tag::OCTET_STRING)
+            .encode(masked_msg, ASN1_Tag::OCTET_STRING)
             .end_cons();
 
          if(recode_ctext.size() != ciphertext_len)

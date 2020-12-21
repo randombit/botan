@@ -120,7 +120,7 @@ RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier&,
    {
    BigInt n, e;
    BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
+      .start_sequence()
       .decode(n)
       .decode(e)
       .end_cons();
@@ -154,7 +154,7 @@ std::vector<uint8_t> RSA_PublicKey::public_key_bits() const
    {
    std::vector<uint8_t> output;
    DER_Encoder der(output);
-   der.start_cons(SEQUENCE)
+   der.start_sequence()
          .encode(get_n())
          .encode(get_e())
       .end_cons();
@@ -180,7 +180,7 @@ std::shared_ptr<const RSA_Private_Data> RSA_PrivateKey::private_data() const
 secure_vector<uint8_t> RSA_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .encode(static_cast<size_t>(0))
          .encode(get_n())
          .encode(get_e())
@@ -214,7 +214,7 @@ RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier&,
    BigInt n, e, d, p, q, d1, d2, c;
 
    BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .decode_and_check<size_t>(0, "Unknown PKCS #1 key format version")
          .decode(n)
          .decode(e)

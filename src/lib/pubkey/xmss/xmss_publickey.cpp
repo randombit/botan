@@ -30,7 +30,7 @@ std::vector<uint8_t> extract_raw_key(const std::vector<uint8_t>& key_bits)
    std::vector<uint8_t> raw_key;
    try
       {
-      BER_Decoder(key_bits).decode(raw_key, OCTET_STRING);
+      BER_Decoder(key_bits).decode(raw_key, ASN1_Tag::OCTET_STRING);
       }
    catch(Decoding_Error&)
       {
@@ -122,7 +122,7 @@ std::vector<uint8_t> XMSS_PublicKey::raw_public_key() const
 std::vector<uint8_t> XMSS_PublicKey::public_key_bits() const
    {
    std::vector<uint8_t> output;
-   DER_Encoder(output).encode(raw_public_key(), OCTET_STRING);
+   DER_Encoder(output).encode(raw_public_key(), ASN1_Tag::OCTET_STRING);
    return output;
    }
 

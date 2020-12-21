@@ -248,7 +248,7 @@ std::vector<uint8_t> X509_DN::DER_encode() const
 */
 void X509_DN::encode_into(DER_Encoder& der) const
    {
-   der.start_cons(SEQUENCE);
+   der.start_sequence();
 
    if(!m_dn_bits.empty())
       {
@@ -262,8 +262,8 @@ void X509_DN::encode_into(DER_Encoder& der) const
       {
       for(const auto& dn : m_rdn)
          {
-         der.start_cons(SET)
-            .start_cons(SEQUENCE)
+         der.start_cons(ASN1_Tag::SET)
+            .start_sequence()
             .encode(dn.first)
             .encode(dn.second)
             .end_cons()
@@ -281,7 +281,7 @@ void X509_DN::decode_from(BER_Decoder& source)
    {
    std::vector<uint8_t> bits;
 
-   source.start_cons(SEQUENCE)
+   source.start_sequence()
       .raw_bytes(bits)
    .end_cons();
 
@@ -291,14 +291,14 @@ void X509_DN::decode_from(BER_Decoder& source)
 
    while(sequence.more_items())
       {
-      BER_Decoder rdn = sequence.start_cons(SET);
+      BER_Decoder rdn = sequence.start_cons(ASN1_Tag::SET);
 
       while(rdn.more_items())
          {
          OID oid;
          ASN1_String str;
 
-         rdn.start_cons(SEQUENCE)
+         rdn.start_sequence()
             .decode(oid)
             .decode(str) // TODO support Any
             .end_cons().verify_end("Invalid X509_DN, data follows RDN");

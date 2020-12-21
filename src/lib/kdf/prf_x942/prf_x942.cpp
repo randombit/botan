@@ -24,7 +24,7 @@ std::vector<uint8_t> encode_x942_int(uint32_t n)
    store_be(n, n_buf);
 
    std::vector<uint8_t> output;
-   DER_Encoder(output).encode(n_buf, 4, OCTET_STRING);
+   DER_Encoder(output).encode(n_buf, 4, ASN1_Tag::OCTET_STRING);
    return output;
    }
 
@@ -59,9 +59,9 @@ void X942_PRF::kdf(uint8_t key[], size_t key_len,
       hash->update(secret, secret_len);
 
       hash->update(
-         DER_Encoder().start_cons(SEQUENCE)
+         DER_Encoder().start_sequence()
 
-            .start_cons(SEQUENCE)
+            .start_sequence()
                .encode(m_key_wrap_oid)
                .raw_bytes(encode_x942_int(counter))
             .end_cons()
@@ -69,7 +69,7 @@ void X942_PRF::kdf(uint8_t key[], size_t key_len,
             .encode_if(salt_len != 0,
                DER_Encoder()
                   .start_explicit(0)
-                     .encode(in, OCTET_STRING)
+                    .encode(in, ASN1_Tag::OCTET_STRING)
                   .end_explicit()
                )
 

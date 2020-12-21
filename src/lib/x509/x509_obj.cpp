@@ -33,11 +33,11 @@ Pss_params decode_pss_params(const std::vector<uint8_t>& encoded_pss_params)
 
    Pss_params pss_parameter;
    BER_Decoder(encoded_pss_params)
-      .start_cons(SEQUENCE)
-         .decode_optional(pss_parameter.hash_algo, ASN1_Tag(0), PRIVATE, default_hash)
-         .decode_optional(pss_parameter.mask_gen_algo, ASN1_Tag(1), PRIVATE, default_mgf)
-         .decode_optional(pss_parameter.salt_len, ASN1_Tag(2), PRIVATE, size_t(20))
-         .decode_optional(pss_parameter.trailer_field, ASN1_Tag(3), PRIVATE, size_t(1))
+      .start_sequence()
+         .decode_optional(pss_parameter.hash_algo, ASN1_Tag(0), ASN1_Tag::PRIVATE, default_hash)
+         .decode_optional(pss_parameter.mask_gen_algo, ASN1_Tag(1), ASN1_Tag::PRIVATE, default_mgf)
+         .decode_optional(pss_parameter.salt_len, ASN1_Tag(2), ASN1_Tag::PRIVATE, size_t(20))
+         .decode_optional(pss_parameter.trailer_field, ASN1_Tag(3), ASN1_Tag::PRIVATE, size_t(1))
       .end_cons();
 
    BER_Decoder(pss_parameter.mask_gen_algo.get_parameters()).decode(pss_parameter.mask_gen_hash);
@@ -91,12 +91,12 @@ void X509_Object::load_data(DataSource& in)
 
 void X509_Object::encode_into(DER_Encoder& to) const
    {
-   to.start_cons(SEQUENCE)
-         .start_cons(SEQUENCE)
+   to.start_sequence()
+         .start_sequence()
             .raw_bytes(signed_body())
          .end_cons()
          .encode(signature_algorithm())
-         .encode(signature(), BIT_STRING)
+         .encode(signature(), ASN1_Tag::BIT_STRING)
       .end_cons();
    }
 
@@ -105,12 +105,12 @@ void X509_Object::encode_into(DER_Encoder& to) const
 */
 void X509_Object::decode_from(BER_Decoder& from)
    {
-   from.start_cons(SEQUENCE)
-         .start_cons(SEQUENCE)
+   from.start_sequence()
+         .start_sequence()
             .raw_bytes(m_tbs_bits)
          .end_cons()
          .decode(m_sig_algo)
-         .decode(m_sig, BIT_STRING)
+         .decode(m_sig, ASN1_Tag::BIT_STRING)
       .end_cons();
 
    force_decode();
@@ -309,10 +309,10 @@ std::vector<uint8_t> X509_Object::make_signed(PK_Signer* signer,
 
    std::vector<uint8_t> output;
    DER_Encoder(output)
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .raw_bytes(tbs_bits)
          .encode(algo)
-         .encode(signature, BIT_STRING)
+         .encode(signature, ASN1_Tag::BIT_STRING)
       .end_cons();
 
    return output;

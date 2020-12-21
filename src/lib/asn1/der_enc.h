@@ -62,7 +62,13 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
       std::vector<uint8_t> get_contents_unlocked();
 
       DER_Encoder& start_cons(ASN1_Tag type_tag,
-                              ASN1_Tag class_tag = UNIVERSAL);
+                              ASN1_Tag class_tag = ASN1_Tag::UNIVERSAL);
+
+      DER_Encoder& start_sequence()
+         {
+         return start_cons(ASN1_Tag::SEQUENCE);
+         }
+
       DER_Encoder& end_cons();
 
       DER_Encoder& start_explicit(uint16_t type_tag);
@@ -93,20 +99,20 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
 
       DER_Encoder& encode(bool b,
                           ASN1_Tag type_tag,
-                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+                          ASN1_Tag class_tag = ASN1_Tag::CONTEXT_SPECIFIC);
 
       DER_Encoder& encode(size_t s,
                           ASN1_Tag type_tag,
-                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+                          ASN1_Tag class_tag = ASN1_Tag::CONTEXT_SPECIFIC);
 
       DER_Encoder& encode(const BigInt& n,
                           ASN1_Tag type_tag,
-                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+                          ASN1_Tag class_tag = ASN1_Tag::CONTEXT_SPECIFIC);
 
       DER_Encoder& encode(const uint8_t v[], size_t len,
                           ASN1_Tag real_type,
                           ASN1_Tag type_tag,
-                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+                          ASN1_Tag class_tag = ASN1_Tag::CONTEXT_SPECIFIC);
 
       template<typename Alloc>
       DER_Encoder& encode(const std::vector<uint8_t, Alloc>& bytes,

@@ -37,9 +37,9 @@ Public_Key* load_key(DataSource& source)
       if(ASN1::maybe_BER(source) && !PEM_Code::matches(source))
          {
          BER_Decoder(source)
-            .start_cons(SEQUENCE)
+            .start_sequence()
             .decode(alg_id)
-            .decode(key_bits, BIT_STRING)
+            .decode(key_bits, ASN1_Tag::BIT_STRING)
          .end_cons();
          }
       else
@@ -49,9 +49,9 @@ Public_Key* load_key(DataSource& source)
             );
 
          BER_Decoder(ber)
-            .start_cons(SEQUENCE)
+            .start_sequence()
             .decode(alg_id)
-            .decode(key_bits, BIT_STRING)
+            .decode(key_bits, ASN1_Tag::BIT_STRING)
          .end_cons();
          }
 

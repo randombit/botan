@@ -914,7 +914,7 @@ BOTAN_REGISTER_TEST("pkcs11", "pkcs11-rsa", PKCS11_RSA_Tests);
 std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::PointGFp& point)
    {
    std::vector<uint8_t> enc;
-   DER_Encoder(enc).encode(point.encode(PointGFp::UNCOMPRESSED), OCTET_STRING);
+   DER_Encoder(enc).encode(point.encode(PointGFp::UNCOMPRESSED), ASN1_Tag::OCTET_STRING);
    return enc;
    }
 #endif

@@ -34,9 +34,9 @@ Attribute::Attribute(const std::string& attr_oid,
 */
 void Attribute::encode_into(DER_Encoder& codec) const
    {
-   codec.start_cons(SEQUENCE)
+   codec.start_sequence()
       .encode(m_oid)
-      .start_cons(SET)
+      .start_cons(ASN1_Tag::SET)
          .raw_bytes(m_parameters)
       .end_cons()
    .end_cons();
@@ -47,9 +47,9 @@ void Attribute::encode_into(DER_Encoder& codec) const
 */
 void Attribute::decode_from(BER_Decoder& codec)
    {
-   codec.start_cons(SEQUENCE)
+   codec.start_sequence()
       .decode(m_oid)
-      .start_cons(SET)
+      .start_cons(ASN1_Tag::SET)
          .raw_bytes(m_parameters)
       .end_cons()
    .end_cons();

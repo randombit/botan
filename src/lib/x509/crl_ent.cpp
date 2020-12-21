@@ -65,10 +65,10 @@ bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2)
 */
 void CRL_Entry::encode_into(DER_Encoder& der) const
    {
-   der.start_cons(SEQUENCE)
+   der.start_sequence()
       .encode(BigInt::decode(serial_number()))
       .encode(expire_time())
-      .start_cons(SEQUENCE)
+      .start_sequence()
          .encode(extensions())
       .end_cons()
    .end_cons();
@@ -83,7 +83,7 @@ void CRL_Entry::decode_from(BER_Decoder& source)
 
    std::unique_ptr<CRL_Entry_Data> data(new CRL_Entry_Data);
 
-   BER_Decoder entry = source.start_cons(SEQUENCE);
+   BER_Decoder entry = source.start_sequence();
 
    entry.decode(serial_number_bn).decode(data->m_time);
    data->m_serial = BigInt::encode(serial_number_bn);
