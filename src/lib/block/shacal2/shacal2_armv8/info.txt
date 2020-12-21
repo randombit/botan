@@ -1,0 +1,16 @@
+<defines>
+SHACAL2_ARMV8 -> 20201221
+</defines>
+
+<requires>
+shacal2
+</requires>
+
+<isa>
+armv8crypto
+</isa>
+
+<cc>
+gcc
+clang
+</cc>

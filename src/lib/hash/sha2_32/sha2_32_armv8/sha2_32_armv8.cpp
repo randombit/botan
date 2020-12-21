@@ -51,8 +51,8 @@ void SHA_256::compress_digest_armv8(secure_vector<uint32_t>& digest, const uint8
    while(blocks > 0)
       {
       // Save current state
-      const uint32x4_t ABEF_SAVE = STATE0;
-      const uint32x4_t CDGH_SAVE = STATE1;
+      const uint32x4_t ABCD_SAVE = STATE0;
+      const uint32x4_t EFGH_SAVE = STATE1;
 
       uint32x4_t MSG0 = vld1q_u32(input32 + 0);
       uint32x4_t MSG1 = vld1q_u32(input32 + 4);
@@ -175,8 +175,8 @@ void SHA_256::compress_digest_armv8(secure_vector<uint32_t>& digest, const uint8
       STATE0 = TSTATE;
 
       // Add back to state
-      STATE0 = vaddq_u32(STATE0, ABEF_SAVE);
-      STATE1 = vaddq_u32(STATE1, CDGH_SAVE);
+      STATE0 = vaddq_u32(STATE0, ABCD_SAVE);
+      STATE1 = vaddq_u32(STATE1, EFGH_SAVE);
 
       input32 += 64/4;
       blocks--;
