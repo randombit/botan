@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.17.3, Not Yet Released
+Version 2.17.3, 2020-12-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Change base64, base58, base32, and hex encoding and decoding opearations
