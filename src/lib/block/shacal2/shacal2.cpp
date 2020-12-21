@@ -1,6 +1,6 @@
 /*
 * SHACAL-2
-* (C) 2017 Jack Lloyd
+* (C) 2017,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -51,6 +51,13 @@ void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_intel_sha())
       {
       return x86_encrypt_blocks(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHACAL2_ARMV8)
+   if(CPUID::has_arm_sha2())
+      {
+      return armv8_encrypt_blocks(in, out, blocks);
       }
 #endif
 
@@ -222,7 +229,14 @@ size_t SHACAL2::parallelism() const
 #if defined(BOTAN_HAS_SHACAL2_X86)
    if(CPUID::has_intel_sha())
       {
-      return 4;
+      return 2;
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHACAL2_ARMV8)
+   if(CPUID::has_arm_sha2())
+      {
+      return 2;
       }
 #endif
 
@@ -249,6 +263,13 @@ std::string SHACAL2::provider() const
    if(CPUID::has_intel_sha())
       {
       return "intel_sha";
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHACAL2_ARMV8)
+   if(CPUID::has_arm_sha2())
+      {
+      return "armv8_sha2";
       }
 #endif
 

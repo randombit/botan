@@ -44,6 +44,10 @@ class SHACAL2 final : public Block_Cipher_Fixed_Params<32, 16, 64, 4>
       void x86_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
 
+#if defined(BOTAN_HAS_SHACAL2_ARMV8)
+      void armv8_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks) const;
+#endif
+
       secure_vector<uint32_t> m_RK;
    };
 
