@@ -31,15 +31,6 @@ class Whirlpool final : public MDx_HashFunction
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
 
-      static const uint64_t C0[256];
-      static const uint64_t C1[256];
-      static const uint64_t C2[256];
-      static const uint64_t C3[256];
-      static const uint64_t C4[256];
-      static const uint64_t C5[256];
-      static const uint64_t C6[256];
-      static const uint64_t C7[256];
-
       secure_vector<uint64_t> m_M, m_digest;
    };
 
