@@ -45,11 +45,12 @@ namespace {
 
 uint8_t odd_parity_of(uint8_t x)
    {
-   x &= 0xFE;
-   uint8_t parity = 1;
-   for(size_t i = 1; i != 8; ++i)
-      parity ^= (x >> i) & 1;
-   return x ^ parity;
+   uint8_t f = x | 0x01;
+   f ^= (f >> 4);
+   f ^= (f >> 2);
+   f ^= (f >> 1);
+
+   return (x & 0xFE) ^ (f & 0x01);
    }
 
 }
