@@ -29,7 +29,7 @@ Improved Ciphers Implementations
 * Poly1305 using AVX2
 * ChaCha using SSSE3
 * SHA-512 using BMI2+AVX2
-* Constant time DES using bitslicing and/or BMI2
+* Constant time DES using bitslicing
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 
 Public Key Crypto, Math

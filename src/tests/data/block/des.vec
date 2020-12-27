@@ -1,3 +1,5 @@
+#test cpuid bmi2
+
 [DES]
 Key = 0113B970FD34F2CE
 In = 059B5E0851CF143A

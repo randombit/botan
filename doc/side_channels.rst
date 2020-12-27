@@ -310,6 +310,12 @@ channel attacks. DES or 3DES should be avoided in new systems. The proper fix
 would be a scalar bitsliced implementation, this is not seen as worth the
 engineering investment given these algorithms end of life status.
 
+On systems supporting the BMI2 instruction set, an implementation using pdep is
+available which is slower but uses only cache-line sized tables. Thus it avoids
+most known cache-based side channels. It would still be vulnerable to cache-bank
+conflict side channels, but all hardware known to be vulnerable to such channels
+does not implement BMI2.
+
 Twofish
 ------------------------
 

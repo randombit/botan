@@ -11,6 +11,7 @@
 #include <botan/internal/des.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/cpuid.h>
 
 namespace Botan {
 
@@ -431,6 +432,13 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
    {
    verify_key_set(m_round_key.empty() == false);
 
+#if defined(BOTAN_HAS_DES_BMI2)
+   if(CPUID::has_bmi2() && CPUID::has_fast_pdep())
+      {
+      return bmi2_encrypt_n(in, out, blocks, &m_round_key[0]);
+      }
+#endif
+
    while(blocks >= 2)
       {
       uint32_t L0 = load_be<uint32_t>(in, 0);
@@ -480,6 +488,13 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
 void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_round_key.empty() == false);
+
+#if defined(BOTAN_HAS_DES_BMI2)
+   if(CPUID::has_bmi2() && CPUID::has_fast_pdep())
+      {
+      return bmi2_decrypt_n(in, out, blocks, &m_round_key[0]);
+      }
+#endif
 
    while(blocks >= 2)
       {
