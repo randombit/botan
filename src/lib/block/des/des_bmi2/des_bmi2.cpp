@@ -7,7 +7,7 @@
 #include <botan/internal/des.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/loadstor.h>
-#include <x86intrin.h>
+#include <immintrin.h>
 
 namespace Botan {
 
