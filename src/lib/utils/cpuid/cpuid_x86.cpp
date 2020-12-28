@@ -152,7 +152,20 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          implements BMI2 but not BMI1.
          */
          if(flags7 & x86_CPUID_7_bits::BMI2)
+            {
             features_detected |= CPUID::CPUID_BMI2_BIT;
+
+            /*
+            Up until Zen3, AMD CPUs with BMI2 support had microcoded
+            pdep/pext, which works but is very slow.
+
+            TODO: check for Zen3 here
+            */
+            if(is_intel)
+               {
+               features_detected |= CPUID::CPUID_FAST_PDEP_BIT;
+               }
+            }
          }
 
       if(flags7 & x86_CPUID_7_bits::AVX512_F)

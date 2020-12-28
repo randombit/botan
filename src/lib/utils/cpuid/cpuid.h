@@ -115,6 +115,7 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
          CPUID_ADX_BIT        = (1ULL << 49),
          CPUID_BMI1_BIT       = (1ULL << 50),
          CPUID_BMI2_BIT       = (1ULL << 51),
+         CPUID_FAST_PDEP_BIT  = (1ULL << 52),
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
@@ -308,6 +309,12 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       */
       static bool has_bmi2()
          { return has_cpuid_bit(CPUID_BMI2_BIT); }
+
+      /**
+      * Check if the processor supports fast PDEP/PEXT from BMI2
+      */
+      static bool has_fast_pdep()
+         { return has_cpuid_bit(CPUID_FAST_PDEP_BIT); }
 
       /**
       * Check if the processor supports AES-NI

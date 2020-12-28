@@ -30,7 +30,7 @@ Improved Ciphers Implementations
 * ChaCha using SSSE3
 * Threefish-512 AVX2 would be improved by doing 4-wide execution
 * SHA-512 using BMI2+AVX2
-* Constant time DES using bitslicing and/or BMI2
+* Constant time DES using bitslicing
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 
 Public Key Crypto, Math
