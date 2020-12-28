@@ -30,6 +30,9 @@ Version 3.0.0, Not Yet Released
 * Use smaller tables in the implementations of Camellia, ARIA, SEED, DES,
   and Whirlpool (GH #2534 #2558)
 
+* Add a BMI2 implementation of 3DES which avoids most cache-based side channels.
+  (GH #2565)
+
 * Convert base64, base58, base32 and hex encoding/decoding to be constant
   time (GH #2543)
 
