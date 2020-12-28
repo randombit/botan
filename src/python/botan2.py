@@ -719,6 +719,7 @@ class SymmetricCipher(object):
         flags = 0 if encrypt else 1
         self.__obj = c_void_p(0)
         _DLL.botan_cipher_init(byref(self.__obj), _ctype_str(algo), flags)
+        self._is_cbc = algo.find('/CBC') > 0
 
     def __del__(self):
         _DLL.botan_cipher_destroy(self.__obj)
@@ -784,7 +785,16 @@ class SymmetricCipher(object):
         inp = txt if txt else ''
         inp_sz = c_size_t(len(inp))
         inp_consumed = c_size_t(0)
-        out = create_string_buffer(inp_sz.value + (self.tag_length() if final else 0))
+        extra_bytes = 0
+        if final:
+            tag_len = self.tag_length()
+            if tag_len > 0:
+                # AEADs don't expand beyond the tag
+                extra_bytes = tag_len
+            elif self._is_cbc:
+                # Hack: the largest block size currently supported
+                extra_bytes = 64
+        out = create_string_buffer(inp_sz.value + extra_bytes)
         out_sz = c_size_t(len(out))
         out_written = c_size_t(0)
         flags = c_uint32(1 if final else 0)
