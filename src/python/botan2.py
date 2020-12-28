@@ -720,6 +720,7 @@ class SymmetricCipher(object):
         self.__obj = c_void_p(0)
         _DLL.botan_cipher_init(byref(self.__obj), _ctype_str(algo), flags)
         self._is_cbc = algo.find('/CBC') > 0
+        self._is_encrypt = encrypt
 
     def __del__(self):
         _DLL.botan_cipher_destroy(self.__obj)
@@ -786,7 +787,7 @@ class SymmetricCipher(object):
         inp_sz = c_size_t(len(inp))
         inp_consumed = c_size_t(0)
         extra_bytes = 0
-        if final:
+        if final and self._is_encrypt:
             tag_len = self.tag_length()
             if tag_len > 0:
                 # AEADs don't expand beyond the tag
