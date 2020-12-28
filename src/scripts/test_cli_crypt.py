@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+"""
+(C) 2015,2016,2017,2018 Simon Warta
+(C) 2019,2020,2021 Jack Lloyd
+
+Botan is released under the Simplified BSD License (see license.txt)
+"""
+
 import binascii
 import argparse
 import re
@@ -11,19 +18,6 @@ import time
 from collections import OrderedDict
 import multiprocessing
 from multiprocessing.pool import ThreadPool
-
-SUPPORTED_ALGORITHMS = {
-    "AES-128/CFB": "aes-128-cfb",
-    "AES-192/CFB": "aes-192-cfb",
-    "AES-256/CFB": "aes-256-cfb",
-    "AES-128/GCM": "aes-128-gcm",
-    "AES-192/GCM": "aes-192-gcm",
-    "AES-256/GCM": "aes-256-gcm",
-    "AES-128/OCB": "aes-128-ocb",
-    "AES-128/XTS": "aes-128-xts",
-    "AES-256/XTS": "aes-256-xts",
-    "ChaCha20Poly1305": "chacha20poly1305",
-}
 
 class VecDocument:
     def __init__(self, filepath):
@@ -98,25 +92,23 @@ def setup_logging(options):
     logging.getLogger().setLevel(log_level)
 
 def test_cipher_kat(cli_binary, data):
-    iv = data['Nonce']
+    iv = data['Nonce'] if 'Nonce' in data else ''
     key = data['Key']
-    ad = data['AD'] if 'AD' in data else ""
     plaintext = data['In'].lower()
     ciphertext = data['Out'].lower()
     algorithm = data['Algorithm']
     direction = data['Direction']
 
-    mode = SUPPORTED_ALGORITHMS.get(algorithm)
-    if mode is None:
-        raise Exception("Unknown algorithm: '" + algorithm + "'")
-
     cmd = [
         cli_binary,
-        "encryption",
-        "--mode=%s" % mode,
-        "--iv=%s" % iv,
-        "--ad=%s" % ad,
+        "cipher",
+        "--cipher=%s" % algorithm,
+        "--nonce=%s" % iv,
         "--key=%s" % key]
+
+    if 'AD' in data:
+        cmd += ['--ad=%s' % (data['AD'])]
+
     if direction == "decrypt":
         cmd += ['--decrypt']
 
@@ -126,8 +118,12 @@ def test_cipher_kat(cli_binary, data):
         invalue = plaintext
 
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    out_raw = p.communicate(input=binascii.unhexlify(invalue))[0]
-    output = binascii.hexlify(out_raw).decode("UTF-8").lower()
+    (stdout_raw, stderr_raw) = p.communicate(input=binascii.unhexlify(invalue))
+    output = binascii.hexlify(stdout_raw).decode("UTF-8").lower()
+    stderr = stderr_raw.decode("UTF-8")
+
+    if stderr != '':
+        logging.error("Unexpected stderr output %s" % (stderr))
 
     expected = plaintext if direction == "decrypt" else ciphertext
     if expected != output:
@@ -136,27 +132,26 @@ def test_cipher_kat(cli_binary, data):
 def get_testdata(document, max_tests):
     out = []
     for algorithm in document:
-        if algorithm in SUPPORTED_ALGORITHMS:
-            testcase_number = 0
-            for testcase in document[algorithm]:
-                testcase_number += 1
-                for direction in ['encrypt', 'decrypt']:
-                    testname = "{} no {:0>3} ({})".format(
-                        algorithm.lower(), testcase_number, direction)
-                    testname = re.sub("[^a-z0-9-]", "_", testname)
-                    testname = re.sub("_+", "_", testname)
-                    testname = testname.strip("_")
-                    test = {'testname': testname}
-                    for key in testcase:
-                        value = testcase[key]
-                        test[key] = value
-                    test['Algorithm'] = algorithm
-                    test['Direction'] = direction
+        testcase_number = 0
+        for testcase in document[algorithm]:
+            testcase_number += 1
+            for direction in ['encrypt', 'decrypt']:
+                testname = "{} no {:0>3} ({})".format(
+                    algorithm.lower(), testcase_number, direction)
+                testname = re.sub("[^a-z0-9-]", "_", testname)
+                testname = re.sub("_+", "_", testname)
+                testname = testname.strip("_")
+                test = {'testname': testname}
+                for key in testcase:
+                    value = testcase[key]
+                    test[key] = value
+                test['Algorithm'] = algorithm
+                test['Direction'] = direction
 
-                    out.append(test)
+                out.append(test)
 
-                if max_tests > 0 and testcase_number > max_tests:
-                    break
+            if max_tests > 0 and testcase_number > max_tests:
+                break
     return out
 
 def main(args=None):
@@ -174,7 +169,7 @@ def main(args=None):
     setup_logging(args)
 
     cli_binary = args.cli_binary
-    max_tests = 0 if args.run_slow_tests else 50
+    max_tests = 0 if args.run_slow_tests else 30
     threads = args.threads
 
     if threads == 0:
@@ -182,11 +177,17 @@ def main(args=None):
 
     test_data_dir = os.path.join('src', 'tests', 'data')
 
-    mode_test_data = [os.path.join(test_data_dir, 'modes', 'cfb.vec'),
-                      os.path.join(test_data_dir, 'aead', 'gcm.vec'),
-                      os.path.join(test_data_dir, 'aead', 'ocb.vec'),
-                      os.path.join(test_data_dir, 'modes', 'xts.vec'),
-                      os.path.join(test_data_dir, 'aead', 'chacha20poly1305.vec')]
+    mode_test_data = [
+        os.path.join(test_data_dir, 'aead', 'ccm.vec'),
+        os.path.join(test_data_dir, 'aead', 'chacha20poly1305.vec'),
+        os.path.join(test_data_dir, 'aead', 'eax.vec'),
+        os.path.join(test_data_dir, 'aead', 'gcm.vec'),
+        os.path.join(test_data_dir, 'aead', 'ocb.vec'),
+        os.path.join(test_data_dir, 'modes', 'cbc.vec'),
+        os.path.join(test_data_dir, 'modes', 'cfb.vec'),
+        os.path.join(test_data_dir, 'modes', 'ctr.vec'),
+        os.path.join(test_data_dir, 'modes', 'xts.vec'),
+    ]
 
     kats = []
     for f in mode_test_data:
