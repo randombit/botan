@@ -9,12 +9,12 @@
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
 
-#if defined(BOTAN_TARGET_OS_IS_IOS)
+  #include <botan/internal/os_utils.h>
+#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
   #include <sys/types.h>
   #include <sys/sysctl.h>
 
 #else
-  #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
   #include <sys/auxv.h>
@@ -195,6 +195,14 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    // No way to detect cache line size on iOS?
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
+
+#if defined(BOTAN_TARGET_OS_IS_MACOS)
+   unsigned long cache_line_size_vl;
+   size_t size = sizeof(cache_line_size_vl);
+   if(::sysctlbyname("hw.cachelinesize", &cache_line_size_vl, &size, nullptr, 0) == 0)
+     *cache_line_size = cache_line_size_vl;
+
+#endif
 
    /*
    No getauxval API available, fall back on probe functions. We only
