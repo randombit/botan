@@ -9,12 +9,12 @@
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
 
-#if defined(BOTAN_TARGET_OS_IS_IOS)
+  #include <botan/internal/os_utils.h>
+#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
   #include <sys/types.h>
   #include <sys/sysctl.h>
 
 #else
-  #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
   #include <sys/auxv.h>
@@ -185,14 +185,35 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
       detected_features |= CPUID::CPUID_ARM_SVE_BIT;
 #endif
 
-#elif defined(BOTAN_TARGET_OS_IS_IOS)
+#elif defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
 
+   size_t size;
+#if defined(BOTAN_TARGET_OS_IS_IOS)
    char machine[64] = { 0 };
-   size_t size = sizeof(machine) - 1;
+   size = sizeof(machine) - 1;
    ::sysctlbyname("hw.machine", machine, &size, nullptr, 0);
 
    detected_features = flags_by_ios_machine_type(machine);
-   // No way to detect cache line size on iOS?
+#else
+   unsigned int feature;
+   size = sizeof(feature);
+   detected_features |= CPUID::CPUID_ARM_NEON_BIT;
+   detected_features |= CPUID::CPUID_ARM_AES_BIT;
+   detected_features |= CPUID::CPUID_ARM_PMULL_BIT;
+   detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
+   detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
+   ::sysctlbyname("hw.optional.armv8_2_sha3", &feature, &size, nullptr, 0);
+   if(feature == 1)
+     detected_features |= CPUID::CPUID_ARM_SHA3_BIT;
+   feature = 0;
+   ::sysctlbyname("hw.optional.armv8_2_sha512", &feature, &size, nullptr, 0);
+   if(feature == 1)
+     detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
+#endif
+   unsigned long cache_line_size_vl;
+   size = sizeof(cache_line_size_vl);
+   if(::sysctlbyname("hw.cachelinesize", &cache_line_size_vl, &size, nullptr, 0) == 0)
+     *cache_line_size = cache_line_size_vl;
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
