@@ -9,6 +9,7 @@
 #include <botan/types.h>
 #include <botan/exceptn.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/os_utils.h>
 #include <ostream>
 
 namespace Botan {
@@ -105,7 +106,11 @@ CPUID::CPUID_Data::CPUID_Data()
    m_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
 
    if(m_cache_line_size == 0)
-      m_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
+      {
+      m_cache_line_size = OS::get_cache_line_size();
+      if(m_cache_line_size == 0)
+         m_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
+      }
 
    m_endian_status = runtime_check_endian();
    }
