@@ -156,7 +156,7 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(hex_encode(sha256_2.final()), hex_encode(hash1))
 
     def test_cipher(self):
-        for mode in ['AES-128/CTR-BE', 'Serpent/GCM', 'ChaCha20Poly1305']:
+        for mode in ['AES-128/CTR-BE', 'Serpent/GCM', 'ChaCha20Poly1305', 'AES-128/CBC/PKCS7']:
             enc = botan2.SymmetricCipher(mode, encrypt=True)
 
             if mode == 'AES-128/CTR-BE':
