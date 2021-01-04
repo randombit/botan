@@ -109,139 +109,139 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks)
       for(size_t j = 0; j != 10; ++j)
          {
          uint64_t T0, T1, T2, T3, T4, T5, T6, T7;
-         T0 = WHIRL_S[get_byte(0, K0)] ^
-            rotr<8>(WHIRL_S[get_byte(1, K7)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, K6)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, K5)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, K4)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, K3)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, K2)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, K1)]) ^ RC[j];
+         T0 = WHIRL_S[get_byte<0>(K0)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(K7)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(K6)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(K5)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(K4)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(K3)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(K2)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(K1)]) ^ RC[j];
 
-         T1 = WHIRL_S[get_byte(0, K1)] ^
-            rotr<8>(WHIRL_S[get_byte(1, K0)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, K7)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, K6)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, K5)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, K4)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, K3)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, K2)]);
-         T2 = WHIRL_S[get_byte(0, K2)] ^
-            rotr<8>(WHIRL_S[get_byte(1, K1)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, K0)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, K7)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, K6)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, K5)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, K4)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, K3)]);
-         T3 = WHIRL_S[get_byte(0, K3)] ^
-            rotr<8>(WHIRL_S[get_byte(1, K2)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, K1)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, K0)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, K7)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, K6)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, K5)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, K4)]);
-         T4 = WHIRL_S[get_byte(0, K4)] ^
-            rotr<8>(WHIRL_S[get_byte(1, K3)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, K2)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, K1)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, K0)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, K7)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, K6)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, K5)]);
-         T5 = WHIRL_S[get_byte(0, K5)] ^
-            rotr<8>(WHIRL_S[get_byte(1, K4)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, K3)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, K2)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, K1)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, K0)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, K7)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, K6)]);
-         T6 = WHIRL_S[get_byte(0, K6)] ^
-            rotr<8>(WHIRL_S[get_byte(1, K5)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, K4)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, K3)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, K2)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, K1)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, K0)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, K7)]);
-         T7 = WHIRL_S[get_byte(0, K7)] ^
-            rotr<8>(WHIRL_S[get_byte(1, K6)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, K5)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, K4)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, K3)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, K2)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, K1)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, K0)]);
+         T1 = WHIRL_S[get_byte<0>(K1)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(K0)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(K7)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(K6)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(K5)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(K4)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(K3)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(K2)]);
+         T2 = WHIRL_S[get_byte<0>(K2)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(K1)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(K0)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(K7)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(K6)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(K5)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(K4)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(K3)]);
+         T3 = WHIRL_S[get_byte<0>(K3)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(K2)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(K1)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(K0)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(K7)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(K6)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(K5)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(K4)]);
+         T4 = WHIRL_S[get_byte<0>(K4)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(K3)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(K2)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(K1)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(K0)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(K7)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(K6)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(K5)]);
+         T5 = WHIRL_S[get_byte<0>(K5)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(K4)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(K3)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(K2)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(K1)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(K0)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(K7)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(K6)]);
+         T6 = WHIRL_S[get_byte<0>(K6)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(K5)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(K4)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(K3)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(K2)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(K1)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(K0)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(K7)]);
+         T7 = WHIRL_S[get_byte<0>(K7)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(K6)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(K5)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(K4)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(K3)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(K2)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(K1)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(K0)]);
 
          K0 = T0; K1 = T1; K2 = T2; K3 = T3;
          K4 = T4; K5 = T5; K6 = T6; K7 = T7;
 
-         T0 = WHIRL_S[get_byte(0, B0)] ^
-            rotr<8>(WHIRL_S[get_byte(1, B7)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, B6)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, B5)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, B4)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, B3)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, B2)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, B1)]) ^ K0;
-         T1 = WHIRL_S[get_byte(0, B1)] ^
-            rotr<8>(WHIRL_S[get_byte(1, B0)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, B7)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, B6)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, B5)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, B4)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, B3)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, B2)]) ^ K1;
-         T2 = WHIRL_S[get_byte(0, B2)] ^
-            rotr<8>(WHIRL_S[get_byte(1, B1)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, B0)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, B7)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, B6)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, B5)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, B4)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, B3)]) ^ K2;
-         T3 = WHIRL_S[get_byte(0, B3)] ^
-            rotr<8>(WHIRL_S[get_byte(1, B2)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, B1)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, B0)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, B7)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, B6)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, B5)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, B4)]) ^ K3;
-         T4 = WHIRL_S[get_byte(0, B4)] ^
-            rotr<8>(WHIRL_S[get_byte(1, B3)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, B2)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, B1)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, B0)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, B7)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, B6)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, B5)]) ^ K4;
-         T5 = WHIRL_S[get_byte(0, B5)] ^
-            rotr<8>(WHIRL_S[get_byte(1, B4)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, B3)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, B2)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, B1)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, B0)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, B7)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, B6)]) ^ K5;
-         T6 = WHIRL_S[get_byte(0, B6)] ^
-            rotr<8>(WHIRL_S[get_byte(1, B5)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, B4)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, B3)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, B2)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, B1)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, B0)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, B7)]) ^ K6;
-         T7 = WHIRL_S[get_byte(0, B7)] ^
-            rotr<8>(WHIRL_S[get_byte(1, B6)]) ^
-            rotr<16>(WHIRL_S[get_byte(2, B5)]) ^
-            rotr<24>(WHIRL_S[get_byte(3, B4)]) ^
-            rotr<32>(WHIRL_S[get_byte(4, B3)]) ^
-            rotr<40>(WHIRL_S[get_byte(5, B2)]) ^
-            rotr<48>(WHIRL_S[get_byte(6, B1)]) ^
-            rotr<56>(WHIRL_S[get_byte(7, B0)]) ^ K7;
+         T0 = WHIRL_S[get_byte<0>(B0)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(B7)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(B6)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(B5)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(B4)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(B3)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(B2)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(B1)]) ^ K0;
+         T1 = WHIRL_S[get_byte<0>(B1)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(B0)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(B7)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(B6)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(B5)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(B4)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(B3)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(B2)]) ^ K1;
+         T2 = WHIRL_S[get_byte<0>(B2)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(B1)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(B0)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(B7)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(B6)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(B5)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(B4)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(B3)]) ^ K2;
+         T3 = WHIRL_S[get_byte<0>(B3)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(B2)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(B1)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(B0)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(B7)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(B6)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(B5)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(B4)]) ^ K3;
+         T4 = WHIRL_S[get_byte<0>(B4)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(B3)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(B2)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(B1)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(B0)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(B7)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(B6)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(B5)]) ^ K4;
+         T5 = WHIRL_S[get_byte<0>(B5)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(B4)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(B3)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(B2)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(B1)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(B0)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(B7)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(B6)]) ^ K5;
+         T6 = WHIRL_S[get_byte<0>(B6)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(B5)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(B4)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(B3)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(B2)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(B1)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(B0)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(B7)]) ^ K6;
+         T7 = WHIRL_S[get_byte<0>(B7)] ^
+            rotr<8>(WHIRL_S[get_byte<1>(B6)]) ^
+            rotr<16>(WHIRL_S[get_byte<2>(B5)]) ^
+            rotr<24>(WHIRL_S[get_byte<3>(B4)]) ^
+            rotr<32>(WHIRL_S[get_byte<4>(B3)]) ^
+            rotr<40>(WHIRL_S[get_byte<5>(B2)]) ^
+            rotr<48>(WHIRL_S[get_byte<6>(B1)]) ^
+            rotr<56>(WHIRL_S[get_byte<7>(B0)]) ^ K7;
 
          B0 = T0; B1 = T1; B2 = T2; B3 = T3;
          B4 = T4; B5 = T5; B6 = T6; B7 = T7;

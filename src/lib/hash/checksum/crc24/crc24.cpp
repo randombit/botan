@@ -243,9 +243,9 @@ void CRC24::add_data(const uint8_t input[], size_t length)
 */
 void CRC24::final_result(uint8_t output[])
    {
-   output[0] = get_byte(3, m_crc);
-   output[1] = get_byte(2, m_crc);
-   output[2] = get_byte(1, m_crc);
+   output[0] = get_byte<3>(m_crc);
+   output[1] = get_byte<2>(m_crc);
+   output[2] = get_byte<1>(m_crc);
    clear();
    }
 

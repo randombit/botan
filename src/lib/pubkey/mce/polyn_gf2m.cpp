@@ -781,8 +781,8 @@ secure_vector<uint8_t> polyn_gf2m::encode() const
    for(unsigned i = 0; i < len; i++)
       {
       // "big endian" encoding of the GF(2^m) elements
-      result.push_back(get_byte(0, coeff[i]));
-      result.push_back(get_byte(1, coeff[i]));
+      result.push_back(get_byte<0>(coeff[i]));
+      result.push_back(get_byte<1>(coeff[i]));
       }
    return result;
    }

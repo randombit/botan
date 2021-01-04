@@ -77,8 +77,8 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks)
       for(uint16_t j = 0, carry = 0; j != 32; ++j)
          {
          uint16_t s = m_sum[j] + input[32*i+j] + carry;
-         carry = get_byte(0, s);
-         m_sum[j] = get_byte(1, s);
+         carry = get_byte<0>(s);
+         m_sum[j] = get_byte<1>(s);
          }
 
       uint8_t S[32] = { 0 };
@@ -96,7 +96,7 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks)
             {
             const uint64_t UVk = U[k] ^ V[k];
             for(size_t l = 0; l != 8; ++l)
-               key[4*l+k] = get_byte(l, UVk);
+               key[4*l+k] = get_byte_var(l, UVk);
             }
 
          m_cipher.set_key(key, 32);

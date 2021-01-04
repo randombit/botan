@@ -63,7 +63,7 @@ void encode_length(std::vector<uint8_t>& encoded_length, size_t length)
       encoded_length.push_back(static_cast<uint8_t>(0x80 | bytes_needed));
 
       for(size_t i = sizeof(length) - bytes_needed; i < sizeof(length); ++i)
-         encoded_length.push_back(get_byte(i, length));
+         encoded_length.push_back(get_byte_var(i, length));
       }
    }
 

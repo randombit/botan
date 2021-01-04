@@ -199,8 +199,8 @@ alignas(256) const uint32_t CAST_SBOX4[256] = {
 inline uint32_t F1(uint32_t R, uint32_t MK, uint8_t RK)
    {
    const uint32_t T = rotl_var(MK + R, RK);
-   return (CAST_SBOX1[get_byte(0, T)] ^ CAST_SBOX2[get_byte(1, T)]) -
-           CAST_SBOX3[get_byte(2, T)] + CAST_SBOX4[get_byte(3, T)];
+   return (CAST_SBOX1[get_byte<0>(T)] ^ CAST_SBOX2[get_byte<1>(T)]) -
+           CAST_SBOX3[get_byte<2>(T)] + CAST_SBOX4[get_byte<3>(T)];
    }
 
 /*
@@ -209,8 +209,8 @@ inline uint32_t F1(uint32_t R, uint32_t MK, uint8_t RK)
 inline uint32_t F2(uint32_t R, uint32_t MK, uint8_t RK)
    {
    const uint32_t T = rotl_var(MK ^ R, RK);
-   return (CAST_SBOX1[get_byte(0, T)]  - CAST_SBOX2[get_byte(1, T)] +
-           CAST_SBOX3[get_byte(2, T)]) ^ CAST_SBOX4[get_byte(3, T)];
+   return (CAST_SBOX1[get_byte<0>(T)]  - CAST_SBOX2[get_byte<1>(T)] +
+           CAST_SBOX3[get_byte<2>(T)]) ^ CAST_SBOX4[get_byte<3>(T)];
    }
 
 /*
@@ -219,8 +219,8 @@ inline uint32_t F2(uint32_t R, uint32_t MK, uint8_t RK)
 inline uint32_t F3(uint32_t R, uint32_t MK, uint8_t RK)
    {
    const uint32_t T = rotl_var(MK - R, RK);
-   return ((CAST_SBOX1[get_byte(0, T)]  + CAST_SBOX2[get_byte(1, T)]) ^
-            CAST_SBOX3[get_byte(2, T)]) - CAST_SBOX4[get_byte(3, T)];
+   return ((CAST_SBOX1[get_byte<0>(T)]  + CAST_SBOX2[get_byte<1>(T)]) ^
+            CAST_SBOX3[get_byte<2>(T)]) - CAST_SBOX4[get_byte<3>(T)];
    }
 
 }

@@ -124,13 +124,13 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    if(is_intel)
       {
       // Intel cache line size is in cpuid(1) output
-      *cache_line_size = 8 * get_byte(2, cpuid[1]);
+      *cache_line_size = 8 * get_byte<2>(cpuid[1]);
       }
    else if(is_amd)
       {
       // AMD puts it in vendor zone
       invoke_cpuid(0x80000005, cpuid);
-      *cache_line_size = get_byte(3, cpuid[2]);
+      *cache_line_size = get_byte<3>(cpuid[2]);
       }
 
    if(max_supported_sublevel >= 7)

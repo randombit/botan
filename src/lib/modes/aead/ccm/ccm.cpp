@@ -90,8 +90,8 @@ void CCM_Mode::set_associated_data(const uint8_t ad[], size_t length)
       // FIXME: support larger AD using length encoding rules
       BOTAN_ARG_CHECK(length < (0xFFFF - 0xFF), "Supported CCM AD length");
 
-      m_ad_buf.push_back(get_byte(0, static_cast<uint16_t>(length)));
-      m_ad_buf.push_back(get_byte(1, static_cast<uint16_t>(length)));
+      m_ad_buf.push_back(get_byte<0>(static_cast<uint16_t>(length)));
+      m_ad_buf.push_back(get_byte<1>(static_cast<uint16_t>(length)));
       m_ad_buf += std::make_pair(ad, length);
       while(m_ad_buf.size() % CCM_BS)
          m_ad_buf.push_back(0); // pad with zeros to full block size
@@ -121,7 +121,7 @@ void CCM_Mode::encode_length(uint64_t len, uint8_t out[])
    BOTAN_ASSERT_NOMSG(len_bytes >= 2 && len_bytes <= 8);
 
    for(size_t i = 0; i != len_bytes; ++i)
-      out[len_bytes-1-i] = get_byte(sizeof(uint64_t)-1-i, len);
+      out[len_bytes-1-i] = get_byte_var(sizeof(uint64_t)-1-i, len);
 
    if(len_bytes < 8 && (len >> (len_bytes*8)) > 0)
       throw Encoding_Error("CCM message length too long to encode in L field");

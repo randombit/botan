@@ -192,8 +192,8 @@ std::vector<uint8_t> Server_Hello::serialize() const
 
    append_tls_length_value(buf, m_session_id, 1);
 
-   buf.push_back(get_byte(0, m_ciphersuite));
-   buf.push_back(get_byte(1, m_ciphersuite));
+   buf.push_back(get_byte<0>(m_ciphersuite));
+   buf.push_back(get_byte<1>(m_ciphersuite));
 
    buf.push_back(m_comp_method);
 

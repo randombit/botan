@@ -170,8 +170,8 @@ Connection_Cipher_State::format_ad(uint64_t msg_sequence,
    ad[8] = msg_type;
    ad[9] = version.major_version();
    ad[10] = version.minor_version();
-   ad[11] = get_byte(0, msg_length);
-   ad[12] = get_byte(1, msg_length);
+   ad[11] = get_byte<0>(msg_length);
+   ad[12] = get_byte<1>(msg_length);
 
    return ad;
    }
@@ -182,8 +182,8 @@ inline void append_u16_len(secure_vector<uint8_t>& output, size_t len_field)
    {
    const uint16_t len16 = static_cast<uint16_t>(len_field);
    BOTAN_ASSERT_EQUAL(len_field, len16, "No truncation");
-   output.push_back(get_byte(0, len16));
-   output.push_back(get_byte(1, len16));
+   output.push_back(get_byte<0>(len16));
+   output.push_back(get_byte<1>(len16));
    }
 
 void write_record_header(secure_vector<uint8_t>& output,
@@ -200,7 +200,7 @@ void write_record_header(secure_vector<uint8_t>& output,
    if(version.is_datagram_protocol())
       {
       for(size_t i = 0; i != 8; ++i)
-         output.push_back(get_byte(i, record_sequence));
+         output.push_back(get_byte_var(i, record_sequence));
       }
    }
 

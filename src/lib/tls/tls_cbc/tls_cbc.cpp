@@ -125,8 +125,8 @@ std::vector<uint8_t> TLS_CBC_HMAC_AEAD_Mode::assoc_data_with_len(uint16_t len)
    {
    std::vector<uint8_t> ad = m_ad;
    BOTAN_ASSERT(ad.size() == 13, "Expected AAD size");
-   ad[11] = get_byte(0, len);
-   ad[12] = get_byte(1, len);
+   ad[11] = get_byte<0>(len);
+   ad[12] = get_byte<1>(len);
    return ad;
    }
 
@@ -147,8 +147,8 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data(const uint8_t ad[], size_
       // EtM uses ciphertext size instead of plaintext size for AEAD input
       const uint16_t pt_size = make_uint16(assoc_data()[11], assoc_data()[12]);
       const uint16_t enc_size = static_cast<uint16_t>(round_up(iv_size() + pt_size + 1, block_size()));
-      assoc_data()[11] = get_byte<uint16_t>(0, enc_size);
-      assoc_data()[12] = get_byte<uint16_t>(1, enc_size);
+      assoc_data()[11] = get_byte<0, uint16_t>(enc_size);
+      assoc_data()[12] = get_byte<1, uint16_t>(enc_size);
       }
    }
 

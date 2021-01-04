@@ -64,8 +64,8 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
 
    const uint16_t uid_len = static_cast<uint16_t>(8 * user_id.size());
 
-   hash.update(get_byte(0, uid_len));
-   hash.update(get_byte(1, uid_len));
+   hash.update(get_byte<0>(uid_len));
+   hash.update(get_byte<1>(uid_len));
    hash.update(user_id);
 
    const size_t p_bytes = domain.get_p_bytes();

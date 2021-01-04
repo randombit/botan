@@ -29,9 +29,9 @@ inline size_t load_be24(const uint8_t q[3])
 
 void store_be24(uint8_t out[3], size_t val)
    {
-   out[0] = get_byte(1, static_cast<uint32_t>(val));
-   out[1] = get_byte(2, static_cast<uint32_t>(val));
-   out[2] = get_byte(3, static_cast<uint32_t>(val));
+   out[0] = get_byte<1>(static_cast<uint32_t>(val));
+   out[1] = get_byte<2>(static_cast<uint32_t>(val));
+   out[2] = get_byte<3>(static_cast<uint32_t>(val));
    }
 
 uint64_t steady_clock_ms()

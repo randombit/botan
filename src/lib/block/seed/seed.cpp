@@ -56,10 +56,10 @@ alignas(256) const uint8_t SEED_S1[256] = {
 inline uint32_t SEED_G(uint32_t X)
    {
    const uint32_t M = 0x01010101;
-   const uint32_t s0 = M * SEED_S0[get_byte(3, X)];
-   const uint32_t s1 = M * SEED_S1[get_byte(2, X)];
-   const uint32_t s2 = M * SEED_S0[get_byte(1, X)];
-   const uint32_t s3 = M * SEED_S1[get_byte(0, X)];
+   const uint32_t s0 = M * SEED_S0[get_byte<3>(X)];
+   const uint32_t s1 = M * SEED_S1[get_byte<2>(X)];
+   const uint32_t s2 = M * SEED_S0[get_byte<1>(X)];
+   const uint32_t s3 = M * SEED_S1[get_byte<0>(X)];
 
    const uint32_t M0 = 0x3FCFF3FC;
    const uint32_t M1 = 0xFC3FCFF3;
@@ -176,14 +176,14 @@ void SEED::key_schedule(const uint8_t key[], size_t)
       m_K[2*i+1] = SEED_G(WK[1] - WK[3] + RC[i]) ^ m_K[2*i];
 
       uint32_t T = (WK[0] & 0xFF) << 24;
-      WK[0] = (WK[0] >> 8) | (get_byte(3, WK[1]) << 24);
+      WK[0] = (WK[0] >> 8) | (get_byte<3>(WK[1]) << 24);
       WK[1] = (WK[1] >> 8) | T;
 
       m_K[2*i+2] = SEED_G(WK[0] + WK[2] - RC[i+1]);
       m_K[2*i+3] = SEED_G(WK[1] - WK[3] + RC[i+1]) ^ m_K[2*i+2];
 
-      T = get_byte(0, WK[3]);
-      WK[3] = (WK[3] << 8) | get_byte(0, WK[2]);
+      T = get_byte<0>(WK[3]);
+      WK[3] = (WK[3] << 8) | get_byte<0>(WK[2]);
       WK[2] = (WK[2] << 8) | T;
       }
    }

@@ -96,7 +96,7 @@ size_t decode_length(DataSource* ber, size_t& field_size, size_t allow_indef)
 
    for(size_t i = 0; i != field_size - 1; ++i)
       {
-      if(get_byte(0, length) != 0)
+      if(get_byte<0>(length) != 0)
          throw BER_Decoding_Error("Field length overflow");
       if(!ber->read_byte(b))
          throw BER_Decoding_Error("Corrupted length field");

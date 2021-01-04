@@ -92,14 +92,14 @@ std::vector<uint8_t> Certificate::serialize() const
       const size_t cert_size = raw_cert.size();
       for(size_t j = 0; j != 3; ++j)
          {
-         buf.push_back(get_byte(j+1, static_cast<uint32_t>(cert_size)));
+         buf.push_back(get_byte_var(j+1, static_cast<uint32_t>(cert_size)));
          }
       buf += raw_cert;
       }
 
    const size_t buf_size = buf.size() - 3;
    for(size_t i = 0; i != 3; ++i)
-      buf[i] = get_byte(i+1, static_cast<uint32_t>(buf_size));
+      buf[i] = get_byte_var(i+1, static_cast<uint32_t>(buf_size));
 
    return buf;
    }

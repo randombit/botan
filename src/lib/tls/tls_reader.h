@@ -203,11 +203,11 @@ void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
       throw Invalid_Argument("append_tls_length_value: value too large");
 
    for(size_t i = 0; i != tag_size; ++i)
-      buf.push_back(get_byte(sizeof(val_bytes)-tag_size+i, val_bytes));
+      buf.push_back(get_byte_var(sizeof(val_bytes)-tag_size+i, val_bytes));
 
    for(size_t i = 0; i != vals_size; ++i)
       for(size_t j = 0; j != T_size; ++j)
-         buf.push_back(get_byte(j, vals[i]));
+         buf.push_back(get_byte_var(j, vals[i]));
    }
 
 template<typename T, typename Alloc, typename Alloc2>

@@ -59,16 +59,16 @@ std::vector<uint8_t> Certificate_Verify::serialize() const
    if(m_scheme != Signature_Scheme::NONE)
       {
       const uint16_t scheme_code = static_cast<uint16_t>(m_scheme);
-      buf.push_back(get_byte(0, scheme_code));
-      buf.push_back(get_byte(1, scheme_code));
+      buf.push_back(get_byte<0>(scheme_code));
+      buf.push_back(get_byte<1>(scheme_code));
       }
 
    if(m_signature.size() > 0xFFFF)
       throw Encoding_Error("Certificate_Verify signature too long to encode");
 
    const uint16_t sig_len = static_cast<uint16_t>(m_signature.size());
-   buf.push_back(get_byte(0, sig_len));
-   buf.push_back(get_byte(1, sig_len));
+   buf.push_back(get_byte<0>(sig_len));
+   buf.push_back(get_byte<1>(sig_len));
    buf += m_signature;
 
    return buf;
