@@ -249,10 +249,6 @@ class Print_Cpuid final : public Command
       void go() override
          {
          output() << "CPUID flags: " << Botan::CPUID::to_string() << "\n";
-
-         size_t cl = Botan::CPUID::cache_line_size();
-         if(cl > 0)
-            output() << "Cache line size: " << cl << " bytes\n";
          }
    };
 
