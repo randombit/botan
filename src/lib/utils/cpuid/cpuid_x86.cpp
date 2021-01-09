@@ -25,41 +25,59 @@ namespace Botan {
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
+namespace {
+
+void invoke_cpuid(uint32_t type, uint32_t out[4])
    {
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-  #define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
-  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
+   __cpuid((int*)out, type);
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
-  #define X86_CPUID(type, out) do { __cpuid(out, type); } while(0)
-  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
+   __cpuid(out, type);
 
 #elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && defined(BOTAN_USE_GCC_INLINE_ASM)
-  #define X86_CPUID(type, out)                                                    \
-     asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
-         : "0" (type))
-
-  #define X86_CPUID_SUBLEVEL(type, level, out)                                    \
-     asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
-         : "0" (type), "2" (level))
+   asm("cpuid\n\t"
+       : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3])
+       : "0" (type));
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-  #define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
-
-  #define X86_CPUID_SUBLEVEL(type, level, out) \
-     do { __cpuid_count(type, level, out[0], out[1], out[2], out[3]); } while(0)
+   __get_cpuid(type, out, out+1, out+2, out+3);
 #else
-  #warning "No way of calling x86 cpuid instruction for this compiler"
-  #define X86_CPUID(type, out) do { clear_mem(out, 4); } while(0)
-  #define X86_CPUID_SUBLEVEL(type, level, out) do { clear_mem(out, 4); } while(0)
+   #warning "No way of calling x86 cpuid instruction for this compiler"
+   clear_mem(out, 4);
 #endif
+   }
 
+void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4])
+   {
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   __cpuidex((int*)out, type, level);
+
+#elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
+   __cpuidex((int*)out, type, level);
+
+#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && defined(BOTAN_USE_GCC_INLINE_ASM)
+   asm("cpuid\n\t"
+       : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3])     \
+       : "0" (type), "2" (level));
+
+#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+   __cpuid_count(type, level, out[0], out[1], out[2], out[3]);
+#else
+   #warning "No way of calling x86 cpuid instruction for this compiler"
+   clear_mem(out, 4);
+#endif
+   }
+
+}
+
+uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
+   {
    uint64_t features_detected = 0;
    uint32_t cpuid[4] = { 0 };
 
    // CPUID 0: vendor identification, max sublevel
-   X86_CPUID(0, cpuid);
+   invoke_cpuid(0, cpuid);
 
    const uint32_t max_supported_sublevel = cpuid[0];
 
@@ -71,7 +89,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    if(max_supported_sublevel >= 1)
       {
       // CPUID 1: feature bits
-      X86_CPUID(1, cpuid);
+      invoke_cpuid(1, cpuid);
       const uint64_t flags0 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[3];
 
       enum x86_CPUID_1_bits : uint64_t {
@@ -111,14 +129,14 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    else if(is_amd)
       {
       // AMD puts it in vendor zone
-      X86_CPUID(0x80000005, cpuid);
+      invoke_cpuid(0x80000005, cpuid);
       *cache_line_size = get_byte(3, cpuid[2]);
       }
 
    if(max_supported_sublevel >= 7)
       {
       clear_mem(cpuid, 4);
-      X86_CPUID_SUBLEVEL(7, 0, cpuid);
+      invoke_cpuid_sublevel(7, 0, cpuid);
 
       enum x86_CPUID_7_bits : uint64_t {
          BMI1 = (1ULL << 3),
@@ -203,9 +221,6 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
       if(flags7 & x86_CPUID_7_bits::SHA)
          features_detected |= CPUID::CPUID_SHA_BIT;
       }
-
-#undef X86_CPUID
-#undef X86_CPUID_SUBLEVEL
 
    /*
    * If we don't have access to CPUID, we can still safely assume that
