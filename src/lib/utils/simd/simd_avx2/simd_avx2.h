@@ -270,13 +270,21 @@ class SIMD_8x32 final
       BOTAN_FUNC_ISA("avx2")
       static SIMD_8x32 choose(const SIMD_8x32& mask, const SIMD_8x32& a, const SIMD_8x32& b)
          {
+#if defined(__AVX512VL__)
+         return _mm256_ternarylogic_epi32(mask.handle(), a.handle(), b.handle(), 0xca);
+#else
          return (mask & a) ^ mask.andc(b);
+#endif
          }
 
       BOTAN_FUNC_ISA("avx2")
       static SIMD_8x32 majority(const SIMD_8x32& x, const SIMD_8x32& y, const SIMD_8x32& z)
          {
+#if defined(__AVX512VL__)
+         return _mm256_ternarylogic_epi32(x.handle(), y.handle(), z.handle(), 0xe8);
+#else
          return SIMD_8x32::choose(x ^ y, z, y);
+#endif
          }
 
       BOTAN_FUNC_ISA("avx2")
