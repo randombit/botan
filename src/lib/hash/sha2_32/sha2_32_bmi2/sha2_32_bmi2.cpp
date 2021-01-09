@@ -7,6 +7,7 @@
 #include <botan/internal/sha2_32.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -23,9 +24,9 @@ Likely instruction scheduling could be improved by using inline asm.
    uint32_t E_rho = rotr<6>(E) ^ rotr<11>(E) ^ rotr<25>(E);             \
    uint32_t M2_sigma = rotr<17>(M2) ^ rotr<19>(M2) ^ (M2 >> 10);        \
    uint32_t M4_sigma = rotr<7>(M4) ^ rotr<18>(M4) ^ (M4 >> 3);          \
-   H += magic + E_rho + ((E & F) ^ (~E & G)) + M1;                      \
+   H += magic + E_rho + choose(E, F, G) + M1;                           \
    D += H;                                                              \
-   H += A_rho + ((A & B) | ((A | B) & C));                              \
+   H += A_rho + majority(A, B, C);                                      \
    M1 += M2_sigma + M3 + M4_sigma;                                      \
    } while(0);
 

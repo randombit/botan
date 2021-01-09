@@ -8,6 +8,7 @@
 #include <botan/internal/rmd160.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -37,7 +38,7 @@ template<size_t S>
 inline void F2(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
                uint32_t M)
    {
-   A += (D ^ (B & (C ^ D))) + M;
+   A += choose(B, C, D) + M;
    A  = rotl<S>(A) + E;
    C  = rotl<10>(C);
    }
@@ -61,7 +62,7 @@ template<size_t S>
 inline void F4(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
                uint32_t M)
    {
-   A += (C ^ (D & (B ^ C))) + M;
+   A += choose(D, B, C) + M;
    A  = rotl<S>(A) + E;
    C  = rotl<10>(C);
    }

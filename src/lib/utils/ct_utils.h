@@ -287,8 +287,7 @@ class Mask
       */
       T select(T x, T y) const
          {
-         // (x & value()) | (y & ~value())
-         return static_cast<T>(y ^ (value() & (x ^ y)));
+         return choose(value(), x, y);
          }
 
       T select_and_unpoison(T x, T y) const

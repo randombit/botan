@@ -9,6 +9,7 @@
 
 #include <botan/internal/sha160.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/bit_ops.h>
 #include <emmintrin.h>
 
 namespace Botan {
@@ -114,7 +115,7 @@ W0 = W[t]..W[t+3]
 */
 inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += (D ^ (B & (C ^ D))) + msg + rotl<5>(A);
+   E += choose(B, C, D) + msg + rotl<5>(A);
    B  = rotl<30>(B);
    }
 
@@ -132,7 +133,7 @@ inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 */
 inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += ((B & C) | ((B | C) & D)) + msg + rotl<5>(A);
+   E += majority(B, C, D) + msg + rotl<5>(A);
    B  = rotl<30>(B);
    }
 

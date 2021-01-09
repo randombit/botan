@@ -8,6 +8,7 @@
 #include <botan/internal/md4.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -22,16 +23,16 @@ inline void FF4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
                 uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
 
    {
-   A += (D ^ (B & (C ^ D))) + M0;
+   A += choose(B, C, D) + M0;
    A = rotl<3>(A);
 
-   D += (C ^ (A & (B ^ C))) + M1;
+   D += choose(A, B, C) + M1;
    D = rotl<7>(D);
 
-   C += (B ^ (D & (A ^ B))) + M2;
+   C += choose(D, A, B) + M2;
    C = rotl<11>(C);
 
-   B += (A ^ (C & (D ^ A))) + M3;
+   B += choose(C, D, A) + M3;
    B = rotl<19>(B);
    }
 
@@ -39,6 +40,12 @@ inline void GG4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
                 uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
 
    {
+   /*
+   These are choose(D, B | C, B & C) but the below expression
+   takes advantage of the fact that B & C is a subset of B | C
+   to eliminate an and
+   */
+
    A += ((B & C) | (D & (B | C))) + M0 + 0x5A827999;
    A = rotl<3>(A);
 
