@@ -60,19 +60,10 @@ void SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t block
          B1_0 = _mm_sha256rnds2_epu32(B1_0, B1_1, RK3);
          }
 
-      TMP = _mm_shuffle_epi8(_mm_unpackhi_epi64(B0_0, B0_1), MASK1);
-      B0_1 = _mm_shuffle_epi8(_mm_unpacklo_epi64(B0_0, B0_1), MASK1);
-      B0_0 = TMP;
-
-      TMP = _mm_shuffle_epi8(_mm_unpackhi_epi64(B1_0, B1_1), MASK1);
-      B1_1 = _mm_shuffle_epi8(_mm_unpacklo_epi64(B1_0, B1_1), MASK1);
-      B1_0 = TMP;
-
-      // Save state
-      _mm_storeu_si128(out_mm + 0, B0_0);
-      _mm_storeu_si128(out_mm + 1, B0_1);
-      _mm_storeu_si128(out_mm + 2, B1_0);
-      _mm_storeu_si128(out_mm + 3, B1_1);
+      _mm_storeu_si128(out_mm + 0, _mm_shuffle_epi8(_mm_unpackhi_epi64(B0_0, B0_1), MASK1));
+      _mm_storeu_si128(out_mm + 1, _mm_shuffle_epi8(_mm_unpacklo_epi64(B0_0, B0_1), MASK1));
+      _mm_storeu_si128(out_mm + 2, _mm_shuffle_epi8(_mm_unpackhi_epi64(B1_0, B1_1), MASK1));
+      _mm_storeu_si128(out_mm + 3, _mm_shuffle_epi8(_mm_unpacklo_epi64(B1_0, B1_1), MASK1));
 
       blocks -= 2;
       in_mm += 4;
@@ -101,13 +92,8 @@ void SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t block
          B0 = _mm_sha256rnds2_epu32(B0, B1, RK3);
          }
 
-      TMP = _mm_shuffle_epi8(_mm_unpackhi_epi64(B0, B1), MASK1);
-      B1 = _mm_shuffle_epi8(_mm_unpacklo_epi64(B0, B1), MASK1);
-      B0 = TMP;
-
-      // Save state
-      _mm_storeu_si128(out_mm, B0);
-      _mm_storeu_si128(out_mm + 1, B1);
+      _mm_storeu_si128(out_mm    , _mm_shuffle_epi8(_mm_unpackhi_epi64(B0, B1), MASK1));
+      _mm_storeu_si128(out_mm + 1, _mm_shuffle_epi8(_mm_unpacklo_epi64(B0, B1), MASK1));
 
       blocks--;
       in_mm += 2;
