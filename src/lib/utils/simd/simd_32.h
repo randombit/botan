@@ -414,7 +414,6 @@ class SIMD_4x32 final
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
          m_simd = _mm_xor_si128(m_simd, other.m_simd);
-
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
          m_simd = vec_xor(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_NEON)
