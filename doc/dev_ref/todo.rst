@@ -32,6 +32,7 @@ Improved Ciphers Implementations
 * SHA-512 using BMI2+AVX2
 * Constant time DES using bitslicing
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
+* AVX-512 implementations? (SHACAL2, Serpent, ChaCha)
 
 Public Key Crypto, Math
 ----------------------------------------
