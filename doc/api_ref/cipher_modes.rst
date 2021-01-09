@@ -181,6 +181,12 @@ ciphertext to have the same length as the plaintext, however using CTS
 requires the input be at least one full block plus one byte. It is
 also less commonly implemented.
 
+.. warning::
+   Using CBC with padding without an authentication mode exposes your
+   application to CBC padding oracle attacks, which allow recovering
+   the plaintext of arbitrary messages. Always pair CBC with a MAC such
+   as HMAC (or, preferably, use an AEAD such as GCM).
+
 CFB
 ~~~~~~~~~~~~
 
