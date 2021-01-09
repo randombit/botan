@@ -8,6 +8,7 @@
 #include <botan/internal/md5.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -24,7 +25,7 @@ namespace {
 template<size_t S>
 inline void FF(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M)
    {
-   A += (D ^ (B & (C ^ D))) + M;
+   A += choose(B, C, D) + M;
    A  = rotl<S>(A) + B;
    }
 
@@ -34,7 +35,7 @@ inline void FF(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M)
 template<size_t S>
 inline void GG(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M)
    {
-   A += (C ^ (D & (B ^ C))) + M;
+   A += choose(D, B, C) + M;
    A  = rotl<S>(A) + B;
    }
 
@@ -54,6 +55,7 @@ inline void HH(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M)
 template<size_t S>
 inline void II(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M)
    {
+   // This expr is choose(D, B ^ C, ~C), but that is slower
    A += (C ^ (B | ~D)) + M;
    A  = rotl<S>(A) + B;
    }

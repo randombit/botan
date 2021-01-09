@@ -1,6 +1,7 @@
 /*
 * SM3
 * (C) 2017 Ribose Inc.
+* (C) 2021 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,6 +9,7 @@
 #include <botan/internal/sm3.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -26,18 +28,6 @@ const uint32_t SM3_IV[] = {
 inline uint32_t P0(uint32_t X)
    {
    return X ^ rotl<9>(X) ^ rotl<17>(X);
-   }
-
-inline uint32_t FF1(uint32_t X, uint32_t Y, uint32_t Z)
-   {
-   return (X & Y) | ((X | Y) & Z);
-   //return (X & Y) | (X & Z) | (Y & Z);
-   }
-
-inline uint32_t GG1(uint32_t X, uint32_t Y, uint32_t Z)
-   {
-   //return (X & Y) | (~X & Z);
-   return ((Z ^ (X & (Y ^ Z))));
    }
 
 inline void R1(uint32_t A, uint32_t& B, uint32_t C, uint32_t& D,
@@ -61,8 +51,8 @@ inline void R2(uint32_t A, uint32_t& B, uint32_t C, uint32_t& D,
    {
    const uint32_t A12 = rotl<12>(A);
    const uint32_t SS1 = rotl<7>(A12 + E + TJ);
-   const uint32_t TT1 = FF1(A, B, C) + D + (SS1 ^ A12) + Wj;
-   const uint32_t TT2 = GG1(E, F, G) + H + SS1 + Wi;
+   const uint32_t TT1 = majority(A, B, C) + D + (SS1 ^ A12) + Wj;
+   const uint32_t TT2 = choose(E, F, G) + H + SS1 + Wi;
 
    B = rotl<9>(B);
    D = TT1;

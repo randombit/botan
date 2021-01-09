@@ -7,6 +7,7 @@
 #include <botan/internal/sha2_64.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -22,9 +23,9 @@ namespace Botan {
       const uint64_t A_rho = rotr<28>(A) ^ rotr<34>(A) ^ rotr<39>(A);    \
       const uint64_t M2_sigma = rotr<19>(M2) ^ rotr<61>(M2) ^ (M2 >> 6); \
       const uint64_t M4_sigma = rotr<1>(M4) ^ rotr<8>(M4) ^ (M4 >> 7);   \
-      H += magic + E_rho + ((E & F) ^ (~E & G)) + M1;                    \
+      H += magic + E_rho + choose(E, F, G) + M1;                         \
       D += H;                                                            \
-      H += A_rho + ((A & B) | ((A | B) & C));                            \
+      H += A_rho + majority(A, B, C);                                    \
       M1 += M2_sigma + M3 + M4_sigma;                                    \
    } while(0);
 

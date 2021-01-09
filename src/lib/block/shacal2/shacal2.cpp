@@ -8,6 +8,7 @@
 #include <botan/internal/shacal2.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/cpuid.h>
 
 namespace Botan {
@@ -21,9 +22,9 @@ inline void SHACAL2_Fwd(uint32_t A, uint32_t B, uint32_t C, uint32_t& D,
    const uint32_t A_rho = rotr<2>(A) ^ rotr<13>(A) ^ rotr<22>(A);
    const uint32_t E_rho = rotr<6>(E) ^ rotr<11>(E) ^ rotr<25>(E);
 
-   H += E_rho + ((E & F) ^ (~E & G)) + RK;
+   H += E_rho + choose(E, F, G) + RK;
    D += H;
-   H += A_rho + ((A & B) | ((A | B) & C));
+   H += A_rho + majority(A, B, C);
    }
 
 inline void SHACAL2_Rev(uint32_t A, uint32_t B, uint32_t C, uint32_t& D,
@@ -33,9 +34,9 @@ inline void SHACAL2_Rev(uint32_t A, uint32_t B, uint32_t C, uint32_t& D,
    const uint32_t A_rho = rotr<2>(A) ^ rotr<13>(A) ^ rotr<22>(A);
    const uint32_t E_rho = rotr<6>(E) ^ rotr<11>(E) ^ rotr<25>(E);
 
-   H -= A_rho + ((A & B) | ((A | B) & C));
+   H -= A_rho + majority(A, B, C);
    D -= H;
-   H -= E_rho + ((E & F) ^ (~E & G)) + RK;
+   H -= E_rho + choose(E, F, G) + RK;
    }
 
 }

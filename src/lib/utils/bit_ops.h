@@ -166,6 +166,28 @@ inline constexpr void swap_bits(T& x, T& y, T mask, size_t shift)
    y ^= swap;
    }
 
+template<typename T>
+inline constexpr T choose(T mask, T a, T b)
+   {
+   //return (mask & a) | (~mask & b);
+   return (b ^ (mask & (a ^ b)));
+   }
+
+template<typename T>
+inline constexpr T majority(T a, T b, T c)
+   {
+   /*
+   Considering each bit of a, b, c individually
+
+   If a xor b is set, then c is the deciding vote.
+
+   If a xor b is not set then either a and b are both set or both unset.
+   In either case the value of c doesn't matter, and examining b (or a)
+   allows us to determine which case we are in.
+   */
+   return choose(a ^ b, c, b);
+   }
+
 }
 
 #endif
