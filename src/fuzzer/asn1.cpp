@@ -14,13 +14,13 @@ class ASN1_Parser final : public Botan::ASN1_Formatter
       ASN1_Parser() : Botan::ASN1_Formatter(true, 64) {}
 
    protected:
-      std::string format(Botan::ASN1_Tag, Botan::ASN1_Tag, size_t, size_t,
+      std::string format(Botan::ASN1_Type, Botan::ASN1_Class, size_t, size_t,
                          const std::string&) const override
          {
          return "";
          }
 
-      std::string format_bin(Botan::ASN1_Tag, Botan::ASN1_Tag,
+      std::string format_bin(Botan::ASN1_Type, Botan::ASN1_Class,
                              const std::vector<uint8_t>&) const override
          {
          return "";

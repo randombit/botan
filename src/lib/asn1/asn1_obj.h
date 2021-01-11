@@ -19,17 +19,24 @@ class BER_Decoder;
 class DER_Encoder;
 
 /**
-* ASN.1 Type and Class Tags
+* ASN.1 Class Tags
 */
-enum class ASN1_Tag : uint32_t {
-   UNIVERSAL        = 0x00,
-   APPLICATION      = 0x40,
-   CONTEXT_SPECIFIC = 0x80,
+enum class ASN1_Class : uint32_t {
+    UNIVERSAL        = 0b0000'0000,
+    APPLICATION      = 0b0100'0000,
+    CONTEXT_SPECIFIC = 0b1000'0000,
+    PRIVATE          = 0b1100'0000,
 
-   CONSTRUCTED      = 0x20,
+    CONSTRUCTED      = 0b0010'0000,
+    EXPLICIT_CONTEXT_SPECIFIC = CONSTRUCTED | CONTEXT_SPECIFIC,
 
-   PRIVATE          = CONSTRUCTED | CONTEXT_SPECIFIC,
+    NO_OBJECT        = 0xFF00
+};
 
+/**
+* ASN.1 Type Tags
+*/
+enum class ASN1_Type : uint32_t {
    EOC              = 0x00,
    BOOLEAN          = 0x01,
    INTEGER          = 0x02,
@@ -58,18 +65,33 @@ enum class ASN1_Tag : uint32_t {
    DIRECTORY_STRING = 0xFF01
 };
 
-inline bool intersects(ASN1_Tag x, ASN1_Tag y)
+inline bool intersects(ASN1_Class x, ASN1_Class y)
    {
    return static_cast<uint32_t>(x) & static_cast<uint32_t>(y);
    }
 
-inline ASN1_Tag operator|(ASN1_Tag x, ASN1_Tag y)
+inline ASN1_Type operator|(ASN1_Type x, ASN1_Type y)
    {
-   return static_cast<ASN1_Tag>(static_cast<uint32_t>(x) | static_cast<uint32_t>(y));
+   return static_cast<ASN1_Type>(static_cast<uint32_t>(x) | static_cast<uint32_t>(y));
    }
 
-std::string BOTAN_UNSTABLE_API asn1_tag_to_string(ASN1_Tag type);
-std::string BOTAN_UNSTABLE_API asn1_class_to_string(ASN1_Tag type);
+inline ASN1_Class operator|(ASN1_Class x, ASN1_Class y)
+   {
+   return static_cast<ASN1_Class>(static_cast<uint32_t>(x) | static_cast<uint32_t>(y));
+   }
+
+inline uint32_t operator|(ASN1_Type x, ASN1_Class y)
+   {
+   return static_cast<uint32_t>(x) | static_cast<uint32_t>(y);
+   }
+
+inline uint32_t operator|(ASN1_Class x, ASN1_Type y)
+   {
+    return static_cast<uint32_t>(x) | static_cast<uint32_t>(y);
+   }
+
+std::string BOTAN_UNSTABLE_API asn1_tag_to_string(ASN1_Type type);
+std::string BOTAN_UNSTABLE_API asn1_class_to_string(ASN1_Class type);
 
 /**
 * Basic ASN.1 Object Interface
@@ -108,7 +130,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Object
 class BOTAN_PUBLIC_API(2,0) BER_Object final
    {
    public:
-      BER_Object() : m_type_tag(ASN1_Tag::NO_OBJECT), m_class_tag(ASN1_Tag::UNIVERSAL) {}
+      BER_Object() : m_type_tag(ASN1_Type::NO_OBJECT), m_class_tag(ASN1_Class::UNIVERSAL) {}
 
       BER_Object(const BER_Object& other) = default;
 
@@ -118,34 +140,35 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
 
       BER_Object& operator=(BER_Object&& other) = default;
 
-      bool is_set() const { return m_type_tag != ASN1_Tag::NO_OBJECT; }
+      bool is_set() const { return m_type_tag != ASN1_Type::NO_OBJECT; }
 
-      ASN1_Tag tagging() const { return type_tag() | class_tag(); }
+      uint32_t tagging() const { return type_tag() | class_tag(); }
 
-      ASN1_Tag type_tag() const { return m_type_tag; }
-      ASN1_Tag class_tag() const { return m_class_tag; }
+      ASN1_Type type_tag() const { return m_type_tag; }
+      ASN1_Class class_tag() const { return m_class_tag; }
 
-      ASN1_Tag type() const { return m_type_tag; }
-      ASN1_Tag get_class() const { return m_class_tag; }
+      ASN1_Type type() const { return m_type_tag; }
+      ASN1_Class get_class() const { return m_class_tag; }
 
       const uint8_t* bits() const { return m_value.data(); }
 
       size_t length() const { return m_value.size(); }
 
-      void assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag,
+      void assert_is_a(ASN1_Type type_tag, ASN1_Class class_tag,
                        const std::string& descr = "object") const;
 
-      bool is_a(ASN1_Tag type_tag, ASN1_Tag class_tag) const;
+      bool is_a(ASN1_Type type_tag, ASN1_Class class_tag) const;
 
-      bool is_a(int type_tag, ASN1_Tag class_tag) const;
+      bool is_a(int type_tag, ASN1_Class class_tag) const;
 
    private:
-      ASN1_Tag m_type_tag, m_class_tag;
+       ASN1_Type m_type_tag;
+       ASN1_Class m_class_tag;
       secure_vector<uint8_t> m_value;
 
       friend class BER_Decoder;
 
-      void set_tagging(ASN1_Tag type_tag, ASN1_Tag class_tag);
+      void set_tagging(ASN1_Type type_tag, ASN1_Class class_tag);
 
       uint8_t* mutable_bits(size_t length)
          {
@@ -188,8 +211,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoding_Error : public Decoding_Error
 class BOTAN_PUBLIC_API(2,0) BER_Bad_Tag final : public BER_Decoding_Error
    {
    public:
-      BER_Bad_Tag(const std::string& msg, ASN1_Tag tag);
-      BER_Bad_Tag(const std::string& msg, ASN1_Tag tag1, ASN1_Tag tag2);
+      BER_Bad_Tag(const std::string& msg, uint32_t tagging);
    };
 
 /**
@@ -332,7 +354,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Time final : public ASN1_Object
       explicit ASN1_Time(const std::chrono::system_clock::time_point& time);
 
       /// Create an ASN1_Time from string
-      ASN1_Time(const std::string& t_spec, ASN1_Tag tag);
+      ASN1_Time(const std::string& t_spec, ASN1_Type tag);
 
       /// Returns a STL timepoint object
       std::chrono::system_clock::time_point to_std_timepoint() const;
@@ -341,7 +363,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Time final : public ASN1_Object
       uint64_t time_since_epoch() const;
 
    private:
-      void set_to(const std::string& t_spec, ASN1_Tag);
+      void set_to(const std::string& t_spec, ASN1_Type);
       bool passes_sanity_check() const;
 
       uint32_t m_year = 0;
@@ -350,7 +372,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Time final : public ASN1_Object
       uint32_t m_hour = 0;
       uint32_t m_minute = 0;
       uint32_t m_second = 0;
-      ASN1_Tag m_tag = ASN1_Tag::NO_OBJECT;
+      ASN1_Type m_tag = ASN1_Type::NO_OBJECT;
    };
 
 /*
@@ -375,7 +397,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
       void encode_into(class DER_Encoder&) const override;
       void decode_from(class BER_Decoder&) override;
 
-      ASN1_Tag tagging() const { return m_tag; }
+      ASN1_Type tagging() const { return m_tag; }
 
       const std::string& value() const { return m_utf8_str; }
 
@@ -387,17 +409,17 @@ class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
       * Return true iff this is a tag for a known string type we can handle.
       * This ignores string types that are not supported, eg teletexString
       */
-      static bool is_string_type(ASN1_Tag tag);
+      static bool is_string_type(ASN1_Type tag);
 
       bool operator==(const ASN1_String& other) const
          { return value() == other.value(); }
 
       explicit ASN1_String(const std::string& utf8 = "");
-      ASN1_String(const std::string& utf8, ASN1_Tag tag);
+      ASN1_String(const std::string& utf8, ASN1_Type tag);
    private:
       std::vector<uint8_t> m_data;
       std::string m_utf8_str;
-      ASN1_Tag m_tag;
+      ASN1_Type m_tag;
    };
 
 /**

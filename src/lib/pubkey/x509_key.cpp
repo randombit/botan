@@ -39,7 +39,7 @@ Public_Key* load_key(DataSource& source)
          BER_Decoder(source)
             .start_sequence()
             .decode(alg_id)
-            .decode(key_bits, ASN1_Tag::BIT_STRING)
+            .decode(key_bits, ASN1_Type::BIT_STRING)
          .end_cons();
          }
       else
@@ -51,7 +51,7 @@ Public_Key* load_key(DataSource& source)
          BER_Decoder(ber)
             .start_sequence()
             .decode(alg_id)
-            .decode(key_bits, ASN1_Tag::BIT_STRING)
+            .decode(key_bits, ASN1_Type::BIT_STRING)
          .end_cons();
          }
 

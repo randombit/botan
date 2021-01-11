@@ -114,7 +114,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    BER_Object v3_exts_data;
 
    BER_Decoder(obj.signed_body())
-      .decode_optional(data->m_version, ASN1_Tag(0), ASN1_Tag::CONSTRUCTED | ASN1_Tag::CONTEXT_SPECIFIC)
+      .decode_optional(data->m_version, ASN1_Type(0), ASN1_Class::CONSTRUCTED | ASN1_Class::CONTEXT_SPECIFIC)
       .decode(serial_bn)
       .decode(data->m_sig_algo_inner)
       .decode(data->m_issuer_dn)
@@ -124,8 +124,8 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       .end_cons()
       .decode(data->m_subject_dn)
       .get_next(public_key)
-      .decode_optional_string(data->m_v2_issuer_key_id, ASN1_Tag::BIT_STRING, 1)
-      .decode_optional_string(data->m_v2_subject_key_id, ASN1_Tag::BIT_STRING, 2)
+      .decode_optional_string(data->m_v2_issuer_key_id, ASN1_Type::BIT_STRING, 1)
+      .decode_optional_string(data->m_v2_subject_key_id, ASN1_Type::BIT_STRING, 2)
       .get_next(v3_exts_data)
       .verify_end("TBSCertificate has extra data after extensions block");
 
@@ -134,7 +134,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    if(obj.signature_algorithm() != data->m_sig_algo_inner)
       throw Decoding_Error("X.509 Certificate had differing algorithm identifers in inner and outer ID fields");
 
-   public_key.assert_is_a(ASN1_Tag::SEQUENCE, ASN1_Tag::CONSTRUCTED, "X.509 certificate public key");
+   public_key.assert_is_a(ASN1_Type::SEQUENCE, ASN1_Class::CONSTRUCTED, "X.509 certificate public key");
 
    // crude method to save the serial's sign; will get lost during decoding, otherwise
    data->m_serial_negative = serial_bn.is_negative();
@@ -196,16 +196,16 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    BER_Decoder(data->m_subject_public_key_bits)
       .decode(data->m_subject_public_key_algid)
-      .decode(data->m_subject_public_key_bitstring, ASN1_Tag::BIT_STRING);
+      .decode(data->m_subject_public_key_bitstring, ASN1_Type::BIT_STRING);
 
-   if(v3_exts_data.is_a(3, ASN1_Tag::CONSTRUCTED | ASN1_Tag::CONTEXT_SPECIFIC))
+   if(v3_exts_data.is_a(3, ASN1_Class::CONSTRUCTED | ASN1_Class::CONTEXT_SPECIFIC))
       {
       // Path validation will reject a v1/v2 cert with v3 extensions
       BER_Decoder(v3_exts_data).decode(data->m_v3_extensions).verify_end();
       }
    else if(v3_exts_data.is_set())
       {
-      throw BER_Bad_Tag("Unknown tag in X.509 cert", v3_exts_data.tagging());
+          throw BER_Bad_Tag("Unknown tag in X.509 cert", v3_exts_data.tagging());
       }
 
    // Now cache some fields from the extensions

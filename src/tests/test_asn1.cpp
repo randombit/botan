@@ -309,8 +309,8 @@ class ASN1_Time_Parsing_Tests final : public Text_Based_Test
             throw Test_Error("Invalid tag value in ASN1 date parsing test");
             }
 
-         const Botan::ASN1_Tag tag =
-            (tag_str == "UTC" || tag_str == "UTC.invalid") ? Botan::ASN1_Tag::UTC_TIME : Botan::ASN1_Tag::GENERALIZED_TIME;
+         const Botan::ASN1_Type tag =
+            (tag_str == "UTC" || tag_str == "UTC.invalid") ? Botan::ASN1_Type::UTC_TIME : Botan::ASN1_Type::GENERALIZED_TIME;
 
          const bool valid = tag_str.find(".invalid") == std::string::npos;
 

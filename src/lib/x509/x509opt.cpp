@@ -16,7 +16,7 @@ namespace Botan {
 */
 void X509_Cert_Options::not_before(const std::string& time_string)
    {
-   start = X509_Time(time_string, ASN1_Tag::UTC_OR_GENERALIZED_TIME);
+   start = X509_Time(time_string, ASN1_Type::UTC_OR_GENERALIZED_TIME);
    }
 
 /*
@@ -24,7 +24,7 @@ void X509_Cert_Options::not_before(const std::string& time_string)
 */
 void X509_Cert_Options::not_after(const std::string& time_string)
    {
-   end = X509_Time(time_string, ASN1_Tag::UTC_OR_GENERALIZED_TIME);
+   end = X509_Time(time_string, ASN1_Type::UTC_OR_GENERALIZED_TIME);
    }
 
 /*

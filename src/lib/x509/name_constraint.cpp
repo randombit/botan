@@ -41,22 +41,22 @@ void GeneralName::decode_from(class BER_Decoder& ber)
    {
    BER_Object obj = ber.get_next_object();
 
-   if(obj.is_a(1, ASN1_Tag::CONTEXT_SPECIFIC))
+   if(obj.is_a(1, ASN1_Class::CONTEXT_SPECIFIC))
       {
       m_type = "RFC822";
       m_name = ASN1::to_string(obj);
       }
-   else if(obj.is_a(2, ASN1_Tag::CONTEXT_SPECIFIC))
+   else if(obj.is_a(2, ASN1_Class::CONTEXT_SPECIFIC))
       {
       m_type = "DNS";
       m_name = ASN1::to_string(obj);
       }
-   else if(obj.is_a(6, ASN1_Tag::CONTEXT_SPECIFIC))
+   else if(obj.is_a(6, ASN1_Class::CONTEXT_SPECIFIC))
       {
       m_type = "URI";
       m_name = ASN1::to_string(obj);
       }
-   else if(obj.is_a(4, ASN1_Tag::CONTEXT_SPECIFIC | ASN1_Tag::CONSTRUCTED))
+   else if(obj.is_a(4, ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED))
       {
       m_type = "DN";
       X509_DN dn;
@@ -68,7 +68,7 @@ void GeneralName::decode_from(class BER_Decoder& ber)
 
       m_name = ss.str();
       }
-   else if(obj.is_a(7, ASN1_Tag::CONTEXT_SPECIFIC))
+   else if(obj.is_a(7, ASN1_Class::CONTEXT_SPECIFIC))
       {
       if(obj.length() == 8)
          {
@@ -255,7 +255,7 @@ void GeneralSubtree::decode_from(class BER_Decoder& ber)
    {
    ber.start_sequence()
       .decode(m_base)
-      .decode_optional(m_minimum, ASN1_Tag(0), ASN1_Tag::CONTEXT_SPECIFIC, size_t(0))
+      .decode_optional(m_minimum, ASN1_Type(0), ASN1_Class::CONTEXT_SPECIFIC, size_t(0))
    .end_cons();
 
    if(m_minimum != 0)

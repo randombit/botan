@@ -91,10 +91,10 @@ class PK_Encrypt final : public Command
 
          der.start_sequence()
             .encode(pk_alg_id)
-            .encode(encrypted_key, Botan::ASN1_Tag::OCTET_STRING)
+            .encode(encrypted_key, Botan::ASN1_Type::OCTET_STRING)
             .encode(aead_oid)
-            .encode(nonce, Botan::ASN1_Tag::OCTET_STRING)
-            .encode(data, Botan::ASN1_Tag::OCTET_STRING)
+            .encode(nonce, Botan::ASN1_Type::OCTET_STRING)
+            .encode(data, Botan::ASN1_Type::OCTET_STRING)
             .end_cons();
 
          output() << Botan::PEM_Code::encode(buf, "PUBKEY ENCRYPTED MESSAGE", 72);
@@ -147,10 +147,10 @@ class PK_Decrypt final : public Command
             Botan::BER_Decoder(Botan::PEM_Code::decode_check_label(input, "PUBKEY ENCRYPTED MESSAGE"))
                .start_sequence()
                   .decode(pk_alg_id)
-                  .decode(encrypted_key, Botan::ASN1_Tag::OCTET_STRING)
+                  .decode(encrypted_key, Botan::ASN1_Type::OCTET_STRING)
                   .decode(aead_oid)
-                  .decode(nonce, Botan::ASN1_Tag::OCTET_STRING)
-                  .decode(data, Botan::ASN1_Tag::OCTET_STRING)
+                  .decode(nonce, Botan::ASN1_Type::OCTET_STRING)
+                  .decode(data, Botan::ASN1_Type::OCTET_STRING)
                .end_cons();
             }
          catch(Botan::Decoding_Error&)

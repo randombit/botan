@@ -79,8 +79,8 @@ void ASN1_Formatter::decode(std::ostream& output,
 
    while(obj.is_set())
       {
-      const ASN1_Tag type_tag = obj.type();
-      const ASN1_Tag class_tag = obj.get_class();
+      const ASN1_Type type_tag = obj.type();
+      const ASN1_Class class_tag = obj.get_class();
       const size_t length = obj.length();
 
       /* hack to insert the tag+length back in front of the stuff now
@@ -90,7 +90,7 @@ void ASN1_Formatter::decode(std::ostream& output,
 
       BER_Decoder data(bits);
 
-      if(intersects(class_tag, ASN1_Tag::CONSTRUCTED))
+      if(intersects(class_tag, ASN1_Class::CONSTRUCTED))
          {
          BER_Decoder cons_info(obj.bits(), obj.length());
 
@@ -105,7 +105,7 @@ void ASN1_Formatter::decode(std::ostream& output,
                              format_bin(type_tag, class_tag, bits));
             }
          }
-      else if(intersects(class_tag, ASN1_Tag::APPLICATION) || intersects(class_tag, ASN1_Tag::CONTEXT_SPECIFIC))
+      else if(intersects(class_tag, ASN1_Class::APPLICATION) || intersects(class_tag, ASN1_Class::CONTEXT_SPECIFIC))
          {
          bool success_parsing_cs = false;
 
@@ -142,7 +142,7 @@ void ASN1_Formatter::decode(std::ostream& output,
                              format_bin(type_tag, class_tag, bits));
             }
          }
-      else if(type_tag == ASN1_Tag::OBJECT_ID)
+      else if(type_tag == ASN1_Type::OBJECT_ID)
          {
          OID oid;
          data.decode(oid);
@@ -159,17 +159,17 @@ void ASN1_Formatter::decode(std::ostream& output,
 
          output << format(type_tag, class_tag, level, length, out);
          }
-      else if(type_tag == ASN1_Tag::INTEGER || type_tag == ASN1_Tag::ENUMERATED)
+      else if(type_tag == ASN1_Type::INTEGER || type_tag == ASN1_Type::ENUMERATED)
          {
          BigInt number;
 
-         if(type_tag == ASN1_Tag::INTEGER)
+         if(type_tag == ASN1_Type::INTEGER)
             {
             data.decode(number);
             }
-         else if(type_tag == ASN1_Tag::ENUMERATED)
+         else if(type_tag == ASN1_Type::ENUMERATED)
             {
-            data.decode(number, ASN1_Tag::ENUMERATED, class_tag);
+            data.decode(number, ASN1_Type::ENUMERATED, class_tag);
             }
 
          std::vector<uint8_t> rep = BigInt::encode(number);
@@ -178,17 +178,17 @@ void ASN1_Formatter::decode(std::ostream& output,
 
          output << format(type_tag, class_tag, level, length, hex_encode(rep));
          }
-      else if(type_tag == ASN1_Tag::BOOLEAN)
+      else if(type_tag == ASN1_Type::BOOLEAN)
          {
          bool boolean;
          data.decode(boolean);
          output << format(type_tag, class_tag, level, length, (boolean ? "true" : "false"));
          }
-      else if(type_tag == ASN1_Tag::NULL_TAG)
+      else if(type_tag == ASN1_Type::NULL_TAG)
          {
          output << format(type_tag, class_tag, level, length, "");
          }
-      else if(type_tag == ASN1_Tag::OCTET_STRING || type_tag == ASN1_Tag::BIT_STRING)
+      else if(type_tag == ASN1_Type::OCTET_STRING || type_tag == ASN1_Type::BIT_STRING)
          {
          std::vector<uint8_t> decoded_bits;
          data.decode(decoded_bits, type_tag);
@@ -224,7 +224,7 @@ void ASN1_Formatter::decode(std::ostream& output,
          data.decode(str);
          output << format(type_tag, class_tag, level, length, str.value());
          }
-      else if(type_tag == ASN1_Tag::UTC_TIME || type_tag == ASN1_Tag::GENERALIZED_TIME)
+      else if(type_tag == ASN1_Type::UTC_TIME || type_tag == ASN1_Type::GENERALIZED_TIME)
          {
          ASN1_Time time;
          data.decode(time);
@@ -242,26 +242,26 @@ void ASN1_Formatter::decode(std::ostream& output,
 
 namespace {
 
-std::string format_type(ASN1_Tag type_tag, ASN1_Tag class_tag)
+std::string format_type(ASN1_Type type_tag, ASN1_Class class_tag)
    {
-   if(class_tag == ASN1_Tag::UNIVERSAL)
+   if(class_tag == ASN1_Class::UNIVERSAL)
       return asn1_tag_to_string(type_tag);
 
-   if(class_tag == ASN1_Tag::CONSTRUCTED && (type_tag == ASN1_Tag::SEQUENCE || type_tag == ASN1_Tag::SET))
+   if(class_tag == ASN1_Class::CONSTRUCTED && (type_tag == ASN1_Type::SEQUENCE || type_tag == ASN1_Type::SET))
       return asn1_tag_to_string(type_tag);
 
    std::string name;
 
-   if(intersects(class_tag, ASN1_Tag::CONSTRUCTED))
+   if(intersects(class_tag, ASN1_Class::CONSTRUCTED))
       name += "cons ";
 
    name += "[" + std::to_string(static_cast<uint32_t>(type_tag)) + "]";
 
-   if(intersects(class_tag, ASN1_Tag::APPLICATION))
+   if(intersects(class_tag, ASN1_Class::APPLICATION))
       {
       name += " appl";
       }
-   if(intersects(class_tag, ASN1_Tag::CONTEXT_SPECIFIC))
+   if(intersects(class_tag, ASN1_Class::CONTEXT_SPECIFIC))
       {
       name += " context";
       }
@@ -271,8 +271,8 @@ std::string format_type(ASN1_Tag type_tag, ASN1_Tag class_tag)
 
 }
 
-std::string ASN1_Pretty_Printer::format(ASN1_Tag type_tag,
-                                        ASN1_Tag class_tag,
+std::string ASN1_Pretty_Printer::format(ASN1_Type type_tag,
+                                        ASN1_Class class_tag,
                                         size_t level,
                                         size_t length,
                                         const std::string& value) const
@@ -284,7 +284,7 @@ std::string ASN1_Pretty_Printer::format(ASN1_Tag type_tag,
       should_skip = true;
       }
 
-   if((type_tag == ASN1_Tag::OCTET_STRING || type_tag == ASN1_Tag::BIT_STRING) &&
+   if((type_tag == ASN1_Type::OCTET_STRING || type_tag == ASN1_Type::BIT_STRING) &&
       value.length() > m_print_binary_limit)
       {
       should_skip = true;
@@ -312,8 +312,8 @@ std::string ASN1_Pretty_Printer::format(ASN1_Tag type_tag,
    return oss.str();
    }
 
-std::string ASN1_Pretty_Printer::format_bin(ASN1_Tag /*type_tag*/,
-                                            ASN1_Tag /*class_tag*/,
+std::string ASN1_Pretty_Printer::format_bin(ASN1_Type /*type_tag*/,
+                                            ASN1_Class /*class_tag*/,
                                             const std::vector<uint8_t>& vec) const
    {
    if(all_printable_chars(vec.data(), vec.size()))
