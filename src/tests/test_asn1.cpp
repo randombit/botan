@@ -265,6 +265,31 @@ Test::Result test_asn1_utf8_encoding()
    return result;
    }
 
+Test::Result test_asn1_tag_underlying_type()
+   {
+   Test::Result result("ASN.1 class and type underlying type");
+
+   if constexpr(std::is_same_v<std::underlying_type_t<Botan::ASN1_Class>,
+                               std::underlying_type_t<Botan::ASN1_Type>>)
+   {
+      if constexpr(!std::is_same_v<std::underlying_type_t<Botan::ASN1_Class>,
+                                   std::invoke_result_t<decltype(&Botan::BER_Object::tagging), Botan::BER_Object>>)
+      {
+         result.test_failure("Return type of BER_Object::tagging() is different than the underlying type of ASN1_Class");
+      }
+      else
+      {
+         result.test_success("Same types");
+      }
+   }
+   else
+   {
+      result.test_failure("ASN1_Class and ASN1_Type have different underlying types");
+   }
+
+   return result;
+   }
+
 }
 
 class ASN1_Tests final : public Test
@@ -282,6 +307,7 @@ class ASN1_Tests final : public Test
          results.push_back(test_asn1_ucs4_parsing());
          results.push_back(test_asn1_ascii_encoding());
          results.push_back(test_asn1_utf8_encoding());
+         results.push_back(test_asn1_tag_underlying_type());
 
          return results;
          }
