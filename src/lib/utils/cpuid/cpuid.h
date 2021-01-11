@@ -98,7 +98,7 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
          CPUID_AVX512DQ_BIT   = (1ULL << 6),
          CPUID_AVX512BW_BIT   = (1ULL << 7),
 
-         // Ice Lake profile: AVX-512 F, DQ, BW, IFMA, VBMI, VBMI2, BITALG
+         // Ice Lake profile: AVX-512 F, DQ, BW, VL, IFMA, VBMI, VBMI2, BITALG
          CPUID_AVX512_ICL_BIT = (1ULL << 11),
 
          // Crypto-specific ISAs
