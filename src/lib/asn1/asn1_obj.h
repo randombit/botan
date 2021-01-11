@@ -22,15 +22,15 @@ class DER_Encoder;
 * ASN.1 Class Tags
 */
 enum class ASN1_Class : uint32_t {
-    UNIVERSAL        = 0b0000'0000,
-    APPLICATION      = 0b0100'0000,
-    CONTEXT_SPECIFIC = 0b1000'0000,
-    PRIVATE          = 0b1100'0000,
+   UNIVERSAL        = 0b0000'0000,
+   APPLICATION      = 0b0100'0000,
+   CONTEXT_SPECIFIC = 0b1000'0000,
+   PRIVATE          = 0b1100'0000,
 
-    CONSTRUCTED      = 0b0010'0000,
-    EXPLICIT_CONTEXT_SPECIFIC = CONSTRUCTED | CONTEXT_SPECIFIC,
+   CONSTRUCTED      = 0b0010'0000,
+   EXPLICIT_CONTEXT_SPECIFIC = CONSTRUCTED | CONTEXT_SPECIFIC,
 
-    NO_OBJECT        = 0xFF00
+   NO_OBJECT        = 0xFF00
 };
 
 /**
@@ -162,8 +162,8 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
       bool is_a(int type_tag, ASN1_Class class_tag) const;
 
    private:
-       ASN1_Type m_type_tag;
-       ASN1_Class m_class_tag;
+      ASN1_Type m_type_tag;
+      ASN1_Class m_class_tag;
       secure_vector<uint8_t> m_value;
 
       friend class BER_Decoder;
