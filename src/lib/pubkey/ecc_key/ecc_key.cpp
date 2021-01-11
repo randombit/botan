@@ -145,9 +145,9 @@ secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
    return DER_Encoder()
       .start_sequence()
          .encode(static_cast<size_t>(1))
-         .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()), ASN1_Tag::OCTET_STRING)
-         .start_cons(ASN1_Tag(1), ASN1_Tag::PRIVATE)
-            .encode(m_public_key.encode(PointGFp::Compression_Type::UNCOMPRESSED), ASN1_Tag::BIT_STRING)
+         .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()), ASN1_Type::OCTET_STRING)
+         .start_cons(ASN1_Type(1), ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC)
+            .encode(m_public_key.encode(PointGFp::Compression_Type::UNCOMPRESSED), ASN1_Type::BIT_STRING)
          .end_cons()
       .end_cons()
       .get_contents();
@@ -167,8 +167,8 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
       .start_sequence()
          .decode_and_check<size_t>(1, "Unknown version code for ECC key")
          .decode_octet_string_bigint(m_private_key)
-         .decode_optional(key_parameters, ASN1_Tag(0), ASN1_Tag::PRIVATE)
-         .decode_optional_string(public_key_bits, ASN1_Tag::BIT_STRING, 1, ASN1_Tag::PRIVATE)
+         .decode_optional(key_parameters, ASN1_Type(0), ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC)
+         .decode_optional_string(public_key_bits, ASN1_Type::BIT_STRING, 1, ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC)
       .end_cons();
 
    if(public_key_bits.empty())

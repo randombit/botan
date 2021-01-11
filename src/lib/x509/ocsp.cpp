@@ -27,12 +27,12 @@ namespace {
 
 // TODO: should this be in a header somewhere?
 void decode_optional_list(BER_Decoder& ber,
-                          ASN1_Tag tag,
+                          ASN1_Type tag,
                           std::vector<X509_Certificate>& output)
    {
    BER_Object obj = ber.get_next_object();
 
-   if(obj.is_a(tag, ASN1_Tag::CONTEXT_SPECIFIC | ASN1_Tag::CONSTRUCTED) == false)
+   if(obj.is_a(tag, ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED) == false)
       {
       ber.push_back(obj);
       return;
@@ -105,7 +105,7 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
    size_t resp_status = 0;
 
-   response_outer.decode(resp_status, ASN1_Tag::ENUMERATED, ASN1_Tag::UNIVERSAL);
+   response_outer.decode(resp_status, ASN1_Type::ENUMERATED, ASN1_Class::UNIVERSAL);
 
    m_status = static_cast<Response_Status_Code>(resp_status);
 
@@ -115,7 +115,7 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
    if(response_outer.more_items())
       {
       BER_Decoder response_bytes =
-         response_outer.start_cons(ASN1_Tag(0), ASN1_Tag::CONTEXT_SPECIFIC).start_sequence();
+         response_outer.start_cons(ASN1_Type(0), ASN1_Class::CONTEXT_SPECIFIC).start_sequence();
 
       response_bytes.decode_and_check(OID("1.3.6.1.5.5.7.48.1.1"),
                                       "Unknown response type in OCSP response");
@@ -127,28 +127,28 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
            .raw_bytes(m_tbs_bits)
          .end_cons()
          .decode(m_sig_algo)
-         .decode(m_signature, ASN1_Tag::BIT_STRING);
-      decode_optional_list(basicresponse, ASN1_Tag(0), m_certs);
+         .decode(m_signature, ASN1_Type::BIT_STRING);
+      decode_optional_list(basicresponse, ASN1_Type(0), m_certs);
 
       size_t responsedata_version = 0;
       Extensions extensions;
 
       BER_Decoder(m_tbs_bits)
-         .decode_optional(responsedata_version, ASN1_Tag(0),
-                          ASN1_Tag::CONTEXT_SPECIFIC | ASN1_Tag::CONSTRUCTED)
+         .decode_optional(responsedata_version, ASN1_Type(0),
+                          ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED)
 
-         .decode_optional(m_signer_name, ASN1_Tag(1),
-                          ASN1_Tag::CONTEXT_SPECIFIC | ASN1_Tag::CONSTRUCTED)
+         .decode_optional(m_signer_name, ASN1_Type(1),
+                          ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED)
 
-         .decode_optional_string(m_key_hash, ASN1_Tag::OCTET_STRING, 2,
-                                 ASN1_Tag::CONTEXT_SPECIFIC | ASN1_Tag::CONSTRUCTED)
+         .decode_optional_string(m_key_hash, ASN1_Type::OCTET_STRING, 2,
+                                 ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED)
 
          .decode(m_produced_at)
 
          .decode_list(m_responses)
 
-         .decode_optional(extensions, ASN1_Tag(1),
-                          ASN1_Tag::CONTEXT_SPECIFIC | ASN1_Tag::CONSTRUCTED);
+         .decode_optional(extensions, ASN1_Type(1),
+                          ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED);
       }
 
    response_outer.end_cons();

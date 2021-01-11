@@ -50,8 +50,8 @@ class BOTAN_PUBLIC_API(2,4) ASN1_Formatter
       /**
       * This is called for each element
       */
-      virtual std::string format(ASN1_Tag type_tag,
-                                 ASN1_Tag class_tag,
+      virtual std::string format(ASN1_Type type_tag,
+                                 ASN1_Class class_tag,
                                  size_t level,
                                  size_t length,
                                  const std::string& value) const = 0;
@@ -61,8 +61,8 @@ class BOTAN_PUBLIC_API(2,4) ASN1_Formatter
       * convert to a string The result will be passed as value to format; the
       * tags are included as a hint to aid decoding.
       */
-      virtual std::string format_bin(ASN1_Tag type_tag,
-                                     ASN1_Tag class_tag,
+      virtual std::string format_bin(ASN1_Type type_tag,
+                                     ASN1_Class class_tag,
                                      const std::vector<uint8_t>& vec) const = 0;
 
    private:
@@ -104,14 +104,14 @@ class BOTAN_PUBLIC_API(2,4) ASN1_Pretty_Printer final : public ASN1_Formatter
          {}
 
    private:
-      std::string format(ASN1_Tag type_tag,
-                         ASN1_Tag class_tag,
+      std::string format(ASN1_Type type_tag,
+                         ASN1_Class class_tag,
                          size_t level,
                          size_t length,
                          const std::string& value) const override;
 
-      std::string format_bin(ASN1_Tag type_tag,
-                             ASN1_Tag class_tag,
+      std::string format_bin(ASN1_Type type_tag,
+                             ASN1_Class class_tag,
                              const std::vector<uint8_t>& vec) const override;
 
       const size_t m_print_limit;

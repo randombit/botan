@@ -18,7 +18,7 @@ namespace {
 /*
 * Choose an encoding for the string
 */
-ASN1_Tag choose_encoding(const std::string& str)
+ASN1_Type choose_encoding(const std::string& str)
    {
    auto all_printable = CT::Mask<uint8_t>::set();
 
@@ -40,12 +40,12 @@ ASN1_Tag choose_encoding(const std::string& str)
       }
 
    if(all_printable.is_set())
-      return ASN1_Tag::PRINTABLE_STRING;
+      return ASN1_Type::PRINTABLE_STRING;
    else
-      return ASN1_Tag::UTF8_STRING;
+      return ASN1_Type::UTF8_STRING;
    }
 
-void assert_is_string_type(ASN1_Tag tag)
+void assert_is_string_type(ASN1_Type tag)
    {
    if(!ASN1_String::is_string_type(tag))
       {
@@ -57,25 +57,25 @@ void assert_is_string_type(ASN1_Tag tag)
 }
 
 //static
-bool ASN1_String::is_string_type(ASN1_Tag tag)
+bool ASN1_String::is_string_type(ASN1_Type tag)
    {
-   return (tag == ASN1_Tag::NUMERIC_STRING ||
-           tag == ASN1_Tag::PRINTABLE_STRING ||
-           tag == ASN1_Tag::VISIBLE_STRING ||
-           tag == ASN1_Tag::T61_STRING ||
-           tag == ASN1_Tag::IA5_STRING ||
-           tag == ASN1_Tag::UTF8_STRING ||
-           tag == ASN1_Tag::BMP_STRING ||
-           tag == ASN1_Tag::UNIVERSAL_STRING);
+   return (tag == ASN1_Type::NUMERIC_STRING ||
+           tag == ASN1_Type::PRINTABLE_STRING ||
+           tag == ASN1_Type::VISIBLE_STRING ||
+           tag == ASN1_Type::T61_STRING ||
+           tag == ASN1_Type::IA5_STRING ||
+           tag == ASN1_Type::UTF8_STRING ||
+           tag == ASN1_Type::BMP_STRING ||
+           tag == ASN1_Type::UNIVERSAL_STRING);
    }
 
 
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_utf8_str(str), m_tag(t)
+ASN1_String::ASN1_String(const std::string& str, ASN1_Type t) : m_utf8_str(str), m_tag(t)
    {
-   if(m_tag == ASN1_Tag::DIRECTORY_STRING)
+   if(m_tag == ASN1_Type::DIRECTORY_STRING)
       {
       m_tag = choose_encoding(m_utf8_str);
       }
@@ -98,12 +98,12 @@ void ASN1_String::encode_into(DER_Encoder& encoder) const
    {
    if(m_data.empty())
       {
-      encoder.add_object(tagging(), ASN1_Tag::UNIVERSAL, m_utf8_str);
+      encoder.add_object(tagging(), ASN1_Class::UNIVERSAL, m_utf8_str);
       }
    else
       {
       // If this string was decoded, reserialize using original encoding
-      encoder.add_object(tagging(), ASN1_Tag::UNIVERSAL, m_data.data(), m_data.size());
+      encoder.add_object(tagging(), ASN1_Class::UNIVERSAL, m_data.data(), m_data.size());
       }
    }
 
@@ -119,11 +119,11 @@ void ASN1_String::decode_from(BER_Decoder& source)
    m_tag = obj.type();
    m_data.assign(obj.bits(), obj.bits() + obj.length());
 
-   if(m_tag == ASN1_Tag::BMP_STRING)
+   if(m_tag == ASN1_Type::BMP_STRING)
       {
       m_utf8_str = ucs2_to_utf8(m_data.data(), m_data.size());
       }
-   else if(m_tag == ASN1_Tag::UNIVERSAL_STRING)
+   else if(m_tag == ASN1_Type::UNIVERSAL_STRING)
       {
       m_utf8_str = ucs4_to_utf8(m_data.data(), m_data.size());
       }

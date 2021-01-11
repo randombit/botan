@@ -80,7 +80,7 @@ PKCS10_Request PKCS10_Request::create(const Private_Key& key,
    if(challenge.empty() == false)
       {
       std::vector<uint8_t> value;
-      DER_Encoder(value).encode(ASN1_String(challenge, ASN1_Tag::DIRECTORY_STRING));
+      DER_Encoder(value).encode(ASN1_String(challenge, ASN1_Type::DIRECTORY_STRING));
       tbs_req.encode(Attribute("PKCS9.ChallengePassword", value));
       }
 
@@ -118,8 +118,8 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
    cert_req_info.decode(data->m_subject_dn);
 
    BER_Object public_key = cert_req_info.get_next_object();
-   if(public_key.is_a(ASN1_Tag::SEQUENCE, ASN1_Tag::CONSTRUCTED) == false)
-      throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key", public_key.tagging());
+   if(public_key.is_a(ASN1_Type::SEQUENCE, ASN1_Class::CONSTRUCTED) == false)
+       throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key", public_key.tagging());
 
    data->m_public_key_bits = ASN1::put_in_sequence(public_key.bits(), public_key.length());
 
@@ -127,7 +127,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
 
    std::set<std::string> pkcs9_email;
 
-   if(attr_bits.is_a(0, ASN1_Tag::CONSTRUCTED | ASN1_Tag::CONTEXT_SPECIFIC))
+   if(attr_bits.is_a(0, ASN1_Class::CONSTRUCTED | ASN1_Class::CONTEXT_SPECIFIC))
       {
       BER_Decoder attributes(attr_bits);
       while(attributes.more_items())
@@ -158,7 +158,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
       attributes.verify_end();
       }
    else if(attr_bits.is_set())
-      throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for attributes", attr_bits.tagging());
+          throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for attributes", attr_bits.tagging());
 
    cert_req_info.verify_end();
 

@@ -208,10 +208,10 @@ AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
    std::vector<uint8_t> parameters;
    DER_Encoder(parameters)
       .start_sequence()
-      .start_cons(ASN1_Tag(0), ASN1_Tag::CONTEXT_SPECIFIC).encode(hash_id).end_cons()
-      .start_cons(ASN1_Tag(1), ASN1_Tag::CONTEXT_SPECIFIC).encode(mgf_id).end_cons()
-      .start_cons(ASN1_Tag(2), ASN1_Tag::CONTEXT_SPECIFIC).encode(m_salt_size).end_cons()
-      .start_cons(ASN1_Tag(3), ASN1_Tag::CONTEXT_SPECIFIC).encode(size_t(1)).end_cons() // trailer field
+      .start_cons(ASN1_Type(0), ASN1_Class::CONTEXT_SPECIFIC).encode(hash_id).end_cons()
+      .start_cons(ASN1_Type(1), ASN1_Class::CONTEXT_SPECIFIC).encode(mgf_id).end_cons()
+      .start_cons(ASN1_Type(2), ASN1_Class::CONTEXT_SPECIFIC).encode(m_salt_size).end_cons()
+      .start_cons(ASN1_Type(3), ASN1_Class::CONTEXT_SPECIFIC).encode(size_t(1)).end_cons() // trailer field
       .end_cons();
 
    // hardcoded as RSA is the only valid algorithm for EMSA4 at the moment

@@ -123,7 +123,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
    BER_Decoder tbs_crl(body);
 
    size_t version;
-   tbs_crl.decode_optional(version, ASN1_Tag::INTEGER, ASN1_Tag::UNIVERSAL);
+   tbs_crl.decode_optional(version, ASN1_Type::INTEGER, ASN1_Class::UNIVERSAL);
 
    if(version != 0 && version != 1)
       throw Decoding_Error("Unknown X.509 CRL version " + std::to_string(version+1));
@@ -140,7 +140,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
 
    BER_Object next = tbs_crl.get_next_object();
 
-   if(next.is_a(ASN1_Tag::SEQUENCE, ASN1_Tag::CONSTRUCTED))
+   if(next.is_a(ASN1_Type::SEQUENCE, ASN1_Class::CONSTRUCTED))
       {
       BER_Decoder cert_list(std::move(next));
 
@@ -153,7 +153,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
       next = tbs_crl.get_next_object();
       }
 
-   if(next.is_a(0, ASN1_Tag::CONSTRUCTED | ASN1_Tag::CONTEXT_SPECIFIC))
+   if(next.is_a(0, ASN1_Class::CONSTRUCTED | ASN1_Class::CONTEXT_SPECIFIC))
       {
       BER_Decoder crl_options(std::move(next));
       crl_options.decode(data->m_extensions).verify_end();

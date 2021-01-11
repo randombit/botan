@@ -24,24 +24,25 @@ const size_t ALLOWED_EOC_NESTINGS = 16;
 /*
 * BER decode an ASN.1 type tag
 */
-size_t decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
+size_t decode_tag(DataSource* ber, ASN1_Type& type_tag, ASN1_Class& class_tag)
    {
    uint8_t b;
    if(!ber->read_byte(b))
       {
-      class_tag = type_tag = ASN1_Tag::NO_OBJECT;
+      type_tag = ASN1_Type::NO_OBJECT;
+      class_tag = ASN1_Class::NO_OBJECT;
       return 0;
       }
 
    if((b & 0x1F) != 0x1F)
       {
-      type_tag = ASN1_Tag(b & 0x1F);
-      class_tag = ASN1_Tag(b & 0xE0);
+      type_tag = ASN1_Type(b & 0x1F);
+      class_tag = ASN1_Class(b & 0xE0);
       return 1;
       }
 
    size_t tag_bytes = 1;
-   class_tag = ASN1_Tag(b & 0xE0);
+   class_tag = ASN1_Class(b & 0xE0);
 
    size_t tag_buf = 0;
    while(true)
@@ -54,7 +55,7 @@ size_t decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
       tag_buf = (tag_buf << 7) | (b & 0x7F);
       if((b & 0x80) == 0) break;
       }
-   type_tag = ASN1_Tag(tag_buf);
+   type_tag = ASN1_Type(tag_buf);
    return tag_bytes;
    }
 
@@ -126,9 +127,10 @@ size_t find_eoc(DataSource* ber, size_t allow_indef)
    size_t length = 0;
    while(true)
       {
-      ASN1_Tag type_tag, class_tag;
+      ASN1_Type type_tag;
+      ASN1_Class class_tag;
       size_t tag_size = decode_tag(&source, type_tag, class_tag);
-      if(type_tag == ASN1_Tag::NO_OBJECT)
+      if(type_tag == ASN1_Type::NO_OBJECT)
          break;
 
       size_t length_size = 0;
@@ -139,7 +141,7 @@ size_t find_eoc(DataSource* ber, size_t allow_indef)
       length = BOTAN_CHECKED_ADD(length, tag_size);
       length = BOTAN_CHECKED_ADD(length, length_size);
 
-      if(type_tag == ASN1_Tag::EOC && class_tag == ASN1_Tag::UNIVERSAL)
+      if(type_tag == ASN1_Type::EOC && class_tag == ASN1_Class::UNIVERSAL)
          break;
       }
    return length;
@@ -246,7 +248,8 @@ BER_Object BER_Decoder::get_next_object()
 
    for(;;)
       {
-      ASN1_Tag type_tag, class_tag;
+      ASN1_Type type_tag;
+      ASN1_Class class_tag;
       decode_tag(m_source, type_tag, class_tag);
       next.set_tagging(type_tag, class_tag);
       if(next.is_set() == false) // no more objects
@@ -261,7 +264,7 @@ BER_Object BER_Decoder::get_next_object()
       if(m_source->read(out, length) != length)
          throw BER_Decoding_Error("Value truncated");
 
-      if(next.tagging() == ASN1_Tag::EOC)
+      if(next.tagging() == static_cast<uint32_t>(ASN1_Type::EOC))
          continue;
       else
          break;
@@ -287,10 +290,10 @@ void BER_Decoder::push_back(BER_Object&& obj)
    m_pushed = std::move(obj);
    }
 
-BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag, ASN1_Tag class_tag)
+BER_Decoder BER_Decoder::start_cons(ASN1_Type type_tag, ASN1_Class class_tag)
    {
    BER_Object obj = get_next_object();
-   obj.assert_is_a(type_tag, class_tag | ASN1_Tag::CONSTRUCTED);
+   obj.assert_is_a(type_tag, class_tag | ASN1_Class::CONSTRUCTED);
    return BER_Decoder(std::move(obj), this);
    }
 
@@ -364,7 +367,7 @@ BER_Decoder::BER_Decoder(const BER_Decoder& other)
 * Request for an object to decode itself
 */
 BER_Decoder& BER_Decoder::decode(ASN1_Object& obj,
-                                 ASN1_Tag, ASN1_Tag)
+                                 ASN1_Type, ASN1_Class)
    {
    obj.decode_from(*this);
    return (*this);
@@ -376,7 +379,7 @@ BER_Decoder& BER_Decoder::decode(ASN1_Object& obj,
 BER_Decoder& BER_Decoder::decode_null()
    {
    BER_Object obj = get_next_object();
-   obj.assert_is_a(ASN1_Tag::NULL_TAG, ASN1_Tag::UNIVERSAL);
+   obj.assert_is_a(ASN1_Type::NULL_TAG, ASN1_Class::UNIVERSAL);
    if(obj.length() > 0)
       throw BER_Decoding_Error("NULL object had nonzero size");
    return (*this);
@@ -385,7 +388,7 @@ BER_Decoder& BER_Decoder::decode_null()
 BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out)
    {
    secure_vector<uint8_t> out_vec;
-   decode(out_vec, ASN1_Tag::OCTET_STRING);
+   decode(out_vec, ASN1_Type::OCTET_STRING);
    out = BigInt::decode(out_vec.data(), out_vec.size());
    return (*this);
    }
@@ -394,7 +397,7 @@ BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out)
 * Decode a BER encoded BOOLEAN
 */
 BER_Decoder& BER_Decoder::decode(bool& out,
-                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+                                 ASN1_Type type_tag, ASN1_Class class_tag)
    {
    BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, class_tag);
@@ -410,8 +413,8 @@ BER_Decoder& BER_Decoder::decode(bool& out,
 * Decode a small BER encoded INTEGER
 */
 BER_Decoder& BER_Decoder::decode(size_t& out,
-                                 ASN1_Tag type_tag,
-                                 ASN1_Tag class_tag)
+                                 ASN1_Type type_tag,
+                                 ASN1_Class class_tag)
    {
    BigInt integer;
    decode(integer, type_tag, class_tag);
@@ -432,8 +435,8 @@ BER_Decoder& BER_Decoder::decode(size_t& out,
 /*
 * Decode a small BER encoded INTEGER
 */
-uint64_t BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
-                                                 ASN1_Tag class_tag,
+uint64_t BER_Decoder::decode_constrained_integer(ASN1_Type type_tag,
+                                                 ASN1_Class class_tag,
                                                  size_t T_bytes)
    {
    if(T_bytes > 8)
@@ -456,8 +459,8 @@ uint64_t BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
 * Decode a BER encoded INTEGER
 */
 BER_Decoder& BER_Decoder::decode(BigInt& out,
-                                 ASN1_Tag type_tag,
-                                 ASN1_Tag class_tag)
+                                 ASN1_Type type_tag,
+                                 ASN1_Class class_tag)
    {
    BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, class_tag);
@@ -495,13 +498,13 @@ namespace {
 template<typename Alloc>
 void asn1_decode_binary_string(std::vector<uint8_t, Alloc>& buffer,
                                const BER_Object& obj,
-                               ASN1_Tag real_type,
-                               ASN1_Tag type_tag,
-                               ASN1_Tag class_tag)
+                               ASN1_Type real_type,
+                               ASN1_Type type_tag,
+                               ASN1_Class class_tag)
    {
    obj.assert_is_a(type_tag, class_tag);
 
-   if(real_type == ASN1_Tag::OCTET_STRING)
+   if(real_type == ASN1_Type::OCTET_STRING)
       {
       buffer.assign(obj.bits(), obj.bits() + obj.length());
       }
@@ -525,22 +528,22 @@ void asn1_decode_binary_string(std::vector<uint8_t, Alloc>& buffer,
 * BER decode a BIT STRING or OCTET STRING
 */
 BER_Decoder& BER_Decoder::decode(secure_vector<uint8_t>& buffer,
-                                 ASN1_Tag real_type,
-                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+                                 ASN1_Type real_type,
+                                 ASN1_Type type_tag, ASN1_Class class_tag)
    {
-   if(real_type != ASN1_Tag::OCTET_STRING && real_type != ASN1_Tag::BIT_STRING)
-      throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", real_type);
+   if(real_type != ASN1_Type::OCTET_STRING && real_type != ASN1_Type::BIT_STRING)
+       throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", static_cast<uint32_t>(real_type));
 
    asn1_decode_binary_string(buffer, get_next_object(), real_type, type_tag, class_tag);
    return (*this);
    }
 
 BER_Decoder& BER_Decoder::decode(std::vector<uint8_t>& buffer,
-                                 ASN1_Tag real_type,
-                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+                                 ASN1_Type real_type,
+                                 ASN1_Type type_tag, ASN1_Class class_tag)
    {
-   if(real_type != ASN1_Tag::OCTET_STRING && real_type != ASN1_Tag::BIT_STRING)
-      throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", real_type);
+   if(real_type != ASN1_Type::OCTET_STRING && real_type != ASN1_Type::BIT_STRING)
+      throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", static_cast<uint32_t>(real_type));
 
    asn1_decode_binary_string(buffer, get_next_object(), real_type, type_tag, class_tag);
    return (*this);
