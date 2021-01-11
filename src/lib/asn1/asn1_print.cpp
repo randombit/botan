@@ -90,7 +90,7 @@ void ASN1_Formatter::decode(std::ostream& output,
 
       BER_Decoder data(bits);
 
-      if(intersects(class_tag, ASN1_Class::CONSTRUCTED))
+      if(intersects(class_tag, ASN1_Class::Constructed))
          {
          BER_Decoder cons_info(obj.bits(), obj.length());
 
@@ -105,7 +105,7 @@ void ASN1_Formatter::decode(std::ostream& output,
                              format_bin(type_tag, class_tag, bits));
             }
          }
-      else if(intersects(class_tag, ASN1_Class::APPLICATION) || intersects(class_tag, ASN1_Class::CONTEXT_SPECIFIC))
+      else if(intersects(class_tag, ASN1_Class::Application) || intersects(class_tag, ASN1_Class::ContextSpecific))
          {
          bool success_parsing_cs = false;
 
@@ -142,7 +142,7 @@ void ASN1_Formatter::decode(std::ostream& output,
                              format_bin(type_tag, class_tag, bits));
             }
          }
-      else if(type_tag == ASN1_Type::OBJECT_ID)
+      else if(type_tag == ASN1_Type::ObjectId)
          {
          OID oid;
          data.decode(oid);
@@ -159,17 +159,17 @@ void ASN1_Formatter::decode(std::ostream& output,
 
          output << format(type_tag, class_tag, level, length, out);
          }
-      else if(type_tag == ASN1_Type::INTEGER || type_tag == ASN1_Type::ENUMERATED)
+      else if(type_tag == ASN1_Type::Integer || type_tag == ASN1_Type::Enumerated)
          {
          BigInt number;
 
-         if(type_tag == ASN1_Type::INTEGER)
+         if(type_tag == ASN1_Type::Integer)
             {
             data.decode(number);
             }
-         else if(type_tag == ASN1_Type::ENUMERATED)
+         else if(type_tag == ASN1_Type::Enumerated)
             {
-            data.decode(number, ASN1_Type::ENUMERATED, class_tag);
+            data.decode(number, ASN1_Type::Enumerated, class_tag);
             }
 
          std::vector<uint8_t> rep = BigInt::encode(number);
@@ -178,17 +178,17 @@ void ASN1_Formatter::decode(std::ostream& output,
 
          output << format(type_tag, class_tag, level, length, hex_encode(rep));
          }
-      else if(type_tag == ASN1_Type::BOOLEAN)
+      else if(type_tag == ASN1_Type::Boolean)
          {
          bool boolean;
          data.decode(boolean);
          output << format(type_tag, class_tag, level, length, (boolean ? "true" : "false"));
          }
-      else if(type_tag == ASN1_Type::NULL_TAG)
+      else if(type_tag == ASN1_Type::Null)
          {
          output << format(type_tag, class_tag, level, length, "");
          }
-      else if(type_tag == ASN1_Type::OCTET_STRING || type_tag == ASN1_Type::BIT_STRING)
+      else if(type_tag == ASN1_Type::OctetString || type_tag == ASN1_Type::BitString)
          {
          std::vector<uint8_t> decoded_bits;
          data.decode(decoded_bits, type_tag);
@@ -224,7 +224,7 @@ void ASN1_Formatter::decode(std::ostream& output,
          data.decode(str);
          output << format(type_tag, class_tag, level, length, str.value());
          }
-      else if(type_tag == ASN1_Type::UTC_TIME || type_tag == ASN1_Type::GENERALIZED_TIME)
+      else if(type_tag == ASN1_Type::UtcTime || type_tag == ASN1_Type::GeneralizedTime)
          {
          ASN1_Time time;
          data.decode(time);
@@ -244,24 +244,24 @@ namespace {
 
 std::string format_type(ASN1_Type type_tag, ASN1_Class class_tag)
    {
-   if(class_tag == ASN1_Class::UNIVERSAL)
+   if(class_tag == ASN1_Class::Universal)
       return asn1_tag_to_string(type_tag);
 
-   if(class_tag == ASN1_Class::CONSTRUCTED && (type_tag == ASN1_Type::SEQUENCE || type_tag == ASN1_Type::SET))
+   if(class_tag == ASN1_Class::Constructed && (type_tag == ASN1_Type::Sequence || type_tag == ASN1_Type::Set))
       return asn1_tag_to_string(type_tag);
 
    std::string name;
 
-   if(intersects(class_tag, ASN1_Class::CONSTRUCTED))
+   if(intersects(class_tag, ASN1_Class::Constructed))
       name += "cons ";
 
    name += "[" + std::to_string(static_cast<uint32_t>(type_tag)) + "]";
 
-   if(intersects(class_tag, ASN1_Class::APPLICATION))
+   if(intersects(class_tag, ASN1_Class::Application))
       {
       name += " appl";
       }
-   if(intersects(class_tag, ASN1_Class::CONTEXT_SPECIFIC))
+   if(intersects(class_tag, ASN1_Class::ContextSpecific))
       {
       name += " context";
       }
@@ -284,7 +284,7 @@ std::string ASN1_Pretty_Printer::format(ASN1_Type type_tag,
       should_skip = true;
       }
 
-   if((type_tag == ASN1_Type::OCTET_STRING || type_tag == ASN1_Type::BIT_STRING) &&
+   if((type_tag == ASN1_Type::OctetString || type_tag == ASN1_Type::BitString) &&
       value.length() > m_print_binary_limit)
       {
       should_skip = true;

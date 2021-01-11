@@ -33,13 +33,13 @@ void BER_Object::assert_is_a(ASN1_Type expected_type_tag, ASN1_Class expected_cl
 
       msg << "Tag mismatch when decoding " << descr << " got ";
 
-      if(m_class_tag == ASN1_Class::NO_OBJECT && m_type_tag == ASN1_Type::NO_OBJECT)
+      if(m_class_tag == ASN1_Class::NoObject && m_type_tag == ASN1_Type::NoObject)
          {
          msg << "EOF";
          }
       else
          {
-         if(m_class_tag == ASN1_Class::UNIVERSAL || m_class_tag == ASN1_Class::CONSTRUCTED)
+         if(m_class_tag == ASN1_Class::Universal || m_class_tag == ASN1_Class::Constructed)
             {
             msg << asn1_tag_to_string(m_type_tag);
             }
@@ -53,7 +53,7 @@ void BER_Object::assert_is_a(ASN1_Type expected_type_tag, ASN1_Class expected_cl
 
       msg << " expected ";
 
-      if(expected_class_tag == ASN1_Class::UNIVERSAL || expected_class_tag == ASN1_Class::CONSTRUCTED)
+      if(expected_class_tag == ASN1_Class::Universal || expected_class_tag == ASN1_Class::Constructed)
          {
          msg << asn1_tag_to_string(expected_type_tag);
          }
@@ -88,17 +88,17 @@ std::string asn1_class_to_string(ASN1_Class type)
    {
    switch(type)
       {
-      case ASN1_Class::UNIVERSAL:
+      case ASN1_Class::Universal:
          return "UNIVERSAL";
-      case ASN1_Class::CONSTRUCTED:
+      case ASN1_Class::Constructed:
          return "CONSTRUCTED";
-      case ASN1_Class::CONTEXT_SPECIFIC:
+      case ASN1_Class::ContextSpecific:
          return "CONTEXT_SPECIFIC";
-      case ASN1_Class::APPLICATION:
+      case ASN1_Class::Application:
          return "APPLICATION";
-      case ASN1_Class::PRIVATE:
+      case ASN1_Class::Private:
          return "PRIVATE";
-      case ASN1_Class::NO_OBJECT:
+      case ASN1_Class::NoObject:
          return "NO_OBJECT";
       default:
          return "CLASS(" + std::to_string(static_cast<size_t>(type)) + ")";
@@ -109,64 +109,64 @@ std::string asn1_tag_to_string(ASN1_Type type)
    {
    switch(type)
       {
-      case ASN1_Type::SEQUENCE:
+      case ASN1_Type::Sequence:
          return "SEQUENCE";
 
-      case ASN1_Type::SET:
+      case ASN1_Type::Set:
          return "SET";
 
-      case ASN1_Type::PRINTABLE_STRING:
+      case ASN1_Type::PrintableString:
          return "PRINTABLE STRING";
 
-      case ASN1_Type::NUMERIC_STRING:
+      case ASN1_Type::NumericString:
          return "NUMERIC STRING";
 
-      case ASN1_Type::IA5_STRING:
+      case ASN1_Type::Ia5String:
          return "IA5 STRING";
 
-      case ASN1_Type::T61_STRING:
+      case ASN1_Type::T61String:
          return "T61 STRING";
 
-      case ASN1_Type::UTF8_STRING:
+      case ASN1_Type::Utf8String:
          return "UTF8 STRING";
 
-      case ASN1_Type::VISIBLE_STRING:
+      case ASN1_Type::VisibleString:
          return "VISIBLE STRING";
 
-      case ASN1_Type::BMP_STRING:
+      case ASN1_Type::BmpString:
          return "BMP STRING";
 
-      case ASN1_Type::UNIVERSAL_STRING:
+      case ASN1_Type::UniversalString:
          return "UNIVERSAL STRING";
 
-      case ASN1_Type::UTC_TIME:
+      case ASN1_Type::UtcTime:
          return "UTC TIME";
 
-      case ASN1_Type::GENERALIZED_TIME:
+      case ASN1_Type::GeneralizedTime:
          return "GENERALIZED TIME";
 
-      case ASN1_Type::OCTET_STRING:
+      case ASN1_Type::OctetString:
          return "OCTET STRING";
 
-      case ASN1_Type::BIT_STRING:
+      case ASN1_Type::BitString:
          return "BIT STRING";
 
-      case ASN1_Type::ENUMERATED:
+      case ASN1_Type::Enumerated:
          return "ENUMERATED";
 
-      case ASN1_Type::INTEGER:
+      case ASN1_Type::Integer:
          return "INTEGER";
 
-      case ASN1_Type::NULL_TAG:
+      case ASN1_Type::Null:
          return "NULL";
 
-      case ASN1_Type::OBJECT_ID:
+      case ASN1_Type::ObjectId:
          return "OBJECT";
 
-      case ASN1_Type::BOOLEAN:
+      case ASN1_Type::Boolean:
          return "BOOLEAN";
 
-      case ASN1_Type::NO_OBJECT:
+      case ASN1_Type::NoObject:
          return "NO_OBJECT";
 
       default:
@@ -224,7 +224,7 @@ bool maybe_BER(DataSource& source)
       throw Stream_IO_Error("ASN1::maybe_BER: Source was empty");
       }
 
-   const auto cons_seq = static_cast<uint8_t>(ASN1_Class::CONSTRUCTED) | static_cast<uint8_t>(ASN1_Type::SEQUENCE);
+   const auto cons_seq = static_cast<uint8_t>(ASN1_Class::Constructed) | static_cast<uint8_t>(ASN1_Type::Sequence);
    if(first_u8 == cons_seq)
       return true;
    return false;

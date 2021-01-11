@@ -94,8 +94,8 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
             .start_sequence()
             .encode(x1)
             .encode(y1)
-            .encode(C3, ASN1_Type::OCTET_STRING)
-            .encode(masked_msg, ASN1_Type::OCTET_STRING)
+            .encode(C3, ASN1_Type::OctetString)
+            .encode(masked_msg, ASN1_Type::OctetString)
             .end_cons()
             .get_contents();
          }
@@ -163,8 +163,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
             .start_sequence()
             .decode(x1)
             .decode(y1)
-            .decode(C3, ASN1_Type::OCTET_STRING)
-            .decode(masked_msg, ASN1_Type::OCTET_STRING)
+            .decode(C3, ASN1_Type::OctetString)
+            .decode(masked_msg, ASN1_Type::OctetString)
             .end_cons()
             .verify_end();
 
@@ -173,8 +173,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
             .start_sequence()
             .encode(x1)
             .encode(y1)
-            .encode(C3, ASN1_Type::OCTET_STRING)
-            .encode(masked_msg, ASN1_Type::OCTET_STRING)
+            .encode(C3, ASN1_Type::OctetString)
+            .encode(masked_msg, ASN1_Type::OctetString)
             .end_cons();
 
          if(recode_ctext.size() != ciphertext_len)

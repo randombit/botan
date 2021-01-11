@@ -59,8 +59,8 @@ void CertID::encode_into(class DER_Encoder& to) const
    {
    to.start_sequence()
       .encode(m_hash_id)
-      .encode(m_issuer_dn_hash, ASN1_Type::OCTET_STRING)
-      .encode(m_issuer_key_hash, ASN1_Type::OCTET_STRING)
+      .encode(m_issuer_dn_hash, ASN1_Type::OctetString)
+      .encode(m_issuer_key_hash, ASN1_Type::OctetString)
       .encode(m_subject_serial)
       .end_cons();
    }
@@ -69,8 +69,8 @@ void CertID::decode_from(class BER_Decoder& from)
    {
    from.start_sequence()
       .decode(m_hash_id)
-      .decode(m_issuer_dn_hash, ASN1_Type::OCTET_STRING)
-      .decode(m_issuer_key_hash, ASN1_Type::OCTET_STRING)
+      .decode(m_issuer_dn_hash, ASN1_Type::OctetString)
+      .decode(m_issuer_key_hash, ASN1_Type::OctetString)
       .decode(m_subject_serial)
       .end_cons();
 
@@ -91,10 +91,10 @@ void SingleResponse::decode_from(class BER_Decoder& from)
       .get_next(cert_status)
       .decode(m_thisupdate)
       .decode_optional(m_nextupdate, ASN1_Type(0),
-                       ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED)
+                       ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
       .decode_optional(extensions,
                        ASN1_Type(1),
-                       ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED)
+                       ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
       .end_cons();
 
    /* CertStatus ::= CHOICE {

@@ -80,7 +80,7 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
 Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
                                              const secure_vector<uint8_t>& key_bits)
    {
-   BER_Decoder(key_bits).decode(m_private, ASN1_Type::OCTET_STRING).discard_remaining();
+   BER_Decoder(key_bits).decode(m_private, ASN1_Type::OctetString).discard_remaining();
 
    size_check(m_private.size(), "private key");
    m_public.resize(32);
@@ -94,7 +94,7 @@ std::unique_ptr<Public_Key> Curve25519_PrivateKey::public_key() const
 
 secure_vector<uint8_t> Curve25519_PrivateKey::private_key_bits() const
    {
-   return DER_Encoder().encode(m_private, ASN1_Type::OCTET_STRING).get_contents();
+   return DER_Encoder().encode(m_private, ASN1_Type::OctetString).get_contents();
    }
 
 bool Curve25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const

@@ -78,7 +78,7 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier&,
                                        const secure_vector<uint8_t>& key_bits)
    {
    secure_vector<uint8_t> bits;
-   BER_Decoder(key_bits).decode(bits, ASN1_Type::OCTET_STRING).discard_remaining();
+   BER_Decoder(key_bits).decode(bits, ASN1_Type::OctetString).discard_remaining();
 
    if(bits.size() != 32)
       throw Decoding_Error("Invalid size for Ed25519 private key");
@@ -95,7 +95,7 @@ std::unique_ptr<Public_Key> Ed25519_PrivateKey::public_key() const
 secure_vector<uint8_t> Ed25519_PrivateKey::private_key_bits() const
    {
    secure_vector<uint8_t> bits(&m_private[0], &m_private[32]);
-   return DER_Encoder().encode(bits, ASN1_Type::OCTET_STRING).get_contents();
+   return DER_Encoder().encode(bits, ASN1_Type::OctetString).get_contents();
    }
 
 bool Ed25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const

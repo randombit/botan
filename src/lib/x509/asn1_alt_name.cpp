@@ -141,15 +141,15 @@ void encode_entries(DER_Encoder& encoder,
       {
       if(type == "RFC822" || type == "DNS" || type == "URI")
          {
-         ASN1_String asn1_string(i->second, ASN1_Type::IA5_STRING);
-         encoder.add_object(tagging, ASN1_Class::CONTEXT_SPECIFIC, asn1_string.value());
+         ASN1_String asn1_string(i->second, ASN1_Type::Ia5String);
+         encoder.add_object(tagging, ASN1_Class::ContextSpecific, asn1_string.value());
          }
       else if(type == "IP")
          {
          const uint32_t ip = string_to_ipv4(i->second);
          uint8_t ip_buf[4] = { 0 };
          store_be(ip, ip_buf);
-         encoder.add_object(tagging, ASN1_Class::CONTEXT_SPECIFIC, ip_buf, 4);
+         encoder.add_object(tagging, ASN1_Class::ContextSpecific, ip_buf, 4);
          }
       else if (type == "DN")
          {
@@ -202,7 +202,7 @@ void AlternativeName::decode_from(BER_Decoder& source)
       {
       BER_Object obj = names.get_next_object();
 
-      if(obj.is_a(0, ASN1_Class::CONTEXT_SPECIFIC))
+      if(obj.is_a(0, ASN1_Class::ContextSpecific))
          {
          BER_Decoder othername(obj);
 
@@ -213,7 +213,7 @@ void AlternativeName::decode_from(BER_Decoder& source)
             BER_Object othername_value_outer = othername.get_next_object();
             othername.verify_end();
 
-            if(othername_value_outer.is_a(0, ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC) == false)
+            if(othername_value_outer.is_a(0, ASN1_Class::ExplicitContextSpecific) == false)
                throw Decoding_Error("Invalid tags on otherName value");
 
             BER_Decoder othername_value_inner(othername_value_outer);
@@ -221,25 +221,25 @@ void AlternativeName::decode_from(BER_Decoder& source)
             BER_Object value = othername_value_inner.get_next_object();
             othername_value_inner.verify_end();
 
-            if(ASN1_String::is_string_type(value.type()) && value.get_class() == ASN1_Class::UNIVERSAL)
+            if(ASN1_String::is_string_type(value.type()) && value.get_class() == ASN1_Class::Universal)
                {
                add_othername(oid, ASN1::to_string(value), value.type());
                }
             }
          }
-      if(obj.is_a(1, ASN1_Class::CONTEXT_SPECIFIC))
+      if(obj.is_a(1, ASN1_Class::ContextSpecific))
          {
          add_attribute("RFC822", ASN1::to_string(obj));
          }
-      else if(obj.is_a(2, ASN1_Class::CONTEXT_SPECIFIC))
+      else if(obj.is_a(2, ASN1_Class::ContextSpecific))
          {
          add_attribute("DNS", ASN1::to_string(obj));
          }
-      else if(obj.is_a(6, ASN1_Class::CONTEXT_SPECIFIC))
+      else if(obj.is_a(6, ASN1_Class::ContextSpecific))
          {
          add_attribute("URI", ASN1::to_string(obj));
          }
-      else if(obj.is_a(4, ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED))
+      else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed))
          {
          BER_Decoder dec(obj);
          X509_DN dn;
@@ -250,7 +250,7 @@ void AlternativeName::decode_from(BER_Decoder& source)
 
          add_attribute("DN", ss.str());
          }
-      else if(obj.is_a(7, ASN1_Class::CONTEXT_SPECIFIC))
+      else if(obj.is_a(7, ASN1_Class::ContextSpecific))
          {
          if(obj.length() == 4)
             {

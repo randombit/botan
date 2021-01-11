@@ -34,10 +34,10 @@ Pss_params decode_pss_params(const std::vector<uint8_t>& encoded_pss_params)
    Pss_params pss_parameter;
    BER_Decoder(encoded_pss_params)
       .start_sequence()
-         .decode_optional(pss_parameter.hash_algo, ASN1_Type(0), ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC, default_hash)
-         .decode_optional(pss_parameter.mask_gen_algo, ASN1_Type(1), ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC, default_mgf)
-         .decode_optional(pss_parameter.salt_len, ASN1_Type(2), ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC, size_t(20))
-         .decode_optional(pss_parameter.trailer_field, ASN1_Type(3), ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC, size_t(1))
+         .decode_optional(pss_parameter.hash_algo, ASN1_Type(0), ASN1_Class::ExplicitContextSpecific, default_hash)
+         .decode_optional(pss_parameter.mask_gen_algo, ASN1_Type(1), ASN1_Class::ExplicitContextSpecific, default_mgf)
+         .decode_optional(pss_parameter.salt_len, ASN1_Type(2), ASN1_Class::ExplicitContextSpecific, size_t(20))
+         .decode_optional(pss_parameter.trailer_field, ASN1_Type(3), ASN1_Class::ExplicitContextSpecific, size_t(1))
       .end_cons();
 
    BER_Decoder(pss_parameter.mask_gen_algo.get_parameters()).decode(pss_parameter.mask_gen_hash);
@@ -96,7 +96,7 @@ void X509_Object::encode_into(DER_Encoder& to) const
             .raw_bytes(signed_body())
          .end_cons()
          .encode(signature_algorithm())
-         .encode(signature(), ASN1_Type::BIT_STRING)
+         .encode(signature(), ASN1_Type::BitString)
       .end_cons();
    }
 
@@ -110,7 +110,7 @@ void X509_Object::decode_from(BER_Decoder& from)
             .raw_bytes(m_tbs_bits)
          .end_cons()
          .decode(m_sig_algo)
-         .decode(m_sig, ASN1_Type::BIT_STRING)
+         .decode(m_sig, ASN1_Type::BitString)
       .end_cons();
 
    force_decode();
@@ -312,7 +312,7 @@ std::vector<uint8_t> X509_Object::make_signed(PK_Signer* signer,
       .start_sequence()
          .raw_bytes(tbs_bits)
          .encode(algo)
-         .encode(signature, ASN1_Type::BIT_STRING)
+         .encode(signature, ASN1_Type::BitString)
       .end_cons();
 
    return output;

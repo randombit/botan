@@ -32,7 +32,7 @@ void decode_optional_list(BER_Decoder& ber,
    {
    BER_Object obj = ber.get_next_object();
 
-   if(obj.is_a(tag, ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED) == false)
+   if(obj.is_a(tag, ASN1_Class::ContextSpecific | ASN1_Class::Constructed) == false)
       {
       ber.push_back(obj);
       return;
@@ -105,7 +105,7 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
    size_t resp_status = 0;
 
-   response_outer.decode(resp_status, ASN1_Type::ENUMERATED, ASN1_Class::UNIVERSAL);
+   response_outer.decode(resp_status, ASN1_Type::Enumerated, ASN1_Class::Universal);
 
    m_status = static_cast<Response_Status_Code>(resp_status);
 
@@ -127,7 +127,7 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
            .raw_bytes(m_tbs_bits)
          .end_cons()
          .decode(m_sig_algo)
-         .decode(m_signature, ASN1_Type::BIT_STRING);
+         .decode(m_signature, ASN1_Type::BitString);
       decode_optional_list(basicresponse, ASN1_Type(0), m_certs);
 
       size_t responsedata_version = 0;
@@ -135,20 +135,20 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
       BER_Decoder(m_tbs_bits)
          .decode_optional(responsedata_version, ASN1_Type(0),
-                          ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED)
+                          ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
 
          .decode_optional(m_signer_name, ASN1_Type(1),
-                          ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED)
+                          ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
 
-         .decode_optional_string(m_key_hash, ASN1_Type::OCTET_STRING, 2,
-                                 ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED)
+         .decode_optional_string(m_key_hash, ASN1_Type::OctetString, 2,
+                                 ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
 
          .decode(m_produced_at)
 
          .decode_list(m_responses)
 
          .decode_optional(extensions, ASN1_Type(1),
-                          ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED);
+                          ASN1_Class::ContextSpecific | ASN1_Class::Constructed);
       }
 
    response_outer.end_cons();

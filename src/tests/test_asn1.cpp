@@ -310,7 +310,7 @@ class ASN1_Time_Parsing_Tests final : public Text_Based_Test
             }
 
          const Botan::ASN1_Type tag =
-            (tag_str == "UTC" || tag_str == "UTC.invalid") ? Botan::ASN1_Type::UTC_TIME : Botan::ASN1_Type::GENERALIZED_TIME;
+            (tag_str == "UTC" || tag_str == "UTC.invalid") ? Botan::ASN1_Type::UtcTime : Botan::ASN1_Type::GeneralizedTime;
 
          const bool valid = tag_str.find(".invalid") == std::string::npos;
 

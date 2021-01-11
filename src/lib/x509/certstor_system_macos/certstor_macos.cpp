@@ -81,7 +81,7 @@ X509_DN normalize(const X509_DN& dn)
       const auto oid = rdn.first;
       auto str = rdn.second;
 
-      if(str.tagging() == ASN1_Type::PRINTABLE_STRING)
+      if(str.tagging() == ASN1_Type::PrintableString)
          {
          std::string normalized;
          normalized.reserve(str.value().size());
