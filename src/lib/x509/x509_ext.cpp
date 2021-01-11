@@ -840,7 +840,7 @@ void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&
 void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder& ber)
    {
    ber.start_sequence()
-      .start_cons(ASN1_Type(0), ASN1_Class::CONTEXT_SPECIFIC)
+      .start_context_specific(0)
         .decode_optional_implicit(m_point, ASN1_Type(0),
                                   ASN1_Class::CONTEXT_SPECIFIC | ASN1_Class::CONSTRUCTED,
                                   ASN1_Type::SEQUENCE, ASN1_Class::CONSTRUCTED)

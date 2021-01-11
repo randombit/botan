@@ -61,12 +61,26 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
       BOTAN_DEPRECATED("Use DER_Encoder(vector) instead")
       std::vector<uint8_t> get_contents_unlocked();
 
-      DER_Encoder& start_cons(ASN1_Type type_tag,
-                              ASN1_Class class_tag = ASN1_Class::UNIVERSAL);
+      DER_Encoder& start_cons(ASN1_Type type_tag, ASN1_Class class_tag);
 
       DER_Encoder& start_sequence()
          {
-         return start_cons(ASN1_Type::SEQUENCE);
+         return start_cons(ASN1_Type::SEQUENCE, ASN1_Class::UNIVERSAL);
+         }
+
+      DER_Encoder& start_set()
+         {
+         return start_cons(ASN1_Type::SET, ASN1_Class::UNIVERSAL);
+         }
+
+      DER_Encoder& start_context_specific(uint32_t tag)
+         {
+         return start_cons(ASN1_Type(tag), ASN1_Class::CONTEXT_SPECIFIC);
+         }
+
+      DER_Encoder& start_explicit_context_specific(uint32_t tag)
+         {
+         return start_cons(ASN1_Type(tag), ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC);
          }
 
       DER_Encoder& end_cons();

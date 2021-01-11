@@ -146,7 +146,7 @@ secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
       .start_sequence()
          .encode(static_cast<size_t>(1))
          .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()), ASN1_Type::OCTET_STRING)
-         .start_cons(ASN1_Type(1), ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC)
+         .start_explicit_context_specific(1)
             .encode(m_public_key.encode(PointGFp::Compression_Type::UNCOMPRESSED), ASN1_Type::BIT_STRING)
          .end_cons()
       .end_cons()
