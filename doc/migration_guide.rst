@@ -61,3 +61,8 @@ Use of ``enum class``
 Several enumerations where modified to become ``enum class``, including
 ``DL_Group::Format``, ``CRL_Code``, ``EC_Group_Encoding``,
 
+ASN.1 enums
+---------------
+
+The enum ``ASN1_Tag`` has been split into ``ASN1_Type`` and ``ASN1_Class``.
+Unlike ``ASN1_Tag``, these new enums are ``enum class``.
