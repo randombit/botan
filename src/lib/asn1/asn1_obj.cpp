@@ -124,7 +124,7 @@ std::string asn1_tag_to_string(ASN1_Type type)
       case ASN1_Type::Ia5String:
          return "IA5 STRING";
 
-      case ASN1_Type::T61String:
+      case ASN1_Type::TeletexString:
          return "T61 STRING";
 
       case ASN1_Type::Utf8String:

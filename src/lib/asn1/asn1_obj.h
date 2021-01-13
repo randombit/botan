@@ -51,7 +51,7 @@ enum class ASN1_Type : uint32_t {
    Utf8String       = 0x0C,
    NumericString    = 0x12,
    PrintableString  = 0x13,
-   T61String        = 0x14,
+   TeletexString    = 0x14,
    Ia5String        = 0x16,
    VisibleString    = 0x1A,
    UniversalString  = 0x1C,
