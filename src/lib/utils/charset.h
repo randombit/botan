@@ -1,5 +1,5 @@
 /*
-* Character Set Handling
+* Character Set Conversions
 * (C) 1999-2007 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -34,20 +34,6 @@ BOTAN_TEST_API std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len);
 * If a character outside the Latin-1 range is encountered, an exception is thrown.
 */
 BOTAN_TEST_API std::string latin1_to_utf8(const std::string& iso8859);
-
-namespace Charset {
-
-/*
-* Simple character classifier functions
-*/
-bool is_digit(char c);
-bool is_space(char c);
-bool caseless_cmp(char x, char y);
-
-uint8_t char2digit(char c);
-char digit2char(uint8_t b);
-
-}
 
 }
 
