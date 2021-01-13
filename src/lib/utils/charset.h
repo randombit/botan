@@ -33,10 +33,6 @@ BOTAN_TEST_API std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len);
 * Convert a UTF-8 string to Latin-1
 * If a character outside the Latin-1 range is encountered, an exception is thrown.
 */
-BOTAN_TEST_API std::string utf8_to_latin1(const std::string& utf8);
-
-BOTAN_TEST_API std::string ucs2_to_latin1(const std::string& ucs2);
-
 BOTAN_TEST_API std::string latin1_to_utf8(const std::string& iso8859);
 
 namespace Charset {

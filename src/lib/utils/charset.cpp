@@ -93,66 +93,6 @@ std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len)
    }
 
 /*
-* Convert from UTF-8 to ISO 8859-1
-*/
-std::string utf8_to_latin1(const std::string& utf8)
-   {
-   std::string iso8859;
-
-   size_t position = 0;
-   while(position != utf8.size())
-      {
-      const uint8_t c1 = static_cast<uint8_t>(utf8[position++]);
-
-      if(c1 <= 0x7F)
-         {
-         iso8859 += static_cast<char>(c1);
-         }
-      else if(c1 >= 0xC0 && c1 <= 0xC7)
-         {
-         if(position == utf8.size())
-            throw Decoding_Error("UTF-8: sequence truncated");
-
-         const uint8_t c2 = static_cast<uint8_t>(utf8[position++]);
-         const uint8_t iso_char = ((c1 & 0x07) << 6) | (c2 & 0x3F);
-
-         if(iso_char <= 0x7F)
-            throw Decoding_Error("UTF-8: sequence longer than needed");
-
-         iso8859 += static_cast<char>(iso_char);
-         }
-      else
-         throw Decoding_Error("UTF-8: Unicode chars not in Latin1 used");
-      }
-
-   return iso8859;
-   }
-
-/*
-* Convert from UCS-2 to ISO 8859-1
-*/
-std::string ucs2_to_latin1(const std::string& ucs2)
-   {
-   if(ucs2.size() % 2 == 1)
-      throw Decoding_Error("UCS-2 string has an odd number of bytes");
-
-   std::string latin1;
-
-   for(size_t i = 0; i != ucs2.size(); i += 2)
-      {
-      const uint8_t c1 = ucs2[i];
-      const uint8_t c2 = ucs2[i+1];
-
-      if(c1 != 0)
-         throw Decoding_Error("UCS-2 has non-Latin1 characters");
-
-      latin1 += static_cast<char>(c2);
-      }
-
-   return latin1;
-   }
-
-/*
 * Convert from ISO 8859-1 to UTF-8
 */
 std::string latin1_to_utf8(const std::string& iso8859)
