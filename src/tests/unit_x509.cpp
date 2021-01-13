@@ -562,6 +562,30 @@ Test::Result test_x509_bmpstring()
    return result;
    }
 
+Test::Result test_x509_teletex()
+   {
+   Test::Result result("X509 with TeletexString encoded fields");
+
+   try
+      {
+      Botan::X509_Certificate teletex_cert(Test::data_file("x509/misc/teletex_dn.der"));
+
+      const Botan::X509_DN& issuer_dn = teletex_cert.issuer_dn();
+
+      const std::string common_name =
+         "neam Gesellschaft f\xc3\xbcr Kommunikationsl\xc3\xb6sungen mbH";
+
+      result.test_eq("O",  issuer_dn.get_first_attribute("O"), "neam CA");
+      result.test_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
+      }
+   catch (const Botan::Decoding_Error &ex)
+      {
+      result.test_failure(ex.what());
+      }
+
+   return result;
+   }
+
 Test::Result test_x509_authority_info_access_extension()
    {
    Test::Result result("X509 with PKIX.AuthorityInformationAccess extension");
@@ -1715,6 +1739,7 @@ class X509_Cert_Unit_Tests final : public Test
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
          results.push_back(test_x509_utf8());
          results.push_back(test_x509_bmpstring());
+         results.push_back(test_x509_teletex());
          results.push_back(test_crl_dn_name());
          results.push_back(test_x509_decode_list());
          results.push_back(test_rsa_oaep());

@@ -95,12 +95,12 @@ std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len)
 /*
 * Convert from ISO 8859-1 to UTF-8
 */
-std::string latin1_to_utf8(const std::string& iso8859)
+std::string latin1_to_utf8(const uint8_t chars[], size_t len)
    {
    std::string utf8;
-   for(size_t i = 0; i != iso8859.size(); ++i)
+   for(size_t i = 0; i != len; ++i)
       {
-      const uint8_t c = static_cast<uint8_t>(iso8859[i]);
+      const uint8_t c = static_cast<uint8_t>(chars[i]);
 
       if(c <= 0x7F)
          utf8 += static_cast<char>(c);

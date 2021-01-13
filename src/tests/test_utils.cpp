@@ -760,7 +760,7 @@ class Charset_Tests final : public Text_Based_Test
             }
          else if(type == "LATIN1-UTF8")
             {
-            converted = Botan::latin1_to_utf8(in_str);
+            converted = Botan::latin1_to_utf8(in.data(), in.size());
             }
          else
             {
