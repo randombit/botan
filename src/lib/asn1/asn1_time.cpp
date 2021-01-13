@@ -27,7 +27,7 @@ ASN1_Time::ASN1_Time(const std::chrono::system_clock::time_point& time)
    m_minute = cal.minutes();
    m_second = cal.seconds();
 
-   m_tag = (m_year >= 2050) ? ASN1_Type::GENERALIZED_TIME : ASN1_Type::UTC_TIME;
+   m_tag = (m_year >= 2050) ? ASN1_Type::GeneralizedTime : ASN1_Type::UtcTime;
    }
 
 ASN1_Time::ASN1_Time(const std::string& t_spec, ASN1_Type tag)
@@ -35,12 +35,22 @@ ASN1_Time::ASN1_Time(const std::string& t_spec, ASN1_Type tag)
    set_to(t_spec, tag);
    }
 
+ASN1_Time::ASN1_Time(const std::string& t_spec)
+   {
+   if(t_spec.size() == 13)
+      set_to(t_spec, ASN1_Type::UtcTime);
+   else if(t_spec.size() == 15)
+      set_to(t_spec, ASN1_Type::GeneralizedTime);
+   else
+      throw Invalid_Argument("Time string could not be parsed as GeneralizedTime or UTCTime.");
+   }
+
 void ASN1_Time::encode_into(DER_Encoder& der) const
    {
-   BOTAN_ARG_CHECK(m_tag == ASN1_Type::UTC_TIME || m_tag == ASN1_Type::GENERALIZED_TIME,
+   BOTAN_ARG_CHECK(m_tag == ASN1_Type::UtcTime || m_tag == ASN1_Type::GeneralizedTime,
                    "ASN1_Time: Bad encoding tag");
 
-   der.add_object(m_tag, ASN1_Class::UNIVERSAL, to_string());
+   der.add_object(m_tag, ASN1_Class::Universal, to_string());
    }
 
 void ASN1_Time::decode_from(BER_Decoder& source)
@@ -57,7 +67,7 @@ std::string ASN1_Time::to_string() const
 
    uint32_t full_year = m_year;
 
-   if(m_tag == ASN1_Type::UTC_TIME)
+   if(m_tag == ASN1_Type::UtcTime)
       {
       if(m_year < 1950 || m_year >= 2050)
          throw Encoding_Error("ASN1_Time: The time " + readable_string() +
@@ -82,7 +92,7 @@ std::string ASN1_Time::to_string() const
 
    std::string repr = std::to_string(int_repr) + "Z";
 
-   uint32_t desired_size = (m_tag == ASN1_Type::UTC_TIME) ? 13 : 15;
+   uint32_t desired_size = (m_tag == ASN1_Type::UtcTime) ? 13 : 15;
 
    while(repr.size() < desired_size)
       repr = "0" + repr;
@@ -140,41 +150,20 @@ int32_t ASN1_Time::cmp(const ASN1_Time& other) const
 
 void ASN1_Time::set_to(const std::string& t_spec, ASN1_Type spec_tag)
    {
-   if(spec_tag == ASN1_Type::UTC_OR_GENERALIZED_TIME)
-      {
-      try
-         {
-         set_to(t_spec, ASN1_Type::GENERALIZED_TIME);
-         return;
-         }
-      catch(Invalid_Argument&) {} // Not a generalized time. Continue
+   BOTAN_ASSERT(spec_tag == ASN1_Type::UtcTime || spec_tag == ASN1_Type::GeneralizedTime, "Invalid tag.");
 
-      try
-         {
-         set_to(t_spec, ASN1_Type::UTC_TIME);
-         return;
-         }
-      catch(Invalid_Argument&) {} // Not a UTC time. Continue
-
-      throw Invalid_Argument("Time string could not be parsed as GeneralizedTime or UTCTime.");
-      }
-
-   BOTAN_ASSERT(spec_tag == ASN1_Type::UTC_TIME || spec_tag == ASN1_Type::GENERALIZED_TIME, "Invalid tag.");
-
-   BOTAN_ARG_CHECK(t_spec.size() > 0, "Time string must not be empty.");
-
-   BOTAN_ARG_CHECK(t_spec.back() == 'Z', "Botan does not support times with timezones other than Z");
-
-   if(spec_tag == ASN1_Type::GENERALIZED_TIME)
+   if(spec_tag == ASN1_Type::GeneralizedTime)
       {
       BOTAN_ARG_CHECK(t_spec.size() == 15, "Invalid GeneralizedTime string");
       }
-   else if(spec_tag == ASN1_Type::UTC_TIME)
+   else if(spec_tag == ASN1_Type::UtcTime)
       {
       BOTAN_ARG_CHECK(t_spec.size() == 13, "Invalid UTCTime string");
       }
 
-   const size_t YEAR_SIZE = (spec_tag == ASN1_Type::UTC_TIME) ? 2 : 4;
+   BOTAN_ARG_CHECK(t_spec.back() == 'Z', "Botan does not support ASN1 times with timezones other than Z");
+
+   const size_t YEAR_SIZE = (spec_tag == ASN1_Type::UtcTime) ? 2 : 4;
 
    std::vector<std::string> params;
    std::string current;
@@ -202,7 +191,7 @@ void ASN1_Time::set_to(const std::string& t_spec, ASN1_Type spec_tag)
    m_second = (params.size() == 6) ? to_u32bit(params[5]) : 0;
    m_tag    = spec_tag;
 
-   if(spec_tag == ASN1_Type::UTC_TIME)
+   if(spec_tag == ASN1_Type::UtcTime)
       {
       if(m_year >= 50) m_year += 1900;
       else             m_year += 2000;
@@ -240,7 +229,7 @@ bool ASN1_Time::passes_sanity_check() const
    if(m_hour >= 24 || m_minute >= 60 || m_second > 60)
       return false;
 
-   if (m_tag == ASN1_Type::UTC_TIME)
+   if (m_tag == ASN1_Type::UtcTime)
       {
       /*
       UTCTime limits the value of components such that leap seconds

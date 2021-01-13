@@ -299,17 +299,17 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
    BER_Decoder ber(bits, len);
    BER_Object obj = ber.get_next_object();
 
-   if(obj.type() == ASN1_Type::NULL_TAG)
+   if(obj.type() == ASN1_Type::Null)
       {
       throw Decoding_Error("Cannot handle ImplicitCA ECC parameters");
       }
-   else if(obj.type() == ASN1_Type::OBJECT_ID)
+   else if(obj.type() == ASN1_Type::ObjectId)
       {
       OID dom_par_oid;
       BER_Decoder(bits, len).decode(dom_par_oid);
       return ec_group_data().lookup(dom_par_oid);
       }
-   else if(obj.type() == ASN1_Type::SEQUENCE)
+   else if(obj.type() == ASN1_Type::Sequence)
       {
       BigInt p, a, b, order, cofactor;
       std::vector<uint8_t> base_pt;
@@ -326,9 +326,9 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
            .start_sequence()
              .decode_octet_string_bigint(a)
              .decode_octet_string_bigint(b)
-             .decode_optional_string(seed, ASN1_Type::BIT_STRING, ASN1_Type::BIT_STRING)
+             .decode_optional_string(seed, ASN1_Type::BitString, ASN1_Type::BitString)
            .end_cons()
-           .decode(base_pt, ASN1_Type::OCTET_STRING)
+           .decode(base_pt, ASN1_Type::OctetString)
            .decode(order)
            .decode(cofactor)
          .end_cons()
@@ -627,11 +627,11 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
             .end_cons()
             .start_sequence()
                .encode(BigInt::encode_1363(get_a(), p_bytes),
-                       ASN1_Type::OCTET_STRING)
+                       ASN1_Type::OctetString)
                .encode(BigInt::encode_1363(get_b(), p_bytes),
-                       ASN1_Type::OCTET_STRING)
+                       ASN1_Type::OctetString)
             .end_cons()
-              .encode(get_base_point().encode(PointGFp::UNCOMPRESSED), ASN1_Type::OCTET_STRING)
+              .encode(get_base_point().encode(PointGFp::UNCOMPRESSED), ASN1_Type::OctetString)
             .encode(get_order())
             .encode(get_cofactor())
          .end_cons();

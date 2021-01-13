@@ -36,7 +36,7 @@ void Attribute::encode_into(DER_Encoder& codec) const
    {
    codec.start_sequence()
       .encode(m_oid)
-      .start_cons(ASN1_Type::SET)
+      .start_set()
          .raw_bytes(m_parameters)
       .end_cons()
    .end_cons();
@@ -49,7 +49,7 @@ void Attribute::decode_from(BER_Decoder& codec)
    {
    codec.start_sequence()
       .decode(m_oid)
-      .start_cons(ASN1_Type::SET)
+      .start_set()
          .raw_bytes(m_parameters)
       .end_cons()
    .end_cons();

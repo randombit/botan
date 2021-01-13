@@ -93,7 +93,7 @@ std::vector<uint8_t> McEliece_PublicKey::public_key_bits() const
          .encode(static_cast<size_t>(get_code_length()))
          .encode(static_cast<size_t>(get_t()))
          .end_cons()
-      .encode(m_public_matrix, ASN1_Type::OCTET_STRING)
+      .encode(m_public_matrix, ASN1_Type::OctetString)
       .end_cons();
    return output;
    }
@@ -118,7 +118,7 @@ McEliece_PublicKey::McEliece_PublicKey(const std::vector<uint8_t>& key_bits)
       .decode(n)
       .decode(t)
       .end_cons()
-      .decode(m_public_matrix, ASN1_Type::OCTET_STRING)
+      .decode(m_public_matrix, ASN1_Type::OctetString)
       .end_cons();
    m_t = t;
    m_code_length = n;
@@ -132,12 +132,12 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const
       .encode(static_cast<size_t>(get_code_length()))
       .encode(static_cast<size_t>(get_t()))
       .end_cons()
-      .encode(m_public_matrix, ASN1_Type::OCTET_STRING)
-      .encode(m_g[0].encode(), ASN1_Type::OCTET_STRING); // g as octet string
+      .encode(m_public_matrix, ASN1_Type::OctetString)
+      .encode(m_g[0].encode(), ASN1_Type::OctetString); // g as octet string
    enc.start_sequence();
    for(size_t i = 0; i < m_sqrtmod.size(); i++)
       {
-      enc.encode(m_sqrtmod[i].encode(), ASN1_Type::OCTET_STRING);
+      enc.encode(m_sqrtmod[i].encode(), ASN1_Type::OctetString);
       }
    enc.end_cons();
    secure_vector<uint8_t> enc_support;
@@ -147,7 +147,7 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const
       enc_support.push_back(get_byte(0, Linv));
       enc_support.push_back(get_byte(1, Linv));
       }
-   enc.encode(enc_support, ASN1_Type::OCTET_STRING);
+   enc.encode(enc_support, ASN1_Type::OctetString);
    secure_vector<uint8_t> enc_H;
    for(uint32_t coef : m_coeffs)
       {
@@ -156,7 +156,7 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const
       enc_H.push_back(get_byte(2, coef));
       enc_H.push_back(get_byte(3, coef));
       }
-   enc.encode(enc_H, ASN1_Type::OCTET_STRING);
+   enc.encode(enc_H, ASN1_Type::OctetString);
    enc.end_cons();
    return enc.get_contents();
    }
@@ -189,8 +189,8 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits)
       .decode(n)
       .decode(t)
       .end_cons()
-      .decode(m_public_matrix, ASN1_Type::OCTET_STRING)
-      .decode(enc_g, ASN1_Type::OCTET_STRING);
+      .decode(m_public_matrix, ASN1_Type::OctetString)
+      .decode(enc_g, ASN1_Type::OctetString);
 
    if(t == 0 || n == 0)
       throw Decoding_Error("invalid McEliece parameters");
@@ -211,7 +211,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits)
    for(uint32_t i = 0; i < t/2; i++)
       {
       secure_vector<uint8_t> sqrt_enc;
-      dec2.decode(sqrt_enc, ASN1_Type::OCTET_STRING);
+      dec2.decode(sqrt_enc, ASN1_Type::OctetString);
       while(sqrt_enc.size() < (t*2))
          {
          // ensure that the length is always t
@@ -226,7 +226,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits)
       }
    secure_vector<uint8_t> enc_support;
    BER_Decoder dec3 = dec2.end_cons()
-      .decode(enc_support, ASN1_Type::OCTET_STRING);
+      .decode(enc_support, ASN1_Type::OctetString);
    if(enc_support.size() % 2)
       {
       throw Decoding_Error("encoded support has odd length");
@@ -241,7 +241,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits)
       m_Linv.push_back(el);
       }
    secure_vector<uint8_t> enc_H;
-   dec3.decode(enc_H, ASN1_Type::OCTET_STRING)
+   dec3.decode(enc_H, ASN1_Type::OctetString)
       .end_cons();
    if(enc_H.size() % 4)
       {

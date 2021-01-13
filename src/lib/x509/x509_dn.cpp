@@ -262,7 +262,7 @@ void X509_DN::encode_into(DER_Encoder& der) const
       {
       for(const auto& dn : m_rdn)
          {
-         der.start_cons(ASN1_Type::SET)
+         der.start_set()
             .start_sequence()
             .encode(dn.first)
             .encode(dn.second)
@@ -291,7 +291,7 @@ void X509_DN::decode_from(BER_Decoder& source)
 
    while(sequence.more_items())
       {
-      BER_Decoder rdn = sequence.start_cons(ASN1_Type::SET);
+      BER_Decoder rdn = sequence.start_set();
 
       while(rdn.more_items())
          {

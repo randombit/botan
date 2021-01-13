@@ -36,7 +36,7 @@ std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const
       }
 
    std::vector<uint8_t> output;
-   DER_Encoder(output).encode(bits, ASN1_Type::OCTET_STRING);
+   DER_Encoder(output).encode(bits, ASN1_Type::OctetString);
    return output;
    }
 
@@ -78,7 +78,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
                            std::to_string(p_bits));
 
    secure_vector<uint8_t> bits;
-   BER_Decoder(key_bits).decode(bits, ASN1_Type::OCTET_STRING);
+   BER_Decoder(key_bits).decode(bits, ASN1_Type::OctetString);
 
    const size_t part_size = bits.size() / 2;
 

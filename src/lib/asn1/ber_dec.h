@@ -106,14 +106,26 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       */
       BER_Decoder& discard_remaining();
 
-      /**
-      * Start decoding a constructed data (sequence or set)
-      */
-      BER_Decoder start_cons(ASN1_Type type_tag, ASN1_Class class_tag = ASN1_Class::UNIVERSAL);
+      BER_Decoder start_cons(ASN1_Type type_tag, ASN1_Class class_tag);
 
       BER_Decoder start_sequence()
          {
-         return start_cons(ASN1_Type::SEQUENCE);
+         return start_cons(ASN1_Type::Sequence, ASN1_Class::Universal);
+         }
+
+      BER_Decoder start_set()
+         {
+         return start_cons(ASN1_Type::Set, ASN1_Class::Universal);
+         }
+
+      BER_Decoder start_context_specific(uint32_t tag)
+         {
+         return start_cons(ASN1_Type(tag), ASN1_Class::ContextSpecific);
+         }
+
+      BER_Decoder start_explicit_context_specific(uint32_t tag)
+         {
+         return start_cons(ASN1_Type(tag), ASN1_Class::ExplicitContextSpecific);
          }
 
       /**
@@ -135,7 +147,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       template <typename T>
          BER_Decoder& get_next_value(T &out,
                                      ASN1_Type type_tag,
-                                     ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC)
+                                     ASN1_Class class_tag = ASN1_Class::ContextSpecific)
          {
          static_assert(std::is_standard_layout<T>::value && std::is_trivial<T>::value, "Type must be POD");
 
@@ -174,7 +186,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       */
       BER_Decoder& decode(bool& out)
          {
-         return decode(out, ASN1_Type::BOOLEAN, ASN1_Class::UNIVERSAL);
+         return decode(out, ASN1_Type::Boolean, ASN1_Class::Universal);
          }
 
       /*
@@ -182,7 +194,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       */
       BER_Decoder& decode(size_t& out)
          {
-         return decode(out, ASN1_Type::INTEGER, ASN1_Class::UNIVERSAL);
+         return decode(out, ASN1_Type::Integer, ASN1_Class::Universal);
          }
 
       /*
@@ -190,13 +202,13 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       */
       BER_Decoder& decode(BigInt& out)
          {
-         return decode(out, ASN1_Type::INTEGER, ASN1_Class::UNIVERSAL);
+         return decode(out, ASN1_Type::Integer, ASN1_Class::Universal);
          }
 
       std::vector<uint8_t> get_next_octet_string()
          {
          std::vector<uint8_t> out_vec;
-         decode(out_vec, ASN1_Type::OCTET_STRING);
+         decode(out_vec, ASN1_Type::OctetString);
          return out_vec;
          }
 
@@ -206,34 +218,34 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       template<typename Alloc>
       BER_Decoder& decode(std::vector<uint8_t, Alloc>& out, ASN1_Type real_type)
          {
-         return decode(out, real_type, real_type, ASN1_Class::UNIVERSAL);
+         return decode(out, real_type, real_type, ASN1_Class::Universal);
          }
 
       BER_Decoder& decode(bool& v,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       BER_Decoder& decode(size_t& v,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       BER_Decoder& decode(BigInt& v,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       BER_Decoder& decode(std::vector<uint8_t>& v,
                           ASN1_Type real_type,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       BER_Decoder& decode(secure_vector<uint8_t>& v,
                           ASN1_Type real_type,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       BER_Decoder& decode(class ASN1_Object& obj,
-                          ASN1_Type type_tag = ASN1_Type::NO_OBJECT,
-                          ASN1_Class class_tag = ASN1_Class::NO_OBJECT);
+                          ASN1_Type type_tag = ASN1_Type::NoObject,
+                          ASN1_Class class_tag = ASN1_Class::NoObject);
 
       /**
       * Decode an integer value which is typed as an octet string
@@ -246,13 +258,13 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
 
       template<typename T> BER_Decoder& decode_integer_type(T& out)
          {
-         return decode_integer_type<T>(out, ASN1_Type::INTEGER, ASN1_Class::UNIVERSAL);
+         return decode_integer_type<T>(out, ASN1_Type::Integer, ASN1_Class::Universal);
          }
 
       template<typename T>
          BER_Decoder& decode_integer_type(T& out,
                                           ASN1_Type type_tag,
-                                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC)
+                                          ASN1_Class class_tag = ASN1_Class::ContextSpecific)
          {
          out = static_cast<T>(decode_constrained_integer(type_tag, class_tag, sizeof(out)));
          return (*this);
@@ -275,8 +287,8 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
 
       template<typename T>
          BER_Decoder& decode_list(std::vector<T>& out,
-                                  ASN1_Type type_tag = ASN1_Type::SEQUENCE,
-                                  ASN1_Class class_tag = ASN1_Class::UNIVERSAL);
+                                  ASN1_Type type_tag = ASN1_Type::Sequence,
+                                  ASN1_Class class_tag = ASN1_Class::Universal);
 
       template<typename T>
          BER_Decoder& decode_and_check(const T& expected,
@@ -298,7 +310,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       BER_Decoder& decode_optional_string(std::vector<uint8_t, Alloc>& out,
                                           ASN1_Type real_type,
                                           uint32_t expected_tag,
-                                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC)
+                                          ASN1_Class class_tag = ASN1_Class::ContextSpecific)
          {
          BER_Object obj = get_next_object();
 
@@ -306,7 +318,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
 
          if(obj.is_a(type_tag, class_tag))
             {
-            if(class_tag == ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC)
+            if(class_tag == ASN1_Class::ExplicitContextSpecific)
                {
                BER_Decoder(std::move(obj)).decode(out, real_type).verify_end();
                }
@@ -329,7 +341,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       BER_Decoder& decode_optional_string(std::vector<uint8_t, Alloc>& out,
                                           ASN1_Type real_type,
                                           ASN1_Type expected_tag,
-                                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC)
+                                          ASN1_Class class_tag = ASN1_Class::ContextSpecific)
          {
          return decode_optional_string(out, real_type,
                                        static_cast<uint32_t>(expected_tag),
@@ -359,7 +371,7 @@ BER_Decoder& BER_Decoder::decode_optional(T& out,
 
    if(obj.is_a(type_tag, class_tag))
       {
-      if(class_tag == ASN1_Class::EXPLICIT_CONTEXT_SPECIFIC)
+      if(class_tag == ASN1_Class::ExplicitContextSpecific)
          {
          BER_Decoder(std::move(obj)).decode(out).verify_end();
          }

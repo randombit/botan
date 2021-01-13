@@ -61,12 +61,26 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
       BOTAN_DEPRECATED("Use DER_Encoder(vector) instead")
       std::vector<uint8_t> get_contents_unlocked();
 
-      DER_Encoder& start_cons(ASN1_Type type_tag,
-                              ASN1_Class class_tag = ASN1_Class::UNIVERSAL);
+      DER_Encoder& start_cons(ASN1_Type type_tag, ASN1_Class class_tag);
 
       DER_Encoder& start_sequence()
          {
-         return start_cons(ASN1_Type::SEQUENCE);
+         return start_cons(ASN1_Type::Sequence, ASN1_Class::Universal);
+         }
+
+      DER_Encoder& start_set()
+         {
+         return start_cons(ASN1_Type::Set, ASN1_Class::Universal);
+         }
+
+      DER_Encoder& start_context_specific(uint32_t tag)
+         {
+         return start_cons(ASN1_Type(tag), ASN1_Class::ContextSpecific);
+         }
+
+      DER_Encoder& start_explicit_context_specific(uint32_t tag)
+         {
+         return start_cons(ASN1_Type(tag), ASN1_Class::ExplicitContextSpecific);
          }
 
       DER_Encoder& end_cons();
@@ -99,20 +113,20 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
 
       DER_Encoder& encode(bool b,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       DER_Encoder& encode(size_t s,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       DER_Encoder& encode(const BigInt& n,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       DER_Encoder& encode(const uint8_t v[], size_t len,
                           ASN1_Type real_type,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::CONTEXT_SPECIFIC);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       template<typename Alloc>
       DER_Encoder& encode(const std::vector<uint8_t, Alloc>& bytes,

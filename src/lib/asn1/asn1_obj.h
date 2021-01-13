@@ -22,47 +22,45 @@ class DER_Encoder;
 * ASN.1 Class Tags
 */
 enum class ASN1_Class : uint32_t {
-   UNIVERSAL        = 0b0000'0000,
-   APPLICATION      = 0b0100'0000,
-   CONTEXT_SPECIFIC = 0b1000'0000,
-   PRIVATE          = 0b1100'0000,
+   Universal        = 0b0000'0000,
+   Application      = 0b0100'0000,
+   ContextSpecific  = 0b1000'0000,
+   Private          = 0b1100'0000,
 
-   CONSTRUCTED      = 0b0010'0000,
-   EXPLICIT_CONTEXT_SPECIFIC = CONSTRUCTED | CONTEXT_SPECIFIC,
+   Constructed      = 0b0010'0000,
+   ExplicitContextSpecific = Constructed | ContextSpecific,
 
-   NO_OBJECT        = 0xFF00
+   NoObject        = 0xFF00
 };
 
 /**
 * ASN.1 Type Tags
 */
 enum class ASN1_Type : uint32_t {
-   EOC              = 0x00,
-   BOOLEAN          = 0x01,
-   INTEGER          = 0x02,
-   BIT_STRING       = 0x03,
-   OCTET_STRING     = 0x04,
-   NULL_TAG         = 0x05,
-   OBJECT_ID        = 0x06,
-   ENUMERATED       = 0x0A,
-   SEQUENCE         = 0x10,
-   SET              = 0x11,
+   Eoc              = 0x00,
+   Boolean          = 0x01,
+   Integer          = 0x02,
+   BitString        = 0x03,
+   OctetString      = 0x04,
+   Null             = 0x05,
+   ObjectId         = 0x06,
+   Enumerated       = 0x0A,
+   Sequence         = 0x10,
+   Set              = 0x11,
 
-   UTF8_STRING      = 0x0C,
-   NUMERIC_STRING   = 0x12,
-   PRINTABLE_STRING = 0x13,
-   T61_STRING       = 0x14,
-   IA5_STRING       = 0x16,
-   VISIBLE_STRING   = 0x1A,
-   UNIVERSAL_STRING = 0x1C,
-   BMP_STRING       = 0x1E,
+   Utf8String       = 0x0C,
+   NumericString    = 0x12,
+   PrintableString  = 0x13,
+   T61String        = 0x14,
+   Ia5String        = 0x16,
+   VisibleString    = 0x1A,
+   UniversalString  = 0x1C,
+   BmpString        = 0x1E,
 
-   UTC_TIME                = 0x17,
-   GENERALIZED_TIME        = 0x18,
-   UTC_OR_GENERALIZED_TIME = 0x19,
+   UtcTime          = 0x17,
+   GeneralizedTime  = 0x18,
 
-   NO_OBJECT        = 0xFF00,
-   DIRECTORY_STRING = 0xFF01
+   NoObject         = 0xFF00,
 };
 
 inline bool intersects(ASN1_Class x, ASN1_Class y)
@@ -130,7 +128,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Object
 class BOTAN_PUBLIC_API(2,0) BER_Object final
    {
    public:
-      BER_Object() : m_type_tag(ASN1_Type::NO_OBJECT), m_class_tag(ASN1_Class::UNIVERSAL) {}
+      BER_Object() : m_type_tag(ASN1_Type::NoObject), m_class_tag(ASN1_Class::Universal) {}
 
       BER_Object(const BER_Object& other) = default;
 
@@ -140,7 +138,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
 
       BER_Object& operator=(BER_Object&& other) = default;
 
-      bool is_set() const { return m_type_tag != ASN1_Type::NO_OBJECT; }
+      bool is_set() const { return m_type_tag != ASN1_Type::NoObject; }
 
       uint32_t tagging() const { return type_tag() | class_tag(); }
 
@@ -354,6 +352,9 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Time final : public ASN1_Object
       explicit ASN1_Time(const std::chrono::system_clock::time_point& time);
 
       /// Create an ASN1_Time from string
+      ASN1_Time(const std::string& t_spec);
+
+      /// Create an ASN1_Time from string and a specified tagging (Utc or Generalized)
       ASN1_Time(const std::string& t_spec, ASN1_Type tag);
 
       /// Returns a STL timepoint object
@@ -363,7 +364,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Time final : public ASN1_Object
       uint64_t time_since_epoch() const;
 
    private:
-      void set_to(const std::string& t_spec, ASN1_Type);
+      void set_to(const std::string& t_spec, ASN1_Type type);
       bool passes_sanity_check() const;
 
       uint32_t m_year = 0;
@@ -372,7 +373,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Time final : public ASN1_Object
       uint32_t m_hour = 0;
       uint32_t m_minute = 0;
       uint32_t m_second = 0;
-      ASN1_Type m_tag = ASN1_Type::NO_OBJECT;
+      ASN1_Type m_tag = ASN1_Type::NoObject;
    };
 
 /*
