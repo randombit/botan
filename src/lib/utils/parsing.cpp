@@ -8,17 +8,10 @@
 */
 
 #include <botan/internal/parsing.h>
-#include <botan/exceptn.h>
-#include <botan/internal/charset.h>
 #include <botan/internal/loadstor.h>
+#include <botan/exceptn.h>
 #include <algorithm>
 #include <cctype>
-#include <limits>
-#include <set>
-
-#if defined(BOTAN_HAS_ASN1)
-  #include <botan/asn1_obj.h>
-#endif
 
 namespace Botan {
 
@@ -154,47 +147,6 @@ std::string string_join(const std::vector<std::string>& strs, char delim)
       }
 
    return out;
-   }
-
-/*
-* X.500 String Comparison
-*/
-bool x500_name_cmp(const std::string& name1, const std::string& name2)
-   {
-   auto p1 = name1.begin();
-   auto p2 = name2.begin();
-
-   while((p1 != name1.end()) && Charset::is_space(*p1)) ++p1;
-   while((p2 != name2.end()) && Charset::is_space(*p2)) ++p2;
-
-   while(p1 != name1.end() && p2 != name2.end())
-      {
-      if(Charset::is_space(*p1))
-         {
-         if(!Charset::is_space(*p2))
-            return false;
-
-         while((p1 != name1.end()) && Charset::is_space(*p1)) ++p1;
-         while((p2 != name2.end()) && Charset::is_space(*p2)) ++p2;
-
-         if(p1 == name1.end() && p2 == name2.end())
-            return true;
-         if(p1 == name1.end() || p2 == name2.end())
-            return false;
-         }
-
-      if(!Charset::caseless_cmp(*p1, *p2))
-         return false;
-      ++p1;
-      ++p2;
-      }
-
-   while((p1 != name1.end()) && Charset::is_space(*p1)) ++p1;
-   while((p2 != name2.end()) && Charset::is_space(*p2)) ++p2;
-
-   if((p1 != name1.end()) || (p2 != name2.end()))
-      return false;
-   return true;
    }
 
 /*

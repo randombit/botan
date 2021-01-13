@@ -7,7 +7,6 @@
 
 #include <botan/bigint.h>
 #include <botan/internal/divide.h>
-#include <botan/internal/charset.h>
 #include <botan/hex.h>
 
 namespace Botan {
@@ -30,7 +29,7 @@ std::string BigInt::to_dec_string() const
 
    for(auto i = digits.rbegin(); i != digits.rend(); ++i)
       {
-      s.push_back(Charset::digit2char(*i));
+      s.push_back(*i + '0');
       }
 
    if(s.empty())
@@ -119,17 +118,13 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base)
       {
       for(size_t i = 0; i != length; ++i)
          {
-         if(Charset::is_space(buf[i]))
-            continue;
+         const char c = buf[i];
 
-         if(!Charset::is_digit(buf[i]))
-            throw Invalid_Argument("BigInt::decode: "
-                                   "Invalid character in decimal input");
+         if(c < '0' || c > '9')
+            throw Invalid_Argument("BigInt::decode: invalid decimal char");
 
-         const uint8_t x = Charset::char2digit(buf[i]);
-
-         if(x >= 10)
-            throw Invalid_Argument("BigInt: Invalid decimal string");
+         const uint8_t x = c - '0';
+         BOTAN_ASSERT_NOMSG(x < 10);
 
          r *= 10;
          r += x;

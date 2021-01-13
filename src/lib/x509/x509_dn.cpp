@@ -8,7 +8,6 @@
 #include <botan/pkix_types.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/oids.h>
 #include <ostream>
@@ -16,6 +15,66 @@
 #include <cctype>
 
 namespace Botan {
+
+namespace {
+
+namespace {
+
+bool caseless_cmp(char a, char b)
+   {
+   return (std::tolower(static_cast<unsigned char>(a)) ==
+           std::tolower(static_cast<unsigned char>(b)));
+   }
+
+bool is_space(char c)
+   {
+   return std::isspace(static_cast<unsigned char>(c));
+   }
+
+}
+
+/*
+* X.500 String Comparison
+*/
+bool x500_name_cmp(const std::string& name1, const std::string& name2)
+   {
+   auto p1 = name1.begin();
+   auto p2 = name2.begin();
+
+   while((p1 != name1.end()) && is_space(*p1)) ++p1;
+   while((p2 != name2.end()) && is_space(*p2)) ++p2;
+
+   while(p1 != name1.end() && p2 != name2.end())
+      {
+      if(is_space(*p1))
+         {
+         if(!is_space(*p2))
+            return false;
+
+         while((p1 != name1.end()) && is_space(*p1)) ++p1;
+         while((p2 != name2.end()) && is_space(*p2)) ++p2;
+
+         if(p1 == name1.end() && p2 == name2.end())
+            return true;
+         if(p1 == name1.end() || p2 == name2.end())
+            return false;
+         }
+
+      if(!caseless_cmp(*p1, *p2))
+         return false;
+      ++p1;
+      ++p2;
+      }
+
+   while((p1 != name1.end()) && is_space(*p1)) ++p1;
+   while((p2 != name2.end()) && is_space(*p2)) ++p2;
+
+   if((p1 != name1.end()) || (p2 != name2.end()))
+      return false;
+   return true;
+   }
+
+}
 
 /*
 * Add an attribute to a X509_DN

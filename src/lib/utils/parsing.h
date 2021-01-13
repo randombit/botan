@@ -43,15 +43,6 @@ std::string string_join(const std::vector<std::string>& strs,
                         char delim);
 
 /**
-* Compare two names using the X.509 comparison algorithm
-* @param name1 the first name
-* @param name2 the second name
-* @return true if name1 is the same as name2 by the X.509 comparison rules
-*/
-bool x500_name_cmp(const std::string& name1,
-                   const std::string& name2);
-
-/**
 * Convert a string to a number
 * @param str the string to convert
 * @return number value of the string
