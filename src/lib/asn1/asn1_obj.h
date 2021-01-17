@@ -408,7 +408,6 @@ class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
 
       /**
       * Return true iff this is a tag for a known string type we can handle.
-      * This ignores string types that are not supported, eg teletexString
       */
       static bool is_string_type(ASN1_Type tag);
 

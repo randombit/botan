@@ -45,13 +45,21 @@ ASN1_Type choose_encoding(const std::string& str)
       return ASN1_Type::Utf8String;
    }
 
-void assert_is_string_type(ASN1_Type tag)
+bool is_utf8_subset_string_type(ASN1_Type tag)
    {
-   if(!ASN1_String::is_string_type(tag))
-      {
-      throw Invalid_Argument("ASN1_String: Unknown string type " +
-                             std::to_string(static_cast<uint32_t>(tag)));
-      }
+   return (tag == ASN1_Type::NumericString ||
+           tag == ASN1_Type::PrintableString ||
+           tag == ASN1_Type::VisibleString ||
+           tag == ASN1_Type::Ia5String ||
+           tag == ASN1_Type::Utf8String);
+   }
+
+bool is_asn1_string_type(ASN1_Type tag)
+   {
+   return (is_utf8_subset_string_type(tag) ||
+           tag == ASN1_Type::TeletexString ||
+           tag == ASN1_Type::BmpString ||
+           tag == ASN1_Type::UniversalString);
    }
 
 }
@@ -59,28 +67,17 @@ void assert_is_string_type(ASN1_Type tag)
 //static
 bool ASN1_String::is_string_type(ASN1_Type tag)
    {
-   return (tag == ASN1_Type::NumericString ||
-           tag == ASN1_Type::PrintableString ||
-           tag == ASN1_Type::VisibleString ||
-           tag == ASN1_Type::TeletexString ||
-           tag == ASN1_Type::Ia5String ||
-           tag == ASN1_Type::Utf8String ||
-           tag == ASN1_Type::BmpString ||
-           tag == ASN1_Type::UniversalString);
+   return is_asn1_string_type(tag);
    }
 
-
-/*
-* Create an ASN1_String
-*/
 ASN1_String::ASN1_String(const std::string& str, ASN1_Type t) : m_utf8_str(str), m_tag(t)
    {
-   assert_is_string_type(m_tag);
+   if(!is_utf8_subset_string_type(m_tag))
+      {
+      throw Invalid_Argument("ASN1_String only supports encoding to UTF-8 or a UTF-8 subset");
+      }
    }
 
-/*
-* Create an ASN1_String
-*/
 ASN1_String::ASN1_String(const std::string& str) :
    ASN1_String(str, choose_encoding(str))
    {}
@@ -92,6 +89,7 @@ void ASN1_String::encode_into(DER_Encoder& encoder) const
    {
    if(m_data.empty())
       {
+      BOTAN_ASSERT_NOMSG(is_utf8_subset_string_type(tagging()));
       encoder.add_object(tagging(), ASN1_Class::Universal, m_utf8_str);
       }
    else
@@ -108,7 +106,11 @@ void ASN1_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
 
-   assert_is_string_type(obj.type());
+   if(!is_asn1_string_type(obj.type()))
+      {
+      throw Decoding_Error("ASN1_String: Unknown string type " +
+                           std::to_string(static_cast<uint32_t>(obj.type())));
+      }
 
    m_tag = obj.type();
    m_data.assign(obj.bits(), obj.bits() + obj.length());
