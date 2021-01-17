@@ -771,6 +771,21 @@ class System_RNG_Tests final : public Test
             rng.add_entropy(out_buf.data(), out_buf.size());
             }
 
+         if constexpr(sizeof(size_t) > 4)
+            {
+            // Pass buffer with a size greater than 32bit
+            const size_t size32BitsMax = std::numeric_limits<uint32_t>::max();
+            const size_t checkSize = 1024;
+            std::vector<uint8_t> large_buf(size32BitsMax + checkSize);
+            std::memset(large_buf.data() + size32BitsMax, 0xFE, checkSize);
+
+            rng.randomize(large_buf.data(), large_buf.size());
+
+            std::vector<uint8_t> check_buf(checkSize, 0xFE);
+
+            result.confirm("System RNG failed to write after 4GB boundry", std::memcmp(large_buf.data() + size32BitsMax, check_buf.data(), checkSize) != 0);
+            }
+
          return std::vector<Test::Result>{result};
          }
    };
