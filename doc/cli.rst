@@ -63,9 +63,10 @@ HMAC
 
 Encryption
 ----------------
-``encryption --buf-size=4096 --decrypt --mode= --key= --iv= --ad=``
-  Encrypt a given file with the specified *mode*.  If ``--decrypt`` is provided
-  the file is decrypted instead.
+``cipher --buf-size=4096 --decrypt --cipher= --key= --nonce= --ad=``
+
+  Encrypt a given file with the specified *cipher*, eg "AES-256/GCM".
+  If ``--decrypt`` is provided the file is decrypted instead.
 
 Public Key Cryptography
 -------------------------------------
