@@ -1,6 +1,7 @@
 /*
 * System RNG
 * (C) 2014,2015,2017,2018 Jack Lloyd
+* (C) 2021 Tom Crowley
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -48,9 +49,24 @@ class System_RNG_Impl final : public RandomNumberGenerator
 
       void randomize(uint8_t buf[], size_t len) override
          {
-         bool success = m_rtlgenrandom(buf, ULONG(len)) == TRUE;
-         if(!success)
-            throw System_Error("RtlGenRandom failed");
+         const size_t limit = std::numeric_limits<ULONG>::max();
+
+         uint8_t* pData = buf;
+         size_t bytesLeft = len;
+         while (bytesLeft > 0)
+            {
+            const ULONG blockSize = static_cast<ULONG>(std::min(bytesLeft, limit));
+
+            const bool success = m_rtlgenrandom(pData, blockSize) == TRUE;
+            if (!success)
+               {
+               throw System_Error("RtlGenRandom failed");
+               }
+
+            BOTAN_ASSERT(bytesLeft >= blockSize, "Block is oversized");
+            bytesLeft -= blockSize;
+            pData += blockSize;
+            }
          }
 
       void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
@@ -86,9 +102,24 @@ class System_RNG_Impl final : public RandomNumberGenerator
 
       void randomize(uint8_t buf[], size_t len) override
          {
-         NTSTATUS ret = ::BCryptGenRandom(m_prov, static_cast<PUCHAR>(buf), static_cast<ULONG>(len), 0);
-         if(ret != STATUS_SUCCESS)
-            throw System_Error("System_RNG call to BCryptGenRandom failed", ret);
+         const size_t limit = std::numeric_limits<ULONG>::max();
+
+         uint8_t* pData = buf;
+         size_t bytesLeft = len;
+         while (bytesLeft > 0)
+            {
+            const ULONG blockSize = static_cast<ULONG>(std::min(bytesLeft, limit));
+
+            const NTSTATUS ret = BCryptGenRandom(m_prov, static_cast<PUCHAR>(pData), blockSize, 0);
+            if (ret != STATUS_SUCCESS)
+               {
+               throw System_Error("System_RNG call to BCryptGenRandom failed", ret);
+               }
+
+            BOTAN_ASSERT(bytesLeft >= blockSize, "Block is oversized");
+            bytesLeft -= blockSize;
+            pData += blockSize;
+            }
          }
 
       void add_entropy(const uint8_t in[], size_t length) override
