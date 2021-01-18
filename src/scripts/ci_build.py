@@ -256,9 +256,12 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
         if target in ['coverage']:
             flags += ['--with-tpm']
-            test_cmd += ['--run-long-tests', '--run-online-tests']
+            test_cmd += ['--run-online-tests']
             if pkcs11_lib and os.access(pkcs11_lib, os.R_OK):
                 test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
+
+    if target in ['coverage', 'sanitizer']:
+        test_cmd += ['--run-long-tests']
 
     flags += ['--cc-bin=%s' % (cc_bin)]
 
@@ -505,7 +508,8 @@ def main(args=None):
         if target == 'docs':
             cmds.append(make_cmd + ['docs'])
         else:
-            cmds.append([options.compiler_cache, '--show-stats'])
+            if options.compiler_cache is not None:
+                cmds.append([options.compiler_cache, '--show-stats'])
 
             make_targets = ['libs', 'tests', 'cli']
 
@@ -517,7 +521,8 @@ def main(args=None):
 
             cmds.append(make_prefix + make_cmd + make_targets)
 
-            cmds.append([options.compiler_cache, '--show-stats'])
+            if options.compiler_cache is not None:
+                cmds.append([options.compiler_cache, '--show-stats'])
 
         if run_test_command is not None:
             cmds.append(run_test_command)
