@@ -15,7 +15,9 @@ namespace {
 /*
 * The minimum weight irreducible binary polynomial of size n
 *
-* See http://www.hpl.hp.com/techreports/98/HPL-98-135.pdf
+* See "Table of Low-Weight Binary Irreducible Polynomials"
+* by Gadiel Seroussi, HP Labs Tech Report HPL-98-135
+* http://www.hpl.hp.com/techreports/98/HPL-98-135.pdf
 */
 enum class MinWeightPolynomial : uint64_t {
    P64   = 0x1B,
