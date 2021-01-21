@@ -1,10 +1,7 @@
 Botan 2.x to 3.x Migration
 ==============================
 
-This is a guide on migrating applications from Botan 2.x to 3.0.  If you find
-that some functionality you need has been removed in 3.0 please open an issue on
-Github - the goal is to remove only APIs where have a superior alternative
-exists or where the API is just hopelessly broken.
+This is a guide on migrating applications from Botan 2.x to 3.0.
 
 Headers
 --------
@@ -25,13 +22,42 @@ algorithm headers (such as ``aes.h``) have been removed. Instead you should
 create objects via the factory methods (in the case of AES,
 ``BlockCipher::create``) which works in both 2.x and 3.0
 
+TLS Functionality Removed
+---------------------------
+
+Functionality removed from the TLS implementation includes
+
+* DSA ciphersuites
+* anonymous ciphersuites
+* SRP ciphersuites
+* SEED ciphersuites
+* Camellia CBC ciphersuites
+* AES-128 OCB ciphersuites
+* DHE_PSK ciphersuites
+
 Algorithms Removed
 -------------------
 
 The algorithms CAST-256, MISTY1, Kasumi, DESX, XTEA, PBKDF1, MCEIES, CBC-MAC and
 Tiger have been removed. The expectation is that literally nobody was using any
-of these algorithms for anything. All are obscure, and many are (more or less)
-broken.
+of these algorithms for anything. All are obscure, and many are broken.
+
+Certificate API shared_ptr
+----------------------------
+
+Previously the certificate store returned ``shared_ptr<X509_Certificate>`` to
+avoid copies. However starting in 2.4.0, ``X509_Certificate`` itself is a pimpl
+to a ``shared_ptr``, making the outer shared pointer pointless. In 3.0 the
+certificate store interface has been changed to just consume and return
+``X509_Certificate``.
+
+This change similarly affects some of the functions involved in certificate
+path building.
+
+All Or Nothing Package Transform
+----------------------------------
+
+This code was deprecated and has been removed.
 
 Exception Changes
 -------------------
@@ -65,4 +91,13 @@ ASN.1 enums
 ---------------
 
 The enum ``ASN1_Tag`` has been split into ``ASN1_Type`` and ``ASN1_Class``.
-Unlike ``ASN1_Tag``, these new enums are ``enum class``.
+Unlike ``ASN1_Tag``, these new enums are ``enum class``. The members of the
+enums have changed from ``SHOUTING_CASE`` to ``CamelCase``, eg ``CONSTRUCTED``
+is now ``Constructed``.
+
+Also an important change related to ``ASN1_Tag::PRIVATE``. This enum value was
+incorrect, and actually was used for explicitly tagged context specific values.
+Now, ``ASN1_Class::Private`` refers to the correct class, but would lead to a
+different encoding vs 2.x's ``ASN1_Tag::PRIVATE``. The correct value to use in
+3.0 to match ``ASN1_Tag::PRIVATE`` is ``ASN1_Class::ExplicitContextSpecific``.
+
