@@ -201,6 +201,7 @@ class FFI_Unit_Tests final : public Test
          botan_rng_t system_rng;
          botan_rng_t hwrng_rng = nullptr;
          botan_rng_t null_rng;
+         botan_rng_t custom_rng;
 
          TEST_FFI_FAIL("invalid rng type", botan_rng_init, (&rng, "invalid_type"));
 
@@ -248,28 +249,19 @@ class FFI_Unit_Tests final : public Test
             }
 
          size_t cb_counter = 0;
-         auto custom_init_cb = +[](void* context) -> void
-            {
-            (*((size_t*)context))++;
-            };
 
          auto custom_get_cb = +[](uint8_t* out, size_t out_len, void* context) -> int
             {
             BOTAN_UNUSED(out, out_len);
-            (*((size_t*)context))++;
+            (*(static_cast<size_t*>(context)))++;
             return 0;
             };
 
          auto custom_add_entropy_cb = +[](const uint8_t input[], size_t length, void* context) -> int
             {
             BOTAN_UNUSED(input, length);
-            (*((size_t*)context))++;
+            (*(static_cast<size_t*>(context)))++;
             return 0;
-            };
-
-         auto custom_destroy_cb = +[](void* context) -> void
-            {
-            (*((size_t*)context))++;
             };
 
          if(TEST_FFI_OK(botan_rng_init_custom, (&custom_rng, "custom rng", &cb_counter, custom_get_cb, custom_add_entropy_cb)))
