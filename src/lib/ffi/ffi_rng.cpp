@@ -57,6 +57,93 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
       });
    }
 
+int botan_rng_init_custom(botan_rng_t* rng_out, const char* rng_name, void* context,
+                          int(* get_cb)(uint8_t* out, size_t out_len, void* context),
+                          int(* add_entropy_cb)(const uint8_t input[], size_t length, void* context))
+{
+return ffi_guard_thunk(__func__,[=]() -> int {
+   if(rng_out == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   std::unique_ptr<Botan::RandomNumberGenerator> rng;
+   class Custom_RNG : public Botan::RandomNumberGenerator
+      {
+      public:
+         Custom_RNG(const std::string& name, void* context,
+                    int(* get_cb)(uint8_t* out, size_t out_len, void* context),
+                    int(* add_entropy_cb)(const uint8_t input[], size_t length, void* context)) :
+            m_name(name)
+            {
+               m_cbs.context = context;
+               m_cbs.get = get_cb;
+               m_cbs.add_entropy = add_entropy_cb;
+            }
+
+         void randomize(uint8_t output[], size_t length) override
+         {
+            if(m_cbs.get(output, length, m_cbs.context))
+            {
+               throw Botan::Invalid_State("Failed to get random from C callback");
+            }
+         }
+
+         bool accepts_input() const override
+         {
+            return m_cbs.add_entropy != nullptr;
+         }
+
+         void add_entropy(const uint8_t input[], size_t length) override
+         {
+            if(m_cbs.add_entropy == nullptr)
+            {
+               throw Botan::Invalid_Argument("No callback set for add_entropy");
+            }
+            
+            if(m_cbs.add_entropy(input, length, m_cbs.context))
+            {
+               throw Botan::Invalid_State("Failed to add entropy via C callback");
+            }
+         }
+
+         std::string name() const override
+         {
+            return m_name;
+         }
+
+         void clear() override
+         {
+            // TODO?
+            // post: is_seeded() == false!
+         }
+
+         bool is_seeded() const override
+         {
+            // assume seeded after init_cb() called
+            return true;
+         }
+
+      private:
+         std::string m_name;
+         struct callbacks
+         {
+            void* context;
+            int(* get)(uint8_t* out, size_t out_len, void* context);
+            int(* add_entropy)(const uint8_t input[], size_t length, void* context);
+         } m_cbs;
+   };
+
+   rng.reset(new Custom_RNG(rng_name, context, get_cb, add_entropy_cb));
+
+   if(!rng)
+      {
+      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
+
+   *rng_out = new botan_rng_struct(rng.release());
+   return BOTAN_FFI_SUCCESS;
+   });
+}
+
 int botan_rng_destroy(botan_rng_t rng)
    {
    return BOTAN_FFI_CHECKED_DELETE(rng);

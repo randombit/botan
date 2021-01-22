@@ -247,6 +247,49 @@ class FFI_Unit_Tests final : public Test
             TEST_FFI_OK(botan_rng_add_entropy, (rng, not_really_entropy, 32));
             }
 
+         size_t cb_counter = 0;
+         auto custom_init_cb = +[](void* context) -> void
+            {
+            (*((size_t*)context))++;
+            };
+
+         auto custom_get_cb = +[](uint8_t* out, size_t out_len, void* context) -> int
+            {
+            BOTAN_UNUSED(out, out_len);
+            (*((size_t*)context))++;
+            return 0;
+            };
+
+         auto custom_add_entropy_cb = +[](const uint8_t input[], size_t length, void* context) -> int
+            {
+            BOTAN_UNUSED(input, length);
+            (*((size_t*)context))++;
+            return 0;
+            };
+
+         auto custom_destroy_cb = +[](void* context) -> void
+            {
+            (*((size_t*)context))++;
+            };
+
+         if(TEST_FFI_OK(botan_rng_init_custom, (&custom_rng, "custom rng", &cb_counter, custom_get_cb, custom_add_entropy_cb)))
+            {
+               TEST_FFI_OK(botan_rng_get, (custom_rng, outbuf.data(), outbuf.size()));
+               result.test_eq("custom_get_cb called", cb_counter, 1);
+
+               TEST_FFI_OK(botan_rng_reseed, (custom_rng, 256));
+               result.test_eq("custom_add_entropy_cb called", cb_counter, 2);
+
+               TEST_FFI_OK(botan_rng_reseed_from_rng, (custom_rng, system_rng, 256));
+               result.test_eq("custom_add_entropy_cb called", cb_counter, 3);
+
+               uint8_t not_really_entropy[32] = { 0 };
+               TEST_FFI_OK(botan_rng_add_entropy, (custom_rng, not_really_entropy, 32));
+               result.test_eq("custom_add_entropy_cb called", cb_counter, 4);
+
+               TEST_FFI_OK(botan_rng_destroy, (custom_rng));
+            }
+
          TEST_FFI_OK(botan_rng_destroy, (rng));
          TEST_FFI_OK(botan_rng_destroy, (null_rng));
          TEST_FFI_OK(botan_rng_destroy, (system_rng));

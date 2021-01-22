@@ -201,6 +201,17 @@ typedef struct botan_rng_struct* botan_rng_t;
 BOTAN_PUBLIC_API(2,0) int botan_rng_init(botan_rng_t* rng, const char* rng_type);
 
 /**
+* Initialize a custom random number generator with a set of callbacks
+* @param rng rng object
+* @param rng_name name of the rng
+* @param get_cb Callback for getting random bytes from the rng
+* @param add_entry_cb Callback for adding entropy to the rng
+*/
+BOTAN_PUBLIC_API(3,0) int botan_rng_init_custom(botan_rng_t* rng_out, const char* rng_name, void* context,
+                                                 int(* get_cb)(uint8_t* out, size_t out_len, void* context),
+                                                 int(* add_entropy_cb)(const uint8_t input[], size_t length, void* context));
+
+/**
 * Get random bytes from a random number generator
 * @param rng rng object
 * @param out output buffer of size out_len
