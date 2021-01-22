@@ -1,6 +1,7 @@
 /*
 * FFI (C89 API)
 * (C) 2015,2017 Jack Lloyd
+* (C) 2021 René Fischer
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -199,6 +200,20 @@ typedef struct botan_rng_struct* botan_rng_t;
 * Set rng_type to null to let the library choose some default.
 */
 BOTAN_PUBLIC_API(2,0) int botan_rng_init(botan_rng_t* rng, const char* rng_type);
+
+/**
+* Initialize a custom random number generator from a set of callback functions
+* @param rng rng object
+* @param rng_name name of the rng
+* @param context An application-specific context passed to the callback functions
+* @param get_cb Callback for getting random bytes from the rng, return 0 for success
+* @param add_entry_cb Callback for adding entropy to the rng, return 0 for success, may be NULL
+* @param destroy_cb Callback called when rng is destroyed, may be NULL
+*/
+BOTAN_PUBLIC_API(2,17) int botan_rng_init_custom(botan_rng_t* rng_out, const char* rng_name, void* context,
+                                                 int(* get_cb)(void* context, uint8_t* out, size_t out_len),
+                                                 int(* add_entropy_cb)(void* context, const uint8_t input[], size_t length),
+                                                 void(* destroy_cb)(void* context));
 
 /**
 * Get random bytes from a random number generator
