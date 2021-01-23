@@ -1554,6 +1554,15 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.uses_pkg_config = (lex.uses_pkg_config == 'yes')
         self.feature_macros = lex.feature_macros
 
+        self._validate_os_features(self.target_features, infofile)
+
+    @staticmethod
+    def _validate_os_features(features, infofile):
+        feature_re = re.compile('^[a-z][a-z0-9_]*[a-z0-9]$')
+        for feature in features:
+            if not feature_re.match(feature):
+                logging.error("Invalid OS feature %s in %s" % (feature, infofile))
+
     def matches_name(self, nm):
         if nm in self._aliases:
             return True
