@@ -14,6 +14,7 @@ sockets
 threads
 thread_local
 filesystem
+auxinfo
 </target_features>
 
 <feature_macros>

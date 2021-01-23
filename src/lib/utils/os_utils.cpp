@@ -45,6 +45,11 @@
   #include <sys/auxv.h>
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_AUXINFO)
+  #include <dlfcn.h>
+  #include <elf.h>
+#endif
+
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
   #define NOMINMAX 1
   #define _WINSOCKAPI_ // stop windows.h including winsock.h
@@ -174,6 +179,14 @@ unsigned long OS::get_auxval(unsigned long id)
    unsigned long auxinfo = 0;
    ::elf_aux_info(static_cast<int>(id), &auxinfo, sizeof(auxinfo));
    return auxinfo;
+#elif defined(BOTAN_TARGET_OS_HAS_AUXINFO)
+   for (const AuxInfo *auxinfo = static_cast<AuxInfo *>(::_dlauxinfo()); auxinfo != AT_NULL; ++auxinfo)
+      {
+      if (id == auxinfo->a_type)
+          return auxinfo->a_v;
+      }
+
+   return 0;
 #else
    BOTAN_UNUSED(id);
    return 0;
