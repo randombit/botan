@@ -96,7 +96,7 @@ The Botan MAC computation is split into five stages.
 Code Examples
 ------------------------
 
-The following example computes an HMAC with a random key then verifies the tag.
+The following example computes an HMAC with a random key then verifies the tag::
 
     #include <botan/mac.h>
     #include <botan/hex.h>
