@@ -45,7 +45,7 @@
   #include <sys/auxv.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS__DLAUXINFO)
+#if defined(BOTAN_TARGET_OS_HAS_AUXINFO)
   #include <dlfcn.h>
   #include <elf.h>
 #endif
@@ -179,7 +179,7 @@ unsigned long OS::get_auxval(unsigned long id)
    unsigned long auxinfo = 0;
    ::elf_aux_info(static_cast<int>(id), &auxinfo, sizeof(auxinfo));
    return auxinfo;
-#elif defined(BOTAN_TARGET_OS_HAS__DLAUXINFO)
+#elif defined(BOTAN_TARGET_OS_HAS_AUXINFO)
    for (const AuxInfo *auxinfo = static_cast<AuxInfo *>(::_dlauxinfo()); auxinfo != AT_NULL; ++auxinfo)
       {
       if (id == auxinfo->a_type)

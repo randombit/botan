@@ -14,7 +14,7 @@ sockets
 threads
 thread_local
 filesystem
-_dlauxinfo
+auxinfo
 </target_features>
 
 <feature_macros>
