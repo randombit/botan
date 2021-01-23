@@ -98,23 +98,43 @@ The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
 
    .. cpp:function:: std::unique_ptr<PasswordHash> from_params( \
          size_t i1, size_t i2 = 0, size_t i3 = 0) const
-         
+
       Create a password hash using some scheme specific format.
       Eg PBKDF2 and PGP-S2K set iterations in i1
       Scrypt uses N,r,p in i{1-3}
       Bcrypt-PBKDF just has iterations
       Argon2{i,d,id} would use iterations, memory, parallelism for i{1-3}, and Argon2 type is part of the family.
-      
+
       Values not needed should be set to 0.
 
 Available Schemes
 ----------------------
 
+General Recommendations
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you need wide interoperability use PBKDF2 with HMAC-SHA256 and at least 10K
+iterations. If you don't, use Scrypt with N=32768, r=8, p=1.
+
+You can test how long a particular PBKDF takes to execute using the cli tool
+``pbkdf_tune``::
+
+  $ ./botan pbkdf_tune --algo=Argon2id 500 --max-mem=192 --check
+  For 500 ms selected Argon2id(196608,3,1) using 192 MiB took 413.159 msec to compute
+
+This indicates the parameters chosen by the fast auto-tuning algorithm and
+because ``--check`` was supplied the hash is also executed with the full set of
+parameters and timed.
+
+
 PBKDF2
 ^^^^^^^^^^^^
 
 PBKDF2 is the "standard" password derivation scheme, widely implemented in many
-different libraries. It uses HMAC internally.
+different libraries. It uses HMAC internally and requires choosing a hash
+function to use. (If in doubt use SHA-256 or SHA-512). It also requires choosing
+an iteration count, which makes brute force attacks more expensive. Use *at
+least* 10000 and preferably much more.
 
 Scrypt
 ^^^^^^^^^^
@@ -156,7 +176,22 @@ Argon2
 .. versionadded:: 2.11.0
 
 Argon2 is the winner of the PHC (Password Hashing Competition) and
-provides a tunable memory hard PBKDF.
+provides a tunable memory hard PBKDF. There are three minor variants
+of Argon2 - Argon2d, Argon2i, and Argon2id. All three are implemented.
+
+Bcrypt
+^^^^^^^^^^^^
+
+.. versionadded:: 2.11.0
+
+Bcrypt-PBKDF is a variant of the well known ``bcrypt`` password hashing
+function.  Like ``bcrypt`` it is based around using Blowfish for the key
+expansion, which requires 4 KiB of fast random access memory, making hardware
+based attacks more expensive. Unlike Argon2 or Scrypt, the memory usage is not
+tunable.
+
+This function is relatively obscure but is used for example in OpenSSH.
+Prefer Argon2 or Scrypt in new systems.
 
 OpenPGP S2K
 ^^^^^^^^^^^^
