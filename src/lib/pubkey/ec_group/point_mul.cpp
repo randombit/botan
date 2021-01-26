@@ -9,7 +9,6 @@
 #include <botan/reducer.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
-#include <iostream>
 
 namespace Botan {
 
