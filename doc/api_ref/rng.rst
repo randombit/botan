@@ -68,7 +68,8 @@ System_RNG
 
 On systems which support it, in ``system_rng.h`` you can access a shared
 reference to a process global instance of the system PRNG (using interfaces such
-as ``/dev/urandom``, ``getrandom``, ``arc4random``, or ``RtlGenRandom``):
+as ``/dev/urandom``, ``getrandom``, ``arc4random``, ``BCryptGenRandom``,
+or ``RtlGenRandom``):
 
 .. cpp:function:: RandomNumberGenerator& system_rng()
 
@@ -249,7 +250,8 @@ and entropy.
 
 The following entropy sources are currently used:
 
- * The system RNG (``arc4random``, ``/dev/urandom``, or ``RtlGenRandom``).
+ * The system RNG (``/dev/urandom``, ``getrandom``, ``arc4random``,
+   ``BCryptGenRandom``, or ``RtlGenRandom``).
  * RDRAND and RDSEED are used if available, but not counted as contributing entropy
  * ``/dev/random`` and ``/dev/urandom``. This may be redundant with the system RNG
  * ``getentropy``, only used on OpenBSD currently
