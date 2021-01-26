@@ -17,6 +17,6 @@ if NOT %CC% == MinGW (
   7z e jom.zip
 )
 
-appveyor DownloadFile https://github.com/mozilla/sccache/releases/download/%SCCACHE_VERSION%/sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
-tar -xf sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
-set PATH=%PATH%;sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc
+appveyor DownloadFile https://github.com/mozilla/sccache/releases/download/v%SCCACHE_VERSION%/sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
+tar -xf sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
+set PATH=%PATH%;sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc

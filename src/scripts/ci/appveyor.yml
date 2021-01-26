@@ -47,4 +47,4 @@ branches:
 cache:
   - C:\Users\appveyor\AppData\Local\Mozilla\sccache\cache
   - C:\projects\botan\jom.zip
-  - C:\projects\botan\sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
+  - C:\projects\botan\sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
