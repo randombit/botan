@@ -3,7 +3,7 @@ clone_depth: 5
 
 environment:
   SCCACHE_CACHE_SIZE: 320M
-  SCCACHE_VERSION: 0.2.12
+  SCCACHE_VERSION: 0.2.15
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
   matrix:
@@ -13,7 +13,7 @@ environment:
       PLATFORM: x86_amd64
       TARGET: sanitizer
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      MAKE_TOOL: nmake
+      MAKE_TOOL: jom
       TARGET_CC: msvc
 
     # MSVC 2019 x86-64 preview
@@ -21,7 +21,7 @@ environment:
       PLATFORM: x86_amd64
       TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
-      MAKE_TOOL: nmake
+      MAKE_TOOL: jom
       TARGET_CC: msvc
 
     # MinGW GCC
@@ -46,3 +46,5 @@ branches:
 
 cache:
   - C:\Users\appveyor\AppData\Local\Mozilla\sccache\cache
+  - C:\projects\botan\jom.zip
+  - C:\projects\botan\sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
