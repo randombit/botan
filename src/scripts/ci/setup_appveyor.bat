@@ -15,11 +15,13 @@ if %CC% == MinGW (
    cl
 )
 
-if NOT %CC% == MinGW (
-  appveyor DownloadFile http://download.qt.io/official_releases/jom/jom.zip -FileName jom.zip
-  7z e jom.zip
+if not exist jom.zip (
+  appveyor DownloadFile https://download.qt.io/official_releases/jom/jom_1_1_3.zip -FileName jom.zip
 )
+7z e jom.zip
 
-appveyor DownloadFile https://github.com/mozilla/sccache/releases/download/v%SCCACHE_VERSION%/sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
+if not exist sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz (
+  appveyor DownloadFile https://github.com/mozilla/sccache/releases/download/v%SCCACHE_VERSION%/sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
+)
 tar -xf sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
 set PATH=%PATH%;sccache-v%SCCACHE_VERSION%-x86_64-pc-windows-msvc
