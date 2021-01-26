@@ -3,7 +3,7 @@
 * (C) 1999-2007,2017 Jack Lloyd
 * (C) 2018 Ribose Inc
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_OPENPGP_S2K_H_

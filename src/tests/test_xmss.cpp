@@ -1,9 +1,11 @@
 /*
- * Extended Hash-Based Signatures Tests
- *
- * (C) 2014,2015 Jack Lloyd
- * (C) 2016,2018 Matthias Gierlings
- **/
+* Extended Hash-Based Signatures Tests
+*
+* (C) 2014,2015 Jack Lloyd
+* (C) 2016,2018 Matthias Gierlings
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+**/
 
 #include "tests.h"
 

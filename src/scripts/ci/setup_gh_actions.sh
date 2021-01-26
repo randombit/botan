@@ -4,6 +4,8 @@
 #
 # (C) 2015,2017 Simon Warta
 # (C) 2016,2017,2018,2020 Jack Lloyd
+#
+# Botan is released under the Simplified BSD License (see license.txt)
 
 command -v shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 

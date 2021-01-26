@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 # (C) 2017,2018 Jack Lloyd
+# Botan is released under the Simplified BSD License (see license.txt)
 
 import sys
 import os

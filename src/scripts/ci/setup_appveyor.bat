@@ -1,4 +1,7 @@
 
+rem (C) 2017,2019,2021 Jack Lloyd
+rem Botan is released under the Simplified BSD License (see license.txt)
+
 echo Current build setup CC="%CC%" PLATFORM="%PLATFORM%" TARGET="%TARGET%"
 
 if %CC% == VC2019 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%

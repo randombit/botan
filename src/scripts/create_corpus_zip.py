@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# (C) 2017 Jack Lloyd
+# Botan is released under the Simplified BSD License (see license.txt)
+
 # These is used to create fuzzer corpus zip files
 
 # This is primarily used by OSS-Fuzz but might be useful if you were

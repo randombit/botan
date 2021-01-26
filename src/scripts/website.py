@@ -4,6 +4,8 @@
 Generate the Botan website
 
 (C) 2017 Jack Lloyd
+
+Botan is released under the Simplified BSD License (see license.txt)
 """
 
 import optparse # pylint: disable=deprecated-module

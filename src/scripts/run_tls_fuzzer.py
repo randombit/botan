@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# (C) 2019 Jack Lloyd
+# Botan is released under the Simplified BSD License (see license.txt)
+
 import argparse
 import subprocess
 import logging
