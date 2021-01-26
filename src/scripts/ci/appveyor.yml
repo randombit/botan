@@ -3,7 +3,7 @@ clone_depth: 5
 
 environment:
   SCCACHE_CACHE_SIZE: 320M
-  SCCACHE_VERSION: 0.2.12
+  SCCACHE_VERSION: 0.2.15
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
   matrix:
