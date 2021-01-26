@@ -13,7 +13,7 @@ environment:
       PLATFORM: x86_amd64
       TARGET: sanitizer
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      MAKE_TOOL: nmake
+      MAKE_TOOL: jom
       TARGET_CC: msvc
 
     # MSVC 2019 x86-64 preview
@@ -21,7 +21,7 @@ environment:
       PLATFORM: x86_amd64
       TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
-      MAKE_TOOL: nmake
+      MAKE_TOOL: jom
       TARGET_CC: msvc
 
     # MinGW GCC
