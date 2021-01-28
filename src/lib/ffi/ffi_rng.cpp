@@ -10,6 +10,8 @@
 #include <botan/system_rng.h>
 #include <botan/auto_rng.h>
 
+#include <functional>
+
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
    #include <botan/processor_rng.h>
 #endif
@@ -58,11 +60,18 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
    }
 
 int botan_rng_init_custom(botan_rng_t* rng_out, const char* rng_name, void* context,
-                          int(* get_cb)(uint8_t* out, size_t out_len, void* context),
-                          int(* add_entropy_cb)(const uint8_t input[], size_t length, void* context))
+                          int(* get_cb)(void* context, uint8_t* out, size_t out_len),
+                          int(* add_entropy_cb)(void* context, const uint8_t input[], size_t length),
+                          void(* destroy_cb)(void* context))
 {
 return ffi_guard_thunk(__func__,[=]() -> int {
    if(rng_out == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   if(rng_name == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   if(get_cb == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
    std::unique_ptr<Botan::RandomNumberGenerator> rng;
@@ -70,18 +79,28 @@ return ffi_guard_thunk(__func__,[=]() -> int {
       {
       public:
          Custom_RNG(const std::string& name, void* context,
-                    int(* get_cb)(uint8_t* out, size_t out_len, void* context),
-                    int(* add_entropy_cb)(const uint8_t input[], size_t length, void* context)) :
+                    int(* get_cb)(void* context, uint8_t* out, size_t out_len),
+                    int(* add_entropy_cb)(void* context, const uint8_t input[], size_t length),
+                    void(* destroy_cb)(void* context)) :
             m_name(name)
             {
-               m_cbs.context = context;
-               m_cbs.get = get_cb;
-               m_cbs.add_entropy = add_entropy_cb;
+               m_context = context;
+               m_get_cb = get_cb;
+               m_add_entropy_cb = add_entropy_cb;
+               m_destroy_cb = destroy_cb;
             }
+
+         ~Custom_RNG()
+         {
+            if(m_destroy_cb)
+            {
+               m_destroy_cb(m_context);
+            }
+         }
 
          void randomize(uint8_t output[], size_t length) override
          {
-            if(m_cbs.get(output, length, m_cbs.context))
+            if(m_get_cb(m_context, output, length))
             {
                throw Botan::Invalid_State("Failed to get random from C callback");
             }
@@ -89,17 +108,17 @@ return ffi_guard_thunk(__func__,[=]() -> int {
 
          bool accepts_input() const override
          {
-            return m_cbs.add_entropy != nullptr;
+            return m_add_entropy_cb != nullptr;
          }
 
          void add_entropy(const uint8_t input[], size_t length) override
          {
-            if(m_cbs.add_entropy == nullptr)
+            if(m_add_entropy_cb == nullptr)
             {
-               throw Botan::Invalid_Argument("No callback set for add_entropy");
+               return;
             }
             
-            if(m_cbs.add_entropy(input, length, m_cbs.context))
+            if(m_add_entropy_cb(m_context, input, length))
             {
                throw Botan::Invalid_State("Failed to add entropy via C callback");
             }
@@ -112,32 +131,22 @@ return ffi_guard_thunk(__func__,[=]() -> int {
 
          void clear() override
          {
-            // TODO?
-            // post: is_seeded() == false!
          }
 
          bool is_seeded() const override
          {
-            // assume seeded after init_cb() called
             return true;
          }
 
       private:
          std::string m_name;
-         struct callbacks
-         {
-            void* context;
-            int(* get)(uint8_t* out, size_t out_len, void* context);
-            int(* add_entropy)(const uint8_t input[], size_t length, void* context);
-         } m_cbs;
+         void* m_context;
+         std::function<int(void* context, uint8_t* out, size_t out_len)> m_get_cb;
+         std::function<int(void* context, const uint8_t input[], size_t length)> m_add_entropy_cb;
+         std::function<void(void* context)> m_destroy_cb;
    };
 
-   rng.reset(new Custom_RNG(rng_name, context, get_cb, add_entropy_cb));
-
-   if(!rng)
-      {
-      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-      }
+   rng.reset(new Custom_RNG(rng_name, context, get_cb, add_entropy_cb, destroy_cb));
 
    *rng_out = new botan_rng_struct(rng.release());
    return BOTAN_FFI_SUCCESS;

@@ -250,24 +250,33 @@ class FFI_Unit_Tests final : public Test
 
          size_t cb_counter = 0;
 
-         auto custom_get_cb = +[](uint8_t* out, size_t out_len, void* context) -> int
+         auto custom_get_cb = +[](void* context, uint8_t* out, size_t out_len) -> int
             {
+            Botan::set_mem(out, out_len, 0x12);
             BOTAN_UNUSED(out, out_len);
             (*(static_cast<size_t*>(context)))++;
             return 0;
             };
 
-         auto custom_add_entropy_cb = +[](const uint8_t input[], size_t length, void* context) -> int
+         auto custom_add_entropy_cb = +[](void* context, const uint8_t input[], size_t length) -> int
             {
             BOTAN_UNUSED(input, length);
             (*(static_cast<size_t*>(context)))++;
             return 0;
             };
 
-         if(TEST_FFI_OK(botan_rng_init_custom, (&custom_rng, "custom rng", &cb_counter, custom_get_cb, custom_add_entropy_cb)))
+         auto custom_destroy_cb = +[](void* context) -> void
             {
+            (*(static_cast<size_t*>(context)))++;
+            };
+
+         if(TEST_FFI_OK(botan_rng_init_custom, (&custom_rng, "custom rng", &cb_counter, custom_get_cb, custom_add_entropy_cb, custom_destroy_cb)))
+            {
+               Botan::clear_mem(outbuf.data(), outbuf.size());
                TEST_FFI_OK(botan_rng_get, (custom_rng, outbuf.data(), outbuf.size()));
                result.test_eq("custom_get_cb called", cb_counter, 1);
+               std::vector<uint8_t> pattern(outbuf.size(), 0x12);
+               result.test_eq("custom_get_cb returned bytes", pattern, outbuf);
 
                TEST_FFI_OK(botan_rng_reseed, (custom_rng, 256));
                result.test_eq("custom_add_entropy_cb called", cb_counter, 2);
@@ -280,6 +289,7 @@ class FFI_Unit_Tests final : public Test
                result.test_eq("custom_add_entropy_cb called", cb_counter, 4);
 
                TEST_FFI_OK(botan_rng_destroy, (custom_rng));
+               result.test_eq("custom_destroy_cb called", cb_counter, 5);
             }
 
          TEST_FFI_OK(botan_rng_destroy, (rng));
