@@ -103,7 +103,7 @@ return ffi_guard_thunk(__func__,[=]() -> int {
             int rc = m_get_cb(m_context, output, length);
             if(rc)
             {
-               throw Botan::Invalid_State("Failed to get random from C callback, rc=" + rc);
+               throw Botan::Invalid_State("Failed to get random from C callback, rc=" + std::to_string(rc));
             }
          }
 
@@ -122,7 +122,7 @@ return ffi_guard_thunk(__func__,[=]() -> int {
             int rc = m_add_entropy_cb(m_context, input, length);
             if(rc)
             {
-               throw Botan::Invalid_State("Failed to add entropy via C callback, rc=" + rc);
+               throw Botan::Invalid_State("Failed to add entropy via C callback, rc=" + std::to_string(rc));
             }
          }
 
