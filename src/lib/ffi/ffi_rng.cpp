@@ -1,5 +1,6 @@
 /*
 * (C) 2015,2017 Jack Lloyd
+* (C) 2021 René Fischer
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -74,7 +75,6 @@ return ffi_guard_thunk(__func__,[=]() -> int {
    if(get_cb == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
-   std::unique_ptr<Botan::RandomNumberGenerator> rng;
    class Custom_RNG : public Botan::RandomNumberGenerator
       {
       public:
@@ -100,9 +100,10 @@ return ffi_guard_thunk(__func__,[=]() -> int {
 
          void randomize(uint8_t output[], size_t length) override
          {
-            if(m_get_cb(m_context, output, length))
+            int rc = m_get_cb(m_context, output, length);
+            if(rc)
             {
-               throw Botan::Invalid_State("Failed to get random from C callback");
+               throw Botan::Invalid_State("Failed to get random from C callback, rc=" + rc);
             }
          }
 
@@ -117,10 +118,11 @@ return ffi_guard_thunk(__func__,[=]() -> int {
             {
                return;
             }
-            
-            if(m_add_entropy_cb(m_context, input, length))
+
+            int rc = m_add_entropy_cb(m_context, input, length);
+            if(rc)
             {
-               throw Botan::Invalid_State("Failed to add entropy via C callback");
+               throw Botan::Invalid_State("Failed to add entropy via C callback, rc=" + rc);
             }
          }
 
@@ -146,7 +148,7 @@ return ffi_guard_thunk(__func__,[=]() -> int {
          std::function<void(void* context)> m_destroy_cb;
    };
 
-   rng.reset(new Custom_RNG(rng_name, context, get_cb, add_entropy_cb, destroy_cb));
+   std::unique_ptr<Botan::RandomNumberGenerator> rng(new Custom_RNG(rng_name, context, get_cb, add_entropy_cb, destroy_cb));
 
    *rng_out = new botan_rng_struct(rng.release());
    return BOTAN_FFI_SUCCESS;
