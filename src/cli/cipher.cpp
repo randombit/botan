@@ -22,7 +22,7 @@ namespace Botan_CLI {
 class Cipher final : public Command
    {
    public:
-      Cipher() : Command("cipher --cipher=AES-256/GCM --decrypt --key= --nonce= --ad= --buf-size=4096") {}
+      Cipher() : Command("cipher --cipher=AES-256/GCM --decrypt --key= --nonce= --ad= --buf-size=4096 input-file") {}
 
       std::string group() const override
          {
@@ -40,6 +40,7 @@ class Cipher final : public Command
          const std::string key_hex = get_arg("key");
          const std::string nonce_hex  = get_arg("nonce");
          const std::string ad_hex = get_arg_or("ad", "");
+         const std::string input_file = get_arg_or("input-file", "-");
          const size_t buf_size = get_arg_sz("buf-size");
 
          const Botan::SymmetricKey key(key_hex);
@@ -73,7 +74,7 @@ class Cipher final : public Command
          // Set nonce
          cipher->start(nonce.bits_of());
 
-         const std::vector<uint8_t> input = this->slurp_file("-", buf_size);
+         const std::vector<uint8_t> input = this->slurp_file(input_file, buf_size);
 
          Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
          cipher->finish(buf);
