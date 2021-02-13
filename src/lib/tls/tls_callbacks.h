@@ -259,16 +259,24 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
 
        /**
        * Optional callback for server: choose ALPN protocol
+       *
        * ALPN (RFC 7301) works by the client sending a list of application
        * protocols it is willing to negotiate. The server then selects which
-       * protocol to use, which is not necessarily even on the list that
-       * the client sent.
+       * protocol to use. RFC 7301 requires that if the server does not support
+       * any protocols offered by the client, then it should close the connection
+       * with an alert of no_application_protocol. Within this callback this would
+       * be done by throwing a TLS_Exception(Alert::NO_APPLICATION_PROTOCOL)
        *
        * @param client_protos the vector of protocols the client is willing to negotiate
        *
-       * @return the protocol selected by the server, which need not be on the
-       * list that the client sent; if this is the empty string, the server ignores the
-       * client ALPN extension. Default return value is empty string.
+       * @return the protocol selected by the server; if the empty string is
+       * returned, the server does not reply to the client ALPN extension.
+       *
+       * The default implementation returns the empty string, causing client
+       * ALPN to be ignored.
+       *
+       * It is highly recommended to support ALPN whenever possible to avoid
+       * cross-protocol attacks.
        */
        virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos);
 
