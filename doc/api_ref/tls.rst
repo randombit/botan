@@ -130,7 +130,17 @@ information about the connection.
      Optional. Called by the server when a client includes a list of protocols in the ALPN extension.
      The server then choose which protocol to use, or "" to disable sending any ALPN response.
      The default implementation returns the empty string all of the time, effectively disabling
-     ALPN responses.
+     ALPN responses. The server may also throw an exception to reject the connection; this is
+     recommended when the client sends a list of protocols and the server does not understand
+     any of them.
+
+     .. warning::
+
+        The ALPN RFC requires that if the server does not understand any of the
+        protocols offered by the client, it should close the connection using an
+        alert. Carrying on the connection (for example by ignoring ALPN when the
+        server does not understand the protocol list) can expose applications to
+        cross-protocol attacks.
 
  .. cpp:function:: void tls_session_activated()
 
