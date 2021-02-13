@@ -202,19 +202,22 @@ uint16_t choose_ciphersuite(
 
          if(version.supports_negotiable_signature_algorithms())
             {
-            const std::vector<Signature_Scheme> allowed =
-               policy.allowed_signature_schemes();
-
-            std::vector<Signature_Scheme> client_sig_methods =
+            const std::vector<Signature_Scheme> client_sig_methods =
                client_hello.signature_schemes();
 
-            if(client_sig_methods.empty())
-               {
-               // If empty, then implicit SHA-1 (TLS v1.2 rules)
-               client_sig_methods.push_back(Signature_Scheme::RSA_PKCS1_SHA1);
-               client_sig_methods.push_back(Signature_Scheme::ECDSA_SHA1);
-               }
+            /*
+            If the vector is empty (eg because the client did not send the
+            extension), then the loop will fail to find a match and we will
+            reject with a handshake failure.
 
+            The TLS v1.2 logic said that a client not sending the extension implicitly
+            supported SHA-1 but with draft-ietf-tls-md5-sha1-deprecate instead we
+            are removing support for SHA-1 signatures entirely.
+
+            Contrary to the wording of draft-ietf-tls-md5-sha1-deprecate we do
+            not enforce that clients do not offer support SHA-1 or MD5
+            signatures; we just ignore it.
+            */
             bool we_support_some_hash_by_client = false;
 
             for(Signature_Scheme scheme : client_sig_methods)

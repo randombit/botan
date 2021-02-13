@@ -174,10 +174,6 @@ std::string hash_function_of_scheme(Signature_Scheme scheme)
    {
    switch(scheme)
       {
-      case Signature_Scheme::ECDSA_SHA1:
-      case Signature_Scheme::RSA_PKCS1_SHA1:
-         return "SHA-1";
-
       case Signature_Scheme::ECDSA_SHA256:
       case Signature_Scheme::RSA_PKCS1_SHA256:
       case Signature_Scheme::RSA_PSS_SHA256:
@@ -224,9 +220,6 @@ const std::vector<Signature_Scheme>& all_signature_schemes()
       Signature_Scheme::ECDSA_SHA384,
       Signature_Scheme::ECDSA_SHA512,
       Signature_Scheme::ECDSA_SHA256,
-
-      Signature_Scheme::RSA_PKCS1_SHA1,
-      Signature_Scheme::ECDSA_SHA1,
    };
 
    return all_schemes;
@@ -236,7 +229,6 @@ bool signature_scheme_is_known(Signature_Scheme scheme)
    {
    switch(scheme)
       {
-      case Signature_Scheme::RSA_PKCS1_SHA1:
       case Signature_Scheme::RSA_PKCS1_SHA256:
       case Signature_Scheme::RSA_PKCS1_SHA384:
       case Signature_Scheme::RSA_PKCS1_SHA512:
@@ -244,7 +236,6 @@ bool signature_scheme_is_known(Signature_Scheme scheme)
       case Signature_Scheme::RSA_PSS_SHA384:
       case Signature_Scheme::RSA_PSS_SHA512:
 
-      case Signature_Scheme::ECDSA_SHA1:
       case Signature_Scheme::ECDSA_SHA256:
       case Signature_Scheme::ECDSA_SHA384:
       case Signature_Scheme::ECDSA_SHA512:
@@ -260,7 +251,6 @@ std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
    {
    switch(scheme)
       {
-      case Signature_Scheme::RSA_PKCS1_SHA1:
       case Signature_Scheme::RSA_PKCS1_SHA256:
       case Signature_Scheme::RSA_PKCS1_SHA384:
       case Signature_Scheme::RSA_PKCS1_SHA512:
@@ -269,7 +259,6 @@ std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
       case Signature_Scheme::RSA_PSS_SHA512:
          return "RSA";
 
-      case Signature_Scheme::ECDSA_SHA1:
       case Signature_Scheme::ECDSA_SHA256:
       case Signature_Scheme::ECDSA_SHA384:
       case Signature_Scheme::ECDSA_SHA512:
@@ -292,8 +281,6 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
    {
    switch(scheme)
       {
-      case Signature_Scheme::RSA_PKCS1_SHA1:
-         return "RSA_PKCS1_SHA1";
       case Signature_Scheme::RSA_PKCS1_SHA256:
          return "RSA_PKCS1_SHA256";
       case Signature_Scheme::RSA_PKCS1_SHA384:
@@ -301,8 +288,6 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
       case Signature_Scheme::RSA_PKCS1_SHA512:
          return "RSA_PKCS1_SHA512";
 
-      case Signature_Scheme::ECDSA_SHA1:
-         return "ECDSA_SHA1";
       case Signature_Scheme::ECDSA_SHA256:
          return "ECDSA_SHA256";
       case Signature_Scheme::ECDSA_SHA384:
@@ -333,8 +318,6 @@ std::string padding_string_for_scheme(Signature_Scheme scheme)
    {
    switch(scheme)
       {
-      case Signature_Scheme::RSA_PKCS1_SHA1:
-         return "EMSA_PKCS1(SHA-1)";
       case Signature_Scheme::RSA_PKCS1_SHA256:
          return "EMSA_PKCS1(SHA-256)";
       case Signature_Scheme::RSA_PKCS1_SHA384:
@@ -342,8 +325,6 @@ std::string padding_string_for_scheme(Signature_Scheme scheme)
       case Signature_Scheme::RSA_PKCS1_SHA512:
          return "EMSA_PKCS1(SHA-512)";
 
-      case Signature_Scheme::ECDSA_SHA1:
-         return "EMSA1(SHA-1)";
       case Signature_Scheme::ECDSA_SHA256:
          return "EMSA1(SHA-256)";
       case Signature_Scheme::ECDSA_SHA384:

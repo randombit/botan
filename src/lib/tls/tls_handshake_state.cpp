@@ -398,13 +398,6 @@ Handshake_State::choose_sig_format(const Private_Key& key,
       std::vector<Signature_Scheme> requested =
          (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
 
-      if(requested.empty())
-         {
-         // Implicit SHA-1
-         requested.push_back(Signature_Scheme::RSA_PKCS1_SHA1);
-         requested.push_back(Signature_Scheme::ECDSA_SHA1);
-         }
-
       for(Signature_Scheme scheme : allowed)
          {
          if(signature_scheme_is_known(scheme) == false)

@@ -71,7 +71,6 @@ std::vector<std::string> Policy::allowed_signature_hashes() const
       "SHA-512",
       "SHA-384",
       "SHA-256",
-      //"SHA-1",
       };
    }
 

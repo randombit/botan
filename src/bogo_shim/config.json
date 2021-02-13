@@ -35,6 +35,14 @@
         "Downgrade-*-Client-Ignore": "Not possible to ignore downgrade indicator",
         "Downgrade-TLS12-*": "Not a downgrade when we don't support v1.3",
 
+        "Agree-Digest-SHA1": "No SHA-1 in TLS 1.2",
+        "ServerAuth-SHA1-Fallback-*": "No SHA-1 in TLS 1.2",
+        "*-InvalidSignature-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+        "*-Sign-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+        "*-Sign-Negotiate-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+        "*-VerifyDefault-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+        "*-Verify-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+
         "*QUIC*": "No QUIC",
         "ALPS*": "No ALPS",
 

@@ -78,12 +78,10 @@ Auth_Method BOTAN_TEST_API auth_method_from_string(const std::string& str);
 enum class Signature_Scheme : uint16_t {
    NONE             = 0x0000,
 
-   RSA_PKCS1_SHA1   = 0x0201,
    RSA_PKCS1_SHA256 = 0x0401,
    RSA_PKCS1_SHA384 = 0x0501,
    RSA_PKCS1_SHA512 = 0x0601,
 
-   ECDSA_SHA1   = 0x0203,
    ECDSA_SHA256 = 0x0403,
    ECDSA_SHA384 = 0x0503,
    ECDSA_SHA512 = 0x0603,
