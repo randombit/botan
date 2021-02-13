@@ -104,7 +104,8 @@ def test_cipher_kat(cli_binary, data):
         "cipher",
         "--cipher=%s" % algorithm,
         "--nonce=%s" % iv,
-        "--key=%s" % key]
+        "--key=%s" % key,
+        "-"]
 
     if 'AD' in data:
         cmd += ['--ad=%s' % (data['AD'])]
