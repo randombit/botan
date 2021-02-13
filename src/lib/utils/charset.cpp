@@ -1,14 +1,13 @@
 /*
 * Character Set Handling
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2021 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/charset.h>
-#include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
-#include <cctype>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -68,7 +67,7 @@ std::string ucs2_to_utf8(const uint8_t ucs2[], size_t len)
    std::string s;
    for(size_t i = 0; i != chars; ++i)
       {
-      const uint16_t c = load_be<uint16_t>(ucs2, i);
+      const uint32_t c = load_be<uint16_t>(ucs2, i);
       append_utf8_for(s, c);
       }
 
@@ -97,20 +96,13 @@ std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len)
 */
 std::string latin1_to_utf8(const uint8_t chars[], size_t len)
    {
-   std::string utf8;
+   std::string s;
    for(size_t i = 0; i != len; ++i)
       {
-      const uint8_t c = static_cast<uint8_t>(chars[i]);
-
-      if(c <= 0x7F)
-         utf8 += static_cast<char>(c);
-      else
-         {
-         utf8 += static_cast<char>((0xC0 | (c >> 6)));
-         utf8 += static_cast<char>((0x80 | (c & 0x3F)));
-         }
+      const uint32_t c = static_cast<uint8_t>(chars[i]);
+      append_utf8_for(s, c);
       }
-   return utf8;
+   return s;
    }
 
 }
