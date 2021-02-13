@@ -201,6 +201,16 @@ size_t low_zero_bits(const BigInt& n)
    return seen_nonempty_word.if_set_return(low_zero);
    }
 
+
+namespace {
+
+size_t safegcd_loop_bound(size_t f_bits, size_t g_bits)
+   {
+   return 4 + 3*std::max(f_bits, g_bits);
+   }
+
+}
+
 /*
 * Calculate the GCD
 */
@@ -231,7 +241,7 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 
    int32_t delta = 1;
 
-   const size_t loop_cnt = 4 + 3*std::max(f.bits(), g.bits());
+   const size_t loop_cnt = safegcd_loop_bound(f.bits(), g.bits());
 
    BigInt newg, t;
    for(size_t i = 0; i != loop_cnt; ++i)
