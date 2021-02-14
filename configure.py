@@ -482,11 +482,8 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-valgrind', help='use valgrind API',
                            dest='with_valgrind', action='store_true', default=False)
 
-    # Cmake and bakefile options are hidden as they should not be used by end users
+    # Cmake option is hidden as it should not be used by end users
     build_group.add_option('--with-cmake', action='store_true',
-                           default=False, help=optparse.SUPPRESS_HELP)
-
-    build_group.add_option('--with-bakefile', action='store_true',
                            default=False, help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
@@ -2122,8 +2119,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'endian': options.with_endian,
         'cpu_is_64bit': arch.wordsize == 64,
 
-        'bakefile_arch': 'x86' if options.arch == 'x86_32' else 'x86_64',
-
         'innosetup_arch': innosetup_arch(options.os, options.arch),
 
         'mp_bits': choose_mp_bits(),
@@ -3099,13 +3094,6 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.with_pdf and not options.with_sphinx:
         raise UserError('Option --with-pdf requires --with-sphinx')
 
-    if options.with_bakefile:
-        if options.os != 'windows' or options.compiler != 'msvc' or options.build_shared_lib is False:
-            raise UserError("Building via bakefile is only supported for MSVC DLL build")
-
-        if options.arch not in ['x86_64', 'x86_32']:
-            raise UserError("Bakefile only supports x86 targets")
-
     # Warnings
     if options.os == 'windows' and options.compiler != 'msvc':
         logging.warning('The windows target is oriented towards MSVC; maybe you want --os=cygwin or --os=mingw')
@@ -3276,9 +3264,6 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
     if options.with_cmake:
         logging.warning("CMake build is only for development: use make for production builds")
         write_template('CMakeLists.txt', in_build_data('cmake.in'))
-    elif options.with_bakefile:
-        logging.warning("Bakefile build is only for development: use make for production builds")
-        write_template('botan.bkl', in_build_data('bakefile.in'))
     else:
         write_template(template_vars['makefile_path'], in_build_data('makefile.in'))
 
