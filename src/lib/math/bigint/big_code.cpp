@@ -21,8 +21,14 @@ std::string BigInt::to_dec_string() const
 
    while(copy > 0)
       {
-      ct_divide_u8(copy, 10, copy, remainder);
-      digits.push_back(remainder);
+      ct_divide_u8(copy, 100, copy, remainder);
+
+      const uint8_t ld = remainder % 10;
+      const uint8_t td = (remainder - ld) / 10;
+      digits.push_back(ld);
+
+      if(copy > 0 || td > 0)
+         digits.push_back(td);
       }
 
    std::string s;
