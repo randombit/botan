@@ -206,7 +206,12 @@ namespace {
 
 size_t safegcd_loop_bound(size_t f_bits, size_t g_bits)
    {
-   return 4 + 3*std::max(f_bits, g_bits);
+   const size_t d = std::max(f_bits, g_bits);
+
+   if(d < 46)
+      return (49*d + 80) / 17;
+   else
+      return (49*d + 57) / 17;
    }
 
 }
@@ -216,8 +221,10 @@ size_t safegcd_loop_bound(size_t f_bits, size_t g_bits)
 */
 BigInt gcd(const BigInt& a, const BigInt& b)
    {
-   if(a.is_zero() || b.is_zero())
-      return 0;
+   if(a.is_zero())
+      return abs(b);
+   if(b.is_zero())
+      return abs(a);
    if(a == 1 || b == 1)
       return 1;
 
