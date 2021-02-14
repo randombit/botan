@@ -266,18 +266,13 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
    m_random = reader.get_fixed<uint8_t>(32);
    m_session_id = reader.get_range<uint8_t>(1, 0, 32);
 
-   std::unique_ptr<HashFunction> sha256;
    if(m_version.is_datagram_protocol())
       {
-      sha256 = HashFunction::create_or_throw("SHA-256");
+      auto sha256 = HashFunction::create_or_throw("SHA-256");
       sha256->update(reader.get_data_read_so_far());
-      }
 
-   if(m_version.is_datagram_protocol())
       m_hello_cookie = reader.get_range<uint8_t>(1, 0, 255);
 
-   if(sha256)
-      {
       sha256->update(reader.get_remaining());
       m_cookie_input_bits.resize(sha256->output_length());
       sha256->final(m_cookie_input_bits.data());
