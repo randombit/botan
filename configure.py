@@ -2014,7 +2014,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         if libs is None:
             return ''
 
-        return ' '.join([(cc.add_lib_option % lib) for lib in libs.split(',')])
+        return ' '.join([(cc.add_lib_option % lib) for lib in libs.split(',') if lib != ''])
 
     variables = {
         'version_major':  Version.major(),
