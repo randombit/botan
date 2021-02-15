@@ -142,14 +142,12 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       virtual std::unique_ptr<PasswordHash> from_iterations(size_t iterations) const = 0;
 
       /**
-      * Create a password hash using some scheme specific format.
-      * Eg PBKDF2 and PGP-S2K set iterations in i1
-      * Scrypt uses N,r,p in i{1-3}
-      * Bcrypt-PBKDF just has iterations
-      * Argon2{i,d,id} would use iterations, memory, parallelism for i{1-3},
-      * and Argon2 type is part of the family.
+      * Create a password hash using some scheme specific format. Parameters are as follows:
+      * - For PBKDF2, PGP-S2K, and Bcrypt-PBKDF, i1 is iterations
+      * - Scrypt uses N, r, p for i{1-3}
+      * - Argon2 family uses memory (in KB), iterations, and parallelism for i{1-3}
       *
-      * Values not needed should be set to 0
+      * All unneeded parameters should be set to 0 or left blank.
       */
       virtual std::unique_ptr<PasswordHash> from_params(
          size_t i1,
