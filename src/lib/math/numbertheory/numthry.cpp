@@ -112,10 +112,14 @@ BigInt ressol(const BigInt& a, const BigInt& p)
             }
          }
 
+      BOTAN_ASSERT_NOMSG(s >= (i + 1)); // No underflow!
       c = monty_exp_vartime(monty_p, c, BigInt::power_of_2(s-i-1));
       r = mod_p.multiply(r, c);
       c = mod_p.square(c);
       n = mod_p.multiply(n, c);
+
+      // s decreases as the algorithm proceeds
+      BOTAN_ASSERT_NOMSG(s >= i);
       s = i;
       }
 
@@ -257,8 +261,8 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 
       const bool need_swap = (g.is_odd() && delta > 0);
 
-      // if(need_swap) delta *= -1
-      delta *= CT::Mask<uint8_t>::expand(need_swap).select(0, 2) - 1;
+      // if(need_swap) { delta *= -1 } else { delta *= 1 }
+      delta *= CT::Mask<uint8_t>::expand(need_swap).if_not_set_return(2) - 1;
       f.ct_cond_swap(need_swap, g);
       g.ct_cond_swap(need_swap, newg);
 
@@ -272,6 +276,8 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 
    f.const_time_unpoison();
    g.const_time_unpoison();
+
+   BOTAN_ASSERT_NOMSG(g.is_zero());
 
    return f;
    }
