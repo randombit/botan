@@ -202,7 +202,7 @@ bool BitMap::find_free(size_t* bit)
       const bitmask_type mask = (i == m_bits.size() - 1) ? m_last_mask : m_main_mask;
       if((m_bits[i] & mask) != mask)
          {
-         size_t free_bit = find_set_bit(~m_bits[i]);
+         const size_t free_bit = find_set_bit(~m_bits[i]);
          const bitmask_type bmask = static_cast<bitmask_type>(1) << (free_bit % BITMASK_BITS);
          BOTAN_ASSERT_NOMSG((m_bits[i] & bmask) == 0);
          m_bits[i] |= bmask;
