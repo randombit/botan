@@ -333,6 +333,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     target_group.add_option('--ldflags', metavar='FLAGS',
                             help='set linker flags', default=None)
 
+    target_group.add_option('--extra-libs', metavar='LIBS',
+                            help='specify extra libraries to link against', default='')
+
     target_group.add_option('--ar-command', dest='ar_command', metavar='AR', default=None,
                             help='set path to static archive creator')
 
@@ -2007,6 +2010,12 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         else:
             return '%s %s' % (options.compiler_cache, cxx)
 
+    def extra_libs(libs, cc):
+        if libs is None:
+            return ''
+
+        return ' '.join([(cc.add_lib_option % lib) for lib in libs.split(',') if lib != ''])
+
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -2131,6 +2140,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'cc_sysroot': sysroot_option(),
         'cc_compile_flags': options.cxxflags or cc.cc_compile_flags(options),
         'ldflags': options.ldflags or '',
+        'extra_libs': extra_libs(options.extra_libs, cc),
         'cc_warning_flags': cc.cc_warning_flags(options),
         'output_to_exe': cc.output_to_exe,
         'cc_macro': cc.macro_name,
@@ -3005,6 +3015,10 @@ def canonicalize_options(options, info_os, info_arch):
     # Set default fuzzing lib
     if options.build_fuzzers == 'libfuzzer' and options.fuzzer_lib is None:
         options.fuzzer_lib = 'Fuzzer'
+
+    if options.ldflags is not None:
+        libs = [m.group(1) for m in re.finditer(r'-l([a-z0-9]+)', options.ldflags)]
+        options.extra_libs += ','.join(libs)
 
 # Checks user options for consistency
 # This method DOES NOT change options on behalf of the user but explains

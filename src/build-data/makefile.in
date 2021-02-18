@@ -21,7 +21,7 @@ LDFLAGS        = %{ldflags}
 EXE_LINK_CMD   = %{exe_link_cmd}
 
 LIB_LINKS_TO   = %{external_link_cmd} %{link_to}
-EXE_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO)
+EXE_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO) %{extra_libs}
 
 BUILD_FLAGS    = $(ABI_FLAGS) $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 
