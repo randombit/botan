@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Travis CI setup script for Botan build
 #
