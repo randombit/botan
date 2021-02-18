@@ -10,6 +10,12 @@ compiler: gcc
 
 jobs:
   include:
+    - name: FreeBSD x86_64 (Clang)
+      os: freebsd
+      compiler: clang
+      env:
+       - TARGET="shared"
+
     - name: Linux s390x (GCC)
       arch: s390x
       env:
