@@ -1,8 +1,13 @@
 Release Notes
 ========================================
 
-Version 2.17.4, Not Yet Released
+Version 2.18.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add support for implementing custom RNG objects through the
+  FFI interface (GH #2627 #2600)
+
+* Improve safegcd bounds, improving runtime performance (GH #2628 #2619)
 
 * Fix a regression introduced in 2.17.0 where LDFLAGS which add an extra
   library (such as ``-latomic`` needed on SPARC) were not always applied
