@@ -250,7 +250,7 @@ class FFI_Unit_Tests final : public Test
 
          size_t cb_counter = 0;
 
-         auto custom_get_cb = +[](void* context, uint8_t* out, size_t out_len) -> int
+         auto custom_get_cb = [](void* context, uint8_t* out, size_t out_len) -> int
             {
             Botan::set_mem(out, out_len, 0x12);
             BOTAN_UNUSED(out, out_len);
@@ -258,14 +258,14 @@ class FFI_Unit_Tests final : public Test
             return 0;
             };
 
-         auto custom_add_entropy_cb = +[](void* context, const uint8_t input[], size_t length) -> int
+         auto custom_add_entropy_cb = [](void* context, const uint8_t input[], size_t length) -> int
             {
             BOTAN_UNUSED(input, length);
             (*(static_cast<size_t*>(context)))++;
             return 0;
             };
 
-         auto custom_destroy_cb = +[](void* context) -> void
+         auto custom_destroy_cb = [](void* context) -> void
             {
             (*(static_cast<size_t*>(context)))++;
             };
