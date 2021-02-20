@@ -61,13 +61,29 @@ size_t low_zero_bits(const BigInt& n)
    return seen_nonempty_word.if_set_return(low_zero);
    }
 
+namespace {
+
+size_t safegcd_loop_bound(size_t f_bits, size_t g_bits)
+   {
+   const size_t d = std::max(f_bits, g_bits);
+
+   if(d < 46)
+      return (49*d + 80) / 17;
+   else
+      return (49*d + 57) / 17;
+   }
+
+}
+
 /*
 * Calculate the GCD
 */
 BigInt gcd(const BigInt& a, const BigInt& b)
    {
-   if(a.is_zero() || b.is_zero())
-      return 0;
+   if(a.is_zero())
+      return abs(b);
+   if(b.is_zero())
+      return abs(a);
    if(a == 1 || b == 1)
       return 1;
 
@@ -91,7 +107,7 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 
    int32_t delta = 1;
 
-   const size_t loop_cnt = 4 + 3*std::max(f.bits(), g.bits());
+   const size_t loop_cnt = safegcd_loop_bound(f.bits(), g.bits());
 
    BigInt newg, t;
    for(size_t i = 0; i != loop_cnt; ++i)
@@ -100,8 +116,8 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 
       const bool need_swap = (g.is_odd() && delta > 0);
 
-      // if(need_swap) delta *= -1
-      delta *= CT::Mask<uint8_t>::expand(need_swap).select(0, 2) - 1;
+      // if(need_swap) { delta *= -1 } else { delta *= 1 }
+      delta *= CT::Mask<uint8_t>::expand(need_swap).if_not_set_return(2) - 1;
       f.ct_cond_swap(need_swap, g);
       g.ct_cond_swap(need_swap, newg);
 
@@ -115,6 +131,8 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 
    f.const_time_unpoison();
    g.const_time_unpoison();
+
+   BOTAN_ASSERT_NOMSG(g.is_zero());
 
    return f;
    }
