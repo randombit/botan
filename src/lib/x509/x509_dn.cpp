@@ -291,7 +291,7 @@ void X509_DN::decode_from(BER_Decoder& source)
          rdn.start_cons(SEQUENCE)
             .decode(oid)
             .decode(str) // TODO support Any
-            .end_cons().verify_end("Invalid X509_DN, data follows RDN");
+            .end_cons();
 
          add_attribute(oid, str);
          }
