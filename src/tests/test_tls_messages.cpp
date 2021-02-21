@@ -67,8 +67,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                {
                if(algo == "cert_verify")
                   {
-                  Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
-                  Botan::TLS::Certificate_Verify message(buffer, pv);
+                  Botan::TLS::Certificate_Verify message(buffer);
                   }
                else if(algo == "client_hello")
                   {
@@ -150,10 +149,9 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
             {
             if(algo == "cert_verify")
                {
-               Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
-               result.test_throws("invalid cert_verify input", exception, [&buffer, &pv]()
+               result.test_throws("invalid cert_verify input", exception, [&buffer]()
                   {
-                  Botan::TLS::Certificate_Verify message(buffer, pv);
+                  Botan::TLS::Certificate_Verify message(buffer);
                   });
                }
             else if(algo == "client_hello")

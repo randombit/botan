@@ -612,10 +612,6 @@ class Test_Policy final : public Botan::TLS::Text_Policy
          {
          return true;
          }
-      bool send_fallback_scsv(Botan::TLS::Protocol_Version) const override
-         {
-         return false;
-         }
 
       size_t dtls_initial_timeout() const override
          {
@@ -691,10 +687,7 @@ class TLS_Unit_Tests final : public Test
          policy.set("key_exchange_methods", kex_policy);
          policy.set("negotiate_encrypt_then_mac", etm_policy);
 
-         policy.set("allow_tls10", "true");
-         policy.set("allow_tls11", "true");
          policy.set("allow_tls12", "true");
-         policy.set("allow_dtls10", "true");
          policy.set("allow_dtls12", "true");
 
          if(kex_policy.find("RSA") != std::string::npos)
@@ -704,11 +697,6 @@ class TLS_Unit_Tests final : public Test
 
          std::vector<Botan::TLS::Protocol_Version> versions =
             {
-#if defined(BOTAN_HAS_TLS_V10)
-            Botan::TLS::Protocol_Version::TLS_V10,
-            Botan::TLS::Protocol_Version::TLS_V11,
-            Botan::TLS::Protocol_Version::DTLS_V10,
-#endif
             Botan::TLS::Protocol_Version::TLS_V12,
             Botan::TLS::Protocol_Version::DTLS_V12
             };
@@ -746,10 +734,7 @@ class TLS_Unit_Tests final : public Test
          policy.set("ciphers", cipher_policy);
          policy.set("macs", mac_policy);
          policy.set("key_exchange_methods", kex_policy);
-         policy.set("allow_tls10", "false");
-         policy.set("allow_tls11", "false");
          policy.set("allow_tls12", "true");
-         policy.set("allow_dtls10", "false");
          policy.set("allow_dtls12", "true");
 
          if(kex_policy.find("RSA") != std::string::npos)
@@ -1026,10 +1011,7 @@ class DTLS_Reconnection_Test : public Test
                std::vector<std::string> allowed_key_exchange_methods() const override
                   { return {"PSK"}; }
 
-               bool allow_tls10()  const override { return false; }
-               bool allow_tls11()  const override { return false; }
                bool allow_tls12()  const override { return false; }
-               bool allow_dtls10() const override { return false; }
                bool allow_dtls12() const override { return true;  }
 
                bool allow_dtls_epoch0_restart() const override { return true; }

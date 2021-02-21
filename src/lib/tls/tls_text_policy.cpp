@@ -199,11 +199,6 @@ uint32_t Text_Policy::session_ticket_lifetime() const
    return static_cast<uint32_t>(get_len("session_ticket_lifetime", Policy::session_ticket_lifetime()));
    }
 
-bool Text_Policy::send_fallback_scsv(Protocol_Version version) const
-   {
-   return get_bool("send_fallback_scsv", false) ? Policy::send_fallback_scsv(version) : false;
-   }
-
 std::vector<uint16_t> Text_Policy::srtp_profiles() const
    {
    std::vector<uint16_t> r;

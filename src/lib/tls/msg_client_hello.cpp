@@ -294,11 +294,6 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
       }
    }
 
-bool Client_Hello::sent_fallback_scsv() const
-   {
-   return offered_suite(static_cast<uint16_t>(TLS_FALLBACK_SCSV));
-   }
-
 /*
 * Check if we offered this ciphersuite
 */

@@ -1002,11 +1002,6 @@ class Shim_Policy final : public Botan::TLS::Policy
          return false;
          }
 
-      bool send_fallback_scsv(Botan::TLS::Protocol_Version) const override
-         {
-         return m_args.flag_set("fallback-scsv");
-         }
-
       //bool server_uses_own_ciphersuite_preferences() const override;
 
       //bool negotiate_encrypt_then_mac() const override;

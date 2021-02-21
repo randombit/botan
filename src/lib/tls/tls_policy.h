@@ -537,8 +537,6 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       uint32_t session_ticket_lifetime() const override;
 
-      bool send_fallback_scsv(Protocol_Version version) const override;
-
       std::vector<uint16_t> srtp_profiles() const override;
 
       void set(const std::string& k, const std::string& v);

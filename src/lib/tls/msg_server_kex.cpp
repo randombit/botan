@@ -176,6 +176,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
                                          const Auth_Method auth_method,
                                          Protocol_Version version)
    {
+   BOTAN_UNUSED(version); // remove this
    TLS_Data_Reader reader("ServerKeyExchange", buf);
 
    /*
