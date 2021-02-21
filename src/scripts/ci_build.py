@@ -2,7 +2,8 @@
 
 """
 CI build script
-(C) 2017 Jack Lloyd
+(C) 2017,2020 Jack Lloyd
+
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
@@ -24,9 +25,9 @@ def get_concurrency():
         return def_concurrency
 
 def build_targets(target, target_os):
-    if target in ['shared', 'mini-shared', 'bsi', 'nist']:
+    if target in ['shared', 'minimized', 'bsi', 'nist']:
         yield 'shared'
-    elif target in ['static', 'mini-static', 'fuzzers', 'baremetal']:
+    elif target in ['static', 'fuzzers', 'baremetal']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
@@ -51,7 +52,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     """
     is_cross_target = target.startswith('cross-')
 
-    if target_os not in ['linux', 'osx', 'windows']:
+    if target_os not in ['linux', 'osx', 'windows', 'freebsd']:
         print('Error unknown OS %s' % (target_os))
         return (None, None, None)
 
@@ -73,18 +74,15 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
-    essential_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
-                       'hmac_drbg', 'hmac_drbg_unit', 'tls',
-                       'rsa_sign', 'rsa_verify', 'dh_kat',
-                       'ecc_randomized', 'ecdh_kat', 'ecdsa_sign', 'curve25519_scalar',
-                       'cpuid', 'simd_32', 'os_utils', 'util', 'util_dates']
-
-    install_prefix = os.path.join(tempfile.gettempdir(), 'botan-install')
+    install_prefix = tempfile.mkdtemp(prefix='botan-install-')
 
     flags = ['--prefix=%s' % (install_prefix),
              '--cc=%s' % (target_cc),
              '--os=%s' % (target_os),
              '--build-targets=%s' % ','.join(build_targets(target, target_os))]
+
+    if ccache is not None:
+        flags += ['--no-store-vc-rev', '--compiler-cache=%s' % (ccache)]
 
     if not disable_werror:
         flags += ['--werror-mode']
@@ -95,18 +93,12 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     for flag in extra_cxxflags:
         flags += ['--extra-cxxflags=%s' % (flag)]
 
-    if target in ['mini-static', 'mini-shared']:
+    if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
-    if target == 'static':
-        # Arbitrarily test amalgamation with the static lib builds
-        flags += ['--amalgamation']
-
     if target in ['bsi', 'nist']:
-        # Arbitrarily test disable static on module policy builds
         # tls is optional for bsi/nist but add it so verify tests work with these minimized configs
-        flags += ['--module-policy=%s' % (target),
-                  '--enable-modules=tls']
+        flags += ['--module-policy=%s' % (target), '--enable-modules=tls']
 
     if target == 'docs':
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
@@ -118,22 +110,26 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target == 'coverage':
         flags += ['--with-coverage-info', '--with-debug-info', '--test-mode']
-        test_cmd += ['--skip-tests=tls_stream_integration']
 
     if target == 'valgrind':
-        # valgrind in 16.04 has a bug with rdrand handling
-        flags += ['--with-valgrind', '--disable-rdrand']
+        flags += ['--with-valgrind']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
         # valgrind is single threaded anyway
         test_cmd += ['--test-threads=1']
         # valgrind is slow
-        test_cmd += essential_tests
+        slow_tests = [
+            'cryptobox', 'dh_invalid', 'dh_kat', 'dh_keygen',
+            'dl_group_gen', 'dlies', 'dsa_param', 'ecc_basemul',
+            'ecdsa_verify_wycheproof', 'mce_keygen', 'passhash9',
+            'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
+            'srp6_kat', 'x509_path_bsi', 'xmss_keygen', 'xmss_sign',
+            'pbkdf', 'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression',
+            'ed25519_sign', 'elgamal_keygen', 'x509_path_rsa_pss']
+
+        test_cmd += ['--skip-tests=%s' % (','.join(slow_tests))]
 
     if target == 'fuzzers':
         flags += ['--unsafe-fuzzer-mode']
-
-    if target in ['fuzzers', 'coverage', 'valgrind']:
-        flags += ['--with-debug-info']
 
     if target in ['fuzzers', 'coverage']:
         flags += ['--build-fuzzers=test']
@@ -149,9 +145,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
 
-    if target == 'parallel':
-        flags += ['--with-openmp']
-
     if target == 'baremetal':
         cc_bin = 'arm-none-eabi-c++'
         flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector', '--ldflags=-specs=nosys.specs']
@@ -161,9 +154,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         if target_os == 'ios':
             make_prefix = ['xcrun', '--sdk', 'iphoneos']
             test_cmd = None
-            if target == 'cross-arm32':
-                flags += ['--cpu=armv7', '--cc-abi-flags=-arch armv7 -arch armv7s -stdlib=libc++']
-            elif target == 'cross-arm64':
+            if target == 'cross-ios-arm64':
                 flags += ['--cpu=arm64', '--cc-abi-flags=-arch arm64 -stdlib=libc++']
             else:
                 raise Exception("Unknown cross target '%s' for iOS" % (target))
@@ -197,9 +188,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
         elif target == 'cross-i386':
             flags += ['--cpu=x86_32']
-        elif target == 'cross-arm32':
-            flags += ['--cpu=armv7']
-            cc_bin = 'arm-linux-gnueabihf-g++'
 
         elif target == 'cross-win64':
             # MinGW in 16.04 is lacking std::mutex for unknown reason
@@ -209,10 +197,12 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             test_cmd = [os.path.join(root_dir, 'botan-test.exe')] + test_cmd[1:]
             test_prefix = ['wine']
         else:
-            # Build everything but restrict what is run
-            test_cmd += essential_tests
-
-            if target == 'cross-arm64':
+            if target == 'cross-arm32':
+                flags += ['--cpu=armv7']
+                cc_bin = 'arm-linux-gnueabihf-g++'
+                # Currently arm32 CI only runs on native AArch64
+                #test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
+            elif target == 'cross-arm64':
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
                 test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']
@@ -234,16 +224,13 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     else:
         # Flags specific to native targets
 
-        if target == 'gcc4.8':
-            cc_bin = 'g++-4.8'
-
         if target_os in ['osx', 'linux']:
             flags += ['--with-bzip2', '--with-sqlite', '--with-zlib']
 
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        if target_os == 'osx' or target == 'coverage':
+        if target == 'coverage':
             flags += ['--with-boost']
 
         if target_os == 'windows' and target in ['shared', 'static']:
@@ -262,25 +249,21 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             flags += ['--with-lzma']
 
         if target_os == 'linux':
-            if target not in ['sanitizer', 'valgrind', 'mini-shared', 'mini-static']:
+            if target not in ['sanitizer', 'valgrind', 'minimized']:
                 # Avoid OpenSSL when using dynamic checkers, or on OS X where it sporadically
                 # is not installed on the CI image
                 flags += ['--with-openssl']
 
-        if target in ['sonar', 'coverage']:
+        if target in ['coverage']:
             flags += ['--with-tpm']
-            test_cmd += ['--run-long-tests', '--run-online-tests']
+            test_cmd += ['--run-online-tests']
             if pkcs11_lib and os.access(pkcs11_lib, os.R_OK):
                 test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
 
-    if ccache is None:
-        flags += ['--cc-bin=%s' % (cc_bin)]
-    elif ccache == 'clcache':
-        flags += ['--cc-bin=%s' % (ccache)]
-    else:
-        flags += ['--cc-bin=%s %s' % (ccache, cc_bin)]
-        # Avoid putting the revision in build.h, which helps ccache hit rates
-        flags += ['--no-store-vc-rev']
+    if target in ['coverage', 'sanitizer']:
+        test_cmd += ['--run-long-tests']
+
+    flags += ['--cc-bin=%s' % (cc_bin)]
 
     if test_cmd is None:
         run_test_command = None
@@ -295,7 +278,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         else:
             run_test_command = test_prefix + test_cmd
 
-    return flags, run_test_command, make_prefix, install_prefix
+    return flags, run_test_command, make_prefix
 
 def run_cmd(cmd, root_dir):
     """
@@ -339,13 +322,19 @@ def run_cmd(cmd, root_dir):
         if cmd[0] not in ['lcov']:
             sys.exit(proc.returncode)
 
+def default_os():
+    platform_os = platform.system().lower()
+    if platform_os == 'darwin':
+        return 'osx'
+    return platform_os
+
 def parse_args(args):
     """
     Parse arguments
     """
     parser = optparse.OptionParser()
 
-    parser.add_option('--os', default=platform.system().lower(),
+    parser.add_option('--os', default=default_os(),
                       help='Set the target os (default %default)')
     parser.add_option('--cc', default='gcc',
                       help='Set the target compiler type (default %default)')
@@ -373,18 +362,15 @@ def parse_args(args):
     parser.add_option('--branch', metavar='B', default=None,
                       help='Specify branch being built')
 
-    parser.add_option('--add-travis-folds', action='store_true', default=False,
-                      help='Add fold markers for Travis UI')
-
     parser.add_option('--dry-run', action='store_true', default=False,
                       help='Just show commands to be executed')
     parser.add_option('--build-jobs', metavar='J', default=get_concurrency(),
                       help='Set number of jobs to run in parallel (default %default)')
 
     parser.add_option('--compiler-cache', default=None, metavar='CC',
-                      help='Set a compiler cache to use (ccache, sccache, clcache)')
+                      help='Set a compiler cache to use (ccache, sccache)')
 
-    parser.add_option('--pkcs11-lib', default=None, metavar='LIB',
+    parser.add_option('--pkcs11-lib', default=os.getenv('PKCS11_LIB'), metavar='LIB',
                       help='Set PKCS11 lib to use for testing')
 
     parser.add_option('--with-python3', dest='use_python3', action='store_true', default=None,
@@ -436,8 +422,6 @@ def main(args=None):
 
     target = args[1]
 
-    use_python2 = have_prog('python2')
-
     if options.use_python3 is None:
         use_python3 = have_prog('python3')
     else:
@@ -459,18 +443,12 @@ def main(args=None):
             return 1
 
     if options.compiler_cache is None and options.cc != 'msvc':
-        # Autodetect ccache, unless using clang profiling - ccache seems to misbehave there
-        if have_prog('ccache') and target not in ['sonar']:
+        # Autodetect ccache
+        if have_prog('ccache'):
             options.compiler_cache = 'ccache'
 
-    if options.compiler_cache == 'clcache' and target in ['sanitizer']:
-        # clcache doesn't support /Zi so using it just adds overhead with
-        # no benefit
-        options.compiler_cache = None
-
-    if target == 'sonar' and os.getenv('SONAR_TOKEN') is None:
-        print('Skipping Sonar scan due to missing SONAR_TOKEN env variable')
-        return 0
+    if options.compiler_cache not in [None, 'ccache', 'sccache']:
+        raise Exception("Don't know about %s as a compiler cache" % (options.compiler_cache))
 
     root_dir = options.root_dir
 
@@ -481,16 +459,8 @@ def main(args=None):
 
     if target == 'lint':
 
-        if not use_python2 and not use_python3:
-            raise Exception('No python interpreters found cannot lint')
-
         pylint_rc = '--rcfile=%s' % (os.path.join(root_dir, 'src/configs/pylint.rc'))
         pylint_flags = [pylint_rc, '--reports=no']
-
-        # Some disabled rules specific to Python2
-        # superfluous-parens: needed for Python3 compatible print statements
-        # too-many-locals: variable counting differs from pylint3
-        py2_flags = '--disable=superfluous-parens,too-many-locals'
 
         # Some disabled rules specific to Python3
         # useless-object-inheritance: complains about code still useful in Python2
@@ -516,14 +486,11 @@ def main(args=None):
 
         full_paths = [os.path.join(root_dir, s) for s in py_scripts]
 
-        if use_python2:
-            cmds.append(['python2', '-m', 'pylint'] + pylint_flags + [py2_flags] + full_paths)
-
         if use_python3 and options.use_pylint3:
             cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags] + full_paths)
 
     else:
-        config_flags, run_test_command, make_prefix, install_prefix = determine_flags(
+        config_flags, run_test_command, make_prefix = determine_flags(
             target, options.os, options.cpu, options.cc,
             options.cc_bin, options.compiler_cache, root_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
@@ -541,28 +508,21 @@ def main(args=None):
         if target == 'docs':
             cmds.append(make_cmd + ['docs'])
         else:
-
-            ccache_show_stats = {
-                'ccache': '--show-stats',
-                'sccache': '--show-stats',
-                'clcache': '-s'
-            }
-
-            if options.compiler_cache in ccache_show_stats:
-                cmds.append([options.compiler_cache, ccache_show_stats[options.compiler_cache]])
+            if options.compiler_cache is not None:
+                cmds.append([options.compiler_cache, '--show-stats'])
 
             make_targets = ['libs', 'tests', 'cli']
 
             if target in ['coverage', 'fuzzers']:
-                make_targets += ['tests', 'cli', 'fuzzers', 'fuzzer_corpus_zip']
+                make_targets += ['fuzzer_corpus_zip', 'fuzzers']
 
             if target in ['coverage']:
                 make_targets += ['bogo_shim']
 
             cmds.append(make_prefix + make_cmd + make_targets)
 
-            if options.compiler_cache in ccache_show_stats:
-                cmds.append([options.compiler_cache, ccache_show_stats[options.compiler_cache]])
+            if options.compiler_cache is not None:
+                cmds.append([options.compiler_cache, '--show-stats'])
 
         if run_test_command is not None:
             cmds.append(run_test_command)
@@ -584,12 +544,13 @@ def main(args=None):
         if target in ['shared', 'coverage'] and options.os != 'windows':
             botan_exe = os.path.join(root_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
 
+            args = ['--threads=%d' % (options.build_jobs)]
+            if target == 'coverage':
+                args.append('--run-slow-tests')
             test_scripts = ['test_cli.py', 'test_cli_crypt.py']
             for script in test_scripts:
-                cmds.append([py_interp,
-                             os.path.join(root_dir, 'src/scripts', script),
-                             '--threads=%d' % (options.build_jobs),
-                             botan_exe])
+                cmds.append([py_interp, os.path.join(root_dir, 'src/scripts', script)] +
+                            args + [botan_exe])
 
         python_tests = os.path.join(root_dir, 'src/scripts/test_python.py')
 
@@ -600,28 +561,15 @@ def main(args=None):
                     # Python on AppVeyor is a 32-bit binary so only test for 32-bit
                     cmds.append([py_interp, '-b', python_tests])
             else:
-                if use_python2:
-                    cmds.append(['python2', '-b', python_tests])
                 if use_python3:
                     cmds.append(['python3', '-b', python_tests])
 
         if target in ['shared', 'static', 'bsi', 'nist']:
             cmds.append(make_cmd + ['install'])
-            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), install_prefix])
-
-        if target in ['sonar']:
-
-            cmds.append(['llvm-profdata', 'merge', '-sparse', 'default.profraw', '-o', 'botan.profdata'])
-            cmds.append(['llvm-cov', 'show', './botan-test',
-                         '-instr-profile=botan.profdata',
-                         '>', 'build/cov_report.txt'])
-            sonar_config = os.path.join(root_dir, 'src/configs/sonar-project.properties')
-            cmds.append(['sonar-scanner',
-                         '-Dproject.settings=%s' % (sonar_config),
-                         '-Dsonar.login=$SONAR_TOKEN'])
+            build_config = os.path.join(root_dir, 'build', 'build_config.json')
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), build_config])
 
         if target in ['coverage']:
-
             if not have_prog('lcov'):
                 print('Error: lcov not found in PATH (%s)' % (os.getenv('PATH')))
                 return 1
@@ -644,7 +592,7 @@ def main(args=None):
                              python_tests])
 
             if have_prog('codecov'):
-                # If codecov exists assume we are on Travis and report to codecov.io
+                # If codecov exists assume we are in CI and report to codecov.io
                 cmds.append(['codecov', '>', 'codecov_stdout.log'])
             else:
                 # Otherwise generate a local HTML report
