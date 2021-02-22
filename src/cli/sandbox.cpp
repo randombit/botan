@@ -109,10 +109,8 @@ bool Sandbox::init()
 
    return true;
 #elif defined(BOTAN_TARGET_OS_HAS_SANDBOX_PROC)
-   char *errbuf = nullptr;
-   if (::sandbox_init(kSBXProfileNoWriteExceptTemporary, SANDBOX_NAMED, &errbuf) < 0)
+   if (::sandbox_init(kSBXProfileNoWriteExceptTemporary, SANDBOX_NAMED, nullptr) < 0)
    {
-       ::sandbox_free_error(errbuf);
        return false;
    }
 
