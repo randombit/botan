@@ -219,12 +219,20 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
       {
       BigInt p(keygen_rng, bits);
 
-      // Force high two bits so multiplication always results in expected n bit integer
+      /*
+      Force high two bits so multiplication always results in expected n bit integer
+
+      Force the two low bits, and step by 4, so the generated prime is always == 3 (mod 4).
+      This way when we perform the inversion modulo phi(n) it is always of the form 2*o
+      with o odd, which allows a fastpath and avoids leaking any information about the
+      structure of the prime.
+      */
       p.set_bit(bits - 1);
       p.set_bit(bits - 2);
+      p.set_bit(1);
       p.set_bit(0);
 
-      const word step = 2;
+      const word step = 4;
 
       Prime_Sieve sieve(p, bits);
 
