@@ -10,8 +10,9 @@ proc_fs
 clock_gettime
 getauxval
 
-getrandom
-getentropy
+# these are not enabled by default as only available in newer kernel/glibc
+#getrandom
+#getentropy
 
 atomics
 sockets
