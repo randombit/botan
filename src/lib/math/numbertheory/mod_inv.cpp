@@ -134,8 +134,10 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
    * https://eprint.iacr.org/2017/411.pdf sections 5 and 7.
    */
 
-   if(a1.is_even())
+   if(a1.is_even() || k == 0)
       return 0;
+   if(k == 1)
+      return 1;
 
    BigInt a = a1;
    a.mask_bits(k);
@@ -193,6 +195,10 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
          return inverse_mod_odd_modulus(ct_modulo(n, mod), mod);
       }
 
+   // If n is even and mod is even we already returned 0
+   // If n is even and mod is odd we jumped directly to odd-modulus algo
+   BOTAN_DEBUG_ASSERT(n.is_odd());
+
    const size_t mod_lz = low_zero_bits(mod);
    BOTAN_ASSERT_NOMSG(mod_lz > 0);
    const size_t mod_bits = mod.bits();
@@ -204,9 +210,38 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       return inverse_mod_pow2(n, mod_lz);
       }
 
+   if(mod_lz == 1)
+      {
+      /*
+      Inversion modulo 2*o is an easier special case of CRT
+
+      This is exactly the main CRT flow below but taking advantage of
+      the fact that any odd number ^-1 modulo 2 is 1. As a result both
+      inv_2k and c can be taken to be 1, m2k is 2, and h is always
+      either 0 or 1, and its value depends only on the low bit of inv_o.
+
+      This is worth special casing because we generate RSA primes such
+      that phi(n) is of this form. However this only works for keys
+      that we generated in this way; pre-existing keys will typically
+      fall back to the general algorithm below.
+      */
+
+      const BigInt o = mod >> 1;
+      const BigInt n_redc = ct_modulo(n, o);
+      const BigInt inv_o = inverse_mod_odd_modulus(n_redc, o);
+
+      // No modular inverse in this case:
+      if(inv_o == 0)
+         return 0;
+
+      BigInt h = inv_o;
+      h.ct_cond_add(!inv_o.get_bit(0), o);
+      return h;
+      }
+
    /*
    * In this case we are performing an inversion modulo 2^k*o for
-   * some k > 1 and some odd (not necessarily prime) integer.
+   * some k >= 2 and some odd (not necessarily prime) integer.
    * Compute the inversions modulo 2^k and modulo o, then combine them
    * using CRT, which is possible because 2^k and o are relatively prime.
    */

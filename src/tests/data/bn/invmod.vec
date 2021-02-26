@@ -23,6 +23,14 @@ Input = 3
 Modulus = 8
 Output = 3
 
+Input = 1
+Modulus = 8
+Output = 1
+
+Input = 0
+Modulus = 8
+Output = 0
+
 Input = 46
 Modulus = 207
 Output = 0
@@ -42,6 +50,14 @@ Output = 0
 Input = 1
 Modulus = 7
 Output = 1
+
+Input = 1
+Modulus = 14
+Output = 1
+
+Input = 0
+Modulus = 7
+Output = 0
 
 Input = 35
 Modulus = 118

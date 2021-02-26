@@ -302,6 +302,8 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    const BigInt q_minus_1 = q - 1;
 
    const BigInt phi_n = lcm(p_minus_1, q_minus_1);
+   // This is guaranteed because p,q == 3 mod 4
+   BOTAN_DEBUG_ASSERT(low_zero_bits(phi_n) == 1);
    d = inverse_mod(e, phi_n);
    d1 = ct_modulo(d, p_minus_1);
    d2 = ct_modulo(d, q_minus_1);
