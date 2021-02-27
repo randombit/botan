@@ -17,16 +17,16 @@ class BlockCipher;
 class L_computer;
 
 /**
-* OCB Mode (base class for OCB_Encryption and OCB_Decryption). Note
-* that OCB is patented, but is freely licensed in some circumstances.
+* OCB Mode (base class for OCB_Encryption and OCB_Decryption).
+* OCB was previously patented in the United States but the patent
+* has now been allowed to lapse.
 *
 * @see "The OCB Authenticated-Encryption Algorithm" RFC 7253
 *      https://tools.ietf.org/html/rfc7253
 * @see "OCB For Block Ciphers Without 128-Bit Blocks"
 *      (draft-krovetz-ocb-wide-d3) for the extension of OCB to
 *      block ciphers with larger block sizes.
-* @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
-* @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
+* @see https://mailarchive.ietf.org/arch/msg/cfrg/qLTveWOdTJcLn4HP3ev-vrj05Vg/
 */
 class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
    {

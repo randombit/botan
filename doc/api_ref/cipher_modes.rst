@@ -359,8 +359,8 @@ Available if ``BOTAN_HAS_AEAD_OCB`` is defined.
 
 A block cipher based AEAD. Supports 128-bit, 256-bit and 512-bit block ciphers.
 This mode is very fast and easily secured against side channels. Adoption has
-been poor because it is patented in the United States, though a license is
-available allowing it to be freely used by open source software.
+been poor because until 2021 it was patented in the United States. The patent
+was allowed to lapse in early 2021.
 
 EAX
 ~~~~~
