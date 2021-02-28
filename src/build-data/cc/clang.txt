@@ -6,7 +6,7 @@ lang_flags "-std=c++17 -D_REENTRANT"
 
 warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wshorten-64-to-32"
 
-werror_flags "-Werror -Wno-error=unused-parameter -Wno-error=unreachable-code -Wno-error=unused-lambda-capture -Wno-error=deprecated-declarations"
+werror_flags "-Werror -Wno-error=unused-parameter -Wno-error=unreachable-code -Wno-error=unused-lambda-capture"
 
 maintainer_warning_flags "-Wunreachable-code -Wdocumentation -Qunused-arguments"
 
