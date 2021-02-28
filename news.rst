@@ -34,8 +34,8 @@ Version 3.0.0, Not Yet Released
 * Add a BMI2 implementation of 3DES which avoids most cache-based side channels.
   (GH #2565)
 
-* Convert base64, base58, base32 and hex encoding/decoding to be constant
-  time (GH #2543)
+* CVE-2021-24115 Convert base64, base58, base32 and hex encoding/decoding to be
+  constant time (GH #2543)
 
 * Use constant-time code instead of table lookups when computing parity bits
   (GH #2560), choosing ASN.1 string type (GH #2559) and when converting to/from
@@ -86,8 +86,8 @@ Version 3.0.0, Not Yet Released
 Version 2.17.3, 2020-12-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Change base64, base58, base32, and hex encoding and decoding opearations
-  to run in constant time (GH #2549)
+* CVE-2021-24115 Change base64, base58, base32, and hex encoding and
+  decoding opearations to run in constant time (GH #2549)
 
 * Fix a build problem on PPC64 building with Clang (GH #2547)
 

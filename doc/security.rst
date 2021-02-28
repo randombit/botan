@@ -18,6 +18,20 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2020
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2020-12-21 (CVE-2021-24115): Codec encoding/decoding was not constant time
+
+  The base64, base32, base58 and hex encoding/decoding routines used lookup
+  tables which could leak information via a cache-based side channel attack.
+  The encoding tables were small and unlikely to be exploitable, but the
+  decoding tables were large enough to cause non-negligible information
+  leakage. In particular parsing an unencrypted PEM-encoded private key within
+  an SGX enclave could be easily attacked to leak key material.
+
+  Identified and reported by Jan Wichelmann, Thomas Eisenbarth,
+  Sebastian Berndt, and Florian Sieck.
+
+  Fixed in 2.17.3
+
 * 2020-07-05: Failure to enforce name constraints on alternative names
 
   The path validation algorithm enforced name constraints on the primary DN
