@@ -20,10 +20,6 @@
   #include <botan/internal/rdseed.h>
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
-  #include <botan/internal/dev_random.h>
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
   #include <botan/internal/es_win32.h>
 #endif
@@ -99,14 +95,14 @@ class Processor_RNG_EntropySource final : public Entropy_Source
 std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-   if(name == "system_rng" || name == "win32_cryptoapi")
+   if(name == "system_rng")
       {
       return std::unique_ptr<Entropy_Source>(new System_RNG_EntropySource);
       }
 #endif
 
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
-   if(name == "hwrng" || name == "rdrand" || name == "p9_darn")
+   if(name == "hwrng")
       {
       if(Processor_RNG::available())
          {
@@ -126,13 +122,6 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    if(name == "getentropy")
       {
       return std::unique_ptr<Entropy_Source>(new Getentropy);
-      }
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
-   if(name == "dev_random")
-      {
-      return std::unique_ptr<Entropy_Source>(new Device_EntropySource(BOTAN_SYSTEM_RNG_POLL_DEVICES));
       }
 #endif
 
@@ -224,4 +213,3 @@ Entropy_Sources& Entropy_Sources::global_sources()
    }
 
 }
-

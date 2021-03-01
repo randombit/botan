@@ -113,7 +113,7 @@ def main(args):
 
         extra = []
         if module == 'auto_rng':
-            extra.append('dev_random')
+            extra.append('system_rng')
         if run_test_build(configure_py, [module] + always_include + extra, True, jobs, run_tests) is False:
             failed.append(module)
             fails += 1
