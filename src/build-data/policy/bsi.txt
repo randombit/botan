@@ -68,7 +68,6 @@ sha2_64_bmi2
 sha3_bmi2
 
 # entropy sources
-dev_random
 proc_walk
 rdseed
 win32_stats

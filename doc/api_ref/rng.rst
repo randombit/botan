@@ -60,7 +60,7 @@ Several different RNG types are implemented. Some access hardware RNGs, which
 are only available on certain platforms. Others are mostly useful in specific
 situations.
 
-Generally prefer using the system RNG, or if not available use ``AutoSeeded_RNG``
+Generally prefer using ``System_RNG``, or if not available use ``AutoSeeded_RNG``
 which is intended to provide best possible behavior in a userspace PRNG.
 
 System_RNG
@@ -88,15 +88,15 @@ for example::
   #endif
 
 Unlike nearly any other object in Botan it is acceptable to share a single
-instance of ``System_RNG`` between threads, because the underlying RNG is itself
-thread safe due to being serialized by a mutex in the kernel itself.
+instance of ``System_RNG`` between threads without locking, because the underlying
+RNG is itself thread safe due to being serialized by a mutex in the kernel itself.
 
 AutoSeeded_RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 AutoSeeded_RNG is type naming a 'best available' userspace PRNG. The
-exact definition of this has changed over time and may change in the
-future, fortunately there is no compatibility concerns when changing
+exact definition of this has changed over time and may change again in the
+future. Fortunately there is no compatibility concerns when changing
 any RNG since the only expectation is it produces bits
 indistinguishable from random.
 
@@ -114,7 +114,7 @@ reseeding of the RNG state.
 HMAC_DRBG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-HMAC DRBG is a random number generator designed by NIST and specified
+HMAC-DRBG is a random number generator designed by NIST and specified
 in SP 800-90A. It seems to be the most conservative generator of the
 NIST approved options.
 
@@ -122,7 +122,13 @@ It can be instantiated with any HMAC but is typically used with
 SHA-256, SHA-384, or SHA-512, as these are the hash functions approved
 for this use by NIST.
 
-HMAC_DRBG's constructors are:
+.. note::
+   There is no reason to use this class directly unless your application
+   requires HMAC-DRBG with specific parameters or options. Usually this
+   would be for some standards conformance reason. If you just want a
+   userspace RNG, use ``AutoSeeded_RNG``.
+
+``HMAC_DRBG``'s constructors are:
 
 .. cpp:class:: HMAC_DRBG
 
@@ -252,9 +258,9 @@ The following entropy sources are currently used:
 
  * The system RNG (``/dev/urandom``, ``getrandom``, ``arc4random``,
    ``BCryptGenRandom``, or ``RtlGenRandom``).
- * RDRAND and RDSEED are used if available, but not counted as contributing entropy
- * ``/dev/random`` and ``/dev/urandom``. This may be redundant with the system RNG
- * ``getentropy``, only used on OpenBSD currently
+ * Processor provided RNG outputs (RDRAND, RDSEED, DARN) are used if available,
+   but not counted as contributing entropy
+ * The ``getentropy`` call is used on OpenBSD, FreeBSD, and macOS
  * ``/proc`` walk: read files in ``/proc``. Last ditch protection against
    flawed system RNG.
  * Win32 stats: takes snapshot of current system processes. Last ditch

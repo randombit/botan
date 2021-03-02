@@ -1,0 +1,9 @@
+
+soname_suffix "so"
+
+<target_features>
+atomics
+threads
+thread_local
+filesystem
+</target_features>

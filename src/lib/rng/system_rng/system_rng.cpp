@@ -209,7 +209,22 @@ class System_RNG_Impl final : public RandomNumberGenerator
 #define O_NOCTTY 0
 #endif
 
-         m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDWR | O_NOCTTY);
+         /*
+         * First open /dev/random and read one byte. On old Linux kernels
+         * this blocks the RNG until we have been actually seeded.
+         */
+         m_fd = ::open("/dev/random", O_RDONLY | O_NOCTTY);
+         if(m_fd < 0)
+            throw System_Error("System_RNG failed to open RNG device", errno);
+
+         uint8_t b;
+         const size_t got = ::read(m_fd, &b, 1);
+         ::close(m_fd);
+
+         if(got != 1)
+            throw System_Error("System_RNG failed to read blocking RNG device");
+
+         m_fd = ::open("/dev/urandom", O_RDWR | O_NOCTTY);
 
          if(m_fd >= 0)
             {
@@ -221,7 +236,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
             Cannot open in read-write mode. Fall back to read-only,
             calls to add_entropy will fail, but randomize will work
             */
-            m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDONLY | O_NOCTTY);
+            m_fd = ::open("/dev/urandom", O_RDONLY | O_NOCTTY);
             m_writable = false;
             }
 
@@ -240,7 +255,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
       bool is_seeded() const override { return true; }
       bool accepts_input() const override { return m_writable; }
       void clear() override { /* not possible */ }
-      std::string name() const override { return BOTAN_SYSTEM_RNG_DEVICE; }
+      std::string name() const override { return "urandom"; }
    private:
       int m_fd;
       bool m_writable;
