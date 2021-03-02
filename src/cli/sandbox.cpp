@@ -14,6 +14,8 @@
   #include <unistd.h>
 #elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
   #include <priv.h>
+#elif defined(BOTAN_TARGET_OS_HAS_SANDBOX_PROC)
+  #include <sandbox.h>
 #endif
 
 namespace Botan_CLI {
@@ -36,6 +38,8 @@ Sandbox::Sandbox()
    m_name = "capsicum";
 #elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
    m_name = "privilege";
+#elif defined(BOTAN_TARGET_OS_HAS_SANDBOX_PROC)
+   m_name = "sandbox";
 #else
    m_name = "<none>";
 #endif
@@ -102,6 +106,17 @@ bool Sandbox::init()
         return false;
      }
    }
+
+   return true;
+#elif defined(BOTAN_TARGET_OS_HAS_SANDBOX_PROC)
+
+  BOTAN_DIAGNOSTIC_PUSH
+  BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED
+   if (::sandbox_init(kSBXProfileNoWriteExceptTemporary, SANDBOX_NAMED, nullptr) < 0)
+   {
+       return false;
+   }
+  BOTAN_DIAGNOSTIC_POP
 
    return true;
 #else

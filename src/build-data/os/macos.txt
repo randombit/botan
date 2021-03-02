@@ -23,6 +23,7 @@ sockets
 threads
 thread_local
 filesystem
+sandbox_proc
 </target_features>
 
 <aliases>
