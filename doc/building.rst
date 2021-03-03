@@ -4,15 +4,15 @@ Building The Library
 =================================
 
 This document describes how to build Botan on Unix/POSIX and Windows
-systems. The POSIX oriented descriptions should apply to most
-common Unix systems (including OS X), along with POSIX-ish systems
-like BeOS, QNX, and Plan 9. Currently, systems other than Windows and
-POSIX (such as VMS, MacOS 9, OS/390, OS/400, ...) are not supported by
-the build system, primarily due to lack of access. Please contact the
+systems. The POSIX oriented descriptions should apply to most common Unix
+systems (including Apple macOS/Darwin), along with POSIX-ish systems like QNX.
+
+Currently systems such as VMS, OS/390, and OS/400 are not supported by the build
+system, primarily due to lack of access and interest.  Please contact the
 maintainer if you would like to build Botan on such a system.
 
 Botan's build is controlled by configure.py, which is a `Python
-<https://www.python.org>`_ script. Python 2.6 or later is required.
+<https://www.python.org>`_ script. Python 2.7 or later is required.
 
 .. highlight:: none
 
