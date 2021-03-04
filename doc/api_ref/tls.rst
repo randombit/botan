@@ -501,7 +501,7 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
           // read data received from the tls server, e.g., using BSD sockets or boost asio
           // ...
 
-          // send data to the tls server using client.send_data()
+          // send data to the tls server using client.send()
           }
        }
 
@@ -658,7 +658,7 @@ The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
        // and pass it to server.received_data().
        // ...
 
-       // send data to the tls client using server.send_data()
+       // send data to the tls client using server.send()
        // ...
        }
 
@@ -1446,7 +1446,7 @@ Client Code Example
           // read data received from the tls server, e.g., using BSD sockets or boost asio
           // ...
 
-          // send data to the tls server using client.send_data()
+          // send data to the tls server using client.send()
 
            }
        }
@@ -1630,7 +1630,7 @@ Server Code Example
        // and pass it to server.received_data().
        // ...
 
-       // send data to the tls client using server.send_data()
+       // send data to the tls client using server.send()
        // ...
        }
 
