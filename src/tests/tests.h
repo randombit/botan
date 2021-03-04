@@ -233,9 +233,9 @@ class Test
                test_failure(what, buf.data(), buf.size());
                }
 
-            bool confirm(const std::string& what, bool expr)
+            bool confirm(const std::string& what, bool expr, bool expected = true)
                {
-               return test_eq(what, expr, true);
+               return test_eq(what, expr, expected);
                }
 
             template<typename T>
