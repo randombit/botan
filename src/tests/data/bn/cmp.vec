@@ -1,0 +1,78 @@
+[EQ]
+X = 5
+Y = 5
+R = true
+
+X = -5
+Y = 5
+R = false
+
+X = 5
+Y = -5
+R = false
+
+X = -5
+Y = -5
+R = true
+
+X = 4
+Y = 5
+R = false
+
+X = 5
+Y = 4
+R = false
+
+[LT]
+X = 5
+Y = 5
+R = false
+
+X = -5
+Y = 5
+R = true
+
+X = 5
+Y = -5
+R = false
+
+X = -5
+Y = -5
+R = false
+
+X = -1
+Y = -3
+R = false
+
+X = -2
+Y = -1
+R = true
+
+[LTE]
+X = 5
+Y = 5
+R = true
+
+X = 5
+Y = 6
+R = true
+
+X = 6
+Y = 5
+R = false
+
+X = -5
+Y = 5
+R = true
+
+X = 5
+Y = -5
+R = false
+
+X = -1
+Y = -2
+R = false
+
+X = -2
+Y = -1
+R = true

@@ -165,8 +165,8 @@ bool BigInt::is_less_than(const BigInt& other) const
 
    if(other.is_negative() && this->is_negative())
       {
-      return !bigint_ct_is_lt(other.data(), other.sig_words(),
-                              this->data(), this->sig_words(), true).is_set();
+      return bigint_ct_is_lt(other.data(), other.sig_words(),
+                             this->data(), this->sig_words()).is_set();
       }
 
    return bigint_ct_is_lt(this->data(), this->sig_words(),
