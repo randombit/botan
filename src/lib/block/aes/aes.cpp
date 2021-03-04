@@ -538,6 +538,8 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
 
       load_be(B, in, this_loop*4);
 
+      CT::poison(B, 8);
+
       for(size_t i = 0; i != 8; ++i)
          B[i] ^= EK[i % 4];
 
@@ -560,6 +562,8 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
 
       for(size_t i = 0; i != 8; ++i)
          B[i] ^= EK[4*rounds + i % 4];
+
+      CT::unpoison(B, 8);
 
       copy_out_be(out, this_loop*4*sizeof(uint32_t), B);
 
@@ -594,6 +598,8 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
 
       uint32_t B[8] = { 0 };
 
+      CT::poison(B, 8);
+
       load_be(B, in, this_loop*4);
 
       for(size_t i = 0; i != 8; ++i)
@@ -618,6 +624,8 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
 
       for(size_t i = 0; i != 8; ++i)
          B[i] ^= DK[4*rounds + i % 4];
+
+      CT::unpoison(B, 8);
 
       copy_out_be(out, this_loop*4*sizeof(uint32_t), B);
 
