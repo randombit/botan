@@ -154,27 +154,28 @@ class JSON_Output final
 
          for(size_t i = 0; i != m_results.size(); ++i)
             {
-            if(i != 0)
-               out << ",";
-
             const Timer& t = m_results[i];
 
-            out << '{';
-            out << "\"algo\": \"" << t.get_name() << "\", ";
-            out << "\"op\": \"" << t.doing() << "\", ";
+            out << "{"
+                << "\"algo\": \"" << t.get_name() << "\", "
+                << "\"op\": \"" << t.doing() << "\", "
+                << "\"events\": " << t.events() << ", ";
 
-            out << "\"events\": " << t.events() << ", ";
             if(t.cycles_consumed() > 0)
                out << "\"cycles\": " << t.cycles_consumed() << ", ";
+
             if(t.buf_size() > 0)
                {
                out << "\"bps\": " << static_cast<uint64_t>(t.events() / (t.value() / 1000000000.0)) << ", ";
                out << "\"buf_size\": " << t.buf_size() << ", ";
                }
 
-            out << "\"nanos\": " << t.value();
+            out << "\"nanos\": " << t.value() << "}";
 
-            out << "}\n";
+            if(i != m_results.size() - 1)
+               out << ",";
+
+            out << "\n";
             }
          out << "]\n";
 
