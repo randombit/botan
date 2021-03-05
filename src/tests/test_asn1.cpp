@@ -182,7 +182,7 @@ Test::Result test_asn1_ucs4_parsing()
       // \x1C - ASN1 tag for 'universal string'
       // \x18 - 24 characters of payload
       // ...  - UCS-4 encoding for Moscow in cyrillic script
-      const Botan::byte moscow[] =
+      const uint8_t moscow[] =
          "\x1C\x18\x00\x00\x04\x1C\x00\x00\x04\x3E\x00\x00\x04\x41\x00\x00\x04\x3A\x00\x00\x04\x32\x00\x00\x04\x30";
       const std::string moscow_plain =
          "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";

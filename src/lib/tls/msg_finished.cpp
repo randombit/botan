@@ -76,7 +76,7 @@ Finished::Finished(const std::vector<uint8_t>& buf) : m_verification_data(buf)
 bool Finished::verify(const Handshake_State& state,
                       Connection_Side side) const
    {
-   std::vector<byte> computed_verify = finished_compute_verify(state, side);
+   std::vector<uint8_t> computed_verify = finished_compute_verify(state, side);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    return true;

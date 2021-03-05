@@ -80,6 +80,7 @@ using std::int32_t;
 using std::int64_t;
 using std::size_t;
 
+#if !defined(BOTAN_IS_BEING_BUILT)
 /*
 * These typedefs are no longer used within the library headers
 * or code. They are kept only for compatability with software
@@ -90,6 +91,7 @@ using u16bit = std::uint16_t;
 using u32bit = std::uint32_t;
 using u64bit = std::uint64_t;
 using s32bit = std::int32_t;
+#endif
 
 #if (BOTAN_MP_WORD_BITS == 32)
   typedef uint32_t word;
