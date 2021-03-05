@@ -88,7 +88,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
       {
       throw Invalid_Argument("random_prime: invalid coprime");
       }
-   if(modulo == 0)
+   if(modulo == 0 || modulo >= 100000)
       {
       throw Invalid_Argument("random_prime: Invalid modulo value");
       }
