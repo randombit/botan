@@ -56,6 +56,9 @@ Version 3.0.0, Not Yet Released
 * Re-enable support for CLMUL instruction on Visual C++, which was accidentally
   disabled starting in 2.12.0
 
+* Fix a bug in BigInt::operator< where if two negative numbers were compared,
+  an incorrect result was computed. (GH #2639 #2638)
+
 * Remove deprecated ``Data_Store`` class (GH #2461)
 
 * Remove deprecated public member variables of ``OID``, ``Attribute``,
