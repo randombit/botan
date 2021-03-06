@@ -9,6 +9,9 @@ Version 2.18.0, Not Yet Released
 
 * Improve safegcd bounds, improving runtime performance (GH #2628 #2619)
 
+* Fix a bug introduced in 2.9.0 where BigInt::operator< would return
+  an incorrect result if both operands were negative. (GH #2641 #2638)
+
 * Fix a regression introduced in 2.17.0 where LDFLAGS which add an extra
   library (such as ``-latomic`` needed on SPARC) were not always applied
   effectively. (GH #2622 #2623 #2625)
