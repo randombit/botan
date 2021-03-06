@@ -219,6 +219,50 @@ class BigInt_Unit_Tests final : public Test
 
 BOTAN_REGISTER_TEST("math", "bigint_unit", BigInt_Unit_Tests);
 
+class BigInt_Cmp_Test final : public Text_Based_Test
+   {
+   public:
+      BigInt_Cmp_Test() : Text_Based_Test("bn/cmp.vec", "X,Y,R") {}
+
+      Test::Result run_one_test(const std::string& op, const VarMap& vars) override
+         {
+         Test::Result result("BigInt Comparison " + op);
+
+         const BigInt x = vars.get_req_bn("X");
+         const BigInt y = vars.get_req_bn("Y");
+         const bool expected = vars.get_req_bool("R");
+
+         if(op == "EQ")
+            {
+            result.confirm("Values equal", x == y, expected);
+            }
+         else if(op == "LT")
+            {
+            result.confirm("Values LT", x < y, expected);
+
+            if(expected)
+               result.confirm("If LT then reverse is GT", y >= x);
+            else
+               result.confirm("If not LT then GTE", x >= y);
+            }
+         else if(op == "LTE")
+            {
+            result.confirm("Values LTE", x <= y, expected);
+
+            if(expected)
+               result.confirm("If LTE then either LT or EQ", x < y || x == y);
+            else
+               result.confirm("If not LTE then GT", x > y);
+            }
+         else
+            throw Test_Error("Unknown BigInt comparison type " + op);
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("math", "bn_cmp", BigInt_Cmp_Test);
+
 class BigInt_Add_Test final : public Text_Based_Test
    {
    public:
