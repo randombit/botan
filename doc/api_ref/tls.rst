@@ -426,7 +426,7 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
              // the session with the tls server was established
              // return false to prevent the session from being cached, true to
              // cache the session in the configured session manager
-             return false;
+             return true;
              }
     };
 
