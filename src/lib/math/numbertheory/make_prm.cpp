@@ -9,6 +9,7 @@
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/reducer.h>
 #include <algorithm>
@@ -20,53 +21,81 @@ namespace {
 class Prime_Sieve final
    {
    public:
-      Prime_Sieve(const BigInt& init_value, size_t sieve_size) :
-         m_sieve(std::min(sieve_size, PRIME_TABLE_SIZE))
+      Prime_Sieve(const BigInt& init_value, size_t sieve_size, word step, bool check_2p1) :
+         m_sieve(std::min(sieve_size, PRIME_TABLE_SIZE)),
+         m_step(step),
+         m_check_2p1(check_2p1)
          {
          for(size_t i = 0; i != m_sieve.size(); ++i)
-            m_sieve[i] = static_cast<uint16_t>(init_value % PRIMES[i]);
+            m_sieve[i] = init_value % PRIMES[i];
          }
 
-      void step(word increment)
+      size_t sieve_size() const { return m_sieve.size(); }
+
+      bool check_2p1() const { return m_check_2p1; }
+
+      bool next()
          {
+         auto passes = CT::Mask<word>::set();
          for(size_t i = 0; i != m_sieve.size(); ++i)
             {
-            m_sieve[i] = (m_sieve[i] + increment) % PRIMES[i];
-            }
-         }
+            m_sieve[i] = (m_sieve[i] + m_step) % PRIMES[i];
 
-      bool passes(bool check_2p1 = false) const
-         {
-         for(size_t i = 0; i != m_sieve.size(); ++i)
-            {
-            /*
-            In this case, p is a multiple of PRIMES[i]
-            */
-            if(m_sieve[i] == 0)
-               return false;
+            // If m_sieve[i] == 0 then val % p == 0 -> not prime
+            passes &= CT::Mask<word>::expand(m_sieve[i]);
 
-            if(check_2p1)
+            if(this->check_2p1())
                {
                /*
-               In this case, 2*p+1 will be a multiple of PRIMES[i]
+               If v % p == (p-1)/2 then 2*v+1 == 0 (mod p)
 
                So if potentially generating a safe prime, we want to
-               avoid this value because 2*p+1 will certainly not be prime.
+               avoid this value because 2*v+1 will certainly not be prime.
 
                See "Safe Prime Generation with a Combined Sieve" M. Wiener
                https://eprint.iacr.org/2003/186.pdf
                */
-               if(m_sieve[i] == (PRIMES[i] - 1) / 2)
-                  return false;
+               passes &= ~CT::Mask<word>::is_equal(m_sieve[i], (PRIMES[i] - 1) / 2);
                }
             }
 
-         return true;
+         return passes.is_set();
          }
 
    private:
-      std::vector<uint16_t> m_sieve;
+      std::vector<word> m_sieve;
+      const word m_step;
+      const bool m_check_2p1;
    };
+
+#if defined(BOTAN_ENABLE_DEBUG_ASSERTS)
+
+bool no_small_multiples(const BigInt& v, const Prime_Sieve& sieve)
+   {
+   const size_t sieve_size = sieve.sieve_size();
+   const bool check_2p1 = sieve.check_2p1();
+
+   if(v.is_even())
+      return false;
+
+   const BigInt v_x2_p1 = 2*v + 1;
+
+   for(size_t i = 0; i != sieve_size; ++i)
+      {
+      if((v % PRIMES[i]) == 0)
+         return false;
+
+      if(check_2p1)
+         {
+         if(v_x2_p1 % PRIMES[i] == 0)
+            return false;
+         }
+      }
+
+   return true;
+   }
+
+#endif
 
 }
 
@@ -149,17 +178,20 @@ BigInt random_prime(RandomNumberGenerator& rng,
       // Force p to be equal to equiv mod modulo
       p += (modulo - (p % modulo)) + equiv;
 
-      Prime_Sieve sieve(p, bits);
+      Prime_Sieve sieve(p, bits, modulo, true);
 
       for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt)
          {
          p += modulo;
 
-         sieve.step(modulo);
-
-         // p can be even if modulo is odd, continue on in that case
-         if(p.is_even() || sieve.passes(true) == false)
+         if(!sieve.next())
             continue;
+
+         // here p can be even if modulo is odd, continue on in that case
+         if(p.is_even())
+            continue;
+
+         BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
          Modular_Reducer mod_p(p);
 
@@ -234,16 +266,16 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
       const word step = 4;
 
-      Prime_Sieve sieve(p, bits);
+      Prime_Sieve sieve(p, bits, step, false);
 
       for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt)
          {
          p += step;
 
-         sieve.step(step);
-
-         if(sieve.passes() == false)
+         if(!sieve.next())
             continue;
+
+         BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
          Modular_Reducer mod_p(p);
 
