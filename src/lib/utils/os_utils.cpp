@@ -256,9 +256,6 @@ uint64_t OS::get_cpu_cycle_counter()
 #elif defined(BOTAN_TARGET_ARCH_IS_HPPA)
    asm volatile("mfctl 16,%0" : "=r" (rtc)); // 64-bit only?
 
-#elif defined(BOTAN_TARGET_ARCH_IS_ARM64) && defined(BOTAN_TARGET_OS_IS_MACOS)
-   asm volatile("isb; mrs %0, cntvct_el0" : "=r" (rtc));
-
 #else
    //#warning "OS::get_cpu_cycle_counter not implemented"
 #endif
