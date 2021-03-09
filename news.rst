@@ -19,8 +19,8 @@ Version 2.18.0, Not Yet Released
 Version 2.17.3, 2020-12-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Change base64, base58, base32, and hex encoding and decoding opearations
-  to run in constant time (GH #2549)
+* CVE-2021-24115 Change base64, base58, base32, and hex encoding and
+  decoding opearations to run in constant time (GH #2549)
 
 * Fix a build problem on PPC64 building with Clang (GH #2547)
 
