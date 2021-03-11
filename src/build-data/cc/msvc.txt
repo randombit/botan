@@ -29,7 +29,7 @@ lang_flags "/std:c++17 /EHs /GR"
 # 4250: diamond inheritence warning
 # 4251: STL types used in DLL interface
 # 4275: ???
-warning_flags "/W4 /wd4250 /wd4251 /wd4275 /wd4127"
+warning_flags "/W4 /wd4250 /wd4251 /wd4275"
 
 werror_flags "/WX"
 
