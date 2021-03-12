@@ -43,6 +43,11 @@ def curve_info(src):
             yield current
             current = {}
 
+def format_int(x):
+    if x.bit_length() <= 5:
+        return str(x)
+    return hex(x).upper().replace('0X', '0x')
+
 def print_curve(curve):
     template_str = """   // %s
    if(%s)
@@ -57,12 +62,12 @@ def print_curve(curve):
 
     name = curve['Name']
     oids = ['OID{%s}' % (oid.replace('.', ',')) for oid in curve['OID']]
-    p = hex(curve['P']).upper().replace('0X', '0x')
-    a = hex(curve['A']).upper().replace('0X', '0x')
-    b = hex(curve['B']).upper().replace('0X', '0x')
-    x = hex(curve['X']).upper().replace('0X', '0x')
-    y = hex(curve['Y']).upper().replace('0X', '0x')
-    n = hex(curve['N']).upper().replace('0X', '0x')
+    p = format_int(curve['P'])
+    a = format_int(curve['A'])
+    b = format_int(curve['B'])
+    x = format_int(curve['X'])
+    y = format_int(curve['Y'])
+    n = format_int(curve['N'])
 
     oid_match = ' || '.join(['oid == %s' % oid for oid in oids])
 

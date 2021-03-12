@@ -127,7 +127,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD97",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD94",
                                 "0xA6",
-                                "0x1",
+                                "1",
                                 "0x8D91E471E0989CDA27DF505A453F2B7635294F2DDF23E3B122ACC99C9E9F1E14",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6C611070995AD10045841B09B761B893",
                                 OID{1,2,643,7,1,2,1,1,1});
@@ -137,7 +137,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC7",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC4",
                                 "0xE8C2505DEDFC86DDC1BD0B2B6667F1DA34B82574761CB0E879BD081CFD0B6265EE3CB090F30D27614CB4574010DA90DD862EF9D4EBEE4761503190785A71C760",
-                                "0x3",
+                                "3",
                                 "0x7503CFE87A836AE3A61B8816E25450E6CE5E1C93ACF1ABC1778064FDCBEFA921DF1626BE4FD036E93D75E6A50E3A41E98028FE5FC235F5B889A589CB5215F2A4",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF27E69532F48D89116FF22B8D4E0560609B4B38ABFAD2B85DCACDB1411F10B275",
                                 oid);
@@ -145,8 +145,8 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
    // secp160k1
    if(oid == OID{1,3,132,0,9})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC73",
-                                "0x0",
-                                "0x7",
+                                "0",
+                                "7",
                                 "0x3B4C382CE37AA192A4019E763036F4F5DD4D7EBB",
                                 "0x938CF935318FDCED6BC28286531733C3F03C4FEE",
                                 "0x100000000000000000001B8FA16DFAB9ACA16B6B3",
@@ -175,8 +175,8 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
    // secp192k1
    if(oid == OID{1,3,132,0,31})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFEE37",
-                                "0x0",
-                                "0x3",
+                                "0",
+                                "3",
                                 "0xDB4FF10EC057E9AE26B07D0280B7F4341DA5D1B1EAE06C7D",
                                 "0x9B2F2F6D9C5628A7844163D015BE86344082AA88D95E2F9D",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFE26F2FC170F69466A74DEFD8D",
@@ -195,8 +195,8 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
    // secp224k1
    if(oid == OID{1,3,132,0,32})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFE56D",
-                                "0x0",
-                                "0x5",
+                                "0",
+                                "5",
                                 "0xA1455B334DF099DF30FC28A169A467E9E47075A90F7E650EB6B7A45C",
                                 "0x7E089FED7FBA344282CAFBD6F7E319F7C0B0BD59E2CA4BDB556D61A5",
                                 "0x10000000000000000000000000001DCE8D2EC6184CAF0A971769FB1F7",
@@ -215,8 +215,8 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
    // secp256k1
    if(oid == OID{1,3,132,0,10})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F",
-                                "0x0",
-                                "0x7",
+                                "0",
+                                "7",
                                 "0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
                                 "0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
