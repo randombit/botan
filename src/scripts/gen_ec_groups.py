@@ -79,10 +79,7 @@ def format_names(names):
     for nm in sorted(names):
         yield '      \"%s\",' % (nm)
 
-def main(args = None):
-    if args is None:
-        args = sys.argv
-
+def main():
     curves = [c for c in curve_info(open('./src/build-data/ec_groups.txt'))]
 
     template_str = open('./src/build-data/ec_named.cpp.in').read()
@@ -93,6 +90,7 @@ def main(args = None):
     today = datetime.date.today().strftime("%Y-%m-%d")
 
     print(template_str % (this_script, today, curves, names))
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())
