@@ -39,10 +39,10 @@ uint32_t to_u32bit(const std::string& str)
 
    const unsigned long int x = std::stoul(str);
 
-   if(sizeof(unsigned long int) > 4)
+   if constexpr(sizeof(unsigned long int) > 4)
       {
       // x might be uint64
-      if (x > std::numeric_limits<uint32_t>::max())
+      if(x > std::numeric_limits<uint32_t>::max())
          {
          throw Invalid_Argument("Integer value of " + str + " exceeds 32 bit range");
          }
