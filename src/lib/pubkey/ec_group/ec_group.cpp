@@ -64,6 +64,13 @@ class EC_Group_Data final
                  this->g_y() == g_y);
          }
 
+      bool match(EC_Group_Data& other) const
+         {
+         return match(other.p(), other.a(), other.b(),
+                      other.g_x(), other.g_y(),
+                      other.order(), other.cofactor());
+         }
+
       void set_oid(const OID& oid)
          {
          BOTAN_STATE_CHECK(m_oid.empty());
@@ -168,6 +175,15 @@ class EC_Group_Data_Map final
 
          if(data)
             {
+            for(auto curve : m_registered_curves)
+               {
+               if(curve->oid().empty() == true && curve->match(*data))
+                  {
+                  curve->set_oid(oid);
+                  return curve;
+                  }
+               }
+
             m_registered_curves.push_back(data);
             return data;
             }

@@ -686,6 +686,34 @@ Test::Result test_ecc_registration()
    return result;
    }
 
+Test::Result test_ec_group_from_params()
+   {
+   Test::Result result("EC_Group from params");
+
+   Botan::EC_Group::clear_registered_curve_data();
+
+   // secp160r1 params
+   const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF");
+   const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC");
+   const Botan::BigInt b("0x1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45");
+
+   const Botan::BigInt g_x("0x4A96B5688EF573284664698968C38BB913CBFC82");
+   const Botan::BigInt g_y("0x23A628553168947D59DCC912042351377AC5FB32");
+   const Botan::BigInt order("0x100000000000000000001F4C8F927AED3CA752257");
+
+   const Botan::OID oid("1.3.132.0.8");
+
+   Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
+   // At this point the group may not have an OID depending on internal state
+
+   // But now we load the group from OID which causes the entries to merge
+   Botan::EC_Group group_from_oid(oid);
+
+   result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
+
+   return result;
+   }
+
 class ECC_Unit_Tests final : public Test
    {
    public:
@@ -705,6 +733,7 @@ class ECC_Unit_Tests final : public Test
          results.push_back(test_enc_dec_uncompressed_112());
          results.push_back(test_enc_dec_uncompressed_521());
          results.push_back(test_ecc_registration());
+         results.push_back(test_ec_group_from_params());
 
          return results;
          }
