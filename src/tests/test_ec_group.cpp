@@ -1,7 +1,7 @@
 /*
 * (C) 2007 Falko Strenzke
 *     2007 Manuel Hartl
-*     2009,2015,2018 Jack Lloyd
+*     2009,2015,2018,2021 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
