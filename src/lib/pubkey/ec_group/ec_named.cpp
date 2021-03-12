@@ -1,6 +1,6 @@
 /*
-* List of ECC groups
-* (C) 2013,2018 Jack Lloyd
+* ECC Group Info
+* This file was automatically generated using ./src/scripts/gen_ec_groups.py on 2021-03-12
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,7 +12,7 @@ namespace Botan {
 //static
 std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
    {
-   // P-256
+   // secp256r1
    if(oid == OID{1,2,840,10045,3,1,7})
       return load_EC_group_info("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF",
                                 "0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC",
@@ -22,7 +22,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551",
                                 oid);
 
-   // P-384
+   // secp384r1
    if(oid == OID{1,3,132,0,34})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFC",
@@ -31,7 +31,8 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x3617DE4A96262C6F5D9E98BF9292DC29F8F41DBD289A147CE9DA3113B5F0B8C00A60B1CE1D7E819D7A431D7C90EA0E5F",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973",
                                 oid);
-   // P-521
+
+   // secp521r1
    if(oid == OID{1,3,132,0,35})
       return load_EC_group_info("0x1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
                                 "0x1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC",
@@ -50,6 +51,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x1667CB477A1A8EC338F94741669C976316DA6321",
                                 "0xE95E4A5F737059DC60DF5991D45029409E60FC09",
                                 oid);
+
    // brainpool192r1
    if(oid == OID{1,3,36,3,3,2,8,1,1,3})
       return load_EC_group_info("0xC302F41D932A36CDA7A3463093D18DB78FCE476DE1A86297",
@@ -59,6 +61,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x14B690866ABD5BB88B5F4828C1490002E6773FA2FA299B8F",
                                 "0xC302F41D932A36CDA7A3462F9E9E916B5BE8F1029AC4ACC1",
                                 oid);
+
    // brainpool224r1
    if(oid == OID{1,3,36,3,3,2,8,1,1,5})
       return load_EC_group_info("0xD7C134AA264366862A18302575D1D787B09F075797DA89F57EC8C0FF",
@@ -68,6 +71,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x58AA56F772C0726F24C6B89E4ECDAC24354B9E99CAA3F6D3761402CD",
                                 "0xD7C134AA264366862A18302575D0FB98D116BC4B6DDEBCA3A5A7939F",
                                 oid);
+
    // brainpool256r1
    if(oid == OID{1,3,36,3,3,2,8,1,1,7})
       return load_EC_group_info("0xA9FB57DBA1EEA9BC3E660A909D838D726E3BF623D52620282013481D1F6E5377",
@@ -77,6 +81,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x547EF835C3DAC4FD97F8461A14611DC9C27745132DED8E545C1D54C72F046997",
                                 "0xA9FB57DBA1EEA9BC3E660A909D838D718C397AA3B561A6F7901E0E82974856A7",
                                 oid);
+
    // brainpool320r1
    if(oid == OID{1,3,36,3,3,2,8,1,1,9})
       return load_EC_group_info("0xD35E472036BC4FB7E13C785ED201E065F98FCFA6F6F40DEF4F92B9EC7893EC28FCD412B1F1B32E27",
@@ -86,6 +91,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x14FDD05545EC1CC8AB4093247F77275E0743FFED117182EAA9C77877AAAC6AC7D35245D1692E8EE1",
                                 "0xD35E472036BC4FB7E13C785ED201E065F98FCFA5B68F12A32D482EC7EE8658E98691555B44C59311",
                                 oid);
+
    // brainpool384r1
    if(oid == OID{1,3,36,3,3,2,8,1,1,11})
       return load_EC_group_info("0x8CB91E82A3386D280F5D6F7E50E641DF152F7109ED5456B412B1DA197FB71123ACD3A729901D1A71874700133107EC53",
@@ -95,6 +101,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x8ABE1D7520F9C2A45CB1EB8E95CFD55262B70B29FEEC5864E19C054FF99129280E4646217791811142820341263C5315",
                                 "0x8CB91E82A3386D280F5D6F7E50E641DF152F7109ED5456B31F166E6CAC0425A7CF3AB6AF6B7FC3103B883202E9046565",
                                 oid);
+
    // brainpool512r1
    if(oid == OID{1,3,36,3,3,2,8,1,1,13})
       return load_EC_group_info("0xAADD9DB8DBE9C48B3FD4E6AE33C9FC07CB308DB3B3C9D20ED6639CCA703308717D4D9B009BC66842AECDA12AE6A380E62881FF2F2D82C68528AA6056583A48F3",
@@ -104,6 +111,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x7DDE385D566332ECC0EABFA9CF7822FDF209F70024A57B1AA000C55B881F8111B2DCDE494A5F485E5BCA4BD88A2763AED1CA2B2FA8F0540678CD1E0F3AD80892",
                                 "0xAADD9DB8DBE9C48B3FD4E6AE33C9FC07CB308DB3B3C9D20ED6639CCA70330870553E5C414CA92619418661197FAC10471DB1D381085DDADDB58796829CA90069",
                                 oid);
+
    // frp256v1
    if(oid == OID{1,2,250,1,223,101,256,1})
       return load_EC_group_info("0xF1FD178C0B3AD58F10126DE8CE42435B3961ADBCABC8CA6DE8FCF353D86E9C03",
@@ -113,8 +121,9 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x6142E0F7C8B204911F9271F0F3ECEF8C2701C307E8E4C9E183115A1554062CFB",
                                 "0xF1FD178C0B3AD58F10126DE8CE42435B53DC67E140D2BF941FFDD459C6D655E1",
                                 oid);
+
    // gost_256A
-   if(oid == OID{1,2,643,2,2,35,1} || oid == OID{1,2,643,2,2,36,0} || oid == OID{1,2,643,7,1,2,1,1,1})
+   if(oid == OID{1,2,643,7,1,2,1,1,1} || oid == OID{1,2,643,2,2,35,1} || oid == OID{1,2,643,2,2,36,0})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD97",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD94",
                                 "0xA6",
@@ -128,7 +137,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC7",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC4",
                                 "0xE8C2505DEDFC86DDC1BD0B2B6667F1DA34B82574761CB0E879BD081CFD0B6265EE3CB090F30D27614CB4574010DA90DD862EF9D4EBEE4761503190785A71C760",
-                                "3",
+                                "0x3",
                                 "0x7503CFE87A836AE3A61B8816E25450E6CE5E1C93ACF1ABC1778064FDCBEFA921DF1626BE4FD036E93D75E6A50E3A41E98028FE5FC235F5B889A589CB5215F2A4",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF27E69532F48D89116FF22B8D4E0560609B4B38ABFAD2B85DCACDB1411F10B275",
                                 oid);
@@ -142,6 +151,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x938CF935318FDCED6BC28286531733C3F03C4FEE",
                                 "0x100000000000000000001B8FA16DFAB9ACA16B6B3",
                                 oid);
+
    // secp160r1
    if(oid == OID{1,3,132,0,8})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF",
@@ -151,6 +161,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x23A628553168947D59DCC912042351377AC5FB32",
                                 "0x100000000000000000001F4C8F927AED3CA752257",
                                 oid);
+
    // secp160r2
    if(oid == OID{1,3,132,0,30})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC73",
@@ -160,6 +171,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0xFEAFFEF2E331F296E071FA0DF9982CFEA7D43F2E",
                                 "0x100000000000000000000351EE786A818F3A1A16B",
                                 oid);
+
    // secp192k1
    if(oid == OID{1,3,132,0,31})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFEE37",
@@ -169,6 +181,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x9B2F2F6D9C5628A7844163D015BE86344082AA88D95E2F9D",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFE26F2FC170F69466A74DEFD8D",
                                 oid);
+
    // secp192r1
    if(oid == OID{1,2,840,10045,3,1,1})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF",
@@ -178,6 +191,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x7192B95FFC8DA78631011ED6B24CDD573F977A11E794811",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFF99DEF836146BC9B1B4D22831",
                                 oid);
+
    // secp224k1
    if(oid == OID{1,3,132,0,32})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFE56D",
@@ -187,6 +201,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x7E089FED7FBA344282CAFBD6F7E319F7C0B0BD59E2CA4BDB556D61A5",
                                 "0x10000000000000000000000000001DCE8D2EC6184CAF0A971769FB1F7",
                                 oid);
+
    // secp224r1
    if(oid == OID{1,3,132,0,33})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000001",
@@ -196,6 +211,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0xBD376388B5F723FB4C22DFE6CD4375A05A07476444D5819985007E34",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFF16A2E0B8F03E13DD29455C5C2A3D",
                                 oid);
+
    // secp256k1
    if(oid == OID{1,3,132,0,10})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F",
@@ -215,6 +231,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0xBC3736A2F4F6779C59BDCEE36B692153D0A9877CC62A474002DF32E52139F0A0",
                                 "0xFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFF7203DF6B21C6052B53BBF40939D54123",
                                 oid);
+
    // x962_p192v2
    if(oid == OID{1,2,840,10045,3,1,2})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF",
@@ -224,6 +241,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x6574D11D69B6EC7A672BB82A083DF2F2B0847DE970B2DE15",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFE5FB1A724DC80418648D8DD31",
                                 oid);
+
    // x962_p192v3
    if(oid == OID{1,2,840,10045,3,1,3})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF",
@@ -233,6 +251,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x38A90F22637337334B49DCB66A6DC8F9978ACA7648A943B0",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFF7A62D031C83F4294F640EC13",
                                 oid);
+
    // x962_p239v1
    if(oid == OID{1,2,840,10045,3,1,4})
       return load_EC_group_info("0x7FFFFFFFFFFFFFFFFFFFFFFF7FFFFFFFFFFF8000000000007FFFFFFFFFFF",
@@ -242,6 +261,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x7DEBE8E4E90A5DAE6E4054CA530BA04654B36818CE226B39FCCB7B02F1AE",
                                 "0x7FFFFFFFFFFFFFFFFFFFFFFF7FFFFF9E5E9A9F5D9071FBD1522688909D0B",
                                 oid);
+
    // x962_p239v2
    if(oid == OID{1,2,840,10045,3,1,5})
       return load_EC_group_info("0x7FFFFFFFFFFFFFFFFFFFFFFF7FFFFFFFFFFF8000000000007FFFFFFFFFFF",
@@ -251,6 +271,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0x5B0125E4DBEA0EC7206DA0FC01D9B081329FB555DE6EF460237DFF8BE4BA",
                                 "0x7FFFFFFFFFFFFFFFFFFFFFFF800000CFA7E8594377D414C03821BC582063",
                                 oid);
+
    // x962_p239v3
    if(oid == OID{1,2,840,10045,3,1,6})
       return load_EC_group_info("0x7FFFFFFFFFFFFFFFFFFFFFFF7FFFFFFFFFFF8000000000007FFFFFFFFFFF",
@@ -268,6 +289,16 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
 const std::set<std::string>& EC_Group::known_named_groups()
    {
    static const std::set<std::string> named_groups = {
+      "brainpool160r1",
+      "brainpool192r1",
+      "brainpool224r1",
+      "brainpool256r1",
+      "brainpool320r1",
+      "brainpool384r1",
+      "brainpool512r1",
+      "frp256v1",
+      "gost_256A",
+      "gost_512A",
       "secp160k1",
       "secp160r1",
       "secp160r2",
@@ -279,23 +310,15 @@ const std::set<std::string>& EC_Group::known_named_groups()
       "secp256r1",
       "secp384r1",
       "secp521r1",
-      "brainpool160r1",
-      "brainpool192r1",
-      "brainpool224r1",
-      "brainpool256r1",
-      "brainpool320r1",
-      "brainpool384r1",
-      "brainpool512r1",
+      "sm2p256v1",
       "x962_p192v2",
       "x962_p192v3",
       "x962_p239v1",
       "x962_p239v2",
       "x962_p239v3",
-      "gost_256A",
-      "gost_512A",
-      "frp256v1",
-      "sm2p256v1"
       };
    return named_groups;
    }
+
 }
+
