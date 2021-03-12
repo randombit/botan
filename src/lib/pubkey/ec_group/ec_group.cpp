@@ -223,7 +223,7 @@ class EC_Group_Data_Map final
                {
                /*
                * If the same curve was previously created without an OID
-               * but has been registered again using an OID, save that OID.
+               * but is now being registered again using an OID, save that OID.
                */
                if(oid.empty() == false)
                   {
@@ -241,26 +241,38 @@ class EC_Group_Data_Map final
                }
             }
 
-         // Not found - if OID is set try looking up that way
+         /*
+         Not found in current list, so we need to create a new entry
+
+         If an OID is set, try to look up relative our static tables to detect a duplicate
+         registration under an OID
+         */
+
+         std::shared_ptr<EC_Group_Data> new_group =
+            std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, source);
 
          if(oid.has_value())
             {
-            // Not located in existing store - try hardcoded data set
             std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
-
-            if(data)
+            if(data != nullptr && !new_group->match(*data))
+               throw Invalid_Argument("Attempting to register an EC group under OID of hardcoded group");
+            }
+         else
+            {
+            // Here try to use the order as a hint to look up the group id, to identify common groups
+            const OID oid_from_store = EC_Group::EC_group_identity_from_order(order);
+            if(oid_from_store.has_value())
                {
-               m_registered_curves.push_back(data);
-               return data;
+               std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
+               if(data == nullptr || new_group->match(*data))
+                  {
+                  new_group->set_oid(oid_from_store);
+                  }
                }
             }
 
-         // Not found or no OID, add data and return
-         std::shared_ptr<EC_Group_Data> d =
-            std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, source);
-
-         m_registered_curves.push_back(d);
-         return d;
+         m_registered_curves.push_back(new_group);
+         return new_group;
          }
 
    private:

@@ -17,6 +17,13 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
    }
 
 //static
+OID EC_Group::EC_group_identity_from_order(const BigInt& order)
+   {
+%s
+   return OID();
+   }
+
+//static
 const std::set<std::string>& EC_Group::known_named_groups()
    {
    static const std::set<std::string> named_groups = {
