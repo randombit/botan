@@ -203,13 +203,16 @@ class Server : public Side, public std::enable_shared_from_this<Server>
          // Note: If this was a real server, we should create a new session (with its own stream) for each accepted
          // connection. In this test we only have one connection.
 
-         if (m_move_before_accept) {
-            // regression for #2635
+         if (m_move_before_accept)
+            {
+            // regression test for #2635
             ssl_stream s(std::move(socket), m_ctx);
             m_stream = std::unique_ptr<ssl_stream>(new ssl_stream(std::move(s)));
-         } else {
+            }
+         else
+            {
             m_stream = std::unique_ptr<ssl_stream>(new ssl_stream(std::move(socket), m_ctx));
-         }
+            }
 
          m_result.set_timer("handshake");
          m_stream->async_handshake(Botan::TLS::Connection_Side::SERVER,
@@ -300,7 +303,7 @@ class Server : public Side, public std::enable_shared_from_this<Server>
       Result_Wrapper m_result;
       bool m_short_read_expected;
 
-      // regression for #2635
+      // regression test for #2635
       bool m_move_before_accept;
    };
 
