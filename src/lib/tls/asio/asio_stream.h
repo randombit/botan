@@ -63,8 +63,7 @@ class Stream
       explicit Stream(Context& context, Args&& ... args)
          : m_context(context)
          , m_nextLayer(std::forward<Args>(args)...)
-         , m_core(*this)
-         , m_shutdown_received(false)
+         , m_core(context)
          , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
@@ -83,8 +82,7 @@ class Stream
       explicit Stream(Arg&& arg, Context& context)
          : m_context(context)
          , m_nextLayer(std::forward<Arg>(arg))
-         , m_core(*this)
-         , m_shutdown_received(false)
+         , m_core(context)
          , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
@@ -519,7 +517,7 @@ class Stream
             {
             // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
             // AsyncWriteOperation call the handler with the error_code set
-            consume_send_buffer(m_send_buffer.size());
+            consume_send_buffer(m_core.send_buffer.size());
             detail::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
             op{std::move(init.completion_handler), *this, std::size_t(0), ec};
             return init.result.get();
@@ -560,7 +558,7 @@ class Stream
       //! @brief Indicates whether a close_notify alert has been received from the peer.
       bool shutdown_received() const
          {
-         return m_shutdown_received;
+         return m_core.shutdown_received;
          }
 
    protected:
@@ -580,21 +578,23 @@ class Stream
       class StreamCore : public Botan::TLS::Callbacks
          {
          public:
-            StreamCore(Stream& stream) : m_stream(stream) {}
+            StreamCore(Botan::TLS::Context &context)
+               : shutdown_received(false)
+               , m_context(context) {}
 
             virtual ~StreamCore() = default;
 
             void tls_emit_data(const uint8_t data[], std::size_t size) override
                {
-               m_stream.m_send_buffer.commit(
-                  boost::asio::buffer_copy(m_stream.m_send_buffer.prepare(size), boost::asio::buffer(data, size))
+               send_buffer.commit(
+                  boost::asio::buffer_copy(send_buffer.prepare(size), boost::asio::buffer(data, size))
                );
                }
 
             void tls_record_received(uint64_t, const uint8_t data[], std::size_t size) override
                {
-               m_stream.m_receive_buffer.commit(
-                  boost::asio::buffer_copy(m_stream.m_receive_buffer.prepare(size), boost::asio::const_buffer(data, size))
+               receive_buffer.commit(
+                  boost::asio::buffer_copy(receive_buffer.prepare(size), boost::asio::const_buffer(data, size))
                );
                }
 
@@ -602,7 +602,7 @@ class Stream
                {
                if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
                   {
-                  m_stream.set_shutdown_received();
+                  shutdown_received = true;
                   // Channel::process_alert will automatically write the corresponding close_notify response to the
                   // send_buffer and close the native_handle after this function returns.
                   }
@@ -627,9 +627,9 @@ class Stream
                const std::string& hostname,
                const TLS::Policy& policy) override
                {
-               if(m_stream.m_context.has_verify_callback())
+               if(m_context.has_verify_callback())
                   {
-                  m_stream.m_context.get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
+                  m_context.get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
                   }
                else
                   {
@@ -637,15 +637,19 @@ class Stream
                   }
                }
 
+            bool shutdown_received;
+            boost::beast::flat_buffer receive_buffer;
+            boost::beast::flat_buffer send_buffer;
+
          private:
-            Stream& m_stream;
+            Botan::TLS::Context& m_context;
          };
 
       const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
-      boost::asio::const_buffer send_buffer() const { return m_send_buffer.data(); }
+      boost::asio::const_buffer send_buffer() const { return m_core.send_buffer.data(); }
 
       //! @brief Check if decrypted data is available in the receive buffer
-      bool has_received_data() const { return m_receive_buffer.size() > 0; }
+      bool has_received_data() const { return m_core.receive_buffer.size() > 0; }
 
       //! @brief Copy decrypted data into the user-provided buffer
       template <typename MutableBufferSequence>
@@ -655,16 +659,16 @@ class Stream
          // the user's desired target buffer once a read is started, and reading directly into that buffer in tls_record
          // received. However, we need to deal with the case that the receive buffer provided by the caller is smaller
          // than the decrypted record, so this optimization might not be worth the additional complexity.
-         const auto copiedBytes = boost::asio::buffer_copy(buffers, m_receive_buffer.data());
-         m_receive_buffer.consume(copiedBytes);
+         const auto copiedBytes = boost::asio::buffer_copy(buffers, m_core.receive_buffer.data());
+         m_core.receive_buffer.consume(copiedBytes);
          return copiedBytes;
          }
 
       //! @brief Check if encrypted data is available in the send buffer
-      bool has_data_to_send() const { return m_send_buffer.size() > 0; }
+      bool has_data_to_send() const { return m_core.send_buffer.size() > 0; }
 
       //! @brief Mark bytes in the send buffer as consumed, removing them from the buffer
-      void consume_send_buffer(std::size_t bytesConsumed) { m_send_buffer.consume(bytesConsumed); }
+      void consume_send_buffer(std::size_t bytesConsumed) { m_core.send_buffer.consume(bytesConsumed); }
 
       /**
        * @brief Create the native handle.
@@ -796,21 +800,11 @@ class Stream
             }
          }
 
-      void set_shutdown_received()
-         {
-         m_shutdown_received = true;
-         }
-
       Context&                  m_context;
       StreamLayer               m_nextLayer;
 
-      boost::beast::flat_buffer m_receive_buffer;
-      boost::beast::flat_buffer m_send_buffer;
-
       StreamCore                m_core;
       std::unique_ptr<ChannelT> m_native_handle;
-
-      bool m_shutdown_received;
 
       // Buffer space used to read input intended for the core
       std::vector<uint8_t>              m_input_buffer_space;
