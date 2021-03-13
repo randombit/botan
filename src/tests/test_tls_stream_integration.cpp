@@ -154,7 +154,8 @@ class Server : public Side, public std::enable_shared_from_this<Server>
          : Side(server_cert(), server_key()),
            m_acceptor(ioc),
            m_result(ioc, "Server"),
-           m_short_read_expected(false) {}
+           m_short_read_expected(false),
+           m_move_before_accept(false) {}
 
       // Control messages
       // The messages below can be used by the test clients in order to configure the server's behavior during a test
@@ -186,6 +187,11 @@ class Server : public Side, public std::enable_shared_from_this<Server>
          m_short_read_expected = true;
          }
 
+      void move_before_accept()
+         {
+         m_move_before_accept = true;
+         }
+
       Result result() { return m_result.result(); }
 
    private:
@@ -196,7 +202,17 @@ class Server : public Side, public std::enable_shared_from_this<Server>
 
          // Note: If this was a real server, we should create a new session (with its own stream) for each accepted
          // connection. In this test we only have one connection.
-         m_stream = std::unique_ptr<ssl_stream>(new ssl_stream(std::move(socket), m_ctx));
+
+         if (m_move_before_accept)
+            {
+            // regression test for #2635
+            ssl_stream s(std::move(socket), m_ctx);
+            m_stream = std::unique_ptr<ssl_stream>(new ssl_stream(std::move(s)));
+            }
+         else
+            {
+            m_stream = std::unique_ptr<ssl_stream>(new ssl_stream(std::move(socket), m_ctx));
+            }
 
          m_result.set_timer("handshake");
          m_stream->async_handshake(Botan::TLS::Connection_Side::SERVER,
@@ -286,6 +302,9 @@ class Server : public Side, public std::enable_shared_from_this<Server>
       tcp::acceptor m_acceptor;
       Result_Wrapper m_result;
       bool m_short_read_expected;
+
+      // regression test for #2635
+      bool m_move_before_accept;
    };
 
 class Client : public Side
@@ -370,8 +389,8 @@ class Synchronous_Test : public TestBase
 class Test_Conversation : public TestBase, public net::coroutine, public std::enable_shared_from_this<Test_Conversation>
    {
    public:
-      Test_Conversation(net::io_context& ioc, std::shared_ptr<Server> server)
-         : TestBase(ioc, server, "Test Conversation") {}
+      Test_Conversation(net::io_context& ioc, std::shared_ptr<Server> server, std::string test_name="Test Conversation")
+         : TestBase(ioc, server, test_name) {}
 
       void run(const error_code& ec)
          {
@@ -669,6 +688,16 @@ class Test_No_Shutdown_Response_Sync : public Synchronous_Test
          }
    };
 
+class Test_Conversation_With_Move : public Test_Conversation
+   {
+   public:
+      Test_Conversation_With_Move(net::io_context& ioc, std::shared_ptr<Server> server)
+         : Test_Conversation(ioc, server, "Test Conversation With Move")
+         {
+            server->move_before_accept();
+         }
+   };
+
 #include <boost/asio/unyield.hpp>
 
 template<typename TestT>
@@ -713,6 +742,7 @@ class Tls_Stream_Integration_Tests final : public Test
          run_test_case<Test_Eager_Close_Sync>(results);
          run_test_case<Test_Close_Without_Shutdown_Sync>(results);
          run_test_case<Test_No_Shutdown_Response_Sync>(results);
+         run_test_case<Test_Conversation_With_Move>(results);
 
          return results;
          }
