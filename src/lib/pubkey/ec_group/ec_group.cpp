@@ -206,20 +206,28 @@ class EC_Group_Data_Map final
 
          for(auto i : m_registered_curves)
             {
+            const bool same_params = i->match(p, a, b, g_x, g_y, order, cofactor);
+            const bool same_oid = !oid.empty() && i->oid() == oid;
+
             if(!oid.empty())
                {
-               if(i->oid() == oid)
+               if(same_oid)
                   {
-                  if(!i->match(p, a, b, g_x, g_y, order, cofactor))
+                  if(same_params)
+                     {
+                     return i;
+                     }
+                  else
+                     {
                      throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
-                                            " but another curve is already registered using that OID");
-                  return i;
+                                            " but a distinct curve is already registered using that OID");
+                     }
                   }
                else if(i->oid().has_value())
                   continue; // distinct OIDs so not a match
                }
 
-            if(i->match(p, a, b, g_x, g_y, order, cofactor))
+            if(same_params)
                {
                /*
                * If the same curve was previously created without an OID
