@@ -762,7 +762,7 @@ Test::Result test_ec_group_duplicate_orders()
 
    // We can now get it by OID:
    Botan::EC_Group hc_group(oid);
-   result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
+   result.confirm("Group has correct OID", hc_group.get_curve_oid() == oid);
 
    // Existing secp160r1 unmodified:
    const Botan::OID secp160r1("1.3.132.0.8");

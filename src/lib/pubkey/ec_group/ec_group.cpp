@@ -64,7 +64,7 @@ class EC_Group_Data final
                  this->g_y() == g_y);
          }
 
-      bool match(EC_Group_Data& other) const
+      bool match(const EC_Group_Data& other) const
          {
          return match(other.p(), other.a(), other.b(),
                       other.g_x(), other.g_y(),
@@ -263,8 +263,20 @@ class EC_Group_Data_Map final
             const OID oid_from_store = EC_Group::EC_group_identity_from_order(order);
             if(oid_from_store.has_value())
                {
-               std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
-               if(data == nullptr || new_group->match(*data))
+               std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid_from_store);
+
+               /*
+               If EC_group_identity_from_order returned an OID then looking up that OID
+               must always return a result.
+               */
+               BOTAN_ASSERT_NOMSG(data != nullptr);
+
+               /*
+               It is possible (if unlikely) that someone is registering another group
+               that happens to have an order equal to that of a well known group -
+               so verify all values before assigning the OID.
+               */
+               if(new_group->match(*data))
                   {
                   new_group->set_oid(oid_from_store);
                   }
