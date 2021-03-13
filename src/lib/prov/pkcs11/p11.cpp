@@ -19,12 +19,11 @@ namespace PKCS11 {
 
 ReturnValue* ThrowException = reinterpret_cast< ReturnValue* >(-1);
 
-namespace {
 /// @param function_result Return value of the PKCS11 module function
 /// @param return_value if (`ThrowException`) is passed the function throws an exception, otherwise if a non-NULL pointer is passed:
 /// return_value receives the return value of the PKCS#11 function and no exception is thrown.
 /// @return true if function call was successful, false otherwise
-bool handle_return_value(const CK_RV function_result, ReturnValue* return_value)
+bool LowLevel::handle_return_value(const CK_RV function_result, ReturnValue* return_value)
    {
    if(return_value == ThrowException)
       {
@@ -42,7 +41,6 @@ bool handle_return_value(const CK_RV function_result, ReturnValue* return_value)
 
    return static_cast< ReturnValue >(function_result) == ReturnValue::OK;
    }
-}
 
 void initialize_token(Slot& slot, const std::string& label, const secure_string& so_pin, const secure_string& pin)
    {
