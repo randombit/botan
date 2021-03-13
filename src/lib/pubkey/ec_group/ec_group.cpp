@@ -206,45 +206,52 @@ class EC_Group_Data_Map final
 
          for(auto i : m_registered_curves)
             {
-            const bool same_params = i->match(p, a, b, g_x, g_y, order, cofactor);
-            const bool same_oid = !oid.empty() && i->oid() == oid;
-
-            if(!oid.empty())
+            /*
+            * The params may be the same but you are trying to register under a
+            * different OID than the one we are using, so using a different
+            * group, since EC_Group's model assumes a single OID per group.
+            */
+            if(!oid.empty() && !i->oid().empty() && i->oid() != oid)
                {
-               if(same_oid)
-                  {
-                  if(same_params)
-                     {
-                     return i;
-                     }
-                  else
-                     {
-                     throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
-                                            " but a distinct curve is already registered using that OID");
-                     }
-                  }
-               else if(i->oid().has_value())
-                  continue; // distinct OIDs so not a match
+               continue;
                }
 
-            if(same_params)
+            const bool same_oid = !oid.empty() && i->oid() == oid;
+            const bool same_params = i->match(p, a, b, g_x, g_y, order, cofactor);
+
+            /*
+            * If the params and OID are the same then we are done, just return
+            * the already registered curve obj.
+            */
+            if(same_params && same_oid)
                {
-               /*
-               * If the same curve was previously created without an OID
-               * but is now being registered again using an OID, save that OID.
-               */
-               if(oid.empty() == false)
-                  {
-                  if(i->oid().empty() == true)
-                     {
-                     i->set_oid(oid);
-                     }
-                  else
-                     {
-                     throw Invalid_Argument("Cannot register ECC group with OID " + oid.to_string() +
-                                            " already registered using " + i->oid().to_string());
-                     }
-                  }
+               return i;
+               }
+
+            /*
+            * If same params and the new OID is empty, then that's ok too
+            */
+            if(same_params && oid.empty())
+               {
+               return i;
+               }
+
+            /*
+            * Check for someone trying to reuse an already in-use OID
+            */
+            if(same_oid && !same_params)
+               {
+               throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
+                                      " but a distinct curve is already registered using that OID");
+               }
+
+            /*
+            * If the same curve was previously created without an OID but is now
+            * being registered again using an OID, save that OID.
+            */
+            if(same_params && i->oid().empty() && !oid.empty())
+               {
+               i->set_oid(oid);
                return i;
                }
             }
