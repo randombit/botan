@@ -80,17 +80,18 @@ def format_names(names):
         yield '      \"%s\",' % (nm)
 
 def format_orders(orders):
-    template_str = """   if(order == BigInt("%s"))\n      return OID{%s};\n""";
+    template_str = """   if(low_bits == %s && order == BigInt("%s"))\n      return OID{%s};\n""";
 
     orders_seen = set([])
 
     for (order,oid) in orders:
+        low_bits = hex(order & 0xFFFFFFFF).upper().replace('0X', '0x')
         order = format_int(order)
         if order in orders_seen:
             raise Exception("Duplicate EC group order %s" % (order))
         orders_seen.add(order)
         oid = oid[0].replace('.', ',')
-        yield template_str % (order, oid)
+        yield template_str % (low_bits, order, oid)
 
 def main():
     curves = [c for c in curve_info(open('./src/build-data/ec_groups.txt'))]
