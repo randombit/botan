@@ -784,7 +784,7 @@ def cli_timing_test_tests(_tmp_dir):
 def cli_tls_ciphersuite_tests(_tmp_dir):
     policies = ['default', 'suiteb_128', 'suiteb_192', 'strict', 'all']
 
-    versions = ['tls1.0', 'tls1.1', 'tls1.2']
+    versions = ['tls1.2']
 
     ciphersuite_re = re.compile('^[A-Z0-9_]+$')
 
