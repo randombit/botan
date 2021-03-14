@@ -51,9 +51,9 @@ class EC_Group_Data final
          {
          }
 
-      bool match(const BigInt& p, const BigInt& a, const BigInt& b,
-                 const BigInt& g_x, const BigInt& g_y,
-                 const BigInt& order, const BigInt& cofactor) const
+      bool params_match(const BigInt& p, const BigInt& a, const BigInt& b,
+                        const BigInt& g_x, const BigInt& g_y,
+                        const BigInt& order, const BigInt& cofactor) const
          {
          return (this->p() == p &&
                  this->a() == a &&
@@ -64,11 +64,11 @@ class EC_Group_Data final
                  this->g_y() == g_y);
          }
 
-      bool match(const EC_Group_Data& other) const
+      bool params_match(const EC_Group_Data& other) const
          {
-         return match(other.p(), other.a(), other.b(),
-                      other.g_x(), other.g_y(),
-                      other.order(), other.cofactor());
+         return params_match(other.p(), other.a(), other.b(),
+                             other.g_x(), other.g_y(),
+                             other.order(), other.cofactor());
          }
 
       void set_oid(const OID& oid)
@@ -177,7 +177,7 @@ class EC_Group_Data_Map final
             {
             for(auto curve : m_registered_curves)
                {
-               if(curve->oid().empty() == true && curve->match(*data))
+               if(curve->oid().empty() == true && curve->params_match(*data))
                   {
                   curve->set_oid(oid);
                   return curve;
@@ -217,7 +217,7 @@ class EC_Group_Data_Map final
                }
 
             const bool same_oid = !oid.empty() && i->oid() == oid;
-            const bool same_params = i->match(p, a, b, g_x, g_y, order, cofactor);
+            const bool same_params = i->params_match(p, a, b, g_x, g_y, order, cofactor);
 
             /*
             * If the params and OID are the same then we are done, just return
@@ -269,7 +269,7 @@ class EC_Group_Data_Map final
          if(oid.has_value())
             {
             std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
-            if(data != nullptr && !new_group->match(*data))
+            if(data != nullptr && !new_group->params_match(*data))
                throw Invalid_Argument("Attempting to register an EC group under OID of hardcoded group");
             }
          else
@@ -291,7 +291,7 @@ class EC_Group_Data_Map final
                that happens to have an order equal to that of a well known group -
                so verify all values before assigning the OID.
                */
-               if(new_group->match(*data))
+               if(new_group->params_match(*data))
                   {
                   new_group->set_oid(oid_from_store);
                   }
