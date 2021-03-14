@@ -328,7 +328,15 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       */
       static std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
 
+      /*
+      * For internal use only
+      */
       static size_t clear_registered_curve_data();
+
+      /*
+      * For internal use only
+      */
+      static OID EC_group_identity_from_order(const BigInt& order);
 
    private:
       static EC_Group_Data_Map& ec_group_data();

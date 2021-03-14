@@ -51,9 +51,9 @@ class EC_Group_Data final
          {
          }
 
-      bool match(const BigInt& p, const BigInt& a, const BigInt& b,
-                 const BigInt& g_x, const BigInt& g_y,
-                 const BigInt& order, const BigInt& cofactor) const
+      bool params_match(const BigInt& p, const BigInt& a, const BigInt& b,
+                        const BigInt& g_x, const BigInt& g_y,
+                        const BigInt& order, const BigInt& cofactor) const
          {
          return (this->p() == p &&
                  this->a() == a &&
@@ -64,11 +64,11 @@ class EC_Group_Data final
                  this->g_y() == g_y);
          }
 
-      bool match(EC_Group_Data& other) const
+      bool params_match(const EC_Group_Data& other) const
          {
-         return match(other.p(), other.a(), other.b(),
-                      other.g_x(), other.g_y(),
-                      other.order(), other.cofactor());
+         return params_match(other.p(), other.a(), other.b(),
+                             other.g_x(), other.g_y(),
+                             other.order(), other.cofactor());
          }
 
       void set_oid(const OID& oid)
@@ -177,7 +177,7 @@ class EC_Group_Data_Map final
             {
             for(auto curve : m_registered_curves)
                {
-               if(curve->oid().empty() == true && curve->match(*data))
+               if(curve->oid().empty() == true && curve->params_match(*data))
                   {
                   curve->set_oid(oid);
                   return curve;
@@ -206,61 +206,100 @@ class EC_Group_Data_Map final
 
          for(auto i : m_registered_curves)
             {
-            if(!oid.empty())
+            /*
+            * The params may be the same but you are trying to register under a
+            * different OID than the one we are using, so using a different
+            * group, since EC_Group's model assumes a single OID per group.
+            */
+            if(!oid.empty() && !i->oid().empty() && i->oid() != oid)
                {
-               if(i->oid() == oid)
-                  {
-                  if(!i->match(p, a, b, g_x, g_y, order, cofactor))
-                     throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
-                                            " but another curve is already registered using that OID");
-                  return i;
-                  }
-               else if(i->oid().has_value())
-                  continue; // distinct OIDs so not a match
+               continue;
                }
 
-            if(i->match(p, a, b, g_x, g_y, order, cofactor))
+            const bool same_oid = !oid.empty() && i->oid() == oid;
+            const bool same_params = i->params_match(p, a, b, g_x, g_y, order, cofactor);
+
+            /*
+            * If the params and OID are the same then we are done, just return
+            * the already registered curve obj.
+            */
+            if(same_params && same_oid)
                {
-               /*
-               * If the same curve was previously created without an OID
-               * but has been registered again using an OID, save that OID.
-               */
-               if(oid.empty() == false)
-                  {
-                  if(i->oid().empty() == true)
-                     {
-                     i->set_oid(oid);
-                     }
-                  else
-                     {
-                     throw Invalid_Argument("Cannot register ECC group with OID " + oid.to_string() +
-                                            " already registered using " + i->oid().to_string());
-                     }
-                  }
+               return i;
+               }
+
+            /*
+            * If same params and the new OID is empty, then that's ok too
+            */
+            if(same_params && oid.empty())
+               {
+               return i;
+               }
+
+            /*
+            * Check for someone trying to reuse an already in-use OID
+            */
+            if(same_oid && !same_params)
+               {
+               throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
+                                      " but a distinct curve is already registered using that OID");
+               }
+
+            /*
+            * If the same curve was previously created without an OID but is now
+            * being registered again using an OID, save that OID.
+            */
+            if(same_params && i->oid().empty() && !oid.empty())
+               {
+               i->set_oid(oid);
                return i;
                }
             }
 
-         // Not found - if OID is set try looking up that way
+         /*
+         Not found in current list, so we need to create a new entry
+
+         If an OID is set, try to look up relative our static tables to detect a duplicate
+         registration under an OID
+         */
+
+         std::shared_ptr<EC_Group_Data> new_group =
+            std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, source);
 
          if(oid.has_value())
             {
-            // Not located in existing store - try hardcoded data set
             std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
-
-            if(data)
+            if(data != nullptr && !new_group->params_match(*data))
+               throw Invalid_Argument("Attempting to register an EC group under OID of hardcoded group");
+            }
+         else
+            {
+            // Here try to use the order as a hint to look up the group id, to identify common groups
+            const OID oid_from_store = EC_Group::EC_group_identity_from_order(order);
+            if(oid_from_store.has_value())
                {
-               m_registered_curves.push_back(data);
-               return data;
+               std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid_from_store);
+
+               /*
+               If EC_group_identity_from_order returned an OID then looking up that OID
+               must always return a result.
+               */
+               BOTAN_ASSERT_NOMSG(data != nullptr);
+
+               /*
+               It is possible (if unlikely) that someone is registering another group
+               that happens to have an order equal to that of a well known group -
+               so verify all values before assigning the OID.
+               */
+               if(new_group->params_match(*data))
+                  {
+                  new_group->set_oid(oid_from_store);
+                  }
                }
             }
 
-         // Not found or no OID, add data and return
-         std::shared_ptr<EC_Group_Data> d =
-            std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, source);
-
-         m_registered_curves.push_back(d);
-         return d;
+         m_registered_curves.push_back(new_group);
+         return new_group;
          }
 
    private:

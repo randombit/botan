@@ -283,6 +283,11 @@ class EC_Group_Tests : public Test
             result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
             result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
 
+            const Botan::OID from_order = Botan::EC_Group::EC_group_identity_from_order(group.get_order());
+            result.test_eq("EC_group_identity_from_order works",
+                           from_order.to_string(),
+                           oid.to_string());
+
             result.confirm("Same group is same", group == Botan::EC_Group(group_name));
 
             const Botan::EC_Group copy(group.get_p(), group.get_a(), group.get_b(),
@@ -704,12 +709,70 @@ Test::Result test_ec_group_from_params()
    const Botan::OID oid("1.3.132.0.8");
 
    Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
-   // At this point the group may not have an OID depending on internal state
-
-   // But now we load the group from OID which causes the entries to merge
-   Botan::EC_Group group_from_oid(oid);
-
    result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
+
+   return result;
+   }
+
+Test::Result test_ec_group_bad_registration()
+   {
+   Test::Result result("EC_Group registering non-match");
+
+   Botan::EC_Group::clear_registered_curve_data();
+
+   // secp160r1 params except with a bad B param
+   const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF");
+   const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC");
+   const Botan::BigInt b("0x1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA47");
+
+   const Botan::BigInt g_x("0x4A96B5688EF573284664698968C38BB913CBFC82");
+   const Botan::BigInt g_y("0x23A628553168947D59DCC912042351377AC5FB32");
+   const Botan::BigInt order("0x100000000000000000001F4C8F927AED3CA752257");
+
+   const Botan::OID oid("1.3.132.0.8");
+
+   try
+      {
+      Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1, oid);
+      result.test_failure("Should have failed");
+      }
+   catch(Botan::Invalid_Argument&)
+      {
+      result.test_success("Got expected exception");
+      }
+
+   return result;
+   }
+
+Test::Result test_ec_group_duplicate_orders()
+   {
+   Test::Result result("EC_Group with duplicate group order");
+
+   Botan::EC_Group::clear_registered_curve_data();
+
+   // secp160r1 params
+   const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF");
+   const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC");
+   const Botan::BigInt b("0x1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45");
+
+   const Botan::BigInt g_x("0x4A96B5688EF573284664698968C38BB913CBFC82");
+   const Botan::BigInt g_y("0x23A628553168947D59DCC912042351377AC5FB32");
+   const Botan::BigInt order("0x100000000000000000001F4C8F927AED3CA752257");
+
+   const Botan::OID oid("1.3.6.1.4.1.25258.100.0"); // some other random OID
+
+   Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1, oid);
+   result.test_success("Registration success");
+   result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
+
+   // We can now get it by OID:
+   Botan::EC_Group hc_group(oid);
+   result.confirm("Group has correct OID", hc_group.get_curve_oid() == oid);
+
+   // Existing secp160r1 unmodified:
+   const Botan::OID secp160r1("1.3.132.0.8");
+   Botan::EC_Group other_group(secp160r1);
+   result.confirm("Group has correct OID", other_group.get_curve_oid() == secp160r1);
 
    return result;
    }
@@ -734,6 +797,8 @@ class ECC_Unit_Tests final : public Test
          results.push_back(test_enc_dec_uncompressed_521());
          results.push_back(test_ecc_registration());
          results.push_back(test_ec_group_from_params());
+         results.push_back(test_ec_group_bad_registration());
+         results.push_back(test_ec_group_duplicate_orders());
 
          return results;
          }
