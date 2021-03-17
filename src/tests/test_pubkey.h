@@ -225,6 +225,20 @@ class PK_Key_Generation_Test : public Test
       std::vector<std::string> possible_providers(const std::string& params) override;
    };
 
+class PK_Key_Validity_Test : public PK_Test
+   {
+   protected:
+      PK_Key_Validity_Test(const std::string& algo,
+                           const std::string& test_src,
+                           const std::string& required_keys,
+                           const std::string& optional_keys = "")
+         : PK_Test(algo, test_src, required_keys, optional_keys) {}
+
+      virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
+   private:
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
+   };
+
 void check_invalid_signatures(Test::Result& result,
                               Botan::PK_Verifier& verifier,
                               const std::vector<uint8_t>& message,
