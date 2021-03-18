@@ -780,6 +780,24 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
    return results;
    }
 
+Test::Result
+PK_Key_Validity_Test::run_one_test(const std::string& header, const VarMap& vars)
+   {
+   Test::Result result(algo_name() + " key validity");
+
+   if(header != "Valid" && header != "Invalid")
+      throw Test_Error("Unexpected header for PK_Key_Validity_Test");
+
+   const bool expected_valid = (header == "Valid");
+   std::unique_ptr<Botan::Public_Key> pubkey = load_public_key(vars);
+
+   const bool tested_valid = pubkey->check_key(rng(), true);
+
+   result.test_eq("Expected validation result", expected_valid, tested_valid);
+
+   return result;
+   }
+
 }
 
 #endif

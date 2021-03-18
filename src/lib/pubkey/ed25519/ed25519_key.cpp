@@ -10,6 +10,7 @@
 
 #include <botan/ed25519.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/ed25519_internal.h>
 #include <botan/hash.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
@@ -24,8 +25,41 @@ AlgorithmIdentifier Ed25519_PublicKey::algorithm_identifier() const
 
 bool Ed25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
    {
-   return true; // no tests possible?
-   // TODO could check cofactor
+   if(m_public.size() != 32)
+      return false;
+
+   /*
+   This function was derived from public domain code in Tor's blinding.c
+   */
+
+   const uint8_t identity_element[32] = { 1 };
+   if(same_mem(m_public.data(), identity_element, 32))
+      return false;
+
+   // The order of the Ed25519 group encoded
+   const uint8_t modm_m[32] = {
+      0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
+      0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10};
+
+   const unsigned char zero[32] = {0};
+
+   unsigned char pkcopy[32];
+
+   copy_mem(pkcopy, m_public.data(), 32);
+   pkcopy[31] ^= (1<<7); // flip sign
+   ge_p3 point;
+   if(ge_frombytes_negate_vartime(&point, pkcopy) != 0)
+      return false;
+
+   uint8_t result[32];
+   ge_double_scalarmult_vartime(result, modm_m, &point, zero);
+
+   if(!same_mem(result, identity_element, 32))
+      return false;
+
+   return true;
    }
 
 Ed25519_PublicKey::Ed25519_PublicKey(const uint8_t pub_key[], size_t pub_len)
