@@ -339,6 +339,16 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       BOTAN_ASSERT_EQUAL(readbuf.size(), TLS_HEADER_SIZE, "Have an entire header");
       }
 
+   /*
+   This is a little hacky but given how TLS 1.3 versioning works it
+   is probably safe
+   */
+   if(readbuf[1] != 3)
+      {
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                          "TLS record version has unexpected value");
+      }
+
    const Protocol_Version version(readbuf[1], readbuf[2]);
 
    if(version.is_datagram_protocol())
