@@ -1,7 +1,7 @@
 /*
 * TLS ASIO Stream
-* (C) 2018-2020 Jack Lloyd
-*     2018-2020 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
+* (C) 2018-2021 Jack Lloyd
+*     2018-2021 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -255,26 +255,29 @@ class Stream
        * This function call always returns immediately.
        *
        * @param side The type of handshaking to be performed, i.e. as a client or as a server.
-       * @param handler The handler to be called when the handshake operation completes.
-       *                The equivalent function signature of the handler must be: void(boost::system::error_code)
+       * @param completion_token The completion handler to be called when the handshake operation completes.
+       *                         The completion signature of the handler must be: void(boost::system::error_code).
        */
-      template <typename HandshakeHandler>
-      auto async_handshake(Connection_Side side, HandshakeHandler&& handler) ->
-      BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler, void(boost::system::error_code))
+      template <typename CompletionToken>
+      auto async_handshake(Botan::TLS::Connection_Side side, CompletionToken&& completion_token)
          {
-         BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(HandshakeHandler, handler) type_check;
+         return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
+                   [this](auto&& completion_handler, Botan::TLS::Connection_Side connection_side)
+            {
+            using completion_handler_t = std::decay_t<decltype(completion_handler)>;
 
-         boost::system::error_code ec;
-         setup_native_handle(side, ec);
-         // If ec is set by setup_native_handle, the AsyncHandshakeOperation created below will do nothing but call the
-         // handler with the error_code set appropriately - no need to early return here.
+            BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(completion_handler_t, completion_handler) type_check;
 
-         boost::asio::async_completion<HandshakeHandler, void(boost::system::error_code)> init(handler);
+            boost::system::error_code ec;
+            setup_native_handle(connection_side, ec);
 
-         detail::AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, Stream>
-         op{std::move(init.completion_handler), *this, ec};
-
-         return init.result.get();
+            detail::AsyncHandshakeOperation<completion_handler_t, Stream> op
+               {
+               std::forward<completion_handler_t>(completion_handler),
+               *this,
+               ec
+               };
+            }, completion_token, side);
          }
 
       //! @throws Not_Implemented
@@ -372,32 +375,32 @@ class Stream
        *
        * Note that this can be used in reaction of a received shutdown alert from the peer.
        *
-       * @param handler The handler to be called when the shutdown operation completes.
-       *                The equivalent function signature of the handler must be: void(boost::system::error_code)
+       * @param completion_token The completion handler to be called when the shutdown operation completes.
+       *                         The completion signature of the handler must be: void(boost::system::error_code).
        */
-      template <typename ShutdownHandler>
-      void async_shutdown(ShutdownHandler&& handler)
+      template <typename CompletionToken>
+      auto async_shutdown(CompletionToken&& completion_token)
          {
-         boost::system::error_code ec;
-         try_with_error_code([&]
+         return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
+                   [this](auto&& completion_handler)
             {
-            native_handle()->close();
-            }, ec);
-         // If ec is set by native_handle->close(), the AsyncWriteOperation created below will do nothing but call the
-         // handler with the error_code set appropriately - no need to early return here.
+            using completion_handler_t = std::decay_t<decltype(completion_handler)>;
 
-         using ShutdownHandlerWrapper = Wrapper<ShutdownHandler>;
+            BOOST_ASIO_SHUTDOWN_HANDLER_CHECK(completion_handler_t, completion_handler) type_check;
 
-         ShutdownHandlerWrapper w(std::forward<ShutdownHandler>(handler));
-         BOOST_ASIO_SHUTDOWN_HANDLER_CHECK(ShutdownHandler, w) type_check;
+            boost::system::error_code ec;
+            try_with_error_code([&] { native_handle()->close(); }, ec);
 
-         boost::asio::async_completion<ShutdownHandlerWrapper, void(boost::system::error_code, std::size_t)>
-         init(w);
+            using write_handler_t = Wrapper<completion_handler_t, typename Stream::executor_type>;
 
-         detail::AsyncWriteOperation<typename std::decay<ShutdownHandlerWrapper>::type, Stream>
-         op{std::move(init.completion_handler), *this, boost::asio::buffer_size(send_buffer())};
-
-         return init.result.get();
+            Botan::TLS::detail::AsyncWriteOperation<write_handler_t, Stream> op
+               {
+               write_handler_t{std::forward<completion_handler_t>(completion_handler), get_executor()},
+               *this,
+               boost::asio::buffer_size(send_buffer()),
+               ec
+               };
+            }, completion_token);
          }
 
       //! @}
@@ -506,35 +509,38 @@ class Stream
        * @brief Start an asynchronous write. The function call always returns immediately.
        *
        * @param buffers The data to be written.
-       * @param handler The handler to be called when the write operation completes. Copies will be made of the handler
-       *        as required. The equivalent function signature of the handler must be:
-       *        void(boost::system::error_code, std::size_t)
+       * @param completion_token The completion handler to be called when the write operation completes. Copies of the
+       *                         handler will be made as required. The completion signature of the handler must be:
+       *                         void(boost::system::error_code, std::size_t).
        */
-      template <typename ConstBufferSequence, typename WriteHandler>
-      auto async_write_some(const ConstBufferSequence& buffers, WriteHandler&& handler) ->
-      BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,
-                                    void(boost::system::error_code, std::size_t))
+      template <typename ConstBufferSequence, typename CompletionToken>
+      auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& completion_token)
          {
-         BOOST_ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
-
-         boost::asio::async_completion<WriteHandler, void(boost::system::error_code, std::size_t)> init(handler);
-
-         boost::system::error_code ec;
-         tls_encrypt(buffers, ec);
-         if(ec)
+         return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code, std::size_t)>(
+                   [this](auto&& completion_handler, const auto& bufs)
             {
-            // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
-            // AsyncWriteOperation call the handler with the error_code set
-            consume_send_buffer(m_core.send_buffer.size());
-            detail::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
-            op{std::move(init.completion_handler), *this, std::size_t(0), ec};
-            return init.result.get();
-            }
+            using completion_handler_t = std::decay_t<decltype(completion_handler)>;
 
-         detail::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
-         op{std::move(init.completion_handler), *this, boost::asio::buffer_size(buffers)};
+            BOOST_ASIO_WRITE_HANDLER_CHECK(completion_handler_t, completion_handler) type_check;
 
-         return init.result.get();
+            boost::system::error_code ec;
+            tls_encrypt(bufs, ec);
+
+            if(ec)
+               {
+               // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
+               // AsyncWriteOperation call the handler with the error_code set
+               consume_send_buffer(m_core.send_buffer.size());
+               }
+
+            detail::AsyncWriteOperation<completion_handler_t, Stream> op
+               {
+               std::forward<completion_handler_t>(completion_handler),
+               *this,
+               ec ? 0 : boost::asio::buffer_size(bufs),
+               ec
+               };
+            }, completion_token, buffers);
          }
 
       /**
@@ -543,22 +549,26 @@ class Stream
        * @param buffers The buffers into which the data will be read. Although the buffers object may be copied as
        *                necessary, ownership of the underlying buffers is retained by the caller, which must guarantee
        *                that they remain valid until the handler is called.
-       * @param handler The handler to be called when the read operation completes. The equivalent function signature of
-       *                the handler must be:
-       *                void(boost::system::error_code, std::size_t)
+       * @param completion_token The completion handler to be called when the read operation completes. The completion
+       *                         signature of the handler must be: void(boost::system::error_code, std::size_t).
        */
-      template <typename MutableBufferSequence, typename ReadHandler>
-      auto async_read_some(const MutableBufferSequence& buffers, ReadHandler&& handler) ->
-      BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
-                                    void(boost::system::error_code, std::size_t))
+      template <typename MutableBufferSequence, typename CompletionToken>
+      auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& completion_token)
          {
-         BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+         return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code, std::size_t)>(
+                   [this](auto&& completion_handler, const auto& bufs)
+            {
+            using completion_handler_t = std::decay_t<decltype(completion_handler)>;
 
-         boost::asio::async_completion<ReadHandler, void(boost::system::error_code, std::size_t)> init(handler);
+            BOOST_ASIO_READ_HANDLER_CHECK(completion_handler_t, completion_handler) type_check;
 
-         detail::AsyncReadOperation<typename std::decay<ReadHandler>::type, Stream, MutableBufferSequence>
-         op{std::move(init.completion_handler), *this, buffers};
-         return init.result.get();
+            detail::AsyncReadOperation<completion_handler_t, Stream, MutableBufferSequence> op
+               {
+               std::forward<completion_handler_t>(completion_handler),
+               *this,
+               bufs
+               };
+            }, completion_token, buffers);
          }
 
       //! @}
