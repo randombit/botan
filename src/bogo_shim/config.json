@@ -72,7 +72,6 @@
         "*P-224*": "P-224 not supported in TLS",
         "*V2ClientHello*": "No support for SSLv2 client hellos",
         "*Ed25519*": "Ed25519 not implemented in TLS",
-        "Http*": "Stack does not have detection logic for HTTP",
         "*FalseStart*": "Botan doesn't do false start",
         "MaxSendFragment*": "Maximum fragment extension not supported",
         "ExportKeyingMaterial-EmptyContext*": "No support for empty context",
