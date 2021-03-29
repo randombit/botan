@@ -339,6 +339,34 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       BOTAN_ASSERT_EQUAL(readbuf.size(), TLS_HEADER_SIZE, "Have an entire header");
       }
 
+   /*
+   This is a little hacky but given how TLS 1.3 versioning works it
+   is probably safe
+   */
+   if(readbuf[1] != 3)
+      {
+      // We know we read up to at least the 5 byte TLS header
+      const std::string first5 = std::string(reinterpret_cast<const char*>(readbuf.data()), 5);
+
+      if(first5 == "GET /" ||
+         first5 == "PUT /" ||
+         first5 == "POST " ||
+         first5 == "HEAD ")
+         {
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                             "Client sent plaintext HTTP request instead of TLS handshake");
+         }
+
+      if(first5 == "CONNE")
+         {
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                             "Client sent HTTP proxy CONNECT request instead of TLS handshake");
+         }
+
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                          "TLS record version has unexpected value");
+      }
+
    const Protocol_Version version(readbuf[1], readbuf[2]);
 
    if(version.is_datagram_protocol())
