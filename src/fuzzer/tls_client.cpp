@@ -21,27 +21,14 @@ class Fuzzer_TLS_Client_Creds : public Botan::Credentials_Manager
 class Fuzzer_TLS_Policy : public Botan::TLS::Policy
    {
    public:
-      std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version version) const override
+      std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version) const override
          {
          std::vector<uint16_t> ciphersuites;
 
          for(auto&& suite : Botan::TLS::Ciphersuite::all_known_ciphersuites())
             {
             if(suite.valid() == false)
-               continue;
-
-            if(!version.supports_aead_modes())
-               {
-               // Are we doing AEAD in a non-AEAD version?
-               if(suite.mac_algo() == "AEAD")
-                  continue;
-
-               // Older (v1.0/v1.1) versions also do not support any hash but SHA-1
-               if(suite.mac_algo() != "SHA-1")
-                  continue;
-               }
-
-            ciphersuites.push_back(suite.ciphersuite_code());
+               ciphersuites.push_back(suite.ciphersuite_code());
             }
 
          return ciphersuites;
