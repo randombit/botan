@@ -20,6 +20,18 @@ environment:
       MAKE_TOOL: jom
       TARGET_CC: msvc
 
+    # MSVC 2019 static x86-64 with Boost
+    - CC: VC2019
+      PLATFORM: x86_amd64
+      TARGET: static
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      BOOST_ROOT: "C:\\Libraries\\boost_1_73_0"
+      BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_73_0\\lib64-msvc-14.2"
+      BOOST_SYSTEM_LIBRARY: "libboost_system-vc142-mt-x64-1_73"
+      MAKE_TOOL: jom
+      TARGET_CC: msvc
+      EXTRA_FLAGS: "--extra-cxxflags=/DUNICODE --extra-cxxflags=/D_UNICODE"
+
     # MSVC 2019 x86-64 preview
     - CC: VC2019p
       PLATFORM: x86_amd64
