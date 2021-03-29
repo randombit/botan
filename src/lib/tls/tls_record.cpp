@@ -340,11 +340,13 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       BOTAN_ASSERT_EQUAL(readbuf.size(), TLS_HEADER_SIZE, "Have an entire header");
       }
 
-   const Protocol_Version version(readbuf[1], readbuf[2]);
-
-   if(version.is_datagram_protocol())
+   if(readbuf[1] != 3)
+      {
       throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                          "Expected TLS but got a record with DTLS version");
+                          "Got unexpected TLS record version");
+      }
+
+   const Protocol_Version version(readbuf[1], readbuf[2]);
 
    const size_t record_size = make_uint16(readbuf[TLS_HEADER_SIZE-2],
                                           readbuf[TLS_HEADER_SIZE-1]);
