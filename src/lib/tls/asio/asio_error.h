@@ -38,22 +38,23 @@ enum StreamError
 //! @brief An error category for errors from the TLS::Stream
 struct StreamCategory : public boost::system::error_category
    {
-   public:
-      const char* name() const noexcept override
-         {
-         return "Botan TLS Stream";
-         }
+   virtual ~StreamCategory() = default;
 
-      std::string message(int value) const override
+   const char* name() const noexcept override
+      {
+      return "Botan TLS Stream";
+      }
+
+   std::string message(int value) const override
+      {
+      switch(value)
          {
-         switch(value)
-            {
-            case StreamTruncated:
-               return "stream truncated";
-            default:
-               return "generic error";
-            }
+         case StreamTruncated:
+            return "stream truncated";
+         default:
+            return "generic error";
          }
+      }
    };
 
 inline const StreamCategory& botan_stream_category()
@@ -70,6 +71,8 @@ inline boost::system::error_code make_error_code(Botan::TLS::StreamError e)
 //! @brief An error category for TLS alerts
 struct BotanAlertCategory : boost::system::error_category
    {
+   virtual ~BotanAlertCategory() = default;
+
    const char* name() const noexcept override
       {
       return "Botan TLS Alert";
@@ -98,6 +101,8 @@ inline boost::system::error_code make_error_code(Botan::TLS::Alert::Type c)
 //! @brief An error category for errors from Botan (other than TLS alerts)
 struct BotanErrorCategory : boost::system::error_category
    {
+   virtual ~BotanErrorCategory() = default;
+
    const char* name() const noexcept override
       {
       return "Botan";
