@@ -12,6 +12,9 @@ Version 2.18.0, Not Yet Released
 * Fix a bug introduced in 2.9.0 where BigInt::operator< would return
   an incorrect result if both operands were negative. (GH #2641 #2638)
 
+* Reject non-TLS messages as quickly as possible without waiting for
+  a full record. (GH #2676)
+
 * Fix a regression introduced in 2.17.0 where LDFLAGS which add an extra
   library (such as ``-latomic`` needed on SPARC) were not always applied
   effectively. (GH #2622 #2623 #2625)
