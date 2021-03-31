@@ -305,16 +305,12 @@ The code is based on the public domain version by Andrew Moon.
 DES/3DES
 ----------------------
 
-The DES implementation uses table lookups, and is likely vulnerable to side
-channel attacks. DES or 3DES should be avoided in new systems. The proper fix
-would be a scalar bitsliced implementation, this is not seen as worth the
-engineering investment given these algorithms end of life status.
-
-On systems supporting the BMI2 instruction set, an implementation using pdep is
-available which is slower but uses only cache-line sized tables. Thus it avoids
-most known cache-based side channels. It would still be vulnerable to cache-bank
-conflict side channels, but all hardware known to be vulnerable to such channels
-does not implement BMI2.
+The DES implementation relies on table lookups but they are limited to
+tables which are exactly 64 bytes in size. On systems with 64 byte (or
+larger) cache lines, these should not leak information. It may still
+be vulnerable to side channels on processors which leak cache line
+access offsets via cache bank conflicts; vulnerable hardware includes
+Sandy Bridge processors, but not later Intel or AMD CPUs.
 
 Twofish
 ------------------------
