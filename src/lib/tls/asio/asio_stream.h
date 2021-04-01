@@ -334,28 +334,36 @@ class Stream
 
    private:
       /**
-       * @brief Internal wrapper type to adapt the expected signature of `async_shutdown`
-       *        to the completion handler signature of `AsyncWriteOperation`.
+       * @brief Internal wrapper type to adapt the expected signature of `async_shutdown` to the completion handler
+       *        signature of `AsyncWriteOperation`.
        *
-       * This is boilerplate to ignore the `size_t` parameter that is passed to the
-       * completion handler of `AsyncWriteOperation`.
-       *
-       * @todo in C++14 and above this could be implemented as a mutable lambda expression
-       *       that captures `handler` by perfect forwarding, like so:
-       *
-       *       [h = std::forward<Handler>(handler)] (...) mutable { return h(ec); }
+       * This is boilerplate to ignore the `size_t` parameter that is passed to the completion handler of
+       * `AsyncWriteOperation`. Note that it needs to retain the wrapped handler's executor.
        */
-      template <typename Handler>
-      class Wrapper
+      template <typename Handler, typename Executor>
+      struct Wrapper
          {
-         public:
-            Wrapper(Handler&& handler) : _handler(std::forward<Handler>(handler)) {}
-            void operator()(boost::system::error_code ec, size_t)
-               {
-               _handler(ec);
-               }
-         private:
-            Handler _handler;
+         void operator()(boost::system::error_code ec, std::size_t)
+            {
+            handler(ec);
+            }
+
+         using executor_type = boost::asio::associated_executor_t<Handler, Executor>;
+
+         executor_type get_executor() const noexcept
+            {
+            return boost::asio::get_associated_executor(handler, io_executor);
+            }
+
+         using allocator_type = boost::asio::associated_allocator_t<Handler>;
+
+         allocator_type get_allocator() const noexcept
+            {
+            return boost::asio::get_associated_allocator(handler);
+            }
+
+         Handler handler;
+         Executor io_executor;
          };
 
    public:
@@ -380,9 +388,9 @@ class Stream
          // If ec is set by native_handle->close(), the AsyncWriteOperation created below will do nothing but call the
          // handler with the error_code set appropriately - no need to early return here.
 
-         using ShutdownHandlerWrapper = Wrapper<ShutdownHandler>;
+         using ShutdownHandlerWrapper = Wrapper<ShutdownHandler, typename Stream::executor_type>;
 
-         ShutdownHandlerWrapper w(std::forward<ShutdownHandler>(handler));
+         ShutdownHandlerWrapper w{std::forward<ShutdownHandler>(handler), get_executor()};
          BOOST_ASIO_SHUTDOWN_HANDLER_CHECK(ShutdownHandler, w) type_check;
 
          boost::asio::async_completion<ShutdownHandlerWrapper, void(boost::system::error_code, std::size_t)>
