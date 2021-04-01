@@ -27,6 +27,7 @@
         "Resume-Server-OmitPSKsOnSecondClientHello": "No TLS 1.3",
         "PartialServerHelloWithHelloRetryRequest": "No TLS 1.3",
         "PartialClientFinishedWithSecondClientHello": "No TLS 1.3",
+        "ECH*": "No ECH support",
 
         "DuplicateCertCompressionExt*": "No support for 1.3 cert compression extension",
 
@@ -56,7 +57,7 @@
         "*SignedCertificateTimestamp*": "No support for SCT",
         "*SCT*": "No support for SCT",
         "Renegotiation-ChangeAuthProperties": "No support for SCT",
-        "UnsolicitedCertificateExtensions-TLS*": "No support for SCT",
+        "UnsolicitedCertificateExtensions-*": "No support for SCT",
 
         "CertificateVerificationSoftFail*":  "Fail, but don't fail... wtf?",
 

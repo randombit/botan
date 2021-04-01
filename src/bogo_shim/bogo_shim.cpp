@@ -142,6 +142,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Received handshake data after connection closure", ":NO_RENEGOTIATION:" },
          { "Received unexpected record version in initial record", ":WRONG_VERSION_NUMBER:" },
          { "Received unexpected record version", ":WRONG_VERSION_NUMBER:" },
+         { "Rejecting ALPN request with alert", ":NO_APPLICATION_PROTOCOL:" },
          { "Server attempting to negotiate SSLv3 which is not supported", ":UNSUPPORTED_PROTOCOL:" },
          { "Server certificate changed during renegotiation", ":SERVER_CERT_CHANGED:" },
          { "Server changed its mind about extended master secret", ":RENEGOTIATION_EMS_MISMATCH:" },
@@ -616,6 +617,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       //"partial-write",
       //"peek-then-read",
       //"read-with-unfinished-write",
+      "reject-alpn",
       "renegotiate-freely",
       "renegotiate-ignore",
       "renegotiate-once",
@@ -1359,6 +1361,10 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          if(client_protos.empty())
             return ""; // shouldn't happen?
 
+         if(m_args.flag_set("reject-alpn"))
+            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::NO_APPLICATION_PROTOCOL,
+                                            "Rejecting ALPN request with alert");
+
          if(m_args.flag_set("decline-alpn"))
             return "";
 
@@ -1575,7 +1581,7 @@ int main(int /*argc*/, char* argv[])
             shim_log("Offering " + offer_version.to_string());
 
             std::string host_name = args->get_string_opt_or_else("host-name", "localhost");
-            if(args->test_name().find("UnsolicitedServerNameAck-TLS1") == 0)
+            if(args->test_name().find("UnsolicitedServerNameAck") == 0)
                host_name = ""; // avoid sending SNI for this test
 
             Botan::TLS::Server_Information server_info(host_name, port);
