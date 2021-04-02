@@ -31,21 +31,9 @@ class TLS_Ciphersuites final : public Command
             {
             return Botan::TLS::Protocol_Version::TLS_V12;
             }
-         else if(str == "tls1.1" || str == "TLS1.1" || str == "TLS-1.1")
-            {
-            return Botan::TLS::Protocol_Version::TLS_V11;
-            }
-         else if(str == "tls1.0" || str == "TLS1.1" || str == "TLS-1.1")
-            {
-            return Botan::TLS::Protocol_Version::TLS_V10;
-            }
          if(str == "dtls1.2" || str == "DTLS1.2" || str == "DTLS-1.2")
             {
             return Botan::TLS::Protocol_Version::DTLS_V12;
-            }
-         else if(str == "dtls1.0" || str == "DTLS1.0" || str == "DTLS-1.0")
-            {
-            return Botan::TLS::Protocol_Version::DTLS_V10;
             }
          else
             {

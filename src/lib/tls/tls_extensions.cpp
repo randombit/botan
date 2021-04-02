@@ -581,21 +581,11 @@ Supported_Versions::Supported_Versions(Protocol_Version offer, const Policy& pol
       {
       if(offer >= Protocol_Version::DTLS_V12 && policy.allow_dtls12())
          m_versions.push_back(Protocol_Version::DTLS_V12);
-#if defined(BOTAN_HAS_TLS_V10)
-      if(offer >= Protocol_Version::DTLS_V10 && policy.allow_dtls10())
-         m_versions.push_back(Protocol_Version::DTLS_V10);
-#endif
       }
    else
       {
       if(offer >= Protocol_Version::TLS_V12 && policy.allow_tls12())
          m_versions.push_back(Protocol_Version::TLS_V12);
-#if defined(BOTAN_HAS_TLS_V10)
-      if(offer >= Protocol_Version::TLS_V11 && policy.allow_tls11())
-         m_versions.push_back(Protocol_Version::TLS_V11);
-      if(offer >= Protocol_Version::TLS_V10 && policy.allow_tls10())
-         m_versions.push_back(Protocol_Version::TLS_V10);
-#endif
       }
    }
 

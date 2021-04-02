@@ -429,11 +429,9 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
       Certificate_Req(Handshake_IO& io,
                       Handshake_Hash& hash,
                       const Policy& policy,
-                      const std::vector<X509_DN>& allowed_cas,
-                      Protocol_Version version);
+                      const std::vector<X509_DN>& allowed_cas);
 
-      Certificate_Req(const std::vector<uint8_t>& buf,
-                      Protocol_Version version);
+      Certificate_Req(const std::vector<uint8_t>& buf);
    private:
       std::vector<uint8_t> serialize() const override;
 
@@ -467,8 +465,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify final : public Handshake_Message
                          RandomNumberGenerator& rng,
                          const Private_Key* key);
 
-      Certificate_Verify(const std::vector<uint8_t>& buf,
-                         Protocol_Version version);
+      Certificate_Verify(const std::vector<uint8_t>& buf);
    private:
       std::vector<uint8_t> serialize() const override;
 

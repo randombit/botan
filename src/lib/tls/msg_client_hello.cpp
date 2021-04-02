@@ -27,7 +27,6 @@ namespace TLS {
 
 enum {
    TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF,
-   TLS_FALLBACK_SCSV                        = 0x5600
 };
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
@@ -119,8 +118,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
 
-   if(m_version.supports_negotiable_signature_algorithms())
-      m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
 
    if(m_version.is_datagram_protocol())
       m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
@@ -135,9 +133,6 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(supported_groups.release());
 
    cb.tls_modify_extensions(m_extensions, CLIENT);
-
-   if(policy.send_fallback_scsv(client_settings.protocol_version()))
-      m_suites.push_back(TLS_FALLBACK_SCSV);
 
    hash.update(io.send(*this));
    }
@@ -192,8 +187,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    if(session.supports_encrypt_then_mac())
       m_extensions.add(new Encrypt_then_MAC);
 
-   if(m_version.supports_negotiable_signature_algorithms())
-      m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
 
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
@@ -298,11 +292,6 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
          m_extensions.add(new Renegotiation_Extension());
          }
       }
-   }
-
-bool Client_Hello::sent_fallback_scsv() const
-   {
-   return offered_suite(static_cast<uint16_t>(TLS_FALLBACK_SCSV));
    }
 
 /*

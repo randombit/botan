@@ -138,24 +138,9 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool only_resume_with_exact_version() const;
 
       /**
-      * Allow TLS v1.0
-      */
-      virtual bool allow_tls10() const;
-
-      /**
-      * Allow TLS v1.1
-      */
-      virtual bool allow_tls11() const;
-
-      /**
       * Allow TLS v1.2
       */
       virtual bool allow_tls12() const;
-
-      /**
-      * Allow DTLS v1.0
-      */
-      virtual bool allow_dtls10() const;
 
       /**
       * Allow DTLS v1.2
@@ -246,13 +231,6 @@ class BOTAN_PUBLIC_API(2,0) Policy
       * a user to disable use of TLS v1.2 (which is *not recommended*)
       */
       virtual Protocol_Version latest_supported_version(bool datagram) const;
-
-      /**
-      * When offering this version, should we send a fallback SCSV?
-      * Default returns true iff version is not the latest version the
-      * policy allows, exists to allow override in case of interop problems.
-      */
-      virtual bool send_fallback_scsv(Protocol_Version version) const;
 
       /**
       * Allows policy to reject any ciphersuites which are undesirable
@@ -371,10 +349,7 @@ class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 : public Policy
 
       size_t minimum_signature_strength() const override { return 128; }
 
-      bool allow_tls10()  const override { return false; }
-      bool allow_tls11()  const override { return false; }
       bool allow_tls12()  const override { return true;  }
-      bool allow_dtls10() const override { return false; }
       bool allow_dtls12() const override { return false; }
    };
 
@@ -404,10 +379,7 @@ class BOTAN_PUBLIC_API(2,7) NSA_Suite_B_192 : public Policy
 
       size_t minimum_signature_strength() const override { return 192; }
 
-      bool allow_tls10()  const override { return false; }
-      bool allow_tls11()  const override { return false; }
       bool allow_tls12()  const override { return true;  }
-      bool allow_dtls10() const override { return false; }
       bool allow_dtls12() const override { return false; }
    };
 
@@ -467,10 +439,7 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
       size_t minimum_ecdh_group_size() const override { return 250; }
       size_t minimum_ecdsa_group_size() const override { return 250; }
 
-      bool allow_tls10()  const override { return false; }
-      bool allow_tls11()  const override { return false; }
       bool allow_tls12()  const override { return true;  }
-      bool allow_dtls10() const override { return false; }
       bool allow_dtls12() const override { return false; }
    };
 
@@ -483,10 +452,7 @@ class BOTAN_PUBLIC_API(2,0) Datagram_Policy : public Policy
       std::vector<std::string> allowed_macs() const override
          { return std::vector<std::string>({"AEAD"}); }
 
-      bool allow_tls10()  const override { return false; }
-      bool allow_tls11()  const override { return false; }
       bool allow_tls12()  const override { return false; }
-      bool allow_dtls10() const override { return false; }
       bool allow_dtls12() const override { return true;  }
    };
 
@@ -508,10 +474,7 @@ class BOTAN_PUBLIC_API(2,0) Strict_Policy : public Policy
 
       std::vector<std::string> allowed_key_exchange_methods() const override;
 
-      bool allow_tls10()  const override;
-      bool allow_tls11()  const override;
       bool allow_tls12()  const override;
-      bool allow_dtls10() const override;
       bool allow_dtls12() const override;
    };
 
@@ -533,13 +496,7 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       bool use_ecc_point_compression() const override;
 
-      bool allow_tls10() const override;
-
-      bool allow_tls11() const override;
-
       bool allow_tls12() const override;
-
-      bool allow_dtls10() const override;
 
       bool allow_dtls12() const override;
 
@@ -579,8 +536,6 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool hide_unknown_users() const override;
 
       uint32_t session_ticket_lifetime() const override;
-
-      bool send_fallback_scsv(Protocol_Version version) const override;
 
       std::vector<uint16_t> srtp_profiles() const override;
 

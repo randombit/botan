@@ -27,7 +27,7 @@
 #include <botan/internal/kdf1_iso18033.h>
 #endif
 
-#if defined(BOTAN_HAS_TLS_V10_PRF) || defined(BOTAN_HAS_TLS_V12_PRF)
+#if defined(BOTAN_HAS_TLS_V12_PRF)
 #include <botan/internal/prf_tls.h>
 #endif
 
@@ -126,20 +126,6 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
          {
          if(auto hash = HashFunction::create(req.arg(0)))
             return std::unique_ptr<KDF>(new KDF1(hash.release()));
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_TLS_V10_PRF)
-   if(req.algo_name() == "TLS-PRF" && req.arg_count() == 0)
-      {
-      if(provider.empty() || provider == "base")
-         {
-         auto hmac_md5 = MessageAuthenticationCode::create("HMAC(MD5)");
-         auto hmac_sha1 = MessageAuthenticationCode::create("HMAC(SHA-1)");
-
-         if(hmac_md5 && hmac_sha1)
-            return std::unique_ptr<KDF>(new TLS_PRF(std::move(hmac_md5), std::move(hmac_sha1)));
          }
       }
 #endif

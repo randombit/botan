@@ -44,7 +44,7 @@ uint64_t steady_clock_ms()
 
 Protocol_Version Stream_Handshake_IO::initial_record_version() const
    {
-   return Protocol_Version::TLS_V10;
+   return Protocol_Version::TLS_V12;
    }
 
 void Stream_Handshake_IO::add_record(const uint8_t record[],
@@ -136,7 +136,7 @@ std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg)
 
 Protocol_Version Datagram_Handshake_IO::initial_record_version() const
    {
-   return Protocol_Version::DTLS_V10;
+   return Protocol_Version::DTLS_V12;
    }
 
 void Datagram_Handshake_IO::retransmit_last_flight()

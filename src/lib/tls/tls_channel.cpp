@@ -559,31 +559,13 @@ void Channel::send_record_array(uint16_t epoch, uint8_t type, const uint8_t inpu
 
    auto cipher_state = write_cipher_state_epoch(epoch);
 
-   if(type == APPLICATION_DATA && m_active_state->version().supports_explicit_cbc_ivs() == false)
+   while(length)
       {
-      while(length)
-         {
-         write_record(cipher_state.get(), epoch, type, input, 1);
-         input += 1;
-         length -= 1;
+      const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
+      write_record(cipher_state.get(), epoch, type, input, sending);
 
-         const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
-         write_record(cipher_state.get(), epoch, type, input, sending);
-
-         input += sending;
-         length -= sending;
-         }
-      }
-   else
-      {
-      while(length)
-         {
-         const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
-         write_record(cipher_state.get(), epoch, type, input, sending);
-
-         input += sending;
-         length -= sending;
-         }
+      input += sending;
+      length -= sending;
       }
    }
 

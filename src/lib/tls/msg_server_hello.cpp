@@ -30,20 +30,8 @@ make_server_hello_random(RandomNumberGenerator& rng,
                          Protocol_Version offered_version,
                          const Policy& policy)
    {
+   BOTAN_UNUSED(offered_version, policy);
    auto random = make_hello_random(rng, policy);
-
-   if((offered_version == Protocol_Version::TLS_V10 ||
-       offered_version == Protocol_Version::TLS_V11) &&
-      policy.allow_tls12())
-      {
-      store_be(DOWNGRADE_TLS11, &random[24]);
-      }
-
-   if(offered_version == Protocol_Version::DTLS_V10 && policy.allow_dtls12())
-      {
-      store_be(DOWNGRADE_TLS11, &random[24]);
-      }
-
    return random;
    }
 

@@ -191,7 +191,7 @@ class TLS_CBC_Tests final : public Text_Based_Test
          Botan::TLS::TLS_CBC_HMAC_AEAD_Decryption tls_cbc(
             std::unique_ptr<Botan::BlockCipher>(new Noop_Block_Cipher(block_size)),
             std::unique_ptr<Botan::MessageAuthenticationCode>(new ZeroMac(mac_len)),
-            0, 0, Botan::TLS::Protocol_Version::TLS_V11, encrypt_then_mac);
+            0, 0, Botan::TLS::Protocol_Version::TLS_V12, encrypt_then_mac);
 
          tls_cbc.set_key(std::vector<uint8_t>(0));
          std::vector<uint8_t> ad(13);

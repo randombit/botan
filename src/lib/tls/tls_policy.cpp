@@ -257,11 +257,6 @@ uint32_t Policy::session_ticket_lifetime() const
    return 86400; // ~1 day
    }
 
-bool Policy::send_fallback_scsv(Protocol_Version version) const
-   {
-   return version != latest_supported_version(version.is_datagram_protocol());
-   }
-
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    if(version == Protocol_Version::TLS_V12 && allow_tls12())
@@ -269,17 +264,6 @@ bool Policy::acceptable_protocol_version(Protocol_Version version) const
 
    if(version == Protocol_Version::DTLS_V12 && allow_dtls12())
       return true;
-
-#if defined(BOTAN_HAS_TLS_V10)
-
-   if(version == Protocol_Version::TLS_V11 && allow_tls11())
-      return true;
-   if(version == Protocol_Version::TLS_V10 && allow_tls10())
-      return true;
-   if(version == Protocol_Version::DTLS_V10 && allow_dtls10())
-      return true;
-
-#endif
 
    return false;
    }
@@ -290,22 +274,12 @@ Protocol_Version Policy::latest_supported_version(bool datagram) const
       {
       if(acceptable_protocol_version(Protocol_Version::DTLS_V12))
          return Protocol_Version::DTLS_V12;
-#if defined(BOTAN_HAS_TLS_V10)
-      if(acceptable_protocol_version(Protocol_Version::DTLS_V10))
-         return Protocol_Version::DTLS_V10;
-#endif
       throw Invalid_State("Policy forbids all available DTLS version");
       }
    else
       {
       if(acceptable_protocol_version(Protocol_Version::TLS_V12))
          return Protocol_Version::TLS_V12;
-#if defined(BOTAN_HAS_TLS_V10)
-      if(acceptable_protocol_version(Protocol_Version::TLS_V11))
-         return Protocol_Version::TLS_V11;
-      if(acceptable_protocol_version(Protocol_Version::TLS_V10))
-         return Protocol_Version::TLS_V10;
-#endif
       throw Invalid_State("Policy forbids all available TLS version");
       }
    }
@@ -319,10 +293,7 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite& ciphersuite) const
 bool Policy::allow_client_initiated_renegotiation() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
-bool Policy::allow_tls10()  const { return false; }
-bool Policy::allow_tls11()  const { return false; }
 bool Policy::allow_tls12()  const { return true; }
-bool Policy::allow_dtls10() const { return false; }
 bool Policy::allow_dtls12() const { return true; }
 bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
@@ -534,10 +505,7 @@ void print_bool(std::ostream& o,
 
 void Policy::print(std::ostream& o) const
    {
-   print_bool(o, "allow_tls10", allow_tls10());
-   print_bool(o, "allow_tls11", allow_tls11());
    print_bool(o, "allow_tls12", allow_tls12());
-   print_bool(o, "allow_dtls10", allow_dtls10());
    print_bool(o, "allow_dtls12", allow_dtls12());
    print_vec(o, "ciphers", allowed_ciphers());
    print_vec(o, "macs", allowed_macs());
@@ -587,10 +555,7 @@ std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
    return { "CECPQ1", "ECDH" };
    }
 
-bool Strict_Policy::allow_tls10()  const { return false; }
-bool Strict_Policy::allow_tls11()  const { return false; }
 bool Strict_Policy::allow_tls12()  const { return true;  }
-bool Strict_Policy::allow_dtls10() const { return false; }
 bool Strict_Policy::allow_dtls12() const { return true;  }
 
 }

@@ -369,18 +369,12 @@ std::vector<uint8_t> Handshake_State::session_ticket() const
 
 KDF* Handshake_State::protocol_specific_prf() const
    {
-   if(version().supports_ciphersuite_specific_prf())
-      {
-      const std::string prf_algo = ciphersuite().prf_algo();
+   const std::string prf_algo = ciphersuite().prf_algo();
 
-      if(prf_algo == "MD5" || prf_algo == "SHA-1")
-         return get_kdf("TLS-12-PRF(SHA-256)");
+   if(prf_algo == "MD5" || prf_algo == "SHA-1")
+      return get_kdf("TLS-12-PRF(SHA-256)");
 
-      return get_kdf("TLS-12-PRF(" + prf_algo + ")");
-      }
-
-   // Old PRF used in TLS v1.0, v1.1 and DTLS v1.0
-   return get_kdf("TLS-PRF");
+   return get_kdf("TLS-12-PRF(" + prf_algo + ")");
    }
 
 std::pair<std::string, Signature_Format>
@@ -391,8 +385,6 @@ Handshake_State::choose_sig_format(const Private_Key& key,
    {
    const std::string sig_algo = key.algo_name();
 
-   if(this->version().supports_negotiable_signature_algorithms())
-      {
       const std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
 
       std::vector<Signature_Scheme> requested =
@@ -431,20 +423,6 @@ Handshake_State::choose_sig_format(const Private_Key& key,
          {
          return std::make_pair(padding_string_for_scheme(chosen_scheme), DER_SEQUENCE);
          }
-      }
-   else
-      {
-      if(sig_algo == "RSA")
-         {
-         const std::string padding = "PKCS1v15(Parallel(MD5,SHA-160))";
-         return std::make_pair(padding, IEEE_1363);
-         }
-      else if(sig_algo == "DSA" || sig_algo == "ECDSA")
-         {
-         const std::string padding = "EMSA1(SHA-1)";
-         return std::make_pair(padding, DER_SEQUENCE);
-         }
-      }
 
    throw Invalid_Argument(sig_algo + " is invalid/unknown for TLS signatures");
    }
@@ -483,30 +461,6 @@ Handshake_State::parse_sig_format(const Public_Key& key,
       {
       throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                           "Rejecting " + key_type + " signature");
-      }
-
-   if(this->version().supports_negotiable_signature_algorithms() == false)
-      {
-      if(scheme != Signature_Scheme::NONE)
-         throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
-
-      /*
-      There is no check on the acceptability of a v1.0/v1.1 hash type,
-      since it's implicit with use of the protocol
-      */
-
-      if(key_type == "RSA")
-         {
-         const std::string padding = "PKCS1v15(Parallel(MD5,SHA-160))";
-         return std::make_pair(padding, IEEE_1363);
-         }
-      else if(key_type == "DSA" || key_type == "ECDSA")
-         {
-         const std::string padding = "EMSA1(SHA-1)";
-         return std::make_pair(padding, DER_SEQUENCE);
-         }
-      else
-         throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures");
       }
 
    if(scheme == Signature_Scheme::NONE)

@@ -53,8 +53,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
       if(extended_master_secret)
          {
          label.assign(EXT_MASTER_SECRET_MAGIC, EXT_MASTER_SECRET_MAGIC + sizeof(EXT_MASTER_SECRET_MAGIC));
-         salt += state->hash().final(state->version(),
-                                     state->ciphersuite().prf_algo());
+         salt += state->hash().final(state->ciphersuite().prf_algo());
          }
       else
          {

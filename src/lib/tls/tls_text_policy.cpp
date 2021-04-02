@@ -45,24 +45,9 @@ bool Text_Policy::use_ecc_point_compression() const
    return get_bool("use_ecc_point_compression", Policy::use_ecc_point_compression());
    }
 
-bool Text_Policy::allow_tls10() const
-   {
-   return get_bool("allow_tls10", Policy::allow_tls10());
-   }
-
-bool Text_Policy::allow_tls11() const
-   {
-   return get_bool("allow_tls11", Policy::allow_tls11());
-   }
-
 bool Text_Policy::allow_tls12() const
    {
    return get_bool("allow_tls12", Policy::allow_tls12());
-   }
-
-bool Text_Policy::allow_dtls10() const
-   {
-   return get_bool("allow_dtls10", Policy::allow_dtls10());
    }
 
 bool Text_Policy::allow_dtls12() const
@@ -212,11 +197,6 @@ bool Text_Policy::hide_unknown_users() const
 uint32_t Text_Policy::session_ticket_lifetime() const
    {
    return static_cast<uint32_t>(get_len("session_ticket_lifetime", Policy::session_ticket_lifetime()));
-   }
-
-bool Text_Policy::send_fallback_scsv(Protocol_Version version) const
-   {
-   return get_bool("send_fallback_scsv", false) ? Policy::send_fallback_scsv(version) : false;
    }
 
 std::vector<uint16_t> Text_Policy::srtp_profiles() const

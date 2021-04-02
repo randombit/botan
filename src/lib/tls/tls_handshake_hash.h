@@ -27,8 +27,7 @@ class Handshake_Hash final
       void update(const std::vector<uint8_t>& in)
          { m_data += in; }
 
-      secure_vector<uint8_t> final(Protocol_Version version,
-                                const std::string& mac_algo) const;
+      secure_vector<uint8_t> final(const std::string& mac_algo) const;
 
       const std::vector<uint8_t>& get_contents() const { return m_data; }
 

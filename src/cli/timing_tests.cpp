@@ -206,7 +206,7 @@ class Lucky13_Timing_Test final : public Timing_Test
          , m_mac_keylen(mac_keylen)
          , m_dec(Botan::BlockCipher::create_or_throw("AES-128"),
                  Botan::MessageAuthenticationCode::create_or_throw("HMAC(" + m_mac_algo + ")"),
-                 16, m_mac_keylen, Botan::TLS::Protocol_Version::TLS_V11, false) {}
+                 16, m_mac_keylen, Botan::TLS::Protocol_Version::TLS_V12, false) {}
 
       std::vector<uint8_t> prepare_input(const std::string& input) override;
       ticks measure_critical_function(const std::vector<uint8_t>& input) override;

@@ -935,26 +935,9 @@ class Shim_Policy final : public Botan::TLS::Policy
          return version.known_version();
          }
 
-      bool allow_tls10() const override
-         {
-         return !m_args.flag_set("dtls") &&
-            !m_args.flag_set("no-tls1") &&
-            allow_version(Botan::TLS::Protocol_Version::TLS_V10);
-         }
-
-      bool allow_tls11() const override
-         {
-         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls11") && allow_version(Botan::TLS::Protocol_Version::TLS_V11);
-         }
-
       bool allow_tls12() const override
          {
          return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls12") && allow_version(Botan::TLS::Protocol_Version::TLS_V12);
-         }
-
-      bool allow_dtls10() const override
-         {
-         return m_args.flag_set("dtls") && !m_args.flag_set("no-tls1") && allow_version(Botan::TLS::Protocol_Version::DTLS_V10);
          }
 
       bool allow_dtls12() const override
@@ -1000,11 +983,6 @@ class Shim_Policy final : public Botan::TLS::Policy
       bool only_resume_with_exact_version() const override
          {
          return false;
-         }
-
-      bool send_fallback_scsv(Botan::TLS::Protocol_Version) const override
-         {
-         return m_args.flag_set("fallback-scsv");
          }
 
       //bool server_uses_own_ciphersuite_preferences() const override;
@@ -1057,7 +1035,7 @@ class Shim_Policy final : public Botan::TLS::Policy
       size_t m_sessions;
    };
 
-std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version version) const
+std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version) const
    {
    std::vector<uint16_t> ciphersuite_codes;
 
@@ -1111,17 +1089,6 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
                {
                shim_exit_with_error("Unknown cipher " + cipher_limit);
                }
-            }
-
-         if(!version.supports_aead_modes())
-            {
-            // Are we doing AEAD in a non-AEAD version?
-            if(suite.mac_algo() == "AEAD")
-               continue;
-
-            // Older (v1.0/v1.1) versions also do not support any hash but SHA-1
-            if(suite.mac_algo() != "SHA-1")
-               continue;
             }
 
          ciphersuite_codes.push_back(suite.ciphersuite_code());
