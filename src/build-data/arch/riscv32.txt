@@ -1,0 +1,2 @@
+family riscv32
+endian little
