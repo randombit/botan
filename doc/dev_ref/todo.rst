@@ -17,6 +17,7 @@ New Ciphers/Hashes/MACs
 * Skein-MAC
 * FFX format preserving encryption (NIST 800-38G)
 * Adiantum (https://eprint.iacr.org/2018/720)
+* HPKE (draft-irtf-cfrg-hpke)
 
 Improved Ciphers Implementations
 ----------------------------------------
