@@ -24,8 +24,6 @@ TLS Protocol Deprecations
 The following TLS protocol features are deprecated and will be removed
 in a future major release:
 
-- Support for TLSv1.0/v1.1 and DTLS v1.0
-
 - Support for point compression in TLS. This is supported in v1.2 but
   removed in v1.3. For simplicity it will be removed in v1.2 also.
 
@@ -33,6 +31,8 @@ in a future major release:
   This implies also removing Encrypt-then-MAC extension.
 
 - All DHE-RSA ciphersuites
+
+- CECPQ1 key exchange
 
 - Support for renegotiation in TLS v1.2
 
@@ -49,6 +49,9 @@ in a future major release.
 - Hash function GOST 34.11-94, MD4
 
 - X9.42 KDF
+
+- NewHope lattice based KEM. This will be replaced by a newer and more
+  well studied design (probably Kyber)
 
 - DLIES
 
