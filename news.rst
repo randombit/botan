@@ -7,6 +7,8 @@ Version 3.0.0, Not Yet Released
 * Switch the build to C++17 mode; require at least GCC 9, Clang 7 or MSVC 2019.
   (GH #2455)
 
+* Support for TLS 1.0, TLS 1.1, and DTLS 1.0 have been removed (GH #2631)
+
 * Remove many deprecated headers (GH #2456)
 
 * Many headers which were previously marked as becoming internal in 2.x have
@@ -31,8 +33,8 @@ Version 3.0.0, Not Yet Released
 * Use smaller tables in the implementations of Camellia, ARIA, SEED, DES,
   and Whirlpool (GH #2534 #2558)
 
-* Add a BMI2 implementation of 3DES which avoids most cache-based side channels.
-  (GH #2565)
+* Modify DES/3DES to use a new implementation which avoids most
+  cache-based side channels. (GH #2565 #2678)
 
 * CVE-2021-24115 Convert base64, base58, base32 and hex encoding/decoding to be
   constant time (GH #2543)
@@ -58,6 +60,10 @@ Version 3.0.0, Not Yet Released
 
 * Fix a bug in BigInt::operator< where if two negative numbers were compared,
   an incorrect result was computed. (GH #2639 #2638)
+
+* Fix a bug in BigInt::operator>> where if the shift size exceeded the size
+  of the integer by at least 32 bits, it was possible an exception would
+  be thrown instead of computing the correct result. (GH #2672)
 
 * Remove deprecated ``Data_Store`` class (GH #2461)
 
