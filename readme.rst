@@ -74,8 +74,7 @@ Find Enclosed
 Transport Layer Security (TLS) Protocol
 ----------------------------------------
 
-* TLS v1.0, v1.1, and v1.2. The broken SSLv3 protocol is no longer supported.
-* DTLS v1.0 and v1.2 are adaptations of TLS to datagram operation.
+* TLS v1.2 and DTLS v1.2
 * Supported extensions include session tickets, SNI, ALPN, OCSP stapling,
   encrypt-then-mac CBC, and extended master secret.
 * Supports authentication using certificates or preshared keys (PSK)
