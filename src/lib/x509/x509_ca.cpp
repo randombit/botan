@@ -93,22 +93,22 @@ Extensions choose_extensions(const PKCS10_Request& req,
    Extensions extensions = req.extensions();
 
    extensions.replace(
-      new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()),
+      std::make_unique<Cert_Extension::Basic_Constraints>(req.is_CA(), req.path_limit()),
       true);
 
    if(constraints != NO_CONSTRAINTS)
       {
-      extensions.replace(new Cert_Extension::Key_Usage(constraints), true);
+      extensions.replace(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
       }
 
-   extensions.replace(new Cert_Extension::Authority_Key_ID(ca_cert.subject_key_id()));
-   extensions.replace(new Cert_Extension::Subject_Key_ID(req.raw_public_key(), hash_fn));
+   extensions.replace(std::make_unique<Cert_Extension::Authority_Key_ID>(ca_cert.subject_key_id()));
+   extensions.replace(std::make_unique<Cert_Extension::Subject_Key_ID>(req.raw_public_key(), hash_fn));
 
    extensions.replace(
-      new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
+      std::make_unique<Cert_Extension::Subject_Alternative_Name>(req.subject_alt_name()));
 
    extensions.replace(
-      new Cert_Extension::Extended_Key_Usage(req.ex_constraints()));
+      std::make_unique<Cert_Extension::Extended_Key_Usage>(req.ex_constraints()));
 
    return extensions;
    }
@@ -273,8 +273,8 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    auto expire_time = issue_time + next_update;
 
    Extensions extensions;
-   extensions.add(new Cert_Extension::Authority_Key_ID(m_ca_cert.subject_key_id()));
-   extensions.add(new Cert_Extension::CRL_Number(crl_number));
+   extensions.add(std::make_unique<Cert_Extension::Authority_Key_ID>(m_ca_cert.subject_key_id()));
+   extensions.add(std::make_unique<Cert_Extension::CRL_Number>(crl_number));
 
    // clang-format off
    const std::vector<uint8_t> crl = X509_Object::make_signed(
