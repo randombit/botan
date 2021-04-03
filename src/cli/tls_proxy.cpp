@@ -104,14 +104,13 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
          Botan::TLS::Policy& policy,
          tcp::resolver::iterator endpoints)
          {
-         return pointer(
-                   new tls_proxy_session(
-                      io,
-                      session_manager,
-                      credentials,
-                      policy,
-                      endpoints)
-                );
+         return std::make_shared<tls_proxy_session>(
+            io,
+            session_manager,
+            credentials,
+            policy,
+            endpoints
+            );
          }
 
       tcp::socket& client_socket()
@@ -139,7 +138,6 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
             }
          }
 
-   private:
       tls_proxy_session(
          boost::asio::io_service& io,
          Botan::TLS::Session_Manager& session_manager,
@@ -157,6 +155,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
                  policy,
                  *m_rng) {}
 
+   private:
       void client_read(const boost::system::error_code& error,
                        size_t bytes_transferred)
          {

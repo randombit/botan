@@ -34,7 +34,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    if(rng_type == "system" || rng_type.empty())
       {
-      return std::unique_ptr<Botan::RandomNumberGenerator>(new Botan::System_RNG);
+      return std::make_unique<Botan::System_RNG>();
       }
 #endif
 
@@ -46,9 +46,9 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
       if(rng_type == "entropy")
-         rng.reset(new Botan::AutoSeeded_RNG(Botan::Entropy_Sources::global_sources()));
+         rng = std::make_unique<Botan::AutoSeeded_RNG>(Botan::Entropy_Sources::global_sources());
       else
-         rng.reset(new Botan::AutoSeeded_RNG);
+         rng = std::make_unique<Botan::AutoSeeded_RNG>();
 
       if(drbg_seed.size() > 0)
          rng->add_entropy(drbg_seed.data(), drbg_seed.size());
@@ -59,9 +59,8 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
 #if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32)
    if(rng_type == "drbg" || (rng_type.empty() && drbg_seed.empty() == false))
       {
-      std::unique_ptr<Botan::MessageAuthenticationCode> mac =
-         Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
-      std::unique_ptr<Botan::Stateful_RNG> rng(new Botan::HMAC_DRBG(std::move(mac)));
+      auto mac = Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
+      auto rng = std::make_unique<Botan::HMAC_DRBG>(std::move(mac));
       rng->add_entropy(drbg_seed.data(), drbg_seed.size());
 
       if(rng->is_seeded() == false)
@@ -69,7 +68,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
                          std::to_string(rng->security_level()/8) +
                          " bytes must be provided");
 
-      return std::unique_ptr<Botan::RandomNumberGenerator>(rng.release());
+      return rng;
       }
 #endif
 
@@ -77,7 +76,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
    if(rng_type == "rdrand" || rng_type == "cpu" || rng_type.empty())
       {
       if(Botan::Processor_RNG::available())
-         return std::unique_ptr<Botan::RandomNumberGenerator>(new Botan::Processor_RNG);
+         return std::make_unique<Botan::Processor_RNG>();
       else if(rng_type.empty() == false)
          throw CLI_Error("RNG instruction not supported on this processor");
       }

@@ -450,9 +450,9 @@ class Speed final : public Command
             }
 
          if(format == "table")
-            m_summary.reset(new Summary);
+            m_summary = std::make_unique<Summary>();
          else if(format == "json")
-            m_json.reset(new JSON_Output);
+            m_json = std::make_unique<JSON_Output>();
          else if(format != "default")
             throw CLI_Usage_Error("Unknown --format type '" + format + "'");
 
@@ -876,9 +876,9 @@ class Speed final : public Command
                                         const std::string& provider = "",
                                         size_t buf_size = 0)
          {
-         return std::unique_ptr<Timer>(
-            new Timer(name, provider, what, event_mult, buf_size,
-                      m_clock_cycle_ratio, m_clock_speed));
+         return std::make_unique<Timer>(
+            name, provider, what, event_mult, buf_size,
+            m_clock_cycle_ratio, m_clock_speed);
          }
 
       std::unique_ptr<Timer> make_timer(const std::string& algo,
@@ -2103,10 +2103,10 @@ class Speed final : public Command
 
             std::unique_ptr<Timer> keygen_timer = make_timer(nm, provider, "keygen");
 
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer->run([&]
+            std::unique_ptr<Botan::Private_Key> key = keygen_timer->run([&]
                {
-               return new Botan::McEliece_PrivateKey(rng(), n, t);
-               }));
+               return std::make_unique<Botan::McEliece_PrivateKey>(rng(), n, t);
+               });;
 
             record_result(keygen_timer);
             bench_pk_kem(*key, nm, provider, "KDF2(SHA-256)", msec);

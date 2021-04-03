@@ -156,11 +156,12 @@ class Roughtime final : public Command
             {
             try
                {
-               chain.reset(new Botan::Roughtime::Chain(slurp_file_as_str(chain_file)));
+               chain = std::make_unique<Botan::Roughtime::Chain>(slurp_file_as_str(chain_file));
                }
             catch(const CLI_IO_Error&)
                {
-               chain.reset(new Botan::Roughtime::Chain()); //file is to still be created
+               // file is to still be created
+               chain = std::make_unique<Botan::Roughtime::Chain>();
                }
             }
 

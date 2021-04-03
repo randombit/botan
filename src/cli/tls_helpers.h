@@ -195,48 +195,42 @@ class TLS_All_Policy final : public Botan::TLS::Policy
 
 inline std::unique_ptr<Botan::TLS::Policy> load_tls_policy(const std::string policy_type)
    {
-   std::unique_ptr<Botan::TLS::Policy> policy;
-
    if(policy_type == "default" || policy_type == "")
       {
-      policy.reset(new Botan::TLS::Policy);
+      return std::make_unique<Botan::TLS::Policy>();
       }
    else if(policy_type == "suiteb_128")
       {
-      policy.reset(new Botan::TLS::NSA_Suite_B_128);
+      return std::make_unique<Botan::TLS::NSA_Suite_B_128>();
       }
    else if(policy_type == "suiteb_192" || policy_type == "suiteb")
       {
-      policy.reset(new Botan::TLS::NSA_Suite_B_192);
+      return std::make_unique<Botan::TLS::NSA_Suite_B_192>();
       }
    else if(policy_type == "strict")
       {
-      policy.reset(new Botan::TLS::Strict_Policy);
+      return std::make_unique<Botan::TLS::Strict_Policy>();
       }
    else if(policy_type == "bsi")
       {
-      policy.reset(new Botan::TLS::BSI_TR_02102_2);
+      return std::make_unique<Botan::TLS::BSI_TR_02102_2>();
       }
    else if(policy_type == "datagram")
       {
-      policy.reset(new Botan::TLS::Strict_Policy);
+      return std::make_unique<Botan::TLS::Strict_Policy>();
       }
    else if(policy_type == "all" || policy_type == "everything")
       {
-      policy.reset(new TLS_All_Policy);
-      }
-   else
-      {
-      // assume it's a file
-      std::ifstream policy_stream(policy_type);
-      if(!policy_stream.good())
-         {
-         throw Botan_CLI::CLI_Usage_Error("Unknown TLS policy: not a file or known short name");
-         }
-      policy.reset(new Botan::TLS::Text_Policy(policy_stream));
+      return std::make_unique<TLS_All_Policy>();
       }
 
-   return policy;
+   // if something we don't recognize, assume it's a file
+   std::ifstream policy_stream(policy_type);
+   if(!policy_stream.good())
+      {
+      throw Botan_CLI::CLI_Usage_Error("Unknown TLS policy: not a file or known short name");
+      }
+   return std::make_unique<Botan::TLS::Text_Policy>(policy_stream);
    }
 
 #endif

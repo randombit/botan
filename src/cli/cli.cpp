@@ -339,16 +339,15 @@ std::vector<std::string> Command::registered_cmds()
 //static
 std::unique_ptr<Command> Command::get_cmd(const std::string& name)
    {
-   const std::map<std::string, Command::cmd_maker_fn>& reg = Command::global_registry();
+   const auto& reg = Command::global_registry();
 
-   std::unique_ptr<Command> r;
    auto i = reg.find(name);
    if(i != reg.end())
       {
-      r.reset(i->second());
+      return i->second();
       }
 
-   return r;
+   return nullptr;
    }
 
 }

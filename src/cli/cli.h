@@ -184,7 +184,7 @@ class Command
       Botan::RandomNumberGenerator& rng();
 
    private:
-      typedef std::function<Command* ()> cmd_maker_fn;
+      typedef std::function<std::unique_ptr<Command> ()> cmd_maker_fn;
       static std::map<std::string, cmd_maker_fn>& global_registry();
 
       void parse_spec();
@@ -213,7 +213,7 @@ class Command
 
 #define BOTAN_REGISTER_COMMAND(name, CLI_Class)                          \
    Botan_CLI::Command::Registration reg_cmd_ ## CLI_Class(name,          \
-               []() -> Botan_CLI::Command* { return new CLI_Class; })
+     []() -> std::unique_ptr<Botan_CLI::Command> { return std::make_unique<CLI_Class>(); })
 
 }
 
