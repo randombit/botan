@@ -259,9 +259,9 @@ Key_Length_Specification Salsa20::key_spec() const
    return Key_Length_Specification(16, 32, 16);
    }
 
-StreamCipher* Salsa20::clone() const
+std::unique_ptr<StreamCipher> Salsa20::new_object() const
    {
-   return new Salsa20;
+   return std::make_unique<Salsa20>();
    }
 
 std::string Salsa20::name() const

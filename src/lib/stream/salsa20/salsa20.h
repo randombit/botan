@@ -30,7 +30,7 @@ class Salsa20 final : public StreamCipher
 
       void clear() override;
       std::string name() const override;
-      StreamCipher* clone() const override;
+      std::unique_ptr<StreamCipher> new_object() const override;
 
       static void salsa_core(uint8_t output[64], const uint32_t input[16], size_t rounds);
       static void hsalsa20(uint32_t output[8], const uint32_t input[16]);

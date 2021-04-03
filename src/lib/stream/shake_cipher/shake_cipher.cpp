@@ -82,9 +82,9 @@ std::string SHAKE_128_Cipher::name() const
    return "SHAKE-128";
    }
 
-StreamCipher* SHAKE_128_Cipher::clone() const
+std::unique_ptr<StreamCipher> SHAKE_128_Cipher::new_object() const
    {
-   return new SHAKE_128_Cipher;
+   return std::make_unique<SHAKE_128_Cipher>();
    }
 
 }

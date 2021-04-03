@@ -29,9 +29,9 @@ void RC4::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_position += length;
    }
 
-StreamCipher* RC4::clone() const
+std::unique_ptr<StreamCipher> RC4::new_object() const
    {
-   return new RC4(m_SKIP);
+   return std::make_unique<RC4>(m_SKIP);
    }
 
 Key_Length_Specification RC4::key_spec() const

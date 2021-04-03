@@ -47,7 +47,7 @@ class ChaCha final : public StreamCipher
 
       void clear() override;
 
-      StreamCipher* clone() const override;
+      std::unique_ptr<StreamCipher> new_object() const override;
 
       std::string name() const override;
 

@@ -16,7 +16,7 @@ namespace Botan {
 
 SIV_Mode::SIV_Mode(BlockCipher* cipher) :
    m_name(cipher->name() + "/SIV"),
-   m_ctr(new CTR_BE(cipher->clone(), 8)),
+   m_ctr(new CTR_BE(cipher->new_object(), 8)),
    m_mac(new CMAC(cipher)),
    m_bs(cipher->block_size())
    {

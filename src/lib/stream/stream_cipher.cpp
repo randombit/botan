@@ -53,7 +53,7 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
          if(cipher)
             {
             size_t ctr_size = req.arg_as_integer(1, cipher->block_size());
-            return std::make_unique<CTR_BE>(cipher.release(), ctr_size);
+            return std::make_unique<CTR_BE>(std::move(cipher), ctr_size);
             }
          }
       }
@@ -94,8 +94,8 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
       {
       if(provider.empty() || provider == "base")
          {
-         if(auto c = BlockCipher::create(req.arg(0)))
-            return std::make_unique<OFB>(c.release());
+         if(auto cipher = BlockCipher::create(req.arg(0)))
+            return std::make_unique<OFB>(std::move(cipher));
          }
       }
 #endif
