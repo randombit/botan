@@ -128,9 +128,9 @@ std::string SipHash::name() const
    return "SipHash(" + std::to_string(m_C) + "," + std::to_string(m_D) + ")";
    }
 
-MessageAuthenticationCode* SipHash::clone() const
+std::unique_ptr<MessageAuthenticationCode> SipHash::new_object() const
    {
-   return new SipHash(m_C, m_D);
+   return std::make_unique<SipHash>(m_C, m_D);
    }
 
 }

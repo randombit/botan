@@ -20,7 +20,7 @@ class SipHash final : public MessageAuthenticationCode
       void clear() override;
       std::string name() const override;
 
-      MessageAuthenticationCode* clone() const override;
+      std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 
       size_t output_length() const override { return 8; }
 

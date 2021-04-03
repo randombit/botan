@@ -23,7 +23,7 @@ class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16>
 
       void clear() override;
       std::string name() const override { return "Camellia-128"; }
-      BlockCipher* clone() const override { return new Camellia_128; }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Camellia_128>(); }
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
@@ -41,7 +41,7 @@ class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24>
 
       void clear() override;
       std::string name() const override { return "Camellia-192"; }
-      BlockCipher* clone() const override { return new Camellia_192; }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Camellia_192>(); }
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
@@ -59,7 +59,7 @@ class Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32>
 
       void clear() override;
       std::string name() const override { return "Camellia-256"; }
-      BlockCipher* clone() const override { return new Camellia_256; }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Camellia_256>(); }
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 

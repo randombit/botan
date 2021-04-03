@@ -21,7 +21,7 @@ class Parallel final : public HashFunction
    public:
       void clear() override;
       std::string name() const override;
-      HashFunction* clone() const override;
+      std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
 
       size_t output_length() const override;

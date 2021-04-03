@@ -21,7 +21,7 @@ class KDF1_18033 final : public KDF
    public:
       std::string name() const override { return "KDF1-18033(" + m_hash->name() + ")"; }
 
-      KDF* clone() const override { return new KDF1_18033(m_hash->clone()); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<KDF1_18033>(m_hash->new_object()); }
 
       void kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,
@@ -29,9 +29,11 @@ class KDF1_18033 final : public KDF
                const uint8_t label[], size_t label_len) const override;
 
       /**
-      * @param h hash function to use
+      * @param hash function to use
       */
-      explicit KDF1_18033(HashFunction* h) : m_hash(h) {}
+      explicit KDF1_18033(std::unique_ptr<HashFunction> hash) :
+         m_hash(std::move(hash))
+         {}
    private:
       std::unique_ptr<HashFunction> m_hash;
    };

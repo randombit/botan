@@ -23,7 +23,7 @@ class SM4 final : public Block_Cipher_Fixed_Params<16, 16>
 
       void clear() override;
       std::string name() const override { return "SM4"; }
-      BlockCipher* clone() const override { return new SM4; }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<SM4>(); }
 
       std::string provider() const override;
       size_t parallelism() const override;

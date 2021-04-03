@@ -25,7 +25,7 @@ class SM3 final : public MDx_HashFunction
    public:
       std::string name() const override { return "SM3"; }
       size_t output_length() const override { return SM3_DIGEST_BYTES; }
-      HashFunction* clone() const override { return new SM3; }
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SM3>(); }
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;

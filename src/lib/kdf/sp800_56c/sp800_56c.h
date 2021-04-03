@@ -21,7 +21,7 @@ class SP800_56C final : public KDF
    public:
       std::string name() const override { return "SP800-56C(" + m_prf->name() + ")"; }
 
-      KDF* clone() const override { return new SP800_56C(m_prf->clone(), m_exp->clone()); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56C>(m_prf->new_object(), m_exp->new_object()); }
 
       /**
       * Derive a key using the SP800-56C KDF.
@@ -47,7 +47,11 @@ class SP800_56C final : public KDF
       * @param mac MAC algorithm used for randomness extraction
       * @param exp KDF used for key expansion
       */
-      SP800_56C(MessageAuthenticationCode* mac, KDF* exp) : m_prf(mac), m_exp(exp) {}
+      SP800_56C(std::unique_ptr<MessageAuthenticationCode> mac,
+                std::unique_ptr<KDF> exp) :
+         m_prf(std::move(mac)),
+         m_exp(std::move(exp))
+         {}
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
       std::unique_ptr<KDF> m_exp;

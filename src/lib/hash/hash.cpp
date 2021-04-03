@@ -314,7 +314,7 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       std::unique_ptr<HashFunction> h2 = HashFunction::create(req.arg(1));
 
       if(h1 && h2)
-         return std::make_unique<Comb4P>(h1.release(), h2.release());
+         return std::make_unique<Comb4P>(std::move(h1), std::move(h2));
       }
 #endif
 

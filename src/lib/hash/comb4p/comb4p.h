@@ -23,7 +23,7 @@ class Comb4P final : public HashFunction
       * @param h1 the first hash
       * @param h2 the second hash
       */
-      Comb4P(HashFunction* h1, HashFunction* h2);
+      Comb4P(std::unique_ptr<HashFunction> h1, std::unique_ptr<HashFunction> h2);
 
       size_t hash_block_size() const override;
 
@@ -32,9 +32,9 @@ class Comb4P final : public HashFunction
          return m_hash1->output_length() + m_hash2->output_length();
          }
 
-      HashFunction* clone() const override
+      std::unique_ptr<HashFunction> new_object() const override
          {
-         return new Comb4P(m_hash1->clone(), m_hash2->clone());
+         return std::make_unique<Comb4P>(m_hash1->new_object(), m_hash2->new_object());
          }
 
       std::unique_ptr<HashFunction> copy_state() const override;

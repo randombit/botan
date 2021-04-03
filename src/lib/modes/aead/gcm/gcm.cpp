@@ -19,7 +19,7 @@ namespace Botan {
 GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_tag_size(tag_size),
    m_cipher_name(cipher->name()),
-   m_ctr(new CTR_BE(cipher, 4)),
+   m_ctr(new CTR_BE(std::unique_ptr<BlockCipher>(cipher), 4)),
    m_ghash(new GHASH)
    {
    if(cipher->block_size() != GCM_BS)

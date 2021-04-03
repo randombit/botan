@@ -65,7 +65,7 @@ void SP800_56A_Hash::kdf(uint8_t key[], size_t key_len,
    SP800_56A_kdf(*m_hash, key, key_len, secret, secret_len, label, label_len);
    }
 
-SP800_56A_HMAC::SP800_56A_HMAC(MessageAuthenticationCode* mac) : m_mac(mac)
+SP800_56A_HMAC::SP800_56A_HMAC(std::unique_ptr<MessageAuthenticationCode> mac) : m_mac(std::move(mac))
    {
    // TODO: we need a MessageAuthenticationCode::is_hmac
    const SCAN_Name req(m_mac->name());

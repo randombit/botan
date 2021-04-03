@@ -23,7 +23,7 @@ class Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
 
       void clear() override;
       std::string name() const override { return "Twofish"; }
-      BlockCipher* clone() const override { return new Twofish; }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Twofish>(); }
    private:
       void key_schedule(const uint8_t[], size_t) override;
 

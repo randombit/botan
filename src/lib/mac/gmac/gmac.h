@@ -28,7 +28,7 @@ class GMAC final : public MessageAuthenticationCode
       void clear() override;
       std::string name() const override;
       size_t output_length() const override;
-      MessageAuthenticationCode* clone() const override;
+      std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 
       Key_Length_Specification key_spec() const override;
 
@@ -37,7 +37,7 @@ class GMAC final : public MessageAuthenticationCode
       *
       * @param cipher the underlying block cipher to use
       */
-      explicit GMAC(BlockCipher* cipher);
+      explicit GMAC(std::unique_ptr<BlockCipher> cipher);
 
       GMAC(const GMAC&) = delete;
       GMAC& operator=(const GMAC&) = delete;

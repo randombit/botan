@@ -33,9 +33,9 @@ std::string Skein_512::name() const
    return "Skein-512(" + std::to_string(m_output_bits) + ")";
    }
 
-HashFunction* Skein_512::clone() const
+std::unique_ptr<HashFunction> Skein_512::new_object() const
    {
-   return new Skein_512(m_output_bits, m_personalization);
+   return std::make_unique<Skein_512>(m_output_bits, m_personalization);
    }
 
 std::unique_ptr<HashFunction> Skein_512::copy_state() const

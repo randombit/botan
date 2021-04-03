@@ -19,11 +19,11 @@ void BLAKE2bMAC::clear()
    }
 
 /*
-* Return a clone of this object
+* Return a new_object of this object
 */
-MessageAuthenticationCode* BLAKE2bMAC::clone() const
+std::unique_ptr<MessageAuthenticationCode> BLAKE2bMAC::new_object() const
    {
-   return new BLAKE2bMAC(m_blake.output_length() * 8);
+   return std::make_unique<BLAKE2bMAC>(m_blake.output_length() * 8);
    }
 
 /*

@@ -24,9 +24,9 @@ std::string SHAKE_128::name() const
    return "SHAKE-128(" + std::to_string(m_output_bits) + ")";
    }
 
-HashFunction* SHAKE_128::clone() const
+std::unique_ptr<HashFunction> SHAKE_128::new_object() const
    {
-   return new SHAKE_128(m_output_bits);
+   return std::make_unique<SHAKE_128>(m_output_bits);
    }
 
 std::unique_ptr<HashFunction> SHAKE_128::copy_state() const
@@ -65,9 +65,9 @@ std::string SHAKE_256::name() const
    return "SHAKE-256(" + std::to_string(m_output_bits) + ")";
    }
 
-HashFunction* SHAKE_256::clone() const
+std::unique_ptr<HashFunction> SHAKE_256::new_object() const
    {
-   return new SHAKE_256(m_output_bits);
+   return std::make_unique<SHAKE_256>(m_output_bits);
    }
 
 std::unique_ptr<HashFunction> SHAKE_256::copy_state() const

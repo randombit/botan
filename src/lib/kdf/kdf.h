@@ -180,7 +180,15 @@ class BOTAN_PUBLIC_API(2,0) KDF
       /**
       * @return new object representing the same algorithm as *this
       */
-      virtual KDF* clone() const = 0;
+      virtual std::unique_ptr<KDF> new_object() const = 0;
+
+      /**
+      * @return new object representing the same algorithm as *this
+      */
+      KDF* clone() const
+         {
+         return this->new_object().release();
+         }
    };
 
 /**

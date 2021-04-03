@@ -27,7 +27,7 @@ class BLAKE2bMAC final : public MessageAuthenticationCode
 
       std::string name() const override { return m_blake.name(); }
       size_t output_length() const override { return m_blake.output_length(); }
-      MessageAuthenticationCode* clone() const override;
+      std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 
       void clear() override;
 

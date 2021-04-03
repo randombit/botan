@@ -10,8 +10,8 @@
 
 namespace Botan {
 
-OFB::OFB(BlockCipher* cipher) :
-   m_cipher(cipher),
+OFB::OFB(std::unique_ptr<BlockCipher> cipher) :
+   m_cipher(std::move(cipher)),
    m_buffer(m_cipher->block_size()),
    m_buf_pos(0)
    {
@@ -52,9 +52,9 @@ Key_Length_Specification OFB::key_spec() const
    return m_cipher->key_spec();
    }
 
-OFB* OFB::clone() const
+std::unique_ptr<StreamCipher> OFB::new_object() const
    {
-   return new OFB(m_cipher->clone());
+   return std::make_unique<OFB>(m_cipher->new_object());
    }
 
 void OFB::cipher(const uint8_t in[], uint8_t out[], size_t length)

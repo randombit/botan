@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-CTR_BE::CTR_BE(BlockCipher* ciph) :
-   m_cipher(ciph),
+CTR_BE::CTR_BE(std::unique_ptr<BlockCipher> cipher) :
+   m_cipher(std::move(cipher)),
    m_block_size(m_cipher->block_size()),
    m_ctr_size(m_block_size),
    m_ctr_blocks(m_cipher->parallel_bytes() / m_block_size),
@@ -23,8 +23,8 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
    {
    }
 
-CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
-   m_cipher(cipher),
+CTR_BE::CTR_BE(std::unique_ptr<BlockCipher> cipher, size_t ctr_size) :
+   m_cipher(std::move(cipher)),
    m_block_size(m_cipher->block_size()),
    m_ctr_size(ctr_size),
    m_ctr_blocks(m_cipher->parallel_bytes() / m_block_size),
@@ -60,9 +60,9 @@ Key_Length_Specification CTR_BE::key_spec() const
    return m_cipher->key_spec();
    }
 
-CTR_BE* CTR_BE::clone() const
+std::unique_ptr<StreamCipher> CTR_BE::new_object() const
    {
-   return new CTR_BE(m_cipher->clone(), m_ctr_size);
+   return std::make_unique<CTR_BE>(m_cipher->new_object(), m_ctr_size);
    }
 
 void CTR_BE::key_schedule(const uint8_t key[], size_t key_len)

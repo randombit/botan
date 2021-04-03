@@ -77,7 +77,7 @@ secure_vector<uint8_t> Encrypted_PSK_Database::get(const std::string& name) cons
 
    const secure_vector<uint8_t> val = base64_decode(val_base64);
 
-   std::unique_ptr<BlockCipher> wrap_cipher(m_cipher->clone());
+   auto wrap_cipher = m_cipher->new_object();
    wrap_cipher->set_key(m_hmac->process(wrapped_name));
 
    return nist_key_unwrap_padded(val.data(), val.size(), *wrap_cipher);
@@ -95,7 +95,7 @@ void Encrypted_PSK_Database::set(const std::string& name, const uint8_t val[], s
                            name.size(),
                            *m_cipher);
 
-   std::unique_ptr<BlockCipher> wrap_cipher(m_cipher->clone());
+   auto wrap_cipher = m_cipher->new_object();
    wrap_cipher->set_key(m_hmac->process(wrapped_name));
    const std::vector<uint8_t> wrapped_key = nist_key_wrap_padded(val, len, *wrap_cipher);
 

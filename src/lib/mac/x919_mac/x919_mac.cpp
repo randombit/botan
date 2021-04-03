@@ -81,9 +81,9 @@ std::string ANSI_X919_MAC::name() const
    return "X9.19-MAC";
    }
 
-MessageAuthenticationCode* ANSI_X919_MAC::clone() const
+std::unique_ptr<MessageAuthenticationCode> ANSI_X919_MAC::new_object() const
    {
-   return new ANSI_X919_MAC;
+   return std::make_unique<ANSI_X919_MAC>();
    }
 
 /*
@@ -91,7 +91,7 @@ MessageAuthenticationCode* ANSI_X919_MAC::clone() const
 */
 ANSI_X919_MAC::ANSI_X919_MAC() :
    m_des1(BlockCipher::create("DES")),
-   m_des2(m_des1->clone()),
+   m_des2(m_des1->new_object()),
    m_position(0)
    {
    }

@@ -21,7 +21,7 @@ class CMAC final : public MessageAuthenticationCode
    public:
       std::string name() const override;
       size_t output_length() const override { return m_block_size; }
-      MessageAuthenticationCode* clone() const override;
+      std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 
       void clear() override;
 
@@ -33,7 +33,7 @@ class CMAC final : public MessageAuthenticationCode
       /**
       * @param cipher the block cipher to use
       */
-      explicit CMAC(BlockCipher* cipher);
+      explicit CMAC(std::unique_ptr<BlockCipher> cipher);
 
       CMAC(const CMAC&) = delete;
       CMAC& operator=(const CMAC&) = delete;

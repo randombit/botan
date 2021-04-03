@@ -23,7 +23,7 @@ class DES final : public Block_Cipher_Fixed_Params<8, 8>
 
       void clear() override;
       std::string name() const override { return "DES"; }
-      BlockCipher* clone() const override { return new DES; }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<DES>(); }
    private:
       void key_schedule(const uint8_t[], size_t) override;
 
@@ -41,7 +41,7 @@ class TripleDES final : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
 
       void clear() override;
       std::string name() const override { return "TripleDES"; }
-      BlockCipher* clone() const override { return new TripleDES; }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<TripleDES>(); }
    private:
 
       void key_schedule(const uint8_t[], size_t) override;

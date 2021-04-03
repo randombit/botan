@@ -98,18 +98,18 @@ std::string CMAC::name() const
    }
 
 /*
-* Return a clone of this object
+* Return a new_object of this object
 */
-MessageAuthenticationCode* CMAC::clone() const
+std::unique_ptr<MessageAuthenticationCode> CMAC::new_object() const
    {
-   return new CMAC(m_cipher->clone());
+   return std::make_unique<CMAC>(m_cipher->new_object());
    }
 
 /*
 * CMAC Constructor
 */
-CMAC::CMAC(BlockCipher* cipher) :
-   m_cipher(cipher),
+CMAC::CMAC(std::unique_ptr<BlockCipher> cipher) :
+   m_cipher(std::move(cipher)),
    m_block_size(m_cipher->block_size())
    {
    if(poly_double_supported_size(m_block_size) == false)

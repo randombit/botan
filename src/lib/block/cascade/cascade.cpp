@@ -48,10 +48,10 @@ std::string Cascade_Cipher::name() const
    return "Cascade(" + m_cipher1->name() + "," + m_cipher2->name() + ")";
    }
 
-BlockCipher* Cascade_Cipher::clone() const
+std::unique_ptr<BlockCipher> Cascade_Cipher::new_object() const
    {
-   return new Cascade_Cipher(m_cipher1->clone(),
-                             m_cipher2->clone());
+   return std::make_unique<Cascade_Cipher>(m_cipher1->new_object(),
+                                           m_cipher2->new_object());
    }
 
 namespace {
@@ -80,13 +80,14 @@ size_t block_size_for_cascade(size_t bs, size_t bs2)
 
 }
 
-Cascade_Cipher::Cascade_Cipher(BlockCipher* c1, BlockCipher* c2) :
-   m_cipher1(c1), m_cipher2(c2)
+Cascade_Cipher::Cascade_Cipher(std::unique_ptr<BlockCipher> cipher1,
+                               std::unique_ptr<BlockCipher> cipher2) :
+   m_cipher1(std::move(cipher1)),
+   m_cipher2(std::move(cipher2)),
+   m_block_size(block_size_for_cascade(m_cipher1->block_size(), m_cipher2->block_size()))
    {
-   m_block = block_size_for_cascade(c1->block_size(), c2->block_size());
-
-   BOTAN_ASSERT(m_block % c1->block_size() == 0 &&
-                m_block % c2->block_size() == 0,
+   BOTAN_ASSERT(m_block_size % m_cipher1->block_size() == 0 &&
+                m_block_size % m_cipher2->block_size() == 0,
                 "Combined block size is a multiple of each ciphers block");
    }
 

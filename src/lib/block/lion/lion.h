@@ -37,15 +37,15 @@ class Lion final : public BlockCipher
 
       void clear() override;
       std::string name() const override;
-      BlockCipher* clone() const override;
+      std::unique_ptr<BlockCipher> new_object() const override;
 
       /**
       * @param hash the hash to use internally
       * @param cipher the stream cipher to use internally
       * @param block_size the size of the block to use
       */
-      Lion(HashFunction* hash,
-           StreamCipher* cipher,
+      Lion(std::unique_ptr<HashFunction> hash,
+           std::unique_ptr<StreamCipher> cipher,
            size_t block_size);
    private:
       void key_schedule(const uint8_t[], size_t) override;

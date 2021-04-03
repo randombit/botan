@@ -287,9 +287,9 @@ Key_Length_Specification ChaCha::key_spec() const
    return Key_Length_Specification(16, 32, 16);
    }
 
-StreamCipher* ChaCha::clone() const
+std::unique_ptr<StreamCipher> ChaCha::new_object() const
    {
-   return new ChaCha(m_rounds);
+   return std::make_unique<ChaCha>(m_rounds);
    }
 
 bool ChaCha::valid_iv_length(size_t iv_len) const

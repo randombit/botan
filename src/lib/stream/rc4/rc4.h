@@ -26,7 +26,7 @@ class RC4 final : public StreamCipher
       void clear() override;
       std::string name() const override;
 
-      StreamCipher* clone() const override;
+      std::unique_ptr<StreamCipher> new_object() const override;
 
       Key_Length_Specification key_spec() const override;
 

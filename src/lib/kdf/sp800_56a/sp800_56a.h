@@ -24,7 +24,7 @@ class SP800_56A_Hash final : public KDF
    public:
       std::string name() const override { return "SP800-56A(" + m_hash->name() + ")"; }
 
-      KDF* clone() const override { return new SP800_56A_Hash(m_hash->clone()); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56A_Hash>(m_hash->new_object()); }
 
       /**
       * Derive a key using the SP800-56A KDF.
@@ -51,7 +51,7 @@ class SP800_56A_Hash final : public KDF
       /**
       * @param hash the hash function to use as the auxiliary function
       */
-      explicit SP800_56A_Hash(HashFunction* hash) : m_hash(hash) {}
+      explicit SP800_56A_Hash(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
    private:
       std::unique_ptr<HashFunction> m_hash;
    };
@@ -64,7 +64,7 @@ class SP800_56A_HMAC final : public KDF
    public:
       std::string name() const override { return "SP800-56A(" + m_mac->name() + ")"; }
 
-      KDF* clone() const override { return new SP800_56A_HMAC(m_mac->clone()); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56A_HMAC>(m_mac->new_object()); }
 
       /**
       * Derive a key using the SP800-56A KDF.
@@ -91,7 +91,7 @@ class SP800_56A_HMAC final : public KDF
       /**
       * @param mac the HMAC to use as the auxiliary function
       */
-      explicit SP800_56A_HMAC(MessageAuthenticationCode* mac);
+      explicit SP800_56A_HMAC(std::unique_ptr<MessageAuthenticationCode> mac);
    private:
       std::unique_ptr<MessageAuthenticationCode> m_mac;
    };

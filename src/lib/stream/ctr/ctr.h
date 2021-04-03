@@ -31,16 +31,16 @@ class CTR_BE final : public StreamCipher
 
       std::string name() const override;
 
-      CTR_BE* clone() const override;
+      std::unique_ptr<StreamCipher> new_object() const override;
 
       void clear() override;
 
       /**
       * @param cipher the block cipher to use
       */
-      explicit CTR_BE(BlockCipher* cipher);
+      explicit CTR_BE(std::unique_ptr<BlockCipher>);
 
-      CTR_BE(BlockCipher* cipher, size_t ctr_size);
+      CTR_BE(std::unique_ptr<BlockCipher> cipher, size_t ctr_size);
 
       void seek(uint64_t offset) override;
    private:

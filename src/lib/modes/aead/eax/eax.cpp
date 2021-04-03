@@ -38,8 +38,8 @@ secure_vector<uint8_t> eax_prf(uint8_t tag, size_t block_size,
 EAX_Mode::EAX_Mode(BlockCipher* cipher, size_t tag_size) :
    m_tag_size(tag_size),
    m_cipher(cipher),
-   m_ctr(new CTR_BE(m_cipher->clone())),
-   m_cmac(new CMAC(m_cipher->clone()))
+   m_ctr(new CTR_BE(m_cipher->new_object())),
+   m_cmac(new CMAC(m_cipher->new_object()))
    {
    if(m_tag_size < 8 || m_tag_size > m_cmac->output_length())
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(tag_size));

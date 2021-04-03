@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-GMAC::GMAC(BlockCipher* cipher) :
-   m_cipher(cipher),
+GMAC::GMAC(std::unique_ptr<BlockCipher> cipher) :
+   m_cipher(std::move(cipher)),
    m_ghash(new GHASH),
    m_aad_buf(GCM_BS),
    m_aad_buf_pos(0),
@@ -127,8 +127,8 @@ void GMAC::final_result(uint8_t mac[])
    clear();
    }
 
-MessageAuthenticationCode* GMAC::clone() const
+std::unique_ptr<MessageAuthenticationCode> GMAC::new_object() const
    {
-   return new GMAC(m_cipher->clone());
+   return std::make_unique<GMAC>(m_cipher->new_object());
    }
 }

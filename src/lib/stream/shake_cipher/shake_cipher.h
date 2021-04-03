@@ -40,7 +40,7 @@ class SHAKE_128_Cipher final : public StreamCipher
 
       void clear() override;
       std::string name() const override;
-      StreamCipher* clone() const override;
+      std::unique_ptr<StreamCipher> new_object() const override;
 
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;

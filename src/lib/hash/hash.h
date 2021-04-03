@@ -47,11 +47,6 @@ class BOTAN_PUBLIC_API(2,0) HashFunction : public Buffered_Computation
       static std::vector<std::string> providers(const std::string& algo_spec);
 
       /**
-      * @return new object representing the same algorithm as *this
-      */
-      virtual HashFunction* clone() const = 0;
-
-      /**
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
@@ -84,6 +79,19 @@ class BOTAN_PUBLIC_API(2,0) HashFunction : public Buffered_Computation
       * @return new hash object
       */
       virtual std::unique_ptr<HashFunction> copy_state() const = 0;
+
+      /**
+      * @return new object representing the same algorithm as *this
+      */
+      virtual std::unique_ptr<HashFunction> new_object() const = 0;
+
+      /**
+      * @return new object representing the same algorithm as *this
+      */
+      HashFunction* clone() const
+         {
+         return this->new_object().release();
+         }
    };
 
 }

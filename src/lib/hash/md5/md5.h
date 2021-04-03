@@ -20,7 +20,7 @@ class MD5 final : public MDx_HashFunction
    public:
       std::string name() const override { return "MD5"; }
       size_t output_length() const override { return 16; }
-      HashFunction* clone() const override { return new MD5; }
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<MD5>(); }
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
