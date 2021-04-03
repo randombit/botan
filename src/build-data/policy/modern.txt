@@ -85,7 +85,6 @@ system_rng
 processor_rng
 
 # entropy sources
-proc_walk
 rdseed
 win32_stats
 </if_available>

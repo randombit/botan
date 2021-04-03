@@ -24,11 +24,6 @@
   #include <botan/internal/es_win32.h>
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
-  #include <botan/internal/proc_walk.h>
-  #include <botan/internal/os_utils.h>
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
   #include <botan/internal/getentropy.h>
 #endif
@@ -122,15 +117,6 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    if(name == "getentropy")
       {
       return std::unique_ptr<Entropy_Source>(new Getentropy);
-      }
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
-   if(name == "proc_walk" && OS::running_in_privileged_state() == false)
-      {
-      const std::string root_dir = BOTAN_ENTROPY_PROC_FS_PATH;
-      if(!root_dir.empty())
-         return std::unique_ptr<Entropy_Source>(new ProcWalking_EntropySource(root_dir));
       }
 #endif
 
