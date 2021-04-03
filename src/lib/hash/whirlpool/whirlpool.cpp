@@ -270,7 +270,7 @@ void Whirlpool::copy_out(uint8_t output[])
 
 std::unique_ptr<HashFunction> Whirlpool::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new Whirlpool(*this));
+   return std::make_unique<Whirlpool>(*this);
    }
 
 /*

@@ -188,7 +188,7 @@ inline uint32_t process32(uint32_t crc, uint32_t word)
 
 std::unique_ptr<HashFunction> CRC24::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new CRC24(*this));
+   return std::make_unique<CRC24>(*this);
    }
 
 /*

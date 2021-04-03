@@ -234,7 +234,7 @@ std::string SHA_3::provider() const
 
 std::unique_ptr<HashFunction> SHA_3::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new SHA_3(*this));
+   return std::make_unique<SHA_3>(*this);
    }
 
 HashFunction* SHA_3::clone() const

@@ -14,7 +14,7 @@ namespace Botan {
 
 std::unique_ptr<HashFunction> Keccak_1600::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new Keccak_1600(*this));
+   return std::make_unique<Keccak_1600>(*this);
    }
 
 Keccak_1600::Keccak_1600(size_t output_bits) :

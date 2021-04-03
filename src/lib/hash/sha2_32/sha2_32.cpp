@@ -46,12 +46,12 @@ std::string sha256_provider()
 
 std::unique_ptr<HashFunction> SHA_224::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new SHA_224(*this));
+   return std::make_unique<SHA_224>(*this);
    }
 
 std::unique_ptr<HashFunction> SHA_256::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new SHA_256(*this));
+   return std::make_unique<SHA_256>(*this);
    }
 
 /*

@@ -71,11 +71,11 @@ void Comb4P::clear()
 
 std::unique_ptr<HashFunction> Comb4P::copy_state() const
    {
+   // Can't use make_unique as this constructor is private
    std::unique_ptr<Comb4P> copy(new Comb4P);
    copy->m_hash1 = m_hash1->copy_state();
    copy->m_hash2 = m_hash2->copy_state();
-   // work around GCC 4.8 bug
-   return std::unique_ptr<HashFunction>(copy.release());
+   return copy;
    }
 
 void Comb4P::add_data(const uint8_t input[], size_t length)

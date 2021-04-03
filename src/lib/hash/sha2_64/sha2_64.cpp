@@ -31,17 +31,17 @@ std::string sha512_provider()
 
 std::unique_ptr<HashFunction> SHA_384::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new SHA_384(*this));
+   return std::make_unique<SHA_384>(*this);
    }
 
 std::unique_ptr<HashFunction> SHA_512::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new SHA_512(*this));
+   return std::make_unique<SHA_512>(*this);
    }
 
 std::unique_ptr<HashFunction> SHA_512_256::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new SHA_512_256(*this));
+   return std::make_unique<SHA_512_256>(*this);
    }
 
 /*
