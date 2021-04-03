@@ -554,57 +554,57 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_HAS_EME_RAW)
    if(test_type == "bleichenbacher")
       {
-      return std::unique_ptr<Timing_Test>(new Bleichenbacker_Timing_Test(2048));
+      return std::make_unique<Bleichenbacker_Timing_Test>(2048);
       }
 #endif
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_OAEP) && defined(BOTAN_HAS_EME_RAW)
    if(test_type == "manger")
       {
-      return std::unique_ptr<Timing_Test>(new Manger_Timing_Test(2048));
+      return std::make_unique<Manger_Timing_Test>(2048);
       }
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
    if(test_type == "ecdsa")
       {
-      return std::unique_ptr<Timing_Test>(new ECDSA_Timing_Test("secp384r1"));
+      return std::make_unique<ECDSA_Timing_Test>("secp384r1");
       }
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
    if(test_type == "ecc_mul")
       {
-      return std::unique_ptr<Timing_Test>(new ECC_Mul_Timing_Test("brainpool512r1"));
+      return std::make_unique<ECC_Mul_Timing_Test>("brainpool512r1");
       }
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    if(test_type == "inverse_mod")
       {
-      return std::unique_ptr<Timing_Test>(new Invmod_Timing_Test(512));
+      return std::make_unique<Invmod_Timing_Test>(512);
       }
 #endif
 
 #if defined(BOTAN_HAS_DL_GROUP)
    if(test_type == "pow_mod")
       {
-      return std::unique_ptr<Timing_Test>(new Powmod_Timing_Test("modp/ietf/1024"));
+      return std::make_unique<Powmod_Timing_Test>("modp/ietf/1024");
       }
 #endif
 
 #if defined(BOTAN_HAS_TLS_CBC)
    if(test_type == "lucky13sec3" || test_type == "lucky13sec4sha1")
       {
-      return std::unique_ptr<Timing_Test>(new Lucky13_Timing_Test("SHA-1", 20));
+      return std::make_unique<Lucky13_Timing_Test>("SHA-1", 20);
       }
    if(test_type == "lucky13sec4sha256")
       {
-      return std::unique_ptr<Timing_Test>(new Lucky13_Timing_Test("SHA-256", 32));
+      return std::make_unique<Lucky13_Timing_Test>("SHA-256", 32);
       }
    if(test_type == "lucky13sec4sha384")
       {
-      return std::unique_ptr<Timing_Test>(new Lucky13_Timing_Test("SHA-384", 48));
+      return std::make_unique<Lucky13_Timing_Test>("SHA-384", 48);
       }
 #endif
 

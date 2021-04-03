@@ -181,7 +181,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          Botan::Credentials_Manager& credentials,
          Botan::TLS::Policy& policy)
          {
-         return pointer(new TLS_Asio_HTTP_Session(io, session_manager, credentials, policy));
+         return std::make_shared<TLS_Asio_HTTP_Session>(io, session_manager, credentials, policy);
          }
 
       tcp::socket& client_socket()
@@ -200,7 +200,6 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          m_tls.close();
          }
 
-   private:
       TLS_Asio_HTTP_Session(boost::asio::io_service& io,
                             Botan::TLS::Session_Manager& session_manager,
                             Botan::Credentials_Manager& credentials,
@@ -210,6 +209,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          , m_rng(cli_make_rng())
          , m_tls(*this, session_manager, credentials, policy, *m_rng) {}
 
+   private:
       void client_read(const boost::system::error_code& error,
                        size_t bytes_transferred)
          {
