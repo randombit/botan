@@ -38,7 +38,10 @@ class OpenSSL_RC4 final : public StreamCipher
             }
          }
 
-      StreamCipher* clone() const override { return new OpenSSL_RC4(m_skip); }
+      std::unique_ptr<StreamCipher> new_object() const override
+         {
+         return std::make_unique<OpenSSL_RC4>(m_skip);
+         }
 
       Key_Length_Specification key_spec() const override
          {

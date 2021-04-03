@@ -27,10 +27,10 @@ class OpenSSL_HashFunction final : public HashFunction
       std::string provider() const override { return "openssl"; }
       std::string name() const override { return m_name; }
 
-      HashFunction* clone() const override
+      std::unique_ptr<HashFunction> new_object() const override
          {
          const EVP_MD* algo = EVP_MD_CTX_md(m_md);
-         return new OpenSSL_HashFunction(name(), algo);
+         return std::make_unique<OpenSSL_HashFunction>(name(), algo);
          }
 
       std::unique_ptr<HashFunction> copy_state() const override

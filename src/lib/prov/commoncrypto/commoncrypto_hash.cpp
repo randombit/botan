@@ -38,9 +38,9 @@ class CommonCrypto_HashFunction final : public HashFunction
       std::string provider() const override { return "commoncrypto"; }
       std::string name() const override { return m_info.name; }
 
-      HashFunction* clone() const override
+      std::unique_ptr<HashFunction> new_object() const override
          {
-         return new CommonCrypto_HashFunction(m_info);
+         return std::make_unique<CommonCrypto_HashFunction>(m_info);
          }
 
       std::unique_ptr<HashFunction> copy_state() const override

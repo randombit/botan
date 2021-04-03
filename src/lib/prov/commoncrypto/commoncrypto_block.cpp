@@ -26,7 +26,7 @@ class CommonCrypto_BlockCipher final : public BlockCipher
       void clear() override;
       std::string provider() const override { return "commoncrypto"; }
       std::string name() const override { return m_cipher_name; }
-      BlockCipher* clone() const override;
+      std::unique_ptr<BlockCipher> new_object() const override;
 
       size_t block_size() const override { return m_opts.block_size; }
 
@@ -120,9 +120,9 @@ void CommonCrypto_BlockCipher::key_schedule(const uint8_t key[], size_t length)
 /*
 * Return a clone of this object
 */
-BlockCipher* CommonCrypto_BlockCipher::clone() const
+std::unique_ptr<BlockCipher> CommonCrypto_BlockCipher::new_object() const
    {
-   return new CommonCrypto_BlockCipher(m_cipher_name, m_opts);
+   return std::make_unique<CommonCrypto_BlockCipher>(m_cipher_name, m_opts);
    }
 
 /*
