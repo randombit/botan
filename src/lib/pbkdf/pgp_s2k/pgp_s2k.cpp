@@ -177,22 +177,22 @@ std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len, std::c
    const double bytes_to_be_hashed = (hash_bytes_per_second * (desired_nsec / 1000000000.0)) / blocks_required;
    const size_t iterations = RFC4880_round_iterations(static_cast<size_t>(bytes_to_be_hashed));
 
-   return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), iterations));
+   return std::make_unique<RFC4880_S2K>(m_hash->clone(), iterations);
    }
 
 std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_params(size_t iter, size_t, size_t) const
    {
-   return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), iter));
+   return std::make_unique<RFC4880_S2K>(m_hash->clone(), iter);
    }
 
 std::unique_ptr<PasswordHash> RFC4880_S2K_Family::default_params() const
    {
-   return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), 50331648));
+   return std::make_unique<RFC4880_S2K>(m_hash->clone(), 50331648);
    }
 
 std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_iterations(size_t iter) const
    {
-   return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), iter));
+   return std::make_unique<RFC4880_S2K>(m_hash->clone(), iter);
    }
 
 RFC4880_S2K::RFC4880_S2K(HashFunction* hash, size_t iterations) :

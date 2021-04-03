@@ -206,22 +206,22 @@ std::string PBKDF2_Family::name() const
 
 std::unique_ptr<PasswordHash> PBKDF2_Family::tune(size_t output_len, std::chrono::milliseconds msec, size_t) const
    {
-   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, output_len, msec));
+   return std::make_unique<PBKDF2>(*m_prf, output_len, msec);
    }
 
 std::unique_ptr<PasswordHash> PBKDF2_Family::default_params() const
    {
-   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, 150000));
+   return std::make_unique<PBKDF2>(*m_prf, 150000);
    }
 
 std::unique_ptr<PasswordHash> PBKDF2_Family::from_params(size_t iter, size_t, size_t) const
    {
-   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, iter));
+   return std::make_unique<PBKDF2>(*m_prf, iter);
    }
 
 std::unique_ptr<PasswordHash> PBKDF2_Family::from_iterations(size_t iter) const
    {
-   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, iter));
+   return std::make_unique<PBKDF2>(*m_prf, iter);
    }
 
 }
