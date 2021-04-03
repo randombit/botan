@@ -32,7 +32,7 @@ class Skein_512 final : public HashFunction
       size_t hash_block_size() const override { return 64; }
       size_t output_length() const override { return m_output_bits / 8; }
 
-      HashFunction* clone() const override;
+      std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
       std::string name() const override;
       void clear() override;

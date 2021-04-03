@@ -34,7 +34,7 @@ class BLAKE2b final : public HashFunction, public SymmetricAlgorithm
 
       Key_Length_Specification key_spec() const override;
 
-      HashFunction* clone() const override;
+      std::unique_ptr<HashFunction> new_object() const override;
       std::string name() const override;
       void clear() override;
 

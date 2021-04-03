@@ -237,9 +237,9 @@ std::unique_ptr<HashFunction> SHA_3::copy_state() const
    return std::make_unique<SHA_3>(*this);
    }
 
-HashFunction* SHA_3::clone() const
+std::unique_ptr<HashFunction> SHA_3::new_object() const
    {
-   return new SHA_3(m_output_bits);
+   return std::make_unique<SHA_3>(m_output_bits);
    }
 
 void SHA_3::clear()

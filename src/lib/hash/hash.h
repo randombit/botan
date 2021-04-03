@@ -83,15 +83,15 @@ class BOTAN_PUBLIC_API(2,0) HashFunction : public Buffered_Computation
       /**
       * @return new object representing the same algorithm as *this
       */
-      std::unique_ptr<HashFunction> new_object() const
-         {
-         return std::unique_ptr<HashFunction>(this->clone());
-         }
+      virtual std::unique_ptr<HashFunction> new_object() const = 0;
 
       /**
       * @return new object representing the same algorithm as *this
       */
-      virtual HashFunction* clone() const = 0;
+      HashFunction* clone() const
+         {
+         return this->new_object().release();
+         }
    };
 
 }

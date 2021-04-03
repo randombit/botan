@@ -20,7 +20,7 @@ class RIPEMD_160 final : public MDx_HashFunction
    public:
       std::string name() const override { return "RIPEMD-160"; }
       size_t output_length() const override { return 20; }
-      HashFunction* clone() const override { return new RIPEMD_160; }
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<RIPEMD_160>(); }
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;

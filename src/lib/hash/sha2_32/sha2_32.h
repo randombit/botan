@@ -21,7 +21,7 @@ class SHA_224 final : public MDx_HashFunction
    public:
       std::string name() const override { return "SHA-224"; }
       size_t output_length() const override { return 28; }
-      HashFunction* clone() const override { return new SHA_224; }
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_224>(); }
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
@@ -45,7 +45,7 @@ class SHA_256 final : public MDx_HashFunction
    public:
       std::string name() const override { return "SHA-256"; }
       size_t output_length() const override { return 32; }
-      HashFunction* clone() const override { return new SHA_256; }
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_256>(); }
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;

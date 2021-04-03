@@ -46,26 +46,26 @@ std::string Parallel::name() const
    return "Parallel(" + string_join(names, ',') + ")";
    }
 
-HashFunction* Parallel::clone() const
+std::unique_ptr<HashFunction> Parallel::new_object() const
    {
    std::vector<std::unique_ptr<HashFunction>> hash_copies;
 
    for(auto&& hash : m_hashes)
-      hash_copies.push_back(std::unique_ptr<HashFunction>(hash->clone()));
+      hash_copies.push_back(std::unique_ptr<HashFunction>(hash->new_object()));
 
-   return new Parallel(hash_copies);
+   return std::make_unique<Parallel>(hash_copies);
    }
 
 std::unique_ptr<HashFunction> Parallel::copy_state() const
    {
-   std::vector<std::unique_ptr<HashFunction>> hash_clones;
+   std::vector<std::unique_ptr<HashFunction>> hash_new_objects;
 
    for(const auto& hash : m_hashes)
       {
-      hash_clones.push_back(hash->copy_state());
+      hash_new_objects.push_back(hash->copy_state());
       }
 
-   return std::make_unique<Parallel>(hash_clones);
+   return std::make_unique<Parallel>(hash_new_objects);
    }
 
 void Parallel::clear()

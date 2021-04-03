@@ -20,7 +20,7 @@ class Whirlpool final : public MDx_HashFunction
    public:
       std::string name() const override { return "Whirlpool"; }
       size_t output_length() const override { return 64; }
-      HashFunction* clone() const override { return new Whirlpool; }
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<Whirlpool>(); }
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;

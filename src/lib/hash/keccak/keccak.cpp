@@ -36,9 +36,9 @@ std::string Keccak_1600::name() const
    return "Keccak-1600(" + std::to_string(m_output_bits) + ")";
    }
 
-HashFunction* Keccak_1600::clone() const
+std::unique_ptr<HashFunction> Keccak_1600::new_object() const
    {
-   return new Keccak_1600(m_output_bits);
+   return std::make_unique<Keccak_1600>(m_output_bits);
    }
 
 void Keccak_1600::clear()
