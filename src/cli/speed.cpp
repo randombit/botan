@@ -1085,7 +1085,7 @@ class Speed final : public Command
             size_t compressed_size = 0;
 
 #if defined(BOTAN_HAS_ZLIB)
-            std::unique_ptr<Botan::Compression_Algorithm> comp(Botan::make_compressor("zlib"));
+            auto comp = Botan::Compression_Algorithm::create("zlib");
 
             if(comp)
                {

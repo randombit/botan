@@ -140,34 +140,34 @@ class Gzip_Decompression_Stream final : public Zlib_Decompression_Stream
 
 }
 
-Compression_Stream* Zlib_Compression::make_stream(size_t level) const
+std::unique_ptr<Compression_Stream> Zlib_Compression::make_stream(size_t level) const
    {
-   return new Zlib_Compression_Stream(level, 15);
+   return std::make_unique<Zlib_Compression_Stream>(level, 15);
    }
 
-Compression_Stream* Zlib_Decompression::make_stream() const
+std::unique_ptr<Compression_Stream> Zlib_Decompression::make_stream() const
    {
-   return new Zlib_Decompression_Stream(15);
+   return std::make_unique<Zlib_Decompression_Stream>(15);
    }
 
-Compression_Stream* Deflate_Compression::make_stream(size_t level) const
+std::unique_ptr<Compression_Stream> Deflate_Compression::make_stream(size_t level) const
    {
-   return new Deflate_Compression_Stream(level, 15);
+   return std::make_unique<Deflate_Compression_Stream>(level, 15);
    }
 
-Compression_Stream* Deflate_Decompression::make_stream() const
+std::unique_ptr<Compression_Stream> Deflate_Decompression::make_stream() const
    {
-   return new Deflate_Decompression_Stream(15);
+   return std::make_unique<Deflate_Decompression_Stream>(15);
    }
 
-Compression_Stream* Gzip_Compression::make_stream(size_t level) const
+std::unique_ptr<Compression_Stream> Gzip_Compression::make_stream(size_t level) const
    {
-   return new Gzip_Compression_Stream(level, 15, m_os_code, m_hdr_time);
+   return std::make_unique<Gzip_Compression_Stream>(level, 15, m_os_code, m_hdr_time);
    }
 
-Compression_Stream* Gzip_Decompression::make_stream() const
+std::unique_ptr<Compression_Stream> Gzip_Decompression::make_stream() const
    {
-   return new Gzip_Decompression_Stream(15);
+   return std::make_unique<Gzip_Decompression_Stream>(15);
    }
 
 }

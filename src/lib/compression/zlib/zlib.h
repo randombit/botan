@@ -21,7 +21,7 @@ class BOTAN_PUBLIC_API(2,0) Zlib_Compression final : public Stream_Compression
    public:
       std::string name() const override { return "Zlib_Compression"; }
    private:
-      Compression_Stream* make_stream(size_t level) const override;
+      std::unique_ptr<Compression_Stream> make_stream(size_t level) const override;
    };
 
 /**
@@ -32,7 +32,7 @@ class BOTAN_PUBLIC_API(2,0) Zlib_Decompression final : public Stream_Decompressi
    public:
       std::string name() const override { return "Zlib_Decompression"; }
    private:
-      Compression_Stream* make_stream() const override;
+      std::unique_ptr<Compression_Stream> make_stream() const override;
    };
 
 /**
@@ -43,7 +43,7 @@ class BOTAN_PUBLIC_API(2,0) Deflate_Compression final : public Stream_Compressio
    public:
       std::string name() const override { return "Deflate_Compression"; }
    private:
-      Compression_Stream* make_stream(size_t level) const override;
+      std::unique_ptr<Compression_Stream> make_stream(size_t level) const override;
    };
 
 /**
@@ -54,7 +54,7 @@ class BOTAN_PUBLIC_API(2,0) Deflate_Decompression final : public Stream_Decompre
    public:
       std::string name() const override { return "Deflate_Decompression"; }
    private:
-      Compression_Stream* make_stream() const override;
+      std::unique_ptr<Compression_Stream> make_stream() const override;
    };
 
 /**
@@ -68,7 +68,7 @@ class BOTAN_PUBLIC_API(2,0) Gzip_Compression final : public Stream_Compression
 
       std::string name() const override { return "Gzip_Compression"; }
    private:
-      Compression_Stream* make_stream(size_t level) const override;
+      std::unique_ptr<Compression_Stream> make_stream(size_t level) const override;
       const uint64_t m_hdr_time;
       const uint8_t m_os_code;
    };
@@ -81,7 +81,7 @@ class BOTAN_PUBLIC_API(2,0) Gzip_Decompression final : public Stream_Decompressi
    public:
       std::string name() const override { return "Gzip_Decompression"; }
    private:
-      Compression_Stream* make_stream() const override;
+      std::unique_ptr<Compression_Stream> make_stream() const override;
    };
 
 }

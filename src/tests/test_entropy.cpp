@@ -58,7 +58,7 @@ class Entropy_Source_Tests final : public Test
                   */
                   for(const std::string comp_algo : { "zlib", "lzma" })
                      {
-                     std::unique_ptr<Botan::Compression_Algorithm> comp(Botan::make_compressor(comp_algo));
+                     auto comp = Botan::Compression_Algorithm::create(comp_algo);
 
                      if(comp)
                         {

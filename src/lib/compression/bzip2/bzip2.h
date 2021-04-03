@@ -21,7 +21,7 @@ class BOTAN_PUBLIC_API(2,0) Bzip2_Compression final : public Stream_Compression
    public:
       std::string name() const override { return "Bzip2_Compression"; }
    private:
-      Compression_Stream* make_stream(size_t comp_level) const override;
+      std::unique_ptr<Compression_Stream> make_stream(size_t comp_level) const override;
    };
 
 /**
@@ -32,7 +32,7 @@ class BOTAN_PUBLIC_API(2,0) Bzip2_Decompression final : public Stream_Decompress
    public:
       std::string name() const override { return "Bzip2_Decompression"; }
    private:
-      Compression_Stream* make_stream() const override;
+      std::unique_ptr<Compression_Stream> make_stream() const override;
    };
 
 }

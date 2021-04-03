@@ -73,13 +73,20 @@ finally completing processing the stream (``finish``).
        This function may throw if the data seems to be invalid.
 
 The easiest way to get a compressor is via the functions
+``Compression_Algorithm::create`` and
+``Decompression_Algorithm::create`` which both accept a string
+argument which can take values include `zlib` (raw zlib with no
+checksum), `deflate` (zlib's deflate format), `gzip`, `bz2`, and
+`lzma`. A null pointer will be returned if the algorithm is
+unavailable.
+
+Two older functions for this are
 
 .. cpp:function:: Compression_Algorithm* make_compressor(std::string type)
 .. cpp:function:: Decompression_Algorithm* make_decompressor(std::string type)
 
-Supported values for `type` include `zlib` (raw zlib with no checksum),
-`deflate` (zlib's deflate format), `gzip`, `bz2`, and `lzma`. A null pointer
-will be returned if the algorithm is unavailable.
+which call the relevant ``create`` function and then ``release`` the
+returned ``unique_ptr``. Avoid these in new code.
 
 To use a compression algorithm in a `Pipe` use the adapter types
 `Compression_Filter` and `Decompression_Filter` from `comp_filter.h`. The

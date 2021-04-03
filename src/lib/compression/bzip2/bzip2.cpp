@@ -97,14 +97,14 @@ class Bzip2_Decompression_Stream final : public Bzip2_Stream
 
 }
 
-Compression_Stream* Bzip2_Compression::make_stream(size_t comp_level) const
+std::unique_ptr<Compression_Stream> Bzip2_Compression::make_stream(size_t comp_level) const
    {
-   return new Bzip2_Compression_Stream(comp_level);
+   return std::make_unique<Bzip2_Compression_Stream>(comp_level);
    }
 
-Compression_Stream* Bzip2_Decompression::make_stream() const
+std::unique_ptr<Compression_Stream> Bzip2_Decompression::make_stream() const
    {
-   return new Bzip2_Decompression_Stream;
+   return std::make_unique<Bzip2_Decompression_Stream>();
    }
 
 }

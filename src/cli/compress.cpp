@@ -55,10 +55,7 @@ class Compress final : public Command
          const size_t buf_size = get_arg_sz("buf-size");
          const size_t comp_level = get_arg_sz("level");
 
-         std::unique_ptr<Botan::Compression_Algorithm> compress;
-
-         compress.reset(Botan::make_compressor(comp_type));
-
+         auto compress = Botan::Compression_Algorithm::create(comp_type);
          if(!compress)
             {
             throw CLI_Error_Unsupported("Compression", comp_type);
@@ -146,9 +143,7 @@ class Decompress final : public Command
             throw CLI_IO_Error("reading", in_file);
             }
 
-         std::unique_ptr<Botan::Decompression_Algorithm> decompress;
-
-         decompress.reset(Botan::make_decompressor(suffix));
+         auto decompress = Botan::Decompression_Algorithm::create(suffix);
 
          if(!decompress)
             {

@@ -82,14 +82,14 @@ class LZMA_Decompression_Stream final : public LZMA_Stream
 
 }
 
-Compression_Stream* LZMA_Compression::make_stream(size_t level) const
+std::unique_ptr<Compression_Stream> LZMA_Compression::make_stream(size_t level) const
    {
-   return new LZMA_Compression_Stream(level);
+   return std::make_unique<LZMA_Compression_Stream>(level);
    }
 
-Compression_Stream* LZMA_Decompression::make_stream() const
+std::unique_ptr<Compression_Stream> LZMA_Decompression::make_stream() const
    {
-   return new LZMA_Decompression_Stream;
+   return std::make_unique<LZMA_Decompression_Stream>();
    }
 
 }
