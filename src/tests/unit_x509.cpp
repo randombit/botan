@@ -1371,9 +1371,9 @@ class String_Extension final : public Botan::Certificate_Extension
          return m_contents;
          }
 
-      String_Extension* copy() const override
+      std::unique_ptr<Certificate_Extension> copy() const override
          {
-         return new String_Extension(m_contents);
+         return std::make_unique<String_Extension>(m_contents);
          }
 
       Botan::OID oid_of() const override

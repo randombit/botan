@@ -208,7 +208,7 @@ std::unique_ptr<Certificate_Extension> Extensions::get(const OID& oid) const
    {
    if(const Certificate_Extension* ext = this->get_extension_object(oid))
       {
-      return std::unique_ptr<Certificate_Extension>(ext->copy());
+      return ext->copy();
       }
    return nullptr;
    }
@@ -220,7 +220,7 @@ std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> Extensions:
       {
       exts.push_back(
          std::make_pair(
-            std::unique_ptr<Certificate_Extension>(ext.second.obj().copy()),
+            ext.second.obj().copy(),
             ext.second.is_critical())
          );
       }
@@ -760,11 +760,11 @@ size_t CRL_Number::get_crl_number() const
 /*
 * Copy a CRL_Number extension
 */
-CRL_Number* CRL_Number::copy() const
+std::unique_ptr<Certificate_Extension> CRL_Number::copy() const
    {
    if(!m_has_value)
       throw Invalid_State("CRL_Number::copy: Not set");
-   return new CRL_Number(m_crl_number);
+   return std::make_unique<CRL_Number>(m_crl_number);
    }
 
 /*

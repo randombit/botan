@@ -366,7 +366,8 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Extension
       * Make a copy of this extension
       * @return copy of this
       */
-      virtual Certificate_Extension* copy() const = 0;
+
+      virtual std::unique_ptr<Certificate_Extension> copy() const = 0;
 
       /*
       * Callback visited during path validation.
