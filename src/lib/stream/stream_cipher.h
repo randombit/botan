@@ -130,6 +130,14 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       virtual StreamCipher* clone() const = 0;
 
       /**
+      * @return new object representing the same algorithm as *this
+      */
+      std::unique_ptr<StreamCipher> new_object() const
+         {
+         return std::unique_ptr<StreamCipher>(this->clone());
+         }
+
+      /**
       * Set the offset and the state used later to generate the keystream
       * @param offset the offset where we begin to generate the keystream
       */

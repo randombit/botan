@@ -101,12 +101,9 @@ std::string Lion::name() const
                     std::to_string(block_size()) + ")";
    }
 
-/*
-* Return a clone of this object
-*/
-BlockCipher* Lion::clone() const
+std::unique_ptr<BlockCipher> Lion::new_object() const
    {
-   return new Lion(m_hash->clone(), m_cipher->clone(), block_size());
+   return std::make_unique<Lion>(m_hash->new_object(), m_cipher->new_object(), block_size());
    }
 
 /*
@@ -123,10 +120,12 @@ void Lion::clear()
 /*
 * Lion Constructor
 */
-Lion::Lion(HashFunction* hash, StreamCipher* cipher, size_t bs) :
+Lion::Lion(std::unique_ptr<HashFunction> hash,
+           std::unique_ptr<StreamCipher> cipher,
+           size_t bs) :
    m_block_size(std::max<size_t>(2*hash->output_length() + 1, bs)),
-   m_hash(hash),
-   m_cipher(cipher)
+   m_hash(std::move(hash)),
+   m_cipher(std::move(cipher))
    {
    if(2*left_size() + 1 > m_block_size)
       throw Invalid_Argument(name() + ": Chosen block size is too small");

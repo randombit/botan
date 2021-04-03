@@ -124,6 +124,14 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
          }
 
       /**
+      * @return new object representing the same algorithm as *this
+      */
+      std::unique_ptr<MessageAuthenticationCode> new_object() const
+         {
+         return std::unique_ptr<MessageAuthenticationCode>(this->clone());
+         }
+
+      /**
       * Get a new object representing the same algorithm as *this
       */
       virtual MessageAuthenticationCode* clone() const = 0;

@@ -269,7 +269,7 @@ BlockCipher::create(const std::string& algo,
       std::unique_ptr<BlockCipher> c2 = BlockCipher::create(req.arg(1));
 
       if(c1 && c2)
-         return std::make_unique<Cascade_Cipher>(c1.release(), c2.release());
+         return std::make_unique<Cascade_Cipher>(std::move(c1), std::move(c2));
       }
 #endif
 
@@ -282,7 +282,7 @@ BlockCipher::create(const std::string& algo,
       if(hash && stream)
          {
          const size_t block_size = req.arg_as_integer(2, 1024);
-         return std::make_unique<Lion>(hash.release(), stream.release(), block_size);
+         return std::make_unique<Lion>(std::move(hash), std::move(stream), block_size);
          }
       }
 #endif

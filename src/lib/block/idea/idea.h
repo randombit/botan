@@ -25,7 +25,7 @@ class IDEA final : public Block_Cipher_Fixed_Params<8, 16>
 
       std::string provider() const override;
       std::string name() const override { return "IDEA"; }
-      BlockCipher* clone() const override { return new IDEA; }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<IDEA>(); }
       size_t parallelism() const override;
 
    private:

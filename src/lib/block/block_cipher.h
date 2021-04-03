@@ -193,7 +193,12 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       /**
       * @return new object representing the same algorithm as *this
       */
-      virtual BlockCipher* clone() const = 0;
+      virtual std::unique_ptr<BlockCipher> new_object() const = 0;
+
+      BlockCipher* clone() const
+         {
+         return this->new_object().release();
+         }
 
       virtual ~BlockCipher() = default;
    };

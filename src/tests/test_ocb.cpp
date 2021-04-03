@@ -30,9 +30,9 @@ class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher
       size_t block_size() const override { return m_bs; }
       void clear() override { m_key.clear(); }
 
-      Botan::BlockCipher* clone() const override
+      std::unique_ptr<Botan::BlockCipher> new_object() const override
          {
-         return new OCB_Wide_Test_Block_Cipher(m_bs);
+         return std::make_unique<OCB_Wide_Test_Block_Cipher>(m_bs);
          }
 
       void key_schedule(const uint8_t key[], size_t length) override

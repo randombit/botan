@@ -64,7 +64,7 @@ class GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32>
       void clear() override;
 
       std::string name() const override;
-      BlockCipher* clone() const override { return new GOST_28147_89(m_SBOX); }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<GOST_28147_89>(m_SBOX); }
 
       /**
       * @param params the sbox parameters to use
@@ -73,10 +73,11 @@ class GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32>
 
       explicit GOST_28147_89(const std::string& param_name) :
          GOST_28147_89(GOST_28147_89_Params(param_name)) {}
-   private:
+
       explicit GOST_28147_89(const std::vector<uint32_t>& other_SBOX) :
          m_SBOX(other_SBOX), m_EK(8) {}
 
+   private:
       void key_schedule(const uint8_t[], size_t) override;
 
       /*

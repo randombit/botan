@@ -27,7 +27,7 @@ class Threefish_512 final :
       void clear() override;
       std::string provider() const override;
       std::string name() const override { return "Threefish-512"; }
-      BlockCipher* clone() const override { return new Threefish_512; }
+      std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Threefish_512>(); }
       size_t parallelism() const override;
 
    private:

@@ -167,7 +167,10 @@ class TLS_CBC_Tests final : public Text_Based_Test
                return Botan::Key_Length_Specification(0, 0, 1);
                }
 
-            virtual BlockCipher* clone() const override { return new Noop_Block_Cipher(m_bs); }
+            std::unique_ptr<BlockCipher> new_object() const override
+               {
+               return std::make_unique<Noop_Block_Cipher>(m_bs);
+               }
          private:
             void key_schedule(const uint8_t[], size_t) override {}
 
