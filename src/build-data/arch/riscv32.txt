@@ -1,0 +1,2 @@
+family riscv
+endian little
