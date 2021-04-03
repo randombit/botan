@@ -131,8 +131,15 @@ class BOTAN_PUBLIC_API(2,0) Decompression_Algorithm
       virtual ~Decompression_Algorithm() = default;
    };
 
-BOTAN_PUBLIC_API(2,0) Compression_Algorithm* make_compressor(const std::string& type);
-BOTAN_PUBLIC_API(2,0) Decompression_Algorithm* make_decompressor(const std::string& type);
+inline Compression_Algorithm* make_compressor(const std::string& type)
+   {
+   return Compression_Algorithm::create(type).release();
+   }
+
+inline Decompression_Algorithm* make_decompressor(const std::string& type)
+   {
+   return Decompression_Algorithm::create(type).release();
+   }
 
 /**
 * An error that occurred during compression (or decompression)
@@ -204,7 +211,7 @@ class Stream_Compression : public Compression_Algorithm
 
       void process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags);
 
-      virtual Compression_Stream* make_stream(size_t level) const = 0;
+      virtual std::unique_ptr<Compression_Stream> make_stream(size_t level) const = 0;
 
       secure_vector<uint8_t> m_buffer;
       std::unique_ptr<Compression_Stream> m_stream;
@@ -227,7 +234,7 @@ class Stream_Decompression : public Decompression_Algorithm
 
       void process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags);
 
-      virtual Compression_Stream* make_stream() const = 0;
+      virtual std::unique_ptr<Compression_Stream> make_stream() const = 0;
 
       secure_vector<uint8_t> m_buffer;
       std::unique_ptr<Compression_Stream> m_stream;

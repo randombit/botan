@@ -18,7 +18,7 @@ namespace Botan {
 #if defined(BOTAN_HAS_COMPRESSION)
 
 Compression_Filter::Compression_Filter(const std::string& type, size_t level, size_t bs) :
-   m_comp(make_compressor(type)),
+   m_comp(Compression_Algorithm::create(type)),
    m_buffersize(std::max<size_t>(bs, 256)),
    m_level(level)
    {
@@ -72,7 +72,7 @@ void Compression_Filter::end_msg()
    }
 
 Decompression_Filter::Decompression_Filter(const std::string& type, size_t bs) :
-   m_comp(make_decompressor(type)),
+   m_comp(Decompression_Algorithm::create(type)),
    m_buffersize(std::max<size_t>(bs, 256))
    {
    if(!m_comp)

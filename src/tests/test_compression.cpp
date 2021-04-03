@@ -68,8 +68,8 @@ class Compression_Tests final : public Test
 
                result.start_timer();
 
-               std::unique_ptr<Botan::Compression_Algorithm> c(Botan::make_compressor(algo));
-               std::unique_ptr<Botan::Decompression_Algorithm> d(Botan::make_decompressor(algo));
+               auto c = Botan::Compression_Algorithm::create(algo);
+               auto d = Botan::Decompression_Algorithm::create(algo);
 
                if(!c || !d)
                   {

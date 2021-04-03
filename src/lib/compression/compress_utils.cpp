@@ -54,7 +54,7 @@ void Stream_Compression::clear()
 
 void Stream_Compression::start(size_t level)
    {
-   m_stream.reset(make_stream(level));
+   m_stream = make_stream(level);
    }
 
 void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags)
@@ -129,7 +129,7 @@ void Stream_Decompression::clear()
 
 void Stream_Decompression::start()
    {
-   m_stream.reset(make_stream());
+   m_stream = make_stream();
    }
 
 void Stream_Decompression::process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags)

@@ -63,7 +63,7 @@ class Entropy final : public Command
 #if defined(BOTAN_HAS_COMPRESSION)
             if(!sample.empty())
                {
-               std::unique_ptr<Botan::Compression_Algorithm> comp(Botan::make_compressor("zlib"));
+               auto comp = Botan::Compression_Algorithm::create("zlib");
                if(comp)
                   {
                   try

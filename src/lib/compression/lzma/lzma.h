@@ -23,7 +23,7 @@ class BOTAN_PUBLIC_API(2,0) LZMA_Compression final : public Stream_Compression
       std::string name() const override { return "LZMA_Compression"; }
 
    private:
-      Compression_Stream* make_stream(size_t level) const override;
+      std::unique_ptr<Compression_Stream> make_stream(size_t level) const override;
    };
 
 /**
@@ -34,7 +34,7 @@ class BOTAN_PUBLIC_API(2,0) LZMA_Decompression final : public Stream_Decompressi
    public:
       std::string name() const override { return "LZMA_Decompression"; }
    private:
-      Compression_Stream* make_stream() const override;
+      std::unique_ptr<Compression_Stream> make_stream() const override;
    };
 
 }
