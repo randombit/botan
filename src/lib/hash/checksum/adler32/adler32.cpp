@@ -80,7 +80,7 @@ void Adler32::final_result(uint8_t output[])
 
 std::unique_ptr<HashFunction> Adler32::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new Adler32(*this));
+   return std::make_unique<Adler32>(*this);
    }
 
 }

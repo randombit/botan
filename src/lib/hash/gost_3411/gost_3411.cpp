@@ -34,7 +34,7 @@ void GOST_34_11::clear()
 
 std::unique_ptr<HashFunction> GOST_34_11::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new GOST_34_11(*this));
+   return std::make_unique<GOST_34_11>(*this);
    }
 
 /**

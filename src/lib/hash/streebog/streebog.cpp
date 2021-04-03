@@ -17,7 +17,7 @@ extern const uint64_t STREEBOG_C[12][8];
 
 std::unique_ptr<HashFunction> Streebog::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new Streebog(*this));
+   return std::make_unique<Streebog>(*this);
    }
 
 Streebog::Streebog(size_t output_bits) :

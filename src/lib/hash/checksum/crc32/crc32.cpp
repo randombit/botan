@@ -105,7 +105,7 @@ void CRC32::final_result(uint8_t output[])
 
 std::unique_ptr<HashFunction> CRC32::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new CRC32(*this));
+   return std::make_unique<CRC32>(*this);
    }
 
 }

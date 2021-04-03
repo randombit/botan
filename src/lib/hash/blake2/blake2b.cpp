@@ -209,7 +209,7 @@ HashFunction* BLAKE2b::clone() const
 
 std::unique_ptr<HashFunction> BLAKE2b::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new BLAKE2b(*this));
+   return std::make_unique<BLAKE2b>(*this);
    }
 
 void BLAKE2b::key_schedule(const uint8_t key[], size_t length)

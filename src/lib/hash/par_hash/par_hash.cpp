@@ -60,12 +60,12 @@ std::unique_ptr<HashFunction> Parallel::copy_state() const
    {
    std::vector<std::unique_ptr<HashFunction>> hash_clones;
 
-   for(const std::unique_ptr<HashFunction>& hash : m_hashes)
+   for(const auto& hash : m_hashes)
       {
       hash_clones.push_back(hash->copy_state());
       }
 
-   return std::unique_ptr<HashFunction>(new Parallel(hash_clones));
+   return std::make_unique<Parallel>(hash_clones);
    }
 
 void Parallel::clear()

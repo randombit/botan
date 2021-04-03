@@ -15,7 +15,7 @@ namespace Botan {
 
 std::unique_ptr<HashFunction> SM3::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new SM3(*this));
+   return std::make_unique<SM3>(*this);
    }
 
 namespace {
