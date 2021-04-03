@@ -553,17 +553,17 @@ std::shared_ptr<CurveGFp_Repr>
 CurveGFp::choose_repr(const BigInt& p, const BigInt& a, const BigInt& b)
    {
    if(p == prime_p192())
-      return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P192(a, b));
+      return std::make_shared<CurveGFp_P192>(a, b);
    if(p == prime_p224())
-      return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P224(a, b));
+      return std::make_shared<CurveGFp_P224>(a, b);
    if(p == prime_p256())
-      return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P256(a, b));
+      return std::make_shared<CurveGFp_P256>(a, b);
    if(p == prime_p384())
-      return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P384(a, b));
+      return std::make_shared<CurveGFp_P384>(a, b);
    if(p == prime_p521())
-      return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P521(a, b));
+      return std::make_shared<CurveGFp_P521>(a, b);
 
-   return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_Montgomery(p, a, b));
+   return std::make_shared<CurveGFp_Montgomery>(p, a, b);
    }
 
 }

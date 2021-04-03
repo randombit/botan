@@ -150,7 +150,7 @@ void randomize_support(std::vector<gf2m>& L, RandomNumberGenerator& rng)
       }
    }
 
-std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, std::shared_ptr<GF2m_Field> sp_field, size_t code_length, size_t t)
+std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, const GF2m_Field& sp_field, size_t code_length, size_t t)
    {
    //L- Support
    //t- Number of errors
@@ -158,26 +158,26 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
    //m- The extension degree of the GF
    //g- The generator polynomial.
 
-   const size_t r = t * sp_field->get_extension_degree();
+   const size_t r = t * sp_field.get_extension_degree();
 
    binary_matrix H(r, code_length);
 
    for(size_t i = 0; i != code_length; i++)
       {
       gf2m x = g->eval(lex_to_gray(L[i]));//evaluate the polynomial at the point L[i].
-      x = sp_field->gf_inv(x);
+      x = sp_field.gf_inv(x);
       gf2m y = x;
       for(size_t j=0;j<t;j++)
          {
-         for(size_t k=0;k<sp_field->get_extension_degree();k++)
+         for(size_t k=0;k<sp_field.get_extension_degree();k++)
             {
             if(y & (1<<k))
                {
                //the co-eff. are set in 2^0,...,2^11 ; 2^0,...,2^11 format along the rows/cols?
-               H.set_coef_to_one(j*sp_field->get_extension_degree()+ k,i);
+               H.set_coef_to_one(j*sp_field.get_extension_degree()+ k,i);
                }
             }
-         y = sp_field->gf_mul(y,lex_to_gray(L[i]));
+         y = sp_field.gf_mul(y,lex_to_gray(L[i]));
          }
       }//The H matrix is fed.
 
@@ -222,7 +222,7 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator & rng, size_t ex
       throw Invalid_Argument("invalid McEliece parameters");
       }
 
-   std::shared_ptr<GF2m_Field> sp_field(new GF2m_Field(ext_deg));
+   auto sp_field = std::make_shared<GF2m_Field>(ext_deg);
 
    //pick the support.........
    std::vector<gf2m> L(code_length);
@@ -244,7 +244,7 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator & rng, size_t ex
 
       try
          {
-         R = generate_R(L, &g, sp_field, code_length, t);
+         R = generate_R(L, &g, *sp_field, code_length, t);
          success = true;
          }
       catch(const Invalid_State &)
