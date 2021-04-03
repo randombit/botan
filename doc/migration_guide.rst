@@ -27,6 +27,7 @@ TLS Functionality Removed
 
 Functionality removed from the TLS implementation includes
 
+* TLS 1.0, 1.1 and DTLS 1.0
 * DSA ciphersuites
 * anonymous ciphersuites
 * SRP ciphersuites
