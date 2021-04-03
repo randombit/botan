@@ -148,7 +148,7 @@ std::unique_ptr<PasswordHash> Argon2_Family::from_iterations(size_t iter) const
 
 std::unique_ptr<PasswordHash> Argon2_Family::from_params(size_t M, size_t t, size_t p) const
    {
-   return std::unique_ptr<PasswordHash>(new Argon2(m_family, M, t, p));
+   return std::make_unique<Argon2>(m_family, M, t, p);
    }
 
 }

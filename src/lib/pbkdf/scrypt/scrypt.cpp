@@ -23,7 +23,7 @@ std::string Scrypt_Family::name() const
 
 std::unique_ptr<PasswordHash> Scrypt_Family::default_params() const
    {
-   return std::unique_ptr<PasswordHash>(new Scrypt(32768, 8, 1));
+   return std::make_unique<Scrypt>(32768, 8, 1);
    }
 
 std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
@@ -99,12 +99,12 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    if(target_nsec / est_nsec > 2)
       p *= std::min<size_t>(1024, static_cast<size_t>(target_nsec / est_nsec));
 
-   return std::unique_ptr<PasswordHash>(new Scrypt(N, r, p));
+   return std::make_unique<Scrypt>(N, r, p);
    }
 
 std::unique_ptr<PasswordHash> Scrypt_Family::from_params(size_t N, size_t r, size_t p) const
    {
-   return std::unique_ptr<PasswordHash>(new Scrypt(N, r, p));
+   return std::make_unique<Scrypt>(N, r, p);
    }
 
 std::unique_ptr<PasswordHash> Scrypt_Family::from_iterations(size_t iter) const
@@ -121,7 +121,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::from_iterations(size_t iter) const
    if(iter > 150000)
       N = 65536;
 
-   return std::unique_ptr<PasswordHash>(new Scrypt(N, r, p));
+   return std::make_unique<Scrypt>(N, r, p);
    }
 
 Scrypt::Scrypt(size_t N, size_t r, size_t p) :

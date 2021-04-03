@@ -73,7 +73,7 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::default_params() const
 
 std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::from_iterations(size_t iter) const
    {
-   return std::unique_ptr<PasswordHash>(new Bcrypt_PBKDF(iter));
+   return std::make_unique<Bcrypt_PBKDF>(iter);
    }
 
 std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::from_params(size_t iter, size_t /*t*/, size_t /*p*/) const
