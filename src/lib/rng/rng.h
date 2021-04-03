@@ -271,11 +271,19 @@ class BOTAN_PUBLIC_API(2,0) Serialized_RNG final : public RandomNumberGenerator
          m_rng->add_entropy(in, len);
          }
 
-      /*
+      /**
       * Since 2.16.0 this is no longer needed for any RNG type. This
       * class will be removed in a future major release.
       */
+      BOTAN_DEPRECATED("Use version accepting a unique_ptr")
       explicit Serialized_RNG(RandomNumberGenerator* rng) : m_rng(rng) {}
+
+      /**
+      * Since 2.16.0 this is no longer needed for any RNG type. This
+      * class will be removed in a future major release.
+      */
+      explicit Serialized_RNG(std::unique_ptr<RandomNumberGenerator> rng) : m_rng(std::move(rng)) {}
+
    private:
       mutable mutex_type m_mutex;
       std::unique_ptr<RandomNumberGenerator> m_rng;

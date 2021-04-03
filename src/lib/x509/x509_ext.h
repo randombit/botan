@@ -25,8 +25,8 @@ static const size_t NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
 class BOTAN_PUBLIC_API(2,0) Basic_Constraints final : public Certificate_Extension
    {
    public:
-      Basic_Constraints* copy() const override
-         { return new Basic_Constraints(m_is_ca, m_path_limit); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Basic_Constraints>(m_is_ca, m_path_limit); }
 
       Basic_Constraints(bool ca = false, size_t limit = 0) :
          m_is_ca(ca), m_path_limit(limit) {}
@@ -54,7 +54,10 @@ class BOTAN_PUBLIC_API(2,0) Basic_Constraints final : public Certificate_Extensi
 class BOTAN_PUBLIC_API(2,0) Key_Usage final : public Certificate_Extension
    {
    public:
-      Key_Usage* copy() const override { return new Key_Usage(m_constraints); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         {
+         return std::make_unique<Key_Usage>(m_constraints);
+         }
 
       explicit Key_Usage(Key_Constraints c = NO_CONSTRAINTS) : m_constraints(c) {}
 
@@ -87,8 +90,8 @@ class BOTAN_PUBLIC_API(2,0) Subject_Key_ID final : public Certificate_Extension
       Subject_Key_ID(const std::vector<uint8_t>& public_key,
                      const std::string& hash_fn);
 
-      Subject_Key_ID* copy() const override
-         { return new Subject_Key_ID(m_key_id); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Subject_Key_ID>(m_key_id); }
 
       const std::vector<uint8_t>& get_key_id() const { return m_key_id; }
 
@@ -113,8 +116,8 @@ class BOTAN_PUBLIC_API(2,0) Subject_Key_ID final : public Certificate_Extension
 class BOTAN_PUBLIC_API(2,0) Authority_Key_ID final : public Certificate_Extension
    {
    public:
-      Authority_Key_ID* copy() const override
-         { return new Authority_Key_ID(m_key_id); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Authority_Key_ID>(m_key_id); }
 
       Authority_Key_ID() = default;
       explicit Authority_Key_ID(const std::vector<uint8_t>& k) : m_key_id(k) {}
@@ -146,8 +149,8 @@ class BOTAN_PUBLIC_API(2,4) Subject_Alternative_Name final : public Certificate_
       static OID static_oid() { return OID("2.5.29.17"); }
       OID oid_of() const override { return static_oid(); }
 
-      Subject_Alternative_Name* copy() const override
-         { return new Subject_Alternative_Name(get_alt_name()); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Subject_Alternative_Name>(get_alt_name()); }
 
       explicit Subject_Alternative_Name(const AlternativeName& name = AlternativeName()) :
          m_alt_name(name) {}
@@ -173,8 +176,8 @@ class BOTAN_PUBLIC_API(2,0) Issuer_Alternative_Name final : public Certificate_E
       static OID static_oid() { return OID("2.5.29.18"); }
       OID oid_of() const override { return static_oid(); }
 
-      Issuer_Alternative_Name* copy() const override
-         { return new Issuer_Alternative_Name(get_alt_name()); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Issuer_Alternative_Name>(get_alt_name()); }
 
       explicit Issuer_Alternative_Name(const AlternativeName& name = AlternativeName()) :
          m_alt_name(name) {}
@@ -195,8 +198,8 @@ class BOTAN_PUBLIC_API(2,0) Issuer_Alternative_Name final : public Certificate_E
 class BOTAN_PUBLIC_API(2,0) Extended_Key_Usage final : public Certificate_Extension
    {
    public:
-      Extended_Key_Usage* copy() const override
-         { return new Extended_Key_Usage(m_oids); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Extended_Key_Usage>(m_oids); }
 
       Extended_Key_Usage() = default;
       explicit Extended_Key_Usage(const std::vector<OID>& o) : m_oids(o) {}
@@ -222,8 +225,8 @@ class BOTAN_PUBLIC_API(2,0) Extended_Key_Usage final : public Certificate_Extens
 class BOTAN_PUBLIC_API(2,0) Name_Constraints final : public Certificate_Extension
    {
    public:
-      Name_Constraints* copy() const override
-         { return new Name_Constraints(m_name_constraints); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Name_Constraints>(m_name_constraints); }
 
       Name_Constraints() = default;
       Name_Constraints(const NameConstraints &nc) : m_name_constraints(nc) {}
@@ -255,8 +258,8 @@ class BOTAN_PUBLIC_API(2,0) Name_Constraints final : public Certificate_Extensio
 class BOTAN_PUBLIC_API(2,0) Certificate_Policies final : public Certificate_Extension
    {
    public:
-      Certificate_Policies* copy() const override
-         { return new Certificate_Policies(m_oids); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Certificate_Policies>(m_oids); }
 
       Certificate_Policies() = default;
       explicit Certificate_Policies(const std::vector<OID>& o) : m_oids(o) {}
@@ -287,8 +290,8 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Policies final : public Certificate_Exte
 class BOTAN_PUBLIC_API(2,0) Authority_Information_Access final : public Certificate_Extension
    {
    public:
-      Authority_Information_Access* copy() const override
-         { return new Authority_Information_Access(m_ocsp_responder, m_ca_issuers); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Authority_Information_Access>(m_ocsp_responder, m_ca_issuers); }
 
       Authority_Information_Access() = default;
 
@@ -321,7 +324,7 @@ class BOTAN_PUBLIC_API(2,0) Authority_Information_Access final : public Certific
 class BOTAN_PUBLIC_API(2,0) CRL_Number final : public Certificate_Extension
    {
    public:
-      CRL_Number* copy() const override;
+      std::unique_ptr<Certificate_Extension> copy() const override;
 
       CRL_Number() : m_has_value(false), m_crl_number(0) {}
       CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
@@ -348,8 +351,8 @@ class BOTAN_PUBLIC_API(2,0) CRL_Number final : public Certificate_Extension
 class BOTAN_PUBLIC_API(2,0) CRL_ReasonCode final : public Certificate_Extension
    {
    public:
-      CRL_ReasonCode* copy() const override
-         { return new CRL_ReasonCode(m_reason); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<CRL_ReasonCode>(m_reason); }
 
       explicit CRL_ReasonCode(CRL_Code r = CRL_Code::UNSPECIFIED) : m_reason(r) {}
 
@@ -386,8 +389,8 @@ class BOTAN_PUBLIC_API(2,0) CRL_Distribution_Points final : public Certificate_E
             AlternativeName m_point;
          };
 
-      CRL_Distribution_Points* copy() const override
-         { return new CRL_Distribution_Points(m_distribution_points); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<CRL_Distribution_Points>(m_distribution_points); }
 
       CRL_Distribution_Points() = default;
 
@@ -429,8 +432,8 @@ class CRL_Issuing_Distribution_Point final : public Certificate_Extension
       explicit CRL_Issuing_Distribution_Point(const CRL_Distribution_Points::Distribution_Point& distribution_point) :
          m_distribution_point(distribution_point) {}
 
-      CRL_Issuing_Distribution_Point* copy() const override
-         { return new CRL_Issuing_Distribution_Point(m_distribution_point); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<CRL_Issuing_Distribution_Point>(m_distribution_point); }
 
       const AlternativeName& get_point() const
          { return m_distribution_point.point(); }
@@ -459,8 +462,8 @@ class BOTAN_PUBLIC_API(2,4) Unknown_Extension final : public Certificate_Extensi
       Unknown_Extension(const OID& oid, bool critical) :
          m_oid(oid), m_critical(critical) {}
 
-      Unknown_Extension* copy() const override
-         { return new Unknown_Extension(m_oid, m_critical); }
+      std::unique_ptr<Certificate_Extension> copy() const override
+         { return std::make_unique<Unknown_Extension>(m_oid, m_critical); }
 
       /**
       * Return the OID of this unknown extension
@@ -503,7 +506,7 @@ class BOTAN_PUBLIC_API(2,4) Unknown_Extension final : public Certificate_Extensi
       std::vector<uint8_t> m_bytes;
    };
 
-   }
+}
 
 }
 

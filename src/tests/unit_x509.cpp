@@ -211,7 +211,7 @@ Test::Result test_x509_extension()
    const auto oid_bc = Botan::OID::from_string("X509v3.BasicConstraints");
    const auto oid_skid = Botan::OID::from_string("X509v3.SubjectKeyIdentifier");
 
-   extn.add(new Botan::Cert_Extension::Basic_Constraints(true), true);
+   extn.add(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(true), true);
 
    result.confirm("Basic constraints is set", extn.extension_set(oid_bc));
    result.confirm("Basic constraints is critical", extn.critical_extension_set(oid_bc));
@@ -225,17 +225,17 @@ Test::Result test_x509_extension()
                       [&]() { extn.get_extension_bits(oid_skid); });
 
    result.test_throws("Extension::add throws on second add",
-                      [&]() { extn.add(new Botan::Cert_Extension::Basic_Constraints(false), false); });
+                      [&]() { extn.add(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(false), false); });
 
    result.test_eq("Extension::get_extension_bits",
                   extn.get_extension_bits(oid_bc), "30060101FF020100");
 
    result.confirm("Returns false since extension already existed",
-                  !extn.add_new(new Botan::Cert_Extension::Basic_Constraints(false), false));
+                  !extn.add_new(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(false), false));
 
    result.confirm("Basic constraints is still critical", extn.critical_extension_set(oid_bc));
 
-   extn.replace(new Botan::Cert_Extension::Basic_Constraints(false), false);
+   extn.replace(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(false), false);
    result.confirm("Replaced basic constraints is not critical", !extn.critical_extension_set(oid_bc));
    result.test_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "3000");
 
@@ -781,7 +781,7 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
    alt_name.add_attribute("DNS", "example.com");
    alt_name.add_attribute("DNS", "example.net");
 
-   opts.extensions.add(new Botan::Cert_Extension::Subject_Alternative_Name(alt_name));
+   opts.extensions.add(std::make_unique<Botan::Cert_Extension::Subject_Alternative_Name>(alt_name));
 
    Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, key, hash_fn, Test::rng());
 
@@ -1371,9 +1371,9 @@ class String_Extension final : public Botan::Certificate_Extension
          return m_contents;
          }
 
-      String_Extension* copy() const override
+      std::unique_ptr<Certificate_Extension> copy() const override
          {
-         return new String_Extension(m_contents);
+         return std::make_unique<String_Extension>(m_contents);
          }
 
       Botan::OID oid_of() const override
@@ -1501,7 +1501,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    Botan::Extensions req_extensions;
    const Botan::OID oid("1.2.3.4.5.6.7.8.9.1");
    const Botan::OID ku_oid = Botan::OID::from_string("X509v3.KeyUsage");
-   req_extensions.add(new String_Extension("AAAAAAAAAAAAAABCDEF"), false);
+   req_extensions.add(std::make_unique<String_Extension>("AAAAAAAAAAAAAABCDEF"), false);
    opts.extensions = req_extensions;
    opts.set_padding_scheme(sig_padding);
 

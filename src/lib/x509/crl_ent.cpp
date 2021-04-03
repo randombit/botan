@@ -34,7 +34,7 @@ CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why)
 
    if(why != CRL_Code::UNSPECIFIED)
       {
-      m_data->m_extensions.add(new Cert_Extension::CRL_ReasonCode(why));
+      m_data->m_extensions.add(std::make_unique<Cert_Extension::CRL_ReasonCode>(why));
       }
    }
 

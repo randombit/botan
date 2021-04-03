@@ -119,32 +119,30 @@ void Certificate_Extension::validate(const X509_Certificate&, const X509_Certifi
 /*
 * Add a new cert
 */
-void Extensions::add(Certificate_Extension* extn, bool critical)
+void Extensions::add(std::unique_ptr<Certificate_Extension> extn, bool critical)
    {
    // sanity check: we don't want to have the same extension more than once
    if(m_extension_info.count(extn->oid_of()) > 0)
       {
       const std::string name = extn->oid_name();
-      delete extn;
       throw Invalid_Argument("Extension " + name + " already present in Extensions::add");
       }
 
    const OID oid = extn->oid_of();
-   Extensions_Info info(critical, extn);
+   Extensions_Info info(critical, std::move(extn));
    m_extension_oids.push_back(oid);
    m_extension_info.emplace(oid, info);
    }
 
-bool Extensions::add_new(Certificate_Extension* extn, bool critical)
+bool Extensions::add_new(std::unique_ptr<Certificate_Extension> extn, bool critical)
    {
    if(m_extension_info.count(extn->oid_of()) > 0)
       {
-      delete extn;
       return false; // already exists
       }
 
    const OID oid = extn->oid_of();
-   Extensions_Info info(critical, extn);
+   Extensions_Info info(critical, std::move(extn));
    m_extension_oids.push_back(oid);
    m_extension_info.emplace(oid, info);
    return true;
@@ -162,13 +160,13 @@ bool Extensions::remove(const OID& oid)
    return erased;
    }
 
-void Extensions::replace(Certificate_Extension* extn, bool critical)
+void Extensions::replace(std::unique_ptr<Certificate_Extension> extn, bool critical)
    {
    // Remove it if it existed
    remove(extn->oid_of());
 
    const OID oid = extn->oid_of();
-   Extensions_Info info(critical, extn);
+   Extensions_Info info(critical, std::move(extn));
    m_extension_oids.push_back(oid);
    m_extension_info.emplace(oid, info);
    }
@@ -208,7 +206,7 @@ std::unique_ptr<Certificate_Extension> Extensions::get(const OID& oid) const
    {
    if(const Certificate_Extension* ext = this->get_extension_object(oid))
       {
-      return std::unique_ptr<Certificate_Extension>(ext->copy());
+      return ext->copy();
       }
    return nullptr;
    }
@@ -220,7 +218,7 @@ std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> Extensions:
       {
       exts.push_back(
          std::make_pair(
-            std::unique_ptr<Certificate_Extension>(ext.second.obj().copy()),
+            ext.second.obj().copy(),
             ext.second.is_critical())
          );
       }
@@ -286,7 +284,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
       .end_cons();
 
       std::unique_ptr<Certificate_Extension> obj = create_extn_obj(oid, critical, bits);
-      Extensions_Info info(critical, bits, obj.release());
+      Extensions_Info info(critical, bits, std::move(obj));
 
       m_extension_oids.push_back(oid);
       m_extension_info.emplace(oid, info);
@@ -760,11 +758,11 @@ size_t CRL_Number::get_crl_number() const
 /*
 * Copy a CRL_Number extension
 */
-CRL_Number* CRL_Number::copy() const
+std::unique_ptr<Certificate_Extension> CRL_Number::copy() const
    {
    if(!m_has_value)
       throw Invalid_State("CRL_Number::copy: Not set");
-   return new CRL_Number(m_crl_number);
+   return std::make_unique<CRL_Number>(m_crl_number);
    }
 
 /*

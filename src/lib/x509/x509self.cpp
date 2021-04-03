@@ -79,24 +79,24 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       }
 
    extensions.add_new(
-      new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit),
+      std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit),
       true);
 
    if(constraints != NO_CONSTRAINTS)
       {
-      extensions.add_new(new Cert_Extension::Key_Usage(constraints), true);
+      extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
       }
 
-   std::unique_ptr<Cert_Extension::Subject_Key_ID> skid(new Cert_Extension::Subject_Key_ID(pub_key, hash_fn));
+   std::unique_ptr<Cert_Extension::Subject_Key_ID> skid(std::make_unique<Cert_Extension::Subject_Key_ID>(pub_key, hash_fn));
 
-   extensions.add_new(new Cert_Extension::Authority_Key_ID(skid->get_key_id()));
-   extensions.add_new(skid.release());
-
-   extensions.add_new(
-      new Cert_Extension::Subject_Alternative_Name(subject_alt));
+   extensions.add_new(std::make_unique<Cert_Extension::Authority_Key_ID>(skid->get_key_id()));
+   extensions.add_new(std::move(skid));
 
    extensions.add_new(
-      new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
+      std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt));
+
+   extensions.add_new(
+      std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
 
    return X509_CA::make_cert(signer.get(), rng, sig_algo, pub_key,
                              opts.start, opts.end,
@@ -129,14 +129,14 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    Extensions extensions = opts.extensions;
 
-   extensions.add_new(new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
+   extensions.add_new(std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit));
 
    if(constraints != NO_CONSTRAINTS)
       {
-      extensions.add_new(new Cert_Extension::Key_Usage(constraints));
+      extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints));
       }
-   extensions.add_new(new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
-   extensions.add_new(new Cert_Extension::Subject_Alternative_Name(subject_alt));
+   extensions.add_new(std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
+   extensions.add_new(std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt));
 
    return PKCS10_Request::create(key,
                                  subject_dn,

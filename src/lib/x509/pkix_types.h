@@ -366,7 +366,8 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Extension
       * Make a copy of this extension
       * @return copy of this
       */
-      virtual Certificate_Extension* copy() const = 0;
+
+      virtual std::unique_ptr<Certificate_Extension> copy() const = 0;
 
       /*
       * Callback visited during path validation.
@@ -468,7 +469,7 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
       * @param critical whether this extension should be marked as critical
       * @throw Invalid_Argument if the extension is already present in the list
       */
-      void add(Certificate_Extension* extn, bool critical = false);
+      void add(std::unique_ptr<Certificate_Extension> extn, bool critical = false);
 
       /**
       * Adds a new extension to the list unless it already exists. If the extension
@@ -478,14 +479,14 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
       * @param critical whether this extension should be marked as critical
       * @return true if the object was added false if the extension was already used
       */
-      bool add_new(Certificate_Extension* extn, bool critical = false);
+      bool add_new(std::unique_ptr<Certificate_Extension> extn, bool critical = false);
 
       /**
       * Adds an extension to the list or replaces it.
       * @param extn the certificate extension
       * @param critical whether this extension should be marked as critical
       */
-      void replace(Certificate_Extension* extn, bool critical = false);
+      void replace(std::unique_ptr<Certificate_Extension> extn, bool critical = false);
 
       /**
       * Remove an extension from the list. Returns true if the
@@ -563,8 +564,8 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
          {
          public:
             Extensions_Info(bool critical,
-                            Certificate_Extension* ext) :
-               m_obj(ext),
+                            std::unique_ptr<Certificate_Extension> ext) :
+               m_obj(std::move(ext)),
                m_bits(m_obj->encode_inner()),
                m_critical(critical)
                {
@@ -572,8 +573,8 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
 
             Extensions_Info(bool critical,
                             const std::vector<uint8_t>& encoding,
-                            Certificate_Extension* ext) :
-               m_obj(ext),
+                            std::unique_ptr<Certificate_Extension> ext) :
+               m_obj(std::move(ext)),
                m_bits(encoding),
                m_critical(critical)
                {
