@@ -123,133 +123,133 @@ BlockCipher::create(const std::string& algo,
 #if defined(BOTAN_HAS_AES)
    if(algo == "AES-128")
       {
-      return std::unique_ptr<BlockCipher>(new AES_128);
+      return std::make_unique<AES_128>();
       }
 
    if(algo == "AES-192")
       {
-      return std::unique_ptr<BlockCipher>(new AES_192);
+      return std::make_unique<AES_192>();
       }
 
    if(algo == "AES-256")
       {
-      return std::unique_ptr<BlockCipher>(new AES_256);
+      return std::make_unique<AES_256>();
       }
 #endif
 
 #if defined(BOTAN_HAS_ARIA)
    if(algo == "ARIA-128")
       {
-      return std::unique_ptr<BlockCipher>(new ARIA_128);
+      return std::make_unique<ARIA_128>();
       }
 
    if(algo == "ARIA-192")
       {
-      return std::unique_ptr<BlockCipher>(new ARIA_192);
+      return std::make_unique<ARIA_192>();
       }
 
    if(algo == "ARIA-256")
       {
-      return std::unique_ptr<BlockCipher>(new ARIA_256);
+      return std::make_unique<ARIA_256>();
       }
 #endif
 
 #if defined(BOTAN_HAS_SERPENT)
    if(algo == "Serpent")
       {
-      return std::unique_ptr<BlockCipher>(new Serpent);
+      return std::make_unique<Serpent>();
       }
 #endif
 
 #if defined(BOTAN_HAS_SHACAL2)
    if(algo == "SHACAL2")
       {
-      return std::unique_ptr<BlockCipher>(new SHACAL2);
+      return std::make_unique<SHACAL2>();
       }
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)
    if(algo == "Twofish")
       {
-      return std::unique_ptr<BlockCipher>(new Twofish);
+      return std::make_unique<Twofish>();
       }
 #endif
 
 #if defined(BOTAN_HAS_THREEFISH_512)
    if(algo == "Threefish-512")
       {
-      return std::unique_ptr<BlockCipher>(new Threefish_512);
+      return std::make_unique<Threefish_512>();
       }
 #endif
 
 #if defined(BOTAN_HAS_BLOWFISH)
    if(algo == "Blowfish")
       {
-      return std::unique_ptr<BlockCipher>(new Blowfish);
+      return std::make_unique<Blowfish>();
       }
 #endif
 
 #if defined(BOTAN_HAS_CAMELLIA)
    if(algo == "Camellia-128")
       {
-      return std::unique_ptr<BlockCipher>(new Camellia_128);
+      return std::make_unique<Camellia_128>();
       }
 
    if(algo == "Camellia-192")
       {
-      return std::unique_ptr<BlockCipher>(new Camellia_192);
+      return std::make_unique<Camellia_192>();
       }
 
    if(algo == "Camellia-256")
       {
-      return std::unique_ptr<BlockCipher>(new Camellia_256);
+      return std::make_unique<Camellia_256>();
       }
 #endif
 
 #if defined(BOTAN_HAS_DES)
    if(algo == "DES")
       {
-      return std::unique_ptr<BlockCipher>(new DES);
+      return std::make_unique<DES>();
       }
 
    if(algo == "TripleDES" || algo == "3DES" || algo == "DES-EDE")
       {
-      return std::unique_ptr<BlockCipher>(new TripleDES);
+      return std::make_unique<TripleDES>();
       }
 #endif
 
 #if defined(BOTAN_HAS_NOEKEON)
    if(algo == "Noekeon")
       {
-      return std::unique_ptr<BlockCipher>(new Noekeon);
+      return std::make_unique<Noekeon>();
       }
 #endif
 
 #if defined(BOTAN_HAS_CAST_128)
    if(algo == "CAST-128" || algo == "CAST5")
       {
-      return std::unique_ptr<BlockCipher>(new CAST_128);
+      return std::make_unique<CAST_128>();
       }
 #endif
 
 #if defined(BOTAN_HAS_IDEA)
    if(algo == "IDEA")
       {
-      return std::unique_ptr<BlockCipher>(new IDEA);
+      return std::make_unique<IDEA>();
       }
 #endif
 
 #if defined(BOTAN_HAS_SEED)
    if(algo == "SEED")
       {
-      return std::unique_ptr<BlockCipher>(new SEED);
+      return std::make_unique<SEED>();
       }
 #endif
 
 #if defined(BOTAN_HAS_SM4)
    if(algo == "SM4")
       {
-      return std::unique_ptr<BlockCipher>(new SM4);
+      return std::make_unique<SM4>();
       }
 #endif
 
@@ -258,31 +258,31 @@ BlockCipher::create(const std::string& algo,
 #if defined(BOTAN_HAS_GOST_28147_89)
    if(req.algo_name() == "GOST-28147-89")
       {
-      return std::unique_ptr<BlockCipher>(new GOST_28147_89(req.arg(0, "R3411_94_TestParam")));
+      return std::make_unique<GOST_28147_89>(req.arg(0, "R3411_94_TestParam"));
       }
 #endif
 
 #if defined(BOTAN_HAS_CASCADE)
    if(req.algo_name() == "Cascade" && req.arg_count() == 2)
       {
-      std::unique_ptr<BlockCipher> c1(BlockCipher::create(req.arg(0)));
-      std::unique_ptr<BlockCipher> c2(BlockCipher::create(req.arg(1)));
+      std::unique_ptr<BlockCipher> c1 = BlockCipher::create(req.arg(0));
+      std::unique_ptr<BlockCipher> c2 = BlockCipher::create(req.arg(1));
 
       if(c1 && c2)
-         return std::unique_ptr<BlockCipher>(new Cascade_Cipher(c1.release(), c2.release()));
+         return std::make_unique<Cascade_Cipher>(c1.release(), c2.release());
       }
 #endif
 
 #if defined(BOTAN_HAS_LION)
    if(req.algo_name() == "Lion" && req.arg_count_between(2, 3))
       {
-      std::unique_ptr<HashFunction> hash(HashFunction::create(req.arg(0)));
-      std::unique_ptr<StreamCipher> stream(StreamCipher::create(req.arg(1)));
+      std::unique_ptr<HashFunction> hash = HashFunction::create(req.arg(0));
+      std::unique_ptr<StreamCipher> stream = StreamCipher::create(req.arg(1));
 
       if(hash && stream)
          {
          const size_t block_size = req.arg_as_integer(2, 1024);
-         return std::unique_ptr<BlockCipher>(new Lion(hash.release(), stream.release(), block_size));
+         return std::make_unique<Lion>(hash.release(), stream.release(), block_size);
          }
       }
 #endif

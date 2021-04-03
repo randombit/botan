@@ -133,92 +133,92 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       algo_spec == "SHA-1" ||
       algo_spec == "SHA1")
       {
-      return std::unique_ptr<HashFunction>(new SHA_160);
+      return std::make_unique<SHA_160>();
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32)
    if(algo_spec == "SHA-224")
       {
-      return std::unique_ptr<HashFunction>(new SHA_224);
+      return std::make_unique<SHA_224>();
       }
 
    if(algo_spec == "SHA-256")
       {
-      return std::unique_ptr<HashFunction>(new SHA_256);
+      return std::make_unique<SHA_256>();
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64)
    if(algo_spec == "SHA-384")
       {
-      return std::unique_ptr<HashFunction>(new SHA_384);
+      return std::make_unique<SHA_384>();
       }
 
    if(algo_spec == "SHA-512")
       {
-      return std::unique_ptr<HashFunction>(new SHA_512);
+      return std::make_unique<SHA_512>();
       }
 
    if(algo_spec == "SHA-512-256")
       {
-      return std::unique_ptr<HashFunction>(new SHA_512_256);
+      return std::make_unique<SHA_512_256>();
       }
 #endif
 
 #if defined(BOTAN_HAS_RIPEMD_160)
    if(algo_spec == "RIPEMD-160")
       {
-      return std::unique_ptr<HashFunction>(new RIPEMD_160);
+      return std::make_unique<RIPEMD_160>();
       }
 #endif
 
 #if defined(BOTAN_HAS_WHIRLPOOL)
    if(algo_spec == "Whirlpool")
       {
-      return std::unique_ptr<HashFunction>(new Whirlpool);
+      return std::make_unique<Whirlpool>();
       }
 #endif
 
 #if defined(BOTAN_HAS_MD5)
    if(algo_spec == "MD5")
       {
-      return std::unique_ptr<HashFunction>(new MD5);
+      return std::make_unique<MD5>();
       }
 #endif
 
 #if defined(BOTAN_HAS_MD4)
    if(algo_spec == "MD4")
       {
-      return std::unique_ptr<HashFunction>(new MD4);
+      return std::make_unique<MD4>();
       }
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_11)
    if(algo_spec == "GOST-R-34.11-94" || algo_spec == "GOST-34.11")
       {
-      return std::unique_ptr<HashFunction>(new GOST_34_11);
+      return std::make_unique<GOST_34_11>();
       }
 #endif
 
 #if defined(BOTAN_HAS_ADLER32)
    if(algo_spec == "Adler32")
       {
-      return std::unique_ptr<HashFunction>(new Adler32);
+      return std::make_unique<Adler32>();
       }
 #endif
 
 #if defined(BOTAN_HAS_CRC24)
    if(algo_spec == "CRC24")
       {
-      return std::unique_ptr<HashFunction>(new CRC24);
+      return std::make_unique<CRC24>();
       }
 #endif
 
 #if defined(BOTAN_HAS_CRC32)
    if(algo_spec == "CRC32")
       {
-      return std::unique_ptr<HashFunction>(new CRC32);
+      return std::make_unique<CRC32>();
       }
 #endif
 
@@ -227,68 +227,64 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
 #if defined(BOTAN_HAS_SKEIN_512)
    if(req.algo_name() == "Skein-512")
       {
-      return std::unique_ptr<HashFunction>(
-         new Skein_512(req.arg_as_integer(0, 512), req.arg(1, "")));
+      return std::make_unique<Skein_512>(req.arg_as_integer(0, 512), req.arg(1, ""));
       }
 #endif
 
 #if defined(BOTAN_HAS_BLAKE2B)
    if(req.algo_name() == "Blake2b" || req.algo_name() == "BLAKE2b")
       {
-      return std::unique_ptr<HashFunction>(
-         new Blake2b(req.arg_as_integer(0, 512)));
+      return std::make_unique<Blake2b>(req.arg_as_integer(0, 512));
    }
 #endif
 
 #if defined(BOTAN_HAS_KECCAK)
    if(req.algo_name() == "Keccak-1600")
       {
-      return std::unique_ptr<HashFunction>(
-         new Keccak_1600(req.arg_as_integer(0, 512)));
+      return std::make_unique<Keccak_1600>(req.arg_as_integer(0, 512));
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA3)
    if(req.algo_name() == "SHA-3")
       {
-      return std::unique_ptr<HashFunction>(
-         new SHA_3(req.arg_as_integer(0, 512)));
+      return std::make_unique<SHA_3>(req.arg_as_integer(0, 512));
       }
 #endif
 
 #if defined(BOTAN_HAS_SHAKE)
    if(req.algo_name() == "SHAKE-128" && req.arg_count() == 1)
       {
-      return std::unique_ptr<HashFunction>(new SHAKE_128(req.arg_as_integer(0)));
+      return std::make_unique<SHAKE_128>(req.arg_as_integer(0));
       }
    if(req.algo_name() == "SHAKE-256" && req.arg_count() == 1)
       {
-      return std::unique_ptr<HashFunction>(new SHAKE_256(req.arg_as_integer(0)));
+      return std::make_unique<SHAKE_256>(req.arg_as_integer(0));
       }
 #endif
 
 #if defined(BOTAN_HAS_STREEBOG)
    if(algo_spec == "Streebog-256")
       {
-      return std::unique_ptr<HashFunction>(new Streebog_256);
+      return std::make_unique<Streebog_256>();
       }
    if(algo_spec == "Streebog-512")
       {
-      return std::unique_ptr<HashFunction>(new Streebog_512);
+      return std::make_unique<Streebog_512>();
       }
 #endif
 
 #if defined(BOTAN_HAS_SM3)
    if(algo_spec == "SM3")
       {
-      return std::unique_ptr<HashFunction>(new SM3);
+      return std::make_unique<SM3>();
       }
 #endif
 
 #if defined(BOTAN_HAS_WHIRLPOOL)
    if(req.algo_name() == "Whirlpool")
       {
-      return std::unique_ptr<HashFunction>(new Whirlpool);
+      return std::make_unique<Whirlpool>();
       }
 #endif
 
@@ -307,18 +303,18 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
          hashes.push_back(std::move(h));
          }
 
-      return std::unique_ptr<HashFunction>(new Parallel(hashes));
+      return std::make_unique<Parallel>(hashes);
       }
 #endif
 
 #if defined(BOTAN_HAS_COMB4P)
    if(req.algo_name() == "Comb4P" && req.arg_count() == 2)
       {
-      std::unique_ptr<HashFunction> h1(HashFunction::create(req.arg(0)));
-      std::unique_ptr<HashFunction> h2(HashFunction::create(req.arg(1)));
+      std::unique_ptr<HashFunction> h1 = HashFunction::create(req.arg(0));
+      std::unique_ptr<HashFunction> h2 = HashFunction::create(req.arg(1));
 
       if(h1 && h2)
-         return std::unique_ptr<HashFunction>(new Comb4P(h1.release(), h2.release()));
+         return std::make_unique<Comb4P>(h1.release(), h2.release());
       }
 #endif
 

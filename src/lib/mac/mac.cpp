@@ -50,9 +50,9 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
 
 #if defined(BOTAN_HAS_BLAKE2BMAC)
    if(req.algo_name() == "Blake2b" || req.algo_name() == "BLAKE2b")
-   {
-       return std::unique_ptr<MessageAuthenticationCode>(new BLAKE2bMAC(req.arg_as_integer(0, 512)));
-   }
+      {
+      return std::make_unique<BLAKE2bMAC>(req.arg_as_integer(0, 512));
+      }
 #endif
 
 #if defined(BOTAN_HAS_GMAC)
@@ -61,7 +61,7 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto bc = BlockCipher::create(req.arg(0)))
-            return std::unique_ptr<MessageAuthenticationCode>(new GMAC(bc.release()));
+            return std::make_unique<GMAC>(bc.release());
          }
       }
 #endif
@@ -73,7 +73,7 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto h = HashFunction::create(req.arg(0)))
-            return std::unique_ptr<MessageAuthenticationCode>(new HMAC(h.release()));
+            return std::make_unique<HMAC>(h.release());
          }
       }
 #endif
@@ -82,7 +82,7 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
    if(req.algo_name() == "Poly1305" && req.arg_count() == 0)
       {
       if(provider.empty() || provider == "base")
-         return std::unique_ptr<MessageAuthenticationCode>(new Poly1305);
+         return std::make_unique<Poly1305>();
       }
 #endif
 
@@ -91,8 +91,7 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       {
       if(provider.empty() || provider == "base")
          {
-         return std::unique_ptr<MessageAuthenticationCode>(
-            new SipHash(req.arg_as_integer(0, 2), req.arg_as_integer(1, 4)));
+         return std::make_unique<SipHash>(req.arg_as_integer(0, 2), req.arg_as_integer(1, 4));
          }
       }
 #endif
@@ -104,7 +103,7 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto bc = BlockCipher::create(req.arg(0)))
-            return std::unique_ptr<MessageAuthenticationCode>(new CMAC(bc.release()));
+            return std::make_unique<CMAC>(bc.release());
          }
       }
 #endif
@@ -115,7 +114,7 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       {
       if(provider.empty() || provider == "base")
          {
-         return std::unique_ptr<MessageAuthenticationCode>(new ANSI_X919_MAC);
+         return std::make_unique<ANSI_X919_MAC>();
          }
       }
 #endif

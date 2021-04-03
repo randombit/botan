@@ -53,7 +53,7 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
          if(cipher)
             {
             size_t ctr_size = req.arg_as_integer(1, cipher->block_size());
-            return std::unique_ptr<StreamCipher>(new CTR_BE(cipher.release(), ctr_size));
+            return std::make_unique<CTR_BE>(cipher.release(), ctr_size);
             }
          }
       }
@@ -63,13 +63,13 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
    if(req.algo_name() == "ChaCha")
       {
       if(provider.empty() || provider == "base")
-         return std::unique_ptr<StreamCipher>(new ChaCha(req.arg_as_integer(0, 20)));
+         return std::make_unique<ChaCha>(req.arg_as_integer(0, 20));
       }
 
    if(req.algo_name() == "ChaCha20")
       {
       if(provider.empty() || provider == "base")
-         return std::unique_ptr<StreamCipher>(new ChaCha(20));
+         return std::make_unique<ChaCha>(20);
       }
 #endif
 
@@ -77,7 +77,7 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
    if(req.algo_name() == "Salsa20")
       {
       if(provider.empty() || provider == "base")
-         return std::unique_ptr<StreamCipher>(new Salsa20);
+         return std::make_unique<Salsa20>();
       }
 #endif
 
@@ -85,7 +85,7 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
    if(req.algo_name() == "SHAKE-128" || req.algo_name() == "SHAKE-128-XOF")
       {
       if(provider.empty() || provider == "base")
-         return std::unique_ptr<StreamCipher>(new SHAKE_128_Cipher);
+         return std::make_unique<SHAKE_128_Cipher>();
       }
 #endif
 
@@ -95,7 +95,7 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto c = BlockCipher::create(req.arg(0)))
-            return std::unique_ptr<StreamCipher>(new OFB(c.release()));
+            return std::make_unique<OFB>(c.release());
          }
       }
 #endif
@@ -117,7 +117,7 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
 
       if(provider.empty() || provider == "base")
          {
-         return std::unique_ptr<StreamCipher>(new RC4(skip));
+         return std::make_unique<RC4>(skip);
          }
       }
 
