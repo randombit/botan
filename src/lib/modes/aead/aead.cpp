@@ -66,9 +66,9 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
    if(algo == "ChaCha20Poly1305")
       {
       if(dir == ENCRYPTION)
-         return std::unique_ptr<AEAD_Mode>(new ChaCha20Poly1305_Encryption);
+         return std::make_unique<ChaCha20Poly1305_Encryption>();
       else
-         return std::unique_ptr<AEAD_Mode>(new ChaCha20Poly1305_Decryption);
+         return std::make_unique<ChaCha20Poly1305_Decryption>();
 
       }
 #endif
@@ -117,9 +117,9 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
       size_t tag_len = req.arg_as_integer(1, 16);
       size_t L_len = req.arg_as_integer(2, 3);
       if(dir == ENCRYPTION)
-         return std::unique_ptr<AEAD_Mode>(new CCM_Encryption(bc.release(), tag_len, L_len));
+         return std::make_unique<CCM_Encryption>(bc.release(), tag_len, L_len);
       else
-         return std::unique_ptr<AEAD_Mode>(new CCM_Decryption(bc.release(), tag_len, L_len));
+         return std::make_unique<CCM_Decryption>(bc.release(), tag_len, L_len);
       }
 #endif
 
@@ -128,9 +128,9 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
       {
       size_t tag_len = req.arg_as_integer(1, 16);
       if(dir == ENCRYPTION)
-         return std::unique_ptr<AEAD_Mode>(new GCM_Encryption(bc.release(), tag_len));
+         return std::make_unique<GCM_Encryption>(bc.release(), tag_len);
       else
-         return std::unique_ptr<AEAD_Mode>(new GCM_Decryption(bc.release(), tag_len));
+         return std::make_unique<GCM_Decryption>(bc.release(), tag_len);
       }
 #endif
 
@@ -139,9 +139,9 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
       {
       size_t tag_len = req.arg_as_integer(1, 16);
       if(dir == ENCRYPTION)
-         return std::unique_ptr<AEAD_Mode>(new OCB_Encryption(bc.release(), tag_len));
+         return std::make_unique<OCB_Encryption>(bc.release(), tag_len);
       else
-         return std::unique_ptr<AEAD_Mode>(new OCB_Decryption(bc.release(), tag_len));
+         return std::make_unique<OCB_Decryption>(bc.release(), tag_len);
       }
 #endif
 
@@ -150,9 +150,9 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
       {
       size_t tag_len = req.arg_as_integer(1, bc->block_size());
       if(dir == ENCRYPTION)
-         return std::unique_ptr<AEAD_Mode>(new EAX_Encryption(bc.release(), tag_len));
+         return std::make_unique<EAX_Encryption>(bc.release(), tag_len);
       else
-         return std::unique_ptr<AEAD_Mode>(new EAX_Decryption(bc.release(), tag_len));
+         return std::make_unique<EAX_Decryption>(bc.release(), tag_len);
       }
 #endif
 
@@ -160,9 +160,9 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
    if(req.algo_name() == "SIV")
       {
       if(dir == ENCRYPTION)
-         return std::unique_ptr<AEAD_Mode>(new SIV_Encryption(bc.release()));
+         return std::make_unique<SIV_Encryption>(bc.release());
       else
-         return std::unique_ptr<AEAD_Mode>(new SIV_Decryption(bc.release()));
+         return std::make_unique<SIV_Decryption>(bc.release());
       }
 #endif
 

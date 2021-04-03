@@ -43,10 +43,10 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
       if(provider.empty() || provider == "base")
          {
          if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
-            return std::unique_ptr<PasswordHashFamily>(new PBKDF2_Family(mac.release()));
+            return std::make_unique<PBKDF2_Family>(mac.release());
 
          if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
-            return std::unique_ptr<PasswordHashFamily>(new PBKDF2_Family(mac.release()));
+            return std::make_unique<PBKDF2_Family>(mac.release());
          }
 
       return nullptr;
@@ -56,29 +56,29 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
 #if defined(BOTAN_HAS_SCRYPT)
    if(req.algo_name() == "Scrypt")
       {
-      return std::unique_ptr<PasswordHashFamily>(new Scrypt_Family);
+      return std::make_unique<Scrypt_Family>();
       }
 #endif
 
 #if defined(BOTAN_HAS_ARGON2)
    if(req.algo_name() == "Argon2d")
       {
-      return std::unique_ptr<PasswordHashFamily>(new Argon2_Family(0));
+      return std::make_unique<Argon2_Family>(0);
       }
    else if(req.algo_name() == "Argon2i")
       {
-      return std::unique_ptr<PasswordHashFamily>(new Argon2_Family(1));
+      return std::make_unique<Argon2_Family>(1);
       }
    else if(req.algo_name() == "Argon2id")
       {
-      return std::unique_ptr<PasswordHashFamily>(new Argon2_Family(2));
+      return std::make_unique<Argon2_Family>(2);
       }
 #endif
 
 #if defined(BOTAN_HAS_PBKDF_BCRYPT)
    if(req.algo_name() == "Bcrypt-PBKDF")
       {
-      return std::unique_ptr<PasswordHashFamily>(new Bcrypt_PBKDF_Family);
+      return std::make_unique<Bcrypt_PBKDF_Family>();
       }
 #endif
 
@@ -87,7 +87,7 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
       {
       if(auto hash = HashFunction::create(req.arg(0)))
          {
-         return std::unique_ptr<PasswordHashFamily>(new RFC4880_S2K_Family(hash.release()));
+         return std::make_unique<RFC4880_S2K_Family>(hash.release());
          }
       }
 #endif
