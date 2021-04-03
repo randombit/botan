@@ -128,18 +128,18 @@ std::string HMAC::name() const
    }
 
 /*
-* Return a clone of this object
+* Return a new_object of this object
 */
-MessageAuthenticationCode* HMAC::clone() const
+std::unique_ptr<MessageAuthenticationCode> HMAC::new_object() const
    {
-   return new HMAC(m_hash->clone());
+   return std::make_unique<HMAC>(m_hash->new_object());
    }
 
 /*
 * HMAC Constructor
 */
-HMAC::HMAC(HashFunction* hash) :
-   m_hash(hash),
+HMAC::HMAC(std::unique_ptr<HashFunction> hash) :
+   m_hash(std::move(hash)),
    m_hash_output_length(m_hash->output_length()),
    m_hash_block_size(m_hash->hash_block_size())
    {

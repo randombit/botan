@@ -23,7 +23,7 @@ class ANSI_X919_MAC final : public MessageAuthenticationCode
       std::string name() const override;
       size_t output_length() const override { return 8; }
 
-      MessageAuthenticationCode* clone() const override;
+      std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 
       Key_Length_Specification key_spec() const override
          {

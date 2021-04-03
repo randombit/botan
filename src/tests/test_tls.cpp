@@ -135,7 +135,10 @@ class TLS_CBC_Tests final : public Text_Based_Test
                return Botan::Key_Length_Specification(0, 0, 1);
                }
 
-            virtual MessageAuthenticationCode* clone() const override { return new ZeroMac(m_mac_len); }
+            virtual std::unique_ptr<MessageAuthenticationCode> new_object() const override
+               {
+               return std::make_unique<ZeroMac>(m_mac_len);
+               }
 
          private:
             void key_schedule(const uint8_t[], size_t) override {}

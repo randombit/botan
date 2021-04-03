@@ -22,7 +22,7 @@ class Poly1305 final : public MessageAuthenticationCode
    public:
       std::string name() const override { return "Poly1305"; }
 
-      MessageAuthenticationCode* clone() const override { return new Poly1305; }
+      std::unique_ptr<MessageAuthenticationCode> new_object() const override { return std::make_unique<Poly1305>(); }
 
       void clear() override;
 

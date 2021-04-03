@@ -17,9 +17,10 @@ namespace Botan {
 SIV_Mode::SIV_Mode(BlockCipher* cipher) :
    m_name(cipher->name() + "/SIV"),
    m_ctr(new CTR_BE(cipher->new_object(), 8)),
-   m_mac(new CMAC(cipher)),
+   m_mac(new CMAC(cipher->new_object())),
    m_bs(cipher->block_size())
    {
+   delete cipher; // fixme
    // Not really true but only 128 bit allowed at the moment
    if(m_bs != 16)
       throw Invalid_Argument("SIV requires a 128 bit block cipher");

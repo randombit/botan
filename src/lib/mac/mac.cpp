@@ -61,7 +61,7 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto bc = BlockCipher::create(req.arg(0)))
-            return std::make_unique<GMAC>(bc.release());
+            return std::make_unique<GMAC>(std::move(bc));
          }
       }
 #endif
@@ -72,8 +72,8 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       // TODO OpenSSL
       if(provider.empty() || provider == "base")
          {
-         if(auto h = HashFunction::create(req.arg(0)))
-            return std::make_unique<HMAC>(h.release());
+         if(auto hash = HashFunction::create(req.arg(0)))
+            return std::make_unique<HMAC>(std::move(hash));
          }
       }
 #endif
@@ -103,7 +103,7 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto bc = BlockCipher::create(req.arg(0)))
-            return std::make_unique<CMAC>(bc.release());
+            return std::make_unique<CMAC>(std::move(bc));
          }
       }
 #endif

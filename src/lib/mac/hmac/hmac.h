@@ -21,7 +21,7 @@ class HMAC final : public MessageAuthenticationCode
    public:
       void clear() override;
       std::string name() const override;
-      MessageAuthenticationCode* clone() const override;
+      std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 
       size_t output_length() const override;
 
@@ -30,7 +30,7 @@ class HMAC final : public MessageAuthenticationCode
       /**
       * @param hash the hash to use for HMACing
       */
-      explicit HMAC(HashFunction* hash);
+      explicit HMAC(std::unique_ptr<HashFunction> hash);
 
       HMAC(const HMAC&) = delete;
       HMAC& operator=(const HMAC&) = delete;
