@@ -23,9 +23,13 @@ class HKDF final : public KDF
       /**
       * @param prf MAC algorithm to use
       */
-      explicit HKDF(MessageAuthenticationCode* prf) : m_prf(prf) {}
+      explicit HKDF(std::unique_ptr<MessageAuthenticationCode> prf) :
+         m_prf(std::move(prf)) {}
 
-      KDF* clone() const override { return new HKDF(m_prf->clone()); }
+      std::unique_ptr<KDF> new_object() const override
+         {
+         return std::make_unique<HKDF>(m_prf->new_object());
+         }
 
       std::string name() const override { return "HKDF(" + m_prf->name() + ")"; }
 
@@ -47,9 +51,13 @@ class HKDF_Extract final : public KDF
       /**
       * @param prf MAC algorithm to use
       */
-      explicit HKDF_Extract(MessageAuthenticationCode* prf) : m_prf(prf) {}
+      explicit HKDF_Extract(std::unique_ptr<MessageAuthenticationCode> prf) :
+         m_prf(std::move(prf)) {}
 
-      KDF* clone() const override { return new HKDF_Extract(m_prf->clone()); }
+      std::unique_ptr<KDF> new_object() const override
+         {
+         return std::make_unique<HKDF_Extract>(m_prf->new_object());
+         }
 
       std::string name() const override { return "HKDF-Extract(" + m_prf->name() + ")"; }
 
@@ -71,9 +79,13 @@ class HKDF_Expand final : public KDF
       /**
       * @param prf MAC algorithm to use
       */
-      explicit HKDF_Expand(MessageAuthenticationCode* prf) : m_prf(prf) {}
+      explicit HKDF_Expand(std::unique_ptr<MessageAuthenticationCode> prf) :
+         m_prf(std::move(prf)) {}
 
-      KDF* clone() const override { return new HKDF_Expand(m_prf->clone()); }
+      std::unique_ptr<KDF> new_object() const override
+         {
+         return std::make_unique<HKDF_Expand>(m_prf->new_object());
+         }
 
       std::string name() const override { return "HKDF-Expand(" + m_prf->name() + ")"; }
 

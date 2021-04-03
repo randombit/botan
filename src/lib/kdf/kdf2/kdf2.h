@@ -21,7 +21,7 @@ class KDF2 final : public KDF
    public:
       std::string name() const override;
 
-      KDF* clone() const override;
+      std::unique_ptr<KDF> new_object() const override;
 
       void kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,
@@ -31,7 +31,9 @@ class KDF2 final : public KDF
       /**
       * @param h hash function to use
       */
-      explicit KDF2(HashFunction* h) : m_hash(h) {}
+      explicit KDF2(std::unique_ptr<HashFunction> hash) :
+         m_hash(std::move(hash))
+         {}
    private:
       std::unique_ptr<HashFunction> m_hash;
    };

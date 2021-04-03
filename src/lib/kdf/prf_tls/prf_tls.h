@@ -21,7 +21,7 @@ class TLS_12_PRF final : public KDF
    public:
       std::string name() const override { return "TLS-12-PRF(" + m_mac->name() + ")"; }
 
-      KDF* clone() const override { return new TLS_12_PRF(m_mac->clone()); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<TLS_12_PRF>(m_mac->new_object()); }
 
       void kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,
@@ -31,7 +31,7 @@ class TLS_12_PRF final : public KDF
       /**
       * @param mac MAC algorithm to use
       */
-      explicit TLS_12_PRF(MessageAuthenticationCode* mac) : m_mac(mac) {}
+      explicit TLS_12_PRF(std::unique_ptr<MessageAuthenticationCode> mac) : m_mac(std::move(mac)) {}
    private:
       std::unique_ptr<MessageAuthenticationCode> m_mac;
    };

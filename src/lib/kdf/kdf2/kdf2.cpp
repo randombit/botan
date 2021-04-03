@@ -15,9 +15,9 @@ std::string KDF2::name() const
    return "KDF2(" + m_hash->name() + ")";
    }
 
-KDF* KDF2::clone() const
+std::unique_ptr<KDF> KDF2::new_object() const
    {
-   return new KDF2(m_hash->clone());
+   return std::make_unique<KDF2>(m_hash->new_object());
    }
 
 void KDF2::kdf(uint8_t key[], size_t key_len,

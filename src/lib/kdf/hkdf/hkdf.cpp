@@ -17,8 +17,8 @@ void HKDF::kdf(uint8_t key[], size_t key_len,
                const uint8_t salt[], size_t salt_len,
                const uint8_t label[], size_t label_len) const
    {
-   HKDF_Extract extract(m_prf->clone());
-   HKDF_Expand expand(m_prf->clone());
+   HKDF_Extract extract(m_prf->new_object());
+   HKDF_Expand expand(m_prf->new_object());
    secure_vector<uint8_t> prk(m_prf->output_length());
 
    extract.kdf(prk.data(), prk.size(), secret, secret_len, salt, salt_len, nullptr, 0);
@@ -107,9 +107,7 @@ hkdf_expand_label(const std::string& hash_fn,
 
    const uint16_t length16 = static_cast<uint16_t>(length);
 
-   auto mac = MessageAuthenticationCode::create_or_throw("HMAC(" + hash_fn + ")");
-
-   HKDF_Expand hkdf(mac.release());
+   HKDF_Expand hkdf(MessageAuthenticationCode::create_or_throw("HMAC(" + hash_fn + ")"));
 
    secure_vector<uint8_t> output(length16);
    std::vector<uint8_t> prefix(3 + label.size() + 1);

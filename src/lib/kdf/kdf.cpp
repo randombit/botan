@@ -56,10 +56,10 @@ std::unique_ptr<KDF>
 kdf_create_mac_or_hash(const std::string& nm)
    {
    if(auto mac = MessageAuthenticationCode::create("HMAC(" + nm + ")"))
-      return std::make_unique<KDF_Type>(mac.release());
+      return std::make_unique<KDF_Type>(std::move(mac));
 
    if(auto mac = MessageAuthenticationCode::create(nm))
-      return std::make_unique<KDF_Type>(mac.release());
+      return std::make_unique<KDF_Type>(std::move(mac));
 
    return nullptr;
    }
@@ -103,7 +103,7 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto hash = HashFunction::create(req.arg(0)))
-            return std::make_unique<KDF2>(hash.release());
+            return std::make_unique<KDF2>(std::move(hash));
          }
       }
 #endif
@@ -114,7 +114,7 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto hash = HashFunction::create(req.arg(0)))
-            return std::make_unique<KDF1_18033>(hash.release());
+            return std::make_unique<KDF1_18033>(std::move(hash));
          }
       }
 #endif
@@ -125,7 +125,7 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto hash = HashFunction::create(req.arg(0)))
-            return std::make_unique<KDF1>(hash.release());
+            return std::make_unique<KDF1>(std::move(hash));
          }
       }
 #endif
@@ -180,9 +180,9 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
    if(req.algo_name() == "SP800-56A" && req.arg_count() == 1)
       {
       if(auto hash = HashFunction::create(req.arg(0)))
-         return std::make_unique<SP800_56A_Hash>(hash.release());
+         return std::make_unique<SP800_56A_Hash>(std::move(hash));
       if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
-         return std::make_unique<SP800_56A_HMAC>(mac.release());
+         return std::make_unique<SP800_56A_HMAC>(std::move(mac));
       }
 #endif
 
@@ -193,10 +193,10 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       if(exp)
          {
          if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
-            return std::make_unique<SP800_56C>(mac.release(), exp.release());
+            return std::make_unique<SP800_56C>(std::move(mac), std::move(exp));
 
          if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
-            return std::make_unique<SP800_56C>(mac.release(), exp.release());
+            return std::make_unique<SP800_56C>(std::move(mac), std::move(exp));
          }
       }
 #endif

@@ -21,7 +21,7 @@ class SP800_108_Counter final : public KDF
    public:
       std::string name() const override { return "SP800-108-Counter(" + m_prf->name() + ")"; }
 
-      KDF* clone() const override { return new SP800_108_Counter(m_prf->clone()); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_108_Counter>(m_prf->new_object()); }
 
       /**
       * Derive a key using the SP800-108 KDF in Counter mode.
@@ -48,7 +48,7 @@ class SP800_108_Counter final : public KDF
       /**
       * @param mac MAC algorithm to use
       */
-      explicit SP800_108_Counter(MessageAuthenticationCode* mac) : m_prf(mac) {}
+      explicit SP800_108_Counter(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
    };
@@ -61,7 +61,7 @@ class SP800_108_Feedback final : public KDF
    public:
       std::string name() const override { return "SP800-108-Feedback(" + m_prf->name() + ")"; }
 
-      KDF* clone() const override { return new SP800_108_Feedback(m_prf->clone()); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_108_Feedback>(m_prf->new_object()); }
 
       /**
       * Derive a key using the SP800-108 KDF in Feedback mode.
@@ -85,7 +85,7 @@ class SP800_108_Feedback final : public KDF
                  const uint8_t salt[], size_t salt_len,
                  const uint8_t label[], size_t label_len) const override;
 
-      explicit SP800_108_Feedback(MessageAuthenticationCode* mac) : m_prf(mac) {}
+      explicit SP800_108_Feedback(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
    };
@@ -98,7 +98,7 @@ class SP800_108_Pipeline final : public KDF
    public:
       std::string name() const override { return "SP800-108-Pipeline(" + m_prf->name() + ")"; }
 
-      KDF* clone() const override { return new SP800_108_Pipeline(m_prf->clone()); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_108_Pipeline>(m_prf->new_object()); }
 
       /**
       * Derive a key using the SP800-108 KDF in Double Pipeline mode.
@@ -122,7 +122,7 @@ class SP800_108_Pipeline final : public KDF
                  const uint8_t salt[], size_t salt_len,
                  const uint8_t label[], size_t label_len) const override;
 
-      explicit SP800_108_Pipeline(MessageAuthenticationCode* mac) : m_prf(mac) {}
+      explicit SP800_108_Pipeline(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;

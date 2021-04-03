@@ -21,7 +21,7 @@ class X942_PRF final : public KDF
    public:
       std::string name() const override;
 
-      KDF* clone() const override { return new X942_PRF(m_key_wrap_oid); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<X942_PRF>(m_key_wrap_oid); }
 
       void kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,
