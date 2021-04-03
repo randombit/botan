@@ -63,15 +63,15 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
 #if defined(BOTAN_HAS_ARGON2)
    if(req.algo_name() == "Argon2d")
       {
-      return std::make_unique<Argon2_Family>(0);
+      return std::make_unique<Argon2_Family>(static_cast<uint8_t>(0));
       }
    else if(req.algo_name() == "Argon2i")
       {
-      return std::make_unique<Argon2_Family>(1);
+      return std::make_unique<Argon2_Family>(static_cast<uint8_t>(1));
       }
    else if(req.algo_name() == "Argon2id")
       {
-      return std::make_unique<Argon2_Family>(2);
+      return std::make_unique<Argon2_Family>(static_cast<uint8_t>(2));
       }
 #endif
 
