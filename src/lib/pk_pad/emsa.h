@@ -22,10 +22,26 @@ class RandomNumberGenerator;
 *
 * Any way of encoding/padding signatures
 */
-class EMSA
+class BOTAN_TEST_API EMSA
    {
    public:
       virtual ~EMSA() = default;
+
+      /**
+      * Factory method for EMSA (message-encoding methods for signatures
+      * with appendix) objects
+      * @param algo_spec the name of the EMSA to create
+      * @return pointer to newly allocated object of that type, or nullptr
+      */
+      static std::unique_ptr<EMSA> create(const std::string& algo_spec);
+
+      /**
+      * Factory method for EMSA (message-encoding methods for signatures
+      * with appendix) objects
+      * @param algo_spec the name of the EMSA to create
+      * @return pointer to newly allocated object of that type, or throws
+      */
+      static std::unique_ptr<EMSA> create_or_throw(const std::string& algo_spec);
 
       /**
       * Add more data to the signature computation
@@ -75,7 +91,7 @@ class EMSA
       /**
       * @return a new object representing the same encoding method as *this
       */
-      virtual EMSA* clone() = 0;
+      virtual std::unique_ptr<EMSA> new_object() = 0;
 
       /**
       * @return the SCAN name of the encoding/padding scheme

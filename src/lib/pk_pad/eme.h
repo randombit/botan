@@ -24,6 +24,13 @@ class EME
       virtual ~EME() = default;
 
       /**
+      * Factory method for EME (message-encoding methods for encryption) objects
+      * @param algo_spec the name of the EME to create
+      * @return pointer to newly allocated object of that type
+      */
+      static std::unique_ptr<EME> create(const std::string& algo_spec);
+
+      /**
       * Return the maximum input size in bytes we can support
       * @param keybits the size of the key in bits
       * @return upper bound of input in bytes
@@ -79,13 +86,6 @@ class EME
                                       size_t key_length,
                                       RandomNumberGenerator& rng) const = 0;
    };
-
-/**
-* Factory method for EME (message-encoding methods for encryption) objects
-* @param algo_spec the name of the EME to create
-* @return pointer to newly allocated object of that type
-*/
-EME*  get_eme(const std::string& algo_spec);
 
 }
 

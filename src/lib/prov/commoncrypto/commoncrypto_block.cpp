@@ -153,7 +153,7 @@ make_commoncrypto_block_cipher(const std::string& name)
    try
       {
       CommonCryptor_Opts opts = commoncrypto_opts_from_algo_name(name);
-      return std::unique_ptr<BlockCipher>(new CommonCrypto_BlockCipher(name, opts));
+      return std::make_unique<CommonCrypto_BlockCipher>(name, opts);
       }
    catch(CommonCrypto_Error& e)
       {

@@ -53,9 +53,9 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
          return vars.get_req_str("Ident") + "," + vars.get_opt_str("Hash", "SM3");
          }
 
-      Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
+      std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override
          {
-         return new Fixed_Output_Position_RNG(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
          }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
@@ -83,9 +83,9 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test
 
       bool clear_between_callbacks() const override { return false; }
 
-      Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
+      std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override
          {
-         return new Fixed_Output_Position_RNG(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
          }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override

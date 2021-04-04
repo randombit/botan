@@ -41,7 +41,7 @@ AlgorithmIdentifier EMSA::config_for_x509(const Private_Key&,
    throw Not_Implemented("Encoding " + name() + " not supported for signing X509 objects");
    }
 
-EMSA* get_emsa(const std::string& algo_spec)
+std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
    {
    SCAN_Name req(algo_spec);
 
@@ -49,7 +49,7 @@ EMSA* get_emsa(const std::string& algo_spec)
    if(req.algo_name() == "EMSA1" && req.arg_count() == 1)
       {
       if(auto hash = HashFunction::create(req.arg(0)))
-         return new EMSA1(hash.release());
+         return std::make_unique<EMSA1>(hash.release());
       }
 #endif
 
@@ -61,19 +61,19 @@ EMSA* get_emsa(const std::string& algo_spec)
       {
       if(req.arg_count() == 2 && req.arg(0) == "Raw")
          {
-         return new EMSA_PKCS1v15_Raw(req.arg(1));
+         return std::make_unique<EMSA_PKCS1v15_Raw>(req.arg(1));
          }
       else if(req.arg_count() == 1)
          {
          if(req.arg(0) == "Raw")
             {
-            return new EMSA_PKCS1v15_Raw;
+            return std::make_unique<EMSA_PKCS1v15_Raw>();
             }
          else
             {
             if(auto hash = HashFunction::create(req.arg(0)))
                {
-               return new EMSA_PKCS1v15(hash.release());
+               return std::make_unique<EMSA_PKCS1v15>(hash.release());
                }
             }
          }
@@ -91,11 +91,11 @@ EMSA* get_emsa(const std::string& algo_spec)
             if(req.arg_count() == 3)
                {
                const size_t salt_size = req.arg_as_integer(2, 0);
-               return new PSSR_Raw(h.release(), salt_size);
+               return std::make_unique<PSSR_Raw>(h.release(), salt_size);
                }
             else
                {
-               return new PSSR_Raw(h.release());
+               return std::make_unique<PSSR_Raw>(h.release());
                }
             }
          }
@@ -114,11 +114,11 @@ EMSA* get_emsa(const std::string& algo_spec)
             if(req.arg_count() == 3)
                {
                const size_t salt_size = req.arg_as_integer(2, 0);
-               return new PSSR(h.release(), salt_size);
+               return std::make_unique<PSSR>(h.release(), salt_size);
                }
             else
                {
-               return new PSSR(h.release());
+               return std::make_unique<PSSR>(h.release());
                }
             }
          }
@@ -134,7 +134,7 @@ EMSA* get_emsa(const std::string& algo_spec)
             {
             const size_t salt_size = req.arg_as_integer(2, h->output_length());
             const bool implicit = req.arg(1, "exp") == "imp";
-            return new ISO_9796_DS2(h.release(), implicit, salt_size);
+            return std::make_unique<ISO_9796_DS2>(h.release(), implicit, salt_size);
             }
          }
       }
@@ -146,7 +146,7 @@ EMSA* get_emsa(const std::string& algo_spec)
          if(auto h = HashFunction::create(req.arg(0)))
             {
             const bool implicit = req.arg(1, "exp") == "imp";
-            return new ISO_9796_DS3(h.release(), implicit);
+            return std::make_unique<ISO_9796_DS3>(h.release(), implicit);
             }
          }
       }
@@ -161,7 +161,7 @@ EMSA* get_emsa(const std::string& algo_spec)
          {
          if(auto hash = HashFunction::create(req.arg(0)))
             {
-            return new EMSA_X931(hash.release());
+            return std::make_unique<EMSA_X931>(hash.release());
             }
          }
       }
@@ -172,17 +172,25 @@ EMSA* get_emsa(const std::string& algo_spec)
       {
       if(req.arg_count() == 0)
          {
-         return new EMSA_Raw;
+         return std::make_unique<EMSA_Raw>();
          }
       else
          {
          auto hash = HashFunction::create(req.arg(0));
          if(hash)
-            return new EMSA_Raw(hash->output_length());
+            return std::make_unique<EMSA_Raw>(hash->output_length());
          }
       }
 #endif
 
+   return nullptr;
+   }
+
+std::unique_ptr<EMSA> EMSA::create_or_throw(const std::string& algo_spec)
+   {
+   auto emsa = EMSA::create(algo_spec);
+   if(emsa)
+      return emsa;
    throw Algorithm_Not_Found(algo_spec);
    }
 

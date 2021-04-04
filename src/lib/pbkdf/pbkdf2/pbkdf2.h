@@ -40,7 +40,7 @@ class BOTAN_PUBLIC_API(2,8) PBKDF2 final : public PasswordHash
    {
    public:
       PBKDF2(const MessageAuthenticationCode& prf, size_t iter) :
-         m_prf(prf.clone()),
+         m_prf(prf.new_object()),
          m_iterations(iter)
          {}
 

@@ -92,7 +92,7 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    if(name == "system_rng")
       {
-      return std::unique_ptr<Entropy_Source>(new System_RNG_EntropySource);
+      return std::make_unique<System_RNG_EntropySource>();
       }
 #endif
 
@@ -101,7 +101,7 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       {
       if(Processor_RNG::available())
          {
-         return std::unique_ptr<Entropy_Source>(new Processor_RNG_EntropySource);
+         return std::make_unique<Processor_RNG_EntropySource>();
          }
       }
 #endif
@@ -109,26 +109,26 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
    if(name == "rdseed")
       {
-      return std::unique_ptr<Entropy_Source>(new Intel_Rdseed);
+      return std::make_unique<Intel_Rdseed>();
       }
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
    if(name == "getentropy")
       {
-      return std::unique_ptr<Entropy_Source>(new Getentropy);
+      return std::make_unique<Getentropy>();
       }
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
    if(name == "system_stats")
       {
-      return std::unique_ptr<Entropy_Source>(new Win32_EntropySource);
+      return std::make_unique<Win32_EntropySource>();
       }
 #endif
 
    BOTAN_UNUSED(name);
-   return std::unique_ptr<Entropy_Source>();
+   return nullptr;
    }
 
 void Entropy_Sources::add_source(std::unique_ptr<Entropy_Source> src)

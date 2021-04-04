@@ -107,7 +107,7 @@ namespace {
 
 std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& obj)
    {
-   std::unique_ptr<X509_Certificate_Data> data(new X509_Certificate_Data);
+   auto data = std::make_unique<X509_Certificate_Data>();
 
    BigInt serial_bn;
    BER_Object public_key;
@@ -366,10 +366,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 void X509_Certificate::force_decode()
    {
    m_data.reset();
-
-   std::unique_ptr<X509_Certificate_Data> data = parse_x509_cert_body(*this);
-
-   m_data.reset(data.release());
+   m_data = parse_x509_cert_body(*this);
    }
 
 const X509_Certificate_Data& X509_Certificate::data() const

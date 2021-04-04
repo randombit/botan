@@ -63,7 +63,7 @@ X509_CRL::X509_CRL(const X509_DN& issuer,
                    const std::vector<CRL_Entry>& revoked) :
    X509_Object()
    {
-   m_data.reset(new CRL_Data);
+   m_data = std::make_shared<CRL_Data>();
    m_data->m_issuer = issuer;
    m_data->m_this_update = this_update;
    m_data->m_next_update = next_update;
@@ -118,7 +118,7 @@ namespace {
 std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
                                           const AlgorithmIdentifier& sig_algo)
    {
-   std::unique_ptr<CRL_Data> data(new CRL_Data);
+   auto data = std::make_unique<CRL_Data>();
 
    BER_Decoder tbs_crl(body);
 

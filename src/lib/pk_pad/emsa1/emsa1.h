@@ -25,7 +25,7 @@ class EMSA1 final : public EMSA
       */
       explicit EMSA1(HashFunction* hash) : m_hash(hash) {}
 
-      EMSA* clone() override;
+      std::unique_ptr<EMSA> new_object() override;
 
       std::string name() const override;
 

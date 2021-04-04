@@ -152,7 +152,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
 
          if(vars.has_key("Nonce"))
             {
-            std::unique_ptr<Botan::RandomNumberGenerator> rng(test_rng(vars.get_req_bin("Nonce")));
+            auto rng = test_rng(vars.get_req_bin("Nonce"));
             generated_signature = signer->sign_message(message, *rng);
             }
          else
@@ -402,7 +402,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
       std::unique_ptr<Botan::RandomNumberGenerator> kat_rng;
       if(vars.has_key("Nonce"))
          {
-         kat_rng.reset(test_rng(vars.get_req_bin("Nonce")));
+         kat_rng = test_rng(vars.get_req_bin("Nonce"));
          }
 
       if(padding == "Raw")

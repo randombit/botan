@@ -26,7 +26,7 @@ class EMSA_PKCS1v15 final : public EMSA
       */
       explicit EMSA_PKCS1v15(HashFunction* hash);
 
-      EMSA* clone() override { return new EMSA_PKCS1v15(m_hash->clone()); }
+      std::unique_ptr<EMSA> new_object() override { return std::make_unique<EMSA_PKCS1v15>(m_hash->clone()); }
 
       void update(const uint8_t[], size_t) override;
 
@@ -56,7 +56,7 @@ class EMSA_PKCS1v15 final : public EMSA
 class EMSA_PKCS1v15_Raw final : public EMSA
    {
    public:
-      EMSA* clone() override { return new EMSA_PKCS1v15_Raw(); }
+      std::unique_ptr<EMSA> new_object() override { return std::make_unique<EMSA_PKCS1v15_Raw>(); }
 
       void update(const uint8_t[], size_t) override;
 

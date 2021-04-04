@@ -27,7 +27,7 @@ struct CRL_Entry_Data
 */
 CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why)
    {
-   m_data.reset(new CRL_Entry_Data);
+   m_data = std::make_shared<CRL_Entry_Data>();
    m_data->m_serial = cert.serial_number();
    m_data->m_time = X509_Time(std::chrono::system_clock::now());
    m_data->m_reason = why;
@@ -81,7 +81,7 @@ void CRL_Entry::decode_from(BER_Decoder& source)
    {
    BigInt serial_number_bn;
 
-   std::unique_ptr<CRL_Entry_Data> data(new CRL_Entry_Data);
+   auto data = std::make_unique<CRL_Entry_Data>();
 
    BER_Decoder entry = source.start_sequence();
 
@@ -103,7 +103,7 @@ void CRL_Entry::decode_from(BER_Decoder& source)
 
    entry.end_cons();
 
-   m_data.reset(data.release());
+   m_data = std::move(data);
    }
 
 const CRL_Entry_Data& CRL_Entry::data() const

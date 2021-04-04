@@ -31,7 +31,7 @@ class PSSR final : public EMSA
       */
       PSSR(HashFunction* hash, size_t salt_size);
 
-      EMSA* clone() override;
+      std::unique_ptr<EMSA> new_object() override;
 
       std::string name() const override;
 
@@ -74,7 +74,7 @@ class PSSR_Raw final : public EMSA
       */
       PSSR_Raw(HashFunction* hash, size_t salt_size);
 
-      EMSA* clone() override;
+      std::unique_ptr<EMSA> new_object() override;
 
       std::string name() const override;
    private:

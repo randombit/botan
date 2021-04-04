@@ -754,7 +754,7 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
          struct termios m_old_termios;
       };
 
-   return std::unique_ptr<Echo_Suppression>(new POSIX_Echo_Suppression);
+   return std::make_unique<POSIX_Echo_Suppression>();
 
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
 
@@ -798,12 +798,12 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
          DWORD m_console_state;
       };
 
-   return std::unique_ptr<Echo_Suppression>(new Win32_Echo_Suppression);
+   return std::make_unique<Win32_Echo_Suppression>();
 
 #else
 
    // Not supported on this platform, return null
-   return std::unique_ptr<Echo_Suppression>();
+   return nullptr;
 #endif
    }
 

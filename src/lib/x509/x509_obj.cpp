@@ -374,10 +374,10 @@ std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
       std::unique_ptr<EMSA> emsa;
       try
          {
-         emsa.reset(get_emsa(padding));
+         emsa = EMSA::create_or_throw(padding);
          }
       /*
-      * get_emsa will throw if opts contains {"padding",<valid_padding>} but
+      * EMSA::create will throw if opts contains {"padding",<valid_padding>} but
       * <valid_padding> does not specify a hash function.
       * Omitting it is valid since it needs to be identical to hash_fn.
       * If it still throws, something happened that we cannot repair here,
@@ -385,7 +385,7 @@ std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
       */
       catch(...)
          {
-         emsa.reset(get_emsa(padding + "(" + hash_fn + ")"));
+         emsa = EMSA::create(padding + "(" + hash_fn + ")");
          }
 
       if(!emsa)
@@ -415,10 +415,8 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(AlgorithmIdentifier& s
                                                           const std::string& padding_algo)
    {
    const Signature_Format format = key.default_x509_signature_format();
-
    const std::string emsa = choose_sig_algo(sig_algo, key, hash_fn, padding_algo);
-
-   return std::unique_ptr<PK_Signer>(new PK_Signer(key, rng, emsa, format));
+   return std::make_unique<PK_Signer>(key, rng, emsa, format);
    }
 
 }

@@ -179,9 +179,9 @@ bool PSSR::verify(const secure_vector<uint8_t>& coded,
    return ok;
    }
 
-EMSA* PSSR::clone()
+std::unique_ptr<EMSA> PSSR::new_object()
    {
-   return new PSSR(m_hash->clone(), m_salt_size);
+   return std::make_unique<PSSR>(m_hash->clone(), m_salt_size);
    }
 
 std::string PSSR::name() const
@@ -278,9 +278,9 @@ bool PSSR_Raw::verify(const secure_vector<uint8_t>& coded,
    return ok;
    }
 
-EMSA* PSSR_Raw::clone()
+std::unique_ptr<EMSA> PSSR_Raw::new_object()
    {
-   return new PSSR_Raw(m_hash->clone(), m_salt_size);
+   return std::make_unique<PSSR_Raw>(m_hash->clone(), m_salt_size);
    }
 
 std::string PSSR_Raw::name() const
