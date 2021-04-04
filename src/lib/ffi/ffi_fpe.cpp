@@ -46,7 +46,7 @@ int botan_fpe_fe1_init(botan_fpe_t* fpe, botan_mp_t n,
 
       fpe_obj->set_key(key, key_len);
 
-      *fpe = new botan_fpe_struct(fpe_obj.release());
+      *fpe = new botan_fpe_struct(std::move(fpe_obj));
       return BOTAN_FFI_SUCCESS;
       });
 #else

@@ -44,7 +44,7 @@ int botan_privkey_create(botan_privkey_t* key_obj,
 
       if(key)
          {
-         *key_obj = new botan_privkey_struct(key.release());
+         *key_obj = new botan_privkey_struct(std::move(key));
          return BOTAN_FFI_SUCCESS;
          }
       else
@@ -78,7 +78,7 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
 
       if(pkcs8)
          {
-         *key = new botan_privkey_struct(pkcs8.release());
+         *key = new botan_privkey_struct(std::move(pkcs8));
          return BOTAN_FFI_SUCCESS;
          }
       return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
@@ -102,7 +102,7 @@ int botan_pubkey_load(botan_pubkey_t* key,
       if(pubkey == nullptr)
          return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
 
-      *key = new botan_pubkey_struct(pubkey.release());
+      *key = new botan_pubkey_struct(std::move(pubkey));
       return BOTAN_FFI_SUCCESS;
       });
    }
@@ -118,7 +118,7 @@ int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj)
       std::unique_ptr<Botan::Public_Key>
          pubkey(Botan::X509::load_key(Botan::X509::BER_encode(safe_get(key_obj))));
 
-      *pubout = new botan_pubkey_struct(pubkey.release());
+      *pubout = new botan_pubkey_struct(std::move(pubkey));
       return BOTAN_FFI_SUCCESS;
       });
    }

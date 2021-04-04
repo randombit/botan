@@ -55,7 +55,7 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
          }
 
-      *rng_out = new botan_rng_struct(rng.release());
+      *rng_out = new botan_rng_struct(std::move(rng));
       return BOTAN_FFI_SUCCESS;
       });
    }
@@ -150,7 +150,7 @@ return ffi_guard_thunk(__func__,[=]() -> int {
 
    std::unique_ptr<Botan::RandomNumberGenerator> rng(new Custom_RNG(rng_name, context, get_cb, add_entropy_cb, destroy_cb));
 
-   *rng_out = new botan_rng_struct(rng.release());
+   *rng_out = new botan_rng_struct(std::move(rng));
    return BOTAN_FFI_SUCCESS;
    });
 }

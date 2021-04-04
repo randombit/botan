@@ -22,11 +22,11 @@ int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
-      std::unique_ptr<Botan::HashFunction> h = Botan::HashFunction::create(hash_name);
+      auto h = Botan::HashFunction::create(hash_name);
       if(h == nullptr)
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 
-      *hash = new botan_hash_struct(h.release());
+      *hash = new botan_hash_struct(std::move(h));
       return BOTAN_FFI_SUCCESS;
       });
    }
@@ -76,7 +76,7 @@ int botan_hash_final(botan_hash_t hash, uint8_t out[])
 int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source)
    {
    return BOTAN_FFI_DO(Botan::HashFunction, source, src, {
-      *dest = new botan_hash_struct(src.copy_state().release()); });
+      *dest = new botan_hash_struct(src.copy_state()); });
    }
 
 int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len)

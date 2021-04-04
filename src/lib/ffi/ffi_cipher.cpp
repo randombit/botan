@@ -14,7 +14,8 @@ using namespace Botan_FFI;
 
 struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C>
    {
-   explicit botan_cipher_struct(Botan::Cipher_Mode* x) : botan_struct(x) {}
+   explicit botan_cipher_struct(std::unique_ptr<Botan::Cipher_Mode> x) :
+      botan_struct(std::move(x)) {}
    Botan::secure_vector<uint8_t> m_buf;
    };
 
@@ -26,7 +27,7 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
       std::unique_ptr<Botan::Cipher_Mode> mode(Botan::Cipher_Mode::create(cipher_name, dir));
       if(!mode)
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-      *cipher = new botan_cipher_struct(mode.release());
+      *cipher = new botan_cipher_struct(std::move(mode));
       return BOTAN_FFI_SUCCESS;
       });
    }
