@@ -147,7 +147,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
          }
       else
          {
-         std::unique_ptr<BlockCipherModePaddingMethod> pad(get_bc_pad(padding));
+         auto pad = BlockCipherModePaddingMethod::create(padding);
 
          if(pad)
             {

@@ -39,7 +39,7 @@ class Cipher_Mode_Padding_Tests final : public Text_Based_Test
 
          Test::Result result(algo);
 
-         std::unique_ptr<Botan::BlockCipherModePaddingMethod> pad(Botan::get_bc_pad(algo));
+         auto pad = Botan::BlockCipherModePaddingMethod::create(algo);
 
          if(!pad)
             {

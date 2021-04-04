@@ -27,6 +27,12 @@ class BOTAN_TEST_API BlockCipherModePaddingMethod
    {
    public:
       /**
+      * Get a block cipher padding mode by name (eg "NoPadding" or "PKCS7")
+      * @param algo_spec block cipher padding mode name
+      */
+      static std::unique_ptr<BlockCipherModePaddingMethod> create(const std::string& algo_spec);
+
+      /**
       * Add padding bytes to buffer.
       * @param buffer data to pad
       * @param final_block_bytes size of the final block in bytes
@@ -146,12 +152,6 @@ class Null_Padding final : public BlockCipherModePaddingMethod
 
       std::string name() const override { return "NoPadding"; }
    };
-
-/**
-* Get a block cipher padding mode by name (eg "NoPadding" or "PKCS7")
-* @param algo_spec block cipher padding mode name
-*/
-BOTAN_TEST_API BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec);
 
 }
 
