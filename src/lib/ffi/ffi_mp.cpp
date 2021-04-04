@@ -23,7 +23,8 @@ int botan_mp_init(botan_mp_t* mp_out)
       if(mp_out == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
-      *mp_out = new botan_mp_struct(new Botan::BigInt);
+      auto mp = std::make_unique<Botan::BigInt>();
+      *mp_out = new botan_mp_struct(std::move(mp));
       return BOTAN_FFI_SUCCESS;
       });
    }

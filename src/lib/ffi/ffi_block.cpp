@@ -22,11 +22,11 @@ int botan_block_cipher_init(botan_block_cipher_t* bc, const char* bc_name)
 
       *bc = nullptr;
 
-      std::unique_ptr<Botan::BlockCipher> cipher(Botan::BlockCipher::create(bc_name));
+      auto cipher = Botan::BlockCipher::create(bc_name);
       if(cipher == nullptr)
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 
-      *bc = new botan_block_cipher_struct(cipher.release());
+      *bc = new botan_block_cipher_struct(std::move(cipher));
       return BOTAN_FFI_SUCCESS;
       });
    }

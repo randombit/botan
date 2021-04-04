@@ -34,8 +34,8 @@ int botan_hotp_init(botan_hotp_t* hotp,
 #if defined(BOTAN_HAS_HOTP)
    return ffi_guard_thunk(__func__, [=]() -> int {
 
-      *hotp = new botan_hotp_struct(
-         new Botan::HOTP(key, key_len, hash_algo, digits));
+      auto otp = std::make_unique<Botan::HOTP>(key, key_len, hash_algo, digits);
+      *hotp = new botan_hotp_struct(std::move(otp));
 
       return BOTAN_FFI_SUCCESS;
       });

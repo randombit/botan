@@ -26,7 +26,7 @@ int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags)
       if(m == nullptr)
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 
-      *mac = new botan_mac_struct(m.release());
+      *mac = new botan_mac_struct(std::move(m));
       return BOTAN_FFI_SUCCESS;
       });
    }

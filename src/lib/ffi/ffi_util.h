@@ -36,7 +36,9 @@ template<typename T, uint32_t MAGIC>
 struct botan_struct
    {
    public:
-      botan_struct(T* obj) : m_magic(MAGIC), m_obj(obj) {}
+      botan_struct(std::unique_ptr<T> obj) :
+         m_magic(MAGIC), m_obj(std::move(obj)) {}
+
       virtual ~botan_struct() { m_magic = 0; m_obj.reset(); }
 
       bool magic_ok() const { return (m_magic == MAGIC); }
@@ -50,8 +52,10 @@ struct botan_struct
       std::unique_ptr<T> m_obj;
    };
 
-#define BOTAN_FFI_DECLARE_STRUCT(NAME, TYPE, MAGIC) \
-   struct NAME final : public Botan_FFI::botan_struct<TYPE, MAGIC> { explicit NAME(TYPE* x) : botan_struct(x) {} }
+#define BOTAN_FFI_DECLARE_STRUCT(NAME, TYPE, MAGIC)                          \
+   struct NAME final : public Botan_FFI::botan_struct<TYPE, MAGIC> {         \
+      explicit NAME(std::unique_ptr<TYPE> x) : botan_struct(std::move(x)) {} \
+   }
 
 // Declared in ffi.cpp
 int ffi_error_exception_thrown(const char* func_name, const char* exn,

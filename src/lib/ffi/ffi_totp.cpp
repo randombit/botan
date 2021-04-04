@@ -34,9 +34,8 @@ int botan_totp_init(botan_totp_t* totp,
 
 #if defined(BOTAN_HAS_TOTP)
    return ffi_guard_thunk(__func__, [=]() -> int {
-
-      *totp = new botan_totp_struct(
-         new Botan::TOTP(key, key_len, hash_algo, digits, time_step));
+      auto otp = std::make_unique<Botan::TOTP>(key, key_len, hash_algo, digits, time_step);
+      *totp = new botan_totp_struct(std::move(otp));
 
       return BOTAN_FFI_SUCCESS;
       });
