@@ -16,7 +16,7 @@ namespace Botan {
 
 std::unique_ptr<Public_Key> ECGDSA_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new ECGDSA_PublicKey(domain(), public_point()));
+   return std::make_unique<ECGDSA_PublicKey>(domain(), public_point());
    }
 
 bool ECGDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
@@ -143,7 +143,7 @@ ECGDSA_PublicKey::create_verification_op(const std::string& params,
                                          const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Verification>(new ECGDSA_Verification_Operation(*this, params));
+      return std::make_unique<ECGDSA_Verification_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -153,7 +153,7 @@ ECGDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                        const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Signature>(new ECGDSA_Signature_Operation(*this, params));
+      return std::make_unique<ECGDSA_Signature_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
 

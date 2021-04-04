@@ -35,9 +35,9 @@ class OpenSSL_HashFunction final : public HashFunction
 
       std::unique_ptr<HashFunction> copy_state() const override
          {
-         std::unique_ptr<OpenSSL_HashFunction> copy(new OpenSSL_HashFunction(m_name, nullptr));
+         auto copy = std::make_unique<OpenSSL_HashFunction>(m_name, nullptr);
          EVP_MD_CTX_copy(copy->m_md, m_md);
-         return std::unique_ptr<HashFunction>(copy.release());
+         return copy;
          }
 
       size_t output_length() const override
@@ -104,7 +104,7 @@ std::unique_ptr<HashFunction>
 make_openssl_hash(const std::string& name)
    {
 #define MAKE_OPENSSL_HASH(fn)                                       \
-   std::unique_ptr<HashFunction>(new OpenSSL_HashFunction(name, fn ()))
+   std::make_unique<OpenSSL_HashFunction>(name, fn ())
 
 #if defined(BOTAN_HAS_SHA2_32) && !defined(OPENSSL_NO_SHA256)
    if(name == "SHA-224")

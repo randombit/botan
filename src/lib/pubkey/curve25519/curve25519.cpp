@@ -89,7 +89,7 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
 
 std::unique_ptr<Public_Key> Curve25519_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new Curve25519_PublicKey(public_value()));
+   return std::make_unique<Curve25519_PublicKey>(public_value());
    }
 
 secure_vector<uint8_t> Curve25519_PrivateKey::private_key_bits() const
@@ -141,7 +141,7 @@ Curve25519_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
                                                const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Key_Agreement>(new Curve25519_KA_Operation(*this, params));
+      return std::make_unique<Curve25519_KA_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
 

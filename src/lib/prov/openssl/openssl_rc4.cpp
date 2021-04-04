@@ -87,7 +87,7 @@ class OpenSSL_RC4 final : public StreamCipher
 std::unique_ptr<StreamCipher>
 make_openssl_rc4(size_t skip)
    {
-   return std::unique_ptr<StreamCipher>(new OpenSSL_RC4(skip));
+   return std::make_unique<OpenSSL_RC4>(skip);
    }
 
 

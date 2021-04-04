@@ -69,7 +69,7 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
 
 std::unique_ptr<Public_Key> DSA_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new DSA_PublicKey(get_group(), get_y()));
+   return std::make_unique<DSA_PublicKey>(get_group(), get_y());
    }
 
 namespace {
@@ -210,7 +210,7 @@ DSA_PublicKey::create_verification_op(const std::string& params,
                                       const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Verification>(new DSA_Verification_Operation(*this, params));
+      return std::make_unique<DSA_Verification_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -220,7 +220,7 @@ DSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                     const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Signature>(new DSA_Signature_Operation(*this, params, rng));
+      return std::make_unique<DSA_Signature_Operation>(*this, params, rng);
    throw Provider_Not_Found(algo_name(), provider);
    }
 

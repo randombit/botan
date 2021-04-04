@@ -34,7 +34,7 @@ ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const
 
 std::unique_ptr<Public_Key> PKCS11_ECDH_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new ECDH_PublicKey(domain(), public_point()));
+   return std::make_unique<ECDH_PublicKey>(domain(), public_point());
    }
 
 secure_vector<uint8_t> PKCS11_ECDH_PrivateKey::private_key_bits() const
@@ -105,7 +105,7 @@ PKCS11_ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator&,
                                                 const std::string& params,
                                                 const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Key_Agreement>(new PKCS11_ECDH_KA_Operation(*this, params));
+   return std::make_unique<PKCS11_ECDH_KA_Operation>(*this, params);
    }
 
 PKCS11_ECDH_KeyPair generate_ecdh_keypair(Session& session, const EC_PublicKeyGenerationProperties& pub_props,

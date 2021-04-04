@@ -123,7 +123,7 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier&,
 
 std::unique_ptr<Public_Key> Ed25519_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new Ed25519_PublicKey(get_public_key()));
+   return std::make_unique<Ed25519_PublicKey>(get_public_key());
    }
 
 secure_vector<uint8_t> Ed25519_PrivateKey::private_key_bits() const
@@ -298,11 +298,11 @@ Ed25519_PublicKey::create_verification_op(const std::string& params,
    if(provider == "base" || provider.empty())
       {
       if(params == "" || params == "Identity" || params == "Pure")
-         return std::unique_ptr<PK_Ops::Verification>(new Ed25519_Pure_Verify_Operation(*this));
+         return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
       else if(params == "Ed25519ph")
-         return std::unique_ptr<PK_Ops::Verification>(new Ed25519_Hashed_Verify_Operation(*this, "SHA-512", true));
+         return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, "SHA-512", true);
       else
-         return std::unique_ptr<PK_Ops::Verification>(new Ed25519_Hashed_Verify_Operation(*this, params, false));
+         return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, params, false);
       }
    throw Provider_Not_Found(algo_name(), provider);
    }
@@ -315,11 +315,11 @@ Ed25519_PrivateKey::create_signature_op(RandomNumberGenerator&,
    if(provider == "base" || provider.empty())
       {
       if(params == "" || params == "Identity" || params == "Pure")
-         return std::unique_ptr<PK_Ops::Signature>(new Ed25519_Pure_Sign_Operation(*this));
+         return std::make_unique<Ed25519_Pure_Sign_Operation>(*this);
       else if(params == "Ed25519ph")
-         return std::unique_ptr<PK_Ops::Signature>(new Ed25519_Hashed_Sign_Operation(*this, "SHA-512", true));
+         return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, "SHA-512", true);
       else
-         return std::unique_ptr<PK_Ops::Signature>(new Ed25519_Hashed_Sign_Operation(*this, params, false));
+         return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, params, false);
       }
    throw Provider_Not_Found(algo_name(), provider);
    }

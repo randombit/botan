@@ -275,7 +275,7 @@ make_openssl_ecdsa_ver_op(const ECDSA_PublicKey& key, const std::string& params)
 
    try
       {
-      return std::unique_ptr<PK_Ops::Verification>(new OpenSSL_ECDSA_Verification_Operation(key, params, nid));
+      return std::make_unique<OpenSSL_ECDSA_Verification_Operation>(key, params, nid);
       }
    catch(OpenSSL_Error&)
       {
@@ -291,7 +291,7 @@ make_openssl_ecdsa_sig_op(const ECDSA_PrivateKey& key, const std::string& params
       {
       throw Lookup_Error("OpenSSL ECDSA does not support this curve");
       }
-   return std::unique_ptr<PK_Ops::Signature>(new OpenSSL_ECDSA_Signing_Operation(key, params));
+   return std::make_unique<OpenSSL_ECDSA_Signing_Operation>(key, params);
    }
 
 #endif
@@ -369,7 +369,7 @@ make_openssl_ecdh_ka_op(const ECDH_PrivateKey& key, const std::string& params)
       throw Lookup_Error("OpenSSL ECDH does not support this curve");
       }
 
-   return std::unique_ptr<PK_Ops::Key_Agreement>(new OpenSSL_ECDH_KA_Operation(key, params));
+   return std::make_unique<OpenSSL_ECDH_KA_Operation>(key, params);
    }
 
 #endif
