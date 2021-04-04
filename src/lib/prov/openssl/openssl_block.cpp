@@ -207,7 +207,7 @@ std::unique_ptr<BlockCipher>
 make_openssl_block_cipher(const std::string& name)
    {
 #define MAKE_OPENSSL_BLOCK(evp_fn) \
-   std::make_unique<OpenSSL_BlockCipher>(name, evp_fn()))
+   std::make_unique<OpenSSL_BlockCipher>(name, evp_fn())
 #define MAKE_OPENSSL_BLOCK_KEYLEN(evp_fn, kl_min, kl_max, kl_mod)       \
    std::make_unique<OpenSSL_BlockCipher>(name, evp_fn(), kl_min, kl_max, kl_mod)
 
