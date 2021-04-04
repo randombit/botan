@@ -24,7 +24,7 @@ std::string SM2_PublicKey::algo_name() const
 
 std::unique_ptr<Public_Key> SM2_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new SM2_Signature_PublicKey(domain(), public_point()));
+   return std::make_unique<SM2_Signature_PublicKey>(domain(), public_point());
    }
 
 bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng,
@@ -287,7 +287,7 @@ SM2_PublicKey::create_verification_op(const std::string& params,
       {
       std::string userid, hash;
       parse_sm2_param_string(params, userid, hash);
-      return std::unique_ptr<PK_Ops::Verification>(new SM2_Verification_Operation(*this, userid, hash));
+      return std::make_unique<SM2_Verification_Operation>(*this, userid, hash);
       }
 
    throw Provider_Not_Found(algo_name(), provider);
@@ -302,7 +302,7 @@ SM2_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
       {
       std::string userid, hash;
       parse_sm2_param_string(params, userid, hash);
-      return std::unique_ptr<PK_Ops::Signature>(new SM2_Signature_Operation(*this, userid, hash));
+      return std::make_unique<SM2_Signature_Operation>(*this, userid, hash);
       }
 
    throw Provider_Not_Found(algo_name(), provider);

@@ -68,7 +68,7 @@ DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
 
 std::unique_ptr<Public_Key> DH_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new DH_PublicKey(get_group(), get_y()));
+   return std::make_unique<DH_PublicKey>(get_group(), get_y());
    }
 
 /*
@@ -140,7 +140,7 @@ DH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                        const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Key_Agreement>(new DH_KA_Operation(*this, params, rng));
+      return std::make_unique<DH_KA_Operation>(*this, params, rng);
    throw Provider_Not_Found(algo_name(), provider);
    }
 

@@ -317,7 +317,7 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
 
 std::unique_ptr<Public_Key> RSA_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new RSA_PublicKey(get_n(), get_e()));
+   return std::make_unique<RSA_PublicKey>(get_n(), get_e());
    }
 
 /*
@@ -667,7 +667,7 @@ RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
 #endif
 
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Encryption>(new RSA_Encryption_Operation(*this, params));
+      return std::make_unique<RSA_Encryption_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -677,7 +677,7 @@ RSA_PublicKey::create_kem_encryption_op(RandomNumberGenerator& /*rng*/,
                                         const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::KEM_Encryption>(new RSA_KEM_Encryption_Operation(*this, params));
+      return std::make_unique<RSA_KEM_Encryption_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -695,7 +695,7 @@ RSA_PublicKey::create_verification_op(const std::string& params,
 #endif
 
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Verification>(new RSA_Verify_Operation(*this, params));
+      return std::make_unique<RSA_Verify_Operation>(*this, params);
 
    throw Provider_Not_Found(algo_name(), provider);
    }
@@ -721,7 +721,7 @@ RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
 #endif
 
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Decryption>(new RSA_Decryption_Operation(*this, params, rng));
+      return std::make_unique<RSA_Decryption_Operation>(*this, params, rng);
 
    throw Provider_Not_Found(algo_name(), provider);
    }
@@ -732,7 +732,7 @@ RSA_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
                                          const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::KEM_Decryption>(new RSA_KEM_Decryption_Operation(*this, params, rng));
+      return std::make_unique<RSA_KEM_Decryption_Operation>(*this, params, rng);
 
    throw Provider_Not_Found(algo_name(), provider);
    }
@@ -752,7 +752,7 @@ RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
 #endif
 
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Signature>(new RSA_Signature_Operation(*this, params, rng));
+      return std::make_unique<RSA_Signature_Operation>(*this, params, rng);
 
    throw Provider_Not_Found(algo_name(), provider);
    }

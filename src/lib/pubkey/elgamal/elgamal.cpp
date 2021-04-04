@@ -52,7 +52,7 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
 
 std::unique_ptr<Public_Key> ElGamal_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new ElGamal_PublicKey(get_group(), get_y()));
+   return std::make_unique<ElGamal_PublicKey>(get_group(), get_y());
    }
 
 /*
@@ -195,7 +195,7 @@ ElGamal_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
                                         const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Encryption>(new ElGamal_Encryption_Operation(*this, params));
+      return std::make_unique<ElGamal_Encryption_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -205,7 +205,7 @@ ElGamal_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
                                          const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Decryption>(new ElGamal_Decryption_Operation(*this, params, rng));
+      return std::make_unique<ElGamal_Decryption_Operation>(*this, params, rng);
    throw Provider_Not_Found(algo_name(), provider);
    }
 

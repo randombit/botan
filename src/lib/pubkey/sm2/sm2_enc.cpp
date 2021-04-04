@@ -244,7 +244,7 @@ SM2_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
    if(provider == "base" || provider.empty())
       {
       const std::string kdf_hash = (params.empty() ? "SM3" : params);
-      return std::unique_ptr<PK_Ops::Encryption>(new SM2_Encryption_Operation(*this, rng, kdf_hash));
+      return std::make_unique<SM2_Encryption_Operation>(*this, rng, kdf_hash);
       }
 
    throw Provider_Not_Found(algo_name(), provider);
@@ -258,7 +258,7 @@ SM2_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
    if(provider == "base" || provider.empty())
       {
       const std::string kdf_hash = (params.empty() ? "SM3" : params);
-      return std::unique_ptr<PK_Ops::Decryption>(new SM2_Decryption_Operation(*this, rng, kdf_hash));
+      return std::make_unique<SM2_Decryption_Operation>(*this, rng, kdf_hash);
       }
 
    throw Provider_Not_Found(algo_name(), provider);

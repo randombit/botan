@@ -111,7 +111,7 @@ uint8_t ECDSA_PublicKey::recovery_param(const std::vector<uint8_t>& msg,
 
 std::unique_ptr<Public_Key> ECDSA_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new ECDSA_PublicKey(domain(), public_point()));
+   return std::make_unique<ECDSA_PublicKey>(domain(), public_point());
    }
 
 bool ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
@@ -279,7 +279,7 @@ ECDSA_PublicKey::create_verification_op(const std::string& params,
 #endif
 
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Verification>(new ECDSA_Verification_Operation(*this, params));
+      return std::make_unique<ECDSA_Verification_Operation>(*this, params);
 
    throw Provider_Not_Found(algo_name(), provider);
    }
@@ -305,7 +305,7 @@ ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
 #endif
 
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Signature>(new ECDSA_Signature_Operation(*this, params, rng));
+      return std::make_unique<ECDSA_Signature_Operation>(*this, params, rng);
 
    throw Provider_Not_Found(algo_name(), provider);
    }

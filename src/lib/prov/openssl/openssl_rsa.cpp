@@ -263,19 +263,19 @@ std::unique_ptr<PK_Ops::Decryption>
 make_openssl_rsa_dec_op(const RSA_PrivateKey& key, const std::string& params)
    {
    auto pad_info = get_openssl_enc_pad(params);
-   return std::unique_ptr<PK_Ops::Decryption>(new OpenSSL_RSA_Decryption_Operation(key, pad_info.first));
+   return std::make_unique<OpenSSL_RSA_Decryption_Operation>(key, pad_info.first);
    }
 
 std::unique_ptr<PK_Ops::Verification>
 make_openssl_rsa_ver_op(const RSA_PublicKey& key, const std::string& params)
    {
-   return std::unique_ptr<PK_Ops::Verification>(new OpenSSL_RSA_Verification_Operation(key, params));
+   return std::make_unique<OpenSSL_RSA_Verification_Operation>(key, params);
    }
 
 std::unique_ptr<PK_Ops::Signature>
 make_openssl_rsa_sig_op(const RSA_PrivateKey& key, const std::string& params)
    {
-   return std::unique_ptr<PK_Ops::Signature>(new OpenSSL_RSA_Signing_Operation(key, params));
+   return std::make_unique<OpenSSL_RSA_Signing_Operation>(key, params);
    }
 
 std::unique_ptr<RSA_PrivateKey>

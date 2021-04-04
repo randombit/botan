@@ -95,7 +95,7 @@ ECIES_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                           const std::string& /*params*/,
                                           const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Key_Agreement>(new ECIES_ECDH_KA_Operation(*this, rng));
+   return std::make_unique<ECIES_ECDH_KA_Operation>(*this, rng);
    }
 
 /**

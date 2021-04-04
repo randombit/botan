@@ -114,7 +114,7 @@ std::unique_ptr<Public_Key> PKCS11_RSA_PrivateKey::public_key() const
 
    BigInt n = BigInt::decode(p) * BigInt::decode(q);
 
-   return std::unique_ptr<Public_Key>(new RSA_PublicKey(n, BigInt::decode(e)));
+   return std::make_unique<RSA_PublicKey>(n, BigInt::decode(e));
    }
 
 secure_vector<uint8_t> PKCS11_RSA_PrivateKey::private_key_bits() const
@@ -336,14 +336,14 @@ PKCS11_RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
                                            const std::string& params,
                                            const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Encryption>(new PKCS11_RSA_Encryption_Operation(*this, params));
+   return std::make_unique<PKCS11_RSA_Encryption_Operation>(*this, params);
    }
 
 std::unique_ptr<PK_Ops::Verification>
 PKCS11_RSA_PublicKey::create_verification_op(const std::string& params,
                                              const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Verification>(new PKCS11_RSA_Verification_Operation(*this, params));
+   return std::make_unique<PKCS11_RSA_Verification_Operation>(*this, params);
    }
 
 std::unique_ptr<PK_Ops::Decryption>
@@ -351,7 +351,7 @@ PKCS11_RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
                                             const std::string& params,
                                             const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Decryption>(new PKCS11_RSA_Decryption_Operation(*this, params, rng));
+   return std::make_unique<PKCS11_RSA_Decryption_Operation>(*this, params, rng);
    }
 
 std::unique_ptr<PK_Ops::Signature>
@@ -359,7 +359,7 @@ PKCS11_RSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                            const std::string& params,
                                            const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Signature>(new PKCS11_RSA_Signature_Operation(*this, params));
+   return std::make_unique<PKCS11_RSA_Signature_Operation>(*this, params);
    }
 
 PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session, const RSA_PublicKeyGenerationProperties& pub_props,

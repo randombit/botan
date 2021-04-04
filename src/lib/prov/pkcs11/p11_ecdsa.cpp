@@ -54,7 +54,7 @@ secure_vector<uint8_t> PKCS11_ECDSA_PrivateKey::private_key_bits() const
 
 std::unique_ptr<Public_Key> PKCS11_ECDSA_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new ECDSA_PublicKey(domain(), public_point()));
+   return std::make_unique<ECDSA_PublicKey>(domain(), public_point());
    }
 
 namespace {
@@ -183,7 +183,7 @@ std::unique_ptr<PK_Ops::Verification>
 PKCS11_ECDSA_PublicKey::create_verification_op(const std::string& params,
                                                const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Verification>(new PKCS11_ECDSA_Verification_Operation(*this, params));
+   return std::make_unique<PKCS11_ECDSA_Verification_Operation>(*this, params);
    }
 
 std::unique_ptr<PK_Ops::Signature>
@@ -191,7 +191,7 @@ PKCS11_ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                              const std::string& params,
                                              const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Signature>(new PKCS11_ECDSA_Signature_Operation(*this, params));
+   return std::make_unique<PKCS11_ECDSA_Signature_Operation>(*this, params);
    }
 
 PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(Session& session, const EC_PublicKeyGenerationProperties& pub_props,

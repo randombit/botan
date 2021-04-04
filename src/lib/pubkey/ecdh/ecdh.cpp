@@ -19,7 +19,7 @@ namespace Botan {
 
 std::unique_ptr<Public_Key> ECDH_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new ECDH_PublicKey(domain(), public_point()));
+   return std::make_unique<ECDH_PublicKey>(domain(), public_point());
    }
 
 namespace {
@@ -83,7 +83,7 @@ ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
 #endif
 
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Key_Agreement>(new ECDH_KA_Operation(*this, params, rng));
+      return std::make_unique<ECDH_KA_Operation>(*this, params, rng);
 
    throw Provider_Not_Found(algo_name(), provider);
    }
