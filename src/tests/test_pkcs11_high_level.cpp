@@ -806,20 +806,31 @@ Test::Result test_rsa_encrypt_decrypt()
 
    auto encrypt_and_decrypt = [&keypair, &result](const std::vector<uint8_t>& plaintext, const std::string& padding)
       {
+      std::vector<uint8_t> encrypted;
+
       try
          {
          Botan::PK_Encryptor_EME encryptor(keypair.first, Test::rng(), padding);
-         auto encrypted = encryptor.encrypt(plaintext, Test::rng());
-
-         Botan::PK_Decryptor_EME decryptor(keypair.second, Test::rng(), padding);
-         auto decrypted = decryptor.decrypt(encrypted);
-
-         result.test_eq("RSA PKCS11 encrypt and decrypt: " + padding, decrypted, plaintext);
+         encrypted = encryptor.encrypt(plaintext, Test::rng());
          }
       catch(Botan::PKCS11::PKCS11_ReturnError& e)
          {
-         result.test_failure("PKCS11 RSA " + padding, e.what());
+         result.test_failure("PKCS11 RSA encrypt " + padding, e.what());
          }
+
+      Botan::secure_vector<uint8_t> decrypted;
+
+      try
+         {
+         Botan::PK_Decryptor_EME decryptor(keypair.second, Test::rng(), padding);
+         decrypted = decryptor.decrypt(encrypted);
+         }
+      catch(Botan::PKCS11::PKCS11_ReturnError& e)
+         {
+         result.test_failure("PKCS11 RSA decrypt " + padding, e.what());
+         }
+
+      result.test_eq("RSA PKCS11 encrypt and decrypt: " + padding, decrypted, plaintext);
       };
 
    std::vector<uint8_t> plaintext(256);
