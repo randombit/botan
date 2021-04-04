@@ -59,7 +59,7 @@ class Curve25519_Agreement_Tests final : public PK_Key_Agreement_Test
          {
          const std::vector<uint8_t> secret_vec = vars.get_req_bin("Secret");
          Botan::secure_vector<uint8_t> secret(secret_vec.begin(), secret_vec.end());
-         return std::unique_ptr<Botan::Private_Key>(new Botan::Curve25519_PrivateKey(secret));
+         return std::make_unique<Botan::Curve25519_PrivateKey>(secret);
          }
 
       std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override

@@ -181,8 +181,7 @@ int Test_Runner::run(const Test_Options& opts)
 
    for(size_t i = 0; i != opts.test_runs(); ++i)
       {
-      std::unique_ptr<Botan::RandomNumberGenerator> rng =
-         std::unique_ptr<Botan::RandomNumberGenerator>(new Testsuite_RNG(seed, i));
+      auto rng = std::make_unique<Testsuite_RNG>(seed, i);
 
       Botan_Tests::Test::set_test_rng(std::move(rng));
 

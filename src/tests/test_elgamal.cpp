@@ -31,8 +31,7 @@ class ElGamal_Encrypt_Tests final : public PK_Encryption_Decryption_Test
          const Botan::BigInt x = vars.get_req_bn("Secret");
          const Botan::DL_Group grp(vars.get_req_str("Group"));
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::ElGamal_PrivateKey(Test::rng(), grp, x));
-         return key;
+         return std::make_unique<Botan::ElGamal_PrivateKey>(Test::rng(), grp, x);
          }
    };
 
@@ -53,8 +52,7 @@ class ElGamal_Decrypt_Tests final : public PK_Decryption_Test
 
          const Botan::DL_Group grp(p, g);
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::ElGamal_PrivateKey(Test::rng(), grp, x));
-         return key;
+         return std::make_unique<Botan::ElGamal_PrivateKey>(Test::rng(), grp, x);
          }
    };
 

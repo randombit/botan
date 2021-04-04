@@ -31,8 +31,7 @@ class Ed25519_Key_Validity_Tests : public PK_Key_Validity_Test
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
          const std::vector<uint8_t> pubkey = vars.get_req_bin("Pubkey");
-         std::unique_ptr<Botan::Ed25519_PublicKey> key(new Botan::Ed25519_PublicKey(pubkey));
-         return std::unique_ptr<Botan::Public_Key>(key.release());
+         return std::make_unique<Botan::Ed25519_PublicKey>(pubkey);
          }
    };
 
@@ -52,11 +51,7 @@ class Ed25519_Verification_Tests : public PK_Signature_Verification_Test
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
          const std::vector<uint8_t> pubkey = vars.get_req_bin("Pubkey");
-
-         std::unique_ptr<Botan::Ed25519_PublicKey> key(new Botan::Ed25519_PublicKey(pubkey));
-
-         return std::unique_ptr<Botan::Public_Key>(key.release());
-
+         return std::make_unique<Botan::Ed25519_PublicKey>(pubkey);
          }
    };
 
@@ -80,12 +75,12 @@ class Ed25519_Signature_Tests final : public PK_Signature_Generation_Test
 
          Botan::secure_vector<uint8_t> seed(privkey.begin(), privkey.end());
 
-         std::unique_ptr<Botan::Ed25519_PrivateKey> key(new Botan::Ed25519_PrivateKey(seed));
+         auto key = std::make_unique<Botan::Ed25519_PrivateKey>(seed);
 
          if(key->get_public_key() != pubkey)
             throw Test_Error("Invalid Ed25519 key in test data");
 
-         return std::unique_ptr<Botan::Private_Key>(key.release());
+         return key;
          }
    };
 

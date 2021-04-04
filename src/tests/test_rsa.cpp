@@ -24,7 +24,7 @@ std::unique_ptr<Botan::Private_Key> load_rsa_private_key(const VarMap& vars)
    const BigInt q = vars.get_req_bn("Q");
    const BigInt e = vars.get_req_bn("E");
 
-   return std::unique_ptr<Botan::Private_Key>(new Botan::RSA_PrivateKey(p, q, e));
+   return std::make_unique<Botan::RSA_PrivateKey>(p, q, e);
    }
 
 std::unique_ptr<Botan::Public_Key> load_rsa_public_key(const VarMap& vars)
@@ -32,7 +32,7 @@ std::unique_ptr<Botan::Public_Key> load_rsa_public_key(const VarMap& vars)
    const BigInt n = vars.get_req_bn("N");
    const BigInt e = vars.get_req_bn("E");
 
-   return std::unique_ptr<Botan::Public_Key>(new Botan::RSA_PublicKey(n, e));
+   return std::make_unique<Botan::RSA_PublicKey>(n, e);
    }
 
 class RSA_ES_KAT_Tests final : public PK_Encryption_Decryption_Test

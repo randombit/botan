@@ -178,11 +178,11 @@ create_creds(Botan::RandomNumberGenerator& rng,
    const Botan::EC_Group ecdsa_params("secp256r1");
    const size_t rsa_params = 1024;
 
-   std::unique_ptr<Botan::Private_Key> rsa_ca_key(new Botan::RSA_PrivateKey(rng, rsa_params));
-   std::unique_ptr<Botan::Private_Key> rsa_srv_key(new Botan::RSA_PrivateKey(rng, rsa_params));
+   auto rsa_ca_key = std::make_unique<Botan::RSA_PrivateKey>(rng, rsa_params);
+   auto rsa_srv_key = std::make_unique<Botan::RSA_PrivateKey>(rng, rsa_params);
 
-   std::unique_ptr<Botan::Private_Key> ecdsa_ca_key(new Botan::ECDSA_PrivateKey(rng, ecdsa_params));
-   std::unique_ptr<Botan::Private_Key> ecdsa_srv_key(new Botan::ECDSA_PrivateKey(rng, ecdsa_params));
+   auto ecdsa_ca_key = std::make_unique<Botan::ECDSA_PrivateKey>(rng, ecdsa_params);
+   auto ecdsa_srv_key = std::make_unique<Botan::ECDSA_PrivateKey>(rng, ecdsa_params);
 
    Botan::X509_Cert_Options rsa_ca_opts("RSA Test CA/VT");
    Botan::X509_Cert_Options ecdsa_ca_opts("ECDSA Test CA/VT");

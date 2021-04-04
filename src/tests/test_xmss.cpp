@@ -57,8 +57,7 @@ class XMSS_Signature_Tests final : public PK_Signature_Generation_Test
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PrivateKey");
          const Botan::secure_vector<uint8_t> sec_key(raw_key.begin(), raw_key.end());
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::XMSS_PrivateKey(sec_key));
-         return key;
+         return std::make_unique<Botan::XMSS_PrivateKey>(sec_key);
          }
    };
 
@@ -79,8 +78,7 @@ class XMSS_Signature_Verify_Tests final : public PK_Signature_Verification_Test
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
-         std::unique_ptr<Botan::Public_Key> key(new Botan::XMSS_PublicKey(raw_key));
-         return key;
+         return std::make_unique<Botan::XMSS_PublicKey>(raw_key);
          }
    };
 
@@ -101,8 +99,7 @@ class XMSS_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerific
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
-         std::unique_ptr<Botan::Public_Key> key(new Botan::XMSS_PublicKey(raw_key));
-         return key;
+         return std::make_unique<Botan::XMSS_PublicKey>(raw_key);
          }
    };
 

@@ -50,8 +50,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
             grp = Botan::DL_Group(p, q, g);
             }
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::DH_PrivateKey(Test::rng(), grp, x));
-         return key;
+         return std::make_unique<Botan::DH_PrivateKey>(Test::rng(), grp, x);
          }
 
       std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override
@@ -84,9 +83,9 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
          const Botan::DL_Group grp(p, g);
 
          const Botan::BigInt x("46205663093589612668746163860870963912226379131190812163519349848291472898748");
-         std::unique_ptr<Botan::Private_Key> privkey(new Botan::DH_PrivateKey(Test::rng(), grp, x));
+         auto privkey = std::make_unique<Botan::DH_PrivateKey>(Test::rng(), grp, x);
 
-         std::unique_ptr<Botan::PK_Key_Agreement> kas(new Botan::PK_Key_Agreement(*privkey, rng(), "Raw"));
+         auto kas = std::make_unique<Botan::PK_Key_Agreement>(*privkey, rng(), "Raw");
 
          result.test_throws("agreement input too big",
                             "DH agreement - invalid key provided",
@@ -130,7 +129,7 @@ class DH_Invalid_Key_Tests final : public Text_Based_Test
          const Botan::BigInt pubkey = vars.get_req_bn("InvalidKey");
 
          Botan::DL_Group grp(p, q, g);
-         std::unique_ptr<Botan::Public_Key> key(new Botan::DH_PublicKey(grp, pubkey));
+         auto key = std::make_unique<Botan::DH_PublicKey>(grp, pubkey);
          result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
          return result;
          }

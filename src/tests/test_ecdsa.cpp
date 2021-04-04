@@ -44,8 +44,7 @@ class ECDSA_Verification_Tests final : public PK_Signature_Verification_Test
 
          const Botan::PointGFp public_point = group.point(px, py);
 
-         std::unique_ptr<Botan::Public_Key> key(new Botan::ECDSA_PublicKey(group, public_point));
-         return key;
+         return std::make_unique<Botan::ECDSA_PublicKey>(group, public_point);
          }
 
       std::string default_padding(const VarMap&) const override
@@ -84,8 +83,7 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
 
          const Botan::PointGFp public_point = group.point(px, py);
 
-         std::unique_ptr<Botan::Public_Key> key(new Botan::ECDSA_PublicKey(group, public_point));
-         return key;
+         return std::make_unique<Botan::ECDSA_PublicKey>(group, public_point);
          }
 
       std::string default_padding(const VarMap& vars) const override
@@ -118,8 +116,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
          const BigInt x = vars.get_req_bn("X");
          Botan::EC_Group group(Botan::OID::from_string(group_id));
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::ECDSA_PrivateKey(Test::rng(), group, x));
-         return key;
+         return std::make_unique<Botan::ECDSA_PrivateKey>(Test::rng(), group, x);
          }
 
       std::string default_padding(const VarMap& vars) const override
@@ -250,7 +247,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
             return result;
             }
 
-         std::unique_ptr<Botan::Public_Key> key(new Botan::ECDSA_PublicKey(group, *public_point));
+         auto key = std::make_unique<Botan::ECDSA_PublicKey>(group, *public_point);
          result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
          return result;
          }

@@ -33,12 +33,11 @@ class ECDH_KAT_Tests final : public PK_Key_Agreement_Test
          }
 
       std::unique_ptr<Botan::Private_Key> load_our_key(const std::string& group_id,
-            const VarMap& vars) override
+                                                       const VarMap& vars) override
          {
          Botan::EC_Group group(group_id);
          const Botan::BigInt secret = vars.get_req_bn("Secret");
-         std::unique_ptr<Botan::Private_Key> key(new Botan::ECDH_PrivateKey(Test::rng(), group, secret));
-         return key;
+         return std::make_unique<Botan::ECDH_PrivateKey>(Test::rng(), group, secret);
          }
 
       std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override

@@ -48,7 +48,7 @@ class HMAC_DRBG_Tests final : public Text_Based_Test
             return result;
             }
 
-         std::unique_ptr<Botan::HMAC_DRBG> rng(new Botan::HMAC_DRBG(std::move(mac)));
+         auto rng = std::make_unique<Botan::HMAC_DRBG>(std::move(mac));
          rng->initialize_with(seed_input.data(), seed_input.size());
 
          // now reseed

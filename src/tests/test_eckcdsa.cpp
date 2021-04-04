@@ -39,8 +39,7 @@ class ECKCDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
          const BigInt x = vars.get_req_bn("X");
          Botan::EC_Group group(Botan::OID::from_string(group_id));
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::ECKCDSA_PrivateKey(Test::rng(), group, x));
-         return key;
+         return std::make_unique<Botan::ECKCDSA_PrivateKey>(Test::rng(), group, x);
          }
 
       std::string default_padding(const VarMap& vars) const override

@@ -33,7 +33,7 @@ std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars)
    Botan::EC_Group domain(p, a, b, xG, yG, order, cofactor);
 
    Botan::Null_RNG null_rng;
-   return std::unique_ptr<Botan::Private_Key>(new Botan::SM2_PrivateKey(null_rng, domain, x));
+   return std::make_unique<Botan::SM2_PrivateKey>(null_rng, domain, x);
    }
 
 class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test

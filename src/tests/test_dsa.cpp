@@ -45,8 +45,7 @@ class DSA_KAT_Tests final : public PK_Signature_Generation_Test
 
          const Botan::DL_Group grp(p, q, g);
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::DSA_PrivateKey(Test::rng(), grp, x));
-         return key;
+         return std::make_unique<Botan::DSA_PrivateKey>(Test::rng(), grp, x);
          }
 
       std::string default_padding(const VarMap& vars) const override
@@ -77,8 +76,7 @@ class DSA_Verification_Tests final : public PK_Signature_Verification_Test
 
          const Botan::DL_Group grp(p, q, g);
 
-         std::unique_ptr<Botan::Public_Key> key(new Botan::DSA_PublicKey(grp, y));
-         return key;
+         return std::make_unique<Botan::DSA_PublicKey>(grp, y);
          }
 
       std::string default_padding(const VarMap&) const override
