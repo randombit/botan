@@ -15,22 +15,23 @@ namespace Botan {
 /**
 * Get a block cipher padding method by name
 */
-BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec)
+std::unique_ptr<BlockCipherModePaddingMethod>
+BlockCipherModePaddingMethod::create(const std::string& algo_spec)
    {
    if(algo_spec == "NoPadding")
-      return new Null_Padding;
+      return std::make_unique<Null_Padding>();
 
    if(algo_spec == "PKCS7")
-      return new PKCS7_Padding;
+      return std::make_unique<PKCS7_Padding>();
 
    if(algo_spec == "OneAndZeros")
-      return new OneAndZeros_Padding;
+      return std::make_unique<OneAndZeros_Padding>();
 
    if(algo_spec == "X9.23")
-      return new ANSI_X923_Padding;
+      return std::make_unique<ANSI_X923_Padding>();
 
    if(algo_spec == "ESP")
-      return new ESP_Padding;
+      return std::make_unique<ESP_Padding>();
 
    return nullptr;
    }
