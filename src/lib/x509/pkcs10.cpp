@@ -105,7 +105,7 @@ namespace {
 
 std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
    {
-   std::unique_ptr<PKCS10_Data> data(new PKCS10_Data);
+   auto data = std::make_unique<PKCS10_Data>();
 
    BER_Decoder cert_req_info(body);
 

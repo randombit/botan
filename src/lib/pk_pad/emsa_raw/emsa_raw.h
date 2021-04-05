@@ -19,7 +19,7 @@ namespace Botan {
 class EMSA_Raw final : public EMSA
    {
    public:
-      EMSA* clone() override { return new EMSA_Raw(); }
+      std::unique_ptr<EMSA> new_object() override { return std::make_unique<EMSA_Raw>(); }
 
       explicit EMSA_Raw(size_t expected_hash_size = 0) :
          m_expected_size(expected_hash_size) {}

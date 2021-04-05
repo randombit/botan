@@ -116,7 +116,7 @@ class Verification_with_EMSA : public Verification
          throw Invalid_State("Message recovery not supported");
          }
 
-      std::unique_ptr<EMSA> clone_emsa() const { return std::unique_ptr<EMSA>(m_emsa->clone()); }
+      std::unique_ptr<EMSA> clone_emsa() const { return m_emsa->new_object(); }
 
    private:
       std::unique_ptr<EMSA> m_emsa;
@@ -148,7 +148,7 @@ class Signature_with_EMSA : public Signature
       */
       virtual secure_vector<uint8_t> message_prefix() const { throw Invalid_State("No prefix"); }
 
-      std::unique_ptr<EMSA> clone_emsa() const { return std::unique_ptr<EMSA>(m_emsa->clone()); }
+      std::unique_ptr<EMSA> clone_emsa() const { return m_emsa->new_object(); }
 
    private:
 

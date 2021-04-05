@@ -120,7 +120,7 @@ void Client::send_client_hello(Handshake_State& state_base,
 
    if(!force_full_renegotiation && !m_info.empty())
       {
-      std::unique_ptr<Session> session_info(new Session);;
+      auto session_info = std::make_unique<Session>();
       if(session_manager().load_from_server_info(m_info, *session_info))
          {
          /*

@@ -128,11 +128,11 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
          }
 
 #if !defined(BOTAN_HAS_RFC6979_GENERATOR)
-      Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
+      std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override
          {
          // probabilistic ecdsa signature generation extracts more random than just the nonce,
          // but the nonce is extracted first
-         return new Fixed_Output_Position_RNG(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
          }
 #endif
    };

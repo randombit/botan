@@ -35,7 +35,7 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
    std::vector<uint8_t> buf(32);
    rng.randomize(buf.data(), buf.size());
 
-   std::unique_ptr<HashFunction> sha256 = HashFunction::create_or_throw("SHA-256");
+   auto sha256 = HashFunction::create_or_throw("SHA-256");
    sha256->update(buf);
    sha256->final(buf);
 
@@ -123,7 +123,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    if(m_version.is_datagram_protocol())
       m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
 
-   std::unique_ptr<Supported_Groups> supported_groups(new Supported_Groups(policy.key_exchange_groups()));
+   auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
 
    if(supported_groups->ec_groups().size() > 0)
       {
@@ -175,7 +175,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    if(policy.support_cert_status_message())
       m_extensions.add(new Certificate_Status_Request({}, {}));
 
-   std::unique_ptr<Supported_Groups> supported_groups(new Supported_Groups(policy.key_exchange_groups()));
+   auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
 
    if(supported_groups->ec_groups().size() > 0)
       {

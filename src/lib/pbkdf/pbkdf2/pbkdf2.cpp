@@ -182,7 +182,7 @@ PBKDF* PKCS5_PBKDF2::clone() const
 // PasswordHash interface
 
 PBKDF2::PBKDF2(const MessageAuthenticationCode& prf, size_t olen, std::chrono::milliseconds msec) :
-   m_prf(prf.clone()),
+   m_prf(prf.new_object()),
    m_iterations(tune_pbkdf2(*m_prf, olen, static_cast<uint32_t>(msec.count())))
    {}
 

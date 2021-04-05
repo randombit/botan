@@ -78,7 +78,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       BOTAN_ASSERT(group_param_is_dh(shared_group), "DH groups for the DH ciphersuites god");
 
       const std::string group_name = state.callbacks().tls_decode_group_param(shared_group);
-      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, DL_Group(group_name)));
+      auto dh = std::make_unique<DH_PrivateKey>(rng, DL_Group(group_name));
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
@@ -102,7 +102,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       if(shared_group == Group_Params::X25519)
          {
 #if defined(BOTAN_HAS_CURVE_25519)
-         std::unique_ptr<Curve25519_PrivateKey> x25519(new Curve25519_PrivateKey(rng));
+         auto x25519 = std::make_unique<X25519_PrivateKey>(rng);
          ecdh_public_val = x25519->public_value();
          m_kex_key.reset(x25519.release());
 #else
@@ -116,7 +116,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          const std::string curve_name = state.callbacks().tls_decode_group_param(curve);
 
          EC_Group ec_group(curve_name);
-         std::unique_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
+         auto ecdh = std::make_unique<ECDH_PrivateKey>(rng, ec_group);
 
          // follow client's preference for point compression
          ecdh_public_val = ecdh->public_value(

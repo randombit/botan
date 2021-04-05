@@ -216,9 +216,9 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
 
 }
 
-EMSA* ISO_9796_DS2::clone()
+std::unique_ptr<EMSA> ISO_9796_DS2::new_object()
    {
-   return new ISO_9796_DS2(m_hash->clone(), m_implicit, m_SALT_SIZE);
+   return std::make_unique<ISO_9796_DS2>(m_hash->clone(), m_implicit, m_SALT_SIZE);
    }
 
 /*
@@ -269,9 +269,9 @@ std::string ISO_9796_DS2::name() const
          + (m_implicit ? "imp" : "exp") + "," + std::to_string(m_SALT_SIZE) + ")";
    }
 
-EMSA* ISO_9796_DS3::clone()
+std::unique_ptr<EMSA> ISO_9796_DS3::new_object()
    {
-   return new ISO_9796_DS3(m_hash->clone(), m_implicit);
+   return std::make_unique<ISO_9796_DS3>(m_hash->clone(), m_implicit);
    }
 
 /*

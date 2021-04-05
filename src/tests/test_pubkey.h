@@ -58,9 +58,9 @@ class PK_Signature_Generation_Test : public PK_Test
 
       virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
 
-      virtual Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const
+      virtual std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const
          {
-         return new Fixed_Output_RNG(nonce);
+         return std::make_unique<Fixed_Output_RNG>(nonce);
          }
 
    private:
@@ -146,9 +146,9 @@ class PK_Encryption_Decryption_Test : public PK_Test
          return "Raw";
          }
 
-      virtual Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const
+      virtual std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const
          {
-         return new Fixed_Output_RNG(nonce);
+         return std::make_unique<Fixed_Output_RNG>(nonce);
          }
 
    private:

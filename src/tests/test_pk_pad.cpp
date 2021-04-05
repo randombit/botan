@@ -116,9 +116,8 @@ class EMSA_unit_tests final : public Test
             try
                {
                const std::string hash_to_use = Botan::hash_for_emsa(pad);
-               std::unique_ptr<Botan::EMSA> emsa_1(
-                  Botan::get_emsa(pad + "(" + hash_to_use + ")"));
-               std::unique_ptr<Botan::EMSA> emsa_2(Botan::get_emsa(emsa_1->name()));
+               auto emsa_1 = Botan::EMSA::create(pad + "(" + hash_to_use + ")");
+               auto emsa_2 = Botan::EMSA::create(emsa_1->name());
                name_tests.test_eq("EMSA_name_test for " + pad,
                      emsa_1->name(), emsa_2->name());
                }
@@ -137,8 +136,7 @@ class EMSA_unit_tests final : public Test
             std::string algo_name = pad + "(YYZ)";
             try
                {
-               std::unique_ptr<Botan::EMSA> emsa(
-                  Botan::get_emsa(algo_name));
+               auto emsa = Botan::EMSA::create_or_throw(algo_name);
                name_tests.test_failure("EMSA_name_test for " + pad + ": " +
                    "Could create EMSA with fantasy hash YYZ");
                }
@@ -158,8 +156,8 @@ class EMSA_unit_tests final : public Test
             {
             try
                {
-               std::unique_ptr<Botan::EMSA> emsa_1(Botan::get_emsa(pad));
-               std::unique_ptr<Botan::EMSA> emsa_2(Botan::get_emsa(emsa_1->name()));
+               auto emsa_1 = Botan::EMSA::create(pad);
+               auto emsa_2 = Botan::EMSA::create(emsa_1->name());
                name_tests.test_eq("EMSA_name_test for " + pad,
                      emsa_1->name(), emsa_2->name());
                }

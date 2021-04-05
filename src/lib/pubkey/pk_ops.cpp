@@ -11,11 +11,9 @@
 
 namespace Botan {
 
-PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme)
+PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme) :
+   m_eme(EME::create(eme))
    {
-   m_eme.reset(get_eme(eme));
-   if(!m_eme.get())
-      throw Algorithm_Not_Found(eme);
    }
 
 size_t PK_Ops::Encryption_with_EME::max_input_bits() const
@@ -31,11 +29,9 @@ secure_vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(const uint8_t msg[],
    return raw_encrypt(encoded.data(), encoded.size(), rng);
    }
 
-PK_Ops::Decryption_with_EME::Decryption_with_EME(const std::string& eme)
+PK_Ops::Decryption_with_EME::Decryption_with_EME(const std::string& eme) :
+   m_eme(EME::create(eme))
    {
-   m_eme.reset(get_eme(eme));
-   if(!m_eme.get())
-      throw Algorithm_Not_Found(eme);
    }
 
 secure_vector<uint8_t>
@@ -65,12 +61,10 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
 
 PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa) :
    Signature(),
-   m_emsa(get_emsa(emsa)),
+   m_emsa(EMSA::create_or_throw(emsa)),
    m_hash(hash_for_emsa(emsa)),
    m_prefix_used(false)
    {
-   if(!m_emsa)
-      throw Algorithm_Not_Found(emsa);
    }
 
 void PK_Ops::Signature_with_EMSA::update(const uint8_t msg[], size_t msg_len)
@@ -94,12 +88,10 @@ secure_vector<uint8_t> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& 
 
 PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa) :
    Verification(),
-   m_emsa(get_emsa(emsa)),
+   m_emsa(EMSA::create_or_throw(emsa)),
    m_hash(hash_for_emsa(emsa)),
    m_prefix_used(false)
    {
-   if(!m_emsa)
-      throw Algorithm_Not_Found(emsa);
    }
 
 void PK_Ops::Verification_with_EMSA::update(const uint8_t msg[], size_t msg_len)

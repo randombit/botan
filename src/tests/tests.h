@@ -444,9 +444,9 @@ class Test
 
       static void register_test(const std::string& category,
                                 const std::string& name,
-                                std::function<Test* ()> maker_fn);
+                                std::function<std::unique_ptr<Test> ()> maker_fn);
 
-      static std::map<std::string, std::function<Test* ()>>& global_registry();
+      static std::map<std::string, std::function<std::unique_ptr<Test> ()>>& global_registry();
 
       static std::set<std::string> registered_tests();
 
@@ -519,7 +519,7 @@ class TestClassRegistration
    public:
       TestClassRegistration(const std::string& category, const std::string& name)
          {
-         auto test_maker = []() -> Test* { return new Test_Class; };
+         auto test_maker = []() -> std::unique_ptr<Test> { return std::make_unique<Test_Class>(); };
          Test::register_test(category, name, test_maker);
          }
    };
@@ -548,7 +548,7 @@ class TestFnRegistration
    public:
       TestFnRegistration(const std::string& category, const std::string& name, test_fn fn)
          {
-         auto test_maker = [=]() -> Test* { return new FnTest(fn); };
+         auto test_maker = [=]() -> std::unique_ptr<Test> { return std::make_unique<FnTest>(fn); };
          Test::register_test(category, name, test_maker);
          }
    };

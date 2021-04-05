@@ -89,9 +89,9 @@ class GOST_3410_2001_Signature_Tests final : public PK_Signature_Generation_Test
          return "EMSA1(" + hash + ")";
          }
 
-      Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
+      std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override
          {
-         return new Fixed_Output_Position_RNG(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
          }
    };
 

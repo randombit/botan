@@ -375,7 +375,7 @@ std::vector<uint8_t> TPM_PrivateKey::export_blob() const
 
 std::unique_ptr<Public_Key> TPM_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(new RSA_PublicKey(get_n(), get_e()));
+   return std::make_unique<RSA_PublicKey>(get_n(), get_e());
    }
 
 bool TPM_PrivateKey::check_key(RandomNumberGenerator&, bool) const
@@ -454,7 +454,7 @@ TPM_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                     const std::string& params,
                                     const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Signature>(new TPM_Signing_Operation(*this, params));
+   return std::make_unique<TPM_Signing_Operation>(*this, params);
    }
 
 }

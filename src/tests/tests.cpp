@@ -473,16 +473,16 @@ std::string Test::Result::result_string() const
 
 // static Test:: functions
 //static
-std::map<std::string, std::function<Test* ()>>& Test::global_registry()
+std::map<std::string, std::function<std::unique_ptr<Test> ()>>& Test::global_registry()
    {
-   static std::map<std::string, std::function<Test* ()>> g_test_registry;
+   static std::map<std::string, std::function<std::unique_ptr<Test> ()>> g_test_registry;
    return g_test_registry;
    }
 
 //static
 void Test::register_test(const std::string& category,
                          const std::string& name,
-                         std::function<Test* ()> maker_fn)
+                         std::function<std::unique_ptr<Test> ()> maker_fn)
    {
    BOTAN_UNUSED(category);
    if(Test::global_registry().count(name) != 0)

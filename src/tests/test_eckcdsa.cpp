@@ -47,11 +47,11 @@ class ECKCDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
          return "EMSA1(" + vars.get_req_str("Hash") + ")";
          }
 
-      Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
+      std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override
          {
          // eckcdsa signature generation extracts more random than just the nonce,
          // but the nonce is extracted first
-         return new Fixed_Output_Position_RNG(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
          }
    };
 
