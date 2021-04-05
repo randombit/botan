@@ -9,7 +9,7 @@
 #define BOTAN_KDF_BASE_H_
 
 #include <botan/secmem.h>
-#include <botan/types.h>
+#include <botan/exceptn.h>
 #include <string>
 
 namespace Botan {
@@ -195,8 +195,20 @@ class BOTAN_PUBLIC_API(2,0) KDF
 * Factory method for KDF (key derivation function)
 * @param algo_spec the name of the KDF to create
 * @return pointer to newly allocated object of that type
+*
+* Prefer KDF::create
 */
-BOTAN_PUBLIC_API(2,0) KDF* get_kdf(const std::string& algo_spec);
+inline KDF* get_kdf(const std::string& algo_spec)
+   {
+   auto kdf = KDF::create(algo_spec);
+   if(kdf)
+      return kdf.release();
+
+   if(algo_spec == "Raw")
+      return nullptr;
+
+   throw Algorithm_Not_Found(algo_spec);
+   }
 
 }
 

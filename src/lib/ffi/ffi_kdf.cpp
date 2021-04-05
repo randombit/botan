@@ -133,7 +133,7 @@ int botan_kdf(const char* kdf_algo,
               const uint8_t label[], size_t label_len)
    {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_algo));
+      auto kdf = Botan::KDF::create_or_throw(kdf_algo);
       kdf->kdf(out, out_len, secret, secret_len, salt, salt_len, label, label_len);
       return BOTAN_FFI_SUCCESS;
       });

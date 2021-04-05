@@ -39,7 +39,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    const uint8_t KEY_GEN_MAGIC[] = {
       0x6B, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70, 0x61, 0x6E, 0x73, 0x69, 0x6F, 0x6E };
 
-   std::unique_ptr<KDF> prf(state->protocol_specific_prf());
+   auto prf = state->protocol_specific_prf();
 
    if(resuming)
       {
