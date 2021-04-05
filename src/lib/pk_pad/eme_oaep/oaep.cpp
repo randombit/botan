@@ -147,19 +147,19 @@ size_t OAEP::maximum_input_size(size_t keybits) const
       return 0;
    }
 
-/*
-* OAEP Constructor
-*/
-OAEP::OAEP(HashFunction* hash, const std::string& P) : m_mgf1_hash(hash)
+OAEP::OAEP(std::unique_ptr<HashFunction> hash,
+           const std::string& P) :
+   m_mgf1_hash(std::move(hash))
    {
    m_Phash = m_mgf1_hash->process(P);
    }
 
-OAEP::OAEP(HashFunction* hash,
-           HashFunction* mgf1_hash,
-           const std::string& P) : m_mgf1_hash(mgf1_hash)
+OAEP::OAEP(std::unique_ptr<HashFunction> hash,
+           std::unique_ptr<HashFunction> mgf1_hash,
+           const std::string& P) :
+   m_mgf1_hash(std::move(mgf1_hash))
    {
-   std::unique_ptr<HashFunction> phash(hash); // takes ownership
+   auto phash = std::move(hash);
    m_Phash = phash->process(P);
    }
 
