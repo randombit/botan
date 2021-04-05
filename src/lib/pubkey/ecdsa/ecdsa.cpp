@@ -36,13 +36,18 @@ PointGFp recover_ecdsa_public_key(const EC_Group& group,
    if(group.get_cofactor() != 1)
       throw Invalid_Argument("ECDSA public key recovery only supported for prime order groups");
 
-   if(v > 4)
+   if(v >= 4)
       throw Invalid_Argument("Unexpected v param for ECDSA public key recovery");
+
+   const BigInt& group_order = group.get_order();
+
+   if(r <= 0 || r >= group_order || s <= 0 || s >= group_order)
+      {
+      throw Invalid_Argument("Out of range r/s cannot recover ECDSA public key");
+      }
 
    const uint8_t y_odd = v % 2;
    const uint8_t add_order = v >> 1;
-
-   const BigInt& group_order = group.get_order();
    const size_t p_bytes = group.get_p_bytes();
 
    try
