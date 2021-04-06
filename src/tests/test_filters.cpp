@@ -205,7 +205,7 @@ class Filter_Tests final : public Test
          pipe.prepend_filter(nullptr); // ignored
          pipe.pop(); // empty pipe, so ignored
 
-         std::unique_ptr<Botan::Filter> queue_filter(new Botan::SecureQueue);
+         auto queue_filter = std::make_shared<Botan::SecureQueue>();
 
          // can't explicitly insert a queue into the pipe because they are implicit
          result.test_throws("pipe error",
@@ -224,7 +224,7 @@ class Filter_Tests final : public Test
 
          pipe.start_msg();
 
-         std::unique_ptr<Botan::Filter> filter(new Botan::BitBucket);
+         auto filter = std::make_unique<Botan::BitBucket>();
 
          // now inside a message, cannot modify pipe structure
 
@@ -488,7 +488,7 @@ class Filter_Tests final : public Test
 
 #if defined(BOTAN_HAS_ZLIB)
 
-         std::unique_ptr<Botan::Compression_Filter> comp_f(new Botan::Compression_Filter("zlib", 9));
+         auto comp_f = std::make_unique<Botan::Compression_Filter>("zlib", 9);
 
          result.test_eq("Compressor filter name", comp_f->name(), "Zlib_Compression");
          Botan::Pipe pipe(comp_f.release());
@@ -503,7 +503,7 @@ class Filter_Tests final : public Test
          // Can't do equality check on compression because output may differ
          result.test_lt("Compressed is shorter", compr.size(), input_str.size());
 
-         std::unique_ptr<Botan::Decompression_Filter> decomp_f(new Botan::Decompression_Filter("zlib"));
+         auto decomp_f = std::make_unique<Botan::Decompression_Filter>("zlib");
          result.test_eq("Decompressor name", decomp_f->name(), "Zlib_Decompression");
          pipe.append(decomp_f.release());
          pipe.pop(); // remove compressor
@@ -523,7 +523,7 @@ class Filter_Tests final : public Test
 
 #if defined(BOTAN_HAS_BZIP2)
 
-         std::unique_ptr<Botan::Compression_Filter> comp_f(new Botan::Compression_Filter("bzip2", 9));
+         auto comp_f = std::make_unique<Botan::Compression_Filter>("bzip2", 9);
 
          result.test_eq("Compressor filter name", comp_f->name(), "Bzip2_Compression");
          Botan::Pipe pipe(comp_f.release());
@@ -537,7 +537,7 @@ class Filter_Tests final : public Test
          auto compr = pipe.read_all(0);
          // Here the output is actually longer than the input as input is so short
 
-         std::unique_ptr<Botan::Decompression_Filter> decomp_f(new Botan::Decompression_Filter("bzip2"));
+         auto decomp_f = std::make_unique<Botan::Decompression_Filter>("bzip2");
          result.test_eq("Decompressor name", decomp_f->name(), "Bzip2_Decompression");
          pipe.append(decomp_f.release());
          pipe.pop(); // remove compressor
@@ -681,15 +681,14 @@ class Filter_Tests final : public Test
             new Botan::Hex_Encoder
          };
 
-         std::unique_ptr<Botan::Chain> chain(new Botan::Chain(filters, 2));
+         auto chain = std::make_unique<Botan::Chain>(filters, 2);
 
          result.test_eq("Chain has a name", chain->name(), "Chain");
 
-         std::unique_ptr<Botan::Fork> fork(
-            new Botan::Fork(
-               chain.release(),
-               new Botan::Chain(new Botan::Hash_Filter("SHA-512-256", 19), new Botan::Hex_Encoder)
-            ));
+         auto fork = std::make_unique<Botan::Fork>(
+            chain.release(),
+            new Botan::Chain(new Botan::Hash_Filter("SHA-512-256", 19), new Botan::Hex_Encoder)
+            );
 
          result.test_eq("Fork has a name", fork->name(), "Fork");
          Botan::Pipe pipe(fork.release());
