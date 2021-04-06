@@ -74,11 +74,11 @@ void Parallel::clear()
       hash->clear();
    }
 
-Parallel::Parallel(std::vector<std::unique_ptr<HashFunction>>& h)
+Parallel::Parallel(std::vector<std::unique_ptr<HashFunction>>& hashes)
    {
-   for(size_t i = 0; i != h.size(); ++i)
+   for(auto&& hash: hashes)
       {
-      m_hashes.push_back(std::unique_ptr<HashFunction>(h[i].release()));
+      m_hashes.push_back(std::move(hash));
       }
    }
 
