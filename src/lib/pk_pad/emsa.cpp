@@ -49,7 +49,7 @@ std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
    if(req.algo_name() == "EMSA1" && req.arg_count() == 1)
       {
       if(auto hash = HashFunction::create(req.arg(0)))
-         return std::make_unique<EMSA1>(hash.release());
+         return std::make_unique<EMSA1>(std::move(hash));
       }
 #endif
 
@@ -73,7 +73,7 @@ std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
             {
             if(auto hash = HashFunction::create(req.arg(0)))
                {
-               return std::make_unique<EMSA_PKCS1v15>(hash.release());
+               return std::make_unique<EMSA_PKCS1v15>(std::move(hash));
                }
             }
          }
@@ -86,16 +86,16 @@ std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
       {
       if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1")
          {
-         if(auto h = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0)))
             {
             if(req.arg_count() == 3)
                {
                const size_t salt_size = req.arg_as_integer(2, 0);
-               return std::make_unique<PSSR_Raw>(h.release(), salt_size);
+               return std::make_unique<PSSR_Raw>(std::move(hash), salt_size);
                }
             else
                {
-               return std::make_unique<PSSR_Raw>(h.release());
+               return std::make_unique<PSSR_Raw>(std::move(hash));
                }
             }
          }
@@ -109,16 +109,16 @@ std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
       {
       if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1")
          {
-         if(auto h = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0)))
             {
             if(req.arg_count() == 3)
                {
                const size_t salt_size = req.arg_as_integer(2, 0);
-               return std::make_unique<PSSR>(h.release(), salt_size);
+               return std::make_unique<PSSR>(std::move(hash), salt_size);
                }
             else
                {
-               return std::make_unique<PSSR>(h.release());
+               return std::make_unique<PSSR>(std::move(hash));
                }
             }
          }
@@ -130,11 +130,11 @@ std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
       {
       if(req.arg_count_between(1, 3))
          {
-         if(auto h = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0)))
             {
-            const size_t salt_size = req.arg_as_integer(2, h->output_length());
+            const size_t salt_size = req.arg_as_integer(2, hash->output_length());
             const bool implicit = req.arg(1, "exp") == "imp";
-            return std::make_unique<ISO_9796_DS2>(h.release(), implicit, salt_size);
+            return std::make_unique<ISO_9796_DS2>(std::move(hash), implicit, salt_size);
             }
          }
       }
@@ -143,10 +143,10 @@ std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
       {
       if(req.arg_count_between(1, 2))
          {
-         if(auto h = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0)))
             {
             const bool implicit = req.arg(1, "exp") == "imp";
-            return std::make_unique<ISO_9796_DS3>(h.release(), implicit);
+            return std::make_unique<ISO_9796_DS3>(std::move(hash), implicit);
             }
          }
       }
@@ -161,7 +161,7 @@ std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
          {
          if(auto hash = HashFunction::create(req.arg(0)))
             {
-            return std::make_unique<EMSA_X931>(hash.release());
+            return std::make_unique<EMSA_X931>(std::move(hash));
             }
          }
       }

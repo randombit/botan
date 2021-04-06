@@ -24,9 +24,9 @@ class EMSA_X931 final : public EMSA
       /**
       * @param hash the hash function to use
       */
-      explicit EMSA_X931(HashFunction* hash);
+      explicit EMSA_X931(std::unique_ptr<HashFunction> hash);
 
-      std::unique_ptr<EMSA> new_object() override { return std::make_unique<EMSA_X931>(m_hash->clone()); }
+      std::unique_ptr<EMSA> new_object() override { return std::make_unique<EMSA_X931>(m_hash->new_object()); }
 
       std::string name() const override;
 

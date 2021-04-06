@@ -24,9 +24,12 @@ class EMSA_PKCS1v15 final : public EMSA
       /**
       * @param hash the hash function to use
       */
-      explicit EMSA_PKCS1v15(HashFunction* hash);
+      explicit EMSA_PKCS1v15(std::unique_ptr<HashFunction> hash);
 
-      std::unique_ptr<EMSA> new_object() override { return std::make_unique<EMSA_PKCS1v15>(m_hash->clone()); }
+      std::unique_ptr<EMSA> new_object() override
+         {
+         return std::make_unique<EMSA_PKCS1v15>(m_hash->new_object());
+         }
 
       void update(const uint8_t[], size_t) override;
 

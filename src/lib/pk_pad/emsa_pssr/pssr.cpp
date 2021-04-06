@@ -125,15 +125,15 @@ bool pss_verify(HashFunction& hash,
 
 }
 
-PSSR::PSSR(HashFunction* h) :
-   m_hash(h),
+PSSR::PSSR(std::unique_ptr<HashFunction> hash) :
+   m_hash(std::move(hash)),
    m_salt_size(m_hash->output_length()),
    m_required_salt_len(false)
    {
    }
 
-PSSR::PSSR(HashFunction* h, size_t salt_size) :
-   m_hash(h),
+PSSR::PSSR(std::unique_ptr<HashFunction> hash, size_t salt_size) :
+   m_hash(std::move(hash)),
    m_salt_size(salt_size),
    m_required_salt_len(true)
    {
@@ -181,7 +181,7 @@ bool PSSR::verify(const secure_vector<uint8_t>& coded,
 
 std::unique_ptr<EMSA> PSSR::new_object()
    {
-   return std::make_unique<PSSR>(m_hash->clone(), m_salt_size);
+   return std::make_unique<PSSR>(m_hash->new_object(), m_salt_size);
    }
 
 std::string PSSR::name() const
@@ -218,15 +218,15 @@ AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
    return AlgorithmIdentifier("RSA/EMSA4", parameters);
    }
 
-PSSR_Raw::PSSR_Raw(HashFunction* h) :
-   m_hash(h),
+PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash) :
+   m_hash(std::move(hash)),
    m_salt_size(m_hash->output_length()),
    m_required_salt_len(false)
    {
    }
 
-PSSR_Raw::PSSR_Raw(HashFunction* h, size_t salt_size) :
-   m_hash(h),
+PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size) :
+   m_hash(std::move(hash)),
    m_salt_size(salt_size),
    m_required_salt_len(true)
    {
@@ -280,7 +280,7 @@ bool PSSR_Raw::verify(const secure_vector<uint8_t>& coded,
 
 std::unique_ptr<EMSA> PSSR_Raw::new_object()
    {
-   return std::make_unique<PSSR_Raw>(m_hash->clone(), m_salt_size);
+   return std::make_unique<PSSR_Raw>(m_hash->new_object(), m_salt_size);
    }
 
 std::string PSSR_Raw::name() const

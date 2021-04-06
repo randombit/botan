@@ -50,7 +50,7 @@ std::string EMSA1::name() const
 
 std::unique_ptr<EMSA> EMSA1::new_object()
    {
-   return std::make_unique<EMSA1>(m_hash->clone());
+   return std::make_unique<EMSA1>(m_hash->new_object());
    }
 
 void EMSA1::update(const uint8_t input[], size_t length)

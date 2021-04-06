@@ -23,7 +23,7 @@ class EMSA1 final : public EMSA
       /**
       * @param hash the hash function to use
       */
-      explicit EMSA1(HashFunction* hash) : m_hash(hash) {}
+      explicit EMSA1(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
 
       std::unique_ptr<EMSA> new_object() override;
 

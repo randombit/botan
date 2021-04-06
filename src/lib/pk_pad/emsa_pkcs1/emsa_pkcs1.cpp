@@ -102,7 +102,8 @@ AlgorithmIdentifier EMSA_PKCS1v15::config_for_x509(const Private_Key& key,
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
-EMSA_PKCS1v15::EMSA_PKCS1v15(HashFunction* hash) : m_hash(hash)
+EMSA_PKCS1v15::EMSA_PKCS1v15(std::unique_ptr<HashFunction> hash) :
+   m_hash(std::move(hash))
    {
    m_hash_id = pkcs_hash_id(m_hash->name());
    }
