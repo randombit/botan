@@ -697,7 +697,7 @@ SymmetricKey Channel::key_material_export(const std::string& label,
       if(pending_state() != nullptr)
          throw Invalid_State("Channel::key_material_export cannot export during renegotiation");
 
-      std::unique_ptr<KDF> prf(active->protocol_specific_prf());
+      auto prf = active->protocol_specific_prf();
 
       const secure_vector<uint8_t>& master_secret =
          active->session_keys().master_secret();

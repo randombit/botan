@@ -354,10 +354,10 @@ OS::open_socket(const std::string& hostname,
                 std::chrono::milliseconds timeout)
    {
 #if defined(BOTAN_HAS_BOOST_ASIO)
-   return std::unique_ptr<OS::Socket>(new Asio_Socket(hostname, service, timeout));
+   return std::make_unique<Asio_Socket>(hostname, service, timeout);
 
 #elif defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
-   return std::unique_ptr<OS::Socket>(new BSD_Socket(hostname, service, timeout));
+   return std::make_unique<BSD_Socket>(hostname, service, timeout);
 
 #else
    BOTAN_UNUSED(hostname);

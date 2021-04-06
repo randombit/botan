@@ -367,14 +367,14 @@ std::vector<uint8_t> Handshake_State::session_ticket() const
    return client_hello()->session_ticket();
    }
 
-KDF* Handshake_State::protocol_specific_prf() const
+std::unique_ptr<KDF> Handshake_State::protocol_specific_prf() const
    {
    const std::string prf_algo = ciphersuite().prf_algo();
 
    if(prf_algo == "MD5" || prf_algo == "SHA-1")
-      return get_kdf("TLS-12-PRF(SHA-256)");
+      return KDF::create_or_throw("TLS-12-PRF(SHA-256)");
 
-   return get_kdf("TLS-12-PRF(" + prf_algo + ")");
+   return KDF::create_or_throw("TLS-12-PRF(" + prf_algo + ")");
    }
 
 std::pair<std::string, Signature_Format>

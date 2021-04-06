@@ -187,7 +187,7 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, c
       throw Invalid_State("McEliece keygen failed - could not bring matrix to row reduced echelon form");
       }
 
-   std::unique_ptr<binary_matrix> result(new binary_matrix(code_length-r, r)) ;
+   auto result = std::make_unique<binary_matrix>(code_length - r, r);
    for(size_t i = 0; i < result->rows(); ++i)
       {
       for(size_t j = 0; j < result->columns(); ++j)

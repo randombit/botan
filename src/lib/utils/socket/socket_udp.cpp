@@ -320,9 +320,9 @@ OS::open_socket_udp(const std::string& hostname,
                     std::chrono::microseconds timeout)
    {
 #if defined(BOTAN_HAS_BOOST_ASIO)
-   return std::unique_ptr<OS::SocketUDP>(new Asio_SocketUDP(hostname, service, timeout));
+   return std::make_unique<Asio_SocketUDP>(hostname, service, timeout);
 #elif defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
-   return std::unique_ptr<OS::SocketUDP>(new BSD_SocketUDP(hostname, service, timeout));
+   return std::make_unique<BSD_SocketUDP>(hostname, service, timeout);
 #else
    BOTAN_UNUSED(hostname);
    BOTAN_UNUSED(service);

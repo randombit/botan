@@ -46,14 +46,14 @@ PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask,
 PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(const std::string& kdf)
    {
    if(kdf != "Raw")
-      m_kdf.reset(get_kdf(kdf));
+      m_kdf = KDF::create_or_throw(kdf);
    }
 
 secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
                                                           const uint8_t w[], size_t w_len,
                                                           const uint8_t salt[], size_t salt_len)
    {
-   secure_vector<uint8_t> z = raw_agree(w, w_len);
+   const secure_vector<uint8_t> z = raw_agree(w, w_len);
    if(m_kdf)
       return m_kdf->derive_key(key_len, z, salt, salt_len);
    return z;
@@ -140,7 +140,7 @@ void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_en
 
 PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(const std::string& kdf)
    {
-   m_kdf.reset(get_kdf(kdf));
+   m_kdf = KDF::create_or_throw(kdf);
    }
 
 secure_vector<uint8_t>
@@ -159,7 +159,7 @@ PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(const uint8_t encap_key[],
 
 PK_Ops::KEM_Decryption_with_KDF::KEM_Decryption_with_KDF(const std::string& kdf)
    {
-   m_kdf.reset(get_kdf(kdf));
+   m_kdf = KDF::create_or_throw(kdf);
    }
 
 }

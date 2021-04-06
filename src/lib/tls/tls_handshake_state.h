@@ -93,7 +93,7 @@ class Handshake_State
                            bool for_client_auth,
                            const Policy& policy) const;
 
-      KDF* protocol_specific_prf() const;
+      std::unique_ptr<KDF> protocol_specific_prf() const;
 
       Protocol_Version version() const { return m_version; }
 

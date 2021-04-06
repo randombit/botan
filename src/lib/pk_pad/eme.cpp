@@ -47,7 +47,7 @@ std::unique_ptr<EME> EME::create(const std::string& algo_spec)
          ((req.arg_count() == 2 || req.arg_count() == 3) && req.arg(1) == "MGF1"))
          {
          if(auto hash = HashFunction::create(req.arg(0)))
-            return std::make_unique<OAEP>(hash.release(), req.arg(2, ""));
+            return std::make_unique<OAEP>(std::move(hash), req.arg(2, ""));
          }
       else if(req.arg_count() == 2 || req.arg_count() == 3)
          {
@@ -60,7 +60,9 @@ std::unique_ptr<EME> EME::create(const std::string& algo_spec)
 
             if(hash && mgf1_hash)
                {
-               return std::make_unique<OAEP>(hash.release(), mgf1_hash.release(), req.arg(2, ""));
+               return std::make_unique<OAEP>(std::move(hash),
+                                             std::move(mgf1_hash),
+                                             req.arg(2, ""));
                }
             }
          }

@@ -224,18 +224,4 @@ std::vector<std::string> KDF::providers(const std::string& algo_spec)
    return probe_providers_of<KDF>(algo_spec, { "base" });
    }
 
-KDF* get_kdf(const std::string& algo_spec)
-   {
-   SCAN_Name request(algo_spec);
-
-   if(request.algo_name() == "Raw")
-      return nullptr; // No KDF
-
-   //return KDF::create_or_throw(algo_spec).release();
-   auto kdf = KDF::create(algo_spec);
-   if(!kdf)
-      throw Algorithm_Not_Found(algo_spec);
-   return kdf.release();
-   }
-
 }
