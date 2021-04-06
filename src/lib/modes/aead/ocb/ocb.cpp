@@ -158,8 +158,8 @@ secure_vector<uint8_t> ocb_hash(const L_computer& L,
 
 }
 
-OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
-   m_cipher(cipher),
+OCB_Mode::OCB_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
+   m_cipher(std::move(cipher)),
    m_checksum(m_cipher->parallel_bytes()),
    m_ad_hash(m_cipher->block_size()),
    m_tag_size(tag_size),
