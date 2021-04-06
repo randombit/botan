@@ -260,6 +260,45 @@ std::string default_ec_group_for(const std::string& alg_name)
 
 #endif
 
+BOTAN_PUBLIC_API(3,0) std::unique_ptr<Private_Key>
+create_ec_private_key(const std::string& alg_name,
+                      const EC_Group& ec_group,
+                      RandomNumberGenerator& rng)
+   {
+#if defined(BOTAN_HAS_ECDSA)
+   if(alg_name == "ECDSA")
+      return std::make_unique<ECDSA_PrivateKey>(rng, ec_group);
+#endif
+
+#if defined(BOTAN_HAS_ECDH)
+   if(alg_name == "ECDH")
+      return std::make_unique<ECDH_PrivateKey>(rng, ec_group);
+#endif
+
+#if defined(BOTAN_HAS_ECKCDSA)
+   if(alg_name == "ECKCDSA")
+      return std::make_unique<ECKCDSA_PrivateKey>(rng, ec_group);
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512")
+      return std::make_unique<GOST_3410_PrivateKey>(rng, ec_group);
+#endif
+
+#if defined(BOTAN_HAS_SM2)
+   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+      return std::make_unique<SM2_PrivateKey>(rng, ec_group);
+#endif
+
+#if defined(BOTAN_HAS_ECGDSA)
+   if(alg_name == "ECGDSA")
+      return std::make_unique<ECGDSA_PrivateKey>(rng, ec_group);
+#endif
+
+   return nullptr;
+   }
+
+
 std::unique_ptr<Private_Key>
 create_private_key(const std::string& alg_name,
                    RandomNumberGenerator& rng,
@@ -338,36 +377,7 @@ create_private_key(const std::string& alg_name,
       alg_name == "GOST-34.10-2012-512")
       {
       const EC_Group ec_group(params.empty() ? default_ec_group_for(alg_name) : params);
-
-#if defined(BOTAN_HAS_ECDSA)
-      if(alg_name == "ECDSA")
-         return std::make_unique<ECDSA_PrivateKey>(rng, ec_group);
-#endif
-
-#if defined(BOTAN_HAS_ECDH)
-      if(alg_name == "ECDH")
-         return std::make_unique<ECDH_PrivateKey>(rng, ec_group);
-#endif
-
-#if defined(BOTAN_HAS_ECKCDSA)
-      if(alg_name == "ECKCDSA")
-         return std::make_unique<ECKCDSA_PrivateKey>(rng, ec_group);
-#endif
-
-#if defined(BOTAN_HAS_GOST_34_10_2001)
-      if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512")
-         return std::make_unique<GOST_3410_PrivateKey>(rng, ec_group);
-#endif
-
-#if defined(BOTAN_HAS_SM2)
-      if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
-         return std::make_unique<SM2_PrivateKey>(rng, ec_group);
-#endif
-
-#if defined(BOTAN_HAS_ECGDSA)
-      if(alg_name == "ECGDSA")
-         return std::make_unique<ECGDSA_PrivateKey>(rng, ec_group);
-#endif
+      return create_ec_private_key(alg_name, ec_group, rng);
       }
 #endif
 

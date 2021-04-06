@@ -36,6 +36,17 @@ create_private_key(const std::string& algo_name,
                    const std::string& algo_params = "",
                    const std::string& provider = "");
 
+
+/**
+* Create a new ECC key
+*/
+class EC_Group;
+
+BOTAN_PUBLIC_API(3,0) std::unique_ptr<Private_Key>
+create_ec_private_key(const std::string& algo_name,
+                      const EC_Group& group,
+                      RandomNumberGenerator& rng);
+
 BOTAN_PUBLIC_API(2,2)
 std::vector<std::string>
 probe_provider_private_key(const std::string& algo_name,
