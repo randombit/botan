@@ -30,7 +30,7 @@ in a future major release:
 - All CBC mode ciphersuites. This includes all available 3DES ciphersuites.
   This implies also removing Encrypt-then-MAC extension.
 
-- All DHE-RSA ciphersuites
+- All DHE ciphersuites
 
 - CECPQ1 key exchange
 
