@@ -50,7 +50,7 @@ class BOTAN_PUBLIC_API(2,8) PasswordHash
       virtual size_t parallelism() const { return 0; }
 
       /**
-      * Returns an estimate of the total memory usage required to perform this
+      * Returns an estimate of the total number of bytes required to perform this
       * key derivation.
       *
       * If this algorithm uses a small and constant amount of memory, with no
