@@ -21,7 +21,7 @@ XTS_Mode::XTS_Mode(std::unique_ptr<BlockCipher> cipher) :
       throw Invalid_Argument("Cannot use " + cipher->name() + " with XTS");
       }
 
-   m_tweak_cipher.reset(m_cipher->clone());
+   m_tweak_cipher = m_cipher->new_object();
    }
 
 void XTS_Mode::clear()
