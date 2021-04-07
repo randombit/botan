@@ -36,7 +36,8 @@ class CBC_Mode : public Cipher_Mode
       void reset() override;
 
    protected:
-      CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding);
+      CBC_Mode(std::unique_ptr<BlockCipher> cipher,
+               std::unique_ptr<BlockCipherModePaddingMethod> padding);
 
       const BlockCipher& cipher() const { return *m_cipher; }
 
@@ -73,8 +74,9 @@ class CBC_Encryption : public CBC_Mode
       * @param cipher block cipher to use
       * @param padding padding method to use
       */
-      CBC_Encryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
-         CBC_Mode(cipher, padding) {}
+      CBC_Encryption(std::unique_ptr<BlockCipher> cipher,
+                     std::unique_ptr<BlockCipherModePaddingMethod> padding) :
+         CBC_Mode(std::move(cipher), std::move(padding)) {}
 
       size_t process(uint8_t buf[], size_t size) override;
 
@@ -94,7 +96,9 @@ class CTS_Encryption final : public CBC_Encryption
       /**
       * @param cipher block cipher to use
       */
-      explicit CTS_Encryption(BlockCipher* cipher) : CBC_Encryption(cipher, nullptr) {}
+      explicit CTS_Encryption(std::unique_ptr<BlockCipher> cipher) :
+         CBC_Encryption(std::move(cipher), nullptr)
+         {}
 
       size_t output_length(size_t input_length) const override;
 
@@ -115,8 +119,11 @@ class CBC_Decryption : public CBC_Mode
       * @param cipher block cipher to use
       * @param padding padding method to use
       */
-      CBC_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
-         CBC_Mode(cipher, padding), m_tempbuf(update_granularity()) {}
+      CBC_Decryption(std::unique_ptr<BlockCipher> cipher,
+                     std::unique_ptr<BlockCipherModePaddingMethod> padding) :
+         CBC_Mode(std::move(cipher), std::move(padding)),
+         m_tempbuf(update_granularity())
+         {}
 
       size_t process(uint8_t buf[], size_t size) override;
 
@@ -141,7 +148,9 @@ class CTS_Decryption final : public CBC_Decryption
       /**
       * @param cipher block cipher to use
       */
-      explicit CTS_Decryption(BlockCipher* cipher) : CBC_Decryption(cipher, nullptr) {}
+      explicit CTS_Decryption(std::unique_ptr<BlockCipher> cipher) :
+         CBC_Decryption(std::move(cipher), nullptr)
+         {}
 
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 

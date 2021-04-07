@@ -37,7 +37,7 @@ class XTS_Mode : public Cipher_Mode
       void reset() override;
 
    protected:
-      explicit XTS_Mode(BlockCipher* cipher);
+      explicit XTS_Mode(std::unique_ptr<BlockCipher> cipher);
 
       const uint8_t* tweak() const { return m_tweak.data(); }
 
@@ -69,7 +69,8 @@ class XTS_Encryption final : public XTS_Mode
       /**
       * @param cipher underlying block cipher
       */
-      explicit XTS_Encryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
+      explicit XTS_Encryption(std::unique_ptr<BlockCipher> cipher) :
+         XTS_Mode(std::move(cipher)) {}
 
       size_t process(uint8_t buf[], size_t size) override;
 
@@ -87,7 +88,8 @@ class XTS_Decryption final : public XTS_Mode
       /**
       * @param cipher underlying block cipher
       */
-      explicit XTS_Decryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
+      explicit XTS_Decryption(std::unique_ptr<BlockCipher> cipher) :
+         XTS_Mode(std::move(cipher)) {}
 
       size_t process(uint8_t buf[], size_t size) override;
 

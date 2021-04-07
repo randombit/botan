@@ -11,8 +11,8 @@
 
 namespace Botan {
 
-XTS_Mode::XTS_Mode(BlockCipher* cipher) :
-   m_cipher(cipher),
+XTS_Mode::XTS_Mode(std::unique_ptr<BlockCipher> cipher) :
+   m_cipher(std::move(cipher)),
    m_cipher_block_size(m_cipher->block_size()),
    m_cipher_parallelism(m_cipher->parallel_bytes())
    {

@@ -38,7 +38,7 @@ class CFB_Mode : public Cipher_Mode
 
       void reset() override final;
    protected:
-      CFB_Mode(BlockCipher* cipher, size_t feedback_bits);
+      CFB_Mode(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits);
 
       void shift_register();
 
@@ -71,8 +71,8 @@ class CFB_Encryption final : public CFB_Mode
       * @param feedback_bits number of bits fed back into the shift register,
       * must be a multiple of 8
       */
-      CFB_Encryption(BlockCipher* cipher, size_t feedback_bits) :
-         CFB_Mode(cipher, feedback_bits) {}
+      CFB_Encryption(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
+         CFB_Mode(std::move(cipher), feedback_bits) {}
 
       size_t process(uint8_t buf[], size_t size) override;
 
@@ -91,8 +91,8 @@ class CFB_Decryption final : public CFB_Mode
       * @param feedback_bits number of bits fed back into the shift register,
       * must be a multiple of 8
       */
-      CFB_Decryption(BlockCipher* cipher, size_t feedback_bits) :
-         CFB_Mode(cipher, feedback_bits) {}
+      CFB_Decryption(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
+         CFB_Mode(std::move(cipher), feedback_bits) {}
 
       size_t process(uint8_t buf[], size_t size) override;
 

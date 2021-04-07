@@ -230,14 +230,14 @@ void CommonCrypto_Cipher_Mode::key_schedule(const uint8_t key[], size_t length)
    }
 }
 
-Cipher_Mode*
+std::unique_ptr<Cipher_Mode>
 make_commoncrypto_cipher_mode(const std::string& name, Cipher_Dir direction)
    {
 
    try
       {
       CommonCryptor_Opts opts = commoncrypto_opts_from_algo(name);
-      return new CommonCrypto_Cipher_Mode(name, direction, opts);
+      return std::make_unique<CommonCrypto_Cipher_Mode>(name, direction, opts);
       }
    catch(CommonCrypto_Error& e)
       {
