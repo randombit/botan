@@ -14,8 +14,8 @@
    #include <botan/passhash9.h>
 #endif
 
-#if defined(BOTAN_HAS_ARGON2)
-   #include <botan/argon2.h>
+#if defined(BOTAN_HAS_ARGON2_FMT)
+   #include <botan/argon2fmt.h>
    #include "test_rng.h"
 #endif
 
@@ -81,7 +81,7 @@ BOTAN_REGISTER_TEST("pbkdf", "bcrypt", Bcrypt_Tests);
 
 #endif
 
-#if defined(BOTAN_HAS_ARGON2)
+#if defined(BOTAN_HAS_ARGON2_FMT)
 class Argon2_Tests final : public Text_Based_Test
    {
    public:

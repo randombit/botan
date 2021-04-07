@@ -1,11 +1,13 @@
 <defines>
-ARGON2 -> 20210407
+ARGON2_FMT -> 20210407
 </defines>
 
 <requires>
-blake2
+argon2
+base64
+rng
 </requires>
 
 <header:public>
-argon2.h
+argon2fmt.h
 </header:public>

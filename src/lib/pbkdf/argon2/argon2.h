@@ -9,6 +9,10 @@
 
 #include <botan/pwdhash.h>
 
+#if defined(BOTAN_HAS_ARGON2_FMT)
+  #include <botan/argon2fmt.h>
+#endif
+
 //BOTAN_FUTURE_INTERNAL_HEADER(argon2.h)
 
 namespace Botan {
@@ -97,21 +101,6 @@ void BOTAN_PUBLIC_API(2,11) argon2(uint8_t output[], size_t output_len,
                                    const uint8_t key[], size_t key_len,
                                    const uint8_t ad[], size_t ad_len,
                                    uint8_t y, size_t p, size_t M, size_t t);
-
-std::string BOTAN_PUBLIC_API(2,11)
-   argon2_generate_pwhash(const char* password, size_t password_len,
-                          RandomNumberGenerator& rng,
-                          size_t p, size_t M, size_t t,
-                          uint8_t y = 2, size_t salt_len = 16, size_t output_len = 32);
-
-/**
-* Check a previously created password hash
-* @param password the password to check against
-* @param password_len the length of password
-* @param hash the stored hash to check against
-*/
-bool BOTAN_PUBLIC_API(2,11) argon2_check_pwhash(const char* password, size_t password_len,
-                                                const std::string& hash);
 
 }
 
