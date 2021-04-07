@@ -12,35 +12,11 @@
 #include <botan/pbkdf.h>
 #include <botan/pwdhash.h>
 #include <botan/hash.h>
-
-/*
-This header will not be fully internal - the RFC4880 count
-encoding functions will remain here. But the definition of
-OpenPGP_S2K will be made internal
-*/
+#include <botan/rfc4880.h>
 
 //BOTAN_FUTURE_INTERNAL_HEADER(pgp_s2k.h)
 
 namespace Botan {
-
-/**
-* RFC 4880 encodes the iteration count to a single-byte value
-*/
-uint8_t BOTAN_PUBLIC_API(2,8) RFC4880_encode_count(size_t iterations);
-
-/**
-* Decode the iteration count from RFC 4880 encoding
-*/
-size_t BOTAN_PUBLIC_API(2,8) RFC4880_decode_count(uint8_t encoded_iter);
-
-/**
-* Round an arbitrary iteration count to next largest iteration count
-* supported by RFC4880 encoding.
-*/
-inline size_t RFC4880_round_iterations(size_t iterations)
-   {
-   return RFC4880_decode_count(RFC4880_encode_count(iterations));
-   }
 
 /**
 * OpenPGP's S2K

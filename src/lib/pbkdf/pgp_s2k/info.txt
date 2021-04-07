@@ -1,5 +1,6 @@
 <defines>
 PGP_S2K -> 20170527
+RFC4880 -> 20210407
 </defines>
 
 <requires>
@@ -8,4 +9,5 @@ hash
 
 <header:public>
 pgp_s2k.h
+rfc4880.h
 </header:public>
