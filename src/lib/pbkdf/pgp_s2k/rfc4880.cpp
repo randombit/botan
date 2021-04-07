@@ -5,6 +5,7 @@
 */
 
 #include <botan/rfc4880.h>
+#include <algorithm>
 
 namespace Botan {
 
