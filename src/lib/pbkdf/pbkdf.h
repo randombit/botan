@@ -51,7 +51,15 @@ class BOTAN_PUBLIC_API(2,0) PBKDF
       /**
       * @return new instance of this same algorithm
       */
-      virtual PBKDF* clone() const = 0;
+      virtual std::unique_ptr<PBKDF> new_object() const = 0;
+
+      /**
+      * @return new instance of this same algorithm
+      */
+      PBKDF* clone() const
+         {
+         return this->new_object().release();
+         }
 
       /**
       * @return name of this PBKDF

@@ -72,9 +72,9 @@ class BOTAN_PUBLIC_API(2,2) OpenPGP_S2K final : public PBKDF
          return "OpenPGP-S2K(" + m_hash->name() + ")";
          }
 
-      PBKDF* clone() const override
+      std::unique_ptr<PBKDF> new_object() const override
          {
-         return new OpenPGP_S2K(m_hash->clone());
+         return std::make_unique<OpenPGP_S2K>(m_hash->clone());
          }
 
       size_t pbkdf(uint8_t output_buf[], size_t output_len,
