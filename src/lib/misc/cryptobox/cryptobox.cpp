@@ -9,7 +9,7 @@
 #include <botan/cipher_mode.h>
 #include <botan/mac.h>
 #include <botan/rng.h>
-#include <botan/pbkdf.h>
+#include <botan/pwdhash.h>
 #include <botan/data_src.h>
 #include <botan/pem.h>
 #include <botan/internal/loadstor.h>
@@ -61,16 +61,17 @@ std::string encrypt(const uint8_t input[], size_t input_len,
 
    // Generate the keys and IV
 
-   std::unique_ptr<PBKDF> pbkdf(PBKDF::create_or_throw("PBKDF2(HMAC(SHA-512))"));
+   auto pbkdf_fam = PasswordHashFamily::create_or_throw("PBKDF2(HMAC(SHA-512))");
+   auto pbkdf = pbkdf_fam->from_params(PBKDF_ITERATIONS);
 
-   OctetString master_key = pbkdf->derive_key(
-      CIPHER_KEY_LEN + MAC_KEY_LEN + CIPHER_IV_LEN,
-      passphrase,
-      &out_buf[VERSION_CODE_LEN],
-      PBKDF_SALT_LEN,
-      PBKDF_ITERATIONS);
+   secure_vector<uint8_t> master_key(CIPHER_KEY_LEN + MAC_KEY_LEN + CIPHER_IV_LEN);
 
-   const uint8_t* mk = master_key.begin();
+   pbkdf->derive_key(
+      master_key.data(), master_key.size(),
+      passphrase.data(), passphrase.size(),
+      &out_buf[VERSION_CODE_LEN], PBKDF_SALT_LEN);
+
+   const uint8_t* mk = master_key.data();
    const uint8_t* cipher_key = mk;
    const uint8_t* mac_key = mk + CIPHER_KEY_LEN;
    const uint8_t* iv = mk + CIPHER_KEY_LEN + MAC_KEY_LEN;
@@ -113,16 +114,17 @@ decrypt_bin(const uint8_t input[], size_t input_len,
    const uint8_t* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
    const uint8_t* box_mac = &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN];
 
-   std::unique_ptr<PBKDF> pbkdf(PBKDF::create_or_throw("PBKDF2(HMAC(SHA-512))"));
+   auto pbkdf_fam = PasswordHashFamily::create_or_throw("PBKDF2(HMAC(SHA-512))");
+   auto pbkdf = pbkdf_fam->from_params(PBKDF_ITERATIONS);
 
-   OctetString master_key = pbkdf->derive_key(
-      PBKDF_OUTPUT_LEN,
-      passphrase,
-      pbkdf_salt,
-      PBKDF_SALT_LEN,
-      PBKDF_ITERATIONS);
+   secure_vector<uint8_t> master_key(CIPHER_KEY_LEN + MAC_KEY_LEN + CIPHER_IV_LEN);
 
-   const uint8_t* mk = master_key.begin();
+   pbkdf->derive_key(
+      master_key.data(), master_key.size(),
+      passphrase.data(), passphrase.size(),
+      pbkdf_salt, PBKDF_SALT_LEN);
+
+   const uint8_t* mk = master_key.data();
    const uint8_t* cipher_key = mk;
    const uint8_t* mac_key = mk + CIPHER_KEY_LEN;
    const uint8_t* iv = mk + CIPHER_KEY_LEN + MAC_KEY_LEN;

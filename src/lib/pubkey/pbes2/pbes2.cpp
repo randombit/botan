@@ -1,6 +1,6 @@
 /*
 * PKCS #5 PBES2
-* (C) 1999-2008,2014 Jack Lloyd
+* (C) 1999-2008,2014,2021 Jack Lloyd
 * (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -8,7 +8,6 @@
 
 #include <botan/internal/pbes2.h>
 #include <botan/cipher_mode.h>
-#include <botan/pbkdf.h>
 #include <botan/pwdhash.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -30,9 +29,9 @@ bool known_pbes_cipher_mode(const std::string& mode)
    return (mode == "CBC" || mode == "GCM" || mode == "SIV");
    }
 
-SymmetricKey derive_key(const std::string& passphrase,
-                        const AlgorithmIdentifier& kdf_algo,
-                        size_t default_key_size)
+secure_vector<uint8_t> derive_key(const std::string& passphrase,
+                                  const AlgorithmIdentifier& kdf_algo,
+                                  size_t default_key_size)
    {
    if(kdf_algo.get_oid() == OID::from_string("PKCS5.PBKDF2"))
       {
@@ -57,8 +56,14 @@ SymmetricKey derive_key(const std::string& passphrase,
          key_length = default_key_size;
 
       const std::string prf = OIDS::oid2str_or_throw(prf_algo.get_oid());
-      std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
-      return pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations);
+      auto pbkdf_fam = PasswordHashFamily::create_or_throw("PBKDF2(" + prf + ")");
+      auto pbkdf = pbkdf_fam->from_params(iterations);
+
+      secure_vector<uint8_t> derived_key(key_length);
+      pbkdf->derive_key(derived_key.data(), derived_key.size(),
+                        passphrase.data(), passphrase.size(),
+                        salt.data(), salt.size());
+      return derived_key;
       }
 #if defined(BOTAN_HAS_SCRYPT)
    else if(kdf_algo.get_oid() == OID::from_string("Scrypt"))
@@ -80,11 +85,11 @@ SymmetricKey derive_key(const std::string& passphrase,
       if(key_length == 0)
          key_length = default_key_size;
 
-      secure_vector<uint8_t> output(key_length);
-      scrypt(output.data(), output.size(), passphrase,
+      secure_vector<uint8_t> derived_key(key_length);
+      scrypt(derived_key.data(), derived_key.size(), passphrase,
              salt.data(), salt.size(), N, r, p);
 
-      return SymmetricKey(output);
+      return derived_key;
       }
 #endif
    else
