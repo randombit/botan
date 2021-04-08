@@ -95,7 +95,7 @@ class BOTAN_PUBLIC_API(2,0) PKCS5_PBKDF2 final : public PBKDF
    public:
       std::string name() const override;
 
-      PBKDF* clone() const override;
+      std::unique_ptr<PBKDF> new_object() const override;
 
       size_t pbkdf(uint8_t output_buf[], size_t output_len,
                    const std::string& passphrase,
