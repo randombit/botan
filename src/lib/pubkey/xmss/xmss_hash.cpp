@@ -29,7 +29,7 @@ XMSS_Hash::XMSS_Hash(const std::string& h_func_name) :
    BOTAN_ASSERT(m_output_length > 0, "Hash output length of zero is invalid.");
 
    m_zero_padding.resize(m_output_length - 1);
-   m_msg_hash.reset(m_hash->clone());
+   m_msg_hash = m_hash->new_object();
    }
 
 void

@@ -44,7 +44,7 @@ class CCM_Mode : public AEAD_Mode
       size_t tag_size() const override { return m_tag_size; }
 
    protected:
-      CCM_Mode(BlockCipher* cipher, size_t tag_size, size_t L);
+      CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t L);
 
       size_t L() const { return m_L; }
 
@@ -85,8 +85,8 @@ class CCM_Encryption final : public CCM_Mode
       * @param L length of L parameter. The total message length
       *           must be less than 2**L bytes, and the nonce is 15-L bytes.
       */
-      CCM_Encryption(BlockCipher* cipher, size_t tag_size = 16, size_t L = 3) :
-         CCM_Mode(cipher, tag_size, L) {}
+      CCM_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16, size_t L = 3) :
+         CCM_Mode(std::move(cipher), tag_size, L) {}
 
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
@@ -109,8 +109,8 @@ class CCM_Decryption final : public CCM_Mode
       * @param L length of L parameter. The total message length
       *           must be less than 2**L bytes, and the nonce is 15-L bytes.
       */
-      CCM_Decryption(BlockCipher* cipher, size_t tag_size = 16, size_t L = 3) :
-         CCM_Mode(cipher, tag_size, L) {}
+      CCM_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16, size_t L = 3) :
+         CCM_Mode(std::move(cipher), tag_size, L) {}
 
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 

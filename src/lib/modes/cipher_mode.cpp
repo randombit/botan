@@ -84,14 +84,14 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
 #if defined(BOTAN_HAS_STREAM_CIPHER)
    if(auto sc = StreamCipher::create(algo))
       {
-      return std::make_unique<Stream_Cipher_Mode>(sc.release());
+      return std::make_unique<Stream_Cipher_Mode>(std::move(sc));
       }
 #endif
 
 #if defined(BOTAN_HAS_AEAD_MODES)
    if(auto aead = AEAD_Mode::create(algo, direction))
       {
-      return std::unique_ptr<Cipher_Mode>(aead.release());
+      return aead;
       }
 #endif
 
@@ -141,9 +141,9 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
       if(padding == "CTS")
          {
          if(direction == ENCRYPTION)
-            return std::make_unique<CTS_Encryption>(bc.release());
+            return std::make_unique<CTS_Encryption>(std::move(bc));
          else
-            return std::make_unique<CTS_Decryption>(bc.release());
+            return std::make_unique<CTS_Decryption>(std::move(bc));
          }
       else
          {
@@ -152,9 +152,9 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
          if(pad)
             {
             if(direction == ENCRYPTION)
-               return std::make_unique<CBC_Encryption>(bc.release(), pad.release());
+               return std::make_unique<CBC_Encryption>(std::move(bc), std::move(pad));
             else
-               return std::make_unique<CBC_Decryption>(bc.release(), pad.release());
+               return std::make_unique<CBC_Decryption>(std::move(bc), std::move(pad));
             }
          }
       }
@@ -164,9 +164,9 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
    if(spec.algo_name() == "XTS")
       {
       if(direction == ENCRYPTION)
-         return std::make_unique<XTS_Encryption>(bc.release());
+         return std::make_unique<XTS_Encryption>(std::move(bc));
       else
-         return std::make_unique<XTS_Decryption>(bc.release());
+         return std::make_unique<XTS_Decryption>(std::move(bc));
       }
 #endif
 
@@ -175,9 +175,9 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
       {
       const size_t feedback_bits = spec.arg_as_integer(1, 8*bc->block_size());
       if(direction == ENCRYPTION)
-         return std::make_unique<CFB_Encryption>(bc.release(), feedback_bits);
+         return std::make_unique<CFB_Encryption>(std::move(bc), feedback_bits);
       else
-         return std::make_unique<CFB_Decryption>(bc.release(), feedback_bits);
+         return std::make_unique<CFB_Decryption>(std::move(bc), feedback_bits);
       }
 #endif
 

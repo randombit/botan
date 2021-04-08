@@ -57,7 +57,7 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
       ~SIV_Mode();
 
    protected:
-      explicit SIV_Mode(BlockCipher* cipher);
+      explicit SIV_Mode(std::unique_ptr<BlockCipher> cipher);
 
       size_t block_size() const { return m_bs; }
 
@@ -74,11 +74,12 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
       void key_schedule(const uint8_t key[], size_t length) override;
 
       const std::string m_name;
+      const size_t m_bs;
+
       std::unique_ptr<StreamCipher> m_ctr;
       std::unique_ptr<MessageAuthenticationCode> m_mac;
       secure_vector<uint8_t> m_nonce, m_msg_buf;
       std::vector<secure_vector<uint8_t>> m_ad_macs;
-      const size_t m_bs;
    };
 
 /**
@@ -90,7 +91,8 @@ class BOTAN_TEST_API SIV_Encryption final : public SIV_Mode
       /**
       * @param cipher a block cipher
       */
-      explicit SIV_Encryption(BlockCipher* cipher) : SIV_Mode(cipher) {}
+      explicit SIV_Encryption(std::unique_ptr<BlockCipher> cipher) :
+         SIV_Mode(std::move(cipher)) {}
 
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
@@ -109,7 +111,8 @@ class BOTAN_TEST_API SIV_Decryption final : public SIV_Mode
       /**
       * @param cipher a 128-bit block cipher
       */
-      explicit SIV_Decryption(BlockCipher* cipher) : SIV_Mode(cipher) {}
+      explicit SIV_Decryption(std::unique_ptr<BlockCipher> cipher) :
+         SIV_Mode(std::move(cipher)) {}
 
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 

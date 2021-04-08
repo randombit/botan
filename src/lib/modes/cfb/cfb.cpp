@@ -10,12 +10,12 @@
 
 namespace Botan {
 
-CFB_Mode::CFB_Mode(BlockCipher* cipher, size_t feedback_bits) :
-   m_cipher(cipher),
+CFB_Mode::CFB_Mode(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
+   m_cipher(std::move(cipher)),
    m_block_size(m_cipher->block_size()),
    m_feedback_bytes(feedback_bits ? feedback_bits / 8 : m_block_size)
    {
-   if(feedback_bits % 8 || feedback() > cipher->block_size())
+   if(feedback_bits % 8 || feedback() > m_block_size)
       throw Invalid_Argument(name() + ": feedback bits " +
                                   std::to_string(feedback_bits) + " not supported");
    }

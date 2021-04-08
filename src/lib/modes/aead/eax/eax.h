@@ -44,7 +44,7 @@ class EAX_Mode : public AEAD_Mode
       * @param cipher the cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Mode(BlockCipher* cipher, size_t tag_size);
+      EAX_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size);
 
       size_t block_size() const { return m_cipher->block_size(); }
 
@@ -73,8 +73,8 @@ class EAX_Encryption final : public EAX_Mode
       * @param cipher a 128-bit block cipher
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Encryption(BlockCipher* cipher, size_t tag_size = 0) :
-         EAX_Mode(cipher, tag_size) {}
+      EAX_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 0) :
+         EAX_Mode(std::move(cipher), tag_size) {}
 
       size_t output_length(size_t input_length) const override
          { return input_length + tag_size(); }
@@ -96,8 +96,8 @@ class EAX_Decryption final : public EAX_Mode
       * @param cipher a 128-bit block cipher
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Decryption(BlockCipher* cipher, size_t tag_size = 0) :
-         EAX_Mode(cipher, tag_size) {}
+      EAX_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 0) :
+         EAX_Mode(std::move(cipher), tag_size) {}
 
       size_t output_length(size_t input_length) const override
          {

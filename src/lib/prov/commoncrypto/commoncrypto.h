@@ -45,7 +45,7 @@ class BOTAN_PUBLIC_API(2, 0) CommonCrypto_Error final : public Exception
 
 /* Cipher Modes */
 
-Cipher_Mode*
+std::unique_ptr<Cipher_Mode>
 make_commoncrypto_cipher_mode(const std::string& name, Cipher_Dir direction);
 
 /* Block Ciphers */

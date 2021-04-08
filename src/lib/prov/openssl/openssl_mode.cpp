@@ -211,11 +211,11 @@ void OpenSSL_Cipher_Mode::key_schedule(const uint8_t key[], size_t length)
 
 }
 
-Cipher_Mode*
+std::unique_ptr<Cipher_Mode>
 make_openssl_cipher_mode(const std::string& name, Cipher_Dir direction)
    {
 #define MAKE_OPENSSL_MODE(evp_fn) \
-   new OpenSSL_Cipher_Mode(name, (evp_fn)(), direction)
+   std::make_unique<OpenSSL_Cipher_Mode>(name, (evp_fn)(), direction)
 
 #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_MODE_CBC) && !defined(OPENSSL_NO_AES)
    if(name == "AES-128/CBC/NoPadding")

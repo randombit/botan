@@ -24,7 +24,8 @@ class Stream_Cipher_Mode final : public Cipher_Mode
       /**
       * @param cipher underyling stream cipher
       */
-      explicit Stream_Cipher_Mode(StreamCipher* cipher) : m_cipher(cipher) {}
+      explicit Stream_Cipher_Mode(std::unique_ptr<StreamCipher> cipher) :
+         m_cipher(std::move(cipher)) {}
 
       size_t process(uint8_t buf[], size_t sz) override
          {

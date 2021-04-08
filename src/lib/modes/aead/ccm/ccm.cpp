@@ -17,10 +17,10 @@ static const size_t CCM_BS = 16;
 /*
 * CCM_Mode Constructor
 */
-CCM_Mode::CCM_Mode(BlockCipher* cipher, size_t tag_size, size_t L) :
+CCM_Mode::CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t L) :
    m_tag_size(tag_size),
    m_L(L),
-   m_cipher(cipher)
+   m_cipher(std::move(cipher))
    {
    if(m_cipher->block_size() != CCM_BS)
       throw Invalid_Argument(m_cipher->name() + " cannot be used with CCM mode");

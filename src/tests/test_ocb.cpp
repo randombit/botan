@@ -130,14 +130,16 @@ class OCB_Wide_KAT_Tests final : public Text_Based_Test
          const size_t bs = key.size();
          Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
 
-         Botan::OCB_Encryption enc(new OCB_Wide_Test_Block_Cipher(bs), std::min<size_t>(bs, 32));
+         Botan::OCB_Encryption enc(std::make_unique<OCB_Wide_Test_Block_Cipher>(bs),
+                                   std::min<size_t>(bs, 32));
          enc.set_key(key);
          enc.set_ad(ad);
          enc.start(nonce);
          enc.finish(buf);
          result.test_eq("Ciphertext matches", buf, expected);
 
-         Botan::OCB_Decryption dec(new OCB_Wide_Test_Block_Cipher(bs), std::min<size_t>(bs, 32));
+         Botan::OCB_Decryption dec(std::make_unique<OCB_Wide_Test_Block_Cipher>(bs),
+                                   std::min<size_t>(bs, 32));
          dec.set_key(key);
          dec.set_ad(ad);
          dec.start(nonce);
@@ -189,7 +191,7 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
             cipher.reset(new OCB_Wide_Test_Block_Cipher(bs));
             }
 
-         Botan::OCB_Encryption enc(cipher.release(), std::min<size_t>(bs, 32));
+         Botan::OCB_Encryption enc(std::move(cipher), std::min<size_t>(bs, 32));
 
          /*
          Y, string of length min(B, 256) bits
@@ -286,8 +288,8 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
 
          std::unique_ptr<Botan::BlockCipher> aes(Botan::BlockCipher::create_or_throw(algo));
 
-         Botan::OCB_Encryption enc(aes->clone(), taglen / 8);
-         Botan::OCB_Decryption dec(aes->clone(), taglen / 8);
+         Botan::OCB_Encryption enc(aes->new_object(), taglen / 8);
+         Botan::OCB_Decryption dec(std::move(aes), taglen / 8);
 
          std::vector<uint8_t> key(keylen / 8);
          key[keylen / 8 - 1] = static_cast<uint8_t>(taglen);
