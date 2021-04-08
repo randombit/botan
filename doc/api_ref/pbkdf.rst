@@ -28,6 +28,16 @@ specified with all parameters (say "Scrypt" with ``N`` = 8192, ``r`` = 64, and
 
       Derive a key from the specified password and salt, placing it into output.
 
+   .. cpp:function:: void derive_key(uint8_t out[], size_t out_len, \
+                     const char* password, const size_t password_len, \
+                     const uint8_t salt[], size_t salt_len, \
+                     const uint8_t ad[], size_t ad_len, \
+                     const uint8_t key[], size_t key_len) const
+
+      Derive a key from the specified password, salt, associated data, and
+      secret key, placing it into output. The ad and key are both allowed
+      to be empty. Currently non-empty AD/key is only supported with Argon2.
+
    .. cpp:function:: std::string to_string() const
 
       Return a descriptive string including the parameters (iteration count, etc)

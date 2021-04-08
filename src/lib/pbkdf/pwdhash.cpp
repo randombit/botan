@@ -30,6 +30,22 @@
 
 namespace Botan {
 
+void PasswordHash::derive_key(uint8_t out[], size_t out_len,
+                              const char* password, size_t password_len,
+                              const uint8_t salt[], size_t salt_len,
+                              const uint8_t ad[], size_t ad_len,
+                              const uint8_t key[], size_t key_len) const
+   {
+   BOTAN_UNUSED(ad, key);
+
+   if(ad_len == 0 && key_len == 0)
+      return this->derive_key(out, out_len,
+                              password, password_len,
+                              salt, salt_len);
+   else
+      throw Not_Implemented("PasswordHash " + this->to_string() + " does not support AD or key");
+   }
+
 std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string& algo_spec,
                                      const std::string& provider)
    {
