@@ -1,13 +1,13 @@
 <defines>
-PGP_S2K -> 20170527
-RFC4880 -> 20210407
+ARGON2_FMT -> 20210407
 </defines>
 
 <requires>
-hash
+argon2
+base64
+rng
 </requires>
 
 <header:public>
-pgp_s2k.h
-rfc4880.h
+argon2fmt.h
 </header:public>
