@@ -20,10 +20,6 @@
    #include <botan/scrypt.h>
 #endif
 
-#if defined(BOTAN_HAS_ARGON2)
-   #include <botan/argon2.h>
-#endif
-
 #if defined(BOTAN_HAS_PBKDF_BCRYPT)
    #include <botan/bcrypt_pbkdf.h>
 #endif
@@ -268,28 +264,7 @@ class Argon2_KAT_Tests final : public Text_Based_Test
          const std::vector<uint8_t> passphrase = vars.get_req_bin("Passphrase");
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
-         uint8_t family;
-         if(mode == "Argon2d")
-            family = 0;
-         else if(mode == "Argon2i")
-            family = 1;
-         else if(mode == "Argon2id")
-            family = 2;
-         else
-            throw Test_Error("Unknown Argon2 mode");
-
          Test::Result result(mode);
-
-         std::vector<uint8_t> output(expected.size());
-         Botan::argon2(output.data(), output.size(),
-                       reinterpret_cast<const char*>(passphrase.data()),
-                       passphrase.size(),
-                       salt.data(), salt.size(),
-                       key.data(), key.size(),
-                       ad.data(), ad.size(),
-                       family, P, M, T);
-
-         result.test_eq("derived key", output, expected);
 
          auto pwdhash_fam = Botan::PasswordHashFamily::create(mode);
 
@@ -299,18 +274,17 @@ class Argon2_KAT_Tests final : public Text_Based_Test
             return result;
             }
 
-         if(ad.size() == 0)
-            {
-            auto pwdhash = pwdhash_fam->from_params(M, T, P);
+         auto pwdhash = pwdhash_fam->from_params(M, T, P);
 
-            std::vector<uint8_t> pwdhash_derived(expected.size());
-            pwdhash->derive_key(pwdhash_derived.data(), pwdhash_derived.size(),
-                                reinterpret_cast<const char*>(passphrase.data()),
-                                passphrase.size(),
-                                salt.data(), salt.size());
+         std::vector<uint8_t> pwdhash_derived(expected.size());
+         pwdhash->derive_key(pwdhash_derived.data(), pwdhash_derived.size(),
+                             reinterpret_cast<const char*>(passphrase.data()),
+                             passphrase.size(),
+                             salt.data(), salt.size(),
+                             ad.data(), ad.size(),
+                             key.data(), key.size());
 
-            result.test_eq("pwdhash derived key", pwdhash_derived, expected);
-            }
+         result.test_eq("pwdhash derived key", pwdhash_derived, expected);
 
          return result;
          }

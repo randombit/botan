@@ -74,6 +74,32 @@ class BOTAN_PUBLIC_API(2,8) PasswordHash
       virtual void derive_key(uint8_t out[], size_t out_len,
                               const char* password, size_t password_len,
                               const uint8_t salt[], size_t salt_len) const = 0;
+
+      /**
+      * Derive a key from a password plus additional data and/or a secret key
+      *
+      * Currently this is only supported for Argon2. Using a non-empty AD or key
+      * with other algorithms will cause a Not_Implemented exception.
+      *
+      * @param out buffer to store the derived key, must be of out_len bytes
+      * @param out_len the desired length of the key to produce
+      * @param password the password to derive the key from
+      * @param password_len the length of password in bytes
+      * @param salt a randomly chosen salt
+      * @param salt_len length of salt in bytes
+      * @param ad some additional data
+      * @param ad_len length of ad in bytes
+      * @param key a secret key
+      * @param key_len length of key in bytes
+      *
+      * This function is const, but is not thread safe. Different threads should
+      * either use unique objects, or serialize all access.
+      */
+      virtual void derive_key(uint8_t out[], size_t out_len,
+                              const char* password, size_t password_len,
+                              const uint8_t salt[], size_t salt_len,
+                              const uint8_t ad[], size_t ad_len,
+                              const uint8_t key[], size_t key_len) const;
    };
 
 class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
