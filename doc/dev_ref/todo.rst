@@ -35,6 +35,7 @@ Improved Ciphers Implementations
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Salsa implementations (SIMD_4x32 and/or AVX2)
 * AVX-512 implementations? (SHACAL2, Serpent, ChaCha)
+* Support parallel execution via thread pool in scrypt and Argon2
 
 Public Key Crypto, Math
 ----------------------------------------
