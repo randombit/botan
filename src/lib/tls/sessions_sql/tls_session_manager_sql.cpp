@@ -7,7 +7,7 @@
 
 #include <botan/tls_session_manager_sql.h>
 #include <botan/database.h>
-#include <botan/pbkdf.h>
+#include <botan/pwdhash.h>
 #include <botan/hex.h>
 #include <botan/rng.h>
 #include <botan/internal/loadstor.h>
@@ -47,7 +47,7 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
 
    const size_t salts = m_db->row_count("tls_sessions_metadata");
 
-   std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-512)"));
+   auto pbkdf_fam = PasswordHashFamily::create_or_throw("PBKDF2(SHA-512)");
 
    if(salts == 1)
       {
@@ -60,16 +60,20 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
          const size_t iterations = stmt->get_size_t(1);
          const size_t check_val_db = stmt->get_size_t(2);
 
-         secure_vector<uint8_t> x = pbkdf->pbkdf_iterations(32 + 2,
-                                                         passphrase,
-                                                         salt.first, salt.second,
-                                                         iterations);
+         secure_vector<uint8_t> derived_key(32 + 2);
 
-         const size_t check_val_created = make_uint16(x[0], x[1]);
-         m_session_key.assign(x.begin() + 2, x.end());
+         auto pbkdf = pbkdf_fam->from_params(iterations);
+
+         pbkdf->derive_key(derived_key.data(), derived_key.size(),
+                           passphrase.data(), passphrase.size(),
+                           salt.first, salt.second);
+
+         const size_t check_val_created = make_uint16(derived_key[0], derived_key[1]);
 
          if(check_val_created != check_val_db)
             throw Invalid_Argument("Session database password not valid");
+
+         m_session_key.assign(derived_key.begin() + 2, derived_key.end());
          }
       }
    else
@@ -82,16 +86,20 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
 
       std::vector<uint8_t> salt;
       rng.random_vec(salt, 16);
-      size_t iterations = 0;
 
-      secure_vector<uint8_t> x = pbkdf->pbkdf_timed(32 + 2,
-                                                 passphrase,
-                                                 salt.data(), salt.size(),
-                                                 std::chrono::milliseconds(100),
-                                                 iterations);
+      secure_vector<uint8_t> derived_key(32 + 2);
 
-      size_t check_val = make_uint16(x[0], x[1]);
-      m_session_key.assign(x.begin() + 2, x.end());
+      auto desired_runtime = std::chrono::milliseconds(100);
+      auto pbkdf = pbkdf_fam->tune(derived_key.size(), desired_runtime);
+
+      pbkdf->derive_key(derived_key.data(), derived_key.size(),
+                        passphrase.data(), passphrase.size(),
+                        salt.data(), salt.size());
+
+      const size_t iterations = pbkdf->iterations();
+
+      const size_t check_val = make_uint16(derived_key[0], derived_key[1]);
+      m_session_key.assign(derived_key.begin() + 2, derived_key.end());
 
       auto stmt = m_db->new_statement("insert into tls_sessions_metadata values(?1, ?2, ?3)");
 
