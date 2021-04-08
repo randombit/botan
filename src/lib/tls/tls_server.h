@@ -115,7 +115,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       void session_create(Server_Handshake_State& pending_state,
                           bool have_session_ticket_key);
 
-      Handshake_State* new_handshake_state(Handshake_IO* io) override;
+      std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
 
       Credentials_Manager& m_creds;
       std::string m_next_protocol;

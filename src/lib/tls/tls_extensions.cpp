@@ -17,49 +17,49 @@ namespace TLS {
 
 namespace {
 
-Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size, Connection_Side from)
+std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size, Connection_Side from)
    {
    switch(code)
       {
       case TLSEXT_SERVER_NAME_INDICATION:
-         return new Server_Name_Indicator(reader, size);
+         return std::make_unique<Server_Name_Indicator>(reader, size);
 
       case TLSEXT_SUPPORTED_GROUPS:
-         return new Supported_Groups(reader, size);
+         return std::make_unique<Supported_Groups>(reader, size);
 
       case TLSEXT_CERT_STATUS_REQUEST:
-         return new Certificate_Status_Request(reader, size, from);
+         return std::make_unique<Certificate_Status_Request>(reader, size, from);
 
       case TLSEXT_EC_POINT_FORMATS:
-         return new Supported_Point_Formats(reader, size);
+         return std::make_unique<Supported_Point_Formats>(reader, size);
 
       case TLSEXT_SAFE_RENEGOTIATION:
-         return new Renegotiation_Extension(reader, size);
+         return std::make_unique<Renegotiation_Extension>(reader, size);
 
       case TLSEXT_SIGNATURE_ALGORITHMS:
-         return new Signature_Algorithms(reader, size);
+         return std::make_unique<Signature_Algorithms>(reader, size);
 
       case TLSEXT_USE_SRTP:
-          return new SRTP_Protection_Profiles(reader, size);
+         return std::make_unique<SRTP_Protection_Profiles>(reader, size);
 
       case TLSEXT_ALPN:
-         return new Application_Layer_Protocol_Notification(reader, size);
+         return std::make_unique<Application_Layer_Protocol_Notification>(reader, size);
 
       case TLSEXT_EXTENDED_MASTER_SECRET:
-         return new Extended_Master_Secret(reader, size);
+         return std::make_unique<Extended_Master_Secret>(reader, size);
 
       case TLSEXT_ENCRYPT_THEN_MAC:
-         return new Encrypt_then_MAC(reader, size);
+         return std::make_unique<Encrypt_then_MAC>(reader, size);
 
       case TLSEXT_SESSION_TICKET:
-         return new Session_Ticket(reader, size);
+         return std::make_unique<Session_Ticket>(reader, size);
 
       case TLSEXT_SUPPORTED_VERSIONS:
-         return new Supported_Versions(reader, size, from);
+         return std::make_unique<Supported_Versions>(reader, size, from);
       }
 
-   return new Unknown_Extension(static_cast<Handshake_Extension_Type>(code),
-                                reader, size);
+   return std::make_unique<Unknown_Extension>(static_cast<Handshake_Extension_Type>(code),
+                                              reader, size);;
    }
 
 }
@@ -84,10 +84,7 @@ void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side from)
             throw TLS_Exception(TLS::Alert::DECODE_ERROR,
                                 "Peer sent duplicated extensions");
 
-         Extension* extn = make_extension(
-            reader, extension_code, extension_size, from);
-
-         this->add(extn);
+         this->add(make_extension(reader, extension_code, extension_size, from));
          }
       }
    }

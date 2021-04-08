@@ -83,7 +83,7 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
                                  const std::vector<uint8_t>& contents,
                                  bool epoch0_restart) override;
 
-      Handshake_State* new_handshake_state(Handshake_IO* io) override;
+      std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
 
       Credentials_Manager& m_creds;
       const Server_Information m_info;

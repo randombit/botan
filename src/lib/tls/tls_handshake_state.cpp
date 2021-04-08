@@ -180,9 +180,9 @@ std::string handshake_mask_to_string(uint32_t mask, char combiner)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State(Handshake_IO* io, Callbacks& cb) :
+Handshake_State::Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb) :
    m_callbacks(cb),
-   m_handshake_io(io),
+   m_handshake_io(std::move(io)),
    m_version(m_handshake_io->initial_record_version())
    {
    }

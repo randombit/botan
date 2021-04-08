@@ -23,8 +23,8 @@ namespace {
 class Client_Handshake_State final : public Handshake_State
    {
    public:
-      Client_Handshake_State(Handshake_IO* io, Callbacks& cb) :
-         Handshake_State(io, cb),
+      Client_Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb) :
+         Handshake_State(std::move(io), cb),
          m_is_reneg(false)
          {}
 
@@ -79,9 +79,9 @@ Client::Client(Callbacks& callbacks,
    send_client_hello(state, false, offer_version, next_protocols);
    }
 
-Handshake_State* Client::new_handshake_state(Handshake_IO* io)
+std::unique_ptr<Handshake_State> Client::new_handshake_state(std::unique_ptr<Handshake_IO> io)
    {
-   return new Client_Handshake_State(io, callbacks());
+   return std::make_unique<Client_Handshake_State>(std::move(io), callbacks());
    }
 
 std::vector<X509_Certificate>

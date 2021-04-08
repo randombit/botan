@@ -193,7 +193,8 @@ class BOTAN_PUBLIC_API(2,0) Channel
       virtual std::vector<X509_Certificate>
          get_peer_cert_chain(const Handshake_State& state) const = 0;
 
-      virtual Handshake_State* new_handshake_state(class Handshake_IO* io) = 0;
+      virtual std::unique_ptr<Handshake_State>
+         new_handshake_state(std::unique_ptr<class Handshake_IO> io) = 0;
 
       Handshake_State& create_handshake_state(Protocol_Version version);
 

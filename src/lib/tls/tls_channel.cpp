@@ -150,7 +150,7 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
       io.reset(new Stream_Handshake_IO(std::bind(&Channel::send_record, this, _1, _2)));
       }
 
-   m_pending_state.reset(new_handshake_state(io.release()));
+   m_pending_state = new_handshake_state(std::move(io));
 
    if(auto active = active_state())
       m_pending_state->set_version(active->version());

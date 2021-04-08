@@ -19,8 +19,8 @@ namespace TLS {
 class Server_Handshake_State final : public Handshake_State
    {
    public:
-      Server_Handshake_State(Handshake_IO* io, Callbacks& cb)
-         : Handshake_State(io, cb) {}
+      Server_Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb)
+         : Handshake_State(std::move(io), cb) {}
 
       Private_Key* server_rsa_kex_key() { return m_server_rsa_kex_key; }
       void set_server_rsa_kex_key(Private_Key* key)
@@ -277,12 +277,11 @@ Server::Server(Callbacks& callbacks,
    {
    }
 
-Handshake_State* Server::new_handshake_state(Handshake_IO* io)
+std::unique_ptr<Handshake_State> Server::new_handshake_state(std::unique_ptr<Handshake_IO> io)
    {
-   std::unique_ptr<Handshake_State> state(new Server_Handshake_State(io, callbacks()));
-
+   std::unique_ptr<Handshake_State> state(new Server_Handshake_State(std::move(io), callbacks()));
    state->set_expected_next(CLIENT_HELLO);
-   return state.release();
+   return state;
    }
 
 std::vector<X509_Certificate>
