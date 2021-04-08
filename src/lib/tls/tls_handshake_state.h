@@ -49,7 +49,7 @@ class Finished;
 class Handshake_State
    {
    public:
-      Handshake_State(Handshake_IO* io, Callbacks& callbacks);
+      Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& callbacks);
 
       virtual ~Handshake_State() = default;
 

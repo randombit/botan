@@ -476,6 +476,11 @@ class BOTAN_UNSTABLE_API Extensions final
          return get<T>() != nullptr;
          }
 
+      void add(std::unique_ptr<Extension> extn)
+         {
+         m_extensions[extn->type()].reset(extn.release());
+         }
+
       void add(Extension* extn)
          {
          m_extensions[extn->type()].reset(extn);
@@ -495,7 +500,7 @@ class BOTAN_UNSTABLE_API Extensions final
       void deserialize(TLS_Data_Reader& reader, Connection_Side from);
 
       /**
-      * Remvoe an extension from this extensions object, if it exists.
+      * Remove an extension from this extensions object, if it exists.
       * Returns true if the extension existed (and thus is now removed),
       * otherwise false (the extension wasn't set in the first place).
       */
