@@ -16,7 +16,11 @@ Argon2::Argon2(uint8_t family, size_t M, size_t t, size_t p) :
    m_M(M),
    m_t(t),
    m_p(p)
-   {}
+   {
+   BOTAN_ARG_CHECK(m_p >= 1 && m_p <= 128, "Invalid Argon2 threads parameter");
+   BOTAN_ARG_CHECK(m_M >= 8*m_p && m_M <= 8192*1024, "Invalid Argon2 M parameter");
+   BOTAN_ARG_CHECK(m_t >= 1, "Invalid Argon2 t parameter");
+   }
 
 void Argon2::derive_key(uint8_t output[], size_t output_len,
                         const char* password, size_t password_len,
@@ -26,8 +30,7 @@ void Argon2::derive_key(uint8_t output[], size_t output_len,
           password, password_len,
           salt, salt_len,
           nullptr, 0,
-          nullptr, 0,
-          m_family, m_p, m_M, m_t);
+          nullptr, 0);
    }
 
 void Argon2::derive_key(uint8_t output[], size_t output_len,
@@ -40,8 +43,7 @@ void Argon2::derive_key(uint8_t output[], size_t output_len,
           password, password_len,
           salt, salt_len,
           key, key_len,
-          ad, ad_len,
-          m_family, m_p, m_M, m_t);
+          ad, ad_len);
    }
 
 namespace {

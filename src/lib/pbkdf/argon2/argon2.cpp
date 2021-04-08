@@ -407,37 +407,32 @@ void process_blocks(secure_vector<uint64_t>& B,
 
 }
 
-void argon2(uint8_t output[], size_t output_len,
-            const char* password, size_t password_len,
-            const uint8_t salt[], size_t salt_len,
-            const uint8_t key[], size_t key_len,
-            const uint8_t ad[], size_t ad_len,
-            uint8_t mode, size_t threads, size_t M, size_t t)
+void Argon2::argon2(uint8_t output[], size_t output_len,
+                    const char* password, size_t password_len,
+                    const uint8_t salt[], size_t salt_len,
+                    const uint8_t key[], size_t key_len,
+                    const uint8_t ad[], size_t ad_len) const
    {
-   BOTAN_ARG_CHECK(mode == 0 || mode == 1 || mode == 2, "Unknown Argon2 mode parameter");
    BOTAN_ARG_CHECK(output_len >= 4, "Invalid Argon2 output length");
-   BOTAN_ARG_CHECK(threads >= 1 && threads <= 128, "Invalid Argon2 threads parameter");
-   BOTAN_ARG_CHECK(M >= 8*threads && M <= 8192*1024, "Invalid Argon2 M parameter");
-   BOTAN_ARG_CHECK(t >= 1, "Invalid Argon2 t parameter");
 
-   std::unique_ptr<HashFunction> blake2 = HashFunction::create_or_throw("BLAKE2b");
+   auto blake2 = HashFunction::create_or_throw("BLAKE2b");
 
    const auto H0 = argon2_H0(*blake2, output_len,
                              password, password_len,
                              salt, salt_len,
                              key, key_len,
                              ad, ad_len,
-                             mode, threads, M, t);
+                             m_family, m_p, m_M, m_t);
 
-   const size_t memory = (M / (SYNC_POINTS*threads)) * (SYNC_POINTS*threads);
+   const size_t memory = (m_M / (SYNC_POINTS*m_p)) * (SYNC_POINTS*m_p);
 
    secure_vector<uint64_t> B(memory * 1024/8);
 
-   init_blocks(B, *blake2, H0, memory, threads);
-   process_blocks(B, t, memory, threads, mode);
+   init_blocks(B, *blake2, H0, memory, m_p);
+   process_blocks(B, m_t, memory, m_p, m_family);
 
    clear_mem(output, output_len);
-   extract_key(output, output_len, B, memory, threads);
+   extract_key(output, output_len, B, memory, m_p);
    }
 
 }

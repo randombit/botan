@@ -8,6 +8,7 @@
 #define BOTAN_ARGON2_H_
 
 #include <botan/pwdhash.h>
+#include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_ARGON2_FMT)
   #include <botan/argon2fmt.h>
@@ -58,6 +59,13 @@ class BOTAN_PUBLIC_API(2,11) Argon2 final : public PasswordHash
       size_t total_memory_usage() const override { return M() * 1024; }
 
    private:
+
+      void argon2(uint8_t output[], size_t output_len,
+                  const char* password, size_t password_len,
+                  const uint8_t salt[], size_t salt_len,
+                  const uint8_t key[], size_t key_len,
+                  const uint8_t ad[], size_t ad_len) const;
+
       uint8_t m_family;
       size_t m_M, m_t, m_p;
    };
@@ -101,12 +109,32 @@ class BOTAN_PUBLIC_API(2,11) Argon2_Family final : public PasswordHashFamily
 * @param M the amount of memory to use in Kb
 * @param t the number of iterations to use
 */
-void BOTAN_PUBLIC_API(2,11) argon2(uint8_t output[], size_t output_len,
-                                   const char* password, size_t password_len,
-                                   const uint8_t salt[], size_t salt_len,
-                                   const uint8_t key[], size_t key_len,
-                                   const uint8_t ad[], size_t ad_len,
-                                   uint8_t y, size_t p, size_t M, size_t t);
+inline void argon2(uint8_t output[], size_t output_len,
+                   const char* password, size_t password_len,
+                   const uint8_t salt[], size_t salt_len,
+                   const uint8_t key[], size_t key_len,
+                   const uint8_t ad[], size_t ad_len,
+                   uint8_t y, size_t p, size_t M, size_t t)
+   {
+   std::unique_ptr<PasswordHashFamily> pwdhash_fam;
+
+   if(y == 0)
+      pwdhash_fam = PasswordHashFamily::create_or_throw("Argon2d");
+   else if(y == 1)
+      pwdhash_fam = PasswordHashFamily::create_or_throw("Argon2i");
+   else if(y == 2)
+      pwdhash_fam = PasswordHashFamily::create_or_throw("Argon2id");
+   else
+      throw Not_Implemented("Unknown Argon2 family type");
+
+   auto pwdhash = pwdhash_fam->from_params(M, t, p);
+
+   pwdhash->derive_key(output, output_len,
+                       password, password_len,
+                       salt, salt_len,
+                       ad, ad_len,
+                       key, key_len);
+   }
 
 }
 
