@@ -62,9 +62,10 @@ operations such as authenticated encryption.
 
      Zero out the key. The key must be reset before the cipher object can be used.
 
-  .. cpp:function:: BlockCipher* clone() const
+  .. cpp:function:: std::unique_ptr<BlockCipher> new_object() const
 
      Return a newly allocated BlockCipher object of the same type as this one.
+     The new object is unkeyed.
 
   .. cpp:function:: size_t block_size() const
 

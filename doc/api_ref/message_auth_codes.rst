@@ -36,9 +36,10 @@ The Botan MAC computation is split into five stages.
 
      Clear the key.
 
-  .. cpp:function:: MessageAuthenticationCode* clone() const
+  .. cpp:function:: std::unique_ptr<MessageAuthenticationCode> new_object() const
 
      Return a newly allocated object of the same type as this one.
+     The new object is unkeyed.
 
   .. cpp:function:: void set_key(const uint8_t* key, size_t length)
 

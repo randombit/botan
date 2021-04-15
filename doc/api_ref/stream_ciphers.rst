@@ -29,9 +29,10 @@ class :cpp:class:`StreamCipher` (`botan/stream_cipher.h`).
 
      Clear the key.
 
-  .. cpp:function:: StreamCipher* clone() const
+  .. cpp:function:: std::unique_ptr<StreamCipher> new_object() const
 
      Return a newly allocated object of the same type as this one.
+     The new object is unkeyed.
 
   .. cpp:function:: void set_key(const uint8_t* key, size_t length)
 

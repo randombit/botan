@@ -72,6 +72,15 @@ internal state is reset to begin hashing a new message.
 
      Equivalent to calling ``update`` followed by ``final``.
 
+  .. cpp:function:: std::unique_ptr<HashFunction> new_object()
+
+     Return a newly allocated HashFunction object of the same type as this one.
+
+  .. cpp:function:: std::unique_ptr<HashFunction> copy_state()
+
+     Return a newly allocated HashFunction object of the same type as this one,
+     whose internal state matches the current state of this.
+
 Code Example
 ------------
 
