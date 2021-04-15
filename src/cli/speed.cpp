@@ -894,7 +894,7 @@ class Speed final : public Command
                               std::chrono::milliseconds runtime,
                               const std::vector<size_t>& buf_sizes)
          {
-         std::unique_ptr<Timer> ks_timer = make_timer(cipher.name(), provider, "key schedule");
+         auto ks_timer = make_timer(cipher.name(), provider, "key schedule");
 
          const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
          ks_timer->run([&]() { cipher.set_key(key); });
@@ -914,8 +914,8 @@ class Speed final : public Command
             std::vector<uint8_t> buffer(buf_size);
             const size_t blocks = buf_size / bs;
 
-            std::unique_ptr<Timer> encrypt_timer = make_timer(cipher.name(), buffer.size(), "encrypt", provider, buf_size);
-            std::unique_ptr<Timer> decrypt_timer = make_timer(cipher.name(), buffer.size(), "decrypt", provider, buf_size);
+            auto encrypt_timer = make_timer(cipher.name(), buffer.size(), "encrypt", provider, buf_size);
+            auto decrypt_timer = make_timer(cipher.name(), buffer.size(), "decrypt", provider, buf_size);
 
             encrypt_timer->run_until_elapsed(runtime, [&]() { cipher.encrypt_n(&buffer[0], &buffer[0], blocks); });
             record_result(encrypt_timer);
@@ -937,7 +937,7 @@ class Speed final : public Command
             {
             Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
-            std::unique_ptr<Timer> encrypt_timer = make_timer(cipher.name(), buffer.size(), "encrypt", provider, buf_size);
+            auto encrypt_timer = make_timer(cipher.name(), buffer.size(), "encrypt", provider, buf_size);
 
             const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
             cipher.set_key(key);
@@ -971,7 +971,7 @@ class Speed final : public Command
             {
             Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
-            std::unique_ptr<Timer> timer = make_timer(hash.name(), buffer.size(), "hash", provider, buf_size);
+            auto timer = make_timer(hash.name(), buffer.size(), "hash", provider, buf_size);
             timer->run_until_elapsed(runtime, [&]() { hash.update(buffer); hash.final(output.data()); });
             record_result(timer);
             }
@@ -995,7 +995,7 @@ class Speed final : public Command
             mac.set_key(key);
             mac.start(nullptr, 0);
 
-            std::unique_ptr<Timer> timer = make_timer(mac.name(), buffer.size(), "mac", provider, buf_size);
+            auto timer = make_timer(mac.name(), buffer.size(), "mac", provider, buf_size);
             timer->run_until_elapsed(runtime, [&]() { mac.update(buffer); });
             timer->run([&]() { mac.final(output.data()); });
             record_result(timer);
@@ -1010,7 +1010,7 @@ class Speed final : public Command
          const std::chrono::milliseconds runtime,
          const std::vector<size_t>& buf_sizes)
          {
-         std::unique_ptr<Timer> ks_timer = make_timer(enc.name(), enc.provider(), "key schedule");
+         auto ks_timer = make_timer(enc.name(), enc.provider(), "key schedule");
 
          const Botan::SymmetricKey key(rng(), enc.key_spec().maximum_keylength());
 
@@ -1023,8 +1023,8 @@ class Speed final : public Command
             {
             Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
-            std::unique_ptr<Timer> encrypt_timer = make_timer(enc.name(), buffer.size(), "encrypt", enc.provider(), buf_size);
-            std::unique_ptr<Timer> decrypt_timer = make_timer(dec.name(), buffer.size(), "decrypt", dec.provider(), buf_size);
+            auto encrypt_timer = make_timer(enc.name(), buffer.size(), "encrypt", enc.provider(), buf_size);
+            auto decrypt_timer = make_timer(dec.name(), buffer.size(), "decrypt", dec.provider(), buf_size);
 
             Botan::secure_vector<uint8_t> iv = rng().random_vec(enc.default_nonce_length());
 
@@ -1064,7 +1064,7 @@ class Speed final : public Command
             rng.reseed_from_rng(Botan::system_rng(), 256);
 #endif
 
-            std::unique_ptr<Timer> timer = make_timer(rng_name, buffer.size(), "generate", "", buf_size);
+            auto timer = make_timer(rng_name, buffer.size(), "generate", "", buf_size);
             timer->run_until_elapsed(runtime, [&]() { rng.randomize(buffer.data(), buffer.size()); });
             record_result(timer);
             }
@@ -1079,7 +1079,7 @@ class Speed final : public Command
             size_t entropy_bits = 0;
             Botan_Tests::SeedCapturing_RNG rng;
 
-            std::unique_ptr<Timer> timer = make_timer(src, "", "bytes");
+            auto timer = make_timer(src, "", "bytes");
             timer->run([&]() { entropy_bits = srcs.poll_just(rng, src); });
 
             size_t compressed_size = 0;
@@ -1123,9 +1123,9 @@ class Speed final : public Command
             {
             const Botan::EC_Group ec_group(group_name);
 
-            std::unique_ptr<Timer> add_timer = make_timer(group_name + " add");
-            std::unique_ptr<Timer> addf_timer = make_timer(group_name + " addf");
-            std::unique_ptr<Timer> dbl_timer = make_timer(group_name + " dbl");
+            auto add_timer = make_timer(group_name + " add");
+            auto addf_timer = make_timer(group_name + " addf");
+            auto dbl_timer = make_timer(group_name + " dbl");
 
             const Botan::PointGFp& base_point = ec_group.get_base_point();
             Botan::PointGFp non_affine_pt = ec_group.get_base_point() * 1776; // create a non-affine point
@@ -1150,7 +1150,7 @@ class Speed final : public Command
          {
          for(std::string group_name : groups)
             {
-            std::unique_ptr<Timer> timer = make_timer(group_name + " initialization");
+            auto timer = make_timer(group_name + " initialization");
 
             while(timer->under(runtime))
                {
@@ -1168,9 +1168,9 @@ class Speed final : public Command
             {
             const Botan::EC_Group ec_group(group_name);
 
-            std::unique_ptr<Timer> mult_timer = make_timer(group_name + " Montgomery ladder");
-            std::unique_ptr<Timer> blinded_mult_timer = make_timer(group_name + " blinded comb");
-            std::unique_ptr<Timer> blinded_var_mult_timer = make_timer(group_name + " blinded window");
+            auto mult_timer = make_timer(group_name + " Montgomery ladder");
+            auto blinded_mult_timer = make_timer(group_name + " blinded comb");
+            auto blinded_var_mult_timer = make_timer(group_name + " blinded window");
 
             const Botan::PointGFp& base_point = ec_group.get_base_point();
 
@@ -1204,8 +1204,8 @@ class Speed final : public Command
          {
          for(std::string group_name : groups)
             {
-            std::unique_ptr<Timer> uncmp_timer = make_timer("OS2ECP uncompressed " + group_name);
-            std::unique_ptr<Timer> cmp_timer = make_timer("OS2ECP compressed " + group_name);
+            auto uncmp_timer = make_timer("OS2ECP uncompressed " + group_name);
+            auto cmp_timer = make_timer("OS2ECP compressed " + group_name);
 
             const Botan::EC_Group ec_group(group_name);
 
@@ -1233,8 +1233,8 @@ class Speed final : public Command
          {
          const Botan::BigInt n = 1000000000000000;
 
-         std::unique_ptr<Timer> enc_timer = make_timer("FPE_FE1 encrypt");
-         std::unique_ptr<Timer> dec_timer = make_timer("FPE_FE1 decrypt");
+         auto enc_timer = make_timer("FPE_FE1 encrypt");
+         auto dec_timer = make_timer("FPE_FE1 decrypt");
 
          const Botan::SymmetricKey key(rng(), 32);
          const std::vector<uint8_t> tweak(8); // 8 zeros
@@ -1269,8 +1269,8 @@ class Speed final : public Command
 
       void bench_rfc3394(const std::chrono::milliseconds runtime)
          {
-         std::unique_ptr<Timer> wrap_timer = make_timer("RFC3394 AES-256 key wrap");
-         std::unique_ptr<Timer> unwrap_timer = make_timer("RFC3394 AES-256 key unwrap");
+         auto wrap_timer = make_timer("RFC3394 AES-256 key wrap");
+         auto unwrap_timer = make_timer("RFC3394 AES-256 key unwrap");
 
          const Botan::SymmetricKey kek(rng(), 32);
          Botan::secure_vector<uint8_t> key(64, 0);
@@ -1300,8 +1300,8 @@ class Speed final : public Command
          std::chrono::milliseconds runtime_per_size = runtime;
          for(size_t bits : { 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096 })
             {
-            std::unique_ptr<Timer> mul_timer = make_timer("BigInt mul " + std::to_string(bits));
-            std::unique_ptr<Timer> sqr_timer = make_timer("BigInt sqr " + std::to_string(bits));
+            auto mul_timer = make_timer("BigInt mul " + std::to_string(bits));
+            auto sqr_timer = make_timer("BigInt sqr " + std::to_string(bits));
 
             const Botan::BigInt y(rng(), bits);
             Botan::secure_vector<Botan::word> ws;
@@ -1336,8 +1336,8 @@ class Speed final : public Command
             const size_t q_bits = n_bits / 2;
             const std::string bit_descr = std::to_string(n_bits) + "/" + std::to_string(q_bits);
 
-            std::unique_ptr<Timer> div_timer = make_timer("BigInt div " + bit_descr);
-            std::unique_ptr<Timer> ct_div_timer = make_timer("BigInt ct_div " + bit_descr);
+            auto div_timer = make_timer("BigInt div " + bit_descr);
+            auto ct_div_timer = make_timer("BigInt ct_div " + bit_descr);
 
             Botan::BigInt y;
             Botan::BigInt x;
@@ -1375,8 +1375,8 @@ class Speed final : public Command
             {
             const std::string bit_descr = std::to_string(n_bits) + "/10";
 
-            std::unique_ptr<Timer> div_timer = make_timer("BigInt div " + bit_descr);
-            std::unique_ptr<Timer> ct_div_timer = make_timer("BigInt ct_div " + bit_descr);
+            auto div_timer = make_timer("BigInt div " + bit_descr);
+            auto ct_div_timer = make_timer("BigInt ct_div " + bit_descr);
 
             Botan::BigInt x;
             Botan::secure_vector<Botan::word> ws;
@@ -1423,8 +1423,8 @@ class Speed final : public Command
             const Botan::BigInt random_e(rng(), e_bits);
             const Botan::BigInt random_f(rng(), f_bits);
 
-            std::unique_ptr<Timer> e_timer = make_timer(group_bits_str + " short exponent");
-            std::unique_ptr<Timer> f_timer = make_timer(group_bits_str + "  full exponent");
+            auto e_timer = make_timer(group_bits_str + " short exponent");
+            auto f_timer = make_timer(group_bits_str + "  full exponent");
 
             while(f_timer->under(runtime))
                {
@@ -1443,7 +1443,7 @@ class Speed final : public Command
          {
          Botan::secure_vector<Botan::word> ws;
 
-         std::unique_ptr<Timer> p192_timer = make_timer("P-192 redc");
+         auto p192_timer = make_timer("P-192 redc");
          Botan::BigInt r192(rng(), 192*2 - 1);
          while(p192_timer->under(runtime))
             {
@@ -1453,7 +1453,7 @@ class Speed final : public Command
             }
          record_result(p192_timer);
 
-         std::unique_ptr<Timer> p224_timer = make_timer("P-224 redc");
+         auto p224_timer = make_timer("P-224 redc");
          Botan::BigInt r224(rng(), 224*2 - 1);
          while(p224_timer->under(runtime))
             {
@@ -1463,7 +1463,7 @@ class Speed final : public Command
             }
          record_result(p224_timer);
 
-         std::unique_ptr<Timer> p256_timer = make_timer("P-256 redc");
+         auto p256_timer = make_timer("P-256 redc");
          Botan::BigInt r256(rng(), 256*2 - 1);
          while(p256_timer->under(runtime))
             {
@@ -1473,7 +1473,7 @@ class Speed final : public Command
             }
          record_result(p256_timer);
 
-         std::unique_ptr<Timer> p384_timer = make_timer("P-384 redc");
+         auto p384_timer = make_timer("P-384 redc");
          Botan::BigInt r384(rng(), 384*2 - 1);
          while(p384_timer->under(runtime))
             {
@@ -1483,7 +1483,7 @@ class Speed final : public Command
             }
          record_result(p384_timer);
 
-         std::unique_ptr<Timer> p521_timer = make_timer("P-521 redc");
+         auto p521_timer = make_timer("P-521 redc");
          Botan::BigInt r521(rng(), 521*2 - 1);
          while(p521_timer->under(runtime))
             {
@@ -1501,8 +1501,8 @@ class Speed final : public Command
             Botan::BigInt p(rng(), bitsize);
 
             std::string bit_str = std::to_string(bitsize);
-            std::unique_ptr<Timer> barrett_timer = make_timer("Barrett-" + bit_str);
-            std::unique_ptr<Timer> schoolbook_timer = make_timer("Schoolbook-" + bit_str);
+            auto barrett_timer = make_timer("Barrett-" + bit_str);
+            auto schoolbook_timer = make_timer("Schoolbook-" + bit_str);
 
             Botan::Modular_Reducer mod_p(p);
 
@@ -1529,7 +1529,7 @@ class Speed final : public Command
             {
             const std::string bit_str = std::to_string(bits);
 
-            std::unique_ptr<Timer> timer = make_timer("inverse_mod-" + bit_str);
+            auto timer = make_timer("inverse_mod-" + bit_str);
 
             while(timer->under(runtime))
                {
@@ -1559,9 +1559,9 @@ class Speed final : public Command
          {
          for(size_t bits : { 256, 512, 1024 })
             {
-            std::unique_ptr<Timer> mr_timer = make_timer("Miller-Rabin-" + std::to_string(bits));
-            std::unique_ptr<Timer> bpsw_timer = make_timer("Bailie-PSW-" + std::to_string(bits));
-            std::unique_ptr<Timer> lucas_timer = make_timer("Lucas-" + std::to_string(bits));
+            auto mr_timer = make_timer("Miller-Rabin-" + std::to_string(bits));
+            auto bpsw_timer = make_timer("Bailie-PSW-" + std::to_string(bits));
+            auto lucas_timer = make_timer("Lucas-" + std::to_string(bits));
 
             Botan::BigInt n = Botan::random_prime(rng(), bits);
 
@@ -1593,9 +1593,9 @@ class Speed final : public Command
 
          for(size_t bits : { 256, 384, 512, 768, 1024, 1536 })
             {
-            std::unique_ptr<Timer> genprime_timer = make_timer("random_prime " + std::to_string(bits));
-            std::unique_ptr<Timer> gensafe_timer = make_timer("random_safe_prime " + std::to_string(bits));
-            std::unique_ptr<Timer> is_prime_timer = make_timer("is_prime " + std::to_string(bits));
+            auto genprime_timer = make_timer("random_prime " + std::to_string(bits));
+            auto gensafe_timer = make_timer("random_safe_prime " + std::to_string(bits));
+            auto is_prime_timer = make_timer("is_prime " + std::to_string(bits));
 
             while(gensafe_timer->under(runtime))
                {
@@ -1651,8 +1651,8 @@ class Speed final : public Command
          Botan::PK_Encryptor_EME enc(key, rng(), padding, provider);
          Botan::PK_Decryptor_EME dec(key, rng(), padding, provider);
 
-         std::unique_ptr<Timer> enc_timer = make_timer(nm + " " + padding, provider, "encrypt");
-         std::unique_ptr<Timer> dec_timer = make_timer(nm + " " + padding, provider, "decrypt");
+         auto enc_timer = make_timer(nm + " " + padding, provider, "encrypt");
+         auto dec_timer = make_timer(nm + " " + padding, provider, "decrypt");
 
          while(enc_timer->under(msec) || dec_timer->under(msec))
             {
@@ -1686,7 +1686,7 @@ class Speed final : public Command
          {
          const std::string kdf = "KDF2(SHA-256)"; // arbitrary choice
 
-         std::unique_ptr<Timer> keygen_timer = make_timer(nm, provider, "keygen");
+         auto keygen_timer = make_timer(nm, provider, "keygen");
 
          std::unique_ptr<Botan::Private_Key> key1(keygen_timer->run([&]
             {
@@ -1708,7 +1708,7 @@ class Speed final : public Command
          const std::vector<uint8_t> ka1_pub = ka_key1.public_value();
          const std::vector<uint8_t> ka2_pub = ka_key2.public_value();
 
-         std::unique_ptr<Timer> ka_timer = make_timer(nm, provider, "key agreements");
+         auto ka_timer = make_timer(nm, provider, "key agreements");
 
          while(ka_timer->under(msec))
             {
@@ -1733,8 +1733,8 @@ class Speed final : public Command
          Botan::PK_KEM_Decryptor dec(key, rng(), kdf, provider);
          Botan::PK_KEM_Encryptor enc(key, rng(), kdf, provider);
 
-         std::unique_ptr<Timer> kem_enc_timer = make_timer(nm, provider, "KEM encrypt");
-         std::unique_ptr<Timer> kem_dec_timer = make_timer(nm, provider, "KEM decrypt");
+         auto kem_enc_timer = make_timer(nm, provider, "KEM encrypt");
+         auto kem_dec_timer = make_timer(nm, provider, "KEM decrypt");
 
          while(kem_enc_timer->under(msec) && kem_dec_timer->under(msec))
             {
@@ -1769,7 +1769,7 @@ class Speed final : public Command
             {
             const std::string nm = grp.empty() ? algo : (algo + "-" + grp);
 
-            std::unique_ptr<Timer> keygen_timer = make_timer(nm, provider, "keygen");
+            auto keygen_timer = make_timer(nm, provider, "keygen");
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer->run([&]
                {
@@ -1792,8 +1792,8 @@ class Speed final : public Command
          Botan::PK_Signer   sig(key, rng(), padding, Botan::IEEE_1363, provider);
          Botan::PK_Verifier ver(key, padding, Botan::IEEE_1363, provider);
 
-         std::unique_ptr<Timer> sig_timer = make_timer(nm + " " + padding, provider, "sign");
-         std::unique_ptr<Timer> ver_timer = make_timer(nm + " " + padding, provider, "verify");
+         auto sig_timer = make_timer(nm + " " + padding, provider, "sign");
+         auto ver_timer = make_timer(nm + " " + padding, provider, "verify");
 
          size_t invalid_sigs = 0;
 
@@ -1856,7 +1856,7 @@ class Speed final : public Command
          for(size_t keylen : { 1024, 2048, 3072, 4096 })
             {
             const std::string nm = "RSA-" + std::to_string(keylen);
-            std::unique_ptr<Timer> keygen_timer = make_timer(nm, provider, "keygen");
+            auto keygen_timer = make_timer(nm, provider, "keygen");
 
             while(keygen_timer->under(msec))
                {
@@ -1878,7 +1878,7 @@ class Speed final : public Command
             {
             const std::string nm = "RSA-" + std::to_string(keylen);
 
-            std::unique_ptr<Timer> keygen_timer = make_timer(nm, provider, "keygen");
+            auto keygen_timer = make_timer(nm, provider, "keygen");
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer->run([&]
                {
@@ -1912,7 +1912,7 @@ class Speed final : public Command
          for(std::string group_name : groups)
             {
             Botan::EC_Group group(group_name);
-            std::unique_ptr<Timer> recovery_timer = make_timer("ECDSA recovery " + group_name);
+            auto recovery_timer = make_timer("ECDSA recovery " + group_name);
 
             while(recovery_timer->under(msec))
                {
@@ -2014,7 +2014,7 @@ class Speed final : public Command
             const std::string params =
                (bits == 1024) ? "dsa/jce/1024" : ("dsa/botan/" + std::to_string(bits));
 
-            std::unique_ptr<Timer> keygen_timer = make_timer(nm, provider, "keygen");
+            auto keygen_timer = make_timer(nm, provider, "keygen");
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer->run([&]
                {
@@ -2037,7 +2037,7 @@ class Speed final : public Command
 
             const std::string params = "modp/ietf/" + std::to_string(keylen);
 
-            std::unique_ptr<Timer> keygen_timer = make_timer(nm, provider, "keygen");
+            auto keygen_timer = make_timer(nm, provider, "keygen");
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer->run([&]
                {
@@ -2101,7 +2101,7 @@ class Speed final : public Command
             const std::string nm = "McEliece-" + std::to_string(n) + "," + std::to_string(t) +
                                    " (WF=" + std::to_string(Botan::mceliece_work_factor(n, t)) + ")";
 
-            std::unique_ptr<Timer> keygen_timer = make_timer(nm, provider, "keygen");
+            auto keygen_timer = make_timer(nm, provider, "keygen");
 
             std::unique_ptr<Botan::Private_Key> key = keygen_timer->run([&]
                {
@@ -2133,7 +2133,7 @@ class Speed final : public Command
 
          for(std::string params : xmss_params)
             {
-            std::unique_ptr<Timer> keygen_timer = make_timer(params, provider, "keygen");
+            auto keygen_timer = make_timer(params, provider, "keygen");
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer->run([&]
                {
@@ -2152,8 +2152,8 @@ class Speed final : public Command
          {
          for(size_t sz : { 8, 16, 24, 32, 64, 128 })
             {
-            std::unique_ptr<Timer> be_timer = make_timer("poly_dbl_be_" + std::to_string(sz));
-            std::unique_ptr<Timer> le_timer = make_timer("poly_dbl_le_" + std::to_string(sz));
+            auto be_timer = make_timer("poly_dbl_be_" + std::to_string(sz));
+            auto le_timer = make_timer("poly_dbl_le_" + std::to_string(sz));
 
             std::vector<uint8_t> buf(sz);
             rng().randomize(buf.data(), sz);
@@ -2175,7 +2175,7 @@ class Speed final : public Command
 
          for(uint8_t work_factor = 4; work_factor <= 14; ++work_factor)
             {
-            std::unique_ptr<Timer> timer = make_timer("bcrypt wf=" + std::to_string(work_factor));
+            auto timer = make_timer("bcrypt wf=" + std::to_string(work_factor));
 
             timer->run([&] {
                Botan::generate_bcrypt(password, rng(), work_factor);
@@ -2199,7 +2199,7 @@ class Speed final : public Command
 
             for(auto work_factor : { 10, 15 })
                {
-               std::unique_ptr<Timer> timer = make_timer("passhash9 alg=" + std::to_string(alg) +
+               auto timer = make_timer("passhash9 alg=" + std::to_string(alg) +
                                                          " wf=" + std::to_string(work_factor));
 
                timer->run([&] {
@@ -2224,7 +2224,7 @@ class Speed final : public Command
                {
                for(size_t p : { 1, 4 })
                   {
-                  std::unique_ptr<Timer> scrypt_timer = make_timer(
+                  auto scrypt_timer = make_timer(
                      "scrypt-" + std::to_string(N) + "-" +
                      std::to_string(r) + "-" + std::to_string(p) +
                      " (" + std::to_string(Botan::scrypt_memory_usage(N, r, p) / (1024*1024)) + " MiB)");
@@ -2266,7 +2266,7 @@ class Speed final : public Command
                {
                for(size_t p : { 1 })
                   {
-                  std::unique_ptr<Timer> timer = make_timer(
+                  auto timer = make_timer(
                      "Argon2id M=" + std::to_string(M) + " t=" + std::to_string(t) + " p=" + std::to_string(p));
 
                   uint8_t out[64];
@@ -2296,9 +2296,9 @@ class Speed final : public Command
          {
          const std::string nm = "NEWHOPE";
 
-         std::unique_ptr<Timer> keygen_timer = make_timer(nm, "", "keygen");
-         std::unique_ptr<Timer> shareda_timer = make_timer(nm, "", "shareda");
-         std::unique_ptr<Timer> sharedb_timer = make_timer(nm, "", "sharedb");
+         auto keygen_timer = make_timer(nm, "", "keygen");
+         auto shareda_timer = make_timer(nm, "", "shareda");
+         auto sharedb_timer = make_timer(nm, "", "sharedb");
 
          Botan::ChaCha_RNG nh_rng(Botan::secure_vector<uint8_t>(32));
 
