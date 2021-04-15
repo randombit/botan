@@ -99,9 +99,13 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
    Timer timer("Argon2");
    const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
 
+   auto pwhash = this->from_params(tune_M, t, p);
+
    timer.run_until_elapsed(tune_time, [&]() {
       uint8_t output[64] = { 0 };
-      argon2(output, sizeof(output), "test", 4, nullptr, 0, nullptr, 0, nullptr, 0, m_family, p, tune_M, t);
+      pwhash->derive_key(output, sizeof(output),
+                         "test", 4,
+                         nullptr, 0);
       });
 
    if(timer.events() == 0 || timer.value() == 0)
