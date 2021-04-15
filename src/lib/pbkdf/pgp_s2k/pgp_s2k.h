@@ -14,7 +14,7 @@
 #include <botan/hash.h>
 #include <botan/rfc4880.h>
 
-//BOTAN_FUTURE_INTERNAL_HEADER(pgp_s2k.h)
+BOTAN_FUTURE_INTERNAL_HEADER(pgp_s2k.h)
 
 namespace Botan {
 
