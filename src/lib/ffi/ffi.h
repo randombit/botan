@@ -210,7 +210,7 @@ BOTAN_PUBLIC_API(2,0) int botan_rng_init(botan_rng_t* rng, const char* rng_type)
 * @param add_entry_cb Callback for adding entropy to the rng, return 0 for success, may be NULL
 * @param destroy_cb Callback called when rng is destroyed, may be NULL
 */
-BOTAN_PUBLIC_API(2,17) int botan_rng_init_custom(botan_rng_t* rng_out, const char* rng_name, void* context,
+BOTAN_PUBLIC_API(2,18) int botan_rng_init_custom(botan_rng_t* rng_out, const char* rng_name, void* context,
                                                  int(* get_cb)(void* context, uint8_t* out, size_t out_len),
                                                  int(* add_entropy_cb)(void* context, const uint8_t input[], size_t length),
                                                  void(* destroy_cb)(void* context));
