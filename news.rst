@@ -92,6 +92,28 @@ Version 3.0.0, Not Yet Released
 
 * Generate a ``compile_commands.json`` for use with Clang tooling.
 
+Version 2.18.0, 2021-04-15
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add support for implementing custom RNG objects through the
+  FFI interface (GH #2627 #2600)
+
+* Improve safegcd bounds, improving runtime performance (GH #2628 #2619)
+
+* Fix a bug introduced in 2.9.0 where BigInt::operator< would return
+  an incorrect result if both operands were negative. (GH #2641 #2638)
+
+* Reject non-TLS messages as quickly as possible without waiting for
+  a full record. (GH #2676)
+
+* Add build support for RISC-V 32
+
+* Fixes for TLS::Stream::async_shutdown (GH #2673)
+
+* Fix a regression introduced in 2.17.0 where LDFLAGS which add an extra
+  library (such as ``-latomic`` needed on SPARC) were not always applied
+  effectively. (GH #2622 #2623 #2625)
+
 Version 2.17.3, 2020-12-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
