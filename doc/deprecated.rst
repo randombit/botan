@@ -77,7 +77,6 @@ Deprecated Headers
 
   PBKDF headers:
   ``bcrypt_pbkdf.h``,
-  ``pbkdf1.h``,
   ``pbkdf2.h``,
   ``pgp_s2k.h``,
   ``scrypt.h``,
