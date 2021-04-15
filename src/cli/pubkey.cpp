@@ -469,7 +469,7 @@ class PK_Workfactor final : public Command
          else if(type == "dl_exp")
             { output() << Botan::dl_exponent_size(bits) << "\n"; }
          else
-            { throw CLI_Usage_Error("Unknown type for pk_workfactor"); }
+            { throw CLI_Usage_Error("Unknown type for pk_workfactor (rsa, dl, dl_exp)"); }
          }
    };
 
