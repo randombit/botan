@@ -14,7 +14,7 @@
   #include <botan/argon2fmt.h>
 #endif
 
-//BOTAN_FUTURE_INTERNAL_HEADER(argon2.h)
+BOTAN_FUTURE_INTERNAL_HEADER(argon2.h)
 
 namespace Botan {
 
@@ -109,6 +109,7 @@ class BOTAN_PUBLIC_API(2,11) Argon2_Family final : public PasswordHashFamily
 * @param M the amount of memory to use in Kb
 * @param t the number of iterations to use
 */
+BOTAN_DEPRECATED("Use PasswordHashFamily+PasswordHash")
 inline void argon2(uint8_t output[], size_t output_len,
                    const char* password, size_t password_len,
                    const uint8_t salt[], size_t salt_len,
