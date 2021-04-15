@@ -15,6 +15,10 @@ Version 2.18.0, Not Yet Released
 * Reject non-TLS messages as quickly as possible without waiting for
   a full record. (GH #2676)
 
+* Add build support for RISC-V 32
+
+* Fixes for TLS::Stream::async_shutdown (GH #2673)
+
 * Fix a regression introduced in 2.17.0 where LDFLAGS which add an extra
   library (such as ``-latomic`` needed on SPARC) were not always applied
   effectively. (GH #2622 #2623 #2625)
