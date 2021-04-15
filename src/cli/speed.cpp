@@ -123,10 +123,6 @@
    #include <botan/scrypt.h>
 #endif
 
-#if defined(BOTAN_HAS_ARGON2)
-   #include <botan/argon2.h>
-#endif
-
 #if defined(BOTAN_HAS_BCRYPT)
    #include <botan/bcrypt.h>
 #endif
@@ -2258,7 +2254,7 @@ class Speed final : public Command
       void bench_argon2(const std::string& /*provider*/,
                         std::chrono::milliseconds msec)
          {
-         const uint8_t mode = 2; // Argon2id
+         auto pwhash_fam = Botan::PasswordHashFamily::create_or_throw("Argon2id");
 
          for(size_t M : { 8*1024, 64*1024, 256*1024 })
             {
@@ -2266,8 +2262,8 @@ class Speed final : public Command
                {
                for(size_t p : { 1 })
                   {
-                  auto timer = make_timer(
-                     "Argon2id M=" + std::to_string(M) + " t=" + std::to_string(t) + " p=" + std::to_string(p));
+                  auto pwhash = pwhash_fam->from_params(M, t, p);
+                  auto timer = make_timer(pwhash->to_string());
 
                   uint8_t out[64];
                   uint8_t salt[16];
@@ -2275,11 +2271,12 @@ class Speed final : public Command
 
                   while(timer->under(msec))
                      {
-                     timer->run([&] {
-                                Botan::argon2(out, sizeof(out), "password", 8,
-                                              salt, sizeof(salt), nullptr, 0, nullptr, 0,
-                                              mode, p, M, t);
-                                });
+                     timer->run([&]
+                        {
+                        pwhash->derive_key(out, sizeof(out),
+                                           "password", 8,
+                                           salt, sizeof(salt));
+                        });
                      }
 
                   record_result(timer);

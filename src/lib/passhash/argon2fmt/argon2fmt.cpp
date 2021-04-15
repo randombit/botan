@@ -5,7 +5,7 @@
 */
 
 #include <botan/argon2fmt.h>
-#include <botan/argon2.h>
+#include <botan/pwdhash.h>
 #include <botan/rng.h>
 #include <botan/base64.h>
 #include <botan/internal/parsing.h>
@@ -22,6 +22,18 @@ std::string strip_padding(std::string s)
    return s;
    }
 
+std::string argon2_family(uint8_t y)
+   {
+   if(y == 0)
+      return "Argon2d";
+   else if(y == 1)
+      return "Argon2i";
+   else if(y == 2)
+      return "Argon2id";
+   else
+      throw Not_Implemented("Unknown Argon2 family type");
+   }
+
 }
 
 std::string argon2_generate_pwhash(const char* password, size_t password_len,
@@ -33,12 +45,13 @@ std::string argon2_generate_pwhash(const char* password, size_t password_len,
    rng.randomize(salt.data(), salt.size());
 
    std::vector<uint8_t> output(output_len);
-   argon2(output.data(), output.size(),
-          password, password_len,
-          salt.data(), salt.size(),
-          nullptr, 0,
-          nullptr, 0,
-          y, p, M, t);
+
+   auto pwdhash_fam = PasswordHashFamily::create_or_throw(argon2_family(y));
+   auto pwdhash = pwdhash_fam->from_params(M, t, p);
+
+   pwdhash->derive_key(output.data(), output.size(),
+                       password, password_len,
+                       salt.data(), salt.size());
 
    std::ostringstream oss;
 
@@ -113,12 +126,12 @@ bool argon2_check_pwhash(const char* password, size_t password_len,
       return false;
 
    std::vector<uint8_t> generated(hash.size());
-   argon2(generated.data(), generated.size(),
-          password, password_len,
-          salt.data(), salt.size(),
-          nullptr, 0,
-          nullptr, 0,
-          family, p, M, t);
+   auto pwdhash_fam = PasswordHashFamily::create_or_throw(argon2_family(family));
+   auto pwdhash = pwdhash_fam->from_params(M, t, p);
+
+   pwdhash->derive_key(generated.data(), generated.size(),
+                       password, password_len,
+                       salt.data(), salt.size());
 
    return constant_time_compare(generated.data(), hash.data(), generated.size());
    }
