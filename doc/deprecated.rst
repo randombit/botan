@@ -75,11 +75,8 @@ in a future major release.
 Deprecated Headers
 ^^^^^^^^^^^^^^^^^^^^^^
 
-  PBKDF headers:
-  ``bcrypt_pbkdf.h``,
-  ``pbkdf2.h``,
-  ``pgp_s2k.h``,
-  ``scrypt.h``,
+  PBKDF headers: ``bcrypt_pbkdf.h``, ``pbkdf2.h``, ``pgp_s2k.h``, ``scrypt.h``,
+  and ``argon2.h``: Use the ``PasswordHash`` interface instead.
 
   Internal implementation headers - seemingly no reason for applications to use:
   ``curve_gfp.h``,
@@ -96,6 +93,9 @@ Deprecated Headers
 
 Other API deprecations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The ``PBKDF`` class is deprecated in favor of ``PasswordHash`` and
+  ``PasswordHashFamily``.
 
 - The ``Buffered_Computation`` base class. In a future release the
   class will be removed, and all of member functions instead declared
