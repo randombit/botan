@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.18.0, Not Yet Released
+Version 2.18.0, 2021-04-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add support for implementing custom RNG objects through the
