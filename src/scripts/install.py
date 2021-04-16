@@ -88,7 +88,7 @@ def prepend_destdir(path):
 
 def makedirs(dirname, exist_ok=True):
     try:
-        logging.debug('Creating directory %s' % (dirname))
+        logging.debug('Creating directory %s', dirname)
         os.makedirs(dirname)
     except OSError as e:
         if e.errno != errno.EEXIST or not exist_ok:
@@ -107,7 +107,7 @@ def calculate_exec_mode(options):
     out = 0o777
     if 'umask' in os.__dict__:
         umask = int(options.umask, 8)
-        logging.debug('Setting umask to %s' % oct(umask))
+        logging.debug('Setting umask to %s', oct(umask))
         os.umask(int(options.umask, 8))
         out &= (umask ^ 0o777)
     return out
@@ -124,12 +124,12 @@ def main(args):
     build_dir = options.build_dir
 
     def copy_file(src, dst):
-        logging.debug('Copying %s to %s' % (src, dst))
+        logging.debug('Copying %s to %s', src, dst)
         shutil.copyfile(src, dst)
 
     def copy_executable(src, dst):
         copy_file(src, dst)
-        logging.debug('Make %s executable' % dst)
+        logging.debug('Make %s executable', dst)
         os.chmod(dst, exe_mode)
 
     with open(os.path.join(build_dir, 'build_config.json')) as f:
@@ -204,7 +204,7 @@ def main(args):
     if 'ffi' in cfg['mod_list'] and cfg['build_shared_lib'] is True and cfg['install_python_module'] is True:
         for ver in cfg['python_version'].split(','):
             py_lib_path = os.path.join(lib_dir, 'python%s' % (ver), 'site-packages')
-            logging.debug('Installing python module to %s' % (py_lib_path))
+            logging.debug('Installing python module to %s', py_lib_path)
             makedirs(prepend_destdir(py_lib_path))
 
             py_dir = cfg['python_dir']
@@ -240,6 +240,6 @@ if __name__ == '__main__':
     try:
         sys.exit(main(sys.argv))
     except Exception as e: # pylint: disable=broad-except
-        logging.error('Failure: %s' % (e))
+        logging.error('Failure: %s', str(e))
         logging.info(traceback.format_exc())
         sys.exit(1)

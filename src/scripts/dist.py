@@ -55,7 +55,7 @@ def check_subprocess_results(subproc, name):
 
 def run_git(args):
     cmd = ['git'] + args
-    logging.debug('Running %s' % (' '.join(cmd)))
+    logging.debug('Running %s', ' '.join(cmd))
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return check_subprocess_results(proc, 'git')
 
@@ -75,11 +75,11 @@ def datestamp(tag):
 
     ts_matcher = re.compile(r'^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}) .*')
 
-    logging.debug('Git returned timestamp of %s for tag %s' % (ts, tag))
+    logging.debug('Git returned timestamp of %s for tag %s', ts, tag)
     match = ts_matcher.match(ts)
 
     if match is None:
-        logging.error('Failed parsing timestamp "%s" of tag %s' % (ts, tag))
+        logging.error('Failed parsing timestamp "%s" of tag %s', ts, tag)
         return 0
 
     rel_date = int(match.group(1) + match.group(2) + match.group(3))
@@ -104,11 +104,11 @@ def gpg_sign(keyid, passphrase_file, files, detached=True):
         gpg_cmd[1:1] = ['--passphrase-file', passphrase_file]
 
     for filename in files:
-        logging.info('Signing %s using PGP id %s' % (filename, keyid))
+        logging.info('Signing %s using PGP id %s', filename, keyid)
 
         cmd = gpg_cmd + [filename]
 
-        logging.debug('Running %s' % (' '.join(cmd)))
+        logging.debug('Running %s', ' '.join(cmd))
 
         gpg = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
@@ -239,7 +239,7 @@ def write_archive(version, output_basename, archive_type, rel_epoch, all_files, 
             raise Exception("Unknown archive type '%s'" % (archive_type))
 
     output_archive = output_basename + '.' + archive_suffix(archive_type)
-    logging.info('Writing archive "%s"' % (output_archive))
+    logging.info('Writing archive "%s"', output_archive)
 
     remove_file_if_exists(output_archive)
     remove_file_if_exists(output_archive + '.asc')
@@ -291,8 +291,8 @@ def write_archive(version, output_basename, archive_type, rel_epoch, all_files, 
     sha256.update(archive_contents)
     archive_hash = sha256.hexdigest().upper()
 
-    logging.info('%s is %.2f MiB' % (output_archive, len(archive_contents) / (1024.0*1024.0)))
-    logging.info('SHA-256(%s) = %s' % (output_archive, archive_hash))
+    logging.info('%s is %.2f MiB', output_archive, len(archive_contents) / (1024.0*1024.0))
+    logging.info('SHA-256(%s) = %s', output_archive, archive_hash)
     if hash_file is not None:
         hash_file.write("%s  %s\n" % (archive_hash, output_archive))
 
@@ -330,7 +330,7 @@ def main(args=None):
     configure_logging(options)
 
     if len(args) != 1 and len(args) != 2:
-        logging.error('Usage: %s [options] <version tag>' % (sys.argv[0]))
+        logging.error('Usage: %s [options] <version tag>', sys.argv[0])
 
     snapshot_branch = None
     target_version = None
@@ -338,7 +338,7 @@ def main(args=None):
     archives = options.archive_types.split(',') if options.archive_types != '' else []
     for archive_type in archives:
         if archive_type not in ['tar', 'tgz', 'tbz', 'txz']:
-            logging.error('Unknown archive type "%s"' % (archive_type))
+            logging.error('Unknown archive type "%s"', archive_type)
 
     if args[0] == 'snapshot':
         if len(args) != 2:
@@ -354,19 +354,20 @@ def main(args=None):
         target_version = snapshot_branch
     elif len(args) == 1:
         try:
-            logging.info('Creating release for version %s' % (target_version))
+            logging.info('Creating release for version %s', target_version)
         except ValueError as e:
-            logging.error('Invalid version number %s' % (target_version))
+            logging.error('Invalid version number %s', target_version)
 
     rev_id = revision_of(target_version)
     if rev_id == '':
-        logging.error('No tag matching %s found' % (target_version))
+        logging.error('No tag matching %s found', target_version)
 
     rel_date, rel_epoch = datestamp(target_version)
     if rel_date == 0 or rel_epoch == 0:
         logging.error('No date found for version, git error?')
 
-    logging.info('Found %s at revision id %s released %d' % (target_version, rev_id, rel_date))
+    logging.info('Found %s at revision id %s released %d',
+                 target_version, rev_id, rel_date)
 
     global GZIP_HEADER_TIME # pylint: disable=global-statement
     GZIP_HEADER_TIME = rel_epoch
@@ -382,10 +383,10 @@ def main(args=None):
 
     output_basename = output_name()
 
-    logging.debug('Output basename %s' % (output_basename))
+    logging.debug('Output basename %s', output_basename)
 
     if os.access(output_basename, os.X_OK):
-        logging.info('Removing existing output dir %s' % (output_basename))
+        logging.info('Removing existing output dir %s', output_basename)
         shutil.rmtree(output_basename)
 
     extract_revision(rev_id, output_basename)
@@ -409,7 +410,7 @@ def main(args=None):
     version_file = find_version_file()
 
     if not os.access(version_file, os.R_OK):
-        logging.error('Cannot read %s' % (version_file))
+        logging.error('Cannot read %s', version_file)
 
     rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, rel_date)
 
@@ -417,7 +418,7 @@ def main(args=None):
         os.makedirs(options.output_dir)
     except OSError as e:
         if e.errno != errno.EEXIST:
-            logging.error('Creating dir %s failed %s' % (options.output_dir, e))
+            logging.error('Creating dir %s failed %s', options.output_dir, e)
 
     output_files = []
 
@@ -448,7 +449,7 @@ def main(args=None):
 
     if options.output_dir != '.':
         for output_file in output_files:
-            logging.debug('Moving %s to %s' % (output_file, options.output_dir))
+            logging.debug('Moving %s to %s', output_file, options.output_dir)
             shutil.move(output_file, os.path.join(options.output_dir, output_file))
 
     if options.print_output_names:
