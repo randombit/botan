@@ -77,7 +77,7 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_st
 
     cmdline = [CLI_PATH, cmd] + drbg_options + opt_list
 
-    logging.debug("Executing '%s'" % (' '.join([CLI_PATH, cmd] + opt_list)))
+    logging.debug("Executing '%s'", ' '.join([CLI_PATH, cmd] + opt_list))
 
     stdout = None
     stderr = None
@@ -124,13 +124,13 @@ def cli_config_tests(_tmp_dir):
     libs = test_cli("config", "libs")
 
     if len(prefix) < 4 or prefix[0] != '/':
-        logging.error("Bad prefix %s" % (prefix))
+        logging.error("Bad prefix %s", prefix)
     if ("-I%s/include/botan-3" % (prefix)) not in cflags:
-        logging.error("Bad cflags %s" % (cflags))
+        logging.error("Bad cflags %s", cflags)
     if not ldflags.endswith(("-L%s/lib" % (prefix))):
-        logging.error("Bad ldflags %s" % (ldflags))
+        logging.error("Bad ldflags %s", ldflags)
     if "-lbotan-3" not in libs:
-        logging.error("Bad libs %s" % (libs))
+        logging.error("Bad libs %s", libs)
 
 def cli_help_tests(_tmp_dir):
     output = test_cli("help", None, None)
@@ -144,12 +144,12 @@ def cli_version_tests(_tmp_dir):
 
     version_re = re.compile(r'[0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)?')
     if not version_re.match(output):
-        logging.error("Unexpected version output %s" % (output))
+        logging.error("Unexpected version output %s", output)
 
     output = test_cli("version", ["--full"], None, None)
     version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)? \(.* revision .*, distribution .*\)$')
     if not version_full_re.match(output):
-        logging.error("Unexpected version output %s" % (output))
+        logging.error("Unexpected version output %s", output)
 
 def cli_is_prime_tests(_tmp_dir):
     test_cli("is_prime", "5", "5 is probably prime")
@@ -429,7 +429,7 @@ def cli_pbkdf_tune_tests(_tmp_dir):
 
     for line in output:
         if expected.match(line) is None:
-            logging.error("Unexpected line '%s'" % (line))
+            logging.error("Unexpected line '%s'", line)
 
     expected_pbkdf2 = re.compile(r'For (default|[1-9][0-9]*) ms selected PBKDF2\(HMAC\(SHA-256\),[0-9]+\)')
 
@@ -437,7 +437,7 @@ def cli_pbkdf_tune_tests(_tmp_dir):
 
     for line in output:
         if expected_pbkdf2.match(line) is None:
-            logging.error("Unexpected line '%s'" % (line))
+            logging.error("Unexpected line '%s'", line)
 
     expected_argon2 = re.compile(r'For (default|[1-9][0-9]*) ms selected Argon2id\([0-9]+,[0-9]+,[0-9]+\)')
 
@@ -445,7 +445,7 @@ def cli_pbkdf_tune_tests(_tmp_dir):
 
     for line in output:
         if expected_argon2.match(line) is None:
-            logging.error("Unexpected line '%s'" % (line))
+            logging.error("Unexpected line '%s'", line)
 
 def cli_psk_db_tests(tmp_dir):
     if not check_for_command("psk_get"):
@@ -520,7 +520,7 @@ def cli_rng_tests(_tmp_dir):
         if output == "D80F88F6ADBE65ACB10C":
             logging.error('RNG produced DRBG output')
         if hex_10.match(output) is None:
-            logging.error('Unexpected RNG output %s' % (output))
+            logging.error('Unexpected RNG output %s', output)
 
     has_rdrand = test_cli("cpuid", []).find(' rdrand ') > 0
 
@@ -530,7 +530,7 @@ def cli_rng_tests(_tmp_dir):
         if output == "D80F88F6ADBE65ACB10C":
             logging.error('RDRAND produced DRBG output')
         if hex_10.match(output) is None:
-            logging.error('Unexpected RNG output %s' % (output))
+            logging.error('Unexpected RNG output %s', output)
 
 def cli_roughtime_check_tests(tmp_dir):
     # pylint: disable=line-too-long
@@ -728,13 +728,13 @@ def cli_cpuid_tests(_tmp_dir):
     cpuid_output = test_cli("cpuid", [])
 
     if not cpuid_output.startswith('CPUID flags:'):
-        logging.error('Unexpected cpuid output "%s"' % (cpuid_output))
+        logging.error('Unexpected cpuid output "%s"', cpuid_output)
 
     flag_re = re.compile('[a-z0-9_]+')
     flags = cpuid_output[13:].split(' ')
     for flag in flags:
         if flag != '' and flag_re.match(flag) is None:
-            logging.error('Unexpected CPUID flag name "%s"' % (flag))
+            logging.error('Unexpected CPUID flag name "%s"', flag)
 
 def cli_cc_enc_tests(_tmp_dir):
     test_cli("cc_encrypt", ["8028028028028029", "pass"], "4308989841607208")
@@ -864,13 +864,13 @@ def cli_tls_socket_tests(tmp_dir):
     (stdout, stderr) = tls_client.communicate()
 
     if stderr:
-        logging.error("Got unexpected stderr output %s" % (stderr))
+        logging.error("Got unexpected stderr output %s", stderr)
 
     if b'Handshake complete' not in stdout:
-        logging.error('Failed to complete handshake: %s' % (stdout))
+        logging.error('Failed to complete handshake: %s', stdout)
 
     if client_msg not in stdout:
-        logging.error("Missing client message from stdout %s" % (stdout))
+        logging.error("Missing client message from stdout %s", stdout)
 
     tls_server.communicate()
 
@@ -918,7 +918,7 @@ def cli_tls_http_server_tests(tmp_dir):
     resp = conn.getresponse()
 
     if resp.status != 200:
-        logging.error('Unexpected response status %d' % (resp.status))
+        logging.error('Unexpected response status %d', resp.status)
 
     body = str(resp.read())
 
@@ -929,7 +929,7 @@ def cli_tls_http_server_tests(tmp_dir):
     resp = conn.getresponse()
 
     if resp.status != 405:
-        logging.error('Unexpected response status %d' % (resp.status))
+        logging.error('Unexpected response status %d', resp.status)
 
     if sys.version_info.major >= 3:
         rc = tls_server.wait(5) # pylint: disable=too-many-function-args
@@ -1020,12 +1020,12 @@ def cli_tls_proxy_tests(tmp_dir):
         resp = conn.getresponse()
 
         if resp.status != 200:
-            logging.error('Unexpected response status %d' % (resp.status))
+            logging.error('Unexpected response status %d', resp.status)
 
         body = resp.read()
 
         if body != server_response:
-            logging.error('Unexpected response from server %s' % (body))
+            logging.error('Unexpected response from server %s', body)
 
     if sys.version_info.major >= 3:
         rc = tls_proxy.wait(5) # pylint: disable=too-many-function-args
@@ -1130,7 +1130,7 @@ def cli_uuid_tests(_tmp_dir):
     output = test_cli("uuid", [])
 
     if uuid_re.match(output) is None:
-        logging.error('Bad uuid output %s' % (output))
+        logging.error('Bad uuid output %s', output)
 
 def cli_tls_client_hello_tests(_tmp_dir):
 
@@ -1302,7 +1302,7 @@ def cli_speed_tests(_tmp_dir):
     for b in json_blob:
         for field in ['algo', 'op', 'events', 'bps', 'buf_size', 'nanos']:
             if field not in b:
-                logging.error('Missing field %s in JSON record %s' % (field, b))
+                logging.error('Missing field %s in JSON record %s', field, b)
 
 def run_test(fn_name, fn):
     start = time.time()

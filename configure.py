@@ -166,7 +166,7 @@ class Version(object):
 
             return '%s:%s' % (cmdname, rev)
         except OSError as e:
-            logging.debug('Error getting rev from %s - %s' % (cmdname, e.strerror))
+            logging.debug('Error getting rev from %s - %s', cmdname, e.strerror)
             return 'unknown'
 
 
@@ -825,7 +825,8 @@ class ModuleInfo(InfoObject):
             pub_header = set(header_list_public)
             int_header = set(header_list_internal)
             if not pub_header.isdisjoint(int_header):
-                logging.error("Module %s header contains same header in public and internal sections" % self.infofile)
+                logging.error("Module %s has same header in public and internal sections",
+                              self.infofile)
 
         check_header_duplicates(lex.header_public, lex.header_internal)
 
@@ -882,13 +883,13 @@ class ModuleInfo(InfoObject):
         # Filesystem read access check
         for src in self.source + self.header_internal + self.header_public + self.header_external:
             if not os.access(src, os.R_OK):
-                logging.error("Missing file %s in %s" % (src, infofile))
+                logging.error("Missing file %s in %s", src, infofile)
 
         # Check for duplicates
         def intersect_check(type_a, list_a, type_b, list_b):
             intersection = set.intersection(set(list_a), set(list_b))
             if intersection:
-                logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), type_a, type_b))
+                logging.error('Headers %s marked both %s and %s', ' '.join(intersection), type_a, type_b)
 
         intersect_check('public', self.header_public, 'internal', self.header_internal)
         intersect_check('public', self.header_public, 'external', self.header_external)
@@ -1072,9 +1073,8 @@ class ModuleInfo(InfoObject):
         missing = [s for s in self.dependencies(None) if s not in modules]
 
         if missing:
-            logging.error("Module '%s', dep of '%s', does not exist" % (
-                missing, self.basename))
-
+            logging.error("Module '%s', dep of '%s', does not exist",
+                          missing, self.basename)
 
 class ModulePolicyInfo(InfoObject):
     def __init__(self, infofile):
@@ -1093,8 +1093,8 @@ class ModulePolicyInfo(InfoObject):
         def check(tp, lst):
             for mod in lst:
                 if mod not in modules:
-                    logging.error("Module policy %s includes non-existent module %s in <%s>" % (
-                        self.infofile, mod, tp))
+                    logging.error("Module policy %s includes non-existent module %s in <%s>",
+                                  self.infofile, mod, tp)
 
         check('required', self.required)
         check('if_available', self.if_available)
@@ -1561,7 +1561,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         feature_re = re.compile('^[a-z][a-z0-9_]*[a-z0-9]$')
         for feature in features:
             if not feature_re.match(feature):
-                logging.error("Invalid OS feature %s in %s" % (feature, infofile))
+                logging.error("Invalid OS feature %s in %s", feature, infofile)
 
     def matches_name(self, nm):
         if nm in self._aliases:
@@ -1628,10 +1628,10 @@ def guess_processor(archinfo):
         if info_part:
             match = canon_processor(archinfo, info_part)
             if match is not None:
-                logging.debug("Matched '%s' to processor '%s'" % (info_part, match))
+                logging.debug("Matched '%s' to processor '%s'", info_part, match)
                 return match, info_part
             else:
-                logging.debug("Failed to deduce CPU from '%s'" % info_part)
+                logging.debug("Failed to deduce CPU from '%s'", info_part)
 
     raise UserError('Could not determine target CPU; set with --cpu')
 
@@ -1748,9 +1748,9 @@ def process_template_string(template_text, variables, template_source):
     try:
         return SimpleTemplate(variables).substitute(template_text)
     except KeyError as e:
-        logging.error('Unbound var %s in template %s' % (e, template_source))
+        logging.error('Unbound var %s in template %s', e, template_source)
     except Exception as e: # pylint: disable=broad-except
-        logging.error('Exception %s during template processing file %s' % (e, template_source))
+        logging.error('Exception %s during template processing file %s', e, template_source)
 
 def process_template(template_file, variables):
     return process_template_string(read_textfile(template_file), variables, template_file)
@@ -1901,9 +1901,11 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
                                  if info_txt_libname in chosen_libname]
 
             if len(adjusted_libnames) > 1:
-                logging.warning('Ambiguous boost library names: %s' % ', '.join(adjusted_libnames))
+                logging.warning('Ambiguous boost library names: %s',
+                                ', '.join(adjusted_libnames))
             if len(adjusted_libnames) == 1:
-                logging.debug('Replacing boost library name %s -> %s' % (info_txt_libname, adjusted_libnames[0]))
+                logging.debug('Replacing boost library name %s -> %s',
+                              info_txt_libname, adjusted_libnames[0])
                 return adjusted_libnames[0]
 
         return info_txt_libname
@@ -1931,7 +1933,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
     def choose_mp_bits():
         mp_bits = arch.wordsize # allow command line override?
-        logging.debug('Using MP bits %d' % (mp_bits))
+        logging.debug('Using MP bits %d', mp_bits)
         return mp_bits
 
     def innosetup_arch(os_name, arch):
@@ -1942,7 +1944,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             if arch in inno_arch:
                 return inno_arch[arch]
             else:
-                logging.warning('Unknown arch %s in innosetup_arch' % (arch))
+                logging.warning('Unknown arch %s in innosetup_arch', arch)
         return None
 
     def configure_command_line():
@@ -2301,7 +2303,7 @@ class ModulesChooser(object):
         for reason in sorted(skipped_modules.keys()):
             disabled_mods = sorted(skipped_modules[reason])
             if disabled_mods:
-                logging.info('Skipping (%s): %s' % (reason, ' '.join(disabled_mods)))
+                logging.info('Skipping (%s): %s', reason, ' '.join(disabled_mods))
 
     @staticmethod
     def _display_module_information_to_load(all_modules, modules_to_load):
@@ -2309,11 +2311,11 @@ class ModulesChooser(object):
 
         for modname in sorted_modules_to_load:
             if all_modules[modname].comment:
-                logging.info('%s: %s' % (modname, all_modules[modname].comment))
+                logging.info('%s: %s', modname, all_modules[modname].comment)
             if all_modules[modname].warning:
-                logging.warning('%s: %s' % (modname, all_modules[modname].warning))
+                logging.warning('%s: %s', modname, all_modules[modname].warning)
             if all_modules[modname].load_on == 'vendor':
-                logging.info('Enabling use of external dependency %s' % modname)
+                logging.info('Enabling use of external dependency %s', modname)
 
         if sorted_modules_to_load:
             logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
@@ -2338,31 +2340,31 @@ class ModulesChooser(object):
     def _validate_user_selection(modules, enabled_modules, disabled_modules):
         for modname in enabled_modules:
             if modname not in modules:
-                logging.error("Module not found: %s" % modname)
+                logging.error("Module not found: %s", modname)
 
         for modname in disabled_modules:
             if modname not in modules:
-                logging.warning("Disabled module not found: %s" % modname)
+                logging.warning("Disabled module not found: %s", modname)
 
     def _handle_by_module_policy(self, modname, usable):
         if self._module_policy is not None:
             if modname in self._module_policy.required:
                 if not usable:
-                    logging.error('Module policy requires module %s not usable on this platform' % (modname))
+                    logging.error('Module policy requires module %s not usable on this platform', modname)
                 elif modname in self._options.disabled_modules:
-                    logging.error('Module %s was disabled but is required by policy' % (modname))
+                    logging.error('Module %s was disabled but is required by policy', modname)
                 self._to_load.add(modname)
                 return True
             elif modname in self._module_policy.if_available:
                 if modname in self._options.disabled_modules:
                     self._not_using_because['disabled by user'].add(modname)
                 elif usable:
-                    logging.debug('Enabling optional module %s' % (modname))
+                    logging.debug('Enabling optional module %s', modname)
                     self._to_load.add(modname)
                 return True
             elif modname in self._module_policy.prohibited:
                 if modname in self._options.enabled_modules:
-                    logging.error('Module %s was requested but is prohibited by policy' % (modname))
+                    logging.error('Module %s was requested but is prohibited by policy', modname)
                 self._not_using_because['prohibited by module policy'].add(modname)
                 return True
 
@@ -2462,8 +2464,8 @@ class ModulesChooser(object):
             else:
                 self._to_load.add(modname)
         else:
-            logging.error('Unknown load_on %s in %s' % (
-                module.load_on, modname))
+            logging.error('Unknown load_on %s in %s',
+                          module.load_on, modname)
 
     def choose(self):
         for (modname, module) in self._modules.items():
@@ -2532,10 +2534,10 @@ def choose_link_method(options):
     for method in useable_methods():
         if req is None or req == method:
             logging.info('Using %s to link files into build dir ' \
-                         '(use --link-method to change)' % (method))
+                         '(use --link-method to change)', method)
             return method
 
-    logging.warning('Could not use link method "%s", will copy instead' % (req))
+    logging.warning('Could not use link method "%s", will copy instead', req)
     return 'copy'
 
 def portable_symlink(file_path, target_dir, method):
@@ -2544,7 +2546,7 @@ def portable_symlink(file_path, target_dir, method):
     """
 
     if not os.access(file_path, os.R_OK):
-        logging.warning('Missing file %s' % (file_path))
+        logging.warning('Missing file %s', file_path)
         return
 
     if method == 'symlink':
@@ -2624,7 +2626,7 @@ class AmalgamationHeader(object):
                 contents = AmalgamationGenerator.read_header(filepath)
                 self.file_contents[os.path.basename(filepath)] = contents
             except IOError as e:
-                logging.error('Error processing file %s for amalgamation: %s' % (filepath, e))
+                logging.error('Error processing file %s for amalgamation: %s', filepath, e)
 
         self.contents = ''
         for name in sorted(self.file_contents):
@@ -2728,7 +2730,7 @@ class AmalgamationGenerator(object):
 
         pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
         amalgamation_header_fsname = '%s.h' % (self._filename_prefix)
-        logging.info('Writing amalgamation header to %s' % (amalgamation_header_fsname))
+        logging.info('Writing amalgamation header to %s', amalgamation_header_fsname)
         pub_header_amalag.write_to_file(amalgamation_header_fsname, "BOTAN_AMALGAMATION_H_")
 
         internal_headers_list = []
@@ -2738,7 +2740,7 @@ class AmalgamationGenerator(object):
 
         # file descriptors for all `amalgamation_sources`
         amalgamation_fsname = '%s.cpp' % (self._filename_prefix)
-        logging.info('Writing amalgamation source to %s' % (amalgamation_fsname))
+        logging.info('Writing amalgamation source to %s', amalgamation_fsname)
 
         amalgamation_file = open(amalgamation_fsname, 'w', **encoding_kwords)
 
@@ -2782,7 +2784,7 @@ def have_program(program):
         exe_file = os.path.join(path, program)
 
         if os.path.exists(exe_file) and os.access(exe_file, os.X_OK):
-            logging.debug('Found program %s in %s' % (program, path))
+            logging.debug('Found program %s in %s', program, path)
             return True
         else:
             return False
@@ -2794,7 +2796,7 @@ def have_program(program):
             if exe_test(path, program + suffix):
                 return True
 
-    logging.debug('Program %s not found' % (program))
+    logging.debug('Program %s not found', program)
     return False
 
 
@@ -2839,9 +2841,9 @@ def load_info_files(search_dir, descr, filename_matcher, class_t):
 
     if info:
         infotxt_basenames = ' '.join(sorted(info.keys()))
-        logging.debug('Loaded %d %s files: %s' % (len(info), descr, infotxt_basenames))
+        logging.debug('Loaded %d %s files: %s', len(info), descr, infotxt_basenames)
     else:
-        logging.warning('Failed to load any %s files' % (descr))
+        logging.warning('Failed to load any %s files', descr)
 
     return info
 
@@ -2892,7 +2894,7 @@ def python_platform_identifier():
 def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pylint: disable=too-many-branches
     if options.os is None:
         options.os = python_platform_identifier()
-        logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
+        logging.info('Guessing target OS is %s (use --os to set)', options.os)
 
     if options.os not in info_os:
         def find_canonical_os_name(os_name_variant):
@@ -2913,23 +2915,23 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
         options.compiler = deduce_compiler_type_from_cc_bin(options.compiler_binary)
 
         if options.compiler is None:
-            logging.error("Could not figure out what compiler type '%s' is, use --cc to set" % (
-                options.compiler_binary))
+            logging.error("Could not figure out what compiler type '%s' is, use --cc to set",
+                          options.compiler_binary)
 
     if options.compiler is None and options.os in info_os:
         options.compiler = info_os[options.os].default_compiler
 
         if not have_program(info_cc[options.compiler].binary_name):
-            logging.error("Default compiler for system is %s but could not find binary '%s'; use --cc to set" % (
-                options.compiler, info_cc[options.compiler].binary_name))
+            logging.error("Default compiler is %s but could not find '%s'; use --cc to set",
+                          options.compiler, info_cc[options.compiler].binary_name)
 
-        logging.info('Guessing to use compiler %s (use --cc or CXX to set)' % (options.compiler))
+        logging.info('Guessing to use compiler %s (use --cc or CXX to set)', options.compiler)
 
     if options.cpu is None:
         (arch, cpu) = guess_processor(info_arch)
         options.arch = arch
         options.cpu = cpu
-        logging.info('Guessing target processor is a %s (use --cpu to set)' % (options.arch))
+        logging.info('Guessing target processor is a %s (use --cpu to set)', options.arch)
 
     # OpenBSD uses an old binutils that does not support AVX2
     if options.os == 'openbsd':
@@ -3011,10 +3013,10 @@ def canonicalize_options(options, info_os, info_arch):
 
     if not shared_libs_supported:
         if options.build_shared_lib is True:
-            logging.warning('Shared libs not supported on %s, disabling shared lib support' % (options.os))
+            logging.warning('Shared libs not supported on %s, disabling shared lib support', options.os)
             options.build_shared_lib = False
         elif options.build_shared_lib is None:
-            logging.info('Shared libs not supported on %s, disabling shared lib support' % (options.os))
+            logging.info('Shared libs not supported on %s, disabling shared lib support', options.os)
 
     if options.os == 'windows' and options.build_shared_lib is None and options.build_static_lib is None:
         options.build_shared_lib = True
@@ -3117,7 +3119,7 @@ def validate_options(options, info_os, info_cc, available_module_policies):
             raise UserError("Makes no sense to specify MSVC runtime for %s" % (options.compiler))
 
         if options.msvc_runtime not in ['MT', 'MD', 'MTd', 'MDd']:
-            logging.warning("MSVC runtime option '%s' not known", (options.msvc_runtime))
+            logging.warning("MSVC runtime option '%s' not known", options.msvc_runtime)
 
 def run_compiler_preproc(options, ccinfo, source_file, default_return, extra_flags=None):
     if extra_flags is None:
@@ -3136,7 +3138,7 @@ def run_compiler_preproc(options, ccinfo, source_file, default_return, extra_fla
             universal_newlines=True).communicate()
         cc_output = stdout
     except OSError as e:
-        logging.warning('Could not execute %s: %s' % (cmd, e))
+        logging.warning('Could not execute %s: %s', cmd, e)
         return default_return
 
     def cleanup_output(output):
@@ -3155,7 +3157,7 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
     unknown_pattern = r'UNKNOWN 0 0'
 
     if ccinfo.basename not in version_patterns:
-        logging.info("No compiler version detection available for %s" % (ccinfo.basename))
+        logging.info("No compiler version detection available for %s", ccinfo.basename)
         return "0.0"
 
     detect_version_source = os.path.join(source_paths.build_data_dir, "detect_version.cpp")
@@ -3163,19 +3165,19 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
     cc_output = run_compiler_preproc(options, ccinfo, detect_version_source, "0.0")
 
     if re.search(unknown_pattern, cc_output) is not None:
-        logging.warning('Failed to get version for %s from macro check' % (ccinfo.basename))
+        logging.warning('Failed to get version for %s from macro check', ccinfo.basename)
         return "0.0"
 
     match = re.search(version_patterns[ccinfo.basename], cc_output, flags=re.MULTILINE)
     if match is None:
-        logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
-            ccinfo.basename, cc_output))
+        logging.warning("Tried to get %s version, but output '%s' is unexpected",
+                        ccinfo.basename, cc_output)
         return "0.0"
 
     major_version = int(match.group(1), 0)
     minor_version = int(match.group(2), 0)
     cc_version = "%d.%d" % (major_version, minor_version)
-    logging.info('Auto-detected compiler version %s' % (cc_version))
+    logging.info('Auto-detected compiler version %s', cc_version)
 
     return cc_version
 
@@ -3197,7 +3199,7 @@ def check_compiler_arch(options, ccinfo, archinfo, source_paths):
         logging.warning("Error detecting compiler target arch: '%s'", cc_output)
         return None
 
-    logging.info('Auto-detected compiler arch %s' % (cc_output))
+    logging.info('Auto-detected compiler arch %s', cc_output)
     return cc_output
 
 def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, template_vars, options):
@@ -3207,14 +3209,14 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
         robust_rmtree(build_paths.build_dir)
     except OSError as e:
         if e.errno != errno.ENOENT:
-            logging.error('Problem while removing build dir: %s' % (e))
+            logging.error('Problem while removing build dir: %s', e)
 
     for build_dir in build_paths.build_dirs():
         try:
             robust_makedirs(build_dir)
         except OSError as e:
             if e.errno != errno.EEXIST:
-                logging.error('Error while creating "%s": %s' % (build_dir, e))
+                logging.error('Error while creating "%s": %s', build_dir, e)
 
     def write_template(sink, template):
         with open(sink, 'w') as f:
@@ -3237,7 +3239,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
     link_method = choose_link_method(options)
 
     def link_headers(headers, visibility, directory):
-        logging.debug('Linking %d %s header files in %s' % (len(headers), visibility, directory))
+        logging.debug('Linking %d %s header files in %s', len(headers), visibility, directory)
 
         for header_file in headers:
             try:
@@ -3305,11 +3307,13 @@ botan
             for line in cli_doc_contents:
                 f.write(line)
 
-    logging.info('Botan %s (revision %s) (%s %s) build setup is complete' % (
-        Version.as_string(),
-        Version.vc_rev(),
-        Version.release_type(),
-        ('dated %d' % (Version.datestamp())) if Version.datestamp() != 0 else 'undated'))
+    date = 'dated %d' % (Version.datestamp()) if Version.datestamp() != 0 else 'undated'
+
+    logging.info('Botan %s (revision %s) (%s %s) build setup is complete',
+                 Version.as_string(),
+                 Version.vc_rev(),
+                 Version.release_type(),
+                 date)
 
     if options.unsafe_fuzzer_mode:
         logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")
@@ -3367,8 +3371,8 @@ def main(argv):
         policy.cross_check(info_modules)
 
     logging.info('%s invoked with options "%s"', argv[0], ' '.join(argv[1:]))
-    logging.info('Configuring to build Botan %s (revision %s)' % (
-        Version.as_string(), Version.vc_rev()))
+    logging.info('Configuring to build Botan %s (revision %s)',
+                 Version.as_string(), Version.vc_rev())
     logging.info('Running under %s', sys.version.replace('\n', ''))
 
     take_options_from_env(options)
@@ -3376,8 +3380,8 @@ def main(argv):
     logging.info('Autodetected platform information: OS="%s" machine="%s" proc="%s"',
                  platform.system(), platform.machine(), platform.processor())
 
-    logging.debug('Known CPU names: ' + ' '.join(
-        sorted(flatten([[ainfo.basename] + ainfo.aliases for ainfo in info_arch.values()]))))
+    cpu_names = sorted(flatten([[ainfo.basename] + ainfo.aliases for ainfo in info_arch.values()]))
+    logging.debug('Known CPU names: %s', ' '.join(cpu_names))
 
     set_defaults_for_unset_options(options, info_arch, info_cc, info_os)
     canonicalize_options(options, info_os, info_arch)
@@ -3398,8 +3402,8 @@ def main(argv):
     else:
         cc_min_version = options.cc_min_version or "0.0"
 
-    logging.info('Target is %s:%s-%s-%s' % (
-        options.compiler, cc_min_version, options.os, options.arch))
+    logging.info('Target is %s:%s-%s-%s',
+                 options.compiler, cc_min_version, options.os, options.arch)
 
     def choose_endian(arch_info, options):
         if options.with_endian is not None:
@@ -3444,6 +3448,6 @@ An internal error occurred.
 Don't panic, this is probably not your fault! Please open an issue
 with the entire output at https://github.com/randombit/botan
 
-You'll meet friendly people happy to help!""" % traceback.format_exc())
+You'll meet friendly people happy to help!""", traceback.format_exc())
 
     sys.exit(0)
