@@ -3017,8 +3017,14 @@ def canonicalize_options(options, info_os, info_arch):
         options.fuzzer_lib = 'Fuzzer'
 
     if options.ldflags is not None:
-        libs = [m.group(1) for m in re.finditer(r'-l([a-z0-9]+)', options.ldflags)]
-        options.extra_libs += ','.join(libs)
+        extra_libs = []
+        link_to_lib = re.compile('^-l(.*)')
+        for flag in options.ldflags.split(' '):
+            match = link_to_lib.match(flag)
+            if match:
+                extra_libs.append(match.group(1))
+
+        options.extra_libs += ','.join(extra_libs)
 
 # Checks user options for consistency
 # This method DOES NOT change options on behalf of the user but explains
