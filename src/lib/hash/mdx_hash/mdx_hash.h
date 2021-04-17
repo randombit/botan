@@ -49,12 +49,6 @@ class MDx_HashFunction : public HashFunction
       * @param buffer to put the output into
       */
       virtual void copy_out(uint8_t buffer[]) = 0;
-
-      /**
-      * Write the count, if used, to this spot
-      * @param out where to write the counter to
-      */
-      virtual void write_count(uint8_t out[]);
    private:
       const uint8_t m_pad_char;
       const uint8_t m_counter_size;

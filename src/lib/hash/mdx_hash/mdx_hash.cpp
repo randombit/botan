@@ -95,27 +95,19 @@ void MDx_HashFunction::final_result(uint8_t output[])
       zeroise(m_buffer);
       }
 
-   write_count(&m_buffer[block_len - m_counter_size]);
-
-   compress_n(m_buffer.data(), 1);
-   copy_out(output);
-   clear();
-   }
-
-/*
-* Write the count bits to the buffer
-*/
-void MDx_HashFunction::write_count(uint8_t out[])
-   {
    BOTAN_ASSERT_NOMSG(m_counter_size <= output_length());
    BOTAN_ASSERT_NOMSG(m_counter_size >= 8);
 
    const uint64_t bit_count = m_count * 8;
 
    if(m_count_big_endian)
-      store_be(bit_count, out + m_counter_size - 8);
+      store_be(bit_count, &m_buffer[block_len - 8]);
    else
-      store_le(bit_count, out + m_counter_size - 8);
+      store_le(bit_count, &m_buffer[block_len - 8]);
+
+   compress_n(m_buffer.data(), 1);
+   copy_out(output);
+   clear();
    }
 
 }
