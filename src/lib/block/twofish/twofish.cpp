@@ -20,10 +20,10 @@ inline void TF_E(uint32_t A, uint32_t B, uint32_t& C, uint32_t& D,
                  uint32_t RK1, uint32_t RK2,
                  const secure_vector<uint32_t>& SB)
    {
-   uint32_t X = SB[    get_byte(3, A)] ^ SB[256+get_byte(2, A)] ^
-                SB[512+get_byte(1, A)] ^ SB[768+get_byte(0, A)];
-   uint32_t Y = SB[    get_byte(0, B)] ^ SB[256+get_byte(3, B)] ^
-                SB[512+get_byte(2, B)] ^ SB[768+get_byte(1, B)];
+   uint32_t X = SB[    get_byte<3>(A)] ^ SB[256+get_byte<2>(A)] ^
+                SB[512+get_byte<1>(A)] ^ SB[768+get_byte<0>(A)];
+   uint32_t Y = SB[    get_byte<0>(B)] ^ SB[256+get_byte<3>(B)] ^
+                SB[512+get_byte<2>(B)] ^ SB[768+get_byte<1>(B)];
 
    X += Y;
    Y += X;
@@ -39,10 +39,10 @@ inline void TF_D(uint32_t A, uint32_t B, uint32_t& C, uint32_t& D,
                  uint32_t RK1, uint32_t RK2,
                  const secure_vector<uint32_t>& SB)
    {
-   uint32_t X = SB[    get_byte(3, A)] ^ SB[256+get_byte(2, A)] ^
-                SB[512+get_byte(1, A)] ^ SB[768+get_byte(0, A)];
-   uint32_t Y = SB[    get_byte(0, B)] ^ SB[256+get_byte(3, B)] ^
-                SB[512+get_byte(2, B)] ^ SB[768+get_byte(1, B)];
+   uint32_t X = SB[    get_byte<3>(A)] ^ SB[256+get_byte<2>(A)] ^
+                SB[512+get_byte<1>(A)] ^ SB[768+get_byte<0>(A)];
+   uint32_t Y = SB[    get_byte<0>(B)] ^ SB[256+get_byte<3>(B)] ^
+                SB[512+get_byte<2>(B)] ^ SB[768+get_byte<1>(B)];
 
    X += Y;
    Y += X;

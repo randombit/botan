@@ -180,12 +180,16 @@ uint32_t string_to_ipv4(const std::string& str)
 std::string ipv4_to_string(uint32_t ip)
    {
    std::string str;
+   uint8_t bits[4];
+   store_be(ip, bits);
 
-   for(size_t i = 0; i != sizeof(ip); ++i)
+   for(size_t i = 0; i != 4; ++i)
       {
-      if(i)
+      if(i > 0)
+         {
          str += ".";
-      str += std::to_string(get_byte(i, ip));
+         }
+      str += std::to_string(bits[i]);
       }
 
    return str;

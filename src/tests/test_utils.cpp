@@ -99,10 +99,10 @@ class Utility_Function_Tests final : public Text_Based_Test
          const uint32_t in32 = 0xA0B0C0D0;
          const uint64_t in64 = 0xABCDEF0123456789;
 
-         result.test_is_eq<uint8_t>(Botan::get_byte(0, in32), 0xA0);
-         result.test_is_eq<uint8_t>(Botan::get_byte(1, in32), 0xB0);
-         result.test_is_eq<uint8_t>(Botan::get_byte(2, in32), 0xC0);
-         result.test_is_eq<uint8_t>(Botan::get_byte(3, in32), 0xD0);
+         result.test_is_eq<uint8_t>(Botan::get_byte<0>(in32), 0xA0);
+         result.test_is_eq<uint8_t>(Botan::get_byte<1>(in32), 0xB0);
+         result.test_is_eq<uint8_t>(Botan::get_byte<2>(in32), 0xC0);
+         result.test_is_eq<uint8_t>(Botan::get_byte<3>(in32), 0xD0);
 
          result.test_is_eq<uint16_t>(Botan::make_uint16(0xAA, 0xBB), 0xAABB);
          result.test_is_eq<uint32_t>(Botan::make_uint32(0x01, 0x02, 0x03, 0x04), 0x01020304);

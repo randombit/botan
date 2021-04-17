@@ -144,17 +144,17 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const
 
    for(uint16_t Linv : m_Linv)
       {
-      enc_support.push_back(get_byte(0, Linv));
-      enc_support.push_back(get_byte(1, Linv));
+      enc_support.push_back(get_byte<0>(Linv));
+      enc_support.push_back(get_byte<1>(Linv));
       }
    enc.encode(enc_support, ASN1_Type::OctetString);
    secure_vector<uint8_t> enc_H;
    for(uint32_t coef : m_coeffs)
       {
-      enc_H.push_back(get_byte(0, coef));
-      enc_H.push_back(get_byte(1, coef));
-      enc_H.push_back(get_byte(2, coef));
-      enc_H.push_back(get_byte(3, coef));
+      enc_H.push_back(get_byte<0>(coef));
+      enc_H.push_back(get_byte<1>(coef));
+      enc_H.push_back(get_byte<2>(coef));
+      enc_H.push_back(get_byte<3>(coef));
       }
    enc.encode(enc_H, ASN1_Type::OctetString);
    enc.end_cons();

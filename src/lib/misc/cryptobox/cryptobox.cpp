@@ -51,8 +51,7 @@ std::string encrypt(const uint8_t input[], size_t input_len,
       ciphertext
    */
    secure_vector<uint8_t> out_buf(CRYPTOBOX_HEADER_LEN + input_len);
-   for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
-     out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
+   store_be(CRYPTOBOX_VERSION_CODE, out_buf.data());
    rng.randomize(&out_buf[VERSION_CODE_LEN], PBKDF_SALT_LEN);
    // space left for MAC here
    if(input_len > 0)
@@ -107,8 +106,11 @@ decrypt_bin(const uint8_t input[], size_t input_len,
       throw Decoding_Error("Invalid CryptoBox input");
 
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
-      if(ciphertext[i] != get_byte(i, CRYPTOBOX_VERSION_CODE))
+      {
+      uint32_t version = load_be<uint32_t>(ciphertext.data(), 0);
+      if(version != CRYPTOBOX_VERSION_CODE)
          throw Decoding_Error("Bad CryptoBox version");
+      }
 
    const uint8_t* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
    const uint8_t* box_mac = &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN];

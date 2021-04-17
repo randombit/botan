@@ -36,11 +36,25 @@ namespace Botan {
 * @param input the value to extract from
 * @return byte byte_num of input
 */
-template<typename T> inline constexpr uint8_t get_byte(size_t byte_num, T input)
+template<typename T> inline constexpr uint8_t get_byte_var(size_t byte_num, T input)
    {
    return static_cast<uint8_t>(
       input >> (((~byte_num)&(sizeof(T)-1)) << 3)
       );
+   }
+
+/**
+* Byte extraction
+* @param byte_num which byte to extract, 0 == highest byte
+* @param input the value to extract from
+* @return byte byte_num of input
+*/
+template<size_t B, typename T> inline constexpr uint8_t get_byte(T input)
+   {
+   static_assert(B < sizeof(T), "Valid byte offset");
+
+   const size_t shift = ((~B) & (sizeof(T) - 1)) << 3;
+   return static_cast<uint8_t>((input >> shift) & 0xFF);
    }
 
 /**
@@ -439,8 +453,8 @@ inline constexpr void store_be(uint16_t in, uint8_t out[2])
    uint16_t o = BOTAN_ENDIAN_N2B(in);
    typecast_copy(out, o);
 #else
-   out[0] = get_byte(0, in);
-   out[1] = get_byte(1, in);
+   out[0] = get_byte<0>(in);
+   out[1] = get_byte<1>(in);
 #endif
    }
 
@@ -455,8 +469,8 @@ inline constexpr void store_le(uint16_t in, uint8_t out[2])
    uint16_t o = BOTAN_ENDIAN_N2L(in);
    typecast_copy(out, o);
 #else
-   out[0] = get_byte(1, in);
-   out[1] = get_byte(0, in);
+   out[0] = get_byte<1>(in);
+   out[1] = get_byte<0>(in);
 #endif
    }
 
@@ -471,10 +485,10 @@ inline constexpr void store_be(uint32_t in, uint8_t out[4])
    uint32_t o = BOTAN_ENDIAN_B2N(in);
    typecast_copy(out, o);
 #else
-   out[0] = get_byte(0, in);
-   out[1] = get_byte(1, in);
-   out[2] = get_byte(2, in);
-   out[3] = get_byte(3, in);
+   out[0] = get_byte<0>(in);
+   out[1] = get_byte<1>(in);
+   out[2] = get_byte<2>(in);
+   out[3] = get_byte<3>(in);
 #endif
    }
 
@@ -489,10 +503,10 @@ inline constexpr void store_le(uint32_t in, uint8_t out[4])
    uint32_t o = BOTAN_ENDIAN_L2N(in);
    typecast_copy(out, o);
 #else
-   out[0] = get_byte(3, in);
-   out[1] = get_byte(2, in);
-   out[2] = get_byte(1, in);
-   out[3] = get_byte(0, in);
+   out[0] = get_byte<3>(in);
+   out[1] = get_byte<2>(in);
+   out[2] = get_byte<1>(in);
+   out[3] = get_byte<0>(in);
 #endif
    }
 
@@ -507,14 +521,14 @@ inline constexpr void store_be(uint64_t in, uint8_t out[8])
    uint64_t o = BOTAN_ENDIAN_B2N(in);
    typecast_copy(out, o);
 #else
-   out[0] = get_byte(0, in);
-   out[1] = get_byte(1, in);
-   out[2] = get_byte(2, in);
-   out[3] = get_byte(3, in);
-   out[4] = get_byte(4, in);
-   out[5] = get_byte(5, in);
-   out[6] = get_byte(6, in);
-   out[7] = get_byte(7, in);
+   out[0] = get_byte<0>(in);
+   out[1] = get_byte<1>(in);
+   out[2] = get_byte<2>(in);
+   out[3] = get_byte<3>(in);
+   out[4] = get_byte<4>(in);
+   out[5] = get_byte<5>(in);
+   out[6] = get_byte<6>(in);
+   out[7] = get_byte<7>(in);
 #endif
    }
 
@@ -529,14 +543,14 @@ inline constexpr void store_le(uint64_t in, uint8_t out[8])
    uint64_t o = BOTAN_ENDIAN_L2N(in);
    typecast_copy(out, o);
 #else
-   out[0] = get_byte(7, in);
-   out[1] = get_byte(6, in);
-   out[2] = get_byte(5, in);
-   out[3] = get_byte(4, in);
-   out[4] = get_byte(3, in);
-   out[5] = get_byte(2, in);
-   out[6] = get_byte(1, in);
-   out[7] = get_byte(0, in);
+   out[0] = get_byte<7>(in);
+   out[1] = get_byte<6>(in);
+   out[2] = get_byte<5>(in);
+   out[3] = get_byte<4>(in);
+   out[4] = get_byte<3>(in);
+   out[5] = get_byte<2>(in);
+   out[6] = get_byte<1>(in);
+   out[7] = get_byte<0>(in);
 #endif
    }
 
@@ -664,7 +678,7 @@ void copy_out_be(uint8_t out[], size_t out_bytes, const T in[])
    }
 
    for(size_t i = 0; i != out_bytes; ++i)
-      out[i] = get_byte(i%8, in[0]);
+      out[i] = get_byte_var(i % 8, in[0]);
    }
 
 template<typename T, typename Alloc>
@@ -685,7 +699,7 @@ void copy_out_le(uint8_t out[], size_t out_bytes, const T in[])
    }
 
    for(size_t i = 0; i != out_bytes; ++i)
-      out[i] = get_byte(sizeof(T) - 1 - (i % 8), in[0]);
+      out[i] = get_byte_var(sizeof(T) - 1 - (i % 8), in[0]);
    }
 
 template<typename T, typename Alloc>

@@ -60,7 +60,7 @@ std::vector<uint8_t> Certificate_Status::serialize() const
    std::vector<uint8_t> buf;
    buf.push_back(1); // type OCSP
    for(size_t i = 1; i < 4; ++i)
-      buf.push_back(get_byte(i, response_len));
+      buf.push_back(get_byte_var(i, response_len));
 
    buf += m_response;
    return buf;

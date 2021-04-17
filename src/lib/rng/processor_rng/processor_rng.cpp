@@ -132,8 +132,11 @@ void Processor_RNG::randomize(uint8_t out[], size_t out_len)
    if(out_len > 0) // at most sizeof(hwrng_output)-1
       {
       const hwrng_output r = read_hwrng();
+      uint8_t hwrng_bytes[sizeof(hwrng_output)];
+      store_le(r, hwrng_bytes);
+
       for(size_t i = 0; i != out_len; ++i)
-         out[i] = get_byte(i, r);
+         out[i] = hwrng_bytes[i];
       }
    }
 

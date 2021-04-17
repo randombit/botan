@@ -96,16 +96,16 @@ std::string GOST_28147_89::name() const
 #define GOST_2ROUND(N1, N2, R1, R2)   \
    do {                               \
    uint32_t T0 = N1 + m_EK[R1];           \
-   N2 ^= m_SBOX[get_byte(3, T0)] |      \
-         m_SBOX[get_byte(2, T0)+256] |  \
-         m_SBOX[get_byte(1, T0)+512] |  \
-         m_SBOX[get_byte(0, T0)+768];   \
+   N2 ^= m_SBOX[get_byte<3>(T0)] |        \
+         m_SBOX[get_byte<2>(T0)+256] |       \
+         m_SBOX[get_byte<1>(T0)+512] |       \
+         m_SBOX[get_byte<0>(T0)+768];        \
                                       \
    uint32_t T1 = N2 + m_EK[R2];           \
-   N1 ^= m_SBOX[get_byte(3, T1)] |      \
-         m_SBOX[get_byte(2, T1)+256] |  \
-         m_SBOX[get_byte(1, T1)+512] |  \
-         m_SBOX[get_byte(0, T1)+768];   \
+   N1 ^= m_SBOX[get_byte<3>(T1)] |        \
+         m_SBOX[get_byte<2>(T1)+256] |       \
+         m_SBOX[get_byte<1>(T1)+512] |       \
+         m_SBOX[get_byte<0>(T1)+768];        \
    } while(0)
 
 /*

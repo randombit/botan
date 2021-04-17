@@ -108,8 +108,8 @@ BigInt::BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit)
 
 uint8_t BigInt::byte_at(size_t n) const
    {
-   return get_byte(sizeof(word) - (n % sizeof(word)) - 1,
-                   word_at(n / sizeof(word)));
+   return get_byte_var(sizeof(word) - (n % sizeof(word)) - 1,
+                       word_at(n / sizeof(word)));
    }
 
 int32_t BigInt::cmp_word(word other) const
@@ -404,7 +404,7 @@ void BigInt::binary_encode(uint8_t output[], size_t len) const
 
       for(size_t i = 0; i != extra_bytes; ++i)
          {
-         output[extra_bytes - i - 1] = get_byte(sizeof(word) - i - 1, w);
+         output[extra_bytes - i - 1] = get_byte_var(sizeof(word) - i - 1, w);
          }
       }
    }

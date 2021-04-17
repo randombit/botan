@@ -138,10 +138,10 @@ inline uint32_t ARIA_F1(uint32_t X)
    const uint32_t M3 = 0x01010001;
    const uint32_t M4 = 0x01010100;
 
-   return (S1[get_byte(0, X)] * M1) ^
-          (S2[get_byte(1, X)] * M2) ^
-          (X1[get_byte(2, X)] * M3) ^
-          (X2[get_byte(3, X)] * M4);
+   return (S1[get_byte<0>(X)] * M1) ^
+          (S2[get_byte<1>(X)] * M2) ^
+          (X1[get_byte<2>(X)] * M3) ^
+          (X2[get_byte<3>(X)] * M4);
    }
 
 inline uint32_t ARIA_F2(uint32_t X)
@@ -151,10 +151,10 @@ inline uint32_t ARIA_F2(uint32_t X)
    const uint32_t M3 = 0x01010001;
    const uint32_t M4 = 0x01010100;
 
-   return (X1[get_byte(0, X)] * M3) ^
-          (X2[get_byte(1, X)] * M4) ^
-          (S1[get_byte(2, X)] * M1) ^
-          (S2[get_byte(3, X)] * M2);
+   return (X1[get_byte<0>(X)] * M3) ^
+          (X2[get_byte<1>(X)] * M4) ^
+          (S1[get_byte<2>(X)] * M1) ^
+          (S2[get_byte<3>(X)] * M2);
    }
 
 inline void ARIA_FO(uint32_t& T0, uint32_t& T1, uint32_t& T2, uint32_t& T3)
@@ -247,22 +247,22 @@ void transform(const uint8_t in[], uint8_t out[], size_t blocks,
             ARIA_FE(t0,t1,t2,t3);
          }
 
-      out[16*i+ 0] = X1[get_byte(0,t0)] ^ get_byte(0, KS[4*ROUNDS]);
-      out[16*i+ 1] = X2[get_byte(1,t0)] ^ get_byte(1, KS[4*ROUNDS]);
-      out[16*i+ 2] = S1[get_byte(2,t0)] ^ get_byte(2, KS[4*ROUNDS]);
-      out[16*i+ 3] = S2[get_byte(3,t0)] ^ get_byte(3, KS[4*ROUNDS]);
-      out[16*i+ 4] = X1[get_byte(0,t1)] ^ get_byte(0, KS[4*ROUNDS+1]);
-      out[16*i+ 5] = X2[get_byte(1,t1)] ^ get_byte(1, KS[4*ROUNDS+1]);
-      out[16*i+ 6] = S1[get_byte(2,t1)] ^ get_byte(2, KS[4*ROUNDS+1]);
-      out[16*i+ 7] = S2[get_byte(3,t1)] ^ get_byte(3, KS[4*ROUNDS+1]);
-      out[16*i+ 8] = X1[get_byte(0,t2)] ^ get_byte(0, KS[4*ROUNDS+2]);
-      out[16*i+ 9] = X2[get_byte(1,t2)] ^ get_byte(1, KS[4*ROUNDS+2]);
-      out[16*i+10] = S1[get_byte(2,t2)] ^ get_byte(2, KS[4*ROUNDS+2]);
-      out[16*i+11] = S2[get_byte(3,t2)] ^ get_byte(3, KS[4*ROUNDS+2]);
-      out[16*i+12] = X1[get_byte(0,t3)] ^ get_byte(0, KS[4*ROUNDS+3]);
-      out[16*i+13] = X2[get_byte(1,t3)] ^ get_byte(1, KS[4*ROUNDS+3]);
-      out[16*i+14] = S1[get_byte(2,t3)] ^ get_byte(2, KS[4*ROUNDS+3]);
-      out[16*i+15] = S2[get_byte(3,t3)] ^ get_byte(3, KS[4*ROUNDS+3]);
+      out[16*i+ 0] = X1[get_byte<0>(t0)] ^ get_byte<0>(KS[4*ROUNDS]);
+      out[16*i+ 1] = X2[get_byte<1>(t0)] ^ get_byte<1>(KS[4*ROUNDS]);
+      out[16*i+ 2] = S1[get_byte<2>(t0)] ^ get_byte<2>(KS[4*ROUNDS]);
+      out[16*i+ 3] = S2[get_byte<3>(t0)] ^ get_byte<3>(KS[4*ROUNDS]);
+      out[16*i+ 4] = X1[get_byte<0>(t1)] ^ get_byte<0>(KS[4*ROUNDS+1]);
+      out[16*i+ 5] = X2[get_byte<1>(t1)] ^ get_byte<1>(KS[4*ROUNDS+1]);
+      out[16*i+ 6] = S1[get_byte<2>(t1)] ^ get_byte<2>(KS[4*ROUNDS+1]);
+      out[16*i+ 7] = S2[get_byte<3>(t1)] ^ get_byte<3>(KS[4*ROUNDS+1]);
+      out[16*i+ 8] = X1[get_byte<0>(t2)] ^ get_byte<0>(KS[4*ROUNDS+2]);
+      out[16*i+ 9] = X2[get_byte<1>(t2)] ^ get_byte<1>(KS[4*ROUNDS+2]);
+      out[16*i+10] = S1[get_byte<2>(t2)] ^ get_byte<2>(KS[4*ROUNDS+2]);
+      out[16*i+11] = S2[get_byte<3>(t2)] ^ get_byte<3>(KS[4*ROUNDS+2]);
+      out[16*i+12] = X1[get_byte<0>(t3)] ^ get_byte<0>(KS[4*ROUNDS+3]);
+      out[16*i+13] = X2[get_byte<1>(t3)] ^ get_byte<1>(KS[4*ROUNDS+3]);
+      out[16*i+14] = S1[get_byte<2>(t3)] ^ get_byte<2>(KS[4*ROUNDS+3]);
+      out[16*i+15] = S2[get_byte<3>(t3)] ^ get_byte<3>(KS[4*ROUNDS+3]);
       }
    }
 

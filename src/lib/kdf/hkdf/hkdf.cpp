@@ -112,8 +112,8 @@ hkdf_expand_label(const std::string& hash_fn,
    secure_vector<uint8_t> output(length16);
    std::vector<uint8_t> prefix(3 + label.size() + 1);
 
-   prefix[0] = get_byte(0, length16);
-   prefix[1] = get_byte(1, length16);
+   prefix[0] = get_byte<0>(length16);
+   prefix[1] = get_byte<1>(length16);
    prefix[2] = static_cast<uint8_t>(label.size());
 
    copy_mem(prefix.data() + 3,

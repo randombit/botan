@@ -102,19 +102,19 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const
 
       const std::vector<uint8_t> extn_val = extn.second->serialize(whoami);
 
-      buf.push_back(get_byte(0, extn_code));
-      buf.push_back(get_byte(1, extn_code));
+      buf.push_back(get_byte<0>(extn_code));
+      buf.push_back(get_byte<1>(extn_code));
 
-      buf.push_back(get_byte(0, static_cast<uint16_t>(extn_val.size())));
-      buf.push_back(get_byte(1, static_cast<uint16_t>(extn_val.size())));
+      buf.push_back(get_byte<0>(static_cast<uint16_t>(extn_val.size())));
+      buf.push_back(get_byte<1>(static_cast<uint16_t>(extn_val.size())));
 
       buf += extn_val;
       }
 
    const uint16_t extn_size = static_cast<uint16_t>(buf.size() - 2);
 
-   buf[0] = get_byte(0, extn_size);
-   buf[1] = get_byte(1, extn_size);
+   buf[0] = get_byte<0>(extn_size);
+   buf[1] = get_byte<1>(extn_size);
 
    // avoid sending a completely empty extensions block
    if(buf.size() == 2)
@@ -191,12 +191,12 @@ std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side /*whoami*/
 
    size_t name_len = m_sni_host_name.size();
 
-   buf.push_back(get_byte(0, static_cast<uint16_t>(name_len+3)));
-   buf.push_back(get_byte(1, static_cast<uint16_t>(name_len+3)));
+   buf.push_back(get_byte<0>(static_cast<uint16_t>(name_len+3)));
+   buf.push_back(get_byte<1>(static_cast<uint16_t>(name_len+3)));
    buf.push_back(0); // DNS
 
-   buf.push_back(get_byte(0, static_cast<uint16_t>(name_len)));
-   buf.push_back(get_byte(1, static_cast<uint16_t>(name_len)));
+   buf.push_back(get_byte<0>(static_cast<uint16_t>(name_len)));
+   buf.push_back(get_byte<1>(static_cast<uint16_t>(name_len)));
 
    buf += std::make_pair(
       cast_char_ptr_to_uint8(m_sni_host_name.data()),
@@ -272,8 +272,8 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
                                  1);
       }
 
-   buf[0] = get_byte(0, static_cast<uint16_t>(buf.size()-2));
-   buf[1] = get_byte(1, static_cast<uint16_t>(buf.size()-2));
+   buf[0] = get_byte<0>(static_cast<uint16_t>(buf.size()-2));
+   buf[1] = get_byte<1>(static_cast<uint16_t>(buf.size()-2));
 
    return buf;
    }
@@ -314,13 +314,13 @@ std::vector<uint8_t> Supported_Groups::serialize(Connection_Side /*whoami*/) con
 
       if(id > 0)
          {
-         buf.push_back(get_byte(0, id));
-         buf.push_back(get_byte(1, id));
+         buf.push_back(get_byte<0>(id));
+         buf.push_back(get_byte<1>(id));
          }
       }
 
-   buf[0] = get_byte(0, static_cast<uint16_t>(buf.size()-2));
-   buf[1] = get_byte(1, static_cast<uint16_t>(buf.size()-2));
+   buf[0] = get_byte<0>(static_cast<uint16_t>(buf.size()-2));
+   buf[1] = get_byte<1>(static_cast<uint16_t>(buf.size()-2));
 
    return buf;
    }
@@ -395,15 +395,15 @@ std::vector<uint8_t> Signature_Algorithms::serialize(Connection_Side /*whoami*/)
 
    const uint16_t len = static_cast<uint16_t>(m_schemes.size() * 2);
 
-   buf.push_back(get_byte(0, len));
-   buf.push_back(get_byte(1, len));
+   buf.push_back(get_byte<0>(len));
+   buf.push_back(get_byte<1>(len));
 
    for(Signature_Scheme scheme : m_schemes)
       {
       const uint16_t scheme_code = static_cast<uint16_t>(scheme);
 
-      buf.push_back(get_byte(0, scheme_code));
-      buf.push_back(get_byte(1, scheme_code));
+      buf.push_back(get_byte<0>(scheme_code));
+      buf.push_back(get_byte<1>(scheme_code));
       }
 
    return buf;
@@ -448,13 +448,13 @@ std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoam
    std::vector<uint8_t> buf;
 
    const uint16_t pp_len = static_cast<uint16_t>(m_pp.size() * 2);
-   buf.push_back(get_byte(0, pp_len));
-   buf.push_back(get_byte(1, pp_len));
+   buf.push_back(get_byte<0>(pp_len));
+   buf.push_back(get_byte<1>(pp_len));
 
    for(uint16_t pp : m_pp)
       {
-      buf.push_back(get_byte(0, pp));
-      buf.push_back(get_byte(1, pp));
+      buf.push_back(get_byte<0>(pp));
+      buf.push_back(get_byte<1>(pp));
       }
 
    buf.push_back(0); // srtp_mki, always empty here
@@ -564,8 +564,8 @@ std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
 
       for(Protocol_Version version : m_versions)
          {
-         buf.push_back(get_byte(0, version.major_version()));
-         buf.push_back(get_byte(1, version.minor_version()));
+         buf.push_back(version.major_version());
+         buf.push_back(version.minor_version());
          }
       }
 

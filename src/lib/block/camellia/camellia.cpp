@@ -135,14 +135,14 @@ uint64_t F(uint64_t v, uint64_t K)
 
    const uint64_t x = v ^ K;
 
-   const uint64_t Z1 = M1 * SBOX1[get_byte(0, x)];
-   const uint64_t Z2 = M2 * SBOX2[get_byte(1, x)];
-   const uint64_t Z3 = M3 * SBOX3[get_byte(2, x)];
-   const uint64_t Z4 = M4 * SBOX4[get_byte(3, x)];
-   const uint64_t Z5 = M5 * SBOX2[get_byte(4, x)];
-   const uint64_t Z6 = M6 * SBOX3[get_byte(5, x)];
-   const uint64_t Z7 = M7 * SBOX4[get_byte(6, x)];
-   const uint64_t Z8 = M8 * SBOX1[get_byte(7, x)];
+   const uint64_t Z1 = M1 * SBOX1[get_byte<0>(x)];
+   const uint64_t Z2 = M2 * SBOX2[get_byte<1>(x)];
+   const uint64_t Z3 = M3 * SBOX3[get_byte<2>(x)];
+   const uint64_t Z4 = M4 * SBOX4[get_byte<3>(x)];
+   const uint64_t Z5 = M5 * SBOX2[get_byte<4>(x)];
+   const uint64_t Z6 = M6 * SBOX3[get_byte<5>(x)];
+   const uint64_t Z7 = M7 * SBOX4[get_byte<6>(x)];
+   const uint64_t Z8 = M8 * SBOX1[get_byte<7>(x)];
 
    return Z1 ^ Z2 ^ Z3 ^ Z4 ^ Z5 ^ Z6 ^ Z7 ^ Z8;
    }

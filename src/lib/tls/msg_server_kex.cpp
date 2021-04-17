@@ -128,8 +128,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       const uint16_t named_curve_id = static_cast<uint16_t>(shared_group);
       m_params.push_back(3); // named curve
-      m_params.push_back(get_byte(0, named_curve_id));
-      m_params.push_back(get_byte(1, named_curve_id));
+      m_params.push_back(get_byte<0>(named_curve_id));
+      m_params.push_back(get_byte<1>(named_curve_id));
 
       append_tls_length_value(m_params, ecdh_public_val, 1);
       }
@@ -237,8 +237,8 @@ std::vector<uint8_t> Server_Key_Exchange::serialize() const
       if(m_scheme != Signature_Scheme::NONE)
          {
          const uint16_t scheme_code = static_cast<uint16_t>(m_scheme);
-         buf.push_back(get_byte(0, scheme_code));
-         buf.push_back(get_byte(1, scheme_code));
+         buf.push_back(get_byte<0>(scheme_code));
+         buf.push_back(get_byte<1>(scheme_code));
          }
 
       append_tls_length_value(buf, m_signature, 2);

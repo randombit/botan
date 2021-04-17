@@ -180,8 +180,8 @@ RTSS_Share::split(uint8_t M, uint8_t N,
    copy_mem(&share_header[0], identifier.data(), identifier.size());
    share_header[16] = hash_id;
    share_header[17] = M;
-   share_header[18] = get_byte(0, share_len);
-   share_header[19] = get_byte(1, share_len);
+   share_header[18] = get_byte<0>(share_len);
+   share_header[19] = get_byte<1>(share_len);
 
    // Create RTSS header in each share
    std::vector<RTSS_Share> shares(N);

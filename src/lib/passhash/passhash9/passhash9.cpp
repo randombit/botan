@@ -64,8 +64,8 @@ std::string generate_passhash9(const std::string& pass,
 
    secure_vector<uint8_t> blob;
    blob.push_back(alg_id);
-   blob.push_back(get_byte(0, work_factor));
-   blob.push_back(get_byte(1, work_factor));
+   blob.push_back(get_byte<0>(work_factor));
+   blob.push_back(get_byte<1>(work_factor));
    blob += salt;
    blob += kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN,
                           pass,
