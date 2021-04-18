@@ -4,6 +4,9 @@ Release Notes
 Version 2.18.1, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix a build regression in 2.18.0 which caused linker flags which
+  contain ``-l`` within them (such as ``-fuse-linker-plugin``) to
+  be misinterpreted. (GH #2715)
 
 Version 2.18.0, 2021-04-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
