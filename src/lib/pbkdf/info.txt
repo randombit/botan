@@ -1,5 +1,6 @@
 <defines>
 PBKDF -> 20180902
+PASSWORD_HASHING -> 20210419
 </defines>
 
 <requires>

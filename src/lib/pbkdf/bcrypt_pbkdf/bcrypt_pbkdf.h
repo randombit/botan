@@ -9,7 +9,7 @@
 
 #include <botan/pwdhash.h>
 
-//BOTAN_FUTURE_INTERNAL_HEADER(bcrypt_pbkdf.h)
+BOTAN_FUTURE_INTERNAL_HEADER(bcrypt_pbkdf.h)
 
 namespace Botan {
 
@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2,11) Bcrypt_PBKDF final : public PasswordHash
    {
    public:
-      Bcrypt_PBKDF(size_t iterations) : m_iterations(iterations) {}
+      Bcrypt_PBKDF(size_t iterations);
 
       Bcrypt_PBKDF(const Bcrypt_PBKDF& other) = default;
       Bcrypt_PBKDF& operator=(const Bcrypt_PBKDF&) = default;
@@ -67,10 +67,18 @@ class BOTAN_PUBLIC_API(2,11) Bcrypt_PBKDF_Family final : public PasswordHashFami
 /**
 * Bcrypt PBKDF compatible with OpenBSD bcrypt_pbkdf
 */
-void BOTAN_UNSTABLE_API bcrypt_pbkdf(uint8_t output[], size_t output_len,
-                                     const char* pass, size_t pass_len,
-                                     const uint8_t salt[], size_t salt_len,
-                                     size_t rounds);
+BOTAN_DEPRECATED("Use PasswordHashFamily+PasswordHash")
+inline void bcrypt_pbkdf(uint8_t output[], size_t output_len,
+                         const char* password, size_t password_len,
+                         const uint8_t salt[], size_t salt_len,
+                         size_t rounds)
+   {
+   auto pwdhash_fam = PasswordHashFamily::create_or_throw("Bcrypt-PBKDF");
+   auto pwdhash = pwdhash_fam->from_params(rounds);
+   pwdhash->derive_key(output, output_len,
+                       password, password_len,
+                       salt, salt_len);
+   }
 
 }
 

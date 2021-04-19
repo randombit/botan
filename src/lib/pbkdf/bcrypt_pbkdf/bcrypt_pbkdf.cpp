@@ -12,14 +12,10 @@
 
 namespace Botan {
 
-void Bcrypt_PBKDF::derive_key(uint8_t output[], size_t output_len,
-                              const char* password, size_t password_len,
-                              const uint8_t salt[], size_t salt_len) const
+Bcrypt_PBKDF::Bcrypt_PBKDF(size_t iterations) :
+   m_iterations(iterations)
    {
-   bcrypt_pbkdf(output, output_len,
-                password, password_len,
-                salt, salt_len,
-                m_iterations);
+   BOTAN_ARG_CHECK(m_iterations > 0, "Invalid Bcrypt-PBKDF iterations");
    }
 
 std::string Bcrypt_PBKDF::to_string() const
@@ -46,9 +42,13 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
 
    const size_t starting_iter = 2;
 
+   auto pwhash = this->from_iterations(starting_iter);
+
    timer.run_until_elapsed(tune_time, [&]() {
       uint8_t output[32] = { 0 };
-      bcrypt_pbkdf(output, sizeof(output), "test", 4, nullptr, 0, starting_iter);
+      pwhash->derive_key(output, sizeof(output),
+                         "test", 4,
+                         nullptr, 0);
       });
 
    if(timer.events() < blocks || timer.value() == 0)
@@ -127,13 +127,10 @@ void bcrypt_round(Blowfish& blowfish,
 
 }
 
-void bcrypt_pbkdf(uint8_t output[], size_t output_len,
-                  const char* pass, size_t pass_len,
-                  const uint8_t salt[], size_t salt_len,
-                  size_t rounds)
+void Bcrypt_PBKDF::derive_key(uint8_t output[], size_t output_len,
+                              const char* password, size_t password_len,
+                              const uint8_t salt[], size_t salt_len) const
    {
-   BOTAN_ARG_CHECK(rounds >= 1, "Invalid rounds for Bcrypt PBKDF");
-
    // No output desired, so we are all done already...
    if(output_len == 0)
       return;
@@ -143,8 +140,9 @@ void bcrypt_pbkdf(uint8_t output[], size_t output_len,
    const size_t BCRYPT_BLOCK_SIZE = 32;
    const size_t blocks = (output_len + BCRYPT_BLOCK_SIZE - 1) / BCRYPT_BLOCK_SIZE;
 
-   std::unique_ptr<HashFunction> sha512 = HashFunction::create_or_throw("SHA-512");
-   const secure_vector<uint8_t> pass_hash = sha512->process(reinterpret_cast<const uint8_t*>(pass), pass_len);
+   auto sha512 = HashFunction::create_or_throw("SHA-512");
+   const auto pass_hash =
+      sha512->process(reinterpret_cast<const uint8_t*>(password), password_len);
 
    secure_vector<uint8_t> salt_hash(sha512->output_length());
 
@@ -162,7 +160,7 @@ void bcrypt_pbkdf(uint8_t output[], size_t output_len,
 
       bcrypt_round(blowfish, pass_hash, salt_hash, out, tmp);
 
-      for(size_t r = 1; r != rounds; ++r)
+      for(size_t r = 1; r < m_iterations; ++r)
          {
          // Next salt is H(prev_output)
          sha512->update(tmp);

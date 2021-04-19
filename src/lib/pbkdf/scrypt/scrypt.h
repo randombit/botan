@@ -10,7 +10,7 @@
 
 #include <botan/pwdhash.h>
 
-//BOTAN_FUTURE_INTERNAL_HEADER(scrypt.h)
+BOTAN_FUTURE_INTERNAL_HEADER(scrypt.h)
 
 namespace Botan {
 
@@ -34,15 +34,11 @@ class BOTAN_PUBLIC_API(2,8) Scrypt final : public PasswordHash
 
       std::string to_string() const override;
 
-      size_t N() const { return m_N; }
-      size_t r() const { return m_r; }
-      size_t p() const { return m_p; }
+      size_t iterations() const override { return m_r; }
 
-      size_t iterations() const override { return r(); }
+      size_t parallelism() const override { return m_p; }
 
-      size_t parallelism() const override { return p(); }
-
-      size_t memory_param() const override { return N(); }
+      size_t memory_param() const override { return m_N; }
 
       size_t total_memory_usage() const override;
 
@@ -84,10 +80,18 @@ class BOTAN_PUBLIC_API(2,8) Scrypt_Family final : public PasswordHashFamily
 *
 * Scrypt uses approximately (p + N + 1) * 128 * r bytes of memory
 */
-void BOTAN_PUBLIC_API(2,8) scrypt(uint8_t output[], size_t output_len,
-                                  const char* password, size_t password_len,
-                                  const uint8_t salt[], size_t salt_len,
-                                  size_t N, size_t r, size_t p);
+BOTAN_DEPRECATED("Use PasswordHashFamily+PasswordHash")
+inline void scrypt(uint8_t output[], size_t output_len,
+                   const char* password, size_t password_len,
+                   const uint8_t salt[], size_t salt_len,
+                   size_t N, size_t r, size_t p)
+   {
+   auto pwdhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
+   auto pwdhash = pwdhash_fam->from_params(N, r, p);
+   pwdhash->derive_key(output, output_len,
+                       password, password_len,
+                       salt, salt_len);
+   }
 
 /**
 * Scrypt key derivation function (RFC 7914)
@@ -106,20 +110,17 @@ void BOTAN_PUBLIC_API(2,8) scrypt(uint8_t output[], size_t output_len,
 *
 * Scrypt uses approximately (p + N + 1) * 128 * r bytes of memory
 */
+BOTAN_DEPRECATED("Use PasswordHashFamily+PasswordHash")
 inline void scrypt(uint8_t output[], size_t output_len,
                    const std::string& password,
                    const uint8_t salt[], size_t salt_len,
                    size_t N, size_t r, size_t p)
    {
-   return scrypt(output, output_len,
-                 password.c_str(), password.size(),
-                 salt, salt_len,
-                 N, r, p);
-   }
-
-inline size_t scrypt_memory_usage(size_t N, size_t r, size_t p)
-   {
-   return 128 * r * (N + p);
+   auto pwdhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
+   auto pwdhash = pwdhash_fam->from_params(N, r, p);
+   pwdhash->derive_key(output, output_len,
+                       password.c_str(), password.size(),
+                       salt, salt_len);
    }
 
 }
