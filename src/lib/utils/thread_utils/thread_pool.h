@@ -18,6 +18,7 @@
 #include <thread>
 #include <future>
 #include <condition_variable>
+#include <optional>
 
 namespace Botan {
 
@@ -32,9 +33,20 @@ class BOTAN_TEST_API Thread_Pool
       /**
       * Initialize a thread pool with some number of threads
       * @param pool_size number of threads in the pool, if 0
-      *        then some default value is chosen
+      *        then some default value is chosen. If the optional
+      *        is nullopt then the thread pool is disabled; all
+      *        work is executed immediately when queued.
       */
-      Thread_Pool(size_t pool_size = 0);
+      Thread_Pool(std::optional<size_t> pool_size);
+
+      /**
+      * Initialize a thread pool with some number of threads
+      * @param pool_size number of threads in the pool, if 0
+      *        then some default value is chosen.
+      */
+      Thread_Pool(size_t pool_size = 0) :
+         Thread_Pool(std::optional<size_t>(pool_size))
+         {}
 
       ~Thread_Pool() { shutdown(); }
 
