@@ -16,10 +16,6 @@
 #include <botan/oids.h>
 #include <botan/rng.h>
 
-#if defined(BOTAN_HAS_SCRYPT)
-   #include <botan/scrypt.h>
-#endif
-
 namespace Botan {
 
 namespace {
@@ -65,7 +61,6 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
                         salt.data(), salt.size());
       return derived_key;
       }
-#if defined(BOTAN_HAS_SCRYPT)
    else if(kdf_algo.get_oid() == OID::from_string("Scrypt"))
       {
       secure_vector<uint8_t> salt;
@@ -86,12 +81,15 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
          key_length = default_key_size;
 
       secure_vector<uint8_t> derived_key(key_length);
-      scrypt(derived_key.data(), derived_key.size(), passphrase,
-             salt.data(), salt.size(), N, r, p);
+
+      auto pwdhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
+      auto pwdhash = pwdhash_fam->from_params(N, r, p);
+      pwdhash->derive_key(derived_key.data(), derived_key.size(),
+                          passphrase.data(), passphrase.size(),
+                          salt.data(), salt.size());
 
       return derived_key;
       }
-#endif
    else
       throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
                            kdf_algo.get_oid().to_string());
@@ -109,9 +107,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
 
    if(digest == "Scrypt")
       {
-#if defined(BOTAN_HAS_SCRYPT)
-
-      std::unique_ptr<PasswordHashFamily> pwhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
+      auto pwhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
 
       std::unique_ptr<PasswordHash> pwhash;
 
@@ -149,9 +145,6 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
 
       kdf_algo = AlgorithmIdentifier(OID::from_string("Scrypt"), scrypt_params);
       return key;
-#else
-      throw Not_Implemented("Scrypt is not available in this build");
-#endif
       }
    else
       {

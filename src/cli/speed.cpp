@@ -119,16 +119,16 @@
    #include <botan/newhope.h>
 #endif
 
-#if defined(BOTAN_HAS_SCRYPT)
-   #include <botan/scrypt.h>
-#endif
-
 #if defined(BOTAN_HAS_BCRYPT)
    #include <botan/bcrypt.h>
 #endif
 
 #if defined(BOTAN_HAS_PASSHASH9)
    #include <botan/passhash9.h>
+#endif
+
+#if defined(BOTAN_HAS_PASSWORD_HASHING)
+  #include <botan/pwdhash.h>
 #endif
 
 namespace Botan_CLI {
@@ -2213,17 +2213,20 @@ class Speed final : public Command
       void bench_scrypt(const std::string& /*provider*/,
                         std::chrono::milliseconds msec)
          {
+         auto pwdhash_fam = Botan::PasswordHashFamily::create_or_throw("Scrypt");
 
          for(size_t N : { 8192, 16384, 32768, 65536 })
             {
             for(size_t r : { 1, 8, 16 })
                {
-               for(size_t p : { 1, 4 })
+               for(size_t p : { 1 })
                   {
+                  auto pwdhash = pwdhash_fam->from_params(N, r, p);
+
                   auto scrypt_timer = make_timer(
                      "scrypt-" + std::to_string(N) + "-" +
                      std::to_string(r) + "-" + std::to_string(p) +
-                     " (" + std::to_string(Botan::scrypt_memory_usage(N, r, p) / (1024*1024)) + " MiB)");
+                     " (" + std::to_string(pwdhash->total_memory_usage() / (1024*1024)) + " MiB)");
 
                   uint8_t out[64];
                   uint8_t salt[8];
@@ -2232,8 +2235,11 @@ class Speed final : public Command
                   while(scrypt_timer->under(msec))
                      {
                      scrypt_timer->run([&] {
-                        Botan::scrypt(out, sizeof(out), "password",
-                                      salt, sizeof(salt), N, r, p);
+                        pwdhash->derive_key(out, sizeof(out),
+                                            "password", 8,
+                                            salt, sizeof(salt));
+
+                        Botan::copy_mem(salt, out, 8);
                         });
                      }
 

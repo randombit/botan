@@ -6,14 +6,14 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_PBKDF)
+#if defined(BOTAN_HAS_PASSWORD_HASHING)
    #include <botan/pwdhash.h>
    #include <botan/internal/os_utils.h>
 #endif
 
 namespace Botan_CLI {
 
-#if defined(BOTAN_HAS_PBKDF)
+#if defined(BOTAN_HAS_PASSWORD_HASHING)
 
 class PBKDF_Tune final : public Command
    {

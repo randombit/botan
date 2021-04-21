@@ -12,16 +12,8 @@
    #include <botan/pwdhash.h>
 #endif
 
-#if defined(BOTAN_HAS_PGP_S2K)
-   #include <botan/pgp_s2k.h>
-#endif
-
-#if defined(BOTAN_HAS_SCRYPT)
-   #include <botan/scrypt.h>
-#endif
-
-#if defined(BOTAN_HAS_PBKDF_BCRYPT)
-   #include <botan/bcrypt_pbkdf.h>
+#if defined(BOTAN_HAS_RFC4880)
+   #include <botan/rfc4880.h>
 #endif
 
 namespace Botan_Tests {
@@ -176,13 +168,23 @@ class Bcrypt_PBKDF_KAT_Tests final : public Text_Based_Test
 
          Test::Result result("bcrypt PBKDF");
 
-         std::vector<uint8_t> output(expected.size());
-         Botan::bcrypt_pbkdf(output.data(), output.size(),
-                             passphrase.data(), passphrase.size(),
-                             salt.data(), salt.size(),
-                             rounds);
+         auto pwdhash_fam = Botan::PasswordHashFamily::create("Bcrypt-PBKDF");
 
-         result.test_eq("derived key", output, expected);
+         if(!pwdhash_fam)
+            {
+            result.test_failure("Bcrypt-PBKDF is missing PasswordHashFamily");
+            return result;
+            }
+
+         auto pwdhash = pwdhash_fam->from_iterations(rounds);
+
+         std::vector<uint8_t> derived(expected.size());
+         pwdhash->derive_key(derived.data(), derived.size(),
+                             reinterpret_cast<const char*>(passphrase.data()),
+                             passphrase.size(),
+                             salt.data(), salt.size());
+
+         result.test_eq("derived key", derived, expected);
 
          return result;
          }
@@ -212,13 +214,6 @@ class Scrypt_KAT_Tests final : public Text_Based_Test
 
          if(N >= 1048576 && Test::run_long_tests() == false)
             return result;
-
-         std::vector<uint8_t> output(expected.size());
-         Botan::scrypt(output.data(), output.size(),
-                       passphrase, salt.data(), salt.size(),
-                       N, R, P);
-
-         result.test_eq("derived key", output, expected);
 
          auto pwdhash_fam = Botan::PasswordHashFamily::create("Scrypt");
 

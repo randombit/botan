@@ -7,14 +7,23 @@
 
 #include <botan/scrypt.h>
 #include <botan/pbkdf2.h>
+#include <botan/exceptn.h>
 #include <botan/internal/salsa20.h>
 #include <botan/internal/loadstor.h>
-#include <botan/exceptn.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/timer.h>
 #include <sstream>
 
 namespace Botan {
+
+namespace {
+
+size_t scrypt_memory_usage(size_t N, size_t r, size_t p)
+   {
+   return 128 * r * (N + p);
+   }
+
+}
 
 std::string Scrypt_Family::name() const
    {
@@ -53,9 +62,13 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    Timer timer("Scrypt");
    const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
 
+   auto pwdhash = this->from_params(N, r, p);
+
    timer.run_until_elapsed(tune_time, [&]() {
       uint8_t output[32] = { 0 };
-      scrypt(output, sizeof(output), "test", 4, nullptr, 0, N, r, p);
+      pwdhash->derive_key(output, sizeof(output),
+                          "test", 4,
+                          nullptr, 0);
       });
 
    // No timer events seems strange, perhaps something is wrong - give
@@ -147,17 +160,11 @@ std::string Scrypt::to_string() const
 
 size_t Scrypt::total_memory_usage() const
    {
-   return scrypt_memory_usage(m_N, m_r, m_p);
-   }
+   const size_t N = memory_param();
+   const size_t p = parallelism();
+   const size_t r = iterations();
 
-void Scrypt::derive_key(uint8_t output[], size_t output_len,
-                        const char* password, size_t password_len,
-                        const uint8_t salt[], size_t salt_len) const
-   {
-   scrypt(output, output_len,
-          password, password_len,
-          salt, salt_len,
-          N(), r(), p());
+   return scrypt_memory_usage(N, r, p);
    }
 
 namespace {
@@ -208,11 +215,14 @@ void scryptROMmix(size_t r, size_t N, uint8_t* B, secure_vector<uint8_t>& V)
 
 }
 
-void scrypt(uint8_t output[], size_t output_len,
-            const char* password, size_t password_len,
-            const uint8_t salt[], size_t salt_len,
-            size_t N, size_t r, size_t p)
+void Scrypt::derive_key(uint8_t output[], size_t output_len,
+                        const char* password, size_t password_len,
+                        const uint8_t salt[], size_t salt_len) const
    {
+   const size_t N = memory_param();
+   const size_t p = parallelism();
+   const size_t r = iterations();
+
    const size_t S = 128 * r;
    secure_vector<uint8_t> B(p * S);
    // temp space
