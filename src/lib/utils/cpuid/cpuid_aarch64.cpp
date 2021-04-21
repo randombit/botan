@@ -117,6 +117,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    auto pmull_probe = []() noexcept -> int { asm(".word 0x0ee0e000"); return 1; };
    auto sha1_probe  = []() noexcept -> int { asm(".word 0x5e280800"); return 1; };
    auto sha2_probe  = []() noexcept -> int { asm(".word 0x5e282800"); return 1; };
+   auto sha512_probe = []() noexcept -> int { asm(".long 0xcec08000"); return 1; };
 
    // Only bother running the crypto detection if we found NEON
 
@@ -132,6 +133,8 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
       if(OS::run_cpu_instruction_probe(sha2_probe) == 1)
          detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
+      if(OS::run_cpu_instruction_probe(sha512_probe) == 1)
+         detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
       }
 
 #endif
