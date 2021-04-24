@@ -4,6 +4,10 @@
 
 name: ci
 
+permissions:
+  contents: read
+  # implicitly all other scopes not listed become none
+
 on:
   push:
     branches: [ master ]
