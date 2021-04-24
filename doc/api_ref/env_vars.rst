@@ -6,7 +6,10 @@ library. The variables and their behavior are described here.
 
 * ``BOTAN_THREAD_POOL_SIZE`` controls the number of threads which will be
   created for a thread pool used for some purposes within the library. If not
-  set then it defaults to the number of CPUs available on the system.
+  set, or set to 0, then it defaults to the number of CPUs available on the
+  system. If it is set to the string "none" then the thread pool is disabled;
+  instead all work passed to the thread pool will be executed immediately
+  by the calling thread.
 
 * ``BOTAN_MLOCK_POOL_SIZE`` controls the total amount of memory which will be
   locked in memory using ``mlock`` or ``VirtualLock`` and managed in a memory
