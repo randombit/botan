@@ -295,7 +295,7 @@ DER_Encoder& DER_Encoder::encode(bool is_true)
 */
 DER_Encoder& DER_Encoder::encode(size_t n)
    {
-   return encode(BigInt(n), ASN1_Type::Integer, ASN1_Class::Universal);
+   return encode(BigInt::from_u64(n), ASN1_Type::Integer, ASN1_Class::Universal);
    }
 
 /*
@@ -331,7 +331,7 @@ DER_Encoder& DER_Encoder::encode(bool is_true,
 DER_Encoder& DER_Encoder::encode(size_t n,
                                  ASN1_Type type_tag, ASN1_Class class_tag)
    {
-   return encode(BigInt(n), type_tag, class_tag);
+   return encode(BigInt::from_u64(n), type_tag, class_tag);
    }
 
 /*

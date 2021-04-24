@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKeyGenerationProperties final : public Pub
       explicit RSA_PublicKeyGenerationProperties(Ulong bits);
 
       /// @param pub_exponent public exponent e
-      inline void set_pub_exponent(const BigInt& pub_exponent = BigInt(0x10001))
+      inline void set_pub_exponent(const BigInt& pub_exponent = BigInt::from_word(0x10001))
          {
          add_binary(AttributeType::PublicExponent, BigInt::encode(pub_exponent));
          }

@@ -467,7 +467,7 @@ BER_Decoder& BER_Decoder::decode(BigInt& out,
 
    if(obj.length() == 0)
       {
-      out = 0;
+      out.clear();
       }
    else
       {

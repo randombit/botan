@@ -26,8 +26,8 @@ const size_t MAX_N_BYTES = 128/8;
 */
 void factor(BigInt n, BigInt& a, BigInt& b)
    {
-   a = 1;
-   b = 1;
+   a = BigInt::one();
+   b = BigInt::one();
 
    size_t n_low_zero = low_zero_bits(n);
 
@@ -42,7 +42,7 @@ void factor(BigInt n, BigInt& a, BigInt& b)
          a *= PRIMES[i];
          if(a > b)
             std::swap(a, b);
-         n /= PRIMES[i];
+         n /= BigInt::from_word(PRIMES[i]);
          }
       }
 

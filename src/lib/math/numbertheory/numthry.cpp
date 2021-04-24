@@ -43,7 +43,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
       throw Invalid_Argument("ressol: invalid prime");
 
    if(a == 0)
-      return 0;
+      return BigInt::zero();
    else if(a < 0)
       throw Invalid_Argument("ressol: value to solve for must be positive");
    else if(a >= p)
@@ -53,7 +53,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
       return a;
 
    if(jacobi(a, p) != 1) // not a quadratic residue
-      return -BigInt(1);
+      return BigInt::from_s32(-1);
 
    Modular_Reducer mod_p(p);
    auto monty_p = std::make_shared<Montgomery_Params>(p, mod_p);
@@ -80,7 +80,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
    word z = 2;
    for(;;)
       {
-      if(jacobi(z, p) == -1) // found one
+      if(jacobi(BigInt::from_word(z), p) == -1) // found one
          break;
 
       z += 1; // try next z
@@ -91,10 +91,10 @@ BigInt ressol(const BigInt& a, const BigInt& p)
       * certainly we have been given a non-prime p.
       */
       if(z >= 256)
-         return -BigInt(1);
+         return BigInt::from_s32(-1);
       }
 
-   BigInt c = monty_exp_vartime(monty_p, z, (q << 1) + 1);
+   BigInt c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1);
 
    while(n > 1)
       {
@@ -108,7 +108,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
 
          if(i >= s)
             {
-            return -BigInt(1);
+            return BigInt::from_s32(-1);
             }
          }
 
@@ -201,7 +201,7 @@ size_t low_zero_bits(const BigInt& n)
       }
 
    // if we saw no words with x > 0 then n == 0 and the value we have
-   // computed is meaningless. Instead return 0 in that case.
+   // computed is meaningless. Instead return BigInt::zero() in that case.
    return seen_nonempty_word.if_set_return(low_zero);
    }
 
@@ -230,7 +230,7 @@ BigInt gcd(const BigInt& a, const BigInt& b)
    if(b.is_zero())
       return abs(a);
    if(a == 1 || b == 1)
-      return 1;
+      return BigInt::one();
 
    // See https://gcd.cr.yp.to/safegcd-20190413.pdf fig 1.2
 
@@ -297,14 +297,14 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
    {
    if(mod.is_negative() || mod == 1)
       {
-      return 0;
+      return BigInt::zero();
       }
 
    if(base.is_zero() || mod.is_zero())
       {
       if(exp.is_zero())
-         return 1;
-      return 0;
+         return BigInt::one();
+      return BigInt::zero();
       }
 
    Modular_Reducer reduce_mod(mod);
@@ -321,7 +321,7 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
    Support for even modulus is just a convenience and not considered
    cryptographically important, so this implementation is slow ...
    */
-   BigInt accum = 1;
+   BigInt accum = BigInt::one();
    BigInt g = reduce_mod.reduce(base);
    BigInt t;
 
@@ -340,7 +340,7 @@ BigInt is_perfect_square(const BigInt& C)
    if(C < 1)
       throw Invalid_Argument("is_perfect_square requires C >= 1");
    if(C == 1)
-      return 1;
+      return BigInt::one();
 
    const size_t n = C.bits();
    const size_t m = (n + 1) / 2;
@@ -361,7 +361,7 @@ BigInt is_perfect_square(const BigInt& C)
    if(X2 == C)
       return X;
    else
-      return 0;
+      return BigInt::zero();
    }
 
 /*

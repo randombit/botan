@@ -161,8 +161,8 @@ GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    BigInt e = decode_le(msg, msg_len);
 
    e = m_group.mod_order(e);
-   if(e == 0)
-      e = 1;
+   if(e.is_zero())
+      e = BigInt::one();
 
    const BigInt r = m_group.mod_order(
       m_group.blinded_base_point_multiply_x(k, rng, m_ws));
@@ -218,8 +218,8 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_le
 
    BigInt e = decode_le(msg, msg_len);
    e = m_group.mod_order(e);
-   if(e == 0)
-      e = 1;
+   if(e.is_zero())
+      e = BigInt::one();
 
    const BigInt v = m_group.inverse_mod_order(e);
 

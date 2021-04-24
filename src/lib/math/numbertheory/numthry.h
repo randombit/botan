@@ -136,7 +136,7 @@ BigInt BOTAN_PUBLIC_API(2,8) is_perfect_square(const BigInt& x);
 */
 BigInt BOTAN_PUBLIC_API(2,0) random_prime(RandomNumberGenerator& rng,
                                           size_t bits,
-                                          const BigInt& coprime = 0,
+                                          const BigInt& coprime = BigInt::from_u64(0),
                                           size_t equiv = 1,
                                           size_t equiv_mod = 2,
                                           size_t prob = 128);

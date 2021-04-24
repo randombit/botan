@@ -79,8 +79,8 @@ class BOTAN_PUBLIC_API(2,0) ECGDSA_PrivateKey final : public ECGDSA_PublicKey,
       * @param x the private key (if zero, generate a new random key)
       */
       ECGDSA_PrivateKey(RandomNumberGenerator& rng,
-                       const EC_Group& domain,
-                       const BigInt& x = 0) :
+                        const EC_Group& domain,
+                        const BigInt& x = BigInt::zero()) :
          EC_PrivateKey(rng, domain, x, true) {}
 
       std::unique_ptr<Public_Key> public_key() const override;

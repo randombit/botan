@@ -37,15 +37,7 @@ int botan_mp_clear(botan_mp_t mp)
 int botan_mp_set_from_int(botan_mp_t mp, int initial_value)
    {
    return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
-      if(initial_value >= 0)
-         {
-         bn = Botan::BigInt(static_cast<uint64_t>(initial_value));
-         }
-      else
-         {
-         bn = Botan::BigInt(static_cast<uint64_t>(-initial_value));
-         bn.flip_sign();
-         }
+      bn = Botan::BigInt::from_s32(initial_value);
       });
    }
 

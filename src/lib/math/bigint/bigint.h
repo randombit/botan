@@ -35,12 +35,40 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      enum Sign { Negative = 0, Positive = 1 };
 
      /**
-     * Create empty BigInt
+     * Create empty (zero) BigInt
      */
      BigInt() = default;
 
      /**
-     * Create BigInt from 64 bit integer
+     * Create a 0-value BigInt
+     */
+     static BigInt zero() { return BigInt(); }
+
+     /**
+     * Create a 1-value BigInt
+     */
+     static BigInt one() { return BigInt::from_word(1); }
+
+     /**
+     * Create BigInt from an unsigned 64 bit integer
+     * @param n initial value of this BigInt
+     */
+     static BigInt from_u64(uint64_t n);
+
+     /**
+     * Create BigInt from a word (limb)
+     * @param n initial value of this BigInt
+     */
+     static BigInt from_word(word n);
+
+     /**
+     * Create BigInt from a signed 32 bit integer
+     * @param n initial value of this BigInt
+     */
+     static BigInt from_s32(int32_t n);
+
+     /**
+     * Create BigInt from an unsigned 64 bit integer
      * @param n initial value of this BigInt
      */
      BigInt(uint64_t n);
@@ -89,14 +117,8 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param max_bits if the resulting integer is more than max_bits,
      *        it will be shifted so it is at most max_bits in length.
      */
-     BigInt(const uint8_t buf[], size_t length, size_t max_bits);
-
-     /**
-     * Create a BigInt from an array of words
-     * @param words the words
-     * @param length number of words
-     */
-     BigInt(const word words[], size_t length);
+     static BigInt from_bytes_with_max_bits(const uint8_t buf[], size_t length,
+                                            size_t max_bits);
 
      /**
      * \brief Create a random BigInt of the specified size
@@ -111,10 +133,9 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      /**
      * Create BigInt of specified size, all zeros
-     * @param sign the sign
      * @param n size of the internal register in words
      */
-     BigInt(Sign sign, size_t n);
+     static BigInt with_capacity(size_t n);
 
      /**
      * Move constructor

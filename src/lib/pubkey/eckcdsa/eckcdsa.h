@@ -79,8 +79,8 @@ class BOTAN_PUBLIC_API(2,0) ECKCDSA_PrivateKey final : public ECKCDSA_PublicKey,
       * @param x the private key (if zero, generate a new random key)
       */
       ECKCDSA_PrivateKey(RandomNumberGenerator& rng,
-                       const EC_Group& domain,
-                       const BigInt& x = 0) :
+                         const EC_Group& domain,
+                         const BigInt& x = BigInt::zero()) :
          EC_PrivateKey(rng, domain, x, true) {}
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;

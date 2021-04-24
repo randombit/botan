@@ -68,7 +68,7 @@ class BOTAN_PUBLIC_API(2,0) DH_PrivateKey final : public DH_PublicKey,
       * @param x the key's secret value (or if zero, generate a new key)
       */
       DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& grp,
-                    const BigInt& x = 0);
+                    const BigInt& x = BigInt::zero());
 
       std::unique_ptr<Public_Key> public_key() const override;
 

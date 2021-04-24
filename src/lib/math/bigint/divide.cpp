@@ -56,9 +56,9 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out)
 
    const size_t x_bits = x.bits();
 
-   BigInt q(BigInt::Positive, x_words);
-   BigInt r(BigInt::Positive, y_words);
-   BigInt t(BigInt::Positive, y_words); // a temporary
+   BigInt q = BigInt::with_capacity(x_words);
+   BigInt r = BigInt::with_capacity(y_words);
+   BigInt t = BigInt::with_capacity(y_words); // a temporary
 
    for(size_t i = 0; i != x_bits; ++i)
       {
@@ -84,7 +84,7 @@ void ct_divide_u8(const BigInt& x, uint8_t y, BigInt& q_out, uint8_t& r_out)
    const size_t x_words = x.sig_words();
    const size_t x_bits = x.bits();
 
-   BigInt q(BigInt::Positive, x_words);
+   BigInt q = BigInt::with_capacity(x_words);
    uint32_t r = 0;
 
    for(size_t i = 0; i != x_bits; ++i)
@@ -124,8 +124,8 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y)
 
    const size_t x_bits = x.bits();
 
-   BigInt r(BigInt::Positive, y_words);
-   BigInt t(BigInt::Positive, y_words);
+   BigInt r = BigInt::with_capacity(y_words);
+   BigInt t = BigInt::with_capacity(y_words);
 
    for(size_t i = 0; i != x_bits; ++i)
       {
@@ -151,6 +151,17 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y)
    return r;
    }
 
+void vartime_divide_word(const BigInt& x, const word y, BigInt& q_out, BigInt& r_out)
+   {
+   if(y == 0)
+      throw Invalid_Argument("vartime_divide_word: cannot divide by zero");
+
+   // It might be worthwhile to specialize vartime_divide for y with 1 word
+
+   // until then:
+   vartime_divide(x, BigInt::from_word(y), q_out, r_out);
+   }
+
 /*
 * Solve x = q * y + r
 *
@@ -168,7 +179,7 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
    BigInt y = y_arg;
 
    BigInt r = x;
-   BigInt q = 0;
+   BigInt q = BigInt::zero();
    secure_vector<word> ws;
 
    r.set_sign(BigInt::Positive);

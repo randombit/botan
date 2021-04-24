@@ -111,9 +111,9 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RS
       * @param n if specified, this must be n = p * q. Leave it as 0
       * if you wish to the constructor to calculate it.
       */
-      RSA_PrivateKey(const BigInt& p, const BigInt& q,
-                     const BigInt& e, const BigInt& d = 0,
-                     const BigInt& n = 0);
+      RSA_PrivateKey(const BigInt& p, const BigInt& q, const BigInt& e,
+                     const BigInt& d = BigInt::zero(),
+                     const BigInt& n = BigInt::zero());
 
       /**
       * Create a new private key with the specified bit length

@@ -1124,7 +1124,10 @@ class Speed final : public Command
             auto dbl_timer = make_timer(group_name + " dbl");
 
             const Botan::PointGFp& base_point = ec_group.get_base_point();
-            Botan::PointGFp non_affine_pt = ec_group.get_base_point() * 1776; // create a non-affine point
+
+            // create a non-affine point
+            const auto random_k = Botan::BigInt::from_u64(0x4E6F537465707E);
+            Botan::PointGFp non_affine_pt = ec_group.get_base_point() * random_k;
             Botan::PointGFp pt = ec_group.get_base_point();
 
             std::vector<Botan::BigInt> ws(Botan::PointGFp::WORKSPACE_SIZE);
@@ -1227,7 +1230,7 @@ class Speed final : public Command
 
       void bench_fpe_fe1(const std::chrono::milliseconds runtime)
          {
-         const Botan::BigInt n = 1000000000000000;
+         const auto n = Botan::BigInt::from_u64(1000000000000000);
 
          auto enc_timer = make_timer("FPE_FE1 encrypt");
          auto dec_timer = make_timer("FPE_FE1 decrypt");
@@ -1235,7 +1238,7 @@ class Speed final : public Command
          const Botan::SymmetricKey key(rng(), 32);
          const std::vector<uint8_t> tweak(8); // 8 zeros
 
-         Botan::BigInt x = 1;
+         auto x = Botan::BigInt::one();
 
          Botan::FPE_FE1 fpe_fe1(n);
          fpe_fe1.set_key(key);
@@ -1377,7 +1380,7 @@ class Speed final : public Command
             Botan::BigInt x;
             Botan::secure_vector<Botan::word> ws;
 
-            const Botan::BigInt ten(10);
+            const auto ten = Botan::BigInt::from_word(10);
             Botan::BigInt q1, r1, q2;
             uint8_t r2;
 
@@ -1585,7 +1588,7 @@ class Speed final : public Command
 
       void bench_random_prime(const std::chrono::milliseconds runtime)
          {
-         const size_t coprime = 65537; // simulates RSA key gen
+         const auto coprime = Botan::BigInt::from_word(0x10001);
 
          for(size_t bits : { 256, 384, 512, 768, 1024, 1536 })
             {

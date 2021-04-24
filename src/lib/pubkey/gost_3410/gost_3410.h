@@ -88,7 +88,7 @@ class BOTAN_PUBLIC_API(2,0) GOST_3410_PrivateKey final :
       */
       GOST_3410_PrivateKey(RandomNumberGenerator& rng,
                            const EC_Group& domain,
-                           const BigInt& x = 0);
+                           const BigInt& x = BigInt::zero());
 
       std::unique_ptr<Public_Key> public_key() const override;
 

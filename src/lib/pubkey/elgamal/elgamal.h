@@ -72,7 +72,7 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey final : public ElGamal_PublicKey,
       */
       ElGamal_PrivateKey(RandomNumberGenerator& rng,
                          const DL_Group& group,
-                         const BigInt& priv_key = 0);
+                         const BigInt& priv_key = BigInt::zero());
 
       std::unique_ptr<Public_Key> public_key() const override;
 
