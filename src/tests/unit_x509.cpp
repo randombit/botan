@@ -460,6 +460,20 @@ Test::Result test_crl_dn_name()
    return result;
    }
 
+Test::Result test_rdn_multielement_set_name()
+   {
+   Test::Result result("DN with multiple elements in RDN");
+
+   // GH #2611
+
+   Botan::X509_Certificate cert(Test::data_file("x509/misc/rdn_set.crt"));
+
+   result.confirm("contains expected name components",
+                  cert.issuer_dn().get_attributes().size() == 4);
+
+   return result;
+   }
+
 Test::Result test_rsa_oaep()
    {
    Test::Result result("RSA OAEP decoding");
@@ -1718,6 +1732,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_x509_utf8());
          results.push_back(test_x509_bmpstring());
          results.push_back(test_crl_dn_name());
+         results.push_back(test_rdn_multielement_set_name());
          results.push_back(test_x509_decode_list());
          results.push_back(test_rsa_oaep());
          results.push_back(test_x509_authority_info_access_extension());
