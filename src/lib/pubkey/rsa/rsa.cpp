@@ -286,17 +286,26 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    const size_t p_bits = (bits + 1) / 2;
    const size_t q_bits = bits - p_bits;
 
-   do
+   for(size_t attempt = 0; ; ++attempt)
       {
+      if(attempt > 10)
+         throw Internal_Error("RNG failure during RSA key generation");
+
       // TODO could generate primes in thread pool
       p = generate_rsa_prime(rng, rng, p_bits, e);
       q = generate_rsa_prime(rng, rng, q_bits, e);
 
-      if(p == q)
-         throw Internal_Error("RNG failure during RSA key generation");
+      const BigInt diff = p - q;
+      if(diff.bits() < (bits/2) - 100)
+         continue;
 
       n = p * q;
-      } while(n.bits() != bits);
+
+      if(n.bits() != bits)
+         continue;
+
+      break;
+      }
 
    const BigInt p_minus_1 = p - 1;
    const BigInt q_minus_1 = q - 1;
