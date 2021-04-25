@@ -85,7 +85,7 @@ class BOTAN_PUBLIC_API(2,2) SM2_PrivateKey final :
       */
       SM2_PrivateKey(RandomNumberGenerator& rng,
                      const EC_Group& domain,
-                     const BigInt& x = 0);
+                     const BigInt& x = BigInt::zero());
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 

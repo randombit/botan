@@ -106,7 +106,7 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar, size
    const size_t exp_nibbles = (max_k_bits + m_window_bits - 1) / m_window_bits;
 
    if(exp_nibbles == 0)
-      return 1;
+      return BigInt::one();
 
    secure_vector<word> e_bits(m_params->p_words());
    secure_vector<word> ws;
@@ -132,7 +132,7 @@ BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scal
    secure_vector<word> ws;
 
    if(exp_nibbles == 0)
-      return 1;
+      return BigInt::one();
 
    Montgomery_Int x = m_g[scalar.get_substring(m_window_bits*(exp_nibbles-1), m_window_bits)];
 

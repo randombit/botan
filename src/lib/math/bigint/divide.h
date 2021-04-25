@@ -26,6 +26,19 @@ void vartime_divide(const BigInt& x,
                     BigInt& r);
 
 /**
+* BigInt/word Division
+* @param x an integer
+* @param y a non-zero integer
+* @param q will be set to x / y
+* @param r will be set to x % y
+*/
+BOTAN_TEST_API
+void vartime_divide_word(const BigInt& x,
+                         word y,
+                         BigInt& q,
+                         BigInt& r);
+
+/**
 * BigInt division, const time variant
 *
 * This runs with control flow independent of the values of x/y.

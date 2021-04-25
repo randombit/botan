@@ -136,15 +136,15 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
       if(bits == 2)
          {
-         return ((rng.next_byte() % 2) ? 2 : 3);
+         return BigInt::from_word(((rng.next_byte() % 2) ? 2 : 3));
          }
       else if(bits == 3)
          {
-         return ((rng.next_byte() % 2) ? 5 : 7);
+         return BigInt::from_word(((rng.next_byte() % 2) ? 5 : 7));
          }
       else if(bits == 4)
          {
-         return ((rng.next_byte() % 2) ? 11 : 13);
+         return BigInt::from_word(((rng.next_byte() % 2) ? 11 : 13));
          }
       else
          {
@@ -157,7 +157,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
             const uint16_t small_prime = PRIMES[idx];
 
             if(high_bit(small_prime) == bits)
-               return small_prime;
+               return BigInt::from_word(small_prime);
             }
          }
       }
@@ -320,7 +320,7 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
       Generate q == 2 (mod 3), since otherwise [in the case of q == 1 (mod 3)],
       2*q+1 == 3 (mod 3) and so certainly not prime.
       */
-      q = random_prime(rng, bits - 1, 0, 2, 3, error_bound);
+      q = random_prime(rng, bits - 1, BigInt::zero(), 2, 3, error_bound);
       p = (q << 1) + 1;
 
       if(is_prime(p, rng, error_bound, true))

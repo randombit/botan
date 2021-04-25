@@ -109,7 +109,7 @@ BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y,
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
    BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
 
-   BigInt z(BigInt::Positive, output_size);
+   BigInt z = BigInt::with_capacity(output_size);
    bigint_mul(z.mutable_data(), z.size(),
               x.data(), x.size(), std::min(m_p_words, x.size()),
               y.data(), y.size(), std::min(m_p_words, y.size()),
@@ -129,7 +129,7 @@ BigInt Montgomery_Params::mul(const BigInt& x,
    const size_t output_size = 2*m_p_words + 2;
    if(ws.size() < output_size)
       ws.resize(output_size);
-   BigInt z(BigInt::Positive, output_size);
+   BigInt z = BigInt::with_capacity(output_size);
 
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
 
@@ -208,7 +208,7 @@ BigInt Montgomery_Params::sqr(const BigInt& x, secure_vector<word>& ws) const
    if(ws.size() < output_size)
       ws.resize(output_size);
 
-   BigInt z(BigInt::Positive, output_size);
+   BigInt z = BigInt::with_capacity(output_size);
 
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
 
@@ -283,9 +283,10 @@ Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
 Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
                                const word words[], size_t len,
                                bool redc_needed) :
-   m_params(params),
-   m_v(words, len)
+   m_params(params)
    {
+   m_v.set_words(words, len);
+
    if(redc_needed)
       {
       BOTAN_ASSERT_NOMSG(m_v < m_params->p());

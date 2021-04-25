@@ -135,15 +135,15 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
    */
 
    if(a1.is_even() || k == 0)
-      return 0;
+      return BigInt::zero();
    if(k == 1)
-      return 1;
+      return BigInt::one();
 
    BigInt a = a1;
    a.mask_bits(k);
 
-   BigInt b = 1;
-   BigInt X = 0;
+   BigInt b = BigInt::one();
+   BigInt X = BigInt::zero();
    BigInt newb;
 
    const size_t a_words = a.sig_words();
@@ -181,7 +181,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    if(mod.is_negative() || n.is_negative())
       throw Invalid_Argument("inverse_mod: arguments must be non-negative");
    if(n.is_zero() || (n.is_even() && mod.is_even()))
-      return 0;
+      return BigInt::zero();
 
    if(mod.is_odd())
       {
@@ -232,7 +232,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 
       // No modular inverse in this case:
       if(inv_o == 0)
-         return 0;
+         return BigInt::zero();
 
       BigInt h = inv_o;
       h.ct_cond_add(!inv_o.get_bit(0), o);
@@ -253,7 +253,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 
    // No modular inverse in this case:
    if(inv_o == 0 || inv_2k == 0)
-      return 0;
+      return BigInt::zero();
 
    const BigInt m2k = BigInt::power_of_2(mod_lz);
    // Compute the CRT parameter

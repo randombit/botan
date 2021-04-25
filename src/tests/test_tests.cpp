@@ -164,14 +164,16 @@ class Test_Tests final : public Test
 #if defined(BOTAN_HAS_BIGINT)
             {
             Test::Result test_result(testcase_name);
-            Botan::BigInt x = 5, y = 6;
+            const auto x = Botan::BigInt::from_word(5);
+            const auto y = Botan::BigInt::from_word(6);
             test_result.test_eq("test ints equal", x, y);
             verify_failure("test ints equal", result, test_result);
             }
 
             {
             Test::Result test_result(testcase_name);
-            Botan::BigInt x = 5, y = 5;
+            const auto x = Botan::BigInt::from_word(5);
+            const auto y = Botan::BigInt::from_word(5);
             test_result.test_ne("test ints not equal", x, y);
             verify_failure("test ints not equal", result, test_result);
             }

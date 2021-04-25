@@ -14,35 +14,54 @@
 
 namespace Botan {
 
-BigInt::BigInt(const word words[], size_t length)
-   {
-   m_data.set_words(words, length);
-   }
-
-/*
-* Construct a BigInt from a regular number
-*/
 BigInt::BigInt(uint64_t n)
    {
-   if(n > 0)
-      {
-#if BOTAN_MP_WORD_BITS == 32
-      m_data.set_word_at(0, static_cast<word>(n));
-      m_data.set_word_at(1, static_cast<word>(n >> 32));
+#if BOTAN_MP_WORD_BITS == 64
+   m_data.set_word_at(0, n);
 #else
-      m_data.set_word_at(0, n);
+   m_data.set_word_at(1, static_cast<word>(n >> 32));
+   m_data.set_word_at(0, static_cast<word>(n));
 #endif
-      }
-
    }
 
-/*
-* Construct a BigInt of the specified size
-*/
-BigInt::BigInt(Sign s, size_t size)
+//static
+BigInt BigInt::from_u64(uint64_t n)
    {
-   m_data.set_size(size);
-   m_signedness = s;
+   BigInt bn;
+
+#if BOTAN_MP_WORD_BITS == 64
+   bn.set_word_at(0, n);
+#else
+   bn.set_word_at(1, static_cast<word>(n >> 32));
+   bn.set_word_at(0, static_cast<word>(n));
+#endif
+
+   return bn;
+   }
+
+//static
+BigInt BigInt::from_word(word n)
+   {
+   BigInt bn;
+   bn.set_word_at(0, n);
+   return bn;
+   }
+
+//static
+BigInt BigInt::from_s32(int32_t n)
+   {
+   if(n >= 0)
+      return BigInt::from_u64(static_cast<uint64_t>(n));
+   else
+      return -BigInt::from_u64(static_cast<uint64_t>(-n));
+   }
+
+//static
+BigInt BigInt::with_capacity(size_t size)
+   {
+   BigInt bn;
+   bn.grow_to(size);
+   return bn;
    }
 
 /*
@@ -87,15 +106,19 @@ BigInt::BigInt(const uint8_t input[], size_t length, Base base)
    *this = decode(input, length, base);
    }
 
-BigInt::BigInt(const uint8_t buf[], size_t length, size_t max_bits)
+//static
+BigInt BigInt::from_bytes_with_max_bits(const uint8_t buf[], size_t length, size_t max_bits)
    {
    if(8 * length > max_bits)
       length = (max_bits + 7) / 8;
 
-   binary_decode(buf, length);
+   BigInt bn;
+   bn.binary_decode(buf, length);
 
    if(8 * length > max_bits)
-      *this >>= (8 - (max_bits % 8));
+      bn >>= (8 - (max_bits % 8));
+
+   return bn;
    }
 
 /*

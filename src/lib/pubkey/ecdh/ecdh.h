@@ -86,7 +86,7 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PrivateKey final : public ECDH_PublicKey,
       */
       ECDH_PrivateKey(RandomNumberGenerator& rng,
                       const EC_Group& domain,
-                      const BigInt& x = 0) :
+                      const BigInt& x = BigInt::zero()) :
          EC_PrivateKey(rng, domain, x) {}
 
       std::unique_ptr<Public_Key> public_key() const override;

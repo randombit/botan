@@ -240,7 +240,7 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q)
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i)
       {
       // TODO precompute!
-      BigInt g = power_mod(PRIMES[i], e, p);
+      BigInt g = power_mod(BigInt::from_word(PRIMES[i]), e, p);
       if(g > 1)
          return g;
       }
@@ -271,13 +271,13 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
       Always choose a generator that is quadratic reside mod p,
       this forces g to be a generator of the subgroup of size q.
       */
-      BigInt g = 2;
+      BigInt g = BigInt::from_word(2);
       if(jacobi(g, p) != 1)
          {
          // prime table does not contain 2
          for(size_t i = 0; i < PRIME_TABLE_SIZE; ++i)
             {
-            g = PRIMES[i];
+            g = BigInt::from_word(PRIMES[i]);
             if(jacobi(g, p) == 1)
                break;
             }
@@ -341,7 +341,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
 */
 DL_Group::DL_Group(const BigInt& p, const BigInt& g)
    {
-   m_data = std::make_shared<DL_Group_Data>(p, 0, g, DL_Group_Source::ExternalSource);
+   m_data = std::make_shared<DL_Group_Data>(p, BigInt::zero(), g, DL_Group_Source::ExternalSource);
    }
 
 /*
@@ -442,7 +442,7 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng,
 
          for(size_t i = 2; i != upper_bound; ++i)
             {
-            if(data().power_g_p_vartime(i) == 1)
+            if(data().power_g_p_vartime(BigInt::from_word(i)) == 1)
                {
                return false;
                }
