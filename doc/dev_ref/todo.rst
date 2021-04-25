@@ -48,7 +48,6 @@ Public Key Crypto, Math
 * Identity based encryption
 * Paillier homomorphic cryptosystem
 * Socialist Millionaires Protocol (needed for OTRv3)
-* Hashing onto an elliptic curve (draft-irtf-cfrg-hash-to-curve)
 * New PAKEs (pending CFRG bakeoff results)
 * New post quantum schemes (pending NIST contest results)
 * SPHINX password store (https://eprint.iacr.org/2018/695)
