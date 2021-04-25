@@ -223,6 +223,14 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       */
       BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const;
 
+      /*
+      * Return x^3 modulo the order
+      */
+      inline BigInt cube_mod_order(const BigInt& x) const
+         {
+         return multiply_mod_order(x, square_mod_order(x));
+         }
+
       /**
       * Check if y is a plausible point on the curve
       *
@@ -289,6 +297,44 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * Return a random scalar ie an integer in [1,order)
       */
       BigInt random_scalar(RandomNumberGenerator& rng) const;
+
+      /**
+      * Hash onto the curve.
+      * For some curve types no mapping is currently available, in this
+      * case this function will throw an exception.
+      *
+      * @param hash_fn the hash function to use (typically "SHA-256" or "SHA-512")
+      * @param input the input to hash
+      * @param input_len length of input in bytes
+      * @param domain_sep a domain seperator
+      * @param domain_sep_len length of domain_sep in bytes
+      * @param random_oracle if the mapped point must be uniform (use
+               "true" here unless you know what you are doing)
+      */
+      PointGFp hash_to_curve(const std::string& hash_fn,
+                             const uint8_t input[],
+                             size_t input_len,
+                             const uint8_t domain_sep[],
+                             size_t domain_sep_len,
+                             bool random_oracle = true) const;
+
+      /**
+      * Hash onto the curve.
+      * For some curve types no mapping is currently available, in this
+      * case this function will throw an exception.
+      *
+      * @param hash_fn the hash function to use (typically "SHA-256" or "SHA-512")
+      * @param input the input to hash
+      * @param input_len length of input in bytes
+      * @param domain_sep a domain seperator
+      * @param random_oracle if the mapped point must be uniform (use
+               "true" here unless you know what you are doing)
+      */
+      PointGFp hash_to_curve(const std::string& hash_fn,
+                             const uint8_t input[],
+                             size_t input_len,
+                             const std::string& domain_sep,
+                             bool random_oracle = true) const;
 
       /**
       * Return the zero (or infinite) point on this curve

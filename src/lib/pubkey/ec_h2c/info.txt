@@ -1,0 +1,12 @@
+<defines>
+EC_HASH_TO_CURVE -> 20210420
+</defines>
+
+<requires>
+ec_group
+hash
+</requires>
+
+<header:internal>
+ec_h2c.h
+</header:internal>

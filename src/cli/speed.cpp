@@ -749,6 +749,12 @@ class Speed final : public Command
                bench_os2ecp(ecc_groups, msec);
                }
 #endif
+#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
+            else if(algo == "ec_h2c")
+               {
+               bench_ec_h2c(msec);
+               }
+#endif
             else if(algo == "RNG")
                {
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
@@ -1224,6 +1230,41 @@ class Speed final : public Command
             }
          }
 
+#endif
+
+#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
+      void bench_ec_h2c(const std::chrono::milliseconds runtime)
+         {
+         for(std::string group_name : { "secp256r1", "secp384r1", "secp521r1" })
+            {
+            auto h2c_ro_timer = make_timer(group_name + "-RO", "", "hash to curve");
+            auto h2c_nu_timer = make_timer(group_name + "-NU", "", "hash to curve");
+
+            const Botan::EC_Group group(group_name);
+
+            while(h2c_ro_timer->under(runtime))
+               {
+               std::vector<uint8_t> input(32);
+
+               rng().randomize(input.data(), input.size());
+
+               const Botan::PointGFp p1 = h2c_ro_timer->run([&]() {
+                  return group.hash_to_curve("SHA-256", input.data(), input.size(), nullptr, 0, true);
+                  });
+
+               BOTAN_ASSERT_NOMSG(p1.on_the_curve());
+
+               const Botan::PointGFp p2 = h2c_nu_timer->run([&]() {
+                  return group.hash_to_curve("SHA-256", input.data(), input.size(), nullptr, 0, false);
+                  });
+
+               BOTAN_ASSERT_NOMSG(p2.on_the_curve());
+               }
+
+            record_result(h2c_ro_timer);
+            record_result(h2c_nu_timer);
+            }
+         }
 #endif
 
 #if defined(BOTAN_HAS_FPE_FE1)
