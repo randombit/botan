@@ -44,6 +44,9 @@ Version 3.0.0, Not Yet Released
 * CVE-2021-24115 Convert base64, base58, base32 and hex encoding/decoding to be
   constant time (GH #2543)
 
+* Add support for hashing onto an elliptic curve using the SSWU
+  technique of draft-irtf-cfrg-hash-to-curve (GH #2726)
+
 * Use constant-time code instead of table lookups when computing parity bits
   (GH #2560), choosing ASN.1 string type (GH #2559) and when converting to/from
   the bcrypt variant of base64 (GH #2561)
