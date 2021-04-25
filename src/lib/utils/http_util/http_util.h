@@ -23,7 +23,7 @@ namespace HTTP {
 /**
 * HTTP_Error Exception
 */
-class BOTAN_PUBLIC_API(2,0) HTTP_Error final : public Exception
+class HTTP_Error final : public Exception
    {
    public:
       explicit HTTP_Error(const std::string& msg) :
@@ -68,35 +68,35 @@ class Response final
       std::map<std::string, std::string> m_headers;
    };
 
-BOTAN_PUBLIC_API(2,0) std::ostream& operator<<(std::ostream& o, const Response& resp);
+BOTAN_TEST_API std::ostream& operator<<(std::ostream& o, const Response& resp);
 
 typedef std::function<std::string (const std::string&, const std::string&, const std::string&)> http_exch_fn;
 
-BOTAN_PUBLIC_API(2,0) Response http_sync(http_exch_fn fn,
-                                         const std::string& verb,
-                                         const std::string& url,
-                                         const std::string& content_type,
-                                         const std::vector<uint8_t>& body,
-                                         size_t allowable_redirects);
+Response http_sync(http_exch_fn fn,
+                   const std::string& verb,
+                   const std::string& url,
+                   const std::string& content_type,
+                   const std::vector<uint8_t>& body,
+                   size_t allowable_redirects);
 
-BOTAN_PUBLIC_API(2,0) Response http_sync(const std::string& verb,
-                                         const std::string& url,
-                                         const std::string& content_type,
-                                         const std::vector<uint8_t>& body,
-                                         size_t allowable_redirects,
-                                         std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
+Response http_sync(const std::string& verb,
+                   const std::string& url,
+                   const std::string& content_type,
+                   const std::vector<uint8_t>& body,
+                   size_t allowable_redirects,
+                   std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
-BOTAN_PUBLIC_API(2,0) Response GET_sync(const std::string& url,
-                                        size_t allowable_redirects = 1,
-                                        std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
+Response BOTAN_TEST_API GET_sync(const std::string& url,
+                                 size_t allowable_redirects = 1,
+                                 std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
-BOTAN_PUBLIC_API(2,0) Response POST_sync(const std::string& url,
-                                         const std::string& content_type,
-                                         const std::vector<uint8_t>& body,
-                                         size_t allowable_redirects = 1,
-                                         std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
+Response POST_sync(const std::string& url,
+                   const std::string& content_type,
+                   const std::vector<uint8_t>& body,
+                   size_t allowable_redirects = 1,
+                   std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
-BOTAN_PUBLIC_API(2,0) std::string url_encode(const std::string& url);
+std::string url_encode(const std::string& url);
 
 }
 

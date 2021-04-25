@@ -25,7 +25,7 @@ word monty_inverse(word input);
 /**
 * The Montgomery representation of an integer
 */
-class BOTAN_UNSTABLE_API Montgomery_Int final
+class BOTAN_TEST_API Montgomery_Int final
    {
    public:
       /**
@@ -133,7 +133,7 @@ class BOTAN_UNSTABLE_API Montgomery_Int final
 /**
 * Parameters for Montgomery Reduction
 */
-class BOTAN_UNSTABLE_API Montgomery_Params final
+class BOTAN_TEST_API Montgomery_Params final
    {
    public:
       /**
