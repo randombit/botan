@@ -98,6 +98,7 @@ OID::OID(const std::string& oid_str)
 std::string OID::to_string() const
    {
    std::ostringstream oss;
+   oss.imbue(std::locale("C"));
    for(size_t i = 0; i != m_id.size(); ++i)
       {
       oss << m_id[i];
