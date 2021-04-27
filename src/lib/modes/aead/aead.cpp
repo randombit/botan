@@ -82,17 +82,16 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
       if(mode_info.empty())
          return std::unique_ptr<AEAD_Mode>();
 
-      std::ostringstream alg_args;
+      std::ostringstream mode_name;
 
-      alg_args << '(' << cipher_name;
+      mode_name << mode_info[0] << '(' << cipher_name;
       for(size_t i = 1; i < mode_info.size(); ++i)
-         alg_args << ',' << mode_info[i];
+         mode_name << ',' << mode_info[i];
       for(size_t i = 2; i < algo_parts.size(); ++i)
-         alg_args << ',' << algo_parts[i];
-      alg_args << ')';
+         mode_name << ',' << algo_parts[i];
+      mode_name << ')';
 
-      const std::string mode_name = mode_info[0] + alg_args.str();
-      return AEAD_Mode::create(mode_name, dir);
+      return AEAD_Mode::create(mode_name.str(), dir);
       }
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
