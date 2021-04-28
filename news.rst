@@ -8,6 +8,13 @@ Version 2.18.1, Not Yet Released
   contain ``-l`` within them (such as ``-fuse-linker-plugin``) to
   be misinterpreted. (GH #2715)
 
+* Fix a bug which caused decoding a certificate which contained
+  more than one name in a single RDN. (GH #2611 #2630 #2724)
+
+* Fix a bug which caused OID lookup failures when run in a locale
+  which uses thousands separators (pt_BR was reported as having
+  this issue). (GH #2732 #2730 #2237)
+
 Version 2.18.0, 2021-04-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -34,7 +41,7 @@ Version 2.17.3, 2020-12-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2021-24115 Change base64, base58, base32, and hex encoding and
-  decoding opearations to run in constant time (GH #2549)
+  decoding operations to run in constant time (GH #2549)
 
 * Fix a build problem on PPC64 building with Clang (GH #2547)
 
@@ -56,7 +63,7 @@ Version 2.17.2, 2020-11-13
 
 * Resolve an issue in the modular square root algorithm where a loop
   to find a quadratic non-residue could, for a carefully chosen
-  composite modulus, not terminte in a timely manner. (GH #2482 #2476)
+  composite modulus, not terminate in a timely manner. (GH #2482 #2476)
 
 * Fix a regression in MinGW builds introduced in 2.17.1
 
