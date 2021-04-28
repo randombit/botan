@@ -468,8 +468,10 @@ Test::Result test_rdn_multielement_set_name()
 
    Botan::X509_Certificate cert(Test::data_file("x509/misc/rdn_set.crt"));
 
-   result.confirm("contains expected name components",
+   result.confirm("issuer DN contains expected name components",
                   cert.issuer_dn().get_attributes().size() == 4);
+   result.confirm("subject DN contains expected name components",
+                  cert.subject_dn().get_attributes().size() == 4);
 
    return result;
    }
