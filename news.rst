@@ -151,7 +151,7 @@ Version 2.17.3, 2020-12-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2021-24115 Change base64, base58, base32, and hex encoding and
-  decoding opearations to run in constant time (GH #2549)
+  decoding operations to run in constant time (GH #2549)
 
 * Fix a build problem on PPC64 building with Clang (GH #2547)
 
@@ -173,7 +173,7 @@ Version 2.17.2, 2020-11-13
 
 * Resolve an issue in the modular square root algorithm where a loop
   to find a quadratic non-residue could, for a carefully chosen
-  composite modulus, not terminte in a timely manner. (GH #2482 #2476)
+  composite modulus, not terminate in a timely manner. (GH #2482 #2476)
 
 * Fix a regression in MinGW builds introduced in 2.17.1
 
