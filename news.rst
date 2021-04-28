@@ -4,8 +4,8 @@ Release Notes
 Version 3.0.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Switch the build to C++17 mode; require at least GCC 9, Clang 7 or MSVC 2019.
-  (GH #2455)
+* Botan is now a C++17 codebase; compiler requirements have been
+  increased to GCC 9, Clang 7, or MSVC 2019. (GH #2455)
 
 * Support for TLS 1.0, TLS 1.1, and DTLS 1.0 have been removed (GH #2631)
 
