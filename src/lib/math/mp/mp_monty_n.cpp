@@ -56,12 +56,7 @@ void bigint_monty_redc_4(word z[], const word p[4], word p_dash, word ws[])
    word3_add(&w2, &w1, &w0, z[9]);
    ws[4] = w0;
    ws[5] = w1;
-   word borrow = 0;
-   ws[5] = word_sub(ws[0], p[0], &borrow);
-   ws[6] = word_sub(ws[1], p[1], &borrow);
-   ws[7] = word_sub(ws[2], p[2], &borrow);
-   ws[8] = word_sub(ws[3], p[3], &borrow);
-   ws[9] = word_sub(ws[4], 0, &borrow);
+   word borrow = bigint_sub3(ws + 4 + 1, ws, 4 + 1, p, 4);
    CT::conditional_copy_mem(borrow, z, ws, ws + 5, 5);
    clear_mem(z + 4, 2*(4+1) - 4);
    }
@@ -144,14 +139,7 @@ void bigint_monty_redc_6(word z[], const word p[6], word p_dash, word ws[])
    word3_add(&w2, &w1, &w0, z[13]);
    ws[6] = w0;
    ws[7] = w1;
-   word borrow = 0;
-   ws[7] = word_sub(ws[0], p[0], &borrow);
-   ws[8] = word_sub(ws[1], p[1], &borrow);
-   ws[9] = word_sub(ws[2], p[2], &borrow);
-   ws[10] = word_sub(ws[3], p[3], &borrow);
-   ws[11] = word_sub(ws[4], p[4], &borrow);
-   ws[12] = word_sub(ws[5], p[5], &borrow);
-   ws[13] = word_sub(ws[6], 0, &borrow);
+   word borrow = bigint_sub3(ws + 6 + 1, ws, 6 + 1, p, 6);
    CT::conditional_copy_mem(borrow, z, ws, ws + 7, 7);
    clear_mem(z + 6, 2*(6+1) - 6);
    }
@@ -274,16 +262,7 @@ void bigint_monty_redc_8(word z[], const word p[8], word p_dash, word ws[])
    word3_add(&w2, &w1, &w0, z[17]);
    ws[8] = w0;
    ws[9] = w1;
-   word borrow = 0;
-   ws[9] = word_sub(ws[0], p[0], &borrow);
-   ws[10] = word_sub(ws[1], p[1], &borrow);
-   ws[11] = word_sub(ws[2], p[2], &borrow);
-   ws[12] = word_sub(ws[3], p[3], &borrow);
-   ws[13] = word_sub(ws[4], p[4], &borrow);
-   ws[14] = word_sub(ws[5], p[5], &borrow);
-   ws[15] = word_sub(ws[6], p[6], &borrow);
-   ws[16] = word_sub(ws[7], p[7], &borrow);
-   ws[17] = word_sub(ws[8], 0, &borrow);
+   word borrow = bigint_sub3(ws + 8 + 1, ws, 8 + 1, p, 8);
    CT::conditional_copy_mem(borrow, z, ws, ws + 9, 9);
    clear_mem(z + 8, 2*(8+1) - 8);
    }
