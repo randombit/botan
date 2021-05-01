@@ -5,5 +5,4 @@ BIGINT_MP -> 20151225
 <header:internal>
 mp_core.h
 mp_asmi.h
-mp_monty.h
 </header:internal>

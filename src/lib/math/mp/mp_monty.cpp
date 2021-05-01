@@ -8,14 +8,11 @@
 */
 
 #include <botan/internal/mp_core.h>
-#include <botan/internal/mp_monty.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/mem_ops.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
-
-namespace {
 
 /*
 * Montgomery reduction - product scanning form
@@ -100,32 +97,6 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
 
    CT::conditional_copy_mem(borrow, z, ws, ws + (p_size + 1), (p_size + 1));
    clear_mem(z + p_size, z_size - p_size - 2);
-   }
-
-}
-
-void bigint_monty_redc(word z[],
-                       const word p[], size_t p_size, word p_dash,
-                       word ws[], size_t ws_size)
-   {
-   const size_t z_size = 2*(p_size+1);
-
-   BOTAN_ARG_CHECK(ws_size >= z_size, "workspace too small");
-
-   if(p_size == 4)
-      bigint_monty_redc_4(z, p, p_dash, ws);
-   else if(p_size == 6)
-      bigint_monty_redc_6(z, p, p_dash, ws);
-   else if(p_size == 8)
-      bigint_monty_redc_8(z, p, p_dash, ws);
-   else if(p_size == 16)
-      bigint_monty_redc_16(z, p, p_dash, ws);
-   else if(p_size == 24)
-      bigint_monty_redc_24(z, p, p_dash, ws);
-   else if(p_size == 32)
-      bigint_monty_redc_32(z, p, p_dash, ws);
-   else
-      bigint_monty_redc_generic(z, z_size, p, p_size, p_dash, ws);
    }
 
 }
