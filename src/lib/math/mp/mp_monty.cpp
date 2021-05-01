@@ -87,11 +87,7 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
    * borrow.
    */
 
-   // word borrow = bigint_sub3(ws + p_size + 1, ws, p_size + 1, p, p_size);
-   word borrow = 0;
-   for(size_t i = 0; i != p_size; ++i)
-      ws[p_size + 1 + i] = word_sub(ws[i], p[i], &borrow);
-   ws[2*p_size+1] = word_sub(ws[p_size], 0, &borrow);
+   word borrow = bigint_sub3(ws + p_size + 1, ws, p_size + 1, p, p_size);
 
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
 
