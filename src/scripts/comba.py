@@ -94,7 +94,6 @@ def main(args = None):
 */
 
 #include <botan/internal/mp_core.h>
-#include <botan/internal/mp_asmi.h>
 
 namespace Botan {
 """ % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d")))

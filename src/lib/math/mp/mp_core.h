@@ -784,6 +784,26 @@ void bigint_comba_sqr9(word out[18], const word in[9]);
 void bigint_comba_sqr16(word out[32], const word in[16]);
 void bigint_comba_sqr24(word out[48], const word in[24]);
 
+/*
+* Montgomery reduction
+*
+* Each of these functions makes the following assumptions:
+*
+* z_size >= 2*(p_size + 1)
+* ws_size >= z_size
+*/
+void bigint_monty_redc_4(word z[], const word p[], word p_dash, word ws[]);
+void bigint_monty_redc_6(word z[], const word p[], word p_dash, word ws[]);
+void bigint_monty_redc_8(word z[], const word p[], word p_dash, word ws[]);
+void bigint_monty_redc_16(word z[], const word p[], word p_dash, word ws[]);
+void bigint_monty_redc_24(word z[], const word p[], word p_dash, word ws[]);
+void bigint_monty_redc_32(word z[], const word p[], word p_dash, word ws[]);
+
+void bigint_monty_redc_generic(word z[], size_t z_size,
+                               const word p[], size_t p_size, word p_dash,
+                               word ws[]);
+
+
 /**
 * Montgomery Reduction
 * @param z integer to reduce, of size exactly 2*(p_size+1).
@@ -792,14 +812,35 @@ void bigint_comba_sqr24(word out[48], const word in[24]);
 * @param p modulus
 * @param p_size size of p
 * @param p_dash Montgomery value
-* @param workspace array of at least 2*(p_size+1) words
-* @param ws_size size of workspace in words
+* @param ws array of at least 2*(p_size+1) words
+* @param ws_size size of ws in words
 */
-void bigint_monty_redc(word z[],
-                       const word p[], size_t p_size,
-                       word p_dash,
-                       word workspace[],
-                       size_t ws_size);
+inline void bigint_monty_redc(word z[],
+                              const word p[], size_t p_size,
+                              word p_dash,
+                              word ws[],
+                              size_t ws_size)
+   {
+   const size_t z_size = 2*(p_size+1);
+
+   BOTAN_ARG_CHECK(ws_size >= z_size, "ws too small");
+
+   if(p_size == 4)
+      bigint_monty_redc_4(z, p, p_dash, ws);
+   else if(p_size == 6)
+      bigint_monty_redc_6(z, p, p_dash, ws);
+   else if(p_size == 8)
+      bigint_monty_redc_8(z, p, p_dash, ws);
+   else if(p_size == 16)
+      bigint_monty_redc_16(z, p, p_dash, ws);
+   else if(p_size == 24)
+      bigint_monty_redc_24(z, p, p_dash, ws);
+   else if(p_size == 32)
+      bigint_monty_redc_32(z, p, p_dash, ws);
+   else
+      bigint_monty_redc_generic(z, z_size, p, p_size, p_dash, ws);
+   }
+
 
 /*
 * High Level Multiplication/Squaring Interfaces

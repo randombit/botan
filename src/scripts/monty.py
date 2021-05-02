@@ -42,7 +42,9 @@ def monty_redc_code(n):
     lines.append("ws[%d] = w0;" % (n))
     lines.append("ws[%d] = w1;" % (n+1))
 
-    if n < 16:
+    sub3_bound = 0
+
+    if n >= sub3_bound:
         lines.append("word borrow = 0;")
         for i in range(n):
             lines.append("ws[%d] = word_sub(ws[%d], p[%d], &borrow);" % (n + 1 + i, i, i))
@@ -72,9 +74,7 @@ def main(args = None):
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mp_monty.h>
 #include <botan/internal/mp_core.h>
-#include <botan/internal/mp_asmi.h>
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {
