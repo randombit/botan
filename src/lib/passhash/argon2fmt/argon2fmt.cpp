@@ -62,7 +62,9 @@ std::string argon2_generate_pwhash(const char* password, size_t password_len,
    else
       oss << "$argon2id$";
 
-   oss << "v=19$m=" << M << ",t=" << t << ",p=" << p << "$";
+   oss << "v=19$m=" << std::to_string(M)
+       << ",t=" << std::to_string(t)
+       << ",p=" << std::to_string(p) << "$";
    oss << strip_padding(base64_encode(salt)) << "$" << strip_padding(base64_encode(output));
 
    return oss.str();

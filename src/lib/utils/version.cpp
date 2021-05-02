@@ -90,7 +90,9 @@ std::string runtime_version_check(uint32_t major,
       std::ostringstream oss;
       oss << "Warning: linked version (" << short_version_string() << ")"
           << " does not match version built against "
-          << "(" << major << '.' << minor << '.' << patch << ")\n";
+          << "(" << std::to_string(major)
+          << '.' << std::to_string(minor)
+          << '.' << std::to_string(patch) << ")\n";
       return oss.str();
       }
 
