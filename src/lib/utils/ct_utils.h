@@ -50,8 +50,7 @@ inline void poison(const T* p, size_t n)
 #if defined(BOTAN_HAS_VALGRIND)
    VALGRIND_MAKE_MEM_UNDEFINED(p, n * sizeof(T));
 #else
-   BOTAN_UNUSED(p);
-   BOTAN_UNUSED(n);
+   BOTAN_UNUSED(p, n);
 #endif
    }
 
@@ -61,8 +60,7 @@ inline void unpoison(const T* p, size_t n)
 #if defined(BOTAN_HAS_VALGRIND)
    VALGRIND_MAKE_MEM_DEFINED(p, n * sizeof(T));
 #else
-   BOTAN_UNUSED(p);
-   BOTAN_UNUSED(n);
+   BOTAN_UNUSED(p, n);
 #endif
    }
 
@@ -394,14 +392,22 @@ inline void conditional_swap_ptr(bool cnd, T& x, T& y)
    }
 
 /**
-* If bad_mask is unset, return in[delim_idx:input_length] copied to
-* new buffer. If bad_mask is set, return an all zero vector of
-* unspecified length.
+* If bad_mask is unset, return input[offset:input_length] copied to new
+* buffer. If bad_mask is set, return an empty vector. In all cases, the capacity
+* of the vector is equal to input_length
+*
+* This function attempts to avoid leaking the following:
+*  - if bad_input was set or not
+*  - the value of offset
+*  - the values in input[]
+*
+* This function leaks the value of input_length
 */
+BOTAN_TEST_API
 secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input,
                                    const uint8_t input[],
                                    size_t input_length,
-                                   size_t delim_idx);
+                                   size_t offset);
 
 secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t length);
 

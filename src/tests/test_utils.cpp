@@ -230,6 +230,46 @@ class CT_Mask_Tests final : public Test
          result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFFFFFF, 5).value(), 0x00000000);
          result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(5, 0xFFFFFFFF).value(), 0xFFFFFFFF);
 
+         for(auto bad_input : { 0, 1 })
+            {
+            for(size_t input_length : { 0, 1, 2, 32 })
+               {
+               for(size_t offset = 0; offset != input_length + 1; ++offset)
+                  {
+                  const auto mask = Botan::CT::Mask<uint8_t>::expand(static_cast<uint8_t>(bad_input));
+
+                  std::vector<uint8_t> input(input_length);
+                  rng().randomize(input.data(), input.size());
+
+                  auto output = Botan::CT::copy_output(mask,
+                                                       input.data(),
+                                                       input.size(),
+                                                       offset);
+
+                  result.test_eq_sz("CT::copy_output capacity", output.capacity(), input.size());
+
+                  if(bad_input)
+                     {
+                     result.confirm("If bad input, no output", output.empty());
+                     }
+                  else
+                     {
+                     if(offset >= input_length)
+                        {
+                        result.confirm("If offset is too large, output is empty", output.empty());
+                        }
+                     else
+                        {
+                        result.test_eq_sz("CT::copy_output length", output.size(), input.size() - offset);
+
+                        for(size_t i = 0; i != output.size(); ++i)
+                           result.test_eq_sz("CT::copy_output offset", output[i], input[i + offset]);
+                        }
+                     }
+                  }
+               }
+            }
+
          return {result};
          }
    };

@@ -1,5 +1,5 @@
 /*
-* (C) 2018 Jack Lloyd
+* (C) 2018,2021 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,26 +10,37 @@ namespace Botan {
 
 namespace CT {
 
-secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input,
+secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input_u8,
                                    const uint8_t input[],
                                    size_t input_length,
                                    size_t offset)
    {
-   if(input_length == 0)
-      return secure_vector<uint8_t>();
-
    /*
-   * Ensure at runtime that offset <= input_length. This is an invalid input,
-   * but we can't throw without using the poisoned value. Instead, if it happens,
-   * set offset to be equal to the input length (so output_bytes becomes 0 and
-   * the returned vector is empty)
+   * We do not poison the input here because if we did we would have
+   * to unpoison it at exit. We assume instead that callers have
+   * already poisoned the input and will unpoison it at their own
+   * time.
    */
-   const auto valid_offset = CT::Mask<size_t>::is_lte(offset, input_length);
-   offset = valid_offset.select(offset, input_length);
-
-   const size_t output_bytes = input_length - offset;
+   CT::poison(&offset, sizeof(size_t));
 
    secure_vector<uint8_t> output(input_length);
+
+   auto bad_input = CT::Mask<size_t>::expand(bad_input_u8);
+
+   /*
+   * If the offset is greater than input_length then the arguments are
+   * invalid. Ideally we would through an exception but that leaks
+   * information about the offset. Instead treat it as if the input
+   * was invalid.
+   */
+   bad_input |= CT::Mask<size_t>::is_gt(offset, input_length);
+
+   /*
+   * If the input is invalid, then set offset == input_length as a result
+   * at the end we will set output_bytes == 0 causing the final result to
+   * be an empty vector.
+   */
+   offset = bad_input.select(input_length, offset);
 
    /*
    Move the desired output bytes to the front using a slow (O^n)
@@ -38,18 +49,30 @@ secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input,
    for(size_t i = 0; i != input_length; ++i)
       {
       /*
+      * If bad_input was set then we modified offset to equal the input_length.
+      * In that case, this_loop will be greater than input_length, and so is_eq
+      * mask will always be false. As a result none of the input values will be
+      * written to output.
+      *
+      * This is ignoring the possibility of integer overflow of offset + i. But
+      * for this to happen the input would have to consume nearly the entire
+      * address space, and we just allocated an output buffer of equal size.
+      */
+      const size_t this_loop = offset + i;
+
+      /*
       start index from i rather than 0 since we know j must be >= i + offset
       to have any effect, and starting from i does not reveal information
       */
       for(size_t j = i; j != input_length; ++j)
          {
          const uint8_t b = input[j];
-         const auto is_eq = CT::Mask<size_t>::is_equal(j, offset + i);
+         const auto is_eq = CT::Mask<size_t>::is_equal(j, this_loop);
          output[i] |= is_eq.if_set_return(b);
          }
       }
 
-   bad_input.if_set_zero_out(output.data(), output.size());
+   const size_t output_bytes = input_length - offset;
 
    CT::unpoison(output.data(), output.size());
    CT::unpoison(output_bytes);
