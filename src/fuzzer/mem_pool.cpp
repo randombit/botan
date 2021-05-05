@@ -108,8 +108,6 @@ void fuzz(const uint8_t in[], size_t in_len)
          in_len -= 1;
          }
 
-      //printf("%d %d\n", op, idx);
-
       if(op == 0)
          {
          const size_t plen = idx + 1; // ensure non-zero
@@ -174,7 +172,7 @@ void fuzz(const uint8_t in[], size_t in_len)
       else if(op == 1)
          {
          if(ptrs.empty())
-            return;
+            continue;
 
          size_t which_ptr = idx % ptrs.size();
 
