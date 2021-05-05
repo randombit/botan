@@ -57,10 +57,10 @@ inline word word_madd2(word a, word b, word* c)
    return a;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-      asm(R"(
-         mulq %[b]
-         addq %[c],%[a]
-         adcq $0,%[carry]
+   asm(R"(
+      mulq %[b]
+      addq %[c],%[a]
+      adcq $0,%[carry]
       )"
       : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*c)
       : "0"(a), "1"(b), [c]"g"(*c) : "cc");
@@ -109,8 +109,10 @@ inline word word_madd3(word a, word b, word c, word* d)
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
    asm(R"(
       mulq %[b]
+
       addq %[c],%[a]
       adcq $0,%[carry]
+
       addq %[d],%[a]
       adcq $0,%[carry]
       )"
@@ -271,7 +273,6 @@ inline word word8_add2(word x[8], const word y[8], word carry)
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"r"(y), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
 
@@ -280,7 +281,6 @@ inline word word8_add2(word x[8], const word y[8], word carry)
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"r"(y), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #else
    x[0] = word_add(x[0], y[0], &carry);
@@ -291,8 +291,9 @@ inline word word8_add2(word x[8], const word y[8], word carry)
    x[5] = word_add(x[5], y[5], &carry);
    x[6] = word_add(x[6], y[6], &carry);
    x[7] = word_add(x[7], y[7], &carry);
-   return carry;
 #endif
+
+   return carry;
    }
 
 /*
@@ -307,16 +308,13 @@ inline word word8_add3(word z[8], const word x[8],
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"r"(y), [z]"r"(z), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    asm(
       ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "adcq"))
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"r"(y), [z]"r"(z), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #else
    z[0] = word_add(x[0], y[0], &carry);
@@ -327,8 +325,9 @@ inline word word8_add3(word z[8], const word x[8],
    z[5] = word_add(x[5], y[5], &carry);
    z[6] = word_add(x[6], y[6], &carry);
    z[7] = word_add(x[7], y[7], &carry);
-   return carry;
 #endif
+
+   return carry;
    }
 
 /*
@@ -345,7 +344,6 @@ inline word word_sub(word x, word y, word* carry)
    return x;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    asm(
       ADD_OR_SUBTRACT(ASM("sbbq %[y],%[x]"))
       : [x]"=r"(x), [carry]"=r"(*carry)
@@ -373,16 +371,13 @@ inline word word8_sub2(word x[8], const word y[8], word carry)
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"r"(y), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    asm(
       ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "sbbq"))
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"r"(y), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #else
    x[0] = word_sub(x[0], y[0], &carry);
@@ -393,8 +388,9 @@ inline word word8_sub2(word x[8], const word y[8], word carry)
    x[5] = word_sub(x[5], y[5], &carry);
    x[6] = word_sub(x[6], y[6], &carry);
    x[7] = word_sub(x[7], y[7], &carry);
-   return carry;
 #endif
+
+   return carry;
    }
 
 /*
@@ -408,16 +404,13 @@ inline word word8_sub2_rev(word x[8], const word y[8], word carry)
       : [carry]"=r"(carry)
       : [x]"r"(y), [y]"r"(x), [z]"r"(x), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    asm(
       ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
       : [carry]"=r"(carry)
       : [x]"r"(y), [y]"r"(x), [z]"r"(x), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #else
    x[0] = word_sub(y[0], x[0], &carry);
@@ -428,8 +421,9 @@ inline word word8_sub2_rev(word x[8], const word y[8], word carry)
    x[5] = word_sub(y[5], x[5], &carry);
    x[6] = word_sub(y[6], x[6], &carry);
    x[7] = word_sub(y[7], x[7], &carry);
-   return carry;
 #endif
+
+   return carry;
    }
 
 /*
@@ -444,16 +438,13 @@ inline word word8_sub3(word z[8], const word x[8],
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"r"(y), [z]"r"(z), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    asm(
       ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"r"(y), [z]"r"(z), "0"(carry)
       : "cc", "memory");
-   return carry;
 
 #else
    z[0] = word_sub(x[0], y[0], &carry);
@@ -464,8 +455,9 @@ inline word word8_sub3(word z[8], const word x[8],
    z[5] = word_sub(x[5], y[5], &carry);
    z[6] = word_sub(x[6], y[6], &carry);
    z[7] = word_sub(x[7], y[7], &carry);
-   return carry;
 #endif
+
+   return carry;
    }
 
 /*
@@ -479,16 +471,13 @@ inline word word8_linmul2(word x[8], word y, word carry)
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"rm"(y), "0"(carry)
       : "cc", "%eax", "%edx");
-   return carry;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    asm(
       DO_8_TIMES(LINMUL_OP, "x")
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"rm"(y), "0"(carry)
       : "cc", "%rax", "%rdx");
-   return carry;
 
 #else
    x[0] = word_madd2(x[0], y, &carry);
@@ -499,8 +488,9 @@ inline word word8_linmul2(word x[8], word y, word carry)
    x[5] = word_madd2(x[5], y, &carry);
    x[6] = word_madd2(x[6], y, &carry);
    x[7] = word_madd2(x[7], y, &carry);
-   return carry;
 #endif
+
+   return carry;
    }
 
 /*
@@ -514,7 +504,6 @@ inline word word8_linmul3(word z[8], const word x[8], word y, word carry)
       : [carry]"=r"(carry)
       : [z]"r"(z), [x]"r"(x), [y]"rm"(y), "0"(carry)
       : "cc", "%eax", "%edx");
-   return carry;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
    asm(
@@ -522,7 +511,6 @@ inline word word8_linmul3(word z[8], const word x[8], word y, word carry)
       : [carry]"=r"(carry)
       : [z]"r"(z), [x]"r"(x), [y]"rm"(y), "0"(carry)
       : "cc", "%rax", "%rdx");
-   return carry;
 
 #else
    z[0] = word_madd2(x[0], y, &carry);
@@ -533,8 +521,9 @@ inline word word8_linmul3(word z[8], const word x[8], word y, word carry)
    z[5] = word_madd2(x[5], y, &carry);
    z[6] = word_madd2(x[6], y, &carry);
    z[7] = word_madd2(x[7], y, &carry);
-   return carry;
 #endif
+
+   return carry;
    }
 
 /*
@@ -548,16 +537,13 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry)
       : [carry]"=r"(carry)
       : [z]"r"(z), [x]"r"(x), [y]"rm"(y), "0"(carry)
       : "cc", "%eax", "%edx");
-   return carry;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    asm(
       DO_8_TIMES(MULADD_OP, "")
       : [carry]"=r"(carry)
       : [z]"r"(z), [x]"r"(x), [y]"rm"(y), "0"(carry)
       : "cc", "%rax", "%rdx");
-   return carry;
 
 #else
    z[0] = word_madd3(x[0], y, z[0], &carry);
@@ -568,8 +554,9 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry)
    z[5] = word_madd3(x[5], y, z[5], &carry);
    z[6] = word_madd3(x[6], y, z[6], &carry);
    z[7] = word_madd3(x[7], y, z[7], &carry);
-   return carry;
 #endif
+
+   return carry;
    }
 
 /*
@@ -596,7 +583,6 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
        : "cc");
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    word z0 = 0, z1 = 0;
 
    asm("mulq %[y]"
@@ -638,7 +624,6 @@ inline void word3_add(word* w2, word* w1, word* w0, word x)
       : "cc");
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    asm(R"(
       addq %[x],%[w0]
       adcq $0,%[w1]
@@ -664,7 +649,6 @@ inline void word3_add(word* w2, word* w1, word* w0, word x)
 inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
    {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-
    word z0 = 0, z1 = 0;
 
    asm("mull %[y]"
@@ -686,7 +670,6 @@ inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
       : "cc");
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-
    word z0 = 0, z1 = 0;
 
    asm("mulq %[y]"
