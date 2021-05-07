@@ -75,7 +75,8 @@ by a technique based on the CRT - ``phi(n)`` is factored to ``2**e * z`` for
 some ``e`` > 1 and some odd ``z``. Then ``e`` is inverted modulo ``2**e`` and
 also modulo ``z``. The inversion modulo ``2**e`` is done via a specialized
 constant-time algoirthm which only works for powers of 2. Then the two
-inversions are combined using the CRT.
+inversions are combined using the CRT. This process does leak the value of
+``e``; to avoid problems ``p`` and ``q`` are chosen so that ``e`` is always 1.
 
 See blinding.cpp and rsa.cpp.
 
@@ -174,7 +175,7 @@ used in cases when the scalar is a secret.
 Both ``blinded_base_point_multiply`` and ``blinded_var_point_multiply`` apply
 side channel countermeasures. The scalar is masked by a multiple of the group
 order (this is commonly called Coron's first countermeasure [CoronDpa]),
-currently the mask is an 80 bit random value.
+currently the mask is scaled to be half the bit length of the order of the group.
 
 Botan stores all ECC points in Jacobian representation. This form allows faster
 computation by representing points (x,y) as (X,Y,Z) where x=X/Z^2 and
