@@ -665,14 +665,9 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
       const bool issuer_name_constraint_critical =
          issuer.is_critical("X509v3.NameConstraints");
 
-      const bool at_self_signed_root = (pos == cert_path.size() - 1);
-
       // Check that all subordinate certs pass the name constraint
-      for(size_t j = 0; j <= pos; ++j)
+      for(size_t j = 0; j < pos; ++j)
          {
-         if(pos == j && at_self_signed_root)
-            continue;
-
          bool permitted = m_name_constraints.permitted().empty();
          bool failed = false;
 
