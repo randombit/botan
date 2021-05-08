@@ -165,17 +165,19 @@ bool GeneralName::matches_dns(const std::string& nam) const
    {
    if(nam.size() == name().size())
       {
-      return nam == name();
+      return tolower_string(nam) == tolower_string(name());
       }
    else if(name().size() > nam.size())
       {
+      // The constraint is longer than the issued name: not possibly a match
       return false;
       }
    else // name.size() < nam.size()
       {
-      std::string constr = name().front() == '.' ? name() : "." + name();
       // constr is suffix of nam
-      return constr == nam.substr(nam.size() - constr.size(), constr.size());
+      const std::string constr = name().front() == '.' ? name() : "." + name();
+      const std::string substr = nam.substr(nam.size() - constr.size(), constr.size());
+      return tolower_string(constr) == tolower_string(substr);
       }
    }
 
