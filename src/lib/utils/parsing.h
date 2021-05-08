@@ -92,6 +92,8 @@ std::map<std::string, std::string> read_kv(const std::string& kv);
 
 std::string clean_ws(const std::string& s);
 
+std::string tolower_string(const std::string& s);
+
 /**
 * Check if the given hostname is a match for the specified wildcard
 */
