@@ -324,8 +324,6 @@ std::string replace_char(const std::string& str, char from_char, char to_char)
    return out;
    }
 
-namespace {
-
 std::string tolower_string(const std::string& in)
    {
    std::string s = in;
@@ -337,8 +335,6 @@ std::string tolower_string(const std::string& in)
       }
    return s;
    }
-
-}
 
 bool host_wildcard_match(const std::string& issued_, const std::string& host_)
    {
