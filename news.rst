@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.18.1, Not Yet Released
+Version 2.18.1, 2021-05-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix a build regression in 2.18.0 which caused linker flags which
