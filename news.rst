@@ -47,6 +47,17 @@ Version 3.0.0, Not Yet Released
 * Add support for hashing onto an elliptic curve using the SSWU
   technique of draft-irtf-cfrg-hash-to-curve (GH #2726)
 
+* DNS names in name constraints were compared with case sensitivity, which
+  could cause valid certificates to be rejected. (GH #2738 #2735)
+
+* X.509 name constraint extensions were rejected if non-critical. RFC 5280
+  requires conforming CAs issue such extensions as critical, but not all
+  certificates are compliant, and all other known implementations do not
+  require this. (GH #2738 #2736)
+
+* X.509 name constraints were incorrectly applied to the certificate which
+  included the constraint. (GH #2738 #2737)
+
 * Use constant-time code instead of table lookups when computing parity bits
   (GH #2560), choosing ASN.1 string type (GH #2559) and when converting to/from
   the bcrypt variant of base64 (GH #2561)
