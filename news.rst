@@ -136,6 +136,31 @@ Version 3.0.0, Not Yet Released
 
 * Generate a ``compile_commands.json`` for use with Clang tooling.
 
+Version 2.18.1, 2021-05-09
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a build regression in 2.18.0 which caused linker flags which
+  contain ``-l`` within them (such as ``-fuse-linker-plugin``) to
+  be misinterpreted. (GH #2715)
+
+* Fix a bug which caused decoding a certificate which contained
+  more than one name in a single RDN. (GH #2611 #2630 #2724)
+
+* Fix a bug which caused OID lookup failures when run in a locale
+  which uses thousands separators (pt_BR was reported as having
+  this issue). (GH #2732 #2730 #2237)
+
+* DNS names in name constraints were compared with case sensitivity, which
+  could cause valid certificates to be rejected. (GH #2739 #2735)
+
+* X.509 name constraint extensions were rejected if non-critical. RFC 5280
+  requires conforming CAs issue such extensions as critical, but not all
+  certificates are compliant, and all other known implementations do not
+  require this. (GH #2739 #2736)
+
+* X.509 name constraints were incorrectly applied to the certificate which
+  included the constraint. (GH #2739 #2737)
+
 Version 2.18.0, 2021-04-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
