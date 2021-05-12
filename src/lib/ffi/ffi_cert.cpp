@@ -17,7 +17,13 @@
 #endif
 
 #if defined(BOTAN_HAS_CERTSTOR_FLATFILE)
-   #include <botan/certstor_flatfile/certstor_flatfile.h>
+   #include <botan/certstor_flatfile.h>
+#endif
+
+#if defined(BOTAN_HAS_CERTSTOR_MACOS)
+   #include <botan/certstor_macos.h>
+#elif defined(BOTAN_HAS_CERTSTOR_WINDOWS)
+   #include <botan/certstor_windows.h>
 #endif
 
 extern "C" {
@@ -522,6 +528,33 @@ int botan_x509_certstore_load_file(botan_x509_certstore_t* certstore_obj, const 
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::Certificate_Store> c(new Botan::Flatfile_Certificate_Store(certstore_path));
+      *certstore_obj = new botan_x509_certstore_struct(c.release());
+      return BOTAN_FFI_SUCCESS;
+      });
+
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_x509_certstore_load_system(botan_x509_certstore_t* certstore_obj)
+   {
+   if(!certstore_obj)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES) 
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+#if defined(BOTAN_HAS_CERTSTOR_MACOS)
+      std::unique_ptr<Botan::Certificate_Store> c(new Botan::Certificate_Store_MacOS);
+#elif defined(BOTAN_HAS_CERTSTOR_WINDOWS)
+      std::unique_ptr<Botan::Certificate_Store> c(new Botan::Certificate_Store_Windows);
+#elif defined(BOTAN_HAS_CERTSTOR_FLATFILE) && defined(BOTAN_SYSTEM_CERT_BUNDLE)
+      std::unique_ptr<Botan::Certificate_Store> c(
+          new Botan::Flatfile_Certificate_Store(BOTAN_SYSTEM_CERT_BUNDLE, true));
+#else
+      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
       *certstore_obj = new botan_x509_certstore_struct(c.release());
       return BOTAN_FFI_SUCCESS;
       });

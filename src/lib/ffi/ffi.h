@@ -1633,6 +1633,8 @@ typedef struct botan_x509_certstore_struct* botan_x509_certstore_t;
 
 BOTAN_PUBLIC_API(2,19) int botan_x509_certstore_load_file(botan_x509_certstore_t* certstore_obj, const char* certstore_path);
 
+BOTAN_PUBLIC_API(2,19) int botan_x509_certstore_load_system(botan_x509_certstore_t* certstore_obj);
+
 BOTAN_PUBLIC_API(2,19) int botan_x509_certstore_destroy(botan_x509_certstore_t crl);
 
 BOTAN_PUBLIC_API(2,19)
