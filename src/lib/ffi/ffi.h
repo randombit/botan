@@ -451,6 +451,11 @@ BOTAN_PUBLIC_API(2,0) int botan_cipher_valid_nonce_length(botan_cipher_t cipher,
 BOTAN_PUBLIC_API(2,0) int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tag_size);
 
 /**
+* Get the minimum input size required of the cipher.
+*/
+BOTAN_PUBLIC_API(2,19) int botan_cipher_get_minimum_final_size(botan_cipher_t cipher, size_t* fs);
+
+/**
 * Get the default nonce length of this cipher
 */
 BOTAN_PUBLIC_API(2,0) int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl);
