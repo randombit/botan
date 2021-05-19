@@ -475,9 +475,11 @@ class BigInt_GCD_Test final : public Text_Based_Test
          const BigInt y = vars.get_req_bn("Y");
          const BigInt expected = vars.get_req_bn("GCD");
 
-         const BigInt g = Botan::gcd(x, y);
+         const BigInt g1 = Botan::gcd(x, y);
+         result.test_eq("gcd", g1, expected);
 
-         result.test_eq("gcd", g, expected);
+         const BigInt g2 = Botan::gcd(y, x);
+         result.test_eq("gcd", g2, expected);
 
          return result;
          }
