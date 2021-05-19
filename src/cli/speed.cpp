@@ -1570,8 +1570,9 @@ class Speed final : public Command
             const std::string bit_str = std::to_string(bits);
 
             auto timer = make_timer("inverse_mod-" + bit_str);
+            auto gcd_timer = make_timer("gcd-" + bit_str);
 
-            while(timer->under(runtime))
+            while(timer->under(runtime) && gcd_timer->under(runtime))
                {
                const Botan::BigInt x(rng(), bits - 1);
                Botan::BigInt mod(rng(), bits);
@@ -1579,19 +1580,22 @@ class Speed final : public Command
                const Botan::BigInt x_inv = timer->run(
                   [&] { return Botan::inverse_mod(x, mod); });
 
+               const Botan::BigInt g = gcd_timer->run([&] { return gcd(x, mod); });
+
                if(x_inv == 0)
                   {
-                  const Botan::BigInt g = gcd(x, mod);
                   BOTAN_ASSERT(g != 1, "Inversion only fails if gcd(x, mod) > 1");
                   }
                else
                   {
+                  BOTAN_ASSERT(g == 1, "Inversion succeeds only if gcd != 1");
                   const Botan::BigInt check = (x_inv*x) % mod;
                   BOTAN_ASSERT_EQUAL(check, 1, "Const time inversion correct");
                   }
                }
 
             record_result(timer);
+            record_result(gcd_timer);
             }
          }
 
