@@ -54,6 +54,24 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          m_x(eckcdsa.private_value()),
          m_prefix()
          {
+         auto hash = HashFunction::create_or_throw(hash_for_signature());
+
+         /*
+         ECKCDSA does support hash truncation but for whatever reason uses the
+         opposite convention of DSA, ECDSA, ECGDSA, etc, cutting bits from
+         the low rather than the high side of the hash.
+
+         As a result it is not easily supported in this codebase, and since
+         ECKCDSA is quite obscure and mostly included for BSI compliance, we
+         simply prohibit creating signatures where the resulting signature will
+         not be accepted by other implementations of ECKCDSA
+
+         See https://github.com/randombit/botan/issues/2742 for further detail.
+         */
+
+         if(hash->output_length() > m_group.get_order_bytes())
+            throw Encoding_Error("ECKCDSA does not support the hash being larger than the group");
+
          const BigInt public_point_x = eckcdsa.public_point().get_affine_x();
          const BigInt public_point_y = eckcdsa.public_point().get_affine_y();
 
@@ -63,9 +81,8 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          BigInt::encode_1363(&m_prefix[0], order_bytes, public_point_x);
          BigInt::encode_1363(&m_prefix[order_bytes], order_bytes, public_point_y);
 
-         const size_t block_size = HashFunction::create(hash_for_signature())->hash_block_size();
          // Either truncate or zero-extend to match the hash block size
-         m_prefix.resize(block_size);
+         m_prefix.resize(hash->hash_block_size());
          }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
