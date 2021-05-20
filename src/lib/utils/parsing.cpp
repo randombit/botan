@@ -12,6 +12,7 @@
 #include <botan/exceptn.h>
 #include <algorithm>
 #include <cctype>
+#include <limits>
 
 namespace Botan {
 
