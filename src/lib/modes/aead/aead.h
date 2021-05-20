@@ -44,8 +44,6 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
                                                         Cipher_Dir direction,
                                                         const std::string& provider = "");
 
-      bool authenticated() const override { return true; }
-
       /**
       * Set associated data that is not included in the ciphertext but
       * that should be authenticated. Must be called after set_key and

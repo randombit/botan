@@ -166,7 +166,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * @return true iff this mode provides authentication as well as
       * confidentiality.
       */
-      virtual bool authenticated() const { return false; }
+      bool authenticated() const { return this->tag_size() > 0; }
 
       /**
       * @return the size of the authentication tag used (in bytes)
