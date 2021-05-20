@@ -54,13 +54,19 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          m_x(eckcdsa.private_value()),
          m_prefix()
          {
+         auto hash = HashFunction::create(hash_for_signature());
+
+         if(hash->output_length() > m_group.get_order_bytes())
+            throw Encoding_Error("ECKCDSA does not support the hash being larger than the group");
+
          const BigInt public_point_x = eckcdsa.public_point().get_affine_x();
          const BigInt public_point_y = eckcdsa.public_point().get_affine_y();
 
          m_prefix.resize(public_point_x.bytes() + public_point_y.bytes());
          public_point_x.binary_encode(m_prefix.data());
          public_point_y.binary_encode(&m_prefix[public_point_x.bytes()]);
-         m_prefix.resize(HashFunction::create(hash_for_signature())->hash_block_size()); // use only the "hash input block size" leftmost bits
+
+         m_prefix.resize(hash->hash_block_size()); // use only the "hash input block size" leftmost bits
          }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
