@@ -135,9 +135,7 @@
 */
 #if !defined(BOTAN_PARALLEL_SIMD_FOR)
 
-#if defined(BOTAN_TARGET_HAS_OPENMP)
-  #define BOTAN_PARALLEL_SIMD_FOR _Pragma("omp simd") for
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
   #define BOTAN_PARALLEL_SIMD_FOR _Pragma("GCC ivdep") for
 #else
   #define BOTAN_PARALLEL_SIMD_FOR for

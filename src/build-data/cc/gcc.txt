@@ -84,8 +84,6 @@ arm64:neon    -> ""
 <mach_abi_linking>
 all!haiku,qnx,none -> "-pthread"
 
-openmp  -> "-fopenmp"
-
 s390    -> "-m31"
 s390x   -> "-m64"
 sparc32 -> "-m32 -mno-app-regs"
