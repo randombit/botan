@@ -211,11 +211,7 @@ namespace {
 size_t safegcd_loop_bound(size_t f_bits, size_t g_bits)
    {
    const size_t d = std::max(f_bits, g_bits);
-
-   if(d < 46)
-      return (49*d + 80) / 17;
-   else
-      return (49*d + 57) / 17;
+   return 4 + 3*d;
    }
 
 }
