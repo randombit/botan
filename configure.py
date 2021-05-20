@@ -2036,6 +2036,12 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'all_targets': ' '.join(all_targets(options)),
         'install_targets': ' '.join(install_targets(options)),
 
+        'public_headers': sorted([os.path.basename(h) for h in build_paths.public_headers]),
+        'internal_headers': sorted([os.path.basename(h) for h in build_paths.internal_headers]),
+        'external_headers':  sorted([os.path.basename(h) for h in build_paths.external_headers]),
+
+        'abs_root_dir': os.path.dirname(os.path.realpath(__file__)),
+
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
         'test_data_dir': source_paths.test_data_dir,
@@ -2190,6 +2196,11 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'mod_list': sorted([m.basename for m in modules])
     }
+
+    variables['installed_include_dir'] = os.path.join(
+        variables['prefix'],
+        variables['includedir'],
+        'botan-%d' % (Version.major()), 'botan')
 
     if cc.basename == 'msvc' and variables['cxx_abi_flags'] != '':
         # MSVC linker doesn't support/need the ABI options,
