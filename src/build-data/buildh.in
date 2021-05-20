@@ -90,10 +90,6 @@
 #define BOTAN_HAS_VALGRIND
 %{endif}
 
-%{if with_openmp}
-#define BOTAN_TARGET_HAS_OPENMP
-%{endif}
-
 %{if with_debug_asserts}
 #define BOTAN_ENABLE_DEBUG_ASSERTS
 %{endif}

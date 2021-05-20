@@ -443,9 +443,6 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-sysroot-dir', metavar='DIR', default='',
                            help='use DIR for system root while cross-compiling')
 
-    build_group.add_option('--with-openmp', default=False, action='store_true',
-                           help='enable use of OpenMP')
-
     link_methods = ['symlink', 'hardlink', 'copy']
     build_group.add_option('--link-method', default=None, metavar='METHOD',
                            choices=link_methods,
@@ -1372,11 +1369,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
             self.sanitizer_types = san
 
-        if options.with_openmp:
-            if 'openmp' not in self.mach_abi_linking:
-                raise UserError('No support for OpenMP for %s' % (self.basename))
-            abi_link.add(self.mach_abi_linking['openmp'])
-
         abi_flags = ' '.join(sorted(abi_link))
 
         if options.cc_abi_flags != '':
@@ -2203,7 +2195,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'fuzzer_type': options.build_fuzzers.upper() if options.build_fuzzers else '',
 
         'with_valgrind': options.with_valgrind,
-        'with_openmp': options.with_openmp,
         'with_debug_asserts': options.with_debug_asserts,
         'test_mode': options.test_mode,
         'optimize_for_size': options.optimize_for_size,

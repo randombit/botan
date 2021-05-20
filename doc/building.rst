@@ -801,11 +801,6 @@ definitions. Both KEY=VALUE and KEY (without specific value) are supported.
 
 Use specified dir for system root while cross-compiling
 
-``--with-openmp``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Enable use of OpenMP
-
 ``--link-method=METHOD``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
