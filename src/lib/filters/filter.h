@@ -105,6 +105,7 @@ class BOTAN_PUBLIC_API(2,0) Filter
 
       friend class Pipe;
       friend class Fanout_Filter;
+      friend class Threaded_Fork;
 
       size_t total_ports() const;
       size_t current_port() const { return m_port_num; }
@@ -154,12 +155,6 @@ class BOTAN_PUBLIC_API(2,0) Fanout_Filter : public Filter
       void set_next(Filter* f[], size_t n) { Filter::set_next(f, n); }
 
       void attach(Filter* f) { Filter::attach(f); }
-
-   private:
-      friend class Threaded_Fork;
-      using Filter::m_write_queue;
-      using Filter::total_ports;
-      using Filter::m_next;
    };
 
 /**
