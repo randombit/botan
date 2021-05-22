@@ -56,6 +56,12 @@ class BOTAN_TEST_API EMSA
       virtual secure_vector<uint8_t> raw_data() = 0;
 
       /**
+      * Return true if using this EMSA correctly requires a signature scheme
+      * with message recovery
+      */
+      virtual bool requires_message_recovery() const = 0;
+
+      /**
       * Return the encoding of a message
       * @param msg the result of raw_data()
       * @param output_bits the desired output bit size

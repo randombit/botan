@@ -150,7 +150,7 @@ class OpenSSL_RSA_Verification_Operation final : public PK_Ops::Verification_wit
    public:
 
       OpenSSL_RSA_Verification_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa),
+         PK_Ops::Verification_with_EMSA(emsa, true),
          m_openssl_rsa(nullptr, ::RSA_free)
          {
          const std::vector<uint8_t> der = rsa.public_key_bits();
@@ -202,7 +202,7 @@ class OpenSSL_RSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
    public:
 
       OpenSSL_RSA_Signing_Operation(const RSA_PrivateKey& rsa, const std::string& emsa) :
-         PK_Ops::Signature_with_EMSA(emsa),
+         PK_Ops::Signature_with_EMSA(emsa, true),
          m_openssl_rsa(nullptr, ::RSA_free)
          {
          const secure_vector<uint8_t> der = rsa.private_key_bits();

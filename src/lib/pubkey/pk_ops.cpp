@@ -59,12 +59,17 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
    return z;
   }
 
-PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa) :
+PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa, bool with_message_recovery) :
    Signature(),
    m_emsa(EMSA::create_or_throw(emsa)),
    m_hash(hash_for_emsa(emsa)),
    m_prefix_used(false)
    {
+   if(!with_message_recovery && m_emsa->requires_message_recovery())
+      {
+      throw Invalid_Argument("Signature padding method " + emsa +
+                             " requires message recovery, which is not supported by this scheme");
+      }
    }
 
 void PK_Ops::Signature_with_EMSA::update(const uint8_t msg[], size_t msg_len)
@@ -86,12 +91,17 @@ secure_vector<uint8_t> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& 
    return raw_sign(padded.data(), padded.size(), rng);
    }
 
-PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa) :
+PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa, bool with_message_recovery) :
    Verification(),
    m_emsa(EMSA::create_or_throw(emsa)),
    m_hash(hash_for_emsa(emsa)),
    m_prefix_used(false)
    {
+   if(!with_message_recovery && m_emsa->requires_message_recovery())
+      {
+      throw Invalid_Argument("Signature padding method " + emsa +
+                             " requires message recovery, which is not supported by this scheme");
+      }
    }
 
 void PK_Ops::Verification_with_EMSA::update(const uint8_t msg[], size_t msg_len)
