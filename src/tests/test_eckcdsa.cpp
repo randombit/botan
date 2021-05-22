@@ -28,11 +28,6 @@ class ECKCDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
               "pubkey/eckcdsa.vec",
               "Group,X,Hash,Msg,Nonce,Signature") {}
 
-      bool clear_between_callbacks() const override
-         {
-         return false;
-         }
-
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
          const std::string group_id = vars.get_req_str("Group");
