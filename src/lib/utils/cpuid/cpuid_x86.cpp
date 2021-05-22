@@ -29,11 +29,8 @@ namespace {
 
 void invoke_cpuid(uint32_t type, uint32_t out[4])
    {
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC) || defined(BOTAN_BUILD_COMPILER_IS_INTEL)
    __cpuid((int*)out, type);
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
-   __cpuid(out, type);
 
 #elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && defined(BOTAN_USE_GCC_INLINE_ASM)
    asm("cpuid\n\t"
