@@ -29,6 +29,8 @@ class EMSA1 final : public EMSA
 
       std::string name() const override;
 
+      bool requires_message_recovery() const override { return false; }
+
       AlgorithmIdentifier config_for_x509(const Private_Key& key,
                                           const std::string& cert_hash_name) const override;
    private:

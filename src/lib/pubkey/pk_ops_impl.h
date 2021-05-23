@@ -64,7 +64,7 @@ class Verification_with_EMSA : public Verification
       std::string hash_for_signature() { return m_hash; }
 
    protected:
-      explicit Verification_with_EMSA(const std::string& emsa);
+      explicit Verification_with_EMSA(const std::string& emsa, bool has_message_recovery = false);
 
       /**
       * Get the maximum message size in bits supported by this public key.
@@ -131,7 +131,8 @@ class Signature_with_EMSA : public Signature
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
    protected:
-      explicit Signature_with_EMSA(const std::string& emsa);
+      explicit Signature_with_EMSA(const std::string& emsa, bool with_message_recovery = false);
+
       ~Signature_with_EMSA() = default;
 
       std::string hash_for_signature() { return m_hash; }

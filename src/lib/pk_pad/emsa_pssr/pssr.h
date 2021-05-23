@@ -37,6 +37,8 @@ class PSSR final : public EMSA
 
       AlgorithmIdentifier config_for_x509(const Private_Key& key,
                                           const std::string& cert_hash_name) const override;
+
+      bool requires_message_recovery() const override { return true; }
    private:
       void update(const uint8_t input[], size_t length) override;
 
@@ -77,6 +79,8 @@ class PSSR_Raw final : public EMSA
       std::unique_ptr<EMSA> new_object() override;
 
       std::string name() const override;
+
+      bool requires_message_recovery() const override { return true; }
    private:
       void update(const uint8_t input[], size_t length) override;
 

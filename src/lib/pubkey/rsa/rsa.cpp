@@ -491,7 +491,7 @@ class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,
       size_t signature_length() const override { return public_modulus_bytes(); }
 
       RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string& emsa, RandomNumberGenerator& rng) :
-         PK_Ops::Signature_with_EMSA(emsa),
+         PK_Ops::Signature_with_EMSA(emsa, true),
          RSA_Private_Operation(rsa, rng)
          {
          }
@@ -611,7 +611,7 @@ class RSA_Verify_Operation final : public PK_Ops::Verification_with_EMSA,
       size_t max_input_bits() const override { return get_max_input_bits(); }
 
       RSA_Verify_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa),
+         PK_Ops::Verification_with_EMSA(emsa, true),
          RSA_Public_Operation(rsa)
          {
          }

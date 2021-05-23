@@ -30,6 +30,8 @@ class EMSA_X931 final : public EMSA
 
       std::string name() const override;
 
+      bool requires_message_recovery() const override { return true; }
+
    private:
       void update(const uint8_t[], size_t) override;
       secure_vector<uint8_t> raw_data() override;
