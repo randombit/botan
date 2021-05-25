@@ -103,7 +103,13 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
    const std::vector<uint8_t> signature = vars.get_req_bin("Signature");
    const std::string padding = choose_padding(vars, pad_hdr);
 
-   Test::Result result(algo_name() + "/" + padding + " signature generation");
+   std::ostringstream test_name;
+   test_name << algo_name();
+   if(vars.has_key("Group"))
+      test_name << "-" << vars.get_req_str("Group");
+   test_name << "/" << padding << " signature generation";
+
+   Test::Result result(test_name.str());
 
    std::unique_ptr<Botan::Private_Key> privkey;
    try

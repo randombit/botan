@@ -57,10 +57,15 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          const BigInt public_point_x = eckcdsa.public_point().get_affine_x();
          const BigInt public_point_y = eckcdsa.public_point().get_affine_y();
 
-         m_prefix.resize(public_point_x.bytes() + public_point_y.bytes());
-         public_point_x.binary_encode(m_prefix.data());
-         public_point_y.binary_encode(&m_prefix[public_point_x.bytes()]);
-         m_prefix.resize(HashFunction::create(hash_for_signature())->hash_block_size()); // use only the "hash input block size" leftmost bits
+         const size_t order_bytes = m_group.get_order_bytes();
+
+         m_prefix.resize(2*order_bytes);
+         BigInt::encode_1363(&m_prefix[0], order_bytes, public_point_x);
+         BigInt::encode_1363(&m_prefix[order_bytes], order_bytes, public_point_y);
+
+         const size_t block_size = HashFunction::create(hash_for_signature())->hash_block_size();
+         // Either truncate or zero-extend to match the hash block size
+         m_prefix.resize(block_size);
          }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
@@ -126,10 +131,15 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
          const BigInt public_point_x = eckcdsa.public_point().get_affine_x();
          const BigInt public_point_y = eckcdsa.public_point().get_affine_y();
 
-         m_prefix.resize(public_point_x.bytes() + public_point_y.bytes());
-         public_point_x.binary_encode(&m_prefix[0]);
-         public_point_y.binary_encode(&m_prefix[public_point_x.bytes()]);
-         m_prefix.resize(HashFunction::create(hash_for_signature())->hash_block_size()); // use only the "hash input block size" leftmost bits
+         const size_t order_bytes = m_group.get_order_bytes();
+
+         m_prefix.resize(2*order_bytes);
+         BigInt::encode_1363(&m_prefix[0], order_bytes, public_point_x);
+         BigInt::encode_1363(&m_prefix[order_bytes], order_bytes, public_point_y);
+
+         const size_t block_size = HashFunction::create(hash_for_signature())->hash_block_size();
+         // Either truncate or zero-extend to match the hash block size
+         m_prefix.resize(block_size);
          }
 
       bool has_prefix() override { return true; }
@@ -178,7 +188,10 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
 
    const PointGFp q = m_gy_mul.multi_exp(w, s);
    if(q.is_zero())
+      {
       return false;
+      }
+
    const BigInt q_x = q.get_affine_x();
    secure_vector<uint8_t> c(q_x.bytes());
    q_x.binary_encode(c.data());
