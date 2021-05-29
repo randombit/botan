@@ -246,7 +246,11 @@ bool ECDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
    const BigInt r(sig, sig_len / 2);
    const BigInt s(sig + sig_len / 2, sig_len / 2);
 
-   if(r <= 0 || r >= m_group.get_order() || s <= 0 || s >= m_group.get_order())
+   // Cannot be negative here since we just decoded from binary
+   if(r.is_zero() || s.is_zero())
+      return false;
+
+   if(r >= m_group.get_order() || s >= m_group.get_order())
       return false;
 
    const BigInt w = m_group.inverse_mod_order(s);
