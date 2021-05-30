@@ -30,7 +30,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> key      = vars.get_req_bin("Key");
-         const std::vector<uint8_t> nonce    = vars.get_opt_bin("Nonce");
+         const std::vector<uint8_t> nonce    = vars.get_req_bin("Nonce");
          const std::vector<uint8_t> input    = vars.get_req_bin("In");
          const std::vector<uint8_t> expected = vars.get_req_bin("Out");
 

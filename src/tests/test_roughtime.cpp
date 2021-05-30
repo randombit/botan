@@ -5,9 +5,6 @@
 */
 
 #include "tests.h"
-
-#include <cassert>
-
 #include "test_rng.h"
 
 #if defined(BOTAN_HAS_BIGINT)
@@ -20,6 +17,7 @@
    #include <botan/hex.h>
    #include <botan/roughtime.h>
 #endif
+
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_ROUGHTIME)
@@ -32,7 +30,7 @@ class Roughtime_Request_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
-         Test::Result result("roughtime request");
+         Test::Result result("Roughtime request");
 
          const auto nonce = vars.get_req_bin("Nonce");
          const auto request_v = vars.get_req_bin("Request");
@@ -60,18 +58,19 @@ class Roughtime_Response_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
-         Test::Result result("roughtime response");
+         Test::Result result("Roughtime response");
 
          const auto response_v = vars.get_req_bin("Response");
-         const auto n = vars.has_key("Nonce") ? vars.get_req_bin("Nonce") : std::vector<uint8_t>(64);
-         assert(n.size() == 64);
-         const Botan::Roughtime::Nonce nonce(n);
+         const auto nonce_bits = vars.has_key("Nonce") ? vars.get_opt_bin("Nonce") : std::vector<uint8_t>(64);
+
+         const Botan::Roughtime::Nonce nonce(nonce_bits);
          try
             {
             const auto response = Botan::Roughtime::Response::from_bits(response_v, nonce);
 
             const auto pubkey = vars.get_req_bin("Pubkey");
-            assert(pubkey.size() == 32);
+            if(pubkey.size() != 32)
+               throw Test_Error("Unexpected Roughtime Ed25519 pubkey size");
 
             if(!response.validate(Botan::Ed25519_PublicKey(pubkey)))
                {

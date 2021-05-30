@@ -158,9 +158,10 @@ namespace Roughtime {
 Nonce::Nonce(const std::vector<uint8_t>& nonce)
    {
    if(nonce.size() != 64)
-      { throw Invalid_Argument("Nonce lenght must be 64"); }
+      { throw Invalid_Argument("Roughtime nonce must be 64 bytes long"); }
    m_nonce = typecast_copy<std::array<uint8_t, 64>>(nonce.data());
    }
+
 Nonce::Nonce(RandomNumberGenerator& rng)
    {
    rng.randomize(m_nonce.data(), m_nonce.size());
