@@ -31,11 +31,12 @@ Improved Ciphers Implementations
 * ChaCha using SSSE3
 * Threefish-512 AVX2 would be improved by doing 4-wide execution
 * SHA-512 using BMI2+AVX2
-* Constant time DES using bitslicing
+* Constant time bitsliced DES
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Salsa implementations (SIMD_4x32 and/or AVX2)
 * AVX-512 implementations? (SHACAL2, Serpent, ChaCha)
 * Support parallel execution via thread pool in scrypt and Argon2
+* Add CLMUL/PMULL implementations for CRC24/CRC32
 
 Public Key Crypto, Math
 ----------------------------------------
