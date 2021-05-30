@@ -25,7 +25,7 @@ class DLIES_KAT_Tests final : public Text_Based_Test
       DLIES_KAT_Tests()
          : Text_Based_Test(
               "pubkey/dlies.vec",
-              "Kdf,Mac,MacKeyLen,IV,Group,X1,X2,Msg,Ciphertext") {}
+              "Kdf,Mac,MacKeyLen,Group,X1,X2,Msg,Ciphertext", "IV") {}
 
       Test::Result run_one_test(const std::string& cipher_algo, const VarMap& vars) override
          {

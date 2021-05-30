@@ -1063,6 +1063,13 @@ std::vector<Test::Result> Text_Based_Test::run()
          {
          try
             {
+            for(auto& req_key: m_required_keys)
+               {
+               if(!vars.has_key(req_key))
+                  results.push_back(Test::Result::Failure(header_or_name,
+                                                          test_id + " missing required key " + req_key));
+               }
+
             if(skip_this_test(header, vars))
                continue;
 

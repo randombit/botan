@@ -77,7 +77,7 @@ class RSA_KEM_Tests final : public PK_KEM_Test
          : PK_KEM_Test(
               "RSA",
               "pubkey/rsa_kem.vec",
-              "E,P,Q,R,C0,KDF,OutLen,K") {}
+              "E,P,Q,R,C0,KDF,K") {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {

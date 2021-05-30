@@ -20,7 +20,7 @@ namespace {
 class SIV_Tests final : public Text_Based_Test
    {
    public:
-      SIV_Tests() : Text_Based_Test("siv_ad.vec", "Key,Nonce,ADs,In,Out") {}
+      SIV_Tests() : Text_Based_Test("siv_ad.vec", "Key,In,Out", "Nonce,ADs") {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {

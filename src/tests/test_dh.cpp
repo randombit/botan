@@ -25,8 +25,8 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
          : PK_Key_Agreement_Test(
               "Diffie-Hellman",
               "pubkey/dh.vec",
-              "P,G,X,Y,Msg,OutLen,K",
-              "Q,KDF") {}
+              "P,G,X,Y,K",
+              "Q,KDF,OutLen") {}
 
       std::string default_kdf(const VarMap&) const override
          {
