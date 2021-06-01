@@ -26,7 +26,7 @@ class Roughtime_Request_Tests final : public Text_Based_Test
    {
    public:
       Roughtime_Request_Tests() :
-         Text_Based_Test("misc/roughtime_request.vec", "Nonce,Request") {}
+         Text_Based_Test("roughtime/roughtime_request.vec", "Nonce,Request") {}
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
@@ -52,7 +52,7 @@ class Roughtime_Response_Tests final : public Text_Based_Test
    {
    public:
       Roughtime_Response_Tests() :
-         Text_Based_Test("misc/roughtime_response.vec",
+         Text_Based_Test("roughtime/roughtime_response.vec",
                          "Response",
                          "Nonce,Pubkey,MidpointMicroSeconds,RadiusMicroSeconds") {}
 
@@ -104,7 +104,7 @@ class Roughtime_nonce_from_blind_Tests final : public Text_Based_Test
    {
    public:
       Roughtime_nonce_from_blind_Tests() :
-         Text_Based_Test("misc/roughtime_nonce_from_blind.vec", "Response,Blind,Nonce") {}
+         Text_Based_Test("roughtime/roughtime_nonce_from_blind.vec", "Response,Blind,Nonce") {}
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
