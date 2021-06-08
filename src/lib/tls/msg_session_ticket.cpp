@@ -49,4 +49,18 @@ std::vector<uint8_t> New_Session_Ticket_12::serialize() const
    return buf;
    }
 
+#if defined (BOTAN_HAS_TLS_13)
+
+New_Session_Ticket_13::New_Session_Ticket_13(const std::vector<uint8_t>&)
+   {
+   // TODO: Implement
+   }
+
+std::vector<uint8_t> New_Session_Ticket_13::serialize() const
+   {
+   return {};
+   }
+
+#endif
+
 }

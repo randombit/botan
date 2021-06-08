@@ -114,7 +114,6 @@ class Handshake_State
       // we're taking the ownership
       void client_hello(Client_Hello_12* client_hello);
       void server_hello(Server_Hello_12* server_hello);
-
       void server_cert_status(Certificate_Status* server_cert_status);
       void server_kex(Server_Key_Exchange* server_kex);
       void cert_req(Certificate_Req* cert_req);

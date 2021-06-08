@@ -180,6 +180,16 @@ std::vector<Group_Params> Policy::key_exchange_groups() const
       };
    }
 
+std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const
+   {
+   // by default, we offer a key share for the most-preferred group, only
+   std::vector<Group_Params> groups_to_offer;
+   const auto supported_groups = key_exchange_groups();
+   if (!supported_groups.empty())
+      groups_to_offer.push_back(supported_groups.front());
+   return groups_to_offer;
+   }
+
 size_t Policy::minimum_dh_group_size() const
    {
    return 2048;
@@ -259,11 +269,18 @@ uint32_t Policy::session_ticket_lifetime() const
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
+#if defined(BOTAN_HAS_TLS_13)
+   if(version == Protocol_Version::TLS_V13 && allow_tls13())
+      return true;
+#endif
+
+#if defined(BOTAN_HAS_TLS_12)
    if(version == Protocol_Version::TLS_V12 && allow_tls12())
       return true;
 
    if(version == Protocol_Version::DTLS_V12 && allow_dtls12())
       return true;
+#endif
 
    return false;
    }
@@ -278,6 +295,10 @@ Protocol_Version Policy::latest_supported_version(bool datagram) const
       }
    else
       {
+#if defined(BOTAN_HAS_TLS_13)
+      if(acceptable_protocol_version(Protocol_Version::TLS_V13))
+         return Protocol_Version::TLS_V13;
+#endif
       if(acceptable_protocol_version(Protocol_Version::TLS_V12))
          return Protocol_Version::TLS_V12;
       throw Invalid_State("Policy forbids all available TLS version");
@@ -293,14 +314,39 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite& ciphersuite) const
 bool Policy::allow_client_initiated_renegotiation() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
-bool Policy::allow_tls12() const { return true; }
-bool Policy::allow_dtls12() const { return true; }
+bool Policy::allow_tls12() const
+   {
+#if defined(BOTAN_HAS_TLS_12)
+   return true;
+#else
+   return false;
+#endif
+   }
+bool Policy::allow_tls13() const
+   {
+#if defined(BOTAN_HAS_TLS_13)
+   return true;
+#else
+   return false;
+#endif
+   }
+bool Policy::allow_dtls12() const
+   {
+#if defined(BOTAN_HAS_TLS_12)
+   return true;
+#else
+   return false;
+#endif
+   }
 bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 bool Policy::negotiate_encrypt_then_mac() const { return true; }
+bool Policy::use_extended_master_secret() const { return allow_tls12() || allow_dtls12(); }
+std::optional<uint16_t> Policy::record_size_limit() const { return std::nullopt; }
 bool Policy::support_cert_status_message() const { return true; }
 bool Policy::allow_resumption_for_renegotiation() const { return true; }
+bool Policy::tls_13_middlebox_compatibility_mode() const { return true; }
 bool Policy::hash_hello_random() const { return true; }
 bool Policy::only_resume_with_exact_version() const { return true; }
 bool Policy::require_client_certificate_authentication() const { return false; }
@@ -513,6 +559,7 @@ void print_bool(std::ostream& o,
 void Policy::print(std::ostream& o) const
    {
    print_bool(o, "allow_tls12", allow_tls12());
+   print_bool(o, "allow_tls13", allow_tls13());
    print_bool(o, "allow_dtls12", allow_dtls12());
    print_vec(o, "ciphers", allowed_ciphers());
    print_vec(o, "macs", allowed_macs());
@@ -520,14 +567,25 @@ void Policy::print(std::ostream& o) const
    print_vec(o, "signature_methods", allowed_signature_methods());
    print_vec(o, "key_exchange_methods", allowed_key_exchange_methods());
    print_vec(o, "key_exchange_groups", key_exchange_groups());
+   const auto groups_to_offer = key_exchange_groups_to_offer();
+   if (groups_to_offer.empty()) {
+      print_vec(o, "key_exchange_groups_to_offer", { std::string("none") });
+   } else {
+      print_vec(o, "key_exchange_groups_to_offer", groups_to_offer);
+   }
    print_bool(o, "allow_insecure_renegotiation", allow_insecure_renegotiation());
    print_bool(o, "include_time_in_hello_random", include_time_in_hello_random());
    print_bool(o, "allow_server_initiated_renegotiation", allow_server_initiated_renegotiation());
    print_bool(o, "hide_unknown_users", hide_unknown_users());
    print_bool(o, "server_uses_own_ciphersuite_preferences", server_uses_own_ciphersuite_preferences());
    print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
+   print_bool(o, "use_extended_master_secret", use_extended_master_secret());
    print_bool(o, "support_cert_status_message", support_cert_status_message());
+   print_bool(o, "tls_13_middlebox_compatibility_mode", tls_13_middlebox_compatibility_mode());
    print_bool(o, "hash_hello_random", hash_hello_random());
+   if (record_size_limit().has_value()) {
+      o << "record_size_limit = " << record_size_limit().has_value() << '\n';
+   }
    o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
    o << "minimum_ecdh_group_size = " << minimum_ecdh_group_size() << '\n';
@@ -563,6 +621,14 @@ std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
    }
 
 bool Strict_Policy::allow_tls12()  const { return true;  }
+bool Strict_Policy::allow_tls13()  const
+{
+#if defined(BOTAN_HAS_TLS_13)
+   return true;
+#else
+   return false;
+#endif
+}
 bool Strict_Policy::allow_dtls12() const { return true;  }
 
 }

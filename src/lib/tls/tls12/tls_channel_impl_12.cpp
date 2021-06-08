@@ -181,6 +181,11 @@ void Channel_Impl_12::renegotiate(bool force_full_renegotiation)
       throw Invalid_State("Cannot renegotiate on inactive connection");
    }
 
+void Channel_Impl_12::update_traffic_keys(bool)
+   {
+   throw Invalid_Argument("cannot update traffic keys on a TLS 1.2 channel");
+   }
+
 void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side)
    {
    auto pending = pending_state();

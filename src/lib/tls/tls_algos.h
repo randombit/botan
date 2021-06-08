@@ -8,6 +8,7 @@
 #define BOTAN_TLS_ALGO_IDS_H_
 
 #include <botan/types.h>
+#include <botan/asn1_obj.h>
 #include <string>
 #include <vector>
 
@@ -65,6 +66,9 @@ enum class Auth_Method {
    RSA,
    ECDSA,
 
+   // To support TLS 1.3 ciphersuites, which do not determine the auth method
+   UNDEFINED,
+
    // These are placed outside the encodable range
    IMPLICIT = 0x10000
 };
@@ -92,6 +96,16 @@ enum class Signature_Scheme : uint16_t {
 
    EDDSA_25519 = 0x0807,
    EDDSA_448   = 0x0808,
+
+   // provided but not actually supported
+   // required for TLS 1.3 test based on RFC 8448
+   ECDSA_SHA1     = 0x0203,
+   RSA_PKCS1_SHA1 = 0x0201,
+
+   DSA_SHA1   = 0x0202,
+   DSA_SHA256 = 0x0402,
+   DSA_SHA384 = 0x0502,
+   DSA_SHA512 = 0x0602
 };
 
 BOTAN_UNSTABLE_API const std::vector<Signature_Scheme>& all_signature_schemes();
@@ -101,6 +115,7 @@ std::string BOTAN_UNSTABLE_API sig_scheme_to_string(Signature_Scheme scheme);
 std::string BOTAN_UNSTABLE_API hash_function_of_scheme(Signature_Scheme scheme);
 std::string BOTAN_UNSTABLE_API padding_string_for_scheme(Signature_Scheme scheme);
 std::string signature_algorithm_of_scheme(Signature_Scheme scheme);
+AlgorithmIdentifier algorithm_identifier_for_scheme(Signature_Scheme scheme);
 
 /*
 * Matches with wire encoding
@@ -135,6 +150,9 @@ enum class Kex_Algo {
    CECPQ1,
    PSK,
    ECDHE_PSK,
+
+   // To support TLS 1.3 ciphersuites, which do not determine the kex algo
+   UNDEFINED
 };
 
 std::string BOTAN_TEST_API kex_method_to_string(Kex_Algo method);

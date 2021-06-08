@@ -1,0 +1,18 @@
+# Cookie extension consists of:
+#     - Cookie length (2 bytes)
+#     - Cookie content (vector of bytes[Cookie length])
+
+[cookie]
+Buffer = 00020304
+Expected_Content = 0304
+Exception =
+
+Buffer = 000401020304
+Expected_Content = 01020304
+Exception =
+
+Buffer = 00000304
+Exception = Cookie length must be bigger than 0
+
+Buffer = 000203
+Exception = Not enough bytes in the buffer to decode Cookie

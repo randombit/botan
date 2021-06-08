@@ -2,8 +2,8 @@
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* (tls-parameters.txt sha256 6412d7a966151d409d463681e5427e706cd9066f13d34ca7a89f8cc2f7dff4b2)
-* by ./src/scripts/tls_suite_info.py on 2020-11-24
+* (tls-parameters.txt sha256 ab105c99c5d0828af3742aaa6cf5a7ce8c890f8322f824ffa2abb41028a60d72)
+* by tls_suite_info.py on 2021-07-29
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -38,6 +38,11 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
       Ciphersuite(0x00A9, "PSK_WITH_AES_256_GCM_SHA384", Auth_Method::IMPLICIT, Kex_Algo::PSK, "AES-256/GCM", 32, "AEAD", 0, KDF_Algo::SHA_384, Nonce_Format::AEAD_IMPLICIT_4),
       Ciphersuite(0x00AE, "PSK_WITH_AES_128_CBC_SHA256", Auth_Method::IMPLICIT, Kex_Algo::PSK, "AES-128", 16, "SHA-256", 32, KDF_Algo::SHA_256, Nonce_Format::CBC_MODE),
       Ciphersuite(0x00AF, "PSK_WITH_AES_256_CBC_SHA384", Auth_Method::IMPLICIT, Kex_Algo::PSK, "AES-256", 32, "SHA-384", 48, KDF_Algo::SHA_384, Nonce_Format::CBC_MODE),
+      Ciphersuite(0x1301, "AES_128_GCM_SHA256", Auth_Method::UNDEFINED, Kex_Algo::UNDEFINED, "AES-128/GCM", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_IMPLICIT_4),
+      Ciphersuite(0x1302, "AES_256_GCM_SHA384", Auth_Method::UNDEFINED, Kex_Algo::UNDEFINED, "AES-256/GCM", 32, "AEAD", 0, KDF_Algo::SHA_384, Nonce_Format::AEAD_IMPLICIT_4),
+      Ciphersuite(0x1303, "CHACHA20_POLY1305_SHA256", Auth_Method::UNDEFINED, Kex_Algo::UNDEFINED, "ChaCha20Poly1305", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
+      Ciphersuite(0x1304, "AES_128_CCM_SHA256", Auth_Method::UNDEFINED, Kex_Algo::UNDEFINED, "AES-128/CCM", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_IMPLICIT_4),
+      Ciphersuite(0x1305, "AES_128_CCM_8_SHA256", Auth_Method::UNDEFINED, Kex_Algo::UNDEFINED, "AES-128/CCM(8)", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_IMPLICIT_4),
       Ciphersuite(0x16B7, "CECPQ1_RSA_WITH_CHACHA20_POLY1305_SHA256", Auth_Method::RSA, Kex_Algo::CECPQ1, "ChaCha20Poly1305", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0x16B8, "CECPQ1_ECDSA_WITH_CHACHA20_POLY1305_SHA256", Auth_Method::ECDSA, Kex_Algo::CECPQ1, "ChaCha20Poly1305", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0x16B9, "CECPQ1_RSA_WITH_AES_256_GCM_SHA384", Auth_Method::RSA, Kex_Algo::CECPQ1, "AES-256/GCM", 32, "AEAD", 0, KDF_Algo::SHA_384, Nonce_Format::AEAD_IMPLICIT_4),

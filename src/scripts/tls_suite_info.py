@@ -4,6 +4,7 @@
 Used to generate lib/tls/tls_suite_info.cpp from IANA params
 
 (C) 2011, 2012, 2013, 2014, 2015, 2016, 2017 Jack Lloyd
+(C) 2021 Elektrobit Automotive GmbH
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -16,9 +17,22 @@ import optparse
 
 def to_ciphersuite_info(code, name):
 
-    (sig_and_kex,cipher_and_mac) = name.split('_WITH_')
+    sig_and_kex = ''
+    cipher_and_mac = ''
 
-    if sig_and_kex == 'RSA':
+    with_substr = '_WITH_'
+    if with_substr in name:
+        # TLS 1.2 or earlier cipher suites
+        (sig_and_kex,cipher_and_mac) = name.split(with_substr)
+    else:
+        # TLS 1.3 cipher suites, no sig_and_kex
+        cipher_and_mac = name
+
+    if sig_and_kex == '':
+        # UNDEFINED means that the information is not coded in the cipher suite
+        sig_algo = 'UNDEFINED'
+        kex_algo = 'UNDEFINED'
+    elif sig_and_kex == 'RSA':
         sig_algo = 'IMPLICIT'
         kex_algo = 'RSA'
     elif 'PSK' in sig_and_kex:
@@ -67,6 +81,7 @@ def to_ciphersuite_info(code, name):
         }
 
     tls_to_botan_names = {
+        'UNDEFINED': 'UNDEFINED',
         'IMPLICIT': 'IMPLICIT',
 
         'anon': 'ANONYMOUS',
@@ -200,7 +215,9 @@ def main(args = None):
     removed_algos = ['SEED', 'CAMELLIA_128_CBC', 'CAMELLIA_256_CBC']
     protocol_goop = ['SCSV', 'KRB5']
     maybe_someday = ['RSA_PSK', 'ECCPWD']
-    not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday + removed_algos
+    macciphersuites = ['SHA256_SHA256', 'SHA384_SHA384']
+    shang_mi = ['SM4_GCM_SM3', 'SM4_CCM_SM3'] # RFC8998
+    not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday + removed_algos + macciphersuites + shang_mi
 
     (options, args) = process_command_line(args)
 
@@ -227,7 +244,7 @@ def main(args = None):
                 if ns in name:
                     should_use = False
 
-            if should_use and name.find('_WITH_') > 0:
+            if should_use:# and name.find('_WITH_') > 0:
                 info = to_ciphersuite_info(code, name)
                 if info is not None:
                     suites[code] = info

@@ -1,0 +1,27 @@
+# Signature_algorithms_cert extension consists of:
+#     - Signature_algorithms_cert length (2 bytes)
+#     - Signature_algorithms_cert content (vector of Signature_Scheme)
+
+[signature_algorithms_cert]
+# correct extension content with only one signature scheme
+Buffer = 00020401
+Expected_Content = 0401
+Exception =
+
+# correct extension content with many signature schemes
+Buffer = 000E0401050106010403050306030804
+Expected_Content = 0401050106010403050306030804
+Exception =
+
+# incorrect extension missing content
+Buffer = 000E0401
+Exception = Bad encoding on signature algorithms extension
+
+# incorrect extension content size 0
+Buffer = 00000304
+Exception = signature_algorithms_cert length must be bigger than 0
+
+# incorrect extension content size 256
+Buffer = 0100040104030804
+Exception = Too many signature schemes
+

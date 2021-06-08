@@ -887,7 +887,8 @@ def cli_tls_socket_tests(tmp_dir):
     time.sleep(wait_time)
 
     tls_client = subprocess.Popen([CLI_PATH, 'tls_client', 'localhost',
-                                   '--port=%d' % (server_port), '--trusted-cas=%s' % (ca_cert)],
+                                   '--port=%d' % (server_port), '--trusted-cas=%s' % (ca_cert),
+                                   '--tls-version=1.2'], # TODO: test TLS 1.3 once it becomes available
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     time.sleep(wait_time)

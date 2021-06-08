@@ -161,5 +161,4 @@ std::vector<uint8_t> Certificate_Req::serialize() const
 
    return buf;
    }
-
 }

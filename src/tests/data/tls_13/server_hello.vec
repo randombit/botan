@@ -1,0 +1,72 @@
+# Tests generated partially with openssl 1.0.2g or taken from RFC 8448
+# ServerHello message contains many fields, the following fields are checked:
+# - Protocol Version
+# - Message Type
+# - Cipher suite
+# - Extensions
+
+[server_hello]
+# correct, with session ticket and renegotiation info
+Buffer = 0303ffea0bcfba564a4ce177c6a444b0ebdff5629b277293c618c1125f231e8628dd00c030000016ff01000100000b00040300010200230000000f000101
+Protocol = 0303
+Message_Type = server_hello_12
+Ciphersuite = C030
+AdditionalData = 000B000F0023FF01
+Exception =
+
+# correct, with session ticket, extended master secret, and renegotiation info
+Buffer = 03019f9cafa88664d9095f85dd64a39e5dd5c09f5a4a5362938af3718ee4e818af6a00c03000001aff01000100000b00040300010200230000000f00010100170000
+Protocol = 0301
+Message_Type = server_hello_12
+Ciphersuite = C030
+AdditionalData = 000B000F00170023FF01
+Exception =
+
+# correct, TLS 1.3 (from RFC 8448)
+Buffer = 0303a6af06a4121860dc5e6e60249cd34c95930c8ac5cb1434dac155772ed3e2692800130100002e00330024001d0020c9828876112095fe66762bdbf7c672e156d6cc253b833df1dd69b1b04e751f0f002b00020304
+Protocol = 0304
+Message_Type = server_hello_13
+Ciphersuite = 1301
+AdditionalData = 002B0033
+Exception =
+
+# correct, TLS 1.3 Hello Retry Request (from RFC 8448)
+Buffer = 0303cf21ad74e59a6111be1d8c021e65b891c2a211167abb8c5e079e09e2c8a8339c001301000084003300020017002c0074007271dcd04bb88bc3189119398a00000000eefafc76c146b823b096f8aacad365dd0030953f4edf625636e5f21bb2e23fcc654b1b5b40318d10d137abcbb87574e36e8a1f025f7dfa5d6e50781b5eda4aa15b0c8be778257d16aa3030e9e7841dd9e4c0342267e8ca0caf571fb2b7cff0f934b0002b00020304
+Protocol = 0304
+Message_Type = hello_retry_request
+Ciphersuite = 1301
+AdditionalData = 002B002C0033
+Exception =
+
+
+# incorrect, corrupted
+Buffer =
+Protocol = 0303
+Message_Type = fail
+Ciphersuite = C030
+AdditionalData =
+Exception = Server_Hello: Packet corrupted
+
+# incorrect, corrupted
+Buffer = 00
+Protocol = 0303
+Message_Type = fail
+Ciphersuite = C030
+AdditionalData =
+Exception = Server_Hello: Packet corrupted
+
+# invalid extensions length
+Buffer = 03039f9cafa88664d9095f85dd64a39e5dd5c09f5a4a5362938af3718ee4e818af6a00c03000001cff01000100000b00040300010200230000000f00010100170000
+Protocol = 0303
+Message_Type = fail
+Ciphersuite = C030
+AdditionalData = 00170023FF01
+Exception = Bad extension size
+
+# invalid extension length
+Buffer = 03039f9cafa88664d9095f85dd64a39e5dd5c09f5a4a5362938af3718ee4e818af6a00c03000001aff01000100000b00040300010200230100000f00010100170000
+Protocol = 0303
+Message_Type = fail
+Ciphersuite = C030
+AdditionalData = 00170023FF01
+Exception = Invalid ServerHello: Expected 256 bytes remaining, only 9 left

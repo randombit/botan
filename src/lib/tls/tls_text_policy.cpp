@@ -49,6 +49,11 @@ bool Text_Policy::allow_tls12() const
    return get_bool("allow_tls12", Policy::allow_tls12());
    }
 
+bool Text_Policy::allow_tls13() const
+   {
+   return get_bool("allow_tls13", Policy::allow_tls13());
+   }
+
 bool Text_Policy::allow_dtls12() const
    {
    return get_bool("allow_dtls12", Policy::allow_dtls12());
@@ -89,6 +94,20 @@ bool Text_Policy::negotiate_encrypt_then_mac() const
    return get_bool("negotiate_encrypt_then_mac", Policy::negotiate_encrypt_then_mac());
    }
 
+bool Text_Policy::use_extended_master_secret() const
+   {
+   return get_bool("use_extended_master_secret", Policy::use_extended_master_secret());
+   }
+
+std::optional<uint16_t> Text_Policy::record_size_limit() const
+   {
+   const auto limit = get_len("record_size_limit", 0);
+   // RFC 8449 4.
+   //    TLS 1.3 uses a limit of 2^14+1 octets.
+   BOTAN_ARG_CHECK(limit <= 16385, "record size limit too large");
+   return (limit > 0) ? std::make_optional(static_cast<uint16_t>(limit)) : std::nullopt;
+   }
+
 bool Text_Policy::support_cert_status_message() const
    {
    return get_bool("support_cert_status_message", Policy::support_cert_status_message());
@@ -107,6 +126,25 @@ std::vector<Group_Params> Text_Policy::key_exchange_groups() const
    if(group_str.empty())
       {
       return Policy::key_exchange_groups();
+      }
+
+   return read_group_list(group_str);
+   }
+
+
+std::vector<Group_Params> Text_Policy::key_exchange_groups_to_offer() const
+   {
+   std::string group_str = get_str("key_exchange_groups_to_offer", "notset");
+
+   if(group_str.empty() || group_str == "notset")
+      {
+      // policy was not set, fall back to default behaviour
+      return Policy::key_exchange_groups_to_offer();
+      }
+
+   if(group_str == "none")
+      {
+      return {};
       }
 
    return read_group_list(group_str);
@@ -176,6 +214,11 @@ std::vector<uint16_t> Text_Policy::srtp_profiles() const
       r.push_back(to_uint16(p));
       }
    return r;
+   }
+
+bool Text_Policy::tls_13_middlebox_compatibility_mode() const
+   {
+   return get_bool("tls_13_middlebox_compatibility_mode", Policy::tls_13_middlebox_compatibility_mode());
    }
 
 bool Text_Policy::hash_hello_random() const

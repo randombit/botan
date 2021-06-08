@@ -17,12 +17,16 @@
 #include <botan/data_src.h>
 #include <botan/pkcs8.h>
 #include <botan/internal/loadstor.h>
+#include <botan/ocsp.h>
 #include <botan/oids.h>
 #include <botan/chacha_rng.h>
 #include <botan/base64.h>
 #include <botan/hex.h>
 #include <botan/internal/parsing.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/os_utils.h>
+#include <botan/internal/stl_util.h>
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -57,7 +61,7 @@ void shim_log(const std::string& s)
       static FILE* log = std::fopen("/tmp/bogo_shim.log", "w");
       struct timeval tv;
       ::gettimeofday(&tv, nullptr);
-      std::fprintf(log, "%lld.%lu: %s\n", static_cast<unsigned long long>(tv.tv_sec), tv.tv_usec, s.c_str());
+      std::fprintf(log, "%lld.%lu: %s\n", static_cast<unsigned long long>(tv.tv_sec), static_cast<unsigned long>(tv.tv_usec), s.c_str());
       std::fflush(log);
       }
    }
@@ -82,9 +86,13 @@ std::string map_to_bogo_error(const std::string& e)
          { "Bad length in hello verify request", ":DECODE_ERROR:" },
          { "Bad lengths in DTLS header", ":BAD_HANDSHAKE_RECORD:" },
          { "Bad signature on server key exchange", ":BAD_SIGNATURE:" },
+         { "Server certificate verification failed", ":BAD_SIGNATURE:" },
+         { "compression is not supported in TLS 1.3", ":DECODE_ERROR:" },
+         { "Cookie length must be at least 1 byte", ":DECODE_ERROR:" },
          { "Bad size (1) for TLS alert message", ":BAD_ALERT:" },
          { "Bad size (4) for TLS alert message", ":BAD_ALERT:" },
          { "CERTIFICATE decoding failed with PEM: No PEM header found", ":CANNOT_PARSE_LEAF_CERT:" },
+         { "Certificate usage constraints do not allow signing", ":KEY_USAGE_BIT_INCORRECT:" },
          { "Can't agree on a ciphersuite with client", ":NO_SHARED_CIPHER:" },
          { "Can't interleave application and handshake data", ":UNEXPECTED_RECORD:" },
          { "Certificate chain exceeds policy specified maximum size", ":EXCESSIVE_MESSAGE_SIZE:" },
@@ -98,16 +106,18 @@ std::string map_to_bogo_error(const std::string& e)
          { "Client offered DTLS version with major version 0xFF",  ":UNSUPPORTED_PROTOCOL:" },
          { "Client offered SSLv3 which is not supported", ":UNSUPPORTED_PROTOCOL:" },
          { "Client offered TLS version with major version under 3", ":UNSUPPORTED_PROTOCOL:" },
+         { "Expected server hello of (D)TLS 1.2 or lower", ":UNSUPPORTED_PROTOCOL:" },
+         { "Protocol version was not offered", ":UNSUPPORTED_PROTOCOL:" },
          { "Client policy prohibits insecure renegotiation", ":RENEGOTIATION_MISMATCH:" },
          { "Client policy prohibits renegotiation", ":NO_RENEGOTIATION:" },
          { "Client resumed extended ms session without sending extension", ":RESUMED_EMS_SESSION_WITHOUT_EMS_EXTENSION:" },
          { "Client sent plaintext HTTP proxy CONNECT request instead of TLS handshake", ":HTTPS_PROXY_REQUEST:" },
          { "Client sent plaintext HTTP request instead of TLS handshake", ":HTTP_REQUEST:" },
          { "Client signalled fallback SCSV, possible attack", ":INAPPROPRIATE_FALLBACK:" },
-         { "Client version DTLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
-         { "Client version TLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Client version TLS v1.1 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
+         { "No shared TLS version based on supported versions extension", ":UNSUPPORTED_PROTOCOL:" },
          { "Client: No certificates sent by server", ":DECODE_ERROR:" },
+         { "No certificates sent by server", ":PEER_DID_NOT_RETURN_A_CERTIFICATE:" },
          { "Counterparty sent inconsistent key and sig types", ":WRONG_SIGNATURE_TYPE:" },
          { "Downgrade attack detected", ":TLS13_DOWNGRADE:" },
          { "Empty ALPN protocol not allowed", ":PARSE_TLSEXT:" },
@@ -117,9 +127,13 @@ std::string map_to_bogo_error(const std::string& e)
          { "Have data remaining in buffer after ClientHello", ":EXCESS_HANDSHAKE_DATA:" },
          { "Have data remaining in buffer after Finished", ":EXCESS_HANDSHAKE_DATA:" },
          { "Have data remaining in buffer after ServerHelloDone", ":EXCESS_HANDSHAKE_DATA:" },
+         { "Hello Retry Request does not request any changes to Client Hello", ":EMPTY_HELLO_RETRY_REQUEST:" },
+         { "Unexpected additional handshake message data found in record", ":EXCESS_HANDSHAKE_DATA:" },
          { "Inconsistent length in certificate request", ":DECODE_ERROR:" },
+         { "unexpected key_update parameter", ":DECODE_ERROR:" },
          { "Inconsistent values in fragmented DTLS handshake header", ":FRAGMENT_MISMATCH:" },
          { "Invalid CertificateRequest: Length field outside parameters", ":DECODE_ERROR:" },
+         { "Invalid ServerHello: Length field outside parameters", ":DECODE_ERROR:" },
          { "Invalid CertificateVerify: Extra bytes at end of message", ":DECODE_ERROR:" },
          { "Invalid Certificate_Status: invalid length field", ":DECODE_ERROR:" },
          { "Invalid ChangeCipherSpec", ":BAD_CHANGE_CIPHER_SPEC:" },
@@ -130,6 +144,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Invalid authentication tag: ChaCha20Poly1305 tag check failed", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
          { "Invalid authentication tag: GCM tag check failed", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
          { "Message authentication failure", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
+         { "No content type found in encrypted record", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
          { "No shared DTLS version", ":UNSUPPORTED_PROTOCOL:" },
          { "No shared TLS version", ":UNSUPPORTED_PROTOCOL:" },
          { "OS2ECP: Unknown format type 251", ":BAD_ECPOINT:" },
@@ -138,6 +153,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Policy refuses to accept signing with any hash supported by peer", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Policy requires client send a certificate, but it did not", ":PEER_DID_NOT_RETURN_A_CERTIFICATE:" },
          { "Received a record that exceeds maximum size", ":ENCRYPTED_LENGTH_TOO_LONG:" },
+         { "Received an encrypted record that exceeds maximum size", ":ENCRYPTED_LENGTH_TOO_LONG:" },
          { "Received application data after connection closure", ":APPLICATION_DATA_ON_SHUTDOWN:" },
          { "Received handshake data after connection closure", ":NO_RENEGOTIATION:" },
          { "Received unexpected record version in initial record", ":WRONG_VERSION_NUMBER:" },
@@ -148,13 +164,16 @@ std::string map_to_bogo_error(const std::string& e)
          { "Server changed its mind about extended master secret", ":RENEGOTIATION_EMS_MISMATCH:" },
          { "Server changed its mind about secure renegotiation", ":RENEGOTIATION_MISMATCH:" },
          { "Server changed version after renegotiation", ":WRONG_SSL_VERSION:" },
-         { "Server downgraded version after renegotiation", ":WRONG_SSL_VERSION:" },
          { "Server policy prohibits renegotiation", ":NO_RENEGOTIATION:" },
          { "Server replied using a ciphersuite not allowed in version it offered", ":WRONG_CIPHER_RETURNED:" },
          { "Server replied with an invalid version", ":UNSUPPORTED_PROTOCOL:" },
+         { "server changed its chosen ciphersuite", ":WRONG_CIPHER_RETURNED:" },
          { "Server replied with DTLS-SRTP alg we did not send", ":BAD_SRTP_PROTECTION_PROFILE_LIST:" },
          { "Server replied with ciphersuite we didn't send", ":WRONG_CIPHER_RETURNED:" },
-         { "Server replied with later version than client offered", ":UNSUPPORTED_PROTOCOL:" },
+         { "Server replied with an invalid version", ":UNSUPPORTED_PROTOCOL:" },  // bogus version from "ServerBogusVersion"
+         { "Server version SSL v3 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },  // "NoSSL3-Client-Unsolicited"
+         { "legacy_version 'TLS v1.4' is not allowed", ":DECODE_ERROR:" },
+         { "legacy_version 'Unknown 18.52' is not allowed", ":UNSUPPORTED_PROTOCOL:" },
          { "Server replied with non-null compression method", ":UNSUPPORTED_COMPRESSION_ALGORITHM:" },
          { "Server replied with some unknown ciphersuite", ":UNKNOWN_CIPHER_RETURNED:" },
          { "Server replied with unsupported extensions: 0", ":UNEXPECTED_EXTENSION:" },
@@ -166,7 +185,16 @@ std::string map_to_bogo_error(const std::string& e)
          { "Server resumed session but added extended master secret", ":RESUMED_NON_EMS_SESSION_WITH_EMS_EXTENSION:" },
          { "Server resumed session but with wrong version", ":OLD_SESSION_VERSION_NOT_RETURNED:" },
          { "Server sent ECC curve prohibited by policy", ":WRONG_CURVE:" },
+         { "group was not advertised as supported", ":WRONG_CURVE:" },
+         { "group was already offered", ":WRONG_CURVE:" },
+         { "Server selected an unexpected key exchange group.", ":WRONG_CURVE:" },
+         { "TLS 1.3 Server Hello selected a different version", ":SECOND_SERVERHELLO_VERSION_MISMATCH:" },
+         { "Version downgrade received after Hello Retry", ":SECOND_SERVERHELLO_VERSION_MISMATCH:" },
+         { "protected change cipher spec received", ":UNEXPECTED_RECORD:" },
          { "Server sent an unsupported extension", ":UNEXPECTED_EXTENSION:" },
+         { "Unexpected extension received", ":UNEXPECTED_EXTENSION:" },
+         { "server hello must contain key exchange information", ":MISSING_KEY_SHARE:"},
+         { "Peer sent duplicated extensions", ":DUPLICATE_EXTENSION:" },
          { "Server sent bad values for secure renegotiation", ":RENEGOTIATION_MISMATCH:" },
          { "Server version DTLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Server version TLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
@@ -176,6 +204,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Simulating cert verify callback failure", ":CERT_CB_ERROR:" },
          { "Simulating failure from OCSP response callback", ":OCSP_CB_ERROR:" },
          { "TLS plaintext record is larger than allowed maximum", ":DATA_LENGTH_TOO_LONG:" },
+         { "Received an encrypted record that exceeds maximum plaintext size", ":DATA_LENGTH_TOO_LONG:" },
          { "TLS record type had unexpected value", ":UNEXPECTED_RECORD:" },
          { "TLS record version had unexpected value", ":WRONG_VERSION_NUMBER:" },
          { "TLS signature extension did not allow for RSA/SHA-256 signature", ":WRONG_SIGNATURE_TYPE:", },
@@ -187,16 +216,21 @@ std::string map_to_bogo_error(const std::string& e)
          { "Unexpected state transition in handshake got a certificate_status expected certificate seen server_hello", ":UNEXPECTED_MESSAGE:" },
          { "Unexpected state transition in handshake got a change_cipher_spec expected certificate_verify seen client_hello+certificate+client_key_exchange", ":UNEXPECTED_RECORD:" },
          { "Unexpected state transition in handshake got a change_cipher_spec expected client_key_exchange seen client_hello", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake got a change_cipher_spec expected new_session_ticket seen server_hello+certificate+certificate_status+server_key_exchange+server_hello_done", ":UNEXPECTED_RECORD:" },
+         { "Unexpected state transition in handshake got a change_cipher_spec expected new_session_ticket seen server_hello+certificate+server_key_exchange+server_hello_done", ":UNEXPECTED_RECORD:" },
          { "Unexpected state transition in handshake got a client_key_exchange expected certificate seen client_hello", ":UNEXPECTED_MESSAGE:" },
          { "Unexpected state transition in handshake got a finished expected change_cipher_spec seen client_hello", ":UNEXPECTED_RECORD:" },
          { "Unexpected state transition in handshake got a finished expected change_cipher_spec seen client_hello+client_key_exchange", ":UNEXPECTED_RECORD:" },
          { "Unexpected state transition in handshake got a finished expected change_cipher_spec seen server_hello", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake got a finished expected change_cipher_spec seen server_hello+certificate+certificate_status+server_key_exchange+server_hello_done+new_session_ticket", ":UNEXPECTED_RECORD:" },
+         { "Unexpected state transition in handshake got a finished expected change_cipher_spec seen server_hello+certificate+server_key_exchange+server_hello_done+new_session_ticket", ":UNEXPECTED_RECORD:" },
          { "Unexpected state transition in handshake got a hello_request expected server_hello", ":UNEXPECTED_MESSAGE:" },
          { "Unexpected state transition in handshake got a server_hello_done expected server_key_exchange seen server_hello+certificate+certificate_status", ":UNEXPECTED_MESSAGE:" },
          { "Unexpected state transition in handshake got a server_key_exchange expected certificate_request|server_hello_done seen server_hello+certificate+certificate_status", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a server_hello_done expected server_key_exchange seen server_hello+certificate", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a server_key_exchange expected certificate seen server_hello", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a server_key_exchange expected certificate_request|server_hello_done seen server_hello+certificate", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a hello_retry_request expected server_hello", ":UNEXPECTED_MESSAGE:" },
          { "Unexpected state transition in handshake got a server_key_exchange not expecting messages", ":BAD_HELLO_REQUEST:" },
+         { "Unexpected state transition in handshake got a finished expected certificate_verify seen server_hello+certificate+encrypted_extensions", ":BAD_HELLO_REQUEST:" },
          { "Unknown TLS handshake message type 43", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 44", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 45", ":UNEXPECTED_MESSAGE:" },
@@ -210,7 +244,19 @@ std::string map_to_bogo_error(const std::string& e)
          { "Unknown TLS handshake message type 6", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 62", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 64", ":UNEXPECTED_MESSAGE:" },
+         { "Unknown handshake message received", ":UNEXPECTED_MESSAGE:" },
+         { "Unknown post-handshake message received", ":UNEXPECTED_MESSAGE:" },
          { "signature_algorithm_of_scheme: Unknown signature algorithm enum", ":WRONG_SIGNATURE_TYPE:" },
+         { "Unexpected session ID during downgrade", ":SERVER_ECHOED_INVALID_SESSION_ID:" },
+         { "Encrypted Extensions contained an extension that is not allowed", ":ERROR_PARSING_EXTENSION:" },
+         { "Encrypted Extensions contained an extension that was not offered", ":UNEXPECTED_EXTENSION:" },
+         { "Certificate Entry contained an extension that is not allowed", ":UNEXPECTED_EXTENSION:" },
+         { "Certificate Entry contained an extension that was not offered", ":UNEXPECTED_EXTENSION:" },
+         { "Server Hello contained an extension that is not allowed", ":UNEXPECTED_EXTENSION:" },
+         { "Hello Retry Request contained an extension that is not allowed", ":UNEXPECTED_EXTENSION:" },
+         { "Signature algorithm does not match certificate's public key", ":WRONG_SIGNATURE_TYPE:" },
+         { "unprotected record received where protected traffic was expected", ":INVALID_OUTER_RECORD_TYPE:" },
+         { "Error alert not marked fatal", ":BAD_ALERT:" },
       };
 
    auto err_map_i = err_map.find(e);
@@ -588,6 +634,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       //"expect-tls13-downgrade",
       "expect-verify-result",
       "expect-no-hrr",
+      "expect-hrr",
       //"export-traffic-secrets",
       "fail-cert-callback",
       //"fail-ddos-callback",
@@ -606,14 +653,14 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       "install-ddos-callback",
       "is-handshaker-supported",
       //"jdk11-workaround",
-      //"key-update",
+      "key-update",
       "no-op-extra-handshake",
       "no-rsa-pss-rsae-certs",
       "no-ticket",
       "no-tls1",
       "no-tls11",
       "no-tls12",
-      "no-tls13", // implict due to 1.3 not being implemented
+      "no-tls13",
       "on-resume-no-ticket",
       //"on-resume-verify-fail",
       //"partial-write",
@@ -675,7 +722,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       "test-name",
       "use-client-ca-list",
       //"send-channel-id",
-      //"write-settings",
+      "write-settings",
    };
 
    const std::set<std::string> bogo_shim_base64_opts = {
@@ -863,9 +910,16 @@ class Shim_Policy final : public Botan::TLS::Policy
          if(m_args.option_used("curves"))
             {
             std::vector<Botan::TLS::Group_Params> groups;
+
+            // upcall to base class to find the groups actually supported by
+            // this Botan build
+            const auto supported_groups = Botan::TLS::Policy::key_exchange_groups();
+
             for(size_t pref : m_args.get_int_vec_opt("curves"))
                {
-               groups.push_back(static_cast<Botan::TLS::Group_Params>(pref));
+               const auto group = static_cast<Botan::TLS::Group_Params>(pref);
+               if(std::find(supported_groups.cbegin(), supported_groups.cend(), group) != supported_groups.end())
+                  groups.push_back(group);
                }
 
             return groups;
@@ -942,6 +996,11 @@ class Shim_Policy final : public Botan::TLS::Policy
          return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls12") && allow_version(Botan::TLS::Protocol_Version::TLS_V12);
          }
 
+      bool allow_tls13() const override
+         {
+         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls13") && allow_version(Botan::TLS::Protocol_Version::TLS_V13);
+         }
+
       bool allow_dtls12() const override
          {
          return m_args.flag_set("dtls") && !m_args.flag_set("no-tls12") && allow_version(Botan::TLS::Protocol_Version::DTLS_V12);
@@ -1000,6 +1059,10 @@ class Shim_Policy final : public Botan::TLS::Policy
             if(m_args.flag_set("decline-ocsp-callback"))
                return false;
             }
+         else
+            if(!m_args.flag_set("enable-ocsp-stapling"))
+               return false;
+
          return true;
          }
 
@@ -1032,12 +1095,33 @@ class Shim_Policy final : public Botan::TLS::Policy
          return m_args.get_int_opt_or_else("max-cert-list", 0);
          }
 
+      bool tls_13_middlebox_compatibility_mode() const override
+         {
+         // These tests expect the client to send an alert in return of a malformed TLS 1.2 server hello.
+         // However, our TLS 1.3 implementation produces an alert without downgrading to TLS 1.2 first.
+         // In compatibility mode this prepends a CCS, which BoGo does not expect to read.
+         const std::vector<std::string> alert_after_server_hello = {
+                 "DuplicateExtensionClient-TLS-TLS12",
+                 "WrongMessageType-ServerHello-TLS",
+                 "SendServerHelloAsHelloRetryRequest",
+                 "TrailingMessageData-ServerHello-TLS",
+                 "NoSSL3-Client-Unsolicited",
+                 "Client-TooLongSessionID",
+                 "MinimumVersion-Client-TLS13-TLS12-TLS",
+                 "MinimumVersion-Client2-TLS13-TLS12-TLS",
+         };
+         if(Botan::value_exists(alert_after_server_hello, m_args.test_name()))
+            return false;
+
+         return true;
+         }
+
    private:
       const Shim_Arguments& m_args;
       size_t m_sessions;
    };
 
-std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version) const
+std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version version) const
    {
    std::vector<uint16_t> ciphersuite_codes;
 
@@ -1068,6 +1152,20 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
       for(auto i = ciphersuites.rbegin(); i != ciphersuites.rend(); ++i)
          {
          const auto suite = *i;
+         const bool is_tls13_suite =
+            suite.kex_method() == Botan::TLS::Kex_Algo::UNDEFINED &&
+            suite.auth_method() == Botan::TLS::Auth_Method::UNDEFINED;
+
+         const bool is_client = !m_args.flag_set("server");
+
+         // client should only offer suites appropriate to version
+         if(is_client && (version == Botan::TLS::Protocol_Version::TLS_V13) != is_tls13_suite)
+            continue;
+
+         // tls 1.3 server is nyi
+         if (!is_client && is_tls13_suite)
+            continue;
+
          // Can we use it?
          if(suite.valid() == false)
             continue;
@@ -1225,6 +1323,14 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          {
          shim_log("sending record of len " + std::to_string(size));
 
+         if(m_args.option_used("write-settings"))
+            {
+            // TODO: the transcript option should probably be used differently
+            std::cout << ">>>" << std::endl
+                            << Botan::hex_encode(data, size) << std::endl
+                            << ">>>" << std::endl;
+            }
+
          if(m_is_datagram)
             {
             std::vector<uint8_t> packet(size + 5);
@@ -1323,6 +1429,19 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
             throw Botan::TLS::TLS_Exception(alert, "Test requires rejecting cert");
             }
+         }
+
+      std::optional<Botan::OCSP::Response> tls_parse_ocsp_response(const std::vector<uint8_t>& raw_response) override
+         {
+         if(m_args.option_used("expect-ocsp-response") &&
+            m_args.get_b64_opt("expect-ocsp-response") != raw_response)
+            {
+            shim_exit_with_error("unexpected OCSP response");
+            }
+
+         // Bogo uses invalid dummy OCSP responses. Don't even bother trying to
+         // decode them.
+         return std::nullopt;
          }
 
       std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override
@@ -1491,6 +1610,12 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
             m_channel->close();
             }
+
+         if(m_args.flag_set("key-update"))
+            {
+            shim_log("Updating traffic keys without asking for reciprocation");
+            m_channel->update_traffic_keys(false /* don't request reciprocal update */);
+            }
          }
 
    private:
@@ -1522,7 +1647,6 @@ int main(int /*argc*/, char* argv[])
       const size_t resume_count = args->get_int_opt_or_else("resume-count", 0);
       const bool is_server = args->flag_set("server");
       const bool is_datagram = args->flag_set("dtls");
-
       const size_t buf_size = args->get_int_opt_or_else("read-size", 18*1024);
 
       Botan::ChaCha_RNG rng(Botan::secure_vector<uint8_t>(64));
@@ -1531,7 +1655,9 @@ int main(int /*argc*/, char* argv[])
 
       for(size_t i = 0; i != resume_count+1; ++i)
          {
-         Shim_Socket socket("localhost", port);
+
+         auto execute_test = [&](const std::string& hostname) {
+         Shim_Socket socket(hostname, port);
 
          shim_log("Connection " + std::to_string(i+1) + "/" + std::to_string(resume_count+1));
 
@@ -1549,7 +1675,7 @@ int main(int /*argc*/, char* argv[])
             Botan::TLS::Protocol_Version offer_version = policy.latest_supported_version(is_datagram);
             shim_log("Offering " + offer_version.to_string());
 
-            std::string host_name = args->get_string_opt_or_else("host-name", "localhost");
+            std::string host_name = args->get_string_opt_or_else("host-name", hostname);
             if(args->test_name().find("UnsolicitedServerNameAck") == 0)
                host_name = ""; // avoid sending SNI for this test
 
@@ -1617,6 +1743,15 @@ int main(int /*argc*/, char* argv[])
 
                shim_log("Got packet of " + std::to_string(got));
 
+
+               if(args->option_used("write-settings"))
+                  {
+                  // TODO: the transcript option should probably be used differently
+                  std::cout << "<<<" << std::endl
+                            << Botan::hex_encode(buf.data(), got) << std::endl
+                            << "<<<" << std::endl;
+                  }
+
                if(args->flag_set("use-exporter-between-reads") && chan->is_active())
                   {
                   chan->key_material_export("some label", "some context", 42);
@@ -1644,8 +1779,23 @@ int main(int /*argc*/, char* argv[])
                                     " exp " + std::to_string(exp));
             }
          shim_log("End of resume loop");
+         };
+         try
+            {
+            execute_test("localhost");
+            }
+         catch (const Shim_Exception& e)
+            {
+            if (std::string(e.what()) == "Failed to connect to host")
+               {
+               execute_test("::1");
+               }
+            else
+               {
+               throw e;
+               }
+            }
          }
-
       }
    catch(Shim_Exception& e)
       {

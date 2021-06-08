@@ -35,7 +35,11 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       */
       static Protocol_Version latest_tls_version()
          {
+#if defined(BOTAN_HAS_TLS_13)
+         return Protocol_Version(TLS_V13);
+#else
          return Protocol_Version(TLS_V12);
+#endif
          }
 
       /**

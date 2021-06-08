@@ -12,6 +12,10 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 
+#if defined(BOTAN_HAS_TLS_13)
+   #include <botan/internal/tls_cipher_state.h>
+#endif
+
 namespace Botan::TLS {
 
 namespace {
@@ -82,4 +86,16 @@ bool Finished_12::verify(const Handshake_State& state,
 #endif
    }
 
+#if defined(BOTAN_HAS_TLS_13)
+Finished_13::Finished_13(Cipher_State* cipher_state,
+                         const Transcript_Hash& transcript_hash)
+   {
+   m_verification_data = cipher_state->finished_mac(transcript_hash);
+   }
+
+bool Finished_13::verify(Cipher_State* cipher_state, const Transcript_Hash& transcript_hash) const
+   {
+   return cipher_state->verify_peer_finished_mac(transcript_hash, m_verification_data);
+   }
+#endif
 }

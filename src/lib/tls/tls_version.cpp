@@ -79,6 +79,9 @@ bool Protocol_Version::valid() const
 bool Protocol_Version::known_version() const
    {
    return (m_version == Protocol_Version::TLS_V12 ||
+#if defined(BOTAN_HAS_TLS_13)
+           m_version == Protocol_Version::TLS_V13 ||
+#endif
            m_version == Protocol_Version::DTLS_V12);
    }
 
