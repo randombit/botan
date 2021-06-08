@@ -46,7 +46,10 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
       sha256->final(buf);
       }
 
-   if(policy.include_time_in_hello_random())
+   // TLS 1.3 does not require the insertion of a timestamp in the client hello
+   // random. When offering both TLS 1.2 and 1.3 we nevertheless comply with the
+   // legacy specification.
+   if(policy.include_time_in_hello_random() && (policy.allow_tls12() || policy.allow_dtls12()))
       {
       const uint32_t time32 = static_cast<uint32_t>(
                                  std::chrono::system_clock::to_time_t(cb.tls_current_timestamp()));
@@ -92,6 +95,10 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
 
    m_extensions.deserialize(reader, Connection_Side::CLIENT, type());
 
+   // TODO: Reject oid_filters extension if found (which is the only known extension that
+   //       must not occur in the TLS 1.3 client hello.
+   // RFC 8446 4.2.5
+   //    [The oid_filters extension] MUST only be sent in the CertificateRequest message.
    if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
       {
       if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
@@ -469,5 +476,118 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    hash.update(io.send(*this));
    }
 
+#if defined(BOTAN_HAS_TLS_13)
+
+/*
+* Create a new Client Hello message
+*/
+Client_Hello_13::Client_Hello_13(const Policy& policy,
+                                 Callbacks& cb,
+                                 RandomNumberGenerator& rng,
+                                 const std::string& hostname,
+                                 const std::vector<std::string>& next_protocols)
+   {
+   // RFC 8446 4.1.2
+   //    In TLS 1.3, the client indicates its version preferences in the
+   //    "supported_versions" extension (Section 4.2.1) and the
+   //    legacy_version field MUST be set to 0x0303, which is the version
+   //    number for TLS 1.2.
+   m_legacy_version = Protocol_Version::TLS_V12;
+   m_random = make_hello_random(rng, cb, policy);
+   m_suites = policy.ciphersuite_list(Protocol_Version::TLS_V13);
+
+   if(policy.allow_tls12())  // Note: DTLS 1.3 is NYI, hence dtls_12 is not checked
+      {
+      const auto legacy_suites = policy.ciphersuite_list(Protocol_Version::TLS_V12);
+      m_suites.insert(m_suites.end(), legacy_suites.cbegin(), legacy_suites.cend());
+      }
+
+   if(policy.tls_13_middlebox_compatibility_mode())
+      {
+      // RFC 8446 4.1.2
+      //    In compatibility mode (see Appendix D.4), this field MUST be non-empty,
+      //    so a client not offering a pre-TLS 1.3 session MUST generate a new
+      //    32-byte value.
+      rng.random_vec(m_session_id, 32);
+      }
+
+   if(!hostname.empty())
+      m_extensions.add(new Server_Name_Indicator(hostname));
+
+   m_extensions.add(new Supported_Groups(policy.key_exchange_groups()));
+
+   m_extensions.add(new Key_Share(policy, cb, rng));
+
+   m_extensions.add(new Supported_Versions(Protocol_Version::TLS_V13, policy));
+
+   m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+
+   // TODO: Add a signature_algorithms_cert extension negotiating the acceptable
+   //       signature algorithms in a server certificate chain's certificates.
+
+   if(policy.support_cert_status_message())
+      m_extensions.add(new Certificate_Status_Request({}, {}));
+
+   // We currently support "record_size_limit" for TLS 1.3 exclusively. Hence,
+   // when TLS 1.2 is advertised as a supported protocol, we must not offer this
+   // extension.
+   if(policy.record_size_limit().has_value() && !policy.allow_tls12())
+      m_extensions.add(new Record_Size_Limit(policy.record_size_limit().value()));
+
+   if(!next_protocols.empty())
+      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
+
+   if(policy.allow_tls12())
+      {
+      m_extensions.add(new Renegotiation_Extension());
+      m_extensions.add(new Session_Ticket());
+
+      // EMS must always be used with TLS 1.2, regardless of the policy
+      m_extensions.add(new Extended_Master_Secret);
+
+      if(policy.negotiate_encrypt_then_mac())
+         m_extensions.add(new Encrypt_then_MAC);
+
+      if(m_extensions.has<Supported_Groups>() && !m_extensions.get<Supported_Groups>()->ec_groups().empty())
+         m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+      }
+
+   cb.tls_modify_extensions(m_extensions, CLIENT);
+   }
+
+void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
+                            Callbacks& cb,
+                            RandomNumberGenerator& rng)
+   {
+   BOTAN_STATE_CHECK(m_extensions.has<Supported_Groups>());
+   BOTAN_STATE_CHECK(m_extensions.has<Key_Share>());
+
+   auto hrr_ks = hrr.extensions().get<Key_Share>();
+   const auto& supported_groups = m_extensions.get<Supported_Groups>()->groups();
+
+   if(hrr.extensions().has<Key_Share>())
+      m_extensions.get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, cb, rng);
+
+   // RFC 8446 4.2.2
+   //    When sending the new ClientHello, the client MUST copy
+   //    the contents of the extension received in the HelloRetryRequest into
+   //    a "cookie" extension in the new ClientHello.
+   //
+   // RFC 8446 4.2.2
+   //    Clients MUST NOT use cookies in their initial ClientHello in subsequent
+   //    connections.
+   if(hrr.extensions().has<Cookie>())
+      {
+      BOTAN_STATE_CHECK(!m_extensions.has<Cookie>());
+      m_extensions.add(new Cookie(hrr.extensions().get<Cookie>()->get_cookie()));
+      }
+
+   // TODO: the consumer of the TLS implementation won't be able to distinguish
+   //       invocations to this callback due to the first Client_Hello or the
+   //       retried Client_Hello after receiving a Hello_Retry_Request.
+   cb.tls_modify_extensions(m_extensions, CLIENT);
+   }
+
+#endif // BOTAN_HAS_TLS_13
 
 }

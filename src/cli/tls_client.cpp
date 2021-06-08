@@ -2,6 +2,7 @@
 * (C) 2014,2015 Jack Lloyd
 *     2016 Matthias Gierlings
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
+*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -34,7 +35,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
    public:
       TLS_Client()
          : Command("tls_client host --port=443 --print-certs --policy=default "
-                   "--skip-system-cert-store --trusted-cas= "
+                   "--skip-system-cert-store --trusted-cas= --tls-version=default "
                    "--session-db= --session-db-pass= --next-protocols= --type=tcp "
                    "--client-cert= --client-cert-key=")
          {
@@ -72,6 +73,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          const std::string next_protos = get_arg("next-protocols");
          const bool use_system_cert_store = flag_set("skip-system-cert-store") == false;
          const std::string trusted_CAs = get_arg("trusted-cas");
+         const auto tls_version = get_arg("tls-version");
 
          if(!sessions_db.empty())
             {
@@ -95,22 +97,25 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             throw CLI_Usage_Error("Invalid transport type '" + transport + "' for TLS");
             }
 
-         const bool use_tcp = (transport == "tcp");
-
          const std::vector<std::string> protocols_to_offer = Command::split_on(next_protos, ',');
-
-         Botan::TLS::Protocol_Version version =
-            use_tcp ? Botan::TLS::Protocol_Version::TLS_V12 : Botan::TLS::Protocol_Version::DTLS_V12;
 
          if(!policy)
             {
             policy.reset(new Botan::TLS::Policy);
             }
 
-         if(policy->acceptable_protocol_version(version) == false)
-            {
-            throw CLI_Usage_Error("The policy specified does not allow the requested TLS version");
+         const bool use_tcp = (transport == "tcp");
+         Botan::TLS::Protocol_Version version = policy->latest_supported_version(!use_tcp);
+
+         if(tls_version != "default") {
+            if(tls_version == "1.2") {
+               version = Botan::TLS::Protocol_Version::TLS_V12;
+            } else if (tls_version == "1.3") {
+               version = Botan::TLS::Protocol_Version::TLS_V13;
+            } else {
+               error_output() << "Unknown TLS protocol version " << tls_version << '\n';
             }
+         }
 
          struct sockaddr_storage addrbuf;
          std::string hostname;

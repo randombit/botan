@@ -62,6 +62,8 @@ class Client_Impl_12 : public Channel_Impl_12
                               size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE
           );
 
+      explicit Client_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info);
+
       /**
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension
       */

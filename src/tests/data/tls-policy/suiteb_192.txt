@@ -1,6 +1,7 @@
 allow_tls10 = false
 allow_tls11 = false
 allow_tls12 = true
+allow_tls13 = false
 allow_dtls10 = false
 allow_dtls12 = false
 ciphers = AES-256/GCM

@@ -1,0 +1,21 @@
+<defines>
+TLS_13 -> 20210721
+</defines>
+
+<header:public>
+</header:public>
+
+<header:internal>
+tls_channel_impl_13.h
+tls_cipher_state.h
+tls_client_impl_13.h
+tls_handshake_layer_13.h
+tls_handshake_state_13.h
+tls_record_layer_13.h
+tls_transcript_hash_13.h
+</header:internal>
+
+<requires>
+hkdf
+tls
+</requires>

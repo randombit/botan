@@ -9,6 +9,7 @@
 
 #include <botan/tls_client.h>
 #include <botan/tls_messages.h>
+#include <botan/ocsp.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_client_impl_12.h>
@@ -74,6 +75,28 @@ Client_Impl_12::Client_Impl_12(Callbacks& callbacks,
    const auto version = datagram ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
    Handshake_State& state = create_handshake_state(version);
    send_client_hello(state, false, version, next_protocols);
+   }
+
+Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info) :
+   Channel_Impl_12(downgrade_info.callbacks,
+                   downgrade_info.session_manager,
+                   downgrade_info.rng,
+                   downgrade_info.policy,
+                   false /* is_server */,
+                   false /* datagram -- not supported by Botan in TLS 1.3 */),
+   m_creds(downgrade_info.creds),
+   m_info(downgrade_info.server_info)
+   {
+   Handshake_State& state = create_handshake_state(Protocol_Version::TLS_V12);
+
+   std::vector<uint8_t> client_hello_msg(downgrade_info.client_hello_message.begin() + 4 /* handshake header length */,
+                                         downgrade_info.client_hello_message.end());
+
+   state.client_hello(new Client_Hello_12(client_hello_msg));
+   state.hash().update(downgrade_info.client_hello_message);
+
+   secure_renegotiation_check(state.client_hello());
+   state.set_expected_next(SERVER_HELLO);
    }
 
 std::unique_ptr<Handshake_State> Client_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io)
