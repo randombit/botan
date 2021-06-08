@@ -53,7 +53,8 @@ if type -p "apt-get"; then
         pip install --user codecov
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-        git clone --depth 1 --branch jack/runner-20210401 https://github.com/randombit/boringssl.git
+        # TODO: merge changes to Botan's boring fork
+        git clone --depth 1 --branch rene/runner-20220322 https://github.com/reneme/boringssl.git
 
         sudo chgrp -R "$(id -g)" /var/lib/softhsm/ /etc/softhsm
         sudo chmod g+w /var/lib/softhsm/tokens

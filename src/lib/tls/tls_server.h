@@ -92,6 +92,8 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
 
       void renegotiate(bool force_full_renegotiation = false) override;
 
+      void update_traffic_keys(bool request_peer_update = false) override;
+
       bool secure_renegotiation_supported() const override;
 
       void send(const uint8_t buf[], size_t buf_size) override;
