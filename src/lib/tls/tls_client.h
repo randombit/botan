@@ -2,6 +2,7 @@
 * TLS Client
 * (C) 2004-2011 Jack Lloyd
 *     2016 Matthias Gierlings
+*     2021 Elektrobit Automotive GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,10 +14,14 @@
 #include <botan/tls_policy.h>
 #include <botan/credentials_manager.h>
 #include <vector>
+#include <memory>
 
 namespace Botan {
 
 namespace TLS {
+
+class Client_Impl;
+class Handshake_IO;
 
 /**
 * SSL/TLS Client
@@ -61,37 +66,55 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
             size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
          );
 
+      ~Client();
+
       /**
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension
       */
-      std::string application_protocol() const override { return m_application_protocol; }
+      std::string application_protocol() const override;
+
+      size_t received_data(const uint8_t buf[], size_t buf_size) override;
+
+      size_t received_data(const std::vector<uint8_t>& buf) override;
+
+      bool is_active() const override;
+
+      bool is_closed() const override;
+
+      std::vector<X509_Certificate> peer_cert_chain() const override;
+
+      SymmetricKey key_material_export(const std::string& label,
+                                       const std::string& context,
+                                       size_t length) const override;
+
+      void renegotiate(bool force_full_renegotiation = false) override;
+
+      bool secure_renegotiation_supported() const override;
+
+      void send(const uint8_t buf[], size_t buf_size) override;
+
+      void send(const std::string& val) override;
+
+      template<typename Alloc>
+      void send(const std::vector<unsigned char, Alloc>& val)
+         {
+         send(val.data(), val.size());
+         }
+
+      void send_alert(const Alert& alert) override;
+
+      void send_warning_alert(Alert::Type type) override;
+
+      void send_fatal_alert(Alert::Type type) override;
+
+      void close() override;
+
+      bool timeout_check() override;
+
    private:
-      std::vector<X509_Certificate>
-         get_peer_cert_chain(const Handshake_State& state) const override;
-
-      void initiate_handshake(Handshake_State& state,
-                              bool force_full_renegotiation) override;
-
-      void send_client_hello(Handshake_State& state,
-                             bool force_full_renegotiation,
-                             Protocol_Version version,
-                             const std::vector<std::string>& next_protocols = {});
-
-      void process_handshake_msg(const Handshake_State* active_state,
-                                 Handshake_State& pending_state,
-                                 Handshake_Type type,
-                                 const std::vector<uint8_t>& contents,
-                                 bool epoch0_restart) override;
-
-      std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
-
-      Credentials_Manager& m_creds;
-      const Server_Information m_info;
-      std::string m_application_protocol;
+      std::unique_ptr<Client_Impl> m_impl;
    };
-
 }
-
 }
 
 #endif

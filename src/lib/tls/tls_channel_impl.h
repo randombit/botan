@@ -7,40 +7,32 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_CHANNEL_H_
-#define BOTAN_TLS_CHANNEL_H_
+#ifndef BOTAN_TLS_CHANNEL_IMPL_H_
+#define BOTAN_TLS_CHANNEL_IMPL_H_
 
-#include <botan/tls_session.h>
-#include <botan/tls_alert.h>
-#include <botan/tls_session_manager.h>
-#include <botan/tls_callbacks.h>
-#include <botan/x509cert.h>
-#include <functional>
+#include <botan/tls_channel.h>
+#include <botan/tls_version.h>
+#include <botan/tls_magic.h>
 #include <vector>
-#include <string>
-#include <map>
+#include <memory>
+
 
 namespace Botan {
 
+class X509_Certificate;
+
 namespace TLS {
 
-class Connection_Cipher_State;
-class Connection_Sequence_Numbers;
 class Handshake_State;
-class Handshake_Message;
-class Client_Hello;
-class Server_Hello;
-class Policy;
+class Handshake_IO;
 
-/**
-* Generic interface for TLS endpoint
-*/
-class BOTAN_PUBLIC_API(2,0) Channel
+class Channel_Impl
    {
    public:
-      static size_t IO_BUF_DEFAULT_SIZE;
+      virtual ~Channel_Impl() = default;
 
-      virtual ~Channel() = 0;
+
+      virtual Handshake_State& create_handshake_state(Protocol_Version version) = 0;
 
       /**
       * Inject TLS traffic received from counterparty
@@ -70,16 +62,6 @@ class BOTAN_PUBLIC_API(2,0) Channel
       virtual void send(const std::string& val) = 0;
 
       /**
-      * Inject plaintext intended for counterparty
-      * Throws an exception if is_active() is false
-      */
-      template<typename Alloc>
-      void send(const std::vector<unsigned char, Alloc>& val)
-         {
-         send(val.data(), val.size());
-         }
-
-      /**
       * Send a TLS alert message. If the alert is fatal, the internal
       * state (keys, etc) will be reset.
       * @param alert the Alert to send
@@ -100,6 +82,7 @@ class BOTAN_PUBLIC_API(2,0) Channel
       * Send a close notification alert
       */
       virtual void close() = 0;
+
 
       /**
       * @return true iff the connection is active for sending application data
@@ -149,7 +132,25 @@ class BOTAN_PUBLIC_API(2,0) Channel
       virtual bool timeout_check() = 0;
 
       virtual std::string application_protocol() const = 0;
+
+   protected:
+
+      virtual void process_handshake_msg(const Handshake_State* active_state,
+                                         Handshake_State& pending_state,
+                                         Handshake_Type type,
+                                         const std::vector<uint8_t>& contents,
+                                         bool epoch0_restart) = 0;
+
+      virtual void initiate_handshake(Handshake_State& state,
+                                      bool force_full_renegotiation) = 0;
+
+      virtual std::vector<X509_Certificate>
+         get_peer_cert_chain(const Handshake_State& state) const = 0;
+
+      virtual std::unique_ptr<Handshake_State>
+         new_handshake_state(std::unique_ptr<class Handshake_IO> io) = 0;
    };
+
 }
 
 }
