@@ -24,13 +24,23 @@ tls_version.h
 </header:public>
 
 <header:internal>
+msg_client_hello_impl.h
+msg_certificate_impl.h
+msg_cert_verify_impl.h
+msg_cert_req_impl.h
+msg_finished_impl.h
+msg_server_hello_impl.h
+tls_channel_impl.h
+tls_client_impl.h
 tls_handshake_hash.h
 tls_handshake_io.h
 tls_handshake_state.h
 tls_reader.h
-tls_record.h
+tls_server_impl.h
 tls_seq_numbers.h
 tls_session_key.h
+tls_message_factory.h
+tls_mock_msg_impl_13.h
 </header:internal>
 
 <requires>

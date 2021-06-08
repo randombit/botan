@@ -2,6 +2,7 @@
 * TLS Server
 * (C) 2004-2011 Jack Lloyd
 *     2016 Matthias Gierlings
+*     2021 Elektrobit Automotive GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -18,7 +19,8 @@ namespace Botan {
 
 namespace TLS {
 
-class Server_Handshake_State;
+class Handshake_IO;
+class Server_Impl;
 
 /**
 * TLS Server
@@ -26,8 +28,6 @@ class Server_Handshake_State;
 class BOTAN_PUBLIC_API(2,0) Server final : public Channel
    {
    public:
-      typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;
-
       /**
       * Server initialization
       *
@@ -55,16 +55,10 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
              const Policy& policy,
              RandomNumberGenerator& rng,
              bool is_datagram = false,
-             size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
+             size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE
          );
 
-      /**
-      * Return the protocol notification set by the client (using the
-      * ALPN extension) for this connection, if any. This value is not
-      * tied to the session and a later renegotiation of the same
-      * session can choose a new protocol.
-      */
-      std::string next_protocol() const { return m_next_protocol; }
+      ~Server();
 
       /**
       * Return the protocol notification set by the client (using the
@@ -72,58 +66,57 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       * tied to the session and a later renegotiation of the same
       * session can choose a new protocol.
       */
-      std::string application_protocol() const override { return m_next_protocol; }
+      std::string next_protocol() const;
+
+      /**
+      * Return the protocol notification set by the client (using the
+      * ALPN extension) for this connection, if any. This value is not
+      * tied to the session and a later renegotiation of the same
+      * session can choose a new protocol.
+      */
+      std::string application_protocol() const override;
+
+      size_t received_data(const uint8_t buf[], size_t buf_size) override;
+
+      size_t received_data(const std::vector<uint8_t>& buf) override;
+
+      bool is_active() const override;
+
+      bool is_closed() const override;
+
+      std::vector<X509_Certificate> peer_cert_chain() const override;
+
+      SymmetricKey key_material_export(const std::string& label,
+                                       const std::string& context,
+                                       size_t length) const override;
+
+      void renegotiate(bool force_full_renegotiation = false) override;
+
+      bool secure_renegotiation_supported() const override;
+
+      void send(const uint8_t buf[], size_t buf_size) override;
+
+      void send(const std::string& val) override;
+
+      template<typename Alloc>
+      void send(const std::vector<unsigned char, Alloc>& val)
+         {
+         send(val.data(), val.size());
+         }
+
+      void send_alert(const Alert& alert) override;
+
+      void send_warning_alert(Alert::Type type) override;
+
+      void send_fatal_alert(Alert::Type type) override;
+
+      void close() override;
+
+      bool timeout_check() override;
 
    private:
-      std::vector<X509_Certificate>
-         get_peer_cert_chain(const Handshake_State& state) const override;
-
-      void initiate_handshake(Handshake_State& state,
-                              bool force_full_renegotiation) override;
-
-      void process_handshake_msg(const Handshake_State* active_state,
-                                 Handshake_State& pending_state,
-                                 Handshake_Type type,
-                                 const std::vector<uint8_t>& contents,
-                                 bool epoch0_restart) override;
-
-      void process_client_hello_msg(const Handshake_State* active_state,
-                                    Server_Handshake_State& pending_state,
-                                    const std::vector<uint8_t>& contents,
-                                    bool epoch0_restart);
-
-      void process_certificate_msg(Server_Handshake_State& pending_state,
-                                   const std::vector<uint8_t>& contents);
-
-      void process_client_key_exchange_msg(Server_Handshake_State& pending_state,
-                                           const std::vector<uint8_t>& contents);
-
-      void process_change_cipher_spec_msg(Server_Handshake_State& pending_state);
-
-      void process_certificate_verify_msg(Server_Handshake_State& pending_state,
-                                          Handshake_Type type,
-                                          const std::vector<uint8_t>& contents);
-
-      void process_finished_msg(Server_Handshake_State& pending_state,
-                                Handshake_Type type,
-                                const std::vector<uint8_t>& contents);
-
-      void session_resume(Server_Handshake_State& pending_state,
-                          bool have_session_ticket_key,
-                          Session& session_info);
-
-      void session_create(Server_Handshake_State& pending_state,
-                          bool have_session_ticket_key);
-
-      std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
-
-      Credentials_Manager& m_creds;
-      std::string m_next_protocol;
-
-      // Set by deprecated constructor, Server calls both this fn and Callbacks version
-      next_protocol_fn m_choose_next_protocol;
+      std::unique_ptr<Server_Impl> m_impl;
    };
-
 }
 
 }

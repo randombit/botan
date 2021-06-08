@@ -91,7 +91,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Certificate key type did not match ciphersuite", ":WRONG_CERTIFICATE_TYPE:" },
          { "Certificate usage constraints do not allow this ciphersuite", ":KEY_USAGE_BIT_INCORRECT:" },
          { "Certificate: Message malformed", ":DECODE_ERROR:" },
-         { "Channel::key_material_export cannot export during renegotiation", "failed to export keying material" },
+         { "Channel_Impl_12::key_material_export cannot export during renegotiation", "failed to export keying material" },
          { "Client cert verify failed", ":BAD_SIGNATURE:" },
          { "Client certificate does not support signing", ":KEY_USAGE_BIT_INCORRECT:" },
          { "Client did not offer NULL compression", ":INVALID_COMPRESSION_LIST:" },
@@ -1530,7 +1530,9 @@ int main(int /*argc*/, char* argv[])
 
       for(size_t i = 0; i != resume_count+1; ++i)
          {
-         Shim_Socket socket("localhost", port);
+
+         auto execute_test = [&](const std::string& hostname) {
+         Shim_Socket socket(hostname, port);
 
          shim_log("Connection " + std::to_string(i+1) + "/" + std::to_string(resume_count+1));
 
@@ -1548,7 +1550,7 @@ int main(int /*argc*/, char* argv[])
             Botan::TLS::Protocol_Version offer_version = policy.latest_supported_version(is_datagram);
             shim_log("Offering " + offer_version.to_string());
 
-            std::string host_name = args->get_string_opt_or_else("host-name", "localhost");
+            std::string host_name = args->get_string_opt_or_else("host-name", hostname);
             if(args->test_name().find("UnsolicitedServerNameAck") == 0)
                host_name = ""; // avoid sending SNI for this test
 
@@ -1643,8 +1645,23 @@ int main(int /*argc*/, char* argv[])
                                     " exp " + std::to_string(exp));
             }
          shim_log("End of resume loop");
+         };
+         try
+            {
+            execute_test("localhost");
+            }
+         catch (const Shim_Exception& e)
+            {
+            if (std::string(e.what()) == "Failed to connect to host")
+               {
+               execute_test("::1");
+               }
+            else
+               {
+               throw e;
+               }
+            }
          }
-
       }
    catch(Shim_Exception& e)
       {

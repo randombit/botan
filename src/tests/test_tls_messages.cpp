@@ -10,6 +10,7 @@
    #include <exception>
    #include <botan/hex.h>
    #include <botan/mac.h>
+   #include <botan/tls_version.h>
    #include <botan/tls_ciphersuite.h>
    #include <botan/tls_handshake_msg.h>
    #include <botan/tls_messages.h>
@@ -68,7 +69,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                {
                if(algo == "cert_verify")
                   {
-                  Botan::TLS::Certificate_Verify message(buffer);
+                  Botan::TLS::Certificate_Verify message(Botan::TLS::Protocol_Version::TLS_V12, buffer);
                   }
                else if(algo == "client_hello")
                   {
@@ -152,7 +153,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                {
                result.test_throws("invalid cert_verify input", exception, [&buffer]()
                   {
-                  Botan::TLS::Certificate_Verify message(buffer);
+                  Botan::TLS::Certificate_Verify message(Botan::TLS::Protocol_Version::TLS_V12, buffer);
                   });
                }
             else if(algo == "client_hello")

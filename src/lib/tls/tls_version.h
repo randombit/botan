@@ -23,6 +23,7 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
    public:
       enum Version_Code {
          TLS_V12            = 0x0303,
+         TLS_V13            = 0x0304,
          DTLS_V12           = 0xFEFD
       };
 

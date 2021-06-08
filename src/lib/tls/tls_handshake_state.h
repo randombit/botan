@@ -51,8 +51,8 @@ class Handshake_State
    {
    public:
       Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& callbacks);
+      virtual ~Handshake_State();
 
-      virtual ~Handshake_State() = default;
 
       Handshake_State(const Handshake_State&) = delete;
       Handshake_State& operator=(const Handshake_State&) = delete;
