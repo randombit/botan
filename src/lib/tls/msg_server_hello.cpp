@@ -3,6 +3,7 @@
 * (C) 2004-2011,2015,2016,2019 Jack Lloyd
 *     2016 Matthias Gierlings
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2021 Elektrobit Automotive GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,27 +16,13 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/msg_server_hello_impl.h>
+#include <botan/internal/msg_server_hello_impl_12.h>
+#include <botan/internal/tls_message_factory.h>
 
 namespace Botan {
 
 namespace TLS {
-
-namespace {
-
-const uint64_t DOWNGRADE_TLS11 = 0x444F574E47524400;
-//const uint64_t DOWNGRADE_TLS12 = 0x444F574E47524401;
-
-std::vector<uint8_t>
-make_server_hello_random(RandomNumberGenerator& rng,
-                         Protocol_Version offered_version,
-                         const Policy& policy)
-   {
-   BOTAN_UNUSED(offered_version, policy);
-   auto random = make_hello_random(rng, policy);
-   return random;
-   }
-
-}
 
 // New session case
 Server_Hello::Server_Hello(Handshake_IO& io,
@@ -47,64 +34,10 @@ Server_Hello::Server_Hello(Handshake_IO& io,
                            const Client_Hello& client_hello,
                            const Server_Hello::Settings& server_settings,
                            const std::string next_protocol) :
-   m_version(server_settings.protocol_version()),
-   m_session_id(server_settings.session_id()),
-   m_random(make_server_hello_random(rng, m_version, policy)),
-   m_ciphersuite(server_settings.ciphersuite()),
-   m_comp_method(0)
+   m_impl(server_settings.protocol_version() == Protocol_Version::TLS_V13
+      ? TLS_Message_Factory::create<Server_Hello_Impl, Protocol_Version::TLS_V13>(io, hash, policy, cb, rng, reneg_info, client_hello, server_settings, next_protocol)
+      : TLS_Message_Factory::create<Server_Hello_Impl, Protocol_Version::TLS_V12>(io, hash, policy, cb, rng, reneg_info, client_hello, server_settings, next_protocol))
    {
-   if(client_hello.supports_extended_master_secret())
-      m_extensions.add(new Extended_Master_Secret);
-
-   // Sending the extension back does not commit us to sending a stapled response
-   if(client_hello.supports_cert_status_message() && policy.support_cert_status_message())
-      m_extensions.add(new Certificate_Status_Request);
-
-   Ciphersuite c = Ciphersuite::by_id(m_ciphersuite);
-
-   if(c.cbc_ciphersuite() && client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
-      {
-      m_extensions.add(new Encrypt_then_MAC);
-      }
-
-   if(c.ecc_ciphersuite() && client_hello.extension_types().count(TLSEXT_EC_POINT_FORMATS))
-      {
-      m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
-      }
-
-   if(client_hello.secure_renegotiation())
-      m_extensions.add(new Renegotiation_Extension(reneg_info));
-
-   if(client_hello.supports_session_ticket() && server_settings.offer_session_ticket())
-      m_extensions.add(new Session_Ticket());
-
-   if(!next_protocol.empty() && client_hello.supports_alpn())
-      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
-
-   if(m_version.is_datagram_protocol())
-      {
-      const std::vector<uint16_t> server_srtp = policy.srtp_profiles();
-      const std::vector<uint16_t> client_srtp = client_hello.srtp_profiles();
-
-      if(!server_srtp.empty() && !client_srtp.empty())
-         {
-         uint16_t shared = 0;
-         // always using server preferences for now
-         for(auto s_srtp : server_srtp)
-            for(auto c_srtp : client_srtp)
-               {
-               if(shared == 0 && s_srtp == c_srtp)
-                  shared = s_srtp;
-               }
-
-         if(shared)
-            m_extensions.add(new SRTP_Protection_Profiles(shared));
-         }
-      }
-
-   cb.tls_modify_extensions(m_extensions, SERVER);
-
-   hash.update(io.send(*this));
    }
 
 // Resuming
@@ -118,39 +51,10 @@ Server_Hello::Server_Hello(Handshake_IO& io,
                            Session& resumed_session,
                            bool offer_session_ticket,
                            const std::string& next_protocol) :
-   m_version(resumed_session.version()),
-   m_session_id(client_hello.session_id()),
-   m_random(make_hello_random(rng, policy)),
-   m_ciphersuite(resumed_session.ciphersuite_code()),
-   m_comp_method(0)
+   m_impl(client_hello.version() == Protocol_Version::TLS_V13
+      ? TLS_Message_Factory::create<Server_Hello_Impl, Protocol_Version::TLS_V13>(io, hash, policy, cb, rng, reneg_info, client_hello, resumed_session, offer_session_ticket, next_protocol)
+      : TLS_Message_Factory::create<Server_Hello_Impl, Protocol_Version::TLS_V12>(io, hash, policy, cb, rng, reneg_info, client_hello, resumed_session, offer_session_ticket, next_protocol))
    {
-   if(client_hello.supports_extended_master_secret())
-      m_extensions.add(new Extended_Master_Secret);
-
-   if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
-      {
-      Ciphersuite c = resumed_session.ciphersuite();
-      if(c.cbc_ciphersuite())
-         m_extensions.add(new Encrypt_then_MAC);
-      }
-
-   if(resumed_session.ciphersuite().ecc_ciphersuite() && client_hello.extension_types().count(TLSEXT_EC_POINT_FORMATS))
-      {
-      m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
-      }
-
-   if(client_hello.secure_renegotiation())
-      m_extensions.add(new Renegotiation_Extension(reneg_info));
-
-   if(client_hello.supports_session_ticket() && offer_session_ticket)
-      m_extensions.add(new Session_Ticket());
-
-   if(!next_protocol.empty() && client_hello.supports_alpn())
-      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
-
-   cb.tls_modify_extensions(m_extensions, SERVER);
-
-   hash.update(io.send(*this));
    }
 
 /*
@@ -158,25 +62,103 @@ Server_Hello::Server_Hello(Handshake_IO& io,
 */
 Server_Hello::Server_Hello(const std::vector<uint8_t>& buf)
    {
-   if(buf.size() < 38)
-      throw Decoding_Error("Server_Hello: Packet corrupted");
+      auto supported_versions = Server_Hello_Impl(buf).supported_versions();
 
-   TLS_Data_Reader reader("ServerHello", buf);
+      m_impl = value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V13))
+             ? TLS_Message_Factory::create<Server_Hello_Impl, Protocol_Version::TLS_V13>(buf)
+             : TLS_Message_Factory::create<Server_Hello_Impl, Protocol_Version::TLS_V12>(buf);
+   }
 
-   const uint8_t major_version = reader.get_byte();
-   const uint8_t minor_version = reader.get_byte();
+Server_Hello::~Server_Hello() = default;
 
-   m_version = Protocol_Version(major_version, minor_version);
+Handshake_Type Server_Hello::type() const
+   {
+   return m_impl->type();
+   }
 
-   m_random = reader.get_fixed<uint8_t>(32);
+Protocol_Version Server_Hello::version() const
+   {
+   return m_impl->version();
+   }
 
-   m_session_id = reader.get_range<uint8_t>(1, 0, 32);
+const std::vector<uint8_t>& Server_Hello::random() const
+   {
+   return m_impl->random();
+   }
 
-   m_ciphersuite = reader.get_uint16_t();
+const std::vector<uint8_t>& Server_Hello::session_id() const
+   {
+   return m_impl->session_id();
+   }
 
-   m_comp_method = reader.get_byte();
+uint16_t Server_Hello::ciphersuite() const
+   {
+   return m_impl->ciphersuite();
+   }
 
-   m_extensions.deserialize(reader, Connection_Side::SERVER);
+uint8_t Server_Hello::compression_method() const
+   {
+   return m_impl->compression_method();
+   }
+
+bool Server_Hello::secure_renegotiation() const
+   {
+   return m_impl->secure_renegotiation();
+   }
+
+std::vector<uint8_t> Server_Hello::renegotiation_info() const
+   {
+   return m_impl->renegotiation_info();
+   }
+
+bool Server_Hello::supports_extended_master_secret() const
+   {
+   return m_impl->supports_extended_master_secret();
+   }
+
+bool Server_Hello::supports_encrypt_then_mac() const
+   {
+   return m_impl->supports_encrypt_then_mac();
+   }
+
+bool Server_Hello::supports_certificate_status_message() const
+   {
+   return m_impl->supports_certificate_status_message();
+   }
+
+bool Server_Hello::supports_session_ticket() const
+   {
+   return m_impl->supports_session_ticket();
+   }
+
+uint16_t Server_Hello::srtp_profile() const
+   {
+   return m_impl->srtp_profile();
+   }
+
+std::string Server_Hello::next_protocol() const
+   {
+   return m_impl->next_protocol();
+   }
+
+std::set<Handshake_Extension_Type> Server_Hello::extension_types() const
+   {
+   return m_impl->extension_types();
+   }
+
+const Extensions& Server_Hello::extensions() const
+   {
+   return m_impl->extensions();
+   }
+
+bool Server_Hello::prefers_compressed_ec_points() const
+   {
+   return m_impl->prefers_compressed_ec_points();
+   }
+
+bool Server_Hello::random_signals_downgrade() const
+   {
+   return m_impl->random_signals_downgrade();
    }
 
 /*
@@ -184,28 +166,7 @@ Server_Hello::Server_Hello(const std::vector<uint8_t>& buf)
 */
 std::vector<uint8_t> Server_Hello::serialize() const
    {
-   std::vector<uint8_t> buf;
-
-   buf.push_back(m_version.major_version());
-   buf.push_back(m_version.minor_version());
-   buf += m_random;
-
-   append_tls_length_value(buf, m_session_id, 1);
-
-   buf.push_back(get_byte<0>(m_ciphersuite));
-   buf.push_back(get_byte<1>(m_ciphersuite));
-
-   buf.push_back(m_comp_method);
-
-   buf += m_extensions.serialize(Connection_Side::SERVER);
-
-   return buf;
-   }
-
-bool Server_Hello::random_signals_downgrade() const
-   {
-   const uint64_t last8 = load_be<uint64_t>(m_random.data(), 3);
-   return (last8 == DOWNGRADE_TLS11);
+   return m_impl->serialize();
    }
 
 /*
@@ -233,7 +194,6 @@ std::vector<uint8_t> Server_Hello_Done::serialize() const
    {
    return std::vector<uint8_t>();
    }
-
 }
 
 }

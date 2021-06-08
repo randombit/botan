@@ -1,0 +1,13 @@
+<defines>
+TLS_12 -> 20210608
+</defines>
+
+<header:public>
+</header:public>
+
+<header:internal>
+msg_client_hello_impl_13.h
+</header:internal>
+
+<requires>
+</requires>
