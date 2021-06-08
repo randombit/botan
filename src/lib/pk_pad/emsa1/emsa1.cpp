@@ -1,6 +1,6 @@
 /*
 * EMSA1
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2021 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,24 +17,26 @@ namespace {
 secure_vector<uint8_t> emsa1_encoding(const secure_vector<uint8_t>& msg,
                                   size_t output_bits)
    {
-   if(8*msg.size() <= output_bits)
+   const size_t msg_bits = 8*msg.size();
+   if(msg_bits <= output_bits)
       return msg;
 
-   size_t shift = 8*msg.size() - output_bits;
+   const size_t shift = msg_bits - output_bits;
+   const size_t byte_shift = shift / 8;
+   const size_t bit_shift = shift % 8;
 
-   size_t byte_shift = shift / 8, bit_shift = shift % 8;
    secure_vector<uint8_t> digest(msg.size() - byte_shift);
 
-   for(size_t j = 0; j != msg.size() - byte_shift; ++j)
-      digest[j] = msg[j];
+   for(size_t i = 0; i != msg.size() - byte_shift; ++i)
+      digest[i] = msg[i];
 
    if(bit_shift)
       {
       uint8_t carry = 0;
-      for(size_t j = 0; j != digest.size(); ++j)
+      for(size_t i = 0; i != digest.size(); ++i)
          {
-         uint8_t temp = digest[j];
-         digest[j] = (temp >> bit_shift) | carry;
+         uint8_t temp = digest[i];
+         digest[i] = (temp >> bit_shift) | carry;
          carry = (temp << (8 - bit_shift));
          }
       }
@@ -90,7 +92,7 @@ bool EMSA1::verify(const secure_vector<uint8_t>& input,
    // If our encoding is longer, all the bytes in it must be zero
    for(size_t i = 0; i != offset; ++i)
       if(our_coding[i] != 0)
-            return false;
+         return false;
 
    return constant_time_compare(input.data(), &our_coding[offset], input.size());
    }
