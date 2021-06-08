@@ -58,13 +58,10 @@ class Verification_with_EMSA : public Verification
       void update(const uint8_t msg[], size_t msg_len) override;
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
 
-      bool do_check(const secure_vector<uint8_t>& msg,
-                    const uint8_t sig[], size_t sig_len);
-
-      std::string hash_for_signature() { return m_hash; }
-
    protected:
       explicit Verification_with_EMSA(const std::string& emsa, bool has_message_recovery = false);
+
+      std::string hash_for_signature() { return m_hash; }
 
       /**
       * Get the maximum message size in bits supported by this public key.
@@ -158,9 +155,6 @@ class Signature_with_EMSA : public Signature
       * @return maximum message in bits
       */
       virtual size_t max_input_bits() const = 0;
-
-      bool self_test_signature(const std::vector<uint8_t>& msg,
-                               const std::vector<uint8_t>& sig) const;
 
       virtual secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                            RandomNumberGenerator& rng) = 0;
