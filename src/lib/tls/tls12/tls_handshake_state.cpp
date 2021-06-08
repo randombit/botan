@@ -35,6 +35,9 @@ const char* handshake_type_to_string(Handshake_Type type)
       case SERVER_HELLO:
          return "server_hello";
 
+      case HELLO_RETRY_REQUEST:
+         return "hello_retry_request";
+
       case CERTIFICATE:
          return "certificate";
 
@@ -67,6 +70,15 @@ const char* handshake_type_to_string(Handshake_Type type)
 
       case FINISHED:
          return "finished";
+
+      case END_OF_EARLY_DATA:
+         return "end_of_early_data";
+
+      case ENCRYPTED_EXTENSIONS:
+         return "encrypted_extensions";
+
+      case KEY_UPDATE:
+         return "key_update";
 
       case HANDSHAKE_NONE:
          return "invalid";
@@ -374,11 +386,34 @@ Handshake_State::parse_sig_format(const Public_Key& key,
 
    const std::string hash_algo = hash_function_of_scheme(scheme);
 
+   // RFC 8446 4.4.3:
+   //   The SHA-1 algorithm MUST NOT be used in any signatures of
+   //   CertificateVerify messages.
+   if(scheme == Signature_Scheme::RSA_PKCS1_SHA1
+         || scheme == Signature_Scheme::ECDSA_SHA1
+         || scheme == Signature_Scheme::DSA_SHA1)
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "SHA-1 algorithm must not be used");
+      }
+
    if(!supported_algos_include(supported_algos, key_type, hash_algo))
       {
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                           "TLS signature extension did not allow for " +
                           key_type + "/" + hash_algo + " signature");
+      }
+
+
+   // RFC 8446 4.4.3:
+   //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
+   //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
+   if(version() == Protocol_Version::TLS_V13 && key_type == "RSA" &&
+         (scheme == Signature_Scheme::RSA_PKCS1_SHA1
+          || scheme == Signature_Scheme::RSA_PKCS1_SHA256
+          || scheme == Signature_Scheme::RSA_PKCS1_SHA384
+          || scheme == Signature_Scheme::RSA_PKCS1_SHA512))
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "RSA signatures must use an RSASSA-PSS algorithm");
       }
 
    if(key_type == "RSA")

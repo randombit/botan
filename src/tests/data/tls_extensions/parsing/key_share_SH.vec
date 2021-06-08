@@ -1,0 +1,17 @@
+# KeyShareServerKello (variant of KeyShare extension) consists of:
+#     - KeyShareEntry:
+#           - Group (2 bytes)
+#           - Key Exchange Length (2 bytes)
+#           - Key Exchange (vector of bytes[Key Exchange Length])
+
+
+[key_share_SH]
+# correct extension content
+Buffer = 001d0020f0dc1c73b9de09ca9a65dc7565b06e698c0a2ac27f5240026e56c5b2f8d88d4d
+Expected_Content = 001d0020f0dc1c73b9de09ca9a65dc7565b06e698c0a2ac27f5240026e56c5b2f8d88d4d
+Exception =
+
+# not enough bytes in the buffer to decode extension
+Buffer = 001d0020f0dc1c73b9de09ca9a65dc7565b06e698c0a2ac27f5240026e56c5b2f8d88d
+Expected_Content =
+Exception = Not enough bytes in the buffer to decode KeyShare (ServerHello) extension

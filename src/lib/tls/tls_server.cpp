@@ -67,6 +67,11 @@ void Server::renegotiate(bool force_full_renegotiation)
    m_impl->channel().renegotiate(force_full_renegotiation);
    }
 
+void Server::update_traffic_keys(bool request_peer_update)
+   {
+   m_impl->channel().update_traffic_keys(request_peer_update);
+   }
+
 bool Server::secure_renegotiation_supported() const
    {
    return m_impl->channel().secure_renegotiation_supported();
