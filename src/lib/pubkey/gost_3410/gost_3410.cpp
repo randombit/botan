@@ -80,6 +80,9 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    secure_vector<uint8_t> bits;
    BER_Decoder(key_bits).decode(bits, ASN1_Type::OctetString);
 
+   if(bits.size() != 2*(p_bits/8))
+      throw Decoding_Error("GOST-34.10-2020 invalid encoding of public key");
+
    const size_t part_size = bits.size() / 2;
 
    // Keys are stored in little endian format (WTF)
