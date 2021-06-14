@@ -80,6 +80,8 @@ void BigInt::encode_1363(uint8_t output[], size_t bytes, const BigInt& n)
 */
 secure_vector<uint8_t> BigInt::encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes)
    {
+   if(n1.is_negative() || n2.is_negative())
+      throw Encoding_Error("encode_fixed_length_int_pair: values must be positive");
    if(n1.bytes() > bytes || n2.bytes() > bytes)
       throw Encoding_Error("encode_fixed_length_int_pair: values too large to encode properly");
    secure_vector<uint8_t> output(2 * bytes);
