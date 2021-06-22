@@ -208,7 +208,7 @@ class BigInt_Unit_Tests final : public Test
 
          oss.str("");
          oss << std::hex << n;
-         result.test_eq("output 33 hex", oss.str(), "21");
+         result.test_eq("output 33 hex", oss.str(), "0x21");
 
          result.test_throws("octal output not supported", [&]() { oss << std::oct << n; });
 

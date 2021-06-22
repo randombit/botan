@@ -1498,13 +1498,9 @@ class MPI(object): # pylint: disable=too-many-public-methods
         return self.__obj
 
     def __int__(self):
-        out = create_string_buffer(2*self.byte_count() + 1)
+        out = create_string_buffer(2*self.byte_count() + 3)
         _DLL.botan_mp_to_hex(self.__obj, out)
-        val = int(out.value, 16)
-        if self.is_negative():
-            return -val
-        else:
-            return val
+        return int(out.value, 16)
 
     def __repr__(self):
         # Should have a better size estimate than this ...

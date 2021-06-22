@@ -14,6 +14,7 @@
 
 namespace Botan {
 
+class BigInt;
 class BER_Decoder;
 
 /**
@@ -58,12 +59,17 @@ class BOTAN_PUBLIC_API(2,4) ASN1_Formatter
 
       /**
       * This is called to format binary elements that we don't know how to
-      * convert to a string The result will be passed as value to format; the
+      * convert to a string. The result will be passed as value to format; the
       * tags are included as a hint to aid decoding.
       */
       virtual std::string format_bin(ASN1_Type type_tag,
                                      ASN1_Class class_tag,
                                      const std::vector<uint8_t>& vec) const = 0;
+
+      /**
+      * This is called to format integers
+      */
+      virtual std::string format_bn(const BigInt& bn) const = 0;
 
    private:
       void decode(std::ostream& output,
@@ -113,6 +119,8 @@ class BOTAN_PUBLIC_API(2,4) ASN1_Pretty_Printer final : public ASN1_Formatter
       std::string format_bin(ASN1_Type type_tag,
                              ASN1_Class class_tag,
                              const std::vector<uint8_t>& vec) const override;
+
+      std::string format_bn(const BigInt& bn) const override;
 
       const size_t m_print_limit;
       const size_t m_print_binary_limit;
