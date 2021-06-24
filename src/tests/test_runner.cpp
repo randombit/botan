@@ -195,9 +195,34 @@ int Test_Runner::run(const Test_Options& opts)
 
 namespace {
 
-std::string report_out(const std::vector<Botan_Tests::Test::Result>& results,
-                       size_t& tests_failed,
-                       size_t& tests_ran)
+class Test_Result_State
+   {
+   public:
+      Test_Result_State(size_t test_run, size_t tot_test_runs) :
+         m_test_run(test_run),
+         m_tot_test_runs(tot_test_runs),
+         m_tests_failed(0),
+         m_tests_run(0),
+         m_start_time(Botan_Tests::Test::timestamp())
+         {}
+
+      std::string record(const std::string& test_name,
+                         const std::vector<Botan_Tests::Test::Result>& results);
+
+      std::string final_summary();
+
+      size_t tests_failed() const { return m_tests_failed; }
+   private:
+      std::set<std::string> m_tests_failed_names;
+      size_t m_test_run;
+      size_t m_tot_test_runs;
+      size_t m_tests_failed;
+      size_t m_tests_run;
+      uint64_t m_start_time;
+   };
+
+std::string Test_Result_State::record(const std::string& test_name,
+                                      const std::vector<Botan_Tests::Test::Result>& results)
    {
    std::ostringstream out;
 
@@ -218,11 +243,56 @@ std::string report_out(const std::vector<Botan_Tests::Test::Result>& results,
    for(auto const& result : combined)
       {
       out << result.second.result_string();
-      tests_failed += result.second.tests_failed();
-      tests_ran += result.second.tests_run();
+      m_tests_run += result.second.tests_run();
+
+      const size_t failed = result.second.tests_failed();
+
+      if(failed > 0)
+         {
+         m_tests_failed += result.second.tests_failed();
+         m_tests_failed_names.insert(test_name);
+         }
       }
 
    return out.str();
+   }
+
+std::string Test_Result_State::final_summary()
+   {
+   const uint64_t total_ns = Botan_Tests::Test::timestamp() - m_start_time;
+
+   std::ostringstream oss;
+
+   if(m_test_run == 0 && m_tot_test_runs == 1)
+      oss << "Tests";
+   else
+      oss << "Test run " << (1+m_test_run) << "/" << m_tot_test_runs;
+
+   oss << " complete ran " << m_tests_run << " tests in "
+            << Botan_Tests::Test::format_time(total_ns) << " ";
+
+   if(m_tests_failed > 0)
+      {
+      oss << m_tests_failed << " tests failed (in ";
+
+      bool first = true;
+      for(auto& test : m_tests_failed_names)
+         {
+         if(!first)
+            oss << " ";
+         first = false;
+         oss << test;
+         }
+
+      oss << ")";
+      }
+   else if(m_tests_run > 0)
+      {
+      oss << "all tests ok";
+      }
+
+   oss << "\n";
+   return oss.str();
    }
 
 std::vector<Test::Result> run_a_test(const std::string& test_name)
@@ -257,32 +327,6 @@ std::vector<Test::Result> run_a_test(const std::string& test_name)
    return results;
    }
 
-std::string test_summary(size_t test_run, size_t tot_test_runs, uint64_t total_ns,
-                         size_t tests_ran, size_t tests_failed)
-   {
-   std::ostringstream oss;
-
-   if(test_run == 0 && tot_test_runs == 1)
-      oss << "Tests";
-   else
-      oss << "Test run " << (1+test_run) << "/" << tot_test_runs;
-
-   oss << " complete ran " << tests_ran << " tests in "
-            << Botan_Tests::Test::format_time(total_ns) << " ";
-
-   if(tests_failed > 0)
-      {
-      oss << tests_failed << " tests failed";
-      }
-   else if(tests_ran > 0)
-      {
-      oss << "all tests ok";
-      }
-
-   oss << "\n";
-   return oss.str();
-   }
-
 #if defined(BOTAN_HAS_THREAD_UTILS)
 
 bool needs_serialization(const std::string& test_name)
@@ -305,8 +349,7 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
                               size_t test_run,
                               size_t tot_test_runs)
    {
-   size_t tests_ran = 0, tests_failed = 0;
-   const uint64_t start_time = Botan_Tests::Test::timestamp();
+   Test_Result_State state(test_run, tot_test_runs);
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    if(test_threads != 1)
@@ -346,17 +389,14 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
       for(size_t i = 0; i != m_fut_results.size(); ++i)
          {
          output() << tests_to_run[i] << ':' << std::endl;
-         const std::vector<Test::Result> results = m_fut_results[i].get();
-         output() << report_out(results, tests_failed, tests_ran) << std::flush;
+         output() << state.record(tests_to_run[i], m_fut_results[i].get()) << std::flush;
          }
 
       pool.shutdown();
 
-      const uint64_t total_ns = Botan_Tests::Test::timestamp() - start_time;
+      output() << state.final_summary();
 
-      output() << test_summary(test_run, tot_test_runs, total_ns, tests_ran, tests_failed);
-
-      return tests_failed;
+      return state.tests_failed();
       }
 #else
    if(test_threads > 1)
@@ -368,15 +408,12 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
    for(auto const& test_name : tests_to_run)
       {
       output() << test_name << ':' << std::endl;
-      const std::vector<Test::Result> results = run_a_test(test_name);
-      output() << report_out(results, tests_failed, tests_ran) << std::flush;
+      output() << state.record(test_name, run_a_test(test_name)) << std::flush;
       }
 
-   const uint64_t total_ns = Botan_Tests::Test::timestamp() - start_time;
+   output() << state.final_summary();
 
-   output() << test_summary(test_run, tot_test_runs, total_ns, tests_ran, tests_failed);
-
-   return tests_failed;
+   return state.tests_failed();
    }
 
 }
