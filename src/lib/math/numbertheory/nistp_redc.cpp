@@ -21,6 +21,8 @@ const BigInt& prime_p521()
 
 void redc_p521(BigInt& x, secure_vector<word>& ws)
    {
+   BOTAN_DEBUG_ASSERT(x.is_positive());
+
    const size_t p_full_words = 521 / BOTAN_MP_WORD_BITS;
    const size_t p_top_bits = 521 % BOTAN_MP_WORD_BITS;
    const size_t p_words = p_full_words + 1;
@@ -109,6 +111,8 @@ const BigInt& prime_p192()
 
 void redc_p192(BigInt& x, secure_vector<word>& ws)
    {
+   BOTAN_DEBUG_ASSERT(x.is_positive());
+
    BOTAN_UNUSED(ws);
 
    static const size_t p192_limbs = 192 / BOTAN_MP_WORD_BITS;
@@ -204,6 +208,8 @@ const BigInt& prime_p224()
 
 void redc_p224(BigInt& x, secure_vector<word>& ws)
    {
+   BOTAN_DEBUG_ASSERT(x.is_positive());
+
    static const size_t p224_limbs = (BOTAN_MP_WORD_BITS == 32) ? 7 : 4;
 
    BOTAN_UNUSED(ws);
@@ -306,6 +312,8 @@ const BigInt& prime_p256()
 
 void redc_p256(BigInt& x, secure_vector<word>& ws)
    {
+   BOTAN_DEBUG_ASSERT(x.is_positive());
+
    static const size_t p256_limbs = (BOTAN_MP_WORD_BITS == 32) ? 8 : 4;
 
    BOTAN_UNUSED(ws);
@@ -434,6 +442,8 @@ const BigInt& prime_p384()
 
 void redc_p384(BigInt& x, secure_vector<word>& ws)
    {
+   BOTAN_DEBUG_ASSERT(x.is_positive());
+
    BOTAN_UNUSED(ws);
 
    static const size_t p384_limbs = (BOTAN_MP_WORD_BITS == 32) ? 12 : 6;
