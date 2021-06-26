@@ -20,7 +20,7 @@ std::string BigInt::to_dec_string() const
    secure_vector<uint8_t> digits;
 
    // (over-)estimate of the number of digits, log2(10) ~= 3.32
-   digits.reserve(3.4 * this->bits());
+   digits.reserve(static_cast<size_t>(3.4 * this->bits()));
 
    while(copy > 0)
       {
