@@ -25,6 +25,11 @@ class ASN1_Parser final : public Botan::ASN1_Formatter
          {
          return "";
          }
+
+      std::string format_bn(const Botan::BigInt&) const override
+         {
+         return "";
+         }
    };
 
 void fuzz(const uint8_t in[], size_t len)

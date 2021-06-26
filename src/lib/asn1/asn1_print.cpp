@@ -172,11 +172,7 @@ void ASN1_Formatter::decode(std::ostream& output,
             data.decode(number, ASN1_Type::Enumerated, class_tag);
             }
 
-         std::vector<uint8_t> rep = BigInt::encode(number);
-         if(rep.empty()) // if zero
-            rep.resize(1);
-
-         output << format(type_tag, class_tag, level, length, hex_encode(rep));
+         output << format(type_tag, class_tag, level, length, format_bn(number));
          }
       else if(type_tag == ASN1_Type::Boolean)
          {
@@ -322,6 +318,14 @@ std::string ASN1_Pretty_Printer::format_bin(ASN1_Type /*type_tag*/,
       }
    else
       return hex_encode(vec);
+   }
+
+std::string ASN1_Pretty_Printer::format_bn(const BigInt& bn) const
+   {
+   if(bn.bits() < 16)
+      return bn.to_dec_string();
+   else
+      return bn.to_hex_string();
    }
 
 }

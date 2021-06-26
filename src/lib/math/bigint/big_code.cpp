@@ -17,7 +17,10 @@ std::string BigInt::to_dec_string() const
    copy.set_sign(Positive);
 
    uint8_t remainder;
-   std::vector<uint8_t> digits;
+   secure_vector<uint8_t> digits;
+
+   // (over-)estimate of the number of digits, log2(10) ~= 3.32
+   digits.reserve(static_cast<size_t>(3.4 * this->bits()));
 
    while(copy > 0)
       {
@@ -33,6 +36,9 @@ std::string BigInt::to_dec_string() const
 
    std::string s;
 
+   if(is_negative())
+      s += "-";
+
    for(auto i = digits.rbegin(); i != digits.rend(); ++i)
       {
       s.push_back(*i + '0');
@@ -46,11 +52,17 @@ std::string BigInt::to_dec_string() const
 
 std::string BigInt::to_hex_string() const
    {
-   const std::vector<uint8_t> bits = BigInt::encode(*this);
+   std::vector<uint8_t> bits = BigInt::encode(*this);
+
    if(bits.empty())
-      return "00";
-   else
-      return hex_encode(bits);
+      bits.push_back(0);
+
+   std::string hrep;
+   if(is_negative())
+      hrep += "-";
+   hrep += "0x";
+   hrep += hex_encode(bits);
+   return hrep;
    }
 
 /*
