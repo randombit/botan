@@ -1,6 +1,6 @@
 /*
 * BigInt Encoding/Decoding
-* (C) 1999-2010,2012,2019 Jack Lloyd
+* (C) 1999-2010,2012,2019,2021 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,35 +13,70 @@ namespace Botan {
 
 std::string BigInt::to_dec_string() const
    {
-   BigInt copy = *this;
-   copy.set_sign(Positive);
+   // Use the largest power of 10 that fits in a word
+#if (BOTAN_MP_WORD_BITS == 64)
+   const word conversion_radix = 10000000000000000000U;
+   const word radix_digits = 19;
+#else
+   const word conversion_radix = 1000000000U;
+   const word radix_digits = 9;
+#endif
 
-   uint8_t remainder;
-   secure_vector<uint8_t> digits;
+   // (over-)estimate of the number of digits needed; log2(10) ~ 3.3219
+   const size_t digit_estimate = static_cast<size_t>(1 + (this->bits() / 3.32));
 
-   // (over-)estimate of the number of digits, log2(10) ~= 3.32
-   digits.reserve(static_cast<size_t>(3.4 * this->bits()));
+   // (over-)estimate of db such that conversion_radix^db > *this
+   const size_t digit_blocks = (digit_estimate + radix_digits - 1) / radix_digits;
 
-   while(copy > 0)
+   BigInt value = *this;
+   value.set_sign(Positive);
+
+   // Extract groups of digits into words
+   std::vector<word> digit_groups(digit_blocks);
+
+   for(size_t i = 0; i != digit_blocks; ++i)
       {
-      ct_divide_u8(copy, 100, copy, remainder);
-
-      const uint8_t ld = remainder % 10;
-      const uint8_t td = (remainder - ld) / 10;
-      digits.push_back(ld);
-
-      if(copy > 0 || td > 0)
-         digits.push_back(td);
+      word remainder = 0;
+      ct_divide_word(value, conversion_radix, value, remainder);
+      digit_groups[i] = remainder;
       }
 
+   BOTAN_ASSERT_NOMSG(value.is_zero());
+
+   // Extract digits from the groups
+   std::vector<uint8_t> digits(digit_blocks * radix_digits);
+
+   for(size_t i = 0; i != digit_blocks; ++i)
+      {
+      word remainder = digit_groups[i];
+      for(size_t j = 0; j != radix_digits; ++j)
+         {
+         // Compiler should convert div/mod by 10 into mul by magic constant
+         const word digit = remainder % 10;
+         remainder /= 10;
+         digits[radix_digits*i + j] = static_cast<uint8_t>(digit);
+         }
+      }
+
+   // remove leading zeros
+   while(digits.size() > 0 && digits.back() == 0)
+      {
+      digits.pop_back();
+      }
+
+   BOTAN_ASSERT_NOMSG(digit_estimate >= digits.size());
+
+   // Reverse the digits to big-endian and format to text
    std::string s;
+   s.reserve(1 + digits.size());
 
    if(is_negative())
       s += "-";
 
+   // Reverse and convert to textual digits
    for(auto i = digits.rbegin(); i != digits.rend(); ++i)
       {
-      s.push_back(*i + '0');
+      s.push_back(*i + '0'); // assumes ASCII
       }
 
    if(s.empty())
@@ -136,6 +171,7 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base)
       }
    else if(base == Decimal)
       {
+      // This could be made faster using the same trick as to_dec_string
       for(size_t i = 0; i != length; ++i)
          {
          const char c = buf[i];

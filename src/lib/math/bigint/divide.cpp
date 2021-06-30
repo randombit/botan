@@ -1,6 +1,6 @@
 /*
-* Division Algorithm
-* (C) 1999-2007,2012,2018 Jack Lloyd
+* Division Algorithms
+* (C) 1999-2007,2012,2018,2021 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -50,6 +50,9 @@ inline bool division_check(word q, word y2, word y1,
 
 void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out)
    {
+   if(y.is_zero())
+      throw Invalid_Argument("ct_divide: cannot divide by zero");
+
    const size_t x_words = x.sig_words();
    const size_t y_words = y.sig_words();
 
@@ -78,24 +81,28 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out)
    q_out = q;
    }
 
-void ct_divide_u8(const BigInt& x, uint8_t y, BigInt& q_out, uint8_t& r_out)
+void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out)
    {
+   if(y == 0)
+      throw Invalid_Argument("ct_divide_word: cannot divide by zero");
+
    const size_t x_words = x.sig_words();
    const size_t x_bits = x.bits();
 
    BigInt q = BigInt::with_capacity(x_words);
-   uint32_t r = 0;
+   word r = 0;
 
    for(size_t i = 0; i != x_bits; ++i)
       {
       const size_t b = x_bits - 1 - i;
       const bool x_b = x.get_bit(b);
 
+      const auto r_carry = CT::Mask<word>::expand(r >> (BOTAN_MP_WORD_BITS - 1));
+
       r *= 2;
       r += x_b;
 
-      const auto r_gte_y = CT::Mask<uint32_t>::is_gte(r, y);
-
+      const auto r_gte_y = CT::Mask<word>::is_gte(r, y) | r_carry;
       q.conditionally_set_bit(b, r_gte_y.is_set());
       r = r_gte_y.select(r - y, r);
       }
@@ -110,7 +117,7 @@ void ct_divide_u8(const BigInt& x, uint8_t y, BigInt& q_out, uint8_t& r_out)
          }
       }
 
-   r_out = static_cast<uint8_t>(r);
+   r_out = r;
    q_out = q;
    }
 
@@ -148,17 +155,6 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y)
       }
 
    return r;
-   }
-
-void vartime_divide_word(const BigInt& x, const word y, BigInt& q_out, BigInt& r_out)
-   {
-   if(y == 0)
-      throw Invalid_Argument("vartime_divide_word: cannot divide by zero");
-
-   // It might be worthwhile to specialize vartime_divide for y with 1 word
-
-   // until then:
-   vartime_divide(x, BigInt::from_word(y), q_out, r_out);
    }
 
 /*

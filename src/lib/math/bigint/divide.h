@@ -26,19 +26,6 @@ void vartime_divide(const BigInt& x,
                     BigInt& r);
 
 /**
-* BigInt/word Division
-* @param x an integer
-* @param y a non-zero integer
-* @param q will be set to x / y
-* @param r will be set to x % y
-*/
-BOTAN_TEST_API
-void vartime_divide_word(const BigInt& x,
-                         word y,
-                         BigInt& q,
-                         BigInt& r);
-
-/**
 * BigInt division, const time variant
 *
 * This runs with control flow independent of the values of x/y.
@@ -76,7 +63,7 @@ inline BigInt ct_divide(const BigInt& x, const BigInt& y)
 * BigInt division, const time variant
 *
 * This runs with control flow independent of the values of x/y.
-* Warning: the loop bounds still leak the sizes of x and y.
+* Warning: the loop bounds still leaks the size of x.
 *
 * @param x an integer
 * @param y a non-zero integer
@@ -84,10 +71,10 @@ inline BigInt ct_divide(const BigInt& x, const BigInt& y)
 * @param r will be set to x % y
 */
 BOTAN_TEST_API
-void ct_divide_u8(const BigInt& x,
-                  uint8_t y,
-                  BigInt& q,
-                  uint8_t& r);
+void ct_divide_word(const BigInt& x,
+                    word y,
+                    BigInt& q,
+                    word& r);
 
 /**
 * BigInt modulo, const time variant

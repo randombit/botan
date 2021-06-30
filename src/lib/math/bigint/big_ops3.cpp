@@ -111,20 +111,10 @@ BigInt operator/(const BigInt& x, word y)
    {
    if(y == 0)
       throw Invalid_Argument("BigInt::operator/ divide by zero");
-   else if(y == 1)
-      return x;
-   else if(y == 2)
-      return (x >> 1);
-   else if(y <= 255)
-      {
-      BigInt q;
-      uint8_t r;
-      ct_divide_u8(x, static_cast<uint8_t>(y), q, r);
-      return q;
-      }
 
-   BigInt q, r;
-   vartime_divide_word(x, y, q, r);
+   BigInt q;
+   word r;
+   ct_divide_word(x, y, q, r);
    return q;
    }
 
