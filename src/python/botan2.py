@@ -40,8 +40,14 @@ class BotanException(Exception):
         if rc == 0:
             super(BotanException, self).__init__(message)
         else:
-            descr = _DLL.botan_error_description(rc).decode('ascii')
-            super(BotanException, self).__init__("%s: %d (%s)" % (message, rc, descr))
+            exn_msg = _DLL.botan_error_last_exception_message().decode('ascii')
+            err_descr = _DLL.botan_error_description(rc).decode('ascii')
+
+            formatted_msg = "%s: %d (%s)" % (message, rc, err_descr)
+            if exn_msg != "":
+                formatted_msg += ': ' + exn_msg
+
+            super(BotanException, self).__init__(formatted_msg)
 
     def error_code(self):
         return self.__rc
@@ -118,6 +124,9 @@ def _set_prototypes(dll):
 
     dll.botan_error_description.argtypes = [c_int]
     dll.botan_error_description.restype = c_char_p
+
+    dll.botan_error_last_exception_message.argtypes = []
+    dll.botan_error_last_exception_message.restype = c_char_p
 
     # These are generated using src/scripts/ffi_decls.py:
     ffi_api(dll.botan_constant_time_compare, [c_void_p, c_void_p, c_size_t], [-1])
