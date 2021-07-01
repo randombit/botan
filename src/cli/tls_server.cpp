@@ -9,10 +9,14 @@
 #include "cli.h"
 #include "sandbox.h"
 
+#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+  #include <sys/socket.h>
+#endif
+
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && \
    defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
-#if defined(SO_USER_COOKIE)
+#if defined(SO_USER_COOKIE) || defined(SO_RTABLE)
 #define SOCKET_ID 1
 #else
 #define SOCKET_ID 0
@@ -68,7 +72,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          const std::string transport = get_arg("type");
          const std::string dump_traces_to = get_arg("dump-traces");
 #if SOCKET_ID
-         m_socket_id = get_arg_sz("socket-id");
+         m_socket_id = static_cast<uint32_t>(get_arg_sz("socket-id"));
 #endif
 
          if(transport != "tcp" && transport != "udp")
@@ -260,6 +264,12 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                {
                // Failed but not world-ending issue
                output() << "set socket cookie id failed" << std::endl;
+               }
+#elif defined(SO_RTABLE)
+            if(::setsockopt(fd, SOL_SOCKET, SO_RTABLE, reinterpret_cast<const void *>(&m_socket_id), sizeof(m_socket_id)) != 0)
+               {
+               // Failed but not world-ending issue
+               output() << "set socket route table id failed" << std::endl;
                }
 #endif
 #endif
