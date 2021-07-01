@@ -16,8 +16,12 @@
 
 namespace Botan_FFI {
 
+thread_local std::string g_last_exception_what;
+
 int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc)
    {
+   g_last_exception_what.assign(exn);
+
    std::string val;
    if(Botan::OS::read_env_variable(val, "BOTAN_FFI_PRINT_EXCEPTIONS") == true && val != "")
       {
@@ -88,6 +92,8 @@ int ffi_map_error_type(Botan::ErrorType err)
 
 int ffi_guard_thunk(const char* func_name, std::function<int ()> thunk)
    {
+   g_last_exception_what.clear();
+
    try
       {
       return thunk();
@@ -121,6 +127,11 @@ int ffi_guard_thunk(const char* func_name, std::function<int ()> thunk)
 extern "C" {
 
 using namespace Botan_FFI;
+
+const char* botan_error_last_exception_message()
+   {
+   return g_last_exception_what.c_str();
+   }
 
 const char* botan_error_description(int err)
    {
@@ -200,7 +211,11 @@ uint32_t botan_ffi_api_version()
 
 int botan_ffi_supports_api(uint32_t api_version)
    {
-   // This is the API introduced in 2.18 and 3.0
+   // This is the API introduced in 3.0
+   if(api_version == 20210628)
+      return BOTAN_FFI_SUCCESS;
+
+   // This is the API introduced in 2.18
    if(api_version == 20210220)
       return BOTAN_FFI_SUCCESS;
 

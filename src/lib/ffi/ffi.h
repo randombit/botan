@@ -97,6 +97,15 @@ enum BOTAN_FFI_ERROR {
 BOTAN_PUBLIC_API(2,8) const char* botan_error_description(int err);
 
 /**
+* Return the message of the last exception caught in this thread.
+*
+* This pointer can/will be reallocated or overwritten the next time
+* this thread calls any other Botan FFI function and must be copied
+* to persistent storage first.
+*/
+BOTAN_PUBLIC_API(3,0) const char* botan_error_last_exception_message();
+
+/**
 * Return the version of the currently supported FFI API. This is
 * expressed in the form YYYYMMDD of the release date of this version
 * of the API.

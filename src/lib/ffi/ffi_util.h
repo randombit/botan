@@ -109,25 +109,18 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
 template<typename T, uint32_t M>
 int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
    {
-   try
+   return ffi_guard_thunk(func_name, [=]() -> int
       {
+      // ignore delete of null objects
       if(obj == nullptr)
-         return BOTAN_FFI_SUCCESS; // ignore delete of null objects
+         return BOTAN_FFI_SUCCESS;
 
       if(obj->magic_ok() == false)
          return BOTAN_FFI_ERROR_INVALID_OBJECT;
 
       delete obj;
       return BOTAN_FFI_SUCCESS;
-      }
-   catch(std::exception& e)
-      {
-      return ffi_error_exception_thrown(func_name, e.what());
-      }
-   catch(...)
-      {
-      return ffi_error_exception_thrown(func_name, "unknown exception");
-      }
+      });
    }
 
 #define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, __func__)
