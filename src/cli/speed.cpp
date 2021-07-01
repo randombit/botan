@@ -1423,7 +1423,7 @@ class Speed final : public Command
 
             const auto ten = Botan::BigInt::from_word(10);
             Botan::BigInt q1, r1, q2;
-            uint8_t r2;
+            Botan::word r2;
 
             while(ct_div_timer->under(runtime_per_size))
                {
@@ -1434,7 +1434,7 @@ class Speed final : public Command
                div_timer->stop();
 
                ct_div_timer->start();
-               Botan::ct_divide_u8(x, 10, q2, r2);
+               Botan::ct_divide_word(x, 10, q2, r2);
                ct_div_timer->stop();
 
                BOTAN_ASSERT_EQUAL(q1, q2, "Quotient ok");

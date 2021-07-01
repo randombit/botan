@@ -390,19 +390,22 @@ class BigInt_Div_Test final : public Text_Based_Test
          e /= b;
          result.test_eq("a /= b", e, c);
 
-         if(b.bytes() == 1)
+         if(b.sig_words() == 1)
             {
-            const uint8_t b8 = b.byte_at(0);
+            const Botan::word bw = b.word_at(0);
+            result.test_eq("bw ok", Botan::BigInt::from_word(bw), b);
 
             Botan::BigInt ct_q;
-            uint8_t ct_r;
-            Botan::ct_divide_u8(a, b8, ct_q, ct_r);
-            result.test_eq("ct_divide_u8 q", ct_q, c);
+            Botan::word ct_r;
+            Botan::ct_divide_word(a, bw, ct_q, ct_r);
+            result.test_eq("ct_divide_word q", ct_q, c);
+            result.test_eq("ct_divide_word r", ct_q * b + ct_r, a);
             }
 
          Botan::BigInt ct_q, ct_r;
          Botan::ct_divide(a, b, ct_q, ct_r);
          result.test_eq("ct_divide q", ct_q, c);
+         result.test_eq("ct_divide r", ct_q * b + ct_r, a);
 
          return result;
          }
@@ -442,13 +445,10 @@ class BigInt_Mod_Test final : public Text_Based_Test
             result.test_eq("a %= b (as word)", e, expected);
 
             result.test_eq("a % b (as word)", a % b_word, expected);
-            }
 
-         if(b.bytes() == 1)
-            {
             Botan::BigInt ct_q;
-            Botan::uint8_t ct_r;
-            Botan::ct_divide_u8(a, b.byte_at(0), ct_q, ct_r);
+            Botan::word ct_r;
+            Botan::ct_divide_word(a, b.word_at(0), ct_q, ct_r);
             result.test_eq("ct_divide_u8 r", ct_r, expected);
             }
 

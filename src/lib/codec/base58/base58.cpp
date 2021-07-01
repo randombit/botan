@@ -62,16 +62,16 @@ char lookup_base58_char(uint8_t x)
 
 std::string base58_encode(BigInt v, size_t leading_zeros)
    {
-   const uint8_t radix = 58;
+   const word radix = 58;
 
    std::string result;
    BigInt q;
 
    while(v.is_nonzero())
       {
-      uint8_t r;
-      ct_divide_u8(v, radix, q, r);
-      result.push_back(lookup_base58_char(r));
+      word r;
+      ct_divide_word(v, radix, q, r);
+      result.push_back(lookup_base58_char(static_cast<uint8_t>(r)));
       v.swap(q);
       }
 
