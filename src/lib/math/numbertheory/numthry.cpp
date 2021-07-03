@@ -283,7 +283,13 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 */
 BigInt lcm(const BigInt& a, const BigInt& b)
    {
-   return ct_divide(a * b, gcd(a, b));
+   if(a == b)
+      return a;
+
+   auto ab = a * b;
+   ab.set_sign(BigInt::Positive); // ignore the signs of a & b
+   const auto g = gcd(a, b);
+   return ct_divide(ab, g);
    }
 
 /*
