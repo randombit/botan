@@ -1,6 +1,7 @@
 Release Notes
 ========================================
 
+<<<<<<< HEAD
 Version 2.18.1, 2021-05-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -87,6 +88,11 @@ Version 2.17.1, 2020-11-07
 * Re-enable support for the x86 CLMUL instruction on Visual C++, which was
   accidentally disabled starting in 2.12.0. (GH #2460)
 
+=======
+Version 3.0.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+>>>>>>> c9fcd92e4 (Bump version to 3.0.0-alpha0)
 Version 2.17.0, 2020-11-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

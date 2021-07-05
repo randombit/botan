@@ -8,6 +8,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+
 #ifndef BOTAN_ED25519_INT_H_
 #define BOTAN_ED25519_INT_H_
 
@@ -16,6 +17,22 @@
 
 namespace Botan {
 
+  #ifndef gePoints
+  #define gePoints
+  typedef struct
+     {
+     fe X;
+     fe Y;
+     fe Z;
+     fe T;
+     } ge_p3;
+     typedef struct
+     {
+     fe X;
+     fe Y;
+     fe Z;
+     } ge_p2;
+  #endif
 inline uint64_t load_3(const uint8_t in[3])
    {
    return static_cast<uint64_t>(in[0]) |
@@ -90,17 +107,11 @@ Representations:
   ge_p3 (extended): (X:Y:Z:T) satisfying x=X/Z, y=Y/Z, XY=ZT
 */
 
-typedef struct
-   {
-   fe X;
-   fe Y;
-   fe Z;
-   fe T;
-   } ge_p3;
+
+
 
 int ge_frombytes_negate_vartime(ge_p3*, const uint8_t*);
 void ge_scalarmult_base(uint8_t out[32], const uint8_t in[32]);
-
 void ge_double_scalarmult_vartime(uint8_t out[32],
                                   const uint8_t a[],
                                   const ge_p3* A,
@@ -110,7 +121,6 @@ void ge_double_scalarmult_vartime(uint8_t out[32],
 The set of scalars is \Z/l
 where l = 2^252 + 27742317777372353535851937790883648493.
 */
-
 void sc_reduce(uint8_t*);
 void sc_muladd(uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*);
 
