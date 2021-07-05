@@ -1,9 +1,17 @@
 
+<<<<<<< HEAD
 release_major = 2
 release_minor = 18
 release_patch = 1
 release_suffix = ''
 release_so_abi_rev = 18
+=======
+release_major = 3
+release_minor = 0
+release_patch = 0
+release_suffix = '-alpha0'
+release_so_abi_rev = 0
+>>>>>>> c9fcd92e4 (Bump version to 3.0.0-alpha0)
 
 # These are set by the distribution script
 release_vc_rev = None

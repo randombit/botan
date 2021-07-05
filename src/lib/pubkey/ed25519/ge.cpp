@@ -22,12 +22,24 @@ Representations:
   ge_p1p1 (completed): ((X:Z),(Y:T)) satisfying x=X/Z, y=Y/T
   ge_precomp (Duif): (y+x,y-x,2dxy)
 */
+
+
+#ifndef gePoints
+#define gePoints
 typedef struct
    {
    fe X;
    fe Y;
    fe Z;
+   fe T;
+   } ge_p3;
+   typedef struct
+   {
+   fe X;
+   fe Y;
+   fe Z;
    } ge_p2;
+#endif
 
 typedef struct
    {

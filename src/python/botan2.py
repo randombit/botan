@@ -55,11 +55,15 @@ def _load_botan_dll(expected_version):
     possible_dll_names = []
 
     if platform in ['win32', 'cygwin', 'msys']:
+        possible_dll_names.append('botan-3.dll')
         possible_dll_names.append('botan.dll')
     elif platform in ['darwin', 'macos']:
+        possible_dll_names.append('libbotan-3.dylib')
         possible_dll_names.append('libbotan-2.dylib')
     else:
         # assumed to be some Unix/Linux system
+        possible_dll_names.append('libbotan-3.so')
+        possible_dll_names += ['libbotan-3.so.%d' % (v) for v in reversed(range(0, 10))]
         possible_dll_names.append('libbotan-2.so')
         possible_dll_names += ['libbotan-2.so.%d' % (v) for v in reversed(range(13, 20))]
 
