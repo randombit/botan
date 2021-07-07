@@ -1,0 +1,7 @@
+<defines>
+PAIRING_BN256 -> 20180113
+</defines>
+
+<header:public>
+bn256.h
+</header:public>
