@@ -16,10 +16,14 @@
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && \
    defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
-#if defined(SO_USER_COOKIE) || defined(SO_RTABLE)
-#define SOCKET_ID 1
+#if defined(SO_MARK) || defined(SO_USER_COOKIE) || defined(SO_RTABLE)
+#if defined(SO_MARK)
+#define BOTAN_SO_SOCKETID SO_MARK
+#elif defined(SO_USER_COOKIE)
+#define BOTAN_SO_SOCKETID SO_USER_COOKIE
 #else
-#define SOCKET_ID 0
+#define BOTAN_SO_SOCKETID SO_RTABLE
+#endif
 #endif
 
 #include <botan/tls_server.h>
@@ -39,7 +43,7 @@ namespace Botan_CLI {
 class TLS_Server final : public Command, public Botan::TLS::Callbacks
    {
    public:
-#if SOCKET_ID
+#if defined(BOTAN_SO_SOCKETID)
       TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0")
 #else
       TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=default --dump-traces= --max-clients=0")
@@ -71,7 +75,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          const size_t max_clients = get_arg_sz("max-clients");
          const std::string transport = get_arg("type");
          const std::string dump_traces_to = get_arg("dump-traces");
-#if SOCKET_ID
+#if defined(BOTAN_SO_SOCKETID)
          m_socket_id = static_cast<uint32_t>(get_arg_sz("socket-id"));
 #endif
 
@@ -257,21 +261,12 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
             }
          if(m_socket_id > 0)
             {
-#if SOCKET_ID
-            // Other oses could have other means to trace sockets
-#if defined(SO_USER_COOKIE)
-            if(::setsockopt(fd, SOL_SOCKET, SO_USER_COOKIE, reinterpret_cast<const void *>(&m_socket_id), sizeof(m_socket_id)) != 0)
+#if defined(BOTAN_SO_SOCKETID)
+            if(::setsockopt(fd, SOL_SOCKET, BOTAN_SO_SOCKETID, reinterpret_cast<const void *>(&m_socket_id), sizeof(m_socket_id)) != 0)
                {
                // Failed but not world-ending issue
-               output() << "set socket cookie id failed" << std::endl;
+               output() << "set socket identifier setting failed" << std::endl;
                }
-#elif defined(SO_RTABLE)
-            if(::setsockopt(fd, SOL_SOCKET, SO_RTABLE, reinterpret_cast<const void *>(&m_socket_id), sizeof(m_socket_id)) != 0)
-               {
-               // Failed but not world-ending issue
-               output() << "set socket route table id failed" << std::endl;
-               }
-#endif
 #endif
             }
          return fd;
