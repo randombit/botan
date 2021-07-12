@@ -1,16 +1,18 @@
 /*
 * Certificate Store
-* (C) 1999-2019 Jack Lloyd
+* (C) 1999-2021 Jack Lloyd
 * (C) 2018-2019 Patrik Fiedler, Tim Oesterreich
+* (C) 2021      René Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/ber_dec.h>
 #include <botan/certstor_windows.h>
 #include <botan/pkix_types.h>
-#include <functional>
 
 #include <array>
+#include <functional>
 #include <vector>
 
 #define NOMINMAX 1
@@ -201,8 +203,11 @@ std::vector<X509_DN> Certificate_Store_Windows::all_subjects() const
       // freeing the previous context.
       while(cert_context.assign(CertEnumCertificatesInStore(windows_cert_store.get(), cert_context.get())))
          {
-         X509_Certificate cert(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
-         subject_dns.push_back(cert.subject_dn());
+         BER_Decoder dec(cert_context->pCertInfo->Subject.pbData, cert_context->pCertInfo->Subject.cbData);
+
+         X509_DN dn;
+         dn.decode_from(dec);
+         subject_dns.emplace_back(std::move(dn));
          }
       }
 
