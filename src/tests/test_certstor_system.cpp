@@ -49,6 +49,31 @@ Test::Result find_certificate_by_pubkey_sha1(Botan::Certificate_Store& certstore
    return result;
    }
 
+Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certificate_Store& certstore)
+   {
+   Test::Result result("System Certificate Store - Find Certificate by SHA1(pubkey) - regression test for GH #2779");
+
+   try
+      {
+      result.start_timer();
+      auto cert = certstore.find_cert_by_pubkey_sha1(get_pubkey_sha1_of_cert_with_different_key_id());
+      result.end_timer();
+
+      if(result.test_not_nullopt("found certificate", cert))
+         {
+         auto cns = cert->subject_dn().get_attribute("CN");
+         result.test_is_eq("exactly one CN", cns.size(), size_t(1));
+         result.test_eq("CN", cns.front(), "D-TRUST Root Class 3 CA 2 2009");
+         }
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure(e.what());
+      }
+
+   return result;
+   }
+
 Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore)
    {
    Test::Result result("System Certificate Store - Find Certificate by subject DN");
@@ -328,6 +353,7 @@ class Certstor_System_Tests final : public Test
          results.push_back(open_result);
 
          results.push_back(find_certificate_by_pubkey_sha1(*system));
+         results.push_back(find_certificate_by_pubkey_sha1_with_unmatching_key_id(*system));
          results.push_back(find_cert_by_subject_dn(*system));
          results.push_back(find_cert_by_subject_dn_and_key_id(*system));
          results.push_back(find_all_certs_by_subject_dn(*system));

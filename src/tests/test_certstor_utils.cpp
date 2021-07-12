@@ -49,6 +49,18 @@ std::vector<uint8_t> get_key_id()
    return Botan::hex_decode("c4a7b1a47b2c71fadbe14b9075ffc41560858910");
    }
 
+
+std::vector<uint8_t> get_pubkey_sha1_of_cert_with_different_key_id()
+   {
+   // this is _not_ the same as the public key SHA1
+   // see https://github.com/randombit/botan/issues/2779 for details
+   //
+   // SHA-1(Public Key) of:   D-TRUST Root Class 3 CA 2 2009
+   // Valid Until:            Nov  5 08:35:58 2029 GMT
+   // Subject Key Identifier: fdda14c49f30de21bd1e4239fcab632349e0f184
+   return Botan::hex_decode("a737b46280e401211faff74eeccd1c05eb8947ce");
+   }
+
 Botan::X509_DN get_unknown_dn()
    {
    // thats a D-Trust "Test Certificate". It should be fairly likely that
