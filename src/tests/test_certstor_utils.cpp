@@ -52,13 +52,12 @@ std::vector<uint8_t> get_key_id()
 
 std::vector<uint8_t> get_pubkey_sha1_of_cert_with_different_key_id()
    {
-   // this is _not_ the same as the public key SHA1
    // see https://github.com/randombit/botan/issues/2779 for details
    //
-   // SHA-1(Public Key) of:   D-TRUST Root Class 3 CA 2 2009
-   // Valid Until:            Nov  5 08:35:58 2029 GMT
-   // Subject Key Identifier: fdda14c49f30de21bd1e4239fcab632349e0f184
-   return Botan::hex_decode("a737b46280e401211faff74eeccd1c05eb8947ce");
+   // SHA-1(Public Key) of:   SecureTrust CA
+   // Valid Until:            Dec 31 19:40:55 2029 GMT
+   // Subject Key Identifier: 4232b616fa04fdfe5d4b7ac3fdf74c401d5a43af
+   return Botan::hex_decode("ca4edd5b273529d9f6eec3e553efa4c019961daf");
    }
 
 Botan::X509_DN get_unknown_dn()

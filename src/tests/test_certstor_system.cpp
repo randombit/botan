@@ -63,7 +63,7 @@ Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certi
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
-         result.test_eq("CN", cns.front(), "D-TRUST Root Class 3 CA 2 2009");
+         result.test_eq("CN", cns.front(), "SecureTrust CA");
          }
       }
    catch(std::exception& e)
