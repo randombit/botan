@@ -60,6 +60,15 @@ std::vector<uint8_t> get_pubkey_sha1_of_cert_with_different_key_id()
    return Botan::hex_decode("ca4edd5b273529d9f6eec3e553efa4c019961daf");
    }
 
+Botan::X509_DN get_dn_of_cert_with_different_key_id()
+   {
+   // This is the DN of the 'SecureTrust CA' whose SHA-1(pubkey) differs
+   // from its Subject Key Identifier
+   return read_dn("3048310b30090603550406130255533120301e060355040a131753656375"
+                  "7265547275737420436f72706f726174696f6e311730150603550403130e"
+                  "5365637572655472757374204341");
+   }
+
 Botan::X509_DN get_unknown_dn()
    {
    // thats a D-Trust "Test Certificate". It should be fairly likely that

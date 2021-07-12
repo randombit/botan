@@ -53,6 +53,12 @@ Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certi
    {
    Test::Result result("System Certificate Store - Find Certificate by SHA1(pubkey) - regression test for GH #2779");
 
+   if(!certstore.find_cert(get_dn_of_cert_with_different_key_id(), {}).has_value())
+      {
+      result.note_missing("OS does not trust the certificate used for this regression test, skipping");
+      return result;
+      }
+
    try
       {
       result.start_timer();
