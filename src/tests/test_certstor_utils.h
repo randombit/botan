@@ -1,6 +1,6 @@
 /*
-* (C) 1999-2019 Jack Lloyd
-* (C) 2019      René Meusel
+* (C) 1999-2021 Jack Lloyd
+* (C) 2019,2021 René Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

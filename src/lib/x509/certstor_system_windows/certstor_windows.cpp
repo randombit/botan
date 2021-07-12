@@ -1,7 +1,8 @@
 /*
 * Certificate Store
-* (C) 1999-2019 Jack Lloyd
+* (C) 1999-2021 Jack Lloyd
 * (C) 2018-2019 Patrik Fiedler, Tim Oesterreich
+* (C) 2021      René Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
