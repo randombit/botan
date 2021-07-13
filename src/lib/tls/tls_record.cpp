@@ -340,10 +340,13 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       }
 
    /*
-   This is a little hacky but given how TLS 1.3 versioning works it
-   is probably safe
+   Verify that the record type and record version are within some expected
+   range, so we can quickly reject totally invalid packets.
+
+   The version check is a little hacky but given how TLS 1.3 versioning works
+   this is probably safe
    */
-   if(readbuf[1] != 3)
+   if(readbuf[0] < 20 || readbuf[0] > 23 || readbuf[1] != 3 || readbuf[2] >= 4)
       {
       // We know we read up to at least the 5 byte TLS header
       const std::string first5 = std::string(reinterpret_cast<const char*>(readbuf.data()), 5);
@@ -364,7 +367,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
          }
 
       throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                          "TLS record version has unexpected value");
+                          "TLS record version or record type has unexpected value");
       }
 
    const Protocol_Version version(readbuf[1], readbuf[2]);
