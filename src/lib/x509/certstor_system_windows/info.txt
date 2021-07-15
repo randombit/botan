@@ -10,6 +10,10 @@ win32,certificate_store
 certstor_windows.h
 </header:public>
 
+<requires>
+sha1
+</requires>
+
 <libs>
 windows -> crypt32
 mingw -> crypt32

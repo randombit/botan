@@ -1,6 +1,6 @@
 /*
-* (C) 1999-2019 Jack Lloyd
-* (C) 2019      René Meusel
+* (C) 1999-2021 Jack Lloyd
+* (C) 2019,2021 René Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -26,6 +26,9 @@ Botan::X509_DN get_dn();
 Botan::X509_DN get_utf8_dn();
 
 std::vector<uint8_t> get_key_id();
+
+std::vector<uint8_t> get_pubkey_sha1_of_cert_with_different_key_id();
+Botan::X509_DN       get_dn_of_cert_with_different_key_id();
 
 Botan::X509_DN get_unknown_dn();
 
