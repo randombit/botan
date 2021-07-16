@@ -65,8 +65,11 @@ enum class Auth_Method {
    RSA,
    ECDSA,
 
+   // To support TLS 1.3 ciphersuites, which do not determine the auth method
+   UNDEFINED,
+
    // These are placed outside the encodable range
-   IMPLICIT = 0x10000,
+   IMPLICIT = 0x10000
 };
 
 std::string BOTAN_TEST_API auth_method_to_string(Auth_Method method);
@@ -135,6 +138,9 @@ enum class Kex_Algo {
    CECPQ1,
    PSK,
    ECDHE_PSK,
+
+   // To support TLS 1.3 ciphersuites, which do not determine the kex algo
+   UNDEFINED
 };
 
 std::string BOTAN_TEST_API kex_method_to_string(Kex_Algo method);

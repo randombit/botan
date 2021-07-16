@@ -98,6 +98,8 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
       "ECDH",
       "DH",
       //"RSA",
+      //"IMPLICIT",
+      //TODO: allow TLS 1.3 ciphers with UNDEFINED kex algo
       };
    }
 
@@ -108,6 +110,7 @@ std::vector<std::string> Policy::allowed_signature_methods() const
       "RSA",
       //"DSA",
       //"IMPLICIT",
+      //TODO: allow TLS 1.3 ciphers with UNDEFINED sig meth
       };
    }
 
@@ -262,6 +265,11 @@ bool Policy::acceptable_protocol_version(Protocol_Version version) const
    if(version == Protocol_Version::TLS_V12 && allow_tls12())
       return true;
 
+#if defined(BOTAN_HAS_TLS_13)
+   if(version == Protocol_Version::TLS_V13 && allow_tls13())
+      return true;
+#endif
+
    if(version == Protocol_Version::DTLS_V12 && allow_dtls12())
       return true;
 
@@ -278,6 +286,10 @@ Protocol_Version Policy::latest_supported_version(bool datagram) const
       }
    else
       {
+#if defined(BOTAN_HAS_TLS_13)
+      if(acceptable_protocol_version(Protocol_Version::TLS_V13))
+         return Protocol_Version::TLS_V13;
+#endif
       if(acceptable_protocol_version(Protocol_Version::TLS_V12))
          return Protocol_Version::TLS_V12;
       throw Invalid_State("Policy forbids all available TLS version");
@@ -294,6 +306,14 @@ bool Policy::allow_client_initiated_renegotiation() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
 bool Policy::allow_tls12()  const { return true; }
+bool Policy::allow_tls13() const 
+   {
+#if defined(BOTAN_HAS_TLS_13)
+   return true;
+#else
+   return false;
+#endif
+   }
 bool Policy::allow_dtls12() const { return true; }
 bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
@@ -506,6 +526,7 @@ void print_bool(std::ostream& o,
 void Policy::print(std::ostream& o) const
    {
    print_bool(o, "allow_tls12", allow_tls12());
+   print_bool(o, "allow_tls13", allow_tls13());
    print_bool(o, "allow_dtls12", allow_dtls12());
    print_vec(o, "ciphers", allowed_ciphers());
    print_vec(o, "macs", allowed_macs());
@@ -556,6 +577,14 @@ std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
    }
 
 bool Strict_Policy::allow_tls12()  const { return true;  }
+bool Strict_Policy::allow_tls13()  const 
+{
+#if defined(BOTAN_HAS_TLS_13)
+   return true;
+#else
+   return false;
+#endif
+}
 bool Strict_Policy::allow_dtls12() const { return true;  }
 
 }

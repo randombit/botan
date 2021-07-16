@@ -77,6 +77,8 @@ Client_Hello_Impl::Client_Hello_Impl(Handshake_IO& io,
    m_suites(policy.ciphersuite_list(m_version)),
    m_comp_methods(1)
    {
+   BOTAN_UNUSED(io, hash, cb, reneg_info, next_protocols);
+
    if(!policy.acceptable_protocol_version(m_version))
       throw Internal_Error("Offering " + m_version.to_string() +
                            " but our own policy does not accept it");
@@ -85,42 +87,12 @@ Client_Hello_Impl::Client_Hello_Impl(Handshake_IO& io,
    * Place all empty extensions in front to avoid a bug in some systems
    * which reject hellos when the last extension in the list is empty.
    */
+
+   /*
+   * Used by default independent of protocol version.
+   * RFC 8446: Appendix D.
+   */
    m_extensions.add(new Extended_Master_Secret);
-   m_extensions.add(new Session_Ticket());
-
-   if(policy.negotiate_encrypt_then_mac())
-      m_extensions.add(new Encrypt_then_MAC);
-
-   m_extensions.add(new Renegotiation_Extension(reneg_info));
-
-   m_extensions.add(new Supported_Versions(m_version, policy));
-
-   if(client_settings.hostname() != "")
-      m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
-
-   if(policy.support_cert_status_message())
-      m_extensions.add(new Certificate_Status_Request({}, {}));
-
-   if(reneg_info.empty() && !next_protocols.empty())
-      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
-
-   m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
-
-   if(m_version.is_datagram_protocol())
-      m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
-
-   auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
-
-   if(supported_groups->ec_groups().size() > 0)
-      {
-      m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
-      }
-
-   m_extensions.add(supported_groups.release());
-
-   cb.tls_modify_extensions(m_extensions, CLIENT);
-
-   hash.update(io.send(*this));
    }
 
 /*
@@ -140,47 +112,21 @@ Client_Hello_Impl::Client_Hello_Impl(Handshake_IO& io,
    m_suites(policy.ciphersuite_list(m_version)),
    m_comp_methods(1)
    {
+   BOTAN_UNUSED(io, hash, cb, reneg_info, next_protocols);
+
    if(!policy.acceptable_protocol_version(m_version))
       throw Internal_Error("Offering " + m_version.to_string() +
                            " but our own policy does not accept it");
 
-   if(!value_exists(m_suites, session.ciphersuite_code()))
-      m_suites.push_back(session.ciphersuite_code());
-
    /*
-   We always add the EMS extension, even if not used in the original session.
-   If the server understands it and follows the RFC it should reject our resume
-   attempt and upgrade us to a new session with the EMS protection.
+   * We always add the EMS extension, even if not used in the original session.
+   * If the server understands it and follows the RFC it should reject our resume
+   * attempt and upgrade us to a new session with the EMS protection.
+   * 
+   * Used by default independent of protocol version.
+   * RFC 8446: Appendix D.
    */
    m_extensions.add(new Extended_Master_Secret);
-
-   m_extensions.add(new Renegotiation_Extension(reneg_info));
-   m_extensions.add(new Server_Name_Indicator(session.server_info().hostname()));
-   m_extensions.add(new Session_Ticket(session.session_ticket()));
-
-   if(policy.support_cert_status_message())
-      m_extensions.add(new Certificate_Status_Request({}, {}));
-
-   auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
-
-   if(supported_groups->ec_groups().size() > 0)
-      {
-      m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
-      }
-
-   m_extensions.add(supported_groups.release());
-
-   if(session.supports_encrypt_then_mac())
-      m_extensions.add(new Encrypt_then_MAC);
-
-   m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
-
-   if(reneg_info.empty() && !next_protocols.empty())
-      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
-
-   cb.tls_modify_extensions(m_extensions, CLIENT);
-
-   hash.update(io.send(*this));
    }
 
 /*

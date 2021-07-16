@@ -70,6 +70,17 @@ const char* handshake_type_to_string(Handshake_Type type)
       case FINISHED:
          return "finished";
 
+#if defined(BOTAN_HAS_TLS_13)
+      case END_OF_EARLY_DATA:
+         return "end_of_early_data";
+
+      case ENCRYPTED_EXTENSIONS:
+         return "encrypted_extensions";
+
+      case KEY_UPDATE:
+         return "key_update";
+#endif
+
       case HANDSHAKE_NONE:
          return "invalid";
       }
@@ -128,6 +139,13 @@ uint32_t bitmask_for_handshake_type(Handshake_Type type)
 
       case FINISHED:
          return (1 << 14);
+
+#if defined(BOTAN_HAS_TLS_13)
+      case END_OF_EARLY_DATA:
+      case ENCRYPTED_EXTENSIONS:
+      case KEY_UPDATE:
+         BOTAN_ASSERT(false, "unhandled enum value");  // TODO fixme
+#endif
 
       // allow explicitly disabling new handshakes
       case HANDSHAKE_NONE:

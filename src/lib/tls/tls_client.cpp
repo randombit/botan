@@ -14,6 +14,12 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_client_impl.h>
 #include <botan/internal/tls_client_impl_12.h>
+#include <botan/internal/tls_endpoint_factory.h>
+
+#if defined(BOTAN_HAS_TLS_13)
+#include <botan/internal/tls_client_impl_13.h>
+#endif
+
 #include <iterator>
 #include <sstream>
 
@@ -33,9 +39,17 @@ Client::Client(Callbacks& callbacks,
                const Protocol_Version& offer_version,
                const std::vector<std::string>& next_protocols,
                size_t io_buf_sz) :
-   m_impl(std::make_unique<Client_Impl_12>(
-             callbacks, session_manager, creds, policy,
-             rng, info, offer_version, next_protocols, io_buf_sz))
+   m_impl(
+#if defined(BOTAN_HAS_TLS_13)
+      offer_version == Protocol_Version::TLS_V13 ?
+      TLS_Endpoint_Factory::create<Client_Impl, Protocol_Version::TLS_V13>(
+         callbacks, session_manager, creds, policy,
+         rng, info, offer_version, next_protocols, io_buf_sz) :
+#endif
+      TLS_Endpoint_Factory::create<Client_Impl, Protocol_Version::TLS_V12>(
+         callbacks, session_manager, creds, policy,
+         rng, info, offer_version, next_protocols, io_buf_sz))
+
    {
    }
 

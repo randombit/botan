@@ -3,6 +3,7 @@
 * (C) 2011,2012,2016,2018,2019 Jack Lloyd
 * (C) 2016 Juraj Somorovsky
 * (C) 2016 Matthias Gierlings
+* (C) 2021 Elektrobit Automotive GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -24,28 +25,36 @@ namespace Botan {
 
 namespace TLS {
 
+#if defined(BOTAN_HAS_TLS_13)
+class Key_Share_Content;
+#endif
 class Policy;
-
 class TLS_Data_Reader;
 
 // This will become an enum class in a future major release
 enum Handshake_Extension_Type {
-   TLSEXT_SERVER_NAME_INDICATION = 0,
-   TLSEXT_CERT_STATUS_REQUEST    = 5,
+   TLSEXT_SERVER_NAME_INDICATION    = 0,
+   TLSEXT_CERT_STATUS_REQUEST       = 5,
 
-   TLSEXT_CERTIFICATE_TYPES      = 9,
-   TLSEXT_SUPPORTED_GROUPS       = 10,
-   TLSEXT_EC_POINT_FORMATS       = 11,
-   TLSEXT_SIGNATURE_ALGORITHMS   = 13,
-   TLSEXT_USE_SRTP               = 14,
-   TLSEXT_ALPN                   = 16,
+   TLSEXT_CERTIFICATE_TYPES         = 9,
+   TLSEXT_SUPPORTED_GROUPS          = 10,
+   TLSEXT_EC_POINT_FORMATS          = 11,
+   TLSEXT_SIGNATURE_ALGORITHMS      = 13,
+   TLSEXT_USE_SRTP                  = 14,
+   TLSEXT_ALPN                      = 16,
 
-   TLSEXT_ENCRYPT_THEN_MAC       = 22,
-   TLSEXT_EXTENDED_MASTER_SECRET = 23,
+   TLSEXT_ENCRYPT_THEN_MAC          = 22,
+   TLSEXT_EXTENDED_MASTER_SECRET    = 23,
 
-   TLSEXT_SESSION_TICKET         = 35,
+   TLSEXT_SESSION_TICKET            = 35,
 
-   TLSEXT_SUPPORTED_VERSIONS     = 43,
+   TLSEXT_SUPPORTED_VERSIONS        = 43,
+#if defined(BOTAN_HAS_TLS_13)
+   TLSEXT_COOKIE                    = 44,
+
+   TLSEXT_SIGNATURE_ALGORITHMS_CERT = 50,
+   TLSEXT_KEY_SHARE                 = 51,
+#endif
 
    TLSEXT_SAFE_RENEGOTIATION     = 65281,
 };
@@ -432,6 +441,176 @@ class BOTAN_UNSTABLE_API Supported_Versions final : public Extension
    private:
       std::vector<Protocol_Version> m_versions;
    };
+
+using Named_Group = Group_Params;
+
+#if defined(BOTAN_HAS_TLS_13)
+/**
+* Cookie from RFC 8446 4.2.2
+*/
+class BOTAN_UNSTABLE_API Cookie final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_COOKIE; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override { return m_cookie.empty(); }
+
+      const std::vector<uint8_t>& get_cookie() const { return m_cookie; }
+
+      explicit Cookie(const std::vector<uint8_t>& cookie);
+
+      explicit Cookie(TLS_Data_Reader& reader,
+                      uint16_t extension_size);
+
+   private:
+      std::vector<uint8_t> m_cookie;
+   };
+
+/**
+* Signature_Algorithms_Cert from RFC 8446
+*/
+class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_SIGNATURE_ALGORITHMS_CERT; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      const std::vector<Signature_Scheme>& supported_schemes() const { return m_siganture_algorithms.supported_schemes(); }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override { return m_siganture_algorithms.empty(); }
+
+      explicit Signature_Algorithms_Cert(const std::vector<Signature_Scheme>& schemes);
+
+      Signature_Algorithms_Cert(TLS_Data_Reader& reader, uint16_t extension_size);
+
+   private:
+      const Signature_Algorithms m_siganture_algorithms;
+   };
+
+/**
+* KeyShareEntry from RFC 8446 B.3.1
+*/
+class Key_Share_Entry
+   {
+   public:
+      explicit Key_Share_Entry() = default;
+
+      explicit Key_Share_Entry(Named_Group group, const std::vector<uint8_t>& key_exchange);
+
+      bool empty() const;
+
+      size_t size() const;
+
+      std::vector<uint8_t> serialize() const;
+
+   private:
+      Named_Group m_group;
+      std::vector<uint8_t> m_key_exchange;
+   };
+
+class Key_Share_Content
+   {
+   public:
+      virtual std::vector<uint8_t> serialize() const = 0;
+      virtual bool empty() const = 0;
+      virtual ~Key_Share_Content() = default;
+   };
+
+class Key_Share_ClientHello final : public Key_Share_Content
+   {
+   public:
+      explicit Key_Share_ClientHello(TLS_Data_Reader& reader,
+                                     uint16_t extension_size);
+
+      explicit Key_Share_ClientHello(const std::vector<Key_Share_Entry>& client_shares);
+
+      ~Key_Share_ClientHello() override;
+
+      std::vector<uint8_t> serialize() const override;
+
+      bool empty() const override;
+
+   private:
+      std::vector<Key_Share_Entry> m_client_shares;
+   };
+
+class Key_Share_ServerHello final : public Key_Share_Content
+   {
+   public:
+      explicit Key_Share_ServerHello(TLS_Data_Reader& reader,
+                                     uint16_t extension_size);
+
+      explicit Key_Share_ServerHello(const Key_Share_Entry& server_share);
+
+      ~Key_Share_ServerHello() override;
+
+      std::vector<uint8_t> serialize() const override;
+
+      bool empty() const override;
+
+   private:
+      Key_Share_Entry m_server_share;
+   };
+
+class Key_Share_HelloRetryRequest final : public Key_Share_Content
+   {
+   public:
+      explicit Key_Share_HelloRetryRequest(TLS_Data_Reader& reader,
+                                           uint16_t extension_size);
+
+      explicit Key_Share_HelloRetryRequest(Named_Group selected_group);
+
+      ~Key_Share_HelloRetryRequest() override;
+
+      std::vector<uint8_t> serialize() const override;
+
+      bool empty() const override;
+
+   private:
+      Named_Group m_selected_group;
+   };
+
+/**
+* Key_Share from RFC 8446 4.2.8
+*/
+class BOTAN_UNSTABLE_API Key_Share final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_KEY_SHARE; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override;
+
+      explicit Key_Share(TLS_Data_Reader& reader,
+                         uint16_t extension_size,
+                         Connection_Side from);
+
+      // constuctor used for ClientHello msg
+      explicit Key_Share(const std::vector<Key_Share_Entry>& client_shares);
+
+      // constuctor used for ServerHello msg
+      explicit Key_Share(const Key_Share_Entry& server_share);
+
+      // constuctor used for HelloRetryRequest msg
+      explicit Key_Share(Named_Group selected_group);
+
+   private:
+      std::unique_ptr<Key_Share_Content> m_content;
+   };
+#endif
 
 /**
 * Unknown extensions are deserialized as this type

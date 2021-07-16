@@ -1,5 +1,6 @@
 /*
 * (C) 2016 Juraj Somorovsky
+* (C) 2021 Elektrobit Automotive GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -16,6 +17,9 @@
    #include <botan/tls_messages.h>
    #include <botan/tls_alert.h>
    #include <botan/internal/loadstor.h>
+#if defined(BOTAN_HAS_TLS_13)
+   #include <botan/internal/tls_reader.h>
+#endif
 #endif
 
 namespace Botan_Tests {
@@ -226,6 +230,168 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("tls", "tls_messages", TLS_Message_Parsing_Test);
+
+#if defined(BOTAN_HAS_TLS_13)
+class TLS_Extension_Parsing_Test final : public Text_Based_Test
+   {
+   public:
+      TLS_Extension_Parsing_Test()
+         : Text_Based_Test("tls_extensions", "Buffer,Protocol,Ciphersuite,AdditionalData,Name,Expected_Content,Exception") {}
+
+      Test::Result run_one_test(const std::string& extension, const VarMap& vars) override
+         {
+         const std::vector<uint8_t> buffer      = vars.get_req_bin("Buffer");
+         const std::vector<uint8_t> protocol    = vars.get_opt_bin("Protocol");
+         const std::vector<uint8_t> ciphersuite = vars.get_opt_bin("Ciphersuite");
+         const std::string exception            = vars.get_req_str("Exception");
+         const std::string expected_name        = vars.get_opt_str("Name", "");
+         const bool is_positive_test            = exception.empty();
+
+         Test::Result result(extension + " parsing");
+
+         if(is_positive_test)
+            {
+            try
+               {
+               if(extension == "supported_version")
+                  {
+                     const std::string expected_buffer = Botan::hex_encode(buffer);
+                     Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
+                      Botan::TLS::Supported_Versions supported_versions(tls_data_reader, buffer.size(),
+                        Botan::TLS::Connection_Side::CLIENT);
+                     const auto serialized_buffer = supported_versions.serialize(Botan::TLS::Connection_Side::CLIENT);
+
+                     const std::vector<std::vector<uint8_t>> expected_versions = vars.get_req_bin_list("Expected_Content");
+                     for (const auto& expected_version : expected_versions)
+                     {
+                        result.confirm("Expected_Content",
+                           supported_versions.supports(Botan::TLS::Protocol_Version(expected_version[0], expected_version[1])));
+                     }
+
+                     result.test_eq("supported_version test 1", Botan::hex_encode(serialized_buffer), expected_buffer);
+                  }
+               else if(extension == "supported_groups")
+                  {
+                     Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
+                     Botan::TLS::Supported_Groups supp_groups_ext (tls_data_reader, buffer.size());
+
+                     const auto serialized_buffer = supp_groups_ext.serialize(Botan::TLS::Connection_Side::CLIENT);
+                     const auto expected_content = vars.get_req_bin("Expected_Content");
+
+                     const auto dh_groups = supp_groups_ext.dh_groups();
+                     const auto ec_groups = supp_groups_ext.ec_groups();
+
+                     std::vector<Botan::TLS::Named_Group> named_groupes;
+                     std::merge(dh_groups.begin(), dh_groups.end(), ec_groups.begin(), ec_groups.end(), std::back_inserter(named_groupes));
+
+                     result.confirm("supported_groups extension - size check", (named_groupes.size() * 2) == expected_content.size());
+
+                     for(auto i = 0u; i < expected_content.size(); i+=2) {
+
+                        const auto expected_named_group = Botan::make_uint16(expected_content.at(i), expected_content.at(i+1));
+
+                        result.confirm("signature_algorithms_cert extension - named group check",
+                           std::any_of(named_groupes.cbegin(), named_groupes.cend(), [&expected_named_group](const Botan::TLS::Named_Group& named_group){
+                              return static_cast<Botan::TLS::Named_Group>(expected_named_group) == named_group;
+                           }));
+                     }
+
+                     result.test_eq("supported_groups extension - serialization test", serialized_buffer, buffer);
+                  }
+               else if(extension == "signature_algorithms_cert")
+                  {
+                     Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
+                     Botan::TLS::Signature_Algorithms_Cert sig_algo_cert (tls_data_reader, buffer.size());
+
+                     const auto serialized_buffer = sig_algo_cert.serialize(Botan::TLS::Connection_Side::CLIENT);
+                     const auto expected_content = vars.get_req_bin("Expected_Content");
+
+                     result.confirm("signature_algorithms_cert extension - size check",
+                        sig_algo_cert.supported_schemes().size() * 2 == expected_content.size());
+
+                     auto offset = 0u;
+                     for (const auto& sig_scheme : sig_algo_cert.supported_schemes()) {
+
+                        const auto expected_sig_scheme = Botan::make_uint16(expected_content.at(offset), expected_content.at(offset+1));
+
+                        result.confirm("signature_algorithms_cert extension - sig scheme check",
+                           static_cast<Botan::TLS::Signature_Scheme>(expected_sig_scheme) == sig_scheme);
+
+                        offset += 2;
+                     }
+
+                     result.test_eq("signature_algorithms_cert extension - serialization test", serialized_buffer, buffer);
+                  }
+               else if (extension == "cookie")
+                  {
+                  Botan::TLS::TLS_Data_Reader tls_data_reader("HelloRetryRequest", buffer);
+                  Botan::TLS::Cookie cookie(tls_data_reader, buffer.size());
+
+                  const auto serialized_buffer = cookie.serialize(Botan::TLS::Connection_Side::SERVER);
+                  const auto expected_cookie = vars.get_req_bin("Expected_Content");
+
+                  result.test_eq("Cookie extension test", Botan::hex_encode(expected_cookie), Botan::hex_encode(cookie.get_cookie()));
+                  }
+               else if (extension == "key_share_HRR")
+                  {
+                  Botan::TLS::TLS_Data_Reader tls_data_reader("HelloRetryRequest", buffer);
+                  Botan::TLS::Key_Share_HelloRetryRequest key_share(tls_data_reader, buffer.size());
+
+                  const auto serialized_buffer = key_share.serialize();
+                  const auto expected_key_share = vars.get_req_bin("Expected_Content");
+
+                  result.test_eq("key_share_HRR test", Botan::hex_encode(serialized_buffer), Botan::hex_encode(expected_key_share));
+                  }
+               else if (extension == "key_share_SH")
+                  {
+                  Botan::TLS::TLS_Data_Reader tls_data_reader("ServerHello", buffer);
+                  Botan::TLS::Key_Share key_share(tls_data_reader, buffer.size(), Botan::TLS::Connection_Side::SERVER);
+
+                  const auto serialized_buffer = key_share.serialize(Botan::TLS::Connection_Side::CLIENT);
+                  const auto expected_key_share = vars.get_req_bin("Expected_Content");
+
+                  result.test_eq("key_share_SH test", Botan::hex_encode(serialized_buffer), Botan::hex_encode(expected_key_share));
+                  }
+               else if (extension == "key_share_CH")
+                  {
+                  Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
+                  Botan::TLS::Key_Share key_share(tls_data_reader, buffer.size(), Botan::TLS::Connection_Side::CLIENT);
+
+                  const auto serialized_buffer = key_share.serialize(Botan::TLS::Connection_Side::SERVER);
+                  const auto expected_key_share = vars.get_req_bin("Expected_Content");
+
+                  result.test_eq("key_share_CH test", Botan::hex_encode(serialized_buffer), Botan::hex_encode(expected_key_share));
+                  }
+               else
+                  {
+                  throw Test_Error("Unknown extension type " + extension + " in TLS parsing tests");
+                  }
+               result.test_success("Correct parsing");
+               }
+            catch(std::exception& e)
+               {
+               result.test_failure(e.what());
+               }
+            }
+         else
+            {
+            }
+
+         return result;
+         }
+
+      std::vector<Test::Result> run_final_tests() override
+         {
+         std::vector<Test::Result> results;
+
+         results.push_back(test_hello_verify_request());
+
+         return results;
+         }
+   };
+
+BOTAN_REGISTER_TEST("tls_extensions", "tls_extensions", TLS_Extension_Parsing_Test);
+#endif
 
 #endif
 

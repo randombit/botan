@@ -15,7 +15,6 @@
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_hash.h>
-#include <botan/internal/stl_util.h>
 #include <botan/internal/msg_server_hello_impl.h>
 #include <botan/internal/msg_server_hello_impl_12.h>
 #include <botan/internal/tls_message_factory.h>
@@ -58,14 +57,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
 */
 Server_Hello::Server_Hello(const std::vector<uint8_t>& buf)
    {
-      auto supported_versions = Server_Hello_Impl(buf).supported_versions();
-
-      const auto protocol_version =
-         value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V13))
-            ? Protocol_Version::TLS_V13
-            : Protocol_Version::TLS_V12;
-
-      m_impl = Message_Factory::create<Server_Hello_Impl>(protocol_version, buf);
+      m_impl = Message_Factory::create<Server_Hello_Impl>(Server_Hello_Impl(buf).supported_versions(), buf);
    }
 
 // Needed for std::unique_ptr<> m_impl member, as *_Impl type

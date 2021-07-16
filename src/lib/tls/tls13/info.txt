@@ -1,5 +1,5 @@
 <defines>
-TLS_12 -> 20210608
+TLS_13 -> 20210721
 </defines>
 
 <header:public>
@@ -7,6 +7,8 @@ TLS_12 -> 20210608
 
 <header:internal>
 msg_client_hello_impl_13.h
+tls_channel_impl_13.h
+tls_client_impl_13.h
 </header:internal>
 
 <requires>

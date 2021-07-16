@@ -1,6 +1,7 @@
 /*
 * TLS Protocol Version Management
 * (C) 2012 Jack Lloyd
+* (C) 2021 Elektrobit Automotive GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,7 +24,9 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
    public:
       enum Version_Code {
          TLS_V12            = 0x0303,
+#if defined(BOTAN_HAS_TLS_13)
          TLS_V13            = 0x0304,
+#endif
          DTLS_V12           = 0xFEFD
       };
 
@@ -32,7 +35,11 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       */
       static Protocol_Version latest_tls_version()
          {
+#if defined(BOTAN_HAS_TLS_13)
+         return Protocol_Version(TLS_V13);
+#else
          return Protocol_Version(TLS_V12);
+#endif
          }
 
       /**

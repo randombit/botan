@@ -1,0 +1,26 @@
+# Supported_groups extension consists of:
+#     - Supported_groups length (2 bytes)
+#     - Supported_groups content (vector of Group_Params)
+
+[supported_groups]
+# correct extension content with only one group params
+Buffer = 00020017
+Expected_Content = 0017
+Exception =
+
+# correct extension content with many group params
+Buffer = 0012001700180019001D01000101010201030104
+Expected_Content = 001700180019001D01000101010201030104
+Exception =
+
+# incorrect extension wrong length
+Buffer = 00040017
+Exception = Inconsistent length field in supported groups list
+
+# incorrect extension content size 0
+Buffer = 00000017
+Exception = Inconsistent length field in supported groups list
+
+# incorrect extension odd bytes number
+Buffer = 0003001700
+Exception = Supported groups list of strange size

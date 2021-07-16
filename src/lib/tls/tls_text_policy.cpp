@@ -50,6 +50,11 @@ bool Text_Policy::allow_tls12() const
    return get_bool("allow_tls12", Policy::allow_tls12());
    }
 
+bool Text_Policy::allow_tls13() const
+   {
+   return get_bool("allow_tls13", Policy::allow_tls13());
+   }
+
 bool Text_Policy::allow_dtls12() const
    {
    return get_bool("allow_dtls12", Policy::allow_dtls12());

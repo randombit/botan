@@ -21,15 +21,25 @@ namespace TLS {
 class Client_Hello_Impl_13: public Client_Hello_Impl
    {
    public:
-      explicit Client_Hello_Impl_13()
-         {
-         // TODO throw std::runtime_error("Implemenation for TLSv1.3 not ready yet. You are welcome to implement it.");
-         }
+      explicit Client_Hello_Impl_13(Handshake_IO& io,
+                                    Handshake_Hash& hash,
+                                    const Policy& policy,
+                                    Callbacks& cb,
+                                    RandomNumberGenerator& rng,
+                                    const std::vector<uint8_t>& reneg_info,
+                                    const Client_Hello::Settings& client_settings,
+                                    const std::vector<std::string>& next_protocols);
 
-      explicit Client_Hello_Impl_13(const std::vector<uint8_t>& buf) : Client_Hello_Impl(buf)
-         {
-         // TODO throw std::runtime_error("Implemenation for TLSv1.3 not ready yet. You are welcome to implement it.");
-         }
+      explicit Client_Hello_Impl_13(Handshake_IO& io,
+                                    Handshake_Hash& hash,
+                                    const Policy& policy,
+                                    Callbacks& cb,
+                                    RandomNumberGenerator& rng,
+                                    const std::vector<uint8_t>& reneg_info,
+                                    const Session& resumed_session,
+                                    const std::vector<std::string>& next_protocols);
+
+      explicit Client_Hello_Impl_13(const std::vector<uint8_t>& buf);
    };
 
 }
