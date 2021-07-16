@@ -42,6 +42,8 @@ std::string kex_method_to_string(Kex_Algo method)
          return "PSK";
       case Kex_Algo::ECDHE_PSK:
          return "ECDHE_PSK";
+      case Kex_Algo::UNDEFINED:
+         return "UNDEFINED";
       }
 
    throw Invalid_State("kex_method_to_string unknown enum value");
@@ -67,6 +69,9 @@ Kex_Algo kex_method_from_string(const std::string& str)
    if(str == "ECDHE_PSK")
       return Kex_Algo::ECDHE_PSK;
 
+   if(str == "UNDEFINED")
+      return Kex_Algo::UNDEFINED;
+
    throw Invalid_Argument("Unknown kex method " + str);
    }
 
@@ -80,6 +85,8 @@ std::string auth_method_to_string(Auth_Method method)
          return "ECDSA";
       case Auth_Method::IMPLICIT:
          return "IMPLICIT";
+      case Auth_Method::UNDEFINED:
+         return "UNDEFINED";
       }
 
     throw Invalid_State("auth_method_to_string unknown enum value");
@@ -93,7 +100,9 @@ Auth_Method auth_method_from_string(const std::string& str)
       return Auth_Method::ECDSA;
    if(str == "IMPLICIT")
       return Auth_Method::IMPLICIT;
-
+   if(str == "UNDEFINED")
+      return Auth_Method::UNDEFINED;
+      
    throw Invalid_Argument("Bad signature method " + str);
    }
 

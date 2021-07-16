@@ -40,7 +40,7 @@ tls_server_impl.h
 tls_seq_numbers.h
 tls_session_key.h
 tls_message_factory.h
-tls_mock_msg_impl_13.h
+tls_endpoint_factory.h
 </header:internal>
 
 <requires>

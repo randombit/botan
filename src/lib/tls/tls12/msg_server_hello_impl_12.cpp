@@ -127,6 +127,7 @@ Server_Hello_Impl_12::Server_Hello_Impl_12(Handshake_IO& io,
 Server_Hello_Impl_12::Server_Hello_Impl_12(const std::vector<uint8_t>& buf) :
    Server_Hello_Impl(buf)
    {
+   // Common implementation is enough, as received Server_Hello shall be read correctly independent of the version
    }
 
 

@@ -1820,9 +1820,23 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
     def _build_info(sources, objects, target_type):
         output = []
+        cxx = os.getenv('CXX')
+        cxx = cxx if cxx else 'gcc'
+
+        compiler_command_args = [cxx, "-Ibuild/include", "-Ibuild/include/external", "-Ibuild/include/internal", "-M"]
+        exit_code = subprocess.call(compiler_command_args + sources[:1] + ["-o", "/dev/null"] )
+        include_dependency_enabled = True if exit_code == 0 else False
+
+        compiler_command_args = " ".join(compiler_command_args)
+
         for (obj_file, src) in zip(objects, sources):
+            deps = ''
+            if include_dependency_enabled: # and ('tls' in src):
+                deps = os.popen("%s %s" % (compiler_command_args, src)).read().rstrip()
+
             info = {
                 'src': src,
+                'inc': deps[deps.find(".cpp ")+5:] if deps else '',
                 'obj': obj_file,
                 'isa_flags': _isa_specific_flags(src)
                 }

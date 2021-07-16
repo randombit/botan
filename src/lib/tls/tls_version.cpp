@@ -1,6 +1,7 @@
 /*
 * TLS Protocol Version Management
 * (C) 2012 Jack Lloyd
+* (C) 2021 Elektrobit Automotive GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -51,6 +52,9 @@ bool Protocol_Version::operator>(const Protocol_Version& other) const
 bool Protocol_Version::known_version() const
    {
    return (m_version == Protocol_Version::TLS_V12 ||
+#if defined(BOTAN_HAS_TLS_13)
+           m_version == Protocol_Version::TLS_V13 ||
+#endif
            m_version == Protocol_Version::DTLS_V12);
    }
 

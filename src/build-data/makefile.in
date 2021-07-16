@@ -122,22 +122,22 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 # Build Commands
 
 %{for lib_build_info}
-%{obj}: %{src}
+%{obj}: %{src} %{inc}
 	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
-%{obj}: %{src}
+%{obj}: %{src} %{inc}
 	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for test_build_info}
-%{obj}: %{src}
+%{obj}: %{src} %{inc}
 	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for fuzzer_build_info}
-%{obj}: %{src}
+%{obj}: %{src} %{inc}
 	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)

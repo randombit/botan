@@ -303,7 +303,13 @@ class Test_TLS_Policy_Text : public Test
          for(std::string policy : policies)
             {
             const std::string from_policy_obj = tls_policy_string(policy);
-            std::string from_file = read_tls_policy(policy);
+            std::string from_file = 
+#if defined(BOTAN_HAS_TLS_13)
+               read_tls_policy(policy + (policy == "default" || policy == "strict" ? "_tls13" : ""));
+#else
+               read_tls_policy(policy);
+#endif
+            
 
 #if !defined(BOTAN_HAS_CURVE_25519)
             auto pos = from_file.find("x25519 ");

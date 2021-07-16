@@ -70,6 +70,17 @@ const char* handshake_type_to_string(Handshake_Type type)
       case FINISHED:
          return "finished";
 
+#if defined(BOTAN_HAS_TLS_13)
+      case END_OF_EARLY_DATA:
+         return "end_of_early_data";
+
+      case ENCRYPTED_EXTENSIONS:
+         return "encrypted_extensions";
+
+      case KEY_UPDATE:
+         return "key_update";
+#endif
+
       case HANDSHAKE_NONE:
          return "invalid";
       }

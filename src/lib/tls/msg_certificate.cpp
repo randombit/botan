@@ -45,9 +45,12 @@ Certificate::Certificate(const Protocol_Version& protocol_version,
                          Handshake_IO& io,
                          Handshake_Hash& hash,
                          const std::vector<X509_Certificate>& cert_list) :
-   m_impl( protocol_version == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V13>()
-      : TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V12>(io, hash, cert_list))
+   m_impl(
+#if defined(BOTAN_HAS_TLS_13)
+      protocol_version == Protocol_Version::TLS_V13 ?
+      TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V13>(io, hash, cert_list) :
+#endif
+      TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V12>(io, hash, cert_list))
    {
    }
 
@@ -56,9 +59,12 @@ Certificate::Certificate(const Protocol_Version& protocol_version,
 */
 Certificate::Certificate(const Protocol_Version& protocol_version,
                          const std::vector<uint8_t>& buf, const Policy& policy) :
-   m_impl( protocol_version == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V13>()
-      : TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V12>(buf, policy))
+   m_impl(
+#if defined(BOTAN_HAS_TLS_13)
+      protocol_version == Protocol_Version::TLS_V13 ?
+      TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V13>(buf, policy) :
+#endif
+      TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V12>(buf, policy))
    {
    }
 

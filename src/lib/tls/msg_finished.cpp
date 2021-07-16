@@ -25,9 +25,12 @@ namespace TLS {
 Finished::Finished(Handshake_IO& io,
                    Handshake_State& state,
                    Connection_Side side) :
-   m_impl( state.version() == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Finished_Impl, Protocol_Version::TLS_V13>(io, state, side)
-      : TLS_Message_Factory::create<Finished_Impl, Protocol_Version::TLS_V12>(io, state, side))
+   m_impl(
+#if defined(BOTAN_HAS_TLS_13)
+      state.version() == Protocol_Version::TLS_V13 ?
+      TLS_Message_Factory::create<Finished_Impl, Protocol_Version::TLS_V13>(io, state, side) :
+#endif
+      TLS_Message_Factory::create<Finished_Impl, Protocol_Version::TLS_V12>(io, state, side))
    {
    }
 
@@ -43,9 +46,12 @@ std::vector<uint8_t> Finished::serialize() const
 * Deserialize a Finished message
 */
 Finished::Finished(const Protocol_Version& protocol_version, const std::vector<uint8_t>& buf):
-   m_impl( protocol_version == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Finished_Impl, Protocol_Version::TLS_V13>(buf)
-      : TLS_Message_Factory::create<Finished_Impl, Protocol_Version::TLS_V12>(buf))
+   m_impl(
+#if defined(BOTAN_HAS_TLS_13)
+      protocol_version == Protocol_Version::TLS_V13 ?
+      TLS_Message_Factory::create<Finished_Impl, Protocol_Version::TLS_V13>(buf) :
+#endif
+      TLS_Message_Factory::create<Finished_Impl, Protocol_Version::TLS_V12>(buf))
    {
    }
 

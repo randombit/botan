@@ -940,6 +940,12 @@ class Shim_Policy final : public Botan::TLS::Policy
          return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls12") && allow_version(Botan::TLS::Protocol_Version::TLS_V12);
          }
 
+      bool allow_tls13() const override
+         {
+         //TODO: No TLS 1.3 allowed until it is implemented
+         return false;
+         }
+
       bool allow_dtls12() const override
          {
          return m_args.flag_set("dtls") && !m_args.flag_set("no-tls12") && allow_version(Botan::TLS::Protocol_Version::DTLS_V12);
@@ -1066,6 +1072,12 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
       for(auto i = ciphersuites.rbegin(); i != ciphersuites.rend(); ++i)
          {
          const auto suite = *i;
+
+         //TODO: Dummy way of skipping TLS 1.3 cipher suites
+         if(suite.kex_method() == Botan::TLS::Kex_Algo::UNDEFINED &&
+            suite.auth_method() == Botan::TLS::Auth_Method::UNDEFINED)
+            continue;
+
          // Can we use it?
          if(suite.valid() == false)
             continue;

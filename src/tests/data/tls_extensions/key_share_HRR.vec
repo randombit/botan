@@ -1,0 +1,12 @@
+# KeyShareHelloRetryRequest (variant of KeyShare extension) consists of:
+#     - Selected group (2 bytes)
+
+[key_share_HRR]
+# correct extension content
+Buffer = 0018
+Expected_Content = 0018
+Exception =
+
+# incorrect extension content (3 bytes instead of 2)
+Buffer = 001877
+Exception = Size of KeyShare extension in HelloRetryRequest must be 2 bytes

@@ -1,0 +1,23 @@
+# Tests generated partially with openssl 1.0.2g
+# ServerHello message contains many fields, the following fields are checked:
+# - Protocol Version
+# - Cipher suite
+# - Extensions
+
+
+#0000   00 2b 00 03 02 03 04
+#002b0003020304
+
+
+[supported_version]
+# correct, with session ticket and renegotiation info
+Buffer = 020304
+Expected_Content = 0304
+Exception =
+
+# test2
+Buffer = 0403040303
+Expected_Content = 0304, 0303
+Exception =
+
+
