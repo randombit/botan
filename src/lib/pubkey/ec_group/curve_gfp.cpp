@@ -515,35 +515,35 @@ BigInt CurveGFp_P521::invert_element(const BigInt& x, secure_vector<word>& ws) c
       curve_sqr_tmp(r, tmp, ws);
    curve_mul_tmp(r, rl, tmp, ws);
 
-    rl = r;
-    for(size_t i = 0; i != 32; ++i)
-        curve_sqr_tmp(r, tmp, ws);
-    curve_mul_tmp(r, rl, tmp, ws);
+   rl = r;
+   for(size_t i = 0; i != 32; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, rl, tmp, ws);
 
-    rl = r;
-    for(size_t i = 0; i != 64; ++i)
-        curve_sqr_tmp(r, tmp, ws);
-    curve_mul_tmp(r, rl, tmp, ws);
+   rl = r;
+   for(size_t i = 0; i != 64; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, rl, tmp, ws);
 
-    rl = r;
-    for(size_t i = 0; i != 128; ++i)
-        curve_sqr_tmp(r, tmp, ws);
-    curve_mul_tmp(r, rl, tmp, ws);
+   rl = r;
+   for(size_t i = 0; i != 128; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, rl, tmp, ws);
 
-    rl = r;
-    for(size_t i = 0; i != 256; ++i)
-        curve_sqr_tmp(r, tmp, ws);
-    curve_mul_tmp(r, rl, tmp, ws);
+   rl = r;
+   for(size_t i = 0; i != 256; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, rl, tmp, ws);
 
-    for(size_t i = 0; i != 7; ++i)
-        curve_sqr_tmp(r, tmp, ws);
-    curve_mul_tmp(r, a7, tmp, ws);
+   for(size_t i = 0; i != 7; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, a7, tmp, ws);
 
-    for(size_t i = 0; i != 2; ++i)
-       curve_sqr_tmp(r, tmp, ws);
-    curve_mul_tmp(r, x, tmp, ws);
+   for(size_t i = 0; i != 2; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, x, tmp, ws);
 
-    return r;
+   return r;
    }
 
 }
