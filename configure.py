@@ -2955,7 +2955,8 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
                 break
     else:
         if not os.access(options.system_cert_bundle, os.R_OK):
-            logging.warning('Provided system cert bundle path %s not found, ignoring', options.system_cert_bundle)
+            logging.warning('System cert bundle '%s' not found, ignoring', # lgtm[py/clear-text-logging-sensitive-data]
+                            options.system_cert_bundle)
             options.system_cert_bundle = None
 
 # Mutates `options`
