@@ -1,6 +1,6 @@
 /*
-* (C) 1999-2019 Jack Lloyd
-* (C) 2019      René Meusel
+* (C) 1999-2021 Jack Lloyd
+* (C) 2019,2021 René Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -45,6 +45,37 @@ Test::Result find_certificate_by_pubkey_sha1(Botan::Certificate_Store& certstore
       {
       certstore.find_cert_by_pubkey_sha1({});
       });
+
+   return result;
+   }
+
+Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certificate_Store& certstore)
+   {
+   Test::Result result("System Certificate Store - Find Certificate by SHA1(pubkey) - regression test for GH #2779");
+
+   if(!certstore.find_cert(get_dn_of_cert_with_different_key_id(), {}).has_value())
+      {
+      result.note_missing("OS does not trust the certificate used for this regression test, skipping");
+      return result;
+      }
+
+   try
+      {
+      result.start_timer();
+      auto cert = certstore.find_cert_by_pubkey_sha1(get_pubkey_sha1_of_cert_with_different_key_id());
+      result.end_timer();
+
+      if(result.test_not_nullopt("found certificate", cert))
+         {
+         auto cns = cert->subject_dn().get_attribute("CN");
+         result.test_is_eq("exactly one CN", cns.size(), size_t(1));
+         result.test_eq("CN", cns.front(), "SecureTrust CA");
+         }
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure(e.what());
+      }
 
    return result;
    }
@@ -328,6 +359,7 @@ class Certstor_System_Tests final : public Test
          results.push_back(open_result);
 
          results.push_back(find_certificate_by_pubkey_sha1(*system));
+         results.push_back(find_certificate_by_pubkey_sha1_with_unmatching_key_id(*system));
          results.push_back(find_cert_by_subject_dn(*system));
          results.push_back(find_cert_by_subject_dn_and_key_id(*system));
          results.push_back(find_all_certs_by_subject_dn(*system));

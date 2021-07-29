@@ -1,6 +1,6 @@
 /*
-* (C) 1999-2019 Jack Lloyd
-* (C) 2019      René Meusel
+* (C) 1999-2021 Jack Lloyd
+* (C) 2019,2021 René Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -47,6 +47,26 @@ std::vector<uint8_t> get_key_id()
    {
    // this is the same as the public key SHA1
    return Botan::hex_decode("c4a7b1a47b2c71fadbe14b9075ffc41560858910");
+   }
+
+
+std::vector<uint8_t> get_pubkey_sha1_of_cert_with_different_key_id()
+   {
+   // see https://github.com/randombit/botan/issues/2779 for details
+   //
+   // SHA-1(Public Key) of:   SecureTrust CA
+   // Valid Until:            Dec 31 19:40:55 2029 GMT
+   // Subject Key Identifier: 4232b616fa04fdfe5d4b7ac3fdf74c401d5a43af
+   return Botan::hex_decode("ca4edd5b273529d9f6eec3e553efa4c019961daf");
+   }
+
+Botan::X509_DN get_dn_of_cert_with_different_key_id()
+   {
+   // This is the DN of the 'SecureTrust CA' whose SHA-1(pubkey) differs
+   // from its Subject Key Identifier
+   return read_dn("3048310b30090603550406130255533120301e060355040a131753656375"
+                  "7265547275737420436f72706f726174696f6e311730150603550403130e"
+                  "5365637572655472757374204341");
    }
 
 Botan::X509_DN get_unknown_dn()

@@ -9,6 +9,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/certstor_windows.h>
+#include <botan/hash.h>
 #include <botan/pkix_types.h>
 
 #include <array>
@@ -187,6 +188,7 @@ std::vector<X509_Certificate> find_cert_by_dn_and_key_id(const Botan::X509_DN& s
 
    return search_cert_stores(blob, find_type, filter, return_on_first_found);
    }
+
 } // namespace
 
 Certificate_Store_Windows::Certificate_Store_Windows() {}
@@ -246,11 +248,16 @@ Certificate_Store_Windows::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& 
 
    auto filter = [&](const std::vector<X509_Certificate>&, const X509_Certificate&) { return true; };
 
+   // This assumes that the to-be-found certificate adheres to RFC 3280 (Section 4.2.1.2), because
+   // the windows API does not allow to search for the SHA-1 of the certificate's public key directly.
+   // Most certificates adhere to the above mentioned convention...
    const auto certs = search_cert_stores(blob, CERT_FIND_KEY_IDENTIFIER, filter, true);
-   if(certs.empty())
-      return std::nullopt;
-   else
+   if(!certs.empty())
       return certs.front();
+
+   // ... for certificates that don't adhere to RFC 3280 (Section 4.2.1.2), we will need to use a
+   // fallback implementation that does an exhaustive search of all available certificates.
+   return find_cert_by_pubkey_sha1_via_exhaustive_search(key_hash);
    }
 
 std::optional<X509_Certificate>
@@ -267,4 +274,41 @@ std::optional<X509_CRL> Certificate_Store_Windows::find_crl_for(const X509_Certi
    BOTAN_UNUSED(subject);
    return std::nullopt;
    }
+
+std::optional<X509_Certificate>
+Certificate_Store_Windows::find_cert_by_pubkey_sha1_via_exhaustive_search(const std::vector<uint8_t> &key_hash) const
+   {
+   if(const auto cache_hit = m_non_rfc3289_certs.find(key_hash); cache_hit != m_non_rfc3289_certs.end())
+      {
+      return cache_hit->second;
+      }
+
+   auto sha1 = HashFunction::create_or_throw("SHA-1");
+   for(const auto store_name : cert_store_names)
+      {
+      Handle_Guard<HCERTSTORE> windows_cert_store = open_cert_store(store_name);
+      Handle_Guard<PCCERT_CONTEXT> cert_context = nullptr;
+
+      // Handle_Guard::assign exchanges the underlying pointer. No RAII is needed here, because the Windows API takes care of
+      // freeing the previous context.
+      while(cert_context.assign(CertEnumCertificatesInStore(windows_cert_store.get(), cert_context.get())))
+         {
+         const auto pubkey_blob = cert_context->pCertInfo->SubjectPublicKeyInfo.PublicKey;
+         const auto key_hash_candidate = sha1->process(static_cast<uint8_t*>(pubkey_blob.pbData),
+                                                       pubkey_blob.cbData);
+
+         if (std::equal(key_hash.begin(), key_hash.end(), key_hash_candidate.begin()))
+            {
+            X509_Certificate result(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
+            m_non_rfc3289_certs[key_hash] = result;
+            return result;
+            }
+         }
+      }
+
+   // insert a negative query result into the cache
+   m_non_rfc3289_certs[key_hash] = std::nullopt;
+   return std::nullopt;
+   }
+
 }
