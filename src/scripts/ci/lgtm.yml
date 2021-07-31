@@ -24,6 +24,7 @@ queries:
  - include: cpp/unused-static-variable
  - exclude: cpp/fixme-comment
  - exclude: cpp/weak-cryptographic-algorithm
+ - exclude: py/clear-text-logging-sensitive-data
 
 extraction:
   cpp:
