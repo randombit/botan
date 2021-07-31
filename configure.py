@@ -2946,6 +2946,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
             '/etc/ssl/ca-bundle.pem', # SuSE
             '/etc/ssl/cert.pem', # OpenBSD, FreeBSD, Alpine
             '/etc/certs/ca-certificates.crt', # Solaris
+            '/opt/local/share/curl/curl-ca-bundle.crt', # macOS with macPorts
         ]
 
         for path in default_paths:
