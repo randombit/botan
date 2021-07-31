@@ -36,6 +36,11 @@ alignas(256) const uint8_t SM4_SBOX[256] = {
 
 /*
 * SM4_SBOX_T[j] == L(SM4_SBOX[j]).
+*
+* Each entry has the form 0xXXYYZZZZ where ZZ = XX ^ YY; can we take
+* advantage of this to create a smaller equivalent table?
+*
+* Additionally YY differs from SBOX[i] by at most 3 (64x 0, 96x 1, 64x 2, 32x 3)
 */
 alignas(256) const uint32_t SM4_SBOX_T[256] = {
    0x8ED55B5B, 0xD0924242, 0x4DEAA7A7, 0x06FDFBFB, 0xFCCF3333, 0x65E28787,
@@ -95,7 +100,7 @@ inline uint32_t SM4_T_slow(uint32_t b)
 
 inline uint32_t SM4_T(uint32_t b)
    {
-   return          SM4_SBOX_T[get_byte<0>(b)]  ^
+   return     (SM4_SBOX_T[get_byte<0>(b)]) ^
       rotr< 8>(SM4_SBOX_T[get_byte<1>(b)]) ^
       rotr<16>(SM4_SBOX_T[get_byte<2>(b)]) ^
       rotr<24>(SM4_SBOX_T[get_byte<3>(b)]);
@@ -113,19 +118,41 @@ inline uint32_t SM4_Tp(uint32_t b)
    return t ^ rotl<13>(t) ^ rotl<23>(t);
    }
 
-#define SM4_E_RNDS(B, R, F) do {                           \
-   B##0 ^= F(B##1 ^ B##2 ^ B##3 ^ m_RK[4*R+0]);            \
-   B##1 ^= F(B##2 ^ B##3 ^ B##0 ^ m_RK[4*R+1]);            \
-   B##2 ^= F(B##3 ^ B##0 ^ B##1 ^ m_RK[4*R+2]);            \
-   B##3 ^= F(B##0 ^ B##1 ^ B##2 ^ m_RK[4*R+3]);            \
+#define SM4_E_RNDS(R, F) do {                      \
+   B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[4*R+0]);            \
+   B1 ^= F(B2 ^ B3 ^ B0 ^ m_RK[4*R+1]);            \
+   B2 ^= F(B3 ^ B0 ^ B1 ^ m_RK[4*R+2]);            \
+   B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[4*R+3]);            \
    } while(0)
 
-#define SM4_D_RNDS(B, R, F) do {                           \
-   B##0 ^= F(B##1 ^ B##2 ^ B##3 ^ m_RK[4*R+3]);            \
-   B##1 ^= F(B##2 ^ B##3 ^ B##0 ^ m_RK[4*R+2]);            \
-   B##2 ^= F(B##3 ^ B##0 ^ B##1 ^ m_RK[4*R+1]);            \
-   B##3 ^= F(B##0 ^ B##1 ^ B##2 ^ m_RK[4*R+0]);            \
+#define SM4_Ex2_RNDS(R, F) do {                    \
+   B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[4*R+0]);            \
+   C0 ^= F(C1 ^ C2 ^ C3 ^ m_RK[4*R+0]);            \
+   B1 ^= F(B2 ^ B3 ^ B0 ^ m_RK[4*R+1]);            \
+   C1 ^= F(C2 ^ C3 ^ C0 ^ m_RK[4*R+1]);            \
+   B2 ^= F(B3 ^ B0 ^ B1 ^ m_RK[4*R+2]);            \
+   C2 ^= F(C3 ^ C0 ^ C1 ^ m_RK[4*R+2]);            \
+   B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[4*R+3]);            \
+   C3 ^= F(C0 ^ C1 ^ C2 ^ m_RK[4*R+3]);            \
+} while(0)
+
+#define SM4_D_RNDS(R, F) do {                      \
+   B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[4*R+3]);            \
+   B1 ^= F(B2 ^ B3 ^ B0 ^ m_RK[4*R+2]);            \
+   B2 ^= F(B3 ^ B0 ^ B1 ^ m_RK[4*R+1]);            \
+   B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[4*R+0]);            \
    } while(0)
+
+#define SM4_Dx2_RNDS(R, F) do {                    \
+   B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[4*R+3]);            \
+   C0 ^= F(C1 ^ C2 ^ C3 ^ m_RK[4*R+3]);            \
+   B1 ^= F(B2 ^ B3 ^ B0 ^ m_RK[4*R+2]);            \
+   C1 ^= F(C2 ^ C3 ^ C0 ^ m_RK[4*R+2]);            \
+   B2 ^= F(B3 ^ B0 ^ B1 ^ m_RK[4*R+1]);            \
+   C2 ^= F(C3 ^ C0 ^ C1 ^ m_RK[4*R+1]);            \
+   B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[4*R+0]);            \
+   C3 ^= F(C0 ^ C1 ^ C2 ^ m_RK[4*R+0]);            \
+} while(0)
 
 }
 
@@ -153,22 +180,14 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t C2 = load_be<uint32_t>(in, 6);
       uint32_t C3 = load_be<uint32_t>(in, 7);
 
-      SM4_E_RNDS(B, 0, SM4_T_slow);
-      SM4_E_RNDS(C, 0, SM4_T_slow);
-      SM4_E_RNDS(B, 1, SM4_T);
-      SM4_E_RNDS(C, 1, SM4_T);
-      SM4_E_RNDS(B, 2, SM4_T);
-      SM4_E_RNDS(C, 2, SM4_T);
-      SM4_E_RNDS(B, 3, SM4_T);
-      SM4_E_RNDS(C, 3, SM4_T);
-      SM4_E_RNDS(B, 4, SM4_T);
-      SM4_E_RNDS(C, 4, SM4_T);
-      SM4_E_RNDS(B, 5, SM4_T);
-      SM4_E_RNDS(C, 5, SM4_T);
-      SM4_E_RNDS(B, 6, SM4_T);
-      SM4_E_RNDS(C, 6, SM4_T);
-      SM4_E_RNDS(B, 7, SM4_T_slow);
-      SM4_E_RNDS(C, 7, SM4_T_slow);
+      SM4_Ex2_RNDS(0, SM4_T_slow);
+      SM4_Ex2_RNDS(1, SM4_T);
+      SM4_Ex2_RNDS(2, SM4_T);
+      SM4_Ex2_RNDS(3, SM4_T);
+      SM4_Ex2_RNDS(4, SM4_T);
+      SM4_Ex2_RNDS(5, SM4_T);
+      SM4_Ex2_RNDS(6, SM4_T);
+      SM4_Ex2_RNDS(7, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
 
@@ -184,14 +203,14 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t B2 = load_be<uint32_t>(in, 2);
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
-      SM4_E_RNDS(B, 0, SM4_T_slow);
-      SM4_E_RNDS(B, 1, SM4_T);
-      SM4_E_RNDS(B, 2, SM4_T);
-      SM4_E_RNDS(B, 3, SM4_T);
-      SM4_E_RNDS(B, 4, SM4_T);
-      SM4_E_RNDS(B, 5, SM4_T);
-      SM4_E_RNDS(B, 6, SM4_T);
-      SM4_E_RNDS(B, 7, SM4_T_slow);
+      SM4_E_RNDS(0, SM4_T_slow);
+      SM4_E_RNDS(1, SM4_T);
+      SM4_E_RNDS(2, SM4_T);
+      SM4_E_RNDS(3, SM4_T);
+      SM4_E_RNDS(4, SM4_T);
+      SM4_E_RNDS(5, SM4_T);
+      SM4_E_RNDS(6, SM4_T);
+      SM4_E_RNDS(7, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0);
 
@@ -224,22 +243,14 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t C2 = load_be<uint32_t>(in, 6);
       uint32_t C3 = load_be<uint32_t>(in, 7);
 
-      SM4_D_RNDS(B, 7, SM4_T_slow);
-      SM4_D_RNDS(C, 7, SM4_T_slow);
-      SM4_D_RNDS(B, 6, SM4_T);
-      SM4_D_RNDS(C, 6, SM4_T);
-      SM4_D_RNDS(B, 5, SM4_T);
-      SM4_D_RNDS(C, 5, SM4_T);
-      SM4_D_RNDS(B, 4, SM4_T);
-      SM4_D_RNDS(C, 4, SM4_T);
-      SM4_D_RNDS(B, 3, SM4_T);
-      SM4_D_RNDS(C, 3, SM4_T);
-      SM4_D_RNDS(B, 2, SM4_T);
-      SM4_D_RNDS(C, 2, SM4_T);
-      SM4_D_RNDS(B, 1, SM4_T);
-      SM4_D_RNDS(C, 1, SM4_T);
-      SM4_D_RNDS(B, 0, SM4_T_slow);
-      SM4_D_RNDS(C, 0, SM4_T_slow);
+      SM4_Dx2_RNDS(7, SM4_T_slow);
+      SM4_Dx2_RNDS(6, SM4_T);
+      SM4_Dx2_RNDS(5, SM4_T);
+      SM4_Dx2_RNDS(4, SM4_T);
+      SM4_Dx2_RNDS(3, SM4_T);
+      SM4_Dx2_RNDS(2, SM4_T);
+      SM4_Dx2_RNDS(1, SM4_T);
+      SM4_Dx2_RNDS(0, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
 
@@ -255,14 +266,14 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t B2 = load_be<uint32_t>(in, 2);
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
-      SM4_D_RNDS(B, 7, SM4_T_slow);
-      SM4_D_RNDS(B, 6, SM4_T);
-      SM4_D_RNDS(B, 5, SM4_T);
-      SM4_D_RNDS(B, 4, SM4_T);
-      SM4_D_RNDS(B, 3, SM4_T);
-      SM4_D_RNDS(B, 2, SM4_T);
-      SM4_D_RNDS(B, 1, SM4_T);
-      SM4_D_RNDS(B, 0, SM4_T_slow);
+      SM4_D_RNDS(7, SM4_T_slow);
+      SM4_D_RNDS(6, SM4_T);
+      SM4_D_RNDS(5, SM4_T);
+      SM4_D_RNDS(4, SM4_T);
+      SM4_D_RNDS(3, SM4_T);
+      SM4_D_RNDS(2, SM4_T);
+      SM4_D_RNDS(1, SM4_T);
+      SM4_D_RNDS(0, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0);
 
