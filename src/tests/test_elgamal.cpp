@@ -1,5 +1,5 @@
 /*
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,15 +17,33 @@ namespace {
 
 #if defined(BOTAN_HAS_ELGAMAL)
 
-class ElGamal_KAT_Tests final : public PK_Encryption_Decryption_Test
+class ElGamal_Encrypt_Tests final : public PK_Encryption_Decryption_Test
    {
    public:
-      ElGamal_KAT_Tests()
+      ElGamal_Encrypt_Tests()
          : PK_Encryption_Decryption_Test(
               "ElGamal",
-              "pubkey/elgamal.vec",
-              "P,G,X,Msg,Nonce,Ciphertext",
-              "Padding") {}
+              "pubkey/elgamal_encrypt.vec",
+              "Group,Secret,Nonce,Msg,Ciphertext", "Padding") {}
+
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const Botan::BigInt x = vars.get_req_bn("Secret");
+         const Botan::DL_Group grp(vars.get_req_str("Group"));
+
+         std::unique_ptr<Botan::Private_Key> key(new Botan::ElGamal_PrivateKey(Test::rng(), grp, x));
+         return key;
+         }
+   };
+
+class ElGamal_Decrypt_Tests final : public PK_Decryption_Test
+   {
+   public:
+      ElGamal_Decrypt_Tests()
+         : PK_Decryption_Test(
+              "ElGamal",
+              "pubkey/elgamal_decrypt.vec",
+              "P,G,X,Msg,Ciphertext") {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
@@ -53,7 +71,8 @@ class ElGamal_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("pubkey", "elgamal_encrypt", ElGamal_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "elgamal_encrypt", ElGamal_Encrypt_Tests);
+BOTAN_REGISTER_TEST("pubkey", "elgamal_decrypt", ElGamal_Decrypt_Tests);
 BOTAN_REGISTER_TEST("pubkey", "elgamal_keygen", ElGamal_Keygen_Tests);
 
 #endif
