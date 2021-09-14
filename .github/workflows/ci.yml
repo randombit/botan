@@ -1,0 +1,88 @@
+
+# (C) 2020 Jack Lloyd
+# Botan is released under the Simplified BSD License (see license.txt)
+
+name: ci
+
+on:
+  push:
+    branches: [ release-2 ]
+  pull_request:
+    branches: [ release-2 ]
+
+jobs:
+  ci:
+    runs-on: ${{ matrix.host_os }}
+
+    env:
+      ANDROID_NDK: android-ndk-r21d
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - target: coverage
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: shared
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: shared
+            compiler: clang
+            host_os: ubuntu-20.04
+          - target: valgrind
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: fuzzers
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: cross-i386
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: cross-arm64
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: cross-ppc64
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: cross-android-arm32
+            compiler: clang
+            host_os: ubuntu-20.04
+          - target: cross-android-arm64
+            compiler: clang
+            host_os: ubuntu-20.04
+          - target: cross-win64
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: baremetal
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: minimized
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: bsi
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: lint
+            compiler: gcc
+            host_os: ubuntu-20.04
+          - target: shared
+            compiler: clang
+            host_os: macos-latest
+          - target: cross-ios-arm64
+            compiler: clang
+            host_os: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+            path: |
+              ~/.ccache
+              /Users/runner/Library/Caches/ccache
+            key: release-2-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-${{ github.run_id }}
+            restore-keys: |
+               release-2-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-
+      - run: ./src/scripts/ci/setup_gh_actions.sh ${{ matrix.target }}
+      - run: ./src/scripts/ci_build.py --cc '${{ matrix.compiler }}' ${{ matrix.target }}
