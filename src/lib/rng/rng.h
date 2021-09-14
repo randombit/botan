@@ -37,8 +37,14 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
 
       /**
       * Randomize a byte array.
+      *
+      * May block shortly if e.g. the RNG is not yet initialized
+      * or a retry because of insufficient entropy is needed.
+      *
       * @param output the byte array to hold the random output.
       * @param length the length of the byte array output in bytes.
+      * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
+      * @throws Exception if the RNG fails
       */
       virtual void randomize(uint8_t output[], size_t length) = 0;
 
@@ -60,6 +66,7 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       *
       * @param input a byte array containg the entropy to be added
       * @param length the length of the byte array in
+      * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
       virtual void add_entropy(const uint8_t input[], size_t length) = 0;
 
@@ -86,6 +93,9 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * @param output_len size of the output buffer in bytes
       * @param input entropy buffer to incorporate
       * @param input_len size of the input buffer in bytes
+      * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
+      * @throws Exception if the RNG fails
+      * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
       virtual void randomize_with_input(uint8_t output[], size_t output_len,
                                         const uint8_t input[], size_t input_len);
@@ -98,6 +108,12 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * rollback, or other cases where somehow an RNG state is duplicated. If
       * both of the duplicated RNG states later incorporate a timestamp (and the
       * timestamps don't themselves repeat), their outputs will diverge.
+      *
+      * @param output buffer to hold the random output
+      * @param output_len size of the output buffer in bytes
+      * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
+      * @throws Exception if the RNG fails
+      * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
       virtual void randomize_with_ts_input(uint8_t output[], size_t output_len);
 
@@ -108,7 +124,7 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
 
       /**
       * Clear all internally held values of this RNG
-      * @post is_seeded() == false
+      * @post is_seeded() == false if the RNG has an internal state that can be cleared.
       */
       virtual void clear() = 0;
 
@@ -122,6 +138,8 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * Poll provided sources for up to poll_bits bits of entropy
       * or until the timeout expires. Returns estimate of the number
       * of bits collected.
+      *
+      * Sets the seeded state to true if enough entropy was added.
       */
       virtual size_t reseed(Entropy_Sources& srcs,
                             size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS,
@@ -129,6 +147,10 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
 
       /**
       * Reseed by reading specified bits from the RNG
+      *
+      * Sets the seeded state to true if enough entropy was added.
+      *
+      * @throws Exception if RNG accepts input but reseeding failed.
       */
       virtual void reseed_from_rng(RandomNumberGenerator& rng,
                                    size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS);
@@ -139,6 +161,8 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * Return a random vector
       * @param bytes number of bytes in the result
       * @return randomized vector of length bytes
+      * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
+      * @throws Exception if the RNG fails
       */
       secure_vector<uint8_t> random_vec(size_t bytes)
          {
@@ -157,6 +181,8 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       /**
       * Return a random byte
       * @return random byte
+      * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
+      * @throws Exception if the RNG fails
       */
       uint8_t next_byte()
          {
@@ -167,6 +193,8 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
 
       /**
       * @return a random byte that is greater than zero
+      * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
+      * @throws Exception if the RNG fails
       */
       uint8_t next_nonzero_byte()
          {
