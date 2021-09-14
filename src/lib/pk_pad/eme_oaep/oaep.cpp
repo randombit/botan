@@ -62,14 +62,14 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
    Also have to be careful about timing attacks! Pointed out by Falko
    Strenzke.
 
-   According to the standard (Section 7.1.1), the encryptor always
+   According to the standard (RFC 3447 Section 7.1.1), the encryptor always
    creates a message as follows:
       i. Concatenate a single octet with hexadecimal value 0x00,
          maskedSeed, and maskedDB to form an encoded message EM of
          length k octets as
             EM = 0x00 || maskedSeed || maskedDB.
    where k is the length of the modulus N.
-   Therefore, the first byte can always be skipped safely.
+   Therefore, the first byte should always be zero.
    */
 
    const auto leading_0 = CT::Mask<uint8_t>::is_zero(in[0]);
