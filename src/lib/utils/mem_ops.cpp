@@ -20,6 +20,12 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size)
    if(elems == 0 || elem_size == 0)
       return nullptr;
 
+   // Some calloc implementations do not check for overflow (?!?)
+   const size_t total_size = elems * elem_size;
+
+   if(total_size < elems || total_size < elem_size)
+      throw std::bad_alloc();
+
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
    if(void* p = mlock_allocator::instance().allocate(elems, elem_size))
       return p;
