@@ -114,8 +114,12 @@ ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
       throw Invalid_Argument("ElGamal encryption: Input is too large");
 
    /*
-   Some ElGamal implementations foolishly use prime fields where p - 1 is
-   smooth, as a result it is unsafe to use short exponents.
+   Some weird PGP implementations generate keys using bad parameters
+   which result in easily breakable encryption if short exponents are
+   used during encryption. To avoid this problem, always use full size
+   exponents.
+
+   See https://eprint.iacr.org/2021/923
    */
    const size_t k_bits = m_group.p_bits() - 1;
    const BigInt k(rng, k_bits, false);
