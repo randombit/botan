@@ -16,6 +16,7 @@ arc4random
 getentropy
 explicit_bzero
 pledge
+alloc_conceal
 
 atomics
 sockets

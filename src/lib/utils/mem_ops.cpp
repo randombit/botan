@@ -25,7 +25,11 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size)
       return p;
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_ALLOC_CONCEAL)
+   void *ptr = ::calloc_conceal(elems, elem_size);
+#else
    void* ptr = std::calloc(elems, elem_size);
+#endif
    if(!ptr)
       throw std::bad_alloc();
    return ptr;
@@ -42,7 +46,6 @@ void deallocate_memory(void* p, size_t elems, size_t elem_size)
    if(mlock_allocator::instance().deallocate(p, elems, elem_size))
       return;
 #endif
-
    std::free(p);
    }
 
