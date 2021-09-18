@@ -19,7 +19,7 @@ class HashFunction;
 * @param hash hash function to use
 * @param in input buffer
 * @param in_len size of the input buffer in bytes
-* @param out output buffer
+* @param out output buffer. The buffer is XORed with the output of MGF1.
 * @param out_len size of the output buffer in bytes
 */
 void mgf1_mask(HashFunction& hash,

@@ -392,8 +392,8 @@ inline void conditional_swap_ptr(bool cnd, T& x, T& y)
    }
 
 /**
-* If bad_mask is unset, return input[offset:input_length] copied to new
-* buffer. If bad_mask is set, return an empty vector. In all cases, the capacity
+* If bad_input is unset, return input[offset:input_length] copied to new
+* buffer. If bad_input is set, return an empty vector. In all cases, the capacity
 * of the vector is equal to input_length
 *
 * This function attempts to avoid leaking the following:
