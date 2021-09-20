@@ -317,18 +317,17 @@ class OCSP_Tests final : public Test
          {
          Test::Result result("OCSP online check");
 
-         // Expired end-entity certificate:
-         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
+         auto cert = load_test_X509_cert("x509/ocsp/digicert-ecdsa-int.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/digicert-root.pem");
 
-         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ca, trust_root };
+         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { cert, trust_root };
 
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
 
-         typedef std::chrono::system_clock Clock;
-         const auto ocspTimeout = std::chrono::milliseconds(3000);
-         auto ocsp_status = Botan::PKIX::check_ocsp_online(cert_path, { &certstore }, Clock::now(), ocspTimeout, false);
+         const auto ocsp_timeout = std::chrono::milliseconds(3000);
+         const auto now = std::chrono::system_clock::now();
+         auto ocsp_status = Botan::PKIX::check_ocsp_online(cert_path, { &certstore }, now, ocsp_timeout, false);
 
          if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
             {
