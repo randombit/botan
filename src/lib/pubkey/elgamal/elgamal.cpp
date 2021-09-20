@@ -108,8 +108,14 @@ ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
    if(m >= m_group.get_p())
       throw Invalid_Argument("ElGamal encryption: Input is too large");
 
-   const size_t k_bits = m_group.exponent_bits();
-   const BigInt k(rng, k_bits);
+   /*
+   Some ElGamal implementations generate keys where using short exponents
+   is unsafe. Always use full length exponents to avoid this.
+
+   See https://eprint.iacr.org/2021/923 for details.
+   */
+   const size_t k_bits = m_group.p_bits() - 1;
+   const BigInt k(rng, k_bits, false);
 
    const BigInt a = m_group.power_g_p(k, k_bits);
    const BigInt b = m_group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits));
