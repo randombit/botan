@@ -8,6 +8,9 @@ header_dir include
 lib_dir lib
 doc_dir share/doc
 
+soname_pattern_base "{lib_prefix}{libname}.dll"
+shared_lib_symlinks no
+
 # see https://sourceforge.net/p/mingw-w64/bugs/755/
 use_stack_protector no
 

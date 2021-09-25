@@ -175,6 +175,13 @@ def main(args):
             soname_base = libname + '.dll'
             copy_executable(os.path.join(out_dir, soname_base),
                             prepend_destdir(os.path.join(bin_dir, soname_base)))
+        elif target_os == "mingw":
+            shared_lib_name = cfg['shared_lib_name']
+            copy_executable(os.path.join(out_dir, shared_lib_name),
+                            prepend_destdir(os.path.join(bin_dir, shared_lib_name)))
+            implib_name = shared_lib_name + '.a'
+            copy_executable(os.path.join(out_dir, implib_name),
+                            prepend_destdir(os.path.join(lib_dir, implib_name)))
         else:
             soname_patch = cfg['soname_patch']
             soname_abi = cfg['soname_abi']

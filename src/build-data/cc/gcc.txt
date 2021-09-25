@@ -45,6 +45,8 @@ solaris -> "$(CXX) -shared -fPIC -Wl,-h,{soname_abi}"
 # AIX and OpenBSD don't use sonames at all
 aix     -> "$(CXX) -shared -fPIC"
 openbsd -> "$(CXX) -shared -fPIC"
+
+mingw   -> "$(CXX) -shared -Wl,--out-implib,{shared_lib_name}.a"
 </so_link_commands>
 
 <binary_link_commands>
