@@ -236,7 +236,8 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test
    {
    public:
       TLS_Extension_Parsing_Test()
-         : Text_Based_Test("tls_extensions", "Buffer,Protocol,Ciphersuite,AdditionalData,Name,Expected_Content,Exception") {}
+         : Text_Based_Test("tls_extensions", "Buffer,Exception",
+                           "Protocol,Ciphersuite,AdditionalData,Name,Expected_Content") {}
 
       Test::Result run_one_test(const std::string& extension, const VarMap& vars) override
          {
@@ -334,10 +335,9 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test
                   }
                else if (extension == "key_share_HRR")
                   {
-                  Botan::TLS::TLS_Data_Reader tls_data_reader("HelloRetryRequest", buffer);
-                  Botan::TLS::Key_Share_HelloRetryRequest key_share(tls_data_reader, buffer.size());
+                  Botan::TLS::Key_Share key_share(Botan::TLS::Group_Params::SECP384R1);
 
-                  const auto serialized_buffer = key_share.serialize();
+                  const auto serialized_buffer = key_share.serialize(Botan::TLS::Connection_Side::CLIENT);
                   const auto expected_key_share = vars.get_req_bin("Expected_Content");
 
                   result.test_eq("key_share_HRR test", Botan::hex_encode(serialized_buffer), Botan::hex_encode(expected_key_share));
