@@ -39,7 +39,7 @@ class XMSS_Common_Ops
         * @param[in] right Right half of the hash function input.
         * @param[in] adrs Adress of the hash function call.
         * @param[in] seed The seed for G.
-        * @param[in] hash Instance of XMSS_Hash, that may only by the thead
+        * @param[in] hash Instance of XMSS_Hash, that may only by the thread
         *            executing generate_public_key.
         * @param[in] params
         **/
@@ -66,7 +66,7 @@ class XMSS_Common_Ops
        * @param[in] adrs Address encoding the address of the L-Tree
        * @param[in] seed The seed generated during the public key generation.
        * @param[in] hash Instance of XMSS_Hash, that may only be used by the
-       *            thead executing create_l_tree.
+       *            thread executing create_l_tree.
        * @param[in] params
       **/
       static void create_l_tree(secure_vector<uint8_t>& result,
