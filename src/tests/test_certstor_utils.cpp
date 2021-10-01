@@ -24,13 +24,13 @@ Botan::X509_DN read_dn(const std::string hex)
 
 Botan::X509_DN get_dn()
    {
-   // ASN.1 encoded subject DN of "DST Root CA X3"
+   // ASN.1 encoded subject DN of "ISRG Root X1"
    // This certificate is in the standard "System Roots" of any macOS setup,
    // serves as the trust root of botan.randombit.net and expires on
-   // Thursday, 30. September 2021 at 16:01:15 Central European Summer Time
-   return read_dn("303f31243022060355040a131b4469676974616c205369676e6174757265"
-                  "20547275737420436f2e311730150603550403130e44535420526f6f7420"
-                  "4341205833");
+   // Monday, 4. June 2035 at 13:04:38 Central European Summer Time
+   return read_dn("304F310B300906035504061302555331293027060355040A1320496E74657"
+                  "26E65742053656375726974792052657365617263682047726F7570311530"
+                  "130603550403130C4953524720526F6F74205831");
    }
 
 Botan::X509_DN get_utf8_dn()
@@ -45,8 +45,13 @@ Botan::X509_DN get_utf8_dn()
 
 std::vector<uint8_t> get_key_id()
    {
-   // this is the same as the public key SHA1
-   return Botan::hex_decode("c4a7b1a47b2c71fadbe14b9075ffc41560858910");
+   // this is the same as the public key SHA1 of "ISRG Root X1"
+   return Botan::hex_decode("79B459E67BB6E5E40173800888C81A58F6E99B6E");
+   }
+
+std::string get_subject_cn()
+   {
+   return "ISRG Root X1";
    }
 
 Botan::X509_DN get_unknown_dn()
@@ -66,9 +71,37 @@ Botan::X509_DN get_skewed_dn()
    // according to Apple's idea of a normalized PrintableString field:
    //   (1) It has leading and trailing white space
    //   (2) It contains multiple spaces between 'words'
-   return read_dn("304b312a3028060355040a132120204469676974616c2020205369676e61"
-                  "7475726520547275737420436f2e2020311d301b06035504031314202044"
-                  "5354202020526f6f742043412058332020");
+   //
+   // This skewed DN was fabricated using the program below and the DN-info of
+   // "ISRG Root X1" which expires on Monday, 4. June 2035 at 13:04:38 CEST
+   //
+   // ```C++
+   // #include <iostream>
+   //
+   // #include <botan/pkix_types.h>
+   // #include <botan/der_enc.h>
+   // #include <botan/hex.h>
+   //
+   // using namespace Botan;
+   //
+   // int main()
+   //    {
+   //    X509_DN dn{};
+   //
+   //    dn.add_attribute(OID{2,5,4,6}, ASN1_String("US", ASN1_Type::PrintableString));
+   //    dn.add_attribute(OID{2,5,4,10}, ASN1_String("Internet Security  Research Group  ", ASN1_Type::PrintableString));
+   //    dn.add_attribute(OID{2,5,4,3}, ASN1_String("  ISRG Root  X1", ASN1_Type::PrintableString));
+   //
+   //    DER_Encoder enc;
+   //    dn.encode_into(enc);
+   //
+   //    std::cout << hex_encode(enc.get_contents()) << std::endl;
+   //    }
+   // ```
+
+   return read_dn("3055310B3009060355040613025553312C302A060355040A1323496E74657"
+                  "26E6574205365637572697479202052657365617263682047726F75702020"
+                  "311830160603550403130F20204953524720526F6F7420205831");
    }
 
 std::vector<uint8_t> get_unknown_key_id()
