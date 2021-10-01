@@ -177,7 +177,7 @@ BOTAN_PUBLIC_API(2,0) int botan_hex_encode(const uint8_t* x, size_t len, char* o
 * @param hex_str a string of hex chars (whitespace is ignored)
 * @param in_len the length of hex_str
 * @param out the output buffer should be at least strlen(hex_str)/2 bytes
-* @param out_len the size of out
+* @param out_len the size of the output buffer on input, set to the number of bytes written
 * @return 0 on success, a negative value on failure
 */
 BOTAN_PUBLIC_API(2,3) int botan_hex_decode(const char* hex_str, size_t in_len, uint8_t* out, size_t* out_len);
