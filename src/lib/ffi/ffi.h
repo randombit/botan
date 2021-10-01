@@ -168,7 +168,7 @@ BOTAN_PUBLIC_API(2,2) int botan_scrub_mem(void* mem, size_t bytes);
 * @param len length of x in bytes
 * @param out an array of at least x*2 bytes
 * @param flags flags out be upper or lower case?
-* @return 0 on success, 1 on failure
+* @return 0 on success, a negative value on failure
 */
 BOTAN_PUBLIC_API(2,0) int botan_hex_encode(const uint8_t* x, size_t len, char* out, uint32_t flags);
 
@@ -178,6 +178,7 @@ BOTAN_PUBLIC_API(2,0) int botan_hex_encode(const uint8_t* x, size_t len, char* o
 * @param in_len the length of hex_str
 * @param out the output buffer should be at least strlen(hex_str)/2 bytes
 * @param out_len the size of out
+* @return 0 on success, a negative value on failure
 */
 BOTAN_PUBLIC_API(2,3) int botan_hex_decode(const char* hex_str, size_t in_len, uint8_t* out, size_t* out_len);
 
