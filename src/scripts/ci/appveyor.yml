@@ -32,14 +32,6 @@ environment:
       TARGET_CC: msvc
       EXTRA_FLAGS: "--extra-cxxflags=/DUNICODE --extra-cxxflags=/D_UNICODE"
 
-    # MSVC 2019 x86-64 preview
-    - CC: VC2019p
-      PLATFORM: x86_amd64
-      TARGET: shared
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
-      MAKE_TOOL: jom
-      TARGET_CC: msvc
-
     # MinGW GCC
     - CC: MinGW
       PLATFORM: x86_amd64
