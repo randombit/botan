@@ -33,7 +33,7 @@ Test::Result find_certificate_by_pubkey_sha1(Botan::Certificate_Store& certstore
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
-         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         result.test_eq("CN", cns.front(), get_subject_cn());
          }
       }
    catch(std::exception& e)
@@ -96,7 +96,7 @@ Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore)
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
-         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         result.test_eq("CN", cns.front(), get_subject_cn());
          }
       }
    catch(std::exception& e)
@@ -157,7 +157,7 @@ Test::Result find_cert_by_subject_dn_and_key_id(Botan::Certificate_Store& certst
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
-         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         result.test_eq("CN", cns.front(), get_subject_cn());
          }
       }
    catch(std::exception& e)
@@ -185,7 +185,7 @@ Test::Result find_certs_by_subject_dn_and_key_id(Botan::Certificate_Store& certs
          {
          auto cns = certs.front().subject_dn().get_attribute("CN");
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
-         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         result.test_eq("CN", cns.front(), get_subject_cn());
          }
       }
    catch(std::exception& e)
@@ -222,7 +222,7 @@ Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore)
          {
          auto cns = certs.front().subject_dn().get_attribute("CN");
          result.test_gte("at least one CN", cns.size(), size_t(1));
-         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         result.test_eq("CN", cns.front(), get_subject_cn());
          }
       }
    catch(std::exception& e)
@@ -312,8 +312,8 @@ Test::Result certificate_matching_with_dn_normalization(Botan::Certificate_Store
       if(result.confirm("find_all_certs did find the skewed DN", !certs.empty()) &&
          result.confirm("find_cert did find the skewed DN", cert.has_value()))
          {
-         result.test_eq("it is the correct cert", certs.front().subject_dn().get_first_attribute("CN"), "DST Root CA X3");
-         result.test_eq("it is the correct cert", cert->subject_dn().get_first_attribute("CN"), "DST Root CA X3");
+         result.test_eq("it is the correct cert", certs.front().subject_dn().get_first_attribute("CN"), get_subject_cn());
+         result.test_eq("it is the correct cert", cert->subject_dn().get_first_attribute("CN"), get_subject_cn());
          }
       }
    catch(std::exception& e)
