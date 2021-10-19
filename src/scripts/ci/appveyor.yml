@@ -36,7 +36,7 @@ environment:
     - CC: MinGW
       PLATFORM: x86_amd64
       TARGET: static
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       MAKE_TOOL: mingw32-make
       TARGET_CC: gcc
 
