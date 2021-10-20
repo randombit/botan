@@ -125,25 +125,10 @@ make_openssl_hash(const std::string& name)
       return MAKE_OPENSSL_HASH(EVP_sha1);
 #endif
 
-#if defined(BOTAN_HAS_RIPEMD_160) && !defined(OPENSSL_NO_RIPEMD)
-   if(name == "RIPEMD-160")
-      return MAKE_OPENSSL_HASH(EVP_ripemd160);
-#endif
-
 #if defined(BOTAN_HAS_MD5) && !defined(OPENSSL_NO_MD5)
    if(name == "MD5")
       return MAKE_OPENSSL_HASH(EVP_md5);
    #endif
-
-#if defined(BOTAN_HAS_MD4) && !defined(OPENSSL_NO_MD4)
-   if(name == "MD4")
-      return MAKE_OPENSSL_HASH(EVP_md4);
-#endif
-
-#if defined(BOTAN_HAS_WHIRLPOOL) && !defined(OPENSSL_NO_WHIRLPOOL)
-   if(name == "Whirlpool")
-      return MAKE_OPENSSL_HASH(EVP_whirlpool);
-#endif
 
    return nullptr;
    }
