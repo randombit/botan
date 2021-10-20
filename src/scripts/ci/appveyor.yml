@@ -62,19 +62,11 @@ environment:
       MAKE_TOOL: jom
       TARGET_CC: msvc
 
-    # MSVC 2019 x86-64 preview
-    - CC: VC2019p
-      PLATFORM: x86_amd64
-      TARGET: static
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
-      MAKE_TOOL: jom
-      TARGET_CC: msvc
-
     # MinGW GCC
     - CC: MinGW
       PLATFORM: x86_amd64
       TARGET: static
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       MAKE_TOOL: mingw32-make
       TARGET_CC: gcc
 

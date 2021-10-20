@@ -4,7 +4,6 @@ echo Current build setup CC="%CC%" PLATFORM="%PLATFORM%" TARGET="%TARGET%"
 if %CC% == VC2015 call "%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
 if %CC% == VC2017 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 if %CC% == VC2019 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
-if %CC% == VC2019p call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Preview\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 if %CC% == MinGW set PATH=%PATH%;C:\msys64\mingw64\bin
 
 rem check compiler version
