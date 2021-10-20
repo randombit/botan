@@ -65,7 +65,7 @@ Test::Result find_certificate_by_pubkey_sha1()
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_int_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         result.test_eq("CN", cns.front(), get_subject_cn());
          }
       }
    catch(std::exception& e)
@@ -99,7 +99,7 @@ Test::Result find_cert_by_subject_dn()
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_int_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         result.test_eq("CN", cns.front(), get_subject_cn());
          }
       }
    catch(std::exception& e)
@@ -156,7 +156,7 @@ Test::Result find_cert_by_subject_dn_and_key_id()
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_int_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         result.test_eq("CN", cns.front(), get_subject_cn());
          }
       }
    catch(std::exception& e)
@@ -185,7 +185,7 @@ Test::Result find_certs_by_subject_dn_and_key_id()
          {
          auto cns = certs.front()->subject_dn().get_attribute("CN");
          result.test_int_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         result.test_eq("CN", cns.front(), get_subject_cn());
          }
       }
    catch(std::exception& e)
