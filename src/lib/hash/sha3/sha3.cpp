@@ -11,17 +11,40 @@
 #include <botan/exceptn.h>
 #include <botan/internal/cpuid.h>
 
+#include <tuple>
+
 namespace Botan {
 
 namespace {
 
+// This is a workaround for a suspected bug in clang 12 (and XCode 13)
+// that caused a miscompile of the SHA3 implementation for optimization
+// level -O2 and higher.
+//
+// For details, see: https://github.com/randombit/botan/issues/2802
+#if    defined(__clang__) && \
+    (( defined(__apple_build_version__) && __clang_major__ == 13) || \
+     (!defined(__apple_build_version__) && __clang_major__ == 12))
+#define BOTAN_WORKAROUND_MAYBE_INLINE __attribute__((noinline))
+#else
+#define BOTAN_WORKAROUND_MAYBE_INLINE inline
+#endif
+
+BOTAN_WORKAROUND_MAYBE_INLINE decltype(auto) xor_CNs(const uint64_t A[25])
+   {
+   return std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>(
+      A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20],
+      A[1] ^ A[6] ^ A[11] ^ A[16] ^ A[21],
+      A[2] ^ A[7] ^ A[12] ^ A[17] ^ A[22],
+      A[3] ^ A[8] ^ A[13] ^ A[18] ^ A[23],
+      A[4] ^ A[9] ^ A[14] ^ A[19] ^ A[24]);
+   }
+
+#undef BOTAN_WORKAROUND_MAYBE_INLINE
+
 inline void SHA3_round(uint64_t T[25], const uint64_t A[25], uint64_t RC)
    {
-   const uint64_t C0 = A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20];
-   const uint64_t C1 = A[1] ^ A[6] ^ A[11] ^ A[16] ^ A[21];
-   const uint64_t C2 = A[2] ^ A[7] ^ A[12] ^ A[17] ^ A[22];
-   const uint64_t C3 = A[3] ^ A[8] ^ A[13] ^ A[18] ^ A[23];
-   const uint64_t C4 = A[4] ^ A[9] ^ A[14] ^ A[19] ^ A[24];
+   const auto [C0,C1,C2,C3,C4] = xor_CNs(A);
 
    const uint64_t D0 = rotl<1>(C0) ^ C3;
    const uint64_t D1 = rotl<1>(C1) ^ C4;
