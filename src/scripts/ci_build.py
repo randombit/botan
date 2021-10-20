@@ -44,7 +44,8 @@ def build_targets(target, target_os):
         yield 'bogo_shim'
 
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
-                    ccache, root_dir, pkcs11_lib, use_gdb, disable_werror, extra_cxxflags):
+                    ccache, root_dir, pkcs11_lib, use_gdb, disable_werror, extra_cxxflags,
+                    disabled_tests):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
     """
@@ -106,7 +107,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target == 'cross-win64':
         # this test compiles under MinGW but fails when run under Wine
-        test_cmd += ['--skip-tests=certstor_system']
+        disabled_tests.append('certstor_system')
 
     if target == 'coverage':
         flags += ['--with-coverage-info', '--with-debug-info', '--test-mode']
@@ -126,7 +127,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             'pbkdf', 'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression',
             'ed25519_sign', 'elgamal_keygen', 'x509_path_rsa_pss']
 
-        test_cmd += ['--skip-tests=%s' % (','.join(slow_tests))]
+        disabled_tests += slow_tests
 
     if target == 'fuzzers':
         flags += ['--unsafe-fuzzer-mode']
@@ -269,8 +270,14 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         run_test_command = None
     else:
         if use_gdb:
+            disabled_tests.append("os_utils")
+
+        # render 'disabled_tests' array into test_cmd
+        if disabled_tests:
+            test_cmd += ['--skip-tests=%s' % (','.join(disabled_tests))]
+
+        if use_gdb:
             (cmd, args) = test_cmd[0], test_cmd[1:]
-            args += ['--skip-tests=os_utils']
             run_test_command = test_prefix + ['gdb', cmd,
                                               '-ex', 'run %s' % (' '.join(args)),
                                               '-ex', 'bt',
@@ -358,6 +365,8 @@ def parse_args(args):
                       help='Build via amalgamation')
     parser.add_option('--disable-shared', action='store_true', default=False,
                       help='Disable building shared libraries')
+    parser.add_option('--disabled-tests', metavar='DISABLED_TESTS', default=[], action='append',
+                      help='Comma separated list of tests that should not be run')
 
     parser.add_option('--branch', metavar='B', default=None,
                       help='Specify branch being built')
@@ -494,7 +503,7 @@ def main(args=None):
             target, options.os, options.cpu, options.cc,
             options.cc_bin, options.compiler_cache, root_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
-            options.extra_cxxflags)
+            options.extra_cxxflags, options.disabled_tests)
 
         cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
 
