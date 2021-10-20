@@ -207,7 +207,7 @@ TLS Server/Client
 -----------------------
 
 The ``--policy=`` argument of the TLS commands specifies the TLS policy to use.
-The policy can be any of the the strings "default", "suiteb_128", "suiteb_192",
+The policy can be any of the strings "default", "suiteb_128", "suiteb_192",
 "bsi", "strict", or "all" to denote built-in policies, or it can name a file
 from which a policy description will be read.
 

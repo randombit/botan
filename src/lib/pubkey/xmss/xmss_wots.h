@@ -391,7 +391,7 @@ class XMSS_WOTS_PublicKey : virtual public Public_Key
        * @param steps A number of steps.
        * @param adrs An OTS Hash Address.
        * @param public_seed A public seed.
-       * @param hash Instance of XMSS_Hash, that may only by the thead
+       * @param hash Instance of XMSS_Hash, that may only by the thread
        *        executing chain.
        **/
       void chain(secure_vector<uint8_t>& x,
@@ -551,7 +551,7 @@ class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
        *
        * @param i Index of the key to retrieve.
        * @param hash Instance of XMSS_Hash, that may only be used by the
-       *        thead executing at.
+       *        thread executing at.
        *
        * @return WOTS secret key.
        **/
@@ -580,7 +580,7 @@ class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
        *
        * @param adrs The address of the key to retrieve.
        * @param hash Instance of XMSS_Hash, that may only be used by the
-       *        thead executing at.
+       *        thread executing at.
        *
        * @return WOTS secret key.
        **/
@@ -620,7 +620,7 @@ class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
        *        public key generation.
        * @param adrs Hash function address encoding the address of
        *        the WOTS+ key pair within a greater structure.
-       * @param hash Instance of XMSS_Hash, that may only by the thead
+       * @param hash Instance of XMSS_Hash, that may only by the thread
        *        executing generate_public_key.
        **/
       void generate_public_key(XMSS_WOTS_PublicKey& pub_key,
@@ -674,7 +674,7 @@ class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
        * @param adrs An OTS hash address identifying the WOTS+ key pair
        *        used for signing.
        * @param hash Instance of XMSS_Hash, that may only be used by the
-       *        thead executing sign.
+       *        thread executing sign.
        *
        * @return signature for msg.
        **/
@@ -736,7 +736,7 @@ class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
        *
        * @param private_seed Uniformly random n-byte value.
        * @param[in] hash Instance of XMSS_Hash, that may only be used by the
-       *            thead executing generate.
+       *            thread executing generate.
        *
        * @returns a vector of length key_size() of vectors of n bytes length
        *          containing uniformly random data.

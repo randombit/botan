@@ -33,7 +33,7 @@ namespace {
 #if defined(BOTAN_HAS_ECDSA)
 
 /**
-* Tests whether the the signing routine will work correctly in case
+* Tests whether the signing routine will work correctly in case
 * the integer e that is constructed from the message (thus the hash
 * value) is larger than n, the order of the base point.  Tests the
 * signing function of the pk signer object

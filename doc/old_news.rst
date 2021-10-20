@@ -1189,7 +1189,7 @@ Version 1.11.16, 2015-03-29
   Unfortunately the semantics of the exchange have changed with ALPN. Using
   NPN, the server offered a list of protocols it advertised, and then the
   client chose its favorite. With ALPN, the client offers a list of protocols
-  and the server chooses. The the signatures of both the TLS::Client and
+  and the server chooses. The signatures of both the TLS::Client and
   TLS::Server constructors have changed to support this new flow.
 
 * Optimized ECDSA signature verification thanks to an observation by
@@ -2402,7 +2402,7 @@ Version 1.9.15, 2011-03-21
   causing a illegal instruction crash.
 
 * Improve detection and autoconfiguration for ARM processors. Thanks
-  go out to the the `Tahoe-LAFS Software Foundation
+  go out to the `Tahoe-LAFS Software Foundation
   <http://tahoe-lafs.org>`_, who donated a Sheevaplug that I'll be
   using to figure out how to make the cryptographic primitives
   Tahoe-LAFS relies on faster, particularly targeting the ARMv5TE.
