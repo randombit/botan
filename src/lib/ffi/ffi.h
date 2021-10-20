@@ -168,7 +168,7 @@ BOTAN_PUBLIC_API(2,2) int botan_scrub_mem(void* mem, size_t bytes);
 * @param len length of x in bytes
 * @param out an array of at least x*2 bytes
 * @param flags flags out be upper or lower case?
-* @return 0 on success, 1 on failure
+* @return 0 on success, a negative value on failure
 */
 BOTAN_PUBLIC_API(2,0) int botan_hex_encode(const uint8_t* x, size_t len, char* out, uint32_t flags);
 
@@ -177,7 +177,8 @@ BOTAN_PUBLIC_API(2,0) int botan_hex_encode(const uint8_t* x, size_t len, char* o
 * @param hex_str a string of hex chars (whitespace is ignored)
 * @param in_len the length of hex_str
 * @param out the output buffer should be at least strlen(hex_str)/2 bytes
-* @param out_len the size of out
+* @param out_len the size of the output buffer on input, set to the number of bytes written
+* @return 0 on success, a negative value on failure
 */
 BOTAN_PUBLIC_API(2,3) int botan_hex_decode(const char* hex_str, size_t in_len, uint8_t* out, size_t* out_len);
 
@@ -238,7 +239,7 @@ BOTAN_PUBLIC_API(2,0) int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t ou
 * Uses the System_RNG as a seed generator.
 *
 * @param rng rng object
-* @param bits number of bits to to reseed with
+* @param bits number of bits to reseed with
 * @return 0 on success, a negative value on failure
 */
 BOTAN_PUBLIC_API(2,0) int botan_rng_reseed(botan_rng_t rng, size_t bits);
@@ -248,7 +249,7 @@ BOTAN_PUBLIC_API(2,0) int botan_rng_reseed(botan_rng_t rng, size_t bits);
 *
 * @param rng rng object
 * @param source_rng the rng that will be read from
-* @param bits number of bits to to reseed with
+* @param bits number of bits to reseed with
 * @return 0 on success, a negative value on failure
 */
 BOTAN_PUBLIC_API(2,8) int botan_rng_reseed_from_rng(botan_rng_t rng,
@@ -1145,7 +1146,7 @@ BOTAN_PUBLIC_API(2,0) int botan_pubkey_fingerprint(botan_pubkey_t key, const cha
 BOTAN_PUBLIC_API(2,0) int botan_pubkey_destroy(botan_pubkey_t key);
 
 /*
-* Get arbitrary named fields from public or privat keys
+* Get arbitrary named fields from public or private keys
 */
 BOTAN_PUBLIC_API(2,0) int botan_pubkey_get_field(botan_mp_t output,
                                      botan_pubkey_t key,
