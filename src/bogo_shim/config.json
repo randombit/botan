@@ -23,6 +23,7 @@
         "ExportTrafficSecrets-*": "No TLS 1.3",
         "IgnoreClientVersionOrder": "No TLS 1.3",
         "Resume-Server-OmitPSKsOnSecondClientHello": "No TLS 1.3",
+        "Http*": "No support for HTTP detection",
 
         "DuplicateCertCompressionExt*": "No support for 1.3 cert compression extension",
 
