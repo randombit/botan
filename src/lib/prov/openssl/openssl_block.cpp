@@ -223,25 +223,8 @@ make_openssl_block_cipher(const std::string& name)
 #endif
 
 #if defined(BOTAN_HAS_DES) && !defined(OPENSSL_NO_DES)
-   if(name == "DES")
-      return MAKE_OPENSSL_BLOCK(EVP_des_ecb);
    if(name == "TripleDES")
       return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_des_ede3_ecb, 16, 24, 8);
-#endif
-
-#if defined(BOTAN_HAS_BLOWFISH) && !defined(OPENSSL_NO_BF)
-   if(name == "Blowfish")
-      return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_bf_ecb, 1, 56, 1);
-#endif
-
-#if defined(BOTAN_HAS_CAST_128) && !defined(OPENSSL_NO_CAST)
-   if(name == "CAST-128")
-      return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_cast5_ecb, 1, 16, 1);
-#endif
-
-#if defined(BOTAN_HAS_SEED) && !defined(OPENSSL_NO_SEED)
-   if(name == "SEED")
-      return MAKE_OPENSSL_BLOCK(EVP_seed_ecb);
 #endif
 
    return nullptr;
