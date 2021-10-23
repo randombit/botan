@@ -8,12 +8,21 @@ Version 2.18.2, Not Yet Released
   implementations generate keys with parameters that are weak when
   short exponents are used (GH #2794)
 
-* Fix a low risk OAEP side channel (GH #2797)
+* Fix a low risk OAEP decryption side channel (GH #2797)
+
+* Work around a miscompilation of SHA-3 caused by a bug in Clang 12
+  and XCode 13. (GH #2826)
+
+* Remove support in OpenSSL provider for algorithms which are
+  disabled by default in OpenSSL 3.0 (GH #2823, #2814)
 
 * Add CI based on GitHub actions to replace Travis CI (GH #2632)
 
 * Fix the online OCSP test, as the certificate involved had expired.
   (GH #2799)
+
+* Fix some test failures induced by the expiration of the trust root
+  "DST Root CA X3" (GH #2820)
 
 Version 2.18.1, 2021-05-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
