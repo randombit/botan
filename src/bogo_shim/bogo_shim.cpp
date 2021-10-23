@@ -110,6 +110,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Encoding error: Cannot encode PSS string, output length too small", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Expected TLS but got a record with DTLS version", ":WRONG_VERSION_NUMBER:" },
          { "Finished message didn't verify", ":DIGEST_CHECK_FAILED:" },
+         { "Got unexpected TLS record version", ":WRONG_VERSION_NUMBER:" },
          { "Inconsistent length in certificate request", ":DECODE_ERROR:" },
          { "Inconsistent values in fragmented DTLS handshake header", ":FRAGMENT_MISMATCH:" },
          { "Invalid CertificateRequest: Length field outside parameters", ":DECODE_ERROR:" },
