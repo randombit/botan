@@ -221,7 +221,7 @@ KDF::create_or_throw(const std::string& algo,
 
 std::vector<std::string> KDF::providers(const std::string& algo_spec)
    {
-   return probe_providers_of<KDF>(algo_spec, { "base" });
+   return probe_providers_of<KDF>(algo_spec);
    }
 
 }

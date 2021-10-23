@@ -11,10 +11,6 @@
 #include <botan/numthry.h>
 #include <botan/internal/pk_ops_impl.h>
 
-#if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
-#endif
-
 namespace Botan {
 
 std::unique_ptr<Public_Key> ECDH_PrivateKey::public_key() const
@@ -67,21 +63,6 @@ ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                          const std::string& params,
                                          const std::string& provider) const
    {
-#if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl" || provider.empty())
-      {
-      try
-         {
-         return make_openssl_ecdh_ka_op(*this, params);
-         }
-      catch(Lookup_Error&)
-         {
-         if(provider == "openssl")
-            throw;
-         }
-      }
-#endif
-
    if(provider == "base" || provider.empty())
       return std::make_unique<ECDH_KA_Operation>(*this, params, rng);
 

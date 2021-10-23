@@ -145,7 +145,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
 
       /**
       * @return provider information about this implementation. Default is "base",
-      * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
+      * might also return "sse2", "avx2" or some other arbitrary string.
       */
       virtual std::string provider() const { return "base"; }
    };

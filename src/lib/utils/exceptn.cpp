@@ -48,8 +48,6 @@ std::string to_string(ErrorType type)
          return "InvalidTag";
       case ErrorType::RoughtimeError:
          return "RoughtimeError";
-      case ErrorType::OpenSSLError :
-         return "OpenSSLError";
       case ErrorType::CommonCryptoError:
          return "CommonCryptoError";
       case ErrorType::Pkcs11Error:

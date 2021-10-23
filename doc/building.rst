@@ -60,7 +60,7 @@ we might see lines like::
    INFO: Skipping (incompatible OS): darwin_secrandom getentropy win32_stats
    INFO: Skipping (incompatible compiler): aes_armv8 pmull sha1_armv8 sha2_32_armv8
    INFO: Skipping (no enabled compression schemes): compression
-   INFO: Skipping (requires external dependency): boost bzip2 lzma openssl sqlite3 tpm zlib
+   INFO: Skipping (requires external dependency): boost bzip2 lzma sqlite3 tpm zlib
 
 The ones that are skipped because they are require an external
 dependency have to be explicitly asked for, because they rely on third
@@ -355,10 +355,6 @@ by the user using
 
  - ``--with-sqlite3`` enables using sqlite3 databases in various contexts
    (TLS session cache, PSK database, etc).
-
- - ``--with-openssl`` adds an engine that uses OpenSSL for some ciphers, hashes,
-   and public key operations. OpenSSL 1.0.2 or later is supported. LibreSSL can
-   also be used.
 
  - ``--with-tpm`` adds support for using TPM hardware via the TrouSerS library.
 
@@ -959,11 +955,6 @@ Enable lzma compression
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enable using zlib compression
-
-``--with-openssl``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Enable using OpenSSL for certain operations
 
 ``--with-commoncrypto``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

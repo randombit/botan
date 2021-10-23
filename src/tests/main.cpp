@@ -14,10 +14,6 @@
 
 #include <botan/version.h>
 
-#if defined(BOTAN_HAS_OPENSSL)
-   #include <botan/internal/openssl.h>
-#endif
-
 namespace {
 
 std::string help_text(const std::string& spec)
@@ -100,26 +96,9 @@ int main(int argc, char* argv[])
          parser.flag_set("run-long-tests"),
          parser.flag_set("abort-on-first-fail"));
 
-#if defined(BOTAN_HAS_OPENSSL)
-      if(opts.provider().empty() || opts.provider() == "openssl")
-         {
-         ::ERR_load_crypto_strings();
-         }
-#endif
-
       Botan_Tests::Test_Runner tests(std::cout);
 
-      int rc = tests.run(opts);
-
-#if defined(BOTAN_HAS_OPENSSL) && defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER < 0x01010000)
-      if(opts.provider().empty() || opts.provider() == "openssl")
-         {
-         ERR_free_strings();
-         ::ERR_remove_thread_state(nullptr);
-         }
-#endif
-
-      return rc;
+      return tests.run(opts);
       }
    catch(std::exception& e)
       {

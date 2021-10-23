@@ -56,10 +56,8 @@ enum class ErrorType {
    /** An error during Roughtime validation */
    RoughtimeError,
 
-   /** An error when calling OpenSSL */
-   OpenSSLError = 200,
    /** An error when interacting with CommonCrypto API */
-   CommonCryptoError,
+   CommonCryptoError = 201,
    /** An error when interacting with a PKCS11 device */
    Pkcs11Error,
    /** An error when interacting with a TPM device */
@@ -105,9 +103,7 @@ class BOTAN_PUBLIC_API(2,0) Exception : public std::exception
       *
       * The domain of this error varies depending on the source, for example on
       * POSIX systems it might be errno, while on a Windows system it might be
-      * the result of GetLastError or WSAGetLastError. For error_type() is
-      * OpenSSLError, it will (if nonzero) be an OpenSSL error code from
-      * ERR_get_error.
+      * the result of GetLastError or WSAGetLastError.
       */
       virtual int error_code() const noexcept { return 0; }
 

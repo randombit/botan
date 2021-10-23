@@ -54,8 +54,6 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
 #if defined(BOTAN_HAS_PBKDF2)
    if(req.algo_name() == "PBKDF2")
       {
-      // TODO OpenSSL
-
       if(provider.empty() || provider == "base")
          {
          if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
@@ -128,7 +126,7 @@ PasswordHashFamily::create_or_throw(const std::string& algo,
 
 std::vector<std::string> PasswordHashFamily::providers(const std::string& algo_spec)
    {
-   return probe_providers_of<PasswordHashFamily>(algo_spec, { "base", "openssl" });
+   return probe_providers_of<PasswordHashFamily>(algo_spec);
    }
 
 }
