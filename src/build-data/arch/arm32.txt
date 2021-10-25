@@ -10,7 +10,7 @@ evbarm # For NetBSD
 
 armv7
 armv7l
-arvm7a
+armv7a
 armv7-a
 
 armv8l # For AlpineLinux
