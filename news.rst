@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.18.2, Not Yet Released
+Version 2.18.2, 2021-10-25
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Avoid using short exponents when encrypting in ElGamal, as some PGP
