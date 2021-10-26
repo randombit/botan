@@ -6,10 +6,16 @@
 */
 
 #include <botan/tls_callbacks.h>
+#include <botan/tls_exceptn.h>
+
+#include <botan/dh.h>
+#include <botan/ecdh.h>
 
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/msg_client_hello_impl_13.h>
+
+#include <botan/hex.h> // TODO remove
 
 namespace Botan {
 
@@ -29,16 +35,23 @@ Client_Hello_Impl_13::Client_Hello_Impl_13(Handshake_IO& io,
    Client_Hello_Impl(io, hash, policy, cb, rng, reneg_info, client_settings, next_protocols)
    {
    // Always use TLS 1.2 as a legacy version
-   m_version = Protocol_Version::TLS_V12;
+   m_legacy_version = Protocol_Version::TLS_V12;
 
    //TODO: Compatibility mode, does not need to be random
-   m_session_id = make_hello_random(rng, policy);
+   // m_session_id = make_hello_random(rng, policy);
+
+   // TODO: check when to set these -- setting for rfc8448 now
+   m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
+
+   m_extensions.add(new Renegotiation_Extension());
+
+   m_extensions.add(new Session_Ticket());
 
    m_extensions.add(new Supported_Groups(policy.key_exchange_groups()));
 
    m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
 
-   //TODO: Mandatory Key Share extension to be added
+   m_extensions.add(new Key_Share(policy, cb, rng));
 
    m_extensions.add(new Supported_Versions(client_settings.protocol_version(), policy));
 
@@ -63,7 +76,7 @@ Client_Hello_Impl_13::Client_Hello_Impl_13(Handshake_IO& io,
    //TODO: session resumption checks
 
    // Always use TLS 1.2 as a legacy version
-   m_version = Protocol_Version::TLS_V12;
+   m_legacy_version = Protocol_Version::TLS_V12;
 
    m_extensions.add(new Supported_Groups(policy.key_exchange_groups()));
 

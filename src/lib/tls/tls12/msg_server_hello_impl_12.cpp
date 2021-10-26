@@ -51,7 +51,7 @@ Server_Hello_Impl_12::Server_Hello_Impl_12(Handshake_IO& io,
       m_extensions.add(new Session_Ticket());
       }
 
-   if(m_version.is_datagram_protocol())
+   if(m_legacy_version.is_datagram_protocol())
       {
       const std::vector<uint16_t> server_srtp = policy.srtp_profiles();
       const std::vector<uint16_t> client_srtp = client_hello.srtp_profiles();

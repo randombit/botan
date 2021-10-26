@@ -11,6 +11,7 @@
 #include <botan/internal/msg_server_hello_impl.h>
 #include <botan/internal/tls_reader.h>
 
+#include <array>
 
 namespace Botan {
 
@@ -48,9 +49,9 @@ Server_Hello_Impl::Server_Hello_Impl(const Policy& policy,
                                      const Client_Hello& client_hello,
                                      const Server_Hello::Settings& server_settings,
                                      const std::string next_protocol) :
-   m_version(server_settings.protocol_version()),
+   m_legacy_version(server_settings.protocol_version()),
    m_session_id(server_settings.session_id()),
-   m_random(make_server_hello_random(rng, m_version, policy)),
+   m_random(make_server_hello_random(rng, m_legacy_version, policy)),
    m_ciphersuite(server_settings.ciphersuite()),
    m_comp_method(0)
    {
@@ -77,7 +78,7 @@ Server_Hello_Impl::Server_Hello_Impl(const Policy& policy,
                                      const Client_Hello& client_hello,
                                      Session& resumed_session,
                                      const std::string next_protocol) :
-   m_version(resumed_session.version()),
+   m_legacy_version(resumed_session.version()),
    m_session_id(client_hello.session_id()),
    m_random(make_hello_random(rng, policy)),
    m_ciphersuite(resumed_session.ciphersuite_code()),
@@ -106,7 +107,7 @@ Server_Hello_Impl::Server_Hello_Impl(const std::vector<uint8_t>& buf)
    const uint8_t major_version = reader.get_byte();
    const uint8_t minor_version = reader.get_byte();
 
-   m_version = Protocol_Version(major_version, minor_version);
+   m_legacy_version = Protocol_Version(major_version, minor_version);
 
    m_random = reader.get_fixed<uint8_t>(32);
 
@@ -124,9 +125,9 @@ Handshake_Type Server_Hello_Impl::type() const
    return SERVER_HELLO;
    }
 
-Protocol_Version Server_Hello_Impl::version() const
+Protocol_Version Server_Hello_Impl::legacy_version() const
    {
-   return m_version;
+   return m_legacy_version;
    }
 
 const std::vector<uint8_t>& Server_Hello_Impl::random() const
@@ -236,8 +237,8 @@ std::vector<uint8_t> Server_Hello_Impl::serialize() const
    {
    std::vector<uint8_t> buf;
 
-   buf.push_back(m_version.major_version());
-   buf.push_back(m_version.minor_version());
+   buf.push_back(m_legacy_version.major_version());
+   buf.push_back(m_legacy_version.minor_version());
    buf += m_random;
 
    append_tls_length_value(buf, m_session_id, 1);

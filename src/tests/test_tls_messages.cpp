@@ -16,8 +16,11 @@
    #include <botan/tls_handshake_msg.h>
    #include <botan/tls_messages.h>
    #include <botan/tls_alert.h>
+   #include <botan/tls_callbacks.h>
    #include <botan/internal/loadstor.h>
 #if defined(BOTAN_HAS_TLS_13)
+   #include "test_rng.h"
+
    #include <botan/internal/tls_reader.h>
 #endif
 #endif
@@ -48,6 +51,20 @@ Test::Result test_hello_verify_request()
    result.test_eq("Cookie comparison", hfr.cookie(), test);
    return result;
    }
+
+class Test_Callbacks : public Botan::TLS::Callbacks {
+public:
+   Test_Callbacks(Test::Result &result) : m_result(result) {}
+
+public:
+   void tls_emit_data(const uint8_t[], size_t) override { m_result.test_failure("unsolicited call to tls_emit_data"); }
+   void tls_record_received(uint64_t, const uint8_t[], size_t) override { m_result.test_failure("unsolicited call to tls_record_received"); }
+   void tls_alert(Botan::TLS::Alert) override { m_result.test_failure("unsolicited call to tls_alert"); }
+   bool tls_session_established(const Botan::TLS::Session&) override { m_result.test_failure("unsolicited call to tls_session_established"); return false; }
+
+private:
+   Test::Result &m_result;
+};
 
 class TLS_Message_Parsing_Test final : public Text_Based_Test
    {
@@ -80,7 +97,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   const std::string extensions = vars.get_req_str("AdditionalData");
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
                   Botan::TLS::Client_Hello message(buffer);
-                  result.test_eq("Protocol version", message.version().to_string(), pv.to_string());
+                  result.test_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   std::vector<uint8_t> buf;
                   for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
                      {
@@ -108,7 +125,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
                   Botan::TLS::Ciphersuite cs = Botan::TLS::Ciphersuite::by_id(Botan::make_uint16(ciphersuite[0], ciphersuite[1])).value();
                   Botan::TLS::Server_Hello message(buffer);
-                  result.test_eq("Protocol version", message.version().to_string(), pv.to_string());
+                  result.test_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   result.confirm("Ciphersuite", (message.ciphersuite() == cs.ciphersuite_code()));
                   std::vector<uint8_t> buf;
                   for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
@@ -232,11 +249,41 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
 BOTAN_REGISTER_TEST("tls", "tls_messages", TLS_Message_Parsing_Test);
 
 #if defined(BOTAN_HAS_TLS_13)
+class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test
+   {
+   public:
+      TLS_Key_Share_CH_Generation_Test()
+         : Text_Based_Test("tls_extensions/generation/key_share_CH_offers.vec", "Groups,Rng_Data,Expected_Content", "Offered_Groups") {}
+
+      Test::Result run_one_test(const std::string& extension, const VarMap& vars) override
+         {
+            Test::Result result(extension + " generation");
+
+            const auto rng_data           = vars.get_req_bin("Rng_Data");
+            const auto groups             = vars.get_req_str("Groups");
+            const auto offered_groups     = vars.get_opt_str("Offered_Groups", groups);
+            const auto expected_key_share = vars.get_req_bin("Expected_Content");
+
+            Test_Callbacks cb(result);
+            Botan::TLS::Text_Policy policy("key_exchange_groups = " + groups + "\n"
+                                           "key_exchange_groups_to_offer = " + offered_groups);
+            Botan_Tests::Fixed_Output_RNG rng;
+            rng.add_entropy(rng_data.data(), rng_data.size());
+
+            Botan::TLS::Key_Share share(policy, cb, rng);
+            const auto serialized_buffer = share.serialize(Botan::TLS::Connection_Side::CLIENT);
+
+            result.test_eq("key_share_CH_offers test", serialized_buffer, expected_key_share);
+
+            return result;
+         }
+   };
+
 class TLS_Extension_Parsing_Test final : public Text_Based_Test
    {
    public:
       TLS_Extension_Parsing_Test()
-         : Text_Based_Test("tls_extensions", "Buffer,Exception",
+         : Text_Based_Test("tls_extensions/parsing", "Buffer,Exception",
                            "Protocol,Ciphersuite,AdditionalData,Name,Expected_Content") {}
 
       Test::Result run_one_test(const std::string& extension, const VarMap& vars) override
@@ -390,7 +437,8 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_extensions", "tls_extensions", TLS_Extension_Parsing_Test);
+BOTAN_REGISTER_TEST("tls_extensions", "tls_extensions_parsing",                TLS_Extension_Parsing_Test);
+BOTAN_REGISTER_TEST("tls_extensions", "tls_extensions_key_share_client_hello", TLS_Key_Share_CH_Generation_Test);
 #endif
 
 #endif

@@ -18,43 +18,6 @@ namespace Botan {
 class Credentials_Manager;
 namespace TLS {
 
-namespace {
-
-class Client_Handshake_State final : public Handshake_State
-   {
-   public:
-      Client_Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb) :
-         Handshake_State(std::move(io), cb)
-         {}
-
-      const Public_Key& get_server_public_key() const
-         {
-         BOTAN_ASSERT(server_public_key, "Server sent us a certificate");
-         return *server_public_key.get();
-         }
-
-      bool is_a_resumption() const { return (resumed_session != nullptr); }
-
-      const secure_vector<uint8_t>& resume_master_secret() const
-         {
-         BOTAN_STATE_CHECK(is_a_resumption());
-         return resumed_session->master_secret();
-         }
-
-      const std::vector<X509_Certificate>& resume_peer_certs() const
-         {
-         BOTAN_STATE_CHECK(is_a_resumption());
-         return resumed_session->peer_certs();
-         }
-
-      std::unique_ptr<Public_Key> server_public_key;
-      
-      // Used during session resumption
-      std::unique_ptr<Session> resumed_session;
-   };
-}
-
-
 /**
 * SSL/TLS Client 1.3 implementation
 */

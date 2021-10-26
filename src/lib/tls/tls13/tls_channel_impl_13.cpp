@@ -28,6 +28,8 @@ Channel_Impl_13::Channel_Impl_13(Callbacks& callbacks,
    m_is_server(is_server),
    m_has_been_closed(false)
    {
+   BOTAN_UNUSED(m_is_server); // TODO: fixme
+
    /* epoch 0 is plaintext, thus null cipher state */
    m_write_cipher_states[0] = nullptr;
    m_read_cipher_states[0] = nullptr;

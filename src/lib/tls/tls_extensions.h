@@ -23,10 +23,13 @@
 
 namespace Botan {
 
+class RandomNumberGenerator;
+
 namespace TLS {
 
 #if defined(BOTAN_HAS_TLS_13)
 class Key_Share_Content;
+class Callbacks;
 #endif
 class Policy;
 class TLS_Data_Reader;
@@ -46,11 +49,17 @@ enum Handshake_Extension_Type {
    TLSEXT_ENCRYPT_THEN_MAC          = 22,
    TLSEXT_EXTENDED_MASTER_SECRET    = 23,
 
+   // TODO: not implemented (RFC 8449)
+   TLSEXT_RECORD_SIZE_LIMIT         = 28,
+
    TLSEXT_SESSION_TICKET            = 35,
 
    TLSEXT_SUPPORTED_VERSIONS        = 43,
 #if defined(BOTAN_HAS_TLS_13)
    TLSEXT_COOKIE                    = 44,
+
+   // TODO: not implemented
+   TLSEXT_PSK_KEY_EXCHANGE_MODES    = 45,
 
    TLSEXT_SIGNATURE_ALGORITHMS_CERT = 50,
    TLSEXT_KEY_SHARE                 = 51,
@@ -496,87 +505,12 @@ class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
       const Signature_Algorithms m_siganture_algorithms;
    };
 
-/**
-* KeyShareEntry from RFC 8446 B.3.1
-*/
-class Key_Share_Entry
-   {
-   public:
-      explicit Key_Share_Entry() = default;
-
-      explicit Key_Share_Entry(Named_Group group, const std::vector<uint8_t>& key_exchange);
-
-      bool empty() const;
-
-      size_t size() const;
-
-      std::vector<uint8_t> serialize() const;
-
-   private:
-      Named_Group m_group;
-      std::vector<uint8_t> m_key_exchange;
-   };
-
 class Key_Share_Content
    {
    public:
       virtual std::vector<uint8_t> serialize() const = 0;
       virtual bool empty() const = 0;
       virtual ~Key_Share_Content() = default;
-   };
-
-class Key_Share_ClientHello final : public Key_Share_Content
-   {
-   public:
-      explicit Key_Share_ClientHello(TLS_Data_Reader& reader,
-                                     uint16_t extension_size);
-
-      explicit Key_Share_ClientHello(const std::vector<Key_Share_Entry>& client_shares);
-
-      ~Key_Share_ClientHello() override;
-
-      std::vector<uint8_t> serialize() const override;
-
-      bool empty() const override;
-
-   private:
-      std::vector<Key_Share_Entry> m_client_shares;
-   };
-
-class Key_Share_ServerHello final : public Key_Share_Content
-   {
-   public:
-      explicit Key_Share_ServerHello(TLS_Data_Reader& reader,
-                                     uint16_t extension_size);
-
-      explicit Key_Share_ServerHello(const Key_Share_Entry& server_share);
-
-      ~Key_Share_ServerHello() override;
-
-      std::vector<uint8_t> serialize() const override;
-
-      bool empty() const override;
-
-   private:
-      Key_Share_Entry m_server_share;
-   };
-
-class Key_Share_HelloRetryRequest final : public Key_Share_Content
-   {
-   public:
-      explicit Key_Share_HelloRetryRequest(TLS_Data_Reader& reader,
-                                           uint16_t extension_size);
-
-      explicit Key_Share_HelloRetryRequest(Named_Group selected_group);
-
-      ~Key_Share_HelloRetryRequest() override;
-
-      std::vector<uint8_t> serialize() const override;
-
-      bool empty() const override;
-
-   private:
-      Named_Group m_selected_group;
    };
 
 /**
@@ -599,10 +533,10 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension
                          Connection_Side from);
 
       // constuctor used for ClientHello msg
-      explicit Key_Share(const std::vector<Key_Share_Entry>& client_shares);
+      explicit Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng);
 
       // constuctor used for ServerHello msg
-      explicit Key_Share(const Key_Share_Entry& server_share);
+      // explicit Key_Share(const Key_Share_Entry& server_share);
 
       // constuctor used for HelloRetryRequest msg
       explicit Key_Share(Named_Group selected_group);

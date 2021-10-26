@@ -100,7 +100,7 @@ bool check_for_resume(Session& session_info,
       }
 
    // wrong version
-   if(client_hello->version() != session_info.version())
+   if(client_hello->legacy_version() != session_info.version())
       return false;
 
    // client didn't send original ciphersuite
@@ -416,7 +416,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
                           "Have data remaining in buffer after ClientHello");
 
    pending_state.client_hello(new Client_Hello(contents));
-   const Protocol_Version client_offer = pending_state.client_hello()->version();
+   const Protocol_Version client_offer = pending_state.client_hello()->legacy_version();
    const bool datagram = client_offer.is_datagram_protocol();
 
    if(datagram)
@@ -642,7 +642,7 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
       Session session_info(
          pending_state.server_hello()->session_id(),
          pending_state.session_keys().master_secret(),
-         pending_state.server_hello()->version(),
+         pending_state.server_hello()->legacy_version(),
          pending_state.server_hello()->ciphersuite(),
          SERVER,
          pending_state.server_hello()->supports_extended_master_secret(),

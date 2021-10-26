@@ -182,9 +182,9 @@ Handshake_Type Client_Hello::type() const
    return m_impl->type();
    }
 
-Protocol_Version Client_Hello::version() const
+Protocol_Version Client_Hello::legacy_version() const
    {
-   return m_impl->version();
+   return m_impl->legacy_version();
    }
 
 std::vector<Protocol_Version> Client_Hello::supported_versions() const

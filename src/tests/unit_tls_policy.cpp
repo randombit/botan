@@ -45,6 +45,7 @@ class TLS_Policy_Unit_Tests final : public Test
          results.push_back(test_peer_key_acceptable_ecdh());
          results.push_back(test_peer_key_acceptable_ecdsa());
          results.push_back(test_peer_key_acceptable_dh());
+         results.push_back(test_key_exchange_groups_to_offer());
 
          return results;
          }
@@ -146,6 +147,29 @@ class TLS_Policy_Unit_Tests final : public Test
             result.test_success("Correctly rejecting short bit DH keys");
             }
 #endif
+         return result;
+         }
+
+      Test::Result test_key_exchange_groups_to_offer()
+         {
+         Test::Result result("TLS Policy key share offering");
+
+         Botan::TLS::Policy default_policy;
+         result.test_eq("default TLS Policy offers exactly one", default_policy.key_exchange_groups_to_offer().size(), 1);
+         result.confirm("default TLS Policy offers preferred group", default_policy.key_exchange_groups().front() == default_policy.key_exchange_groups_to_offer().front());
+
+         using TP = Botan::TLS::Text_Policy;
+
+         result.test_eq("default behaviour from text policy (size)", TP("").key_exchange_groups_to_offer().size(), 1);
+         result.confirm("default behaviour from text policy (preferred)", TP("").key_exchange_groups().front() == TP("").key_exchange_groups_to_offer().front());
+
+         result.confirm("no offerings", TP("key_exchange_groups_to_offer = none").key_exchange_groups_to_offer().empty());
+
+         const auto two_groups = "key_exchange_groups_to_offer = secp256r1 ffdhe/ietf/4096";
+         result.test_eq("list of offerings (size)", TP(two_groups).key_exchange_groups_to_offer().size(), 2);
+         result.confirm("list of offerings (0)", TP(two_groups).key_exchange_groups_to_offer()[0] == Botan::TLS::Group_Params::SECP256R1);
+         result.confirm("list of offerings (1)", TP(two_groups).key_exchange_groups_to_offer()[1] == Botan::TLS::Group_Params::FFDHE_4096);
+
          return result;
          }
 

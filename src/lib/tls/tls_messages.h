@@ -93,7 +93,17 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       Handshake_Type type() const override;
 
-      Protocol_Version version() const;
+      /**
+       * Return the version indicated in the ClientHello.
+       * This may differ from the version indicated in the supported_versions extension.
+       *
+       * See RFC 8446 4.1.2:
+       *   TLS 1.3, the client indicates its version preferences in the
+       *   "supported_versions" extension (Section 4.2.1) and the
+       *   legacy_version field MUST be set to 0x0303, which is the version
+       *   number for TLS 1.2.
+       */
+      Protocol_Version legacy_version() const;
 
       std::vector<Protocol_Version> supported_versions() const;
 
@@ -209,7 +219,7 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
 
       Handshake_Type type() const override;
 
-      Protocol_Version version() const;
+      Protocol_Version legacy_version() const;
 
       const std::vector<uint8_t>& random() const;
 

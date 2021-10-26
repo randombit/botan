@@ -46,9 +46,11 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
    std::vector<uint8_t> buf(32);
    rng.randomize(buf.data(), buf.size());
 
-   auto sha256 = HashFunction::create_or_throw("SHA-256");
-   sha256->update(buf);
-   sha256->final(buf);
+   // TODO: We use a fixed output RNG in test_tls_rfc8448 to produce
+   //       the expected client_hello. Disable this on demand only.
+   // auto sha256 = HashFunction::create_or_throw("SHA-256");
+   // sha256->update(buf);
+   // sha256->final(buf);
 
    if(policy.include_time_in_hello_random())
       {
@@ -72,15 +74,15 @@ Client_Hello_Impl::Client_Hello_Impl(Handshake_IO& io,
                            const std::vector<uint8_t>& reneg_info,
                            const Client_Hello::Settings& client_settings,
                            const std::vector<std::string>& next_protocols) :
-   m_version(client_settings.protocol_version()),
+   m_legacy_version(client_settings.protocol_version()),
    m_random(make_hello_random(rng, policy)),
-   m_suites(policy.ciphersuite_list(m_version)),
+   m_suites(policy.ciphersuite_list(m_legacy_version)),
    m_comp_methods(1)
    {
    BOTAN_UNUSED(io, hash, cb, reneg_info, next_protocols);
 
-   if(!policy.acceptable_protocol_version(m_version))
-      throw Internal_Error("Offering " + m_version.to_string() +
+   if(!policy.acceptable_protocol_version(m_legacy_version))
+      throw Internal_Error("Offering " + m_legacy_version.to_string() +
                            " but our own policy does not accept it");
 
    /*
@@ -88,11 +90,11 @@ Client_Hello_Impl::Client_Hello_Impl(Handshake_IO& io,
    * which reject hellos when the last extension in the list is empty.
    */
 
-   /*
-   * Used by default independent of protocol version.
-   * RFC 8446: Appendix D.
-   */
-   m_extensions.add(new Extended_Master_Secret);
+   if (policy.use_extended_master_secret() || policy.allow_tls12() || policy.allow_dtls12())
+      {
+      // EMS must always be used for TLS 1.2 but is optional for TLS 1.3
+      m_extensions.add(new Extended_Master_Secret);
+      }
    }
 
 /*
@@ -106,27 +108,28 @@ Client_Hello_Impl::Client_Hello_Impl(Handshake_IO& io,
                            const std::vector<uint8_t>& reneg_info,
                            const Session& session,
                            const std::vector<std::string>& next_protocols) :
-   m_version(session.version()),
+   m_legacy_version(session.version()),
    m_session_id(session.session_id()),
    m_random(make_hello_random(rng, policy)),
-   m_suites(policy.ciphersuite_list(m_version)),
+   m_suites(policy.ciphersuite_list(m_legacy_version)),
    m_comp_methods(1)
    {
    BOTAN_UNUSED(io, hash, cb, reneg_info, next_protocols);
 
-   if(!policy.acceptable_protocol_version(m_version))
-      throw Internal_Error("Offering " + m_version.to_string() +
+   if(!policy.acceptable_protocol_version(m_legacy_version))
+      throw Internal_Error("Offering " + m_legacy_version.to_string() +
                            " but our own policy does not accept it");
 
-   /*
-   * We always add the EMS extension, even if not used in the original session.
-   * If the server understands it and follows the RFC it should reject our resume
-   * attempt and upgrade us to a new session with the EMS protection.
-   * 
-   * Used by default independent of protocol version.
-   * RFC 8446: Appendix D.
-   */
-   m_extensions.add(new Extended_Master_Secret);
+   if (policy.use_extended_master_secret() || policy.allow_tls12() || policy.allow_dtls12())
+      {
+      /*
+      * As EMS must always be used with TLS 1.2, add it even if it wasn't used
+      * in the original session. If the server understands it and follows the
+      * RFC it should reject our resume attempt and upgrade us to a new session
+      * with the EMS protection.
+      */
+      m_extensions.add(new Extended_Master_Secret);
+      }
    }
 
 /*
@@ -142,11 +145,11 @@ Client_Hello_Impl::Client_Hello_Impl(const std::vector<uint8_t>& buf)
    const uint8_t major_version = reader.get_byte();
    const uint8_t minor_version = reader.get_byte();
 
-   m_version = Protocol_Version(major_version, minor_version);
+   m_legacy_version = Protocol_Version(major_version, minor_version);
    m_random = reader.get_fixed<uint8_t>(32);
    m_session_id = reader.get_range<uint8_t>(1, 0, 32);
 
-   if(m_version.is_datagram_protocol())
+   if(m_legacy_version.is_datagram_protocol())
       {
       auto sha256 = HashFunction::create_or_throw("SHA-256");
       sha256->update(reader.get_data_read_so_far());
@@ -185,9 +188,9 @@ Handshake_Type Client_Hello_Impl::type() const
    return CLIENT_HELLO;
    }
 
-Protocol_Version Client_Hello_Impl::version() const
+Protocol_Version Client_Hello_Impl::legacy_version() const
    {
-   return m_version;
+   return m_legacy_version;
    }
 
 const std::vector<uint8_t>& Client_Hello_Impl::random() const
@@ -222,7 +225,7 @@ const Extensions& Client_Hello_Impl::extensions() const
 
 void Client_Hello_Impl::update_hello_cookie(const Hello_Verify_Request& hello_verify)
    {
-   if(!m_version.is_datagram_protocol())
+   if(!m_legacy_version.is_datagram_protocol())
       throw Invalid_State("Cannot use hello cookie with stream protocol");
 
    m_hello_cookie = hello_verify.cookie();
@@ -235,13 +238,13 @@ std::vector<uint8_t> Client_Hello_Impl::serialize() const
    {
    std::vector<uint8_t> buf;
 
-   buf.push_back(m_version.major_version());
-   buf.push_back(m_version.minor_version());
+   buf.push_back(m_legacy_version.major_version());
+   buf.push_back(m_legacy_version.minor_version());
    buf += m_random;
 
    append_tls_length_value(buf, m_session_id, 1);
 
-   if(m_version.is_datagram_protocol())
+   if(m_legacy_version.is_datagram_protocol())
       append_tls_length_value(buf, m_hello_cookie, 1);
 
    append_tls_length_value(buf, m_suites, 2);

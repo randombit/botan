@@ -148,12 +148,12 @@ std::string map_to_bogo_error(const std::string& e)
          { "Server changed its mind about extended master secret", ":RENEGOTIATION_EMS_MISMATCH:" },
          { "Server changed its mind about secure renegotiation", ":RENEGOTIATION_MISMATCH:" },
          { "Server changed version after renegotiation", ":WRONG_SSL_VERSION:" },
-         { "Server downgraded version after renegotiation", ":WRONG_SSL_VERSION:" },
          { "Server policy prohibits renegotiation", ":NO_RENEGOTIATION:" },
          { "Server replied using a ciphersuite not allowed in version it offered", ":WRONG_CIPHER_RETURNED:" },
          { "Server replied with DTLS-SRTP alg we did not send", ":BAD_SRTP_PROTECTION_PROFILE_LIST:" },
          { "Server replied with ciphersuite we didn't send", ":WRONG_CIPHER_RETURNED:" },
-         { "Server replied with later version than client offered", ":UNSUPPORTED_PROTOCOL:" },
+         { "Server replied with an invalid version", ":UNSUPPORTED_PROTOCOL:" },  // bogus version from "ServerBogusVersion"
+         { "Server version SSL v3 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },  // "NoSSL3-Client-Unsolicited"
          { "Server replied with non-null compression method", ":UNSUPPORTED_COMPRESSION_ALGORITHM:" },
          { "Server replied with some unknown ciphersuite", ":UNKNOWN_CIPHER_RETURNED:" },
          { "Server replied with unsupported extensions: 0", ":UNEXPECTED_EXTENSION:" },

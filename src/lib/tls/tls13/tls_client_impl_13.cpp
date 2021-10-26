@@ -17,9 +17,43 @@ namespace Botan {
 
 namespace TLS {
 
-/*
-* TLS 1.3 Client  Constructor
-*/
+namespace {
+
+class Client_Handshake_State_13 final : public Handshake_State
+   {
+   public:
+      Client_Handshake_State_13(std::unique_ptr<Handshake_IO> io, Callbacks& cb) :
+         Handshake_State(std::move(io), cb)
+         {}
+
+      const Public_Key& get_server_public_key() const
+         {
+         BOTAN_ASSERT(server_public_key, "Server sent us a certificate");
+         return *server_public_key.get();
+         }
+
+      bool is_a_resumption() const { return (resumed_session != nullptr); }
+
+      const secure_vector<uint8_t>& resume_master_secret() const
+         {
+         BOTAN_STATE_CHECK(is_a_resumption());
+         return resumed_session->master_secret();
+         }
+
+      const std::vector<X509_Certificate>& resume_peer_certs() const
+         {
+         BOTAN_STATE_CHECK(is_a_resumption());
+         return resumed_session->peer_certs();
+         }
+
+      std::unique_ptr<Public_Key> server_public_key;
+
+      // Used during session resumption
+      std::unique_ptr<Session> resumed_session;
+   };
+
+}
+
 Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
                                Session_Manager& session_manager,
                                Credentials_Manager& creds,
@@ -35,6 +69,7 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
    m_creds(creds),
    m_info(info)
    {
+   BOTAN_UNUSED(m_creds); // TODO: fixme
    Handshake_State& state = create_handshake_state(offer_version);
    send_client_hello(state, offer_version, next_protocols);
    }
@@ -63,14 +98,14 @@ void Client_Impl_13::process_handshake_msg(const Handshake_State* active_state,
 
 std::unique_ptr<Handshake_State> Client_Impl_13::new_handshake_state(std::unique_ptr<Handshake_IO> io)
    {
-   return std::make_unique<Client_Handshake_State>(std::move(io), callbacks());
+   return std::make_unique<Client_Handshake_State_13>(std::move(io), callbacks());
    }
 
 void Client_Impl_13::send_client_hello(Handshake_State& state_base,
                                        Protocol_Version version,
                                        const std::vector<std::string>& next_protocols)
    {
-   Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
+   Client_Handshake_State_13& state = dynamic_cast<Client_Handshake_State_13&>(state_base);
 
    state.set_expected_next(SERVER_HELLO);
 

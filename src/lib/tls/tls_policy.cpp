@@ -98,8 +98,6 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
       "ECDH",
       "DH",
       //"RSA",
-      //"IMPLICIT",
-      //TODO: allow TLS 1.3 ciphers with UNDEFINED kex algo
       };
    }
 
@@ -110,7 +108,6 @@ std::vector<std::string> Policy::allowed_signature_methods() const
       "RSA",
       //"DSA",
       //"IMPLICIT",
-      //TODO: allow TLS 1.3 ciphers with UNDEFINED sig meth
       };
    }
 
@@ -181,6 +178,16 @@ std::vector<Group_Params> Policy::key_exchange_groups() const
       Group_Params::FFDHE_6144,
       Group_Params::FFDHE_8192,
       };
+   }
+
+std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const
+   {
+   // by default, we offer a key share for the most-preferred group, only
+   std::vector<Group_Params> groups_to_offer;
+   const auto supported_groups = key_exchange_groups();
+   if (!supported_groups.empty())
+      groups_to_offer.push_back(supported_groups.front());
+   return groups_to_offer;
    }
 
 size_t Policy::minimum_dh_group_size() const
@@ -306,7 +313,7 @@ bool Policy::allow_client_initiated_renegotiation() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
 bool Policy::allow_tls12()  const { return true; }
-bool Policy::allow_tls13() const 
+bool Policy::allow_tls13() const
    {
 #if defined(BOTAN_HAS_TLS_13)
    return true;
@@ -319,6 +326,7 @@ bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 bool Policy::negotiate_encrypt_then_mac() const { return true; }
+bool Policy::use_extended_master_secret() const { return allow_tls12() || allow_dtls12(); }
 bool Policy::support_cert_status_message() const { return true; }
 bool Policy::allow_resumption_for_renegotiation() const { return true; }
 bool Policy::only_resume_with_exact_version() const { return true; }
@@ -440,31 +448,37 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version) const
       if(!this->acceptable_ciphersuite(suite))
          continue;
 
-      if(!value_exists(kex, suite.kex_algo()))
-         continue; // unsupported key exchange
-
       if(!value_exists(ciphers, suite.cipher_algo()))
          continue; // unsupported cipher
 
-      if(!value_exists(macs, suite.mac_algo()))
-         continue; // unsupported MAC algo
-
-      if(!value_exists(sigs, suite.sig_algo()))
+      // these checks are irrelevant for TLS 1.3
+      // TODO: consider making a method for this logic
+      if((!version.is_datagram_protocol() && version <= Protocol_Version(Protocol_Version::TLS_V12)) ||
+         ( version.is_datagram_protocol() && version <= Protocol_Version(Protocol_Version::DTLS_V12)))
          {
-         // allow if it's an empty sig algo and we want to use PSK
-         if(suite.auth_method() != Auth_Method::IMPLICIT || !suite.psk_ciphersuite())
-            continue;
-         }
+         if(!value_exists(kex, suite.kex_algo()))
+            continue; // unsupported key exchange
 
-      /*
-      CECPQ1 always uses x25519 for ECDH, so treat the applications
-      removal of x25519 from the ECC curve list as equivalent to
-      saying they do not trust CECPQ1
-      */
-      if(suite.kex_method() == Kex_Algo::CECPQ1)
-         {
-         if(value_exists(key_exchange_groups(), Group_Params::X25519) == false)
-            continue;
+         if(!value_exists(macs, suite.mac_algo()))
+            continue; // unsupported MAC algo
+
+         if(!value_exists(sigs, suite.sig_algo()))
+            {
+            // allow if it's an empty sig algo and we want to use PSK
+            if(suite.auth_method() != Auth_Method::IMPLICIT || !suite.psk_ciphersuite())
+               continue;
+            }
+
+         /*
+         CECPQ1 always uses x25519 for ECDH, so treat the applications
+         removal of x25519 from the ECC curve list as equivalent to
+         saying they do not trust CECPQ1
+         */
+         if(suite.kex_method() == Kex_Algo::CECPQ1)
+            {
+            if(value_exists(key_exchange_groups(), Group_Params::X25519) == false)
+               continue;
+            }
          }
 
       // OK, consider it
@@ -535,12 +549,20 @@ void Policy::print(std::ostream& o) const
    print_vec(o, "key_exchange_methods", allowed_key_exchange_methods());
    print_vec(o, "key_exchange_groups", key_exchange_groups());
 
+   const auto groups_to_offer = key_exchange_groups_to_offer();
+   if (groups_to_offer.empty()) {
+      print_vec(o, "key_exchange_groups_to_offer", { std::string("none") });
+   } else {
+      print_vec(o, "key_exchange_groups_to_offer", groups_to_offer);
+   }
+
    print_bool(o, "allow_insecure_renegotiation", allow_insecure_renegotiation());
    print_bool(o, "include_time_in_hello_random", include_time_in_hello_random());
    print_bool(o, "allow_server_initiated_renegotiation", allow_server_initiated_renegotiation());
    print_bool(o, "hide_unknown_users", hide_unknown_users());
    print_bool(o, "server_uses_own_ciphersuite_preferences", server_uses_own_ciphersuite_preferences());
    print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
+   print_bool(o, "use_extended_master_secret", use_extended_master_secret());
    print_bool(o, "support_cert_status_message", support_cert_status_message());
    o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
@@ -577,7 +599,7 @@ std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
    }
 
 bool Strict_Policy::allow_tls12()  const { return true;  }
-bool Strict_Policy::allow_tls13()  const 
+bool Strict_Policy::allow_tls13()  const
 {
 #if defined(BOTAN_HAS_TLS_13)
    return true;

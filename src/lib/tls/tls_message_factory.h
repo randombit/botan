@@ -10,6 +10,7 @@
 
 #include <botan/tls_messages.h>
 #include <botan/tls_version.h>
+#include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
 
 #include <exception>
@@ -101,13 +102,15 @@ std::unique_ptr<MessageBaseT> create(const Protocol_Version &protocol_version, P
      case Protocol_Version::DTLS_V12:
        return std::make_unique<typename impl_t::v12>(std::forward<ParamTs>(parameters)...);
      default:
-       BOTAN_ASSERT(false, "unexpected protocol version");
+       // TODO is this the right behavior?
+       throw TLS_Exception(Alert::PROTOCOL_VERSION, "unsupported protocol version");
      }
    }
 
 template <typename MessageBaseT, typename... ParamTs>
 std::unique_ptr<MessageBaseT> create(std::vector<Protocol_Version> supported_versions, ParamTs&&... parameters)
    {
+   // TODO: this will not work for DTLS
 #if defined(BOTAN_HAS_TLS_13)
    const auto protocol_version =
       value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V13))

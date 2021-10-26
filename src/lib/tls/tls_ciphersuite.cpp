@@ -74,7 +74,19 @@ bool Ciphersuite::ecc_ciphersuite() const
 
 bool Ciphersuite::usable_in_version(Protocol_Version version) const
    {
-   BOTAN_UNUSED(version);
+   // RFC 8446 B.4.:
+   //   Although TLS 1.3 uses the same cipher suite space as previous
+   //   versions of TLS, TLS 1.3 cipher suites are defined differently, only
+   //   specifying the symmetric ciphers, and cannot be used for TLS 1.2.
+   //   Similarly, cipher suites for TLS 1.2 and lower cannot be used with
+   //   TLS 1.3.
+   if((!version.is_datagram_protocol() && version > Protocol_Version(Protocol_Version::TLS_V12)) ||
+      ( version.is_datagram_protocol() && version > Protocol_Version(Protocol_Version::DTLS_V12)))
+      {
+      // currently cipher suite codes {0x13,0x01} through {0x13,0x05} are
+      // allowed for TLS 1.3. This may change in the future.
+      return (ciphersuite_code() & 0xFF00) == 0x1300;
+      }
    return true;
    }
 

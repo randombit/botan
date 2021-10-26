@@ -47,7 +47,7 @@ Client_Hello_Impl_12::Client_Hello_Impl_12(Handshake_IO& io,
 
    m_extensions.add(new Renegotiation_Extension(reneg_info));
 
-   m_extensions.add(new Supported_Versions(m_version, policy));
+   m_extensions.add(new Supported_Versions(m_legacy_version, policy));
 
    if(client_settings.hostname() != "")
       m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
@@ -60,7 +60,7 @@ Client_Hello_Impl_12::Client_Hello_Impl_12(Handshake_IO& io,
 
    m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
 
-   if(m_version.is_datagram_protocol())
+   if(m_legacy_version.is_datagram_protocol())
       m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
 
    auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());

@@ -5,11 +5,12 @@
 */
 
 #include "tests.h"
-#include <fstream>
 #include <memory>
 
 #if defined(BOTAN_HAS_TLS)
   #include "test_rng.h"
+  #include "test_tls_utils.h"
+
   #include <botan/tls_alert.h>
   #include <botan/tls_policy.h>
   #include <botan/tls_session.h>
@@ -326,9 +327,9 @@ class Test_TLS_Policy_Text : public Test
             const std::string from_policy_obj = tls_policy_string(policy);
             std::string from_file = 
 #if defined(BOTAN_HAS_TLS_13)
-               read_tls_policy(policy + (policy == "default" || policy == "strict" ? "_tls13" : ""));
+               read_tls_policy(policy + (policy == "default" || policy == "strict" ? "_tls13" : "")).to_string();
 #else
-               read_tls_policy(policy);
+               read_tls_policy(policy).to_string();
 #endif
             
 
@@ -345,20 +346,6 @@ class Test_TLS_Policy_Text : public Test
          }
 
    private:
-      std::string read_tls_policy(const std::string& policy_str)
-         {
-         const std::string fspath = Test::data_file("tls-policy/" + policy_str + ".txt");
-
-         std::ifstream is(fspath.c_str());
-         if(!is.good())
-            {
-            throw Test_Error("Missing policy file " + fspath);
-            }
-
-         Botan::TLS::Text_Policy policy(is);
-         return policy.to_string();
-         }
-
       std::string tls_policy_string(const std::string& policy_str)
          {
          std::unique_ptr<Botan::TLS::Policy> policy;

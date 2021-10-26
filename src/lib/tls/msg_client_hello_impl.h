@@ -57,7 +57,7 @@ class Client_Hello_Impl : public Handshake_Message
 
       Handshake_Type type() const override;
 
-      Protocol_Version version() const;
+      Protocol_Version legacy_version() const;
 
       virtual std::vector<Protocol_Version> supported_versions() const;
 
@@ -116,7 +116,7 @@ class Client_Hello_Impl : public Handshake_Message
       std::vector<uint8_t> serialize() const override;
 
    protected:
-      Protocol_Version m_version;
+      Protocol_Version m_legacy_version;
       std::vector<uint8_t> m_session_id;
       std::vector<uint8_t> m_random;
       std::vector<uint16_t> m_suites;
