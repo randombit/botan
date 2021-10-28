@@ -124,7 +124,7 @@ class BOTAN_PUBLIC_API(2,0) Session final
       /**
       * Get the ciphersuite info of the saved session
       */
-      Ciphersuite ciphersuite() const { return Ciphersuite::by_id(m_ciphersuite); }
+      Ciphersuite ciphersuite() const;
 
       /**
       * Get which side of the connection the resumed session we are/were

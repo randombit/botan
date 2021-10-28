@@ -13,6 +13,7 @@
 #include <botan/tls_version.h>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace Botan {
 
@@ -27,16 +28,16 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       /**
       * Convert an SSL/TLS ciphersuite to algorithm fields
       * @param suite the ciphersuite code number
-      * @return ciphersuite object
+      * @return ciphersuite object or std::nullopt if it is unknown to the library
       */
-      static Ciphersuite by_id(uint16_t suite);
+      static std::optional<Ciphersuite> by_id(uint16_t suite);
 
       /**
       * Convert an SSL/TLS ciphersuite name to algorithm fields
       * @param name the IANA name for the desired ciphersuite
-      * @return ciphersuite object
+      * @return ciphersuite object or std::nullopt if it is unknown to the library
       */
-      static Ciphersuite from_name(const std::string& name);
+      static std::optional<Ciphersuite> from_name(const std::string& name);
 
       /**
       * Returns true iff this suite is a known SCSV

@@ -167,6 +167,17 @@ std::string Session::PEM_encode() const
    return PEM_Code::encode(this->DER_encode(), "TLS SESSION");
    }
 
+Ciphersuite Session::ciphersuite() const
+   {
+   auto suite = Ciphersuite::by_id(m_ciphersuite);
+   if (!suite.has_value())
+      {
+      throw Decoding_Error("Failed to find cipher suite for ID " +
+                           std::to_string(m_ciphersuite));
+      }
+   return suite.value();
+   }
+
 std::chrono::seconds Session::session_age() const
    {
    return std::chrono::duration_cast<std::chrono::seconds>(

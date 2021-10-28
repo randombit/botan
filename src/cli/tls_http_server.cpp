@@ -374,14 +374,14 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
             strm << "Client offered following ciphersuites:\n";
             for(uint16_t suite_id : client_hello.ciphersuites())
                {
-               Botan::TLS::Ciphersuite ciphersuite = Botan::TLS::Ciphersuite::by_id(suite_id);
+               const auto ciphersuite = Botan::TLS::Ciphersuite::by_id(suite_id);
 
                strm << " - 0x"
                     << std::hex << std::setfill('0') << std::setw(4) << suite_id
                     << std::dec << std::setfill(' ') << std::setw(0) << " ";
 
-               if(ciphersuite.valid())
-                  strm << ciphersuite.to_string() << "\n";
+               if(ciphersuite && ciphersuite->valid())
+                  strm << ciphersuite->to_string() << "\n";
                else if(suite_id == 0x00FF)
                   strm << "Renegotiation SCSV\n";
                else

@@ -261,7 +261,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                              "Server replied with ciphersuite we didn't send");
          }
 
-      if(!Ciphersuite::by_id(state.server_hello()->ciphersuite()).usable_in_version(state.server_hello()->version()))
+      if(const auto suite = Ciphersuite::by_id(state.server_hello()->ciphersuite());
+         !suite || !suite->usable_in_version(state.server_hello()->version()))
          {
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Server replied using a ciphersuite not allowed in version it offered");

@@ -219,7 +219,15 @@ void Handshake_State::client_hello(Client_Hello* client_hello)
 void Handshake_State::server_hello(Server_Hello* server_hello)
    {
    m_server_hello.reset(server_hello);
-   m_ciphersuite = Ciphersuite::by_id(m_server_hello->ciphersuite());
+
+   auto suite = Ciphersuite::by_id(m_server_hello->ciphersuite());
+   if (!suite.has_value())
+      {
+      throw Decoding_Error("Failed to find cipher suite for ID " +
+                           std::to_string(m_server_hello->ciphersuite()));
+      }
+
+   m_ciphersuite = suite.value();
    note_message(*m_server_hello);
    }
 

@@ -88,7 +88,7 @@ bool Ciphersuite::signature_used() const
    return auth_method() != Auth_Method::IMPLICIT;
    }
 
-Ciphersuite Ciphersuite::by_id(uint16_t suite)
+std::optional<Ciphersuite> Ciphersuite::by_id(uint16_t suite)
    {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
    auto s = std::lower_bound(all_suites.begin(), all_suites.end(), suite);
@@ -98,10 +98,10 @@ Ciphersuite Ciphersuite::by_id(uint16_t suite)
       return *s;
       }
 
-   return Ciphersuite(); // some unknown ciphersuite
+   return std::nullopt; // some unknown ciphersuite
    }
 
-Ciphersuite Ciphersuite::from_name(const std::string& name)
+std::optional<Ciphersuite> Ciphersuite::from_name(const std::string& name)
    {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
 
@@ -111,7 +111,7 @@ Ciphersuite Ciphersuite::from_name(const std::string& name)
          return suite;
       }
 
-   return Ciphersuite(); // some unknown ciphersuite
+   return std::nullopt; // some unknown ciphersuite
    }
 
 namespace {

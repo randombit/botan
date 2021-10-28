@@ -380,19 +380,19 @@ class Test_TLS_Ciphersuites : public Test
          for(size_t csuite_id = 0; csuite_id <= 0xFFFF; ++csuite_id)
             {
             const uint16_t csuite_id16 = static_cast<uint16_t>(csuite_id);
-            Botan::TLS::Ciphersuite ciphersuite = Botan::TLS::Ciphersuite::by_id(csuite_id16);
+            auto ciphersuite = Botan::TLS::Ciphersuite::by_id(csuite_id16);
 
-            if(ciphersuite.valid())
+            if(ciphersuite && ciphersuite->valid())
                {
                result.test_eq("Valid Ciphersuite is not SCSV", Botan::TLS::Ciphersuite::is_scsv(csuite_id16), false);
 
-               if(ciphersuite.cbc_ciphersuite() == false)
+               if(ciphersuite->cbc_ciphersuite() == false)
                   {
-                  result.test_eq("Expected MAC name for AEAD ciphersuites", ciphersuite.mac_algo(), "AEAD");
+                  result.test_eq("Expected MAC name for AEAD ciphersuites", ciphersuite->mac_algo(), "AEAD");
                   }
                else
                   {
-                  result.test_eq("MAC algo and PRF algo same for CBC suites", ciphersuite.prf_algo(), ciphersuite.mac_algo());
+                  result.test_eq("MAC algo and PRF algo same for CBC suites", ciphersuite->prf_algo(), ciphersuite->mac_algo());
                   }
 
                // TODO more tests here

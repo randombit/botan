@@ -177,22 +177,22 @@ uint16_t choose_ciphersuite(
       if(!value_exists(other_list, suite_id))
          continue;
 
-      const Ciphersuite suite = Ciphersuite::by_id(suite_id);
+      const auto suite = Ciphersuite::by_id(suite_id);
 
-      if(suite.valid() == false)
+      if(!suite.has_value() || !suite->valid())
          {
          continue;
          }
 
-      if(have_shared_ecc_curve == false && suite.ecc_ciphersuite())
+      if(have_shared_ecc_curve == false && suite->ecc_ciphersuite())
          {
          continue;
          }
 
       // For non-anon ciphersuites
-      if(suite.signature_used())
+      if(suite->signature_used())
          {
-         const std::string sig_algo = suite.sig_algo();
+         const std::string sig_algo = suite->sig_algo();
 
          // Do we have any certificates for this sig?
          if(cert_chains.count(sig_algo) == 0)
@@ -218,7 +218,7 @@ uint16_t choose_ciphersuite(
             if(signature_scheme_is_known(scheme) == false)
                continue;
 
-            if(signature_algorithm_of_scheme(scheme) == suite.sig_algo() &&
+            if(signature_algorithm_of_scheme(scheme) == suite->sig_algo() &&
                policy.allowed_signature_hash(hash_function_of_scheme(scheme)))
                {
                we_support_some_hash_by_client = true;
