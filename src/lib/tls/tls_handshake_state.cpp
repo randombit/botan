@@ -219,15 +219,7 @@ void Handshake_State::client_hello(Client_Hello* client_hello)
 void Handshake_State::server_hello(Server_Hello* server_hello)
    {
    m_server_hello.reset(server_hello);
-
-   auto suite = Ciphersuite::by_id(m_server_hello->ciphersuite());
-   if (!suite.has_value())
-      {
-      throw Decoding_Error("Failed to find cipher suite for ID " +
-                           std::to_string(m_server_hello->ciphersuite()));
-      }
-
-   m_ciphersuite = suite.value();
+   m_ciphersuite = Ciphersuite::by_id(m_server_hello->ciphersuite());
    note_message(*m_server_hello);
    }
 
@@ -295,6 +287,15 @@ void Handshake_State::client_finished(Finished* client_finished)
    {
    m_client_finished.reset(client_finished);
    note_message(*m_client_finished);
+   }
+
+const Ciphersuite& Handshake_State::ciphersuite() const
+   {
+   if (!m_ciphersuite.has_value())
+      {
+      throw Decoding_Error("Cipher suite is not set");
+      }
+   return m_ciphersuite.value();
    }
 
 void Handshake_State::set_version(const Protocol_Version& version)
