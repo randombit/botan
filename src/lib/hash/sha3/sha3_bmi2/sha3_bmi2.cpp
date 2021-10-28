@@ -28,7 +28,7 @@ namespace {
 #endif
 
 BOTAN_WORKAROUND_MAYBE_INLINE std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>
-   xor_CNs(const uint64_t A[25])
+   xor_CNs_BMI2(const uint64_t A[25])
    {
    return {
       A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20],
@@ -42,7 +42,7 @@ BOTAN_WORKAROUND_MAYBE_INLINE std::tuple<uint64_t, uint64_t, uint64_t, uint64_t,
 
 inline void SHA3_BMI2_round(uint64_t T[25], const uint64_t A[25], uint64_t RC)
    {
-   const auto Cs = xor_CNs(A);
+   const auto Cs = xor_CNs_BMI2(A);
 
    const uint64_t D0 = rotl<1>(std::get<0>(Cs)) ^ std::get<3>(Cs);
    const uint64_t D1 = rotl<1>(std::get<1>(Cs)) ^ std::get<4>(Cs);
