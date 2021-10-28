@@ -27,7 +27,7 @@ namespace {
 #define BOTAN_WORKAROUND_MAYBE_INLINE inline
 #endif
 
-BOTAN_WORKAROUND_MAYBE_INLINE decltype(auto) xor_CNs(const uint64_t A[25])
+BOTAN_WORKAROUND_MAYBE_INLINE decltype(auto) xor_CNs_BMI2(const uint64_t A[25])
    {
    return std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>(
       A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20],
@@ -41,7 +41,7 @@ BOTAN_WORKAROUND_MAYBE_INLINE decltype(auto) xor_CNs(const uint64_t A[25])
 
 inline void SHA3_BMI2_round(uint64_t T[25], const uint64_t A[25], uint64_t RC)
    {
-   const auto [C0,C1,C2,C3,C4] = xor_CNs(A);
+   const auto [C0,C1,C2,C3,C4] = xor_CNs_BMI2(A);
 
    const uint64_t D0 = rotl<1>(C0) ^ C3;
    const uint64_t D1 = rotl<1>(C1) ^ C4;
