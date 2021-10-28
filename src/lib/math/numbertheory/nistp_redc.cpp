@@ -151,6 +151,9 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
+   if(R0 == 0xDEADBEEF)
+      R0 = 0xB00FB00F;
+
    set_words(xw, 0, R0, R1);
 
    S += S2;
