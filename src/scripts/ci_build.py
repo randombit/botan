@@ -25,6 +25,33 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
+def known_targets():
+    return [
+        'amalgamation',
+        'baremetal',
+        'bsi',
+        'coverage',
+        'cross-android-arm32',
+        'cross-android-arm64',
+        'cross-arm32',
+        'cross-arm64',
+        'cross-i386',
+        'cross-ios-arm64',
+        'cross-mips64',
+        'cross-ppc32',
+        'cross-ppc64',
+        'cross-win64',
+        'docs',
+        'fuzzers',
+        'lint',
+        'minimized',
+        'nist',
+        'sanitizer',
+        'shared',
+        'static',
+        'valgrind',
+    ]
+
 def build_targets(target, target_os):
     if target in ['shared', 'minimized', 'bsi', 'nist']:
         yield 'shared'
@@ -97,6 +124,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
+
+    if target in ['amalgamation']:
+        flags += ['--amalgamation']
 
     if target in ['bsi', 'nist']:
         # tls is optional for bsi/nist but add it so verify tests work with these minimized configs
@@ -344,6 +374,8 @@ def parse_args(args):
 
     parser.add_option('--os', default=default_os(),
                       help='Set the target os (default %default)')
+    parser.add_option('--cpu', default=None,
+                      help='Specify a target CPU platform')
     parser.add_option('--cc', default='gcc',
                       help='Set the target compiler type (default %default)')
     parser.add_option('--cc-bin', default=None,
@@ -357,20 +389,8 @@ def parse_args(args):
     parser.add_option('--extra-cxxflags', metavar='FLAGS', default=[], action='append',
                       help='Specify extra build flags')
 
-    parser.add_option('--cpu', default=None,
-                      help='Specify a target CPU platform')
-
-    parser.add_option('--with-debug', action='store_true', default=False,
-                      help='Include debug information')
-    parser.add_option('--amalgamation', action='store_true', default=False,
-                      help='Build via amalgamation')
-    parser.add_option('--disable-shared', action='store_true', default=False,
-                      help='Disable building shared libraries')
     parser.add_option('--disabled-tests', metavar='DISABLED_TESTS', default=[], action='append',
                       help='Comma separated list of tests that should not be run')
-
-    parser.add_option('--branch', metavar='B', default=None,
-                      help='Specify branch being built')
 
     parser.add_option('--dry-run', action='store_true', default=False,
                       help='Just show commands to be executed')
@@ -423,6 +443,7 @@ def main(args=None):
 
     if args is None:
         args = sys.argv
+
     print("Invoked as '%s'" % (' '.join(args)))
     (options, args) = parse_args(args)
 
@@ -431,6 +452,10 @@ def main(args=None):
         return 1
 
     target = args[1]
+
+    if target not in known_targets():
+        print("Unknown target '%s'" % (target))
+        return 2
 
     if options.use_python3 is None:
         use_python3 = have_prog('python3')
@@ -513,6 +538,7 @@ def main(args=None):
             make_cmd += ['-C', root_dir]
         if options.build_jobs > 1 and options.make_tool != 'nmake':
             make_cmd += ['-j%d' % (options.build_jobs)]
+
         make_cmd += ['-k']
 
         if target == 'docs':
