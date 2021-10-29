@@ -37,13 +37,13 @@ class TLS_Session_Tests final : public Test
          Botan::secure_vector<uint8_t> default_der = default_session.DER_encode();
 
          result.test_gte("Encoded default session has size", default_der.size(), 0);
-
-         Botan::TLS::Session decoded_default(default_der.data(), default_der.size());
+         result.test_throws("Encoded default session cannot be read",
+                            [&] { Botan::TLS::Session{default_der.data(), default_der.size()}; });
 
          Botan::TLS::Session session(std::vector<uint8_t>{0xAA, 0xBB},
                                      Botan::secure_vector<uint8_t>{0xCC, 0xDD},
                                      Botan::TLS::Protocol_Version::TLS_V12,
-                                     0xFE0F,
+                                     0xC02F,
                                      Botan::TLS::CLIENT,
                                      true,
                                      false,
@@ -55,6 +55,10 @@ class TLS_Session_Tests final : public Test
          const std::string pem = session.PEM_encode();
          Botan::TLS::Session session_from_pem(pem);
          result.test_eq("Roundtrip from pem", session.DER_encode(), session_from_pem.DER_encode());
+
+         const auto der = session.DER_encode();
+         Botan::TLS::Session session_from_der(der.data(), der.size());
+         result.test_eq("Roundtrip from der", session.DER_encode(), session_from_der.DER_encode());
 
          const Botan::SymmetricKey key("ABCDEF");
          const std::vector<uint8_t> ctext1 = session.encrypt(key, Test::rng());
@@ -79,6 +83,23 @@ class TLS_Session_Tests final : public Test
          const std::vector<uint8_t> ctextf2 = session.encrypt(key, frng2);
 
          result.test_eq("Only randomness comes from RNG", ctextf1, ctextf2);
+
+         Botan::TLS::Session session2(std::vector<uint8_t>{0xAA, 0xCC},
+                                     Botan::secure_vector<uint8_t>{0xCC, 0xEE},
+                                     Botan::TLS::Protocol_Version::TLS_V12,
+                                     0xBAAD, // cipher suite does not exist
+                                     Botan::TLS::CLIENT,
+                                     true,
+                                     false,
+                                     std::vector<Botan::X509_Certificate>(),
+                                     std::vector<uint8_t>(),
+                                     Botan::TLS::Server_Information("server"),
+                                     0x0000);
+         const std::string pem_with_unknown_ciphersuite = session2.PEM_encode();
+
+         result.test_throws("unknown ciphersuite during session parsing",
+                            "Serialized TLS session contains unknown cipher suite (47789)",
+                            [&] { Botan::TLS::Session{pem_with_unknown_ciphersuite}; });
 
          return {result};
          }
