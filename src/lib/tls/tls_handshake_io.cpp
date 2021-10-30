@@ -228,12 +228,13 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
 
       if(message_seq >= m_in_message_seq)
          {
-         m_messages[message_seq].add_fragment(&record[DTLS_HANDSHAKE_HEADER_LEN],
-                                              fragment_length,
-                                              fragment_offset,
-                                              epoch,
-                                              msg_type,
-                                              msg_len);
+         add_fragment(message_seq,
+                      &record[DTLS_HANDSHAKE_HEADER_LEN],
+                      fragment_length,
+                      fragment_offset,
+                      epoch,
+                      msg_type,
+                      msg_len);
          }
       else
          {
@@ -243,6 +244,22 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
       record += total_size;
       record_len -= total_size;
       }
+   }
+
+void Datagram_Handshake_IO::add_fragment(uint16_t message_seq,
+                                         const uint8_t fragment[],
+                                         size_t fragment_length,
+                                         size_t fragment_offset,
+                                         uint16_t epoch,
+                                         uint8_t msg_type,
+                                         size_t msg_length)
+   {
+   m_messages[message_seq].add_fragment(fragment,
+                                        fragment_length,
+                                        fragment_offset,
+                                        epoch,
+                                        msg_type,
+                                        msg_length);
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>

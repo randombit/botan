@@ -816,9 +816,23 @@ void Channel::process_prestate(DTLS_Prestate* prestate)
 
    try
       {
+      create_handshake_state(prestate->m_record_version,
+                             prestate);
+
+      Datagram_Handshake_IO& handshake_io =
+         static_cast<Datagram_Handshake_IO&>(m_pending_state->handshake_io());
+
+      size_t msg_len = prestate->m_contents->size();
+      handshake_io.add_fragment(prestate->m_in_message_seq - 1,
+                                prestate->m_contents->data(),
+                                /*fragment_length=*/msg_len,
+                                /*fragment_offset=*/0,
+                                /*epoch=*/0,
+                                /*msg_type=*/CLIENT_HELLO,
+                                /*msg_length=*/msg_len);
+
       process_handshake_msg(nullptr,
-                            create_handshake_state(prestate->m_record_version,
-                                                   prestate),
+                            *m_pending_state.get(),
                             CLIENT_HELLO,
                             *prestate->m_contents,
                             false);

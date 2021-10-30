@@ -134,6 +134,14 @@ class Datagram_Handshake_IO final : public Handshake_IO
                       Record_Type type,
                       uint64_t sequence_number) override;
 
+      void add_fragment(uint16_t message_seq,
+                        const uint8_t fragment[],
+                        size_t fragment_length,
+                        size_t fragment_offset,
+                        uint16_t epoch,
+                        uint8_t msg_type,
+                        size_t msg_length);
+
       std::pair<Handshake_Type, std::vector<uint8_t>>
          get_next_record(bool expecting_ccs) override;
 
