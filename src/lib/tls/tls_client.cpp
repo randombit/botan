@@ -712,9 +712,11 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       if(!state.client_finished()) // session resume case
          {
+         start_buffering_records();
          state.handshake_io().send(Change_Cipher_Spec());
          change_cipher_spec_writer(CLIENT);
          state.client_finished(new Finished(state.handshake_io(), state, CLIENT));
+         send_buffered_records();
          }
 
       std::vector<uint8_t> session_id = state.server_hello()->session_id();
