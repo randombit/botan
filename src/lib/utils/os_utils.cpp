@@ -265,30 +265,34 @@ uint64_t OS::get_cpu_cycle_counter()
    return rtc;
    }
 
-size_t OS::get_cpu_total()
+size_t OS::get_cpu_available()
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(_SC_NPROCESSORS_CONF)
-   const long res = ::sysconf(_SC_NPROCESSORS_CONF);
-   if(res > 0)
-      return static_cast<size_t>(res);
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+
+#if defined(_SC_NPROCESSORS_ONLN)
+   const long cpu_online = ::sysconf(_SC_NPROCESSORS_ONLN);
+   if(cpu_online > 0)
+      return static_cast<size_t>(cpu_online);
+#endif
+
+#if defined(_SC_NPROCESSORS_CONF)
+   const long cpu_conf = ::sysconf(_SC_NPROCESSORS_CONF);
+   if(cpu_conf > 0)
+      return static_cast<size_t>(cpu_conf);
+#endif
+
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-   return static_cast<size_t>(std::thread::hardware_concurrency());
-#else
+   // hardware_concurrency is allowed to return 0 if the value is not
+   // well defined or not computable.
+   const size_t hw_concur = std::thread::hardware_concurrency();
+
+   if(hw_concur > 0)
+      return hw_concur;
+#endif
+
    return 1;
-#endif
-   }
-
-size_t OS::get_cpu_available()
-   {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(_SC_NPROCESSORS_ONLN)
-   const long res = ::sysconf(_SC_NPROCESSORS_ONLN);
-   if(res > 0)
-      return static_cast<size_t>(res);
-#endif
-
-   return OS::get_cpu_total();
    }
 
 uint64_t OS::get_high_resolution_clock()

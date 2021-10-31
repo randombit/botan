@@ -112,12 +112,11 @@ class OS_Utils_Tests final : public Test
 
       Test::Result test_get_cpu_numbers()
          {
-         Test::Result result("OS::get_cpu_total/OS::get_cpu_available");
+         Test::Result result("OS::get_cpu_available");
 
-         size_t tt = Botan::OS::get_cpu_total();
-         size_t ta = Botan::OS::get_cpu_available();
+         const size_t ta = Botan::OS::get_cpu_available();
 
-         result.test_lte("get_cpu_available not greater than total", ta, tt);
+         result.test_gte("get_cpu_available is at least 1", ta, 1);
 
          return result;
          }

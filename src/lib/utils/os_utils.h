@@ -50,7 +50,6 @@ bool running_in_privileged_state();
 */
 uint64_t BOTAN_TEST_API get_cpu_cycle_counter();
 
-size_t BOTAN_TEST_API get_cpu_total();
 size_t BOTAN_TEST_API get_cpu_available();
 
 /**
