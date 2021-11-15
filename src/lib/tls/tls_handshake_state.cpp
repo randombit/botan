@@ -293,7 +293,7 @@ const Ciphersuite& Handshake_State::ciphersuite() const
    {
    if (!m_ciphersuite.has_value())
       {
-      throw Decoding_Error("Cipher suite is not set");
+      throw Invalid_State("Cipher suite is not set");
       }
    return m_ciphersuite.value();
    }
