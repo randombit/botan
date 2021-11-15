@@ -2243,10 +2243,11 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
     if options.os == 'llvm' or options.compiler == 'msvc':
         # llvm-link and msvc require just naming the file directly
+        variables['build_dir_link_path'] = ''
         variables['link_to_botan'] = os.path.join(build_dir, variables['static_lib_name'])
     else:
-        variables['link_to_botan'] = '%s%s %s' % (cc.add_lib_dir_option, build_dir,
-                                                  (cc.add_lib_option % variables['libname']))
+        variables['build_dir_link_path'] = '%s%s' % (cc.add_lib_dir_option, build_dir)
+        variables['link_to_botan'] = cc.add_lib_option % variables['libname']
 
     return variables
 
