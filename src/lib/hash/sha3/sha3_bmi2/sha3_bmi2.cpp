@@ -30,7 +30,7 @@ namespace {
 BOTAN_WORKAROUND_MAYBE_INLINE std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>
    xor_CNs_BMI2(const uint64_t A[25])
    {
-   return {
+   return std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>{
       A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20],
       A[1] ^ A[6] ^ A[11] ^ A[16] ^ A[21],
       A[2] ^ A[7] ^ A[12] ^ A[17] ^ A[22],
