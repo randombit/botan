@@ -101,7 +101,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   {
                   const std::string extensions = vars.get_req_str("AdditionalData");
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
-                  Botan::TLS::Ciphersuite cs = Botan::TLS::Ciphersuite::by_id(Botan::make_uint16(ciphersuite[0], ciphersuite[1]));
+                  Botan::TLS::Ciphersuite cs = Botan::TLS::Ciphersuite::by_id(Botan::make_uint16(ciphersuite[0], ciphersuite[1])).value();
                   Botan::TLS::Server_Hello message(buffer);
                   result.test_eq("Protocol version", message.version().to_string(), pv.to_string());
                   result.confirm("Ciphersuite", (message.ciphersuite() == cs.ciphersuite_code()));

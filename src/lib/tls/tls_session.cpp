@@ -69,6 +69,7 @@ Session::Session(const uint8_t ber[], size_t ber_len)
    size_t srtp_profile = 0;
    size_t fragment_size = 0;
    size_t compression_method = 0;
+   uint16_t ciphersuite_code = 0;
 
    BER_Decoder(ber, ber_len)
       .start_sequence()
@@ -79,7 +80,7 @@ Session::Session(const uint8_t ber[], size_t ber_len)
         .decode_integer_type(minor_version)
         .decode(m_identifier, ASN1_Type::OctetString)
         .decode(m_session_ticket, ASN1_Type::OctetString)
-        .decode_integer_type(m_ciphersuite)
+        .decode_integer_type(ciphersuite_code)
         .decode_integer_type(compression_method)
         .decode_integer_type(side_code)
         .decode_integer_type(fragment_size)
@@ -113,6 +114,13 @@ Session::Session(const uint8_t ber[], size_t ber_len)
                            " no longer supported");
       }
 
+   if(!Ciphersuite::by_id(ciphersuite_code))
+      {
+      throw Decoding_Error("Serialized TLS session contains unknown cipher suite "
+                           "(" + std::to_string(ciphersuite_code) + ")");
+      }
+
+   m_ciphersuite = ciphersuite_code;
    m_version = Protocol_Version(major_version, minor_version);
    m_start_time = std::chrono::system_clock::from_time_t(start_time);
    m_connection_side = static_cast<Connection_Side>(side_code);
@@ -165,6 +173,17 @@ secure_vector<uint8_t> Session::DER_encode() const
 std::string Session::PEM_encode() const
    {
    return PEM_Code::encode(this->DER_encode(), "TLS SESSION");
+   }
+
+Ciphersuite Session::ciphersuite() const
+   {
+   auto suite = Ciphersuite::by_id(m_ciphersuite);
+   if (!suite.has_value())
+      {
+      throw Decoding_Error("Failed to find cipher suite for ID " +
+                           std::to_string(m_ciphersuite));
+      }
+   return suite.value();
    }
 
 std::chrono::seconds Session::session_age() const

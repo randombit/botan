@@ -1054,9 +1054,9 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
       for(auto suite_name : suites)
          {
          const auto suite = Botan::TLS::Ciphersuite::from_name(suite_name);
-         if(suite.valid() == false)
+         if(!suite || !suite->valid())
             shim_exit_with_error("Bad ciphersuite name " + suite_name);
-         ciphersuite_codes.push_back(suite.ciphersuite_code());
+         ciphersuite_codes.push_back(suite->ciphersuite_code());
          }
       }
    else

@@ -60,14 +60,14 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    if(client_hello.supports_cert_status_message() && policy.support_cert_status_message())
       m_extensions.add(new Certificate_Status_Request);
 
-   Ciphersuite c = Ciphersuite::by_id(m_ciphersuite);
+   const auto c = Ciphersuite::by_id(m_ciphersuite);
 
-   if(c.cbc_ciphersuite() && client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
+   if(c && c->cbc_ciphersuite() && client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
       {
       m_extensions.add(new Encrypt_then_MAC);
       }
 
-   if(c.ecc_ciphersuite() && client_hello.extension_types().count(TLSEXT_EC_POINT_FORMATS))
+   if(c && c->ecc_ciphersuite() && client_hello.extension_types().count(TLSEXT_EC_POINT_FORMATS))
       {
       m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }

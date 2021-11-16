@@ -13,6 +13,7 @@
 #include <botan/tls_version.h>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace Botan {
 
@@ -27,16 +28,16 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       /**
       * Convert an SSL/TLS ciphersuite to algorithm fields
       * @param suite the ciphersuite code number
-      * @return ciphersuite object
+      * @return ciphersuite object or std::nullopt if it is unknown to the library
       */
-      static Ciphersuite by_id(uint16_t suite);
+      static std::optional<Ciphersuite> by_id(uint16_t suite);
 
       /**
       * Convert an SSL/TLS ciphersuite name to algorithm fields
       * @param name the IANA name for the desired ciphersuite
-      * @return ciphersuite object
+      * @return ciphersuite object or std::nullopt if it is unknown to the library
       */
-      static Ciphersuite from_name(const std::string& name);
+      static std::optional<Ciphersuite> from_name(const std::string& name);
 
       /**
       * Returns true iff this suite is a known SCSV
@@ -130,8 +131,6 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       bool operator<(const Ciphersuite& o) const { return ciphersuite_code() < o.ciphersuite_code(); }
       bool operator<(const uint16_t c) const { return ciphersuite_code() < c; }
 
-      Ciphersuite() = default;
-
    private:
 
       bool is_usable() const;
@@ -166,18 +165,18 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       All of these const char* strings are references to compile time
       constants in tls_suite_info.cpp
       */
-      const char* m_iana_id = nullptr;
+      const char* m_iana_id;
 
-      Auth_Method m_auth_method = Auth_Method::IMPLICIT;
-      Kex_Algo m_kex_algo = Kex_Algo::STATIC_RSA;
-      KDF_Algo m_prf_algo = KDF_Algo::SHA_1;
-      Nonce_Format m_nonce_format = Nonce_Format::CBC_MODE;
+      Auth_Method m_auth_method;
+      Kex_Algo m_kex_algo;
+      KDF_Algo m_prf_algo;
+      Nonce_Format m_nonce_format;
 
-      const char* m_cipher_algo = nullptr;
-      const char* m_mac_algo = nullptr;
+      const char* m_cipher_algo;
+      const char* m_mac_algo;
 
-      size_t m_cipher_keylen = 0;
-      size_t m_mac_keylen = 0;
+      size_t m_cipher_keylen;
+      size_t m_mac_keylen;
 
       bool m_usable = false;
    };

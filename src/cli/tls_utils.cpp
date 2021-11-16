@@ -66,8 +66,8 @@ class TLS_Ciphersuites final : public Command
 
          for(uint16_t suite_id : policy->ciphersuite_list(version))
             {
-            const Botan::TLS::Ciphersuite suite(Botan::TLS::Ciphersuite::by_id(suite_id));
-            output() << suite.to_string() << "\n";
+            const auto s = Botan::TLS::Ciphersuite::by_id(suite_id);
+            output() << ((s) ? s->to_string() : "unknown cipher suite") << "\n";
             }
          }
    };
@@ -161,9 +161,9 @@ class TLS_Client_Hello_Reader final : public Command
             oss << "SessionID: " << Botan::hex_encode(hello.session_id()) << "\n";
          for(uint16_t csuite_id : hello.ciphersuites())
             {
-            auto csuite = Botan::TLS::Ciphersuite::by_id(csuite_id);
-            if(csuite.valid())
-               oss << "Cipher: " << csuite.to_string()  << "\n";
+            const auto csuite = Botan::TLS::Ciphersuite::by_id(csuite_id);
+            if(csuite && csuite->valid())
+               oss << "Cipher: " << csuite->to_string()  << "\n";
             else if(csuite_id == 0x00FF)
                oss << "Cipher: EMPTY_RENEGOTIATION_INFO_SCSV\n";
             else

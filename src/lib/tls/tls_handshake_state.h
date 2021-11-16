@@ -19,6 +19,7 @@
 #include <botan/pk_keys.h>
 #include <botan/pubkey.h>
 #include <functional>
+#include <optional>
 
 namespace Botan {
 
@@ -154,7 +155,7 @@ class Handshake_State
       const Finished* client_finished() const
          { return m_client_finished.get(); }
 
-      const Ciphersuite& ciphersuite() const { return m_ciphersuite; }
+      const Ciphersuite& ciphersuite() const;
 
       const Session_Keys& session_keys() const { return m_session_keys; }
 
@@ -178,7 +179,7 @@ class Handshake_State
       uint32_t m_hand_expecting_mask = 0;
       uint32_t m_hand_received_mask = 0;
       Protocol_Version m_version;
-      Ciphersuite m_ciphersuite;
+      std::optional<Ciphersuite> m_ciphersuite;
       Session_Keys m_session_keys;
       Handshake_Hash m_handshake_hash;
 

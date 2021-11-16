@@ -289,6 +289,15 @@ void Handshake_State::client_finished(Finished* client_finished)
    note_message(*m_client_finished);
    }
 
+const Ciphersuite& Handshake_State::ciphersuite() const
+   {
+   if (!m_ciphersuite.has_value())
+      {
+      throw Invalid_State("Cipher suite is not set");
+      }
+   return m_ciphersuite.value();
+   }
+
 void Handshake_State::set_version(const Protocol_Version& version)
    {
    m_version = version;
