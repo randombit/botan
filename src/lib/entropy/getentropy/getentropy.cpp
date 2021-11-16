@@ -10,6 +10,10 @@
 #if defined(BOTAN_TARGET_OS_IS_OPENBSD) || defined(BOTAN_TARGET_OS_IS_FREEBSD)
    #include <unistd.h>
 #else
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+      // Allows successful compilation on macOS older than 10.12: Provides a missing typedef for `u_int`.
+      #include <sys/types.h>
+   #endif
    #include <sys/random.h>
 #endif
 
