@@ -11,6 +11,7 @@
 #include <botan/internal/os_utils.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
+#include <cstdlib>
 
 namespace Botan {
 

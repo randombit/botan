@@ -11,7 +11,7 @@
 #include <map>
 #include <utility>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace {
 
