@@ -75,7 +75,7 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
 
       size_t received_data(const uint8_t buf[], size_t buf_size) override;
 
-      size_t received_data(const std::vector<uint8_t>& buf) override;
+      using Channel::received_data;
 
       bool is_active() const override;
 
@@ -93,13 +93,7 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
 
       void send(const uint8_t buf[], size_t buf_size) override;
 
-      void send(const std::string& val) override;
-
-      template<typename Alloc>
-      void send(const std::vector<unsigned char, Alloc>& val)
-         {
-         send(val.data(), val.size());
-         }
+      using Channel::send;
 
       void send_alert(const Alert& alert) override;
 

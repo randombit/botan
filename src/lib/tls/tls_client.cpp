@@ -46,11 +46,6 @@ size_t Client::received_data(const uint8_t buf[], size_t buf_size)
    return m_impl->channel().received_data(buf, buf_size);
    }
 
-size_t Client::received_data(const std::vector<uint8_t>& buf)
-   {
-   return m_impl->channel().received_data(buf);
-   }
-
 bool Client::is_active() const
    {
    return m_impl->channel().is_active();
@@ -86,11 +81,6 @@ bool Client::secure_renegotiation_supported() const
 void Client::send(const uint8_t buf[], size_t buf_size)
    {
    m_impl->channel().send(buf, buf_size);
-   }
-
-void Client::send(const std::string& val)
-   {
-   m_impl->channel().send(val);
    }
 
 void Client::send_alert(const Alert& alert)

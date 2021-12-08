@@ -21,8 +21,6 @@ namespace TLS {
 
 Certificate_Req_Impl::Certificate_Req_Impl() = default;
 
-Certificate_Req_Impl::~Certificate_Req_Impl() = default;
-
 Handshake_Type Certificate_Req_Impl::type() const
    {
    return CERTIFICATE_REQUEST;

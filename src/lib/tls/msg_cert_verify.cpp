@@ -28,9 +28,7 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
                                        const Policy& policy,
                                        RandomNumberGenerator& rng,
                                        const Private_Key* priv_key) :
-   m_impl( state.version() == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Certificate_Verify_Impl, Protocol_Version::TLS_V13>(io, state, policy, rng, priv_key)
-      : TLS_Message_Factory::create<Certificate_Verify_Impl, Protocol_Version::TLS_V12>(io, state, policy, rng, priv_key))
+   m_impl(Message_Factory::create<Certificate_Verify_Impl>(state.version(), io, state, policy, rng, priv_key))
    {
    }
 
@@ -38,12 +36,12 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
 * Deserialize a Certificate Verify message
 */
 Certificate_Verify::Certificate_Verify(const Protocol_Version& protocol_version, const std::vector<uint8_t>& buf) :
-   m_impl( protocol_version == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Certificate_Verify_Impl, Protocol_Version::TLS_V13>(buf)
-      : TLS_Message_Factory::create<Certificate_Verify_Impl, Protocol_Version::TLS_V12>(buf))
+   m_impl(Message_Factory::create<Certificate_Verify_Impl>(protocol_version, buf))
    {
    }
 
+// Needed for std::unique_ptr<> m_impl member, as *_Impl type
+// is available as a forward declaration in the header only.
 Certificate_Verify::~Certificate_Verify() = default;
 
 /*

@@ -109,11 +109,9 @@ bool check_for_resume(Session& session_info,
       return false;
 
    // client sent a different SNI hostname
-   if(client_hello->sni_hostname() != "")
-      {
-      if(client_hello->sni_hostname() != session_info.server_info().hostname())
+   if(client_hello->sni_hostname() != "" &&
+      client_hello->sni_hostname() != session_info.server_info().hostname())
          return false;
-      }
 
    // Checking extended_master_secret on resume (RFC 7627 section 5.3)
    if(client_hello->supports_extended_master_secret() != session_info.supports_extended_master_secret())

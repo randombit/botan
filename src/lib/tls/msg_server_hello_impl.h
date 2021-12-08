@@ -33,21 +33,19 @@ class Server_Hello_Impl : public Handshake_Message
    public:
       explicit Server_Hello_Impl();
 
-      explicit Server_Hello_Impl(const Policy& policy,
-                                 RandomNumberGenerator& rng,
-                                 const Client_Hello& client_hello,
-                                 const Server_Hello::Settings& settings,
-                                 const std::string next_protocol);
+      Server_Hello_Impl(const Policy& policy,
+                        RandomNumberGenerator& rng,
+                        const Client_Hello& client_hello,
+                        const Server_Hello::Settings& settings,
+                        const std::string next_protocol);
 
-      explicit Server_Hello_Impl(const Policy& policy,
-                                 RandomNumberGenerator& rng,
-                                 const Client_Hello& client_hello,
-                                 Session& resumed_session,
-                                 const std::string next_protocol);
+      Server_Hello_Impl(const Policy& policy,
+                        RandomNumberGenerator& rng,
+                        const Client_Hello& client_hello,
+                        Session& resumed_session,
+                        const std::string next_protocol);
 
       explicit Server_Hello_Impl(const std::vector<uint8_t>& buf);
-
-      virtual ~Server_Hello_Impl();
 
       Handshake_Type type() const override;
 

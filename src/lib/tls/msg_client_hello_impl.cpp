@@ -41,27 +41,25 @@ enum {
 };
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
-                                    const Policy& policy)
-{
-std::vector<uint8_t> buf(32);
-rng.randomize(buf.data(), buf.size());
-
-auto sha256 = HashFunction::create_or_throw("SHA-256");
-sha256->update(buf);
-sha256->final(buf);
-
-if(policy.include_time_in_hello_random())
+                                       const Policy& policy)
    {
-   const uint32_t time32 = static_cast<uint32_t>(
-      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+   std::vector<uint8_t> buf(32);
+   rng.randomize(buf.data(), buf.size());
 
-   store_be(time32, buf.data());
+   auto sha256 = HashFunction::create_or_throw("SHA-256");
+   sha256->update(buf);
+   sha256->final(buf);
+
+   if(policy.include_time_in_hello_random())
+      {
+      const uint32_t time32 = static_cast<uint32_t>(
+         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+
+      store_be(time32, buf.data());
+      }
+
+   return buf;
    }
-
-return buf;
-}
-
-Client_Hello_Impl::Client_Hello_Impl() = default;
 
 /*
 * Create a new Client Hello message
@@ -236,9 +234,6 @@ Client_Hello_Impl::Client_Hello_Impl(const std::vector<uint8_t>& buf)
       }
    }
 
-
-Client_Hello_Impl::~Client_Hello_Impl() = default;
-
 Handshake_Type Client_Hello_Impl::type() const
    {
    return CLIENT_HELLO;
@@ -330,10 +325,7 @@ std::vector<uint8_t> Client_Hello_Impl::cookie_input_data() const
 */
 bool Client_Hello_Impl::offered_suite(uint16_t ciphersuite) const
    {
-   for(size_t i = 0; i != m_suites.size(); ++i)
-      if(m_suites[i] == ciphersuite)
-         return true;
-   return false;
+   return std::find(m_suites.cbegin(), m_suites.cend(), ciphersuite) != m_suites.cend();
    }
 
 std::vector<Signature_Scheme> Client_Hello_Impl::signature_schemes() const

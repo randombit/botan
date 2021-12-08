@@ -41,25 +41,11 @@ class Channel_Impl
       */
       virtual size_t received_data(const uint8_t buf[], size_t buf_size) = 0;
 
-
-      /**
-      * Inject TLS traffic received from counterparty
-      * @return a hint as the how many more bytes we need to process the
-      *         current record (this may be 0 if on a record boundary)
-      */
-      virtual size_t received_data(const std::vector<uint8_t>& buf) = 0;
-
       /**
       * Inject plaintext intended for counterparty
       * Throws an exception if is_active() is false
       */
       virtual void send(const uint8_t buf[], size_t buf_size) = 0;
-
-      /**
-      * Inject plaintext intended for counterparty
-      * Throws an exception if is_active() is false
-      */
-      virtual void send(const std::string& val) = 0;
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal
@@ -71,12 +57,12 @@ class Channel_Impl
       /**
       * Send a warning alert
       */
-      virtual void send_warning_alert(Alert::Type type) = 0;
+      void send_warning_alert(Alert::Type type) { send_alert(Alert(type, false)); }
 
       /**
       * Send a fatal alert
       */
-      virtual void send_fatal_alert(Alert::Type type) = 0;
+      void send_fatal_alert(Alert::Type type) { send_alert(Alert(type, true)); }
 
       /**
       * Send a close notification alert
