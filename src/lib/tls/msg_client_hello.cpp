@@ -22,7 +22,6 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/msg_client_hello_impl.h>
 #include <botan/internal/msg_client_hello_impl_12.h>
-#include <botan/internal/msg_client_hello_impl_13.h>
 #include <botan/internal/tls_message_factory.h>
 
 namespace Botan {
@@ -65,9 +64,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            const std::vector<uint8_t>& reneg_info,
                            const Client_Hello::Settings& client_settings,
                            const std::vector<std::string>& next_protocols) :
-   m_impl(client_settings.protocol_version() == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Client_Hello_Impl, Protocol_Version::TLS_V13>(io, hash, policy, cb, rng, reneg_info, client_settings, next_protocols)
-      : TLS_Message_Factory::create<Client_Hello_Impl, Protocol_Version::TLS_V12>(io, hash, policy, cb, rng, reneg_info, client_settings, next_protocols))
+   m_impl(Message_Factory::create<Client_Hello_Impl>(client_settings.protocol_version(), io, hash, policy, cb, rng, reneg_info, client_settings, next_protocols))
    {
    }
 
@@ -82,9 +79,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            const std::vector<uint8_t>& reneg_info,
                            const Session& session,
                            const std::vector<std::string>& next_protocols) :
-   m_impl(session.version() == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Client_Hello_Impl, Protocol_Version::TLS_V13>(io, hash, policy, cb, rng, reneg_info, session, next_protocols)
-      : TLS_Message_Factory::create<Client_Hello_Impl, Protocol_Version::TLS_V12>(io, hash, policy, cb, rng, reneg_info, session, next_protocols))
+   m_impl(Message_Factory::create<Client_Hello_Impl>(session.version(), io, hash, policy, cb, rng, reneg_info, session, next_protocols))
    {
    }
 
@@ -95,11 +90,16 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
    {
       auto supported_versions = Client_Hello_Impl(buf).supported_versions();
 
-      m_impl = value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V13))
-             ? TLS_Message_Factory::create<Client_Hello_Impl, Protocol_Version::TLS_V13>(buf)
-             : TLS_Message_Factory::create<Client_Hello_Impl, Protocol_Version::TLS_V12>(buf);
+      const auto protocol_version =
+         value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V13))
+            ? Protocol_Version::TLS_V13
+            : Protocol_Version::TLS_V12;
+
+      m_impl = Message_Factory::create<Client_Hello_Impl>(protocol_version, buf);
    }
 
+// Needed for std::unique_ptr<> m_impl member, as *_Impl type
+// is available as a forward declaration in the header only.
 Client_Hello::~Client_Hello() = default;
 
 

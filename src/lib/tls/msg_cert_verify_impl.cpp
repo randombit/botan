@@ -58,8 +58,6 @@ Certificate_Verify_Impl::Certificate_Verify_Impl(const std::vector<uint8_t>& buf
    reader.assert_done();
    }
 
-Certificate_Verify_Impl::~Certificate_Verify_Impl() = default;
-
 /*
 * Serialize a Certificate Verify message
 */

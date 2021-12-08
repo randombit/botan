@@ -33,7 +33,7 @@ make_server_hello_random(RandomNumberGenerator& rng,
                          Protocol_Version offered_version,
                          const Policy& policy)
    {
-   BOTAN_UNUSED(offered_version, policy);
+   BOTAN_UNUSED(offered_version);
    auto random = make_hello_random(rng, policy);
    return random;
    }
@@ -118,8 +118,6 @@ Server_Hello_Impl::Server_Hello_Impl(const std::vector<uint8_t>& buf)
 
    m_extensions.deserialize(reader, Connection_Side::SERVER);
    }
-
-Server_Hello_Impl::~Server_Hello_Impl() = default;
 
 Handshake_Type Server_Hello_Impl::type() const
    {

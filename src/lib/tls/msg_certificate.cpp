@@ -45,9 +45,7 @@ Certificate::Certificate(const Protocol_Version& protocol_version,
                          Handshake_IO& io,
                          Handshake_Hash& hash,
                          const std::vector<X509_Certificate>& cert_list) :
-   m_impl( protocol_version == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V13>()
-      : TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V12>(io, hash, cert_list))
+   m_impl(Message_Factory::create<Certificate_Impl>(protocol_version, io, hash, cert_list))
    {
    }
 
@@ -56,12 +54,12 @@ Certificate::Certificate(const Protocol_Version& protocol_version,
 */
 Certificate::Certificate(const Protocol_Version& protocol_version,
                          const std::vector<uint8_t>& buf, const Policy& policy) :
-   m_impl( protocol_version == Protocol_Version::TLS_V13
-      ? TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V13>()
-      : TLS_Message_Factory::create<Certificate_Impl, Protocol_Version::TLS_V12>(buf, policy))
+   m_impl(Message_Factory::create<Certificate_Impl>(protocol_version, buf, policy))
    {
    }
 
+// Needed for std::unique_ptr<> m_impl member, as *_Impl type
+// is available as a forward declaration in the header only.
 Certificate::~Certificate() = default;
 
 /**

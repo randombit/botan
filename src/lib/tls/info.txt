@@ -59,5 +59,6 @@ rng
 rsa
 sha2_32
 sha2_64
+tls12
 x509
 </requires>

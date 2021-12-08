@@ -8,71 +8,85 @@
 #ifndef BOTAN_TLS_MOCK_MSG_IMPL_13_H_
 #define BOTAN_TLS_MOCK_MSG_IMPL_13_H_
 
-#include <botan/p11_x509.h>
+#include <botan/exceptn.h>
 #include <botan/internal/msg_cert_req_impl.h>
 #include <botan/internal/msg_certificate_impl.h>
 #include <botan/tls_algos.h>
 
 #include <vector>
 #include <string>
+#include <type_traits>
 
 namespace Botan {
 
 namespace TLS {
 
-#include <vector>
-template< typename T >
-class Mock_Impl_13: public T
+namespace detail {
+
+template <typename RetT = void>
+[[noreturn]] RetT nyi()
+   {
+   throw Not_Implemented("Implementation for TLSv1.3 not ready yet. You are welcome to implement it.");
+   }
+
+template <typename T>
+inline constexpr bool must_be_upcalled = !std::is_abstract_v<T> && !std::is_default_constructible_v<T>;
+
+template <typename T, typename Enable = void>
+class Mock_Impl_13_Internal;
+
+template <typename T>
+class Mock_Impl_13_Internal<T, std::enable_if_t<!must_be_upcalled<T>>> : public T
 {
-   public:
-      template <typename ... Args>
-      explicit Mock_Impl_13(Args&& ... args)
-      : T(std::forward<Args>(args) ... )
+public:
+   template <typename... Args>
+   Mock_Impl_13_Internal(Args&&...)
       {
-      // TODO throw std::runtime_error("Implemenation for TLSv1.3 not ready yet. You are welcome to implement it.");
+      nyi();
       }
+
 };
 
-class Mock_Certificate_Impl_13 : public Certificate_Impl
+template <typename T>
+class Mock_Impl_13_Internal<T, std::enable_if_t<must_be_upcalled<T>>> : public T
 {
-   public:
-      template <typename ... Args>
-      explicit Mock_Certificate_Impl_13(Args&& ... args)
-      : Certificate_Impl(std::forward<Args>(args) ... )
+public:
+   template <typename... Args>
+   Mock_Impl_13_Internal(Args&&... args)
+      : T(std::forward<Args>(args)...)
       {
-      // TODO throw std::runtime_error("Implemenation for TLSv1.3 not ready yet. You are welcome to implement it.");
+      nyi();
       }
 
-      // from Certificate_Impl
-      std::vector<unsigned char> serialize() const override { return {}; }
-      const std::vector<Botan::X509_Certificate>& cert_chain() const override { return m_mock_cert_chain; }
-      std::size_t count() const override { return {}; }
-      bool empty() const override { return {}; }
-
-   private:
-      std::vector<Botan::X509_Certificate> m_mock_cert_chain;
 };
 
-class Mock_Certificate_Req_Impl_13 : public Certificate_Req_Impl
-{
-   public:
-      template <typename ... Args>
-      explicit Mock_Certificate_Req_Impl_13(Args&& ... args)
-      : Certificate_Req_Impl(std::forward<Args>(args) ... )
-      {
-      // throw std::runtime_error("Implemenation for TLSv1.3 not ready yet. You are welcome to implement it.");
-      }
+}
 
-      // from Certificate_Req_Impl
-      std::vector<unsigned char> serialize() const override { return {}; }
-      const std::vector<std::string>& acceptable_cert_types() const override { return m_acceptable_cert_types; }
-      const std::vector<X509_DN>& acceptable_CAs() const override { return m_mock_acceptable_CAs; }
-      const std::vector<Signature_Scheme>& signature_schemes() const override { return m_mock_signature_schemes; }
+template <typename T>
+class Mock_Impl_13 : public detail::Mock_Impl_13_Internal<T> {
+   using detail::Mock_Impl_13_Internal<T>::Mock_Impl_13_Internal;
+};
 
-   private:
-      std::vector<std::string> m_acceptable_cert_types;
-      std::vector<X509_DN> m_mock_acceptable_CAs;
-      std::vector<Signature_Scheme> m_mock_signature_schemes;
+template<>
+class Mock_Impl_13<Certificate_Impl> : public detail::Mock_Impl_13_Internal<Certificate_Impl> {
+public:
+   using Mock_Impl_13_Internal<Certificate_Impl>::Mock_Impl_13_Internal;
+
+   const std::vector<X509_Certificate>& cert_chain() const override { return detail::nyi<const std::vector<X509_Certificate>&>(); }
+   size_t count() const override { return detail::nyi<size_t>(); }
+   bool empty() const override { return detail::nyi<bool>(); }
+   std::vector<unsigned char> serialize() const override { return detail::nyi<std::vector<unsigned char>>(); }
+};
+
+template<>
+class Mock_Impl_13<Certificate_Req_Impl> : public detail::Mock_Impl_13_Internal<Certificate_Req_Impl> {
+public:
+   using Mock_Impl_13_Internal<Certificate_Req_Impl>::Mock_Impl_13_Internal;
+
+   const std::vector<std::string>& acceptable_cert_types() const override { return detail::nyi<const std::vector<std::string>&>(); }
+   const std::vector<X509_DN>& acceptable_CAs() const override { return detail::nyi<const std::vector<X509_DN>&>(); }
+   const std::vector<Signature_Scheme>& signature_schemes() const override { return detail::nyi<const std::vector<Signature_Scheme>&>(); }
+   std::vector<unsigned char> serialize() const override { return detail::nyi<std::vector<unsigned char>>(); }
 };
 
 }

@@ -18,10 +18,6 @@ Handshake_Type Certificate_Impl::type() const
    return CERTIFICATE;
    }
 
-Certificate_Impl::Certificate_Impl() = default;
-
-Certificate_Impl::~Certificate_Impl() = default;
-
 }
 
 }

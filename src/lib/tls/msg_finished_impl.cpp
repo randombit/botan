@@ -37,10 +37,9 @@ std::vector<uint8_t> finished_compute_verify(const Handshake_State& state,
 
    std::vector<uint8_t> input;
    std::vector<uint8_t> label;
-   if(side == CLIENT)
-      label += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
-   else
-      label += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
+   label += (side == CLIENT)
+      ? std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL))
+      : std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
 
    input += state.hash().final(state.ciphersuite().prf_algo());
 
@@ -60,6 +59,11 @@ Finished_Impl::Finished_Impl(Handshake_IO& io,
    state.hash().update(io.send(*this));
    }
 
+Handshake_Type Finished_Impl::type() const
+   {
+   return FINISHED;
+   }
+
 /*
 * Serialize a Finished message
 */
@@ -73,8 +77,6 @@ std::vector<uint8_t> Finished_Impl::serialize() const
 */
 Finished_Impl::Finished_Impl(const std::vector<uint8_t>& buf) : m_verification_data(buf)
    {}
-
-Finished_Impl::~Finished_Impl() = default;
 
 std::vector<uint8_t> Finished_Impl::verify_data() const
    {

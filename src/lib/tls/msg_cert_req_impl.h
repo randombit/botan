@@ -36,8 +36,6 @@ class Certificate_Req_Impl : public Handshake_Message
       virtual const std::vector<Signature_Scheme>& signature_schemes() const = 0;
 
       explicit Certificate_Req_Impl();
-
-      virtual ~Certificate_Req_Impl() = 0;
    };
 }
 

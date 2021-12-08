@@ -41,11 +41,6 @@ size_t Server::received_data(const uint8_t buf[], size_t buf_size)
    return m_impl->channel().received_data(buf, buf_size);
    }
 
-size_t Server::received_data(const std::vector<uint8_t>& buf)
-   {
-   return m_impl->channel().received_data(buf);
-   }
-
 bool Server::is_active() const
    {
    return m_impl->channel().is_active();
@@ -81,11 +76,6 @@ bool Server::secure_renegotiation_supported() const
 void Server::send(const uint8_t buf[], size_t buf_size)
    {
    m_impl->channel().send(buf, buf_size);
-   }
-
-void Server::send(const std::string& val)
-   {
-   m_impl->channel().send(val);
    }
 
 void Server::send_alert(const Alert& alert)

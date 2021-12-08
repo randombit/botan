@@ -40,7 +40,7 @@ class BOTAN_PUBLIC_API(2,0) Channel
    public:
       static size_t IO_BUF_DEFAULT_SIZE;
 
-      virtual ~Channel() = 0;
+      virtual ~Channel() = default;
 
       /**
       * Inject TLS traffic received from counterparty
@@ -49,13 +49,15 @@ class BOTAN_PUBLIC_API(2,0) Channel
       */
       virtual size_t received_data(const uint8_t buf[], size_t buf_size) = 0;
 
-
       /**
       * Inject TLS traffic received from counterparty
       * @return a hint as the how many more bytes we need to process the
       *         current record (this may be 0 if on a record boundary)
       */
-      virtual size_t received_data(const std::vector<uint8_t>& buf) = 0;
+      size_t received_data(const std::vector<uint8_t>& buf)
+         {
+         return this->received_data(buf.data(), buf.size());
+         }
 
       /**
       * Inject plaintext intended for counterparty
@@ -67,7 +69,10 @@ class BOTAN_PUBLIC_API(2,0) Channel
       * Inject plaintext intended for counterparty
       * Throws an exception if is_active() is false
       */
-      virtual void send(const std::string& val) = 0;
+      void send(const std::string& val)
+         {
+         this->send(cast_char_ptr_to_uint8(val.data()), val.size());
+         }
 
       /**
       * Inject plaintext intended for counterparty

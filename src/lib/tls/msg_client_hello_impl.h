@@ -33,29 +33,27 @@ class Policy;
 class Client_Hello_Impl : public Handshake_Message
    {
    public:
-      explicit Client_Hello_Impl();
+      explicit Client_Hello_Impl() = default;
 
-      explicit Client_Hello_Impl(Handshake_IO& io,
-                   Handshake_Hash& hash,
-                   const Policy& policy,
-                   Callbacks& cb,
-                   RandomNumberGenerator& rng,
-                   const std::vector<uint8_t>& reneg_info,
-                   const Client_Hello::Settings& client_settings,
-                   const std::vector<std::string>& next_protocols);
+      Client_Hello_Impl(Handshake_IO& io,
+                        Handshake_Hash& hash,
+                        const Policy& policy,
+                        Callbacks& cb,
+                        RandomNumberGenerator& rng,
+                        const std::vector<uint8_t>& reneg_info,
+                        const Client_Hello::Settings& client_settings,
+                        const std::vector<std::string>& next_protocols);
 
-      explicit Client_Hello_Impl(Handshake_IO& io,
-                   Handshake_Hash& hash,
-                   const Policy& policy,
-                   Callbacks& cb,
-                   RandomNumberGenerator& rng,
-                   const std::vector<uint8_t>& reneg_info,
-                   const Session& resumed_session,
-                   const std::vector<std::string>& next_protocols);
+      Client_Hello_Impl(Handshake_IO& io,
+                        Handshake_Hash& hash,
+                        const Policy& policy,
+                        Callbacks& cb,
+                        RandomNumberGenerator& rng,
+                        const std::vector<uint8_t>& reneg_info,
+                        const Session& resumed_session,
+                        const std::vector<std::string>& next_protocols);
 
       explicit Client_Hello_Impl(const std::vector<uint8_t>& buf);
-
-      virtual ~Client_Hello_Impl();
 
       Handshake_Type type() const override;
 

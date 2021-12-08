@@ -273,11 +273,6 @@ void Channel_Impl_12::activate_session()
    callbacks().tls_session_activated();
    }
 
-size_t Channel_Impl_12::received_data(const std::vector<uint8_t>& buf)
-   {
-   return this->received_data(buf.data(), buf.size());
-   }
-
 size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
    {
    const bool allow_epoch0_restart = m_is_datagram && m_is_server && policy().allow_dtls_epoch0_restart();
@@ -575,11 +570,6 @@ void Channel_Impl_12::send(const uint8_t buf[], size_t buf_size)
 
    send_record_array(sequence_numbers().current_write_epoch(),
                      APPLICATION_DATA, buf, buf_size);
-   }
-
-void Channel_Impl_12::send(const std::string& string)
-   {
-   this->send(cast_char_ptr_to_uint8(string.data()), string.size());
    }
 
 void Channel_Impl_12::send_alert(const Alert& alert)
