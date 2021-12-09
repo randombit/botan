@@ -20,8 +20,9 @@ LDFLAGS        = %{ldflags}
 
 EXE_LINK_CMD   = %{exe_link_cmd}
 
-LIB_LINKS_TO   = %{external_link_cmd} %{link_to}
-EXE_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO) %{extra_libs}
+LIB_LINKS_TO        = %{external_link_cmd} %{link_to}
+BUILD_DIR_LINK_PATH = %{build_dir_link_path}
+EXE_LINKS_TO        = %{link_to_botan} $(LIB_LINKS_TO) %{extra_libs}
 
 BUILD_FLAGS    = $(ABI_FLAGS) $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 
@@ -72,10 +73,10 @@ TESTOBJS = %{join test_objs}
 # Executable targets
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
-	$(EXE_LINK_CMD) $(ABI_FLAGS) $(CLIOBJS) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) $(CLIOBJS) $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(EXE_LINK_CMD) $(ABI_FLAGS) $(TESTOBJS) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) $(TESTOBJS) $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
 
 %{if build_fuzzers}
 
@@ -97,7 +98,7 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 
 # BoGo shim
 %{out_dir}/botan_bogo_shim: %{bogo_shim_src} $(LIBRARIES)
-	$(CXX) $(BUILD_FLAGS) %{include_paths} %{bogo_shim_src} $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(CXX) $(BUILD_FLAGS) %{include_paths} %{bogo_shim_src} $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
 
 %{endif}
 
@@ -142,5 +143,5 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
-	$(EXE_LINK_CMD) $(ABI_FLAGS) %{obj} $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) %{obj} $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
 %{endfor}
