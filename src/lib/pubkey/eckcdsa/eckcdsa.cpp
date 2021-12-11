@@ -23,7 +23,7 @@ std::unique_ptr<Public_Key> ECKCDSA_PrivateKey::public_key() const
    }
 
 bool ECKCDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
-                                 bool strong) const
+                                   bool strong) const
    {
    if(!public_point().on_the_curve())
       {
@@ -48,7 +48,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
    public:
 
       ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& eckcdsa,
-                                const std::string& emsa) :
+                                  const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
          m_group(eckcdsa.domain()),
          m_x(eckcdsa.private_value()),
@@ -86,7 +86,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
 
 secure_vector<uint8_t>
 ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t,
-                                     RandomNumberGenerator& rng)
+                                      RandomNumberGenerator& rng)
    {
    const BigInt k = m_group.random_scalar(rng);
    const BigInt k_times_P_x = m_group.blinded_base_point_multiply_x(k, rng, m_ws);
@@ -122,7 +122,7 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
    public:
 
       ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa,
-                                   const std::string& emsa) :
+                                     const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
          m_group(eckcdsa.domain()),
          m_gy_mul(m_group.get_base_point(), eckcdsa.public_point()),
@@ -158,7 +158,7 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
    };
 
 bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
-                                           const uint8_t sig[], size_t sig_len)
+                                            const uint8_t sig[], size_t sig_len)
    {
    const std::unique_ptr<HashFunction> hash = HashFunction::create(hash_for_signature());
    //calculate size of r
@@ -208,7 +208,7 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
 
 std::unique_ptr<PK_Ops::Verification>
 ECKCDSA_PublicKey::create_verification_op(const std::string& params,
-                                         const std::string& provider) const
+                                          const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<ECKCDSA_Verification_Operation>(*this, params);
