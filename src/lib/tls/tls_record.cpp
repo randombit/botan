@@ -15,6 +15,7 @@
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/rng.h>
+#include <sstream>
 
 #if defined(BOTAN_HAS_TLS_CBC)
   #include <botan/internal/tls_cbc.h>
@@ -340,10 +341,21 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       }
 
    /*
-   This is a little hacky but given how TLS 1.3 versioning works it
-   is probably safe
+   Verify that the record type and record version are within some expected
+   range, so we can quickly reject totally invalid packets.
+
+   The version check is a little hacky but given how TLS 1.3 versioning works
+   this is probably safe
+
+   - The first byte is the record version which in TLS 1.2 is always in [20..23)
+   - The second byte is the TLS major version which is effectively fossilized at 3
+   - The third byte is the TLS minor version which (due to TLS 1.3 versioning changes)
+     will never be more than 3 (signifying TLS 1.2)
    */
-   if(readbuf[1] != 3)
+   const bool bad_record_type = readbuf[0] < 20 || readbuf[0] > 23;
+   const bool bad_record_version = readbuf[1] != 3 || readbuf[2] >= 4;
+
+   if(bad_record_type || bad_record_version)
       {
       // We know we read up to at least the 5 byte TLS header
       const std::string first5 = std::string(reinterpret_cast<const char*>(readbuf.data()), 5);
@@ -360,11 +372,19 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       if(first5 == "CONNE")
          {
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                             "Client sent HTTP proxy CONNECT request instead of TLS handshake");
+                             "Client sent plaintext HTTP proxy CONNECT request instead of TLS handshake");
          }
 
-      throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                          "TLS record version has unexpected value");
+
+      std::ostringstream oss;
+      oss << "TLS record ";
+      if(bad_record_type)
+         oss << "type";
+      else
+         oss << "version";
+      oss << " had unexpected value";
+
+      throw TLS_Exception(Alert::PROTOCOL_VERSION, oss.str());
       }
 
    const Protocol_Version version(readbuf[1], readbuf[2]);
