@@ -135,6 +135,8 @@
         "Resume-Client-Mismatch-TLS11-TLS12-TLS": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-Mismatch-TLS1-TLS12-DTLS": "BoGo expects resumption attempt sends latest version",
 
+        "LooseInitialRecordVersion-TLS12": "Botan is somewhat strict about the record version number",
+
         "CurveTest-*-Compressed*": "Point compression is supported, which BoGo doesn't expect",
         "PointFormat-*-MissingUncompressed": "Point compression is supported, which BoGo doesn't expect",
 
