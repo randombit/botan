@@ -4,6 +4,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#ifndef BOTAN_SHA3_ROUND_H_
+#define BOTAN_SHA3_ROUND_H_
+
 #include <botan/types.h>
 #include <botan/internal/rotate.h>
 
@@ -121,3 +124,5 @@ inline void SHA3_round(uint64_t T[25], const uint64_t A[25], uint64_t RC)
    }
 
 }
+
+#endif
