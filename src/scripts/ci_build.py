@@ -280,12 +280,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         if target_os == 'linux':
             flags += ['--with-lzma']
 
-        if target_os == 'linux':
-            if target not in ['sanitizer', 'valgrind', 'minimized']:
-                # Avoid OpenSSL when using dynamic checkers, or on OS X where it sporadically
-                # is not installed on the CI image
-                flags += ['--with-openssl']
-
         if target in ['coverage']:
             flags += ['--with-tpm']
             test_cmd += ['--run-online-tests']

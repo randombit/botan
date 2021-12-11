@@ -104,7 +104,7 @@ class SCAN_Name final
 // This is unrelated but it is convenient to stash it here
 template<typename T>
 std::vector<std::string> probe_providers_of(const std::string& algo_spec,
-                                            const std::vector<std::string>& possible)
+                                            const std::vector<std::string>& possible = { "base" })
    {
    std::vector<std::string> providers;
    for(auto&& prov : possible)

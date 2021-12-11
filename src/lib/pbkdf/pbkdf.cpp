@@ -70,7 +70,7 @@ PBKDF::create_or_throw(const std::string& algo,
 
 std::vector<std::string> PBKDF::providers(const std::string& algo_spec)
    {
-   return probe_providers_of<PBKDF>(algo_spec, { "base", "openssl" });
+   return probe_providers_of<PBKDF>(algo_spec);
    }
 
 void PBKDF::pbkdf_timed(uint8_t out[], size_t out_len,

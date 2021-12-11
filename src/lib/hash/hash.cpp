@@ -89,10 +89,6 @@
   #include <botan/internal/blake2b.h>
 #endif
 
-#if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
-#endif
-
 #if defined(BOTAN_HAS_COMMONCRYPTO)
   #include <botan/internal/commoncrypto.h>
 #endif
@@ -107,17 +103,6 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(provider.empty() || provider == "commoncrypto")
       {
       if(auto hash = make_commoncrypto_hash(algo_spec))
-         return hash;
-
-      if(!provider.empty())
-         return nullptr;
-      }
-#endif
-
-#if defined(BOTAN_HAS_OPENSSL)
-   if(provider.empty() || provider == "openssl")
-      {
-      if(auto hash = make_openssl_hash(algo_spec))
          return hash;
 
       if(!provider.empty())
@@ -336,7 +321,7 @@ HashFunction::create_or_throw(const std::string& algo,
 
 std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
    {
-   return probe_providers_of<HashFunction>(algo_spec, {"base", "openssl", "commoncrypto"});
+   return probe_providers_of<HashFunction>(algo_spec, {"base", "commoncrypto"});
    }
 
 }

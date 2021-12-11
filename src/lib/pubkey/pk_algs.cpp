@@ -72,10 +72,6 @@
   #include <botan/sm2.h>
 #endif
 
-#if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
-#endif
-
 namespace Botan {
 
 std::unique_ptr<Public_Key>
@@ -318,16 +314,6 @@ create_private_key(const std::string& alg_name,
    if(alg_name == "RSA")
       {
       const size_t rsa_bits = (params.empty() ? 3072 : to_u32bit(params));
-#if defined(BOTAN_HAS_OPENSSL)
-      if(provider.empty() || provider == "openssl")
-         {
-         auto pk = make_openssl_rsa_private_key(rng, rsa_bits);
-
-         // Return nullptr if openssl was specifically requested
-         if(pk || !provider.empty())
-            return pk;
-         }
-#endif
       return std::make_unique<RSA_PrivateKey>(rng, rsa_bits);
       }
 #endif
@@ -420,11 +406,6 @@ probe_provider_private_key(const std::string& alg_name,
       {
       if(prov == "base")
          providers.push_back(prov);
-
-#if defined(BOTAN_HAS_OPENSSL)
-      if(prov == "openssl" && alg_name == "RSA")
-         providers.push_back(prov);
-#endif
       }
 
    BOTAN_UNUSED(alg_name);

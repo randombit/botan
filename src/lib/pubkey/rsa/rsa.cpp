@@ -17,10 +17,6 @@
 #include <botan/internal/divide.h>
 #include <botan/internal/monty_exp.h>
 
-#if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
-#endif
-
 #if defined(BOTAN_HAS_THREAD_UTILS)
   #include <botan/internal/thread_pool.h>
 #endif
@@ -655,26 +651,6 @@ RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
                                     const std::string& params,
                                     const std::string& provider) const
    {
-#if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl" || provider.empty())
-      {
-      try
-         {
-         return make_openssl_rsa_enc_op(*this, params);
-         }
-      catch(Exception& e)
-         {
-         /*
-         * If OpenSSL for some reason could not handle this (eg due to OAEP params),
-         * throw if openssl was specifically requested but otherwise just fall back
-         * to the normal version.
-         */
-         if(provider == "openssl")
-            throw Lookup_Error("OpenSSL RSA provider rejected key:" + std::string(e.what()));
-         }
-      }
-#endif
-
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Encryption_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
@@ -694,15 +670,6 @@ std::unique_ptr<PK_Ops::Verification>
 RSA_PublicKey::create_verification_op(const std::string& params,
                                       const std::string& provider) const
    {
-#if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl" || provider.empty())
-      {
-      std::unique_ptr<PK_Ops::Verification> res = make_openssl_rsa_ver_op(*this, params);
-      if(res)
-         return res;
-      }
-#endif
-
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Verify_Operation>(*this, params);
 
@@ -714,21 +681,6 @@ RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
                                      const std::string& params,
                                      const std::string& provider) const
    {
-#if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl" || provider.empty())
-      {
-      try
-         {
-         return make_openssl_rsa_dec_op(*this, params);
-         }
-      catch(Exception& e)
-         {
-         if(provider == "openssl")
-            throw Lookup_Error("OpenSSL RSA provider rejected key:" + std::string(e.what()));
-         }
-      }
-#endif
-
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Decryption_Operation>(*this, params, rng);
 
@@ -751,15 +703,6 @@ RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                     const std::string& params,
                                     const std::string& provider) const
    {
-#if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl" || provider.empty())
-      {
-      std::unique_ptr<PK_Ops::Signature> res = make_openssl_rsa_sig_op(*this, params);
-      if(res)
-         return res;
-      }
-#endif
-
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Signature_Operation>(*this, params, rng);
 

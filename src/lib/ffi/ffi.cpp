@@ -41,7 +41,6 @@ int ffi_map_error_type(Botan::ErrorType err)
 
       case Botan::ErrorType::SystemError:
       case Botan::ErrorType::IoError:
-      case Botan::ErrorType::OpenSSLError:
       case Botan::ErrorType::Pkcs11Error:
       case Botan::ErrorType::CommonCryptoError:
       case Botan::ErrorType::TPMError:
