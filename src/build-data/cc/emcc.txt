@@ -1,0 +1,27 @@
+macro_name CLANG
+
+binary_name em++
+
+lang_flags "-s DISABLE_EXCEPTION_CATCHING=0 -std=c++17 -D_REENTRANT"
+lang_binary_linker_flags "-s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s NO_DISABLE_EXCEPTION_CATCHING"
+
+warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wshorten-64-to-32"
+
+werror_flags "-Werror -Wno-error=unused-parameter -Wno-error=unreachable-code -Wno-error=unused-lambda-capture"
+
+maintainer_warning_flags "-Wunreachable-code -Wdocumentation -Qunused-arguments"
+
+optimization_flags "-O3"
+sanitizer_optimization_flags "-O1 -fno-optimize-sibling-calls -fno-omit-frame-pointer"
+size_optimization_flags "-Os"
+
+visibility_build_flags "-fvisibility=hidden"
+visibility_attribute '__attribute__((visibility("default")))'
+
+<so_link_commands>
+default -> "false"
+</so_link_commands>
+
+<binary_link_commands>
+default -> "em++"
+</binary_link_commands>
