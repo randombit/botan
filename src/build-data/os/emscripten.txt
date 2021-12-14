@@ -17,3 +17,8 @@ filesystem
 dev_random
 posix1
 </target_features>
+
+<aliases>
+emscripten
+wasm
+</aliases>

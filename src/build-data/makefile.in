@@ -76,7 +76,7 @@ $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) $(CLIOBJS) $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(EXE_LINK_CMD) $(ABI_FLAGS) $(TESTOBJS) $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) $(TESTOBJS) $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) %{test_exe_extra_ldflags} $(EXE_LINKS_TO) %{output_to_exe}$@
 
 %{if build_fuzzers}
 
