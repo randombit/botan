@@ -3168,6 +3168,7 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
         'gcc': r'^ *GCC ([0-9]+) ([0-9]+)$',
         'clang': r'^ *CLANG ([0-9]+) ([0-9]+)$',
         'xlc': r'^ *XLC ([0-9]+) ([0-9]+)$',
+        'emcc': r'^ *EMCC ([0-9]+) ([0-9]+)$',
     }
 
     unknown_pattern = r'UNKNOWN 0 0'

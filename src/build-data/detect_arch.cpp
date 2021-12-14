@@ -73,6 +73,9 @@
 #elif defined(__loongarch64)
   LOONGARCH64
 
+#elif defined(__EMSCRIPTEN__)
+  WASM
+
 #else
   UNKNOWN
 
