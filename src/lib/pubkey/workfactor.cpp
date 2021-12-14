@@ -37,6 +37,9 @@ size_t nfs_workfactor(size_t bits, double log2_k)
 
 size_t if_work_factor(size_t bits)
    {
+   if(bits < 512)
+      return 0;
+
    // RFC 3766 estimates k at .02 and o(1) to be effectively zero for sizes of interest
 
    const double log2_k = -5.6438; // log2(.02)
