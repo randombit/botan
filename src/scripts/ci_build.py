@@ -188,7 +188,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target == 'emscripten':
         flags += ['--cpu=wasm']
-        test_cmd = None # TODO: find a way to run the wasm-compiled tests w/o a browser
+        # need to find a way to run the wasm-compiled tests w/o a browser
+        test_cmd = None
 
     if is_cross_target:
         if target_os == 'ios':
