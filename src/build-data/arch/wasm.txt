@@ -1,2 +1,2 @@
 endian little
-wordsize 64
+wordsize 32
