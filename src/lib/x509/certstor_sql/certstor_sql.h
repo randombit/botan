@@ -12,7 +12,6 @@
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
 #include <botan/database.h>
-#include <botan/mutex.h>
 
 namespace Botan {
 
@@ -112,7 +111,6 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQL : public Certificate_Store
       std::shared_ptr<SQL_Database> m_database;
       std::string m_prefix;
       std::string m_password;
-      mutex_type m_mutex;
    };
 
 }
