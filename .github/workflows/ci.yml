@@ -62,6 +62,9 @@ jobs:
           - target: amalgamation
             compiler: gcc
             host_os: ubuntu-20.04
+          - target: emscripten
+            compiler: emcc
+            host_os: ubuntu-20.04
           - target: baremetal
             compiler: gcc
             host_os: ubuntu-20.04
