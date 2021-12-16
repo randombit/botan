@@ -65,5 +65,10 @@ if type -p "apt-get"; then
         sudo apt-get -qq install doxygen python-docutils python3-sphinx
     fi
 else
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install ccache
+    export HOMEBREW_NO_AUTO_UPDATE=1
+    brew install ccache
+
+    if [ "$TARGET" = "emscripten" ]; then
+        brew install emscripten
+    fi
 fi
