@@ -34,6 +34,7 @@ API Reference
    tpm
    otp
    roughtime
+   zfec
    ffi
    env_vars
    python

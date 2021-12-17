@@ -1,0 +1,13 @@
+<defines>
+ZFEC_SSE2 -> 20211211
+</defines>
+
+<isa>
+sse2
+</isa>
+
+<cc>
+gcc
+clang
+msvc
+</cc>

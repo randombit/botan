@@ -44,20 +44,21 @@ class Print_Help final : public Command
             }
 
          const std::map<std::string, std::string> groups_description {
-            { "encryption", "Encryption" },
-            { "compression", "Compression" },
             { "codec", "Encoders/Decoders" },
+            { "compression", "Compression" },
+            { "crypto", "Encryption", },
+            { "fec", "Forward Error Correction" },
             { "hash", "Hash Functions" },
             { "hmac", "HMAC" },
             { "info", "Informational" },
+            { "misc", "Miscellaneous" },
             { "numtheory", "Number Theory" },
             { "passhash", "Password Hashing" },
             { "psk", "PSK Database" },
             { "pubkey", "Public Key Cryptography" },
             { "tls", "TLS" },
             { "tss", "Secret Sharing" },
-            { "x509", "X.509" },
-            { "misc", "Miscellaneous" }
+            { "x509", "X.509" }
          };
 
       std::ostringstream oss;

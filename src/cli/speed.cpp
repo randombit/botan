@@ -131,6 +131,10 @@
   #include <botan/pwdhash.h>
 #endif
 
+#if defined(BOTAN_HAS_ZFEC)
+  #include <botan/zfec.h>
+#endif
+
 namespace Botan_CLI {
 
 using Botan::Timer;
@@ -663,6 +667,12 @@ class Speed final : public Command
             else if(algo == "passhash9")
                {
                bench_passhash9();
+               }
+#endif
+#if defined(BOTAN_HAS_ZFEC)
+            else if(algo == "zfec")
+               {
+               bench_zfec(msec);
                }
 #endif
 #if defined(BOTAN_HAS_POLY_DBL)
@@ -2189,6 +2199,71 @@ class Speed final : public Command
                break;
             }
          }
+#endif
+
+#if defined(BOTAN_HAS_ZFEC)
+      void bench_zfec(std::chrono::milliseconds msec)
+         {
+         const size_t k = 4;
+         const size_t n = 16;
+
+         Botan::ZFEC zfec(k, n);
+
+         const size_t share_size = 1024;
+
+         std::vector<uint8_t> input(share_size * k);
+         rng().randomize(input.data(), input.size());
+
+         std::vector<uint8_t> output(share_size * n);
+
+         auto enc_fn = [&](size_t share, size_t /*max_share*/,
+                           const uint8_t buf[], size_t len)
+            {
+            std::memcpy(&output[share*share_size], buf, len);
+            };
+
+         auto enc_timer = make_timer("zfec " +
+                                     std::to_string(k) + "/" +
+                                     std::to_string(n),
+                                     input.size(),
+                                     "encode", "", input.size());
+
+         enc_timer->run_until_elapsed(msec, [&]() {
+            zfec.encode(input.data(), input.size(), enc_fn);
+         });
+
+         record_result(enc_timer);
+
+         auto dec_timer = make_timer("zfec " +
+                                     std::to_string(k) + "/" +
+                                     std::to_string(n),
+                                     input.size(),
+                                     "decode", "", input.size());
+
+         std::map<size_t, const uint8_t*> shares;
+         for(size_t i = 0; i != n; ++i)
+            {
+            shares[i] = &output[share_size * i];
+            }
+
+         // remove data shares to make decoding maximally expensive:
+         while(shares.size() != k)
+            {
+            shares.erase(shares.begin());
+            }
+
+         auto dec_fn = [&](size_t /*share*/, size_t /*max_share*/,
+                           const uint8_t /*buf*/[], size_t /*len*/)
+            {
+            };
+
+         dec_timer->run_until_elapsed(msec, [&]() {
+            zfec.decode(shares, share_size, dec_fn);
+         });
+
+         record_result(dec_timer);
+         }
+
 #endif
 
 #if defined(BOTAN_HAS_POLY_DBL)
