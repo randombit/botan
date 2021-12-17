@@ -70,6 +70,8 @@ Version 3.0.0, Not Yet Released
 
 * Add new ``X509_DN::DER_encode`` function. (GH #2472)
 
+* Add support for ``zfec`` compatible forward error correction (GH #2866)
+
 * Add support for keyed BLAKE2b (GH #2524)
 
 * Optimizations for SHACAL2, especially improving ARMv8 and POWER (GH #2556 #2557)
