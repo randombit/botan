@@ -20,6 +20,10 @@
 
    XLC __ibmxl_version__ __ibmxl_release__
 
+#elif defined(__EMSCRIPTEN__)
+
+   EMCC __EMSCRIPTEN_major__ __EMSCRIPTEN_minor__
+
 #elif defined(__clang__) && defined(__apple_build_version__)
 
    /*

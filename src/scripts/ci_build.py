@@ -42,6 +42,7 @@ def known_targets():
         'cross-ppc64',
         'cross-win64',
         'docs',
+        'emscripten',
         'fuzzers',
         'lint',
         'minimized',
@@ -55,7 +56,7 @@ def known_targets():
 def build_targets(target, target_os):
     if target in ['shared', 'minimized', 'bsi', 'nist']:
         yield 'shared'
-    elif target in ['static', 'fuzzers', 'baremetal']:
+    elif target in ['static', 'fuzzers', 'baremetal', 'emscripten']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
@@ -98,6 +99,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target == 'baremetal':
         target_os = 'none'
+
+    if target == 'emscripten':
+        target_os = 'emscripten'
 
     make_prefix = []
     test_prefix = []
@@ -180,6 +184,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     if target == 'baremetal':
         cc_bin = 'arm-none-eabi-c++'
         flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector', '--ldflags=-specs=nosys.specs']
+        test_cmd = None
+
+    if target == 'emscripten':
+        flags += ['--cpu=wasm']
+        # need to find a way to run the wasm-compiled tests w/o a browser
         test_cmd = None
 
     if is_cross_target:
@@ -467,6 +476,8 @@ def main(args=None):
             options.cc_bin = 'clang++'
         elif options.cc == 'msvc':
             options.cc_bin = 'cl'
+        elif options.cc == "emcc":
+            options.cc_bin = "em++"
         else:
             print('Error unknown compiler %s' % (options.cc))
             return 1

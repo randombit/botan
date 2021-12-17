@@ -12,6 +12,7 @@ PYTHON_EXE     = %{python_exe}
 # Compiler Flags
 ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
+LANG_EXE_FLAGS = %{cc_lang_binary_linker_flags}
 CXXFLAGS       = %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT
 WARN_FLAGS     = %{cc_warning_flags}
 LIB_FLAGS      = %{lib_flags}
@@ -72,10 +73,10 @@ TESTOBJS = %{join test_objs}
 # Executable targets
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
-	$(EXE_LINK_CMD) $(ABI_FLAGS) $(CLIOBJS) $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) $(CLIOBJS) $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(EXE_LINK_CMD) $(ABI_FLAGS) $(TESTOBJS) $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) $(TESTOBJS) $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) %{test_exe_extra_ldflags} $(EXE_LINKS_TO) %{output_to_exe}$@
 
 %{if build_fuzzers}
 
@@ -142,5 +143,5 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
-	$(EXE_LINK_CMD) $(ABI_FLAGS) %{obj} $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) %{obj} $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
 %{endfor}
