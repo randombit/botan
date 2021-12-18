@@ -1,3 +1,11 @@
 <defines>
 SHA3 -> 20161018
 </defines>
+
+<header:public>
+sha3.h
+</header:public>
+
+<header:internal>
+sha3_round.h
+</header:internal>
