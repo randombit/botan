@@ -11,6 +11,7 @@
 #define BOTAN_ZFEC_H_
 
 #include <botan/types.h>
+#include <string>
 #include <map>
 #include <vector>
 #include <functional>
