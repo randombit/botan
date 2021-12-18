@@ -1,6 +1,17 @@
 Release Notes
 ========================================
 
+Version 2.18.3, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Improve Emscripten build (GH #2864)
+
+* Always use ``-L`` before build flags (GH #2858 2848)
+
+* Fix compilation issue on earlier macOS versions (GH #2851)
+
+* Add a GCC 4.8 CI target to prevent build regressions (GH #2869)
+
 Version 2.18.2, 2021-10-25
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
