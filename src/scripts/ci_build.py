@@ -85,7 +85,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     if ccache is not None:
         flags += ['--no-store-vc-rev', '--compiler-cache=%s' % (ccache)]
 
-    if target_os != 'osx' and not disable_werror:
+    if target_os != 'osx' and target != 'gcc4.8' and not disable_werror:
         flags += ['--werror-mode']
 
     if target_cpu is not None:
