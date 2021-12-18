@@ -23,6 +23,9 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "clang" ]; then
         sudo apt-get -qq install clang
 
+    elif [ "$TARGET" = "gcc4.8" ]; then
+        sudo apt-get -qq install g++-4.8
+
     elif [ "$TARGET" = "cross-i386" ]; then
         sudo apt-get -qq install g++-multilib linux-libc-dev libc6-dev-i386
 
