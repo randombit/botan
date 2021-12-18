@@ -4,22 +4,20 @@ Continuous Integration and Automated Testing
 CI Build Script
 ----------------
 
-The Travis and AppVeyor builds are orchestrated using a script
+The Github Actions and AppVeyor builds are orchestrated using a script
 ``src/scripts/ci_build.py``. This allows one to easily reproduce the CI process
 on a local machine.
 
-Travis CI
------------
-
-https://travis-ci.com/github/randombit/botan
+Github Actions
+----------------
 
 This is the primary CI, and tests the Linux, macOS, and iOS builds. Among other
 things it runs tests using valgrind, compilation on various architectures
-(currently including ARM, PPC64, and S390x), MinGW build, and a build that
+(currently including Aarch64 and POWER), MinGW build, and a build that
 produces the coverage report.
 
-The Travis configurations is in ``src/scripts/ci/travis.yml``, which executes a
-setup script ``src/scripts/ci/setup_travis.sh`` to install needed packages.
+The GH Actions configurations is in ``.github/workflows/ci.yml``, which executes a
+setup script ``src/scripts/ci/setup_gh_actions.sh`` to install needed packages.
 Then ``src/scripts/ci_build.py`` is invoked.
 
 AppVeyor
@@ -62,8 +60,8 @@ https://sonarcloud.io/dashboard?id=botan
 
 Sonar scanner is another software quality scanner. Unfortunately a recent update
 of their scanner caused it to take over an hour to produce a report which caused
-Travis CI timeouts, so it has been disabled. It should be re-enabled to run on
-demand in the same way Coverity is.
+CI timeouts, so it has been disabled. It should be re-enabled to run
+on demand in the same way Coverity is.
 
 OSS-Fuzz
 ----------
