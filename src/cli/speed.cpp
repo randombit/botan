@@ -2209,15 +2209,14 @@ class Speed final : public Command
 
          Botan::ZFEC zfec(k, n);
 
-         const size_t share_size = 1024;
+         const size_t share_size = 256 * 1024;
 
          std::vector<uint8_t> input(share_size * k);
          rng().randomize(input.data(), input.size());
 
          std::vector<uint8_t> output(share_size * n);
 
-         auto enc_fn = [&](size_t share, size_t /*max_share*/,
-                           const uint8_t buf[], size_t len)
+         auto enc_fn = [&](size_t share, const uint8_t buf[], size_t len)
             {
             std::memcpy(&output[share*share_size], buf, len);
             };
@@ -2252,16 +2251,23 @@ class Speed final : public Command
             shares.erase(shares.begin());
             }
 
-         auto dec_fn = [&](size_t /*share*/, size_t /*max_share*/,
-                           const uint8_t /*buf*/[], size_t /*len*/)
+         std::vector<uint8_t> recovered(share_size * k);
+
+         auto dec_fn = [&](size_t share, const uint8_t buf[], size_t len)
             {
+            std::memcpy(&recovered[share * share_size], buf, len);
             };
 
          dec_timer->run_until_elapsed(msec, [&]() {
-            zfec.decode(shares, share_size, dec_fn);
+            zfec.decode_shares(shares, share_size, dec_fn);
          });
 
          record_result(dec_timer);
+
+         if(recovered != input)
+            {
+            error_output() << "ZFEC recovery failed\n";
+            }
          }
 
 #endif

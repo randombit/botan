@@ -537,13 +537,13 @@ alignas(256) const uint8_t GFTBL[256*32] = {
 0x00, 0xff, 0xe3, 0x1c, 0xdb, 0x24, 0x38, 0xc7, 0xab, 0x54, 0x48, 0xb7, 0x70, 0x8f, 0x93, 0x6c,
 0x00, 0x4b, 0x96, 0xdd, 0x31, 0x7a, 0xa7, 0xec, 0x62, 0x29, 0xf4, 0xbf, 0x53, 0x18, 0xc5, 0x8e };
 
-inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) table_lookup(SIMD_4x32 a, SIMD_4x32 b)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) table_lookup(SIMD_4x32 t, SIMD_4x32 v)
    {
 #if defined(BOTAN_SIMD_USE_SSE2)
-   return SIMD_4x32(_mm_shuffle_epi8(a.raw(), b.raw()));
+   return SIMD_4x32(_mm_shuffle_epi8(t.raw(), v.raw()));
 #elif defined(BOTAN_SIMD_USE_NEON)
-   const uint8x16_t tbl = vreinterpretq_u8_u32(a.raw());
-   const uint8x16_t idx = vreinterpretq_u8_u32(b.raw());
+   const uint8x16_t tbl = vreinterpretq_u8_u32(t.raw());
+   const uint8x16_t idx = vreinterpretq_u8_u32(v.raw());
 
 #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
    const uint8x8x2_t tbl2 = { vget_low_u8(tbl), vget_high_u8(tbl) };
@@ -564,8 +564,6 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) table_lookup(SIMD_4x32 a, SIMD_
 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA)
 size_t ZFEC::addmul_vperm(uint8_t z[], const uint8_t x[], uint8_t y, size_t size)
    {
-   // we assume the caller has aligned z to 16 for us!
-
    const auto mask = SIMD_4x32::splat_u8(0x0F);
 
    // fetch the lookup tables for the given y

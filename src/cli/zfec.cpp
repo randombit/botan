@@ -167,7 +167,7 @@ class FEC_Encode final : public Command
             input_data.push_back(0x00);
             }
 
-         auto encoder_fn = [&](size_t share, size_t N,
+         auto encoder_fn = [&](size_t share,
                                const uint8_t bits[], size_t len)
             {
             std::ostringstream output_fsname;
@@ -180,14 +180,14 @@ class FEC_Encode final : public Command
             else
                output_fsname << input;
 
-            output_fsname << "." << (share + 1) << "_" << N;
+            output_fsname << "." << (share + 1) << "_" << n;
 
             if(!suffix.empty())
                output_fsname << "." << suffix;
 
             std::ofstream output(output_fsname.str(), std::ios::binary);
 
-            FEC_Share fec_share(share, k, N, padding, bits, len);
+            FEC_Share fec_share(share, k, n, padding, bits, len);
             fec_share.serialize_to(*hash, output);
             };
 
@@ -283,7 +283,7 @@ class FEC_Decode final : public Command
 
          std::vector<uint8_t> decoded(share_size * k);
 
-         auto decoder_fn = [&](size_t share, size_t /*N*/,
+         auto decoder_fn = [&](size_t share,
                                const uint8_t bits[], size_t len)
             {
             std::memcpy(&decoded[share * share_size],
@@ -295,7 +295,7 @@ class FEC_Decode final : public Command
          for(auto& share: shares)
             share_ptrs[share.share_id()] = share.share_data();
 
-         fec.decode(share_ptrs, share_size, decoder_fn);
+         fec.decode_shares(share_ptrs, share_size, decoder_fn);
 
          auto decoded_digest = hash->process(
             decoded.data(), decoded.size() - (hash_len + padding));
