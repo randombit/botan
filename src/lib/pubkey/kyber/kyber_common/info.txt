@@ -1,0 +1,18 @@
+<defines>
+KYBER_COMMON -> 20220107
+</defines>
+
+<requires>
+pubkey
+hash
+stream
+rng
+</requires>
+
+<header:internal>
+kyber_symmetric_primitives.h
+</header:internal>
+
+<header:public>
+kyber.h
+</header:public>
