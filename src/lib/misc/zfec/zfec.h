@@ -30,6 +30,8 @@ namespace Botan {
 class BOTAN_PUBLIC_API(3,0) ZFEC
    {
    public:
+      typedef std::function<void (size_t, const uint8_t[], size_t)> output_cb_t;
+
       /**
       * FEC constructor
       * @param K the number of shares needed for recovery
@@ -49,7 +51,18 @@ class BOTAN_PUBLIC_API(3,0) ZFEC
       */
       void encode(
          const uint8_t input[], size_t size,
-         std::function<void (size_t, size_t, const uint8_t[], size_t)> output_cb)
+         output_cb_t output_cb)
+         const;
+
+      /**
+      * @param shares exactly K shares of data to FEC
+      * @param share_size the length in bytes of each share
+      * @param output_cb the output callback
+      */
+      void encode_shares(
+         const std::vector<const uint8_t*>& shares,
+         size_t share_size,
+         output_cb_t output_cb)
          const;
 
       /**
@@ -57,10 +70,10 @@ class BOTAN_PUBLIC_API(3,0) ZFEC
       * @param share_size size in bytes of each share
       * @param output_cb the output callback
       */
-      void decode(
+      void decode_shares(
          const std::map<size_t, const uint8_t*>& shares,
          size_t share_size,
-         std::function<void (size_t, size_t, const uint8_t[], size_t)> output_cb)
+         output_cb_t output_cb)
          const;
 
    private:

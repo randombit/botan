@@ -117,6 +117,7 @@ const uint8_t* GF_MUL_TABLE(uint8_t y)
             {
             m_table.resize(256 * 256);
 
+            // x*0 = 0*y = 0 so we iterate over [1,255)
             for(size_t i = 1; i != 256; ++i)
                {
                for(size_t j = 1; j != 256; ++j)
@@ -147,28 +148,33 @@ void invert_matrix(uint8_t matrix[], size_t K)
    class pivot_searcher
       {
       public:
-         pivot_searcher(size_t K) : ipiv(K) {}
+         pivot_searcher(size_t K) : m_ipiv(K) {}
 
-         std::pair<size_t, size_t> operator()(size_t col, const uint8_t* matrix)
+         std::pair<size_t, size_t> operator()(size_t col, const uint8_t matrix[])
             {
-            const size_t K = ipiv.size();
+            /*
+            * Zeroing column 'col', look for a non-zero element.
+            * First try on the diagonal, if it fails, look elsewhere.
+            */
 
-            if(ipiv[col] == false && matrix[col*K + col] != 0)
+            const size_t K = m_ipiv.size();
+
+            if(m_ipiv[col] == false && matrix[col*K + col] != 0)
                {
-               ipiv[col] = true;
+               m_ipiv[col] = true;
                return std::make_pair(col, col);
                }
 
             for(size_t row = 0; row != K; ++row)
                {
-               if(ipiv[row])
+               if(m_ipiv[row])
                   continue;
 
                for(size_t i = 0; i != K; ++i)
                   {
-                  if(ipiv[i] == false && matrix[row*K + i] != 0)
+                  if(m_ipiv[i] == false && matrix[row*K + i] != 0)
                      {
-                     ipiv[i] = true;
+                     m_ipiv[i] = true;
                      return std::make_pair(row, i);
                      }
                   }
@@ -179,25 +185,19 @@ void invert_matrix(uint8_t matrix[], size_t K)
 
       private:
          // Marks elements already used as pivots
-         std::vector<bool> ipiv;
+         std::vector<bool> m_ipiv;
       };
 
    pivot_searcher pivot_search(K);
    std::vector<size_t> indxc(K);
    std::vector<size_t> indxr(K);
-   std::vector<uint8_t> id_row(K);
 
    for(size_t col = 0; col != K; ++col)
       {
-      /*
-      * Zeroing column 'col', look for a non-zero element.
-      * First try on the diagonal, if it fails, look elsewhere.
-      */
+      const auto icolrow = pivot_search(col, matrix);
 
-      std::pair<size_t, size_t> icolrow = pivot_search(col, matrix);
-
-      size_t icol = icolrow.first;
-      size_t irow = icolrow.second;
+      const size_t icol = icolrow.first;
+      const size_t irow = icolrow.second;
 
       /*
       * swap rows irow and icol, so afterwards the diagonal
@@ -213,17 +213,15 @@ void invert_matrix(uint8_t matrix[], size_t K)
       indxr[col] = irow;
       indxc[col] = icol;
       uint8_t* pivot_row = &matrix[icol*K];
-      uint8_t c = pivot_row[icol];
+      const uint8_t c = pivot_row[icol];
+      pivot_row[icol] = 1;
 
       if(c == 0)
          throw Invalid_Argument("ZFEC: singlar matrix");
 
       if(c != 1)
          {
-         pivot_row[icol] = 1;
-
          const uint8_t* mul_c = GF_MUL_TABLE(GF_INVERSE[c]);
-
          for(size_t i = 0; i != K; ++i)
             pivot_row[i] = mul_c[pivot_row[i]];
          }
@@ -231,32 +229,22 @@ void invert_matrix(uint8_t matrix[], size_t K)
       /*
       * From all rows, remove multiples of the selected row to zero
       * the relevant entry (in fact, the entry is not zero because we
-      * know it must be zero). Here, if we know that the pivot_row is
-      * the identity, we can optimize the addmul.
+      * know it must be zero).
       */
-      id_row[icol] = 1;
-      if(std::memcmp(pivot_row, &id_row[0], K) != 0)
+      for(size_t i = 0; i != K; ++i)
          {
-         uint8_t* p = matrix;
-
-         for(size_t i = 0; i != K; ++i)
+         if(i != icol)
             {
-            if(i != icol)
-               {
-               c = p[icol];
-               p[icol] = 0;
+            const uint8_t z = matrix[i*K + icol];
+            matrix[i*K + icol] = 0;
 
-               const uint8_t* GF_MUL_C = GF_MUL_TABLE(c);
-
-               // This is equivalent to addmul()
-               for(size_t j = 0; j != K; ++j)
-                  p[j] ^= GF_MUL_C[pivot_row[j]];
-               }
-            p += K;
+            // This is equivalent to addmul()
+            const uint8_t* mul_z = GF_MUL_TABLE(z);
+            for(size_t j = 0; j != K; ++j)
+               matrix[i*K + j] ^= mul_z[pivot_row[j]];
             }
          }
-      id_row[icol] = 0;
-      } /* done all columns */
+      }
 
    for(size_t i = 0; i != K; ++i)
       {
@@ -424,7 +412,7 @@ ZFEC::ZFEC(size_t K, size_t N) :
 
    /*
    * quick code to build systematic matrix: invert the top
-   * K*K vandermonde matrix, multiply right the bottom n-K rows
+   * K*K Vandermonde matrix, multiply right the bottom n-K rows
    * by the inverse, and construct the identity matrix at the top.
    */
    create_inverted_vdm(&temp_matrix[0], m_K);
@@ -441,16 +429,18 @@ ZFEC::ZFEC(size_t K, size_t N) :
    /*
    * computes C = AB where A is n*K, B is K*m, C is n*m
    */
-   for(size_t row = m_K*m_K; row != m_N*m_K; row += m_K)
+   for(size_t row = m_K; row != m_N; ++row)
       {
       for(size_t col = 0; col != m_K; ++col)
          {
-         const uint8_t* pa = &temp_matrix[row];
-         const uint8_t* pb = &temp_matrix[col];
          uint8_t acc = 0;
-         for(size_t i = 0; i < m_K; i++, pa++, pb += m_K)
-            acc ^= GF_MUL_TABLE(*pa)[*pb];
-         m_enc_matrix[row + col] = acc;
+         for(size_t i = 0; i != m_K; i++)
+            {
+            const uint8_t row_v = temp_matrix[row * m_K + i];
+            const uint8_t row_c = temp_matrix[col + m_K * i];
+            acc ^= GF_MUL_TABLE(row_v)[row_c];
+            }
+         m_enc_matrix[row * m_K + col] = acc;
          }
       }
    }
@@ -460,38 +450,57 @@ ZFEC::ZFEC(size_t K, size_t N) :
 */
 void ZFEC::encode(
    const uint8_t input[], size_t size,
-   std::function<void (size_t, size_t, const uint8_t[], size_t)> output_cb)
+   output_cb_t output_cb)
    const
    {
    if(size % m_K != 0)
       throw Invalid_Argument("ZFEC::encode: input must be multiple of K uint8_ts");
 
-   size_t block_size = size / m_K;
+   const size_t share_size = size / m_K;
 
+   std::vector<const uint8_t*> shares;
    for(size_t i = 0; i != m_K; ++i)
-      output_cb(i, m_N, input + i*block_size, block_size);
+      shares.push_back(input + i*share_size);
+
+   this->encode_shares(shares, share_size, output_cb);
+   }
+
+void ZFEC::encode_shares(
+   const std::vector<const uint8_t*>& shares,
+   size_t share_size,
+   output_cb_t output_cb)
+   const
+   {
+   if(shares.size() != m_K)
+      throw Invalid_Argument("ZFEC::encode_shares must provide K shares");
+
+   // The initial shares are just the original input shares
+   for(size_t i = 0; i != m_K; ++i)
+      output_cb(i, shares[i], share_size);
+
+   std::vector<uint8_t> fec_buf(share_size);
 
    for(size_t i = m_K; i != m_N; ++i)
       {
-      std::vector<uint8_t> fec_buf(block_size);
+      clear_mem(fec_buf.data(), fec_buf.size());
 
       for(size_t j = 0; j != m_K; ++j)
          {
-         addmul(&fec_buf[0], input + j*block_size,
-                m_enc_matrix[i*m_K+j], block_size);
+         addmul(&fec_buf[0], shares[j],
+                m_enc_matrix[i*m_K+j], share_size);
          }
 
-      output_cb(i, m_N, &fec_buf[0], fec_buf.size());
+      output_cb(i, &fec_buf[0], fec_buf.size());
       }
    }
 
 /*
 * ZFEC decoding routine
 */
-void ZFEC::decode(
+void ZFEC::decode_shares(
    const std::map<size_t, const uint8_t*>& shares,
    size_t share_size,
-   std::function<void (size_t, size_t, const uint8_t[], size_t)> output_cb) const
+   output_cb_t output_cb) const
    {
    /*
    Todo:
@@ -543,7 +552,7 @@ void ZFEC::decode(
       if(share_id < m_K)
          {
          decoding_matrix[i*(m_K+1)] = 1;
-         output_cb(share_id, m_K, share_data, share_size);
+         output_cb(share_id, share_data, share_size);
          }
       else // will decode after inverting matrix
          {
@@ -569,7 +578,7 @@ void ZFEC::decode(
             {
             addmul(&buf[0], sharesv[col], decoding_matrix[i*m_K + col], share_size);
             }
-         output_cb(i, m_K, &buf[0], share_size);
+         output_cb(i, &buf[0], share_size);
          }
       }
    }

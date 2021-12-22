@@ -58,7 +58,7 @@ class ZFEC_KAT final : public Text_Based_Test
 
          std::set<size_t> shares_encoded;
 
-         auto zfec_enc_fn = [&](size_t share, size_t max_share,
+         auto zfec_enc_fn = [&](size_t share,
                                 const uint8_t block[], size_t len)
             {
             if(shares_encoded.insert(share).second == false)
@@ -66,8 +66,7 @@ class ZFEC_KAT final : public Text_Based_Test
                result.test_failure("Encoding returned the same share twice");
                }
 
-            result.test_eq_sz("ZFEC enc max share", max_share, N);
-            result.test_lt("ZFEC enc share in range", share, max_share);
+            result.test_lt("ZFEC enc share in range", share, N);
 
             result.test_eq(zfec_impl.c_str(),
                            "share " + std::to_string(share),
@@ -83,7 +82,7 @@ class ZFEC_KAT final : public Text_Based_Test
          // First test full decoding:
          std::set<size_t> shares_decoded;
 
-         auto zfec_dec_fn = [&](size_t share, size_t max_share,
+         auto zfec_dec_fn = [&](size_t share,
                                 const uint8_t block[], size_t len)
             {
             if(shares_decoded.insert(share).second == false)
@@ -91,8 +90,7 @@ class ZFEC_KAT final : public Text_Based_Test
                result.test_failure("Decoding returned the same share twice");
                }
 
-            result.test_eq_sz("ZFEC dec max share", max_share, K);
-            result.test_lt("ZFEC dec share in range", share, max_share);
+            result.test_lt("ZFEC dec share in range", share, K);
 
             result.test_eq(zfec_impl.c_str(),
                            "share " + std::to_string(share),
@@ -100,7 +98,7 @@ class ZFEC_KAT final : public Text_Based_Test
                            &input[share * share_size], share_size);
             };
 
-         zfec.decode(shares, share_size, zfec_dec_fn);
+         zfec.decode_shares(shares, share_size, zfec_dec_fn);
 
          result.test_eq("Correct number of shares decoded",
                         shares_decoded.size(), K);
@@ -114,7 +112,7 @@ class ZFEC_KAT final : public Text_Based_Test
             shares.erase(idx);
             }
 
-         zfec.decode(shares, share_size, zfec_dec_fn);
+         zfec.decode_shares(shares, share_size, zfec_dec_fn);
 
          result.test_eq("Correct number of shares decoded",
                         shares_decoded.size(), K);
