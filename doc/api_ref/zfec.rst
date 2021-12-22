@@ -28,7 +28,7 @@ size.
      Set up for encoding or decoding using parameters ``k`` and ``n``.
      Both must be less than 256, and ``k`` must be less than ``n``.
 
-  .. cpp:function:: void encode_shares(const std::vector<const uint8_t>& shares, \
+  .. cpp:function:: void encode_shares(const std::vector<const uint8_t*>& shares, \
          size_t share_size, \
          std::function<void (size_t, const uint8_t[], size_t)> output_cb) const
 
