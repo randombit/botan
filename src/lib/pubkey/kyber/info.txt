@@ -1,0 +1,18 @@
+<defines>
+KYBER -> 20210118
+</defines>
+
+<requires>
+aes
+rng
+sha2_32
+sha2_64
+sha3
+shake
+stream
+ctr
+</requires>
+
+<header:public>
+kyber.h
+</header:public>

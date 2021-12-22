@@ -54,6 +54,7 @@ Konstantinos Kolelis
 Krzysztof Kwiatkowski
 Lauri Nurmi
 Luca Piccarreta
+Manuel Glaser (Rohde & Schwarz Cybersecurity)
 Manuel Hartl
 Marcus Brinkmann
 Markus Wanner
@@ -63,6 +64,7 @@ Mathieu Souchaud
 Matthew Gregan
 Matthias Gierlings (Hackmanit GmbH)
 Matt Johnston
+Michael Boric (Rohde & Schwarz Cybersecurity)
 Nathan Hourt
 Nicolas Sendrier
 Nuno Goncalves
