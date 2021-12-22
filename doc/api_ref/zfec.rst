@@ -30,7 +30,7 @@ size.
 
   .. cpp:function:: void encode_shares(const std::vector<const uint8_t>& shares, \
          size_t share_size, \
-         std::function<void (size_t, size_t, const uint8_t[], size_t)> output_cb) const
+         std::function<void (size_t, const uint8_t[], size_t)> output_cb) const
 
      Encode ``K`` shares in ``shares`` each of length ``share_size`` into ``N``
      shares, also each of length ``share_size``. The ``output_cb`` function will
@@ -43,7 +43,7 @@ size.
 
   .. cpp:function:: void decode_shares(const std::map<size_t, const uint8_t*>& shares, \
          size_t share_size, \
-         std::function<void (size_t, size_t, const uint8_t[], size_t)> output_cb) const
+         std::function<void (size_t, const uint8_t[], size_t)> output_cb) const
 
      Decode some set of shares into the original input. Each share is
      of ``share_size`` bytes. The shares are identified by a small
