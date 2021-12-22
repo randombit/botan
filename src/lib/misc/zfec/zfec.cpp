@@ -521,6 +521,8 @@ void ZFEC::decode_shares(
    auto shares_b_iter = shares.begin();
    auto shares_e_iter = shares.rbegin();
 
+   bool missing_primary_share = false;
+
    for(size_t i = 0; i != m_K; ++i)
       {
       size_t share_id = 0;
@@ -538,6 +540,7 @@ void ZFEC::decode_shares(
          share_id = shares_e_iter->first;
          share_data = shares_e_iter->second;
          ++shares_e_iter;
+         missing_primary_share = true;
          }
 
       if(share_id >= m_N)
@@ -548,6 +551,7 @@ void ZFEC::decode_shares(
       matrix), so shares less than K are copies of the input data,
       can output_cb directly. Also we know the encoding matrix in those rows
       contains I, so we can set the single bit directly without copying
+      the entire row
       */
       if(share_id < m_K)
          {
@@ -563,10 +567,17 @@ void ZFEC::decode_shares(
       indexes[i] = share_id;
       }
 
-   /*
-   TODO: if all primary shares were recovered, don't invert the matrix
-   and return immediately
-   */
+   // If we had the original data shares then no need to perform
+   // a matrix inversion, return immediately.
+   if(!missing_primary_share)
+      {
+      for(size_t i = 0; i != indexes.size(); ++i)
+         {
+         BOTAN_ASSERT_NOMSG(indexes[i] < m_K);
+         }
+      return;
+      }
+
    invert_matrix(&decoding_matrix[0], m_K);
 
    for(size_t i = 0; i != indexes.size(); ++i)
