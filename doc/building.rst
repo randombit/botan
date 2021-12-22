@@ -7,6 +7,12 @@ This document describes how to build Botan on Unix/POSIX and Windows
 systems. The POSIX oriented descriptions should apply to most common Unix
 systems (including Apple macOS/Darwin), along with POSIX-ish systems like QNX.
 
+.. note::
+   Botan is available already in nearly all
+   `packaging systems <https://repology.org/project/botan/versions>`_ so you
+   probably only need to build from source if you need unusual options
+   or are building for an old system which has out of date packages.
+
 Currently systems such as VMS, OS/390, and OS/400 are not supported by the build
 system, primarily due to lack of access and interest.  Please contact the
 maintainer if you would like to build Botan on such a system.
@@ -36,7 +42,7 @@ Configuring the Build
 The first step is to run ``configure.py``, which is a Python script
 that creates various directories, config files, and a Makefile for
 building everything. This script should run under a vanilla install of
-Python 2.6, 2.7, or 3.x.
+Python 2.7 or Python 3.x.
 
 The script will attempt to guess what kind of system you are trying to
 compile for (and will print messages telling you what it guessed).
@@ -52,7 +58,7 @@ kernel on a 64-bit CPU will generally not like 64-bit code.
 
 By default the script tries to figure out what will work on your
 system, and use that. It will print a display at the end showing which
-algorithms have and have not been enabled. For instance on one system
+modules have and have not been enabled. For instance on one system
 we might see lines like::
 
    INFO: Skipping (dependency failure): certstor_sqlite3 sessions_sqlite3
@@ -119,7 +125,7 @@ On Unix
 
 The basic build procedure on Unix and Unix-like systems is::
 
-   $ ./configure.py [--enable-modules=<list>] [--cc=CC]
+   $ ./configure.py [various options]
    $ make
    $ make check
 
@@ -128,8 +134,7 @@ If the tests look OK, install::
    $ make install
 
 On Unix systems the script will default to using GCC; use ``--cc`` if
-you want something else. For instance use ``--cc=icc`` for Intel C++
-and ``--cc=clang`` for Clang.
+you want something else. For instance use ``--cc=clang`` for Clang.
 
 The ``make install`` target has a default directory in which it will
 install Botan (typically ``/usr/local``). You can override this by
