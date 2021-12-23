@@ -14,6 +14,7 @@ arc4random
 getentropy
 dev_random
 clock_gettime
+ccrandom
 
 commoncrypto
 apple_keychain
