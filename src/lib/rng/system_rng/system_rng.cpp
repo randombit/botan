@@ -17,6 +17,9 @@
 #elif defined(BOTAN_TARGET_OS_HAS_CRYPTO_NG)
   #include <bcrypt.h>
 
+#elif defined(BOTAN_TARGET_OS_HAS_CCRANDOM)
+  #include <CommonCrypto/CommonRandom.h>
+
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
   #include <stdlib.h>
 
@@ -138,6 +141,25 @@ class System_RNG_Impl final : public RandomNumberGenerator
       BCRYPT_ALG_HANDLE m_prov;
    };
 
+#elif defined(BOTAN_TARGET_OS_HAS_CCRANDOM)
+
+class System_RNG_Impl final : public RandomNumberGenerator
+   {
+   public:
+      void randomize(uint8_t buf[], size_t len) override
+         {
+         if (::CCRandomGenerateBytes(buf, len) != kCCSuccess)
+            {
+            throw System_Error("System_RNG CCRandomGenerateBytes failed", errno);
+            }
+         }
+      bool accepts_input() const override { return false; }
+      void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
+      bool is_seeded() const override { return true; }
+      void clear() override { /* not possible */ }
+      std::string name() const override { return "CCRandomGenerateBytes"; }
+   };
+
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
 
 class System_RNG_Impl final : public RandomNumberGenerator
@@ -148,6 +170,8 @@ class System_RNG_Impl final : public RandomNumberGenerator
       void randomize(uint8_t buf[], size_t len) override
          {
          // macOS 10.15 arc4random crashes if called with buf == nullptr && len == 0
+	 // however it uses ccrng_generate internally which returns a status, ignored
+	 // to respect arc4random "no-fail" interface contract
          if(len > 0)
             {
             ::arc4random_buf(buf, len);
