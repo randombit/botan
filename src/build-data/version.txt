@@ -1,9 +1,9 @@
 
 release_major = 2
-release_minor = 18
-release_patch = 3
+release_minor = 19
+release_patch = 0
 release_suffix = ''
-release_so_abi_rev = 18
+release_so_abi_rev = 19
 
 # These are set by the distribution script
 release_vc_rev = None

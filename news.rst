@@ -1,8 +1,11 @@
 Release Notes
 ========================================
 
-Version 2.18.3, Not Yet Released
+Version 2.19.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add a forward error correction code compatible with the
+  zfec library (GH #2868 #2866)
 
 * Improve Emscripten build (GH #2864)
 
