@@ -58,19 +58,6 @@ decltype(auto) slice(Itr begin, Itr end)
    return std::vector<uint8_t>(begin, end);
    }
 
-template <typename DataT, typename MaskT>
-decltype(auto) apply_mask(const DataT &data, const MaskT &mask)
-   {
-   BOTAN_ASSERT(data.size() >= mask.size(), "data should be at least as long as mask");
-   DataT result = slice(data.begin(), data.begin() + mask.size());
-   std::transform(result.begin(), result.end(), mask.begin(), result.begin(),
-                  [](const auto &d, const auto &m)
-                     {
-                     return d | m;
-                     });
-   return result;
-   }
-
 void check_record_header(Test::Result &result, const std::vector<uint8_t> &record)
    {
    const bool header_present = record.size() >= RECORD_HEADER_SIZE;
@@ -88,95 +75,6 @@ void check_record_header(Test::Result &result, const std::vector<uint8_t> &recor
    const auto msg = slice(record.begin() + RECORD_HEADER_SIZE, record.end());
    result.test_eq("record has indicated length", msg.size(), msg_len);
    }
-
-decltype(auto) parse_extensions(const std::vector<uint8_t> &exts_buffer, Test::Result &result)
-   {
-   std::map<uint16_t, std::vector<uint8_t>> exts;
-
-   Botan::TLS::TLS_Data_Reader tdr("Extensions", exts_buffer);
-
-   const auto exts_len = tdr.get_uint16_t();
-   if (!result.test_eq("extension buffer has expected length", tdr.remaining_bytes(), exts_len))
-      return exts;
-
-   while (tdr.has_remaining())
-      {
-      const auto ext_type = tdr.get_uint16_t();
-      const auto ext_len  = tdr.get_uint16_t();
-
-      if (!result.test_gte("enough bytes to read extension", tdr.remaining_bytes(), ext_len)) {
-         break;
-      }
-
-      exts[ext_type] = tdr.get_fixed<uint8_t>(ext_len);
-      }
-
-   return exts;
-   }
-
-void compare_signature_scheme_extensions(const std::vector<uint8_t> &produced_schemes, const std::vector<uint8_t> &expected_schemes, Test::Result &result)
-  {
-  auto preader = Botan::TLS::TLS_Data_Reader("Produced Signature_Algorithms", produced_schemes);
-  auto ps = Botan::TLS::Signature_Algorithms(preader, produced_schemes.size()).supported_schemes();
-
-  auto ereader = Botan::TLS::TLS_Data_Reader("Expected Signature_Algorithms", expected_schemes);
-  auto es = Botan::TLS::Signature_Algorithms(ereader, expected_schemes.size()).supported_schemes();
-
-  for (const auto& scheme : es)
-     {
-     if (!Botan::TLS::signature_scheme_is_known(scheme))
-       // do not check for schemes Botan doesn't support
-       continue;
-
-     if (!result.confirm("expected scheme is present", Botan::value_exists(ps, scheme)))
-        result.test_note(std::string("did not produce expected signature scheme: ") + Botan::TLS::sig_scheme_to_string(scheme));
-     }
-
-  for (const auto& scheme : ps)
-     {
-     if (!result.confirm("produced scheme was expected", Botan::value_exists(es, scheme)))
-        result.test_note(std::string("produced unexpected signature scheme: ") + Botan::TLS::sig_scheme_to_string(scheme));
-     }
-
-  // TODO: the order of schemes is not checked
-  }
-
-void compare_extensions(const std::vector<uint8_t> &exts_buffer, const std::vector<uint8_t> &exp_exts_buffer, Test::Result &result)
-{
-   const auto prod = parse_extensions(exts_buffer, result);
-   const auto exp  = parse_extensions(exp_exts_buffer, result);
-
-   for (const auto &eext : exp)
-   {
-      switch (eext.first) {
-        case Botan::TLS::Handshake_Extension_Type::TLSEXT_RECORD_SIZE_LIMIT:
-           result.test_note(std::string("ignoring not yet implemented extension record_size_limit"));
-           continue;
-        case Botan::TLS::Handshake_Extension_Type::TLSEXT_PSK_KEY_EXCHANGE_MODES:
-           result.test_note(std::string("ignoring not yet implemented extension psk_key_exchange_modes"));
-           continue;
-      }
-
-      const auto &pext = prod.find(eext.first);
-      if (!result.confirm("expected extension is present", pext != prod.end())) {
-         result.test_note(std::string("expected to produce TLS extension: ") + std::to_string(eext.first));
-      }
-   }
-
-   for (const auto &pext : prod)
-   {
-      const auto &eext = exp.find(pext.first);
-      if (!result.confirm("produced extension was expected", eext != exp.end())) {
-         result.test_note(std::string("did not expect to produce TLS extension: ") + std::to_string(pext.first));
-         continue;
-      }
-
-      if (pext.first == Botan::TLS::Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS)
-         compare_signature_scheme_extensions(pext.second, eext->second, result);
-      else
-         result.test_eq(std::string("content of extension type ") + std::to_string(pext.first), pext.second, eext->second);
-   }
-}
 
 void add_entropy(Botan_Tests::Fixed_Output_RNG &rng, const std::string& hex)
    {
@@ -303,6 +201,35 @@ class Test_Server_Credentials : public Botan::Credentials_Manager
       Botan::RSA_PrivateKey m_key;
 };
 
+class RFC8448_Text_Policy : public Botan::TLS::Text_Policy
+{
+   public:
+      RFC8448_Text_Policy(const Botan::TLS::Text_Policy& other)
+         : Text_Policy(other) {}
+
+      std::vector<Botan::TLS::Signature_Scheme> allowed_signature_schemes() const override
+         {
+         return
+            {
+            Botan::TLS::Signature_Scheme::ECDSA_SHA256,
+            Botan::TLS::Signature_Scheme::ECDSA_SHA384,
+            Botan::TLS::Signature_Scheme::ECDSA_SHA512,
+            Botan::TLS::Signature_Scheme::ECDSA_SHA1,       // not actually supported
+            Botan::TLS::Signature_Scheme::RSA_PSS_SHA256,
+            Botan::TLS::Signature_Scheme::RSA_PSS_SHA384,
+            Botan::TLS::Signature_Scheme::RSA_PSS_SHA512,
+            Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA256,
+            Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA384,
+            Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA512,
+            Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA1,   // not actually supported
+            Botan::TLS::Signature_Scheme::DSA_SHA256,       // not actually supported
+            Botan::TLS::Signature_Scheme::DSA_SHA384,       // not actually supported
+            Botan::TLS::Signature_Scheme::DSA_SHA512,       // not actually supported
+            Botan::TLS::Signature_Scheme::DSA_SHA1          // not actually supported
+            };
+         }
+};
+
 class TLS_Context
    {
    protected:
@@ -323,7 +250,7 @@ class TLS_Context
 
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
       Botan::TLS::Session_Manager_In_Memory         session_mgr;
-      Botan::TLS::Text_Policy                       policy;
+      RFC8448_Text_Policy                           policy;
    };
 
 class Server_Context : public TLS_Context
@@ -370,12 +297,11 @@ class Test_TLS_RFC8448 final : public Test
          Client_Context ctx(std::move(rng));
          result.confirm("client not closed", !ctx.client.is_closed());
 
-         const auto client_hello_record = ctx.pull_send_buffer();
-         result.test_gte("client hello received", client_hello_record.size(), RECORD_HEADER_SIZE);
+         auto client_hello_record = ctx.pull_send_buffer();
+         result.test_gte("client hello written", client_hello_record.size(), RECORD_HEADER_SIZE);
 
          check_record_header(result, client_hello_record);
          const auto client_hello_msg = slice(client_hello_record.begin() + RECORD_HEADER_SIZE, client_hello_record.end());
-
 
          const auto expected_hello = Botan::hex_decode(
            "16 03 01 00 c4 01 00 00 c0 03 03 cb"
@@ -389,43 +315,16 @@ class Test_TLS_RFC8448 final : public Test
            "04 03 05 03 06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02"
            "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01");
 
-         const auto mask = Botan::hex_decode(
-           "00 00 03" /* pin TLS record version to 03 03, as it MAY be 03 01
-               RFC 8446 P. 78:
-               legacy_record_version:  MUST be set to 0x0303 for all records
-                  generated by a TLS 1.3 implementation other than an initial
-                  ClientHello (i.e., one not generated after a HelloRetryRequest),
-                  where it MAY also be 0x0301 for compatibility purposes.  This
-                  field is deprecated and MUST be ignored for all purposes.
-                  Previous versions of TLS would use other values in this field
-                  under some circumstances. */
-           "FF FF"       /* handshake message length should not be checked */
-           "00 FF FF FF" /* client hello data length should not be checked */
-           "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
-           "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
-           "00 00 00"
-           /* various extensions follow */);
-
-         result.test_eq("TLS client hello without extensions", apply_mask(client_hello_record, mask),
-                                                               apply_mask(expected_hello, mask));
-
-         // expected extensions
-         // 0000 000b 0009000006736572766572 -- SNI
-         // ff01 0001 00 -- Renegotiation
-         // 000a 0014 0012 001d 0017 0018 0019 0100 0101 0102 0103 0104 -- Supported Groups
-         // 0023 0000 -- Session Ticket
-         // 0033 0026 0024 001d 0020 99381de560e4bd43d23d8e435a7dbafeb3c06e51c13cae4d5413691e529aaf2c -- KeyShare (X25519)
-         //      private key from RFC:
-         //      49 af 42 ba 7f 79 94 85 2d 71 3e f2 78 4b cb ca a7 91 1d e2 6a dc 56 42 cb 63 45 40 e7 ea 50 05
-         // 002b 0003 02 0304 -- Supported Versions
-         // 000d 0020 001e 0403 0503 0603 0203 08040805080604010501060102010402050206020202 -- Signature Algorithms
-         // 002d 0002 01 01 -- Psk Exchange Modes
-         // 001c 0002 4001 -- Record Size Limit
-         const auto ch_record_exts = slice(client_hello_record.begin() + mask.size(),
-                                           client_hello_record.end());
-         const auto exp_ch_record_exts = slice(expected_hello.begin() + mask.size(),
-                                               expected_hello.end());
-         compare_extensions(ch_record_exts, exp_ch_record_exts, result);
+         // RFC 8446 P. 78:
+         // legacy_record_version:  MUST be set to 0x0303 for all records
+         //    generated by a TLS 1.3 implementation other than an initial
+         //    ClientHello (i.e., one not generated after a HelloRetryRequest),
+         //    where it MAY also be 0x0301 for compatibility purposes.  This
+         //    field is deprecated and MUST be ignored for all purposes.
+         //    Previous versions of TLS would use other values in this field
+         //    under some circumstances.
+         client_hello_record[2] = '\x01';
+         result.test_eq("TLS client hello", client_hello_record, expected_hello);
 
          // RFC8446 5.1
          // legacy_record_version:  MUST be set to 0x0303 for all records
@@ -470,6 +369,56 @@ class Test_TLS_RFC8448 final : public Test
 
          // to test:
          //   * server responds with cipher suite not offered by client
+
+         const auto server_encrypted_exts = Botan::hex_decode(
+         "17 03 03 02 a2 d1 ff 33 4a 56 f5 bf"
+         "f6 59 4a 07 cc 87 b5 80 23 3f 50 0f 45 e4 89 e7 f3 3a f3 5e df"
+         "78 69 fc f4 0a a4 0a a2 b8 ea 73 f8 48 a7 ca 07 61 2e f9 f9 45"
+         "cb 96 0b 40 68 90 51 23 ea 78 b1 11 b4 29 ba 91 91 cd 05 d2 a3"
+         "89 28 0f 52 61 34 aa dc 7f c7 8c 4b 72 9d f8 28 b5 ec f7 b1 3b"
+         "d9 ae fb 0e 57 f2 71 58 5b 8e a9 bb 35 5c 7c 79 02 07 16 cf b9"
+         "b1 18 3e f3 ab 20 e3 7d 57 a6 b9 d7 47 76 09 ae e6 e1 22 a4 cf"
+         "51 42 73 25 25 0c 7d 0e 50 92 89 44 4c 9b 3a 64 8f 1d 71 03 5d"
+         "2e d6 5b 0e 3c dd 0c ba e8 bf 2d 0b 22 78 12 cb b3 60 98 72 55"
+         "cc 74 41 10 c4 53 ba a4 fc d6 10 92 8d 80 98 10 e4 b7 ed 1a 8f"
+         "d9 91 f0 6a a6 24 82 04 79 7e 36 a6 a7 3b 70 a2 55 9c 09 ea d6"
+         "86 94 5b a2 46 ab 66 e5 ed d8 04 4b 4c 6d e3 fc f2 a8 94 41 ac"
+         "66 27 2f d8 fb 33 0e f8 19 05 79 b3 68 45 96 c9 60 bd 59 6e ea"
+         "52 0a 56 a8 d6 50 f5 63 aa d2 74 09 96 0d ca 63 d3 e6 88 61 1e"
+         "a5 e2 2f 44 15 cf 95 38 d5 1a 20 0c 27 03 42 72 96 8a 26 4e d6"
+         "54 0c 84 83 8d 89 f7 2c 24 46 1a ad 6d 26 f5 9e ca ba 9a cb bb"
+         "31 7b 66 d9 02 f4 f2 92 a3 6a c1 b6 39 c6 37 ce 34 31 17 b6 59"
+         "62 22 45 31 7b 49 ee da 0c 62 58 f1 00 d7 d9 61 ff b1 38 64 7e"
+         "92 ea 33 0f ae ea 6d fa 31 c7 a8 4d c3 bd 7e 1b 7a 6c 71 78 af"
+         "36 87 90 18 e3 f2 52 10 7f 24 3d 24 3d c7 33 9d 56 84 c8 b0 37"
+         "8b f3 02 44 da 8c 87 c8 43 f5 e5 6e b4 c5 e8 28 0a 2b 48 05 2c"
+         "f9 3b 16 49 9a 66 db 7c ca 71 e4 59 94 26 f7 d4 61 e6 6f 99 88"
+         "2b d8 9f c5 08 00 be cc a6 2d 6c 74 11 6d bd 29 72 fd a1 fa 80"
+         "f8 5d f8 81 ed be 5a 37 66 89 36 b3 35 58 3b 59 91 86 dc 5c 69"
+         "18 a3 96 fa 48 a1 81 d6 b6 fa 4f 9d 62 d5 13 af bb 99 2f 2b 99"
+         "2f 67 f8 af e6 7f 76 91 3f a3 88 cb 56 30 c8 ca 01 e0 c6 5d 11"
+         "c6 6a 1e 2a c4 c8 59 77 b7 c7 a6 99 9b bf 10 dc 35 ae 69 f5 51"
+         "56 14 63 6c 0b 9b 68 c1 9e d2 e3 1c 0b 3b 66 76 30 38 eb ba 42"
+         "f3 b3 8e dc 03 99 f3 a9 f2 3f aa 63 97 8c 31 7f c9 fa 66 a7 3f"
+         "60 f0 50 4d e9 3b 5b 84 5e 27 55 92 c1 23 35 ee 34 0b bc 4f dd"
+         "d5 02 78 40 16 e4 b3 be 7e f0 4d da 49 f4 b4 40 a3 0c b5 d2 af"
+         "93 98 28 fd 4a e3 79 4e 44 f9 4d f5 a6 31 ed e4 2c 17 19 bf da"
+         "bf 02 53 fe 51 75 be 89 8e 75 0e dc 53 37 0d 2b");
+
+         ctx.client.received_data(server_encrypted_exts);
+
+         // const auto expected_handshake_finished = Botan::hex_decode(
+         //   "17 03 03 00 35 75 ec 4d c2 38 cc e6"
+         //   "0b 29 80 44 a7 1e 21 9c 56 cc 77 b0 51 7f e9 b9 3c 7a 4b fc 44"
+         //   "d8 7f 38 f8 03 38 ac 98 fc 46 de b3 84 bd 1c ae ac ab 68 67 d7"
+         //   "26 c4 05 46");
+
+         // const auto client_handshake_finished = ctx.pull_send_buffer();
+         // result.test_gte("client handshake finished written", client_handshake_finished.size(),
+         //                                                      RECORD_HEADER_SIZE);
+
+         // result.test_eq("correct handshake finished", client_handshake_finished,
+         //                                              expected_handshake_finished);
 
          return result;
          }

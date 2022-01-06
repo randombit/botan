@@ -149,9 +149,14 @@ bool Server_Hello::prefers_compressed_ec_points() const
    return m_impl->prefers_compressed_ec_points();
    }
 
-bool Server_Hello::random_signals_downgrade() const
+std::optional<Protocol_Version> Server_Hello::random_signals_downgrade() const
    {
    return m_impl->random_signals_downgrade();
+   }
+
+bool Server_Hello::random_signals_hello_retry_request() const
+   {
+   return m_impl->random_signals_hello_retry_request();
    }
 
 /*

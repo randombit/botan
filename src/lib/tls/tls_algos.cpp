@@ -202,6 +202,14 @@ std::string hash_function_of_scheme(Signature_Scheme scheme)
       case Signature_Scheme::EDDSA_448:
          return "Pure";
 
+      case Signature_Scheme::RSA_PKCS1_SHA1:
+      case Signature_Scheme::ECDSA_SHA1:
+      case Signature_Scheme::DSA_SHA1:
+      case Signature_Scheme::DSA_SHA256:
+      case Signature_Scheme::DSA_SHA384:
+      case Signature_Scheme::DSA_SHA512:
+         throw Invalid_State("hash_function_of_scheme: Unsupported signature scheme");
+
       case Signature_Scheme::NONE:
          return "";
       }
@@ -250,6 +258,16 @@ bool signature_scheme_is_known(Signature_Scheme scheme)
       case Signature_Scheme::ECDSA_SHA512:
          return true;
 
+      // those schemes are added solely to please the TLS 1.3
+      // integration tests based on RFC 8448
+      case Signature_Scheme::RSA_PKCS1_SHA1:
+      case Signature_Scheme::ECDSA_SHA1:
+      case Signature_Scheme::DSA_SHA1:
+      case Signature_Scheme::DSA_SHA256:
+      case Signature_Scheme::DSA_SHA384:
+      case Signature_Scheme::DSA_SHA512:
+         return false;
+
       default:
          return false;
       }
@@ -279,6 +297,16 @@ std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
       case Signature_Scheme::EDDSA_448:
          return "Ed448";
 
+      case Signature_Scheme::DSA_SHA256:
+      case Signature_Scheme::DSA_SHA384:
+      case Signature_Scheme::DSA_SHA512:
+         throw Invalid_State("signature_algorithm_of_scheme: DSA signature scheme not supported");
+
+      case Signature_Scheme::DSA_SHA1:
+      case Signature_Scheme::ECDSA_SHA1:
+      case Signature_Scheme::RSA_PKCS1_SHA1:
+         throw Invalid_State("signature_algorithm_of_scheme: SHA1-based signature scheme not considered safe");
+
       case Signature_Scheme::NONE:
          return "";
       }
@@ -290,6 +318,8 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
    {
    switch(scheme)
       {
+      case Signature_Scheme::RSA_PKCS1_SHA1:
+         return "RSA_PKCS1_SHA1";
       case Signature_Scheme::RSA_PKCS1_SHA256:
          return "RSA_PKCS1_SHA256";
       case Signature_Scheme::RSA_PKCS1_SHA384:
@@ -297,6 +327,8 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
       case Signature_Scheme::RSA_PKCS1_SHA512:
          return "RSA_PKCS1_SHA512";
 
+      case Signature_Scheme::ECDSA_SHA1:
+         return "ECDSA_SHA1";
       case Signature_Scheme::ECDSA_SHA256:
          return "ECDSA_SHA256";
       case Signature_Scheme::ECDSA_SHA384:
@@ -315,6 +347,15 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
          return "EDDSA_25519";
       case Signature_Scheme::EDDSA_448:
          return "EDDSA_448";
+
+      case Signature_Scheme::DSA_SHA1:
+         return "DSA_SHA1";
+      case Signature_Scheme::DSA_SHA256:
+         return "DSA_SHA256";
+      case Signature_Scheme::DSA_SHA384:
+         return "DSA_SHA384";
+      case Signature_Scheme::DSA_SHA512:
+         return "DSA_SHA512";
 
       case Signature_Scheme::NONE:
          return "";
@@ -352,6 +393,14 @@ std::string padding_string_for_scheme(Signature_Scheme scheme)
          return "Pure";
       case Signature_Scheme::EDDSA_448:
          return "Pure";
+
+      case Signature_Scheme::RSA_PKCS1_SHA1:
+      case Signature_Scheme::ECDSA_SHA1:
+      case Signature_Scheme::DSA_SHA1:
+      case Signature_Scheme::DSA_SHA256:
+      case Signature_Scheme::DSA_SHA384:
+      case Signature_Scheme::DSA_SHA512:
+         throw Invalid_State("padding_string_for_scheme: Unsupported signature scheme");
 
       case Signature_Scheme::NONE:
          return "";

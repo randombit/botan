@@ -33,16 +33,14 @@ enum Connection_Side { CLIENT = 1, SERVER = 2 };
 
 // This will become an enum class in a future major release
 enum Record_Type {
-#if defined(BOTAN_HAS_TLS_13)
-   INVALID            = 0,  // RFC 8446
-#endif
+   INVALID            = 0,  // RFC 8446 (TLS 1.3)
+
    CHANGE_CIPHER_SPEC = 20,
    ALERT              = 21,
    HANDSHAKE          = 22,
    APPLICATION_DATA   = 23,
-#if defined(BOTAN_HAS_TLS_13)
-   HEARTBEAT          = 24, // RFC 6520
-#endif
+
+   HEARTBEAT          = 24, // RFC 6520 (TLS 1.3)
 
    NO_RECORD          = 256
 };
@@ -54,10 +52,10 @@ enum Handshake_Type {
    SERVER_HELLO         = 2,
    HELLO_VERIFY_REQUEST = 3,
    NEW_SESSION_TICKET   = 4, // RFC 5077
-#if defined(BOTAN_HAS_TLS_13)
-   END_OF_EARLY_DATA    = 5, // RFC 8446
-   ENCRYPTED_EXTENSIONS = 8, // RFC 8446
-#endif
+
+   END_OF_EARLY_DATA    = 5, // RFC 8446 (TLS 1.3)
+   ENCRYPTED_EXTENSIONS = 8, // RFC 8446 (TLS 1.3)
+
    CERTIFICATE          = 11,
    SERVER_KEX           = 12,
    CERTIFICATE_REQUEST  = 13,
@@ -68,9 +66,8 @@ enum Handshake_Type {
 
    CERTIFICATE_URL      = 21,
    CERTIFICATE_STATUS   = 22,
-#if defined(BOTAN_HAS_TLS_13)
-   KEY_UPDATE           = 24,
-#endif
+
+   KEY_UPDATE           = 24,  // RFC 8446 (TLS 1.3)
 
    HANDSHAKE_CCS        = 254, // Not a wire value
    HANDSHAKE_NONE       = 255  // Null value

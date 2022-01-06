@@ -140,12 +140,14 @@ uint32_t bitmask_for_handshake_type(Handshake_Type type)
       case FINISHED:
          return (1 << 14);
 
-#if defined(BOTAN_HAS_TLS_13)
-      case END_OF_EARLY_DATA:
-      case ENCRYPTED_EXTENSIONS:
-      case KEY_UPDATE:
-         BOTAN_ASSERT(false, "unhandled enum value");  // TODO fixme
-#endif
+      case END_OF_EARLY_DATA:     // RFC 8446
+           return (1 << 15);
+
+      case ENCRYPTED_EXTENSIONS:  // RFC 8446
+           return (1 << 16);
+
+      case KEY_UPDATE:            // RFC 8446
+           return (1 << 17);
 
       // allow explicitly disabling new handshakes
       case HANDSHAKE_NONE:

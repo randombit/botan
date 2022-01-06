@@ -34,7 +34,7 @@ class Server_Impl_12 : public Channel_Impl_12, public Server_Impl
       * Server initialization
       *
       * @param callbacks contains a set of callback function references
-      *        required by the TLS client.
+      *        required by the TLS server.
       *
       * @param session_manager manages session state
       *

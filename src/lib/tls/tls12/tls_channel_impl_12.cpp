@@ -344,11 +344,8 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
                {
                if(pending->server_hello() != nullptr && record.version() != pending->version())
                   {
-                  if(record.version() != pending->version())
-                     {
-                     throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
                                          "Received unexpected record version");
-                     }
                   }
                }
             else if(auto active = active_state())

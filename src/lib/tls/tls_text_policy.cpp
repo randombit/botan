@@ -9,6 +9,7 @@
 #include <botan/tls_policy.h>
 #include <botan/exceptn.h>
 #include <botan/internal/parsing.h>
+#include <optional>
 #include <sstream>
 
 namespace Botan {
@@ -99,6 +100,13 @@ bool Text_Policy::use_extended_master_secret() const
    {
    return get_bool("use_extended_master_secret", Policy::use_extended_master_secret());
    }
+
+std::optional<uint16_t> Text_Policy::record_size_limit() const
+   {
+   const auto limit = get_len("record_size_limit", 0);
+   return (limit > 0) ? std::make_optional(limit) : std::nullopt;
+   }
+
 
 bool Text_Policy::support_cert_status_message() const
    {

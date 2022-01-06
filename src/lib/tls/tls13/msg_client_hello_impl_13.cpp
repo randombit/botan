@@ -45,15 +45,24 @@ Client_Hello_Impl_13::Client_Hello_Impl_13(Handshake_IO& io,
 
    m_extensions.add(new Renegotiation_Extension());
 
-   m_extensions.add(new Session_Ticket());
-
    m_extensions.add(new Supported_Groups(policy.key_exchange_groups()));
 
-   m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   m_extensions.add(new Session_Ticket());
 
    m_extensions.add(new Key_Share(policy, cb, rng));
 
    m_extensions.add(new Supported_Versions(client_settings.protocol_version(), policy));
+
+   m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+
+   // TODO: this is currently hard-coded to PSK_DHE_KE (to please RFC 8448)
+   m_extensions.add(new PSK_Key_Exchange_Modes({PSK_Key_Exchange_Mode::PSK_DHE_KE}));
+
+   if (policy.record_size_limit().has_value())
+      {
+      m_extensions.add(new Record_Size_Limit(policy.record_size_limit().value()));
+      }
+
 
    cb.tls_modify_extensions(m_extensions, CLIENT);
 

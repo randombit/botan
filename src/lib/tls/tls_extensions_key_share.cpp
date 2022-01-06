@@ -13,6 +13,7 @@
 #include <botan/tls_policy.h>
 #include <botan/tls_callbacks.h>
 #include <botan/rng.h>
+#include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_CURVE_25519)
 #include <botan/curve25519.h>
@@ -24,8 +25,6 @@
 namespace Botan {
 
 namespace TLS {
-
-#if defined(BOTAN_HAS_TLS_13)
 
 namespace {
 
@@ -54,6 +53,10 @@ constexpr bool is_dh(const Group_Params group)
       group == Group_Params::FFDHE_6144 ||
       group == Group_Params::FFDHE_8192;
 }
+
+}
+
+#if defined(BOTAN_HAS_TLS_13)
 
 class Key_Share_Entry
    {
@@ -94,11 +97,71 @@ class Key_Share_Entry
          return result;
       }
 
+      Named_Group group() const { return m_group; }
+
+      /**
+       * Perform key exchange with another Key_Share_Entry's public key
+       *
+       * The caller must ensure that both this and `received` have the same group.
+       * This method must not be called on Key_Share_Entries without a private key.
+       */
+      secure_vector<uint8_t> exchange(const Key_Share_Entry& received, const Policy& policy, Callbacks& cb, RandomNumberGenerator &rng) const
+         {
+         BOTAN_ASSERT_NOMSG(m_private_key != nullptr);
+         BOTAN_ASSERT_NOMSG(m_group == received.m_group);
+
+         PK_Key_Agreement ka(*m_private_key, rng, "Raw");
+
+         if (is_ecdh(m_group))
+            {
+            const EC_Group ec_group(cb.tls_decode_group_param(m_group));
+            ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(received.m_key_exchange));
+            policy.check_peer_key_acceptable(peer_key);
+
+            return ka.derive_key(0, peer_key.public_value()).bits_of();
+            }
+
+         if (is_dh(m_group))
+            {
+            const DL_Group dl_group(cb.tls_decode_group_param(m_group));
+
+            if(!dl_group.verify_group(rng, false))
+               throw TLS_Exception(Alert::INSUFFICIENT_SECURITY, "DH group validation failed");
+
+            DH_PublicKey peer_key(dl_group, BigInt::decode(received.m_key_exchange));
+            policy.check_peer_key_acceptable(peer_key);
+
+            // Note: in contrast to TLS 1.2, no leading zeros are stripped here
+            // cf. RFC 8446 7.4.1
+            return ka.derive_key(0, peer_key.public_value()).bits_of();
+            }
+
+#if defined(BOTAN_HAS_CURVE_25519)
+         if(is_x25519(m_group))
+            {
+            if(received.m_key_exchange.size() != 32)
+               {
+               throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid X25519 key size");
+               }
+
+            Curve25519_PublicKey peer_key(received.m_key_exchange);
+            policy.check_peer_key_acceptable(peer_key);
+
+            return ka.derive_key(0, peer_key.public_value()).bits_of();
+            }
+#endif
+
+         BOTAN_ASSERT_NOMSG(false);
+         }
+
    private:
       Named_Group                  m_group;
       std::vector<uint8_t>         m_key_exchange;
       std::unique_ptr<Private_Key> m_private_key;
    };
+
+
+namespace {
 
 class Key_Share_ClientHello final : public Key_Share_Content
    {
@@ -164,11 +227,7 @@ class Key_Share_ClientHello final : public Key_Share_Content
                continue;
             }
 
-            if (is_x25519(group)) {
-               auto skey = std::make_unique<X25519_PrivateKey>(rng);
-               auto pval = skey->public_value();
-               kse.emplace_back(group, std::move(pval), std::move(skey));
-            } else if (is_ecdh(group)) {
+            if (is_ecdh(group)) {
                const EC_Group ec_group(cb.tls_decode_group_param(group));
                auto skey = std::make_unique<ECDH_PrivateKey>(rng, ec_group);
 
@@ -192,6 +251,12 @@ class Key_Share_ClientHello final : public Key_Share_Content
                auto skey = std::make_unique<DH_PrivateKey>(rng, DL_Group(cb.tls_decode_group_param(group)));
                auto pval = skey->public_value();
                kse.emplace_back(group, std::move(pval), std::move(skey));
+#if defined(BOTAN_HAS_CURVE_25519)
+            } else if (is_x25519(group)) {
+               auto skey = std::make_unique<X25519_PrivateKey>(rng);
+               auto pval = skey->public_value();
+               kse.emplace_back(group, std::move(pval), std::move(skey));
+#endif
             } else {
                throw Decoding_Error("cannot create a key offering without a group definition");
             }
@@ -220,6 +285,28 @@ class Key_Share_ClientHello final : public Key_Share_Content
             [](const Key_Share_Entry& key_share_entry) { return key_share_entry.empty(); });
       }
 
+      secure_vector<uint8_t> exchange(const Key_Share_Content* server_share, const Policy &policy, Callbacks&cb, RandomNumberGenerator &rng) const override
+         {
+         const auto& server_selected = server_share->get_singleton_entry();
+
+         auto match = std::find_if(m_client_shares.cbegin(), m_client_shares.cend(),
+            [&server_selected](const auto& offered){ return offered.group() == server_selected.group(); });
+
+         // RFC 8446 4.2.8:
+         //   [The KeyShareEntry in the ServerHello] MUST be in the same group
+         //   as the KeyShareEntry value offered by the client that the server
+         //   has selected for the negotiated key exchange.  Servers MUST NOT
+         //   send a KeyShareEntry for any group not indicated in the client's
+         //   "supported_groups" extension [...]
+         if (!value_exists(policy.key_exchange_groups(), server_selected.group()) ||
+             match == m_client_shares.cend())
+            {
+            throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Server selected an unexpected key exchange group.");
+            }
+
+         return match->exchange(server_selected, policy, cb, rng);
+         }
+
    protected:
       explicit Key_Share_ClientHello(std::vector<Key_Share_Entry> client_shares)
          : m_client_shares(std::move(client_shares)) {}
@@ -241,6 +328,11 @@ class Key_Share_ServerHello final : public Key_Share_Content
       std::vector<uint8_t> serialize() const override;
 
       bool empty() const override;
+
+      const Key_Share_Entry& get_singleton_entry() const override
+         {
+         return m_server_share;
+         }
 
    private:
       Key_Share_Entry m_server_share;
@@ -369,6 +461,11 @@ std::vector<uint8_t> Key_Share::serialize(Connection_Side /*whoami*/) const
 bool Key_Share::empty() const
    {
    return (m_content == nullptr) || m_content->empty();
+   }
+
+secure_vector<uint8_t> Key_Share::exchange(const Key_Share* peer_keyshare, const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng) const
+   {
+   return m_content->exchange(peer_keyshare->m_content.get(), policy, cb, rng);
    }
 
 #endif

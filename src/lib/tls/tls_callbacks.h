@@ -219,6 +219,8 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @param rng a random number generator
        *
        * @return a pair consisting of the agreed raw secret and our public value
+       *
+       * TODO: TLS 1.2 only
        */
        virtual std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> tls_dh_agree(
           const std::vector<uint8_t>& modulus,
@@ -240,6 +242,8 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @param compressed the compression preference for our public value
        *
        * @return a pair consisting of the agreed raw secret and our public value
+       *
+       * TODO: TLS 1.2 only
        */
        virtual std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> tls_ecdh_agree(
           const std::string& curve_name,

@@ -95,6 +95,16 @@ enum class Signature_Scheme : uint16_t {
 
    EDDSA_25519 = 0x0807,
    EDDSA_448   = 0x0808,
+
+   // provided but not actually supported
+   // required for TLS 1.3 test based on RFC 8448
+   ECDSA_SHA1     = 0x0203,
+   RSA_PKCS1_SHA1 = 0x0201,
+
+   DSA_SHA1   = 0x0202,
+   DSA_SHA256 = 0x0402,
+   DSA_SHA384 = 0x0502,
+   DSA_SHA512 = 0x0602
 };
 
 BOTAN_UNSTABLE_API const std::vector<Signature_Scheme>& all_signature_schemes();

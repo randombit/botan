@@ -21,3 +21,4 @@ minimum_dh_group_size = 2048
 minimum_ecdh_group_size = 255
 minimum_rsa_bits = 1024
 minimum_signature_strength = 110
+record_size_limit = 16385

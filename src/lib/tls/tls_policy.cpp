@@ -13,6 +13,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
 #include <botan/pk_keys.h>
+#include <optional>
 #include <sstream>
 
 namespace Botan {
@@ -327,6 +328,7 @@ bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 bool Policy::negotiate_encrypt_then_mac() const { return true; }
 bool Policy::use_extended_master_secret() const { return allow_tls12() || allow_dtls12(); }
+std::optional<uint16_t> Policy::record_size_limit() const { return std::nullopt; }
 bool Policy::support_cert_status_message() const { return true; }
 bool Policy::allow_resumption_for_renegotiation() const { return true; }
 bool Policy::only_resume_with_exact_version() const { return true; }
@@ -564,6 +566,9 @@ void Policy::print(std::ostream& o) const
    print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
    print_bool(o, "use_extended_master_secret", use_extended_master_secret());
    print_bool(o, "support_cert_status_message", support_cert_status_message());
+   if (record_size_limit().has_value()) {
+      o << "record_size_limit = " << record_size_limit().has_value() << '\n';
+   }
    o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
    o << "minimum_ecdh_group_size = " << minimum_ecdh_group_size() << '\n';

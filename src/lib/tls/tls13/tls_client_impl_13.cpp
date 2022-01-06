@@ -4,7 +4,6 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-
 #include <botan/tls_client.h>
 #include <botan/tls_messages.h>
 #include <botan/internal/tls_client_impl_13.h>
@@ -87,13 +86,69 @@ void Client_Impl_13::initiate_handshake(Handshake_State& state,
    BOTAN_UNUSED(state, force_full_renegotiation);
    }
 
-void Client_Impl_13::process_handshake_msg(const Handshake_State* active_state,
-                                           Handshake_State& pending_state,
-                                           Handshake_Type type,
-                                           const std::vector<uint8_t>& contents,
-                                           bool epoch0_restart)
+void Client_Impl_13::process_handshake_msg(const Handshake_State* previous_state,
+      Handshake_State& state,
+      Handshake_Type type,
+      const std::vector<uint8_t>& contents,
+      bool epoch0_restart)
    {
-   BOTAN_UNUSED(active_state, pending_state, type, contents, epoch0_restart);
+   // there cannot be a previous state in TLS 1.3 as renegotiation is not allowed
+   BOTAN_ASSERT_NOMSG(previous_state == nullptr);
+
+   // does not apply on client side
+   BOTAN_ASSERT_NOMSG(epoch0_restart == false);
+
+   state.confirm_transition_to(type);
+
+   if(type == SERVER_HELLO)
+      {
+      state.server_hello(new Server_Hello(contents));
+      auto sh = state.server_hello();
+
+      if(sh->legacy_version() != Protocol_Version::TLS_V12)
+         {
+         // RFC 8446 4.1.3:
+         //   In TLS 1.3, the TLS server indicates
+         //   its version using the "supported_versions" extension
+         //   (Section 4.2.1), and the legacy_version field MUST be set to
+         //   0x0303, which is the version number for TLS 1.2.
+         throw TLS_Exception(Alert::PROTOCOL_VERSION, "legacy_version must be set to 1.2 in TLS 1.3");
+         }
+
+      if(auto requested = sh->random_signals_downgrade())
+         {
+         if(requested.value() == Protocol_Version::TLS_V11)
+            { throw TLS_Exception(Alert::PROTOCOL_VERSION, "TLS 1.1 is not supported"); }
+         if(requested.value() == Protocol_Version::TLS_V12)
+            { throw Not_Implemented("downgrade is nyi"); }
+         }
+
+      if(sh->random_signals_hello_retry_request())
+         {
+         throw Not_Implemented("hello retry is nyi");
+         }
+
+      if(!sh->extensions().has<Key_Share>())
+         {
+           // TODO
+         throw Unexpected_Message("keyshare ext not found!");
+         }
+
+      BOTAN_ASSERT_NOMSG(state.client_hello()->extensions().has<Key_Share>());
+      auto my_keyshare = state.client_hello()->extensions().get<Key_Share>();
+      const auto shared_secret = my_keyshare->exchange(sh->extensions().get<Key_Share>(), policy(), callbacks(), rng());
+
+      state.set_expected_next(ENCRYPTED_EXTENSIONS);  // TODO expect CCS (middlebox compat)
+
+      }
+   else if(type == ENCRYPTED_EXTENSIONS)
+      {
+      throw Not_Implemented("client 13 process_handshake_msg is nyi");
+      }
+   else
+      {
+      throw Unexpected_Message("unknown handshake message received");
+      }
    }
 
 std::unique_ptr<Handshake_State> Client_Impl_13::new_handshake_state(std::unique_ptr<Handshake_IO> io)
@@ -113,14 +168,14 @@ void Client_Impl_13::send_client_hello(Handshake_State& state_base,
       {
       Client_Hello::Settings client_settings(version, m_info.hostname());
       state.client_hello(new Client_Hello(
-         state.handshake_io(),
-         state.hash(),
-         policy(),
-         callbacks(),
-         rng(),
-         std::vector<uint8_t>(),
-         client_settings,
-         next_protocols));
+                            state.handshake_io(),
+                            state.hash(),
+                            policy(),
+                            callbacks(),
+                            rng(),
+                            std::vector<uint8_t>(),
+                            client_settings,
+                            next_protocols));
       }
    }
 

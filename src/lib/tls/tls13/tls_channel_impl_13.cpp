@@ -97,14 +97,10 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
                }
             else if(auto state = handshake_state())
                {
-               if(state->server_hello() != nullptr &&
-                  record.version() != state->version())
+               if(state->server_hello() != nullptr && record.version() != state->version())
                   {
-                  if(record.version() != state->version())
-                     {
-                     throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                         "Received unexpected record version");
-                     }
+                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                      "Received unexpected record version");
                   }
                }
             }
@@ -115,13 +111,30 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received handshake data after connection closure");
 
             //TODO: Handle the plain handshake message
+            if(initial_record)
+               {
+               create_handshake_state(Protocol_Version::TLS_V13);  // ignore version in record header
+               }
+
+            m_handshake_state->handshake_io().add_record(m_record_buf.data(),
+                                                         m_record_buf.size(),
+                                                         record.type(),
+                                                         record.sequence());
+
+             auto msg = m_handshake_state->get_next_handshake_msg();
+             process_handshake_msg(/*active_state*/ nullptr,
+                                   *m_handshake_state.get(),
+                                   msg.first, msg.second,
+                                   /*epoch0_restart*/ false);
+
             }
          else if (record.type() == CHANGE_CIPHER_SPEC)
             {
             if(m_has_been_closed)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received change cipher spec after connection closure");
 
-            //TODO: Send CCS in response / middlebox compatibility mode to be defined via the policy
+            // TODO: Send CCS in response / middlebox compatibility mode to be defined via the policy
+            // TODO: as described in RFC 8446 Sec 5
             }
          else if(record.type() == APPLICATION_DATA)
             {

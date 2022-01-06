@@ -12,6 +12,7 @@
 #include <botan/tls_version.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_ciphersuite.h>
+#include <optional>
 #include <vector>
 #include <map>
 
@@ -290,6 +291,19 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool use_extended_master_secret() const;
 
       /**
+       * Defines the maximum TLS record length for TLS connections.
+       * This is based on the Record Size Limit extension described in RFC 8449.
+       * By default (i.e. if std::nullopt is returned), TLS clients will omit
+       * this extension altogether.
+       *
+       * This value may be between 64 and 16385 (TLS 1.3) or 16384 (TLS 1.2).
+       *
+       * TODO: Currently, this will actually not have an effect. The record protocol
+       *       will need to be adapted.
+       */
+      virtual std::optional<uint16_t> record_size_limit() const;
+
+      /**
       * Indicates whether certificate status messages should be supported
       */
       virtual bool support_cert_status_message() const;
@@ -559,6 +573,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool negotiate_encrypt_then_mac() const override;
 
       bool use_extended_master_secret() const override;
+
+      std::optional<uint16_t> record_size_limit() const override;
 
       bool support_cert_status_message() const override;
 

@@ -49,6 +49,9 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader, uint16_t code
       case TLSEXT_EXTENDED_MASTER_SECRET:
          return std::make_unique<Extended_Master_Secret>(reader, size);
 
+      case TLSEXT_RECORD_SIZE_LIMIT:
+         return std::make_unique<Record_Size_Limit>(reader, size);
+
       case TLSEXT_ENCRYPT_THEN_MAC:
          return std::make_unique<Encrypt_then_MAC>(reader, size);
 
@@ -61,6 +64,9 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader, uint16_t code
 #if defined(BOTAN_HAS_TLS_13)
       case TLSEXT_COOKIE:
          return std::make_unique<Cookie>(reader, size);
+
+      case TLSEXT_PSK_KEY_EXCHANGE_MODES:
+         return std::make_unique<PSK_Key_Exchange_Modes>(reader, size);
 
       case TLSEXT_SIGNATURE_ALGORITHMS_CERT:
          return std::make_unique<Signature_Algorithms_Cert>(reader, size);
@@ -92,7 +98,7 @@ void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side from)
 
          const auto type = static_cast<Handshake_Extension_Type>(extension_code);
 
-         if(m_extensions.find(type) != m_extensions.end())
+         if(has(type))
             throw TLS_Exception(TLS::Alert::DECODE_ERROR,
                                 "Peer sent duplicated extensions");
 
@@ -105,14 +111,14 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const
    {
    std::vector<uint8_t> buf(2); // 2 bytes for length field
 
-   for(auto& extn : m_extensions)
+   for(const auto& extn : m_extensions)
       {
-      if(extn.second->empty())
+      if(extn->empty())
          continue;
 
-      const uint16_t extn_code = static_cast<uint16_t>(extn.second->type());
+      const uint16_t extn_code = static_cast<uint16_t>(extn->type());
 
-      const std::vector<uint8_t> extn_val = extn.second->serialize(whoami);
+      const std::vector<uint8_t> extn_val = extn->serialize(whoami);
 
       buf.push_back(get_byte<0>(extn_code));
       buf.push_back(get_byte<1>(extn_code));
@@ -135,20 +141,13 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const
    return buf;
    }
 
-bool Extensions::remove_extension(Handshake_Extension_Type typ)
-   {
-   auto i = m_extensions.find(typ);
-   if(i == m_extensions.end())
-      return false;
-   m_extensions.erase(i);
-   return true;
-   }
-
 std::set<Handshake_Extension_Type> Extensions::extension_types() const
    {
    std::set<Handshake_Extension_Type> offers;
-   for(auto i = m_extensions.begin(); i != m_extensions.end(); ++i)
-      offers.insert(i->first);
+   std::transform(m_extensions.cbegin(), m_extensions.cend(),
+                  std::inserter(offers, offers.begin()), [] (const auto &ext) {
+                     return ext->type();
+                  });
    return offers;
    }
 
@@ -633,6 +632,29 @@ bool Supported_Versions::supports(Protocol_Version version) const
    return false;
    }
 
+
+
+Record_Size_Limit::Record_Size_Limit(TLS_Data_Reader& reader, uint16_t extension_size)
+   {
+   if(extension_size != 2)
+      {
+      throw Decoding_Error("invalid record_size_limit extension");
+      }
+
+   m_limit = reader.get_uint16_t();
+}
+
+std::vector<uint8_t> Record_Size_Limit::serialize(Connection_Side) const
+   {
+   std::vector<uint8_t> buf;
+
+   buf.push_back(get_byte<0>(m_limit));
+   buf.push_back(get_byte<1>(m_limit));
+
+   return buf;
+   }
+
+
 #if defined(BOTAN_HAS_TLS_13)
 Cookie::Cookie(const std::vector<uint8_t>& cookie) :
    m_cookie(cookie)
@@ -681,6 +703,41 @@ std::vector<uint8_t> Cookie::serialize(Connection_Side /*whoami*/) const
       }
 
    return buf;
+   }
+
+
+std::vector<uint8_t> PSK_Key_Exchange_Modes::serialize(Connection_Side) const
+   {
+   std::vector<uint8_t> buf;
+
+   BOTAN_ASSERT_NOMSG(m_modes.size() < 256);
+   buf.push_back(static_cast<uint8_t>(m_modes.size()));
+   for (const auto& mode : m_modes)
+      {
+      buf.push_back(static_cast<uint8_t>(mode));
+      }
+
+   return buf;
+   }
+
+PSK_Key_Exchange_Modes::PSK_Key_Exchange_Modes(TLS_Data_Reader& reader, uint16_t extension_size)
+   {
+   if (extension_size < 2)
+      {
+      throw Decoding_Error("Empty psk_key_exchange_modes extension is illegal");
+      }
+
+   const auto mode_count = reader.get_byte();
+   for(uint16_t i = 0; i < mode_count; ++i)
+      {
+      const uint8_t mode = reader.get_byte();
+      if (mode != 0 && mode != 1)
+         {
+         throw Decoding_Error("Unexpected PSK mode: " + std::to_string(mode));
+         }
+
+      m_modes.push_back(PSK_Key_Exchange_Mode(mode));
+      }
    }
 
 Signature_Algorithms_Cert::Signature_Algorithms_Cert(const std::vector<Signature_Scheme>& schemes)

@@ -81,7 +81,9 @@ class Server_Hello_Impl : public Handshake_Message
 
       virtual bool prefers_compressed_ec_points() const;
 
-      virtual bool random_signals_downgrade() const;
+      std::optional<Protocol_Version> random_signals_downgrade() const;
+
+      bool random_signals_hello_retry_request() const;
 
       std::vector<uint8_t> serialize() const override;
 

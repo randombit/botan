@@ -21,6 +21,7 @@
 #include <string>
 #include <set>
 #include <memory>
+#include <optional>
 
 #if defined(BOTAN_HAS_CECPQ1)
   #include <botan/cecpq1.h>
@@ -251,7 +252,12 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
 
       bool prefers_compressed_ec_points() const;
 
-      bool random_signals_downgrade() const;
+      /**
+       * Return desired downgrade version indicated by hello random, if any.
+       */
+      std::optional<Protocol_Version> random_signals_downgrade() const;
+
+      bool random_signals_hello_retry_request() const;
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,

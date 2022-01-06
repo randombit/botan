@@ -23,10 +23,9 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
    {
    public:
       enum Version_Code {
+         TLS_V11            = 0x0302,  // not supported by Botan
          TLS_V12            = 0x0303,
-#if defined(BOTAN_HAS_TLS_13)  // TODO consider not to ifdef this
          TLS_V13            = 0x0304,
-#endif
          DTLS_V12           = 0xFEFD
       };
 

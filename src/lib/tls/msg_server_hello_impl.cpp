@@ -20,10 +20,14 @@ namespace TLS {
 namespace {
 
 const uint64_t DOWNGRADE_TLS11 = 0x444F574E47524400;
-//const uint64_t DOWNGRADE_TLS12 = 0x444F574E47524401;
+const uint64_t DOWNGRADE_TLS12 = 0x444F574E47524401;
 
+// SHA-256("HelloRetryRequest")
+const std::array<uint8_t, 32> HELLO_RETRY_REQUEST_MARKER = {
+   0xCF, 0x21, 0xAD, 0x74, 0xE5, 0x9A, 0x61, 0x11, 0xBE, 0x1D, 0x8C, 0x02,
+   0x1E, 0x65, 0xB8, 0x91, 0xC2, 0xA2, 0x11, 0x16, 0x7A, 0xBB, 0x8C, 0x5E,
+   0x07, 0x9E, 0x09, 0xE2, 0xC8, 0xA8, 0x33, 0x9C };
 }
-
 
 class Client_Hello;
 
@@ -224,10 +228,20 @@ bool Server_Hello_Impl::prefers_compressed_ec_points() const
    return false;
    }
 
-bool Server_Hello_Impl::random_signals_downgrade() const
+std::optional<Protocol_Version> Server_Hello_Impl::random_signals_downgrade() const
    {
    const uint64_t last8 = load_be<uint64_t>(m_random.data(), 3);
-   return (last8 == DOWNGRADE_TLS11);
+   if (last8 == DOWNGRADE_TLS11)
+      return Protocol_Version::TLS_V11;
+   if (last8 == DOWNGRADE_TLS12)
+      return Protocol_Version::TLS_V12;
+
+   return std::nullopt;
+   }
+
+bool Server_Hello_Impl::random_signals_hello_retry_request() const
+   {
+   return (m_random.data() == HELLO_RETRY_REQUEST_MARKER.data());
    }
 
 /*

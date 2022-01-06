@@ -1,6 +1,7 @@
 /*
 * TLS Endpoint Factory
 * (C) 2021 Elektrobit Automotive GmbH
+*     2021 Rene Meusel, Hannes Rantzsch
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -45,11 +46,24 @@ struct TLS_Endpoint_Factory::Impl_Version_Trait<Client_Impl, Protocol_Version::T
    using Ver_Impl = Client_Impl_12;
    };
 
+template<>
+struct TLS_Endpoint_Factory::Impl_Version_Trait<Server_Impl, Protocol_Version::TLS_V12>
+   {
+   using Ver_Impl = Server_Impl_12;
+   };
+
+
 #if defined(BOTAN_HAS_TLS_13)
 template<>
 struct TLS_Endpoint_Factory::Impl_Version_Trait<Client_Impl, Protocol_Version::TLS_V13>
    {
    using Ver_Impl = Client_Impl_13;
+   };
+
+template<>
+struct TLS_Endpoint_Factory::Impl_Version_Trait<Server_Impl, Protocol_Version::TLS_V13>
+   {
+   using Ver_Impl = Server_Impl_13;
    };
 #endif
 

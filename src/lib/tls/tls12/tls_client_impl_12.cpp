@@ -288,7 +288,17 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
       if(state.client_hello()->legacy_version() > state.server_hello()->legacy_version())
          {
-         if(state.server_hello()->random_signals_downgrade())
+         // check for downgrade attacks
+         //
+         // RFC 8446 4.1.3.:
+         //   TLS 1.2 clients SHOULD also check that the last 8 bytes are
+         //   not equal to the [magic value DOWNGRADE_TLS11] if the ServerHello
+         //   indicates TLS 1.1 or below.  If a match is found, the client MUST
+         //   abort the handshake with an "illegal_parameter" alert.
+         //
+         // TLS 1.3 servers will still set the magic string to DOWNGRADE_TLS12. Don't abort in this case.
+         if(auto requested = state.server_hello()->random_signals_downgrade();
+            requested.has_value() && requested.value() == Protocol_Version::TLS_V11)
             throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Downgrade attack detected");
          }
 

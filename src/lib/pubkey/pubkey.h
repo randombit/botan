@@ -423,7 +423,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
 
       /**
       * Perform Key Agreement Operation
-      * @param key_len the desired key output size
+      * @param key_len the desired key output size (ignored if "Raw" KDF is used)
       * @param in the other parties key
       * @param in_len the length of in in bytes
       * @param params extra derivation params
@@ -437,7 +437,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
 
       /**
       * Perform Key Agreement Operation
-      * @param key_len the desired key output size
+      * @param key_len the desired key output size (ignored if "Raw" KDF is used)
       * @param in the other parties key
       * @param params extra derivation params
       * @param params_len the length of params in bytes
@@ -453,7 +453,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
 
       /**
       * Perform Key Agreement Operation
-      * @param key_len the desired key output size
+      * @param key_len the desired key output size (ignored if "Raw" KDF is used)
       * @param in the other parties key
       * @param in_len the length of in in bytes
       * @param params extra derivation params
@@ -469,7 +469,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
 
       /**
       * Perform Key Agreement Operation
-      * @param key_len the desired key output size
+      * @param key_len the desired key output size (ignored if "Raw" KDF is used)
       * @param in the other parties key
       * @param params extra derivation params
       */
