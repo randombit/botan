@@ -17,9 +17,19 @@ entire original input.
    sharing, where having fewer than ``K`` shares gives no information
    about the original input.
 
+.. warning::
+   If a corrupted share is provided to the decoding algorithm, the
+   resulting decoding will be invalid. It is recommended to protect
+   shares using a technique such as a MAC or public key signature, if
+   corruption is likely in your application.
+
 ``ZFEC`` requires that the input length be exactly divisible by ``K``;
 if needed define a padding scheme to pad your input to the necessary
 size.
+
+An example application that adds padding and a hash checksum is available
+in ``src/cli/zfec.cpp`` and invokable using ``botan fec_encode`` and
+``botan fec_decode``.
 
 .. cpp:class:: ZFEC
 
