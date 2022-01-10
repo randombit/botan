@@ -15,6 +15,8 @@ Version 2.19.0, Not Yet Released
 
 * Add a GCC 4.8 CI target to prevent build regressions (GH #2869)
 
+* Add support for Loongarch64 (GH #2877)
+
 Version 2.18.2, 2021-10-25
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
