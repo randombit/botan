@@ -70,6 +70,9 @@
      RISCV32
   #endif
 
+#elif defined(__loongarch64)
+  LOONGARCH64
+
 #else
   UNKNOWN
 
