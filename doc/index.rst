@@ -45,9 +45,6 @@ Especially recommended are:
 
 If you're doing something non-trivial or unique, you might want to at
 the very least ask for review/input at a place such as the
-`metzdowd <http://www.metzdowd.com/mailman/listinfo/cryptography>`_ or
-`randombit <https://lists.randombit.net/mailman/listinfo/cryptography>`_
-mailing lists or the
 `cryptography stack exchange <https://crypto.stackexchange.com/>`_.
 And (if possible) pay a professional cryptographer or security company
 to review your design and code.
