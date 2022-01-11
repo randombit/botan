@@ -57,6 +57,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
 
    uint64_t features_detected = 0;
    uint32_t cpuid[4] = { 0 };
+   bool has_avx = 0;
 
    // CPUID 0: vendor identification, max sublevel
    X86_CPUID(0, cpuid);
@@ -82,6 +83,8 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          SSE41 = (1ULL << 51),
          SSE42 = (1ULL << 52),
          AESNI = (1ULL << 57),
+         OSXSAVE = (1ULL << 59),
+         AVX = (1ULL << 60),
          RDRAND = (1ULL << 62)
       };
 
@@ -101,6 +104,9 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          features_detected |= CPUID::CPUID_AESNI_BIT;
       if(flags0 & x86_CPUID_1_bits::RDRAND)
          features_detected |= CPUID::CPUID_RDRAND_BIT;
+      if((flags0 & x86_CPUID_1_bits::AVX) &&
+         (flags0 & x86_CPUID_1_bits::OSXSAVE))
+         has_avx = 1;
       }
 
    if(is_intel)
@@ -141,7 +147,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
 
       const uint64_t flags7 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
 
-      if(flags7 & x86_CPUID_7_bits::AVX2)
+      if((flags7 & x86_CPUID_7_bits::AVX2) && has_avx)
          features_detected |= CPUID::CPUID_AVX2_BIT;
       if(flags7 & x86_CPUID_7_bits::BMI1)
          {
@@ -155,7 +161,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
             features_detected |= CPUID::CPUID_BMI2_BIT;
          }
 
-      if(flags7 & x86_CPUID_7_bits::AVX512_F)
+      if((flags7 & x86_CPUID_7_bits::AVX512_F) && has_avx)
          {
          features_detected |= CPUID::CPUID_AVX512F_BIT;
 
