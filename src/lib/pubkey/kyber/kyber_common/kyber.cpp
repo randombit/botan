@@ -38,6 +38,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <limits>
 
 namespace Botan {
 namespace {
@@ -417,17 +418,31 @@ class Polynomial
          return result;
          }
 
+      /**
+       * Adds two polynomials element-wise. Does not perform a reduction after the addition.
+       * Therefore this operation might cause an integer overflow.
+       */
       Polynomial& operator+=(const Polynomial& other)
          {
          for(size_t i = 0; i < this->m_coeffs.size(); ++i)
-            { this->m_coeffs[i] = this->m_coeffs[i] + other.m_coeffs[i]; }
+            {
+            BOTAN_DEBUG_ASSERT(static_cast<int32_t>(this->m_coeffs[i]) + other.m_coeffs[i] <= std::numeric_limits<int16_t>::max());
+            this->m_coeffs[i] = this->m_coeffs[i] + other.m_coeffs[i];
+            }
          return *this;
          }
 
+      /**
+       * Subtracts two polynomials element-wise. Does not perform a reduction after the subtraction.
+       * Therefore this operation might cause an integer underflow.
+       */
       Polynomial& operator-=(const Polynomial& other)
          {
          for(size_t i = 0; i < this->m_coeffs.size(); ++i)
-            { this->m_coeffs[i] = other.m_coeffs[i] - this->m_coeffs[i]; }
+            {
+            BOTAN_DEBUG_ASSERT(static_cast<int32_t>(other.m_coeffs[i]) - this->m_coeffs[i] >= std::numeric_limits<int16_t>::min());
+            this->m_coeffs[i] = other.m_coeffs[i] - this->m_coeffs[i];
+            }
          return *this;
          }
 
