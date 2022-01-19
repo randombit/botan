@@ -17,6 +17,8 @@ Version 2.19.0, Not Yet Released
 
 * Add support for Loongarch64 (GH #2877)
 
+* Check OSXSAVE flag before using AVX2 instructions (GH #2878)
+
 Version 2.18.2, 2021-10-25
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
