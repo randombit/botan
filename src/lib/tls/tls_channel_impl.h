@@ -121,12 +121,6 @@ class Channel_Impl
 
    protected:
 
-      virtual void process_handshake_msg(const Handshake_State* active_state,
-                                         Handshake_State& pending_state,
-                                         Handshake_Type type,
-                                         const std::vector<uint8_t>& contents,
-                                         bool epoch0_restart) = 0;
-
       virtual void initiate_handshake(Handshake_State& state,
                                       bool force_full_renegotiation) = 0;
 

@@ -5,10 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 #include <botan/tls_client.h>
+#include <botan/hash.h>
 #include <botan/tls_messages.h>
 #include <botan/internal/tls_client_impl_13.h>
 #include <botan/internal/tls_channel_impl_13.h>
 #include <botan/internal/tls_client_impl.h>
+#include <botan/internal/tls_cipher_state.h>
 
 #include <botan/credentials_manager.h>
 
@@ -86,19 +88,26 @@ void Client_Impl_13::initiate_handshake(Handshake_State& state,
    BOTAN_UNUSED(state, force_full_renegotiation);
    }
 
-void Client_Impl_13::process_handshake_msg(const Handshake_State* previous_state,
-      Handshake_State& state,
-      Handshake_Type type,
-      const std::vector<uint8_t>& contents,
-      bool epoch0_restart)
+void Client_Impl_13::process_handshake_msg(
+   Handshake_State& state,
+   Handshake_Type type,
+   const std::vector<uint8_t>& contents)
    {
-   // there cannot be a previous state in TLS 1.3 as renegotiation is not allowed
-   BOTAN_ASSERT_NOMSG(previous_state == nullptr);
-
-   // does not apply on client side
-   BOTAN_ASSERT_NOMSG(epoch0_restart == false);
-
    state.confirm_transition_to(type);
+
+   // TODO: this uses the TLS 1.2 handshake hash structure. Our working hypothesis
+   //       from the 31st of January: This will not work as soon as we introduce
+   //       Hello Retry Requests or Pre Shared Keys.
+   // TODO: handshake_io().format() re-adds the handshake message's header. In a
+   //       new solution for "transcript hash" we probably want to hash before this
+   //       header is stripped.
+   secure_vector<uint8_t> previous_transcript_hash;
+   if(type == FINISHED)
+      {
+      // When receiving a finished message, we need the old transcript hash to verify the message.
+      previous_transcript_hash = state.hash().final(state.ciphersuite().prf_algo());
+      }
+   state.hash().update(state.handshake_io().format(contents, type));
 
    if(type == SERVER_HELLO)
       {
@@ -128,26 +137,97 @@ void Client_Impl_13::process_handshake_msg(const Handshake_State* previous_state
          throw Not_Implemented("hello retry is nyi");
          }
 
+      if(!state.client_hello()->offered_suite(sh->ciphersuite()))
+         {
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Ciphersuite was not offered");
+         }
+
+      auto cipher = Ciphersuite::by_id(sh->ciphersuite());
+      BOTAN_ASSERT_NOMSG(cipher.has_value());  // should work, since we offered this suite
+
+      m_transcript_hash = HashFunction::create_or_throw(cipher.value().prf_algo());
+
       if(!sh->extensions().has<Key_Share>())
          {
-           // TODO
+         // TODO
          throw Unexpected_Message("keyshare ext not found!");
          }
 
       BOTAN_ASSERT_NOMSG(state.client_hello()->extensions().has<Key_Share>());
       auto my_keyshare = state.client_hello()->extensions().get<Key_Share>();
-      const auto shared_secret = my_keyshare->exchange(sh->extensions().get<Key_Share>(), policy(), callbacks(), rng());
+      auto shared_secret = my_keyshare->exchange(sh->extensions().get<Key_Share>(), policy(), callbacks(), rng());
+
+      m_cipher_state = Cipher_State::init_with_server_hello(m_side,
+                       std::move(shared_secret),
+                       cipher.value(),
+                       state.hash().final(cipher.value().prf_algo()));
+
+      callbacks().tls_examine_extensions(state.server_hello()->extensions(), SERVER);
 
       state.set_expected_next(ENCRYPTED_EXTENSIONS);  // TODO expect CCS (middlebox compat)
-
       }
    else if(type == ENCRYPTED_EXTENSIONS)
       {
-      throw Not_Implemented("client 13 process_handshake_msg is nyi");
+      // TODO: check all extensions are allowed and expected
+      state.encrypted_extensions(new Encrypted_Extensions(contents));
+
+      // Note: As per RFC 6066 3. we can check for an empty SNI extensions to
+      // determine if the server used the SNI we sent here.
+
+      callbacks().tls_examine_extensions(state.encrypted_extensions()->extensions(), SERVER);
+
+      // TODO: this is not true if using PSK
+
+      state.set_expected_next(CERTIFICATE_REQUEST);
+      state.set_expected_next(CERTIFICATE);
+      }
+   else if(type == CERTIFICATE_REQUEST)
+      {
+      state.set_expected_next(CERTIFICATE);
+      }
+   else if(type == CERTIFICATE)
+      {
+      state.set_expected_next(CERTIFICATE_VERIFY);
+      }
+   else if(type == CERTIFICATE_VERIFY)
+      {
+      state.set_expected_next(FINISHED);
+      }
+   else if(type == FINISHED)
+      {
+      state.server_finished(new Finished(contents));
+
+      // RFC 8446 4.4.4
+      //    Recipients of Finished messages MUST verify that the contents are
+      //    correct and if incorrect MUST terminate the connection with a
+      //    "decrypt_error" alert.
+      if(!state.server_finished()->verify(m_cipher_state.get(),
+                                          previous_transcript_hash /* before the server finished message was incorporated */))
+         { throw TLS_Exception(Alert::DECRYPT_ERROR, "Finished message didn't verify"); }
+
+      // after the server finished message was incorporated
+      const auto transcript_hash_server_finished = state.hash().final(state.ciphersuite().prf_algo());
+
+      // send client finished handshake message (still using handshake traffic secrets)
+      state.client_finished(new Finished(state.handshake_io(), state, m_cipher_state.get(),
+                                         transcript_hash_server_finished));
+
+      // after the client finished message was incorporated
+      const auto transcript_hash_client_finished = state.hash().final(state.ciphersuite().prf_algo());
+
+      // derives the application traffic secrets and _replaces_ the handshake traffic secrets
+      // Note: this MUST happen AFTER the client finished message was sent!
+      m_cipher_state->advance_with_server_finished(transcript_hash_server_finished);
+      m_cipher_state->advance_with_client_finished(transcript_hash_client_finished);
+
+      // TODO: save session and invoke tls_session_established callback
+
+      callbacks().tls_session_activated();
       }
    else
       {
-      throw Unexpected_Message("unknown handshake message received");
+      throw Unexpected_Message("unknown handshake message received: " +
+                               std::string(handshake_type_to_string(type)));
       }
    }
 
@@ -163,6 +243,8 @@ void Client_Impl_13::send_client_hello(Handshake_State& state_base,
    Client_Handshake_State_13& state = dynamic_cast<Client_Handshake_State_13&>(state_base);
 
    state.set_expected_next(SERVER_HELLO);
+
+   // TODO: also expect HelloRetryRequest, I guess
 
    if(!state.client_hello())
       {
@@ -180,5 +262,4 @@ void Client_Impl_13::send_client_hello(Handshake_State& state_base,
    }
 
 }
-
 }

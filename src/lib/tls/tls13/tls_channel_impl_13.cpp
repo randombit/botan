@@ -6,9 +6,12 @@
 */
 
 #include <botan/internal/tls_channel_impl_13.h>
-#include <botan/internal/tls_seq_numbers.h>
+
+#include <botan/hash.h>
+#include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_record.h>
+#include <botan/internal/tls_seq_numbers.h>
 #include <botan/tls_messages.h>
 
 namespace Botan {
@@ -21,19 +24,14 @@ Channel_Impl_13::Channel_Impl_13(Callbacks& callbacks,
                                  const Policy& policy,
                                  bool is_server,
                                  size_t reserved_io_buffer_size) :
+   m_side(is_server ? Connection_Side::SERVER : Connection_Side::CLIENT),
    m_callbacks(callbacks),
    m_session_manager(session_manager),
    m_rng(rng),
    m_policy(policy),
-   m_is_server(is_server),
+   m_record_layer(m_side),
    m_has_been_closed(false)
    {
-   BOTAN_UNUSED(m_is_server); // TODO: fixme
-
-   /* epoch 0 is plaintext, thus null cipher state */
-   m_write_cipher_states[0] = nullptr;
-   m_read_cipher_states[0] = nullptr;
-
    m_writebuf.reserve(reserved_io_buffer_size);
    m_readbuf.reserve(reserved_io_buffer_size);
    }
@@ -44,119 +42,71 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
    {
    try
       {
-      while(input_size)
+      const auto result = m_record_layer.parse_records(std::vector(input, input+input_size), m_cipher_state.get());
+
+      if(std::holds_alternative<BytesNeeded>(result))
+         { return std::get<BytesNeeded>(result); }  // need more data to complete record
+
+      for(const auto& record : std::get<std::vector<Record>>(result))
          {
-         size_t consumed = 0;
-
-         auto get_epoch = [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); };
-
-         const Record_Header record =
-            read_record(false,
-                        m_readbuf,
-                        input,
-                        input_size,
-                        consumed,
-                        m_record_buf,
-                        m_sequence_numbers.get(),
-                        get_epoch,
-                        false);
-
-         const size_t needed = record.needed();
-
-         BOTAN_ASSERT(consumed > 0, "Got to eat something");
-
-         BOTAN_ASSERT(consumed <= input_size,
-                      "Record reader consumed sane amount");
-
-         input += consumed;
-         input_size -= consumed;
-
-         BOTAN_ASSERT(input_size == 0 || needed == 0,
-                      "Got a full record or consumed all input");
-
-         if(input_size == 0 && needed != 0)
-            return needed; // need more data to complete record
-
-         if(m_record_buf.size() > MAX_PLAINTEXT_SIZE)
-            throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                                "TLS plaintext record is larger than allowed maximum");
-
          const bool initial_record = !handshake_state();
 
-         if(record.type() != ALERT)
-            {
-            if(initial_record)
-               {
-               // For initial records just check for basic sanity
-               if(record.version().major_version() != 3 &&
-                  record.version().major_version() != 0xFE)
-                  {
-                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                      "Received unexpected record version in initial record");
-                  }
-               }
-            else if(auto state = handshake_state())
-               {
-               if(state->server_hello() != nullptr && record.version() != state->version())
-                  {
-                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                      "Received unexpected record version");
-                  }
-               }
-            }
-
-         if(record.type() == HANDSHAKE)
+         if(record.type == HANDSHAKE)
             {
             if(m_has_been_closed)
-               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received handshake data after connection closure");
+               { throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received handshake data after connection closure"); }
 
-            //TODO: Handle the plain handshake message
             if(initial_record)
                {
+               // server side will not have a handshake state yet
                create_handshake_state(Protocol_Version::TLS_V13);  // ignore version in record header
                }
 
-            m_handshake_state->handshake_io().add_record(m_record_buf.data(),
-                                                         m_record_buf.size(),
-                                                         record.type(),
-                                                         record.sequence());
+            m_handshake_state->handshake_io().add_record(record.fragment.data(),
+                  record.fragment.size(),
+                  record.type,
+                  0 /* sequence number unused in TLS 1.3 */);
 
-             auto msg = m_handshake_state->get_next_handshake_msg();
-             process_handshake_msg(/*active_state*/ nullptr,
-                                   *m_handshake_state.get(),
-                                   msg.first, msg.second,
-                                   /*epoch0_restart*/ false);
-
+            while(true)
+               {
+               auto [type, content] = m_handshake_state->get_next_handshake_msg();
+               if(type == HANDSHAKE_NONE)
+                  {
+                  break;
+                  }
+               else if (type == NEW_SESSION_TICKET || type == KEY_UPDATE /* TODO or POST_HANDSHAKE_AUTH */)
+                  {
+                  process_post_handshake_msg(*m_handshake_state.get(), type, content);
+                  }
+               else
+                  {
+                  process_handshake_msg(*m_handshake_state.get(), type, content);
+                  }
+               }
             }
-         else if (record.type() == CHANGE_CIPHER_SPEC)
+         else if(record.type == CHANGE_CIPHER_SPEC)
             {
             if(m_has_been_closed)
-               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received change cipher spec after connection closure");
+               { throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received change cipher spec after connection closure"); }
 
             // TODO: Send CCS in response / middlebox compatibility mode to be defined via the policy
             // TODO: as described in RFC 8446 Sec 5
             }
-         else if(record.type() == APPLICATION_DATA)
+         else if(record.type == APPLICATION_DATA)
             {
             if(m_has_been_closed)
-               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received application data after connection closure");
+               { throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received application data after connection closure"); }
 
-            if(initial_record)
-               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Cannot handle plain application data");
-
-            //TODO: Process application data or encrypted handshake messages
+            BOTAN_ASSERT(record.seq_no.has_value(), "decrypted application traffic had a sequence number");
+            callbacks().tls_record_received(record.seq_no.value(), record.fragment.data(), record.fragment.size());
             }
-         else if(record.type() == ALERT)
+         else if(record.type == ALERT)
             {
-            process_alert(m_record_buf);
+            process_alert(record.fragment);
             }
-         else if(record.type() != NO_RECORD)
-            throw Unexpected_Message("Unexpected record type " +
-                                     std::to_string(record.type()) +
-                                     " from counterparty");
+         else if(record.type != NO_RECORD)
+            { throw Unexpected_Message("Unexpected record type " + std::to_string(record.type) + " from counterparty"); }
          }
-
-      return 0; // on a record boundary
       }
    catch(TLS_Exception& e)
       {
@@ -165,6 +115,9 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
       }
    catch(Invalid_Authentication_Tag&)
       {
+      // RFC 8446 5.2
+      //    If the decryption fails, the receiver MUST terminate the connection
+      //    with a "bad_record_mac" alert.
       send_fatal_alert(Alert::BAD_RECORD_MAC);
       throw;
       }
@@ -184,19 +137,29 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
 
 void Channel_Impl_13::send(const uint8_t buf[], size_t buf_size)
    {
-   BOTAN_UNUSED(buf, buf_size);
+   if(!is_active())
+      { throw Invalid_State("Data cannot be sent on inactive TLS connection"); }
 
-   return;
+   send_record(Record_Type::APPLICATION_DATA, {buf, buf+buf_size});
    }
 
 void Channel_Impl_13::send_alert(const Alert& alert)
    {
-   BOTAN_UNUSED(alert);
+   if(alert.is_valid() && !is_closed())
+      {
+      try
+         {
+         send_record(Record_Type::ALERT, alert.serialize());
+         }
+      catch(...) { /* swallow it */ }
+      }
+
+   // TODO handle alerts
    }
 
 bool Channel_Impl_13::is_active() const
    {
-   return !is_closed();
+   return !is_closed() && m_cipher_state != nullptr && m_cipher_state->ready_for_application_traffic();
    }
 
 bool Channel_Impl_13::is_closed() const
@@ -210,8 +173,8 @@ std::vector<X509_Certificate> Channel_Impl_13::peer_cert_chain() const
    }
 
 SymmetricKey Channel_Impl_13::key_material_export(const std::string& label,
-                                 const std::string& context,
-                                 size_t length) const
+      const std::string& context,
+      size_t length) const
    {
    BOTAN_UNUSED(label, context, length);
 
@@ -241,7 +204,7 @@ Handshake_State& Channel_Impl_13::create_handshake_state(Protocol_Version versio
    BOTAN_ASSERT(version == Botan::TLS::Protocol_Version::TLS_V13, "Have handshake version for TLS 1.3");
 
    if(handshake_state())
-      throw Internal_Error("create_handshake_state called multiple times");
+      { throw Internal_Error("create_handshake_state called multiple times"); }
 
    if(!m_sequence_numbers)
       {
@@ -251,58 +214,20 @@ Handshake_State& Channel_Impl_13::create_handshake_state(Protocol_Version versio
    using namespace std::placeholders;
 
    std::unique_ptr<Handshake_IO> io = std::make_unique<Stream_Handshake_IO>(
-     std::bind(&Channel_Impl_13::send_record, this, _1, _2));
+                                         std::bind(&Channel_Impl_13::send_record, this, _1, _2));
 
    m_handshake_state = new_handshake_state(std::move(io));
+   m_handshake_state->set_version(version);
 
    return *m_handshake_state.get();
    }
 
 
-void Channel_Impl_13::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch,
-                                   uint8_t record_type, const uint8_t input[], size_t length)
-   {
-   BOTAN_ASSERT(handshake_state(), "Handshake state exists");
-
-   const Protocol_Version record_version = handshake_state()->version();
-
-   const uint64_t next_seq = sequence_numbers().next_write_sequence(epoch);
-
-   if(cipher_state == nullptr)
-      {
-      TLS::write_unencrypted_record(m_writebuf, record_type, record_version, next_seq,
-                                    input, length);
-      }
-   else
-      {
-      TLS::write_record(m_writebuf, record_type, record_version, next_seq,
-                        input, length, *cipher_state, m_rng);
-      }
-
-   callbacks().tls_emit_data(m_writebuf.data(), m_writebuf.size());
-   }
-
-void Channel_Impl_13::send_record_array(uint16_t epoch, uint8_t type, const uint8_t input[], size_t length)
-   {
-   if(length == 0)
-      return;
-
-   auto cipher_state = write_cipher_state_epoch(epoch);
-
-   while(length)
-      {
-      const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
-      write_record(cipher_state.get(), epoch, type, input, sending);
-
-      input += sending;
-      length -= sending;
-      }
-   }
-
 void Channel_Impl_13::send_record(uint8_t record_type, const std::vector<uint8_t>& record)
    {
-   send_record_array(sequence_numbers().current_write_epoch(),
-                     record_type, record.data(), record.size());
+   const auto to_write = m_record_layer.prepare_records(static_cast<Record_Type>(record_type),
+                         record, m_cipher_state.get());
+   callbacks().tls_emit_data(to_write.data(), to_write.size());
    }
 
 Connection_Sequence_Numbers& Channel_Impl_13::sequence_numbers() const
@@ -311,43 +236,27 @@ Connection_Sequence_Numbers& Channel_Impl_13::sequence_numbers() const
    return *m_sequence_numbers;
    }
 
-std::shared_ptr<Connection_Cipher_State> Channel_Impl_13::read_cipher_state_epoch(uint16_t epoch) const
-   {
-   auto i = m_read_cipher_states.find(epoch);
-   if(i == m_read_cipher_states.end())
-      { throw Internal_Error("TLS::Channel_Impl_13 No read cipherstate for epoch " + std::to_string(epoch)); }
-   return i->second;
-   }
-
-std::shared_ptr<Connection_Cipher_State> Channel_Impl_13::write_cipher_state_epoch(uint16_t epoch) const
-   {
-   auto i = m_write_cipher_states.find(epoch);
-   if(i == m_write_cipher_states.end())
-      { throw Internal_Error("TLS::Channel_Impl_13 No write cipherstate for epoch " + std::to_string(epoch)); }
-   return i->second;
-   }
-
 void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record)
-    {
-    Alert alert_msg(record);
+   {
+   Alert alert_msg(record);
 
-    callbacks().tls_alert(alert_msg);
+   callbacks().tls_alert(alert_msg);
 
-    if(alert_msg.is_fatal())
-       {
-       //TODO: single handshake state should have some flag to indicate, whether it is active?
+   if(alert_msg.is_fatal())
+      {
+      //TODO: single handshake state should have some flag to indicate, whether it is active?
       //  if(auto state = handshake_state())
       //     m_session_manager.remove_entry(state->server_hello()->session_id());
-       }
+      }
 
-    if(alert_msg.type() == Alert::CLOSE_NOTIFY)
-       send_warning_alert(Alert::CLOSE_NOTIFY); // reply in kind
+   if(alert_msg.type() == Alert::CLOSE_NOTIFY)
+      { send_warning_alert(Alert::CLOSE_NOTIFY); } // reply in kind
 
-    if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
-       {
-       m_has_been_closed = true;
-       }
-    }
+   if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
+      {
+      m_has_been_closed = true;
+      }
+   }
 
 }
 

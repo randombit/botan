@@ -72,11 +72,9 @@ class Client_Impl_13 : public Channel_Impl_13, public Client_Impl
       void initiate_handshake(Handshake_State& state,
                               bool force_full_renegotiation) override;
 
-      void process_handshake_msg(const Handshake_State* active_state,
-                                 Handshake_State& pending_state,
+      void process_handshake_msg(Handshake_State& active_state,
                                  Handshake_Type type,
-                                 const std::vector<uint8_t>& contents,
-                                 bool epoch0_restart) override;
+                                 const std::vector<uint8_t>& contents) override;
 
       std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
 

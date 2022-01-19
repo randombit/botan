@@ -18,14 +18,26 @@ namespace TLS {
 
 /**
 * Protocol Constants for SSL/TLS
+*
+* TODO: this should not be an enum
 */
-enum Size_Limits {
+enum Size_Limits : size_t {
    TLS_HEADER_SIZE    = 5,
    DTLS_HEADER_SIZE   = TLS_HEADER_SIZE + 8,
 
+   // The "TLSInnerPlaintext" length, i.e. the maximum amount of plaintext
+   // application data that can be transmitted in a single TLS record.
    MAX_PLAINTEXT_SIZE = 16*1024,
+
    MAX_COMPRESSED_SIZE = MAX_PLAINTEXT_SIZE + 1024,
    MAX_CIPHERTEXT_SIZE = MAX_COMPRESSED_SIZE + 1024,
+
+   // RFC 8446 5.2:
+   //   This limit is derived from the maximum TLSInnerPlaintext length of 2^14
+   //   octets + 1 octet for ContentType + the maximum AEAD expansion of 255
+   //   octets.
+   MAX_AEAD_EXPANSION_SIZE_TLS13 = 255,
+   MAX_CIPHERTEXT_SIZE_TLS13 = MAX_PLAINTEXT_SIZE + MAX_AEAD_EXPANSION_SIZE_TLS13 + 1
 };
 
 // This will become an enum class in a future major release

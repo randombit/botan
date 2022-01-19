@@ -105,6 +105,15 @@ void map_remove_if(Pred pred, T& assoc)
       }
    }
 
+template <typename T> T concat(T buffer) { return buffer; }
+template <typename T, typename... Ts>
+T concat(const T& buffer, const Ts& ...buffers)
+   {
+   auto result = concat(buffers...);
+   result.insert(result.begin(), buffer.begin(), buffer.end());
+   return result;
+   }
+
 }
 
 #endif

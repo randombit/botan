@@ -70,7 +70,6 @@ const char* handshake_type_to_string(Handshake_Type type)
       case FINISHED:
          return "finished";
 
-#if defined(BOTAN_HAS_TLS_13)
       case END_OF_EARLY_DATA:
          return "end_of_early_data";
 
@@ -79,7 +78,6 @@ const char* handshake_type_to_string(Handshake_Type type)
 
       case KEY_UPDATE:
          return "key_update";
-#endif
 
       case HANDSHAKE_NONE:
          return "invalid";
@@ -141,13 +139,13 @@ uint32_t bitmask_for_handshake_type(Handshake_Type type)
          return (1 << 14);
 
       case END_OF_EARLY_DATA:     // RFC 8446
-           return (1 << 15);
+         return (1 << 15);
 
       case ENCRYPTED_EXTENSIONS:  // RFC 8446
-           return (1 << 16);
+         return (1 << 16);
 
       case KEY_UPDATE:            // RFC 8446
-           return (1 << 17);
+         return (1 << 17);
 
       // allow explicitly disabling new handshakes
       case HANDSHAKE_NONE:
@@ -175,7 +173,10 @@ std::string handshake_mask_to_string(uint32_t mask, char combiner)
       CLIENT_KEX,
       NEW_SESSION_TICKET,
       HANDSHAKE_CCS,
-      FINISHED
+      FINISHED,
+      END_OF_EARLY_DATA,
+      ENCRYPTED_EXTENSIONS,
+      KEY_UPDATE
    };
 
    std::ostringstream o;
@@ -243,6 +244,12 @@ void Handshake_State::server_hello(Server_Hello* server_hello)
    m_server_hello.reset(server_hello);
    m_ciphersuite = Ciphersuite::by_id(m_server_hello->ciphersuite());
    note_message(*m_server_hello);
+   }
+
+void Handshake_State::encrypted_extensions(Encrypted_Extensions* encrypted_extensions)
+   {
+   m_encrypted_extensions.reset(encrypted_extensions);
+   note_message(*m_encrypted_extensions);
    }
 
 void Handshake_State::server_certs(Certificate* server_certs)

@@ -627,7 +627,7 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
                           "Have data remaining in buffer after Finished");
 
-   pending_state.client_finished(new Finished(pending_state.version(), contents));
+   pending_state.client_finished(new Finished(contents));
 
    if(!pending_state.client_finished()->verify(pending_state, CLIENT))
       throw TLS_Exception(Alert::DECRYPT_ERROR,

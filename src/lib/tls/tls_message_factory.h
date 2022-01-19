@@ -23,7 +23,6 @@ namespace TLS {
 
 class Client_Hello_Impl;
 class Server_Hello_Impl;
-class Finished_Impl;
 class Certificate_Verify_Impl;
 class Certificate_Req_Impl;
 class Certificate_Impl;
@@ -33,7 +32,6 @@ class Client_Hello_Impl_12;
 class Certificate_Req_Impl_12;
 class Certificate_Verify_Impl_12;
 class Certificate_Impl_12;
-class Finished_Impl_12;
 
 class Client_Hello_Impl_13;
 
@@ -75,13 +73,6 @@ struct implementation_trait<Certificate_Impl>
    {
    using v12 = Certificate_Impl_12;
    using v13 = Certificate_Impl_12;  // TODO fixme
-   };
-
-template<>
-struct implementation_trait<Finished_Impl>
-   {
-   using v12 = Finished_Impl_12;
-   using v13 = Finished_Impl_12;  // TODO fixme
    };
 
 }

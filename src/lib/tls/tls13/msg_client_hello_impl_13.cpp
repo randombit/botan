@@ -15,8 +15,6 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/msg_client_hello_impl_13.h>
 
-#include <botan/hex.h> // TODO remove
-
 namespace Botan {
 
 namespace TLS {

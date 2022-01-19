@@ -33,6 +33,7 @@ class Policy;
 class Hello_Verify_Request;
 class Client_Hello;
 class Server_Hello;
+class Encrypted_Extensions;
 class Certificate;
 class Certificate_Status;
 class Server_Key_Exchange;
@@ -46,6 +47,14 @@ class Finished;
 
 /**
 * SSL/TLS Handshake State
+*
+* This is a data holder object for all state aggregated during the handshake,
+* both on client and server side and across protocol versions.
+* It does not implement any logic and offers no guarantees regarding state
+* consistency and legal TLS state transitions.
+*
+* TODO: currently it implements some logic for TLS 1.2, which should be removed
+* TODO: investigate moving the handshake_io to the channel
 */
 class Handshake_State
    {
@@ -102,8 +111,11 @@ class Handshake_State
 
       void hello_verify_request(const Hello_Verify_Request& hello_verify);
 
+      // TODO: take unique_ptr instead of raw pointers for all of these, as
+      // we're taking the ownership
       void client_hello(Client_Hello* client_hello);
       void server_hello(Server_Hello* server_hello);
+      void encrypted_extensions(Encrypted_Extensions* encrypted_extensions);
       void server_certs(Certificate* server_certs);
       void server_cert_status(Certificate_Status* server_cert_status);
       void server_kex(Server_Key_Exchange* server_kex);
@@ -121,6 +133,9 @@ class Handshake_State
 
       const Server_Hello* server_hello() const
          { return m_server_hello.get(); }
+
+      const Encrypted_Extensions* encrypted_extensions() const
+         { return m_encrypted_extensions.get(); }
 
       const Certificate* server_certs() const
          { return m_server_certs.get(); }
@@ -185,6 +200,7 @@ class Handshake_State
 
       std::unique_ptr<Client_Hello> m_client_hello;
       std::unique_ptr<Server_Hello> m_server_hello;
+      std::unique_ptr<Encrypted_Extensions> m_encrypted_extensions;
       std::unique_ptr<Certificate> m_server_certs;
       std::unique_ptr<Certificate_Status> m_server_cert_status;
       std::unique_ptr<Server_Key_Exchange> m_server_kex;

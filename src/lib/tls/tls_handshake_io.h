@@ -25,6 +25,22 @@ class Handshake_Message;
 
 /**
 * Handshake IO Interface
+*
+* This interface abstracts over stream and datagram processing of handshake
+* messages. It receives individual records from the channel via `add_record` and provides a
+* sending interface via a callback function provided by the channel.
+*
+* Handshake message headers are parsed and removed in `get_next_record`. The
+* result is provided back to the channel via
+* `Handshake_State::get_next_handshake_msg`.
+*
+* `send` is used by individual handshake message implementations, which send
+* themselves, as well as both client and server to dispatch CCS messaged (and
+* Hello_Verify_Request in the server case). Before calling the `writer_fn`,
+* `format` is called to add the handshake message header (except for CCS).
+*
+* The buffer returned by `send` is used to update the transcript record hash
+* (where desired).
 */
 class Handshake_IO
    {

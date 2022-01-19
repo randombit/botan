@@ -142,6 +142,12 @@ class Channel_Impl_12 : public Channel_Impl
       bool timeout_check() override;
 
    protected:
+      virtual void process_handshake_msg(const Handshake_State* active_state,
+                                 Handshake_State& pending_state,
+                                 Handshake_Type type,
+                                 const std::vector<uint8_t>& contents,
+                                 bool epoch0_restart) = 0;
+
 
       Handshake_State& create_handshake_state(Protocol_Version version) override;
 

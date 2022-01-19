@@ -9,8 +9,11 @@
 #define BOTAN_TLS_CHANNEL_IMPL_13_H_
 
 #include <botan/internal/tls_channel_impl.h>
+#include <botan/internal/tls_record_layer_13.h>
 
 namespace Botan {
+
+class HashFunction;
 
 namespace TLS {
 
@@ -125,6 +128,15 @@ class Channel_Impl_13 : public Channel_Impl
       RandomNumberGenerator& rng() { return m_rng; }
       const Policy& policy() const { return m_policy; }
 
+      virtual void process_handshake_msg(Handshake_State& active_state,
+                                         Handshake_Type type,
+                                         const std::vector<uint8_t>& contents) = 0;
+
+      virtual void process_post_handshake_msg(Handshake_State&,
+                                              Handshake_Type,
+                                              const std::vector<uint8_t>&) {}
+
+
    private:
       const Handshake_State* handshake_state() const { return m_handshake_state.get(); }
 
@@ -138,10 +150,12 @@ class Channel_Impl_13 : public Channel_Impl
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 
-      std::shared_ptr<Connection_Cipher_State> read_cipher_state_epoch(uint16_t epoch) const;
-      std::shared_ptr<Connection_Cipher_State> write_cipher_state_epoch(uint16_t epoch) const;
-
       void process_alert(const secure_vector<uint8_t>& record);
+
+   protected:
+      const Connection_Side m_side;
+      std::unique_ptr<HashFunction> m_transcript_hash;
+      std::unique_ptr<Cipher_State> m_cipher_state;
 
    private:
       /* callbacks */
@@ -161,11 +175,7 @@ class Channel_Impl_13 : public Channel_Impl
       // 4: plain / early_data / handshake_traffic / application_data_traffic
       std::unique_ptr<Handshake_State> m_handshake_state;
 
-      /* cipher states for each epoch */
-      std::map<uint16_t, std::shared_ptr<Connection_Cipher_State>> m_write_cipher_states;
-      std::map<uint16_t, std::shared_ptr<Connection_Cipher_State>> m_read_cipher_states;
-
-      const bool m_is_server;
+      Record_Layer m_record_layer;
 
       /* I/O buffers */
       secure_vector<uint8_t> m_writebuf;

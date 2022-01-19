@@ -127,6 +127,23 @@ bool Test::Result::test_throws(const std::string& what, const std::string& expec
       }
    }
 
+bool Test::Result::test_no_throw(const std::string& what, std::function<void ()> fn)
+   {
+   try
+      {
+      fn();
+      return test_success(what + " did not throw an exception");
+      }
+   catch(const std::exception& e)
+      {
+      return test_failure(what + " threw unexpected exception " + e.what());
+      }
+   catch (...)
+      {
+      return test_failure(what + " threw some unexpected exception");
+      }
+   }
+
 bool Test::Result::test_success(const std::string& note)
    {
    if(Test::options().log_success())

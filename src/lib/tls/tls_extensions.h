@@ -667,14 +667,16 @@ class BOTAN_UNSTABLE_API Extensions final
          return get(type) != nullptr;
          }
 
-      void add(std::unique_ptr<Extension> extn)
+      size_t size() const
          {
-         m_extensions.emplace_back(std::move(extn.release()));
+         return m_extensions.size();
          }
+
+      void add(std::unique_ptr<Extension> extn);
 
       void add(Extension* extn)
          {
-         m_extensions.emplace_back(extn);
+         add(std::unique_ptr<Extension>(extn));
          }
 
       Extension* get(Handshake_Extension_Type type) const
@@ -690,6 +692,43 @@ class BOTAN_UNSTABLE_API Extensions final
       std::vector<uint8_t> serialize(Connection_Side whoami) const;
 
       void deserialize(TLS_Data_Reader& reader, Connection_Side from);
+
+      /**
+       * Take the extension with the given type out of the extensions list.
+       * Returns a nullptr if the extension didn't exist.
+       */
+      template<typename T>
+      decltype(auto) take()
+         {
+         std::unique_ptr<T> out_ptr;
+
+         auto ext = take(T::static_type());
+         if (ext != nullptr) {
+            out_ptr.reset(dynamic_cast<T*>(ext.get()));
+            BOTAN_ASSERT_NOMSG(out_ptr != nullptr);
+            ext.release();
+         }
+
+         return out_ptr;
+         }
+
+      /**
+       * Take the extension with the given type out of the extensions list.
+       * Returns a nullptr if the extension didn't exist.
+       */
+      std::unique_ptr<Extension> take(Handshake_Extension_Type type);
+
+      /**
+      * Remove an extension from this extensions object, if it exists.
+      * Returns true if the extension existed (and thus is now removed),
+      * otherwise false (the extension wasn't set in the first place).
+      *
+      * Note: not used internally, might be used in Callbacks::tls_modify_extensions()
+      */
+      bool remove_extension(Handshake_Extension_Type type)
+         {
+         return take(type) != nullptr;
+         }
 
       Extensions() = default;
 

@@ -696,7 +696,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
                              "Have data remaining in buffer after Finished");
 
-      state.server_finished(new Finished(state.version(), contents));
+      state.server_finished(new Finished(contents));
 
       if(!state.server_finished()->verify(state, SERVER))
          throw TLS_Exception(Alert::DECRYPT_ERROR,

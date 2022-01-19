@@ -24,14 +24,6 @@ namespace Botan {
 
 namespace TLS {
 
-class Connection_Cipher_State;
-class Connection_Sequence_Numbers;
-class Handshake_State;
-class Handshake_Message;
-class Client_Hello;
-class Server_Hello;
-class Policy;
-
 /**
 * Generic interface for TLS endpoint
 */

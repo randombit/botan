@@ -43,8 +43,8 @@ class Server_Hello_Impl;
 class Certificate_Verify_Impl;
 class Certificate_Req_Impl;
 class Certificate_Impl;
-class Finished_Impl;
 class Protocol_Version;
+class Cipher_State;
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
                                        const Policy& policy);
@@ -290,6 +290,22 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
       std::unique_ptr<Server_Hello_Impl> m_impl;
    };
 
+class BOTAN_UNSTABLE_API Encrypted_Extensions final : public Handshake_Message
+   {
+   public:
+      explicit Encrypted_Extensions(const std::vector<uint8_t>& buf);
+
+      ~Encrypted_Extensions() override = default;
+      Handshake_Type type() const override { return Handshake_Type::ENCRYPTED_EXTENSIONS; }
+
+      const Extensions& extensions() const { return m_extensions; }
+
+      std::vector<uint8_t> serialize() const override { return {}; }
+
+   private:
+      Extensions m_extensions;
+   };
+
 /**
 * Client Key Exchange Message
 */
@@ -453,6 +469,8 @@ class BOTAN_UNSTABLE_API Certificate_Verify final : public Handshake_Message
 class BOTAN_UNSTABLE_API Finished final : public Handshake_Message
    {
    public:
+      explicit Finished(const std::vector<uint8_t>& buf);
+
       Handshake_Type type() const override { return FINISHED; }
 
       std::vector<uint8_t> verify_data() const;
@@ -464,13 +482,20 @@ class BOTAN_UNSTABLE_API Finished final : public Handshake_Message
                Handshake_State& state,
                Connection_Side side);
 
-      explicit Finished(const Protocol_Version& protocol_version, const std::vector<uint8_t>& buf);
+#if defined(BOTAN_HAS_TLS_13)
+      Finished(Handshake_IO& io,
+               Handshake_State& state,
+               Cipher_State* cipher_state,
+               const secure_vector<uint8_t>& transcript_hash);
 
-      ~Finished() override;
+      bool verify(Cipher_State* cipher_state,
+                  const secure_vector<uint8_t>& transcript_hash) const;
+#endif
 
    private:
       std::vector<uint8_t> serialize() const override;
-      std::unique_ptr<Finished_Impl> m_impl;
+
+      std::vector<uint8_t> m_verification_data;
    };
 
 

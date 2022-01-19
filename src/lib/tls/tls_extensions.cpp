@@ -82,6 +82,17 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader, uint16_t code
 
 }
 
+
+void Extensions::add(std::unique_ptr<Extension> extn)
+   {
+   if (has(extn->type()))
+      {
+      throw Invalid_Argument("cannot add the same extension twice: " + std::to_string(extn->type()));
+      }
+
+   m_extensions.emplace_back(std::move(extn.release()));
+   }
+
 void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side from)
    {
    if(reader.has_remaining())
@@ -105,6 +116,23 @@ void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side from)
          this->add(make_extension(reader, extension_code, extension_size, from));
          }
       }
+   }
+
+std::unique_ptr<Extension> Extensions::take(Handshake_Extension_Type type)
+   {
+   const auto i = std::find_if(m_extensions.begin(), m_extensions.end(),
+                               [type](const auto &ext) {
+                                  return ext->type() == type;
+                               });
+
+   std::unique_ptr<Extension> result;
+   if (i != m_extensions.end())
+      {
+      std::swap(result, *i);
+      m_extensions.erase(i);
+      }
+
+   return result;
    }
 
 std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const
