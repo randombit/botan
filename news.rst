@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.19.0, Not Yet Released
+Version 2.19.0, 2022-01-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add a forward error correction code compatible with the
