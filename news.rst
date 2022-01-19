@@ -138,6 +138,24 @@ Version 3.0.0, Not Yet Released
 
 * Generate a ``compile_commands.json`` for use with Clang tooling.
 
+Version 2.19.0, 2022-01-19
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add a forward error correction code compatible with the
+  zfec library (GH #2868 #2866)
+
+* Improve Emscripten build (GH #2864)
+
+* Always use ``-L`` before build flags (GH #2858 2848)
+
+* Fix compilation issue on earlier macOS versions (GH #2851)
+
+* Add a GCC 4.8 CI target to prevent build regressions (GH #2869)
+
+* Add support for Loongarch64 (GH #2877)
+
+* Check OSXSAVE flag before using AVX2 instructions (GH #2878)
+
 Version 2.18.2, 2021-10-25
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
