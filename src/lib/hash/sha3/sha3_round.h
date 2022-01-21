@@ -4,6 +4,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#ifndef BOTAN_SHA3_ROUND_H_
+#define BOTAN_SHA3_ROUND_H_
+
 #include <botan/types.h>
 #include <botan/rotate.h>
 
@@ -32,7 +35,8 @@ namespace Botan {
 
 namespace {
 
-__attribute__((noinline)) decltype(auto) xor_CNs(const uint64_t A[25])
+__attribute__((noinline)) std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>
+   xor_CNs(const uint64_t A[25])
    {
    return std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>(
       A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20],
@@ -121,3 +125,5 @@ inline void SHA3_round(uint64_t T[25], const uint64_t A[25], uint64_t RC)
    }
 
 }
+
+#endif
