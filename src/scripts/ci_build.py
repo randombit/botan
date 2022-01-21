@@ -97,6 +97,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
+    if target in ['amalgamation']:
+        flags += ['--amalgamation']
+
     if target in ['bsi', 'nist']:
         # tls is optional for bsi/nist but add it so verify tests work with these minimized configs
         flags += ['--module-policy=%s' % (target), '--enable-modules=tls']
@@ -364,8 +367,6 @@ def parse_args(args):
 
     parser.add_option('--with-debug', action='store_true', default=False,
                       help='Include debug information')
-    parser.add_option('--amalgamation', action='store_true', default=False,
-                      help='Build via amalgamation')
     parser.add_option('--disable-shared', action='store_true', default=False,
                       help='Disable building shared libraries')
     parser.add_option('--disabled-tests', metavar='DISABLED_TESTS', default=[], action='append',
@@ -425,6 +426,7 @@ def main(args=None):
 
     if args is None:
         args = sys.argv
+
     print("Invoked as '%s'" % (' '.join(args)))
     (options, args) = parse_args(args)
 
