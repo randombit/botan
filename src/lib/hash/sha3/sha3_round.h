@@ -35,7 +35,8 @@ namespace Botan {
 
 namespace {
 
-__attribute__((noinline)) decltype(auto) xor_CNs(const uint64_t A[25])
+__attribute__((noinline)) std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>
+   xor_CNs(const uint64_t A[25])
    {
    return std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>(
       A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20],
