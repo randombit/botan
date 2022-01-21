@@ -58,6 +58,9 @@ jobs:
           - target: cross-win64
             compiler: gcc
             host_os: ubuntu-20.04
+          - target: amalgamation
+            compiler: gcc
+            host_os: ubuntu-20.04
           - target: baremetal
             compiler: gcc
             host_os: ubuntu-20.04
