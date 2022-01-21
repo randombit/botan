@@ -1,6 +1,14 @@
 Release Notes
 ========================================
 
+Version 2.19.1, 2022-01-21
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a compilation problem affecting macOS XCode (GH #2880)
+
+* Fix a build problem preventing amalgamation builds in 2.19.0
+  (GH #2879)
+
 Version 2.19.0, 2022-01-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
