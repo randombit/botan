@@ -53,7 +53,12 @@ __attribute__((noinline)) std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uin
 inline void SHA3_round(uint64_t T[25], const uint64_t A[25], uint64_t RC)
    {
 #if defined(BOTAN_HAS_BROKEN_CLANG_SHA3)
-   const auto [C0,C1,C2,C3,C4] = xor_CNs(A);
+   const auto C_tup = xor_CNs(A);
+   const uint64_t C0 = std::get<0>(C_tup);
+   const uint64_t C1 = std::get<1>(C_tup);
+   const uint64_t C2 = std::get<2>(C_tup);
+   const uint64_t C3 = std::get<3>(C_tup);
+   const uint64_t C4 = std::get<4>(C_tup);
 #else
    const uint64_t C0 = A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20];
    const uint64_t C1 = A[1] ^ A[6] ^ A[11] ^ A[16] ^ A[21];
