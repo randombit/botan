@@ -27,26 +27,21 @@
 #elif defined(__clang__) && defined(__apple_build_version__)
 
    /*
-   Map Apple LLVM versions as used in XCode back to standard Clang.
-   This is not exact since the versions used in XCode are actually
-   forks of Clang and do not coorespond perfectly to standard Clang
-   releases. In addition we don't bother mapping very old versions
-   (anything before XCode 7 is treated like Clang 3.5, which is the
-   oldest version we support) and for "future" versions we simply
-   treat them as Clang 4.0, since we don't currenly rely on any
-   features not included in 4.0
+   Apple's Clang is a long-term fork of Clang and the version of XCode
+   has no correspondence with a specific LLVM Clang version.
+
+   This is a rough map from the XCode Clang to the upstream Clang
+   versions. It is not correct, but is sufficient for our purposes.
    */
 
-   #if __clang_major__ >= 9
-      CLANG 4 0
-   #elif __clang_major__ == 8
-      CLANG 3 9
-   #elif __clang_major__ == 7 && __clang_minor__ == 3
-      CLANG 3 8
-   #elif __clang_major__ == 7
-      CLANG 3 7
-   #else
-      CLANG 3 5
+   #if __clang__major__ <= 10
+     CLANG 7 0
+   #elif __clang__major == 11
+     CLANG 9 0
+   #elif __clang__major == 12
+     CLANG 10 0
+   #elif __clang__major >= 13
+     CLANG 12 0
    #endif
 
 #elif defined(__clang__)
