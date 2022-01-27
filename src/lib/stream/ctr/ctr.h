@@ -38,7 +38,7 @@ class CTR_BE final : public StreamCipher
       /**
       * @param cipher the block cipher to use
       */
-      explicit CTR_BE(std::unique_ptr<BlockCipher>);
+      explicit CTR_BE(std::unique_ptr<BlockCipher> cipher);
 
       CTR_BE(std::unique_ptr<BlockCipher> cipher, size_t ctr_size);
 

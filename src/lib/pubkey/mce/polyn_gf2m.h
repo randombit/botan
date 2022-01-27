@@ -129,7 +129,7 @@ class polyn_gf2m
                                                                      const polyn_gf2m & g,
                                                                      int break_deg);
 
-      void patchup_deg_secure( uint32_t trgt_deg, volatile gf2m patch_elem);
+      void patchup_deg_secure( uint32_t trgt_deg, gf2m patch_elem);
 
    private:
 

@@ -69,7 +69,7 @@ uint8_t ct_compare_u8(const uint8_t x[],
    volatile uint8_t difference = 0;
 
    for(size_t i = 0; i != len; ++i)
-      difference |= (x[i] ^ y[i]);
+      difference = difference | (x[i] ^ y[i]);
 
    return CT::Mask<uint8_t>::is_zero(difference).value();
    }
