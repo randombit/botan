@@ -114,7 +114,7 @@ class BOTAN_PUBLIC_API(2,0) AttributeContainer
 
    protected:
       /// Add an attribute with the given value and size to the attribute collection `m_attributes`
-      void add_attribute(AttributeType attribute, const uint8_t* value, uint32_t size);
+      void add_attribute(AttributeType attribute, const uint8_t* value, Ulong size);
 
    private:
       std::vector<Attribute> m_attributes;

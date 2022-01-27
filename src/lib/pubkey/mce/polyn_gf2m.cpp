@@ -711,8 +711,8 @@ std::vector<polyn_gf2m> polyn_gf2m::sqrt_mod_init(const polyn_gf2m & g)
    for(i = 1; i < nb_polyn_sqrt_mat; i++)
       {
       result[i] = result[i - 1];
-      result[i].poly_shiftmod(g),
-         result[i].get_degree();
+      result[i].poly_shiftmod(g);
+      result[i].get_degree();
       }
 
    return result;

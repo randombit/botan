@@ -29,7 +29,7 @@ class KDF2 final : public KDF
                const uint8_t label[], size_t label_len) const override;
 
       /**
-      * @param h hash function to use
+      * @param hash the hash function to use
       */
       explicit KDF2(std::unique_ptr<HashFunction> hash) :
          m_hash(std::move(hash))
