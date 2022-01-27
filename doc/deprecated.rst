@@ -55,6 +55,10 @@ in a future major release.
 - NewHope lattice based KEM. This will be replaced by a newer and more
   well studied design (probably Kyber)
 
+- The current McEliece implementation (in ``pubkey/mce``) will be
+  replaced by a more modern code-based KEM from the NIST
+  competition. (Probably the "Classic McEliece" submission.)
+
 - DLIES
 
 - GCM support for 64-bit tags
