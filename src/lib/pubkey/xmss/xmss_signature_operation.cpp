@@ -70,8 +70,9 @@ XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_key,
 
    for(size_t j = 0; j < m_xmss_params.tree_height(); j++)
       {
-      size_t k = (m_leaf_idx / (1ULL << j)) ^ 0x01;
-      auth_path[j] = priv_key.tree_hash(k * (1ULL << j), j, adrs);
+      const size_t b = static_cast<size_t>(1) << j;
+      const size_t k = (m_leaf_idx / b) ^ 0x01;
+      auth_path[j] = priv_key.tree_hash(k * b, j, adrs);
       }
 
    return auth_path;

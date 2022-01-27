@@ -68,7 +68,7 @@ inline void ntt(uint16_t* a, const uint16_t* omega)
    for(size_t i = 0; i < 10; i+=2)
       {
       // Even level
-      size_t distance = (1ULL << i);
+      size_t distance = static_cast<size_t>(1) << i;
       for(size_t start = 0; start < distance; start++)
          {
          size_t jTwiddle = 0;

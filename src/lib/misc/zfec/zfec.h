@@ -37,7 +37,7 @@ class BOTAN_PUBLIC_API(3,0) ZFEC
       * @param K the number of shares needed for recovery
       * @param N the number of shares generated
       */
-      ZFEC(size_t K, size_t n);
+      ZFEC(size_t K, size_t N);
 
       size_t recovery_threshold() const { return m_K; }
       size_t generated_shares() const { return m_N; }

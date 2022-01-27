@@ -380,7 +380,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
       static void dgram_socket_write(int sockfd, const uint8_t buf[], size_t length)
          {
-         int r = ::send(sockfd, buf, length, MSG_NOSIGNAL);
+         auto r = ::send(sockfd, buf, length, MSG_NOSIGNAL);
 
          if(r == -1)
             {

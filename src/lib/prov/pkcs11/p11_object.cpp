@@ -23,25 +23,31 @@ void AttributeContainer::add_class(ObjectClass object_class)
    m_numerics.emplace_back(static_cast< uint64_t >(object_class));
    add_attribute(AttributeType::Class,
                  reinterpret_cast< uint8_t* >(&m_numerics.back()),
-                 static_cast<Ulong>(sizeof(ObjectClass)));
+                 static_cast<uint32_t>(sizeof(ObjectClass)));
    }
 
 void AttributeContainer::add_string(AttributeType attribute, const std::string& value)
    {
    m_strings.push_back(value);
-   add_attribute(attribute, reinterpret_cast<const uint8_t*>(m_strings.back().data()), static_cast<Ulong>(value.size()));
+   add_attribute(attribute,
+                 reinterpret_cast<const uint8_t*>(m_strings.back().data()),
+                 static_cast<uint32_t>(value.size()));
    }
 
 void AttributeContainer::add_binary(AttributeType attribute, const uint8_t* value, size_t length)
    {
    m_vectors.push_back(secure_vector<uint8_t>(value, value + length));
-   add_attribute(attribute, reinterpret_cast< const uint8_t* >(m_vectors.back().data()), static_cast<Ulong>(length));
+   add_attribute(attribute,
+                 reinterpret_cast<const uint8_t*>(m_vectors.back().data()),
+                 static_cast<uint32_t>(length));
    }
 
 void AttributeContainer::add_bool(AttributeType attribute, bool value)
    {
    m_numerics.push_back(value ? True : False);
-   add_attribute(attribute, reinterpret_cast< uint8_t* >(&m_numerics.back()), sizeof(Bbool));
+   add_attribute(attribute,
+                 reinterpret_cast<uint8_t*>(&m_numerics.back()),
+                 sizeof(Bbool));
    }
 
 void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* value, uint32_t size)

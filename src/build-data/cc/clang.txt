@@ -8,7 +8,7 @@ warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-over
 
 werror_flags "-Werror -Wno-error=unused-parameter -Wno-error=unreachable-code -Wno-error=unused-lambda-capture"
 
-maintainer_warning_flags "-Wunreachable-code -Wdocumentation -Qunused-arguments"
+maintainer_warning_flags "-Wcomma -Wshorten-64-to-32 -Wunreachable-code -Wdocumentation -Qunused-arguments"
 
 optimization_flags "-O3"
 sanitizer_optimization_flags "-O1 -fno-optimize-sibling-calls -fno-omit-frame-pointer"

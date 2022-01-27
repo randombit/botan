@@ -42,7 +42,7 @@ class XMSS_Common_Ops
         * @param[in] seed The seed for G.
         * @param[in] hash Instance of XMSS_Hash, that may only by the thead
         *            executing generate_public_key.
-        * @param[in] params
+        * @param[in] params algorithm parameters
         **/
       static void randomize_tree_hash(
          secure_vector<uint8_t>& result,
@@ -68,7 +68,7 @@ class XMSS_Common_Ops
        * @param[in] seed The seed generated during the public key generation.
        * @param[in] hash Instance of XMSS_Hash, that may only be used by the
        *            thead executing create_l_tree.
-       * @param[in] params
+       * @param[in] params algorithm parameters
       **/
       static void create_l_tree(secure_vector<uint8_t>& result,
                                 wots_keysig_t pk,
