@@ -218,7 +218,7 @@ void transform(const uint8_t in[], uint8_t out[], size_t blocks,
    volatile uint32_t Z = 0x9C1DADCF;
    for(size_t i = 0; i < 256; i += cache_line_size)
       {
-      Z |= make_uint32(S1[i], S2[i], X1[i], X2[i]);
+      Z = Z | make_uint32(S1[i], S2[i], X1[i], X2[i]);
       }
 
    const size_t ROUNDS = (KS.size() / 4) - 1;

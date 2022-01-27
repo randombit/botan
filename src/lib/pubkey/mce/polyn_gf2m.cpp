@@ -426,7 +426,7 @@ size_t polyn_gf2m::degppf(const polyn_gf2m& g)
    return result;
    }
 
-void polyn_gf2m::patchup_deg_secure( uint32_t trgt_deg, volatile gf2m patch_elem)
+void polyn_gf2m::patchup_deg_secure( uint32_t trgt_deg, gf2m patch_elem)
    {
    uint32_t i;
    if(this->coeff.size() < trgt_deg)
@@ -526,11 +526,11 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
             /* t odd */
             cond1 =  r0.get_degree() < break_deg;
             cond2 =  u0.get_degree() < break_deg - 1;
-            cond1 &= cond2;
+            cond1 = cond1 & cond2;
             }
          /* expand cond1 to a full mask */
          gf2m mask = generate_gf2m_mask(cond1);
-         fake_elem &= mask;
+         fake_elem = fake_elem & mask;
          r0.patchup_deg_secure(trgt_deg, fake_elem);
          }
       if(break_deg == 1) /* syndrome inversion */

@@ -23,10 +23,11 @@ void patch_root_array(gf2m res_root_arr[],
    volatile gf2m cond_mask = (root_pos == res_root_arr_len);
    cond_mask = expand_mask_16bit(cond_mask);
    cond_mask = ~cond_mask; /* now cond = 1 if not enough roots */
-   patch_elem &= cond_mask;
+   patch_elem = patch_elem & cond_mask;
    for(size_t i = 0; i < res_root_arr_len; i++)
       {
-      gf2m masked_patch_elem = (patch_elem++) & cond_mask;
+      patch_elem = patch_elem + 1;
+      gf2m masked_patch_elem = patch_elem & cond_mask;
       res_root_arr[i] ^= masked_patch_elem++;
       }
    }
