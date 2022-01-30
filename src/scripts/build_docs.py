@@ -41,7 +41,7 @@ def have_prog(prog):
     return False
 
 def find_rst2man():
-    possible_names = ['rst2man', 'rst2man.py']
+    possible_names = ['rst2man', 'rst2man.py', 'rst2man-%d.%d' % sys.version_info[:2]]
 
     for name in possible_names:
         if have_prog(name):
