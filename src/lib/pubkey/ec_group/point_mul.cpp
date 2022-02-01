@@ -279,7 +279,7 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
    const BigInt scalar = k + group_order * mask;
 
    const size_t elem_size = 3*m_p_words;
-   const size_t window_elems = (1ULL << m_window_bits);
+   const size_t window_elems = static_cast<size_t>(1) << m_window_bits;
 
    size_t windows = round_up(scalar.bits(), m_window_bits) / m_window_bits;
    PointGFp R(m_curve);
