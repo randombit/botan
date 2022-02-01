@@ -130,6 +130,11 @@ std::vector<Group_Params> Text_Policy::key_exchange_groups() const
       {
       Group_Params group_id = group_param_from_string(group_name);
 
+#if !defined(BOTAN_HAS_CURVE_25519)
+      if(group_id == Group_Params::X25519)
+         continue;
+#endif
+
       if(group_id == Group_Params::NONE)
          {
          try
