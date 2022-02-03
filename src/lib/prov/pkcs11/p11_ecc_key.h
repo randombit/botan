@@ -176,6 +176,16 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_EC_PrivateKey : public virtual Private_Key,
          }
 
       /**
+       * Sets the public desired public point encoding of this private key, when it is passed to cryptoki functions.
+       * This could be either `PublicPointEncoding::Raw` or `PublicPointEncoding::Der`. By default this is set to `Der`,
+       * but some tokens might expect `Raw`-encoded public keys, e.g. when using this private key for key agreement.
+       */
+      void set_point_encoding(PublicPointEncoding point_encoding)
+         {
+         m_point_encoding = point_encoding;
+         }
+
+      /**
       * Gets the public_point
       * @note the public key must be set using `set_public_point`
       *       because it is not possible to infer the public key from a PKCS#11 EC private key
