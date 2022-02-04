@@ -26,7 +26,7 @@ class GCM_Mode : public AEAD_Mode
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
-      std::string name() const override;
+      std::string name() const override final;
 
       size_t update_granularity() const override;
 
@@ -34,7 +34,7 @@ class GCM_Mode : public AEAD_Mode
 
       bool valid_nonce_length(size_t len) const override;
 
-      size_t tag_size() const override { return m_tag_size; }
+      size_t tag_size() const override final { return m_tag_size; }
 
       void clear() override;
 

@@ -22,7 +22,7 @@ CBC_Mode::CBC_Mode(std::unique_ptr<BlockCipher> cipher,
    if(m_padding && !m_padding->valid_blocksize(m_block_size))
       throw Invalid_Argument("Padding " + m_padding->name() +
                              " cannot be used with " +
-                             cipher->name() + "/CBC");
+                             m_cipher->name() + "/CBC");
    }
 
 void CBC_Mode::clear()

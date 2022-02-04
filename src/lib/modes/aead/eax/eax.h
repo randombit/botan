@@ -24,7 +24,7 @@ class EAX_Mode : public AEAD_Mode
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
-      std::string name() const override;
+      std::string name() const override final;
 
       size_t update_granularity() const override;
 
