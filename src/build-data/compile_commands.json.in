@@ -2,7 +2,21 @@
 %{for lib_build_info}
     { "directory": "%{abs_root_dir}",
       "command": "%{cxx} %{lib_flags} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}%{obj}",
-      "file": %{src}
+      "file": "%{src}"
+    },
+%{endfor}
+
+%{for cli_build_info}
+    { "directory": "%{abs_root_dir}",
+      "command": "%{cxx} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}%{obj}",
+      "file": "%{src}"
+    },
+%{endfor}
+
+%{for test_build_info}
+    { "directory": "%{abs_root_dir}",
+      "command": "%{cxx} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}%{obj}",
+      "file": "%{src}"
     },
 %{endfor}
 ]
