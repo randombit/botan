@@ -111,6 +111,8 @@ def main(args = None):
     for result in results:
         result.get()
 
+    return 0
+
 if __name__ == '__main__':
     sys.exit(main())
 
