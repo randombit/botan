@@ -185,7 +185,7 @@ secure_vector<uint8_t> PK_KEM_Decryptor::decrypt(const uint8_t encap_key[],
                             salt, salt_len);
    }
 
-PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&&) = default;
+PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&&) noexcept = default;
 
 PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
                                    RandomNumberGenerator& rng,

@@ -447,7 +447,8 @@ class Date_Format_Tests final : public Text_Based_Test
             }
 
          std::vector<uint32_t> u32s;
-         for(auto const& sub : parts)
+         u32s.reserve(parts.size());
+         for(const auto& sub : parts)
             {
             u32s.push_back(Botan::to_u32bit(sub));
             }

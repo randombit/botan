@@ -29,14 +29,14 @@ const std::map<const std::string, std::vector<std::string>> allowed_signature_pa
    { "RSA", {"EMSA4", "EMSA3"} },
    };
 
-const std::vector<std::string> get_sig_paddings(const std::string algo)
+const std::vector<std::string> get_sig_paddings(const std::string& algo)
    {
    if(allowed_signature_paddings.count(algo) > 0)
       return allowed_signature_paddings.at(algo);
    return {};
    }
 
-bool sig_algo_and_pad_ok(const std::string algo, const std::string padding)
+bool sig_algo_and_pad_ok(const std::string& algo, const std::string& padding)
    {
    std::vector<std::string> pads = get_sig_paddings(algo);
    return std::find(pads.begin(), pads.end(), padding) != pads.end();

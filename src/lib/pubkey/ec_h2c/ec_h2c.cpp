@@ -107,7 +107,7 @@ hash_to_field(const EC_Group& group,
 BigInt sswu_z(const EC_Group& group)
    {
    const BigInt& p = group.get_p();
-   const OID oid = group.get_curve_oid();
+   const OID& oid = group.get_curve_oid();
 
    if(oid == OID{1,2,840,10045,3,1,7}) // secp256r1
       return p - 10;

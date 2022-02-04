@@ -30,33 +30,36 @@ class polyn_gf2m
       /**
       * create a zero polynomial:
       */
-      explicit polyn_gf2m(std::shared_ptr<GF2m_Field> sp_field);
+      explicit polyn_gf2m(const std::shared_ptr<GF2m_Field>& sp_field);
 
       polyn_gf2m() : m_deg(-1) {}
 
-      polyn_gf2m(const secure_vector<uint8_t>& encoded, std::shared_ptr<GF2m_Field> sp_field);
+      polyn_gf2m(const secure_vector<uint8_t>& encoded,
+                 const std::shared_ptr<GF2m_Field>& sp_field);
 
       polyn_gf2m& operator=(const polyn_gf2m&) = default;
 
       /**
       * create zero polynomial with reservation of space for a degree d polynomial
       */
-      polyn_gf2m(int d, std::shared_ptr<GF2m_Field> sp_field);
+      polyn_gf2m(int d, const std::shared_ptr<GF2m_Field>& sp_field);
 
       polyn_gf2m(polyn_gf2m const& other);
 
       /**
       * random irreducible polynomial of degree t
       */
-      polyn_gf2m(size_t t, RandomNumberGenerator& rng, std::shared_ptr<GF2m_Field> sp_field);
+      polyn_gf2m(size_t t, RandomNumberGenerator& rng,
+                 const std::shared_ptr<GF2m_Field>& sp_field);
 
       /** decode a polynomial from memory: **/
-      polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2m_Field> sp_field);
+      polyn_gf2m(const uint8_t* mem, uint32_t mem_len, const std::shared_ptr<GF2m_Field>& sp_field);
 
       /**
       *  create a polynomial from memory area (encoded)
       */
-      polyn_gf2m(int degree, const uint8_t* mem, size_t mem_byte_len, std::shared_ptr<GF2m_Field> sp_field);
+      polyn_gf2m(int degree, const uint8_t* mem, size_t mem_byte_len,
+                 const std::shared_ptr<GF2m_Field>& sp_field);
 
       bool operator==(const polyn_gf2m & other) const ;
 

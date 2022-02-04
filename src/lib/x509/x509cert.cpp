@@ -798,7 +798,7 @@ std::string X509_Certificate::to_string() const
    if(!policies.empty())
       {
       out << "Policies: " << "\n";
-      for(auto oid : policies)
+      for(const auto& oid : policies)
          out << "   " << oid.to_string() << "\n";
       }
 
@@ -821,7 +821,7 @@ std::string X509_Certificate::to_string() const
       if(!name_constraints.permitted().empty())
          {
          out << "   Permit";
-         for(auto st: name_constraints.permitted())
+         for(const auto& st: name_constraints.permitted())
             {
             out << " " << st.base();
             }
@@ -831,7 +831,7 @@ std::string X509_Certificate::to_string() const
       if(!name_constraints.excluded().empty())
          {
          out << "   Exclude";
-         for(auto st: name_constraints.excluded())
+         for(const auto& st: name_constraints.excluded())
             {
             out << " " << st.base();
             }

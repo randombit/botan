@@ -167,12 +167,12 @@ class Command
       * Read a file calling consumer_fn() with the inputs
       */
       void read_file(const std::string& input_file,
-                     std::function<void (uint8_t[], size_t)> consumer_fn,
+                     const std::function<void (uint8_t[], size_t)>& consumer_fn,
                      size_t buf_size = 0) const;
 
 
       void do_read_file(std::istream& in,
-                        std::function<void (uint8_t[], size_t)> consumer_fn,
+                        const std::function<void (uint8_t[], size_t)>& consumer_fn,
                         size_t buf_size = 0) const;
 
       template<typename Alloc>
@@ -207,7 +207,7 @@ class Command
       class Registration final
          {
          public:
-            Registration(const std::string& name, cmd_maker_fn maker_fn);
+            Registration(const std::string& name, const cmd_maker_fn& maker_fn);
          };
    };
 

@@ -36,8 +36,8 @@ Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf)
 
 Certificate_Status::Certificate_Status(Handshake_IO& io,
                                        Handshake_Hash& hash,
-                                       std::shared_ptr<const OCSP::Response> ocsp) :
-   m_response(ocsp->raw_bits())
+                                       const OCSP::Response& ocsp) :
+   m_response(ocsp.raw_bits())
    {
    hash.update(io.send(*this));
    }

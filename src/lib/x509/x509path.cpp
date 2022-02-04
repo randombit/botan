@@ -1012,7 +1012,7 @@ CertificatePathStatusCodes find_warnings(const CertificatePathStatusCodes& all_s
 
 Path_Validation_Result::Path_Validation_Result(CertificatePathStatusCodes status,
                                                std::vector<X509_Certificate>&& cert_chain) :
-   m_all_status(status),
+   m_all_status(std::move(status)),
    m_warnings(find_warnings(m_all_status)),
    m_cert_path(cert_chain),
    m_overall(PKIX::overall_status(m_all_status))
@@ -1046,7 +1046,7 @@ bool Path_Validation_Result::successful_validation() const
 
 bool Path_Validation_Result::no_warnings() const
    {
-   for(auto status_set_i : m_warnings)
+   for(const auto& status_set_i : m_warnings)
       if(!status_set_i.empty())
          return false;
    return true;

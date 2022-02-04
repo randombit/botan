@@ -46,7 +46,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
                            const std::vector<uint8_t>& reneg_info,
                            const Client_Hello& client_hello,
                            const Server_Hello::Settings& server_settings,
-                           const std::string next_protocol) :
+                           const std::string& next_protocol) :
    m_version(server_settings.protocol_version()),
    m_session_id(server_settings.session_id()),
    m_random(make_server_hello_random(rng, m_version, policy)),

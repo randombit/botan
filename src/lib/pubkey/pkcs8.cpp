@@ -47,7 +47,7 @@ secure_vector<uint8_t> PKCS8_extract(DataSource& source,
 */
 secure_vector<uint8_t> PKCS8_decode(
    DataSource& source,
-   std::function<std::string ()> get_passphrase,
+   const std::function<std::string ()>& get_passphrase,
    AlgorithmIdentifier& pk_alg_id,
    bool is_encrypted)
    {
@@ -339,7 +339,7 @@ load_key(DataSource& source,
          bool is_encrypted)
    {
    AlgorithmIdentifier alg_id;
-   secure_vector<uint8_t> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
+   secure_vector<uint8_t> pkcs8_key = PKCS8_decode(source, std::move(get_pass), alg_id, is_encrypted);
 
    const std::string alg_name = OIDS::oid2str_or_empty(alg_id.get_oid());
    if(alg_name.empty())
@@ -357,7 +357,7 @@ load_key(DataSource& source,
 std::unique_ptr<Private_Key> load_key(DataSource& source,
                                       std::function<std::string ()> get_pass)
    {
-   return load_key(source, get_pass, true);
+   return load_key(source, std::move(get_pass), true);
    }
 
 /*
@@ -368,7 +368,7 @@ std::unique_ptr<Private_Key> load_key(DataSource& source,
    {
    // We need to use bind rather than a lambda capturing `pass` here in order to avoid a Clang 8 bug.
    // See https://github.com/randombit/botan/issues/2255.
-   return load_key(source, std::bind([](const std::string p) { return p; }, pass), true);
+   return load_key(source, std::bind([](const std::string& p) { return p; }, pass), true);
    }
 
 /*

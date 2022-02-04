@@ -89,7 +89,7 @@ int ffi_map_error_type(Botan::ErrorType err)
 
 }
 
-int ffi_guard_thunk(const char* func_name, std::function<int ()> thunk)
+int ffi_guard_thunk(const char* func_name, const std::function<int ()>& thunk)
    {
    g_last_exception_what.clear();
 

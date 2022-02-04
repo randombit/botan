@@ -157,7 +157,7 @@ class PK_Fingerprint final : public Command
          const std::string hash_algo = get_arg("algo");
          const bool no_fsname = flag_set("no-fsname");
 
-         for(std::string key_file : get_arg_list("keys"))
+         for(const std::string& key_file : get_arg_list("keys"))
             {
             std::unique_ptr<Botan::Public_Key> key(
                key_file == "-"

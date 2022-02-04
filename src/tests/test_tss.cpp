@@ -34,6 +34,7 @@ class TSS_Recovery_Tests final : public Text_Based_Test
          try
             {
             std::vector<Botan::RTSS_Share> shares;
+            shares.reserve(expected_shares.size());
 
             for(auto&& v : expected_shares)
                {

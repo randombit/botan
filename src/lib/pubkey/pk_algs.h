@@ -50,7 +50,7 @@ create_ec_private_key(const std::string& algo_name,
 BOTAN_PUBLIC_API(2,2)
 std::vector<std::string>
 probe_provider_private_key(const std::string& algo_name,
-                           const std::vector<std::string> possible);
+                           const std::vector<std::string>& possible);
 
 }
 

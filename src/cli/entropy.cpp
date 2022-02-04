@@ -43,7 +43,7 @@ class Entropy final : public Command
          else
             sources.push_back(req_source);
 
-         for(std::string source : sources)
+         for(const std::string& source : sources)
             {
             Botan_Tests::SeedCapturing_RNG rng;
             const size_t entropy_estimate = entropy_sources.poll_just(rng, source);

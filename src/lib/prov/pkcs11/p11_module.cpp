@@ -13,8 +13,6 @@ namespace Botan {
 
 namespace PKCS11 {
 
-Module::Module(Module&&) = default;
-
 Module::Module(const std::string& file_path, C_InitializeArgs init_args)
    : m_file_path(file_path)
    {

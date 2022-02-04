@@ -190,7 +190,7 @@ class BigInt_Unit_Tests final : public Test
                { "4294967297", Botan::BigInt(2147483648) * 2 + 1 }
             };
 
-         for(auto vec : str_to_val)
+         for(const auto& vec : str_to_val)
             {
             Botan::BigInt n;
             std::istringstream iss;

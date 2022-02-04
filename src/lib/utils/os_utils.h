@@ -171,7 +171,7 @@ void page_allow_access(void* page);
 * Return codes:
 * -1 illegal instruction detected
 */
-int BOTAN_TEST_API run_cpu_instruction_probe(std::function<int ()> probe_fn);
+int BOTAN_TEST_API run_cpu_instruction_probe(const std::function<int ()>& probe_fn);
 
 /**
 * Represents a terminal state

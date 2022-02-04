@@ -167,7 +167,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
       data->m_alt_name = ext->get_alt_name();
       }
 
-   for(std::string email : pkcs9_email)
+   for(const std::string& email : pkcs9_email)
       {
       data->m_alt_name.add_attribute("RFC882", email);
       }

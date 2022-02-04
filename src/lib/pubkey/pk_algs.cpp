@@ -398,7 +398,7 @@ create_private_key(const std::string& alg_name,
 
 std::vector<std::string>
 probe_provider_private_key(const std::string& alg_name,
-                           const std::vector<std::string> possible)
+                           const std::vector<std::string>& possible)
    {
    std::vector<std::string> providers;
 

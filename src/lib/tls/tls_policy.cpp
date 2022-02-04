@@ -460,6 +460,7 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version) const
    std::sort(ciphersuites.begin(), ciphersuites.end(), order);
 
    std::vector<uint16_t> ciphersuite_codes;
+   ciphersuite_codes.reserve(ciphersuites.size());
    for(auto i : ciphersuites)
       ciphersuite_codes.push_back(i.ciphersuite_code());
    return ciphersuite_codes;

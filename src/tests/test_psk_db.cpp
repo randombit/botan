@@ -66,7 +66,7 @@ class Test_Map_PSK_Db : public Botan::Encrypted_PSK_Database
          {
          std::set<std::string> names;
 
-         for(auto kv : m_vals)
+         for(const auto& kv : m_vals)
             {
             names.insert(kv.first);
             }

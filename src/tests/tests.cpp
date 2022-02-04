@@ -85,7 +85,7 @@ void Test::Result::note_missing(const std::string& whatever)
       }
    }
 
-bool Test::Result::test_throws(const std::string& what, std::function<void ()> fn)
+bool Test::Result::test_throws(const std::string& what, const std::function<void ()>& fn)
    {
    try
       {
@@ -102,7 +102,7 @@ bool Test::Result::test_throws(const std::string& what, std::function<void ()> f
       }
    }
 
-bool Test::Result::test_throws(const std::string& what, const std::string& expected, std::function<void ()> fn)
+bool Test::Result::test_throws(const std::string& what, const std::string& expected, const std::function<void ()>& fn)
    {
    try
       {
@@ -246,8 +246,8 @@ bool Test::Result::test_eq_sz(const std::string& what, size_t produced, size_t e
    }
 
 bool Test::Result::test_eq(const std::string& what,
-                           Botan::OctetString produced,
-                           Botan::OctetString expected)
+                           const Botan::OctetString& produced,
+                           const Botan::OctetString& expected)
    {
    std::ostringstream out;
    out << m_who << " " << what;
@@ -482,7 +482,7 @@ std::map<std::string, std::function<std::unique_ptr<Test> ()>>& Test::global_reg
 //static
 void Test::register_test(const std::string& category,
                          const std::string& name,
-                         std::function<std::unique_ptr<Test> ()> maker_fn)
+                         const std::function<std::unique_ptr<Test> ()>& maker_fn)
    {
    BOTAN_UNUSED(category);
    if(Test::global_registry().count(name) != 0)
@@ -1102,7 +1102,7 @@ std::vector<Test::Result> Text_Based_Test::run()
                   oss << header << " ";
                oss << "failed ";
 
-               for(auto k: m_required_keys)
+               for(const auto& k: m_required_keys)
                   oss << k << "=" << vars.get_req_str(k) << " ";
 
                result.test_note(oss.str());
@@ -1116,7 +1116,7 @@ std::vector<Test::Result> Text_Based_Test::run()
             if(!header.empty())
                oss << header << " ";
 
-            for(auto k: m_required_keys)
+            for(const auto& k: m_required_keys)
                oss << k << "=" << vars.get_req_str(k) << " ";
 
             oss << "failed with exception '" << e.what() << "'";

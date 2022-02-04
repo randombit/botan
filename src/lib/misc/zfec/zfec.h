@@ -51,7 +51,7 @@ class BOTAN_PUBLIC_API(3,0) ZFEC
       */
       void encode(
          const uint8_t input[], size_t size,
-         output_cb_t output_cb)
+         const output_cb_t& output_cb)
          const;
 
       /**
@@ -62,7 +62,7 @@ class BOTAN_PUBLIC_API(3,0) ZFEC
       void encode_shares(
          const std::vector<const uint8_t*>& shares,
          size_t share_size,
-         output_cb_t output_cb)
+         const output_cb_t& output_cb)
          const;
 
       /**
@@ -73,7 +73,7 @@ class BOTAN_PUBLIC_API(3,0) ZFEC
       void decode_shares(
          const std::map<size_t, const uint8_t*>& shares,
          size_t share_size,
-         output_cb_t output_cb)
+         const output_cb_t& output_cb)
          const;
 
    private:

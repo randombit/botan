@@ -111,7 +111,7 @@ std::vector<Group_Params> Text_Policy::key_exchange_groups() const
       }
 
    std::vector<Group_Params> groups;
-   for(std::string group_name : split_on(group_str, ' '))
+   for(const std::string& group_name : split_on(group_str, ' '))
       {
       Group_Params group_id = group_param_from_string(group_name);
 
@@ -207,7 +207,7 @@ uint32_t Text_Policy::session_ticket_lifetime() const
 std::vector<uint16_t> Text_Policy::srtp_profiles() const
    {
    std::vector<uint16_t> r;
-   for(std::string p : get_list("srtp_profiles", std::vector<std::string>()))
+   for(const std::string& p : get_list("srtp_profiles", std::vector<std::string>()))
       {
       r.push_back(to_uint16(p));
       }

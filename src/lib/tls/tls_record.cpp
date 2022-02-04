@@ -328,7 +328,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
                               size_t& consumed,
                               secure_vector<uint8_t>& recbuf,
                               Connection_Sequence_Numbers* sequence_numbers,
-                              get_cipherstate_fn get_cipherstate)
+                              const get_cipherstate_fn& get_cipherstate)
    {
    if(readbuf.size() < TLS_HEADER_SIZE) // header incomplete?
       {
@@ -462,7 +462,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
                                size_t& consumed,
                                secure_vector<uint8_t>& recbuf,
                                Connection_Sequence_Numbers* sequence_numbers,
-                               get_cipherstate_fn get_cipherstate,
+                               const get_cipherstate_fn& get_cipherstate,
                                bool allow_epoch0_restart)
    {
    if(readbuf.size() < DTLS_HEADER_SIZE) // header incomplete?
@@ -563,7 +563,7 @@ Record_Header read_record(bool is_datagram,
                           size_t& consumed,
                           secure_vector<uint8_t>& recbuf,
                           Connection_Sequence_Numbers* sequence_numbers,
-                          get_cipherstate_fn get_cipherstate,
+                          const get_cipherstate_fn& get_cipherstate,
                           bool allow_epoch0_restart)
    {
    if(is_datagram)

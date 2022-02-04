@@ -153,7 +153,7 @@ uint16_t choose_ciphersuite(
    const Client_Hello& client_hello)
    {
    const bool our_choice = policy.server_uses_own_ciphersuite_preferences();
-   const std::vector<uint16_t> client_suites = client_hello.ciphersuites();
+   const std::vector<uint16_t>& client_suites = client_hello.ciphersuites();
    const std::vector<uint16_t> server_suites = policy.ciphersuite_list(version);
 
    if(server_suites.empty())

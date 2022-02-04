@@ -92,7 +92,7 @@ void Thread_Pool::shutdown()
    m_workers.clear();
    }
 
-void Thread_Pool::queue_thunk(std::function<void ()> fn)
+void Thread_Pool::queue_thunk(const std::function<void ()>& fn)
    {
    std::unique_lock<std::mutex> lock(m_mutex);
 

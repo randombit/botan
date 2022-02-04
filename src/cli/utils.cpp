@@ -125,7 +125,7 @@ class Has_Command final : public Command
          const std::string cmd = get_arg("cmd");
 
          bool exists = false;
-         for(auto registered_cmd : Command::registered_cmds())
+         for(const auto& registered_cmd : Command::registered_cmds())
             {
             if(cmd == registered_cmd)
                {

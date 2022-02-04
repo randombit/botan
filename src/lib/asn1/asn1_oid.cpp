@@ -63,7 +63,7 @@ OID OID::from_string(const std::string& str)
    if(str.empty())
       throw Invalid_Argument("OID::from_string argument must be non-empty");
 
-   const OID o = OIDS::str2oid_or_empty(str);
+   OID o = OIDS::str2oid_or_empty(str);
    if(o.has_value())
       return o;
 
@@ -108,7 +108,7 @@ std::string OID::to_string() const
 
 std::string OID::to_formatted_string() const
    {
-   const std::string s = OIDS::oid2str_or_empty(*this);
+   std::string s = OIDS::oid2str_or_empty(*this);
    if(!s.empty())
       return s;
    return this->to_string();

@@ -11,7 +11,7 @@ from multiprocessing.pool import ThreadPool
 
 enabled_checks = [
     'clang-analyzer-*',
-    #'performance-*',
+    'performance-*',
     #'bugprone-*',
     #'cert-*',
     #'cppcoreguidelines-*',
@@ -34,6 +34,8 @@ disabled_checks = [
     'modernize-pass-by-value',
     'modernize-use-trailing-return-type',
     'readability-function-cognitive-complexity', # bogus
+    'performance-inefficient-string-concatenation',
+    'performance-no-int-to-ptr',
 ]
 
 def create_check_option(enabled, disabled):

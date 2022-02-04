@@ -178,7 +178,7 @@ Record_Header read_record(bool is_datagram,
                           size_t& consumed,
                           secure_vector<uint8_t>& record_buf,
                           Connection_Sequence_Numbers* sequence_numbers,
-                          get_cipherstate_fn get_cipherstate,
+                          const get_cipherstate_fn& get_cipherstate,
                           bool allow_epoch0_restart);
 
 }

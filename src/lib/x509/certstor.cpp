@@ -133,7 +133,7 @@ Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256(const std::vecto
 
 void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
    {
-   X509_DN crl_issuer = crl.issuer_dn();
+   const X509_DN& crl_issuer = crl.issuer_dn();
 
    for(auto& c : m_crls)
       {

@@ -450,7 +450,7 @@ ZFEC::ZFEC(size_t K, size_t N) :
 */
 void ZFEC::encode(
    const uint8_t input[], size_t size,
-   output_cb_t output_cb)
+   const output_cb_t& output_cb)
    const
    {
    if(size % m_K != 0)
@@ -468,7 +468,7 @@ void ZFEC::encode(
 void ZFEC::encode_shares(
    const std::vector<const uint8_t*>& shares,
    size_t share_size,
-   output_cb_t output_cb)
+   const output_cb_t& output_cb)
    const
    {
    if(shares.size() != m_K)
@@ -500,7 +500,7 @@ void ZFEC::encode_shares(
 void ZFEC::decode_shares(
    const std::map<size_t, const uint8_t*>& shares,
    size_t share_size,
-   output_cb_t output_cb) const
+   const output_cb_t& output_cb) const
    {
    /*
    Todo:

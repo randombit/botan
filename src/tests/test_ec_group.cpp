@@ -27,7 +27,7 @@ namespace {
 
 #if defined(BOTAN_HAS_ECC_GROUP)
 
-Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, BigInt max)
+Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const BigInt& max)
    {
    /*
    Produces integers with long runs of ones and zeros, for testing for
@@ -223,7 +223,7 @@ class NIST_Curve_Reduction_Tests final : public Test
 
       Test::Result random_redc_test(const std::string& prime_name,
                                     const Botan::BigInt& p,
-                                    reducer_fn redc_fn)
+                                    const reducer_fn& redc_fn)
          {
          const Botan::BigInt p2 = p * p;
          const size_t p_bits = p.bits();
@@ -523,7 +523,7 @@ Test::Result test_mult_point()
    Botan::EC_Group secp160r1("secp160r1");
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
-   Botan::PointGFp p0 = p_G;
+   const Botan::PointGFp& p0 = p_G;
    Botan::PointGFp p1 = p_G * 2;
 
    p1 *= p0.get_affine_x();
@@ -559,7 +559,7 @@ Test::Result test_basic_operations()
    Botan::EC_Group secp160r1("secp160r1");
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
-   const Botan::PointGFp p0 = p_G;
+   const Botan::PointGFp& p0 = p_G;
    const Botan::PointGFp p1 = p_G * 2;
 
    result.test_eq("p1 affine x", p1.get_affine_x(), Botan::BigInt("16984103820118642236896513183038186009872590470"));

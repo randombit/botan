@@ -94,10 +94,10 @@ polyn_gf2m::polyn_gf2m(polyn_gf2m const& other)
     m_sp_field(other.m_sp_field)
    { }
 
-polyn_gf2m::polyn_gf2m(int d, std::shared_ptr<GF2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(int d, const std::shared_ptr<GF2m_Field>& sp_field)
    :m_deg(-1),
     coeff(d+1),
-    m_sp_field(sp_field)
+    m_sp_field(std::move(sp_field))
    {
    }
 
@@ -123,7 +123,7 @@ void polyn_gf2m::realloc(uint32_t new_size)
    this->coeff = secure_vector<gf2m>(new_size);
    }
 
-polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2m_Field> sp_field) :
+polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, const std::shared_ptr<GF2m_Field>& sp_field) :
    m_deg(-1), m_sp_field(sp_field)
    {
    if(mem_len % sizeof(gf2m))
@@ -150,11 +150,11 @@ polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2
    }
 
 
-polyn_gf2m::polyn_gf2m( std::shared_ptr<GF2m_Field> sp_field) :
+polyn_gf2m::polyn_gf2m(const std::shared_ptr<GF2m_Field>& sp_field) :
    m_deg(-1), coeff(1), m_sp_field(sp_field)
    {}
 
-polyn_gf2m::polyn_gf2m(int degree, const uint8_t* mem, size_t mem_byte_len, std::shared_ptr<GF2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(int degree, const uint8_t* mem, size_t mem_byte_len, const std::shared_ptr<GF2m_Field>& sp_field)
    :m_sp_field(sp_field)
    {
    uint32_t j, k, l;
@@ -235,7 +235,7 @@ int polyn_gf2m::get_degree() const
    }
 
 
-static gf2m eval_aux(const gf2m * /*restrict*/ coeff, gf2m a, int d, std::shared_ptr<GF2m_Field> sp_field)
+static gf2m eval_aux(const gf2m * /*restrict*/ coeff, gf2m a, int d, const std::shared_ptr<GF2m_Field>& sp_field)
    {
    gf2m b;
    b = coeff[d--];
@@ -636,7 +636,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
    return std::make_pair(u1,r1); // coefficients u,v
    }
 
-polyn_gf2m::polyn_gf2m(size_t t, RandomNumberGenerator& rng, std::shared_ptr<GF2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(size_t t, RandomNumberGenerator& rng, const std::shared_ptr<GF2m_Field>& sp_field)
    :m_deg(static_cast<int>(t)),
     coeff(t+1),
     m_sp_field(sp_field)
@@ -751,8 +751,9 @@ std::vector<polyn_gf2m> syndrome_init(polyn_gf2m const& generator, std::vector<g
    return result;
    }
 
-polyn_gf2m::polyn_gf2m(const secure_vector<uint8_t>& encoded, std::shared_ptr<GF2m_Field> sp_field )
-   :m_sp_field(sp_field)
+polyn_gf2m::polyn_gf2m(const secure_vector<uint8_t>& encoded,
+                       const std::shared_ptr<GF2m_Field>& sp_field) :
+   m_sp_field(sp_field)
    {
    if(encoded.size() % 2)
       {

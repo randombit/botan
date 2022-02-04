@@ -20,7 +20,7 @@ namespace Botan {
 * @param algo the algorithm for which to look up supported padding schemes
 * @return a vector of supported padding schemes
 */
-BOTAN_TEST_API const std::vector<std::string> get_sig_paddings(const std::string algo);
+BOTAN_TEST_API const std::vector<std::string> get_sig_paddings(const std::string& algo);
 
 /**
 * Returns true iff the given padding scheme is valid for the given
@@ -29,7 +29,8 @@ BOTAN_TEST_API const std::vector<std::string> get_sig_paddings(const std::string
 * @param algo the signature algorithm to be used
 * @param padding the padding scheme to be used
 */
-bool sig_algo_and_pad_ok(const std::string algo, const std::string padding);
+bool sig_algo_and_pad_ok(const std::string& algo,
+                         const std::string& padding);
 
 }
 

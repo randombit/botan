@@ -114,7 +114,7 @@ OID OIDS::str2oid_or_empty(const std::string& name)
 
 std::string OIDS::oid2str_or_throw(const OID& oid)
    {
-   const std::string s = OIDS::oid2str_or_empty(oid);
+   std::string s = OIDS::oid2str_or_empty(oid);
    if(s.empty())
       throw Lookup_Error("No name associated with OID " + oid.to_string());
    return s;

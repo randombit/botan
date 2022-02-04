@@ -238,7 +238,7 @@ std::map<OID, std::pair<std::vector<uint8_t>, bool>> Extensions::extensions_raw(
 */
 void Extensions::encode_into(DER_Encoder& to_object) const
    {
-   for(auto ext_info : m_extension_info)
+   for(const auto& ext_info : m_extension_info)
       {
       const OID& oid = ext_info.first;
       const bool should_encode = ext_info.second.obj().should_encode();
@@ -569,7 +569,7 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
          bool permitted = m_name_constraints.permitted().empty();
          bool failed = false;
 
-         for(auto c: m_name_constraints.permitted())
+         for(const auto& c: m_name_constraints.permitted())
             {
             switch(c.base().matches(cert_path.at(j)))
                {
@@ -586,7 +586,7 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
                }
             }
 
-         for(auto c: m_name_constraints.excluded())
+         for(const auto& c: m_name_constraints.excluded())
             {
             switch(c.base().matches(cert_path.at(j)))
                {

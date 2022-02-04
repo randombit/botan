@@ -1122,7 +1122,7 @@ Test::Result test_ecdsa_generate_keypair()
    return result;
    }
 
-Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding ec_dompar_enc, std::string test_name)
+Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding ec_dompar_enc, const std::string& test_name)
     {
     Test::Result result(test_name);
     TestSession test_session(true);

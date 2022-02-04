@@ -90,7 +90,7 @@ class Pwdhash_Tests : public Test
             "Bcrypt-PBKDF"
          };
 
-         for(std::string pwdhash : all_pwdhash)
+         for(const std::string& pwdhash : all_pwdhash)
             {
             Test::Result result("Pwdhash " + pwdhash);
             auto pwdhash_fam = Botan::PasswordHashFamily::create(pwdhash);

@@ -95,14 +95,14 @@ std::string url_encode(const std::string& in)
 std::ostream& operator<<(std::ostream& o, const Response& resp)
    {
    o << "HTTP " << resp.status_code() << " " << resp.status_message() << "\n";
-   for(auto h : resp.headers())
+   for(const auto& h : resp.headers())
       o << "Header '" << h.first << "' = '" << h.second << "'\n";
    o << "Body " << std::to_string(resp.body().size()) << " bytes:\n";
    o.write(cast_uint8_ptr_to_char(resp.body().data()), resp.body().size());
    return o;
    }
 
-Response http_sync(http_exch_fn http_transact,
+Response http_sync(const http_exch_fn& http_transact,
                    const std::string& verb,
                    const std::string& url,
                    const std::string& content_type,
@@ -131,7 +131,7 @@ Response http_sync(http_exch_fn http_transact,
       loc = url.substr(host_loc_sep, std::string::npos);
       }
 
-   const auto port_sep = hostname.find(":");
+   const auto port_sep = hostname.find(':');
    if(port_sep == std::string::npos)
       {
       service = "http";

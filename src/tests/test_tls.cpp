@@ -321,7 +321,7 @@ class Test_TLS_Policy_Text : public Test
 
          const std::vector<std::string> policies = { "default", "suiteb_128", "suiteb_192", "strict", "datagram", "bsi" };
 
-         for(std::string policy : policies)
+         for(const std::string& policy : policies)
             {
             const std::string from_policy_obj = tls_policy_string(policy);
             std::string from_file = read_tls_policy(policy);

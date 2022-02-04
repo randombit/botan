@@ -46,7 +46,7 @@ std::map<std::string, std::string> read_cfg(std::istream& is)
       if(s.empty())
          continue;
 
-      auto eq = s.find("=");
+      auto eq = s.find('=');
 
       if(eq == std::string::npos || eq == 0 || eq == s.size() - 1)
          throw Decoding_Error("Bad read_cfg input '" + s + "' on line " + std::to_string(line));

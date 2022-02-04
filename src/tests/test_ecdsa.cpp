@@ -121,7 +121,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         const std::string hash = vars.get_req_str("Hash");
+         std::string hash = vars.get_req_str("Hash");
          if(hash.substr(0,3) == "Raw")
             return hash;
          return "EMSA1(" + hash + ")";

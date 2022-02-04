@@ -670,7 +670,7 @@ void botan_sigill_handler(int)
 
 #endif
 
-int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
+int OS::run_cpu_instruction_probe(const std::function<int ()>& probe_fn)
    {
    volatile int probe_result = -3;
 

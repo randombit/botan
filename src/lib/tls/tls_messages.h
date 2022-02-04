@@ -296,7 +296,7 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
                    const std::vector<uint8_t>& secure_reneg_info,
                    const Client_Hello& client_hello,
                    const Server_Hello::Settings& settings,
-                   const std::string next_protocol);
+                   const std::string& next_protocol);
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
@@ -394,14 +394,14 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
 
       Certificate_Status(Handshake_IO& io,
                          Handshake_Hash& hash,
-                         std::shared_ptr<const OCSP::Response> response);
+                         const OCSP::Response& response);
 
       /*
        * Create a Certificate_Status message using an already DER encoded OCSP response.
        */
       Certificate_Status(Handshake_IO& io,
                          Handshake_Hash& hash,
-                         std::vector<uint8_t> const& raw_response_bytes );
+                         const std::vector<uint8_t>& raw_response_bytes);
 
    private:
       std::vector<uint8_t> serialize() const override;

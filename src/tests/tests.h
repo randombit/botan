@@ -295,8 +295,8 @@ class Test
             bool test_eq_sz(const std::string& what, size_t produced, size_t expected);
 
             bool test_eq(const std::string& what,
-                         Botan::OctetString produced,
-                         Botan::OctetString expected);
+                         const Botan::OctetString& produced,
+                         const Botan::OctetString& expected);
 
             template<typename I1, typename I2>
             bool test_int_eq(I1 x, I2 y, const char* what)
@@ -415,10 +415,10 @@ class Test
                               expected.data(), expected.size());
                }
 
-            bool test_throws(const std::string& what, std::function<void ()> fn);
+            bool test_throws(const std::string& what, const std::function<void ()>& fn);
 
             bool test_throws(const std::string& what, const std::string& expected,
-                             std::function<void ()> fn);
+                             const std::function<void ()>& fn);
 
             void set_ns_consumed(uint64_t ns)
                {
@@ -444,7 +444,7 @@ class Test
 
       static void register_test(const std::string& category,
                                 const std::string& name,
-                                std::function<std::unique_ptr<Test> ()> maker_fn);
+                                const std::function<std::unique_ptr<Test> ()>& maker_fn);
 
       static std::map<std::string, std::function<std::unique_ptr<Test> ()>>& global_registry();
 

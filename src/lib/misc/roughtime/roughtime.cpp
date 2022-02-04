@@ -457,7 +457,7 @@ std::vector<Server_Information> servers_from_str(const std::string& str)
          throw Decoding_Error(ERROR_MESSAGE);
          }
 
-      servers.push_back({name, publicKey, std::move(addresses)});
+      servers.push_back({name, publicKey, addresses});
       }
    return servers;
    }

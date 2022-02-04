@@ -111,7 +111,7 @@ class EMSA_unit_tests final : public Test
 #endif
             };
 
-         for(auto pad : pads_need_hash)
+         for(const auto& pad : pads_need_hash)
             {
             try
                {
@@ -131,7 +131,7 @@ class EMSA_unit_tests final : public Test
                }
             }
 
-         for(auto pad : pads_need_hash)
+         for(const auto& pad : pads_need_hash)
             {
             std::string algo_name = pad + "(YYZ)";
             try
@@ -152,7 +152,7 @@ class EMSA_unit_tests final : public Test
                }
             }
 
-         for(auto pad : pads_no_hash)
+         for(const auto& pad : pads_no_hash)
             {
             try
                {
