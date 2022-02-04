@@ -500,14 +500,14 @@ class Gen_DL_Group final : public Command
 
          if(type == "strong")
             {
-            if(seed_str.size() > 0)
+            if(!seed_str.empty())
                { throw CLI_Usage_Error("Seed only supported for DSA param gen"); }
             Botan::DL_Group grp(rng(), Botan::DL_Group::Strong, pbits);
             output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
             }
          else if(type == "subgroup")
             {
-            if(seed_str.size() > 0)
+            if(!seed_str.empty())
                { throw CLI_Usage_Error("Seed only supported for DSA param gen"); }
             Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
             output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);

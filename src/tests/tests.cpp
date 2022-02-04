@@ -62,7 +62,7 @@ void Test::Result::end_timer()
 
 void Test::Result::test_note(const std::string& note, const char* extra)
    {
-   if(note != "")
+   if(!note.empty())
       {
       std::ostringstream out;
       out << who() << " " << note;
@@ -460,7 +460,7 @@ std::string Test::Result::result_string() const
       report << "Failure " << (i + 1) << ": " << m_fail_log[i] << "\n";
       }
 
-   if(m_fail_log.size() > 0 || tests_run() == 0 || verbose)
+   if(!m_fail_log.empty() || tests_run() == 0 || verbose)
       {
       for(size_t i = 0; i != m_log.size(); ++i)
          {
@@ -1078,7 +1078,7 @@ std::vector<Test::Result> Text_Based_Test::run()
             uint64_t start = Test::timestamp();
 
             Test::Result result = run_one_test(header, vars);
-            if(m_cpu_flags.size() > 0)
+            if(!m_cpu_flags.empty())
                {
                for(auto const& cpuid_u64 : m_cpu_flags)
                   {

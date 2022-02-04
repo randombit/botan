@@ -27,7 +27,7 @@ std::string linewrap(size_t width, const std::string& in)
          }
       out.push_back(in[i]);
       }
-   if(out.size() > 0 && out[out.size()-1] != '\n')
+   if(!out.empty() && out[out.size()-1] != '\n')
       {
       out.push_back('\n');
       }

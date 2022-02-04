@@ -33,7 +33,7 @@ void Filter::send(const uint8_t input[], size_t length)
    for(size_t j = 0; j != total_ports(); ++j)
       if(m_next[j])
          {
-         if(m_write_queue.size())
+         if(!m_write_queue.empty())
             m_next[j]->write(m_write_queue.data(), m_write_queue.size());
          m_next[j]->write(input, length);
          nothing_attached = false;

@@ -77,12 +77,14 @@ void Output_Buffers::add(SecureQueue* queue)
 void Output_Buffers::retire()
    {
    for(size_t i = 0; i != m_buffers.size(); ++i)
-      if(m_buffers[i] && m_buffers[i]->size() == 0)
+      {
+      if(m_buffers[i] && m_buffers[i]->empty())
          {
          m_buffers[i].reset();
          }
+      }
 
-   while(m_buffers.size() && !m_buffers[0])
+   while(!m_buffers.empty() && !m_buffers[0])
       {
       m_buffers.pop_front();
       m_offset = m_offset + Pipe::message_id(1);

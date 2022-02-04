@@ -17,7 +17,7 @@ namespace {
 
 std::string strip_padding(std::string s)
    {
-   while(s.size() > 0 && s[s.size()-1] == '=')
+   while(!s.empty() && s[s.size()-1] == '=')
       s.resize(s.size() - 1);
    return s;
    }

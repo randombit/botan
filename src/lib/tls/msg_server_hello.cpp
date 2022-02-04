@@ -222,7 +222,7 @@ Server_Hello_Done::Server_Hello_Done(Handshake_IO& io,
 */
 Server_Hello_Done::Server_Hello_Done(const std::vector<uint8_t>& buf)
    {
-   if(buf.size())
+   if(!buf.empty())
       throw Decoding_Error("Server_Hello_Done: Must be empty, and is not");
    }
 

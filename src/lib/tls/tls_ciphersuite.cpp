@@ -118,13 +118,13 @@ namespace {
 
 bool have_hash(const std::string& prf)
    {
-   return (HashFunction::providers(prf).size() > 0);
+   return (!HashFunction::providers(prf).empty());
    }
 
 bool have_cipher(const std::string& cipher)
    {
-   return (BlockCipher::providers(cipher).size() > 0) ||
-      (StreamCipher::providers(cipher).size() > 0);
+   return (!BlockCipher::providers(cipher).empty()) ||
+      (!StreamCipher::providers(cipher).empty());
    }
 
 }

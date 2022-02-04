@@ -8,6 +8,8 @@
 #include <botan/reducer.h>
 #include <botan/internal/mp_core.h>
 
+#include <utility>
+
 namespace Botan {
 
 word monty_inverse(word a)
@@ -249,7 +251,7 @@ void Montgomery_Params::square_this(BigInt& x,
    copy_mem(x.mutable_data(), z_data, output_size);
    }
 
-Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params> params,
+Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params>& params,
                                const BigInt& v,
                                bool redc_needed) :
    m_params(params)
@@ -266,7 +268,7 @@ Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params> pa
       }
    }
 
-Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
+Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params>& params,
                                const uint8_t bits[], size_t len,
                                bool redc_needed) :
    m_params(params),
@@ -283,7 +285,7 @@ Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
 Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
                                const word words[], size_t len,
                                bool redc_needed) :
-   m_params(params)
+   m_params(std::move(params))
    {
    m_v.set_words(words, len);
 

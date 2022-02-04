@@ -46,7 +46,7 @@ std::map<std::string, std::string> read_results(const std::string& results_file,
    while(in.good())
       {
       std::getline(in, line);
-      if(line == "")
+      if(line.empty())
          {
          continue;
          }

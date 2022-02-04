@@ -519,7 +519,7 @@ void TLS_Handshake_Test::go()
          server_has_written = true;
          }
 
-      if(m_c2s.size() > 0)
+      if(!m_c2s.empty())
          {
          /*
          * Use this as a temp value to hold the queues as otherwise they
@@ -535,7 +535,7 @@ void TLS_Handshake_Test::go()
          continue;
          }
 
-      if(m_s2c.size() > 0)
+      if(!m_s2c.empty())
          {
          std::vector<uint8_t> input;
          std::swap(m_s2c, input);
@@ -546,12 +546,12 @@ void TLS_Handshake_Test::go()
          continue;
          }
 
-      if(m_client_recv.size())
+      if(!m_client_recv.empty())
          {
          m_results.test_eq("client recv", m_client_recv, server_msg);
          }
 
-      if(m_server_recv.size())
+      if(!m_server_recv.empty())
          {
          m_results.test_eq("server recv", m_server_recv, client_msg);
          }
@@ -586,7 +586,7 @@ void TLS_Handshake_Test::go()
             }
          }
 
-      if(m_server_recv.size() && m_client_recv.size())
+      if(!m_server_recv.empty() && !m_client_recv.empty())
          {
          Botan::SymmetricKey client_key = client->key_material_export("label", "context", 32);
          Botan::SymmetricKey server_key = m_server->key_material_export("label", "context", 32);
@@ -1053,7 +1053,7 @@ class DTLS_Reconnection_Test : public Test
                return {result};
                }
 
-            if(c1_c2s.size() > 0)
+            if(!c1_c2s.empty())
                {
                std::vector<uint8_t> input;
                std::swap(c1_c2s, input);
@@ -1061,7 +1061,7 @@ class DTLS_Reconnection_Test : public Test
                continue;
                }
 
-            if(s2c.size() > 0)
+            if(!s2c.empty())
                {
                std::vector<uint8_t> input;
                std::swap(s2c, input);
@@ -1080,7 +1080,7 @@ class DTLS_Reconnection_Test : public Test
                server.send(server_to_c1_magic);
                }
 
-            if(server_recv.size() > 0 && client1_recv.size() > 0)
+            if(!server_recv.empty() && !client1_recv.empty())
                {
                result.test_eq("Expected message from client1", server_recv, c1_to_server_magic);
                result.test_eq("Expected message to client1", client1_recv, server_to_c1_magic);
@@ -1119,7 +1119,7 @@ class DTLS_Reconnection_Test : public Test
                return {result};
                }
 
-            if(c2_c2s.size() > 0)
+            if(!c2_c2s.empty())
                {
                std::vector<uint8_t> input;
                std::swap(c2_c2s, input);
@@ -1127,7 +1127,7 @@ class DTLS_Reconnection_Test : public Test
                continue;
                }
 
-            if(s2c.size() > 0)
+            if(!s2c.empty())
                {
                std::vector<uint8_t> input;
                std::swap(s2c, input);
@@ -1146,7 +1146,7 @@ class DTLS_Reconnection_Test : public Test
                server.send(server_to_c2_magic);
                }
 
-            if(server_recv.size() > 0 && client2_recv.size() > 0)
+            if(!server_recv.empty() && !client2_recv.empty())
                {
                result.test_eq("Expected message from client2", server_recv, c2_to_server_magic);
                result.test_eq("Expected message to client2", client2_recv, server_to_c2_magic);

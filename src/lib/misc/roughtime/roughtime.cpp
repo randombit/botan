@@ -452,7 +452,7 @@ std::vector<Server_Information> servers_from_str(const std::string& str)
             }
          }
       ();
-      if(addresses.size() == 0)
+      if(addresses.empty())
          {
          throw Decoding_Error(ERROR_MESSAGE);
          }

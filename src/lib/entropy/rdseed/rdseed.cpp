@@ -83,7 +83,7 @@ size_t Intel_Rdseed::poll(RandomNumberGenerator& rng)
             break;
          }
 
-      if(seed.size() > 0)
+      if(!seed.empty())
          {
          rng.add_entropy(reinterpret_cast<const uint8_t*>(seed.data()),
                          seed.size() * sizeof(uint32_t));

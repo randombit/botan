@@ -212,7 +212,7 @@ void GHASH::final(uint8_t mac[], size_t mac_len)
 
 void GHASH::nonce_hash(secure_vector<uint8_t>& y0, const uint8_t nonce[], size_t nonce_len)
    {
-   BOTAN_ASSERT(m_ghash.size() == 0, "nonce_hash called during wrong time");
+   BOTAN_ASSERT(m_ghash.empty(), "nonce_hash called during wrong time");
 
    ghash_update(y0, nonce, nonce_len);
    add_final_block(y0, 0, nonce_len);

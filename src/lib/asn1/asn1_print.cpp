@@ -294,7 +294,7 @@ std::string ASN1_Pretty_Printer::format(ASN1_Type type_tag,
        << ", l=" << std::setw(4) << length << ":"
        << std::string(level + 1, ' ') << format_type(type_tag, class_tag);
 
-   if(value != "" && !should_skip)
+   if(!value.empty() && !should_skip)
       {
       const size_t current_pos = static_cast<size_t>(oss.tellp());
       const size_t spaces_to_align =

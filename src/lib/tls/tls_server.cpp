@@ -105,7 +105,7 @@ bool check_for_resume(Session& session_info,
       return false;
 
    // client sent a different SNI hostname
-   if(client_hello->sni_hostname() != "")
+   if(!client_hello->sni_hostname().empty())
       {
       if(client_hello->sni_hostname() != session_info.server_info().hostname())
          return false;
@@ -288,7 +288,7 @@ std::vector<X509_Certificate>
 Server::get_peer_cert_chain(const Handshake_State& state_base) const
    {
    const Server_Handshake_State& state = dynamic_cast<const Server_Handshake_State&>(state_base);
-   if(state.resume_peer_certs().size() > 0)
+   if(!state.resume_peer_certs().empty())
       return state.resume_peer_certs();
 
    if(state.client_certs())
@@ -320,7 +320,7 @@ Protocol_Version select_version(const Botan::TLS::Policy& policy,
 
    const Protocol_Version latest_supported = policy.latest_supported_version(is_datagram);
 
-   if(supported_versions.size() > 0)
+   if(!supported_versions.empty())
       {
       if(is_datagram)
          {
@@ -818,7 +818,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
 
    cert_chains = get_server_certs(sni_hostname, m_creds);
 
-   if(sni_hostname != "" && cert_chains.empty())
+   if(!sni_hostname.empty() && cert_chains.empty())
       {
       cert_chains = get_server_certs("", m_creds);
 
@@ -878,7 +878,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
          // csr is non-null if client_hello()->supports_cert_status_message()
          BOTAN_ASSERT_NOMSG(csr != nullptr);
          const auto resp_bytes = callbacks().tls_provide_cert_status(cert_chains[algo_used], *csr);
-         if(resp_bytes.size() > 0)
+         if(!resp_bytes.empty())
             {
             pending_state.server_cert_status(new Certificate_Status(
                                                 pending_state.handshake_io(),

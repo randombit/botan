@@ -355,7 +355,7 @@ void* Memory_Pool::allocate(size_t n)
          // Otoh bucket search should be very fast
          }
 
-      if(m_free_pages.size() > 0)
+      if(!m_free_pages.empty())
          {
          uint8_t* ptr = m_free_pages[0];
          m_free_pages.pop_front();

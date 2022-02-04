@@ -182,7 +182,7 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, c
       }//The H matrix is fed.
 
    secure_vector<size_t> perm = H.row_reduced_echelon_form();
-   if(perm.size() == 0)
+   if(perm.empty())
       {
       throw Invalid_State("McEliece keygen failed - could not bring matrix to row reduced echelon form");
       }

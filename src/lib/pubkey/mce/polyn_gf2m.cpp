@@ -97,7 +97,7 @@ polyn_gf2m::polyn_gf2m(polyn_gf2m const& other)
 polyn_gf2m::polyn_gf2m(int d, const std::shared_ptr<GF2m_Field>& sp_field)
    :m_deg(-1),
     coeff(d+1),
-    m_sp_field(std::move(sp_field))
+    m_sp_field(sp_field)
    {
    }
 

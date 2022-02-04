@@ -207,7 +207,7 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
             }
          }
 
-      if(m_key_hash.size() > 0)
+      if(!m_key_hash.empty())
          {
          signing_cert = trusted_roots[i]->find_cert_by_pubkey_sha1(m_key_hash);
          if(signing_cert)
@@ -229,7 +229,7 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
             break;
             }
 
-         if(m_key_hash.size() > 0 && ee_cert_path[i].subject_public_key_bitstring_sha1() == m_key_hash)
+         if(!m_key_hash.empty() && ee_cert_path[i].subject_public_key_bitstring_sha1() == m_key_hash)
             {
             signing_cert = ee_cert_path[i];
             break;
@@ -237,7 +237,7 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
          }
       }
 
-   if(!signing_cert && m_certs.size() > 0)
+   if(!signing_cert && !m_certs.empty())
       {
       for(size_t i = 0; i < m_certs.size(); ++i)
          {
@@ -248,7 +248,7 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
             break;
             }
 
-         if(m_key_hash.size() > 0 && m_certs[i].subject_public_key_bitstring_sha1() == m_key_hash)
+         if(!m_key_hash.empty() && m_certs[i].subject_public_key_bitstring_sha1() == m_key_hash)
             {
             signing_cert = m_certs[i];
             break;

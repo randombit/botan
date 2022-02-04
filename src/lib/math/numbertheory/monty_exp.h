@@ -22,7 +22,7 @@ class Montgomery_Exponentation_State;
 * Precompute for calculating values g^x mod p
 */
 std::shared_ptr<const Montgomery_Exponentation_State>
-monty_precompute(std::shared_ptr<const Montgomery_Params> params_p,
+monty_precompute(const std::shared_ptr<const Montgomery_Params>& params_p,
                  const BigInt& g,
                  size_t window_bits,
                  bool const_time = true);
@@ -59,7 +59,7 @@ BigInt monty_exp_vartime(std::shared_ptr<const Montgomery_Params> params_p,
 /**
 * Return (x^z1 * y^z2) % p
 */
-BigInt monty_multi_exp(std::shared_ptr<const Montgomery_Params> params_p,
+BigInt monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& params_p,
                        const BigInt& x,
                        const BigInt& z1,
                        const BigInt& y,

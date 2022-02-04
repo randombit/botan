@@ -516,7 +516,7 @@ class Timing_Test_Command final : public Command
          std::string line;
          while(std::getline(infile, line))
             {
-            if(line.size() > 0 && line.at(0) != '#')
+            if(!line.empty() && line.at(0) != '#')
                {
                lines.push_back(line);
                }

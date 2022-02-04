@@ -66,7 +66,7 @@ bool Timer::operator<(const Timer& other) const
 
 std::string Timer::to_string() const
    {
-   if(m_custom_msg.size() > 0)
+   if(!m_custom_msg.empty())
       {
       return m_custom_msg;
       }

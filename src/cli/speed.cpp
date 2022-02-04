@@ -211,7 +211,7 @@ class Summary final
          std::ostringstream result_ss;
          result_ss << std::fixed;
 
-         if(m_bps_entries.size() > 0)
+         if(!m_bps_entries.empty())
             {
             result_ss << "\n";
 
@@ -254,7 +254,7 @@ class Summary final
             result_ss << "\n[results are the number of 1000s bytes processed per second]\n";
             }
 
-         if(m_ops_entries.size() > 0)
+         if(!m_ops_entries.empty())
             {
             result_ss << std::setprecision(6) << "\n";
 
@@ -509,7 +509,7 @@ class Speed final : public Command
                // Since everything might be disabled, need a block to else if from
                }
 #if defined(BOTAN_HAS_HASH)
-            else if(Botan::HashFunction::providers(algo).size() > 0)
+            else if(!Botan::HashFunction::providers(algo).empty())
                {
                bench_providers_of<Botan::HashFunction>(
                   algo, provider, msec, buf_sizes,
@@ -517,7 +517,7 @@ class Speed final : public Command
                }
 #endif
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
-            else if(Botan::BlockCipher::providers(algo).size() > 0)
+            else if(!Botan::BlockCipher::providers(algo).empty())
                {
                bench_providers_of<Botan::BlockCipher>(
                   algo, provider, msec, buf_sizes,
@@ -525,7 +525,7 @@ class Speed final : public Command
                }
 #endif
 #if defined(BOTAN_HAS_STREAM_CIPHER)
-            else if(Botan::StreamCipher::providers(algo).size() > 0)
+            else if(!Botan::StreamCipher::providers(algo).empty())
                {
                bench_providers_of<Botan::StreamCipher>(
                   algo, provider, msec, buf_sizes,
@@ -540,7 +540,7 @@ class Speed final : public Command
                }
 #endif
 #if defined(BOTAN_HAS_MAC)
-            else if(Botan::MessageAuthenticationCode::providers(algo).size() > 0)
+            else if(!Botan::MessageAuthenticationCode::providers(algo).empty())
                {
                bench_providers_of<Botan::MessageAuthenticationCode>(
                   algo, provider, msec, buf_sizes,
@@ -1049,7 +1049,7 @@ class Speed final : public Command
 
                   decrypt_timer->run([&]() { dec.start(iv); dec.finish(buffer); });
 
-                  if(iv.size() > 0)
+                  if(!iv.empty())
                      {
                      iv[iv.size()-1] += 1;
                      }

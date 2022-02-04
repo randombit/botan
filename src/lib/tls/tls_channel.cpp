@@ -706,7 +706,7 @@ SymmetricKey Channel::key_material_export(const std::string& label,
       salt += active->client_hello()->random();
       salt += active->server_hello()->random();
 
-      if(context != "")
+      if(!context.empty())
          {
          size_t context_size = context.length();
          if(context_size > 0xFFFF)

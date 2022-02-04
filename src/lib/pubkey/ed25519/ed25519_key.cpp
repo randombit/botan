@@ -297,7 +297,7 @@ Ed25519_PublicKey::create_verification_op(const std::string& params,
    {
    if(provider == "base" || provider.empty())
       {
-      if(params == "" || params == "Identity" || params == "Pure")
+      if(params.empty() || params == "Identity" || params == "Pure")
          return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
       else if(params == "Ed25519ph")
          return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, "SHA-512", true);
@@ -314,7 +314,7 @@ Ed25519_PrivateKey::create_signature_op(RandomNumberGenerator&,
    {
    if(provider == "base" || provider.empty())
       {
-      if(params == "" || params == "Identity" || params == "Pure")
+      if(params.empty() || params == "Identity" || params == "Pure")
          return std::make_unique<Ed25519_Pure_Sign_Operation>(*this);
       else if(params == "Ed25519ph")
          return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, "SHA-512", true);

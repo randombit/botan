@@ -106,7 +106,7 @@ Stream_Handshake_IO::format(const std::vector<uint8_t>& msg,
 
    store_be24(&send_buf[1], buf_size);
 
-   if (msg.size() > 0)
+   if (!msg.empty())
       {
       copy_mem(&send_buf[4], msg.data(), msg.size());
       }
@@ -149,7 +149,7 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx)
    {
    const std::vector<uint16_t>& flight = m_flights.at(flight_idx);
 
-   BOTAN_ASSERT(flight.size() > 0, "Nonempty flight to retransmit");
+   BOTAN_ASSERT(!flight.empty(), "Nonempty flight to retransmit");
 
    uint16_t epoch = m_flight_data[flight[0]].epoch;
 

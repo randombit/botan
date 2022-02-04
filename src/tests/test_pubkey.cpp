@@ -86,7 +86,7 @@ void check_invalid_ciphertexts(Test::Result& result,
 std::string PK_Test::choose_padding(const VarMap& vars,
                                     const std::string& pad_hdr)
    {
-   if(pad_hdr != "")
+   if(!pad_hdr.empty())
       return pad_hdr;
    return vars.get_opt_str("Padding", this->default_padding(vars));
    }

@@ -12,7 +12,7 @@ namespace Botan {
 std::map<std::string, std::string> read_kv(const std::string& kv)
    {
    std::map<std::string, std::string> m;
-   if(kv == "")
+   if(kv.empty())
       return m;
 
    std::vector<std::string> parts;

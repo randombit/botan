@@ -2039,7 +2039,7 @@ class FFI_Unit_Tests final : public Test
 
             botan_pk_op_verify_t verifier = nullptr;
 
-            if(signature.size() > 0 && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-256)", 0)))
+            if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-256)", 0)))
                {
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
                TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
@@ -2148,7 +2148,7 @@ class FFI_Unit_Tests final : public Test
 
             botan_pk_op_verify_t verifier = nullptr;
 
-            if(signature.size() > 0 && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", flags)))
+            if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", flags)))
                {
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
                TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
@@ -2244,7 +2244,7 @@ class FFI_Unit_Tests final : public Test
 
          botan_pk_op_verify_t verifier = nullptr;
 
-         if(signature.size() > 0 && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, sm2_ident.c_str(), 0)))
+         if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, sm2_ident.c_str(), 0)))
             {
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
             TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));

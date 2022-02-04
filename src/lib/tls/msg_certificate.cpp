@@ -72,7 +72,7 @@ Certificate::Certificate(const std::vector<uint8_t>& buf, const Policy& policy)
    * the intermediates are outside of the control of the server.
    * But, require that the leaf certificate be v3
    */
-   if(m_certs.size() > 0 && m_certs[0].x509_version() != 3)
+   if(!m_certs.empty() && m_certs[0].x509_version() != 3)
       {
       throw TLS_Exception(Alert::BAD_CERTIFICATE,
                           "The leaf certificate must be v3");

@@ -140,7 +140,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
             }
 
          // Ignore untrusted hashes on self-signed roots
-         if(trusted_hashes.size() > 0 && !at_self_signed_root)
+         if(!trusted_hashes.empty() && !at_self_signed_root)
             {
             if(trusted_hashes.count(subject->hash_used_for_signature()) == 0)
                status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
@@ -255,7 +255,7 @@ PKIX::check_ocsp(const std::vector<X509_Certificate>& cert_path,
          }
       }
 
-   while(cert_status.size() > 0 && cert_status.back().empty())
+   while(!cert_status.empty() && cert_status.back().empty())
       cert_status.pop_back();
 
    return cert_status;
@@ -313,7 +313,7 @@ PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
             // for example see #1652
 
             // is the extension critical and unknown?
-            if(extension.second && OIDS::oid2str_or_empty(extension.first->oid_of()) == "")
+            if(extension.second && OIDS::oid2str_or_empty(extension.first->oid_of()).empty())
                {
                /* NIST Certificate Path Valiadation Testing document: "When an implementation does not recognize a critical extension in the
                 * crlExtensions field, it shall assume that identified certificates have been revoked and are no longer valid"
@@ -325,7 +325,7 @@ PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
          }
       }
 
-   while(cert_status.size() > 0 && cert_status.back().empty())
+   while(!cert_status.empty() && cert_status.back().empty())
       cert_status.pop_back();
 
    return cert_status;
@@ -384,7 +384,7 @@ PKIX::check_ocsp_online(const std::vector<X509_Certificate>& cert_path,
       const std::optional<X509_Certificate>& subject = cert_path.at(i);
       const std::optional<X509_Certificate>& issuer = cert_path.at(i+1);
 
-      if(subject->ocsp_responder() == "")
+      if(subject->ocsp_responder().empty())
          {
          ocsp_response_futures.emplace_back(std::async(std::launch::deferred, [&]() -> std::optional<OCSP::Response> {
                   return OCSP::Response(Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
@@ -463,7 +463,7 @@ PKIX::check_crl_online(const std::vector<X509_Certificate>& cert_path,
          */
          future_crls.emplace_back(std::future<std::optional<X509_CRL>>());
          }
-      else if(cert->crl_distribution_point() == "")
+      else if(cert->crl_distribution_point().empty())
          {
          // Avoid creating a thread for this case
          future_crls.emplace_back(std::async(std::launch::deferred, [&]() -> std::optional<X509_CRL> {
@@ -781,7 +781,7 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
       {
       bool had_crl = false, had_ocsp = false;
 
-      if(i < crl.size() && crl[i].size() > 0)
+      if(i < crl.size() && !crl[i].empty())
          {
          for(auto&& code : crl[i])
             {
@@ -793,7 +793,7 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
             }
          }
 
-      if(i < ocsp.size() && ocsp[i].size() > 0)
+      if(i < ocsp.size() && !ocsp[i].empty())
          {
          for(auto&& code : ocsp[i])
             {
@@ -888,7 +888,7 @@ Path_Validation_Result x509_path_validate(
 
       CertificatePathStatusCodes ocsp_status;
 
-      if(ocsp_resp.size() > 0)
+      if(!ocsp_resp.empty())
          {
          ocsp_status = PKIX::check_ocsp(cert_path, ocsp_resp, trusted_roots, ref_time, restrictions.max_ocsp_age());
          }

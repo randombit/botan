@@ -232,7 +232,7 @@ std::vector<uint8_t> Server_Key_Exchange::serialize() const
    {
    std::vector<uint8_t> buf = params();
 
-   if(m_signature.size())
+   if(!m_signature.empty())
       {
       if(m_scheme != Signature_Scheme::NONE)
          {

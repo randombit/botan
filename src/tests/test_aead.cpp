@@ -354,7 +354,7 @@ class AEAD_Tests final : public Text_Based_Test
             }
 
          // test decryption with modified nonce
-         if(nonce.size() > 0)
+         if(!nonce.empty())
             {
             buf.assign(input.begin(), input.end());
             std::vector<uint8_t> bad_nonce = mutate_vec(nonce);

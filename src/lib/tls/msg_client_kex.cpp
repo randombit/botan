@@ -120,7 +120,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          const std::string curve_name = state.callbacks().tls_decode_group_param(curve_id);
 
-         if(curve_name == "")
+         if(curve_name.empty())
             throw Decoding_Error("Server sent unknown named curve " +
                                  std::to_string(static_cast<uint16_t>(curve_id)));
 

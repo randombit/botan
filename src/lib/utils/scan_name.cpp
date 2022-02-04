@@ -62,7 +62,7 @@ SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
 
 SCAN_Name::SCAN_Name(std::string algo_spec) : m_orig_algo_spec(algo_spec), m_alg_name(), m_args(), m_mode_info()
    { 
-   if(algo_spec.size() == 0)
+   if(algo_spec.empty())
       throw Invalid_Argument("Expected algorithm name, got empty string");
 
    std::vector<std::pair<size_t, std::string>> name;
@@ -90,7 +90,7 @@ SCAN_Name::SCAN_Name(std::string algo_spec) : m_orig_algo_spec(algo_spec), m_alg
             accum.second.push_back(c);
          else
             {
-            if(accum.second != "")
+            if(!accum.second.empty())
                name.push_back(accum);
             accum = std::make_pair(level, "");
             }
@@ -99,13 +99,13 @@ SCAN_Name::SCAN_Name(std::string algo_spec) : m_orig_algo_spec(algo_spec), m_alg
          accum.second.push_back(c);
       }
 
-   if(accum.second != "")
+   if(!accum.second.empty())
       name.push_back(accum);
 
    if(level != 0)
       throw Decoding_Error(decoding_error + "Missing close paren");
 
-   if(name.size() == 0)
+   if(name.empty())
       throw Decoding_Error(decoding_error + "Empty name");
 
    m_alg_name = name[0].second;

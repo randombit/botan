@@ -607,7 +607,7 @@ std::vector<std::string> X509_Certificate::ca_issuers() const
 std::string X509_Certificate::crl_distribution_point() const
    {
    // just returns the first (arbitrarily)
-   if(data().m_crl_distribution_points.size() > 0)
+   if(!data().m_crl_distribution_points.empty())
       return data().m_crl_distribution_points[0];
    return "";
    }
@@ -700,9 +700,9 @@ std::string X509_Certificate::fingerprint(const std::string& hash_name) const
    * left empty in which case we fall back to create_hex_fingerprint
    * which will throw if the hash is unavailable.
    */
-   if(hash_name == "SHA-256" && data().m_fingerprint_sha256.size() > 0)
+   if(hash_name == "SHA-256" && !data().m_fingerprint_sha256.empty())
       return data().m_fingerprint_sha256;
-   else if(hash_name == "SHA-1" && data().m_fingerprint_sha1.size() > 0)
+   else if(hash_name == "SHA-1" && !data().m_fingerprint_sha1.empty())
       return data().m_fingerprint_sha1;
    else
       return create_hex_fingerprint(this->BER_encode(), hash_name);
@@ -857,10 +857,10 @@ std::string X509_Certificate::to_string() const
 
    out << "Serial number: " << hex_encode(this->serial_number()) << "\n";
 
-   if(this->authority_key_id().size())
+   if(!this->authority_key_id().empty())
      out << "Authority keyid: " << hex_encode(this->authority_key_id()) << "\n";
 
-   if(this->subject_key_id().size())
+   if(!this->subject_key_id().empty())
      out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
 
    try

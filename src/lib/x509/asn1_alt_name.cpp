@@ -123,7 +123,7 @@ X509_DN AlternativeName::dn() const
 */
 bool AlternativeName::has_items() const
    {
-   return (m_alt_info.size() > 0 || m_othernames.size() > 0);
+   return (!m_alt_info.empty() || !m_othernames.empty());
    }
 
 namespace {

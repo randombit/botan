@@ -69,7 +69,7 @@ OID OID::from_string(const std::string& str)
 
    std::vector<uint32_t> raw = parse_oid_str(str);
 
-   if(raw.size() > 0)
+   if(!raw.empty())
       return OID(std::move(raw));
 
    throw Lookup_Error("No OID associated with name " + str);

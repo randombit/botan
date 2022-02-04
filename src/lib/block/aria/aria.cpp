@@ -422,37 +422,37 @@ void key_schedule(secure_vector<uint32_t>& ERK,
 
 void ARIA_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_ERK.size() > 0);
+   verify_key_set(!m_ERK.empty());
    ARIA_F::transform(in, out, blocks, m_ERK);
    }
 
 void ARIA_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_ERK.size() > 0);
+   verify_key_set(!m_ERK.empty());
    ARIA_F::transform(in, out, blocks, m_ERK);
    }
 
 void ARIA_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_ERK.size() > 0);
+   verify_key_set(!m_ERK.empty());
    ARIA_F::transform(in, out, blocks, m_ERK);
    }
 
 void ARIA_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_DRK.size() > 0);
+   verify_key_set(!m_DRK.empty());
    ARIA_F::transform(in, out, blocks, m_DRK);
    }
 
 void ARIA_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_DRK.size() > 0);
+   verify_key_set(!m_DRK.empty());
    ARIA_F::transform(in, out, blocks, m_DRK);
    }
 
 void ARIA_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_DRK.size() > 0);
+   verify_key_set(!m_DRK.empty());
    ARIA_F::transform(in, out, blocks, m_DRK);
    }
 

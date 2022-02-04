@@ -265,7 +265,7 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
       {
       if(p.length() >= 256)
          throw TLS_Exception(Alert::INTERNAL_ERROR, "ALPN name too long");
-      if(p != "")
+      if(!p.empty())
          append_tls_length_value(buf,
                                  cast_char_ptr_to_uint8(p.data()),
                                  p.size(),
@@ -557,7 +557,7 @@ std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
       }
    else
       {
-      BOTAN_ASSERT_NOMSG(m_versions.size() >= 1);
+      BOTAN_ASSERT_NOMSG(!m_versions.empty());
       const uint8_t len = static_cast<uint8_t>(m_versions.size() * 2);
 
       buf.push_back(len);

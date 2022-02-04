@@ -89,7 +89,7 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
       {
       case Nonce_Format::CBC_MODE:
          {
-         if(m_nonce.size())
+         if(!m_nonce.empty())
             {
             std::vector<uint8_t> nonce;
             nonce.swap(m_nonce);
@@ -126,7 +126,7 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
       {
       case Nonce_Format::CBC_MODE:
          {
-         if(nonce_bytes_from_record() == 0 && m_nonce.size())
+         if(nonce_bytes_from_record() == 0 && !m_nonce.empty())
             {
             std::vector<uint8_t> nonce;
             nonce.swap(m_nonce);

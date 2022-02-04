@@ -63,7 +63,7 @@ int Command::run(const std::vector<std::string>& params)
          {
          const std::string output_file = get_arg("output");
 
-         if(output_file != "")
+         if(!output_file.empty())
             {
             m_output_stream.reset(new std::ofstream(output_file, std::ios::binary));
             if(!m_output_stream->good())
@@ -75,7 +75,7 @@ int Command::run(const std::vector<std::string>& params)
          {
          const std::string output_file = get_arg("error-output");
 
-         if(output_file != "")
+         if(!output_file.empty())
             {
             m_error_output_stream.reset(new std::ofstream(output_file, std::ios::binary));
             if(!m_error_output_stream->good())

@@ -19,7 +19,7 @@ enabled_checks = [
     #'modernize-*',
     #'portability-*',
     #'readability-*',
-    #'readability-container-size-empty'
+    'readability-container-size-empty'
 ]
 
 disabled_checks = [
