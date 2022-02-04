@@ -52,7 +52,7 @@ std::vector<uint8_t> Public_Key::subject_public_key() const
 */
 OID Public_Key::get_oid() const
    {
-   const OID o = OIDS::str2oid_or_empty(algo_name());
+   OID o = OIDS::str2oid_or_empty(algo_name());
    if(o.empty())
       throw Lookup_Error("PK algo " + algo_name() + " has no defined OIDs");
    return o;

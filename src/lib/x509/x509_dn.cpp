@@ -374,7 +374,7 @@ namespace {
 
 std::string to_short_form(const OID& oid)
    {
-   const std::string long_id = oid.to_formatted_string();
+   std::string long_id = oid.to_formatted_string();
 
    if(long_id == "X520.CommonName")
       return "CN";

@@ -281,7 +281,7 @@ size_t PK_Signer::signature_length() const
 
 std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
    {
-   const std::vector<uint8_t> sig = unlock(m_op->sign(rng));
+   std::vector<uint8_t> sig = unlock(m_op->sign(rng));
 
    if(m_sig_format == IEEE_1363)
       {

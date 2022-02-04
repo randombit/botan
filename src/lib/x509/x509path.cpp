@@ -499,7 +499,7 @@ PKIX::check_crl_online(const std::vector<X509_Certificate>& cert_path,
          }
       }
 
-   const CertificatePathStatusCodes crl_status = PKIX::check_crl(cert_path, crls, ref_time);
+   auto crl_status = PKIX::check_crl(cert_path, crls, ref_time);
 
    if(crl_store)
       {
