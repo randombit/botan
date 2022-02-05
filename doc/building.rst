@@ -154,10 +154,17 @@ On macOS
 
 A build on macOS works much like that on any other Unix-like system.
 
-To build a universal binary for macOS, you need to set some additional
-build flags. Do this with the `configure.py` flag `--cc-abi-flags`::
+To build a universal binary for macOS, for older macOs releases, 
+you need to set some additional build flags. 
+Do this with the `configure.py` flag `--cc-abi-flags`::
 
   --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
+
+
+for mac M1 on arm64, you can build the x86_64 arch version via Rosetta separately.
+Do this with with `arch -x86_64 configure.py --library-suffix=-x86_64`
+Then using lipo to create a fat binary.
+`lipo -create libbotan-arm64.dylib libbotan-x86_64.dylib -o libbotan.dylib`
 
 On Windows
 --------------
