@@ -10,17 +10,16 @@ import re
 from multiprocessing.pool import ThreadPool
 
 enabled_checks = [
-    'readability-named-parameter',
-    #'clang-analyzer-*',
-    #'performance-*',
-    #'bugprone-*',
-    #'cert-*',
-    #'cppcoreguidelines-*',
+    'clang-analyzer-*',
+    'performance-*',
+    'bugprone-*',
+    'cert-*',
+    'cppcoreguidelines-*',
     #'hicpp-*',
     #'modernize-*',
-    #'portability-*',
+    'portability-*',
     #'readability-*',
-    #'readability-container-size-empty',
+    'readability-container-size-empty',
     #'readability-inconsistent-declaration-parameter-name',
 ]
 
@@ -43,10 +42,11 @@ disabled_checks = [
     'performance-no-int-to-ptr',
     'readability-function-cognitive-complexity', # bogus
     'portability-simd-intrinsics', # not a problem
+    'bugprone-macro-parenthesis', # should be fixed (using inline/constexpr)
     '*-magic-numbers', # not a problem
     'hicpp-signed-bitwise', # djb shit
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
-    'cert-err58-cpp' # shut up whiner
+    'cert-err58-cpp', # shut up whiner
     'modernize-return-braced-init-list', # thanks I hate it
 ]
 
