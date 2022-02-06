@@ -212,7 +212,7 @@ class Command
    };
 
 #define BOTAN_REGISTER_COMMAND(name, CLI_Class)                          \
-   Botan_CLI::Command::Registration reg_cmd_ ## CLI_Class(name,          \
+   const Botan_CLI::Command::Registration reg_cmd_ ## CLI_Class(name,         \
      []() -> std::unique_ptr<Botan_CLI::Command> { return std::make_unique<CLI_Class>(); })
 
 }
