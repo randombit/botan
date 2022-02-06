@@ -199,10 +199,10 @@ std::chrono::seconds Session::session_age() const
 namespace {
 
 // The output length of the HMAC must be a valid keylength for the AEAD
-const char* TLS_SESSION_CRYPT_HMAC = "HMAC(SHA-512-256)";
+const char* const TLS_SESSION_CRYPT_HMAC = "HMAC(SHA-512-256)";
 // SIV would be better, but we can't assume it is available
-const char* TLS_SESSION_CRYPT_AEAD = "AES-256/GCM";
-const char* TLS_SESSION_CRYPT_KEY_NAME = "BOTAN TLS SESSION KEY NAME";
+const char* const TLS_SESSION_CRYPT_AEAD = "AES-256/GCM";
+const char* const TLS_SESSION_CRYPT_KEY_NAME = "BOTAN TLS SESSION KEY NAME";
 const uint64_t TLS_SESSION_CRYPT_MAGIC = 0x068B5A9D396C0000;
 const size_t TLS_SESSION_CRYPT_MAGIC_LEN = 8;
 const size_t TLS_SESSION_CRYPT_KEY_NAME_LEN = 4;
