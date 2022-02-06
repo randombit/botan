@@ -38,8 +38,6 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
 #if defined(BOTAN_HAS_PBKDF2)
    if(req.algo_name() == "PBKDF2")
       {
-      // TODO OpenSSL
-
       if(provider.empty() || provider == "base")
          {
          if(auto mac = MessageAuthenticationCode::create(req.arg(0)))

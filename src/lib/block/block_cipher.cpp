@@ -94,10 +94,6 @@
   #include <botan/xtea.h>
 #endif
 
-#if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
-#endif
-
 #if defined(BOTAN_HAS_COMMONCRYPTO)
   #include <botan/internal/commoncrypto.h>
 #endif
@@ -112,17 +108,6 @@ BlockCipher::create(const std::string& algo,
    if(provider.empty() || provider == "commoncrypto")
       {
       if(auto bc = make_commoncrypto_block_cipher(algo))
-         return bc;
-
-      if(!provider.empty())
-         return nullptr;
-      }
-#endif
-
-#if defined(BOTAN_HAS_OPENSSL)
-   if(provider.empty() || provider == "openssl")
-      {
-      if(auto bc = make_openssl_block_cipher(algo))
          return bc;
 
       if(!provider.empty())
