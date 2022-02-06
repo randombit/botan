@@ -86,9 +86,9 @@ std::vector<uint8_t> Certificate::serialize() const
    {
    std::vector<uint8_t> buf(3);
 
-   for(size_t i = 0; i != m_certs.size(); ++i)
+   for(const auto& cert : m_certs)
       {
-      std::vector<uint8_t> raw_cert = m_certs[i].BER_encode();
+      const auto raw_cert = cert.BER_encode();
       const size_t cert_size = raw_cert.size();
       for(size_t j = 0; j != 3; ++j)
          {

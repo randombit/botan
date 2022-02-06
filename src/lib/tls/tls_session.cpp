@@ -141,9 +141,13 @@ Session::Session(const uint8_t ber[], size_t ber_len)
 
 secure_vector<uint8_t> Session::DER_encode() const
    {
+   // TODO note for anyone making an incompatible change to the
+   // encodings of TLS sessions. The peer cert list should have been a
+   // SEQUENCE not a concatenation:
+
    std::vector<uint8_t> peer_cert_bits;
-   for(size_t i = 0; i != m_peer_certs.size(); ++i)
-      peer_cert_bits += m_peer_certs[i].BER_encode();
+   for(const auto& peer_cert : m_peer_certs)
+      peer_cert_bits += peer_cert.BER_encode();
 
    return DER_Encoder()
       .start_sequence()

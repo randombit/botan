@@ -339,22 +339,22 @@ class Ciphersuite_Preference_Ordering final
          {
          if(a.kex_method() != b.kex_method())
             {
-            for(size_t i = 0; i != m_kex.size(); ++i)
+            for(const auto & i : m_kex)
                {
-               if(a.kex_algo() == m_kex[i])
+               if(a.kex_algo() == i)
                   return true;
-               if(b.kex_algo() == m_kex[i])
+               if(b.kex_algo() == i)
                   return false;
                }
             }
 
          if(a.cipher_algo() != b.cipher_algo())
             {
-            for(size_t i = 0; i != m_ciphers.size(); ++i)
+            for(const auto & m_cipher : m_ciphers)
                {
-               if(a.cipher_algo() == m_ciphers[i])
+               if(a.cipher_algo() == m_cipher)
                   return true;
-               if(b.cipher_algo() == m_ciphers[i])
+               if(b.cipher_algo() == m_cipher)
                   return false;
                }
             }
@@ -369,22 +369,22 @@ class Ciphersuite_Preference_Ordering final
 
          if(a.auth_method() != b.auth_method())
             {
-            for(size_t i = 0; i != m_sigs.size(); ++i)
+            for(const auto & m_sig : m_sigs)
                {
-               if(a.sig_algo() == m_sigs[i])
+               if(a.sig_algo() == m_sig)
                   return true;
-               if(b.sig_algo() == m_sigs[i])
+               if(b.sig_algo() == m_sig)
                   return false;
                }
             }
 
          if(a.mac_algo() != b.mac_algo())
             {
-            for(size_t i = 0; i != m_macs.size(); ++i)
+            for(const auto & m_mac : m_macs)
                {
-               if(a.mac_algo() == m_macs[i])
+               if(a.mac_algo() == m_mac)
                   return true;
-               if(b.mac_algo() == m_macs[i])
+               if(b.mac_algo() == m_mac)
                   return false;
                }
             }

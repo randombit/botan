@@ -713,15 +713,15 @@ bool X509_Certificate::matches_dns_name(const std::string& name) const
    if(name.empty())
       return false;
 
-   std::vector<std::string> issued_names = subject_info("DNS");
+   const auto issued_names = subject_info("DNS");
 
    // Fall back to CN only if no DNS names are set (RFC 6125 sec 6.4.4)
    if(issued_names.empty())
       issued_names = subject_info("Name");
 
-   for(size_t i = 0; i != issued_names.size(); ++i)
+   for(const auto& issued_name : issued_names)
       {
-      if(host_wildcard_match(issued_names[i], name))
+      if(host_wildcard_match(issued_name, name))
          return true;
       }
 
@@ -846,8 +846,8 @@ std::string X509_Certificate::to_string() const
    if(!ca_issuers.empty())
       {
       out << "CA Issuers:\n";
-      for(size_t i = 0; i != ca_issuers.size(); i++)
-         out << "   URI: " << ca_issuers[i] << "\n";
+      for(const auto& ca_issuer : ca_issuers)
+         out << "   URI: " << ca_issuer << "\n";
       }
 
    if(!crl_distribution_point().empty())

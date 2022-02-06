@@ -95,8 +95,8 @@ void DER_Encoder::DER_Sequence::push_contents(DER_Encoder& der)
    if(m_type_tag == ASN1_Type::Set)
       {
       std::sort(m_set_contents.begin(), m_set_contents.end());
-      for(size_t i = 0; i != m_set_contents.size(); ++i)
-         m_contents += m_set_contents[i];
+      for(const auto& set_elem : m_set_contents)
+         m_contents += set_elem;
       m_set_contents.clear();
       }
 
@@ -348,8 +348,8 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n,
    n.binary_encode(&contents[extra_zero]);
    if(n < 0)
       {
-      for(size_t i = 0; i != contents.size(); ++i)
-         contents[i] = ~contents[i];
+      for(unsigned char & content : contents)
+         content = ~content;
       for(size_t i = contents.size(); i > 0; --i)
          if(++contents[i-1])
             break;

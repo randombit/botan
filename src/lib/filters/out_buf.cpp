@@ -76,11 +76,11 @@ void Output_Buffers::add(SecureQueue* queue)
 */
 void Output_Buffers::retire()
    {
-   for(size_t i = 0; i != m_buffers.size(); ++i)
+   for(auto& buf : m_buffers)
       {
-      if(m_buffers[i] && m_buffers[i]->empty())
+      if(buf && buf->empty())
          {
-         m_buffers[i].reset();
+         buf.reset();
          }
       }
 

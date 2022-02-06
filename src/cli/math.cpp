@@ -155,10 +155,10 @@ class Factor final : public Command
                a_factor = rho(n, rng);
                }
 
-            std::vector<Botan::BigInt> rho_factored = factorize(a_factor, rng);
-            for(size_t j = 0; j != rho_factored.size(); j++)
+            const auto rho_factored = factorize(a_factor, rng);
+            for(const auto& factor : rho_factored)
                {
-               factors.push_back(rho_factored[j]);
+               factors.push_back(factor);
                }
 
             n /= a_factor;

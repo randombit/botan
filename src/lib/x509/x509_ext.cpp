@@ -651,8 +651,8 @@ std::vector<uint8_t> Certificate_Policies::encode_inner() const
    {
    std::vector<Policy_Information> policies;
 
-   for(size_t i = 0; i != m_oids.size(); ++i)
-      policies.push_back(Policy_Information(m_oids[i]));
+   for(const auto& oid : m_oids)
+      policies.push_back(Policy_Information(oid));
 
    std::vector<uint8_t> output;
    DER_Encoder(output)
@@ -671,8 +671,8 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in)
 
    BER_Decoder(in).decode_list(policies);
    m_oids.clear();
-   for(size_t i = 0; i != policies.size(); ++i)
-      m_oids.push_back(policies[i].oid());
+   for(const auto& policy : policies)
+      m_oids.push_back(policy.oid());
    }
 
 void Certificate_Policies::validate(
@@ -810,9 +810,9 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf)
 
    std::stringstream ss;
 
-   for(size_t i = 0; i != m_distribution_points.size(); ++i)
+   for(const auto& distribution_point : m_distribution_points)
       {
-      auto contents = m_distribution_points[i].point().contents();
+      auto contents = distribution_point.point().contents();
 
       for(const auto& pair : contents)
          {

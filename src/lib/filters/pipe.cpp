@@ -45,8 +45,8 @@ Pipe::Pipe(std::initializer_list<Filter*> args)
    m_default_read = 0;
    m_inside_msg = false;
 
-   for(auto i = args.begin(); i != args.end(); ++i)
-      do_append(*i);
+   for(auto arg : args)
+      do_append(arg);
    }
 
 /*

@@ -135,8 +135,8 @@ bool Extensions::remove_extension(Handshake_Extension_Type typ)
 std::set<Handshake_Extension_Type> Extensions::extension_types() const
    {
    std::set<Handshake_Extension_Type> offers;
-   for(auto i = m_extensions.begin(); i != m_extensions.end(); ++i)
-      offers.insert(i->first);
+   for(const auto& extension : m_extensions)
+      offers.insert(extension.first);
    return offers;
    }
 

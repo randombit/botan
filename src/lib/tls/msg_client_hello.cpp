@@ -299,9 +299,14 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
 */
 bool Client_Hello::offered_suite(uint16_t ciphersuite) const
    {
-   for(size_t i = 0; i != m_suites.size(); ++i)
-      if(m_suites[i] == ciphersuite)
+   for(const auto suite : m_suites)
+      {
+      if(suite == ciphersuite)
+         {
          return true;
+         }
+      }
+
    return false;
    }
 

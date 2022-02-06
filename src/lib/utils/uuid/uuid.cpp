@@ -46,10 +46,8 @@ UUID::UUID(const std::string& uuid_str)
       }
 
    std::string just_hex;
-   for(size_t i = 0; i != uuid_str.size(); ++i)
+   for(char c : uuid_str)
       {
-      char c = uuid_str[i];
-
       if(c == '-')
          continue;
 
