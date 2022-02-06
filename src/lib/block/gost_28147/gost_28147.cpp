@@ -90,23 +90,30 @@ std::string GOST_28147_89::name() const
    return "GOST-28147-89(" + sbox_name + ")";
    }
 
+namespace {
+
 /*
 * Two rounds of GOST
 */
-#define GOST_2ROUND(N1, N2, R1, R2)   \
-   do {                               \
-   uint32_t T0 = N1 + m_EK[R1];           \
-   N2 ^= m_SBOX[get_byte<3>(T0)] |        \
-         m_SBOX[get_byte<2>(T0)+256] |       \
-         m_SBOX[get_byte<1>(T0)+512] |       \
-         m_SBOX[get_byte<0>(T0)+768];        \
-                                      \
-   uint32_t T1 = N2 + m_EK[R2];           \
-   N1 ^= m_SBOX[get_byte<3>(T1)] |        \
-         m_SBOX[get_byte<2>(T1)+256] |       \
-         m_SBOX[get_byte<1>(T1)+512] |       \
-         m_SBOX[get_byte<0>(T1)+768];        \
-   } while(0)
+template<size_t R1, size_t R2>
+void GOST_ROUND2(uint32_t& N1, uint32_t& N2,
+                 const std::vector<uint32_t>& S,
+                 const secure_vector<uint32_t>& EK)
+   {
+   const uint32_t T0 = N1 + EK[R1];
+   N2 ^= S[get_byte<3>(T0)] |
+         S[get_byte<2>(T0)+256] |
+         S[get_byte<1>(T0)+512] |
+         S[get_byte<0>(T0)+768];
+
+   const uint32_t T1 = N2 + EK[R2];
+   N1 ^= S[get_byte<3>(T1)] |
+         S[get_byte<2>(T1)+256] |
+         S[get_byte<1>(T1)+512] |
+         S[get_byte<0>(T1)+768];
+   }
+
+}
 
 /*
 * GOST Encryption
@@ -122,16 +129,16 @@ void GOST_28147_89::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
       for(size_t j = 0; j != 3; ++j)
          {
-         GOST_2ROUND(N1, N2, 0, 1);
-         GOST_2ROUND(N1, N2, 2, 3);
-         GOST_2ROUND(N1, N2, 4, 5);
-         GOST_2ROUND(N1, N2, 6, 7);
+         GOST_ROUND2<0, 1>(N1, N2, m_SBOX, m_EK);
+         GOST_ROUND2<2, 3>(N1, N2, m_SBOX, m_EK);
+         GOST_ROUND2<4, 5>(N1, N2, m_SBOX, m_EK);
+         GOST_ROUND2<6, 7>(N1, N2, m_SBOX, m_EK);
          }
 
-      GOST_2ROUND(N1, N2, 7, 6);
-      GOST_2ROUND(N1, N2, 5, 4);
-      GOST_2ROUND(N1, N2, 3, 2);
-      GOST_2ROUND(N1, N2, 1, 0);
+      GOST_ROUND2<7, 6>(N1, N2, m_SBOX, m_EK);
+      GOST_ROUND2<5, 4>(N1, N2, m_SBOX, m_EK);
+      GOST_ROUND2<3, 2>(N1, N2, m_SBOX, m_EK);
+      GOST_ROUND2<1, 0>(N1, N2, m_SBOX, m_EK);
 
       store_le(out, N2, N1);
 
@@ -152,17 +159,17 @@ void GOST_28147_89::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
       uint32_t N1 = load_le<uint32_t>(in, 0);
       uint32_t N2 = load_le<uint32_t>(in, 1);
 
-      GOST_2ROUND(N1, N2, 0, 1);
-      GOST_2ROUND(N1, N2, 2, 3);
-      GOST_2ROUND(N1, N2, 4, 5);
-      GOST_2ROUND(N1, N2, 6, 7);
+      GOST_ROUND2<0, 1>(N1, N2, m_SBOX, m_EK);
+      GOST_ROUND2<2, 3>(N1, N2, m_SBOX, m_EK);
+      GOST_ROUND2<4, 5>(N1, N2, m_SBOX, m_EK);
+      GOST_ROUND2<6, 7>(N1, N2, m_SBOX, m_EK);
 
       for(size_t j = 0; j != 3; ++j)
          {
-         GOST_2ROUND(N1, N2, 7, 6);
-         GOST_2ROUND(N1, N2, 5, 4);
-         GOST_2ROUND(N1, N2, 3, 2);
-         GOST_2ROUND(N1, N2, 1, 0);
+         GOST_ROUND2<7, 6>(N1, N2, m_SBOX, m_EK);
+         GOST_ROUND2<5, 4>(N1, N2, m_SBOX, m_EK);
+         GOST_ROUND2<3, 2>(N1, N2, m_SBOX, m_EK);
+         GOST_ROUND2<1, 0>(N1, N2, m_SBOX, m_EK);
          }
 
       store_le(out, N2, N1);
