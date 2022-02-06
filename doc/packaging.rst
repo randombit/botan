@@ -12,10 +12,14 @@ In most environments, zlib, bzip2, and sqlite are already installed, so there is
 no reason to not include support for them in Botan as well. Build with options
 ``--with-zlib --with-bzip2 --with-sqlite3`` to enable these features.
 
-Even though OpenSSL is also typically already installed, using
-``--with-openssl`` by default is *not recommended*. OpenSSL is sometimes faster
-and sometimes slower than Botan, and the relative speeds vary depending on the
-algorithm and CPU.
+Enable Linux Features
+-----------------------
+
+If you are building for a Linux distribution and know that the running
+kernel and glibc will be new enough, you can enable some features
+which are disabled by default::
+
+  ``--with-os-features=getrandom,getentropy``
 
 Set Path to the System CA bundle
 ---------------------------------

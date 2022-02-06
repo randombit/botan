@@ -45,7 +45,7 @@ Library Layout
 * ``filters`` is a filter/pipe API for data transforms
 * ``compression`` has the compression wrappers (zlib, bzip2, lzma)
 * ``ffi`` is the C99 API
-* ``prov`` contains bindings to external libraries like OpenSSL and PKCS #11
+* ``prov`` contains bindings to external libraries like PKCS #11
 * ``misc`` contains odds and ends: format preserving encryption, SRP, threshold
   secret sharing, all or nothing transform, and others
 
@@ -141,7 +141,7 @@ On Linux if you have the ``lcov`` and ``gcov`` tools installed, then running
 ``./src/scripts/ci_build.py coverage`` will produce a coverage enabled build,
 run the tests, test the fuzzers against a corpus, and produce an HTML report
 of total coverage. This coverage build requires the development headers for
-zlib, bzip2, liblzma, OpenSSL, TrouSerS (libtspi), and Sqlite3.
+zlib, bzip2, liblzma, TrouSerS (libtspi), and Sqlite3.
 
 Copyright Notice
 ----------------------------------------
@@ -256,12 +256,12 @@ additional lines of code in the library. That is, if the library really does
 need this functionality, and it can be done in the library for less than that,
 then it makes sense to just write the code. Yup.
 
-Currently the (optional) external dependencies of the library are OpenSSL (for
-access to fast and side channel hardened RSA, ECDSA, AES), some compression
-libraries (zlib, bzip2, lzma), sqlite3 database, Trousers (TPM integration),
-plus various operating system utilities like basic filesystem operations. These
-provide major pieces of functionality which seem worth the trouble of
-maintaining an integration with.
+Currently the (optional) external dependencies of the library are some
+common compression libraries (zlib, bzip2, lzma), sqlite3 database,
+Trousers (TPM integration), plus various operating system utilities
+like basic filesystem operations. These provide major pieces of
+functionality which seem worth the trouble of maintaining an
+integration with.
 
 At this point the most plausible examples of an appropriate new external
 dependency are all deeper integrations with system level cryptographic systems
