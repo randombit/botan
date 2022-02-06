@@ -18,7 +18,7 @@ XTS_Mode::XTS_Mode(std::unique_ptr<BlockCipher> cipher) :
    {
    if(poly_double_supported_size(m_cipher_block_size) == false)
       {
-      throw Invalid_Argument("Cannot use " + cipher->name() + " with XTS");
+      throw Invalid_Argument("Cannot use " + m_cipher->name() + " with XTS");
       }
 
    m_tweak_cipher = m_cipher->new_object();

@@ -44,20 +44,20 @@ class URI_Tests final : public Test
          struct
             {
             std::string uri;
-            Botan::URI::Type type;
             std::string host;
+            Botan::URI::Type type;
             unsigned port;
             } tests []
             {
-               {"localhost::80", Botan::URI::Type::NotSet, {}, 0},
-               {"localhost:70000", Botan::URI::Type::NotSet, {}, 0},
-               {"[::1]:a", Botan::URI::Type::NotSet, {}, 0},
-               {"[::1]:70000", Botan::URI::Type::NotSet, {}, 0},
-               {"localhost:80", Botan::URI::Type::Domain, "localhost", 80},
-               {"www.example.com", Botan::URI::Type::Domain, "www.example.com", 0},
-               {"192.168.1.1", Botan::URI::Type::IPv4, "192.168.1.1", 0},
-               {"192.168.1.1:34567", Botan::URI::Type::IPv4, "192.168.1.1", 34567},
-               {"[::1]:61234", Botan::URI::Type::IPv6, "::1", 61234},
+               {"localhost::80", {}, Botan::URI::Type::NotSet, 0},
+               {"localhost:70000", {}, Botan::URI::Type::NotSet, 0},
+               {"[::1]:a", {}, Botan::URI::Type::NotSet, 0},
+               {"[::1]:70000", {}, Botan::URI::Type::NotSet, 0},
+               {"localhost:80", "localhost", Botan::URI::Type::Domain, 80},
+               {"www.example.com", "www.example.com", Botan::URI::Type::Domain, 0},
+               {"192.168.1.1", "192.168.1.1", Botan::URI::Type::IPv4, 0},
+               {"192.168.1.1:34567", "192.168.1.1", Botan::URI::Type::IPv4, 34567},
+               {"[::1]:61234", "::1", Botan::URI::Type::IPv6, 61234},
             };
 
          for(const auto& t : tests)

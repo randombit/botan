@@ -357,6 +357,7 @@ class Stateful_RNG_Tests : public Test
             rng->randomize(&child_bytes[0], child_bytes.size());
             count = counting_rng.randomize_count();
             ssize_t written = ::write(fd[1], &count, sizeof(count));
+            BOTAN_UNUSED(written);
             try
                {
                rng->randomize(&child_bytes[0], child_bytes.size());

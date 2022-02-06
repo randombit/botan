@@ -251,11 +251,11 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
 #if defined(BOTAN_HAS_STREEBOG)
    if(algo_spec == "Streebog-256")
       {
-      return std::make_unique<Streebog_256>();
+      return std::make_unique<Streebog>(256);
       }
    if(algo_spec == "Streebog-512")
       {
-      return std::make_unique<Streebog_512>();
+      return std::make_unique<Streebog>(512);
       }
 #endif
 
