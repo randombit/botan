@@ -29,7 +29,7 @@ void Cascade_Cipher::decrypt_n(const uint8_t in[], uint8_t out[],
    m_cipher1->decrypt_n(out, out, c1_blocks);
    }
 
-void Cascade_Cipher::key_schedule(const uint8_t key[], size_t)
+void Cascade_Cipher::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    const uint8_t* key2 = key + m_cipher1->maximum_keylength();
 

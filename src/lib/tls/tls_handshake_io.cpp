@@ -49,7 +49,7 @@ Protocol_Version Stream_Handshake_IO::initial_record_version() const
 
 void Stream_Handshake_IO::add_record(const uint8_t record[],
                                      size_t record_len,
-                                     Record_Type record_type, uint64_t)
+                                     Record_Type record_type, uint64_t /*sequence_number*/)
    {
    if(record_type == HANDSHAKE)
       {
@@ -69,7 +69,7 @@ void Stream_Handshake_IO::add_record(const uint8_t record[],
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
-Stream_Handshake_IO::get_next_record(bool)
+Stream_Handshake_IO::get_next_record(bool /*expecting_ccs*/)
    {
    if(m_queue.size() >= 4)
       {

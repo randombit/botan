@@ -46,8 +46,8 @@ secure_vector<uint8_t> EMSA_Raw::raw_data()
 */
 secure_vector<uint8_t>
 EMSA_Raw::encoding_of(const secure_vector<uint8_t>& msg,
-                      size_t,
-                      RandomNumberGenerator&)
+                      size_t /*output_bits*/,
+                      RandomNumberGenerator& /*rng*/)
    {
    if(m_expected_size && msg.size() != m_expected_size)
       throw Invalid_Argument("EMSA_Raw was configured to use a " +
@@ -63,7 +63,7 @@ EMSA_Raw::encoding_of(const secure_vector<uint8_t>& msg,
 */
 bool EMSA_Raw::verify(const secure_vector<uint8_t>& coded,
                       const secure_vector<uint8_t>& raw,
-                      size_t)
+                      size_t /*key_bits*/)
    {
    if(m_expected_size && raw.size() != m_expected_size)
       return false;

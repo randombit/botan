@@ -376,7 +376,7 @@ void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 /*
 * DES Key Schedule
 */
-void DES::key_schedule(const uint8_t key[], size_t)
+void DES::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    m_round_key.resize(32);
    des_key_schedule(m_round_key.data(), key);

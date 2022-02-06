@@ -154,7 +154,7 @@ class RAII_LowLevel
       bool m_is_logged_in;
    };
 
-bool no_op(ReturnValue*)
+bool no_op(ReturnValue* /*unused*/)
    {
    return true;
    }

@@ -87,7 +87,7 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
          m_key.module()->C_SignUpdate(m_key.session().handle(), const_cast<Byte*>(msg), static_cast<Ulong>(msg_len));
          }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator&) override
+      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override
          {
          secure_vector<uint8_t> signature;
          if(!m_first_message.empty())

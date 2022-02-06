@@ -85,7 +85,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
    };
 
 secure_vector<uint8_t>
-ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t,
+ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t /*msg_len*/,
                                       RandomNumberGenerator& rng)
    {
    const BigInt k = m_group.random_scalar(rng);
@@ -157,7 +157,7 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
       secure_vector<uint8_t> m_prefix;
    };
 
-bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
+bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t /*msg_len*/,
                                             const uint8_t sig[], size_t sig_len)
    {
    const std::unique_ptr<HashFunction> hash = HashFunction::create(hash_for_signature());

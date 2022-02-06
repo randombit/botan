@@ -30,7 +30,7 @@ Certificate_Store::find_cert(const X509_DN& subject_dn, const std::vector<uint8_
    return certs.front();
    }
 
-std::optional<X509_CRL> Certificate_Store::find_crl_for(const X509_Certificate&) const
+std::optional<X509_CRL> Certificate_Store::find_crl_for(const X509_Certificate& /*unused*/) const
    {
    return std::nullopt;
    }

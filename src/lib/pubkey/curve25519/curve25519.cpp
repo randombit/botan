@@ -42,12 +42,12 @@ AlgorithmIdentifier Curve25519_PublicKey::algorithm_identifier() const
    return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
-bool Curve25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
+bool Curve25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const
    {
    return true; // no tests possible?
    }
 
-Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
+Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier& /*unused*/,
                                            const std::vector<uint8_t>& key_bits)
    {
    m_public = key_bits;
@@ -77,7 +77,7 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
    curve25519_basepoint(m_public.data(), m_private.data());
    }
 
-Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
+Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier& /*unused*/,
                                              const secure_vector<uint8_t>& key_bits)
    {
    BER_Decoder(key_bits).decode(m_private, ASN1_Type::OctetString).discard_remaining();
@@ -97,7 +97,7 @@ secure_vector<uint8_t> Curve25519_PrivateKey::private_key_bits() const
    return DER_Encoder().encode(m_private, ASN1_Type::OctetString).get_contents();
    }
 
-bool Curve25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const
+bool Curve25519_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const
    {
    std::vector<uint8_t> public_point(32);
    curve25519_basepoint(public_point.data(), m_private.data());

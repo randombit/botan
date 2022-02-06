@@ -42,7 +42,7 @@ DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
    }
 
 std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length,
-                                       RandomNumberGenerator&) const
+                                       RandomNumberGenerator& /*unused*/) const
    {
    if(m_other_pub_key.empty())
       {

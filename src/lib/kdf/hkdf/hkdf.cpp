@@ -28,7 +28,7 @@ void HKDF::kdf(uint8_t key[], size_t key_len,
 void HKDF_Extract::kdf(uint8_t key[], size_t key_len,
                        const uint8_t secret[], size_t secret_len,
                        const uint8_t salt[], size_t salt_len,
-                       const uint8_t[], size_t) const
+                       const uint8_t /*label*/[], size_t label_len) const
    {
    if(key_len == 0)
       return;
@@ -37,6 +37,9 @@ void HKDF_Extract::kdf(uint8_t key[], size_t key_len,
 
    if(key_len > prf_output_len)
       throw Invalid_Argument("HKDF-Extract maximum output length exceeeded");
+
+   if(label_len > 0)
+      throw Invalid_Argument("HKDF-Extract does not support a label input");
 
    if(salt_len == 0)
       {

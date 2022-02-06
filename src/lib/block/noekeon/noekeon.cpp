@@ -215,7 +215,7 @@ void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 /*
 * Noekeon Key Schedule
 */
-void Noekeon::key_schedule(const uint8_t key[], size_t)
+void Noekeon::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    uint32_t A0 = load_be<uint32_t>(key, 0);
    uint32_t A1 = load_be<uint32_t>(key, 1);

@@ -493,7 +493,7 @@ PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    return result;
    }
 
-Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
+Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarMap& vars)
    {
    const std::vector<uint8_t> K = vars.get_req_bin("K");
    const std::vector<uint8_t> C0 = vars.get_req_bin("C0");

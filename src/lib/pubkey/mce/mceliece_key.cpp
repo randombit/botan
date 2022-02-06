@@ -156,7 +156,7 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const
    return enc.get_contents();
    }
 
-bool McEliece_PrivateKey::check_key(RandomNumberGenerator& rng, bool) const
+bool McEliece_PrivateKey::check_key(RandomNumberGenerator& rng, bool /*unused*/) const
    {
    const secure_vector<uint8_t> plaintext = this->random_plaintext_element(rng);
 

@@ -28,12 +28,12 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
               "P,G,X,Y,K",
               "Q,KDF,OutLen") {}
 
-      std::string default_kdf(const VarMap&) const override
+      std::string default_kdf(const VarMap& /*unused*/) const override
          {
          return "Raw";
          }
 
-      std::unique_ptr<Botan::Private_Key> load_our_key(const std::string&, const VarMap& vars) override
+      std::unique_ptr<Botan::Private_Key> load_our_key(const std::string& /*header*/, const VarMap& vars) override
          {
          const Botan::BigInt p = vars.get_req_bn("P");
          const Botan::BigInt q = vars.get_opt_bn("Q", 0);
@@ -53,7 +53,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
          return std::make_unique<Botan::DH_PrivateKey>(Test::rng(), grp, x);
          }
 
-      std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override
+      std::vector<uint8_t> load_their_key(const std::string& /*header*/, const VarMap& vars) override
          {
          const Botan::BigInt p = vars.get_req_bn("P");
          const Botan::BigInt q = vars.get_opt_bn("Q", 0);
@@ -119,7 +119,7 @@ class DH_Invalid_Key_Tests final : public Text_Based_Test
          return false;
          }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("DH invalid keys");
 

@@ -819,7 +819,7 @@ class ECC_Invalid_Key_Tests final : public Text_Based_Test
          return false;
          }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("ECC invalid keys");
 

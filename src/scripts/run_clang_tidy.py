@@ -10,8 +10,9 @@ import re
 from multiprocessing.pool import ThreadPool
 
 enabled_checks = [
-    'clang-analyzer-*',
-    'performance-*',
+    'readability-named-parameter',
+    #'clang-analyzer-*',
+    #'performance-*',
     #'bugprone-*',
     #'cert-*',
     #'cppcoreguidelines-*',
@@ -19,23 +20,34 @@ enabled_checks = [
     #'modernize-*',
     #'portability-*',
     #'readability-*',
-    'readability-container-size-empty'
+    #'readability-container-size-empty',
+    #'readability-inconsistent-declaration-parameter-name',
 ]
 
 disabled_checks = [
     '*-array-to-pointer-decay',
     '*-avoid-c-arrays',
     '*-braces-around-statements', # should fix
-    '*-magic-numbers',
     '*-no-array-decay',
-    '-*else-after-return',
+    '*-else-after-return',
+    '*-function-size', # don't care
+    'readability-implicit-bool-conversion', # maybe fix this
     'bugprone-easily-swappable-parameters',
+    'bugprone-implicit-widening-of-multiplication-result',
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
+    'cppcoreguidelines-pro-bounds-constant-array-index',
     'modernize-pass-by-value',
     'modernize-use-trailing-return-type',
-    'readability-function-cognitive-complexity', # bogus
+    'readability-isolate-declaration',
     'performance-inefficient-string-concatenation',
     'performance-no-int-to-ptr',
+    'readability-function-cognitive-complexity', # bogus
+    'portability-simd-intrinsics', # not a problem
+    '*-magic-numbers', # not a problem
+    'hicpp-signed-bitwise', # djb shit
+    'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
+    'cert-err58-cpp' # shut up whiner
+    'modernize-return-braced-init-list', # thanks I hate it
 ]
 
 def create_check_option(enabled, disabled):

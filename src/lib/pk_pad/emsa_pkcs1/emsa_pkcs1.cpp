@@ -56,7 +56,7 @@ secure_vector<uint8_t> EMSA_PKCS1v15::raw_data()
 secure_vector<uint8_t>
 EMSA_PKCS1v15::encoding_of(const secure_vector<uint8_t>& msg,
                            size_t output_bits,
-                           RandomNumberGenerator&)
+                           RandomNumberGenerator& /*rng*/)
    {
    if(msg.size() != m_hash->output_length())
       throw Encoding_Error("EMSA_PKCS1v15::encoding_of: Bad input length");
@@ -141,7 +141,7 @@ secure_vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data()
 secure_vector<uint8_t>
 EMSA_PKCS1v15_Raw::encoding_of(const secure_vector<uint8_t>& msg,
                                size_t output_bits,
-                               RandomNumberGenerator&)
+                               RandomNumberGenerator& /*rng*/)
    {
    return emsa3_encoding(msg, output_bits, m_hash_id.data(), m_hash_id.size());
    }

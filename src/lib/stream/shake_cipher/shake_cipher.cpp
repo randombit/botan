@@ -57,7 +57,7 @@ void SHAKE_128_Cipher::clear()
    m_buf_pos = 0;
    }
 
-void SHAKE_128_Cipher::set_iv(const uint8_t[], size_t length)
+void SHAKE_128_Cipher::set_iv(const uint8_t /*iv*/[], size_t length)
    {
    /*
    * This could be supported in some way (say, by treating iv as
@@ -67,7 +67,7 @@ void SHAKE_128_Cipher::set_iv(const uint8_t[], size_t length)
       throw Invalid_IV_Length(name(), length);
    }
 
-void SHAKE_128_Cipher::seek(uint64_t)
+void SHAKE_128_Cipher::seek(uint64_t /*offset*/)
    {
    throw Not_Implemented("SHAKE_128_Cipher::seek");
    }

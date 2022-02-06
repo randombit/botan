@@ -69,8 +69,8 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
          }
 
       std::vector<Botan::Certificate_Store*>
-      trusted_certificate_authorities(const std::string&,
-                                      const std::string&) override
+      trusted_certificate_authorities(const std::string& /*type*/,
+                                      const std::string& /*context*/) override
          {
          std::vector<Botan::Certificate_Store*> v;
          for(auto const& store : m_stores)
@@ -115,8 +115,8 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
          }
 
       Botan::Private_Key* private_key_for(const Botan::X509_Certificate& crt,
-                                          const std::string&,
-                                          const std::string&) override
+                                          const std::string& /*type*/,
+                                          const std::string& /*context*/) override
          {
          if(crt == m_rsa_cert)
             {
@@ -131,7 +131,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
 
       Botan::SymmetricKey psk(const std::string& type,
                               const std::string& context,
-                              const std::string&) override
+                              const std::string& /*identity*/) override
          {
          if(type == "tls-server" && context == "session-ticket")
             {
@@ -276,7 +276,7 @@ class TLS_Handshake_Test final
 
             Botan::TLS::Handshake_Extension_Type type() const override { return static_type(); }
 
-            std::vector<uint8_t> serialize(Botan::TLS::Connection_Side) const override { return m_buf; }
+            std::vector<uint8_t> serialize(Botan::TLS::Connection_Side /*whoami*/) const override { return m_buf; }
 
             const std::vector<uint8_t>& value() const { return m_buf; }
 
@@ -608,7 +608,7 @@ class Test_Policy final : public Botan::TLS::Text_Policy
    {
    public:
       Test_Policy() : Text_Policy("") {}
-      bool acceptable_protocol_version(Botan::TLS::Protocol_Version) const override
+      bool acceptable_protocol_version(Botan::TLS::Protocol_Version /*version*/) const override
          {
          return true;
          }
@@ -976,7 +976,7 @@ class DTLS_Reconnection_Test : public Test
             public:
                Botan::SymmetricKey psk(const std::string& type,
                                        const std::string& context,
-                                       const std::string&) override
+                                       const std::string& /*identity*/) override
                   {
                   if(type == "tls-server" && context == "session-ticket")
                      {

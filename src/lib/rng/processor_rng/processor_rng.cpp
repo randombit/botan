@@ -146,12 +146,12 @@ Processor_RNG::Processor_RNG()
       throw Invalid_State("Current CPU does not support RNG instruction");
    }
 
-void Processor_RNG::add_entropy(const uint8_t[], size_t)
+void Processor_RNG::add_entropy(const uint8_t /*input*/[], size_t /*length*/)
    {
    /* no way to add entropy */
    }
 
-size_t Processor_RNG::reseed(Entropy_Sources&, size_t, std::chrono::milliseconds)
+size_t Processor_RNG::reseed(Entropy_Sources& /*srcs*/, size_t /*poll_bits*/, std::chrono::milliseconds /*poll_timeout*/)
    {
    /* no way to add entropy */
    return 0;

@@ -27,7 +27,7 @@ class ECDH_KAT_Tests final : public PK_Key_Agreement_Test
               "Secret,CounterKey,K",
               "KDF") {}
 
-      std::string default_kdf(const VarMap&) const override
+      std::string default_kdf(const VarMap& /*unused*/) const override
          {
          return "Raw";
          }
@@ -40,7 +40,7 @@ class ECDH_KAT_Tests final : public PK_Key_Agreement_Test
          return std::make_unique<Botan::ECDH_PrivateKey>(Test::rng(), group, secret);
          }
 
-      std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override
+      std::vector<uint8_t> load_their_key(const std::string& /*header*/, const VarMap& vars) override
          {
          return vars.get_req_bin("CounterKey");
          }

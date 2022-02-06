@@ -73,7 +73,7 @@ class NEWHOPE_RNG final : public Botan::RandomNumberGenerator
 
       bool accepts_input() const override { return false; }
 
-      void add_entropy(const uint8_t[], size_t) override
+      void add_entropy(const uint8_t /*input*/[], size_t /*length*/) override
          {
          /* ignored */
          }
@@ -112,7 +112,7 @@ class NEWHOPE_Tests final : public Text_Based_Test
               "pubkey/newhope.vec",
               "DRBG_SeedA,H_OutputA,DRBG_SeedB,H_OutputB,SharedKey") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("NEWHOPE");
 

@@ -159,7 +159,7 @@ class Bcrypt_PBKDF_KAT_Tests final : public Text_Based_Test
    public:
       Bcrypt_PBKDF_KAT_Tests() : Text_Based_Test("bcrypt_pbkdf.vec", "Passphrase,Salt,Iterations,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          const size_t rounds = vars.get_req_sz("Iterations");
          const std::vector<uint8_t> salt = vars.get_req_bin("Salt");
@@ -201,7 +201,7 @@ class Scrypt_KAT_Tests final : public Text_Based_Test
    public:
       Scrypt_KAT_Tests() : Text_Based_Test("scrypt.vec", "Passphrase,Salt,N,R,P,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          const size_t N = vars.get_req_sz("N");
          const size_t R = vars.get_req_sz("R");

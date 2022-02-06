@@ -288,7 +288,7 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 /*
 * SM4 Key Schedule
 */
-void SM4::key_schedule(const uint8_t key[], size_t)
+void SM4::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    // System parameter or family key
    const uint32_t FK[4] = { 0xa3b1bac6, 0x56aa3350, 0x677d9197, 0xb27022dc };

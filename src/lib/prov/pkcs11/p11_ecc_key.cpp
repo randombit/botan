@@ -120,7 +120,7 @@ size_t PKCS11_EC_PrivateKey::estimated_strength() const
    return ecp_work_factor(key_length());
    }
 
-bool PKCS11_EC_PrivateKey::check_key(RandomNumberGenerator&, bool) const
+bool PKCS11_EC_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const
    {
    return m_public_key.on_the_curve();
    }

@@ -79,7 +79,7 @@ class ChaCha_RNG_Tests final : public Text_Based_Test
                            "EntropyInput,EntropyInputReseed,Out",
                            "AdditionalInput1,AdditionalInput2") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          const std::vector<uint8_t> seed_input   = vars.get_req_bin("EntropyInput");
          const std::vector<uint8_t> reseed_input = vars.get_req_bin("EntropyInputReseed");

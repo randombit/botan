@@ -174,7 +174,7 @@ void GOST_28147_89::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 /*
 * GOST Key Schedule
 */
-void GOST_28147_89::key_schedule(const uint8_t key[], size_t)
+void GOST_28147_89::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    m_EK.resize(8);
    for(size_t i = 0; i != 8; ++i)

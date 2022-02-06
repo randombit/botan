@@ -661,7 +661,7 @@ namespace {
 
 static ::sigjmp_buf g_sigill_jmp_buf;
 
-void botan_sigill_handler(int)
+void botan_sigill_handler(int /*unused*/)
    {
    siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/1);
    }

@@ -98,7 +98,7 @@ class TSS_Generation_Tests final : public Text_Based_Test
             throw Test_Error("Unknown TSS hash algorithm " + hash);
          }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("TSS");
 

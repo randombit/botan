@@ -366,7 +366,7 @@ class Poly_Double_Tests final : public Text_Based_Test
    public:
       Poly_Double_Tests() : Text_Based_Test("poly_dbl.vec", "In,Out") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("Polynomial doubling");
          const std::vector<uint8_t> in  = vars.get_req_bin("In");
@@ -749,7 +749,7 @@ class UUID_Tests : public Test
 
                std::string name() const override { return "zeros"; }
                bool accepts_input() const override { return false; }
-               void add_entropy(const uint8_t[], size_t) override {}
+               void add_entropy(const uint8_t /*input*/[], size_t /*length*/) override {}
                void clear() override {}
                bool is_seeded() const override { return true; }
             private:

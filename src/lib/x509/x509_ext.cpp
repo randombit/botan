@@ -105,10 +105,10 @@ Extensions::create_extn_obj(const OID& oid,
 /*
 * Validate the extension (the default implementation is a NOP)
 */
-void Certificate_Extension::validate(const X509_Certificate&, const X509_Certificate&,
-      const std::vector<X509_Certificate>&,
-      std::vector<std::set<Certificate_Status_Code>>&,
-      size_t)
+void Certificate_Extension::validate(const X509_Certificate& /*unused*/, const X509_Certificate& /*unused*/,
+      const std::vector<X509_Certificate>& /*unused*/,
+      std::vector<std::set<Certificate_Status_Code>>& /*unused*/,
+      size_t /*unused*/)
    {
    }
 
@@ -823,7 +823,7 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf)
    m_crl_distribution_urls.push_back(ss.str());
    }
 
-void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&) const
+void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder& /*to*/) const
    {
    throw Not_Implemented("CRL_Distribution_Points encoding");
    }

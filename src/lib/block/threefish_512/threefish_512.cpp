@@ -248,7 +248,7 @@ void Threefish_512::set_tweak(const uint8_t tweak[], size_t len)
    m_T[2] = m_T[0] ^ m_T[1];
    }
 
-void Threefish_512::key_schedule(const uint8_t key[], size_t)
+void Threefish_512::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    // todo: define key schedule for smaller keys
    m_K.resize(9);

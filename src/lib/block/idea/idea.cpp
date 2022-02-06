@@ -180,7 +180,7 @@ void IDEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 /*
 * IDEA Key Schedule
 */
-void IDEA::key_schedule(const uint8_t key[], size_t)
+void IDEA::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    m_EK.resize(52);
    m_DK.resize(52);

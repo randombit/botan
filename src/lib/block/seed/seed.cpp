@@ -154,7 +154,7 @@ void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 /*
 * SEED Key Schedule
 */
-void SEED::key_schedule(const uint8_t key[], size_t)
+void SEED::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    const uint32_t RC[16] = {
       0x9E3779B9, 0x3C6EF373, 0x78DDE6E6, 0xF1BBCDCC,

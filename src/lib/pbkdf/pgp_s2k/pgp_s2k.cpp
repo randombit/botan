@@ -98,7 +98,7 @@ std::string RFC4880_S2K_Family::name() const
    return "OpenPGP-S2K(" + m_hash->name() + ")";
    }
 
-std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len, std::chrono::milliseconds msec, size_t) const
+std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len, std::chrono::milliseconds msec, size_t /*max_memory_usage_mb*/) const
    {
    const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
 
@@ -122,7 +122,7 @@ std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len, std::c
    return std::make_unique<RFC4880_S2K>(m_hash->clone(), iterations);
    }
 
-std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_params(size_t iter, size_t, size_t) const
+std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_params(size_t iter, size_t /*i2*/, size_t /*i3*/) const
    {
    return std::make_unique<RFC4880_S2K>(m_hash->clone(), iter);
    }

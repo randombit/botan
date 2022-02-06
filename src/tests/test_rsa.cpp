@@ -96,7 +96,7 @@ class RSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
               "E,P,Q,Msg,Signature",
               "Nonce") {}
 
-      std::string default_padding(const VarMap&) const override
+      std::string default_padding(const VarMap& /*unused*/) const override
          {
          return "Raw";
          }
@@ -172,7 +172,7 @@ class RSA_Signature_Verify_Tests final : public PK_Signature_Verification_Test
               "pubkey/rsa_verify.vec",
               "E,N,Msg,Signature") {}
 
-      std::string default_padding(const VarMap&) const override
+      std::string default_padding(const VarMap& /*unused*/) const override
          {
          return "Raw";
          }
@@ -192,7 +192,7 @@ class RSA_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerifica
               "pubkey/rsa_invalid.vec",
               "E,N,Msg,InvalidSignature") {}
 
-      std::string default_padding(const VarMap&) const override
+      std::string default_padding(const VarMap& /*unused*/) const override
          {
          return "Raw";
          }

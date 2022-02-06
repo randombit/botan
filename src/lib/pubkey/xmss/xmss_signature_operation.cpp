@@ -84,7 +84,7 @@ void XMSS_Signature_Operation::update(const uint8_t msg[], size_t msg_len)
    }
 
 secure_vector<uint8_t>
-XMSS_Signature_Operation::sign(RandomNumberGenerator&)
+XMSS_Signature_Operation::sign(RandomNumberGenerator& /*rng*/)
    {
    initialize();
    secure_vector<uint8_t> signature(sign(m_hash.h_msg_final(),

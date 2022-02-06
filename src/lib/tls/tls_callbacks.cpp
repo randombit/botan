@@ -22,12 +22,12 @@
 
 namespace Botan {
 
-void TLS::Callbacks::tls_inspect_handshake_msg(const Handshake_Message&)
+void TLS::Callbacks::tls_inspect_handshake_msg(const Handshake_Message& /*unused*/)
    {
    // default is no op
    }
 
-std::string TLS::Callbacks::tls_server_choose_app_protocol(const std::vector<std::string>&)
+std::string TLS::Callbacks::tls_server_choose_app_protocol(const std::vector<std::string>& /*unused*/)
    {
    return "";
    }
@@ -37,11 +37,11 @@ std::string TLS::Callbacks::tls_peer_network_identity()
    return "";
    }
 
-void TLS::Callbacks::tls_modify_extensions(Extensions&, Connection_Side)
+void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/, Connection_Side /*unused*/)
    {
    }
 
-void TLS::Callbacks::tls_examine_extensions(const Extensions&, Connection_Side)
+void TLS::Callbacks::tls_examine_extensions(const Extensions& /*unused*/, Connection_Side /*unused*/)
    {
    }
 

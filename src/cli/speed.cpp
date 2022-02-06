@@ -1082,7 +1082,7 @@ class Speed final : public Command
             }
          }
 
-      void bench_entropy_sources(const std::chrono::milliseconds)
+      void bench_entropy_sources(const std::chrono::milliseconds /*unused*/)
          {
          Botan::Entropy_Sources& srcs = Botan::Entropy_Sources::global_sources();
 
@@ -1960,7 +1960,7 @@ class Speed final : public Command
          }
 
       void bench_ecdsa_recovery(const std::vector<std::string>& groups,
-                                const std::string&,
+                                const std::string& /*unused*/,
                                 std::chrono::milliseconds msec)
          {
          for(const std::string& group_name : groups)

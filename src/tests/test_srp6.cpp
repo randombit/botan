@@ -26,7 +26,7 @@ class SRP6_KAT_Tests final : public Text_Based_Test
 
       bool clear_between_callbacks() const override { return false; }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("SRP6a");
 

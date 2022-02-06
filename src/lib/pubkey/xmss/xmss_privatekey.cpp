@@ -397,8 +397,8 @@ std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const
    }
 
 std::unique_ptr<PK_Ops::Signature>
-XMSS_PrivateKey::create_signature_op(RandomNumberGenerator&,
-                                     const std::string&,
+XMSS_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                     const std::string& /*params*/,
                                      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())

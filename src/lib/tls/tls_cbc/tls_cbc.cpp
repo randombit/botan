@@ -282,7 +282,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(uint8_t record_contents[],
    cbc().process(record_contents, record_len);
    }
 
-size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t) const
+size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t /*input_length*/) const
    {
    /*
    * We don't know this because the padding is arbitrary

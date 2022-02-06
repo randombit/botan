@@ -462,7 +462,7 @@ std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoam
    return buf;
    }
 
-Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader&,
+Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader& /*unused*/,
                                                uint16_t extension_size)
    {
    if(extension_size != 0)
@@ -474,7 +474,7 @@ std::vector<uint8_t> Extended_Master_Secret::serialize(Connection_Side /*whoami*
    return std::vector<uint8_t>();
    }
 
-Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader&,
+Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader& /*unused*/,
                                    uint16_t extension_size)
    {
    if(extension_size != 0)

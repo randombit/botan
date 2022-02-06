@@ -394,7 +394,7 @@ bool Test::Result::test_rc(const std::string& func, int expected, int rc)
    return test_success();
    }
 
-std::vector<std::string> Test::possible_providers(const std::string&)
+std::vector<std::string> Test::possible_providers(const std::string& /*unused*/)
    {
    return Test::provider_filter({ "base" });
    }
