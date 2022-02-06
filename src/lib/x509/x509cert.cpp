@@ -713,7 +713,7 @@ bool X509_Certificate::matches_dns_name(const std::string& name) const
    if(name.empty())
       return false;
 
-   const auto issued_names = subject_info("DNS");
+   auto issued_names = subject_info("DNS");
 
    // Fall back to CN only if no DNS names are set (RFC 6125 sec 6.4.4)
    if(issued_names.empty())
