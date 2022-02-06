@@ -20,7 +20,7 @@ namespace Botan {
 * @param algo the algorithm for which to look up supported padding schemes
 * @return a vector of supported padding schemes
 */
-BOTAN_TEST_API const std::vector<std::string> get_sig_paddings(const std::string& algo);
+BOTAN_TEST_API std::vector<std::string> get_sig_paddings(const std::string& algo);
 
 /**
 * Returns true iff the given padding scheme is valid for the given

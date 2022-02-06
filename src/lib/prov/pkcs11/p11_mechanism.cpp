@@ -20,7 +20,7 @@ namespace {
 using PSS_Params = std::tuple<size_t, MechanismType, MGF>;
 
 // maps a PSS mechanism type to the number of bytes used for the salt, the mechanism type of the underlying hash algorithm and the MGF
-static const std::map<MechanismType, PSS_Params> PssOptions =
+const std::map<MechanismType, PSS_Params> PssOptions =
    {
       { MechanismType::RsaPkcsPss, PSS_Params(0, MechanismType::Sha1, MGF::Mgf1Sha1) },
       { MechanismType::Sha1RsaPkcsPss, PSS_Params(20, MechanismType::Sha1, MGF::Mgf1Sha1) },
@@ -71,7 +71,7 @@ struct RSA_SignMechanism final : public MechanismData
    };
 
 // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_sign_mechanism`
-static std::map<std::string, RSA_SignMechanism> SignMechanisms =
+const std::map<std::string, RSA_SignMechanism> SignMechanisms =
    {
       { "Raw", RSA_SignMechanism(MechanismType::RsaX509) },
 
@@ -133,7 +133,7 @@ struct RSA_CryptMechanism final : public MechanismData
    };
 
 // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_crypt_mechanism`
-static const std::map<std::string, RSA_CryptMechanism> CryptMechanisms =
+const std::map<std::string, RSA_CryptMechanism> CryptMechanisms =
    {
       { "Raw", RSA_CryptMechanism(MechanismType::RsaX509, 0) },
       { "EME-PKCS1-v1_5", RSA_CryptMechanism(MechanismType::RsaPkcs, 11) },
@@ -145,7 +145,7 @@ static const std::map<std::string, RSA_CryptMechanism> CryptMechanisms =
    };
 
 // note: when updating this map, update the documentation for `MechanismWrapper::create_ecdsa_mechanism`
-static std::map<std::string, MechanismType> EcdsaHash =
+const std::map<std::string, MechanismType> EcdsaHash =
    {
       { "Raw", MechanismType::Ecdsa },
       { "SHA-160", MechanismType::EcdsaSha1 },
@@ -156,7 +156,7 @@ static std::map<std::string, MechanismType> EcdsaHash =
    };
 
 // note: when updating this map, update the documentation for `MechanismWrapper::create_ecdh_mechanism`
-static std::map<std::string, KeyDerivation> EcdhHash =
+const std::map<std::string, KeyDerivation> EcdhHash =
    {
       { "Raw", KeyDerivation::Null },
       { "SHA-160", KeyDerivation::Sha1Kdf },

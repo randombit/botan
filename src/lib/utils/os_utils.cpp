@@ -659,7 +659,7 @@ void OS::free_locked_pages(const std::vector<void*>& pages)
 
 namespace {
 
-static ::sigjmp_buf g_sigill_jmp_buf;
+::sigjmp_buf g_sigill_jmp_buf;
 
 void botan_sigill_handler(int /*unused*/)
    {

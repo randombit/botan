@@ -16,7 +16,7 @@ PGP stores the iteration count as a single byte
 Thus it can only actually take on one of 256 values, based on the
 formula in RFC 4880 section 3.6.1.3
 */
-static const uint32_t OPENPGP_S2K_ITERS[256] = {
+const uint32_t OPENPGP_S2K_ITERS[256] = {
    1024, 1088, 1152, 1216, 1280, 1344, 1408, 1472, 1536, 1600,
    1664, 1728, 1792, 1856, 1920, 1984, 2048, 2176, 2304, 2432,
    2560, 2688, 2816, 2944, 3072, 3200, 3328, 3456, 3584, 3712,

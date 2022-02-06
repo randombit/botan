@@ -10,16 +10,19 @@ import re
 from multiprocessing.pool import ThreadPool
 
 enabled_checks = [
-    'clang-analyzer-*',
-    'performance-*',
-    'bugprone-*',
-    'cert-*',
-    'cppcoreguidelines-*',
+    #'clang-analyzer-*',
+    #'performance-*',
+    #'bugprone-*',
+    #'cert-*',
+    #'cppcoreguidelines-*',
     #'hicpp-*',
     #'modernize-*',
-    'portability-*',
+    #'portability-*',
     #'readability-*',
-    'readability-container-size-empty',
+    #'readability-container-size-empty',
+    'readability-static-definition-in-anonymous-namespace',
+    #'modernize-make-unique',
+    #'modernize-concat-nested-namespaces',
     #'readability-inconsistent-declaration-parameter-name',
 ]
 
@@ -30,6 +33,9 @@ disabled_checks = [
     '*-no-array-decay',
     '*-else-after-return',
     '*-function-size', # don't care
+    '*-use-auto', # not universally a good idea
+    'modernize-use-nodiscard', # maybe
+    'modernize-loop-convert', # sometimes very ugly
     'readability-implicit-bool-conversion', # maybe fix this
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
@@ -42,12 +48,16 @@ disabled_checks = [
     'performance-no-int-to-ptr',
     'readability-function-cognitive-complexity', # bogus
     'portability-simd-intrinsics', # not a problem
-    'bugprone-macro-parenthesis', # should be fixed (using inline/constexpr)
+    'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
     '*-magic-numbers', # not a problem
     'hicpp-signed-bitwise', # djb shit
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
     'cert-err58-cpp', # shut up whiner
     'modernize-return-braced-init-list', # thanks I hate it
+    'cppcoreguidelines-no-malloc',
+    'cppcoreguidelines-owning-memory',
+    'cppcoreguidelines-init-variables',
+    'readability-inconsistent-declaration-parameter-name', # should fix this
 ]
 
 def create_check_option(enabled, disabled):
@@ -90,6 +100,15 @@ def run_clang_tidy(compile_commands_file,
     if stdout != "":
         print(stdout)
 
+def file_matches(file, args):
+    if args is None or len(args) == 0:
+        return True
+
+    for arg in args:
+        if file.find(arg) > 0:
+            return True
+    return False
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -115,11 +134,16 @@ def main(args = None):
 
     results = []
     for info in compile_commands:
+        file = info['file']
+
+        if not file_matches(file, args[1:]):
+            continue
+
         results.append(pool.apply_async(
             run_clang_tidy,
             (compile_commands_file,
              check_config,
-             info['file'],
+             file,
              options)))
 
     for result in results:
