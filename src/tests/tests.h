@@ -525,7 +525,7 @@ class TestClassRegistration
    };
 
 #define BOTAN_REGISTER_TEST(category, name, Test_Class)                 \
-   TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name)
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name)
 
 typedef Test::Result (*test_fn)();
 
@@ -554,7 +554,7 @@ class TestFnRegistration
    };
 
 #define BOTAN_REGISTER_TEST_FN(category, name, fn_name) \
-   TestFnRegistration reg_ ## fn_name(category, name, fn_name)
+   const TestFnRegistration reg_ ## fn_name(category, name, fn_name)
 
 class VarMap
    {
