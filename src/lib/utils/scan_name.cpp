@@ -60,8 +60,12 @@ SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
    {
    }
 
-SCAN_Name::SCAN_Name(std::string algo_spec) : m_orig_algo_spec(algo_spec), m_alg_name(), m_args(), m_mode_info()
-   { 
+SCAN_Name::SCAN_Name(const std::string& algo_spec) :
+   m_orig_algo_spec(algo_spec),
+   m_alg_name(),
+   m_args(),
+   m_mode_info()
+   {
    if(algo_spec.empty())
       throw Invalid_Argument("Expected algorithm name, got empty string");
 

@@ -23,7 +23,7 @@ namespace {
 * closes the socket.
 */
 std::string http_transact(const std::string& hostname,
-		                  const std::string& service,
+                          const std::string& service,
                           const std::string& message,
                           std::chrono::milliseconds timeout)
    {
@@ -67,6 +67,19 @@ std::string http_transact(const std::string& hostname,
    return oss.str();
    }
 
+bool needs_url_encoding(char c)
+   {
+   if(c >= 'A' && c <= 'Z')
+      return false;
+   if(c >= 'a' && c <= 'z')
+      return false;
+   if(c >= '0' && c <= '9')
+      return false;
+   if(c == '-' || c == '_' || c == '.' || c == '~')
+      return false;
+   return true;
+   }
+
 }
 
 std::string url_encode(const std::string& in)
@@ -75,16 +88,10 @@ std::string url_encode(const std::string& in)
 
    for(auto c : in)
       {
-      if(c >= 'A' && c <= 'Z')
-         out << c;
-      else if(c >= 'a' && c <= 'z')
-         out << c;
-      else if(c >= '0' && c <= '9')
-         out << c;
-      else if(c == '-' || c == '_' || c == '.' || c == '~')
-         out << c;
-      else
+      if(needs_url_encoding(c))
          out << '%' << hex_encode(cast_char_ptr_to_uint8(&c), 1);
+      else
+         out << c;
       }
 
    return out.str();

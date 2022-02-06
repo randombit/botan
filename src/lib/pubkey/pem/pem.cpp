@@ -78,7 +78,7 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label)
       uint8_t b;
       if(!source.read_byte(b))
          throw Decoding_Error("PEM: No PEM header found");
-      if(b == PEM_HEADER1[position])
+      if(static_cast<char>(b) == PEM_HEADER1[position])
          ++position;
       else if(position >= RANDOM_CHAR_LIMIT)
          throw Decoding_Error("PEM: Malformed PEM header");
@@ -91,7 +91,7 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label)
       uint8_t b;
       if(!source.read_byte(b))
          throw Decoding_Error("PEM: No PEM header found");
-      if(b == PEM_HEADER2[position])
+      if(static_cast<char>(b) == PEM_HEADER2[position])
          ++position;
       else if(position)
          throw Decoding_Error("PEM: Malformed PEM header");
@@ -109,7 +109,7 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label)
       uint8_t b;
       if(!source.read_byte(b))
          throw Decoding_Error("PEM: No PEM trailer found");
-      if(b == PEM_TRAILER[position])
+      if(static_cast<char>(b) == PEM_TRAILER[position])
          ++position;
       else if(position)
          throw Decoding_Error("PEM: Malformed PEM trailer");
@@ -143,7 +143,7 @@ bool matches(DataSource& source, const std::string& extra,
    const std::string PEM_HEADER = "-----BEGIN " + extra;
 
    secure_vector<uint8_t> search_buf(search_range);
-   size_t got = source.peek(search_buf.data(), search_buf.size(), 0);
+   const size_t got = source.peek(search_buf.data(), search_buf.size(), 0);
 
    if(got < PEM_HEADER.length())
       return false;
@@ -152,13 +152,21 @@ bool matches(DataSource& source, const std::string& extra,
 
    for(size_t j = 0; j != got; ++j)
       {
-      if(search_buf[j] == PEM_HEADER[index])
+      if(static_cast<char>(search_buf[j]) == PEM_HEADER[index])
+         {
          ++index;
+         }
       else
+         {
          index = 0;
+         }
+
       if(index == PEM_HEADER.size())
+         {
          return true;
+         }
       }
+
    return false;
    }
 

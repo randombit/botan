@@ -10,56 +10,66 @@ import re
 from multiprocessing.pool import ThreadPool
 
 enabled_checks = [
-    #'clang-analyzer-*',
-    #'performance-*',
-    #'bugprone-*',
-    #'cert-*',
+    'bugprone-*',
+    'cert-*',
+    'clang-analyzer-*',
+    'modernize-concat-nested-namespaces',
+    'performance-*',
+    'portability-*',
+    'readability-container-size-empty',
+    'readability-static-definition-in-anonymous-namespace',
+
     #'cppcoreguidelines-*',
     #'hicpp-*',
     #'modernize-*',
-    #'portability-*',
     #'readability-*',
-    #'readability-container-size-empty',
-    #'readability-static-definition-in-anonymous-namespace',
     #'modernize-make-unique',
-    'modernize-concat-nested-namespaces',
     #'readability-inconsistent-declaration-parameter-name',
 ]
 
-disabled_checks = [
-    '*-array-to-pointer-decay',
-    '*-avoid-c-arrays',
-    '*-braces-around-statements', # should fix
-    '*-else-after-return',
-    '*-function-size', # don't care
-    '*-magic-numbers', # not a problem
-    '*-no-array-decay',
-    '*-use-auto', # not universally a good idea
+# these might be worth being clan-y
+disabled_needs_work = [
+    '*-braces-around-statements', # should fix (need clang-format)
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
     'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
-    'cert-err58-cpp', # shut up whiner
+    'bugprone-narrowing-conversions', # should be fixed
     'cppcoreguidelines-init-variables',
-    'cppcoreguidelines-no-malloc',
     'cppcoreguidelines-owning-memory',
-    'cppcoreguidelines-pro-bounds-constant-array-index',
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
-    'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
     'hicpp-signed-bitwise', # djb shit
-    'modernize-loop-convert', # sometimes very ugly
     'modernize-pass-by-value',
-    'modernize-return-braced-init-list', # thanks I hate it
-    'modernize-use-nodiscard', # maybe
+    'modernize-use-nodiscard',
     'modernize-use-trailing-return-type',
     'performance-inefficient-string-concatenation',
     'performance-no-int-to-ptr',
-    'portability-simd-intrinsics', # not a problem
-    'readability-function-cognitive-complexity', # bogus
     'readability-implicit-bool-conversion', # maybe fix this
     'readability-inconsistent-declaration-parameter-name', # should fix this
     'readability-isolate-declaration',
     'readability-simplify-boolean-expr', # sometimes ok
 ]
+
+# these we are not interested in ever being clang-tidy clean for
+disabled_not_interested = [
+    '*-array-to-pointer-decay',
+    '*-avoid-c-arrays',
+    '*-else-after-return',
+    '*-function-size',
+    '*-magic-numbers', # can't stop the magic
+    '*-no-array-decay',
+    '*-use-auto', # not universally a good idea
+    'bugprone-branch-clone', # doesn't interact well with feature macros
+    'cert-err58-cpp',
+    'cppcoreguidelines-no-malloc',
+    'cppcoreguidelines-pro-bounds-constant-array-index',
+    'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
+    'modernize-loop-convert', # sometimes very ugly
+    'modernize-return-braced-init-list', # thanks I hate it
+    'portability-simd-intrinsics',
+    'readability-function-cognitive-complexity',
+]
+
+disabled_checks = disabled_needs_work + disabled_not_interested
 
 def create_check_option(enabled, disabled):
     return ','.join(enabled) + ',' + ','.join(['-' + d for d in disabled])
