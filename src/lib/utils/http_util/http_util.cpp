@@ -14,9 +14,7 @@
 #include <botan/internal/stl_util.h>
 #include <sstream>
 
-namespace Botan {
-
-namespace HTTP {
+namespace Botan::HTTP {
 
 namespace {
 
@@ -261,7 +259,5 @@ Response POST_sync(const std::string& url,
    {
    return http_sync("POST", url, content_type, body, allowable_redirects, timeout);
    }
-
-}
 
 }

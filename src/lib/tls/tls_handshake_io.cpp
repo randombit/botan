@@ -13,9 +13,7 @@
 #include <botan/internal/loadstor.h>
 #include <chrono>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -481,5 +479,4 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
    return no_fragment;
    }
 
-}
 }

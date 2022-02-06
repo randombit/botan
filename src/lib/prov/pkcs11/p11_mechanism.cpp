@@ -13,8 +13,7 @@
 
 #include <tuple>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 namespace {
 using PSS_Params = std::tuple<size_t, MechanismType, MGF>;
@@ -274,5 +273,4 @@ MechanismWrapper MechanismWrapper::create_ecdh_mechanism(const std::string& para
    return mech;
    }
 
-}
 }

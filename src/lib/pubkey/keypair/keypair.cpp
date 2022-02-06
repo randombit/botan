@@ -9,9 +9,7 @@
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 
-namespace Botan {
-
-namespace KeyPair {
+namespace Botan::KeyPair {
 
 /*
 * Check an encryption key pair for consistency
@@ -79,7 +77,5 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
 
    return true;
    }
-
-}
 
 }

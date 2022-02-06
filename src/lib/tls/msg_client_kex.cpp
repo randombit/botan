@@ -23,9 +23,7 @@
   #include <botan/cecpq1.h>
 #endif
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /*
 * Create a new Client Key Exchange message
@@ -352,7 +350,5 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
          throw Internal_Error("Client_Key_Exchange: Unknown key exchange negotiated");
       }
    }
-
-}
 
 }

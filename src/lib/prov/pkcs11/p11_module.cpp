@@ -9,9 +9,7 @@
 #include <botan/p11_types.h>
 #include <botan/internal/dyn_load.h>
 
-namespace Botan {
-
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 Module::Module(const std::string& file_path, C_InitializeArgs init_args)
    : m_file_path(file_path)
@@ -47,5 +45,4 @@ void Module::reload(C_InitializeArgs init_args)
    m_low_level->C_Initialize(&init_args);
    }
 
-}
 }

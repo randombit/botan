@@ -11,9 +11,7 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/loadstor.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 New_Session_Ticket::New_Session_Ticket(Handshake_IO& io,
                                        Handshake_Hash& hash,
@@ -50,7 +48,5 @@ std::vector<uint8_t> New_Session_Ticket::serialize() const
    append_tls_length_value(buf, m_ticket, 2);
    return buf;
    }
-
-}
 
 }

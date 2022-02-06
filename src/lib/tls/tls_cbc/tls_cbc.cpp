@@ -17,9 +17,7 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /*
 * TLS_CBC_HMAC_AEAD_Mode Constructor
@@ -494,7 +492,5 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
          }
       }
    }
-
-}
 
 }

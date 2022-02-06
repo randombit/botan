@@ -20,9 +20,9 @@ enabled_checks = [
     #'portability-*',
     #'readability-*',
     #'readability-container-size-empty',
-    'readability-static-definition-in-anonymous-namespace',
+    #'readability-static-definition-in-anonymous-namespace',
     #'modernize-make-unique',
-    #'modernize-concat-nested-namespaces',
+    'modernize-concat-nested-namespaces',
     #'readability-inconsistent-declaration-parameter-name',
 ]
 
@@ -30,34 +30,35 @@ disabled_checks = [
     '*-array-to-pointer-decay',
     '*-avoid-c-arrays',
     '*-braces-around-statements', # should fix
-    '*-no-array-decay',
     '*-else-after-return',
     '*-function-size', # don't care
+    '*-magic-numbers', # not a problem
+    '*-no-array-decay',
     '*-use-auto', # not universally a good idea
-    'modernize-use-nodiscard', # maybe
-    'modernize-loop-convert', # sometimes very ugly
-    'readability-implicit-bool-conversion', # maybe fix this
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
-    'cppcoreguidelines-pro-bounds-pointer-arithmetic',
-    'cppcoreguidelines-pro-bounds-constant-array-index',
-    'modernize-pass-by-value',
-    'modernize-use-trailing-return-type',
-    'readability-isolate-declaration',
-    'performance-inefficient-string-concatenation',
-    'performance-no-int-to-ptr',
-    'readability-function-cognitive-complexity', # bogus
-    'portability-simd-intrinsics', # not a problem
     'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
-    '*-magic-numbers', # not a problem
-    'hicpp-signed-bitwise', # djb shit
-    'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
     'cert-err58-cpp', # shut up whiner
-    'modernize-return-braced-init-list', # thanks I hate it
+    'cppcoreguidelines-init-variables',
     'cppcoreguidelines-no-malloc',
     'cppcoreguidelines-owning-memory',
-    'cppcoreguidelines-init-variables',
+    'cppcoreguidelines-pro-bounds-constant-array-index',
+    'cppcoreguidelines-pro-bounds-pointer-arithmetic',
+    'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
+    'hicpp-signed-bitwise', # djb shit
+    'modernize-loop-convert', # sometimes very ugly
+    'modernize-pass-by-value',
+    'modernize-return-braced-init-list', # thanks I hate it
+    'modernize-use-nodiscard', # maybe
+    'modernize-use-trailing-return-type',
+    'performance-inefficient-string-concatenation',
+    'performance-no-int-to-ptr',
+    'portability-simd-intrinsics', # not a problem
+    'readability-function-cognitive-complexity', # bogus
+    'readability-implicit-bool-conversion', # maybe fix this
     'readability-inconsistent-declaration-parameter-name', # should fix this
+    'readability-isolate-declaration',
+    'readability-simplify-boolean-expr', # sometimes ok
 ]
 
 def create_check_option(enabled, disabled):

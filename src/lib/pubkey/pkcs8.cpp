@@ -19,9 +19,7 @@
    #include <botan/internal/pbes2.h>
 #endif
 
-namespace Botan {
-
-namespace PKCS8 {
+namespace Botan::PKCS8 {
 
 namespace {
 
@@ -382,7 +380,5 @@ std::unique_ptr<Private_Key> load_key(DataSource& source)
 
    return load_key(source, fail_fn, false);
    }
-
-}
 
 }

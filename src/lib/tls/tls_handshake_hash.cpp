@@ -8,9 +8,7 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/hash.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Return a TLS Handshake Hash
@@ -25,7 +23,5 @@ secure_vector<uint8_t> Handshake_Hash::final(const std::string& mac_algo) const
    hash->update(m_data);
    return hash->final();
    }
-
-}
 
 }

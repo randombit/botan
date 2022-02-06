@@ -8,9 +8,7 @@
 
 #include <botan/p11_types.h>
 
-namespace Botan {
-
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 Slot::Slot(Module& module, SlotId slot_id)
    : m_module(module), m_slot_id(slot_id)
@@ -55,6 +53,4 @@ void Slot::initialize(const std::string& label, const secure_string& so_pin) con
    {
    m_module.get()->C_InitToken(m_slot_id, so_pin, label);
    }
-}
-
 }

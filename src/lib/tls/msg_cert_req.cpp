@@ -13,9 +13,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -140,7 +138,5 @@ std::vector<uint8_t> Certificate_Req::serialize() const
 
    return buf;
    }
-
-}
 
 }

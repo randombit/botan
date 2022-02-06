@@ -11,9 +11,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -615,7 +613,5 @@ bool Supported_Versions::supports(Protocol_Version version) const
          return true;
    return false;
    }
-
-}
 
 }

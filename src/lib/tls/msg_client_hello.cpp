@@ -21,9 +21,7 @@
 #include <botan/internal/stl_util.h>
 #include <chrono>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 enum {
    TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF,
@@ -422,7 +420,5 @@ std::vector<uint16_t> Client_Hello::srtp_profiles() const
    return std::vector<uint16_t>();
    }
 
-
-}
 
 }

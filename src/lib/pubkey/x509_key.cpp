@@ -12,9 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pk_algs.h>
 
-namespace Botan {
-
-namespace X509 {
+namespace Botan::X509 {
 
 /*
 * PEM encode a X.509 public key
@@ -65,7 +63,5 @@ Public_Key* load_key(DataSource& source)
       throw Decoding_Error("X.509 public key decoding", e);
       }
    }
-
-}
 
 }

@@ -14,8 +14,7 @@
 #include <string>
 #include <functional>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 ReturnValue* ThrowException = reinterpret_cast< ReturnValue* >(-1);
 
@@ -759,7 +758,5 @@ bool LowLevel::C_CancelFunction(SessionHandle session,
    {
    return handle_return_value(m_func_list_ptr->C_CancelFunction(session), return_value);
    }
-
-}
 
 }

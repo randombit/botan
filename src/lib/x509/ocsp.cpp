@@ -19,9 +19,7 @@
   #include <botan/internal/http_util.h>
 #endif
 
-namespace Botan {
-
-namespace OCSP {
+namespace Botan::OCSP {
 
 namespace {
 
@@ -357,7 +355,5 @@ Response online_check(const X509_Certificate& issuer,
    }
 
 #endif
-
-}
 
 }

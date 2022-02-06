@@ -10,9 +10,7 @@
 #include <botan/base64.h>
 #include <botan/exceptn.h>
 
-namespace Botan {
-
-namespace PEM_Code {
+namespace Botan::PEM_Code {
 
 namespace {
 
@@ -163,7 +161,5 @@ bool matches(DataSource& source, const std::string& extra,
       }
    return false;
    }
-
-}
 
 }

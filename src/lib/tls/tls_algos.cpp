@@ -7,9 +7,7 @@
 #include <botan/tls_algos.h>
 #include <botan/exceptn.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 std::string kdf_algo_to_string(KDF_Algo algo)
    {
@@ -350,7 +348,5 @@ std::string padding_string_for_scheme(Signature_Scheme scheme)
 
    throw Invalid_State("padding_string_for_scheme: Unknown signature algorithm enum");
    }
-
-}
 
 }

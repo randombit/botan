@@ -6,9 +6,7 @@
 
 #include <botan/internal/ct_utils.h>
 
-namespace Botan {
-
-namespace CT {
+namespace Botan::CT {
 
 secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input_u8,
                                    const uint8_t input[],
@@ -100,7 +98,5 @@ secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t length)
 
    return copy_output(CT::Mask<uint8_t>::cleared(), in, length, leading_zeros);
    }
-
-}
 
 }

@@ -14,8 +14,7 @@
 #include <botan/internal/workfactor.h>
 #include <botan/ber_dec.h>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 namespace {
 /// Converts a DER-encoded ANSI X9.62 ECPoint to PointGFp
 PointGFp decode_public_point(const secure_vector<uint8_t>& ec_point_data, const EC_Group& group)
@@ -129,8 +128,6 @@ AlgorithmIdentifier PKCS11_EC_PrivateKey::algorithm_identifier() const
    {
    return AlgorithmIdentifier(get_oid(), domain().DER_encode(EC_Group_Encoding::Explicit));
    }
-}
-
 }
 
 #endif

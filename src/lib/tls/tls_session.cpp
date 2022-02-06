@@ -15,9 +15,7 @@
 #include <botan/mac.h>
 #include <botan/rng.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 Session::Session(const std::vector<uint8_t>& session_identifier,
                  const secure_vector<uint8_t>& master_secret,
@@ -312,7 +310,5 @@ Session Session::decrypt(const uint8_t in[], size_t in_len, const SymmetricKey& 
                            std::string(e.what()));
       }
    }
-
-}
 
 }

@@ -21,9 +21,7 @@
   #include <botan/internal/tls_cbc.h>
 #endif
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  Connection_Side side,
@@ -573,7 +571,5 @@ Record_Header read_record(bool is_datagram,
       return read_tls_record(readbuf, input, input_len, consumed,
                              recbuf, sequence_numbers, get_cipherstate);
    }
-
-}
 
 }

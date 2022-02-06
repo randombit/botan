@@ -16,9 +16,7 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/stl_util.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -233,7 +231,5 @@ std::vector<uint8_t> Server_Hello_Done::serialize() const
    {
    return std::vector<uint8_t>();
    }
-
-}
 
 }

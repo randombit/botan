@@ -15,9 +15,7 @@
 #include <botan/pk_keys.h>
 #include <sstream>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const
    {
@@ -558,7 +556,5 @@ std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
 
 bool Strict_Policy::allow_tls12()  const { return true;  }
 bool Strict_Policy::allow_dtls12() const { return true;  }
-
-}
 
 }

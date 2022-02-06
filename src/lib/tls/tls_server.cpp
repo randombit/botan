@@ -12,9 +12,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/tls_magic.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Server_Handshake_State final : public Handshake_State
    {
@@ -944,6 +942,4 @@ void Server::session_create(Server_Handshake_State& pending_state,
 
    pending_state.server_hello_done(new Server_Hello_Done(pending_state.handshake_io(), pending_state.hash()));
    }
-}
-
 }
