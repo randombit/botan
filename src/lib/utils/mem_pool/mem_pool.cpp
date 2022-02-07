@@ -149,7 +149,7 @@ class BitMap final
       BitMap(size_t bits) : m_len(bits)
          {
          m_bits.resize((bits + BITMASK_BITS - 1) / BITMASK_BITS);
-         m_main_mask = ~static_cast<bitmask_type>(0);
+         m_main_mask = static_cast<bitmask_type>(~0);
          m_last_mask = m_main_mask;
 
          if(bits % BITMASK_BITS != 0)
@@ -305,7 +305,7 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) :
 
       clear_bytes(page, m_page_size);
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
-      OS::page_prohibit_access(pages[i]);
+      OS::page_prohibit_access(page);
 #endif
       m_free_pages.push_back(static_cast<uint8_t*>(page));
       }

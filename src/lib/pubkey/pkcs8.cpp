@@ -353,9 +353,9 @@ load_key(DataSource& source,
 * Extract an encrypted private key and return it
 */
 std::unique_ptr<Private_Key> load_key(DataSource& source,
-                                      std::function<std::string ()> get_pass)
+                                      const std::function<std::string ()>& get_pass)
    {
-   return load_key(source, std::move(get_pass), true);
+   return load_key(source, get_pass, true);
    }
 
 /*

@@ -505,7 +505,7 @@ class Timing_Test_Command final : public Command
          }
    private:
 
-      std::vector<std::string> read_testdata(const std::string& filename)
+      static std::vector<std::string> read_testdata(const std::string& filename)
          {
          std::vector<std::string> lines;
          std::ifstream infile(filename);
@@ -524,7 +524,7 @@ class Timing_Test_Command final : public Command
          return lines;
          }
 
-      std::unique_ptr<Timing_Test> lookup_timing_test(const std::string& test_type);
+      static std::unique_ptr<Timing_Test> lookup_timing_test(const std::string& test_type);
 
       std::string help_text() const override
          {

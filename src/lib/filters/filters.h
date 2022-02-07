@@ -521,7 +521,7 @@ class BOTAN_PUBLIC_API(2,0) Base64_Encoder final : public Filter
       * @param line_length the length of the lines of the output
       * @param trailing_newline whether to use a trailing newline
       */
-      Base64_Encoder(bool line_break = false, size_t line_length = 72,
+      Base64_Encoder(bool line_breaks = false, size_t line_length = 72,
                      bool trailing_newline = false);
    private:
       void encode_and_send(const uint8_t input[], size_t length,

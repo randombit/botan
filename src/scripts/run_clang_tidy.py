@@ -19,15 +19,15 @@ enabled_checks = [
     'readability-container-size-empty',
     'readability-static-definition-in-anonymous-namespace',
 
-    #'cppcoreguidelines-*',
-    #'hicpp-*',
-    #'modernize-*',
-    #'readability-*',
+    'cppcoreguidelines-*',
+    'hicpp-*',
+    'modernize-*',
+    'readability-*',
     #'modernize-make-unique',
-    #'readability-inconsistent-declaration-parameter-name',
+    'readability-inconsistent-declaration-parameter-name',
 ]
 
-# these might be worth being clan-y
+# these might be worth being clean for
 disabled_needs_work = [
     '*-braces-around-statements', # should fix (need clang-format)
     'bugprone-easily-swappable-parameters',
@@ -35,8 +35,10 @@ disabled_needs_work = [
     'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
     'bugprone-narrowing-conversions', # should be fixed
     'cppcoreguidelines-init-variables',
+    'cppcoreguidelines-narrowing-conversions', # lot of these
     'cppcoreguidelines-owning-memory',
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
+    'cppcoreguidelines-pro-type-union-access', # only in sha1_sse2
     'hicpp-signed-bitwise', # djb shit
     'modernize-pass-by-value',
     'modernize-use-nodiscard',
@@ -59,12 +61,18 @@ disabled_not_interested = [
     '*-no-array-decay',
     '*-use-auto', # not universally a good idea
     'bugprone-branch-clone', # doesn't interact well with feature macros
+    'bugprone-argument-comment',
     'cert-err58-cpp',
     'cppcoreguidelines-no-malloc',
     'cppcoreguidelines-pro-bounds-constant-array-index',
+    'cppcoreguidelines-pro-type-cstyle-cast', # system headers
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
+    'hicpp-no-assembler',
+    'hicpp-no-malloc',
     'modernize-loop-convert', # sometimes very ugly
+    'modernize-raw-string-literal',
     'modernize-return-braced-init-list', # thanks I hate it
+    'modernize-use-using', # fine not great
     'portability-simd-intrinsics',
     'readability-function-cognitive-complexity',
 ]

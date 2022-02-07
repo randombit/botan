@@ -23,6 +23,12 @@
 
 namespace Botan {
 
+McEliece_PrivateKey::McEliece_PrivateKey(const McEliece_PrivateKey&) = default;
+McEliece_PrivateKey::McEliece_PrivateKey(McEliece_PrivateKey&&) = default;
+McEliece_PrivateKey& McEliece_PrivateKey::operator=(const McEliece_PrivateKey&) = default;
+McEliece_PrivateKey& McEliece_PrivateKey::operator=(McEliece_PrivateKey&&) = default;
+McEliece_PrivateKey::~McEliece_PrivateKey() = default;
+
 McEliece_PrivateKey::McEliece_PrivateKey(polyn_gf2m const& goppa_polyn,
                                          std::vector<uint32_t> const& parity_check_matrix_coeffs,
                                          std::vector<polyn_gf2m> const& square_root_matrix,
@@ -43,8 +49,6 @@ McEliece_PrivateKey::McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code
    uint32_t ext_deg = ceil_log2(code_length);
    *this = generate_mceliece_key(rng, ext_deg, code_length, t);
    }
-
-McEliece_PrivateKey::~McEliece_PrivateKey() = default;
 
 const polyn_gf2m& McEliece_PrivateKey::get_goppa_polyn() const
    {

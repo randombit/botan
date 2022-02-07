@@ -52,7 +52,7 @@ class CCM_Mode : public AEAD_Mode
 
       void encode_length(uint64_t len, uint8_t out[]);
 
-      void inc(secure_vector<uint8_t>& C);
+      static void inc(secure_vector<uint8_t>& C);
 
       const secure_vector<uint8_t>& ad_buf() const { return m_ad_buf; }
 

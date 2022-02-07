@@ -90,15 +90,15 @@ Representations:
   ge_p3 (extended): (X:Y:Z:T) satisfying x=X/Z, y=Y/Z, XY=ZT
 */
 
-typedef struct
+struct ge_p3
    {
    fe X;
    fe Y;
    fe Z;
    fe T;
-   } ge_p3;
+   };
 
-int ge_frombytes_negate_vartime(ge_p3*, const uint8_t*);
+int ge_frombytes_negate_vartime(ge_p3* v, const uint8_t*);
 void ge_scalarmult_base(uint8_t out[32], const uint8_t in[32]);
 
 void ge_double_scalarmult_vartime(uint8_t out[32],

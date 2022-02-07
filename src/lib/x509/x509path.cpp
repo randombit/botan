@@ -418,6 +418,7 @@ PKIX::check_ocsp_online(const std::vector<X509_Certificate>& cert_path,
       }
 
    std::vector<std::optional<OCSP::Response>> ocsp_responses;
+   ocsp_responses.reserve(ocsp_response_futures.size());
 
    for(auto& ocsp_response_future : ocsp_response_futures)
       {

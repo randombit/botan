@@ -61,11 +61,11 @@ class ChaCha final : public StreamCipher
       void chacha_x8(uint8_t output[64*8], uint32_t state[16], size_t rounds);
 
 #if defined(BOTAN_HAS_CHACHA_SIMD32)
-      void chacha_simd32_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds);
+      static void chacha_simd32_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds);
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_AVX2)
-      void chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rounds);
+      static void chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rounds);
 #endif
 
       size_t m_rounds;
