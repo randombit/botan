@@ -13,6 +13,7 @@
 
 #include <botan/kyber.h>
 
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
