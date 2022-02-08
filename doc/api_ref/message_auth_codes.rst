@@ -156,6 +156,7 @@ all security is lost*.
        std::cout << mac->name() << ": " << Botan::hex_encode(tag) << std::endl;
 
        //Verify created MAC
+       mac->set_key(key);
        mac->start(nonce);
        mac->update(data);
        std::cout << "Verification: " << (mac->verify_mac(tag) ? "success" : "failure");
