@@ -54,6 +54,7 @@ class GMAC final : public MessageAuthenticationCode
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<GHASH> m_ghash;
       secure_vector<uint8_t> m_aad_buf;
+      secure_vector<uint8_t> m_H;
       size_t m_aad_buf_pos;
       bool m_initialized;
    };
