@@ -1,6 +1,17 @@
 Release Notes
 ========================================
 
+Version 2.19.2, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The OpenSSL provider was incompatible with OpenSSL 3.0.
+  It has been removed (GH #2902)
+
+* Fix TLS::Text_Policy behavior when X25519 is disabled
+  at build time (GH #2894)
+
+* Fix several warnings from Clang (#2888 #2886)
+
 Version 2.19.1, 2022-01-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
