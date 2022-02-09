@@ -1,6 +1,6 @@
 /*
 * System RNG
-* (C) 2014,2015,2017,2018 Jack Lloyd
+* (C) 2014,2015,2017,2018,2022 Jack Lloyd
 * (C) 2021 Tom Crowley
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -8,28 +8,24 @@
 
 #include <botan/system_rng.h>
 
-#if defined(BOTAN_TARGET_OS_HAS_RTLGENRANDOM)
-  #include <botan/internal/dyn_load.h>
+#if defined(BOTAN_TARGET_OS_HAS_WIN32)
   #define NOMINMAX 1
   #define _WINSOCKAPI_ // stop windows.h including winsock.h
   #include <windows.h>
+#endif
 
+#if defined(BOTAN_TARGET_OS_HAS_RTLGENRANDOM)
+  #include <botan/internal/dyn_load.h>
 #elif defined(BOTAN_TARGET_OS_HAS_CRYPTO_NG)
   #include <bcrypt.h>
-
 #elif defined(BOTAN_TARGET_OS_HAS_CCRANDOM)
   #include <CommonCrypto/CommonRandom.h>
-
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
   #include <stdlib.h>
-
 #elif defined(BOTAN_TARGET_OS_HAS_GETRANDOM)
   #include <sys/random.h>
   #include <errno.h>
-
 #elif defined(BOTAN_TARGET_OS_HAS_DEV_RANDOM)
-  #include <sys/types.h>
-  #include <sys/stat.h>
   #include <fcntl.h>
   #include <unistd.h>
   #include <errno.h>
@@ -91,11 +87,13 @@ class System_RNG_Impl final : public RandomNumberGenerator
    public:
       System_RNG_Impl()
          {
-         NTSTATUS ret = ::BCryptOpenAlgorithmProvider(&m_prov,
-                                                      BCRYPT_RNG_ALGORITHM,
-                                                      MS_PRIMITIVE_PROVIDER, 0);
-         if(ret != STATUS_SUCCESS)
+         auto ret = ::BCryptOpenAlgorithmProvider(&m_prov,
+                                                  BCRYPT_RNG_ALGORITHM,
+                                                  MS_PRIMITIVE_PROVIDER, 0);
+         if(!BCRYPT_SUCCESS(ret))
+            {
             throw System_Error("System_RNG failed to acquire crypto provider", ret);
+            }
          }
 
       ~System_RNG_Impl()
@@ -113,8 +111,8 @@ class System_RNG_Impl final : public RandomNumberGenerator
             {
             const ULONG blockSize = static_cast<ULONG>(std::min(bytesLeft, limit));
 
-            const NTSTATUS ret = BCryptGenRandom(m_prov, static_cast<PUCHAR>(pData), blockSize, 0);
-            if (ret != STATUS_SUCCESS)
+            auto ret = BCryptGenRandom(m_prov, static_cast<PUCHAR>(pData), blockSize, 0);
+            if(!BCRYPT_SUCCESS(ret))
                {
                throw System_Error("System_RNG call to BCryptGenRandom failed", ret);
                }
