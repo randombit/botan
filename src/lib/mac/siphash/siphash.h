@@ -34,6 +34,7 @@ class SipHash final : public MessageAuthenticationCode
       void key_schedule(const uint8_t[], size_t) override;
 
       const size_t m_C, m_D;
+      secure_vector<uint64_t> m_K;
       secure_vector<uint64_t> m_V;
       uint64_t m_mbuf = 0;
       size_t m_mbuf_pos = 0;

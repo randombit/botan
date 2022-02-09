@@ -100,7 +100,13 @@ void SipHash::final_result(uint8_t mac[])
 
    store_le(X, mac);
 
-   clear();
+   m_V[0] = m_K[0] ^ 0x736F6D6570736575;
+   m_V[1] = m_K[1] ^ 0x646F72616E646F6D;
+   m_V[2] = m_K[0] ^ 0x6C7967656E657261;
+   m_V[3] = m_K[1] ^ 0x7465646279746573;
+   m_mbuf = 0;
+   m_mbuf_pos = 0;
+   m_words = 0;
    }
 
 void SipHash::key_schedule(const uint8_t key[], size_t /*length*/)
@@ -108,15 +114,20 @@ void SipHash::key_schedule(const uint8_t key[], size_t /*length*/)
    const uint64_t K0 = load_le<uint64_t>(key, 0);
    const uint64_t K1 = load_le<uint64_t>(key, 1);
 
+   m_K.resize(2);
+   m_K[0] = K0;
+   m_K[1] = K1;
+
    m_V.resize(4);
-   m_V[0] = K0 ^ 0x736F6D6570736575;
-   m_V[1] = K1 ^ 0x646F72616E646F6D;
-   m_V[2] = K0 ^ 0x6C7967656E657261;
-   m_V[3] = K1 ^ 0x7465646279746573;
+   m_V[0] = m_K[0] ^ 0x736F6D6570736575;
+   m_V[1] = m_K[1] ^ 0x646F72616E646F6D;
+   m_V[2] = m_K[0] ^ 0x6C7967656E657261;
+   m_V[3] = m_K[1] ^ 0x7465646279746573;
    }
 
 void SipHash::clear()
    {
+   zap(m_K);
    zap(m_V);
    m_mbuf = 0;
    m_mbuf_pos = 0;
