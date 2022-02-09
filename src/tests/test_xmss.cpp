@@ -29,7 +29,7 @@ class XMSS_Signature_Tests final : public PK_Signature_Generation_Test
               "pubkey/xmss_sig.vec",
               "Params,Msg,PrivateKey,Signature") {}
 
-      bool skip_this_test(const std::string&,
+      bool skip_this_test(const std::string& /*header*/,
                           const VarMap& vars) override
          {
          if(Test::run_long_tests() == false)

@@ -103,7 +103,7 @@ void SipHash::final_result(uint8_t mac[])
    clear();
    }
 
-void SipHash::key_schedule(const uint8_t key[], size_t)
+void SipHash::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    const uint64_t K0 = load_le<uint64_t>(key, 0);
    const uint64_t K1 = load_le<uint64_t>(key, 1);

@@ -367,7 +367,7 @@ BER_Decoder::BER_Decoder(const BER_Decoder& other)
 * Request for an object to decode itself
 */
 BER_Decoder& BER_Decoder::decode(ASN1_Object& obj,
-                                 ASN1_Type, ASN1_Class)
+                                 ASN1_Type /*unused*/, ASN1_Class /*unused*/)
    {
    obj.decode_from(*this);
    return (*this);

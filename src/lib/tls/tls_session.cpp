@@ -15,9 +15,7 @@
 #include <botan/mac.h>
 #include <botan/rng.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 Session::Session(const std::vector<uint8_t>& session_identifier,
                  const secure_vector<uint8_t>& master_secret,
@@ -141,9 +139,13 @@ Session::Session(const uint8_t ber[], size_t ber_len)
 
 secure_vector<uint8_t> Session::DER_encode() const
    {
+   // TODO note for anyone making an incompatible change to the
+   // encodings of TLS sessions. The peer cert list should have been a
+   // SEQUENCE not a concatenation:
+
    std::vector<uint8_t> peer_cert_bits;
-   for(size_t i = 0; i != m_peer_certs.size(); ++i)
-      peer_cert_bits += m_peer_certs[i].BER_encode();
+   for(const auto& peer_cert : m_peer_certs)
+      peer_cert_bits += peer_cert.BER_encode();
 
    return DER_Encoder()
       .start_sequence()
@@ -195,10 +197,10 @@ std::chrono::seconds Session::session_age() const
 namespace {
 
 // The output length of the HMAC must be a valid keylength for the AEAD
-const char* TLS_SESSION_CRYPT_HMAC = "HMAC(SHA-512-256)";
+const char* const TLS_SESSION_CRYPT_HMAC = "HMAC(SHA-512-256)";
 // SIV would be better, but we can't assume it is available
-const char* TLS_SESSION_CRYPT_AEAD = "AES-256/GCM";
-const char* TLS_SESSION_CRYPT_KEY_NAME = "BOTAN TLS SESSION KEY NAME";
+const char* const TLS_SESSION_CRYPT_AEAD = "AES-256/GCM";
+const char* const TLS_SESSION_CRYPT_KEY_NAME = "BOTAN TLS SESSION KEY NAME";
 const uint64_t TLS_SESSION_CRYPT_MAGIC = 0x068B5A9D396C0000;
 const size_t TLS_SESSION_CRYPT_MAGIC_LEN = 8;
 const size_t TLS_SESSION_CRYPT_KEY_NAME_LEN = 4;
@@ -308,7 +310,5 @@ Session Session::decrypt(const uint8_t in[], size_t in_len, const SymmetricKey& 
                            std::string(e.what()));
       }
    }
-
-}
 
 }

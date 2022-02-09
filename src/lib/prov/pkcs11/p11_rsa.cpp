@@ -16,9 +16,7 @@
 #include <botan/rng.h>
 #include <botan/internal/blinding.h>
 
-namespace Botan {
-
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 RSA_PublicKeyImportProperties::RSA_PublicKeyImportProperties(const BigInt& modulus, const BigInt& pub_exponent)
    : PublicKeyProperties(KeyType::Rsa), m_modulus(modulus), m_pub_exponent(pub_exponent)
@@ -138,7 +136,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
          m_bits = m_key.get_n().bits() - 1;
          }
 
-      size_t plaintext_length(size_t) const override { return m_key.get_n().bytes(); }
+      size_t plaintext_length(size_t /*ctext_len*/) const override { return m_key.get_n().bytes(); }
 
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, const uint8_t ciphertext[], size_t ciphertext_len) override
          {
@@ -185,14 +183,14 @@ class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption
          m_bits = 8 * (key.get_n().bytes() - m_mechanism.padding_size()) - 1;
          }
 
-      size_t ciphertext_length(size_t) const override { return m_key.get_n().bytes(); }
+      size_t ciphertext_length(size_t /*ptext_len*/) const override { return m_key.get_n().bytes(); }
 
       size_t max_input_bits() const override
          {
          return m_bits;
          }
 
-      secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator&) override
+      secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& /*rng*/) override
          {
          m_key.module()->C_EncryptInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
 
@@ -239,7 +237,7 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature
          m_key.module()->C_SignUpdate(m_key.session().handle(), const_cast< Byte* >(msg), static_cast<Ulong>(msg_len));
          }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator&) override
+      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override
          {
          secure_vector<uint8_t> signature;
          if(!m_first_message.empty())
@@ -374,7 +372,6 @@ PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session, const RSA_PublicKeyGen
    return std::make_pair(PKCS11_RSA_PublicKey(session, pub_key_handle), PKCS11_RSA_PrivateKey(session, priv_key_handle));
    }
 
-}
 }
 
 #endif

@@ -168,11 +168,10 @@ class FFI_Unit_Tests final : public Test
          result.test_is_eq("FFI doesn't support bogus version", botan_ffi_supports_api(20160229), -1);
 
          const std::vector<uint8_t> mem1 = { 0xFF, 0xAA, 0xFF };
-         const std::vector<uint8_t> mem2 = mem1;
-         const std::vector<uint8_t> mem3 = { 0xFF, 0xA9, 0xFF };
+         const std::vector<uint8_t> mem2 = { 0xFF, 0xA9, 0xFF };
 
-         TEST_FFI_RC(0, botan_same_mem, (mem1.data(), mem2.data(), mem1.size()));
-         TEST_FFI_RC(-1, botan_same_mem, (mem1.data(), mem3.data(), mem1.size()));
+         TEST_FFI_RC(0, botan_same_mem, (mem1.data(), mem1.data(), mem1.size()));
+         TEST_FFI_RC(-1, botan_same_mem, (mem1.data(), mem2.data(), mem1.size()));
 
          std::vector<uint8_t> to_zero = { 0xFF, 0xA0 };
          TEST_FFI_OK(botan_scrub_mem, (to_zero.data(), to_zero.size()));
@@ -2040,7 +2039,7 @@ class FFI_Unit_Tests final : public Test
 
             botan_pk_op_verify_t verifier = nullptr;
 
-            if(signature.size() > 0 && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-256)", 0)))
+            if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-256)", 0)))
                {
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
                TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
@@ -2149,7 +2148,7 @@ class FFI_Unit_Tests final : public Test
 
             botan_pk_op_verify_t verifier = nullptr;
 
-            if(signature.size() > 0 && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", flags)))
+            if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", flags)))
                {
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
                TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
@@ -2245,7 +2244,7 @@ class FFI_Unit_Tests final : public Test
 
          botan_pk_op_verify_t verifier = nullptr;
 
-         if(signature.size() > 0 && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, sm2_ident.c_str(), 0)))
+         if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, sm2_ident.c_str(), 0)))
             {
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
             TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));

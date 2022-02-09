@@ -12,9 +12,7 @@
 #include <botan/kdf.h>
 #include <sstream>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 std::string Handshake_Message::type_string() const
    {
@@ -517,7 +515,5 @@ Handshake_State::parse_sig_format(const Public_Key& key,
 
    throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures");
    }
-
-}
 
 }

@@ -114,7 +114,7 @@ class TLS_CBC_Padding_Tests final : public Text_Based_Test
    public:
       TLS_CBC_Padding_Tests() : Text_Based_Test("tls_cbc_padding.vec", "Record,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          const std::vector<uint8_t> record    = vars.get_req_bin("Record");
          const size_t output = vars.get_req_sz("Output");
@@ -143,7 +143,7 @@ class TLS_CBC_Tests final : public Text_Based_Test
             std::string name() const override { return "ZeroMac"; }
             size_t output_length() const override { return m_mac_len; }
 
-            void add_data(const uint8_t[], size_t) override {}
+            void add_data(const uint8_t /*input*/[], size_t /*length*/) override {}
 
             void final_result(uint8_t out[]) override
                {
@@ -162,7 +162,7 @@ class TLS_CBC_Tests final : public Text_Based_Test
                }
 
          private:
-            void key_schedule(const uint8_t[], size_t) override {}
+            void key_schedule(const uint8_t /*key*/[], size_t /*length*/) override {}
 
             size_t m_mac_len;
          };
@@ -196,14 +196,14 @@ class TLS_CBC_Tests final : public Text_Based_Test
                return std::make_unique<Noop_Block_Cipher>(m_bs);
                }
          private:
-            void key_schedule(const uint8_t[], size_t) override {}
+            void key_schedule(const uint8_t /*key*/[], size_t /*length*/) override {}
 
             size_t m_bs;
          };
 
       TLS_CBC_Tests() : Text_Based_Test("tls_cbc.vec", "Blocksize,MACsize,Record,Valid") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("TLS CBC");
 
@@ -321,7 +321,7 @@ class Test_TLS_Policy_Text : public Test
 
          const std::vector<std::string> policies = { "default", "suiteb_128", "suiteb_192", "strict", "datagram", "bsi" };
 
-         for(std::string policy : policies)
+         for(const std::string& policy : policies)
             {
             const std::string from_policy_obj = tls_policy_string(policy);
             std::string from_file = read_tls_policy(policy);

@@ -160,7 +160,7 @@ class Stateful_RNG_Tests : public Test
                   return "Broken Entropy Source";
                   }
 
-               size_t poll(Botan::RandomNumberGenerator&) override
+               size_t poll(Botan::RandomNumberGenerator& /*rng*/) override
                   {
                   throw Botan::Not_Implemented("polling not available");
                   }
@@ -174,7 +174,7 @@ class Stateful_RNG_Tests : public Test
                   return "Insufficient Entropy Source";
                   }
 
-               size_t poll(Botan::RandomNumberGenerator&) override
+               size_t poll(Botan::RandomNumberGenerator& /*rng*/) override
                   {
                   return 0;
                   }

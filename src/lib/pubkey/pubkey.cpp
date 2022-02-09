@@ -185,7 +185,7 @@ secure_vector<uint8_t> PK_KEM_Decryptor::decrypt(const uint8_t encap_key[],
                             salt, salt_len);
    }
 
-PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&&) = default;
+PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&&) noexcept = default;
 
 PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
                                    RandomNumberGenerator& rng,
@@ -281,7 +281,7 @@ size_t PK_Signer::signature_length() const
 
 std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
    {
-   const std::vector<uint8_t> sig = unlock(m_op->sign(rng));
+   std::vector<uint8_t> sig = unlock(m_op->sign(rng));
 
    if(m_sig_format == IEEE_1363)
       {

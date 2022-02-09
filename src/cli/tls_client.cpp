@@ -139,7 +139,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                if(first_active && !protocols_to_offer.empty())
                   {
                   std::string app = client.application_protocol();
-                  if(app != "")
+                  if(!app.empty())
                      {
                      output() << "Server choose protocol: " << client.application_protocol() << "\n";
                      }
@@ -296,7 +296,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             {
             auto status = result.all_statuses();
 
-            if(status.size() > 0 && status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD))
+            if(!status.empty() && status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD))
                {
                output() << "Valid OCSP response for this server\n";
                }

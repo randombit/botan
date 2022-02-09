@@ -15,7 +15,7 @@ namespace Botan {
 
 namespace {
 
-static const size_t SYNC_POINTS = 4;
+const size_t SYNC_POINTS = 4;
 
 secure_vector<uint8_t> argon2_H0(HashFunction& blake2b,
                                  size_t output_len,

@@ -47,7 +47,7 @@ class ECDSA_Verification_Tests final : public PK_Signature_Verification_Test
          return std::make_unique<Botan::ECDSA_PublicKey>(group, public_point);
          }
 
-      std::string default_padding(const VarMap&) const override
+      std::string default_padding(const VarMap& /*unused*/) const override
          {
          return "Raw";
          }
@@ -121,7 +121,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         const std::string hash = vars.get_req_str("Hash");
+         std::string hash = vars.get_req_str("Hash");
          if(hash.substr(0,3) == "Raw")
             return hash;
          return "EMSA1(" + hash + ")";
@@ -170,7 +170,7 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test
       ECDSA_Key_Recovery_Tests() :
          Text_Based_Test("pubkey/ecdsa_key_recovery.vec", "Group,Msg,R,S,V,PubkeyX,PubkeyY") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("ECDSA key recovery");
 
@@ -223,7 +223,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
          return false;
          }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("ECDSA invalid keys");
 

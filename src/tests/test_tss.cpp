@@ -34,6 +34,7 @@ class TSS_Recovery_Tests final : public Text_Based_Test
          try
             {
             std::vector<Botan::RTSS_Share> shares;
+            shares.reserve(expected_shares.size());
 
             for(auto&& v : expected_shares)
                {
@@ -97,7 +98,7 @@ class TSS_Generation_Tests final : public Text_Based_Test
             throw Test_Error("Unknown TSS hash algorithm " + hash);
          }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("TSS");
 

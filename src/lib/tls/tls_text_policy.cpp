@@ -11,9 +11,7 @@
 #include <botan/internal/parsing.h>
 #include <sstream>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 std::vector<std::string> Text_Policy::allowed_ciphers() const
    {
@@ -111,7 +109,7 @@ std::vector<Group_Params> Text_Policy::key_exchange_groups() const
       }
 
    std::vector<Group_Params> groups;
-   for(std::string group_name : split_on(group_str, ' '))
+   for(const std::string& group_name : split_on(group_str, ' '))
       {
       Group_Params group_id = group_param_from_string(group_name);
 
@@ -207,7 +205,7 @@ uint32_t Text_Policy::session_ticket_lifetime() const
 std::vector<uint16_t> Text_Policy::srtp_profiles() const
    {
    std::vector<uint16_t> r;
-   for(std::string p : get_list("srtp_profiles", std::vector<std::string>()))
+   for(const std::string& p : get_list("srtp_profiles", std::vector<std::string>()))
       {
       r.push_back(to_uint16(p));
       }
@@ -298,7 +296,5 @@ bool Text_Policy::set_value(const std::string& key, const std::string& val, bool
    m_kv.insert(i, std::make_pair(key, val));
    return true;
    }
-
-}
 
 }

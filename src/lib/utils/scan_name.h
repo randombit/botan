@@ -31,7 +31,7 @@ class SCAN_Name final
       * Create a SCAN_Name
       * @param algo_spec A SCAN-format name
       */
-      explicit SCAN_Name(std::string algo_spec);
+      explicit SCAN_Name(const std::string& algo_spec);
 
       /**
       * @return original input string

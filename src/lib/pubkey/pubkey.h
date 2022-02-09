@@ -66,9 +66,9 @@ class BOTAN_PUBLIC_API(2,0) PK_Encryptor
       virtual ~PK_Encryptor() = default;
 
       PK_Encryptor(const PK_Encryptor&) = delete;
-      PK_Encryptor(PK_Encryptor&&) = delete;
+      PK_Encryptor(PK_Encryptor&&) noexcept = delete;
       PK_Encryptor& operator=(const PK_Encryptor&) = delete;
-      PK_Encryptor& operator=(PK_Encryptor&&) = delete;
+      PK_Encryptor& operator=(PK_Encryptor&&) noexcept = delete;
 
    private:
       virtual std::vector<uint8_t> enc(const uint8_t[], size_t,
@@ -148,9 +148,9 @@ class BOTAN_PUBLIC_API(2,0) PK_Decryptor
       virtual ~PK_Decryptor() = default;
 
       PK_Decryptor(const PK_Decryptor&) = delete;
-      PK_Decryptor(PK_Decryptor&&) = delete;
+      PK_Decryptor(PK_Decryptor&&) noexcept = delete;
       PK_Decryptor& operator=(const PK_Decryptor&) = delete;
-      PK_Decryptor& operator=(PK_Decryptor&&) = delete;
+      PK_Decryptor& operator=(PK_Decryptor&&) noexcept = delete;
 
    private:
       virtual secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask,
@@ -184,9 +184,9 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       ~PK_Signer();
 
       PK_Signer(const PK_Signer&) = delete;
-      PK_Signer(PK_Signer&&) = delete;
+      PK_Signer(PK_Signer&&) noexcept = delete;
       PK_Signer& operator=(const PK_Signer&) = delete;
-      PK_Signer& operator=(PK_Signer&&) = delete;
+      PK_Signer& operator=(PK_Signer&&) noexcept = delete;
 
       /**
       * Sign a message all in one go
@@ -297,9 +297,9 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       ~PK_Verifier();
 
       PK_Verifier(const PK_Verifier&) = delete;
-      PK_Verifier(PK_Verifier&&) = delete;
+      PK_Verifier(PK_Verifier&&) noexcept = delete;
       PK_Verifier& operator=(const PK_Verifier&) = delete;
-      PK_Verifier& operator=(PK_Verifier&&) = delete;
+      PK_Verifier& operator=(PK_Verifier&&) noexcept = delete;
 
       /**
       * Verify a signature.
@@ -419,7 +419,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
       PK_Key_Agreement& operator=(PK_Key_Agreement&&) = delete;
 
       // For ECIES
-      PK_Key_Agreement(PK_Key_Agreement&&);
+      PK_Key_Agreement(PK_Key_Agreement&&) noexcept;
 
       /**
       * Perform Key Agreement Operation

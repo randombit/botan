@@ -190,7 +190,7 @@ class BigInt_Unit_Tests final : public Test
                { "4294967297", Botan::BigInt(2147483648) * 2 + 1 }
             };
 
-         for(auto vec : str_to_val)
+         for(const auto& vec : str_to_val)
             {
             Botan::BigInt n;
             std::istringstream iss;
@@ -267,7 +267,7 @@ class BigInt_Add_Test final : public Text_Based_Test
    public:
       BigInt_Add_Test() : Text_Based_Test("bn/add.vec", "In1,In2,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Addition");
 
@@ -300,7 +300,7 @@ class BigInt_Sub_Test final : public Text_Based_Test
    public:
       BigInt_Sub_Test() : Text_Based_Test("bn/sub.vec", "In1,In2,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Subtraction");
 
@@ -325,7 +325,7 @@ class BigInt_Mul_Test final : public Text_Based_Test
    public:
       BigInt_Mul_Test() : Text_Based_Test("bn/mul.vec", "In1,In2,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Multiply");
 
@@ -355,7 +355,7 @@ class BigInt_Sqr_Test final : public Text_Based_Test
    public:
       BigInt_Sqr_Test() : Text_Based_Test("bn/sqr.vec", "Input,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Square");
 
@@ -376,7 +376,7 @@ class BigInt_Div_Test final : public Text_Based_Test
    public:
       BigInt_Div_Test() : Text_Based_Test("bn/divide.vec", "In1,In2,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Divide");
 
@@ -418,7 +418,7 @@ class BigInt_Mod_Test final : public Text_Based_Test
    public:
       BigInt_Mod_Test() : Text_Based_Test("bn/mod.vec", "In1,In2,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Mod");
 
@@ -467,7 +467,7 @@ class BigInt_GCD_Test final : public Text_Based_Test
    public:
       BigInt_GCD_Test() : Text_Based_Test("bn/gcd.vec", "X,Y,GCD") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt GCD");
 
@@ -492,7 +492,7 @@ class BigInt_Jacobi_Test final : public Text_Based_Test
    public:
       BigInt_Jacobi_Test() : Text_Based_Test("bn/jacobi.vec", "A,N,J") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Jacobi");
 
@@ -520,7 +520,7 @@ class BigInt_Lshift_Test final : public Text_Based_Test
    public:
       BigInt_Lshift_Test() : Text_Based_Test("bn/lshift.vec", "Value,Shift,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Lshift");
 
@@ -545,7 +545,7 @@ class BigInt_Rshift_Test final : public Text_Based_Test
    public:
       BigInt_Rshift_Test() : Text_Based_Test("bn/rshift.vec", "Value,Shift,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Rshift");
 
@@ -570,7 +570,7 @@ class BigInt_Powmod_Test final : public Text_Based_Test
    public:
       BigInt_Powmod_Test() : Text_Based_Test("bn/powmod.vec", "Base,Exponent,Modulus,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Powmod");
 
@@ -615,7 +615,7 @@ class BigInt_IsSquare_Test final : public Text_Based_Test
    public:
       BigInt_IsSquare_Test() : Text_Based_Test("bn/perfect_square.vec", "X,R") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          const BigInt value = vars.get_req_bn("X");
          const BigInt expected = vars.get_req_bn("R");
@@ -634,7 +634,7 @@ class BigInt_Ressol_Test final : public Text_Based_Test
    public:
       BigInt_Ressol_Test() : Text_Based_Test("bn/ressol.vec", "Input,Modulus,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Ressol");
 
@@ -663,7 +663,7 @@ class BigInt_InvMod_Test final : public Text_Based_Test
    public:
       BigInt_InvMod_Test() : Text_Based_Test("bn/invmod.vec", "Input,Modulus,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt InvMod");
 
@@ -697,7 +697,7 @@ class BigInt_Rand_Test final : public Text_Based_Test
    public:
       BigInt_Rand_Test() : Text_Based_Test("bn/random.vec", "Seed,Min,Max,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("BigInt Random");
 

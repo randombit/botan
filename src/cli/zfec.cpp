@@ -219,7 +219,7 @@ class FEC_Decode final : public Command
 
          std::vector<FEC_Share> shares;
 
-         for(auto share_fsname: get_arg_list("shares"))
+         for(const auto& share_fsname: get_arg_list("shares"))
             {
             const auto share_bits = slurp_file(share_fsname);
 
@@ -249,7 +249,7 @@ class FEC_Decode final : public Command
          size_t padding = 0;
          size_t share_size = 0;
 
-         for(auto share: shares)
+         for(const auto& share: shares)
             {
             if(k == 0 && n == 0 && padding == 0)
                {

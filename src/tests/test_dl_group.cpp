@@ -196,7 +196,7 @@ class DL_Named_Group_Tests final : public Test
          Test::Result result("DL_Group named");
          result.start_timer();
 
-         for(std::string name : dl_named)
+         for(const std::string& name : dl_named)
             {
             // Confirm we can load every group we expect
             Botan::DL_Group group(name);

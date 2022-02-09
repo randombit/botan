@@ -30,7 +30,9 @@ class IDEA final : public Block_Cipher_Fixed_Params<8, 16>
 
    private:
 #if defined(BOTAN_HAS_IDEA_SSE2)
-      void sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52]) const;
+      static void sse2_idea_op_8(const uint8_t in[64],
+                                 uint8_t out[64],
+                                 const uint16_t EK[52]);
 #endif
 
       void key_schedule(const uint8_t[], size_t) override;

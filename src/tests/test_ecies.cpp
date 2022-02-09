@@ -107,7 +107,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test
             "pubkey/ecies-18033.vec",
             "format,p,a,b,mu,nu,gx,gy,hx,hy,x,r,C0,K") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("ECIES-ISO");
 
@@ -200,7 +200,7 @@ class ECIES_Tests final : public Text_Based_Test
               "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext",
               "Iv") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("ECIES");
 

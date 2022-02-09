@@ -36,14 +36,14 @@ class BOTAN_TEST_API Montgomery_Int final
       /**
       * Create a Montgomery_Int
       */
-      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
+      Montgomery_Int(const std::shared_ptr<const Montgomery_Params>& params,
                      const BigInt& v,
                      bool redc_needed = true);
 
       /**
       * Create a Montgomery_Int
       */
-      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
+      Montgomery_Int(const std::shared_ptr<const Montgomery_Params>& params,
                      const uint8_t bits[], size_t len,
                      bool redc_needed = true);
 

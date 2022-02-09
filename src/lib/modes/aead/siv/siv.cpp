@@ -49,7 +49,7 @@ std::string SIV_Mode::name() const
    return m_name;
    }
 
-bool SIV_Mode::valid_nonce_length(size_t) const
+bool SIV_Mode::valid_nonce_length(size_t /*nonce_len*/) const
    {
    return true;
    }
@@ -127,7 +127,7 @@ secure_vector<uint8_t> SIV_Mode::S2V(const uint8_t* text, size_t text_len)
       V ^= m_ad_macs[i];
       }
 
-   if(m_nonce.size())
+   if(!m_nonce.empty())
       {
       poly_double_n(V.data(), V.size());
       V ^= m_nonce;
@@ -178,7 +178,7 @@ void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
-   if(msg_buf().size() > 0)
+   if(!msg_buf().empty())
       {
       buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
       msg_buf().clear();

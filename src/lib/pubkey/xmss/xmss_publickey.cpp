@@ -90,7 +90,7 @@ XMSS_PublicKey::deserialize_xmss_oid(const std::vector<uint8_t>& raw_key)
    }
 
 std::unique_ptr<PK_Ops::Verification>
-XMSS_PublicKey::create_verification_op(const std::string&,
+XMSS_PublicKey::create_verification_op(const std::string& /*params*/,
                                        const std::string& provider) const
    {
    if(provider == "base" || provider.empty())

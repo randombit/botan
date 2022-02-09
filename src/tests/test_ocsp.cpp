@@ -43,7 +43,7 @@ class OCSP_Tests final : public Test
             "x509/ocsp/resp3.der"
             };
 
-         for(std::string ocsp_input_path : ocsp_input_paths)
+         for(const std::string& ocsp_input_path : ocsp_input_paths)
             {
             try
                {

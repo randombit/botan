@@ -50,7 +50,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
       else
          rng = std::make_unique<Botan::AutoSeeded_RNG>();
 
-      if(drbg_seed.size() > 0)
+      if(!drbg_seed.empty())
          rng->add_entropy(drbg_seed.data(), drbg_seed.size());
       return rng;
       }

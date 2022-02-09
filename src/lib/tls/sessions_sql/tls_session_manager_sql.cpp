@@ -13,16 +13,14 @@
 #include <botan/internal/loadstor.h>
 #include <chrono>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                                          const std::string& passphrase,
                                          RandomNumberGenerator& rng,
                                          size_t max_sessions,
                                          std::chrono::seconds session_lifetime) :
-   m_db(db),
+   m_db(std::move(db)),
    m_rng(rng),
    m_max_sessions(max_sessions),
    m_session_lifetime(session_lifetime)
@@ -215,7 +213,5 @@ void Session_Manager_SQL::prune_session_cache()
       remove_some->spin();
       }
    }
-
-}
 
 }

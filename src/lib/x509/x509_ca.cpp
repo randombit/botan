@@ -285,7 +285,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
          .encode(m_ca_cert.subject_dn())
          .encode(X509_Time(issue_time))
          .encode(X509_Time(expire_time))
-         .encode_if(revoked.size() > 0,
+         .encode_if(!revoked.empty(),
               DER_Encoder()
                  .start_sequence()
                     .encode_list(revoked)

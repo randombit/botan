@@ -10,31 +10,74 @@ import re
 from multiprocessing.pool import ThreadPool
 
 enabled_checks = [
+    'bugprone-*',
+    'cert-*',
     'clang-analyzer-*',
-    #'performance-*',
-    #'bugprone-*',
-    #'cert-*',
-    #'cppcoreguidelines-*',
-    #'hicpp-*',
-    #'modernize-*',
-    #'portability-*',
-    #'readability-*',
-    #'readability-container-size-empty'
+    'modernize-concat-nested-namespaces',
+    'performance-*',
+    'portability-*',
+    'readability-container-size-empty',
+    'readability-static-definition-in-anonymous-namespace',
+
+    'cppcoreguidelines-*',
+    'hicpp-*',
+    'modernize-*',
+    'readability-*',
+    #'modernize-make-unique',
+    'readability-inconsistent-declaration-parameter-name',
 ]
 
-disabled_checks = [
+# these might be worth being clean for
+disabled_needs_work = [
+    '*-braces-around-statements', # should fix (need clang-format)
+    'bugprone-easily-swappable-parameters',
+    'bugprone-implicit-widening-of-multiplication-result',
+    'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
+    'bugprone-narrowing-conversions', # should be fixed
+    'cppcoreguidelines-init-variables',
+    'cppcoreguidelines-narrowing-conversions', # lot of these
+    'cppcoreguidelines-owning-memory',
+    'cppcoreguidelines-pro-bounds-pointer-arithmetic',
+    'cppcoreguidelines-pro-type-union-access', # only in sha1_sse2
+    'hicpp-signed-bitwise', # djb shit
+    'modernize-pass-by-value',
+    'modernize-use-nodiscard',
+    'modernize-use-trailing-return-type',
+    'performance-inefficient-string-concatenation',
+    'performance-no-int-to-ptr',
+    'readability-implicit-bool-conversion', # maybe fix this
+    'readability-inconsistent-declaration-parameter-name', # should fix this
+    'readability-isolate-declaration',
+    'readability-simplify-boolean-expr', # sometimes ok
+]
+
+# these we are not interested in ever being clang-tidy clean for
+disabled_not_interested = [
     '*-array-to-pointer-decay',
     '*-avoid-c-arrays',
-    '*-braces-around-statements', # should fix
-    '*-magic-numbers',
+    '*-else-after-return',
+    '*-function-size',
+    '*-magic-numbers', # can't stop the magic
     '*-no-array-decay',
-    '-*else-after-return',
-    'bugprone-easily-swappable-parameters',
-    'cppcoreguidelines-pro-bounds-pointer-arithmetic',
-    'modernize-pass-by-value',
-    'modernize-use-trailing-return-type',
-    'readability-function-cognitive-complexity', # bogus
+    '*-use-auto', # not universally a good idea
+    'bugprone-branch-clone', # doesn't interact well with feature macros
+    'bugprone-argument-comment',
+    'cert-err58-cpp',
+    'cppcoreguidelines-no-malloc',
+    'cppcoreguidelines-pro-bounds-constant-array-index',
+    'cppcoreguidelines-pro-type-cstyle-cast', # system headers
+    'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
+    'hicpp-no-assembler',
+    'hicpp-no-malloc',
+    'modernize-loop-convert', # sometimes very ugly
+    'modernize-raw-string-literal',
+    'modernize-return-braced-init-list', # thanks I hate it
+    'modernize-use-using', # fine not great
+    'portability-simd-intrinsics',
+    'readability-function-cognitive-complexity',
 ]
+
+disabled_checks = disabled_needs_work + disabled_not_interested
 
 def create_check_option(enabled, disabled):
     return ','.join(enabled) + ',' + ','.join(['-' + d for d in disabled])
@@ -76,6 +119,15 @@ def run_clang_tidy(compile_commands_file,
     if stdout != "":
         print(stdout)
 
+def file_matches(file, args):
+    if args is None or len(args) == 0:
+        return True
+
+    for arg in args:
+        if file.find(arg) > 0:
+            return True
+    return False
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -101,11 +153,16 @@ def main(args = None):
 
     results = []
     for info in compile_commands:
+        file = info['file']
+
+        if not file_matches(file, args[1:]):
+            continue
+
         results.append(pool.apply_async(
             run_clang_tidy,
             (compile_commands_file,
              check_config,
-             info['file'],
+             file,
              options)))
 
     for result in results:

@@ -11,8 +11,8 @@
 namespace Botan {
 
 secure_vector<uint8_t> EME_Raw::pad(const uint8_t in[], size_t in_length,
-                                 size_t,
-                                 RandomNumberGenerator&) const
+                                 size_t /*key_length*/,
+                                 RandomNumberGenerator& /*rng*/) const
    {
    return secure_vector<uint8_t>(in, in + in_length);
    }

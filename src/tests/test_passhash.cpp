@@ -29,7 +29,7 @@ class Bcrypt_Tests final : public Text_Based_Test
    public:
       Bcrypt_Tests() : Text_Based_Test("passhash/bcrypt.vec", "Password,Passhash") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          // Encoded as binary so we can test binary inputs
          const std::vector<uint8_t> password_vec = vars.get_req_bin("Password");
@@ -135,7 +135,7 @@ class Passhash9_Tests final : public Text_Based_Test
    public:
       Passhash9_Tests() : Text_Based_Test("passhash/passhash9.vec", "Password,Passhash,PRF") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          // Encoded as binary so we can test binary inputs
          const std::vector<uint8_t> password_vec = vars.get_req_bin("Password");

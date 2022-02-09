@@ -30,7 +30,7 @@ Certificate_Store::find_cert(const X509_DN& subject_dn, const std::vector<uint8_
    return certs.front();
    }
 
-std::optional<X509_CRL> Certificate_Store::find_crl_for(const X509_Certificate&) const
+std::optional<X509_CRL> Certificate_Store::find_crl_for(const X509_Certificate& /*unused*/) const
    {
    return std::nullopt;
    }
@@ -59,11 +59,11 @@ Certificate_Store_In_Memory::find_cert(const X509_DN& subject_dn,
    for(const auto& cert : m_certs)
       {
       // Only compare key ids if set in both call and in the cert
-      if(key_id.size())
+      if(!key_id.empty())
          {
          std::vector<uint8_t> skid = cert.subject_key_id();
 
-         if(skid.size() && skid != key_id) // no match
+         if(!skid.empty() && skid != key_id) // no match
             continue;
          }
 
@@ -82,11 +82,11 @@ std::vector<X509_Certificate> Certificate_Store_In_Memory::find_all_certs(
 
    for(const auto& cert : m_certs)
       {
-      if(key_id.size())
+      if(!key_id.empty())
          {
          std::vector<uint8_t> skid = cert.subject_key_id();
 
-         if(skid.size() && skid != key_id) // no match
+         if(!skid.empty() && skid != key_id) // no match
             continue;
          }
 
@@ -133,7 +133,7 @@ Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256(const std::vecto
 
 void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
    {
-   X509_DN crl_issuer = crl.issuer_dn();
+   const X509_DN& crl_issuer = crl.issuer_dn();
 
    for(auto& c : m_crls)
       {
@@ -157,11 +157,11 @@ std::optional<X509_CRL> Certificate_Store_In_Memory::find_crl_for(const X509_Cer
    for(const auto& c : m_crls)
       {
       // Only compare key ids if set in both call and in the CRL
-      if(key_id.size())
+      if(!key_id.empty())
          {
          std::vector<uint8_t> akid = c.authority_key_id();
 
-         if(akid.size() && akid != key_id) // no match
+         if(!akid.empty() && akid != key_id) // no match
             continue;
          }
 

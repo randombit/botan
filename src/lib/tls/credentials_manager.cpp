@@ -10,21 +10,21 @@
 
 namespace Botan {
 
-std::string Credentials_Manager::psk_identity_hint(const std::string&,
-                                                   const std::string&)
+std::string Credentials_Manager::psk_identity_hint(const std::string& /*unused*/,
+                                                   const std::string& /*unused*/)
    {
    return "";
    }
 
-std::string Credentials_Manager::psk_identity(const std::string&,
-                                              const std::string&,
-                                              const std::string&)
+std::string Credentials_Manager::psk_identity(const std::string& /*unused*/,
+                                              const std::string& /*unused*/,
+                                              const std::string& /*unused*/)
    {
    return "";
    }
 
-SymmetricKey Credentials_Manager::psk(const std::string&,
-                                      const std::string&,
+SymmetricKey Credentials_Manager::psk(const std::string& /*unused*/,
+                                      const std::string& /*unused*/,
                                       const std::string& identity)
    {
    throw Internal_Error("No PSK set for identity " + identity);
@@ -32,7 +32,7 @@ SymmetricKey Credentials_Manager::psk(const std::string&,
 
 std::vector<X509_Certificate> Credentials_Manager::find_cert_chain(
    const std::vector<std::string>& key_types,
-   const std::vector<X509_DN>&,
+   const std::vector<X509_DN>& /*unused*/,
    const std::string& type,
    const std::string& context)
    {
@@ -40,9 +40,9 @@ std::vector<X509_Certificate> Credentials_Manager::find_cert_chain(
    }
 
 std::vector<X509_Certificate> Credentials_Manager::cert_chain(
-   const std::vector<std::string>&,
-   const std::string&,
-   const std::string&)
+   const std::vector<std::string>& /*unused*/,
+   const std::string& /*unused*/,
+   const std::string& /*unused*/)
    {
    return std::vector<X509_Certificate>();
    }
@@ -57,17 +57,17 @@ std::vector<X509_Certificate> Credentials_Manager::cert_chain_single_type(
    return find_cert_chain(cert_types, std::vector<X509_DN>(), type, context);
    }
 
-Private_Key* Credentials_Manager::private_key_for(const X509_Certificate&,
-                                                  const std::string&,
-                                                  const std::string&)
+Private_Key* Credentials_Manager::private_key_for(const X509_Certificate& /*unused*/,
+                                                  const std::string& /*unused*/,
+                                                  const std::string& /*unused*/)
    {
    return nullptr;
    }
 
 std::vector<Certificate_Store*>
 Credentials_Manager::trusted_certificate_authorities(
-   const std::string&,
-   const std::string&)
+   const std::string& /*unused*/,
+   const std::string& /*unused*/)
    {
    return std::vector<Certificate_Store*>();
    }

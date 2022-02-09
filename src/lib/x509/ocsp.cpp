@@ -19,9 +19,7 @@
   #include <botan/internal/http_util.h>
 #endif
 
-namespace Botan {
-
-namespace OCSP {
+namespace Botan::OCSP {
 
 namespace {
 
@@ -193,23 +191,23 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
 
    std::optional<X509_Certificate> signing_cert;
 
-   for(size_t i = 0; i != trusted_roots.size(); ++i)
+   for(const auto& trusted_root : trusted_roots)
       {
       if(m_signer_name.empty() && m_key_hash.empty())
          return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
 
       if(!m_signer_name.empty())
          {
-         signing_cert = trusted_roots[i]->find_cert(m_signer_name, std::vector<uint8_t>());
+         signing_cert = trusted_root->find_cert(m_signer_name, std::vector<uint8_t>());
          if(signing_cert)
             {
             break;
             }
          }
 
-      if(m_key_hash.size() > 0)
+      if(!m_key_hash.empty())
          {
-         signing_cert = trusted_roots[i]->find_cert_by_pubkey_sha1(m_key_hash);
+         signing_cert = trusted_root->find_cert_by_pubkey_sha1(m_key_hash);
          if(signing_cert)
             {
             break;
@@ -229,7 +227,7 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
             break;
             }
 
-         if(m_key_hash.size() > 0 && ee_cert_path[i].subject_public_key_bitstring_sha1() == m_key_hash)
+         if(!m_key_hash.empty() && ee_cert_path[i].subject_public_key_bitstring_sha1() == m_key_hash)
             {
             signing_cert = ee_cert_path[i];
             break;
@@ -237,20 +235,20 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
          }
       }
 
-   if(!signing_cert && m_certs.size() > 0)
+   if(!signing_cert && !m_certs.empty())
       {
-      for(size_t i = 0; i < m_certs.size(); ++i)
+      for(const auto& cert : m_certs)
          {
          // Check all CA certificates in the (assumed validated) EE cert path
-         if(!m_signer_name.empty() && m_certs[i].subject_dn() == m_signer_name)
+         if(!m_signer_name.empty() && cert.subject_dn() == m_signer_name)
             {
-            signing_cert = m_certs[i];
+            signing_cert = cert;
             break;
             }
 
-         if(m_key_hash.size() > 0 && m_certs[i].subject_public_key_bitstring_sha1() == m_key_hash)
+         if(!m_key_hash.empty() && cert.subject_public_key_bitstring_sha1() == m_key_hash)
             {
-            signing_cert = m_certs[i];
+            signing_cert = cert;
             break;
             }
          }
@@ -357,7 +355,5 @@ Response online_check(const X509_Certificate& issuer,
    }
 
 #endif
-
-}
 
 }

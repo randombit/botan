@@ -39,7 +39,7 @@ class PKCS_HashID_Test final : public Test
 
          std::vector<Test::Result> results;
 
-         for(auto hash_info : hash_id_fns)
+         for(const auto& hash_info : hash_id_fns)
             {
             const std::string hash_fn = hash_info.first;
             const size_t hash_len = hash_info.second;

@@ -19,7 +19,7 @@
 
 namespace Botan_Tests {
 
-Botan::X509_DN read_dn(const std::string hex);
+Botan::X509_DN read_dn(const std::string& hex);
 
 Botan::X509_DN get_dn();
 

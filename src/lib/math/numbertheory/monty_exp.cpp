@@ -18,7 +18,7 @@ namespace Botan {
 class Montgomery_Exponentation_State
    {
    public:
-      Montgomery_Exponentation_State(std::shared_ptr<const Montgomery_Params> params,
+      Montgomery_Exponentation_State(const std::shared_ptr<const Montgomery_Params>& params,
                                      const BigInt& g,
                                      size_t window_bits,
                                      bool const_time);
@@ -32,10 +32,11 @@ class Montgomery_Exponentation_State
       size_t m_window_bits;
    };
 
-Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<const Montgomery_Params> params,
-                                                               const BigInt& g,
-                                                               size_t window_bits,
-                                                               bool const_time) :
+Montgomery_Exponentation_State::Montgomery_Exponentation_State(
+   const std::shared_ptr<const Montgomery_Params>& params,
+   const BigInt& g,
+   size_t window_bits,
+   bool const_time) :
    m_params(params),
    m_window_bits(window_bits == 0 ? 4 : window_bits)
    {
@@ -150,7 +151,7 @@ BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scal
    }
 
 std::shared_ptr<const Montgomery_Exponentation_State>
-monty_precompute(std::shared_ptr<const Montgomery_Params> params,
+monty_precompute(const std::shared_ptr<const Montgomery_Params>& params,
                  const BigInt& g,
                  size_t window_bits,
                  bool const_time)
@@ -170,7 +171,7 @@ BigInt monty_execute_vartime(const Montgomery_Exponentation_State& precomputed_s
    return precomputed_state.exponentiation_vartime(k);
    }
 
-BigInt monty_multi_exp(std::shared_ptr<const Montgomery_Params> params_p,
+BigInt monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& params_p,
                        const BigInt& x_bn,
                        const BigInt& z1,
                        const BigInt& y_bn,

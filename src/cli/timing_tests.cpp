@@ -118,8 +118,7 @@ class Bleichenbacker_Timing_Test final : public Timing_Test
       std::vector<uint8_t> prepare_input(const std::string& input) override
          {
          const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
-         const std::vector<uint8_t> encrypted = m_enc.encrypt(input_vector, timing_test_rng());
-         return encrypted;
+         return m_enc.encrypt(input_vector, timing_test_rng());
          }
 
       ticks measure_critical_function(const std::vector<uint8_t>& input) override
@@ -162,8 +161,7 @@ class Manger_Timing_Test final : public Timing_Test
       std::vector<uint8_t> prepare_input(const std::string& input) override
          {
          const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
-         const std::vector<uint8_t> encrypted = m_enc.encrypt(input_vector, timing_test_rng());
-         return encrypted;
+         return m_enc.encrypt(input_vector, timing_test_rng());
          }
 
       ticks measure_critical_function(const std::vector<uint8_t>& input) override
@@ -262,7 +260,7 @@ ticks Lucky13_Timing_Test::measure_critical_function(const std::vector<uint8_t>&
 class ECDSA_Timing_Test final : public Timing_Test
    {
    public:
-      ECDSA_Timing_Test(std::string ecgroup);
+      ECDSA_Timing_Test(const std::string& ecgroup);
 
       ticks measure_critical_function(const std::vector<uint8_t>& input) override;
 
@@ -274,7 +272,7 @@ class ECDSA_Timing_Test final : public Timing_Test
       Botan::BigInt m_b, m_b_inv;
    };
 
-ECDSA_Timing_Test::ECDSA_Timing_Test(std::string ecgroup)
+ECDSA_Timing_Test::ECDSA_Timing_Test(const std::string& ecgroup)
    : m_group(ecgroup)
    , m_privkey(timing_test_rng(), m_group)
    , m_x(m_privkey.private_value())
@@ -317,7 +315,7 @@ ticks ECDSA_Timing_Test::measure_critical_function(const std::vector<uint8_t>& i
 class ECC_Mul_Timing_Test final : public Timing_Test
    {
    public:
-      ECC_Mul_Timing_Test(std::string ecgroup) :
+      ECC_Mul_Timing_Test(const std::string& ecgroup) :
          m_group(ecgroup)
          {}
 
@@ -507,7 +505,7 @@ class Timing_Test_Command final : public Command
          }
    private:
 
-      std::vector<std::string> read_testdata(const std::string& filename)
+      static std::vector<std::string> read_testdata(const std::string& filename)
          {
          std::vector<std::string> lines;
          std::ifstream infile(filename);
@@ -518,7 +516,7 @@ class Timing_Test_Command final : public Command
          std::string line;
          while(std::getline(infile, line))
             {
-            if(line.size() > 0 && line.at(0) != '#')
+            if(!line.empty() && line.at(0) != '#')
                {
                lines.push_back(line);
                }
@@ -526,7 +524,7 @@ class Timing_Test_Command final : public Command
          return lines;
          }
 
-      std::unique_ptr<Timing_Test> lookup_timing_test(const std::string& test_type);
+      static std::unique_ptr<Timing_Test> lookup_timing_test(const std::string& test_type);
 
       std::string help_text() const override
          {

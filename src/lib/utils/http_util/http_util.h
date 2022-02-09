@@ -72,7 +72,7 @@ BOTAN_TEST_API std::ostream& operator<<(std::ostream& o, const Response& resp);
 
 typedef std::function<std::string (const std::string&, const std::string&, const std::string&)> http_exch_fn;
 
-Response http_sync(http_exch_fn fn,
+Response http_sync(const http_exch_fn& fn,
                    const std::string& verb,
                    const std::string& url,
                    const std::string& content_type,

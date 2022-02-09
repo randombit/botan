@@ -101,7 +101,7 @@ class L_computer final
          }
 
    private:
-      secure_vector<uint8_t> poly_double(const secure_vector<uint8_t>& in) const
+      static secure_vector<uint8_t> poly_double(const secure_vector<uint8_t>& in)
          {
          secure_vector<uint8_t> out(in.size());
          poly_double_n(out.data(), in.data(), out.size());

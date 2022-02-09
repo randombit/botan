@@ -68,7 +68,7 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
 
       void curve_mul_words(BigInt& z,
                            const word x_words[],
-                           const size_t x_size,
+                           size_t x_size,
                            const BigInt& y,
                            secure_vector<word>& ws) const override;
 
@@ -206,7 +206,7 @@ class CurveGFp_NIST : public CurveGFp_Repr
 
       void curve_mul_words(BigInt& z,
                            const word x_words[],
-                           const size_t x_size,
+                           size_t x_size,
                            const BigInt& y,
                            secure_vector<word>& ws) const override;
 

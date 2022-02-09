@@ -21,9 +21,7 @@
 #include <botan/internal/stl_util.h>
 #include <chrono>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 enum {
    TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF,
@@ -63,7 +61,7 @@ Hello_Request::Hello_Request(Handshake_IO& io)
 */
 Hello_Request::Hello_Request(const std::vector<uint8_t>& buf)
    {
-   if(buf.size())
+   if(!buf.empty())
       throw Decoding_Error("Bad Hello_Request, has non-zero size");
    }
 
@@ -109,7 +107,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    m_extensions.add(new Supported_Versions(m_version, policy));
 
-   if(client_settings.hostname() != "")
+   if(!client_settings.hostname().empty())
       m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
 
    if(policy.support_cert_status_message())
@@ -125,7 +123,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
 
-   if(supported_groups->ec_groups().size() > 0)
+   if(!supported_groups->ec_groups().empty())
       {
       m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
@@ -177,7 +175,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
 
-   if(supported_groups->ec_groups().size() > 0)
+   if(!supported_groups->ec_groups().empty())
       {
       m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
@@ -299,9 +297,14 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
 */
 bool Client_Hello::offered_suite(uint16_t ciphersuite) const
    {
-   for(size_t i = 0; i != m_suites.size(); ++i)
-      if(m_suites[i] == ciphersuite)
+   for(const auto suite : m_suites)
+      {
+      if(suite == ciphersuite)
+         {
          return true;
+         }
+      }
+
    return false;
    }
 
@@ -417,7 +420,5 @@ std::vector<uint16_t> Client_Hello::srtp_profiles() const
    return std::vector<uint16_t>();
    }
 
-
-}
 
 }

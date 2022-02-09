@@ -99,8 +99,9 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_
       ~McEliece_PrivateKey();
 
       McEliece_PrivateKey(const McEliece_PrivateKey&);
-      McEliece_PrivateKey(McEliece_PrivateKey&&);
       McEliece_PrivateKey& operator=(const McEliece_PrivateKey&);
+
+      McEliece_PrivateKey(McEliece_PrivateKey&&);
       McEliece_PrivateKey& operator=(McEliece_PrivateKey&&);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;

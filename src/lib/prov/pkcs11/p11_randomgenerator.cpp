@@ -8,9 +8,7 @@
 
 #include <botan/p11_randomgenerator.h>
 
-namespace Botan {
-
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 PKCS11_RNG::PKCS11_RNG(Session& session)
    : m_session(session)
@@ -26,6 +24,5 @@ void PKCS11_RNG::add_entropy(const uint8_t in[], std::size_t length)
    module()->C_SeedRandom(m_session.get().handle(), const_cast<uint8_t*>(in), Ulong(length));
    }
 
-}
 }
 

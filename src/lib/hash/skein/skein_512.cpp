@@ -27,7 +27,7 @@ Skein_512::Skein_512(size_t arg_output_bits,
 
 std::string Skein_512::name() const
    {
-   if(m_personalization != "")
+   if(!m_personalization.empty())
       return "Skein-512(" + std::to_string(m_output_bits) + "," +
                             m_personalization + ")";
    return "Skein-512(" + std::to_string(m_output_bits) + ")";
@@ -78,7 +78,7 @@ void Skein_512::initial_block()
    reset_tweak(SKEIN_CONFIG, true);
    ubi_512(config_str, sizeof(config_str));
 
-   if(m_personalization != "")
+   if(!m_personalization.empty())
       {
       /*
         This is a limitation of this implementation, and not of the

@@ -63,7 +63,7 @@ int Command::run(const std::vector<std::string>& params)
          {
          const std::string output_file = get_arg("output");
 
-         if(output_file != "")
+         if(!output_file.empty())
             {
             m_output_stream.reset(new std::ofstream(output_file, std::ios::binary));
             if(!m_output_stream->good())
@@ -75,7 +75,7 @@ int Command::run(const std::vector<std::string>& params)
          {
          const std::string output_file = get_arg("error-output");
 
-         if(output_file != "")
+         if(!output_file.empty())
             {
             m_error_output_stream.reset(new std::ofstream(output_file, std::ios::binary));
             if(!m_error_output_stream->good())
@@ -197,7 +197,7 @@ std::string Command::slurp_file_as_str(const std::string& input_file,
    }
 
 void Command::read_file(const std::string& input_file,
-                        std::function<void (uint8_t[], size_t)> consumer_fn,
+                        const std::function<void (uint8_t[], size_t)>& consumer_fn,
                         size_t buf_size) const
    {
    if(input_file == "-")
@@ -216,7 +216,7 @@ void Command::read_file(const std::string& input_file,
    }
 
 void Command::do_read_file(std::istream& in,
-                           std::function<void (uint8_t[], size_t)> consumer_fn,
+                           const std::function<void (uint8_t[], size_t)>& consumer_fn,
                            size_t buf_size) const
    {
    // Avoid an infinite loop on --buf-size=0
@@ -242,7 +242,7 @@ Botan::RandomNumberGenerator& Command::rng()
 
 std::string Command::get_passphrase_arg(const std::string& prompt, const std::string& opt_name)
    {
-   const std::string s = get_arg(opt_name);
+   std::string s = get_arg(opt_name);
    if(s != "-")
       return s;
    return get_passphrase(prompt);
@@ -308,7 +308,7 @@ std::string Command::format_blob(const std::string& format,
 
 // Registration code
 
-Command::Registration::Registration(const std::string& name, Command::cmd_maker_fn maker_fn)
+Command::Registration::Registration(const std::string& name, const Command::cmd_maker_fn& maker_fn)
    {
    std::map<std::string, Command::cmd_maker_fn>& reg = Command::global_registry();
 

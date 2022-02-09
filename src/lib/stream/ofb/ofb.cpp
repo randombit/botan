@@ -85,7 +85,7 @@ void OFB::set_iv(const uint8_t iv[], size_t iv_len)
    }
 
 
-void OFB::seek(uint64_t)
+void OFB::seek(uint64_t /*offset*/)
    {
    throw Not_Implemented("OFB does not support seeking");
    }

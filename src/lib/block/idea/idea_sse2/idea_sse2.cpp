@@ -134,7 +134,7 @@ void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
 * 8 wide IDEA encryption/decryption in SSE2
 */
 BOTAN_FUNC_ISA("sse2")
-void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52]) const
+void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52])
    {
    CT::poison(in, 64);
    CT::poison(out, 64);

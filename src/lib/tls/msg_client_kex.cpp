@@ -23,9 +23,7 @@
   #include <botan/cecpq1.h>
 #endif
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /*
 * Create a new Client Key Exchange message
@@ -120,7 +118,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          const std::string curve_name = state.callbacks().tls_decode_group_param(curve_id);
 
-         if(curve_name == "")
+         if(curve_name.empty())
             throw Decoding_Error("Server sent unknown named curve " +
                                  std::to_string(static_cast<uint16_t>(curve_id)));
 
@@ -352,7 +350,5 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
          throw Internal_Error("Client_Key_Exchange: Unknown key exchange negotiated");
       }
    }
-
-}
 
 }

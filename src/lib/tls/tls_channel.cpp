@@ -16,9 +16,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/loadstor.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 size_t TLS::Channel::IO_BUF_DEFAULT_SIZE = 10*1024;
 
@@ -706,7 +704,7 @@ SymmetricKey Channel::key_material_export(const std::string& label,
       salt += active->client_hello()->random();
       salt += active->server_hello()->random();
 
-      if(context != "")
+      if(!context.empty())
          {
          size_t context_size = context.length();
          if(context_size > 0xFFFF)
@@ -723,7 +721,5 @@ SymmetricKey Channel::key_material_export(const std::string& label,
       throw Invalid_State("Channel::key_material_export connection not active");
       }
    }
-
-}
 
 }

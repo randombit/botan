@@ -13,7 +13,7 @@ Encrypted_PSK_Database_SQL::Encrypted_PSK_Database_SQL(const secure_vector<uint8
                                                        std::shared_ptr<SQL_Database> db,
                                                        const std::string& table_name) :
    Encrypted_PSK_Database(master_key),
-   m_db(db),
+   m_db(std::move(db)),
    m_table_name(table_name)
    {
    m_db->create_table(

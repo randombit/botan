@@ -119,7 +119,7 @@ HMAC_DRBG::HMAC_DRBG(const std::string& hmac_hash) :
 
 void HMAC_DRBG::clear_state()
    {
-   if(m_V.size() == 0)
+   if(m_V.empty())
       {
       const size_t output_length = m_mac->output_length();
       m_V.resize(output_length);

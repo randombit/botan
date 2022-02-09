@@ -67,14 +67,16 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
    {
    std::multimap<std::string, std::string> names;
 
-   for(auto i = m_alt_info.begin(); i != m_alt_info.end(); ++i)
+   for(const auto& name : m_alt_info)
       {
-      multimap_insert(names, i->first, i->second);
+      multimap_insert(names, name.first, name.second);
       }
 
-   for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
+   for(const auto& othername : m_othernames)
       {
-      multimap_insert(names, i->first.to_formatted_string(), i->second.value());
+      multimap_insert(names,
+                      othername.first.to_formatted_string(),
+                      othername.second.value());
       }
 
    return names;
@@ -123,7 +125,7 @@ X509_DN AlternativeName::dn() const
 */
 bool AlternativeName::has_items() const
    {
-   return (m_alt_info.size() > 0 || m_othernames.size() > 0);
+   return (!m_alt_info.empty() || !m_othernames.empty());
    }
 
 namespace {
@@ -176,12 +178,12 @@ void AlternativeName::encode_into(DER_Encoder& der) const
    encode_entries(der, m_alt_info, "URI", ASN1_Type(6));
    encode_entries(der, m_alt_info, "IP", ASN1_Type(7));
 
-   for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
+   for(const auto& othername : m_othernames)
       {
       der.start_explicit(0)
-         .encode(i->first)
+         .encode(othername.first)
          .start_explicit(0)
-            .encode(i->second)
+            .encode(othername.second)
          .end_explicit()
       .end_explicit();
       }

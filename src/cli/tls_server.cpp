@@ -290,7 +290,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          return true;
          }
 
-      void tls_record_received(uint64_t, const uint8_t input[], size_t input_len) override
+      void tls_record_received(uint64_t /*seq_no*/, const uint8_t input[], size_t input_len) override
          {
          for(size_t i = 0; i != input_len; ++i)
             {
@@ -348,7 +348,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          output() << "Alert: " << alert.type_string() << std::endl;
          }
 
-      std::string tls_server_choose_app_protocol(const std::vector<std::string>&) override
+      std::string tls_server_choose_app_protocol(const std::vector<std::string>& /*client_protos*/) override
          {
          // we ignore whatever the client sends here
          return "echo/0.1";

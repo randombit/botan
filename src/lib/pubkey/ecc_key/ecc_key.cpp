@@ -60,7 +60,7 @@ EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
    }
 
 bool EC_PublicKey::check_key(RandomNumberGenerator& rng,
-                             bool) const
+                             bool /*strong*/) const
    {
    return m_domain_params.verify_group(rng) &&
           m_domain_params.verify_public_element(public_point());

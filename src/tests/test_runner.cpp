@@ -81,7 +81,7 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 int Test_Runner::run(const Test_Options& opts)
    {
    std::vector<std::string> req = opts.requested_tests();
-   const std::set<std::string> to_skip = opts.skip_tests();
+   const std::set<std::string>& to_skip = opts.skip_tests();
 
    if(req.empty())
       {
@@ -96,7 +96,7 @@ int Test_Runner::run(const Test_Options& opts)
          "modes", "kdf", "pbkdf", "hmac_drbg", "util"
       };
 
-      for(auto s : default_first)
+      for(const auto& s : default_first)
          {
          if(to_skip.count(s) == 0)
             req.push_back(s);
@@ -120,7 +120,7 @@ int Test_Runner::run(const Test_Options& opts)
             }
          }
 
-      for(auto f : req)
+      for(const auto& f : req)
          {
          all_others.erase(f);
          }
@@ -153,7 +153,7 @@ int Test_Runner::run(const Test_Options& opts)
    output() << "Testing " << Botan::version_string() << "\n";
 
    const std::string cpuid = Botan::CPUID::to_string();
-   if(cpuid.size() > 0)
+   if(!cpuid.empty())
       output() << "CPU flags: " << cpuid << "\n";
    output() << "Starting tests";
 

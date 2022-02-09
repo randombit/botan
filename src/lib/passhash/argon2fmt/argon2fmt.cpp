@@ -17,7 +17,7 @@ namespace {
 
 std::string strip_padding(std::string s)
    {
-   while(s.size() > 0 && s[s.size()-1] == '=')
+   while(!s.empty() && s[s.size()-1] == '=')
       s.resize(s.size() - 1);
    return s;
    }
@@ -99,7 +99,7 @@ bool argon2_check_pwhash(const char* password, size_t password_len,
 
    size_t M = 0, t = 0, p = 0;
 
-   for(auto param_str : params)
+   for(const auto& param_str : params)
       {
       const std::vector<std::string> param = split_on(param_str, '=');
 

@@ -38,7 +38,7 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
                            "EncryptPRNGSeed,SharedKey,Ciphertext",
                            "") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          const std::vector<uint8_t> keygen_seed  = vars.get_req_bin("McElieceSeed");
          const std::vector<uint8_t> fprint_pub   = vars.get_req_bin("PublicKeyFingerprint");

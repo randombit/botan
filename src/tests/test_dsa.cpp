@@ -79,7 +79,7 @@ class DSA_Verification_Tests final : public PK_Signature_Verification_Test
          return std::make_unique<Botan::DSA_PublicKey>(grp, y);
          }
 
-      std::string default_padding(const VarMap&) const override
+      std::string default_padding(const VarMap& /*unused*/) const override
          {
          return "Raw";
          }

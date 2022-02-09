@@ -9,9 +9,7 @@
 #include <botan/p11_types.h>
 #include <botan/internal/dyn_load.h>
 
-namespace Botan {
-
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 Module::Module(Module&&) = default;
 
@@ -49,5 +47,4 @@ void Module::reload(C_InitializeArgs init_args)
    m_low_level->C_Initialize(&init_args);
    }
 
-}
 }

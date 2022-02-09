@@ -13,9 +13,7 @@
 #include <botan/hash.h>
 #include <algorithm>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 size_t Ciphersuite::nonce_bytes_from_handshake() const
    {
@@ -118,13 +116,13 @@ namespace {
 
 bool have_hash(const std::string& prf)
    {
-   return (HashFunction::providers(prf).size() > 0);
+   return (!HashFunction::providers(prf).empty());
    }
 
 bool have_cipher(const std::string& cipher)
    {
-   return (BlockCipher::providers(cipher).size() > 0) ||
-      (StreamCipher::providers(cipher).size() > 0);
+   return (!BlockCipher::providers(cipher).empty()) ||
+      (!StreamCipher::providers(cipher).empty());
    }
 
 }
@@ -218,8 +216,6 @@ bool Ciphersuite::is_usable() const
 
    return true;
    }
-
-}
 
 }
 

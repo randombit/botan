@@ -188,7 +188,7 @@ PEM_encode_encrypted_pbkdf_msec(const Private_Key& key,
 */
 BOTAN_PUBLIC_API(2,3)
 std::unique_ptr<Private_Key> load_key(DataSource& source,
-                                      std::function<std::string ()> get_passphrase);
+                                      const std::function<std::string ()>& get_passphrase);
 
 /** Load an encrypted key from a data source.
 * @param source the data source providing the encoded key

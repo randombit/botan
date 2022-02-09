@@ -261,7 +261,7 @@ void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 * AES-128 Key Schedule
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_128::aesni_key_schedule(const uint8_t key[], size_t)
+void AES_128::aesni_key_schedule(const uint8_t key[], size_t /*length*/)
    {
    m_EK.resize(44);
    m_DK.resize(44);
@@ -480,7 +480,7 @@ void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 * AES-192 Key Schedule
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_192::aesni_key_schedule(const uint8_t key[], size_t)
+void AES_192::aesni_key_schedule(const uint8_t key[], size_t /*length*/)
    {
    m_EK.resize(52);
    m_DK.resize(52);
@@ -708,7 +708,7 @@ void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 * AES-256 Key Schedule
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_256::aesni_key_schedule(const uint8_t key[], size_t)
+void AES_256::aesni_key_schedule(const uint8_t key[], size_t /*length*/)
    {
    m_EK.resize(60);
    m_DK.resize(60);

@@ -23,7 +23,7 @@ AlgorithmIdentifier Ed25519_PublicKey::algorithm_identifier() const
    return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
-bool Ed25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
+bool Ed25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const
    {
    if(m_public.size() != 32)
       return false;
@@ -69,7 +69,7 @@ Ed25519_PublicKey::Ed25519_PublicKey(const uint8_t pub_key[], size_t pub_len)
    m_public.assign(pub_key, pub_key + pub_len);
    }
 
-Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier&,
+Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier& /*unused*/,
                                      const std::vector<uint8_t>& key_bits)
    {
    m_public = key_bits;
@@ -108,7 +108,7 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(RandomNumberGenerator& rng)
    ed25519_gen_keypair(m_public.data(), m_private.data(), seed.data());
    }
 
-Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier&,
+Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier& /*unused*/,
                                        const secure_vector<uint8_t>& key_bits)
    {
    secure_vector<uint8_t> bits;
@@ -132,7 +132,7 @@ secure_vector<uint8_t> Ed25519_PrivateKey::private_key_bits() const
    return DER_Encoder().encode(bits, ASN1_Type::OctetString).get_contents();
    }
 
-bool Ed25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const
+bool Ed25519_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const
    {
    return true; // ???
    }
@@ -229,7 +229,7 @@ class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature
          m_msg.insert(m_msg.end(), msg, msg + msg_len);
          }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator&) override
+      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override
          {
          secure_vector<uint8_t> sig(64);
          ed25519_sign(sig.data(), m_msg.data(), m_msg.size(), m_key.get_private_key().data(), nullptr, 0);
@@ -271,7 +271,7 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
          m_hash->update(msg, msg_len);
          }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator&) override
+      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override
          {
          secure_vector<uint8_t> sig(64);
          std::vector<uint8_t> msg_hash(m_hash->output_length());
@@ -297,7 +297,7 @@ Ed25519_PublicKey::create_verification_op(const std::string& params,
    {
    if(provider == "base" || provider.empty())
       {
-      if(params == "" || params == "Identity" || params == "Pure")
+      if(params.empty() || params == "Identity" || params == "Pure")
          return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
       else if(params == "Ed25519ph")
          return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, "SHA-512", true);
@@ -308,13 +308,13 @@ Ed25519_PublicKey::create_verification_op(const std::string& params,
    }
 
 std::unique_ptr<PK_Ops::Signature>
-Ed25519_PrivateKey::create_signature_op(RandomNumberGenerator&,
+Ed25519_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                         const std::string& params,
                                         const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
-      if(params == "" || params == "Identity" || params == "Pure")
+      if(params.empty() || params == "Identity" || params == "Pure")
          return std::make_unique<Ed25519_Pure_Sign_Operation>(*this);
       else if(params == "Ed25519ph")
          return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, "SHA-512", true);

@@ -104,7 +104,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
 
             cipher->set_key(key);
 
-            if(tweak.size() > 0)
+            if(!tweak.empty())
                {
                Botan::Tweakable_Block_Cipher* tbc = dynamic_cast<Botan::Tweakable_Block_Cipher*>(cipher.get());
                if(tbc == nullptr)

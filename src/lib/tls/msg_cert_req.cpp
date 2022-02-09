@@ -13,9 +13,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -72,11 +70,11 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf)
 
    TLS_Data_Reader reader("CertificateRequest", buf);
 
-   std::vector<uint8_t> cert_type_codes = reader.get_range_vector<uint8_t>(1, 1, 255);
+   const auto cert_type_codes = reader.get_range_vector<uint8_t>(1, 1, 255);
 
-   for(size_t i = 0; i != cert_type_codes.size(); ++i)
+   for(const auto cert_type_code : cert_type_codes)
       {
-      const std::string cert_type_name = cert_type_code_to_name(cert_type_codes[i]);
+      const std::string cert_type_name = cert_type_code_to_name(cert_type_code);
 
       if(cert_type_name.empty()) // something we don't know
          continue;
@@ -119,21 +117,20 @@ std::vector<uint8_t> Certificate_Req::serialize() const
 
    std::vector<uint8_t> cert_types;
 
-   for(size_t i = 0; i != m_cert_key_types.size(); ++i)
-      cert_types.push_back(cert_type_name_to_code(m_cert_key_types[i]));
+   for(const auto& cert_key_type : m_cert_key_types)
+      cert_types.push_back(cert_type_name_to_code(cert_key_type));
 
    append_tls_length_value(buf, cert_types, 1);
 
-   if(m_schemes.size() > 0)
+   if(!m_schemes.empty())
       buf += Signature_Algorithms(m_schemes).serialize(Connection_Side::SERVER);
 
    std::vector<uint8_t> encoded_names;
 
-   for(size_t i = 0; i != m_names.size(); ++i)
+   for(const auto& name : m_names)
       {
       DER_Encoder encoder;
-      encoder.encode(m_names[i]);
-
+      encoder.encode(name);
       append_tls_length_value(encoded_names, encoder.get_contents(), 2);
       }
 
@@ -141,7 +138,5 @@ std::vector<uint8_t> Certificate_Req::serialize() const
 
    return buf;
    }
-
-}
 
 }

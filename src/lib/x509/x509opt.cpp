@@ -91,7 +91,7 @@ X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
       throw Invalid_Argument("X.509 cert options: Too many names: "
                              + initial_opts);
 
-   if(parsed.size() >= 1) common_name  = parsed[0];
+   if(!parsed.empty()) common_name  = parsed[0];
    if(parsed.size() >= 2) country      = parsed[1];
    if(parsed.size() >= 3) organization = parsed[2];
    if(parsed.size() == 4) org_unit     = parsed[3];

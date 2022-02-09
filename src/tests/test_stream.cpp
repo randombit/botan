@@ -61,7 +61,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test
 
             if(cipher->default_iv_length() == 0)
                {
-               result.confirm("if default iv length is zero, no iv supported", nonce.size() == 0);
+               result.confirm("if default iv length is zero, no iv supported", nonce.empty());
 
                // This should still succeed
                cipher->set_iv(nullptr, 0);
@@ -98,7 +98,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test
                }
 
             bool accepted_nonce_early = false;
-            if(nonce.size() > 0)
+            if(!nonce.empty())
                {
                try
                   {
@@ -136,7 +136,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             not set. So, don't set the nonce now, to ensure the previous call
             had an effect.
             */
-            if(nonce.size() > 0 && accepted_nonce_early == false)
+            if(!nonce.empty() && accepted_nonce_early == false)
                {
                cipher->set_iv(nonce.data(), nonce.size());
                }
@@ -158,7 +158,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             result.test_eq(provider, "encrypt", buf, expected);
             }
 
-            if(nonce.size() > 0)
+            if(!nonce.empty())
                {
                std::vector<uint8_t> buf = input;
                cipher->set_iv(nonce.data(), nonce.size());

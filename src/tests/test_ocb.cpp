@@ -117,7 +117,7 @@ class OCB_Wide_KAT_Tests final : public Text_Based_Test
       OCB_Wide_KAT_Tests()
          : Text_Based_Test("ocb/ocb_wide.vec", "Key,Nonce,AD,In,Out") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("OCB wide block KAT");
 
@@ -274,7 +274,7 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
          : Text_Based_Test("ocb/ocb_long.vec",
                            "Keylen,Taglen,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          const size_t keylen = vars.get_req_sz("Keylen");
          const size_t taglen = vars.get_req_sz("Taglen");

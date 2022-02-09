@@ -169,9 +169,9 @@ class BitMap final
 
       bool empty() const
          {
-         for(size_t i = 0; i != m_bits.size(); ++i)
+         for(auto bitset : m_bits)
             {
-            if(m_bits[i] != 0)
+            if(bitset != 0)
                {
                return false;
                }
@@ -296,18 +296,18 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) :
    m_min_page_ptr = ~static_cast<uintptr_t>(0);
    m_max_page_ptr = 0;
 
-   for(size_t i = 0; i != pages.size(); ++i)
+   for(auto page : pages)
       {
-      const uintptr_t p = reinterpret_cast<uintptr_t>(pages[i]);
+      const uintptr_t p = reinterpret_cast<uintptr_t>(page);
 
       m_min_page_ptr = std::min(p, m_min_page_ptr);
       m_max_page_ptr = std::max(p, m_max_page_ptr);
 
-      clear_bytes(pages[i], m_page_size);
+      clear_bytes(page, m_page_size);
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
-      OS::page_prohibit_access(pages[i]);
+      OS::page_prohibit_access(page);
 #endif
-      m_free_pages.push_back(static_cast<uint8_t*>(pages[i]));
+      m_free_pages.push_back(static_cast<uint8_t*>(page));
       }
 
    /*
@@ -355,7 +355,7 @@ void* Memory_Pool::allocate(size_t n)
          // Otoh bucket search should be very fast
          }
 
-      if(m_free_pages.size() > 0)
+      if(!m_free_pages.empty())
          {
          uint8_t* ptr = m_free_pages[0];
          m_free_pages.pop_front();

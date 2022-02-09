@@ -118,7 +118,7 @@ class TSS_Recover final : public Command
 
          std::vector<Botan::RTSS_Share> shares;
 
-         for(std::string share_fsname : get_arg_list("shares"))
+         for(const std::string& share_fsname : get_arg_list("shares"))
             {
             auto v = slurp_file(share_fsname);
             shares.push_back(Botan::RTSS_Share(v.data(), v.size()));

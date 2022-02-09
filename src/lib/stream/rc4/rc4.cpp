@@ -39,7 +39,7 @@ Key_Length_Specification RC4::key_spec() const
    return Key_Length_Specification(1, 256);
    }
 
-void RC4::set_iv(const uint8_t*, size_t length)
+void RC4::set_iv(const uint8_t* /*iv*/, size_t length)
    {
    if(length > 0)
       throw Invalid_IV_Length("RC4", length);
@@ -126,7 +126,7 @@ void RC4::clear()
 */
 RC4::RC4(size_t s) : m_SKIP(s) {}
 
-void RC4::seek(uint64_t)
+void RC4::seek(uint64_t /*offset*/)
    {
    throw Not_Implemented("RC4 does not support seeking");
    }

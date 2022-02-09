@@ -71,9 +71,9 @@ inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size)
    BOTAN_ASSERT(ws_bn.size() >= PointGFp::WORKSPACE_SIZE,
                 "Expected size for PointGFp workspace");
 
-   for(size_t i = 0; i != ws_bn.size(); ++i)
-      if(ws_bn[i].size() < cap_size)
-         ws_bn[i].get_word_vector().resize(cap_size);
+   for(auto& ws : ws_bn)
+      if(ws.size() < cap_size)
+         ws.get_word_vector().resize(cap_size);
    }
 
 inline word all_zeros(const word x[], size_t len)
@@ -421,14 +421,14 @@ void PointGFp::force_all_affine(std::vector<PointGFp>& points,
    {
    if(points.size() <= 1)
       {
-      for(size_t i = 0; i != points.size(); ++i)
-         points[i].force_affine();
+      for(auto& point : points)
+         point.force_affine();
       return;
       }
 
-   for(size_t i = 0; i != points.size(); ++i)
+   for(auto& point : points)
       {
-      if(points[i].is_zero())
+      if(point.is_zero())
          throw Invalid_State("Cannot convert zero ECC point to affine");
       }
 

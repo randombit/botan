@@ -511,7 +511,7 @@ SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_192_smear(SIMD_4x32 x, SI
 
 }
 
-void AES_128::vperm_key_schedule(const uint8_t keyb[], size_t)
+void AES_128::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/)
    {
    m_EK.resize(11*4);
    m_DK.resize(11*4);
@@ -537,7 +537,7 @@ void AES_128::vperm_key_schedule(const uint8_t keyb[], size_t)
    aes_schedule_mangle_last_dec(key).store_le(&m_DK[0]);
    }
 
-void AES_192::vperm_key_schedule(const uint8_t keyb[], size_t)
+void AES_192::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/)
    {
    m_EK.resize(13*4);
    m_DK.resize(13*4);
@@ -584,7 +584,7 @@ void AES_192::vperm_key_schedule(const uint8_t keyb[], size_t)
       }
    }
 
-void AES_256::vperm_key_schedule(const uint8_t keyb[], size_t)
+void AES_256::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/)
    {
    m_EK.resize(15*4);
    m_DK.resize(15*4);

@@ -8,8 +8,7 @@
 
 #include <botan/p11_types.h>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 Session::Session(Slot& slot, bool read_only)
    : Session(slot, PKCS11::flags(Flag::SerialSession | (read_only ? Flag::None : Flag::RwSession)), nullptr, nullptr)
@@ -92,5 +91,4 @@ void Session::init_pin(const secure_string& new_pin)
    module()->C_InitPIN(m_handle, new_pin);
    }
 
-}
 }

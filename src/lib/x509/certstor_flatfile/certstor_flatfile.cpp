@@ -90,7 +90,7 @@ std::vector<X509_Certificate> Flatfile_Certificate_Store::find_all_certs(
       {
       const auto certs = m_dn_to_cert.at(subject_dn);
 
-      for(auto cert : certs)
+      for(const auto& cert : certs)
          {
          if(key_id.empty() || key_id == cert.subject_key_id())
             {

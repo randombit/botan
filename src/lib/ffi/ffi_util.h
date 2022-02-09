@@ -75,7 +75,7 @@ T& safe_get(botan_struct<T,M>* p)
    throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
    }
 
-int ffi_guard_thunk(const char* func_name, std::function<int ()>);
+int ffi_guard_thunk(const char* func_name, const std::function<int ()>& thunk);
 
 template<typename T, uint32_t M, typename F>
 int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)

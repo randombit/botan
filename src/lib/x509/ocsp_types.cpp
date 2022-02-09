@@ -11,9 +11,7 @@
 #include <botan/x509_ext.h>
 #include <botan/hash.h>
 
-namespace Botan {
-
-namespace OCSP {
+namespace Botan::OCSP {
 
 CertID::CertID(const X509_Certificate& issuer,
                const BigInt& subject_serial)
@@ -76,7 +74,7 @@ void CertID::decode_from(class BER_Decoder& from)
 
    }
 
-void SingleResponse::encode_into(class DER_Encoder&) const
+void SingleResponse::encode_into(class DER_Encoder& /*to*/) const
    {
    throw Not_Implemented("SingleResponse::encode_into");
    }
@@ -112,7 +110,5 @@ void SingleResponse::decode_from(class BER_Decoder& from)
    */
    m_cert_status = static_cast<uint32_t>(cert_status.type());
    }
-
-}
 
 }

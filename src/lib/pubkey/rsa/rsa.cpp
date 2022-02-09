@@ -111,7 +111,7 @@ void RSA_PublicKey::init(BigInt&& n, BigInt&& e)
    m_public = std::make_shared<RSA_Public_Data>(std::move(n), std::move(e));
    }
 
-RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier&,
+RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier& /*unused*/,
                              const std::vector<uint8_t>& key_bits)
    {
    BigInt n, e;
@@ -161,7 +161,7 @@ std::vector<uint8_t> RSA_PublicKey::public_key_bits() const
 /*
 * Check RSA Public Parameters
 */
-bool RSA_PublicKey::check_key(RandomNumberGenerator&, bool) const
+bool RSA_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const
    {
    if(get_n() < 35 || get_n().is_even() || get_e() < 3 || get_e().is_even())
       return false;
@@ -204,7 +204,7 @@ void RSA_PrivateKey::init(BigInt&& d, BigInt&& p, BigInt&& q,
       std::move(d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
    }
 
-RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier&,
+RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier& /*unused*/,
                                const secure_vector<uint8_t>& key_bits)
    {
    BigInt n, e, d, p, q, d1, d2, c;
@@ -493,7 +493,7 @@ class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,
          }
 
       secure_vector<uint8_t> raw_sign(const uint8_t input[], size_t input_len,
-                                      RandomNumberGenerator&) override
+                                      RandomNumberGenerator& /*rng*/) override
          {
          return raw_op(input, input_len);
          }
@@ -510,7 +510,7 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
          {
          }
 
-      size_t plaintext_length(size_t) const override { return public_modulus_bytes(); }
+      size_t plaintext_length(size_t /*ctext_len*/) const override { return public_modulus_bytes(); }
 
       secure_vector<uint8_t> raw_decrypt(const uint8_t input[], size_t input_len) override
          {
@@ -587,12 +587,12 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
          {
          }
 
-      size_t ciphertext_length(size_t) const override { return public_modulus_bytes(); }
+      size_t ciphertext_length(size_t /*ptext_len*/) const override { return public_modulus_bytes(); }
 
       size_t max_raw_input_bits() const override { return get_max_input_bits(); }
 
       secure_vector<uint8_t> raw_encrypt(const uint8_t input[], size_t input_len,
-                                         RandomNumberGenerator&) override
+                                         RandomNumberGenerator& /*rng*/) override
          {
          BigInt input_bn(input, input_len);
          return BigInt::encode_1363(public_op(input_bn), public_modulus_bytes());

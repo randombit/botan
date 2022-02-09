@@ -105,10 +105,10 @@ Extensions::create_extn_obj(const OID& oid,
 /*
 * Validate the extension (the default implementation is a NOP)
 */
-void Certificate_Extension::validate(const X509_Certificate&, const X509_Certificate&,
-      const std::vector<X509_Certificate>&,
-      std::vector<std::set<Certificate_Status_Code>>&,
-      size_t)
+void Certificate_Extension::validate(const X509_Certificate& /*unused*/, const X509_Certificate& /*unused*/,
+      const std::vector<X509_Certificate>& /*unused*/,
+      std::vector<std::set<Certificate_Status_Code>>& /*unused*/,
+      size_t /*unused*/)
    {
    }
 
@@ -238,7 +238,7 @@ std::map<OID, std::pair<std::vector<uint8_t>, bool>> Extensions::extensions_raw(
 */
 void Extensions::encode_into(DER_Encoder& to_object) const
    {
-   for(auto ext_info : m_extension_info)
+   for(const auto& ext_info : m_extension_info)
       {
       const OID& oid = ext_info.first;
       const bool should_encode = ext_info.second.obj().should_encode();
@@ -569,7 +569,7 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
          bool permitted = m_name_constraints.permitted().empty();
          bool failed = false;
 
-         for(auto c: m_name_constraints.permitted())
+         for(const auto& c: m_name_constraints.permitted())
             {
             switch(c.base().matches(cert_path.at(j)))
                {
@@ -586,7 +586,7 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
                }
             }
 
-         for(auto c: m_name_constraints.excluded())
+         for(const auto& c: m_name_constraints.excluded())
             {
             switch(c.base().matches(cert_path.at(j)))
                {
@@ -651,8 +651,8 @@ std::vector<uint8_t> Certificate_Policies::encode_inner() const
    {
    std::vector<Policy_Information> policies;
 
-   for(size_t i = 0; i != m_oids.size(); ++i)
-      policies.push_back(Policy_Information(m_oids[i]));
+   for(const auto& oid : m_oids)
+      policies.push_back(Policy_Information(oid));
 
    std::vector<uint8_t> output;
    DER_Encoder(output)
@@ -671,8 +671,8 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in)
 
    BER_Decoder(in).decode_list(policies);
    m_oids.clear();
-   for(size_t i = 0; i != policies.size(); ++i)
-      m_oids.push_back(policies[i].oid());
+   for(const auto& policy : policies)
+      m_oids.push_back(policy.oid());
    }
 
 void Certificate_Policies::validate(
@@ -810,9 +810,9 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf)
 
    std::stringstream ss;
 
-   for(size_t i = 0; i != m_distribution_points.size(); ++i)
+   for(const auto& distribution_point : m_distribution_points)
       {
-      auto contents = m_distribution_points[i].point().contents();
+      auto contents = distribution_point.point().contents();
 
       for(const auto& pair : contents)
          {
@@ -823,7 +823,7 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf)
    m_crl_distribution_urls.push_back(ss.str());
    }
 
-void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&) const
+void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder& /*to*/) const
    {
    throw Not_Implemented("CRL_Distribution_Points encoding");
    }

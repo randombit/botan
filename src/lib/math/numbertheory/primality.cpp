@@ -16,14 +16,11 @@ namespace Botan {
 
 bool is_lucas_probable_prime(const BigInt& C, const Modular_Reducer& mod_C)
    {
-   if(C <= 1)
-      return false;
-   else if(C == 2)
+   if(C == 2 || C == 3 || C == 5 || C == 7 || C == 11 || C == 13)
       return true;
-   else if(C.is_even())
+
+   if(C <= 1 || C.is_even())
       return false;
-   else if(C == 3 || C == 5 || C == 7 || C == 11 || C == 13)
-      return true;
 
    BigInt D = BigInt::from_word(5);
 

@@ -25,7 +25,7 @@ class Curve25519_Sclarmult_Tests final : public Text_Based_Test
             "pubkey/c25519_scalar.vec",
             "Secret,Basepoint,Out") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          const std::vector<uint8_t> secret    = vars.get_req_bin("Secret");
          const std::vector<uint8_t> basepoint = vars.get_req_bin("Basepoint");
@@ -49,12 +49,12 @@ class Curve25519_Agreement_Tests final : public PK_Key_Agreement_Test
          "pubkey/x25519.vec",
          "Secret,CounterKey,K") {}
 
-      std::string default_kdf(const VarMap&) const override
+      std::string default_kdf(const VarMap& /*unused*/) const override
          {
          return "Raw";
          }
 
-      std::unique_ptr<Botan::Private_Key> load_our_key(const std::string&,
+      std::unique_ptr<Botan::Private_Key> load_our_key(const std::string& /*header*/,
                                                        const VarMap& vars) override
          {
          const std::vector<uint8_t> secret_vec = vars.get_req_bin("Secret");
@@ -62,7 +62,7 @@ class Curve25519_Agreement_Tests final : public PK_Key_Agreement_Test
          return std::make_unique<Botan::Curve25519_PrivateKey>(secret);
          }
 
-      std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override
+      std::vector<uint8_t> load_their_key(const std::string& /*header*/, const VarMap& vars) override
          {
          return vars.get_req_bin("CounterKey");
          }

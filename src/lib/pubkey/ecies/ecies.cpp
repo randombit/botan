@@ -280,7 +280,7 @@ size_t ECIES_Encryptor::ciphertext_length(size_t ptext_len) const
 /*
 * ECIES Encryption according to ISO 18033-2
 */
-std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[], size_t length, RandomNumberGenerator&) const
+std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[], size_t length, RandomNumberGenerator& /*unused*/) const
    {
    if(m_other_point.is_zero())
       {

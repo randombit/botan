@@ -10,9 +10,7 @@
 #include <botan/rng.h>
 #include <chrono>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 Session_Manager_In_Memory::Session_Manager_In_Memory(
    RandomNumberGenerator& rng,
@@ -126,7 +124,5 @@ void Session_Manager_In_Memory::save(const Session& session)
    if(session.side() == CLIENT && !session.server_info().empty())
       m_info_sessions[session.server_info()] = session_id_str;
    }
-
-}
 
 }

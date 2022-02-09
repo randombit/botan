@@ -53,15 +53,15 @@ class Trust_Root_Info final : public Command
 
          if(flag_set("dn-only"))
             {
-            for(auto dn : dn_list)
+            for(const auto& dn : dn_list)
                output() << dn << "\n";
             }
          else
             {
-            for(auto dn : dn_list)
+            for(const auto& dn : dn_list)
                {
                // Some certstores have more than one cert with a particular DN
-               for(auto cert : trust_roots.find_all_certs(dn, std::vector<uint8_t>()))
+               for(const auto& cert : trust_roots.find_all_certs(dn, std::vector<uint8_t>()))
                   {
                   if(flag_set("dn"))
                      output() << "# " << dn << "\n";
@@ -396,7 +396,7 @@ class Generate_PKCS10 final : public Command
             opts.CA_key(get_arg_sz("path-limit"));
             }
 
-         for(std::string ext_ku : Command::split_on(get_arg("ext-ku"), ','))
+         for(const std::string& ext_ku : Command::split_on(get_arg("ext-ku"), ','))
             {
             opts.add_ex_constraint(ext_ku);
             }

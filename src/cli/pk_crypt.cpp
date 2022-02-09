@@ -160,7 +160,7 @@ class PK_Decrypt final : public Command
             }
 
          const std::string aead_algo = Botan::OIDS::oid2str_or_empty(aead_oid);
-         if(aead_algo == "")
+         if(aead_algo.empty())
             {
             error_output() << "Ciphertext was encrypted with an unknown algorithm";
             return set_return_code(1);

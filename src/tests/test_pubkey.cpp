@@ -86,7 +86,7 @@ void check_invalid_ciphertexts(Test::Result& result,
 std::string PK_Test::choose_padding(const VarMap& vars,
                                     const std::string& pad_hdr)
    {
-   if(pad_hdr != "")
+   if(!pad_hdr.empty())
       return pad_hdr;
    return vars.get_opt_str("Padding", this->default_padding(vars));
    }
@@ -493,7 +493,7 @@ PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    return result;
    }
 
-Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
+Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarMap& vars)
    {
    const std::vector<uint8_t> K = vars.get_req_bin("K");
    const std::vector<uint8_t> C0 = vars.get_req_bin("C0");

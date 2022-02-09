@@ -23,7 +23,7 @@ class Cryptobox_KAT final : public Text_Based_Test
    public:
       Cryptobox_KAT() : Text_Based_Test("cryptobox.vec", "Input,Passphrase,Salt,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("Cryptobox");
 

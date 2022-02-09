@@ -15,9 +15,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/data_src.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Create a new Certificate message
@@ -72,7 +70,7 @@ Certificate::Certificate(const std::vector<uint8_t>& buf, const Policy& policy)
    * the intermediates are outside of the control of the server.
    * But, require that the leaf certificate be v3
    */
-   if(m_certs.size() > 0 && m_certs[0].x509_version() != 3)
+   if(!m_certs.empty() && m_certs[0].x509_version() != 3)
       {
       throw TLS_Exception(Alert::BAD_CERTIFICATE,
                           "The leaf certificate must be v3");
@@ -86,9 +84,9 @@ std::vector<uint8_t> Certificate::serialize() const
    {
    std::vector<uint8_t> buf(3);
 
-   for(size_t i = 0; i != m_certs.size(); ++i)
+   for(const auto& cert : m_certs)
       {
-      std::vector<uint8_t> raw_cert = m_certs[i].BER_encode();
+      const auto raw_cert = cert.BER_encode();
       const size_t cert_size = raw_cert.size();
       for(size_t j = 0; j != 3; ++j)
          {
@@ -103,7 +101,5 @@ std::vector<uint8_t> Certificate::serialize() const
 
    return buf;
    }
-
-}
 
 }

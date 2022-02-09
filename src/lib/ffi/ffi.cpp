@@ -23,7 +23,7 @@ int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc)
    g_last_exception_what.assign(exn);
 
    std::string val;
-   if(Botan::OS::read_env_variable(val, "BOTAN_FFI_PRINT_EXCEPTIONS") == true && val != "")
+   if(Botan::OS::read_env_variable(val, "BOTAN_FFI_PRINT_EXCEPTIONS") == true && !val.empty())
       {
       std::fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc);
       }
@@ -89,7 +89,7 @@ int ffi_map_error_type(Botan::ErrorType err)
 
 }
 
-int ffi_guard_thunk(const char* func_name, std::function<int ()> thunk)
+int ffi_guard_thunk(const char* func_name, const std::function<int ()>& thunk)
    {
    g_last_exception_what.clear();
 

@@ -19,9 +19,7 @@
    #include <botan/internal/pbes2.h>
 #endif
 
-namespace Botan {
-
-namespace PKCS8 {
+namespace Botan::PKCS8 {
 
 namespace {
 
@@ -47,7 +45,7 @@ secure_vector<uint8_t> PKCS8_extract(DataSource& source,
 */
 secure_vector<uint8_t> PKCS8_decode(
    DataSource& source,
-   std::function<std::string ()> get_passphrase,
+   const std::function<std::string ()>& get_passphrase,
    AlgorithmIdentifier& pk_alg_id,
    bool is_encrypted)
    {
@@ -335,7 +333,7 @@ namespace {
 */
 std::unique_ptr<Private_Key>
 load_key(DataSource& source,
-         std::function<std::string ()> get_pass,
+         const std::function<std::string ()>& get_pass,
          bool is_encrypted)
    {
    AlgorithmIdentifier alg_id;
@@ -355,7 +353,7 @@ load_key(DataSource& source,
 * Extract an encrypted private key and return it
 */
 std::unique_ptr<Private_Key> load_key(DataSource& source,
-                                      std::function<std::string ()> get_pass)
+                                      const std::function<std::string ()>& get_pass)
    {
    return load_key(source, get_pass, true);
    }
@@ -368,7 +366,7 @@ std::unique_ptr<Private_Key> load_key(DataSource& source,
    {
    // We need to use bind rather than a lambda capturing `pass` here in order to avoid a Clang 8 bug.
    // See https://github.com/randombit/botan/issues/2255.
-   return load_key(source, std::bind([](const std::string p) { return p; }, pass), true);
+   return load_key(source, std::bind([](const std::string& p) { return p; }, pass), true);
    }
 
 /*
@@ -382,7 +380,5 @@ std::unique_ptr<Private_Key> load_key(DataSource& source)
 
    return load_key(source, fail_fn, false);
    }
-
-}
 
 }

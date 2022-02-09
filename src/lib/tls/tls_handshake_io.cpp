@@ -13,9 +13,7 @@
 #include <botan/internal/loadstor.h>
 #include <chrono>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -49,7 +47,7 @@ Protocol_Version Stream_Handshake_IO::initial_record_version() const
 
 void Stream_Handshake_IO::add_record(const uint8_t record[],
                                      size_t record_len,
-                                     Record_Type record_type, uint64_t)
+                                     Record_Type record_type, uint64_t /*sequence_number*/)
    {
    if(record_type == HANDSHAKE)
       {
@@ -69,7 +67,7 @@ void Stream_Handshake_IO::add_record(const uint8_t record[],
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
-Stream_Handshake_IO::get_next_record(bool)
+Stream_Handshake_IO::get_next_record(bool /*expecting_ccs*/)
    {
    if(m_queue.size() >= 4)
       {
@@ -106,7 +104,7 @@ Stream_Handshake_IO::format(const std::vector<uint8_t>& msg,
 
    store_be24(&send_buf[1], buf_size);
 
-   if (msg.size() > 0)
+   if (!msg.empty())
       {
       copy_mem(&send_buf[4], msg.data(), msg.size());
       }
@@ -149,7 +147,7 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx)
    {
    const std::vector<uint16_t>& flight = m_flights.at(flight_idx);
 
-   BOTAN_ASSERT(flight.size() > 0, "Nonempty flight to retransmit");
+   BOTAN_ASSERT(!flight.empty(), "Nonempty flight to retransmit");
 
    uint16_t epoch = m_flight_data[flight[0]].epoch;
 
@@ -481,5 +479,4 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
    return no_fragment;
    }
 
-}
 }

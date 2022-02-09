@@ -26,8 +26,8 @@ typedef newhope_poly poly;
 
 namespace {
 
-static const uint16_t PARAM_Q = 12289;
-static const size_t PARAM_N = 1024;
+const uint16_t PARAM_Q = 12289;
+const size_t PARAM_N = 1024;
 
 /* Incomplete-reduction routines; for details on allowed input ranges
  * and produced output ranges, see the description in the paper:

@@ -21,9 +21,7 @@
   #include <botan/internal/tls_cbc.h>
 #endif
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  Connection_Side side,
@@ -89,7 +87,7 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
       {
       case Nonce_Format::CBC_MODE:
          {
-         if(m_nonce.size())
+         if(!m_nonce.empty())
             {
             std::vector<uint8_t> nonce;
             nonce.swap(m_nonce);
@@ -126,7 +124,7 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
       {
       case Nonce_Format::CBC_MODE:
          {
-         if(nonce_bytes_from_record() == 0 && m_nonce.size())
+         if(nonce_bytes_from_record() == 0 && !m_nonce.empty())
             {
             std::vector<uint8_t> nonce;
             nonce.swap(m_nonce);
@@ -328,7 +326,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
                               size_t& consumed,
                               secure_vector<uint8_t>& recbuf,
                               Connection_Sequence_Numbers* sequence_numbers,
-                              get_cipherstate_fn get_cipherstate)
+                              const get_cipherstate_fn& get_cipherstate)
    {
    if(readbuf.size() < TLS_HEADER_SIZE) // header incomplete?
       {
@@ -462,7 +460,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
                                size_t& consumed,
                                secure_vector<uint8_t>& recbuf,
                                Connection_Sequence_Numbers* sequence_numbers,
-                               get_cipherstate_fn get_cipherstate,
+                               const get_cipherstate_fn& get_cipherstate,
                                bool allow_epoch0_restart)
    {
    if(readbuf.size() < DTLS_HEADER_SIZE) // header incomplete?
@@ -563,7 +561,7 @@ Record_Header read_record(bool is_datagram,
                           size_t& consumed,
                           secure_vector<uint8_t>& recbuf,
                           Connection_Sequence_Numbers* sequence_numbers,
-                          get_cipherstate_fn get_cipherstate,
+                          const get_cipherstate_fn& get_cipherstate,
                           bool allow_epoch0_restart)
    {
    if(is_datagram)
@@ -573,7 +571,5 @@ Record_Header read_record(bool is_datagram,
       return read_tls_record(readbuf, input, input_len, consumed,
                              recbuf, sequence_numbers, get_cipherstate);
    }
-
-}
 
 }

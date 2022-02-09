@@ -35,8 +35,8 @@
 
 namespace Botan {
 
-AlgorithmIdentifier EMSA::config_for_x509(const Private_Key&,
-                                          const std::string&) const
+AlgorithmIdentifier EMSA::config_for_x509(const Private_Key& /*unused*/,
+                                          const std::string& /*unused*/) const
    {
    throw Not_Implemented("Encoding " + name() + " not supported for signing X509 objects");
    }
@@ -200,8 +200,7 @@ std::string hash_for_emsa(const std::string& algo_spec)
 
    if(emsa_name.arg_count() > 0)
       {
-      const std::string pos_hash = emsa_name.arg(0);
-      return pos_hash;
+      return emsa_name.arg(0);
       }
 
    // If we don't understand what this is return a safe default

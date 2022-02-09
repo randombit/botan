@@ -15,8 +15,7 @@
 #include <botan/internal/keypair.h>
 #include <botan/rng.h>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 ECDSA_PublicKey PKCS11_ECDSA_PublicKey::export_key() const
    {
@@ -87,7 +86,7 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
          m_key.module()->C_SignUpdate(m_key.session().handle(), const_cast<Byte*>(msg), static_cast<Ulong>(msg_len));
          }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator&) override
+      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override
          {
          secure_vector<uint8_t> signature;
          if(!m_first_message.empty())
@@ -210,8 +209,6 @@ PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(Session& session, const EC_PublicKey
    return std::make_pair(PKCS11_ECDSA_PublicKey(session, pub_key_handle), PKCS11_ECDSA_PrivateKey(session,
                          priv_key_handle));
    }
-
-}
 
 }
 

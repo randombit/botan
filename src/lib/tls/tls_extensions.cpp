@@ -11,9 +11,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -135,8 +133,8 @@ bool Extensions::remove_extension(Handshake_Extension_Type typ)
 std::set<Handshake_Extension_Type> Extensions::extension_types() const
    {
    std::set<Handshake_Extension_Type> offers;
-   for(auto i = m_extensions.begin(); i != m_extensions.end(); ++i)
-      offers.insert(i->first);
+   for(const auto& extension : m_extensions)
+      offers.insert(extension.first);
    return offers;
    }
 
@@ -265,7 +263,7 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
       {
       if(p.length() >= 256)
          throw TLS_Exception(Alert::INTERNAL_ERROR, "ALPN name too long");
-      if(p != "")
+      if(!p.empty())
          append_tls_length_value(buf,
                                  cast_char_ptr_to_uint8(p.data()),
                                  p.size(),
@@ -462,7 +460,7 @@ std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoam
    return buf;
    }
 
-Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader&,
+Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader& /*unused*/,
                                                uint16_t extension_size)
    {
    if(extension_size != 0)
@@ -474,7 +472,7 @@ std::vector<uint8_t> Extended_Master_Secret::serialize(Connection_Side /*whoami*
    return std::vector<uint8_t>();
    }
 
-Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader&,
+Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader& /*unused*/,
                                    uint16_t extension_size)
    {
    if(extension_size != 0)
@@ -557,7 +555,7 @@ std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
       }
    else
       {
-      BOTAN_ASSERT_NOMSG(m_versions.size() >= 1);
+      BOTAN_ASSERT_NOMSG(!m_versions.empty());
       const uint8_t len = static_cast<uint8_t>(m_versions.size() * 2);
 
       buf.push_back(len);
@@ -615,7 +613,5 @@ bool Supported_Versions::supports(Protocol_Version version) const
          return true;
    return false;
    }
-
-}
 
 }

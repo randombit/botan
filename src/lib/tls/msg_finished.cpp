@@ -10,9 +10,7 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -85,7 +83,5 @@ bool Finished::verify(const Handshake_State& state,
       constant_time_compare(m_verification_data.data(), computed_verify.data(), computed_verify.size());
 #endif
    }
-
-}
 
 }

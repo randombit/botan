@@ -14,7 +14,7 @@
 
 namespace Botan_Tests {
 
-Botan::X509_DN read_dn(const std::string hex)
+Botan::X509_DN read_dn(const std::string& hex)
    {
    Botan::X509_DN dn;
    Botan::BER_Decoder decoder(Botan::hex_decode(hex));

@@ -517,12 +517,12 @@ class BOTAN_PUBLIC_API(2,0) Base64_Encoder final : public Filter
 
       /**
       * Create a base64 encoder.
-      * @param breaks whether to use line breaks in the output
-      * @param length the length of the lines of the output
-      * @param t_n whether to use a trailing newline
+      * @param line_breaks whether to use line breaks in the output
+      * @param line_length the length of the lines of the output
+      * @param trailing_newline whether to use a trailing newline
       */
-      Base64_Encoder(bool breaks = false, size_t length = 72,
-                     bool t_n = false);
+      Base64_Encoder(bool line_breaks = false, size_t line_length = 72,
+                     bool trailing_newline = false);
    private:
       void encode_and_send(const uint8_t input[], size_t length,
                            bool final_inputs = false);

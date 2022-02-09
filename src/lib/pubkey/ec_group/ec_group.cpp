@@ -437,7 +437,7 @@ EC_Group::EC_Group(const OID& domain_oid)
 
 EC_Group::EC_Group(const std::string& str)
    {
-   if(str == "")
+   if(str.empty())
       return; // no initialization / uninitialized
 
    try

@@ -14,9 +14,7 @@
 #include <botan/internal/stl_util.h>
 #include <sstream>
 
-namespace Botan {
-
-namespace HTTP {
+namespace Botan::HTTP {
 
 namespace {
 
@@ -25,7 +23,7 @@ namespace {
 * closes the socket.
 */
 std::string http_transact(const std::string& hostname,
-		                  const std::string& service,
+                          const std::string& service,
                           const std::string& message,
                           std::chrono::milliseconds timeout)
    {
@@ -69,6 +67,19 @@ std::string http_transact(const std::string& hostname,
    return oss.str();
    }
 
+bool needs_url_encoding(char c)
+   {
+   if(c >= 'A' && c <= 'Z')
+      return false;
+   if(c >= 'a' && c <= 'z')
+      return false;
+   if(c >= '0' && c <= '9')
+      return false;
+   if(c == '-' || c == '_' || c == '.' || c == '~')
+      return false;
+   return true;
+   }
+
 }
 
 std::string url_encode(const std::string& in)
@@ -77,16 +88,10 @@ std::string url_encode(const std::string& in)
 
    for(auto c : in)
       {
-      if(c >= 'A' && c <= 'Z')
-         out << c;
-      else if(c >= 'a' && c <= 'z')
-         out << c;
-      else if(c >= '0' && c <= '9')
-         out << c;
-      else if(c == '-' || c == '_' || c == '.' || c == '~')
-         out << c;
-      else
+      if(needs_url_encoding(c))
          out << '%' << hex_encode(cast_char_ptr_to_uint8(&c), 1);
+      else
+         out << c;
       }
 
    return out.str();
@@ -95,14 +100,14 @@ std::string url_encode(const std::string& in)
 std::ostream& operator<<(std::ostream& o, const Response& resp)
    {
    o << "HTTP " << resp.status_code() << " " << resp.status_message() << "\n";
-   for(auto h : resp.headers())
+   for(const auto& h : resp.headers())
       o << "Header '" << h.first << "' = '" << h.second << "'\n";
    o << "Body " << std::to_string(resp.body().size()) << " bytes:\n";
    o.write(cast_uint8_ptr_to_char(resp.body().data()), resp.body().size());
    return o;
    }
 
-Response http_sync(http_exch_fn http_transact,
+Response http_sync(const http_exch_fn& http_transact,
                    const std::string& verb,
                    const std::string& url,
                    const std::string& content_type,
@@ -131,7 +136,7 @@ Response http_sync(http_exch_fn http_transact,
       loc = url.substr(host_loc_sep, std::string::npos);
       }
 
-   const auto port_sep = hostname.find(":");
+   const auto port_sep = hostname.find(':');
    if(port_sep == std::string::npos)
       {
       service = "http";
@@ -261,7 +266,5 @@ Response POST_sync(const std::string& url,
    {
    return http_sync("POST", url, content_type, body, allowable_redirects, timeout);
    }
-
-}
 
 }

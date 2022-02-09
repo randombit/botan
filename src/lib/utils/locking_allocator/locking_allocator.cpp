@@ -49,7 +49,7 @@ mlock_allocator::mlock_allocator()
       {
       m_locked_pages = OS::allocate_locked_pages(mem_to_lock / page_size);
 
-      if(m_locked_pages.size() > 0)
+      if(!m_locked_pages.empty())
          {
          m_pool.reset(new Memory_Pool(m_locked_pages, page_size));
          }

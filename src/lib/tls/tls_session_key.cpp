@@ -10,9 +10,7 @@
 #include <botan/tls_messages.h>
 #include <botan/kdf.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Session_Keys Constructor
@@ -94,7 +92,5 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    copy_mem(&m_c_nonce[0], key_data + 2*(mac_keylen + cipher_keylen), cipher_nonce_bytes);
    copy_mem(&m_s_nonce[0], key_data + 2*(mac_keylen + cipher_keylen) + cipher_nonce_bytes, cipher_nonce_bytes);
    }
-
-}
 
 }

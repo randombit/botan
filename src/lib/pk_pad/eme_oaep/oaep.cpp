@@ -131,7 +131,7 @@ oaep_find_delim(uint8_t& valid_mask,
    delim_idx += 1;
 
    valid_mask = (~bad_input_m).unpoisoned_value();
-   const secure_vector<uint8_t> output = CT::copy_output(bad_input_m, input, input_len, delim_idx);
+   auto output = CT::copy_output(bad_input_m, input, input_len, delim_idx);
 
    CT::unpoison(input, input_len);
 

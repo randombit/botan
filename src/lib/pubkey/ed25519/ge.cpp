@@ -22,35 +22,35 @@ Representations:
   ge_p1p1 (completed): ((X:Z),(Y:T)) satisfying x=X/Z, y=Y/T
   ge_precomp (Duif): (y+x,y-x,2dxy)
 */
-typedef struct
+struct ge_p2
    {
    fe X;
    fe Y;
    fe Z;
-   } ge_p2;
+   };
 
-typedef struct
+struct ge_p1p1
    {
    fe X;
    fe Y;
    fe Z;
    fe T;
-   } ge_p1p1;
+   };
 
-typedef struct
+struct ge_precomp
    {
    fe yplusx;
    fe yminusx;
    fe xy2d;
-   } ge_precomp;
+   };
 
-typedef struct
+struct ge_cached
    {
    fe YplusX;
    fe YminusX;
    fe Z;
    fe T2d;
-   } ge_cached;
+   };
 
 /*
 r = p + q

@@ -15,9 +15,7 @@
 #include <botan/internal/pk_ops.h>
 #include <botan/rng.h>
 
-namespace Botan {
-
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const
    {
@@ -101,7 +99,7 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement
 }
 
 std::unique_ptr<PK_Ops::Key_Agreement>
-PKCS11_ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator&,
+PKCS11_ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
                                                 const std::string& params,
                                                 const std::string& /*provider*/) const
    {
@@ -124,7 +122,6 @@ PKCS11_ECDH_KeyPair generate_ecdh_keypair(Session& session, const EC_PublicKeyGe
    return std::make_pair(PKCS11_ECDH_PublicKey(session, pub_key_handle), PKCS11_ECDH_PrivateKey(session, priv_key_handle));
    }
 
-}
 }
 
 #endif

@@ -15,9 +15,11 @@ namespace Botan {
 /*
 * Base64_Encoder Constructor
 */
-Base64_Encoder::Base64_Encoder(bool breaks, size_t length, bool t_n) :
-   m_line_length(breaks ? length : 0),
-   m_trailing_newline(t_n && breaks),
+Base64_Encoder::Base64_Encoder(bool line_breaks,
+                               size_t line_length,
+                               bool trailing_newline) :
+   m_line_length(line_breaks ? line_length : 0),
+   m_trailing_newline(trailing_newline && line_breaks),
    m_in(48),
    m_out(64),
    m_position(0),

@@ -16,9 +16,7 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/stl_util.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -46,7 +44,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
                            const std::vector<uint8_t>& reneg_info,
                            const Client_Hello& client_hello,
                            const Server_Hello::Settings& server_settings,
-                           const std::string next_protocol) :
+                           const std::string& next_protocol) :
    m_version(server_settings.protocol_version()),
    m_session_id(server_settings.session_id()),
    m_random(make_server_hello_random(rng, m_version, policy)),
@@ -222,7 +220,7 @@ Server_Hello_Done::Server_Hello_Done(Handshake_IO& io,
 */
 Server_Hello_Done::Server_Hello_Done(const std::vector<uint8_t>& buf)
    {
-   if(buf.size())
+   if(!buf.empty())
       throw Decoding_Error("Server_Hello_Done: Must be empty, and is not");
    }
 
@@ -233,7 +231,5 @@ std::vector<uint8_t> Server_Hello_Done::serialize() const
    {
    return std::vector<uint8_t>();
    }
-
-}
 
 }

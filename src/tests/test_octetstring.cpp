@@ -102,9 +102,9 @@ Test::Result test_equality()
    Test::Result result("OctetString");
 
    const Botan::OctetString os1("0000000000000000");
-   const Botan::OctetString os1_copy = os1;
+   const Botan::OctetString& os1_copy = os1;
    const Botan::OctetString os2("FFFFFFFFFFFFFFFF");
-   const Botan::OctetString os2_copy = os2;
+   const Botan::OctetString& os2_copy = os2;
 
    result.confirm("OctetString equality operations works as expected", os1 == os1_copy);
    result.confirm("OctetString equality operations works as expected", os2 == os2_copy);

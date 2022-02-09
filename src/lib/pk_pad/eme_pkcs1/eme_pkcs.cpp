@@ -88,7 +88,7 @@ secure_vector<uint8_t> EME_PKCS1v15::unpad(uint8_t& valid_mask,
    bad_input_m |= CT::Mask<uint8_t>(CT::Mask<size_t>::is_lt(delim_idx, 11));
 
    valid_mask = (~bad_input_m).unpoisoned_value();
-   const secure_vector<uint8_t> output = CT::copy_output(bad_input_m, in, inlen, delim_idx);
+   auto output = CT::copy_output(bad_input_m, in, inlen, delim_idx);
 
    CT::unpoison(in, inlen);
 

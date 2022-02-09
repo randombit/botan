@@ -607,7 +607,7 @@ std::vector<std::string> X509_Certificate::ca_issuers() const
 std::string X509_Certificate::crl_distribution_point() const
    {
    // just returns the first (arbitrarily)
-   if(data().m_crl_distribution_points.size() > 0)
+   if(!data().m_crl_distribution_points.empty())
       return data().m_crl_distribution_points[0];
    return "";
    }
@@ -700,9 +700,9 @@ std::string X509_Certificate::fingerprint(const std::string& hash_name) const
    * left empty in which case we fall back to create_hex_fingerprint
    * which will throw if the hash is unavailable.
    */
-   if(hash_name == "SHA-256" && data().m_fingerprint_sha256.size() > 0)
+   if(hash_name == "SHA-256" && !data().m_fingerprint_sha256.empty())
       return data().m_fingerprint_sha256;
-   else if(hash_name == "SHA-1" && data().m_fingerprint_sha1.size() > 0)
+   else if(hash_name == "SHA-1" && !data().m_fingerprint_sha1.empty())
       return data().m_fingerprint_sha1;
    else
       return create_hex_fingerprint(this->BER_encode(), hash_name);
@@ -713,15 +713,15 @@ bool X509_Certificate::matches_dns_name(const std::string& name) const
    if(name.empty())
       return false;
 
-   std::vector<std::string> issued_names = subject_info("DNS");
+   auto issued_names = subject_info("DNS");
 
    // Fall back to CN only if no DNS names are set (RFC 6125 sec 6.4.4)
    if(issued_names.empty())
       issued_names = subject_info("Name");
 
-   for(size_t i = 0; i != issued_names.size(); ++i)
+   for(const auto& issued_name : issued_names)
       {
-      if(host_wildcard_match(issued_names[i], name))
+      if(host_wildcard_match(issued_name, name))
          return true;
       }
 
@@ -798,7 +798,7 @@ std::string X509_Certificate::to_string() const
    if(!policies.empty())
       {
       out << "Policies: " << "\n";
-      for(auto oid : policies)
+      for(const auto& oid : policies)
          out << "   " << oid.to_string() << "\n";
       }
 
@@ -821,7 +821,7 @@ std::string X509_Certificate::to_string() const
       if(!name_constraints.permitted().empty())
          {
          out << "   Permit";
-         for(auto st: name_constraints.permitted())
+         for(const auto& st: name_constraints.permitted())
             {
             out << " " << st.base();
             }
@@ -831,7 +831,7 @@ std::string X509_Certificate::to_string() const
       if(!name_constraints.excluded().empty())
          {
          out << "   Exclude";
-         for(auto st: name_constraints.excluded())
+         for(const auto& st: name_constraints.excluded())
             {
             out << " " << st.base();
             }
@@ -846,8 +846,8 @@ std::string X509_Certificate::to_string() const
    if(!ca_issuers.empty())
       {
       out << "CA Issuers:\n";
-      for(size_t i = 0; i != ca_issuers.size(); i++)
-         out << "   URI: " << ca_issuers[i] << "\n";
+      for(const auto& ca_issuer : ca_issuers)
+         out << "   URI: " << ca_issuer << "\n";
       }
 
    if(!crl_distribution_point().empty())
@@ -857,10 +857,10 @@ std::string X509_Certificate::to_string() const
 
    out << "Serial number: " << hex_encode(this->serial_number()) << "\n";
 
-   if(this->authority_key_id().size())
+   if(!this->authority_key_id().empty())
      out << "Authority keyid: " << hex_encode(this->authority_key_id()) << "\n";
 
-   if(this->subject_key_id().size())
+   if(!this->subject_key_id().empty())
      out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
 
    try

@@ -26,9 +26,7 @@
   #include <botan/cecpq1.h>
 #endif
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Create a new Server Key Exchange message
@@ -232,7 +230,7 @@ std::vector<uint8_t> Server_Key_Exchange::serialize() const
    {
    std::vector<uint8_t> buf = params();
 
-   if(m_signature.size())
+   if(!m_signature.empty())
       {
       if(m_scheme != Signature_Scheme::NONE)
          {
@@ -281,7 +279,5 @@ const Private_Key& Server_Key_Exchange::server_kex_key() const
    BOTAN_ASSERT_NONNULL(m_kex_key);
    return *m_kex_key;
    }
-
-}
 
 }

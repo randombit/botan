@@ -34,7 +34,7 @@ std::set<std::string> Encrypted_PSK_Database::list_names() const
 
    std::set<std::string> names;
 
-   for(std::string enc_name : encrypted_names)
+   for(const std::string& enc_name : encrypted_names)
       {
       try
          {

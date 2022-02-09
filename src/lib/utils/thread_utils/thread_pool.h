@@ -63,7 +63,7 @@ class BOTAN_TEST_API Thread_Pool
       /*
       * Enqueue some work
       */
-      void queue_thunk(std::function<void ()>);
+      void queue_thunk(const std::function<void ()>&);
 
       template<class F, class... Args>
       auto run(F&& f, Args&&... args) -> std::future<typename std::invoke_result<F, Args...>::type>

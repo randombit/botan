@@ -95,8 +95,8 @@ void DER_Encoder::DER_Sequence::push_contents(DER_Encoder& der)
    if(m_type_tag == ASN1_Type::Set)
       {
       std::sort(m_set_contents.begin(), m_set_contents.end());
-      for(size_t i = 0; i != m_set_contents.size(); ++i)
-         m_contents += m_set_contents[i];
+      for(const auto& set_elem : m_set_contents)
+         m_contents += set_elem;
       m_set_contents.clear();
       }
 
@@ -154,7 +154,7 @@ DER_Encoder::DER_Sequence::DER_Sequence(ASN1_Type t1, ASN1_Class t2) :
 */
 secure_vector<uint8_t> DER_Encoder::get_contents()
    {
-   if(m_subsequences.size() != 0)
+   if(!m_subsequences.empty())
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
    if(m_append_output)
@@ -167,7 +167,7 @@ secure_vector<uint8_t> DER_Encoder::get_contents()
 
 std::vector<uint8_t> DER_Encoder::get_contents_unlocked()
    {
-   if(m_subsequences.size() != 0)
+   if(!m_subsequences.empty())
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
    if(m_append_output)
@@ -230,7 +230,7 @@ DER_Encoder& DER_Encoder::end_explicit()
 */
 DER_Encoder& DER_Encoder::raw_bytes(const uint8_t bytes[], size_t length)
    {
-   if(m_subsequences.size())
+   if(!m_subsequences.empty())
       {
       m_subsequences[m_subsequences.size()-1].add_bytes(bytes, length);
       }
@@ -256,7 +256,7 @@ DER_Encoder& DER_Encoder::add_object(ASN1_Type type_tag, ASN1_Class class_tag,
    encode_tag(hdr, type_tag, class_tag);
    encode_length(hdr, length);
 
-   if(m_subsequences.size())
+   if(!m_subsequences.empty())
       {
       m_subsequences[m_subsequences.size()-1].add_bytes(hdr.data(), hdr.size(), rep, length);
       }
@@ -348,8 +348,8 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n,
    n.binary_encode(&contents[extra_zero]);
    if(n < 0)
       {
-      for(size_t i = 0; i != contents.size(); ++i)
-         contents[i] = ~contents[i];
+      for(unsigned char & content : contents)
+         content = ~content;
       for(size_t i = contents.size(); i > 0; --i)
          if(++contents[i-1])
             break;

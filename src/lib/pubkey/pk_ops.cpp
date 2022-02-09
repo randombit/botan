@@ -53,11 +53,11 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
                                                           const uint8_t w[], size_t w_len,
                                                           const uint8_t salt[], size_t salt_len)
    {
-   const secure_vector<uint8_t> z = raw_agree(w, w_len);
+   secure_vector<uint8_t> z = raw_agree(w, w_len);
    if(m_kdf)
       return m_kdf->derive_key(key_len, z, salt, salt_len);
    return z;
-  }
+   }
 
 PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa, bool with_message_recovery) :
    Signature(),

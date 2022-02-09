@@ -32,7 +32,7 @@ GeneralName::GeneralName(const std::string& str) : GeneralName()
       }
    }
 
-void GeneralName::encode_into(DER_Encoder&) const
+void GeneralName::encode_into(DER_Encoder& /*to*/) const
    {
    throw Not_Implemented("GeneralName encoding");
    }
@@ -248,7 +248,7 @@ GeneralSubtree::GeneralSubtree(const std::string& str) : GeneralSubtree()
       }
    }
 
-void GeneralSubtree::encode_into(DER_Encoder&) const
+void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const
    {
    throw Not_Implemented("General Subtree encoding");
    }

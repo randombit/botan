@@ -17,7 +17,7 @@ class ZFEC_KAT final : public Text_Based_Test
    public:
       ZFEC_KAT() : Text_Based_Test("zfec.vec", "K,N,Data,Code") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          const size_t K = vars.get_req_sz("K");
          const size_t N = vars.get_req_sz("N");

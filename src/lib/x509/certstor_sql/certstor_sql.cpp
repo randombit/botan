@@ -20,7 +20,7 @@ Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database>
                                                    RandomNumberGenerator& rng,
                                                    const std::string& table_prefix) :
    m_rng(rng),
-   m_database(db),
+   m_database(std::move(db)),
    m_prefix(table_prefix),
    m_password(passwd)
    {
@@ -319,12 +319,14 @@ std::vector<X509_CRL> Certificate_Store_In_SQL::generate_crls() const
          }
       }
 
-   std::vector<X509_CRL> ret;
    X509_Time t(std::chrono::system_clock::now());
 
-   for(auto p: crls)
+   std::vector<X509_CRL> ret;
+   ret.reserve(crls.size());
+
+   for(const auto& p: crls)
       {
-      ret.push_back(X509_CRL(p.first,t,t,p.second));
+      ret.push_back(X509_CRL(p.first, t, t, p.second));
       }
 
    return ret;

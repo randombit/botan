@@ -25,7 +25,7 @@ class RFC3394_Keywrap_Tests final : public Text_Based_Test
    public:
       RFC3394_Keywrap_Tests() : Text_Based_Test("keywrap/rfc3394.vec", "Key,KEK,Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
          Test::Result result("RFC3394 keywrap");
 

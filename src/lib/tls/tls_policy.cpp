@@ -15,9 +15,7 @@
 #include <botan/pk_keys.h>
 #include <sstream>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const
    {
@@ -339,22 +337,22 @@ class Ciphersuite_Preference_Ordering final
          {
          if(a.kex_method() != b.kex_method())
             {
-            for(size_t i = 0; i != m_kex.size(); ++i)
+            for(const auto & i : m_kex)
                {
-               if(a.kex_algo() == m_kex[i])
+               if(a.kex_algo() == i)
                   return true;
-               if(b.kex_algo() == m_kex[i])
+               if(b.kex_algo() == i)
                   return false;
                }
             }
 
          if(a.cipher_algo() != b.cipher_algo())
             {
-            for(size_t i = 0; i != m_ciphers.size(); ++i)
+            for(const auto & m_cipher : m_ciphers)
                {
-               if(a.cipher_algo() == m_ciphers[i])
+               if(a.cipher_algo() == m_cipher)
                   return true;
-               if(b.cipher_algo() == m_ciphers[i])
+               if(b.cipher_algo() == m_cipher)
                   return false;
                }
             }
@@ -369,22 +367,22 @@ class Ciphersuite_Preference_Ordering final
 
          if(a.auth_method() != b.auth_method())
             {
-            for(size_t i = 0; i != m_sigs.size(); ++i)
+            for(const auto & m_sig : m_sigs)
                {
-               if(a.sig_algo() == m_sigs[i])
+               if(a.sig_algo() == m_sig)
                   return true;
-               if(b.sig_algo() == m_sigs[i])
+               if(b.sig_algo() == m_sig)
                   return false;
                }
             }
 
          if(a.mac_algo() != b.mac_algo())
             {
-            for(size_t i = 0; i != m_macs.size(); ++i)
+            for(const auto & m_mac : m_macs)
                {
-               if(a.mac_algo() == m_macs[i])
+               if(a.mac_algo() == m_mac)
                   return true;
-               if(b.mac_algo() == m_macs[i])
+               if(b.mac_algo() == m_mac)
                   return false;
                }
             }
@@ -460,6 +458,7 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version) const
    std::sort(ciphersuites.begin(), ciphersuites.end(), order);
 
    std::vector<uint16_t> ciphersuite_codes;
+   ciphersuite_codes.reserve(ciphersuites.size());
    for(auto i : ciphersuites)
       ciphersuite_codes.push_back(i.ciphersuite_code());
    return ciphersuite_codes;
@@ -557,7 +556,5 @@ std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
 
 bool Strict_Policy::allow_tls12()  const { return true;  }
 bool Strict_Policy::allow_dtls12() const { return true;  }
-
-}
 
 }

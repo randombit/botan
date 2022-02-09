@@ -485,7 +485,7 @@ Test::Result test_rsa_oaep()
 
    auto public_key = cert.load_subject_public_key();
    result.test_not_null("Decoding RSA-OAEP worked", public_key.get());
-   auto pk_info = cert.subject_public_key_algo();
+   const auto& pk_info = cert.subject_public_key_algo();
 
    result.test_eq("RSA-OAEP OID", pk_info.get_oid().to_string(), Botan::OID::from_string("RSA/OAEP").to_string());
 #endif
@@ -1447,7 +1447,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
                                     Test::rng(),
                                     sig_padding);
 
-   Botan::X509_DN req_dn = req.subject_dn();
+   const Botan::X509_DN& req_dn = req.subject_dn();
 
    result.test_eq("Expected number of DN entries", req_dn.dn_info().size(), 2);
 
@@ -1463,7 +1463,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
    auto cert = ca.sign_request(req, Test::rng(), not_before, not_after);
 
-   Botan::X509_DN cert_dn = cert.subject_dn();
+   const Botan::X509_DN& cert_dn = cert.subject_dn();
 
    result.test_eq("Expected number of DN entries", cert_dn.dn_info().size(), 2);
 
@@ -1663,7 +1663,7 @@ class X509_Cert_Unit_Tests final : public Test
                }
             results.push_back(usage_result);
 
-            for(auto padding_scheme : Botan::get_sig_paddings(algo))
+            for(const auto& padding_scheme : Botan::get_sig_paddings(algo))
                {
                Test::Result cert_result("X509 Unit");
                try
@@ -1728,7 +1728,7 @@ class X509_Cert_Unit_Tests final : public Test
          */
          const std::vector<std::string> enc_algos = { "DH", "ECDH", "ElGamal" };
 
-         for(std::string algo : enc_algos)
+         for(const std::string& algo : enc_algos)
             {
             std::unique_ptr<Botan::Private_Key> key = make_a_private_key(algo);
 

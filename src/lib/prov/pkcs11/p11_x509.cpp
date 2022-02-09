@@ -10,8 +10,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 X509_CertificateProperties::X509_CertificateProperties(const std::vector<uint8_t>& subject, const std::vector<uint8_t>& value)
    : CertificateProperties(CertificateType::X509), m_subject(subject), m_value(value)
@@ -29,8 +28,6 @@ PKCS11_X509_Certificate::PKCS11_X509_Certificate(Session& session, const X509_Ce
    : Object(session, props), X509_Certificate(props.value())
    {
    }
-
-}
 
 }
 

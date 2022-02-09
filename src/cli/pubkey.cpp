@@ -157,7 +157,7 @@ class PK_Fingerprint final : public Command
          const std::string hash_algo = get_arg("algo");
          const bool no_fsname = flag_set("no-fsname");
 
-         for(std::string key_file : get_arg_list("keys"))
+         for(const std::string& key_file : get_arg_list("keys"))
             {
             std::unique_ptr<Botan::Public_Key> key(
                key_file == "-"
@@ -500,14 +500,14 @@ class Gen_DL_Group final : public Command
 
          if(type == "strong")
             {
-            if(seed_str.size() > 0)
+            if(!seed_str.empty())
                { throw CLI_Usage_Error("Seed only supported for DSA param gen"); }
             Botan::DL_Group grp(rng(), Botan::DL_Group::Strong, pbits);
             output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
             }
          else if(type == "subgroup")
             {
-            if(seed_str.size() > 0)
+            if(!seed_str.empty())
                { throw CLI_Usage_Error("Seed only supported for DSA param gen"); }
             Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
             output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);

@@ -211,7 +211,7 @@ class Summary final
          std::ostringstream result_ss;
          result_ss << std::fixed;
 
-         if(m_bps_entries.size() > 0)
+         if(!m_bps_entries.empty())
             {
             result_ss << "\n";
 
@@ -254,7 +254,7 @@ class Summary final
             result_ss << "\n[results are the number of 1000s bytes processed per second]\n";
             }
 
-         if(m_ops_entries.size() > 0)
+         if(!m_ops_entries.empty())
             {
             result_ss << std::setprecision(6) << "\n";
 
@@ -292,7 +292,7 @@ std::vector<size_t> unique_buffer_sizes(const std::string& cmdline_arg)
    const size_t MAX_BUF_SIZE = 64*1024*1024;
 
    std::set<size_t> buf;
-   for(std::string size_str : Command::split_on(cmdline_arg, ','))
+   for(const std::string& size_str : Command::split_on(cmdline_arg, ','))
       {
       size_t x = 0;
       try
@@ -474,7 +474,7 @@ class Speed final : public Command
 
          const std::vector<size_t> buf_sizes = unique_buffer_sizes(get_arg("buf-size"));
 
-         for(std::string cpuid_to_clear : Command::split_on(get_arg("clear-cpuid"), ','))
+         for(const std::string& cpuid_to_clear : Command::split_on(get_arg("clear-cpuid"), ','))
             {
             auto bits = Botan::CPUID::bit_from_string(cpuid_to_clear);
             if(bits.empty())
@@ -500,7 +500,7 @@ class Speed final : public Command
             algos = default_benchmark_list();
             }
 
-         for(auto algo : algos)
+         for(const auto& algo : algos)
             {
             using namespace std::placeholders;
 
@@ -509,7 +509,7 @@ class Speed final : public Command
                // Since everything might be disabled, need a block to else if from
                }
 #if defined(BOTAN_HAS_HASH)
-            else if(Botan::HashFunction::providers(algo).size() > 0)
+            else if(!Botan::HashFunction::providers(algo).empty())
                {
                bench_providers_of<Botan::HashFunction>(
                   algo, provider, msec, buf_sizes,
@@ -517,7 +517,7 @@ class Speed final : public Command
                }
 #endif
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
-            else if(Botan::BlockCipher::providers(algo).size() > 0)
+            else if(!Botan::BlockCipher::providers(algo).empty())
                {
                bench_providers_of<Botan::BlockCipher>(
                   algo, provider, msec, buf_sizes,
@@ -525,7 +525,7 @@ class Speed final : public Command
                }
 #endif
 #if defined(BOTAN_HAS_STREAM_CIPHER)
-            else if(Botan::StreamCipher::providers(algo).size() > 0)
+            else if(!Botan::StreamCipher::providers(algo).empty())
                {
                bench_providers_of<Botan::StreamCipher>(
                   algo, provider, msec, buf_sizes,
@@ -540,7 +540,7 @@ class Speed final : public Command
                }
 #endif
 #if defined(BOTAN_HAS_MAC)
-            else if(Botan::MessageAuthenticationCode::providers(algo).size() > 0)
+            else if(!Botan::MessageAuthenticationCode::providers(algo).empty())
                {
                bench_providers_of<Botan::MessageAuthenticationCode>(
                   algo, provider, msec, buf_sizes,
@@ -1049,7 +1049,7 @@ class Speed final : public Command
 
                   decrypt_timer->run([&]() { dec.start(iv); dec.finish(buffer); });
 
-                  if(iv.size() > 0)
+                  if(!iv.empty())
                      {
                      iv[iv.size()-1] += 1;
                      }
@@ -1082,7 +1082,7 @@ class Speed final : public Command
             }
          }
 
-      void bench_entropy_sources(const std::chrono::milliseconds)
+      void bench_entropy_sources(const std::chrono::milliseconds /*unused*/)
          {
          Botan::Entropy_Sources& srcs = Botan::Entropy_Sources::global_sources();
 
@@ -1131,7 +1131,7 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_ECC_GROUP)
       void bench_ecc_ops(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime)
          {
-         for(std::string group_name : groups)
+         for(const std::string& group_name : groups)
             {
             const Botan::EC_Group ec_group(group_name);
 
@@ -1179,7 +1179,7 @@ class Speed final : public Command
 
       void bench_ecc_mult(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime)
          {
-         for(std::string group_name : groups)
+         for(const std::string& group_name : groups)
             {
             const Botan::EC_Group ec_group(group_name);
 
@@ -1217,7 +1217,7 @@ class Speed final : public Command
 
       void bench_os2ecp(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime)
          {
-         for(std::string group_name : groups)
+         for(const std::string& group_name : groups)
             {
             auto uncmp_timer = make_timer("OS2ECP uncompressed " + group_name);
             auto cmp_timer = make_timer("OS2ECP compressed " + group_name);
@@ -1960,10 +1960,10 @@ class Speed final : public Command
          }
 
       void bench_ecdsa_recovery(const std::vector<std::string>& groups,
-                                const std::string&,
+                                const std::string& /*unused*/,
                                 std::chrono::milliseconds msec)
          {
-         for(std::string group_name : groups)
+         for(const std::string& group_name : groups)
             {
             Botan::EC_Group group(group_name);
             auto recovery_timer = make_timer("ECDSA recovery " + group_name);
@@ -2110,7 +2110,7 @@ class Speed final : public Command
                       const std::string& provider,
                       std::chrono::milliseconds msec)
          {
-         for(std::string grp : groups)
+         for(const std::string& grp : groups)
             {
             bench_pk_ka("ECDH", "ECDH-" + grp, grp, provider, msec);
             }

@@ -63,7 +63,7 @@ secure_vector<uint8_t> EMSA_X931::raw_data()
 */
 secure_vector<uint8_t> EMSA_X931::encoding_of(const secure_vector<uint8_t>& msg,
                                       size_t output_bits,
-                                      RandomNumberGenerator&)
+                                      RandomNumberGenerator& /*rng*/)
    {
    return emsa2_encoding(msg, output_bits, m_empty_hash, m_hash_id);
    }

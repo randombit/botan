@@ -14,9 +14,7 @@
 #include <iterator>
 #include <sstream>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 namespace {
 
@@ -718,7 +716,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       const bool should_save = save_session(session_info);
 
-      if(session_id.size() > 0 && state.is_a_resumption() == false)
+      if(!session_id.empty() && state.is_a_resumption() == false)
          {
          if(should_save)
             session_manager().save(session_info);
@@ -731,7 +729,5 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
    else
       throw Unexpected_Message("Unknown handshake message received");
    }
-
-}
 
 }

@@ -109,7 +109,7 @@ void CCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 size_t CCM_Mode::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_STATE_CHECK(m_nonce.size() > 0);
+   BOTAN_STATE_CHECK(!m_nonce.empty());
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
    return 0; // no output until finished
    }
@@ -141,7 +141,7 @@ secure_vector<uint8_t> CCM_Mode::format_b0(size_t sz)
    secure_vector<uint8_t> B0(CCM_BS);
 
    const uint8_t b_flags =
-      static_cast<uint8_t>((m_ad_buf.size() ? 64 : 0) + (((tag_size()/2)-1) << 3) + (L()-1));
+      static_cast<uint8_t>((!m_ad_buf.empty() ? 64 : 0) + (((tag_size()/2)-1) << 3) + (L()-1));
 
    B0[0] = b_flags;
    copy_mem(&B0[1], m_nonce.data(), m_nonce.size());

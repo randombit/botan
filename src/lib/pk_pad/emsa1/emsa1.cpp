@@ -67,7 +67,7 @@ secure_vector<uint8_t> EMSA1::raw_data()
 
 secure_vector<uint8_t> EMSA1::encoding_of(const secure_vector<uint8_t>& msg,
                                        size_t output_bits,
-                                       RandomNumberGenerator&)
+                                       RandomNumberGenerator& /*rng*/)
    {
    if(msg.size() != hash_output_length())
       throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");

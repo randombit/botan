@@ -12,9 +12,7 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /*
 * Create a new Certificate Verify message
@@ -99,7 +97,5 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
    return signature_valid;
 #endif
    }
-
-}
 
 }

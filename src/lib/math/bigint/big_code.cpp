@@ -59,7 +59,7 @@ std::string BigInt::to_dec_string() const
       }
 
    // remove leading zeros
-   while(digits.size() > 0 && digits.back() == 0)
+   while(!digits.empty() && digits.back() == 0)
       {
       digits.pop_back();
       }
