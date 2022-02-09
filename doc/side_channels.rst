@@ -67,9 +67,6 @@ operation.
 
 See blinding.cpp and rsa.cpp.
 
-If the OpenSSL provider is enabled, then no explicit blinding is done; we assume
-OpenSSL handles this. See openssl_rsa.cpp.
-
 Decryption of PKCS #1 v1.5 Ciphertexts
 ----------------------------------------
 

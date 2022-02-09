@@ -62,7 +62,6 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
 #if defined(BOTAN_HAS_HMAC)
    if(req.algo_name() == "HMAC" && req.arg_count() == 1)
       {
-      // TODO OpenSSL
       if(provider.empty() || provider == "base")
          {
          if(auto h = HashFunction::create(req.arg(0)))
@@ -93,7 +92,6 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
 #if defined(BOTAN_HAS_CMAC)
    if((req.algo_name() == "CMAC" || req.algo_name() == "OMAC") && req.arg_count() == 1)
       {
-      // TODO: OpenSSL CMAC
       if(provider.empty() || provider == "base")
          {
          if(auto bc = BlockCipher::create(req.arg(0)))

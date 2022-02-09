@@ -31,10 +31,6 @@
   #include <botan/xts.h>
 #endif
 
-#if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
-#endif
-
 #if defined(BOTAN_HAS_COMMONCRYPTO)
   #include <botan/internal/commoncrypto.h>
 #endif
@@ -62,19 +58,6 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
 
       if(commoncrypto_cipher)
          return commoncrypto_cipher;
-
-      if(!provider.empty())
-         return std::unique_ptr<Cipher_Mode>();
-      }
-#endif
-
-#if defined(BOTAN_HAS_OPENSSL)
-   if(provider.empty() || provider == "openssl")
-      {
-      std::unique_ptr<Cipher_Mode> openssl_cipher(make_openssl_cipher_mode(algo, direction));
-
-      if(openssl_cipher)
-         return openssl_cipher;
 
       if(!provider.empty())
          return std::unique_ptr<Cipher_Mode>();

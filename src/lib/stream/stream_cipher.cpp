@@ -33,10 +33,6 @@
   #include <botan/rc4.h>
 #endif
 
-#if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
-#endif
-
 namespace Botan {
 
 std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
@@ -108,13 +104,6 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
       {
       const size_t skip = (req.algo_name() == "MARK-4") ? 256 : req.arg_as_integer(0, 0);
 
-#if defined(BOTAN_HAS_OPENSSL)
-      if(provider.empty() || provider == "openssl")
-         {
-         return std::unique_ptr<StreamCipher>(make_openssl_rc4(skip));
-         }
-#endif
-
       if(provider.empty() || provider == "base")
          {
          return std::unique_ptr<StreamCipher>(new RC4(skip));
@@ -143,7 +132,7 @@ StreamCipher::create_or_throw(const std::string& algo,
 
 std::vector<std::string> StreamCipher::providers(const std::string& algo_spec)
    {
-   return probe_providers_of<StreamCipher>(algo_spec, {"base", "openssl"});
+   return probe_providers_of<StreamCipher>(algo_spec, {"base"});
    }
 
 }
