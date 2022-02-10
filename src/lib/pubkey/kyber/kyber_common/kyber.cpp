@@ -24,6 +24,7 @@
 
 #include <botan/internal/kyber_symmetric_primitives.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/ct_utils.h>
 
 #if defined(BOTAN_HAS_KYBER)
    #include <botan/internal/kyber_modern.h>
@@ -1217,17 +1218,14 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption, protected Kyber
          BOTAN_ASSERT(len_encap_key == cmp.size(), "output of indcpa_enc has unexpected length");
 
          // Overwrite pre-k with z on re-encryption failure (constant time)
-         secure_vector<uint8_t> lower_g_out_final;
-         if(constant_time_compare(encap_key, cmp.data(), len_encap_key))
-            {
-            std::copy(lower_g_out.begin(), lower_g_out.end(), std::back_inserter(lower_g_out_final));
-            }
-         else
-            {
-            std::copy(m_key.m_private->z().begin(), m_key.m_private->z().end(), std::back_inserter(lower_g_out_final));
-            }
+         secure_vector<uint8_t> lower_g_out_final(lower_g_out.size());
+         const uint8_t reencrypt_success = constant_time_compare(encap_key, cmp.data(), len_encap_key);
+         BOTAN_ASSERT_NOMSG(lower_g_out.size() == m_key.m_private->z().size());
+         CT::conditional_copy_mem(reencrypt_success, lower_g_out_final.data(),
+                                  lower_g_out.data(), m_key.m_private->z().data(),
+                                  lower_g_out_final.size());
 
-         KDF->update(lower_g_out);
+         KDF->update(lower_g_out_final);
          KDF->update(H->final());
 
          return KDF->final();
