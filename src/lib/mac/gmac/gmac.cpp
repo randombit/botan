@@ -17,6 +17,7 @@ GMAC::GMAC(std::unique_ptr<BlockCipher> cipher) :
    m_cipher(std::move(cipher)),
    m_ghash(new GHASH),
    m_aad_buf(GCM_BS),
+   m_H(GCM_BS),
    m_aad_buf_pos(0),
    m_initialized(false)
    {
@@ -27,6 +28,7 @@ void GMAC::clear()
    m_cipher->clear();
    m_ghash->clear();
    zeroise(m_aad_buf);
+   zeroise(m_H);
    m_aad_buf_pos = 0;
    m_initialized = false;
    }
@@ -82,9 +84,8 @@ void GMAC::key_schedule(const uint8_t key[], size_t size)
    clear();
    m_cipher->set_key(key, size);
 
-   secure_vector<uint8_t> H(GCM_BS);
-   m_cipher->encrypt(H);
-   m_ghash->set_key(H);
+   m_cipher->encrypt(m_H);
+   m_ghash->set_key(m_H);
    }
 
 void GMAC::start_msg(const uint8_t nonce[], size_t nonce_len)
@@ -124,7 +125,8 @@ void GMAC::final_result(uint8_t mac[])
        }
 
    m_ghash->final(mac, output_length());
-   clear();
+   m_ghash->set_key(m_H);
+   m_aad_buf_pos = 0;
    }
 
 std::unique_ptr<MessageAuthenticationCode> GMAC::new_object() const

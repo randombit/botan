@@ -109,8 +109,11 @@ class Hash_Function_Tests final : public Text_Based_Test
             result.test_eq(provider, hash->name(), algo);
             result.test_eq(provider, hash->name(), clone->name());
 
-            hash->update(input);
-            result.test_eq(provider, "hashing", hash->final(), expected);
+            for(size_t i = 0; i != 3; ++i)
+               {
+               hash->update(input);
+               result.test_eq(provider, "hashing", hash->final(), expected);
+               }
 
             clone->update(input);
             result.test_eq(provider, "hashing (clone)", clone->final(), expected);

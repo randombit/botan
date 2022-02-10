@@ -142,6 +142,13 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       */
       virtual std::string provider() const { return "base"; }
 
+      /**
+      * @return if a fresh key must be set for each message that is processed.
+      *
+      * This is required for certain polynomial-based MACs which are insecure
+      * if a key is ever reused for two different messages.
+      */
+      virtual bool fresh_key_required_per_message() const { return false; }
    };
 
 typedef MessageAuthenticationCode MAC;
