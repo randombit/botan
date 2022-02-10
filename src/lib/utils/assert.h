@@ -151,6 +151,23 @@ namespace Botan {
                                                  unused dummy rest value           \
                           ) /* we got an one of _BOTAN_UNUSED_IMPL*, now call it */ (__VA_ARGS__)
 
+/*
+* Define Botan::unreachable()
+*
+* There is a pending WG21 proposal for `std::unreachable()`
+*   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0627r3.pdf
+*/
+[[noreturn]] BOTAN_FORCE_INLINE void unreachable()
+   {
+#if defined(__GNUC__) // GCC 4.8+, Clang, Intel and other compilers compatible with GCC (-std=c++0x or above)
+   __builtin_unreachable();
+#elif defined(_MSC_VER) // MSVC
+   __assume(false);
+#else
+   return; // undefined behaviour, just like the others...
+#endif
+   }
+
 }
 
 #endif

@@ -1,0 +1,13 @@
+<defines>
+KYBER -> 20220107
+</defines>
+
+<requires>
+kyber_common
+shake
+shake_cipher
+</requires>
+
+<header:internal>
+kyber_modern.h
+</header:internal>

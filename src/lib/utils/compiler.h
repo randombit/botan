@@ -155,7 +155,6 @@
     #define BOTAN_DIAGNOSTIC_POP           	_Pragma("clang diagnostic pop")
   #endif
 
-
 #endif
 
 #endif
