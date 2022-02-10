@@ -98,7 +98,7 @@ std::unique_ptr<Cipher_State> Cipher_State::init_with_server_hello(
    const Connection_Side side,
    secure_vector<uint8_t>&& shared_secret,
    const Ciphersuite& cipher,
-   const secure_vector<uint8_t>& transcript_hash)
+   const Transcript_Hash& transcript_hash)
    {
    auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, cipher));
    cs->advance_without_psk();
@@ -106,7 +106,7 @@ std::unique_ptr<Cipher_State> Cipher_State::init_with_server_hello(
    return cs;
    }
 
-void Cipher_State::advance_with_server_finished(const secure_vector<uint8_t>& transcript_hash)
+void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcript_hash)
    {
    BOTAN_ASSERT_NOMSG(m_state == State::HandshakeTraffic);
 
@@ -122,7 +122,7 @@ void Cipher_State::advance_with_server_finished(const secure_vector<uint8_t>& tr
    m_state = State::ApplicationTraffic;
    }
 
-void Cipher_State::advance_with_client_finished(const secure_vector<uint8_t>& transcript_hash)
+void Cipher_State::advance_with_client_finished(const Transcript_Hash& transcript_hash)
    {
    BOTAN_ASSERT_NOMSG(m_state == State::ApplicationTraffic);
 
@@ -190,7 +190,7 @@ size_t Cipher_State::encrypt_output_length(const size_t input_length) const
    return m_encrypt->output_length(input_length);
    }
 
-std::vector<uint8_t> Cipher_State::finished_mac(const secure_vector<uint8_t>& transcript_hash) const
+std::vector<uint8_t> Cipher_State::finished_mac(const Transcript_Hash& transcript_hash) const
    {
    BOTAN_ASSERT_NOMSG(m_state == State::HandshakeTraffic);
 
@@ -200,7 +200,7 @@ std::vector<uint8_t> Cipher_State::finished_mac(const secure_vector<uint8_t>& tr
    return hmac.final_stdvec();
    }
 
-bool Cipher_State::verify_peer_finished_mac(const secure_vector<uint8_t>& transcript_hash,
+bool Cipher_State::verify_peer_finished_mac(const Transcript_Hash& transcript_hash,
       const std::vector<uint8_t>& peer_mac) const
    {
    BOTAN_ASSERT_NOMSG(m_state == State::HandshakeTraffic);
@@ -211,7 +211,7 @@ bool Cipher_State::verify_peer_finished_mac(const secure_vector<uint8_t>& transc
    return hmac.verify_mac(peer_mac);
    }
 
-secure_vector<uint8_t> Cipher_State::psk(const secure_vector<uint8_t>& nonce) const
+secure_vector<uint8_t> Cipher_State::psk(const std::vector<uint8_t>& nonce) const
    {
    BOTAN_ASSERT_NOMSG(m_state == State::Completed);
 
@@ -229,6 +229,8 @@ std::unique_ptr<MessageAuthenticationCode> create_hmac(const Ciphersuite& cipher
 // minimum nonce length (see RFC 8446 5.3).
 size_t nonce_len_for_cipher_suite(const Ciphersuite& suite)
    {
+   // TODO: We understood from the RFC that ChaCha20 should be 8 rather than
+   // 12, but that didn't work. Check again.
    switch(suite.ciphersuite_code())
       {
       case 0x1301:   // AES_128_GCM_SHA256
@@ -265,13 +267,13 @@ void Cipher_State::advance_without_psk()
    BOTAN_ASSERT_NOMSG(m_state == State::Uninitialized);
 
    const auto early_secret = hkdf_extract(secure_vector<uint8_t>(m_hash->output_length(), 0x00));
-   m_salt = derive_secret(early_secret, "derived", m_hash->process(""));
+   m_salt = derive_secret(early_secret, "derived", empty_hash());
 
    m_state = State::EarlyTraffic;
    }
 
 void Cipher_State::advance_with_server_hello(secure_vector<uint8_t>&& shared_secret,
-      const secure_vector<uint8_t>& transcript_hash)
+      const Transcript_Hash& transcript_hash)
    {
    BOTAN_ASSERT_NOMSG(m_state == State::EarlyTraffic);
 
@@ -282,7 +284,7 @@ void Cipher_State::advance_with_server_hello(secure_vector<uint8_t>&& shared_sec
       derive_secret(handshake_secret, "s hs traffic", transcript_hash),
       true);
 
-   m_salt = derive_secret(handshake_secret, "derived", m_hash->process(""));
+   m_salt = derive_secret(handshake_secret, "derived", empty_hash());
 
    m_state = State::HandshakeTraffic;
    }
@@ -327,7 +329,7 @@ secure_vector<uint8_t> Cipher_State::hkdf_extract(secure_vector<uint8_t>&& ikm) 
 secure_vector<uint8_t> Cipher_State::hkdf_expand_label(
    const secure_vector<uint8_t>& secret,
    std::string                   label,
-   const secure_vector<uint8_t>& context,
+   const std::vector<uint8_t>&   context,
    const size_t                  length) const
    {
    // assemble (serialized) HkdfLabel
@@ -358,7 +360,13 @@ secure_vector<uint8_t> Cipher_State::hkdf_expand_label(
 secure_vector<uint8_t> Cipher_State::derive_secret(
    const secure_vector<uint8_t>& secret,
    std::string label,
-   const secure_vector<uint8_t>& messages_hash) const
+   const Transcript_Hash& messages_hash) const
    {
    return hkdf_expand_label(secret, label, messages_hash, m_hash->output_length());
+   }
+
+std::vector<uint8_t> Cipher_State::empty_hash() const
+   {
+   m_hash->update("");
+   return m_hash->final_stdvec();
    }

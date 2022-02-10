@@ -12,7 +12,7 @@
 #include <botan/internal/tls_handshake_state.h>
 
 #if defined(BOTAN_HAS_TLS_13)
-#include <botan/internal/tls_cipher_state.h>
+   #include <botan/internal/tls_cipher_state.h>
 #endif
 
 
@@ -24,23 +24,27 @@ namespace {
 * Compute the verify_data for TLS 1.2
 */
 std::vector<uint8_t> finished_compute_verify_12(const Handshake_State& state,
-                                                Connection_Side side)
+      Connection_Side side)
    {
-   const uint8_t TLS_CLIENT_LABEL[] = {
+   const uint8_t TLS_CLIENT_LABEL[] =
+      {
       0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x20, 0x66, 0x69, 0x6E, 0x69,
-      0x73, 0x68, 0x65, 0x64 };
+      0x73, 0x68, 0x65, 0x64
+      };
 
-   const uint8_t TLS_SERVER_LABEL[] = {
+   const uint8_t TLS_SERVER_LABEL[] =
+      {
       0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69,
-      0x73, 0x68, 0x65, 0x64 };
+      0x73, 0x68, 0x65, 0x64
+      };
 
    auto prf = state.protocol_specific_prf();
 
    std::vector<uint8_t> input;
    std::vector<uint8_t> label;
    label += (side == CLIENT)
-      ? std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL))
-      : std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
+            ? std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL))
+            : std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
 
    input += state.hash().final(state.ciphersuite().prf_algo());
 
@@ -49,41 +53,28 @@ std::vector<uint8_t> finished_compute_verify_12(const Handshake_State& state,
 
 } // namespace
 
-/*
-* Create a new Finished message
-*/
-Finished::Finished(Handshake_IO& io,
-                             Handshake_State& state,
-                             Connection_Side side)
-   : m_verification_data(finished_compute_verify_12(state, side))
-   {
-   state.hash().update(io.send(*this));
-   }
-
-/*
-* Serialize a Finished message
-*/
 std::vector<uint8_t> Finished::serialize() const
    {
    return m_verification_data;
    }
 
-/*
-* Deserialize a Finished message
-*/
-Finished::Finished(const std::vector<uint8_t>& buf) : m_verification_data(buf)
-   {}
+Finished::Finished(const std::vector<uint8_t>& buf) : m_verification_data(buf) {}
 
 std::vector<uint8_t> Finished::verify_data() const
    {
    return m_verification_data;
    }
 
-/*
-* Verify a Finished message
-*/
-bool Finished::verify(const Handshake_State& state,
-                      Connection_Side side) const
+Finished_12::Finished_12(Handshake_IO& io,
+                      Handshake_State& state,
+                      Connection_Side side)
+   {
+   m_verification_data = finished_compute_verify_12(state, side);
+   state.hash().update(io.send(*this));
+   }
+
+bool Finished_12::verify(const Handshake_State& state,
+                         Connection_Side side) const
    {
    std::vector<uint8_t> computed_verify = finished_compute_verify_12(state, side);
 
@@ -91,24 +82,20 @@ bool Finished::verify(const Handshake_State& state,
    return true;
 #else
    return (m_verification_data.size() == computed_verify.size()) &&
-      constant_time_compare(m_verification_data.data(), computed_verify.data(), computed_verify.size());
+          constant_time_compare(m_verification_data.data(), computed_verify.data(), computed_verify.size());
 #endif
    }
 
 #if defined(BOTAN_HAS_TLS_13)
-Finished::Finished(Handshake_IO& io,
-                   Handshake_State& state,
-                   Cipher_State* cipher_state,
-                   const secure_vector<uint8_t>& transcript_hash)
-   : m_verification_data(cipher_state->finished_mac(transcript_hash))
+Finished_13::Finished_13(Cipher_State* cipher_state,
+                         const Transcript_Hash& transcript_hash)
    {
-   state.hash().update(io.send(*this));
+   m_verification_data = cipher_state->finished_mac(transcript_hash);
    }
 
-bool Finished::verify(Cipher_State* cipher_state, const secure_vector<uint8_t>& transcript_hash) const
+bool Finished_13::verify(Cipher_State* cipher_state, const Transcript_Hash& transcript_hash) const
    {
    return cipher_state->verify_peer_finished_mac(transcript_hash, m_verification_data);
    }
-
 #endif
 }

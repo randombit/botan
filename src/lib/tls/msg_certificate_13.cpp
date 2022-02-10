@@ -31,13 +31,25 @@ Certificate_13::Certificate_13(Handshake_IO& io,
    hash.update(io.send(*this));
    }
 
+void Certificate_13::validate_extensions(const Extensions& requested_extensions) const
+   {
+   // RFC 8446 4.4.2
+   //    Extensions in the Certificate message from the server MUST
+   //    correspond to ones from the ClientHello message.  Extensions in
+   //    the Certificate message from the client MUST correspond to
+   //    extensions in the CertificateRequest message from the server.
+   for(const auto& entry : m_entries)
+      for(const auto& ext_type : entry.extensions.extension_types())
+         if(!requested_extensions.has(ext_type))
+            { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Unexpected extension received"); }
+   }
+
 /**
 * Deserialize a Certificate message
 */
 Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
                                const Policy& policy,
-                               const Connection_Side side,
-                               const Extensions& request_extensions)
+                               const Connection_Side side)
    : m_side(side)
    {
    TLS_Data_Reader reader("cert message reader", buf);
@@ -46,7 +58,7 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
 
    // RFC 8446 4.4.2
    //    [...] in the case of server authentication, this field SHALL be zero length.
-   if(side == Connection_Side::SERVER && !m_request_context.empty())
+   if(m_side == Connection_Side::SERVER && !m_request_context.empty())
       {
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                           "Server Certificate message must not contain a request context");
@@ -87,18 +99,18 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
       TLS_Data_Reader exts_reader("extensions reader", exts_buf);
       entry.extensions.deserialize(exts_reader, m_side);
 
-      // RFC 8446 4.4.2
-      //    Extensions in the Certificate message from the server MUST
-      //    correspond to ones from the ClientHello message.  Extensions in
-      //    the Certificate message from the client MUST correspond to
-      //    extensions in the CertificateRequest message from the server.
-      for(const auto& ext_type : entry.extensions.extension_types())
-         {
-         if(!request_extensions.has(ext_type))
-            { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Unexpected extension received"); }
-         }
-
       m_entries.push_back(std::move(entry));
+      }
+
+   /* validation of provided certificate public key */
+   auto key = m_entries.front().certificate.load_subject_public_key();
+
+   policy.check_peer_key_acceptable(*key);
+
+   if(!policy.allowed_signature_method(key->algo_name()))
+      {
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Rejecting " + key->algo_name() + " signature");
       }
    }
 

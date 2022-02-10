@@ -20,7 +20,7 @@ namespace Botan {
 
 namespace TLS {
 
-class Client_Impl;
+class Channel_Impl;
 class Handshake_IO;
 
 /**
@@ -106,7 +106,7 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
       bool timeout_check() override;
 
    private:
-      std::unique_ptr<Client_Impl> m_impl;
+      std::unique_ptr<Channel_Impl> m_impl;
    };
 }
 }

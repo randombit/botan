@@ -13,7 +13,6 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_server_impl_12.h>
-#include <botan/internal/tls_message_factory.h>
 #include <botan/tls_magic.h>
 
 namespace Botan {
@@ -65,7 +64,7 @@ namespace {
 bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
                       Credentials_Manager& credentials,
-                      const Client_Hello* client_hello,
+                      const Client_Hello_12* client_hello,
                       std::chrono::seconds session_ticket_lifetime)
    {
    const std::vector<uint8_t>& client_session_id = client_hello->session_id();
@@ -152,7 +151,7 @@ uint16_t choose_ciphersuite(
    const Policy& policy,
    Protocol_Version version,
    const std::map<std::string, std::vector<X509_Certificate>>& cert_chains,
-   const Client_Hello& client_hello)
+   const Client_Hello_12& client_hello)
    {
    const bool our_choice = policy.server_uses_own_ciphersuite_preferences();
    const std::vector<uint16_t> client_suites = client_hello.ciphersuites();
@@ -415,7 +414,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
                           "Have data remaining in buffer after ClientHello");
 
-   pending_state.client_hello(new Client_Hello(contents));
+   pending_state.client_hello(new Client_Hello_12(contents));
    const Protocol_Version client_offer = pending_state.client_hello()->legacy_version();
    const bool datagram = client_offer.is_datagram_protocol();
 
@@ -475,7 +474,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
             else
                pending_state.handshake_io().send(verify);
 
-            pending_state.client_hello(nullptr);
+            pending_state.client_hello(static_cast<Client_Hello_12*>(nullptr));
             pending_state.set_expected_next(CLIENT_HELLO);
             return;
             }
@@ -627,7 +626,7 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
                           "Have data remaining in buffer after Finished");
 
-   pending_state.client_finished(new Finished(contents));
+   pending_state.client_finished(new Finished_12(contents));
 
    if(!pending_state.client_finished()->verify(pending_state, CLIENT))
       throw TLS_Exception(Alert::DECRYPT_ERROR,
@@ -661,7 +660,7 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
                const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
 
                pending_state.new_session_ticket(
-                  new New_Session_Ticket(pending_state.handshake_io(),
+                  new New_Session_Ticket_12(pending_state.handshake_io(),
                                          pending_state.hash(),
                                          session_info.encrypt(ticket_key, rng()),
                                          policy().session_ticket_lifetime()));
@@ -676,14 +675,14 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
          pending_state.server_hello()->supports_session_ticket())
          {
          pending_state.new_session_ticket(
-            new New_Session_Ticket(pending_state.handshake_io(), pending_state.hash()));
+            new New_Session_Ticket_12(pending_state.handshake_io(), pending_state.hash()));
          }
 
       pending_state.handshake_io().send(Change_Cipher_Spec());
 
       change_cipher_spec_writer(SERVER);
 
-      pending_state.server_finished(new Finished(pending_state.handshake_io(), pending_state, SERVER));
+      pending_state.server_finished(new Finished_12(pending_state.handshake_io(), pending_state, SERVER));
       }
 
    activate_session();
@@ -750,7 +749,7 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
        pending_state.client_hello()->session_ticket().empty() &&
        have_session_ticket_key);
 
-   pending_state.server_hello(new Server_Hello(
+   pending_state.server_hello(new Server_Hello_12(
                                  pending_state.handshake_io(),
                                  pending_state.hash(),
                                  policy(),
@@ -775,8 +774,8 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
       if(pending_state.server_hello()->supports_session_ticket()) // send an empty ticket
          {
          pending_state.new_session_ticket(
-            new New_Session_Ticket(pending_state.handshake_io(),
-                                   pending_state.hash()));
+            new New_Session_Ticket_12(pending_state.handshake_io(),
+                                      pending_state.hash()));
          }
       }
 
@@ -787,17 +786,17 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
          const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
 
          pending_state.new_session_ticket(
-            new New_Session_Ticket(pending_state.handshake_io(),
-                                   pending_state.hash(),
-                                   session_info.encrypt(ticket_key, rng()),
-                                   policy().session_ticket_lifetime()));
+            new New_Session_Ticket_12(pending_state.handshake_io(),
+                                      pending_state.hash(),
+                                      session_info.encrypt(ticket_key, rng()),
+                                      policy().session_ticket_lifetime()));
          }
       catch(...) {}
 
       if(!pending_state.new_session_ticket())
          {
          pending_state.new_session_ticket(
-            new New_Session_Ticket(pending_state.handshake_io(), pending_state.hash()));
+            new New_Session_Ticket_12(pending_state.handshake_io(), pending_state.hash()));
          }
       }
 
@@ -805,7 +804,7 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
 
    change_cipher_spec_writer(SERVER);
 
-   pending_state.server_finished(new Finished(pending_state.handshake_io(), pending_state, SERVER));
+   pending_state.server_finished(new Finished_12(pending_state.handshake_io(), pending_state, SERVER));
    pending_state.set_expected_next(HANDSHAKE_CCS);
    }
 
@@ -837,13 +836,13 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
                                                    cert_chains,
                                                    *pending_state.client_hello());
 
-   Server_Hello::Settings srv_settings(
+   Server_Hello_12::Settings srv_settings(
       make_hello_random(rng(), policy()), // new session ID
       pending_state.version(),
       ciphersuite,
       have_session_ticket_key);
 
-   pending_state.server_hello(new Server_Hello(
+   pending_state.server_hello(new Server_Hello_12(
                                  pending_state.handshake_io(),
                                  pending_state.hash(),
                                  policy(),
@@ -925,8 +924,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
    if(request_cert && pending_state.ciphersuite().signature_used())
       {
       pending_state.cert_req(
-         new Certificate_Req(pending_state.version(),
-                             pending_state.handshake_io(),
+         new Certificate_Req(pending_state.handshake_io(),
                              pending_state.hash(),
                              policy(),
                              client_auth_CAs));

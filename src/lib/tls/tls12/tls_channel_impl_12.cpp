@@ -598,7 +598,7 @@ void Channel_Impl_12::send_alert(const Alert& alert)
       }
    }
 
-void Channel_Impl_12::secure_renegotiation_check(const Client_Hello* client_hello)
+void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_hello)
    {
    const bool secure_renegotiation = client_hello->secure_renegotiation();
 
@@ -621,7 +621,7 @@ void Channel_Impl_12::secure_renegotiation_check(const Client_Hello* client_hell
       }
    }
 
-void Channel_Impl_12::secure_renegotiation_check(const Server_Hello* server_hello)
+void Channel_Impl_12::secure_renegotiation_check(const Server_Hello_12* server_hello)
    {
    const bool secure_renegotiation = server_hello->secure_renegotiation();
 

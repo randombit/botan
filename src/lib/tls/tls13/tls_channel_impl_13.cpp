@@ -30,6 +30,7 @@ Channel_Impl_13::Channel_Impl_13(Callbacks& callbacks,
    m_rng(rng),
    m_policy(policy),
    m_record_layer(m_side),
+   m_handshake_layer(m_side),
    m_has_been_closed(false)
    {
    m_writebuf.reserve(reserved_io_buffer_size);
@@ -42,47 +43,60 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
    {
    try
       {
-      const auto result = m_record_layer.parse_records(std::vector(input, input+input_size), m_cipher_state.get());
+      m_record_layer.copy_data(std::vector(input, input+input_size));
 
-      if(std::holds_alternative<BytesNeeded>(result))
-         { return std::get<BytesNeeded>(result); }  // need more data to complete record
-
-      for(const auto& record : std::get<std::vector<Record>>(result))
+      while(true)
          {
-         const bool initial_record = !handshake_state();
+         auto result = m_record_layer.next_record(m_cipher_state.get());
+
+         if(std::holds_alternative<BytesNeeded>(result))
+            {
+            return std::get<BytesNeeded>(result);
+            }
+
+         auto record = std::get<Record>(result);
 
          if(record.type == HANDSHAKE)
             {
             if(m_has_been_closed)
                { throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received handshake data after connection closure"); }
 
-            if(initial_record)
-               {
-               // server side will not have a handshake state yet
-               create_handshake_state(Protocol_Version::TLS_V13);  // ignore version in record header
-               }
+            m_handshake_layer.copy_data(unlock(record.fragment));  // TODO: record fragment should be an ordinary std::vector
 
-            m_handshake_state->handshake_io().add_record(record.fragment.data(),
-                  record.fragment.size(),
-                  record.type,
-                  0 /* sequence number unused in TLS 1.3 */);
+            // m_handshake_state->handshake_io().add_record(record.fragment.data(),
+            //       record.fragment.size(),
+            //       record.type,
+            //       0 /* sequence number unused in TLS 1.3 */);
 
-            while(true)
+            while (true)
                {
-               auto [type, content] = m_handshake_state->get_next_handshake_msg();
-               if(type == HANDSHAKE_NONE)
+               // TODO: BytesNeeded is not needed here, hence we could make `next_message` return an optional
+               auto handshake_msg = m_handshake_layer.next_message(policy(), m_transcript_hash);
+
+               if(std::holds_alternative<BytesNeeded>(handshake_msg))
                   {
                   break;
                   }
-               else if (type == NEW_SESSION_TICKET || type == KEY_UPDATE /* TODO or POST_HANDSHAKE_AUTH */)
-                  {
-                  process_post_handshake_msg(*m_handshake_state.get(), type, content);
-                  }
-               else
-                  {
-                  process_handshake_msg(*m_handshake_state.get(), type, content);
-                  }
+
+               process_handshake_msg(std::move(std::get<Handshake_Message_13>(handshake_msg)));
                }
+
+//            while(true)
+//               {
+//               auto [type, content] = m_handshake_state->get_next_handshake_msg();
+//               if(type == HANDSHAKE_NONE)
+//                  {
+//                  break;
+//                  }
+//               else if (type == NEW_SESSION_TICKET || type == KEY_UPDATE /* TODO or POST_HANDSHAKE_AUTH */)
+//                  {
+//                  process_post_handshake_msg(*m_handshake_state.get(), type, content);
+//                  }
+//               else
+//                  {
+//                  process_handshake_msg(*m_handshake_state.get(), type, content);
+//                  }
+//               }
             }
          else if(record.type == CHANGE_CIPHER_SPEC)
             {
@@ -131,8 +145,11 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
       send_fatal_alert(Alert::INTERNAL_ERROR);
       throw;
       }
+   }
 
-   return 0;
+void Channel_Impl_13::send_handshake_message(const Handshake_Message_13_Ref message)
+   {
+   send_record(Record_Type::HANDSHAKE, m_handshake_layer.prepare_message(message, m_transcript_hash));
    }
 
 void Channel_Impl_13::send(const uint8_t buf[], size_t buf_size)
@@ -142,6 +159,11 @@ void Channel_Impl_13::send(const uint8_t buf[], size_t buf_size)
 
    send_record(Record_Type::APPLICATION_DATA, {buf, buf+buf_size});
    }
+
+// void Channel_Impl_13::send_handshake_message(Handshake_Message_13& )
+//    {
+//    m_handshake_layer.prepare_message(hello);
+//    }
 
 void Channel_Impl_13::send_alert(const Alert& alert)
    {
@@ -198,30 +220,6 @@ bool Channel_Impl_13::timeout_check()
    {
    return false;
    }
-
-Handshake_State& Channel_Impl_13::create_handshake_state(Protocol_Version version)
-   {
-   BOTAN_ASSERT(version == Botan::TLS::Protocol_Version::TLS_V13, "Have handshake version for TLS 1.3");
-
-   if(handshake_state())
-      { throw Internal_Error("create_handshake_state called multiple times"); }
-
-   if(!m_sequence_numbers)
-      {
-      m_sequence_numbers.reset(new Stream_Sequence_Numbers);
-      }
-
-   using namespace std::placeholders;
-
-   std::unique_ptr<Handshake_IO> io = std::make_unique<Stream_Handshake_IO>(
-                                         std::bind(&Channel_Impl_13::send_record, this, _1, _2));
-
-   m_handshake_state = new_handshake_state(std::move(io));
-   m_handshake_state->set_version(version);
-
-   return *m_handshake_state.get();
-   }
-
 
 void Channel_Impl_13::send_record(uint8_t record_type, const std::vector<uint8_t>& record)
    {

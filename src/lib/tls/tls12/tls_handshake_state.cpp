@@ -87,117 +87,6 @@ const char* handshake_type_to_string(Handshake_Type type)
                        "Unknown TLS handshake message type " + std::to_string(type));
    }
 
-namespace {
-
-uint32_t bitmask_for_handshake_type(Handshake_Type type)
-   {
-   switch(type)
-      {
-      case HELLO_VERIFY_REQUEST:
-         return (1 << 0);
-
-      case HELLO_REQUEST:
-         return (1 << 1);
-
-      case CLIENT_HELLO:
-         return (1 << 2);
-
-      case SERVER_HELLO:
-         return (1 << 3);
-
-      case CERTIFICATE:
-         return (1 << 4);
-
-      case CERTIFICATE_URL:
-         return (1 << 5);
-
-      case CERTIFICATE_STATUS:
-         return (1 << 6);
-
-      case SERVER_KEX:
-         return (1 << 7);
-
-      case CERTIFICATE_REQUEST:
-         return (1 << 8);
-
-      case SERVER_HELLO_DONE:
-         return (1 << 9);
-
-      case CERTIFICATE_VERIFY:
-         return (1 << 10);
-
-      case CLIENT_KEX:
-         return (1 << 11);
-
-      case NEW_SESSION_TICKET:
-         return (1 << 12);
-
-      case HANDSHAKE_CCS:
-         return (1 << 13);
-
-      case FINISHED:
-         return (1 << 14);
-
-      case END_OF_EARLY_DATA:     // RFC 8446
-         return (1 << 15);
-
-      case ENCRYPTED_EXTENSIONS:  // RFC 8446
-         return (1 << 16);
-
-      case KEY_UPDATE:            // RFC 8446
-         return (1 << 17);
-
-      // allow explicitly disabling new handshakes
-      case HANDSHAKE_NONE:
-         return 0;
-      }
-
-   throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
-                       "Unknown TLS handshake message type " + std::to_string(type));
-   }
-
-std::string handshake_mask_to_string(uint32_t mask, char combiner)
-   {
-   const Handshake_Type types[] =
-      {
-      HELLO_VERIFY_REQUEST,
-      HELLO_REQUEST,
-      CLIENT_HELLO,
-      SERVER_HELLO,
-      CERTIFICATE,
-      CERTIFICATE_URL,
-      CERTIFICATE_STATUS,
-      SERVER_KEX,
-      CERTIFICATE_REQUEST,
-      SERVER_HELLO_DONE,
-      CERTIFICATE_VERIFY,
-      CLIENT_KEX,
-      NEW_SESSION_TICKET,
-      HANDSHAKE_CCS,
-      FINISHED,
-      END_OF_EARLY_DATA,
-      ENCRYPTED_EXTENSIONS,
-      KEY_UPDATE
-      };
-
-   std::ostringstream o;
-   bool empty = true;
-
-   for(auto&& t : types)
-      {
-      if(mask & bitmask_for_handshake_type(t))
-         {
-         if(!empty)
-            { o << combiner; }
-         o << handshake_type_to_string(t);
-         empty = false;
-         }
-      }
-
-   return o.str();
-   }
-
-}
 
 /*
 * Initialize the SSL/TLS Handshake State
@@ -226,7 +115,7 @@ void Handshake_State::hello_verify_request(const Hello_Verify_Request& hello_ver
    note_message(*m_client_hello);
    }
 
-void Handshake_State::client_hello(Client_Hello* client_hello)
+void Handshake_State::client_hello(Client_Hello_12* client_hello)
    {
    if(client_hello == nullptr)
       {
@@ -240,7 +129,7 @@ void Handshake_State::client_hello(Client_Hello* client_hello)
       }
    }
 
-void Handshake_State::server_hello(Server_Hello* server_hello)
+void Handshake_State::server_hello(Server_Hello_12* server_hello)
    {
    m_server_hello.reset(server_hello);
    m_ciphersuite = Ciphersuite::by_id(m_server_hello->ciphersuite());
@@ -257,12 +146,6 @@ void Handshake_State::server_certs(Certificate_12* server_certs)
    {
    m_server_certs.reset(server_certs);
    note_message(*m_server_certs);
-   }
-
-void Handshake_State::server_certs(Certificate_13* server_certs)
-   {
-   m_server_certs_13.reset(server_certs);
-   note_message(*m_server_certs_13);
    }
 
 void Handshake_State::server_cert_status(Certificate_Status* server_cert_status)
@@ -303,41 +186,29 @@ void Handshake_State::client_kex(Client_Key_Exchange* client_kex)
 
 void Handshake_State::client_verify(Certificate_Verify_12* client_verify)
    {
-   m_client_verify_12.reset(client_verify);
-   note_message(*m_client_verify_12);
+   m_client_verify.reset(client_verify);
+   note_message(*m_client_verify);
    }
 
 void Handshake_State::server_verify(Certificate_Verify_12* server_verify)
    {
-   m_server_verify_12.reset(server_verify);
-   note_message(*m_server_verify_12);
+   m_server_verify.reset(server_verify);
+   note_message(*m_server_verify);
    }
 
-void Handshake_State::client_verify(Certificate_Verify_13* client_verify)
-   {
-   m_client_verify_13.reset(client_verify);
-   note_message(*m_client_verify_13);
-   }
-
-void Handshake_State::server_verify(Certificate_Verify_13* server_verify)
-   {
-   m_server_verify_13.reset(server_verify);
-   note_message(*m_server_verify_13);
-   }
-
-void Handshake_State::new_session_ticket(New_Session_Ticket* new_session_ticket)
+void Handshake_State::new_session_ticket(New_Session_Ticket_12* new_session_ticket)
    {
    m_new_session_ticket.reset(new_session_ticket);
    note_message(*m_new_session_ticket);
    }
 
-void Handshake_State::server_finished(Finished* server_finished)
+void Handshake_State::server_finished(Finished_12* server_finished)
    {
    m_server_finished.reset(server_finished);
    note_message(*m_server_finished);
    }
 
-void Handshake_State::client_finished(Finished* client_finished)
+void Handshake_State::client_finished(Finished_12* client_finished)
    {
    m_client_finished.reset(client_finished);
    note_message(*m_client_finished);
@@ -369,57 +240,23 @@ void Handshake_State::compute_session_keys(const secure_vector<uint8_t>& resume_
 
 void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    {
-   const uint32_t mask = bitmask_for_handshake_type(handshake_msg);
-
-   m_hand_received_mask |= mask;
-
-   const bool ok = (m_hand_expecting_mask & mask) != 0; // overlap?
-
-   if(!ok)
-      {
-      const uint32_t seen_so_far = m_hand_received_mask & ~mask;
-
-      std::ostringstream msg;
-
-      msg << "Unexpected state transition in handshake got a " << handshake_type_to_string(handshake_msg);
-
-      if(m_hand_expecting_mask == 0)
-         { msg << " not expecting messages"; }
-      else
-         { msg << " expected " << handshake_mask_to_string(m_hand_expecting_mask, '|'); }
-
-      if(seen_so_far != 0)
-         { msg << " seen " << handshake_mask_to_string(seen_so_far, '+'); }
-
-      throw Unexpected_Message(msg.str());
-      }
-
-   /* We don't know what to expect next, so force a call to
-      set_expected_next; if it doesn't happen, the next transition
-      check will always fail which is what we want.
-   */
-   m_hand_expecting_mask = 0;
+   m_transitions.confirm_transition_to(handshake_msg);
    }
 
 void Handshake_State::set_expected_next(Handshake_Type handshake_msg)
    {
-   m_hand_expecting_mask |= bitmask_for_handshake_type(handshake_msg);
+   m_transitions.set_expected_next(handshake_msg);
    }
 
 bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    {
-   const uint32_t mask = bitmask_for_handshake_type(handshake_msg);
-
-   return (m_hand_received_mask & mask) != 0;
+   return m_transitions.received_handshake_msg(handshake_msg);
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
       Handshake_State::get_next_handshake_msg()
    {
-   const bool expecting_ccs =
-      (bitmask_for_handshake_type(HANDSHAKE_CCS) & m_hand_expecting_mask) != 0;
-
-   return m_handshake_io->get_next_record(expecting_ccs);
+   return m_handshake_io->get_next_record(m_transitions.change_cipher_spec_expected());
    }
 
 std::vector<uint8_t> Handshake_State::session_ticket() const
@@ -515,6 +352,7 @@ bool supported_algos_include(
 std::pair<std::string, Signature_Format>
 Handshake_State::parse_sig_format(const Public_Key& key,
                                   Signature_Scheme scheme,
+                                  const std::vector<Signature_Scheme>& offered_schemes,
                                   bool for_client_auth,
                                   const Policy& policy) const
    {
@@ -545,7 +383,7 @@ Handshake_State::parse_sig_format(const Public_Key& key,
 
    const std::vector<Signature_Scheme> supported_algos =
       for_client_auth ? cert_req()->signature_schemes() :
-      client_hello()->signature_schemes();
+      offered_schemes;
 
    if(!signature_scheme_is_known(scheme))
       throw TLS_Exception(Alert::HANDSHAKE_FAILURE,

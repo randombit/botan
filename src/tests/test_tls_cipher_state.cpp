@@ -93,22 +93,22 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
       "85 1a 27 7f d4 13 11 c9 e6 2d 2c 94 92 e1 c4 f3");
 
    // transcript hash from client hello and server hello
-   const auto th_server_hello = Botan::hex_decode_locked(
+   const auto th_server_hello = Botan::hex_decode(
                                    "86 0c 06 ed c0 78 58 ee 8e 78 f0 e7 42 8c 58 ed"
                                    "d6 b4 3f 2c a3 e6 e9 5f 02 ed 06 3c f0 e1 ca d8");
 
    // transcript hash from client hello up to (excluding) server finished
-   const auto th_pre_server_finished = Botan::hex_decode_locked(
+   const auto th_pre_server_finished = Botan::hex_decode(
                                           "ed b7 72 5f a7 a3 47 3b 03 1e c8 ef 65 a2 48 54"
                                           "93 90 01 38 a2 b9 12 91 40 7d 79 51 a0 61 10 ed");
 
    // transcript hash from client hello up to (including) server finished
-   const auto th_server_finished = Botan::hex_decode_locked(
+   const auto th_server_finished = Botan::hex_decode(
                                       "96 08 10 2a 0f 1c cc 6d b6 25 0b 7b 7e 41 7b 1a"
                                       "00 0e aa da 3d aa e4 77 7a 76 86 c9 ff 83 df 13");
 
-   // transcript hash from client hello up to (including) client finshed
-   const auto th_client_finished = Botan::hex_decode_locked(
+   // transcript hash from client hello up to (including) client finished
+   const auto th_client_finished = Botan::hex_decode(
          "20 91 45 a9 6e e8 e2 a1 22 ff 81 00 47 cc 95 26"
          "84 65 8d 60 49 e8 64 29 42 6d b8 7c 54 ad 14 3d");
 

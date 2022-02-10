@@ -28,12 +28,12 @@ namespace TLS {
 
 namespace {
 
-constexpr bool is_x25519(const Group_Params group)
+[[maybe_unused]] constexpr bool is_x25519(const Group_Params group)
 {
    return group == Group_Params::X25519;
 }
 
-constexpr bool is_ecdh(const Group_Params group)
+[[maybe_unused]] constexpr bool is_ecdh(const Group_Params group)
 {
    return
       group == Group_Params::SECP256R1      ||
@@ -44,7 +44,7 @@ constexpr bool is_ecdh(const Group_Params group)
       group == Group_Params::BRAINPOOL512R1;
 }
 
-constexpr bool is_dh(const Group_Params group)
+[[maybe_unused]] constexpr bool is_dh(const Group_Params group)
 {
    return
       group == Group_Params::FFDHE_2048 ||

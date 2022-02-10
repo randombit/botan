@@ -53,28 +53,32 @@ class BOTAN_TEST_API Record_Layer
       using ReadResult = std::variant<BytesNeeded, ResT>;
 
       /**
-       * Reads data that was received by the peer.
-       *
-       * Return value contains either the number of bytes (`size_t`) needed to proceed
-       * with processing TLS records or a list of plaintext TLS record contents
-       * containing higher level protocol or application data.
+       * Reads data that was received by the peer and stores it internally for further
+       * processing during the invocation of `next_record()`.
        *
        * @param data_from_peer  The data to be parsed.
-       * @param cipher_state    Optional pointer to a Cipher_State instance. If provided, the
-       *                        cipher_state should be ready to decrypt data. Pass nullptr to
-       *                        process plaintext data.
        */
-      ReadResult<std::vector<Record>> parse_records(const std::vector<uint8_t>& data_from_peer,
-                                   Cipher_State* cipher_state=nullptr);
+      void copy_data(const std::vector<uint8_t>& data_from_peer);
+
+      /**
+       * Parses one record off the internal buffer that is being filled using `copy_data`.
+       *
+       * Return value contains either the number of bytes (`size_t`) needed to proceed
+       * with processing TLS records or a single plaintext TLS record content containing
+       * higher level protocol or application data.
+       *
+       * @param cipher_state  Optional pointer to a Cipher_State instance. If provided, the
+       *                      cipher_state should be ready to decrypt data. Pass nullptr to
+       *                      process plaintext data.
+       */
+      ReadResult<Record> next_record(Cipher_State* cipher_state = nullptr);
+
 
       std::vector<uint8_t> prepare_records(const Record_Type type,
                                            const std::vector<uint8_t>& data,
                                            Cipher_State* cipher_state=nullptr);
 
       std::vector<uint8_t> prepare_dummy_ccs_record();
-
-   private:
-      ReadResult<Record> read_record(Cipher_State* cipher_state);
 
    private:
       std::vector<uint8_t> m_read_buffer;

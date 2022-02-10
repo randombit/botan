@@ -134,7 +134,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target in ['bsi', 'nist']:
         # tls is optional for bsi/nist but add it so verify tests work with these minimized configs
-        flags += ['--module-policy=%s' % (target), '--enable-modules=tls']
+        flags += ['--module-policy=%s' % (target), '--enable-modules=tls12']
 
     if target == 'docs':
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']

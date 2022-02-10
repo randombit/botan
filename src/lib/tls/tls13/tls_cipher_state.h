@@ -16,6 +16,8 @@
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
 
+#include <botan/internal/tls_transcript_hash_13.h>
+
 namespace Botan {
 
 class AEAD_Mode;
@@ -71,17 +73,17 @@ class BOTAN_TEST_API Cipher_State
          const Connection_Side side,
          secure_vector<uint8_t>&& shared_secret,
          const Ciphersuite& cipher,
-         const secure_vector<uint8_t>& transcript_hash);
+         const Transcript_Hash& transcript_hash);
 
       /**
        * Transition internal secrets/keys for transporting application data.
        */
-      void advance_with_server_finished(const secure_vector<uint8_t>& transcript_hash);
+      void advance_with_server_finished(const Transcript_Hash& transcript_hash);
 
       /**
        * Transition to the final internal state allowing to create resumptions.
        */
-      void advance_with_client_finished(const secure_vector<uint8_t>& transcript_hash);
+      void advance_with_client_finished(const Transcript_Hash& transcript_hash);
 
       /**
        * Encrypt a TLS record fragment (RFC 8446 5.2 -- TLSInnerPlaintext) using the
@@ -111,18 +113,18 @@ class BOTAN_TEST_API Cipher_State
       /**
        * Calculate the MAC for a TLS "Finished" handshake message (RFC 8446 4.4.4)
        */
-      std::vector<uint8_t> finished_mac(const secure_vector<uint8_t>& transcript_hash) const;
+      std::vector<uint8_t> finished_mac(const Transcript_Hash& transcript_hash) const;
 
       /**
        * Validate a MAC received in a TLS "Finished" handshake message (RFC 8446 4.4.4)
        */
-      bool verify_peer_finished_mac(const secure_vector<uint8_t>& transcript_hash,
+      bool verify_peer_finished_mac(const Transcript_Hash& transcript_hash,
                                     const std::vector<uint8_t>& peer_mac) const;
 
       /**
        * Calculate the PSK for the given nonce (RFC 8446 4.6.1)
        */
-      secure_vector<uint8_t> psk(const secure_vector<uint8_t>& nonce) const;
+      secure_vector<uint8_t> psk(const std::vector<uint8_t>& nonce) const;
 
       /**
        * Indicates whether the appropriate secrets to encrypt/decrypt
@@ -143,7 +145,7 @@ class BOTAN_TEST_API Cipher_State
       void advance_without_psk();
 
       void advance_with_server_hello(secure_vector<uint8_t>&& shared_secret,
-                                     const secure_vector<uint8_t>& transcript_hash);
+                                     const Transcript_Hash& transcript_hash);
 
       std::vector<uint8_t> current_nonce(const uint64_t seq_no,
                                          const secure_vector<uint8_t>& iv) const;
@@ -163,7 +165,7 @@ class BOTAN_TEST_API Cipher_State
       secure_vector<uint8_t> hkdf_expand_label(
          const secure_vector<uint8_t>& secret,
          std::string                   label,
-         const secure_vector<uint8_t>& context,
+         const std::vector<uint8_t>&   context,
          const size_t                  length) const;
 
       /**
@@ -172,7 +174,9 @@ class BOTAN_TEST_API Cipher_State
       secure_vector<uint8_t> derive_secret(
          const secure_vector<uint8_t>& secret,
          std::string label,
-         const secure_vector<uint8_t>& messages_hash) const;
+         const Transcript_Hash& messages_hash) const;
+
+      std::vector<uint8_t> empty_hash() const;
 
    private:
       enum class State

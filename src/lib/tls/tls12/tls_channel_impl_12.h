@@ -30,8 +30,8 @@ class Connection_Cipher_State;
 class Connection_Sequence_Numbers;
 class Handshake_State;
 class Handshake_Message;
-class Client_Hello;
-class Server_Hello;
+class Client_Hello_12;
+class Server_Hello_12;
 class Policy;
 
 /**
@@ -148,8 +148,8 @@ class Channel_Impl_12 : public Channel_Impl
                                  const std::vector<uint8_t>& contents,
                                  bool epoch0_restart) = 0;
 
-
-      Handshake_State& create_handshake_state(Protocol_Version version) override;
+      Handshake_State& create_handshake_state(Protocol_Version version);
+      virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<class Handshake_IO> io) = 0;
 
       void inspect_handshake_message(const Handshake_Message& msg);
 
@@ -161,8 +161,8 @@ class Channel_Impl_12 : public Channel_Impl
 
       /* secure renegotiation handling */
 
-      void secure_renegotiation_check(const Client_Hello* client_hello);
-      void secure_renegotiation_check(const Server_Hello* server_hello);
+      void secure_renegotiation_check(const Client_Hello_12* client_hello);
+      void secure_renegotiation_check(const Server_Hello_12* server_hello);
 
       std::vector<uint8_t> secure_renegotiation_data_for_client_hello() const;
       std::vector<uint8_t> secure_renegotiation_data_for_server_hello() const;
@@ -178,6 +178,10 @@ class Channel_Impl_12 : public Channel_Impl
       Callbacks& callbacks() const { return m_callbacks; }
 
       void reset_active_association_state();
+
+      virtual void initiate_handshake(Handshake_State& state, bool force_full_renegotiation) = 0;
+
+      virtual std::vector<X509_Certificate> get_peer_cert_chain(const Handshake_State& state) const = 0;
 
    private:
       void send_record(uint8_t record_type, const std::vector<uint8_t>& record);

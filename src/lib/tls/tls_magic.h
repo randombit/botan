@@ -8,6 +8,8 @@
 #ifndef BOTAN_TLS_PROTOCOL_MAGIC_H_
 #define BOTAN_TLS_PROTOCOL_MAGIC_H_
 
+#include <vector>
+
 #include <botan/types.h>
 
 //BOTAN_FUTURE_INTERNAL_HEADER(tls_magic.h)
@@ -86,6 +88,8 @@ enum Handshake_Type {
 };
 
 const char* handshake_type_to_string(Handshake_Type t);
+
+using Transcript_Hash = std::vector<uint8_t>;
 
 }
 

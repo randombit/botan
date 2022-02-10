@@ -45,7 +45,6 @@ template<typename T> inline constexpr uint8_t get_byte_var(size_t byte_num, T in
 
 /**
 * Byte extraction
-* @param byte_num which byte to extract, 0 == highest byte
 * @param input the value to extract from
 * @return byte byte_num of input
 */

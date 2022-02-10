@@ -6,13 +6,15 @@ TLS_12 -> 20210608
 </header:public>
 
 <header:internal>
-msg_cert_req_impl_12.h
-msg_server_hello_impl_12.h
-msg_client_hello_impl_12.h
 tls_channel_impl_12.h
 tls_client_impl_12.h
 tls_record.h
 tls_server_impl_12.h
+tls_handshake_hash.h
+tls_handshake_io.h
+tls_handshake_state.h
+tls_seq_numbers.h
+tls_session_key.h
 </header:internal>
 
 <requires>
@@ -32,4 +34,5 @@ rsa
 sha2_32
 sha2_64
 x509
+tls
 </requires>

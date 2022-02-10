@@ -31,12 +31,9 @@ class Channel_Impl
    public:
       virtual ~Channel_Impl() = default;
 
-
-      virtual Handshake_State& create_handshake_state(Protocol_Version version) = 0;
-
       /**
       * Inject TLS traffic received from counterparty
-      * @return a hint as the how many more bytes we need to process the
+      * @return a hint as the how many more bytes we need to q the
       *         current record (this may be 0 if on a record boundary)
       */
       virtual size_t received_data(const uint8_t buf[], size_t buf_size) = 0;
@@ -118,17 +115,6 @@ class Channel_Impl
       virtual bool timeout_check() = 0;
 
       virtual std::string application_protocol() const = 0;
-
-   protected:
-
-      virtual void initiate_handshake(Handshake_State& state,
-                                      bool force_full_renegotiation) = 0;
-
-      virtual std::vector<X509_Certificate>
-         get_peer_cert_chain(const Handshake_State& state) const = 0;
-
-      virtual std::unique_ptr<Handshake_State>
-         new_handshake_state(std::unique_ptr<class Handshake_IO> io) = 0;
    };
 
 }

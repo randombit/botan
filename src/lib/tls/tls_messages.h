@@ -9,6 +9,13 @@
 #ifndef BOTAN_TLS_MESSAGES_H_
 #define BOTAN_TLS_MESSAGES_H_
 
+#include <vector>
+#include <string>
+#include <set>
+#include <memory>
+#include <optional>
+#include <variant>
+
 #include <botan/tls_extensions.h>
 #include <botan/tls_handshake_msg.h>
 #include <botan/tls_session.h>
@@ -17,11 +24,6 @@
 #include <botan/pk_keys.h>
 #include <botan/x509cert.h>
 #include <botan/ocsp.h>
-#include <vector>
-#include <string>
-#include <set>
-#include <memory>
-#include <optional>
 
 #if defined(BOTAN_HAS_CECPQ1)
    #include <botan/cecpq1.h>
@@ -38,11 +40,6 @@ class Session;
 class Handshake_IO;
 class Handshake_State;
 class Callbacks;
-class Client_Hello_Impl;
-class Server_Hello_Impl;
-class Certificate_Req_Impl;
-class Certificate_Impl;
-class Protocol_Version;
 class Cipher_State;
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
@@ -72,7 +69,7 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message
 /**
 * Client Hello Message
 */
-class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
+class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message
    {
    public:
       class Settings final
@@ -105,13 +102,9 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
        */
       Protocol_Version legacy_version() const;
 
-      std::vector<Protocol_Version> supported_versions() const;
-
       const std::vector<uint8_t>& random() const;
 
       const std::vector<uint8_t>& session_id() const;
-
-      const std::vector<uint8_t>& compression_methods() const;
 
       const std::vector<uint16_t>& ciphersuites() const;
 
@@ -123,25 +116,11 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       std::vector<Group_Params> supported_dh_groups() const;
 
-      bool prefers_compressed_ec_points() const;
+      std::vector<Protocol_Version> supported_versions() const;
 
       std::string sni_hostname() const;
 
-      bool secure_renegotiation() const;
-
-      std::vector<uint8_t> renegotiation_info() const;
-
-      bool supports_session_ticket() const;
-
-      std::vector<uint8_t> session_ticket() const;
-
       bool supports_alpn() const;
-
-      bool supports_extended_master_secret() const;
-
-      bool supports_cert_status_message() const;
-
-      bool supports_encrypt_then_mac() const;
 
       bool sent_signature_algorithms() const;
 
@@ -151,7 +130,6 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       std::vector<uint8_t> serialize() const override;
 
-      void update_hello_cookie(const Hello_Verify_Request& hello_verify);
 
       const std::vector<uint8_t>& cookie() const;
 
@@ -161,18 +139,15 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       const Extensions& extensions() const;
 
-      Client_Hello(Handshake_IO& io,
-                   Handshake_Hash& hash,
-                   const Policy& policy,
+   protected:
+      Client_Hello(const Policy& policy,
                    Callbacks& cb,
                    RandomNumberGenerator& rng,
                    const std::vector<uint8_t>& reneg_info,
                    const Client_Hello::Settings& client_settings,
                    const std::vector<std::string>& next_protocols);
 
-      Client_Hello(Handshake_IO& io,
-                   Handshake_Hash& hash,
-                   const Policy& policy,
+      Client_Hello(const Policy& policy,
                    Callbacks& cb,
                    RandomNumberGenerator& rng,
                    const std::vector<uint8_t>& reneg_info,
@@ -181,16 +156,131 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       explicit Client_Hello(const std::vector<uint8_t>& buf);
 
-      ~Client_Hello() override;
+      const std::vector<uint8_t>& compression_methods() const;
 
-   private:
-      std::unique_ptr<Client_Hello_Impl> m_impl;
+   protected:
+      Protocol_Version m_legacy_version;
+      std::vector<uint8_t> m_session_id;
+      std::vector<uint8_t> m_random;
+      std::vector<uint16_t> m_suites;
+      std::vector<uint8_t> m_comp_methods;
+      Extensions m_extensions;
+
+      std::vector<uint8_t> m_hello_cookie; // DTLS only
+      std::vector<uint8_t> m_cookie_input_bits; // DTLS only
    };
+
+class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello
+   {
+   public:
+      explicit Client_Hello_12(const std::vector<uint8_t>& buf) : Client_Hello(buf) {}
+
+      Client_Hello_12(Handshake_IO& io,
+                      Handshake_Hash& hash,
+                      const Policy& policy,
+                      Callbacks& cb,
+                      RandomNumberGenerator& rng,
+                      const std::vector<uint8_t>& reneg_info,
+                      const Client_Hello::Settings& client_settings,
+                      const std::vector<std::string>& next_protocols);
+
+      Client_Hello_12(Handshake_IO& io,
+                      Handshake_Hash& hash,
+                      const Policy& policy,
+                      Callbacks& cb,
+                      RandomNumberGenerator& rng,
+                      const std::vector<uint8_t>& reneg_info,
+                      const Session& session,
+                      const std::vector<std::string>& next_protocols);
+
+      using Client_Hello::random;
+      using Client_Hello::compression_methods;
+
+      bool prefers_compressed_ec_points() const;
+
+      bool secure_renegotiation() const;
+
+      std::vector<uint8_t> renegotiation_info() const;
+
+      bool supports_session_ticket() const;
+
+      std::vector<uint8_t> session_ticket() const;
+
+      bool supports_extended_master_secret() const;
+
+      bool supports_cert_status_message() const;
+
+      bool supports_encrypt_then_mac() const;
+
+      void update_hello_cookie(const Hello_Verify_Request& hello_verify);
+   };
+
+#if defined(BOTAN_HAS_TLS_13)
+
+class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
+   {
+   public:
+      explicit Client_Hello_13(const std::vector<uint8_t>& buf) : Client_Hello(buf) {}
+
+      Client_Hello_13(const Policy& policy,
+                      Callbacks& cb,
+                      RandomNumberGenerator& rng,
+                      const std::vector<uint8_t>& reneg_info,
+                      const Client_Hello::Settings& client_settings,
+                      const std::vector<std::string>& next_protocols);
+
+
+      std::vector<Protocol_Version> supported_versions() const;
+   };
+
+#endif // BOTAN_HAS_TLS_13
 
 /**
 * Server Hello Message
 */
-class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
+class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message
+   {
+   public:
+      std::vector<uint8_t> serialize() const override;
+
+      Handshake_Type type() const override;
+
+      // methods available in both subclasses' interface
+      uint16_t ciphersuite() const;
+      Protocol_Version legacy_version() const;
+      const Extensions& extensions() const;
+
+   protected:
+      explicit Server_Hello(const std::vector<uint8_t>& buf);
+
+      Server_Hello(Protocol_Version legacy_version,
+                   std::vector<uint8_t> session_id,
+                   std::vector<uint8_t> random,
+                   const uint16_t ciphersuite,
+                   const uint8_t comp_method) :
+         m_legacy_version(std::move(legacy_version)),
+         m_session_id(std::move(session_id)),
+         m_random(std::move(random)),
+         m_ciphersuite(ciphersuite),
+         m_comp_method(comp_method) {}
+
+      // methods used internally and potentially exposed by one of the subclasses
+      const std::vector<uint8_t>& session_id() const;
+      std::set<Handshake_Extension_Type> extension_types() const;
+      const std::vector<uint8_t>& random() const;
+      uint8_t compression_method() const;
+
+   protected:
+      Protocol_Version m_legacy_version;
+      std::vector<uint8_t> m_session_id;
+      std::vector<uint8_t> m_random;
+      uint16_t m_ciphersuite;
+      uint8_t m_comp_method;
+
+      Extensions m_extensions;
+   };
+
+class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello
    {
    public:
       class Settings final
@@ -217,21 +307,39 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
             bool m_offer_session_ticket;
          };
 
-      Handshake_Type type() const override;
+      Server_Hello_12(Handshake_IO& io,
+                      Handshake_Hash& hash,
+                      const Policy& policy,
+                      Callbacks& cb,
+                      RandomNumberGenerator& rng,
+                      const std::vector<uint8_t>& secure_reneg_info,
+                      const Client_Hello_12& client_hello,
+                      const Settings& settings,
+                      const std::string next_protocol);
 
-      Protocol_Version legacy_version() const;
+      Server_Hello_12(Handshake_IO& io,
+                      Handshake_Hash& hash,
+                      const Policy& policy,
+                      Callbacks& cb,
+                      RandomNumberGenerator& rng,
+                      const std::vector<uint8_t>& secure_reneg_info,
+                      const Client_Hello_12& client_hello,
+                      Session& resumed_session,
+                      bool offer_session_ticket,
+                      const std::string& next_protocol);
 
-      const std::vector<uint8_t>& random() const;
+      explicit Server_Hello_12(const std::vector<uint8_t>& buf) : Server_Hello(buf) {}
 
-      const std::vector<uint8_t>& session_id() const;
-
-      uint16_t ciphersuite() const;
-
-      uint8_t compression_method() const;
+      using Server_Hello::random;
+      using Server_Hello::compression_method;
+      using Server_Hello::extension_types;
+      using Server_Hello::session_id;
 
       bool secure_renegotiation() const;
 
       std::vector<uint8_t> renegotiation_info() const;
+
+      std::string next_protocol() const;
 
       bool supports_extended_master_secret() const;
 
@@ -242,14 +350,23 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
       bool supports_session_ticket() const;
 
       uint16_t srtp_profile() const;
-
-      std::string next_protocol() const;
-
-      std::set<Handshake_Extension_Type> extension_types() const;
-
-      const Extensions& extensions() const;
-
       bool prefers_compressed_ec_points() const;
+
+      /**
+       * Return desired downgrade version indicated by hello random, if any.
+       */
+      std::optional<Protocol_Version> random_signals_downgrade() const;
+   };
+
+#if defined(BOTAN_HAS_TLS_13)
+
+class BOTAN_UNSTABLE_API Server_Hello_13 final : public Server_Hello
+   {
+   public:
+      explicit Server_Hello_13(const std::vector<uint8_t>& buf) : Server_Hello(buf)
+         {
+         // TODO: validation, e.g. compression method
+         }
 
       /**
        * Return desired downgrade version indicated by hello random, if any.
@@ -258,43 +375,16 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
 
       bool random_signals_hello_retry_request() const;
 
-      Server_Hello(Handshake_IO& io,
-                   Handshake_Hash& hash,
-                   const Policy& policy,
-                   Callbacks& cb,
-                   RandomNumberGenerator& rng,
-                   const std::vector<uint8_t>& secure_reneg_info,
-                   const Client_Hello& client_hello,
-                   const Server_Hello::Settings& settings,
-                   const std::string next_protocol);
-
-      Server_Hello(Handshake_IO& io,
-                   Handshake_Hash& hash,
-                   const Policy& policy,
-                   Callbacks& cb,
-                   RandomNumberGenerator& rng,
-                   const std::vector<uint8_t>& secure_reneg_info,
-                   const Client_Hello& client_hello,
-                   Session& resumed_session,
-                   bool offer_session_ticket,
-                   const std::string& next_protocol);
-
-      explicit Server_Hello(const std::vector<uint8_t>& buf);
-
-      ~Server_Hello() override;
-
-   private:
-      std::vector<uint8_t> serialize() const override;
-
-      std::unique_ptr<Server_Hello_Impl> m_impl;
+      std::vector<Protocol_Version> supported_versions() const;
    };
+
+#endif // BOTAN_HAS_TLS_13
 
 class BOTAN_UNSTABLE_API Encrypted_Extensions final : public Handshake_Message
    {
    public:
       explicit Encrypted_Extensions(const std::vector<uint8_t>& buf);
 
-      ~Encrypted_Extensions() override = default;
       Handshake_Type type() const override { return Handshake_Type::ENCRYPTED_EXTENSIONS; }
 
       const Extensions& extensions() const { return m_extensions; }
@@ -395,12 +485,18 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
       * @param buf the serialized message
       * @param policy the TLS policy
       * @param side is this a SERVER or CLIENT certificate message
-      * @param request_extensions Extensions of Client_Hello or Certificate_Req messages
       */
       Certificate_13(const std::vector<uint8_t>& buf,
                      const Policy& policy,
-                     const Connection_Side side,
-                     const Extensions& request_extensions);
+                     const Connection_Side side);
+
+      /**
+      * Validate a Certificate message regarding what extensions are expected based on
+      * previous handshake messages.
+      *
+      * @param requested_extensions Extensions of Client_Hello or Certificate_Req messages
+      */
+      void validate_extensions(const Extensions& requested_extensions) const;
 
       std::vector<uint8_t> serialize() const override;
 
@@ -447,6 +543,7 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
 
 /**
 * Certificate Request Message
+* TODO: this is 1.2 only
 */
 class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
    {
@@ -459,20 +556,21 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
 
       const std::vector<Signature_Scheme>& signature_schemes() const;
 
-      Certificate_Req(const Protocol_Version& protocol_version,
-                      Handshake_IO& io,
+      Certificate_Req(Handshake_IO& io,
                       Handshake_Hash& hash,
                       const Policy& policy,
                       const std::vector<X509_DN>& allowed_cas);
 
-      explicit Certificate_Req(const Protocol_Version& protocol_version, const std::vector<uint8_t>& buf);
+      explicit Certificate_Req(const std::vector<uint8_t>& buf);
 
       std::vector<uint8_t> serialize() const override;
 
       ~Certificate_Req() override;
 
    private:
-      std::unique_ptr<Certificate_Req_Impl> m_impl;
+      std::vector<X509_DN> m_names;
+      std::vector<std::string> m_cert_key_types;
+      std::vector<Signature_Scheme> m_schemes;
    };
 
 class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message
@@ -488,9 +586,9 @@ class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message
 
       Certificate_Verify(const std::vector<uint8_t>& buf);
 
-   protected:
       std::vector<uint8_t> serialize() const override;
 
+   protected:
       std::vector<uint8_t> m_signature;
       Signature_Scheme m_scheme = Signature_Scheme::NONE;
    };
@@ -514,33 +612,37 @@ class BOTAN_UNSTABLE_API Certificate_Verify_12 final : public Certificate_Verify
                   const Policy& policy) const;
    };
 
+#if defined(BOTAN_HAS_TLS_13)
+
 /**
 * Certificate Verify Message
 */
 class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
    {
    public:
-      using Certificate_Verify::Certificate_Verify;
-
       /**
-      * Check the signature on a certificate verify message
-      * @param cert the purported certificate
-      * @param state the handshake state
-      * @param policy the TLS policy
-      * @param side whether this is a server or client cert verification
-      * @param transcript_hash transcript hash of previous handshake messages
+      * Deserialize a Certificate message
+      * @param buf the serialized message
+      * @param side is this a SERVER or CLIENT certificate message
       */
+      Certificate_Verify_13(const std::vector<uint8_t>& buf,
+                            const Connection_Side side);
+
       bool verify(const X509_Certificate& cert,
-                  const Handshake_State& state,
-                  const Policy& policy,
-                  const Connection_Side side,
-                  const secure_vector<uint8_t>& transcript_hash) const;
+                  const std::vector<Signature_Scheme>& offered_schemes,
+                  Callbacks& callbacks,
+                  const Transcript_Hash& transcript_hash) const;
+
+   private:
+      Connection_Side m_side;
    };
+
+#endif
 
 /**
 * Finished Message
 */
-class BOTAN_UNSTABLE_API Finished final : public Handshake_Message
+class BOTAN_UNSTABLE_API Finished : public Handshake_Message
    {
    public:
       explicit Finished(const std::vector<uint8_t>& buf);
@@ -549,29 +651,36 @@ class BOTAN_UNSTABLE_API Finished final : public Handshake_Message
 
       std::vector<uint8_t> verify_data() const;
 
-      bool verify(const Handshake_State& state,
-                  Connection_Side side) const;
-
-      Finished(Handshake_IO& io,
-               Handshake_State& state,
-               Connection_Side side);
-
-#if defined(BOTAN_HAS_TLS_13)
-      Finished(Handshake_IO& io,
-               Handshake_State& state,
-               Cipher_State* cipher_state,
-               const secure_vector<uint8_t>& transcript_hash);
-
-      bool verify(Cipher_State* cipher_state,
-                  const secure_vector<uint8_t>& transcript_hash) const;
-#endif
-
-   private:
       std::vector<uint8_t> serialize() const override;
 
+   protected:
+      Finished() = default;
       std::vector<uint8_t> m_verification_data;
    };
 
+class BOTAN_UNSTABLE_API Finished_12 final : public Finished
+   {
+   public:
+      using Finished::Finished;
+      Finished_12(Handshake_IO& io,
+                  Handshake_State& state,
+                  Connection_Side side);
+
+      bool verify(const Handshake_State& state, Connection_Side side) const;
+   };
+
+#if defined(BOTAN_HAS_TLS_13)
+class BOTAN_UNSTABLE_API Finished_13 final : public Finished
+   {
+   public:
+      using Finished::Finished;
+      Finished_13(Cipher_State* cipher_state,
+                  const Transcript_Hash& transcript_hash);
+
+      bool verify(Cipher_State* cipher_state,
+                  const Transcript_Hash& transcript_hash) const;
+   };
+#endif
 
 /**
 * Hello Request Message
@@ -659,7 +768,7 @@ class BOTAN_UNSTABLE_API Server_Hello_Done final : public Handshake_Message
 /**
 * New Session Ticket Message
 */
-class BOTAN_UNSTABLE_API New_Session_Ticket final : public Handshake_Message
+class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return NEW_SESSION_TICKET; }
@@ -667,22 +776,40 @@ class BOTAN_UNSTABLE_API New_Session_Ticket final : public Handshake_Message
       uint32_t ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
       const std::vector<uint8_t>& ticket() const { return m_ticket; }
 
-      New_Session_Ticket(Handshake_IO& io,
-                         Handshake_Hash& hash,
-                         const std::vector<uint8_t>& ticket,
-                         uint32_t lifetime);
+      New_Session_Ticket_12(Handshake_IO& io,
+                            Handshake_Hash& hash,
+                            const std::vector<uint8_t>& ticket,
+                            uint32_t lifetime);
 
-      New_Session_Ticket(Handshake_IO& io,
-                         Handshake_Hash& hash);
+      New_Session_Ticket_12(Handshake_IO& io,
+                            Handshake_Hash& hash);
 
-      explicit New_Session_Ticket(const std::vector<uint8_t>& buf);
+      explicit New_Session_Ticket_12(const std::vector<uint8_t>& buf);
 
-   private:
       std::vector<uint8_t> serialize() const override;
 
+   private:
       uint32_t m_ticket_lifetime_hint = 0;
       std::vector<uint8_t> m_ticket;
    };
+
+#if defined(BOTAN_HAS_TLS_13)
+
+class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
+   {
+   public:
+      Handshake_Type type() const override { return NEW_SESSION_TICKET; }
+
+      explicit New_Session_Ticket_13(const std::vector<uint8_t>& buf);
+
+      std::vector<uint8_t> serialize() const override;
+
+   private:
+
+   // TODO: implement this message fully
+   };
+
+#endif
 
 /**
 * Change Cipher Spec
@@ -695,6 +822,59 @@ class BOTAN_UNSTABLE_API Change_Cipher_Spec final : public Handshake_Message
       std::vector<uint8_t> serialize() const override
          { return std::vector<uint8_t>(1, 1); }
    };
+
+#if defined(BOTAN_HAS_TLS_13)
+
+namespace {
+template <typename T>
+struct as_wrapped_references
+   {
+   };
+
+template <typename... AlternativeTs>
+struct as_wrapped_references<std::variant<AlternativeTs...>>
+   {
+   using type = std::variant<std::reference_wrapper<AlternativeTs>...>;
+   };
+
+template <typename T>
+using as_wrapped_references_t = typename as_wrapped_references<T>::type;
+}
+
+// Handshake message types from RFC 8446 4.
+using Handshake_Message_13 = std::variant<
+                             Client_Hello_13,
+                             Server_Hello_13,
+                             // Hello_Retry_Request ?
+                             // End_Of_Early_Data,
+                             Encrypted_Extensions,
+                             Certificate_13,
+                             // Certificate_Req_13,
+                             Certificate_Verify_13,
+                             Finished_13,
+
+                             // Post-Handshake Messages
+                             New_Session_Ticket_13
+                             // Key_Update,
+                             >;
+
+using Handshake_Message_13_Ref = as_wrapped_references_t<Handshake_Message_13>;
+
+using Server_Handshake_13_Message = std::variant<
+                                    Server_Hello_13,
+                                    Encrypted_Extensions,
+                                    Certificate_13,
+                                    Certificate_Verify_13,
+                                    Finished_13,
+                                    New_Session_Ticket_13>;
+using Server_Handshake_13_Message_Ref = as_wrapped_references_t<Server_Handshake_13_Message>;
+
+using Client_Handshake_13_Message = std::variant<
+                                    Client_Hello_13,
+                                    Finished_13>;
+using Client_Handshake_13_Message_Ref = as_wrapped_references_t<Client_Handshake_13_Message>;
+
+#endif // BOTAN_HAS_TLS_13
 
 }
 

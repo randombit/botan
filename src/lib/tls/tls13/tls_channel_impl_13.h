@@ -10,6 +10,8 @@
 
 #include <botan/internal/tls_channel_impl.h>
 #include <botan/internal/tls_record_layer_13.h>
+#include <botan/internal/tls_handshake_layer_13.h>
+#include <botan/internal/tls_transcript_hash_13.h>
 
 namespace Botan {
 
@@ -19,7 +21,6 @@ namespace TLS {
 
 class Connection_Sequence_Numbers;
 class Connection_Cipher_State;
-class Handshake_State;
 
 /**
 * Generic interface for TLSv.12 endpoint
@@ -121,25 +122,20 @@ class Channel_Impl_13 : public Channel_Impl
       bool timeout_check() override;
 
    protected:
-      Handshake_State& create_handshake_state(Protocol_Version version) override;
-
       Callbacks& callbacks() const { return m_callbacks; }
       Session_Manager& session_manager() { return m_session_manager; }
       RandomNumberGenerator& rng() { return m_rng; }
       const Policy& policy() const { return m_policy; }
 
-      virtual void process_handshake_msg(Handshake_State& active_state,
-                                         Handshake_Type type,
-                                         const std::vector<uint8_t>& contents) = 0;
+      virtual void process_handshake_msg(Handshake_Message_13 msg) = 0;
 
       virtual void process_post_handshake_msg(Handshake_State&,
                                               Handshake_Type,
                                               const std::vector<uint8_t>&) {}
 
+      void send_handshake_message(const Handshake_Message_13_Ref message);
 
    private:
-      const Handshake_State* handshake_state() const { return m_handshake_state.get(); }
-
       void send_record(uint8_t record_type, const std::vector<uint8_t>& record);
 
       void send_record_array(uint16_t epoch, uint8_t record_type,
@@ -154,7 +150,7 @@ class Channel_Impl_13 : public Channel_Impl
 
    protected:
       const Connection_Side m_side;
-      std::unique_ptr<HashFunction> m_transcript_hash;
+      Transcript_Hash_State m_transcript_hash;
       std::unique_ptr<Cipher_State> m_cipher_state;
 
    private:
@@ -170,12 +166,8 @@ class Channel_Impl_13 : public Channel_Impl
       std::unique_ptr<Connection_Sequence_Numbers> m_sequence_numbers;
 
       /* handshake state */
-      //TODO: Deciding whether single handshake_state is fine as pending/active is no longer
-      // representing real state of handshake. Either single handshake state can be used, or
-      // 4: plain / early_data / handshake_traffic / application_data_traffic
-      std::unique_ptr<Handshake_State> m_handshake_state;
-
       Record_Layer m_record_layer;
+      Handshake_Layer m_handshake_layer;
 
       /* I/O buffers */
       secure_vector<uint8_t> m_writebuf;

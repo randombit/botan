@@ -71,7 +71,6 @@ Client_Impl_12::Client_Impl_12(Callbacks& callbacks,
                                size_t io_buf_sz) :
    Channel_Impl_12(callbacks, session_manager, rng, policy,
                    false, offer_version.is_datagram_protocol(), io_buf_sz),
-   Client_Impl(static_cast<Channel_Impl&>(*this)),
    m_creds(creds),
    m_info(info)
    {
@@ -103,8 +102,8 @@ Client_Impl_12::get_peer_cert_chain(const Handshake_State& state) const
 void Client_Impl_12::initiate_handshake(Handshake_State& state,
                                         bool force_full_renegotiation)
    {
-   send_client_hello(state, force_full_renegotiation,
-                     policy().latest_supported_version(state.version().is_datagram_protocol()));
+   BOTAN_UNUSED(state, force_full_renegotiation);
+   // TODO
    }
 
 void Client_Impl_12::send_client_hello(Handshake_State& state_base,
@@ -137,14 +136,14 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
          if(policy().acceptable_ciphersuite(session_info->ciphersuite()) && session_version_ok)
             {
             state.client_hello(
-               new Client_Hello(state.handshake_io(),
-                                state.hash(),
-                                policy(),
-                                callbacks(),
-                                rng(),
-                                secure_renegotiation_data_for_client_hello(),
-                                *session_info,
-                                next_protocols));
+               new Client_Hello_12(state.handshake_io(),
+                                   state.hash(),
+                                   policy(),
+                                   callbacks(),
+                                   rng(),
+                                   secure_renegotiation_data_for_client_hello(),
+                                   *session_info,
+                                   next_protocols));
 
             state.resumed_session = std::move(session_info);
             }
@@ -154,15 +153,15 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
    if(!state.client_hello()) // not resuming
       {
       Client_Hello::Settings client_settings(version, m_info.hostname());
-      state.client_hello(new Client_Hello(
-         state.handshake_io(),
-         state.hash(),
-         policy(),
-         callbacks(),
-         rng(),
-         secure_renegotiation_data_for_client_hello(),
-         client_settings,
-         next_protocols));
+      state.client_hello(new Client_Hello_12(
+                         state.handshake_io(),
+                         state.hash(),
+                         policy(),
+                         callbacks(),
+                         rng(),
+                         secure_renegotiation_data_for_client_hello(),
+                         client_settings,
+                         next_protocols));
       }
 
    secure_renegotiation_check(state.client_hello());
@@ -215,7 +214,8 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          if(secure_renegotiation_supported() || policy().allow_insecure_renegotiation())
             {
             state.m_is_reneg = true;
-            this->initiate_handshake(state, true);
+            send_client_hello(state, true /* force_full_renegotiation */,
+                              policy().latest_supported_version(state.version().is_datagram_protocol()));
             }
          else
             {
@@ -253,7 +253,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == SERVER_HELLO)
       {
-      state.server_hello(new Server_Hello(contents));
+      state.server_hello(new Server_Hello_12(contents));
 
       if(!state.server_hello()->legacy_version().valid())
          {
@@ -575,7 +575,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
    else if(type == CERTIFICATE_REQUEST)
       {
       state.set_expected_next(SERVER_HELLO_DONE);
-      state.cert_req(new Certificate_Req(state.version(), contents));
+      state.cert_req(new Certificate_Req(contents));
       }
    else if(type == SERVER_HELLO_DONE)
       {
@@ -670,7 +670,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
       change_cipher_spec_writer(CLIENT);
 
-      state.client_finished(new Finished(state.handshake_io(), state, CLIENT));
+      state.client_finished(new Finished_12(state.handshake_io(), state, CLIENT));
 
       if(state.server_hello()->supports_session_ticket())
          state.set_expected_next(NEW_SESSION_TICKET);
@@ -679,7 +679,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == NEW_SESSION_TICKET)
       {
-      state.new_session_ticket(new New_Session_Ticket(contents));
+      state.new_session_ticket(new New_Session_Ticket_12(contents));
 
       state.set_expected_next(HANDSHAKE_CCS);
       }
@@ -695,7 +695,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
                              "Have data remaining in buffer after Finished");
 
-      state.server_finished(new Finished(contents));
+      state.server_finished(new Finished_12(contents));
 
       if(!state.server_finished()->verify(state, SERVER))
          throw TLS_Exception(Alert::DECRYPT_ERROR,
@@ -708,7 +708,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          // session resume case
          state.handshake_io().send(Change_Cipher_Spec());
          change_cipher_spec_writer(CLIENT);
-         state.client_finished(new Finished(state.handshake_io(), state, CLIENT));
+         state.client_finished(new Finished_12(state.handshake_io(), state, CLIENT));
          }
 
       std::vector<uint8_t> session_id = state.server_hello()->session_id();

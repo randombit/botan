@@ -12,7 +12,6 @@
 #include <botan/tls_channel.h>
 #include <botan/tls_policy.h>
 #include <botan/credentials_manager.h>
-#include <botan/internal/tls_client_impl.h>
 #include <botan/internal/tls_channel_impl_12.h>
 #include <vector>
 #include <memory>
@@ -24,7 +23,7 @@ namespace TLS {
 /**
 * SSL/TLS Client 1.2 implementation
 */
-class Client_Impl_12 : public Channel_Impl_12, public Client_Impl
+class Client_Impl_12 : public Channel_Impl_12
    {
    public:
 

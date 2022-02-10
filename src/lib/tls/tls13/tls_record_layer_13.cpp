@@ -121,27 +121,10 @@ struct TLSPlaintext_Header
 Record_Layer::Record_Layer(Connection_Side side)
    : m_side(side), m_initial_record(true) {}
 
-Record_Layer::ReadResult<std::vector<Record>>
-      Record_Layer::parse_records(const std::vector<uint8_t>& data_from_peer,
-                                  Cipher_State* cipher_state)
+
+void Record_Layer::copy_data(const std::vector<uint8_t>& data_from_peer)
    {
-   std::vector<Record> records_received;
-
    m_read_buffer.insert(m_read_buffer.end(), data_from_peer.cbegin(), data_from_peer.cend());
-   while(true)
-      {
-      auto result = read_record(cipher_state);
-
-      if(std::holds_alternative<BytesNeeded>(result))
-         {
-         if(records_received.empty())
-            { return std::get<BytesNeeded>(result); }
-         return records_received;
-         }
-
-      records_received.emplace_back(std::move(std::get<Record>(result)));
-      m_initial_record = false;
-      }
    }
 
 std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
@@ -250,7 +233,7 @@ std::vector<uint8_t> Record_Layer::prepare_dummy_ccs_record()
    }
 
 
-Record_Layer::ReadResult<Record> Record_Layer::read_record(Cipher_State* cipher_state)
+Record_Layer::ReadResult<Record> Record_Layer::next_record(Cipher_State* cipher_state)
    {
    BOTAN_ASSERT(!m_initial_record || m_side == Connection_Side::SERVER,
                 "the initial record is always received by the server");
@@ -306,6 +289,7 @@ Record_Layer::ReadResult<Record> Record_Layer::read_record(Cipher_State* cipher_
       record.fragment.pop_back();
       }
 
+   m_initial_record = false;
    return record;
    }
 }

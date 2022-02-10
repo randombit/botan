@@ -8,9 +8,9 @@
 #ifndef BOTAN_TLS_CLIENT_IMPL_13_H_
 #define BOTAN_TLS_CLIENT_IMPL_13_H_
 
-#include <botan/internal/tls_client_impl.h>
 #include <botan/internal/tls_channel_impl_13.h>
-#include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_handshake_state_13.h>
+#include <botan/internal/tls_handshake_transitions.h>
 #include <botan/tls_server_info.h>
 
 namespace Botan {
@@ -21,7 +21,7 @@ namespace TLS {
 /**
 * SSL/TLS Client 1.3 implementation
 */
-class Client_Impl_13 : public Channel_Impl_13, public Client_Impl
+class Client_Impl_13 : public Channel_Impl_13
    {
    public:
 
@@ -66,26 +66,26 @@ class Client_Impl_13 : public Channel_Impl_13, public Client_Impl
       std::string application_protocol() const override { return m_application_protocol; }
 
    private:
-      std::vector<X509_Certificate>
-         get_peer_cert_chain(const Handshake_State& state) const override;
+      void process_handshake_msg(Handshake_Message_13 msg) override;
 
-      void initiate_handshake(Handshake_State& state,
-                              bool force_full_renegotiation) override;
+      void send_client_hello(const std::vector<std::string>& next_protocols = {});
 
-      void process_handshake_msg(Handshake_State& active_state,
-                                 Handshake_Type type,
-                                 const std::vector<uint8_t>& contents) override;
+      void handle(const Server_Hello_13& server_hello_msg);
+      void handle(const Encrypted_Extensions& encrypted_extensions_msg);
+      void handle(const Certificate_13& certificate_msg);
+      void handle(const Certificate_Verify_13& certificate_verify_msg);
+      void handle(const Finished_13& finished_msg);
+      void handle(const New_Session_Ticket_13& new_session_ticket);
 
-      std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
-
-      void send_client_hello(Handshake_State& state,
-                             Protocol_Version version,
-                             const std::vector<std::string>& next_protocols = {});
+      std::vector<Handshake_Type> expected_post_handshake_messages() const;
 
    private:
       Credentials_Manager& m_creds;
       const Server_Information m_info;
       std::string m_application_protocol;
+
+      Client_Handshake_State_13 m_handshake_state;
+      Handshake_Transitions m_transitions;
    };
 
 }

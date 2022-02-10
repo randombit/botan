@@ -24,20 +24,10 @@ tls_version.h
 </header:public>
 
 <header:internal>
-msg_client_hello_impl.h
-msg_cert_req_impl.h
-msg_server_hello_impl.h
 tls_channel_impl.h
-tls_client_impl.h
-tls_handshake_hash.h
-tls_handshake_io.h
-tls_handshake_state.h
+tls_handshake_transitions.h
 tls_reader.h
 tls_server_impl.h
-tls_seq_numbers.h
-tls_session_key.h
-tls_message_factory.h
-tls_endpoint_factory.h
 </header:internal>
 
 <requires>
@@ -51,11 +41,9 @@ eme_pkcs1
 emsa_pkcs1
 gcm
 hmac
-prf_tls
 rng
 rsa
 sha2_32
 sha2_64
-tls12
 x509
 </requires>
