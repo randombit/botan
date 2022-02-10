@@ -7,6 +7,8 @@ Version 3.0.0, Not Yet Released
 * Botan is now a C++17 codebase; compiler requirements have been
   increased to GCC 9, Clang 7, or MSVC 2019. (GH #2455)
 
+* Add support for Kyber post-quantum KEM (GH #2872 #2500)
+
 * Support for TLS 1.0, TLS 1.1, and DTLS 1.0 have been removed (GH #2631)
 
 * Remove many deprecated headers (GH #2456)
@@ -100,6 +102,9 @@ Version 3.0.0, Not Yet Released
 * Fix a bug in BigInt::operator>> where if the shift size exceeded the size
   of the integer by at least 32 bits, it was possible an exception would
   be thrown instead of computing the correct result. (GH #2672)
+
+* Fix bugs in GMAC and SipHash where they would require a fresh key be
+  provided for each message. (GH #2908)
 
 * Remove the entropy source which walked ``/proc`` as it is no longer
   required on modern systems. (GH #2692)
