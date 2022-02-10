@@ -7,8 +7,6 @@ TLS_12 -> 20210608
 
 <header:internal>
 msg_cert_req_impl_12.h
-msg_cert_verify_impl_12.h
-msg_certificate_impl_12.h
 msg_server_hello_impl_12.h
 msg_client_hello_impl_12.h
 tls_channel_impl_12.h

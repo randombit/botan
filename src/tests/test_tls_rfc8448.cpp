@@ -176,6 +176,17 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          session_activated_called = true;
          }
 
+      void tls_verify_cert_chain(
+         const std::vector<Botan::X509_Certificate>& cert_chain,
+         const std::vector<std::optional<Botan::OCSP::Response>>&,
+         const std::vector<Botan::Certificate_Store*>&,
+         Botan::Usage_Type,
+         const std::string&,
+         const Botan::TLS::Policy&) override
+         {
+         certificate_chain = cert_chain;
+         }
+
       std::vector<uint8_t> pull_send_buffer()
          {
          return std::exchange(send_buffer, std::vector<uint8_t>());
@@ -190,6 +201,8 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
 
    public:
       bool session_activated_called;
+
+      std::vector<Botan::X509_Certificate> certificate_chain;
 
    private:
       std::vector<uint8_t> send_buffer;
@@ -289,6 +302,11 @@ class TLS_Context
       uint64_t last_received_seq_no() const { return callbacks.last_received_seq_no(); }
 
       bool session_activated_called() const { return callbacks.session_activated_called; }
+
+      const std::vector<Botan::X509_Certificate>& certs_verified() const
+         {
+         return callbacks.certificate_chain;
+         }
 
       virtual void send(const std::vector<uint8_t>& data) = 0;
 
@@ -423,6 +441,7 @@ class Test_TLS_RFC8448 final : public Test
          ctx.client.received_data(server_hello_b);
 
          result.confirm("client is not yet active", !ctx.client.is_active());
+         result.confirm("certificate verify callback was not yet called", ctx.certs_verified().empty());
          result.confirm("session activated callback was not yet called", !ctx.session_activated_called());
 
          const auto server_handshake_messages = Botan::hex_decode(
@@ -461,6 +480,9 @@ class Test_TLS_RFC8448 final : public Test
                                                "bf 02 53 fe 51 75 be 89 8e 75 0e dc 53 37 0d 2b");
 
          ctx.client.received_data(server_handshake_messages);
+
+         result.confirm("certificate verify callback was called", !ctx.certs_verified().empty());
+         result.confirm("correct certificate", ctx.certs_verified().front() == server_certificate());
 
          result.confirm("client is active", ctx.client.is_active());
          result.confirm("session activated callback was called", ctx.session_activated_called());

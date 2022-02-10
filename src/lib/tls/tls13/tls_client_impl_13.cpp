@@ -102,7 +102,7 @@ void Client_Impl_13::process_handshake_msg(
    //       new solution for "transcript hash" we probably want to hash before this
    //       header is stripped.
    secure_vector<uint8_t> previous_transcript_hash;
-   if(type == FINISHED)
+   if(type == CERTIFICATE_VERIFY || type == FINISHED)
       {
       // When receiving a finished message, we need the old transcript hash to verify the message.
       previous_transcript_hash = state.hash().final(state.ciphersuite().prf_algo());
@@ -187,10 +187,45 @@ void Client_Impl_13::process_handshake_msg(
       }
    else if(type == CERTIFICATE)
       {
+      state.server_certs(new Certificate_13(contents, policy(), SERVER, state.client_hello()->extensions()));
+
+      const auto& server_certs = state.server_certs_13()->cert_chain();
+
+      // RFC 8446 4.4.2.4
+      //    If the server supplies an empty Certificate message, the client
+      //    MUST abort the handshake with a "decode_error" alert.
+      if(server_certs.empty())
+         { throw TLS_Exception(Alert::DECODE_ERROR, "Client: No certificates sent by server"); }
+
+      auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-client", m_info.hostname());
+
+      std::vector<X509_Certificate> certs;
+      std::transform(server_certs.cbegin(), server_certs.cend(), std::back_inserter(certs),
+      [](const auto& entry) { return entry.certificate; });
+
+      callbacks().tls_verify_cert_chain(certs,
+                                        {},  // TODO: Support OCSP stapling via RFC8446 4.4.2.1
+                                        trusted_CAs,
+                                        Usage_Type::TLS_SERVER_AUTH,
+                                        m_info.hostname(),
+                                        policy());
+
       state.set_expected_next(CERTIFICATE_VERIFY);
       }
    else if(type == CERTIFICATE_VERIFY)
       {
+      state.server_verify(new Certificate_Verify_13(contents));
+
+      bool sig_valid = state.server_verify_13()->verify(
+         state.server_certs_13()->cert_chain().front().certificate,
+         state,
+         policy(),
+         SERVER,
+         previous_transcript_hash);
+
+     if(!sig_valid)
+         throw TLS_Exception(Alert::DECRYPT_ERROR, "Server certificate verification failed");
+
       state.set_expected_next(FINISHED);
       }
    else if(type == FINISHED)

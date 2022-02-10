@@ -24,7 +24,7 @@
 #include <optional>
 
 #if defined(BOTAN_HAS_CECPQ1)
-  #include <botan/cecpq1.h>
+   #include <botan/cecpq1.h>
 #endif
 
 namespace Botan {
@@ -40,7 +40,6 @@ class Handshake_State;
 class Callbacks;
 class Client_Hello_Impl;
 class Server_Hello_Impl;
-class Certificate_Verify_Impl;
 class Certificate_Req_Impl;
 class Certificate_Impl;
 class Protocol_Version;
@@ -341,31 +340,79 @@ class BOTAN_UNSTABLE_API Client_Key_Exchange final : public Handshake_Message
    };
 
 /**
-* Certificate Message
+* Certificate Message of TLS 1.2
 */
-class BOTAN_UNSTABLE_API Certificate final : public Handshake_Message
+class BOTAN_UNSTABLE_API Certificate_12 final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override;
-      const std::vector<X509_Certificate>& cert_chain() const;
+      Handshake_Type type() const override { return CERTIFICATE; }
+      const std::vector<X509_Certificate>& cert_chain() const { return m_certs; }
 
-      size_t count() const;
-      bool empty() const;
+      size_t count() const { return m_certs.size(); }
+      bool empty() const { return m_certs.empty(); }
 
-      Certificate(const Protocol_Version& protocol_version,
-                  Handshake_IO& io,
-                  Handshake_Hash& hash,
-                  const std::vector<X509_Certificate>& certs);
+      Certificate_12(Handshake_IO& io,
+                     Handshake_Hash& hash,
+                     const std::vector<X509_Certificate>& certs);
 
-      Certificate(const Protocol_Version& protocol_version,
-                  const std::vector<uint8_t>& buf, const Policy &policy);
-
-      ~Certificate() override;
+      Certificate_12(const std::vector<uint8_t>& buf, const Policy& policy);
 
       std::vector<uint8_t> serialize() const override;
 
    private:
-      std::unique_ptr<Certificate_Impl> m_impl;
+      std::vector<X509_Certificate> m_certs;
+   };
+
+/**
+* Certificate Message of TLS 1.3
+*/
+class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
+   {
+   public:
+      struct Certificate_Entry
+         {
+         // TODO: RFC 8446 4.4.2 specifies the possibility to negotiate the usage
+         //       of a single raw public key in lieu of the X.509 certificate
+         //       chain. This is left for future work.
+         X509_Certificate certificate;
+         Extensions       extensions;
+         };
+
+   public:
+      Handshake_Type type() const override { return CERTIFICATE; }
+      const std::vector<Certificate_Entry>& cert_chain() const { return m_entries; }
+
+      size_t count() const { return m_entries.size(); }
+      bool empty() const { return m_entries.empty(); }
+
+      Certificate_13(Handshake_IO& io,
+                     Handshake_Hash& hash,
+                     std::vector<Certificate_Entry> certs,
+                     const Connection_Side side);
+
+      /**
+      * Deserialize a Certificate message
+      * @param buf the serialized message
+      * @param policy the TLS policy
+      * @param side is this a SERVER or CLIENT certificate message
+      * @param request_extensions Extensions of Client_Hello or Certificate_Req messages
+      */
+      Certificate_13(const std::vector<uint8_t>& buf,
+                     const Policy& policy,
+                     const Connection_Side side,
+                     const Extensions& request_extensions);
+
+      std::vector<uint8_t> serialize() const override;
+
+   private:
+      // RFC 8446 4.4.2
+      //    [...] (in the case of server authentication),
+      //    this field SHALL be zero length.
+      //
+      // TODO: implement when adding support for client certificates
+      std::vector<uint8_t>           m_request_context;
+      std::vector<Certificate_Entry> m_entries;
+      Connection_Side                m_side;
    };
 
 /**
@@ -391,7 +438,7 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
        */
       Certificate_Status(Handshake_IO& io,
                          Handshake_Hash& hash,
-                         std::vector<uint8_t> const& raw_response_bytes );
+                         std::vector<uint8_t> const& raw_response_bytes);
 
    private:
       std::vector<uint8_t> serialize() const override;
@@ -413,10 +460,10 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
       const std::vector<Signature_Scheme>& signature_schemes() const;
 
       Certificate_Req(const Protocol_Version& protocol_version,
-             Handshake_IO& io,
-             Handshake_Hash& hash,
-             const Policy& policy,
-             const std::vector<X509_DN>& allowed_cas);
+                      Handshake_IO& io,
+                      Handshake_Hash& hash,
+                      const Policy& policy,
+                      const std::vector<X509_DN>& allowed_cas);
 
       explicit Certificate_Req(const Protocol_Version& protocol_version, const std::vector<uint8_t>& buf);
 
@@ -428,13 +475,33 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
       std::unique_ptr<Certificate_Req_Impl> m_impl;
    };
 
-/**
-* Certificate Verify Message
-*/
-class BOTAN_UNSTABLE_API Certificate_Verify final : public Handshake_Message
+class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CERTIFICATE_VERIFY; }
+
+      Certificate_Verify(Handshake_IO& io,
+                         Handshake_State& state,
+                         const Policy& policy,
+                         RandomNumberGenerator& rng,
+                         const Private_Key* key);
+
+      Certificate_Verify(const std::vector<uint8_t>& buf);
+
+   protected:
+      std::vector<uint8_t> serialize() const override;
+
+      std::vector<uint8_t> m_signature;
+      Signature_Scheme m_scheme = Signature_Scheme::NONE;
+   };
+
+/**
+* Certificate Verify Message
+*/
+class BOTAN_UNSTABLE_API Certificate_Verify_12 final : public Certificate_Verify
+   {
+   public:
+      using Certificate_Verify::Certificate_Verify;
 
       /**
       * Check the signature on a certificate verify message
@@ -445,22 +512,29 @@ class BOTAN_UNSTABLE_API Certificate_Verify final : public Handshake_Message
       bool verify(const X509_Certificate& cert,
                   const Handshake_State& state,
                   const Policy& policy) const;
+   };
 
-      Certificate_Verify(Handshake_IO& io,
-                         Handshake_State& state,
-                         const Policy& policy,
-                         RandomNumberGenerator& rng,
-                         const Private_Key* key);
+/**
+* Certificate Verify Message
+*/
+class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
+   {
+   public:
+      using Certificate_Verify::Certificate_Verify;
 
-      Certificate_Verify(const Protocol_Version& protocol_version,
-                         const std::vector<uint8_t>& buf);
-
-      ~Certificate_Verify() override;
-
-   private:
-      std::vector<uint8_t> serialize() const override;
-
-      std::unique_ptr<Certificate_Verify_Impl> m_impl;
+      /**
+      * Check the signature on a certificate verify message
+      * @param cert the purported certificate
+      * @param state the handshake state
+      * @param policy the TLS policy
+      * @param side whether this is a server or client cert verification
+      * @param transcript_hash transcript hash of previous handshake messages
+      */
+      bool verify(const X509_Certificate& cert,
+                  const Handshake_State& state,
+                  const Policy& policy,
+                  const Connection_Side side,
+                  const secure_vector<uint8_t>& transcript_hash) const;
    };
 
 /**

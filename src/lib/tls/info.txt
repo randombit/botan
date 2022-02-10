@@ -25,8 +25,6 @@ tls_version.h
 
 <header:internal>
 msg_client_hello_impl.h
-msg_certificate_impl.h
-msg_cert_verify_impl.h
 msg_cert_req_impl.h
 msg_server_hello_impl.h
 tls_channel_impl.h

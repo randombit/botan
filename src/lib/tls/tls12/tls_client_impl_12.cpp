@@ -457,7 +457,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == CERTIFICATE)
       {
-      state.server_certs(new Certificate(state.version(), contents, policy()));
+      state.server_certs(new Certificate_12(contents, policy()));
 
       const std::vector<X509_Certificate>& server_certs =
          state.server_certs()->cert_chain();
@@ -632,10 +632,9 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
                                     "tls-client",
                                     m_info.hostname());
 
-         state.client_certs(new Certificate(state.version(),
-                                            state.handshake_io(),
-                                            state.hash(),
-                                            client_certs));
+         state.client_certs(new Certificate_12(state.handshake_io(),
+                                               state.hash(),
+                                               client_certs));
          }
 
       state.client_kex(
@@ -659,11 +658,11 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
                                     m_info.hostname());
 
          state.client_verify(
-            new Certificate_Verify(state.handshake_io(),
-                                   state,
-                                   policy(),
-                                   rng(),
-                                   private_key)
+            new Certificate_Verify_12(state.handshake_io(),
+                                      state,
+                                      policy(),
+                                      rng(),
+                                      private_key)
             );
          }
 

@@ -731,6 +731,8 @@ class BOTAN_UNSTABLE_API Extensions final
          }
 
       Extensions() = default;
+      Extensions(Extensions&&) = default;
+      Extensions& operator=(Extensions&&) = default;
 
       Extensions(TLS_Data_Reader& reader, Connection_Side side)
          {
