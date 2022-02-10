@@ -33,7 +33,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
    {
    public:
       TLS_Client()
-         : Command("tls_client host --port=443 --print-certs --policy=default "
+         : Command("tls_client host --port=443 --print-certs --debug --policy=default "
                    "--skip-system-cert-store --trusted-cas= --tls-version=default "
                    "--session-db= --session-db-pass= --next-protocols= --type=tcp")
          {
@@ -170,6 +170,12 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                   {
                   output() << "Socket error: " << errno << " " << err_to_string(errno) << "\n";
                   continue;
+                  }
+
+               if (flag_set("debug"))
+                  {
+                  output() << "<<< received (" << got << " bytes)\n"
+                           << Botan::hex_encode(buf, got) << "\n<<<\n";
                   }
 
                client.received_data(buf, got);
@@ -351,6 +357,11 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          {
          size_t offset = 0;
 
+         if (flag_set("debug"))
+            {
+            output() << ">>> sending (" << length << " bytes)\n" << Botan::hex_encode(buf,length);
+            }
+
          while(length)
             {
             ssize_t sent = ::send(m_sockfd, buf + offset, length, MSG_NOSIGNAL);
@@ -369,6 +380,11 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
             offset += sent;
             length -= sent;
+            }
+
+         if(flag_set("debug"))
+            {
+            output() << "\n>>> sending done\n";
             }
          }
 
