@@ -24,7 +24,7 @@ namespace {
 class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher
    {
    public:
-      OCB_Wide_Test_Block_Cipher(size_t bs) : m_bs(bs) {}
+      explicit OCB_Wide_Test_Block_Cipher(size_t bs) : m_bs(bs) {}
 
       std::string name() const override { return "OCB_ToyCipher"; }
       size_t block_size() const override { return m_bs; }

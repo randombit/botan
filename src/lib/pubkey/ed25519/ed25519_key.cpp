@@ -145,7 +145,7 @@ namespace {
 class Ed25519_Pure_Verify_Operation final : public PK_Ops::Verification
    {
    public:
-      Ed25519_Pure_Verify_Operation(const Ed25519_PublicKey& key) : m_key(key)
+      explicit Ed25519_Pure_Verify_Operation(const Ed25519_PublicKey& key) : m_key(key)
          {
          }
 
@@ -220,7 +220,7 @@ class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification
 class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature
    {
    public:
-      Ed25519_Pure_Sign_Operation(const Ed25519_PrivateKey& key) : m_key(key)
+      explicit Ed25519_Pure_Sign_Operation(const Ed25519_PrivateKey& key) : m_key(key)
          {
          }
 

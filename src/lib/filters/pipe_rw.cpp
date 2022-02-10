@@ -173,7 +173,7 @@ bool Pipe::check_available(size_t n)
    return (n <= remaining(default_msg()));
    }
 
-bool Pipe::check_available_msg(size_t n, message_id msg)
+bool Pipe::check_available_msg(size_t n, message_id msg) const
    {
    return (n <= remaining(msg));
    }

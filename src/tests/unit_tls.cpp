@@ -282,7 +282,7 @@ class TLS_Handshake_Test final
 
             bool empty() const override { return false; }
 
-            Test_Extension(Botan::TLS::Connection_Side side)
+            explicit Test_Extension(Botan::TLS::Connection_Side side)
                {
                const uint8_t client_extn[6] = { 'c', 'l', 'i', 'e', 'n', 't' };
                const uint8_t server_extn[6] = { 's', 'e', 'r', 'v', 'e', 'r' };
@@ -396,7 +396,7 @@ class TLS_Handshake_Test final
                return "test/3";
                }
 
-            virtual std::string tls_decode_group_param(Botan::TLS::Group_Params group_param) override
+            std::string tls_decode_group_param(Botan::TLS::Group_Params group_param) override
                {
                if(static_cast<uint16_t>(group_param) == 0xFEE1)
                   return "secp112r1";

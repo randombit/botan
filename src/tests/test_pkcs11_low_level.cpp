@@ -44,6 +44,7 @@ class RAII_LowLevel
 
          m_low_level->C_Initialize(&init_args);
          }
+
       ~RAII_LowLevel() noexcept
          {
          try
@@ -64,6 +65,11 @@ class RAII_LowLevel
             // ignore errors here
             }
          }
+
+      RAII_LowLevel(const RAII_LowLevel& other) = delete;
+      RAII_LowLevel(RAII_LowLevel&& other) = delete;
+      RAII_LowLevel& operator=(const RAII_LowLevel& other) = delete;
+      RAII_LowLevel& operator=(RAII_LowLevel&& other) = delete;
 
       std::vector<SlotId> get_slots(bool token_present) const
          {
@@ -606,16 +612,16 @@ Test::Result test_c_set_pin()
    }
 
 // Simple data object
-ObjectClass object_class = ObjectClass::Data;
-std::string label = "A data object";
-std::string data = "Sample data";
-Bbool btrue = True;
+const ObjectClass object_class = ObjectClass::Data;
+const std::string label = "A data object";
+const std::string data = "Sample data";
+const Bbool btrue = True;
 
 std::array<Attribute, 4> dtemplate =
    {
       {
-         { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Class), &object_class, sizeof(object_class) },
-         { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Token), &btrue, sizeof(btrue) },
+         { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Class), const_cast<ObjectClass*>(&object_class), sizeof(object_class) },
+         { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Token), const_cast<Bbool*>(&btrue), sizeof(btrue) },
          { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Label), const_cast<char*>(label.c_str()), static_cast<CK_ULONG>(label.size()) },
          { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Value), const_cast<char*>(data.c_str()), static_cast<CK_ULONG>(data.size()) }
       }

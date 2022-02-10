@@ -192,7 +192,7 @@ class BOTAN_PUBLIC_API(2,0) Session final
       SessionInfo get_info() const;
 
       /// Calls `C_SetPIN` to change the PIN using the old PIN (requires a logged in session)
-      void set_pin(const secure_string& old_pin, const secure_string& new_pin) const;
+      void set_pin(const secure_string& old_pin, const secure_string& new_pin);
 
       /// Calls `C_InitPIN` to change or initialize the PIN using the SO_PIN (requires a logged in session)
       void init_pin(const secure_string& new_pin);

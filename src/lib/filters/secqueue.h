@@ -47,6 +47,9 @@ class BOTAN_TEST_API SecureQueue final : public Fanout_Filter, public DataSource
       */
       SecureQueue& operator=(const SecureQueue& other);
 
+      SecureQueue& operator=(SecureQueue&& other) = delete;
+      SecureQueue(SecureQueue&& other) = delete;
+
       /**
       * SecureQueue default constructor (creates empty queue)
       */

@@ -18,7 +18,7 @@ namespace Botan {
 
 namespace {
 
-gf2m prim_poly[MAX_EXT_DEG + 1] = {
+const gf2m prim_poly[MAX_EXT_DEG + 1] = {
    01,       /* extension degree 0 (!) never used */
    03,       /* extension degree 1 (!) never used */
    07,       /* extension degree 2 */

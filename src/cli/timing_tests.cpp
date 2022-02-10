@@ -75,6 +75,11 @@ class Timing_Test
 
       virtual ~Timing_Test() = default;
 
+      Timing_Test(const Timing_Test& other) = delete;
+      Timing_Test(Timing_Test&& other) = delete;
+      Timing_Test& operator=(const Timing_Test& other) = delete;
+      Timing_Test& operator=(Timing_Test&& other) = delete;
+
       std::vector<std::vector<ticks>> execute_evaluation(
                                       const std::vector<std::string>& inputs,
                                       size_t warmup_runs,
@@ -109,7 +114,7 @@ class Timing_Test
 class Bleichenbacker_Timing_Test final : public Timing_Test
    {
    public:
-      Bleichenbacker_Timing_Test(size_t keysize)
+      explicit Bleichenbacker_Timing_Test(size_t keysize)
          : m_privkey(timing_test_rng(), keysize)
          , m_pubkey(m_privkey)
          , m_enc(m_pubkey, timing_test_rng(), "Raw")
@@ -152,7 +157,7 @@ class Bleichenbacker_Timing_Test final : public Timing_Test
 class Manger_Timing_Test final : public Timing_Test
    {
    public:
-      Manger_Timing_Test(size_t keysize)
+      explicit Manger_Timing_Test(size_t keysize)
          : m_privkey(timing_test_rng(), keysize)
          , m_pubkey(m_privkey)
          , m_enc(m_pubkey, timing_test_rng(), m_encrypt_padding)
@@ -260,7 +265,7 @@ ticks Lucky13_Timing_Test::measure_critical_function(const std::vector<uint8_t>&
 class ECDSA_Timing_Test final : public Timing_Test
    {
    public:
-      ECDSA_Timing_Test(const std::string& ecgroup);
+      explicit ECDSA_Timing_Test(const std::string& ecgroup);
 
       ticks measure_critical_function(const std::vector<uint8_t>& input) override;
 
@@ -315,7 +320,7 @@ ticks ECDSA_Timing_Test::measure_critical_function(const std::vector<uint8_t>& i
 class ECC_Mul_Timing_Test final : public Timing_Test
    {
    public:
-      ECC_Mul_Timing_Test(const std::string& ecgroup) :
+      explicit ECC_Mul_Timing_Test(const std::string& ecgroup) :
          m_group(ecgroup)
          {}
 
@@ -346,7 +351,7 @@ ticks ECC_Mul_Timing_Test::measure_critical_function(const std::vector<uint8_t>&
 class Powmod_Timing_Test final : public Timing_Test
    {
    public:
-      Powmod_Timing_Test(const std::string& dl_group) : m_group(dl_group)
+      explicit Powmod_Timing_Test(const std::string& dl_group) : m_group(dl_group)
          {
          }
 
@@ -376,7 +381,7 @@ ticks Powmod_Timing_Test::measure_critical_function(const std::vector<uint8_t>& 
 class Invmod_Timing_Test final : public Timing_Test
    {
    public:
-      Invmod_Timing_Test(size_t p_bits)
+      explicit Invmod_Timing_Test(size_t p_bits)
          {
          m_p = Botan::random_prime(timing_test_rng(), p_bits);
          }

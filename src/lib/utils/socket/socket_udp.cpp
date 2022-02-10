@@ -187,12 +187,17 @@ class BSD_SocketUDP final : public OS::SocketUDP
             }
          }
 
-      ~BSD_SocketUDP()
+      ~BSD_SocketUDP() override
          {
          close_socket(m_socket);
          m_socket = invalid_socket();
          socket_fini();
          }
+
+      BSD_SocketUDP(const BSD_SocketUDP& other) = delete;
+      BSD_SocketUDP(BSD_SocketUDP&& other) = delete;
+      BSD_SocketUDP& operator=(const BSD_SocketUDP& other) = delete;
+      BSD_SocketUDP& operator=(BSD_SocketUDP&& other) = delete;
 
       void write(const uint8_t buf[], size_t len) override
          {

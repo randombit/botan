@@ -742,7 +742,7 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
                }
             }
 
-         ~POSIX_Echo_Suppression()
+         ~POSIX_Echo_Suppression() override
             {
             try
                {
@@ -752,6 +752,11 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
                {
                }
             }
+
+         POSIX_Echo_Suppression(const POSIX_Echo_Suppression& other) = delete;
+         POSIX_Echo_Suppression(POSIX_Echo_Suppression&& other) = delete;
+         POSIX_Echo_Suppression& operator=(const POSIX_Echo_Suppression& other) = delete;
+         POSIX_Echo_Suppression& operator=(POSIX_Echo_Suppression&& other) = delete;
 
       private:
          int m_stdin_fd;
@@ -786,7 +791,7 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
                }
             }
 
-         ~Win32_Echo_Suppression()
+         ~Win32_Echo_Suppression() override
             {
             try
                {
@@ -796,6 +801,11 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
                {
                }
             }
+
+         Win32_Echo_Suppression(const Win32_Echo_Suppression& other) = delete;
+         Win32_Echo_Suppression(Win32_Echo_Suppression&& other) = delete;
+         Win32_Echo_Suppression& operator=(const Win32_Echo_Suppression& other) = delete;
+         Win32_Echo_Suppression& operator=(Win32_Echo_Suppression&& other) = delete;
 
       private:
          HANDLE m_input_handle;

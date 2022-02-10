@@ -280,12 +280,17 @@ class BSD_Socket final : public OS::Socket
             }
          }
 
-      ~BSD_Socket()
+      ~BSD_Socket() override
          {
          close_socket(m_socket);
          m_socket = invalid_socket();
          socket_fini();
          }
+
+      BSD_Socket(const BSD_Socket& other) = delete;
+      BSD_Socket(BSD_Socket&& other) = delete;
+      BSD_Socket& operator=(const BSD_Socket& other) = delete;
+      BSD_Socket& operator=(BSD_Socket&& other) = delete;
 
       void write(const uint8_t buf[], size_t len) override
          {

@@ -22,6 +22,11 @@ class SecureQueueNode final
 
       ~SecureQueueNode() { m_next = nullptr; m_start = m_end = 0; }
 
+      SecureQueueNode(const SecureQueueNode& other) = delete;
+      SecureQueueNode(SecureQueueNode&& other) = delete;
+      SecureQueueNode& operator=(const SecureQueueNode& other) = delete;
+      SecureQueueNode& operator=(SecureQueueNode&& other) = delete;
+
       size_t write(const uint8_t input[], size_t length)
          {
          size_t copied = std::min<size_t>(length, m_buffer.size() - m_end);

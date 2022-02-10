@@ -127,7 +127,7 @@ std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg)
       return std::vector<uint8_t>(); // not included in handshake hashes
       }
 
-   const std::vector<uint8_t> buf = format(msg_bits, msg.type());
+   auto buf = format(msg_bits, msg.type());
    m_send_hs(HANDSHAKE, buf);
    return buf;
    }
@@ -432,8 +432,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
    {
    const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
 
-   const std::vector<uint8_t> no_fragment =
-      format_w_seq(msg_bits, msg_type, msg_seq);
+   auto no_fragment = format_w_seq(msg_bits, msg_type, msg_seq);
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
       {

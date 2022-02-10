@@ -21,7 +21,7 @@ namespace {
 class Test_Map_PSK_Db : public Botan::Encrypted_PSK_Database
    {
    public:
-      Test_Map_PSK_Db(const Botan::secure_vector<uint8_t>& master_key) :
+      explicit Test_Map_PSK_Db(const Botan::secure_vector<uint8_t>& master_key) :
          Botan::Encrypted_PSK_Database(master_key)
          {}
 

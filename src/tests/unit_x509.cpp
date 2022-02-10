@@ -1366,7 +1366,7 @@ class String_Extension final : public Botan::Certificate_Extension
    {
    public:
       String_Extension() = default;
-      String_Extension(const std::string& val) : m_contents(val) {}
+      explicit String_Extension(const std::string& val) : m_contents(val) {}
 
       std::string value() const
          {

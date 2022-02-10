@@ -78,7 +78,7 @@ class NEWHOPE_RNG final : public Botan::RandomNumberGenerator
          /* ignored */
          }
 
-      NEWHOPE_RNG(const std::vector<uint8_t>& seed)
+      explicit NEWHOPE_RNG(const std::vector<uint8_t>& seed)
          {
          m_chacha = Botan::StreamCipher::create_or_throw("ChaCha20");
 

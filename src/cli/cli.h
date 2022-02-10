@@ -171,9 +171,9 @@ class Command
                      size_t buf_size = 0) const;
 
 
-      void do_read_file(std::istream& in,
-                        const std::function<void (uint8_t[], size_t)>& consumer_fn,
-                        size_t buf_size = 0) const;
+      static void do_read_file(std::istream& in,
+                               const std::function<void (uint8_t[], size_t)>& consumer_fn,
+                               size_t buf_size = 0);
 
       template<typename Alloc>
       void write_output(const std::vector<uint8_t, Alloc>& vec)
