@@ -17,7 +17,7 @@ class Sandbox
       explicit Sandbox();
       virtual ~Sandbox();
 
-      bool init();
+      static bool init();
 
       const std::string& name() const
          {

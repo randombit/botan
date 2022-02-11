@@ -32,7 +32,7 @@ class ECDH_Unit_Tests final : public Test
          }
    private:
 
-      Test::Result test_ecdh_normal_derivation()
+      static Test::Result test_ecdh_normal_derivation()
          {
          Test::Result result("ECDH key exchange");
 

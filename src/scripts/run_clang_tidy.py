@@ -18,7 +18,8 @@ enabled_checks = [
     'portability-*',
     'readability-container-size-empty',
     'readability-static-definition-in-anonymous-namespace',
-    'hicpp-special-member-functions'
+    'readability-convert-member-functions-to-static',
+    'hicpp-special-member-functions',
 
 #    'cppcoreguidelines-*',
 #    'hicpp-*',

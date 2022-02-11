@@ -21,17 +21,17 @@ namespace Botan_Tests {
 class OCSP_Tests final : public Test
    {
    private:
-      Botan::X509_Certificate load_test_X509_cert(const std::string& path)
+      static Botan::X509_Certificate load_test_X509_cert(const std::string& path)
          {
          return Botan::X509_Certificate(Test::data_file(path));
          }
 
-      Botan::OCSP::Response load_test_OCSP_resp(const std::string& path)
+      static Botan::OCSP::Response load_test_OCSP_resp(const std::string& path)
          {
          return Botan::OCSP::Response(Test::read_binary_data_file(path));
          }
 
-      Test::Result test_response_parsing()
+      static Test::Result test_response_parsing()
          {
          Test::Result result("OCSP response parsing");
 
@@ -63,7 +63,7 @@ class OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result test_response_certificate_access()
+      static Test::Result test_response_certificate_access()
          {
          Test::Result result("OCSP response certificate access");
 
@@ -93,7 +93,7 @@ class OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result test_request_encoding()
+      static Test::Result test_request_encoding()
          {
          Test::Result result("OCSP request encoding");
 
@@ -127,7 +127,7 @@ class OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result test_response_verification_with_next_update_without_max_age()
+      static Test::Result test_response_verification_with_next_update_without_max_age()
          {
          Test::Result result("OCSP request check with next_update w/o max_age");
 
@@ -165,7 +165,7 @@ class OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result test_response_verification_with_next_update_with_max_age()
+      static Test::Result test_response_verification_with_next_update_with_max_age()
          {
          Test::Result result("OCSP request check with next_update with max_age");
 
@@ -206,7 +206,7 @@ class OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result test_response_verification_without_next_update_with_max_age()
+      static Test::Result test_response_verification_without_next_update_with_max_age()
          {
          Test::Result result("OCSP request check w/o next_update with max_age");
 
@@ -245,7 +245,7 @@ class OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result test_response_verification_without_next_update_without_max_age()
+      static Test::Result test_response_verification_without_next_update_without_max_age()
          {
          Test::Result result("OCSP request check w/o next_update w/o max_age");
 
@@ -281,7 +281,7 @@ class OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result test_response_verification_softfail()
+      static Test::Result test_response_verification_softfail()
          {
          Test::Result result("OCSP request softfail check");
 
@@ -312,7 +312,7 @@ class OCSP_Tests final : public Test
          }
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
-      Test::Result test_online_request()
+      static Test::Result test_online_request()
          {
          Test::Result result("OCSP online check");
 

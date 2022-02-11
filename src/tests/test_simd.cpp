@@ -136,7 +136,7 @@ class SIMD_32_Tests final : public Test
          }
 
    private:
-      void test_eq(Test::Result& result, const std::string& op,
+      static void test_eq(Test::Result& result, const std::string& op,
                    const Botan::SIMD_4x32& simd,
                    uint32_t exp0, uint32_t exp1, uint32_t exp2, uint32_t exp3)
          {

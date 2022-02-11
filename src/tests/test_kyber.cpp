@@ -32,7 +32,7 @@ namespace Botan_Tests {
 class KYBER_Tests final : public Test
    {
    public:
-      Test::Result run_kyber_test(const char* test_name, Botan::KyberMode mode, size_t strength)
+      static Test::Result run_kyber_test(const char* test_name, Botan::KyberMode mode, size_t strength)
          {
          Test::Result result(test_name);
 
@@ -188,7 +188,7 @@ class Kyber_Encoding_Test : public Text_Based_Test
          }
 
    private:
-      Botan::KyberMode name_to_mode(const std::string& algo_name)
+      static Botan::KyberMode name_to_mode(const std::string& algo_name)
          {
          if(algo_name == "Kyber-512-r3")
             { return Botan::KyberMode::Kyber512; }

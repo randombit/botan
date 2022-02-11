@@ -636,7 +636,7 @@ class Test_Policy final : public Botan::TLS::Text_Policy
 class TLS_Unit_Tests final : public Test
    {
    private:
-      void test_with_policy(const std::string& test_descr,
+      static void test_with_policy(const std::string& test_descr,
                             std::vector<Test::Result>& results,
                             Botan::TLS::Session_Manager& client_ses,
                             Botan::TLS::Session_Manager& server_ses,
@@ -670,16 +670,17 @@ class TLS_Unit_Tests final : public Test
             }
          }
 
-      void test_all_versions(const std::string& test_descr,
-                             std::vector<Test::Result>& results,
-                             Botan::TLS::Session_Manager& client_ses,
-                             Botan::TLS::Session_Manager& server_ses,
-                             Botan::Credentials_Manager& creds,
-                             const std::string& kex_policy,
-                             const std::string& cipher_policy,
-                             const std::string& mac_policy,
-                             const std::string& etm_policy,
-                             bool client_auth = false)
+      static void test_all_versions(
+         const std::string& test_descr,
+         std::vector<Test::Result>& results,
+         Botan::TLS::Session_Manager& client_ses,
+         Botan::TLS::Session_Manager& server_ses,
+         Botan::Credentials_Manager& creds,
+         const std::string& kex_policy,
+         const std::string& cipher_policy,
+         const std::string& mac_policy,
+         const std::string& etm_policy,
+         bool client_auth = false)
          {
          Test_Policy policy;
          policy.set("ciphers", cipher_policy);
@@ -704,31 +705,33 @@ class TLS_Unit_Tests final : public Test
          return test_with_policy(test_descr, results, client_ses, server_ses, creds, versions, policy, client_auth);
          }
 
-      void test_modern_versions(const std::string& test_descr,
-                                std::vector<Test::Result>& results,
-                                Botan::TLS::Session_Manager& client_ses,
-                                Botan::TLS::Session_Manager& server_ses,
-                                Botan::Credentials_Manager& creds,
-                                const std::string& kex_policy,
-                                const std::string& cipher_policy,
-                                const std::string& mac_policy = "AEAD",
-                                bool client_auth = false)
+      static void test_modern_versions(
+         const std::string& test_descr,
+         std::vector<Test::Result>& results,
+         Botan::TLS::Session_Manager& client_ses,
+         Botan::TLS::Session_Manager& server_ses,
+         Botan::Credentials_Manager& creds,
+         const std::string& kex_policy,
+         const std::string& cipher_policy,
+         const std::string& mac_policy = "AEAD",
+         bool client_auth = false)
          {
          std::map<std::string, std::string> no_extra_policies;
          return test_modern_versions(test_descr, results, client_ses, server_ses, creds,
                                      kex_policy, cipher_policy, mac_policy, no_extra_policies, client_auth);
          }
 
-      void test_modern_versions(const std::string& test_descr,
-                                std::vector<Test::Result>& results,
-                                Botan::TLS::Session_Manager& client_ses,
-                                Botan::TLS::Session_Manager& server_ses,
-                                Botan::Credentials_Manager& creds,
-                                const std::string& kex_policy,
-                                const std::string& cipher_policy,
-                                const std::string& mac_policy,
-                                const std::map<std::string, std::string>& extra_policies,
-                                bool client_auth = false)
+      static void test_modern_versions(
+         const std::string& test_descr,
+         std::vector<Test::Result>& results,
+         Botan::TLS::Session_Manager& client_ses,
+         Botan::TLS::Session_Manager& server_ses,
+         Botan::Credentials_Manager& creds,
+         const std::string& kex_policy,
+         const std::string& cipher_policy,
+         const std::string& mac_policy,
+         const std::map<std::string, std::string>& extra_policies,
+         bool client_auth = false)
          {
          Test_Policy policy;
          policy.set("ciphers", cipher_policy);

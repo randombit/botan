@@ -91,7 +91,7 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
          }
 
    private:
-      std::vector<uint8_t> hash_bytes(const uint8_t b[], size_t len, const std::string& hash_fn = "SHA-256")
+      static std::vector<uint8_t> hash_bytes(const uint8_t b[], size_t len, const std::string& hash_fn = "SHA-256")
          {
          std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_fn));
          hash->update(b, len);
@@ -118,7 +118,7 @@ class McEliece_Tests final : public Test
    {
    public:
 
-      std::string fingerprint(const Botan::Private_Key& key, const std::string& hash_algo = "SHA-256")
+      static std::string fingerprint(const Botan::Private_Key& key, const std::string& hash_algo = "SHA-256")
          {
          std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
          if(!hash)
@@ -130,7 +130,7 @@ class McEliece_Tests final : public Test
          return Botan::hex_encode(hash->final());
          }
 
-      std::string fingerprint(const Botan::Public_Key& key, const std::string& hash_algo = "SHA-256")
+      static std::string fingerprint(const Botan::Public_Key& key, const std::string& hash_algo = "SHA-256")
          {
          std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
          if(!hash)
@@ -198,7 +198,7 @@ class McEliece_Tests final : public Test
          }
 
    private:
-      Test::Result test_kem(const Botan::McEliece_PrivateKey& sk,
+      static Test::Result test_kem(const Botan::McEliece_PrivateKey& sk,
                             const Botan::McEliece_PublicKey& pk)
          {
          Test::Result result("McEliece KEM");

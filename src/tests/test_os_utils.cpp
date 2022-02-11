@@ -47,7 +47,7 @@ class OS_Utils_Tests final : public Test
 
    private:
 
-      Test::Result test_get_process_id()
+      static Test::Result test_get_process_id()
          {
          Test::Result result("OS::get_process_id");
 
@@ -65,7 +65,7 @@ class OS_Utils_Tests final : public Test
          return result;
          }
 
-      Test::Result test_get_cpu_cycle_counter()
+      static Test::Result test_get_cpu_cycle_counter()
          {
          const size_t max_trials = 1024;
          const size_t max_repeats = 32;
@@ -90,7 +90,7 @@ class OS_Utils_Tests final : public Test
          return result;
          }
 
-      Test::Result test_get_high_resolution_clock()
+      static Test::Result test_get_high_resolution_clock()
          {
          const size_t max_trials = 1024;
          const size_t max_repeats = 128;
@@ -110,7 +110,7 @@ class OS_Utils_Tests final : public Test
          return result;
          }
 
-      Test::Result test_get_cpu_numbers()
+      static Test::Result test_get_cpu_numbers()
          {
          Test::Result result("OS::get_cpu_available");
 
@@ -121,7 +121,7 @@ class OS_Utils_Tests final : public Test
          return result;
          }
 
-      Test::Result test_get_system_timestamp()
+      static Test::Result test_get_system_timestamp()
          {
          // TODO better tests
          Test::Result result("OS::get_system_timestamp_ns");
@@ -139,7 +139,7 @@ class OS_Utils_Tests final : public Test
          return result;
          }
 
-      Test::Result test_memory_locking()
+      static Test::Result test_memory_locking()
          {
          Test::Result result("OS memory locked pages");
 
@@ -148,7 +148,7 @@ class OS_Utils_Tests final : public Test
          return result;
          }
 
-      Test::Result test_cpu_instruction_probe()
+      static Test::Result test_cpu_instruction_probe()
          {
          Test::Result result("OS::run_cpu_instruction_probe");
 

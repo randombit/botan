@@ -151,7 +151,7 @@ class TLS_Client_Hello_Reader final : public Command
          }
 
    private:
-      std::string format_hello(const Botan::TLS::Client_Hello& hello)
+      static std::string format_hello(const Botan::TLS::Client_Hello& hello)
          {
          std::ostringstream oss;
          oss << "Version: " << hello.version().to_string() << "\n"

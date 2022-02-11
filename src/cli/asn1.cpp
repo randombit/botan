@@ -32,7 +32,7 @@ class ASN1_Printer final : public Command
          return "Decode and print file with ASN.1 Basic Encoding Rules (BER)";
          }
 
-      bool first_n(const std::vector<uint8_t>& data, size_t n, uint8_t b)
+      static bool first_n(const std::vector<uint8_t>& data, size_t n, uint8_t b)
          {
          if(data.size() < n)
             return false;

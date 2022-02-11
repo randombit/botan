@@ -61,7 +61,7 @@ class Filter_Tests final : public Test
          }
 
    private:
-      Test::Result test_secqueue()
+      static Test::Result test_secqueue()
          {
          Test::Result result("SecureQueue");
 
@@ -100,7 +100,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_data_src_sink()
+      static Test::Result test_data_src_sink()
          {
          Test::Result result("DataSink");
 
@@ -128,7 +128,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_data_src_sink_flush()
+      static Test::Result test_data_src_sink_flush()
          {
          Test::Result result("DataSinkFlush");
 
@@ -167,7 +167,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_io()
+      static Test::Result test_pipe_io()
          {
          Test::Result result("Pipe I/O operators");
 
@@ -193,7 +193,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_errors()
+      static Test::Result test_pipe_errors()
          {
          Test::Result result("Pipe");
 
@@ -269,7 +269,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_mac()
+      static Test::Result test_pipe_mac()
          {
          Test::Result result("Pipe");
 
@@ -298,7 +298,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_hash()
+      static Test::Result test_pipe_hash()
          {
          Test::Result result("Pipe");
 
@@ -352,7 +352,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_cfb()
+      static Test::Result test_pipe_cfb()
          {
          Test::Result result("Pipe CFB");
 
@@ -417,7 +417,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_cbc()
+      static Test::Result test_pipe_cbc()
          {
          Test::Result result("Pipe CBC");
 
@@ -482,7 +482,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_compress()
+      static Test::Result test_pipe_compress()
          {
          Test::Result result("Pipe compress zlib");
 
@@ -517,7 +517,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_compress_bzip2()
+      static Test::Result test_pipe_compress_bzip2()
          {
          Test::Result result("Pipe compress bzip2");
 
@@ -551,7 +551,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_codec()
+      static Test::Result test_pipe_codec()
          {
          Test::Result result("Pipe");
 
@@ -626,7 +626,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_stream()
+      static Test::Result test_pipe_stream()
          {
          Test::Result result("Pipe CTR");
 
@@ -651,7 +651,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_fork()
+      static Test::Result test_fork()
          {
          Test::Result result("Filter Fork");
 
@@ -670,7 +670,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_chain()
+      static Test::Result test_chain()
          {
          Test::Result result("Filter Chain");
 
@@ -706,7 +706,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_pipe_fd_io()
+      static Test::Result test_pipe_fd_io()
          {
          Test::Result result("Pipe file descriptor IO");
 
@@ -735,7 +735,7 @@ class Filter_Tests final : public Test
          return result;
          }
 
-      Test::Result test_threaded_fork()
+      static Test::Result test_threaded_fork()
          {
          Test::Result result("Threaded_Fork");
 

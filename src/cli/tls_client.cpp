@@ -224,7 +224,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          }
 
    private:
-      socket_type connect_to_host(const std::string& host, uint16_t port, bool tcp)
+      static socket_type connect_to_host(const std::string& host, uint16_t port, bool tcp)
          {
          addrinfo hints;
          Botan::clear_mem(&hints, 1);

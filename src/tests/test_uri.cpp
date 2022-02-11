@@ -14,7 +14,7 @@ namespace Botan_Tests {
 
 class URI_Tests final : public Test
    {
-      void test_uri_ctor(std::vector<Test::Result>& results)
+      static void test_uri_ctor(std::vector<Test::Result>& results)
          {
          Test::Result result("uri constructors");
          Botan::URI uri(Botan::URI::Type::Domain, "localhost", 80);
@@ -24,7 +24,7 @@ class URI_Tests final : public Test
          results.push_back(result);
          }
 
-      void test_uri_tostring(std::vector<Test::Result>& results)
+      static void test_uri_tostring(std::vector<Test::Result>& results)
          {
          Test::Result result("uri to_string");
 
@@ -37,7 +37,7 @@ class URI_Tests final : public Test
          results.push_back(result);
          }
 
-      void test_uri_factories(std::vector<Test::Result>& results)
+      static void test_uri_factories(std::vector<Test::Result>& results)
          {
          Test::Result result("uri factories");
 

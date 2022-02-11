@@ -109,7 +109,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test
          }
 
    private:
-      std::chrono::system_clock::time_point from_timestring(const std::string& time_str)
+      static std::chrono::system_clock::time_point from_timestring(const std::string& time_str)
          {
          if(time_str.size() != 19)
             throw Test_Error("Invalid TOTP timestamp string " + time_str);

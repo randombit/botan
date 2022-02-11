@@ -22,9 +22,12 @@ class AEAD_Tests final : public Text_Based_Test
    public:
       AEAD_Tests() : Text_Based_Test("aead", "Key,In,Out", "Nonce,AD") {}
 
-      Test::Result test_enc(const std::vector<uint8_t>& key, const std::vector<uint8_t>& nonce,
-                            const std::vector<uint8_t>& input, const std::vector<uint8_t>& expected,
-                            const std::vector<uint8_t>& ad, const std::string& algo)
+      static Test::Result test_enc(const std::vector<uint8_t>& key,
+                                   const std::vector<uint8_t>& nonce,
+                                   const std::vector<uint8_t>& input,
+                                   const std::vector<uint8_t>& expected,
+                                   const std::vector<uint8_t>& ad,
+                                   const std::string& algo)
          {
          const bool is_siv = algo.find("/SIV") != std::string::npos;
 
@@ -186,9 +189,12 @@ class AEAD_Tests final : public Text_Based_Test
          return result;
          }
 
-      Test::Result test_dec(const std::vector<uint8_t>& key, const std::vector<uint8_t>& nonce,
-                            const std::vector<uint8_t>& input, const std::vector<uint8_t>& expected,
-                            const std::vector<uint8_t>& ad, const std::string& algo)
+      static Test::Result test_dec(const std::vector<uint8_t>& key,
+                                   const std::vector<uint8_t>& nonce,
+                                   const std::vector<uint8_t>& input,
+                                   const std::vector<uint8_t>& expected,
+                                   const std::vector<uint8_t>& ad,
+                                   const std::string& algo)
          {
          const bool is_siv = algo.find("/SIV") != std::string::npos;
 

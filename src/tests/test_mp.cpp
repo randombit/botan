@@ -31,7 +31,7 @@ class MP_Unit_Tests final : public Test
          return results;
          }
    private:
-      Result test_cnd_add()
+      static Result test_cnd_add()
          {
          Result result("bigint_cnd_add");
 
@@ -53,7 +53,7 @@ class MP_Unit_Tests final : public Test
          return result;
          }
 
-      Result test_cnd_sub()
+      static Result test_cnd_sub()
          {
          Result result("bigint_cnd_sub");
 
@@ -72,7 +72,7 @@ class MP_Unit_Tests final : public Test
          return result;
          }
 
-      Result test_cnd_abs()
+      static Result test_cnd_abs()
          {
          Result result("bigint_cnd_abs");
 
@@ -101,7 +101,7 @@ class MP_Unit_Tests final : public Test
          return result;
          }
 
-      Result test_cnd_swap()
+      static Result test_cnd_swap()
          {
          Result result("bigint_cnd_swap");
 

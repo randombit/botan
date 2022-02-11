@@ -40,7 +40,7 @@ class BigInt_Unit_Tests final : public Test
          return results;
          }
    private:
-      Test::Result test_bigint_sizes()
+      static Test::Result test_bigint_sizes()
          {
          Test::Result result("BigInt size functions");
 
@@ -86,7 +86,7 @@ class BigInt_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result test_random_prime()
+      static Test::Result test_random_prime()
          {
          Test::Result result("BigInt prime generation");
 
@@ -125,7 +125,7 @@ class BigInt_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result test_encode()
+      static Test::Result test_encode()
          {
          Test::Result result("BigInt encoding functions");
 
@@ -151,7 +151,7 @@ class BigInt_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result test_get_substring()
+      static Test::Result test_get_substring()
          {
          Test::Result result("BigInt get_substring");
 
@@ -177,7 +177,7 @@ class BigInt_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result test_bigint_io()
+      static Test::Result test_bigint_io()
          {
          Test::Result result("BigInt IO operators");
 

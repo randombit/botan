@@ -248,7 +248,7 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
          }
 
    private:
-      void ocb_encrypt(Test::Result& /*result*/,
+      static void ocb_encrypt(Test::Result& /*result*/,
                        std::vector<uint8_t>& output_to,
                        Botan::OCB_Encryption& enc,
                        const std::vector<uint8_t>& nonce,
@@ -323,7 +323,7 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
          return result;
          }
    private:
-      void ocb_encrypt(Test::Result& result,
+      static void ocb_encrypt(Test::Result& result,
                        std::vector<uint8_t>& output_to,
                        Botan::AEAD_Mode& enc,
                        Botan::AEAD_Mode& dec,
