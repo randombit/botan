@@ -58,7 +58,9 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : m_name(n)
 /*
 * GOST Constructor
 */
-GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) : m_SBOX(1024)
+GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
+   m_SBOX(1024),
+   m_name("GOST-28147-89(" + param.param_name() + ")")
    {
    // Convert the parallel 4x4 sboxes into larger word-based sboxes
 
@@ -73,21 +75,7 @@ GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) : m_SBOX(1024)
 
 std::string GOST_28147_89::name() const
    {
-   /*
-   'Guess' the right name for the sbox on the basis of the values.
-   This would need to be updated if support for other sbox parameters
-   is added. Preferably, we would just store the string value in the
-   constructor, but can't break binary compat.
-   */
-   std::string sbox_name = "";
-   if(m_SBOX[0] == 0x00072000)
-      sbox_name = "R3411_94_TestParam";
-   else if(m_SBOX[0] == 0x0002D000)
-      sbox_name = "R3411_CryptoPro";
-   else
-      throw Internal_Error("GOST-28147 unrecognized sbox value");
-
-   return "GOST-28147-89(" + sbox_name + ")";
+   return m_name;
    }
 
 namespace {

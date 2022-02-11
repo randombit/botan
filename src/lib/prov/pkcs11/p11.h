@@ -959,7 +959,8 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li HostMemory \li OK
       * @return true on success, false otherwise
       */
-      static bool C_GetFunctionList(Dynamically_Loaded_Library& pkcs11_module, FunctionListPtr* function_list_ptr_ptr,
+      static bool C_GetFunctionList(Dynamically_Loaded_Library& pkcs11_module,
+                                    FunctionListPtr* function_list_ptr_ptr,
                                     ReturnValue* return_value = ThrowException);
 
       /****************************** Slot and token management functions ******************************/
@@ -2161,7 +2162,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       * @return true on success, false otherwise
       */
       bool C_Sign(SessionHandle session,
-                  Byte* data_ptr,
+                  const Byte* data_ptr,
                   Ulong data_len,
                   Byte* signature_ptr,
                   Ulong* signature_len_ptr,
@@ -2191,7 +2192,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
          {
          Ulong signature_size = 0;
          if(!C_Sign(session,
-                    const_cast<Byte*>((data.data())),
+                    data.data(),
                     static_cast<Ulong>(data.size()),
                     nullptr,
                     &signature_size,
@@ -2202,11 +2203,11 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
 
          signature.resize(signature_size);
          if (!C_Sign(session,
-                       const_cast<Byte*>(data.data()),
-                       static_cast<Ulong>(data.size()),
-                       signature.data(),
-                       &signature_size,
-                       return_value))
+                     data.data(),
+                     static_cast<Ulong>(data.size()),
+                     signature.data(),
+                     &signature_size,
+                     return_value))
             {
             return false;
             }
@@ -2230,7 +2231,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       * @return true on success, false otherwise
       */
       bool C_SignUpdate(SessionHandle session,
-                        Byte* part_ptr,
+                        const Byte* part_ptr,
                         Ulong part_len,
                         ReturnValue* return_value = ThrowException) const;
 
@@ -2254,7 +2255,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                         ReturnValue* return_value = ThrowException) const
          {
          return C_SignUpdate(session,
-                             const_cast<Byte*>(part.data()),
+                             part.data(),
                              static_cast<Ulong>(part.size()),
                              return_value);
          }
@@ -2405,9 +2406,9 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       * @return true on success, false otherwise
       */
       bool C_Verify(SessionHandle session,
-                    Byte* data_ptr,
+                    const Byte* data_ptr,
                     Ulong data_len,
-                    Byte* signature_ptr,
+                    const Byte* signature_ptr,
                     Ulong signature_len,
                     ReturnValue* return_value = ThrowException) const;
 
@@ -2434,7 +2435,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                     ReturnValue* return_value = ThrowException) const
          {
          return C_Verify(session,
-                         const_cast<Byte*>(data.data()),
+                         data.data(),
                          static_cast<Ulong>(data.size()),
                          signature.data(),
                          static_cast<Ulong>(signature.size()),
@@ -2457,7 +2458,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       * @return true on success, false otherwise
       */
       bool C_VerifyUpdate(SessionHandle session,
-                          Byte* part_ptr,
+                          const Byte* part_ptr,
                           Ulong part_len,
                           ReturnValue* return_value = ThrowException) const;
 
@@ -2500,7 +2501,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       * @return true on success, false otherwise
       */
       bool C_VerifyFinal(SessionHandle session,
-                         Byte* signature_ptr,
+                         const Byte* signature_ptr,
                          Ulong signature_len,
                          ReturnValue* return_value = ThrowException) const;
 
@@ -2832,7 +2833,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       * @return true on success, false otherwise
       */
       bool C_SeedRandom(SessionHandle session,
-                        Byte* seed_ptr,
+                        const Byte* seed_ptr,
                         Ulong seed_len,
                         ReturnValue* return_value = ThrowException) const;
 

@@ -9,7 +9,6 @@
 */
 
 #include <botan/internal/ed25519_internal.h>
-#include <assert.h>
 
 namespace Botan {
 

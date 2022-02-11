@@ -231,7 +231,7 @@ class BOTAN_PUBLIC_API(2,0) Pipe final : public DataSource
       size_t get_bytes_read(message_id msg) const;
 
       bool check_available(size_t n) override;
-      bool check_available_msg(size_t n, message_id msg);
+      bool check_available_msg(size_t n, message_id msg) const;
 
       /**
       * @return currently set default message

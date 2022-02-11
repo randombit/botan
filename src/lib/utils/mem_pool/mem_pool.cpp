@@ -146,7 +146,7 @@ size_t find_set_bit(T b)
 class BitMap final
    {
    public:
-      BitMap(size_t bits) : m_len(bits)
+      explicit BitMap(size_t bits) : m_len(bits)
          {
          m_bits.resize((bits + BITMASK_BITS - 1) / BITMASK_BITS);
          m_main_mask = static_cast<bitmask_type>(~0);

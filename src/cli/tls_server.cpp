@@ -52,10 +52,15 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          init_sockets();
          }
 
-      ~TLS_Server()
+      ~TLS_Server() override
          {
          stop_sockets();
          }
+
+      TLS_Server(const TLS_Server& other) = delete;
+      TLS_Server(TLS_Server&& other) = delete;
+      TLS_Server& operator=(const TLS_Server& other) = delete;
+      TLS_Server& operator=(TLS_Server&& other) = delete;
 
       std::string group() const override
          {

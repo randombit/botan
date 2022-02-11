@@ -18,13 +18,12 @@ enabled_checks = [
     'portability-*',
     'readability-container-size-empty',
     'readability-static-definition-in-anonymous-namespace',
+    'hicpp-special-member-functions'
 
-    'cppcoreguidelines-*',
-    'hicpp-*',
-    'modernize-*',
-    'readability-*',
-    #'modernize-make-unique',
-    'readability-inconsistent-declaration-parameter-name',
+#    'cppcoreguidelines-*',
+#    'hicpp-*',
+#    'modernize-*',
+#    'readability-*',
 ]
 
 # these might be worth being clean for
@@ -60,21 +59,26 @@ disabled_not_interested = [
     '*-magic-numbers', # can't stop the magic
     '*-no-array-decay',
     '*-use-auto', # not universally a good idea
-    'bugprone-branch-clone', # doesn't interact well with feature macros
+    '*-use-emplace', # often less clear
+    '-*deprecated-headers', # wrong for system headers like stdlib.h
     'bugprone-argument-comment',
+    'bugprone-branch-clone', # doesn't interact well with feature macros
     'cert-err58-cpp',
     'cppcoreguidelines-no-malloc',
     'cppcoreguidelines-pro-bounds-constant-array-index',
     'cppcoreguidelines-pro-type-cstyle-cast', # system headers
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
+    'cppcoreguidelines-pro-type-vararg', # idiocy
     'hicpp-no-assembler',
     'hicpp-no-malloc',
+    'hicpp-vararg', # idiocy
     'modernize-loop-convert', # sometimes very ugly
     'modernize-raw-string-literal',
     'modernize-return-braced-init-list', # thanks I hate it
     'modernize-use-using', # fine not great
     'portability-simd-intrinsics',
     'readability-function-cognitive-complexity',
+    'readability-use-anyofallof', # not more readable
 ]
 
 disabled_checks = disabled_needs_work + disabled_not_interested
@@ -118,6 +122,7 @@ def run_clang_tidy(compile_commands_file,
         print(source_file)
     if stdout != "":
         print(stdout)
+        sys.stdout.flush()
 
 def file_matches(file, args):
     if args is None or len(args) == 0:

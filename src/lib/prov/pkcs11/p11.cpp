@@ -513,22 +513,25 @@ bool LowLevel::C_SignInit(SessionHandle session,
    }
 
 bool LowLevel::C_Sign(SessionHandle session,
-                      Byte* data_ptr,
+                      const Byte* data_ptr,
                       Ulong data_len,
                       Byte* signature_ptr,
                       Ulong* signature_len_ptr,
                       ReturnValue* return_value) const
    {
-   return handle_return_value(m_func_list_ptr->C_Sign(session, data_ptr, data_len, signature_ptr, signature_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_func_list_ptr->C_Sign(session, const_cast<Byte*>(data_ptr), data_len, signature_ptr, signature_len_ptr),
+      return_value);
    }
 
 bool LowLevel::C_SignUpdate(SessionHandle session,
-                            Byte* part_ptr,
+                            const Byte* part_ptr,
                             Ulong part_len,
                             ReturnValue* return_value) const
    {
-   return handle_return_value(m_func_list_ptr->C_SignUpdate(session, part_ptr, part_len), return_value);
+   return handle_return_value(
+      m_func_list_ptr->C_SignUpdate(session, const_cast<Byte*>(part_ptr), part_len),
+      return_value);
    }
 
 bool LowLevel::C_SignFinal(SessionHandle session,
@@ -569,30 +572,36 @@ bool LowLevel::C_VerifyInit(SessionHandle session,
    }
 
 bool LowLevel::C_Verify(SessionHandle session,
-                        Byte* data_ptr,
+                        const Byte* data_ptr,
                         Ulong data_len,
-                        Byte* signature_ptr,
+                        const Byte* signature_ptr,
                         Ulong signature_len,
                         ReturnValue* return_value) const
    {
-   return handle_return_value(m_func_list_ptr->C_Verify(session, data_ptr, data_len, signature_ptr, signature_len),
-                              return_value);
+   return handle_return_value(
+      m_func_list_ptr->C_Verify(session, const_cast<Byte*>(data_ptr), data_len,
+                                const_cast<Byte*>(signature_ptr), signature_len),
+      return_value);
    }
 
 bool LowLevel::C_VerifyUpdate(SessionHandle session,
-                              Byte* part_ptr,
+                              const Byte* part_ptr,
                               Ulong part_len,
                               ReturnValue* return_value) const
    {
-   return handle_return_value(m_func_list_ptr->C_VerifyUpdate(session, part_ptr, part_len), return_value);
+   return handle_return_value(
+      m_func_list_ptr->C_VerifyUpdate(session, const_cast<Byte*>(part_ptr), part_len),
+      return_value);
    }
 
 bool LowLevel::C_VerifyFinal(SessionHandle session,
-                             Byte* signature_ptr,
+                             const Byte* signature_ptr,
                              Ulong signature_len,
                              ReturnValue* return_value) const
    {
-   return handle_return_value(m_func_list_ptr->C_VerifyFinal(session, signature_ptr, signature_len), return_value);
+   return handle_return_value(
+      m_func_list_ptr->C_VerifyFinal(session, const_cast<Byte*>(signature_ptr), signature_len),
+      return_value);
    }
 
 bool LowLevel::C_VerifyRecoverInit(SessionHandle session,
@@ -730,11 +739,13 @@ bool LowLevel::C_DeriveKey(SessionHandle session,
 /****************************** Random number generation functions ******************************/
 
 bool LowLevel::C_SeedRandom(SessionHandle session,
-                            Byte* seed_ptr,
+                            const Byte* seed_ptr,
                             Ulong seed_len,
                             ReturnValue* return_value) const
    {
-   return handle_return_value(m_func_list_ptr->C_SeedRandom(session, seed_ptr, seed_len), return_value);
+   return handle_return_value(
+      m_func_list_ptr->C_SeedRandom(session, const_cast<Byte*>(seed_ptr), seed_len),
+      return_value);
    }
 
 bool LowLevel::C_GenerateRandom(SessionHandle session,

@@ -136,7 +136,7 @@ class TLS_CBC_Tests final : public Text_Based_Test
       class ZeroMac : public Botan::MessageAuthenticationCode
          {
          public:
-            ZeroMac(size_t mac_len) : m_mac_len(mac_len) {}
+            explicit ZeroMac(size_t mac_len) : m_mac_len(mac_len) {}
 
             void clear() override {}
 
@@ -156,7 +156,7 @@ class TLS_CBC_Tests final : public Text_Based_Test
                return Botan::Key_Length_Specification(0, 0, 1);
                }
 
-            virtual std::unique_ptr<MessageAuthenticationCode> new_object() const override
+            std::unique_ptr<MessageAuthenticationCode> new_object() const override
                {
                return std::make_unique<ZeroMac>(m_mac_len);
                }
@@ -170,7 +170,7 @@ class TLS_CBC_Tests final : public Text_Based_Test
       class Noop_Block_Cipher : public Botan::BlockCipher
          {
          public:
-            Noop_Block_Cipher(size_t bs) : m_bs(bs) {}
+            explicit Noop_Block_Cipher(size_t bs) : m_bs(bs) {}
 
             void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
                {

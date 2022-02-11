@@ -148,7 +148,7 @@ void invert_matrix(uint8_t matrix[], size_t K)
    class pivot_searcher
       {
       public:
-         pivot_searcher(size_t K) : m_ipiv(K) {}
+         explicit pivot_searcher(size_t K) : m_ipiv(K) {}
 
          std::pair<size_t, size_t> operator()(size_t col, const uint8_t matrix[])
             {

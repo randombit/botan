@@ -67,7 +67,7 @@ void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* v
             return data.data() == existing_attribute.pValue;
             }), m_vectors.end());
 
-         existing_attribute.pValue = const_cast< uint8_t* >(value);
+         existing_attribute.pValue = const_cast<uint8_t*>(value);
          existing_attribute.ulValueLen = size;
          exists = true;
          break;
@@ -76,7 +76,12 @@ void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* v
 
    if(!exists)
       {
-      m_attributes.push_back(Attribute{ static_cast< CK_ATTRIBUTE_TYPE >(attribute), const_cast< uint8_t* >(value), size });
+      m_attributes.push_back(
+         Attribute {
+            static_cast<CK_ATTRIBUTE_TYPE>(attribute),
+            const_cast<uint8_t*>(value),
+            size }
+         );
       }
    }
 

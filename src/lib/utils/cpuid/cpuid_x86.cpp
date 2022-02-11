@@ -71,7 +71,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    {
    uint64_t features_detected = 0;
    uint32_t cpuid[4] = { 0 };
-   bool has_avx = 0;
+   bool has_avx = false;
 
    // CPUID 0: vendor identification, max sublevel
    invoke_cpuid(0, cpuid);
@@ -120,7 +120,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          features_detected |= CPUID::CPUID_RDRAND_BIT;
       if((flags0 & x86_CPUID_1_bits::AVX) &&
          (flags0 & x86_CPUID_1_bits::OSXSAVE))
-         has_avx = 1;
+         has_avx = true;
       }
 
    if(is_intel)

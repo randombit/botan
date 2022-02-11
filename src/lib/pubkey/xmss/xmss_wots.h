@@ -57,7 +57,7 @@ class XMSS_WOTS_Parameters final
 
       secure_vector<uint8_t> base_w(size_t value) const;
 
-      void append_checksum(secure_vector<uint8_t>& data);
+      void append_checksum(secure_vector<uint8_t>& data) const;
 
       /**
        * @return XMSS WOTS registry name for the chosen parameter set.

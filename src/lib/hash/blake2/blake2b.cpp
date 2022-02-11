@@ -36,6 +36,8 @@ BLAKE2b::BLAKE2b(size_t output_bits) :
    m_buffer(BLAKE2B_BLOCKBYTES),
    m_bufpos(0),
    m_H(BLAKE2B_IVU64COUNT),
+   m_T(),
+   m_F(),
    m_key_size(0)
    {
    if(output_bits == 0 || output_bits > 512 || output_bits % 8 != 0)

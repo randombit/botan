@@ -83,7 +83,7 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
             m_first_message.clear();
             }
 
-         m_key.module()->C_SignUpdate(m_key.session().handle(), const_cast<Byte*>(msg), static_cast<Ulong>(msg_len));
+         m_key.module()->C_SignUpdate(m_key.session().handle(), msg, static_cast<Ulong>(msg_len));
          }
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override
@@ -140,7 +140,7 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
             m_first_message.clear();
             }
 
-         m_key.module()->C_VerifyUpdate(m_key.session().handle(), const_cast<Byte*>(msg), static_cast<Ulong>(msg_len));
+         m_key.module()->C_VerifyUpdate(m_key.session().handle(), msg, static_cast<Ulong>(msg_len));
          }
 
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override
@@ -151,14 +151,16 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
             // single call to update: perform single-part operation
             m_key.module()->C_Verify(m_key.session().handle(),
                                      m_first_message.data(), static_cast<Ulong>(m_first_message.size()),
-                                     const_cast<Byte*>(sig), static_cast<Ulong>(sig_len),
+                                     sig, static_cast<Ulong>(sig_len),
                                      &return_value);
             m_first_message.clear();
             }
          else
             {
             // multiple calls to update (or none): finish multiple-part operation
-            m_key.module()->C_VerifyFinal(m_key.session().handle(), const_cast<Byte*>(sig), static_cast<Ulong>(sig_len), &return_value);
+            m_key.module()->C_VerifyFinal(m_key.session().handle(),
+                                          sig,
+                                          static_cast<Ulong>(sig_len), &return_value);
             }
          m_initialized = false;
          if(return_value != ReturnValue::OK && return_value != ReturnValue::SignatureInvalid)

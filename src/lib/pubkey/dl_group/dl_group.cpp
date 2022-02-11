@@ -39,7 +39,9 @@ class DL_Group_Data final
       ~DL_Group_Data() = default;
 
       DL_Group_Data(const DL_Group_Data& other) = delete;
+      DL_Group_Data(DL_Group_Data&& other) = delete;
       DL_Group_Data& operator=(const DL_Group_Data& other) = delete;
+      DL_Group_Data& operator=(DL_Group_Data&& other) = delete;
 
       const BigInt& p() const { return m_p; }
       const BigInt& q() const { return m_q; }

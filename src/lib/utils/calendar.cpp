@@ -11,7 +11,6 @@
 #include <ctime>
 #include <sstream>
 #include <iomanip>
-#include <stdlib.h>
 
 namespace Botan {
 

@@ -215,9 +215,10 @@ void Command::read_file(const std::string& input_file,
       }
    }
 
+//static
 void Command::do_read_file(std::istream& in,
                            const std::function<void (uint8_t[], size_t)>& consumer_fn,
-                           size_t buf_size) const
+                           size_t buf_size)
    {
    // Avoid an infinite loop on --buf-size=0
    std::vector<uint8_t> buf(buf_size == 0 ? 4096 : buf_size);

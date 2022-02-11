@@ -40,10 +40,15 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          init_sockets();
          }
 
-      ~TLS_Client()
+      ~TLS_Client() override
          {
          stop_sockets();
          }
+
+      TLS_Client(const TLS_Client& other) = delete;
+      TLS_Client(TLS_Client&& other) = delete;
+      TLS_Client& operator=(const TLS_Client& other) = delete;
+      TLS_Client& operator=(TLS_Client&& other) = delete;
 
       std::string group() const override
          {

@@ -19,7 +19,7 @@ namespace Botan_CLI {
 #if defined(BOTAN_HAS_ZFEC) && defined(BOTAN_HAS_SHA2_64)
 
 static const uint32_t FEC_MAGIC = 0xFECC0DEC;
-const char* FEC_SHARE_HASH = "SHA-512-256";
+const char* const FEC_SHARE_HASH = "SHA-512-256";
 
 class FEC_Share final
    {

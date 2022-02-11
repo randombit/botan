@@ -81,7 +81,7 @@ SessionInfo Session::get_info() const
    return info;
    }
 
-void Session::set_pin(const secure_string& old_pin, const secure_string& new_pin) const
+void Session::set_pin(const secure_string& old_pin, const secure_string& new_pin)
    {
    module()->C_SetPIN(m_handle, old_pin, new_pin);
    }

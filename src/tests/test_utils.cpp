@@ -739,7 +739,7 @@ class UUID_Tests : public Test
          class AllSame_RNG : public Botan::RandomNumberGenerator
             {
             public:
-               AllSame_RNG(uint8_t b) : m_val(b) {}
+               explicit AllSame_RNG(uint8_t b) : m_val(b) {}
 
                void randomize(uint8_t out[], size_t len) override
                   {

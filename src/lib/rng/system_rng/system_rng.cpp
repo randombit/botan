@@ -50,6 +50,11 @@ class System_RNG_Impl final : public RandomNumberGenerator
          m_rtlgenrandom = m_advapi.resolve<RtlGenRandom_fptr>("SystemFunction036");
          }
 
+      System_RNG_Impl(const System_RNG_Impl& other) = delete;
+      System_RNG_Impl(System_RNG_Impl&& other) = delete;
+      System_RNG_Impl& operator=(const System_RNG_Impl& other) = delete;
+      System_RNG_Impl& operator=(System_RNG_Impl&& other) = delete;
+
       void randomize(uint8_t buf[], size_t len) override
          {
          const size_t limit = std::numeric_limits<ULONG>::max();
@@ -98,7 +103,12 @@ class System_RNG_Impl final : public RandomNumberGenerator
             throw System_Error("System_RNG failed to acquire crypto provider", ret);
          }
 
-      ~System_RNG_Impl()
+      System_RNG_Impl(const System_RNG_Impl& other) = delete;
+      System_RNG_Impl(System_RNG_Impl&& other) = delete;
+      System_RNG_Impl& operator=(const System_RNG_Impl& other) = delete;
+      System_RNG_Impl& operator=(System_RNG_Impl&& other) = delete;
+
+      ~System_RNG_Impl() override
          {
          ::BCryptCloseAlgorithmProvider(m_prov, 0);
          }
@@ -268,7 +278,12 @@ class System_RNG_Impl final : public RandomNumberGenerator
             throw System_Error("System_RNG failed to open RNG device", errno);
          }
 
-      ~System_RNG_Impl()
+      System_RNG_Impl(const System_RNG_Impl& other) = delete;
+      System_RNG_Impl(System_RNG_Impl&& other) = delete;
+      System_RNG_Impl& operator=(const System_RNG_Impl& other) = delete;
+      System_RNG_Impl& operator=(System_RNG_Impl&& other) = delete;
+
+      ~System_RNG_Impl() override
          {
          ::close(m_fd);
          m_fd = -1;

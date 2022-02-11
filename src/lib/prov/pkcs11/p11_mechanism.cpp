@@ -35,8 +35,12 @@ struct MechanismData
       : type(_type)
       {}
 
-   MechanismData(MechanismData const&) = default;
-   MechanismData& operator=(MechanismData const&) = default;
+   MechanismData(const MechanismData& other) = default;
+   MechanismData(MechanismData&& other) = default;
+
+   MechanismData& operator=(const MechanismData& other) = default;
+   MechanismData& operator=(MechanismData&& other) = default;
+
    virtual ~MechanismData() = default;
 
    // the mechanism to perform

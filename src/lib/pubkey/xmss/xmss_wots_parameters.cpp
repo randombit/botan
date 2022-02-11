@@ -121,7 +121,7 @@ XMSS_WOTS_Parameters::base_w(size_t value) const
    }
 
 void
-XMSS_WOTS_Parameters::append_checksum(secure_vector<uint8_t>& data)
+XMSS_WOTS_Parameters::append_checksum(secure_vector<uint8_t>& data) const
    {
    size_t csum = 0;
 

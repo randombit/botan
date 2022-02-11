@@ -149,15 +149,19 @@ class KyberConstants
 
          if(!m_symmetric_primitives)
             {
-            throw Not_Implemented("requested kyber mode is not enabled in this build");
+            throw Not_Implemented("requested Kyber mode is not enabled in this build");
             }
          }
+
+      ~KyberConstants() = default;
 
       KyberConstants(const KyberConstants& other) : KyberConstants(other.m_mode)
          {
          }
 
       KyberConstants(KyberConstants&& other) = default;
+      KyberConstants& operator=(const KyberConstants& other) = delete;
+      KyberConstants& operator=(KyberConstants&& other) = default;
 
       std::string algo_name() const
          {
@@ -1040,7 +1044,8 @@ class Kyber_PublicKeyInternal
    {
    public:
       Kyber_PublicKeyInternal(KyberConstants mode, std::vector<uint8_t> polynomials, std::vector<uint8_t> seed)
-         : m_mode(std::move(mode)), m_polynomials(PolynomialVector::from_bytes(polynomials, mode)),
+         : m_mode(std::move(mode)),
+           m_polynomials(PolynomialVector::from_bytes(polynomials, m_mode)),
            m_seed(std::move(seed))
          {
          }
