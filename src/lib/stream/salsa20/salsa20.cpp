@@ -12,13 +12,20 @@
 
 namespace Botan {
 
-#define SALSA20_QUARTER_ROUND(x1, x2, x3, x4)    \
-   do {                                          \
-      x2 ^= rotl<7>(x1 + x4);                    \
-      x3 ^= rotl<9>(x2 + x1);                    \
-      x4 ^= rotl<13>(x3 + x2);                   \
-      x1 ^= rotl<18>(x4 + x3);                   \
-   } while(0)
+namespace {
+
+inline void salsa20_quarter_round(uint32_t& x1,
+                                  uint32_t& x2,
+                                  uint32_t& x3,
+                                  uint32_t& x4)
+   {
+   x2 ^= rotl<7>(x1 + x4);
+   x3 ^= rotl<9>(x2 + x1);
+   x4 ^= rotl<13>(x3 + x2);
+   x1 ^= rotl<18>(x4 + x3);
+   }
+
+}
 
 /*
 * Generate HSalsa20 cipher stream (for XSalsa20 IV setup)
@@ -33,15 +40,15 @@ void Salsa20::hsalsa20(uint32_t output[8], const uint32_t input[16])
 
    for(size_t i = 0; i != 10; ++i)
       {
-      SALSA20_QUARTER_ROUND(x00, x04, x08, x12);
-      SALSA20_QUARTER_ROUND(x05, x09, x13, x01);
-      SALSA20_QUARTER_ROUND(x10, x14, x02, x06);
-      SALSA20_QUARTER_ROUND(x15, x03, x07, x11);
+      salsa20_quarter_round(x00, x04, x08, x12);
+      salsa20_quarter_round(x05, x09, x13, x01);
+      salsa20_quarter_round(x10, x14, x02, x06);
+      salsa20_quarter_round(x15, x03, x07, x11);
 
-      SALSA20_QUARTER_ROUND(x00, x01, x02, x03);
-      SALSA20_QUARTER_ROUND(x05, x06, x07, x04);
-      SALSA20_QUARTER_ROUND(x10, x11, x08, x09);
-      SALSA20_QUARTER_ROUND(x15, x12, x13, x14);
+      salsa20_quarter_round(x00, x01, x02, x03);
+      salsa20_quarter_round(x05, x06, x07, x04);
+      salsa20_quarter_round(x10, x11, x08, x09);
+      salsa20_quarter_round(x15, x12, x13, x14);
       }
 
    output[0] = x00;
@@ -69,15 +76,15 @@ void Salsa20::salsa_core(uint8_t output[64], const uint32_t input[16], size_t ro
 
    for(size_t i = 0; i != rounds / 2; ++i)
       {
-      SALSA20_QUARTER_ROUND(x00, x04, x08, x12);
-      SALSA20_QUARTER_ROUND(x05, x09, x13, x01);
-      SALSA20_QUARTER_ROUND(x10, x14, x02, x06);
-      SALSA20_QUARTER_ROUND(x15, x03, x07, x11);
+      salsa20_quarter_round(x00, x04, x08, x12);
+      salsa20_quarter_round(x05, x09, x13, x01);
+      salsa20_quarter_round(x10, x14, x02, x06);
+      salsa20_quarter_round(x15, x03, x07, x11);
 
-      SALSA20_QUARTER_ROUND(x00, x01, x02, x03);
-      SALSA20_QUARTER_ROUND(x05, x06, x07, x04);
-      SALSA20_QUARTER_ROUND(x10, x11, x08, x09);
-      SALSA20_QUARTER_ROUND(x15, x12, x13, x14);
+      salsa20_quarter_round(x00, x01, x02, x03);
+      salsa20_quarter_round(x05, x06, x07, x04);
+      salsa20_quarter_round(x10, x11, x08, x09);
+      salsa20_quarter_round(x15, x12, x13, x14);
       }
 
    store_le(x00 + input[ 0], output + 4 *  0);
@@ -97,8 +104,6 @@ void Salsa20::salsa_core(uint8_t output[64], const uint32_t input[16], size_t ro
    store_le(x14 + input[14], output + 4 * 14);
    store_le(x15 + input[15], output + 4 * 15);
    }
-
-#undef SALSA20_QUARTER_ROUND
 
 /*
 * Combine cipher stream with message
