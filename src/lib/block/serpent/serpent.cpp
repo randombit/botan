@@ -16,48 +16,13 @@
 
 namespace Botan {
 
-namespace {
-
-/*
-* Serpent's Linear Transform
-*/
-inline void transform(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3)
-   {
-   B0  = rotl<13>(B0);   B2  = rotl<3>(B2);
-   B1 ^= B0 ^ B2;        B3 ^= B2 ^ (B0 << 3);
-   B1  = rotl<1>(B1);    B3  = rotl<7>(B3);
-   B0 ^= B1 ^ B3;        B2 ^= B3 ^ (B1 << 7);
-   B0  = rotl<5>(B0);    B2  = rotl<22>(B2);
-   }
-
-/*
-* Serpent's Inverse Linear Transform
-*/
-inline void i_transform(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3)
-   {
-   B2  = rotr<22>(B2);   B0  = rotr<5>(B0);
-   B2 ^= B3 ^ (B1 << 7); B0 ^= B1 ^ B3;
-   B3  = rotr<7>(B3);    B1  = rotr<1>(B1);
-   B3 ^= B2 ^ (B0 << 3); B1 ^= B0 ^ B2;
-   B2  = rotr<3>(B2);    B0  = rotr<13>(B0);
-   }
-
-}
-
-/*
-* XOR a key block with a data block
-*/
-#define key_xor(round, B0, B1, B2, B3) \
-   B0 ^= m_round_key[4*round  ]; \
-   B1 ^= m_round_key[4*round+1]; \
-   B2 ^= m_round_key[4*round+2]; \
-   B3 ^= m_round_key[4*round+3];
-
 /*
 * Serpent Encryption
 */
 void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   using namespace Botan::Serpent_F;
+
    verify_key_set(m_round_key.empty() == false);
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
@@ -85,6 +50,8 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          }
       }
 #endif
+
+   const Key_Inserter key_xor(m_round_key.data());
 
    BOTAN_PARALLEL_SIMD_FOR(size_t i = 0; i < blocks; ++i)
       {
@@ -133,6 +100,8 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   using namespace Botan::Serpent_F;
+
    verify_key_set(m_round_key.empty() == false);
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
@@ -160,6 +129,8 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          }
       }
 #endif
+
+   const Key_Inserter key_xor(m_round_key.data());
 
    BOTAN_PARALLEL_SIMD_FOR(size_t i = 0; i < blocks; ++i)
       {
@@ -203,15 +174,13 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
    }
 
-#undef key_xor
-#undef transform
-#undef i_transform
-
 /*
 * Serpent Key Schedule
 */
 void Serpent::key_schedule(const uint8_t key[], size_t length)
    {
+   using namespace Botan::Serpent_F;
+
    const uint32_t PHI = 0x9E3779B9;
 
    secure_vector<uint32_t> W(140);
@@ -293,7 +262,5 @@ std::string Serpent::provider() const
 
    return "base";
    }
-
-#undef key_xor
 
 }
