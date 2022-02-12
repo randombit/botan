@@ -15,13 +15,16 @@ namespace Botan {
 
 namespace {
 
-#define CHACHA_QUARTER_ROUND(a, b, c, d) \
-      do {                               \
-      a += b; d ^= a; d = rotl<16>(d);   \
-      c += d; b ^= c; b = rotl<12>(b);   \
-      a += b; d ^= a; d = rotl<8>(d);    \
-      c += d; b ^= c; b = rotl<7>(b);    \
-      } while(0)
+inline void chacha_quarter_round(uint32_t& a,
+                                 uint32_t& b,
+                                 uint32_t& c,
+                                 uint32_t& d)
+   {
+   a += b; d ^= a; d = rotl<16>(d);
+   c += d; b ^= c; b = rotl<12>(b);
+   a += b; d ^= a; d = rotl< 8>(d);
+   c += d; b ^= c; b = rotl< 7>(b);
+   }
 
 /*
 * Generate HChaCha cipher stream (for XChaCha IV setup)
@@ -37,15 +40,15 @@ void hchacha(uint32_t output[8], const uint32_t input[16], size_t rounds)
 
    for(size_t i = 0; i != rounds / 2; ++i)
       {
-      CHACHA_QUARTER_ROUND(x00, x04, x08, x12);
-      CHACHA_QUARTER_ROUND(x01, x05, x09, x13);
-      CHACHA_QUARTER_ROUND(x02, x06, x10, x14);
-      CHACHA_QUARTER_ROUND(x03, x07, x11, x15);
+      chacha_quarter_round(x00, x04, x08, x12);
+      chacha_quarter_round(x01, x05, x09, x13);
+      chacha_quarter_round(x02, x06, x10, x14);
+      chacha_quarter_round(x03, x07, x11, x15);
 
-      CHACHA_QUARTER_ROUND(x00, x05, x10, x15);
-      CHACHA_QUARTER_ROUND(x01, x06, x11, x12);
-      CHACHA_QUARTER_ROUND(x02, x07, x08, x13);
-      CHACHA_QUARTER_ROUND(x03, x04, x09, x14);
+      chacha_quarter_round(x00, x05, x10, x15);
+      chacha_quarter_round(x01, x06, x11, x12);
+      chacha_quarter_round(x02, x07, x08, x13);
+      chacha_quarter_round(x03, x04, x09, x14);
       }
 
    output[0] = x00;
@@ -116,15 +119,15 @@ void ChaCha::chacha_x8(uint8_t output[64*8], uint32_t input[16], size_t rounds)
 
       for(size_t r = 0; r != rounds / 2; ++r)
          {
-         CHACHA_QUARTER_ROUND(x00, x04, x08, x12);
-         CHACHA_QUARTER_ROUND(x01, x05, x09, x13);
-         CHACHA_QUARTER_ROUND(x02, x06, x10, x14);
-         CHACHA_QUARTER_ROUND(x03, x07, x11, x15);
+         chacha_quarter_round(x00, x04, x08, x12);
+         chacha_quarter_round(x01, x05, x09, x13);
+         chacha_quarter_round(x02, x06, x10, x14);
+         chacha_quarter_round(x03, x07, x11, x15);
 
-         CHACHA_QUARTER_ROUND(x00, x05, x10, x15);
-         CHACHA_QUARTER_ROUND(x01, x06, x11, x12);
-         CHACHA_QUARTER_ROUND(x02, x07, x08, x13);
-         CHACHA_QUARTER_ROUND(x03, x04, x09, x14);
+         chacha_quarter_round(x00, x05, x10, x15);
+         chacha_quarter_round(x01, x06, x11, x12);
+         chacha_quarter_round(x02, x07, x08, x13);
+         chacha_quarter_round(x03, x04, x09, x14);
          }
 
       x00 += input[0];
@@ -165,8 +168,6 @@ void ChaCha::chacha_x8(uint8_t output[64*8], uint32_t input[16], size_t rounds)
       input[13] += (input[12] == 0);
       }
    }
-
-#undef CHACHA_QUARTER_ROUND
 
 /*
 * Combine cipher stream with message
