@@ -421,6 +421,11 @@ class SIMD_4x32 final
 #endif
          }
 
+      void operator^=(uint32_t other)
+         {
+         *this ^= SIMD_4x32::splat(other);
+         }
+
       void operator|=(const SIMD_4x32& other)
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
@@ -647,6 +652,25 @@ class SIMD_4x32 final
    private:
       native_simd_type m_simd;
    };
+
+template<size_t R>
+inline SIMD_4x32 rotl(SIMD_4x32 input)
+   {
+   return input.rotl<R>();
+   }
+
+template<size_t R>
+inline SIMD_4x32 rotr(SIMD_4x32 input)
+   {
+   return input.rotr<R>();
+   }
+
+// For Serpent:
+template<size_t S>
+inline SIMD_4x32 shl(SIMD_4x32 input)
+   {
+   return input.shl<S>();
+   }
 
 }
 

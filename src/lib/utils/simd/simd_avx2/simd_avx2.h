@@ -184,6 +184,12 @@ class SIMD_8x32 final
          }
 
       BOTAN_FUNC_ISA("avx2")
+      void operator^=(uint32_t other)
+         {
+         *this ^= SIMD_8x32::splat(other);
+         }
+
+      BOTAN_FUNC_ISA("avx2")
       void operator|=(const SIMD_8x32& other)
          {
          m_avx2 = _mm256_or_si256(m_avx2, other.m_avx2);
@@ -317,6 +323,25 @@ class SIMD_8x32 final
 
       __m256i m_avx2;
    };
+
+template<size_t R>
+inline SIMD_8x32 rotl(SIMD_8x32 input)
+   {
+   return input.rotl<R>();
+   }
+
+template<size_t R>
+inline SIMD_8x32 rotr(SIMD_8x32 input)
+   {
+   return input.rotr<R>();
+   }
+
+// For Serpent:
+template<size_t S>
+inline SIMD_8x32 shl(SIMD_8x32 input)
+   {
+   return input.shl<S>();
+   }
 
 }
 
