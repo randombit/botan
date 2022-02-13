@@ -183,7 +183,7 @@ class Test_Tests final : public Test
          }
 
    private:
-      Test::Result test_testsuite_rng()
+      static Test::Result test_testsuite_rng()
          {
          Test::Result result("Testsuite_RNG");
 
@@ -207,7 +207,7 @@ class Test_Tests final : public Test
          return result;
          }
 
-      void verify_failure(const std::string& what,
+      static void verify_failure(const std::string& what,
                           Test::Result& result,
                           const Test::Result& test_result)
          {

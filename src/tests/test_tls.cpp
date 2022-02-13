@@ -333,7 +333,7 @@ class Test_TLS_Policy_Text : public Test
          }
 
    private:
-      std::string read_tls_policy(const std::string& policy_str)
+      static std::string read_tls_policy(const std::string& policy_str)
          {
          const std::string fspath = Test::data_file("tls-policy/" + policy_str + ".txt");
 
@@ -347,7 +347,7 @@ class Test_TLS_Policy_Text : public Test
          return policy.to_string();
          }
 
-      std::string tls_policy_string(const std::string& policy_str)
+      static std::string tls_policy_string(const std::string& policy_str)
          {
          std::unique_ptr<Botan::TLS::Policy> policy;
          if(policy_str == "default")
@@ -436,7 +436,7 @@ class Test_TLS_Algo_Strings : public Test
          }
 
    private:
-      Test::Result test_tls_sig_method_strings()
+      static Test::Result test_tls_sig_method_strings()
          {
          Test::Result result("TLS::Signature_Scheme");
 
@@ -455,7 +455,7 @@ class Test_TLS_Algo_Strings : public Test
          return result;
          }
 
-      Test::Result test_auth_method_strings()
+      static Test::Result test_auth_method_strings()
          {
          Test::Result result("TLS::Auth_Method");
 
@@ -476,7 +476,7 @@ class Test_TLS_Algo_Strings : public Test
          return result;
          }
 
-      Test::Result test_kex_algo_strings()
+      static Test::Result test_kex_algo_strings()
          {
          Test::Result result("TLS::Kex_Algo");
 

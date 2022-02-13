@@ -33,9 +33,9 @@ class Invalid_Hash_Name_Tests final : public Test
          }
 
    private:
-      void test_invalid_name(Result& result,
+      static void test_invalid_name(Result& result,
                              const std::string& name,
-                             const std::string& expected_msg = "") const
+                             const std::string& expected_msg = "") 
          {
          try
             {

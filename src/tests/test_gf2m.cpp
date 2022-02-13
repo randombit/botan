@@ -29,7 +29,7 @@ class GF2m_Tests final : public Test
          }
 
    private:
-      Test::Result test_gf_overflow()
+      static Test::Result test_gf_overflow()
          {
          Test::Result result("GF2m");
 

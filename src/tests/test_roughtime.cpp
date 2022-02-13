@@ -128,7 +128,7 @@ BOTAN_REGISTER_TEST("roughtime", "roughtime_nonce_from_blind", Roughtime_nonce_f
 
 class Roughtime final : public Test
    {
-      Test::Result test_nonce()
+      static Test::Result test_nonce()
          {
          Test::Result result("roughtime nonce");
 
@@ -147,7 +147,7 @@ class Roughtime final : public Test
          return result;
          }
 
-      Test::Result test_chain()
+      static Test::Result test_chain()
          {
          Test::Result result("roughtime chain");
 
@@ -184,7 +184,7 @@ class Roughtime final : public Test
          return result;
          }
 
-      Test::Result test_server_information()
+      static Test::Result test_server_information()
          {
          Test::Result result("roughtime server_information");
 
@@ -216,7 +216,7 @@ class Roughtime final : public Test
          return result;
          }
 
-      Test::Result test_request_online()
+      static Test::Result test_request_online()
          {
          Test::Result result("roughtime request online");
 

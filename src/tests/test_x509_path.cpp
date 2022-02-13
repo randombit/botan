@@ -163,7 +163,7 @@ class X509test_Path_Validation_Tests final : public Test
 
    private:
 
-      std::vector<Botan::X509_Certificate> load_cert_file(const std::string& filename)
+      static std::vector<Botan::X509_Certificate> load_cert_file(const std::string& filename)
          {
          Botan::DataSource_Stream in(filename);
 
@@ -913,17 +913,17 @@ BOTAN_REGISTER_TEST("x509", "x509_path_bsi", BSI_Path_Validation_Tests);
 class Path_Validation_With_OCSP_Tests final : public Test
    {
    public:
-      Botan::X509_Certificate load_test_X509_cert(const std::string& path)
+      static Botan::X509_Certificate load_test_X509_cert(const std::string& path)
          {
          return Botan::X509_Certificate(Test::data_file(path));
          }
 
-      std::optional<Botan::OCSP::Response> load_test_OCSP_resp(const std::string& path)
+      static std::optional<Botan::OCSP::Response> load_test_OCSP_resp(const std::string& path)
          {
          return Botan::OCSP::Response(Test::read_binary_data_file(path));
          }
 
-      Test::Result validate_with_ocsp_with_next_update_without_max_age()
+      static Test::Result validate_with_ocsp_with_next_update_without_max_age()
          {
          Test::Result result("path check with ocsp with next_update w/o max_age");
          Botan::Certificate_Store_In_Memory trusted;
@@ -962,7 +962,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result validate_with_ocsp_with_next_update_with_max_age()
+      static Test::Result validate_with_ocsp_with_next_update_with_max_age()
          {
          Test::Result result("path check with ocsp with next_update with max_age");
          Botan::Certificate_Store_In_Memory trusted;
@@ -1002,7 +1002,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result validate_with_ocsp_without_next_update_without_max_age()
+      static Test::Result validate_with_ocsp_without_next_update_without_max_age()
          {
          Test::Result result("path check with ocsp w/o next_update w/o max_age");
          Botan::Certificate_Store_In_Memory trusted;
@@ -1040,7 +1040,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result validate_with_ocsp_without_next_update_with_max_age()
+      static Test::Result validate_with_ocsp_without_next_update_with_max_age()
          {
          Test::Result result("path check with ocsp w/o next_update with max_age");
          Botan::Certificate_Store_In_Memory trusted;
@@ -1156,7 +1156,7 @@ BOTAN_REGISTER_TEST("x509", "x509_cve_2020_0601", CVE_2020_0601_Tests);
 class XMSS_Path_Validation_Tests final : public Test
    {
    public:
-      Test::Result validate_self_signed(const std::string& name, const std::string& file)
+      static Test::Result validate_self_signed(const std::string& name, const std::string& file)
       {
       Test::Result result(name);
 

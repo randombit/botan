@@ -49,7 +49,7 @@ class Sodium_API_Tests : public Test
 
    private:
 
-      Test::Result sodium_malloc()
+      static Test::Result sodium_malloc()
          {
          Test::Result result("sodium_malloc");
 
@@ -64,7 +64,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result sodium_utils()
+      static Test::Result sodium_utils()
          {
          Test::Result result("sodium math utils");
 
@@ -103,7 +103,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result randombytes_buf_deterministic()
+      static Test::Result randombytes_buf_deterministic()
          {
          Test::Result result("randombytes_buf_deterministic");
 
@@ -117,7 +117,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result hash_sha512()
+      static Test::Result hash_sha512()
          {
          Test::Result result("crypto_hash_sha512");
 
@@ -130,7 +130,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result hash_sha256()
+      static Test::Result hash_sha256()
          {
          Test::Result result("crypto_hash_sha256");
 
@@ -143,7 +143,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result box_curve25519xsalsa20poly1305()
+      static Test::Result box_curve25519xsalsa20poly1305()
          {
          Test::Result result("crypto_box_curve25519xsalsa20poly1305");
 
@@ -193,7 +193,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result aead_chacha20poly1305()
+      static Test::Result aead_chacha20poly1305()
          {
          Test::Result result("crypto_aead_chacha20poly1305");
 
@@ -247,7 +247,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result aead_chacha20poly1305_ietf()
+      static Test::Result aead_chacha20poly1305_ietf()
          {
          Test::Result result("crypto_aead_chacha20poly1305_ietf");
 
@@ -301,7 +301,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result aead_xchacha20poly1305()
+      static Test::Result aead_xchacha20poly1305()
          {
          Test::Result result("crypto_aead_xchacha20poly1305");
 
@@ -356,7 +356,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result auth_hmacsha512()
+      static Test::Result auth_hmacsha512()
          {
          Test::Result result("crypto_auth_hmacsha512");
 
@@ -381,7 +381,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result auth_hmacsha512256()
+      static Test::Result auth_hmacsha512256()
          {
          Test::Result result("crypto_auth_hmacsha512256");
 
@@ -404,7 +404,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result auth_hmacsha256()
+      static Test::Result auth_hmacsha256()
          {
          Test::Result result("crypto_auth_hmacsha256");
 
@@ -427,7 +427,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result auth_poly1305()
+      static Test::Result auth_poly1305()
          {
          Test::Result result("crypto_onetimeauth_poly1305");
 
@@ -451,7 +451,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result shorthash_siphash24()
+      static Test::Result shorthash_siphash24()
          {
          Test::Result result("crypto_shorthash_siphash24");
 
@@ -466,7 +466,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result secretbox_xsalsa20poly1305()
+      static Test::Result secretbox_xsalsa20poly1305()
          {
          Test::Result result("secretbox_xsalsa20poly1305");
 
@@ -498,7 +498,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result secretbox_xsalsa20poly1305_detached()
+      static Test::Result secretbox_xsalsa20poly1305_detached()
          {
          Test::Result result("secretbox_xsalsa20poly1305");
 
@@ -534,7 +534,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result sign_ed25519()
+      static Test::Result sign_ed25519()
          {
          Test::Result result("crypto_sign_ed25519");
 
@@ -563,7 +563,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result stream_salsa20()
+      static Test::Result stream_salsa20()
          {
          Test::Result result("crypto_stream_salsa20");
 
@@ -583,7 +583,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result stream_xsalsa20()
+      static Test::Result stream_xsalsa20()
          {
          Test::Result result("crypto_stream_xsalsa20");
 
@@ -603,7 +603,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result stream_chacha20()
+      static Test::Result stream_chacha20()
          {
          Test::Result result("crypto_stream_chacha20");
 
@@ -623,7 +623,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result stream_chacha20_ietf()
+      static Test::Result stream_chacha20_ietf()
          {
          Test::Result result("crypto_stream_chacha20");
 
@@ -643,7 +643,7 @@ class Sodium_API_Tests : public Test
          return result;
          }
 
-      Test::Result stream_xchacha20()
+      static Test::Result stream_xchacha20()
          {
          Test::Result result("crypto_stream_xchacha20");
 

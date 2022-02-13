@@ -49,7 +49,7 @@ class TLS_Policy_Unit_Tests final : public Test
          return results;
          }
    private:
-      Test::Result test_peer_key_acceptable_rsa()
+      static Test::Result test_peer_key_acceptable_rsa()
          {
          Test::Result result("TLS Policy RSA key verification");
 #if defined(BOTAN_HAS_RSA)
@@ -73,7 +73,7 @@ class TLS_Policy_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result test_peer_key_acceptable_ecdh()
+      static Test::Result test_peer_key_acceptable_ecdh()
          {
          Test::Result result("TLS Policy ECDH key verification");
 #if defined(BOTAN_HAS_ECDH)
@@ -99,7 +99,7 @@ class TLS_Policy_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result test_peer_key_acceptable_ecdsa()
+      static Test::Result test_peer_key_acceptable_ecdsa()
          {
          Test::Result result("TLS Policy ECDSA key verification");
 #if defined(BOTAN_HAS_ECDSA)
@@ -125,7 +125,7 @@ class TLS_Policy_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result test_peer_key_acceptable_dh()
+      static Test::Result test_peer_key_acceptable_dh()
          {
          Test::Result result("TLS Policy DH key verification");
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)

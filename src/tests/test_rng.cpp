@@ -662,7 +662,7 @@ BOTAN_REGISTER_TEST("rng", "chacha_rng_unit", ChaCha_RNG_Unit_Tests);
 class AutoSeeded_RNG_Tests final : public Test
    {
    private:
-      Test::Result auto_rng_tests()
+      static Test::Result auto_rng_tests()
          {
          Test::Result result("AutoSeeded_RNG");
 

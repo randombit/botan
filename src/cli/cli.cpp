@@ -198,7 +198,7 @@ std::string Command::slurp_file_as_str(const std::string& input_file,
 
 void Command::read_file(const std::string& input_file,
                         const std::function<void (uint8_t[], size_t)>& consumer_fn,
-                        size_t buf_size) const
+                        size_t buf_size)
    {
    if(input_file == "-")
       {

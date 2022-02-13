@@ -328,7 +328,7 @@ class Speed final : public Command
       Speed()
          : Command("speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos") {}
 
-      std::vector<std::string> default_benchmark_list()
+      static std::vector<std::string> default_benchmark_list()
          {
          /*
          This is not intended to be exhaustive: it just hits the high

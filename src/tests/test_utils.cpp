@@ -75,7 +75,7 @@ class Utility_Function_Tests final : public Text_Based_Test
          return results;
          }
 
-      Test::Result test_loadstore()
+      static Test::Result test_loadstore()
          {
          Test::Result result("Util load/store");
 
@@ -438,7 +438,7 @@ class Date_Format_Tests final : public Text_Based_Test
    public:
       Date_Format_Tests() : Text_Based_Test("dates.vec", "Date") {}
 
-      std::vector<uint32_t> parse_date(const std::string& s)
+      static std::vector<uint32_t> parse_date(const std::string& s)
          {
          const std::vector<std::string> parts = Botan::split_on(s, ',');
          if(parts.size() != 6)
@@ -606,7 +606,7 @@ class ReadKV_Tests final : public Text_Based_Test
 
    private:
 
-      std::vector<std::string> split_group(const std::string& str)
+      static std::vector<std::string> split_group(const std::string& str)
          {
          std::vector<std::string> elems;
          if(str.empty()) return elems;
@@ -631,7 +631,7 @@ class ReadKV_Tests final : public Text_Based_Test
          return elems;
          }
 
-      void confirm_kv(Test::Result& result,
+      static void confirm_kv(Test::Result& result,
                       const std::map<std::string, std::string>& kv,
                       const std::vector<std::string>& expected)
          {

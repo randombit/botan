@@ -221,9 +221,9 @@ class NIST_Curve_Reduction_Tests final : public Test
          return results;
          }
 
-      Test::Result random_redc_test(const std::string& prime_name,
-                                    const Botan::BigInt& p,
-                                    const reducer_fn& redc_fn)
+      static Test::Result random_redc_test(const std::string& prime_name,
+                                           const Botan::BigInt& p,
+                                           const reducer_fn& redc_fn)
          {
          const Botan::BigInt p2 = p * p;
          const size_t p_bits = p.bits();
@@ -338,7 +338,7 @@ class EC_Group_Tests : public Test
          }
    private:
 
-      void test_ser_der(Test::Result& result, const Botan::EC_Group& group)
+      static void test_ser_der(Test::Result& result, const Botan::EC_Group& group)
          {
          // generate point
          const Botan::PointGFp pt = create_random_point(Test::rng(), group);
@@ -353,7 +353,7 @@ class EC_Group_Tests : public Test
             }
          }
 
-      void test_basic_math(Test::Result& result, const Botan::EC_Group& group)
+      static void test_basic_math(Test::Result& result, const Botan::EC_Group& group)
          {
          const Botan::PointGFp& G = group.get_base_point();
 
@@ -371,7 +371,7 @@ class EC_Group_Tests : public Test
          result.confirm("point (0,0) is not on the curve", !zero_coords.on_the_curve());
          }
 
-      void test_point_swap(Test::Result& result, const Botan::EC_Group& group)
+      static void test_point_swap(Test::Result& result, const Botan::EC_Group& group)
          {
          Botan::PointGFp a(create_random_point(Test::rng(), group));
          Botan::PointGFp b(create_random_point(Test::rng(), group));
@@ -385,7 +385,7 @@ class EC_Group_Tests : public Test
          result.test_eq("swap correct", b, c);
          }
 
-      void test_zeropoint(Test::Result& result, const Botan::EC_Group& group)
+      static void test_zeropoint(Test::Result& result, const Botan::EC_Group& group)
          {
          Botan::PointGFp zero = group.zero_point();
 

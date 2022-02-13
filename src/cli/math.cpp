@@ -171,7 +171,7 @@ class Factor final : public Command
       * Pollard's Rho algorithm, as described in the MIT algorithms book.
       * Uses Brent's cycle finding
       */
-      Botan::BigInt rho(const Botan::BigInt& n, Botan::RandomNumberGenerator& rng)
+      static Botan::BigInt rho(const Botan::BigInt& n, Botan::RandomNumberGenerator& rng)
          {
          auto monty_n = std::make_shared<Botan::Montgomery_Params>(n);
 
@@ -231,7 +231,7 @@ class Factor final : public Command
          }
 
       // Remove (and return) any small (< 2^16) factors
-      std::vector<Botan::BigInt> remove_small_factors(Botan::BigInt& n)
+      static std::vector<Botan::BigInt> remove_small_factors(Botan::BigInt& n)
          {
          std::vector<Botan::BigInt> factors;
 

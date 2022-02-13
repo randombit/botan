@@ -88,7 +88,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
          }
 
    private:
-      void test_mode(Test::Result& result,
+      static void test_mode(Test::Result& result,
                      const std::string& algo,
                      const std::string& provider,
                      const std::string& direction,
@@ -267,7 +267,7 @@ class Cipher_Mode_IV_Carry_Tests final : public Test
          }
 
    private:
-      Test::Result test_cbc_iv_carry()
+      static Test::Result test_cbc_iv_carry()
          {
          Test::Result result("CBC IV carry");
 
@@ -321,7 +321,7 @@ class Cipher_Mode_IV_Carry_Tests final : public Test
          return result;
          }
 
-      Test::Result test_cfb_iv_carry()
+      static Test::Result test_cfb_iv_carry()
          {
          Test::Result result("CFB IV carry");
 #if defined(BOTAN_HAS_MODE_CFB) && defined(BOTAN_HAS_AES)
@@ -369,7 +369,7 @@ class Cipher_Mode_IV_Carry_Tests final : public Test
          return result;
          }
 
-      Test::Result test_ctr_iv_carry()
+      static Test::Result test_ctr_iv_carry()
          {
          Test::Result result("CTR IV carry");
 #if defined(BOTAN_HAS_CTR_BE) && defined(BOTAN_HAS_AES)

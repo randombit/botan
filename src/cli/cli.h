@@ -166,10 +166,9 @@ class Command
       /*
       * Read a file calling consumer_fn() with the inputs
       */
-      void read_file(const std::string& input_file,
-                     const std::function<void (uint8_t[], size_t)>& consumer_fn,
-                     size_t buf_size = 0) const;
-
+      static void read_file(const std::string& input_file,
+                            const std::function<void (uint8_t[], size_t)>& consumer_fn,
+                            size_t buf_size = 0);
 
       static void do_read_file(std::istream& in,
                                const std::function<void (uint8_t[], size_t)>& consumer_fn,

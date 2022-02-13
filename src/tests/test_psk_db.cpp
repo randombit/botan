@@ -99,7 +99,7 @@ class PSK_DB_Tests final : public Test
 
    private:
 
-      Test::Result test_psk_db()
+      static Test::Result test_psk_db()
          {
          Test::Result result("PSK_DB");
 

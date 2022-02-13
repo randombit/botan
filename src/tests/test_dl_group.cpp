@@ -31,7 +31,7 @@ class DL_Group_Tests final : public Test
          }
 
    private:
-      Test::Result test_dl_errors()
+      static Test::Result test_dl_errors()
          {
          Test::Result result("DL_Group errors");
          result.test_throws("Uninitialized",
@@ -50,7 +50,7 @@ class DL_Group_Tests final : public Test
          return result;
          }
 
-      Test::Result test_dl_encoding()
+      static Test::Result test_dl_encoding()
          {
          Test::Result result("DL_Group encoding");
 

@@ -149,7 +149,7 @@ class FFI_Unit_Tests final : public Test
 
    private:
 
-      Test::Result ffi_test_utils()
+      static Test::Result ffi_test_utils()
          {
          Test::Result result("FFI");
          result.test_is_eq("FFI API version", botan_ffi_api_version(), uint32_t(BOTAN_HAS_FFI));
@@ -191,7 +191,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_rng()
+      static Test::Result ffi_test_rng()
          {
          Test::Result result("FFI RNG");
 
@@ -299,7 +299,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_rsa_cert()
+      static Test::Result ffi_test_rsa_cert()
          {
          Test::Result result("FFI RSA cert");
 
@@ -326,7 +326,7 @@ class FFI_Unit_Tests final : public Test
          }
 
 
-      Test::Result ffi_test_crl()
+      static Test::Result ffi_test_crl()
          {
          Test::Result result("FFI CRL");
 
@@ -374,7 +374,7 @@ class FFI_Unit_Tests final : public Test
          }
 
 
-      Test::Result ffi_test_cert_validation()
+      static Test::Result ffi_test_cert_validation()
          {
          Test::Result result("FFI Cert validation");
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
@@ -449,7 +449,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_ecdsa_cert()
+      static Test::Result ffi_test_ecdsa_cert()
          {
          Test::Result result("FFI ECDSA cert");
 
@@ -563,7 +563,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_pkcs_hash_id()
+      static Test::Result ffi_test_pkcs_hash_id()
          {
          Test::Result result("FFI PKCS hash id");
 
@@ -589,7 +589,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_ciphers_cbc()
+      static Test::Result ffi_test_ciphers_cbc()
          {
          Test::Result result("FFI CBC cipher");
 
@@ -665,7 +665,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_ciphers_aead_gcm()
+      static Test::Result ffi_test_ciphers_aead_gcm()
          {
          Test::Result result("FFI GCM");
 
@@ -774,7 +774,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_ciphers_aead_eax()
+      static Test::Result ffi_test_ciphers_aead_eax()
          {
          Test::Result result("FFI EAX");
 
@@ -865,7 +865,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_stream_ciphers()
+      static Test::Result ffi_test_stream_ciphers()
          {
          Test::Result result("FFI stream ciphers");
 
@@ -914,7 +914,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_hash()
+      static Test::Result ffi_test_hash()
          {
          Test::Result result("FFI hash");
 
@@ -990,7 +990,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_mac()
+      static Test::Result ffi_test_mac()
          {
          Test::Result result("FFI MAC");
 
@@ -1054,7 +1054,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_scrypt()
+      static Test::Result ffi_test_scrypt()
          {
          Test::Result result("FFI Scrypt");
 
@@ -1083,7 +1083,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_kdf(botan_rng_t rng)
+      static Test::Result ffi_test_kdf(botan_rng_t rng)
          {
          Test::Result result("FFI KDF");
          std::vector<uint8_t> outbuf;
@@ -1156,7 +1156,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_block_ciphers()
+      static Test::Result ffi_test_block_ciphers()
          {
          Test::Result result("FFI block ciphers");
 
@@ -1220,7 +1220,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_errors()
+      static Test::Result ffi_test_errors()
          {
          // Test some error handling situations
          Test::Result result("FFI error handling");
@@ -1254,7 +1254,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_base64()
+      static Test::Result ffi_test_base64()
          {
          Test::Result result("FFI base64");
 
@@ -1291,7 +1291,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_hex()
+      static Test::Result ffi_test_hex()
          {
          Test::Result result("FFI hex");
 
@@ -1320,7 +1320,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_mp(botan_rng_t rng)
+      static Test::Result ffi_test_mp(botan_rng_t rng)
          {
          Test::Result result("FFI MP");
 
@@ -1543,7 +1543,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_privkey_t priv, botan_rng_t rng)
+      static void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_privkey_t priv, botan_rng_t rng)
          {
          // export public key
          size_t pubkey_len = 0;
@@ -1676,7 +1676,7 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_pubkey_fingerprint, (pub, "SHA-512", fingerprint.data(), &fingerprint_len));
          }
 
-      Test::Result ffi_test_fpe()
+      static Test::Result ffi_test_fpe()
          {
          Test::Result result("FFI FPE");
 
@@ -1713,7 +1713,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_totp()
+      static Test::Result ffi_test_totp()
          {
          Test::Result result("FFI TOTP");
 
@@ -1740,7 +1740,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_hotp()
+      static Test::Result ffi_test_hotp()
          {
          Test::Result result("FFI HOTP");
 
@@ -1775,7 +1775,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_keywrap()
+      static Test::Result ffi_test_keywrap()
          {
          Test::Result result("FFI keywrap");
 
@@ -1808,7 +1808,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_rsa(botan_rng_t rng)
+      static Test::Result ffi_test_rsa(botan_rng_t rng)
          {
          Test::Result result("FFI RSA");
 
@@ -1964,8 +1964,8 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-         void do_dsa_test(botan_privkey_t priv, botan_rng_t rng, Test::Result &result)
-            {
+      static void do_dsa_test(botan_privkey_t priv, botan_rng_t rng, Test::Result &result)
+         {
             TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
 
             botan_pubkey_t pub;
@@ -2070,7 +2070,7 @@ class FFI_Unit_Tests final : public Test
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             }
 
-      Test::Result ffi_test_dsa(botan_rng_t rng)
+      static Test::Result ffi_test_dsa(botan_rng_t rng)
          {
          Test::Result result("FFI DSA");
          botan_privkey_t priv;
@@ -2087,7 +2087,8 @@ class FFI_Unit_Tests final : public Test
 
          return result;
          }
-      Test::Result ffi_test_ecdsa(botan_rng_t rng)
+
+      static Test::Result ffi_test_ecdsa(botan_rng_t rng)
          {
          Test::Result result("FFI ECDSA");
          static const char* kCurve = "secp384r1";
@@ -2185,7 +2186,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_sm2(botan_rng_t rng)
+      static Test::Result ffi_test_sm2(botan_rng_t rng)
          {
          Test::Result result("FFI SM2 Sig");
          static const char* kCurve = "sm2p256v1";
@@ -2280,7 +2281,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_sm2_enc(botan_rng_t rng)
+      static Test::Result ffi_test_sm2_enc(botan_rng_t rng)
          {
          Test::Result result("FFI SM2 Enc");
          static const char* kCurve = "sm2p256v1";
@@ -2358,7 +2359,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_ecdh(botan_rng_t rng)
+      static Test::Result ffi_test_ecdh(botan_rng_t rng)
          {
          Test::Result result("FFI ECDH");
 
@@ -2440,7 +2441,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_mceliece(botan_rng_t rng)
+      static Test::Result ffi_test_mceliece(botan_rng_t rng)
          {
          Test::Result result("FFI McEliece");
 
@@ -2473,7 +2474,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_ed25519(botan_rng_t rng)
+      static Test::Result ffi_test_ed25519(botan_rng_t rng)
          {
          Test::Result result("FFI Ed25519");
 
@@ -2545,7 +2546,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_x25519()
+      static Test::Result ffi_test_x25519()
          {
          Test::Result result("FFI X25519");
 
@@ -2691,7 +2692,7 @@ class FFI_Unit_Tests final : public Test
          }
 
 
-      Test::Result ffi_test_dh(botan_rng_t rng)
+      static Test::Result ffi_test_dh(botan_rng_t rng)
          {
          Test::Result result("FFI DH");
 
