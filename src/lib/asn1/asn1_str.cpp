@@ -31,7 +31,7 @@ ASN1_Type choose_encoding(const std::string& str)
       auto is_decimal = CT::Mask<uint8_t>::is_within_range(c, '0', '9');
 
       auto is_print_punc = CT::Mask<uint8_t>::is_any_of(c, {
-            ' ', '(', ')', '+', ',', '=', ',', '-', '.', '/',
+            ' ', '(', ')', '+', ',', '-', '.', '/',
             ':', '=', '?'});
 
       auto is_printable = is_alpha_lower | is_alpha_upper | is_decimal | is_print_punc;
