@@ -2,6 +2,8 @@
 * TLS Extensions
 * (C) 2011,2012,2015,2016 Jack Lloyd
 *     2016 Juraj Somorovsky
+*     2021 Elektrobit Automotive GmbH
+*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,11 +13,17 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 
+#include <iterator>
+
 namespace Botan::TLS {
 
 namespace {
 
-std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size, Connection_Side from)
+std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
+                                          const uint16_t code,
+                                          const uint16_t size,
+                                          const Connection_Side from,
+                                          const Handshake_Type message_type)
    {
    switch(code)
       {
@@ -26,7 +34,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader, uint16_t code
          return std::make_unique<Supported_Groups>(reader, size);
 
       case TLSEXT_CERT_STATUS_REQUEST:
-         return std::make_unique<Certificate_Status_Request>(reader, size, from);
+         return std::make_unique<Certificate_Status_Request>(reader, size, from, message_type);
 
       case TLSEXT_EC_POINT_FORMATS:
          return std::make_unique<Supported_Point_Formats>(reader, size);
@@ -41,7 +49,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader, uint16_t code
          return std::make_unique<SRTP_Protection_Profiles>(reader, size);
 
       case TLSEXT_ALPN:
-         return std::make_unique<Application_Layer_Protocol_Notification>(reader, size);
+         return std::make_unique<Application_Layer_Protocol_Notification>(reader, size, from);
 
       case TLSEXT_EXTENDED_MASTER_SECRET:
          return std::make_unique<Extended_Master_Secret>(reader, size);
@@ -62,7 +70,19 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader, uint16_t code
 
 }
 
-void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side from)
+void Extensions::add(std::unique_ptr<Extension> extn)
+   {
+   if (has(extn->type()))
+      {
+      throw Invalid_Argument("cannot add the same extension twice: " + std::to_string(extn->type()));
+      }
+
+   m_extensions.emplace_back(extn.release());
+   }
+
+void Extensions::deserialize(TLS_Data_Reader& reader,
+                             const Connection_Side from,
+                             const Handshake_Type message_type)
    {
    if(reader.has_remaining())
       {
@@ -78,27 +98,44 @@ void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side from)
 
          const auto type = static_cast<Handshake_Extension_Type>(extension_code);
 
-         if(m_extensions.find(type) != m_extensions.end())
+         if(has(type))
             throw TLS_Exception(TLS::Alert::DECODE_ERROR,
                                 "Peer sent duplicated extensions");
 
-         this->add(make_extension(reader, extension_code, extension_size, from));
+         this->add(make_extension(reader, extension_code, extension_size, from, message_type));
          }
       }
+   }
+
+std::unique_ptr<Extension> Extensions::take(Handshake_Extension_Type type)
+   {
+   const auto i = std::find_if(m_extensions.begin(), m_extensions.end(),
+                               [type](const auto &ext) {
+                                  return ext->type() == type;
+                               });
+
+   std::unique_ptr<Extension> result;
+   if (i != m_extensions.end())
+      {
+      std::swap(result, *i);
+      m_extensions.erase(i);
+      }
+
+   return result;
    }
 
 std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const
    {
    std::vector<uint8_t> buf(2); // 2 bytes for length field
 
-   for(auto& extn : m_extensions)
+   for(const auto& extn : m_extensions)
       {
-      if(extn.second->empty())
+      if(extn->empty())
          continue;
 
-      const uint16_t extn_code = static_cast<uint16_t>(extn.second->type());
+      const uint16_t extn_code = static_cast<uint16_t>(extn->type());
 
-      const std::vector<uint8_t> extn_val = extn.second->serialize(whoami);
+      const std::vector<uint8_t> extn_val = extn->serialize(whoami);
 
       buf.push_back(get_byte<0>(extn_code));
       buf.push_back(get_byte<1>(extn_code));
@@ -121,20 +158,13 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const
    return buf;
    }
 
-bool Extensions::remove_extension(Handshake_Extension_Type typ)
-   {
-   auto i = m_extensions.find(typ);
-   if(i == m_extensions.end())
-      return false;
-   m_extensions.erase(i);
-   return true;
-   }
-
 std::set<Handshake_Extension_Type> Extensions::extension_types() const
    {
    std::set<Handshake_Extension_Type> offers;
-   for(const auto& extension : m_extensions)
-      offers.insert(extension.first);
+   std::transform(m_extensions.cbegin(), m_extensions.cend(),
+                  std::inserter(offers, offers.begin()), [] (const auto &ext) {
+                     return ext->type();
+                  });
    return offers;
    }
 
@@ -218,7 +248,8 @@ std::vector<uint8_t> Renegotiation_Extension::serialize(Connection_Side /*whoami
    }
 
 Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
-                                                                                 uint16_t extension_size)
+                                                                                 uint16_t extension_size,
+                                                                                 Connection_Side from)
    {
    if(extension_size == 0)
       return; // empty extension
@@ -244,15 +275,23 @@ Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification
 
       m_protocols.push_back(p);
       }
+
+   // RFC 7301 3.1
+   //    The "extension_data" field of the [...] extension is structured the
+   //    same as described above for the client "extension_data", except that
+   //    the "ProtocolNameList" MUST contain exactly one "ProtocolName".
+   if(from == Connection_Side::SERVER && m_protocols.size() != 1)
+      {
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "Server sent " + std::to_string(m_protocols.size()) +
+                          " protocols in ALPN extension response");
+      }
    }
 
 const std::string& Application_Layer_Protocol_Notification::single_protocol() const
    {
-   if(m_protocols.size() != 1)
-      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                          "Server sent " + std::to_string(m_protocols.size()) +
-                          " protocols in ALPN extension response");
-   return m_protocols[0];
+   BOTAN_STATE_CHECK(m_protocols.size() == 1);
+   return m_protocols.front();
    }
 
 std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connection_Side /*whoami*/) const
@@ -278,6 +317,11 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
 
 Supported_Groups::Supported_Groups(const std::vector<Group_Params>& groups) : m_groups(groups)
    {
+   }
+
+const std::vector<Group_Params>& Supported_Groups::groups() const
+   {
+   return m_groups;
    }
 
 std::vector<Group_Params> Supported_Groups::ec_groups() const
@@ -484,65 +528,6 @@ std::vector<uint8_t> Encrypt_then_MAC::serialize(Connection_Side /*whoami*/) con
    return std::vector<uint8_t>();
    }
 
-std::vector<uint8_t> Certificate_Status_Request::serialize(Connection_Side whoami) const
-   {
-   std::vector<uint8_t> buf;
-
-   if(whoami == Connection_Side::SERVER)
-      return buf; // server reply is empty
-
-   /*
-   opaque ResponderID<1..2^16-1>;
-   opaque Extensions<0..2^16-1>;
-
-   CertificateStatusType status_type = ocsp(1)
-   ResponderID responder_id_list<0..2^16-1>
-   Extensions  request_extensions;
-   */
-
-   buf.push_back(1); // CertificateStatusType ocsp
-
-   buf.push_back(0);
-   buf.push_back(0);
-   buf.push_back(0);
-   buf.push_back(0);
-
-   return buf;
-   }
-
-Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
-                                                       uint16_t extension_size,
-                                                       Connection_Side from)
-   {
-   if(from == Connection_Side::SERVER)
-      {
-      if(extension_size != 0)
-         throw Decoding_Error("Server sent non-empty Certificate_Status_Request extension");
-      }
-   else if(extension_size > 0)
-      {
-      const uint8_t type = reader.get_byte();
-      if(type == 1)
-         {
-         const size_t len_resp_id_list = reader.get_uint16_t();
-         m_ocsp_names = reader.get_fixed<uint8_t>(len_resp_id_list);
-         const size_t len_requ_ext = reader.get_uint16_t();
-         m_extension_bytes = reader.get_fixed<uint8_t>(len_requ_ext);
-         }
-      else
-         {
-         reader.discard_next(extension_size - 1);
-         }
-      }
-   }
-
-Certificate_Status_Request::Certificate_Status_Request(const std::vector<uint8_t>& ocsp_responder_ids,
-                                                       const std::vector<std::vector<uint8_t>>& ocsp_key_ids) :
-   m_ocsp_names(ocsp_responder_ids),
-   m_ocsp_keys(ocsp_key_ids)
-   {
-   }
-
 std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
    {
    std::vector<uint8_t> buf;
@@ -569,6 +554,7 @@ std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
 
    return buf;
    }
+
 
 Supported_Versions::Supported_Versions(Protocol_Version offer, const Policy& policy)
    {

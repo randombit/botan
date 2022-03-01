@@ -1,5 +1,6 @@
 /*
 * (C) 2016 Juraj Somorovsky
+* (C) 2021 Elektrobit Automotive GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,10 +11,12 @@
    #include <exception>
    #include <botan/hex.h>
    #include <botan/mac.h>
+   #include <botan/tls_version.h>
    #include <botan/tls_ciphersuite.h>
    #include <botan/tls_handshake_msg.h>
    #include <botan/tls_messages.h>
    #include <botan/tls_alert.h>
+   #include <botan/tls_callbacks.h>
    #include <botan/internal/loadstor.h>
 #endif
 
@@ -43,6 +46,20 @@ Test::Result test_hello_verify_request()
    result.test_eq("Cookie comparison", hfr.cookie(), test);
    return result;
    }
+
+class Test_Callbacks : public Botan::TLS::Callbacks {
+public:
+   Test_Callbacks(Test::Result &result) : m_result(result) {}
+
+public:
+   void tls_emit_data(const uint8_t[], size_t) override { m_result.test_failure("unsolicited call to tls_emit_data"); }
+   void tls_record_received(uint64_t, const uint8_t[], size_t) override { m_result.test_failure("unsolicited call to tls_record_received"); }
+   void tls_alert(Botan::TLS::Alert) override { m_result.test_failure("unsolicited call to tls_alert"); }
+   bool tls_session_established(const Botan::TLS::Session&) override { m_result.test_failure("unsolicited call to tls_session_established"); return false; }
+
+private:
+   Test::Result &m_result;
+};
 
 class TLS_Message_Parsing_Test final : public Text_Based_Test
    {
@@ -74,8 +91,8 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   {
                   const std::string extensions = vars.get_req_str("AdditionalData");
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
-                  Botan::TLS::Client_Hello message(buffer);
-                  result.test_eq("Protocol version", message.version().to_string(), pv.to_string());
+                  Botan::TLS::Client_Hello_12 message(buffer);
+                  result.test_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   std::vector<uint8_t> buf;
                   for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
                      {
@@ -95,15 +112,15 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   }
                else if(algo == "new_session_ticket")
                   {
-                  Botan::TLS::New_Session_Ticket message(buffer);
+                  Botan::TLS::New_Session_Ticket_12 message(buffer);
                   }
                else if(algo == "server_hello")
                   {
                   const std::string extensions = vars.get_req_str("AdditionalData");
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
                   Botan::TLS::Ciphersuite cs = Botan::TLS::Ciphersuite::by_id(Botan::make_uint16(ciphersuite[0], ciphersuite[1])).value();
-                  Botan::TLS::Server_Hello message(buffer);
-                  result.test_eq("Protocol version", message.version().to_string(), pv.to_string());
+                  Botan::TLS::Server_Hello_12 message(buffer);
+                  result.test_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   result.confirm("Ciphersuite", (message.ciphersuite() == cs.ciphersuite_code()));
                   std::vector<uint8_t> buf;
                   for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
@@ -159,7 +176,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                {
                result.test_throws("invalid client_hello input", exception, [&buffer]()
                   {
-                  Botan::TLS::Client_Hello message(buffer);
+                  Botan::TLS::Client_Hello_12 message(buffer);
                   });
                }
             else if(algo == "hello_verify")
@@ -187,14 +204,14 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                {
                result.test_throws("invalid new_session_ticket input", exception, [&buffer]()
                   {
-                  Botan::TLS::New_Session_Ticket message(buffer);
+                  Botan::TLS::New_Session_Ticket_12 message(buffer);
                   });
                }
             else if(algo == "server_hello")
                {
                result.test_throws("invalid server_hello input", exception, [&buffer]()
                   {
-                  Botan::TLS::Server_Hello message(buffer);
+                  Botan::TLS::Server_Hello_12 message(buffer);
                   });
                }
             else if(algo == "alert")

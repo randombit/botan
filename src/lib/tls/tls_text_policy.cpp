@@ -9,6 +9,7 @@
 #include <botan/tls_policy.h>
 #include <botan/exceptn.h>
 #include <botan/internal/parsing.h>
+#include <optional>
 #include <sstream>
 
 namespace Botan::TLS {
@@ -88,6 +89,11 @@ bool Text_Policy::negotiate_encrypt_then_mac() const
    return get_bool("negotiate_encrypt_then_mac", Policy::negotiate_encrypt_then_mac());
    }
 
+bool Text_Policy::use_extended_master_secret() const
+   {
+   return get_bool("use_extended_master_secret", Policy::use_extended_master_secret());
+   }
+
 bool Text_Policy::support_cert_status_message() const
    {
    return get_bool("support_cert_status_message", Policy::support_cert_status_message());
@@ -108,44 +114,9 @@ std::vector<Group_Params> Text_Policy::key_exchange_groups() const
       return Policy::key_exchange_groups();
       }
 
-   std::vector<Group_Params> groups;
-   for(const std::string& group_name : split_on(group_str, ' '))
-      {
-      Group_Params group_id = group_param_from_string(group_name);
-
-#if !defined(BOTAN_HAS_CURVE_25519)
-      if(group_id == Group_Params::X25519)
-         continue;
-#endif
-
-      if(group_id == Group_Params::NONE)
-         {
-         try
-            {
-            size_t consumed = 0;
-            unsigned long ll_id = std::stoul(group_name, &consumed, 0);
-            if(consumed != group_name.size())
-               continue; // some other cruft
-
-            const uint16_t id = static_cast<uint16_t>(ll_id);
-
-            if(id != ll_id)
-               continue; // integer too large
-
-            group_id = static_cast<Group_Params>(id);
-            }
-         catch(...)
-            {
-            continue;
-            }
-         }
-
-      if(group_id != Group_Params::NONE)
-         groups.push_back(group_id);
-      }
-
-   return groups;
+   return read_group_list(group_str);
    }
+
 
 size_t Text_Policy::minimum_ecdh_group_size() const
    {
@@ -212,6 +183,11 @@ std::vector<uint16_t> Text_Policy::srtp_profiles() const
    return r;
    }
 
+bool Text_Policy::hash_hello_random() const
+   {
+   return get_bool("hash_hello_random", Policy::hash_hello_random());
+   }
+
 void Text_Policy::set(const std::string& k, const std::string& v)
    {
    m_kv[k] = v;
@@ -239,6 +215,48 @@ Text_Policy::get_list(const std::string& key,
 
    return split_on(v, ' ');
    }
+
+std::vector<Group_Params>
+Text_Policy::read_group_list(const std::string &group_str) const
+{
+   std::vector<Group_Params> groups;
+   for(const std::string& group_name : split_on(group_str, ' '))
+      {
+      Group_Params group_id = group_param_from_string(group_name);
+
+#if !defined(BOTAN_HAS_CURVE_25519)
+      if(group_id == Group_Params::X25519)
+         continue;
+#endif
+
+      if(group_id == Group_Params::NONE)
+         {
+         try
+            {
+            size_t consumed = 0;
+            unsigned long ll_id = std::stoul(group_name, &consumed, 0);
+            if(consumed != group_name.size())
+               continue; // some other cruft
+
+            const uint16_t id = static_cast<uint16_t>(ll_id);
+
+            if(id != ll_id)
+               continue; // integer too large
+
+            group_id = static_cast<Group_Params>(id);
+            }
+         catch(...)
+            {
+            continue;
+            }
+         }
+
+      if(group_id != Group_Params::NONE)
+         groups.push_back(group_id);
+      }
+
+   return groups;
+}
 
 size_t Text_Policy::get_len(const std::string& key, size_t def) const
    {

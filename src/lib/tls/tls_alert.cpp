@@ -88,7 +88,8 @@ std::string Alert::type_string() const
          return "user_canceled";
       case NO_RENEGOTIATION:
          return "no_renegotiation";
-
+      case MISSING_EXTENSION:
+         return "missing_extension";
       case UNSUPPORTED_EXTENSION:
          return "unsupported_extension";
       case CERTIFICATE_UNOBTAINABLE:

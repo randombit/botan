@@ -1,6 +1,8 @@
 /*
 * TLS Protocol Version Management
 * (C) 2012 Jack Lloyd
+*     2021 Elektrobit Automotive GmbH
+*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -22,7 +24,9 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
    {
    public:
       enum Version_Code {
+         TLS_V11            = 0x0302,  // not supported by Botan
          TLS_V12            = 0x0303,
+         TLS_V13            = 0x0304,
          DTLS_V12           = 0xFEFD
       };
 
@@ -62,7 +66,7 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       /**
       * @return true if this is a valid protocol version
       */
-      bool valid() const { return (m_version != 0); }
+      bool valid() const;
 
       /**
       * @return true if this is a protocol version we know about
@@ -95,6 +99,11 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       bool is_datagram_protocol() const;
 
       /**
+       * @return true if this version indicates (D)TLS 1.2 or older
+       */
+      bool is_pre_tls_13() const;
+
+      /**
       * @return if this version is equal to other
       */
       bool operator==(const Protocol_Version& other) const
@@ -121,6 +130,22 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       bool operator>=(const Protocol_Version& other) const
          {
          return (*this == other || *this > other);
+         }
+
+      /**
+      * @return if this version is earlier to other
+      */
+      bool operator<(const Protocol_Version& other) const
+         {
+         return !(*this >= other);
+         }
+
+      /**
+      * @return if this version is earlier than or equal to other
+      */
+      bool operator<=(const Protocol_Version& other) const
+         {
+         return (*this == other || *this < other);
          }
 
    private:

@@ -10,6 +10,7 @@
 #define BOTAN_STL_UTIL_H_
 
 #include <vector>
+#include <variant>
 #include <string>
 #include <map>
 #include <set>
@@ -104,6 +105,20 @@ void map_remove_if(Pred pred, T& assoc)
          i++;
       }
    }
+
+template <typename T> T concat(T buffer) { return buffer; }
+template <typename T, typename... Ts>
+T concat(const T& buffer, const Ts& ...buffers)
+   {
+   auto result = concat(buffers...);
+   result.insert(result.begin(), buffer.begin(), buffer.end());
+   return result;
+   }
+
+template<typename... Alts, typename... Ts>
+constexpr bool holds_any_of(const std::variant<Ts...>& v) noexcept {
+    return (std::holds_alternative<Alts>(v) || ...);
+}
 
 }
 

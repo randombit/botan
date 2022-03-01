@@ -172,7 +172,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       if(auto rsa_pub = dynamic_cast<const RSA_PublicKey*>(server_public_key))
          {
-         const Protocol_Version offered_version = state.client_hello()->version();
+         const Protocol_Version offered_version = state.client_hello()->legacy_version();
 
          rng.random_vec(m_pre_master, 48);
          m_pre_master[0] = offered_version.major_version();
@@ -222,8 +222,8 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
 
       PK_Decryptor_EME decryptor(*server_rsa_kex_key, rng, "PKCS1v15");
 
-      const uint8_t client_major = state.client_hello()->version().major_version();
-      const uint8_t client_minor = state.client_hello()->version().minor_version();
+      const uint8_t client_major = state.client_hello()->legacy_version().major_version();
+      const uint8_t client_minor = state.client_hello()->legacy_version().minor_version();
 
       /*
       * PK_Decryptor::decrypt_or_random will return a random value if

@@ -8,6 +8,7 @@
 #define BOTAN_TLS_ALGO_IDS_H_
 
 #include <botan/types.h>
+#include <botan/asn1_obj.h>
 #include <string>
 #include <vector>
 
@@ -66,7 +67,7 @@ enum class Auth_Method {
    ECDSA,
 
    // These are placed outside the encodable range
-   IMPLICIT = 0x10000,
+   IMPLICIT = 0x10000
 };
 
 std::string BOTAN_TEST_API auth_method_to_string(Auth_Method method);

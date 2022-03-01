@@ -55,7 +55,7 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       * Formats the ciphersuite back to an RFC-style ciphersuite string
       * @return RFC ciphersuite string identifier
       */
-      std::string to_string() const { return m_iana_id; }
+      std::string to_string() const { return (!m_iana_id) ? "unknown cipher suite" : m_iana_id; }
 
       /**
       * @return ciphersuite number

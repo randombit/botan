@@ -5,11 +5,13 @@
 */
 
 #include "tests.h"
-#include <fstream>
 #include <memory>
+#include <fstream>
 
 #if defined(BOTAN_HAS_TLS)
   #include "test_rng.h"
+  #include "test_tls_utils.h"
+
   #include <botan/tls_alert.h>
   #include <botan/tls_policy.h>
   #include <botan/tls_session.h>
@@ -284,6 +286,7 @@ class Test_TLS_Alert_Strings : public Test
                Botan::TLS::Alert::INAPPROPRIATE_FALLBACK,
                Botan::TLS::Alert::USER_CANCELED,
                Botan::TLS::Alert::NO_RENEGOTIATION,
+               Botan::TLS::Alert::MISSING_EXTENSION,
                Botan::TLS::Alert::UNSUPPORTED_EXTENSION,
                Botan::TLS::Alert::CERTIFICATE_UNOBTAINABLE,
                Botan::TLS::Alert::UNRECOGNIZED_NAME,
@@ -324,7 +327,8 @@ class Test_TLS_Policy_Text : public Test
          for(const std::string& policy : policies)
             {
             const std::string from_policy_obj = tls_policy_string(policy);
-            std::string from_file = read_tls_policy(policy);
+            std::string from_file =
+               read_tls_policy(policy);
 
             result.test_eq("Values for TLS " + policy + " policy", from_file, from_policy_obj);
             }

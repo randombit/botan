@@ -127,7 +127,7 @@ std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg)
       return std::vector<uint8_t>(); // not included in handshake hashes
       }
 
-   auto buf = format(msg_bits, msg.type());
+   auto buf = format(msg_bits, msg.wire_type());
    m_send_hs(HANDSHAKE, buf);
    return buf;
    }

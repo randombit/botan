@@ -32,28 +32,34 @@ class Callbacks;
 class Policy;
 
 class Hello_Verify_Request;
-class Client_Hello;
-class Server_Hello;
-class Certificate;
+class Client_Hello_12;
+class Server_Hello_12;
+class Certificate_12;
 class Certificate_Status;
 class Server_Key_Exchange;
 class Certificate_Req;
 class Server_Hello_Done;
-class Certificate;
 class Client_Key_Exchange;
-class Certificate_Verify;
-class New_Session_Ticket;
-class Finished;
+class Certificate_Verify_12;
+class New_Session_Ticket_12;
+class Finished_12;
 
 /**
 * SSL/TLS Handshake State
+*
+* This is a data holder object for all state aggregated during the handshake,
+* both on client and server side and across protocol versions.
+* It does not implement any logic and offers no guarantees regarding state
+* consistency and legal TLS state transitions.
+*
+* TODO: currently it implements some logic for TLS 1.2, which should be removed
+* TODO: investigate moving the handshake_io to the channel
 */
 class Handshake_State
    {
    public:
       Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& callbacks);
-
-      virtual ~Handshake_State() = default;
+      virtual ~Handshake_State();
 
       Handshake_State(const Handshake_State&) = delete;
       Handshake_State& operator=(const Handshake_State&) = delete;
@@ -86,6 +92,7 @@ class Handshake_State
       std::pair<std::string, Signature_Format>
          parse_sig_format(const Public_Key& key,
                           Signature_Scheme scheme,
+                          const std::vector<Signature_Scheme>& offered_schemes,
                           bool for_client_auth,
                           const Policy& policy) const;
 
@@ -103,27 +110,35 @@ class Handshake_State
 
       void hello_verify_request(const Hello_Verify_Request& hello_verify);
 
-      void client_hello(Client_Hello* client_hello);
-      void server_hello(Server_Hello* server_hello);
-      void server_certs(Certificate* server_certs);
+      // TODO: take unique_ptr instead of raw pointers for all of these, as
+      // we're taking the ownership
+      void client_hello(Client_Hello_12* client_hello);
+      void server_hello(Server_Hello_12* server_hello);
+
       void server_cert_status(Certificate_Status* server_cert_status);
       void server_kex(Server_Key_Exchange* server_kex);
       void cert_req(Certificate_Req* cert_req);
       void server_hello_done(Server_Hello_Done* server_hello_done);
-      void client_certs(Certificate* client_certs);
       void client_kex(Client_Key_Exchange* client_kex);
-      void client_verify(Certificate_Verify* client_verify);
-      void new_session_ticket(New_Session_Ticket* new_session_ticket);
-      void server_finished(Finished* server_finished);
-      void client_finished(Finished* client_finished);
 
-      const Client_Hello* client_hello() const
+      void client_certs(Certificate_12* client_certs);
+      void server_certs(Certificate_12* server_certs);
+
+      void client_verify(Certificate_Verify_12* client_verify);
+      void server_verify(Certificate_Verify_12* server_verify);
+
+      void server_finished(Finished_12* server_finished);
+      void client_finished(Finished_12* client_finished);
+
+      void new_session_ticket(New_Session_Ticket_12* new_session_ticket);
+
+      const Client_Hello_12* client_hello() const
          { return m_client_hello.get(); }
 
-      const Server_Hello* server_hello() const
+      const Server_Hello_12* server_hello() const
          { return m_server_hello.get(); }
 
-      const Certificate* server_certs() const
+      const Certificate_12* server_certs() const
          { return m_server_certs.get(); }
 
       const Server_Key_Exchange* server_kex() const
@@ -135,25 +150,28 @@ class Handshake_State
       const Server_Hello_Done* server_hello_done() const
          { return m_server_hello_done.get(); }
 
-      const Certificate* client_certs() const
+      const Certificate_12* client_certs() const
          { return m_client_certs.get(); }
 
       const Client_Key_Exchange* client_kex() const
          { return m_client_kex.get(); }
 
-      const Certificate_Verify* client_verify() const
+      const Certificate_Verify_12* client_verify() const
          { return m_client_verify.get(); }
+
+      const Certificate_Verify_12* server_verify() const
+         { return m_server_verify.get(); }
 
       const Certificate_Status* server_cert_status() const
          { return m_server_cert_status.get(); }
 
-      const New_Session_Ticket* new_session_ticket() const
+      const New_Session_Ticket_12* new_session_ticket() const
          { return m_new_session_ticket.get(); }
 
-      const Finished* server_finished() const
+      const Finished_12* server_finished() const
          { return m_server_finished.get(); }
 
-      const Finished* client_finished() const
+      const Finished_12* client_finished() const
          { return m_client_finished.get(); }
 
       const Ciphersuite& ciphersuite() const;
@@ -183,19 +201,21 @@ class Handshake_State
       Session_Keys m_session_keys;
       Handshake_Hash m_handshake_hash;
 
-      std::unique_ptr<Client_Hello> m_client_hello;
-      std::unique_ptr<Server_Hello> m_server_hello;
-      std::unique_ptr<Certificate> m_server_certs;
+      std::unique_ptr<Client_Hello_12> m_client_hello;
+      std::unique_ptr<Server_Hello_12> m_server_hello;
+
+      std::unique_ptr<Certificate_12> m_server_certs;
       std::unique_ptr<Certificate_Status> m_server_cert_status;
       std::unique_ptr<Server_Key_Exchange> m_server_kex;
       std::unique_ptr<Certificate_Req> m_cert_req;
       std::unique_ptr<Server_Hello_Done> m_server_hello_done;
-      std::unique_ptr<Certificate> m_client_certs;
+      std::unique_ptr<Certificate_12> m_client_certs;
       std::unique_ptr<Client_Key_Exchange> m_client_kex;
-      std::unique_ptr<Certificate_Verify> m_client_verify;
-      std::unique_ptr<New_Session_Ticket> m_new_session_ticket;
-      std::unique_ptr<Finished> m_server_finished;
-      std::unique_ptr<Finished> m_client_finished;
+      std::unique_ptr<Certificate_Verify_12> m_client_verify;
+      std::unique_ptr<Certificate_Verify_12> m_server_verify;
+      std::unique_ptr<New_Session_Ticket_12> m_new_session_ticket;
+      std::unique_ptr<Finished_12> m_server_finished;
+      std::unique_ptr<Finished_12> m_client_finished;
    };
 
 }

@@ -20,9 +20,9 @@ namespace Botan::TLS {
 /**
 * Create a new Certificate message
 */
-Certificate::Certificate(Handshake_IO& io,
-                         Handshake_Hash& hash,
-                         const std::vector<X509_Certificate>& cert_list) :
+Certificate_12::Certificate_12(Handshake_IO& io,
+                               Handshake_Hash& hash,
+                               const std::vector<X509_Certificate>& cert_list) :
    m_certs(cert_list)
    {
    hash.update(io.send(*this));
@@ -31,7 +31,7 @@ Certificate::Certificate(Handshake_IO& io,
 /**
 * Deserialize a Certificate message
 */
-Certificate::Certificate(const std::vector<uint8_t>& buf, const Policy& policy)
+Certificate_12::Certificate_12(const std::vector<uint8_t>& buf, const Policy& policy)
    {
    if(buf.size() < 3)
       throw Decoding_Error("Certificate: Message malformed");
@@ -80,7 +80,7 @@ Certificate::Certificate(const std::vector<uint8_t>& buf, const Policy& policy)
 /**
 * Serialize a Certificate message
 */
-std::vector<uint8_t> Certificate::serialize() const
+std::vector<uint8_t> Certificate_12::serialize() const
    {
    std::vector<uint8_t> buf(3);
 

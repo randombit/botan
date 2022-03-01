@@ -80,6 +80,8 @@ const char* handshake_type_to_string(Handshake_Type type)
 /*
 * Initialize the SSL/TLS Handshake State
 */
+Handshake_State::~Handshake_State() = default;
+
 Handshake_State::Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb) :
    m_callbacks(cb),
    m_handshake_io(std::move(io)),
@@ -102,7 +104,7 @@ void Handshake_State::hello_verify_request(const Hello_Verify_Request& hello_ver
    note_message(*m_client_hello);
    }
 
-void Handshake_State::client_hello(Client_Hello* client_hello)
+void Handshake_State::client_hello(Client_Hello_12* client_hello)
    {
    if(client_hello == nullptr)
       {
@@ -116,14 +118,14 @@ void Handshake_State::client_hello(Client_Hello* client_hello)
       }
    }
 
-void Handshake_State::server_hello(Server_Hello* server_hello)
+void Handshake_State::server_hello(Server_Hello_12* server_hello)
    {
    m_server_hello.reset(server_hello);
    m_ciphersuite = Ciphersuite::by_id(m_server_hello->ciphersuite());
    note_message(*m_server_hello);
    }
 
-void Handshake_State::server_certs(Certificate* server_certs)
+void Handshake_State::server_certs(Certificate_12* server_certs)
    {
    m_server_certs.reset(server_certs);
    note_message(*m_server_certs);
@@ -153,7 +155,7 @@ void Handshake_State::server_hello_done(Server_Hello_Done* server_hello_done)
    note_message(*m_server_hello_done);
    }
 
-void Handshake_State::client_certs(Certificate* client_certs)
+void Handshake_State::client_certs(Certificate_12* client_certs)
    {
    m_client_certs.reset(client_certs);
    note_message(*m_client_certs);
@@ -165,25 +167,31 @@ void Handshake_State::client_kex(Client_Key_Exchange* client_kex)
    note_message(*m_client_kex);
    }
 
-void Handshake_State::client_verify(Certificate_Verify* client_verify)
+void Handshake_State::client_verify(Certificate_Verify_12* client_verify)
    {
    m_client_verify.reset(client_verify);
    note_message(*m_client_verify);
    }
 
-void Handshake_State::new_session_ticket(New_Session_Ticket* new_session_ticket)
+void Handshake_State::server_verify(Certificate_Verify_12* server_verify)
+   {
+   m_server_verify.reset(server_verify);
+   note_message(*m_server_verify);
+   }
+
+void Handshake_State::new_session_ticket(New_Session_Ticket_12* new_session_ticket)
    {
    m_new_session_ticket.reset(new_session_ticket);
    note_message(*m_new_session_ticket);
    }
 
-void Handshake_State::server_finished(Finished* server_finished)
+void Handshake_State::server_finished(Finished_12* server_finished)
    {
    m_server_finished.reset(server_finished);
    note_message(*m_server_finished);
    }
 
-void Handshake_State::client_finished(Finished* client_finished)
+void Handshake_State::client_finished(Finished_12* client_finished)
    {
    m_client_finished.reset(client_finished);
    note_message(*m_client_finished);
@@ -191,7 +199,7 @@ void Handshake_State::client_finished(Finished* client_finished)
 
 const Ciphersuite& Handshake_State::ciphersuite() const
    {
-   if (!m_ciphersuite.has_value())
+   if(!m_ciphersuite.has_value())
       {
       throw Invalid_State("Cipher suite is not set");
       }
@@ -229,7 +237,7 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
-Handshake_State::get_next_handshake_msg()
+      Handshake_State::get_next_handshake_msg()
    {
    return m_handshake_io->get_next_record(m_transitions.change_cipher_spec_expected());
    }
@@ -237,7 +245,7 @@ Handshake_State::get_next_handshake_msg()
 std::vector<uint8_t> Handshake_State::session_ticket() const
    {
    if(new_session_ticket() && !new_session_ticket()->ticket().empty())
-      return new_session_ticket()->ticket();
+      { return new_session_ticket()->ticket(); }
 
    return client_hello()->session_ticket();
    }
@@ -247,7 +255,7 @@ std::unique_ptr<KDF> Handshake_State::protocol_specific_prf() const
    const std::string prf_algo = ciphersuite().prf_algo();
 
    if(prf_algo == "MD5" || prf_algo == "SHA-1")
-      return KDF::create_or_throw("TLS-12-PRF(SHA-256)");
+      { return KDF::create_or_throw("TLS-12-PRF(SHA-256)"); }
 
    return KDF::create_or_throw("TLS-12-PRF(" + prf_algo + ")");
    }
@@ -260,44 +268,44 @@ Handshake_State::choose_sig_format(const Private_Key& key,
    {
    const std::string sig_algo = key.algo_name();
 
-      const std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
+   const std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
 
-      std::vector<Signature_Scheme> requested =
-         (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
+   std::vector<Signature_Scheme> requested =
+      (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
 
-      for(Signature_Scheme scheme : allowed)
+   for(Signature_Scheme scheme : allowed)
+      {
+      if(signature_scheme_is_known(scheme) == false)
          {
-         if(signature_scheme_is_known(scheme) == false)
+         continue;
+         }
+
+      if(signature_algorithm_of_scheme(scheme) == sig_algo)
+         {
+         if(std::find(requested.begin(), requested.end(), scheme) != requested.end())
             {
-            continue;
-            }
-
-         if(signature_algorithm_of_scheme(scheme) == sig_algo)
-            {
-            if(std::find(requested.begin(), requested.end(), scheme) != requested.end())
-               {
-               chosen_scheme = scheme;
-               break;
-               }
+            chosen_scheme = scheme;
+            break;
             }
          }
+      }
 
-      const std::string hash = hash_function_of_scheme(chosen_scheme);
+   const std::string hash = hash_function_of_scheme(chosen_scheme);
 
-      if(!policy.allowed_signature_hash(hash))
-         {
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                             "Policy refuses to accept signing with any hash supported by peer");
-         }
+   if(!policy.allowed_signature_hash(hash))
+      {
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Policy refuses to accept signing with any hash supported by peer");
+      }
 
-      if(sig_algo == "RSA")
-         {
-         return std::make_pair(padding_string_for_scheme(chosen_scheme), IEEE_1363);
-         }
-      else if(sig_algo == "DSA" || sig_algo == "ECDSA")
-         {
-         return std::make_pair(padding_string_for_scheme(chosen_scheme), DER_SEQUENCE);
-         }
+   if(sig_algo == "RSA")
+      {
+      return std::make_pair(padding_string_for_scheme(chosen_scheme), IEEE_1363);
+      }
+   else if(sig_algo == "DSA" || sig_algo == "ECDSA")
+      {
+      return std::make_pair(padding_string_for_scheme(chosen_scheme), DER_SEQUENCE);
+      }
 
    throw Invalid_Argument(sig_algo + " is invalid/unknown for TLS signatures");
    }
@@ -312,8 +320,8 @@ bool supported_algos_include(
    for(Signature_Scheme scheme : schemes)
       {
       if(signature_scheme_is_known(scheme) &&
-         hash_function_of_scheme(scheme) == hash_type &&
-         signature_algorithm_of_scheme(scheme) == key_type)
+            hash_function_of_scheme(scheme) == hash_type &&
+            signature_algorithm_of_scheme(scheme) == key_type)
          {
          return true;
          }
@@ -327,6 +335,7 @@ bool supported_algos_include(
 std::pair<std::string, Signature_Format>
 Handshake_State::parse_sig_format(const Public_Key& key,
                                   Signature_Scheme scheme,
+                                  const std::vector<Signature_Scheme>& offered_schemes,
                                   bool for_client_auth,
                                   const Policy& policy) const
    {
@@ -339,10 +348,10 @@ Handshake_State::parse_sig_format(const Public_Key& key,
       }
 
    if(scheme == Signature_Scheme::NONE)
-      throw Decoding_Error("Counterparty did not send hash/sig IDS");
+      { throw Decoding_Error("Counterparty did not send hash/sig IDS"); }
 
    if(key_type != signature_algorithm_of_scheme(scheme))
-      throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+      { throw Decoding_Error("Counterparty sent inconsistent key and sig types"); }
 
    if(for_client_auth && !cert_req())
       {
@@ -357,7 +366,7 @@ Handshake_State::parse_sig_format(const Public_Key& key,
 
    const std::vector<Signature_Scheme> supported_algos =
       for_client_auth ? cert_req()->signature_schemes() :
-      client_hello()->signature_schemes();
+      offered_schemes;
 
    if(!signature_scheme_is_known(scheme))
       throw TLS_Exception(Alert::HANDSHAKE_FAILURE,

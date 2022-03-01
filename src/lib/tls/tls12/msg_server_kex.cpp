@@ -255,7 +255,7 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
    policy.check_peer_key_acceptable(server_key);
 
    std::pair<std::string, Signature_Format> format =
-      state.parse_sig_format(server_key, m_scheme, false, policy);
+      state.parse_sig_format(server_key, m_scheme, state.client_hello()->signature_schemes(), false, policy);
 
    std::vector<uint8_t> buf = state.client_hello()->random();
 

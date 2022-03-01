@@ -329,7 +329,7 @@ class TLS_Handshake_Test final
                extn.add(new Test_Extension(which_side));
 
                // Insert an unsupported signature scheme as highest prio, to ensure we are tolerant of this
-               if(auto sig_algs = extn.get<Botan::TLS::Signature_Algorithms>())
+               if(auto sig_algs = extn.take<Botan::TLS::Signature_Algorithms>())
                   {
                   std::vector<Botan::TLS::Signature_Scheme> schemes = sig_algs->supported_schemes();
                   // 0x0301 is RSA PKCS1/SHA-224, which is not supported anymore

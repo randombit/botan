@@ -12,7 +12,7 @@ void fuzz(const uint8_t in[], size_t len)
    try
       {
       std::vector<uint8_t> v(in, in + len);
-      Botan::TLS::Client_Hello ch(v);
+      Botan::TLS::Client_Hello_12 ch(v);  // TODO: We might want to do that for TLS 1.3 as well
       }
    catch(Botan::Exception& e) {}
    }

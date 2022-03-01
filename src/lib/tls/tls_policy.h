@@ -12,6 +12,7 @@
 #include <botan/tls_version.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_ciphersuite.h>
+#include <optional>
 #include <vector>
 #include <map>
 
@@ -93,6 +94,12 @@ class BOTAN_PUBLIC_API(2,0) Policy
 
       /**
       * Request that ECC curve points are sent compressed
+      * This does not have an effect on TLS 1.3 as it always uses uncompressed ECC points.
+      *
+      * RFC 8446 P. 50:
+      *    Versions of TLS prior to 1.3 permitted point format
+      *    negotiation; TLS 1.3 removes this feature in favor of a single point
+      *    format for each curve.
       */
       virtual bool use_ecc_point_compression() const;
 
@@ -252,6 +259,25 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool negotiate_encrypt_then_mac() const;
 
       /**
+      * TODO: This should probably be removed as it doesn't have an effect on either
+      *       TLS 1.2 or 1.3.
+      *
+      * Indicates whether the extended master secret extension (RFC 7627) should be used.
+      *
+      * This is always enabled if the client supports TLS 1.2 (the option has no effect).
+      * For TLS 1.3 _only_ clients the extension is disabled by default.
+      *
+      * RFC 8446 Appendix D:
+      *   TLS 1.2 and prior supported an "Extended Master Secret" [RFC7627]
+      *   extension which digested large parts of the handshake transcript into
+      *   the master secret.  Because TLS 1.3 always hashes in the transcript
+      *   up to the server Finished, implementations which support both TLS 1.3
+      *   and earlier versions SHOULD indicate the use of the Extended Master
+      *   Secret extension in their APIs whenever TLS 1.3 is used.
+      */
+      virtual bool use_extended_master_secret() const;
+
+      /**
       * Indicates whether certificate status messages should be supported
       */
       virtual bool support_cert_status_message() const;
@@ -276,7 +302,11 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool allow_dtls_epoch0_restart() const;
 
       /**
-      * Return allowed ciphersuites, in order of preference
+      * Return allowed ciphersuites, in order of preference for the provided
+      * protocol version.
+      *
+      * @param version  the exact protocol version to select supported and allowed
+      *                 ciphersuites for
       */
       virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version) const;
 
@@ -302,6 +332,15 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual size_t maximum_certificate_chain_size() const;
 
       virtual bool allow_resumption_for_renegotiation() const;
+
+      /**
+       * Hash the RNG output for the client/server hello random. This is a pre-caution
+       * to avoid writing "raw" RNG output to the wire.
+       *
+       * There's not normally a reason to disable this, except when deterministic output
+       * is required for testing.
+       */
+      virtual bool hash_hello_random() const;
 
       /**
       * Convert this policy to a printable format.
@@ -511,6 +550,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       bool negotiate_encrypt_then_mac() const override;
 
+      bool use_extended_master_secret() const override;
+
       bool support_cert_status_message() const override;
 
       bool require_client_certificate_authentication() const override;
@@ -537,6 +578,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       uint32_t session_ticket_lifetime() const override;
 
+      bool hash_hello_random() const override;
+
       std::vector<uint16_t> srtp_profiles() const override;
 
       void set(const std::string& k, const std::string& v);
@@ -549,6 +592,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       std::vector<std::string> get_list(const std::string& key,
                                         const std::vector<std::string>& def) const;
+
+      std::vector<Group_Params> read_group_list(const std::string &group_str) const;
 
       size_t get_len(const std::string& key, size_t def) const;
 

@@ -81,6 +81,19 @@ void TLS::Callbacks::tls_verify_cert_chain(
       }
    }
 
+std::optional<OCSP::Response> TLS::Callbacks::tls_parse_ocsp_response(const std::vector<uint8_t>& raw_response)
+   {
+   try
+      {
+      return OCSP::Response(raw_response);
+      }
+   catch(const Decoding_Error&)
+      {
+      // ignore parsing errors and just ignore the broken OCSP response
+      return std::nullopt;
+      }
+   }
+
 std::vector<uint8_t> TLS::Callbacks::tls_sign_message(
    const Private_Key& key,
    RandomNumberGenerator& rng,
