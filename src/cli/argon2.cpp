@@ -6,13 +6,13 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_ARGON2)
-   #include <botan/argon2.h>
+#if defined(BOTAN_HAS_ARGON2_FMT)
+  #include <botan/argon2fmt.h>
 #endif
 
 namespace Botan_CLI {
 
-#if defined(BOTAN_HAS_ARGON2)
+#if defined(BOTAN_HAS_ARGON2_FMT)
 
 class Generate_Argon2 final : public Command
    {
