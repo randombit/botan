@@ -2393,9 +2393,9 @@ class Speed final : public Command
 
          for(size_t M : { 8*1024, 64*1024, 256*1024 })
             {
-            for(size_t t : { 1, 2, 4 })
+            for(size_t t : { 1, 4 })
                {
-               for(size_t p : { 1 })
+               for(size_t p : { 1, 4 })
                   {
                   auto pwhash = pwhash_fam->from_params(M, t, p);
                   auto timer = make_timer(pwhash->to_string());
