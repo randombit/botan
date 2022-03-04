@@ -66,6 +66,7 @@ class SIMD_2x64 final
          }
 
       template<size_t ROT>
+      BOTAN_FUNC_ISA("ssse3")
       SIMD_2x64 rotr() const
          {
          static_assert(ROT > 0 && ROT < 64, "Invalid rotation constant");
@@ -104,6 +105,7 @@ class SIMD_2x64 final
          }
 
       template<size_t T>
+      BOTAN_FUNC_ISA("ssse3")
       static SIMD_2x64 alignr(SIMD_2x64 a, SIMD_2x64 b)
          {
          static_assert(T > 0 && T < 16, "Invalid alignr constant");
