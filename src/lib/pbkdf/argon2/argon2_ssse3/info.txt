@@ -1,0 +1,7 @@
+<defines>
+ARGON2_SSSE3 -> 20220303
+</defines>
+
+<isa>
+ssse3
+</isa>

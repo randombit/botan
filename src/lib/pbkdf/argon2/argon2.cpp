@@ -15,6 +15,11 @@
    #include <botan/internal/thread_pool.h>
 #endif
 
+#if defined(BOTAN_HAS_ARGON2_SSSE3)
+   #include <botan/internal/argon2_ssse3.h>
+   #include <botan/internal/cpuid.h>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -171,6 +176,11 @@ BOTAN_FORCE_INLINE void blamka_G(uint64_t& A, uint64_t& B, uint64_t& C, uint64_t
 
 void blamka(uint64_t T[128])
    {
+#if defined(BOTAN_HAS_ARGON2_SSSE3)
+   if(CPUID::has_ssse3())
+      return blamka_ssse3(T);
+#endif
+
    for(size_t i = 0; i != 128; i += 16)
       {
       blamka_G(T[i+  0], T[i+  4], T[i+  8], T[i+ 12]);
