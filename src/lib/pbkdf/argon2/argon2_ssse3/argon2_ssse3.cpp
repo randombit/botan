@@ -5,7 +5,6 @@
 */
 
 #include <botan/internal/argon2_ssse3.h>
-#include <botan/internal/rotate.h>
 #include <tmmintrin.h>
 
 namespace Botan {
