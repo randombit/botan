@@ -305,9 +305,13 @@ bool needs_serialization(const std::string& test_name)
    {
    if(test_name.substr(0, 6) == "pkcs11")
       return true;
-   if(test_name == "block" || test_name == "hash" || test_name == "mac" || test_name == "stream" || test_name == "aead")
-      return true;
-   return false;
+
+   return (test_name == "block" ||
+           test_name == "hash" ||
+           test_name == "mac" ||
+           test_name == "stream" ||
+           test_name == "aead" ||
+           test_name == "argon2");
    }
 
 #endif

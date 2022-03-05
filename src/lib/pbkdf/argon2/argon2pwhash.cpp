@@ -16,7 +16,11 @@ Argon2::Argon2(uint8_t family, size_t M, size_t t, size_t p) :
    m_M(M),
    m_t(t),
    m_p(p)
-   {}
+   {
+   BOTAN_ARG_CHECK(m_p >= 1 && m_p <= 128, "Invalid Argon2 threads parameter");
+   BOTAN_ARG_CHECK(m_M >= 8*m_p && m_M <= 8192*1024, "Invalid Argon2 M parameter");
+   BOTAN_ARG_CHECK(m_t >= 1, "Invalid Argon2 t parameter");
+   }
 
 void Argon2::derive_key(uint8_t output[], size_t output_len,
                         const char* password, size_t password_len,
@@ -83,9 +87,13 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
    Timer timer("Argon2");
    const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
 
+   auto pwhash = this->from_params(tune_M, t, p);
+
    timer.run_until_elapsed(tune_time, [&]() {
       uint8_t output[64] = { 0 };
-      argon2(output, sizeof(output), "test", 4, nullptr, 0, nullptr, 0, nullptr, 0, m_family, p, tune_M, t);
+      pwhash->derive_key(output, sizeof(output),
+                         "test", 4,
+                         nullptr, 0);
       });
 
    if(timer.events() == 0 || timer.value() == 0)
