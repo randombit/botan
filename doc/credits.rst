@@ -154,3 +154,8 @@ snail-mail address (S), and Bitcoin address (B).
   E: daniel.wyatt@ribose.com
   W: https://www.ribose.com/
   D: SM3, Streebog, various minor contributions
+
+  N: Rostyslav Khudolii
+  E: rhudoliy@gmail.com
+  D: SRP6 FFI
+  S: Ukraine/Denmark

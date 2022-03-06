@@ -101,10 +101,10 @@ def _set_prototypes(dll):
     def ffi_api(fn, args, allowed_errors=None):
         if allowed_errors is None:
             allowed_errors = [-10]
-        fn.argtypes = args
-        fn.restype = c_int
-        fn.errcheck = _errcheck
-        fn.allowed_errors = allowed_errors
+            fn.argtypes = args
+            fn.restype = c_int
+            fn.errcheck = _errcheck
+            fn.allowed_errors = allowed_errors
 
     dll.botan_version_string.argtypes = []
     dll.botan_version_string.restype = c_char_p
@@ -434,6 +434,19 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_fpe_encrypt, [c_void_p, c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_fpe_decrypt, [c_void_p, c_void_p, c_char_p, c_size_t])
 
+    # SRP6-a
+    ffi_api(dll.botan_srp6_server_session_init, [c_void_p])
+    ffi_api(dll.botan_srp6_server_session_destroy, [c_void_p])
+    ffi_api(dll.botan_srp6_server_session_step1,
+            [c_void_p, c_char_p, c_size_t, c_char_p, c_char_p, c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_srp6_server_session_step2,
+            [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_generate_srp6_verifier,
+            [c_char_p, c_char_p, c_char_p, c_size_t, c_char_p, c_char_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_srp6_client_agree,
+            [c_char_p, c_char_p, c_char_p, c_char_p, c_char_p, c_size_t, c_char_p, c_size_t, c_void_p,
+             c_char_p, POINTER(c_size_t), c_char_p, POINTER(c_size_t)])
+
     return dll
 
 #
@@ -460,6 +473,26 @@ def _call_fn_returning_vec(guess, fn):
 
     assert buf_len.value <= len(buf)
     return buf.raw[0:int(buf_len.value)]
+
+def _call_fn_returning_vec_pair(guess1, guess2, fn):
+
+    buf1 = create_string_buffer(guess1)
+    buf1_len = c_size_t(len(buf1))
+
+    buf2 = create_string_buffer(guess2)
+    buf2_len = c_size_t(len(buf2))
+
+    rc = fn(buf1, byref(buf1_len), buf2, byref(buf2_len))
+    if rc == -10:
+        if buf1_len.value > len(buf1):
+            guess1 = buf1_len.value
+        if buf2_len.value > len(buf2):
+            guess2 = buf2_len.value
+        return _call_fn_returning_vec_pair(guess1, guess2, fn)
+
+    assert buf1_len.value <= len(buf1)
+    assert buf2_len.value <= len(buf2)
+    return (buf1.raw[0:int(buf1_len.value)], buf2.raw[0:int(buf2_len.value)])
 
 def _call_fn_returning_str(guess, fn):
     # Assumes that anything called with this is returning plain ASCII strings
@@ -806,10 +839,10 @@ class SymmetricCipher(object):
             elif self._is_cbc:
                 # Hack: the largest block size currently supported
                 extra_bytes = 64
-        out = create_string_buffer(inp_sz.value + extra_bytes)
-        out_sz = c_size_t(len(out))
-        out_written = c_size_t(0)
-        flags = c_uint32(1 if final else 0)
+                out = create_string_buffer(inp_sz.value + extra_bytes)
+                out_sz = c_size_t(len(out))
+                out_written = c_size_t(0)
+                flags = c_uint32(1 if final else 0)
 
         _DLL.botan_cipher_update(self.__obj, flags,
                                  out, out_sz, byref(out_written),
@@ -1406,7 +1439,7 @@ class X509Cert(object): # pylint: disable=invalid-name
             arr_intermediates = c_intermediates()
             for i, ca in enumerate(intermediates):
                 arr_intermediates[i] = ca.handle_()
-            len_intermediates = c_size_t(len(intermediates))
+                len_intermediates = c_size_t(len(intermediates))
         else:
             arr_intermediates = c_void_p(0)
             len_intermediates = c_size_t(0)
@@ -1416,7 +1449,7 @@ class X509Cert(object): # pylint: disable=invalid-name
             arr_trusted = c_trusted()
             for i, ca in enumerate(trusted):
                 arr_trusted[i] = ca.handle_()
-            len_trusted = c_size_t(len(trusted))
+                len_trusted = c_size_t(len(trusted))
         else:
             arr_trusted = c_void_p(0)
             len_trusted = c_size_t(0)
@@ -1426,7 +1459,7 @@ class X509Cert(object): # pylint: disable=invalid-name
             arr_crls = c_crls()
             for i, crl in enumerate(crls):
                 arr_crls[i] = crl.handle_()
-            len_crls = c_size_t(len(crls))
+                len_crls = c_size_t(len(crls))
         else:
             arr_crls = c_void_p(0)
             len_crls = c_size_t(0)
@@ -1739,14 +1772,14 @@ class TOTP(object):
     def generate(self, timestamp=None):
         if timestamp is None:
             timestamp = int(system_time())
-        code = c_uint32(0)
-        _DLL.botan_totp_generate(self.__obj, byref(code), timestamp)
+            code = c_uint32(0)
+            _DLL.botan_totp_generate(self.__obj, byref(code), timestamp)
         return code.value
 
     def check(self, code, timestamp=None, acceptable_drift=0):
         if timestamp is None:
             timestamp = int(system_time())
-        rc = _DLL.botan_totp_check(self.__obj, code, timestamp, acceptable_drift)
+            rc = _DLL.botan_totp_check(self.__obj, code, timestamp, acceptable_drift)
         if rc == 0:
             return True
         return False
@@ -1762,3 +1795,48 @@ def nist_key_unwrap(kek, wrapped):
     out_len = c_size_t(len(output))
     _DLL.botan_key_unwrap3394(wrapped, len(wrapped), kek, len(kek), output, byref(out_len))
     return output[0:int(out_len.value)]
+
+class Srp6ServerSession(object):
+    __obj = c_void_p(0)
+
+    def __init__(self):
+        _DLL.botan_srp6_server_session_init(byref(self.__obj))
+
+    def __del__(self):
+        _DLL.botan_srp6_server_session_destroy(self.__obj)
+
+    def step1(self, verifier, group, hash, rng):
+        return _call_fn_returning_vec(128,
+                                      lambda b, bl:
+                                      _DLL.botan_srp6_server_session_step1(self.__obj,
+                                                                           verifier, len(verifier),
+                                                                           _ctype_str(group), _ctype_str(hash),
+                                                                           rng.handle_(),
+                                                                           b, bl))
+
+    def step2(self, A):
+        return _call_fn_returning_vec(128, lambda k, kl:
+                                      _DLL.botan_srp6_server_session_step2(self.__obj,
+                                                                           A, len(A),
+                                                                           k, kl))
+
+def generate_srp6_verifier(identifier, password, salt, group, hash):
+    return _call_fn_returning_vec(128, lambda v, vl:
+                                  _DLL.botan_generate_srp6_verifier(_ctype_str(identifier),
+                                                                    _ctype_str(password),
+                                                                    salt, len(salt),
+                                                                    _ctype_str(group),
+                                                                    _ctype_str(hash),
+                                                                    v, vl))
+
+def srp6_client_agree(username, password, group, hash, salt, B, rng):
+    return _call_fn_returning_vec_pair(128, 128, lambda a, al, k, kl:
+                                       _DLL.botan_srp6_client_agree(_ctype_str(username),
+                                                                    _ctype_str(password),
+                                                                    _ctype_str(group),
+                                                                    _ctype_str(hash),
+                                                                    salt, len(salt),
+                                                                    B, len(B),
+                                                                    rng.handle_(),
+                                                                    a, al,
+                                                                    k, kl))
