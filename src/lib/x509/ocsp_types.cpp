@@ -53,7 +53,7 @@ bool CertID::is_id_for(const X509_Certificate& issuer,
    return true;
    }
 
-void CertID::encode_into(class DER_Encoder& to) const
+void CertID::encode_into(DER_Encoder& to) const
    {
    to.start_sequence()
       .encode(m_hash_id)
@@ -63,7 +63,7 @@ void CertID::encode_into(class DER_Encoder& to) const
       .end_cons();
    }
 
-void CertID::decode_from(class BER_Decoder& from)
+void CertID::decode_from(BER_Decoder& from)
    {
    from.start_sequence()
       .decode(m_hash_id)
@@ -74,12 +74,12 @@ void CertID::decode_from(class BER_Decoder& from)
 
    }
 
-void SingleResponse::encode_into(class DER_Encoder& /*to*/) const
+void SingleResponse::encode_into(DER_Encoder& /*to*/) const
    {
    throw Not_Implemented("SingleResponse::encode_into");
    }
 
-void SingleResponse::decode_from(class BER_Decoder& from)
+void SingleResponse::decode_from(BER_Decoder& from)
    {
    BER_Object cert_status;
    Extensions extensions;

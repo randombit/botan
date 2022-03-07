@@ -92,13 +92,13 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       * DER encode an X509_Object
       * See @ref ASN1_Object::encode_into()
       */
-      void encode_into(class DER_Encoder& to) const override;
+      void encode_into(DER_Encoder& to) const override;
 
       /**
       * Decode a BER encoded X509_Object
       * See @ref ASN1_Object::decode_from()
       */
-      void decode_from(class BER_Decoder& from) override;
+      void decode_from(BER_Decoder& from) override;
 
       /**
       * @return PEM encoding of this

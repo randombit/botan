@@ -247,8 +247,8 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       */
       static OID from_string(const std::string& str);
 
-      void encode_into(class DER_Encoder&) const override;
-      void decode_from(class BER_Decoder&) override;
+      void encode_into(DER_Encoder&) const override;
+      void decode_from(BER_Decoder&) override;
 
       /**
       * Find out whether this OID is empty
@@ -395,8 +395,8 @@ typedef ASN1_Time X509_Time;
 class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
    {
    public:
-      void encode_into(class DER_Encoder&) const override;
-      void decode_from(class BER_Decoder&) override;
+      void encode_into(DER_Encoder&) const override;
+      void decode_from(BER_Decoder&) override;
 
       ASN1_Type tagging() const { return m_tag; }
 
@@ -430,8 +430,8 @@ class BOTAN_PUBLIC_API(2,0) AlgorithmIdentifier final : public ASN1_Object
    public:
       enum Encoding_Option { USE_NULL_PARAM, USE_EMPTY_PARAM };
 
-      void encode_into(class DER_Encoder&) const override;
-      void decode_from(class BER_Decoder&) override;
+      void encode_into(DER_Encoder&) const override;
+      void decode_from(BER_Decoder&) override;
 
       AlgorithmIdentifier() = default;
 
