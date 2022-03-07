@@ -28,8 +28,8 @@ struct CRL_Data;
 class BOTAN_PUBLIC_API(2,0) CRL_Entry final : public ASN1_Object
    {
    public:
-      void encode_into(class DER_Encoder&) const override;
-      void decode_from(class BER_Decoder&) override;
+      void encode_into(DER_Encoder&) const override;
+      void decode_from(BER_Decoder&) override;
 
       /**
       * Get the serial number of the certificate associated with this entry.

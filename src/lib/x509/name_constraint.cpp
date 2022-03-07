@@ -37,7 +37,7 @@ void GeneralName::encode_into(DER_Encoder& /*to*/) const
    throw Not_Implemented("GeneralName encoding");
    }
 
-void GeneralName::decode_from(class BER_Decoder& ber)
+void GeneralName::decode_from(BER_Decoder& ber)
    {
    BER_Object obj = ber.get_next_object();
 
@@ -253,7 +253,7 @@ void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const
    throw Not_Implemented("General Subtree encoding");
    }
 
-void GeneralSubtree::decode_from(class BER_Decoder& ber)
+void GeneralSubtree::decode_from(BER_Decoder& ber)
    {
    ber.start_sequence()
       .decode(m_base)

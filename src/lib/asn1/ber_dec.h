@@ -243,7 +243,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
                           ASN1_Type type_tag,
                           ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
-      BER_Decoder& decode(class ASN1_Object& obj,
+      BER_Decoder& decode(ASN1_Object& obj,
                           ASN1_Type type_tag = ASN1_Type::NoObject,
                           ASN1_Class class_tag = ASN1_Class::NoObject);
 

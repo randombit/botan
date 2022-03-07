@@ -381,8 +381,8 @@ class BOTAN_PUBLIC_API(2,0) CRL_Distribution_Points final : public Certificate_E
       class BOTAN_PUBLIC_API(2,0) Distribution_Point final : public ASN1_Object
          {
          public:
-            void encode_into(class DER_Encoder&) const override;
-            void decode_from(class BER_Decoder&) override;
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(BER_Decoder&) override;
 
             const AlternativeName& point() const { return m_point; }
          private:

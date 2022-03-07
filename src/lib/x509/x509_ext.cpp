@@ -823,12 +823,12 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf)
    m_crl_distribution_urls.push_back(ss.str());
    }
 
-void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder& /*to*/) const
+void CRL_Distribution_Points::Distribution_Point::encode_into(DER_Encoder& /*to*/) const
    {
    throw Not_Implemented("CRL_Distribution_Points encoding");
    }
 
-void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder& ber)
+void CRL_Distribution_Points::Distribution_Point::decode_from(BER_Decoder& ber)
    {
    ber.start_sequence()
       .start_context_specific(0)

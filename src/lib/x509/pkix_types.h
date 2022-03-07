@@ -460,8 +460,8 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
       */
       std::vector<uint8_t> get_extension_bits(const OID& oid) const;
 
-      void encode_into(class DER_Encoder&) const override;
-      void decode_from(class BER_Decoder&) override;
+      void encode_into(DER_Encoder&) const override;
+      void decode_from(BER_Decoder&) override;
 
       /**
       * Adds a new extension to the list.
