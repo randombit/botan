@@ -14,6 +14,8 @@
 #include <deque>
 
 namespace Botan {
+	
+class SecureQueue;
 
 /**
 * Container of output buffers for Pipe
@@ -26,7 +28,7 @@ class Output_Buffers final
       size_t get_bytes_read(Pipe::message_id) const;
       size_t remaining(Pipe::message_id) const;
 
-      void add(class SecureQueue*);
+      void add(SecureQueue*);
       void retire();
 
       Pipe::message_id message_count() const;
