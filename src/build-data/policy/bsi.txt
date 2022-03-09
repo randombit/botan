@@ -129,6 +129,7 @@ chacha_avx2
 ofb
 rc4
 salsa20
+#shake_cipher # not recommended, but needed for kyber
 
 # kdf
 hkdf
@@ -155,11 +156,13 @@ emsa_raw
 emsa_x931
 
 # hash
+#blake2 # not recommended, but needed for argon2
 comb4p
 gost_3411
 md4
 md5
 rmd160
+#shake # not recommended, but needed for kyber
 skein
 #sha1 // needed for x509
 sm3
