@@ -17,6 +17,7 @@ namespace Botan {
 class Public_Key;
 class Private_Key;
 class RandomNumberGenerator;
+class PK_Signer;
 
 /**
 * This class represents abstract X.509 signed objects as in the X.500
@@ -59,7 +60,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       * @param tbs the tbs bits to be signed
       * @return signed X509 object
       */
-      static std::vector<uint8_t> make_signed(class PK_Signer* signer,
+      static std::vector<uint8_t> make_signed(PK_Signer* signer,
                                               RandomNumberGenerator& rng,
                                               const AlgorithmIdentifier& alg_id,
                                               const secure_vector<uint8_t>& tbs);

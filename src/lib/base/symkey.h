@@ -13,6 +13,8 @@
 
 namespace Botan {
 
+class RandomNumberGenerator;
+
 /**
 * Octet String
 */
@@ -73,7 +75,7 @@ class BOTAN_PUBLIC_API(2,0) OctetString final
       * @param rng is a random number generator
       * @param len is the desired length in bytes
       */
-      OctetString(class RandomNumberGenerator& rng, size_t len);
+      OctetString(RandomNumberGenerator& rng, size_t len);
 
       /**
       * Create a new OctetString
