@@ -26,6 +26,9 @@ kdf1_iso18033
 sp800_108
 sp800_56c
 
+# pbkdf
+argon2
+
 # pk_pad
 eme_oaep
 emsa_pssr
@@ -42,6 +45,8 @@ ecgdsa
 ecies
 eckcdsa
 ecdh
+kyber
+kyber_90s
 xmss
 
 # rng
@@ -70,6 +75,9 @@ sha3_bmi2
 # entropy sources
 rdseed
 win32_stats
+
+# pbkdf
+argon2_ssse3
 
 # rng
 processor_rng
@@ -121,7 +129,7 @@ chacha_avx2
 ofb
 rc4
 salsa20
-shake_cipher
+#shake_cipher # not recommended, but needed for kyber
 
 # kdf
 hkdf
@@ -148,13 +156,13 @@ emsa_raw
 emsa_x931
 
 # hash
-blake2
+#blake2 # not recommended, but needed for argon2
 comb4p
 gost_3411
 md4
 md5
 rmd160
-shake
+#shake # not recommended, but needed for kyber
 skein
 #sha1 // needed for x509
 sm3
