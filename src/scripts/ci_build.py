@@ -522,7 +522,8 @@ def main(args=None):
             'src/scripts/test_fuzzers.py',
             'src/scripts/test_cli.py',
             'src/scripts/python_unittests.py',
-            'src/scripts/python_unittests_unix.py']
+            'src/scripts/python_unittests_unix.py',
+            'src/editors/sublime/build.py']
 
         full_paths = [os.path.join(root_dir, s) for s in py_scripts]
 

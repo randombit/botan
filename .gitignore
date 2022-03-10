@@ -24,6 +24,11 @@ vgcore.*
 \#*\#
 .\#*
 
+# Editor configuration files (top level)
+/*.sublime-project
+/*.sublime-workspace
+/.editorconfig
+
 # Archive files
 *.tgz
 *.tar
@@ -41,6 +46,7 @@ vgcore.*
 *.pyc
 .DS_Store
 *.swp
+/*.cache
 
 # ctags/etags files
 /TAGS

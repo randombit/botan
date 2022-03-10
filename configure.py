@@ -1948,7 +1948,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         # Cut absolute path from main executable (e.g. configure.py or python interpreter)
         # to get the same result when configuring the same thing on different machines
         main_executable = os.path.basename(sys.argv[0])
-        return ' '.join([main_executable] + sys.argv[1:])
+        quoted_args = [arg if ' ' not in arg else '\'' + arg + '\'' for arg in sys.argv[1:]]
+        return ' '.join([main_executable] + quoted_args)
 
     def cmake_escape(s):
         return s.replace('(', '\\(').replace(')', '\\)')
