@@ -46,6 +46,7 @@ vgcore.*
 *.pyc
 .DS_Store
 *.swp
+/*.cache
 
 # ctags/etags files
 /TAGS
