@@ -86,8 +86,8 @@ Test::Result test_decode_ecdsa_X509()
 
    result.test_eq("serial number", cert.serial_number(), Botan::hex_decode("01"));
    result.test_eq("authority key id", cert.authority_key_id(), cert.subject_key_id());
-   result.test_eq("key fingerprint", cert.fingerprint("SHA-1"),
-                  "32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9");
+   result.test_eq("key fingerprint", cert.fingerprint("SHA-256"),
+                  "3B:6C:99:1C:D6:5A:51:FC:EB:17:E3:AA:F6:3C:1A:DA:14:1F:82:41:30:6F:64:EE:FF:63:F3:1F:D6:07:14:9F");
 
    std::unique_ptr<Botan::Public_Key> pubkey(cert.subject_public_key());
    result.test_eq("verify self-signed signature", cert.check_signature(*pubkey), true);
@@ -113,6 +113,15 @@ Test::Result test_decode_ver_link_SHA1()
 
    Test::Result result("ECDSA Unit");
    std::unique_ptr<Botan::Public_Key> pubkey(root_cert.subject_public_key());
+
+   auto sha1 = Botan::HashFunction::create("SHA-1");
+
+   if(!sha1)
+      {
+      result.confirm("verification of self-signed signature failed due to missing SHA-1",
+                     !link_cert.check_signature(*pubkey));
+      return result;
+      }
    result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
    return result;
    }
