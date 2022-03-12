@@ -106,7 +106,6 @@ Test::Result test_decode_ver_link_SHA256()
    return result;
    }
 
-#if defined(BOTAN_HAS_SHA1)
 Test::Result test_decode_ver_link_SHA1()
    {
    Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root_SHA1.163.crt"));
@@ -114,10 +113,18 @@ Test::Result test_decode_ver_link_SHA1()
 
    Test::Result result("ECDSA Unit");
    std::unique_ptr<Botan::Public_Key> pubkey(root_cert.subject_public_key());
+
+   auto sha1 = Botan::HashFunction::create("SHA-1");
+
+   if(!sha1)
+      {
+      result.confirm("verification of self-signed signature failed due to missing SHA-1",
+                     !link_cert.check_signature(*pubkey));
+      return result;
+      }
    result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
    return result;
    }
-#endif
 #endif
 
 Test::Result test_sign_then_ver()
@@ -445,9 +452,7 @@ class ECDSA_Unit_Tests final : public Test
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
          results.push_back(test_decode_ecdsa_X509());
          results.push_back(test_decode_ver_link_SHA256());
-#if defined(BOTAN_HAS_SHA1)
          results.push_back(test_decode_ver_link_SHA1());
-#endif
 #endif
 
 #endif
