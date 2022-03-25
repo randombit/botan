@@ -101,10 +101,10 @@ def _set_prototypes(dll):
     def ffi_api(fn, args, allowed_errors=None):
         if allowed_errors is None:
             allowed_errors = [-10]
-            fn.argtypes = args
-            fn.restype = c_int
-            fn.errcheck = _errcheck
-            fn.allowed_errors = allowed_errors
+        fn.argtypes = args
+        fn.restype = c_int
+        fn.errcheck = _errcheck
+        fn.allowed_errors = allowed_errors
 
     dll.botan_version_string.argtypes = []
     dll.botan_version_string.restype = c_char_p
@@ -839,10 +839,10 @@ class SymmetricCipher(object):
             elif self._is_cbc:
                 # Hack: the largest block size currently supported
                 extra_bytes = 64
-                out = create_string_buffer(inp_sz.value + extra_bytes)
-                out_sz = c_size_t(len(out))
-                out_written = c_size_t(0)
-                flags = c_uint32(1 if final else 0)
+        out = create_string_buffer(inp_sz.value + extra_bytes)
+        out_sz = c_size_t(len(out))
+        out_written = c_size_t(0)
+        flags = c_uint32(1 if final else 0)
 
         _DLL.botan_cipher_update(self.__obj, flags,
                                  out, out_sz, byref(out_written),
@@ -1439,7 +1439,7 @@ class X509Cert(object): # pylint: disable=invalid-name
             arr_intermediates = c_intermediates()
             for i, ca in enumerate(intermediates):
                 arr_intermediates[i] = ca.handle_()
-                len_intermediates = c_size_t(len(intermediates))
+            len_intermediates = c_size_t(len(intermediates))
         else:
             arr_intermediates = c_void_p(0)
             len_intermediates = c_size_t(0)
@@ -1449,7 +1449,7 @@ class X509Cert(object): # pylint: disable=invalid-name
             arr_trusted = c_trusted()
             for i, ca in enumerate(trusted):
                 arr_trusted[i] = ca.handle_()
-                len_trusted = c_size_t(len(trusted))
+            len_trusted = c_size_t(len(trusted))
         else:
             arr_trusted = c_void_p(0)
             len_trusted = c_size_t(0)
@@ -1459,7 +1459,7 @@ class X509Cert(object): # pylint: disable=invalid-name
             arr_crls = c_crls()
             for i, crl in enumerate(crls):
                 arr_crls[i] = crl.handle_()
-                len_crls = c_size_t(len(crls))
+            len_crls = c_size_t(len(crls))
         else:
             arr_crls = c_void_p(0)
             len_crls = c_size_t(0)
@@ -1772,14 +1772,14 @@ class TOTP(object):
     def generate(self, timestamp=None):
         if timestamp is None:
             timestamp = int(system_time())
-            code = c_uint32(0)
-            _DLL.botan_totp_generate(self.__obj, byref(code), timestamp)
+        code = c_uint32(0)
+        _DLL.botan_totp_generate(self.__obj, byref(code), timestamp)
         return code.value
 
     def check(self, code, timestamp=None, acceptable_drift=0):
         if timestamp is None:
             timestamp = int(system_time())
-            rc = _DLL.botan_totp_check(self.__obj, code, timestamp, acceptable_drift)
+        rc = _DLL.botan_totp_check(self.__obj, code, timestamp, acceptable_drift)
         if rc == 0:
             return True
         return False
