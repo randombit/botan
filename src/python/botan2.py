@@ -1805,38 +1805,38 @@ class Srp6ServerSession(object):
     def __del__(self):
         _DLL.botan_srp6_server_session_destroy(self.__obj)
 
-    def step1(self, verifier, group, hash, rng):
+    def step1(self, verifier, group, hsh, rng):
         return _call_fn_returning_vec(128,
                                       lambda b, bl:
                                       _DLL.botan_srp6_server_session_step1(self.__obj,
                                                                            verifier, len(verifier),
-                                                                           _ctype_str(group), _ctype_str(hash),
+                                                                           _ctype_str(group), _ctype_str(hsh),
                                                                            rng.handle_(),
                                                                            b, bl))
 
-    def step2(self, A):
+    def step2(self, a):
         return _call_fn_returning_vec(128, lambda k, kl:
                                       _DLL.botan_srp6_server_session_step2(self.__obj,
-                                                                           A, len(A),
+                                                                           a, len(a),
                                                                            k, kl))
 
-def generate_srp6_verifier(identifier, password, salt, group, hash):
+def generate_srp6_verifier(identifier, password, salt, group, hsh):
     return _call_fn_returning_vec(128, lambda v, vl:
                                   _DLL.botan_generate_srp6_verifier(_ctype_str(identifier),
                                                                     _ctype_str(password),
                                                                     salt, len(salt),
                                                                     _ctype_str(group),
-                                                                    _ctype_str(hash),
+                                                                    _ctype_str(hsh),
                                                                     v, vl))
 
-def srp6_client_agree(username, password, group, hash, salt, B, rng):
+def srp6_client_agree(username, password, group, hsh, salt, b, rng):
     return _call_fn_returning_vec_pair(128, 128, lambda a, al, k, kl:
                                        _DLL.botan_srp6_client_agree(_ctype_str(username),
                                                                     _ctype_str(password),
                                                                     _ctype_str(group),
-                                                                    _ctype_str(hash),
+                                                                    _ctype_str(hsh),
                                                                     salt, len(salt),
-                                                                    B, len(B),
+                                                                    b, len(b),
                                                                     rng.handle_(),
                                                                     a, al,
                                                                     k, kl))
