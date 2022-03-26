@@ -1,9 +1,11 @@
 <defines>
-ARGON2 -> 20190824
+ARGON2 -> 20210407
 </defines>
 
 <requires>
 blake2
-base64
 </requires>
 
+<header:public>
+argon2.h
+</header:public>

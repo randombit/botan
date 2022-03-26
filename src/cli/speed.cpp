@@ -2348,9 +2348,9 @@ class Speed final : public Command
 
          for(size_t M : { 8*1024, 64*1024, 256*1024 })
             {
-            for(size_t t : { 1, 2, 4 })
+            for(size_t t : { 1, 4 })
                {
-               for(size_t p : { 1 })
+               for(size_t p : { 1, 4 })
                   {
                   std::unique_ptr<Timer> timer = make_timer(
                      "Argon2id M=" + std::to_string(M) + " t=" + std::to_string(t) + " p=" + std::to_string(p));

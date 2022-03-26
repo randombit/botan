@@ -1,0 +1,16 @@
+<defines>
+ARGON2_SSSE3 -> 20220303
+</defines>
+
+<isa>
+ssse3
+</isa>
+
+<header:internal>
+argon2_ssse3.h
+</header:internal>
+
+<cc>
+gcc
+clang
+</cc>
