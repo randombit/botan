@@ -1782,6 +1782,99 @@ int botan_fpe_encrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size
 BOTAN_PUBLIC_API(2,8)
 int botan_fpe_decrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len);
 
+/**
+* SRP-6 Server Session type
+*/
+typedef struct botan_srp6_server_session_struct* botan_srp6_server_session_t;
+
+/**
+* Initialize an SRP-6 server session object
+* @param srp6 SRP-6 server session object
+*/
+BOTAN_PUBLIC_API(3, 0)
+int botan_srp6_server_session_init(botan_srp6_server_session_t *srp6);
+
+/**
+* Frees all resources of the SRP-6 server session object
+* @param srp6 SRP-6 server session object
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_PUBLIC_API(3, 0)
+int botan_srp6_server_session_destroy(botan_srp6_server_session_t srp6);
+
+/**
+* SRP-6 Server side step 1
+* @param srp6 SRP-6 server session object
+* @param verifier the verification value saved from client registration
+* @param group_id the SRP group id
+* @param hash_id the SRP hash in use
+* @param rng_obj a random number generator object
+* @param B_pub out buffer to store the SRP-6 B value
+* @param B_pub_len SRP-6 B value length
+* @return 0 on success, negative on failure
+*/
+BOTAN_PUBLIC_API(3, 0)
+int botan_srp6_server_session_step1(botan_srp6_server_session_t srp6,
+                                    const uint8_t verifier[],
+                                    size_t verifier_len, const char *group_id,
+                                    const char *hash_id, botan_rng_t rng_obj,
+                                    uint8_t B_pub[], size_t *B_pub_len);
+
+/**
+* SRP-6 Server side step 2
+* @param srp6 SRP-6 server session object
+* @param A the client's value
+* @param A_len the client's value length
+* @param key out buffer to store the symmetric key value
+* @param key_len symmetric key length
+* @return 0 on success, negative on failure
+*/
+BOTAN_PUBLIC_API(3, 0)
+int botan_srp6_server_session_step2(botan_srp6_server_session_t srp6,
+                                    const uint8_t A[], size_t A_len,
+                                    uint8_t key[], size_t *key_len);
+
+/**
+* Generate a new SRP-6 verifier
+* @param identifier a username or other client identifier
+* @param password the secret used to authenticate user
+* @param salt a randomly chosen value, at least 128 bits long
+* @param group_id specifies the shared SRP group
+* @param hash_id specifies a secure hash function
+* @param verifier out buffer to store the SRP-6 verifier value
+* @param verifier_len SRP-6 verifier value length
+* @return 0 on success, negative on failure
+*/
+BOTAN_PUBLIC_API(3, 0)
+int botan_generate_srp6_verifier(const char *identifier, const char *password,
+                                 const uint8_t salt[], size_t salt_len,
+                                 const char *group_id, const char *hash_id,
+                                 uint8_t verifier[], size_t *verifier_len);
+
+/**
+* SRP6a Client side
+* @param username the username we are attempting login for
+* @param password the password we are attempting to use
+* @param group_id specifies the shared SRP group
+* @param hash_id specifies a secure hash function
+* @param salt is the salt value sent by the server
+* @param B is the server's public value
+* @param B_len is the server's public value length
+* @param rng_obj is a random number generator object
+* @param A out buffer to store the SRP-6 A value
+* @param A_len SRP-6 A verifier value length
+* @param K out buffer to store the symmetric value
+* @param K_len symmetric key length
+* @return 0 on success, negative on failure
+*/
+BOTAN_PUBLIC_API(3, 0)
+int botan_srp6_client_agree(const char *username, const char *password,
+                            const char *group_id, const char *hash_id,
+                            const uint8_t salt[], size_t salt_len,
+                            const uint8_t B[], size_t B_len, botan_rng_t rng_obj,
+                            uint8_t A[], size_t *A_len, uint8_t K[],
+                            size_t *K_len);
+
 #ifdef __cplusplus
 }
 #endif
