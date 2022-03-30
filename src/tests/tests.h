@@ -43,11 +43,17 @@ namespace Botan_Tests {
    using Botan::BigInt;
 #endif
 
-class Test_Error final : public Botan::Exception
+class Test_Error : public Botan::Exception
    {
    public:
       explicit Test_Error(const std::string& what) : Exception("Test error", what) {}
       Botan::ErrorType error_type() const noexcept override { return Botan::ErrorType::Unknown; }
+   };
+
+class Test_Aborted final : public Test_Error
+   {
+   public:
+      explicit Test_Aborted(const std::string& what) : Test_Error(what) {}
    };
 
 class Test_Options
@@ -239,6 +245,18 @@ class Test
             bool confirm(const std::string& what, bool expr, bool expected = true)
                {
                return test_eq(what, expr, expected);
+               }
+
+            /**
+             * Require a condition, throw Test_Aborted otherwise
+             * Note: works best when combined with CHECK scopes!
+             */
+            void require(const std::string& what, bool expr, bool expected = true)
+               {
+               if(!confirm(what, expr, expected))
+                  {
+                  throw Test_Aborted("test aborted, because required condition was not met");
+                  }
                }
 
             template<typename T>
@@ -765,6 +783,58 @@ class Text_Based_Test : public Test
       std::deque<std::string> m_srcs;
       std::vector<uint64_t> m_cpu_flags;
    };
+
+/**
+ * This is a convenience wrapper to write small self-contained and in particular
+ * exception-safe unit tests. If some (unexpected) exception is thrown in one of
+ * the CHECK-scopes, it will fail the particular test gracefully with a human-
+ * understandable failure output.
+ *
+ * Example Usage:
+ *
+ * ```
+ * std::vector<Test::Result> test_something()
+ *    {
+ *    return
+ *       {
+ *       CHECK("some unit test name", [](Test::Result& r)
+ *          {
+ *          r.confirm("some observation", 1+1 == 2);
+ *          }),
+ *       CHECK("some other unit test name", [](Test::Result& r)
+ *          {
+ *          // ...
+ *          })
+ *       };
+ *    }
+ *
+ * BOTAN_REGISTER_TEST_FN("some_category", "some_test_name", test_something);
+ * ```
+ */
+template<typename FunT>
+Test::Result CHECK(const char* name, FunT check_fun)
+   {
+   Botan_Tests::Test::Result r(name);
+
+   try
+      {
+      check_fun(r);
+      }
+   catch(const Botan_Tests::Test_Aborted&)
+      {
+      // pass, failure was already noted in the responsible `require`
+      }
+   catch(const std::exception& ex)
+      {
+      r.test_failure(std::string("failed with exception: ") + ex.what());
+      }
+   catch(...)
+      {
+      r.test_failure("failed with unknown exception");
+      }
+
+   return r;
+   }
 
 }
 
