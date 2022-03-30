@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <vector>
 #include <optional>
+#include <variant>
 #include <typeindex>
 
 namespace Botan {
@@ -592,34 +593,78 @@ class TestClassRegistration
 #define BOTAN_REGISTER_TEST(category, name, Test_Class)                 \
    const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name)
 
-typedef Test::Result (*test_fn)();
+typedef Test::Result(*test_fn)();
+typedef std::vector<Test::Result> (*test_fn_vec)();
 
 class FnTest : public Test
    {
+   private:
+      using TestFnVariant = std::variant<test_fn, test_fn_vec>;
+
+      template <typename TestFn>
+      std::vector<TestFnVariant> make_variant_vector(TestFn fn)
+         {
+         using T = std::decay_t<decltype(fn)>;
+         static_assert(std::is_same_v<T, test_fn> || std::is_same_v<T, test_fn_vec>,
+                       "functions passed to BOTAN_REGISTER_TEST_FN must either return a "
+                       "single Test::Result or a std::vector of Test::Result");
+         return { fn };
+         }
+
+      template <typename TestFn, typename... TestFns>
+      std::vector<TestFnVariant> make_variant_vector(const TestFn& fn, const TestFns& ...fns)
+         {
+         auto functions = make_variant_vector(fns...);
+         functions.emplace_back(fn);
+         return functions;
+         }
+
    public:
-      FnTest(test_fn fn) : m_fn(fn) {}
+      template <typename... TestFns>
+      FnTest(TestFns... fns) : m_fns(make_variant_vector(fns...)) {}
 
       std::vector<Test::Result> run() override
          {
-         return {m_fn()};
+         std::vector<Test::Result> result;
+
+         for(auto fn_variant = m_fns.crbegin(); fn_variant != m_fns.crend(); ++fn_variant)
+            {
+            std::visit([&](auto&& fn)
+               {
+               using T = std::decay_t<decltype(fn)>;
+               if constexpr(std::is_same_v<T, test_fn>)
+                  {
+                  result.emplace_back(fn());
+                  }
+               else
+                  {
+                  const auto results = fn();
+                  result.insert(result.end(), results.begin(), results.end());
+                  }
+               },
+            *fn_variant);
+            }
+
+         return result;
          }
 
    private:
-      test_fn m_fn;
+      std::vector<TestFnVariant> m_fns;
    };
 
 class TestFnRegistration
    {
    public:
-      TestFnRegistration(const std::string& category, const std::string& name, test_fn fn)
+      template <typename... TestFns>
+      TestFnRegistration(const std::string& category, const std::string& name, TestFns... fn)
          {
-         auto test_maker = [=]() -> std::unique_ptr<Test> { return std::make_unique<FnTest>(fn); };
+         auto test_maker = [=]() -> std::unique_ptr<Test> { return std::make_unique<FnTest>(fn...); };
          Test::register_test(category, name, test_maker);
          }
    };
 
-#define BOTAN_REGISTER_TEST_FN(category, name, fn_name) \
-   const TestFnRegistration reg_ ## fn_name(category, name, fn_name)
+#define BOTAN_REGISTER_TEST_FN(category, name, ...) \
+   static const TestFnRegistration reg_ ## fn_name(category, name, __VA_ARGS__)
 
 class VarMap
    {
