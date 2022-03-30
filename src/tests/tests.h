@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <vector>
 #include <optional>
+#include <typeindex>
 
 namespace Botan {
 
@@ -415,10 +416,74 @@ class Test
                               expected.data(), expected.size());
                }
 
+         private:
+            class ThrowExpectations
+               {
+               public:
+                  ThrowExpectations(std::function<void()> fn) : m_fn(std::move(fn)), m_expect_success(false), m_consumed(false) {}
+                  ThrowExpectations(const ThrowExpectations&) = delete;
+                  ThrowExpectations& operator=(const ThrowExpectations&) = delete;
+                  ThrowExpectations(ThrowExpectations&&) = default;
+                  ThrowExpectations& operator=(ThrowExpectations&&) = default;
+
+                  ~ThrowExpectations() { BOTAN_ASSERT_NOMSG(m_consumed); }
+
+                  ThrowExpectations& expect_success()
+                     {
+                     BOTAN_ASSERT_NOMSG(!m_expected_message && !m_expected_exception_type);
+                     m_expect_success = true;
+                     return *this;
+                     }
+
+                  ThrowExpectations& expect_message(const std::string& message)
+                     {
+                     BOTAN_ASSERT_NOMSG(!m_expect_success);
+                     m_expected_message = message;
+                     return *this;
+                     }
+
+                  template <typename ExT>
+                  ThrowExpectations& expect_exception_type()
+                     {
+                     BOTAN_ASSERT_NOMSG(!m_expect_success);
+                     m_expected_exception_type = typeid(ExT);
+                     return *this;
+                     }
+
+                  bool check(const std::string& test_name, Test::Result& result);
+
+               private:
+                  std::function<void()>          m_fn;
+                  bool                           m_expect_success;
+                  std::optional<std::string>     m_expected_message;
+                  std::optional<std::type_index> m_expected_exception_type;
+                  bool                           m_consumed;
+               };
+
+         public:
             bool test_throws(const std::string& what, const std::function<void ()>& fn);
 
             bool test_throws(const std::string& what, const std::string& expected,
                              const std::function<void ()>& fn);
+
+            bool test_no_throw(const std::string& what, const std::function<void ()>& fn);
+
+            template <typename ExceptionT>
+            bool test_throws(const std::string& what, const std::function<void ()>& fn)
+               {
+               return ThrowExpectations(fn)
+                      .expect_exception_type<ExceptionT>()
+                      .check(what, *this);
+               }
+
+            template <typename ExceptionT>
+            bool test_throws(const std::string& what, const std::string& expected, const std::function<void ()>& fn)
+               {
+               return ThrowExpectations(fn)
+                      .expect_exception_type<ExceptionT>()
+                      .expect_message(expected)
+                      .check(what, *this);
+               }
 
             void set_ns_consumed(uint64_t ns)
                {

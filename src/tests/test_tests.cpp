@@ -38,7 +38,7 @@ class Test_Tests final : public Test
             {
             Test::Result test_result(testcase_name);
             test_result.test_throws("doesn't throw", []() { });
-            verify_failure("test_throws", result, test_result);
+            verify_failure("test_throws 1", result, test_result);
             }
 
             {
@@ -144,21 +144,42 @@ class Test_Tests final : public Test
             Test::Result test_result(testcase_name);
             test_result.test_throws("test_throws", "expected msg",
                                     []() { throw std::runtime_error("not the message"); });
-            verify_failure("test_throws", result, test_result);
+            verify_failure("test_throws 2", result, test_result);
             }
 
             {
             Test::Result test_result(testcase_name);
             test_result.test_throws("test_throws", "expected msg",
                                     []() { throw std::string("not even a std::exception"); });
-            verify_failure("test_throws", result, test_result);
+            verify_failure("test_throws 3", result, test_result);
             }
 
             {
             Test::Result test_result(testcase_name);
             test_result.test_throws("test_throws", "expected msg",
                                     []() { ; });
-            verify_failure("test_throws", result, test_result);
+            verify_failure("test_throws 4", result, test_result);
+            }
+
+            {
+            Test::Result test_result(testcase_name);
+            test_result.test_throws<std::invalid_argument>("test_throws", "expected msg",
+                                    []() { throw std::runtime_error("expected msg"); });
+            verify_failure("test_throws 5", result, test_result);
+            }
+
+            {
+            Test::Result test_result(testcase_name);
+            test_result.test_throws<std::invalid_argument>("test_throws",
+                                    []() { throw std::runtime_error("expected msg"); });
+            verify_failure("test_throws 6", result, test_result);
+            }
+
+            {
+            Test::Result test_result(testcase_name);
+            test_result.test_no_throw("test_no_throw",
+                                    []() { throw std::runtime_error("boom!"); });
+            verify_failure("test_throws 7", result, test_result);
             }
 
 #if defined(BOTAN_HAS_BIGINT)
