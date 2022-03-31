@@ -374,7 +374,7 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
             {
             if(m_has_been_closed)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received application data after connection closure");
-            if(pending_state() != nullptr)
+            if(pending_state() != nullptr && !active_state())
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Can't interleave application and handshake data");
             process_application_data(record.sequence(), m_record_buf);
             }
