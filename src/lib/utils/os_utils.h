@@ -150,7 +150,7 @@ void page_prohibit_access(void* page);
 void page_allow_access(void* page);
 
 /**
-* Set a ID to a page's range
+* Set a ID to a page's range expressed by size bytes
 */
 void page_named(void* page, size_t size);
 
