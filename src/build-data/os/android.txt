@@ -26,4 +26,5 @@ sockets
 threads
 thread_local
 filesystem
+prctl
 </target_features>
