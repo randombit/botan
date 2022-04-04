@@ -27,6 +27,7 @@ tls_version.h
 tls_handshake_hash.h
 tls_handshake_io.h
 tls_handshake_state.h
+tls_handshake_transitions.h
 tls_reader.h
 tls_record.h
 tls_seq_numbers.h

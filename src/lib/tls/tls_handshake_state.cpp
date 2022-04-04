@@ -76,104 +76,6 @@ const char* handshake_type_to_string(Handshake_Type type)
                        "Unknown TLS handshake message type " + std::to_string(type));
    }
 
-namespace {
-
-uint32_t bitmask_for_handshake_type(Handshake_Type type)
-   {
-   switch(type)
-      {
-      case HELLO_VERIFY_REQUEST:
-         return (1 << 0);
-
-      case HELLO_REQUEST:
-         return (1 << 1);
-
-      case CLIENT_HELLO:
-         return (1 << 2);
-
-      case SERVER_HELLO:
-         return (1 << 3);
-
-      case CERTIFICATE:
-         return (1 << 4);
-
-      case CERTIFICATE_URL:
-         return (1 << 5);
-
-      case CERTIFICATE_STATUS:
-         return (1 << 6);
-
-      case SERVER_KEX:
-         return (1 << 7);
-
-      case CERTIFICATE_REQUEST:
-         return (1 << 8);
-
-      case SERVER_HELLO_DONE:
-         return (1 << 9);
-
-      case CERTIFICATE_VERIFY:
-         return (1 << 10);
-
-      case CLIENT_KEX:
-         return (1 << 11);
-
-      case NEW_SESSION_TICKET:
-         return (1 << 12);
-
-      case HANDSHAKE_CCS:
-         return (1 << 13);
-
-      case FINISHED:
-         return (1 << 14);
-
-      // allow explicitly disabling new handshakes
-      case HANDSHAKE_NONE:
-         return 0;
-      }
-
-   throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
-                       "Unknown TLS handshake message type " + std::to_string(type));
-   }
-
-std::string handshake_mask_to_string(uint32_t mask, char combiner)
-   {
-   const Handshake_Type types[] = {
-      HELLO_VERIFY_REQUEST,
-      HELLO_REQUEST,
-      CLIENT_HELLO,
-      SERVER_HELLO,
-      CERTIFICATE,
-      CERTIFICATE_URL,
-      CERTIFICATE_STATUS,
-      SERVER_KEX,
-      CERTIFICATE_REQUEST,
-      SERVER_HELLO_DONE,
-      CERTIFICATE_VERIFY,
-      CLIENT_KEX,
-      NEW_SESSION_TICKET,
-      HANDSHAKE_CCS,
-      FINISHED
-   };
-
-   std::ostringstream o;
-   bool empty = true;
-
-   for(auto&& t : types)
-      {
-      if(mask & bitmask_for_handshake_type(t))
-         {
-         if(!empty)
-            o << combiner;
-         o << handshake_type_to_string(t);
-         empty = false;
-         }
-      }
-
-   return o.str();
-   }
-
-}
 
 /*
 * Initialize the SSL/TLS Handshake State
@@ -313,57 +215,23 @@ void Handshake_State::compute_session_keys(const secure_vector<uint8_t>& resume_
 
 void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    {
-   const uint32_t mask = bitmask_for_handshake_type(handshake_msg);
-
-   m_hand_received_mask |= mask;
-
-   const bool ok = (m_hand_expecting_mask & mask) != 0; // overlap?
-
-   if(!ok)
-      {
-      const uint32_t seen_so_far = m_hand_received_mask & ~mask;
-
-      std::ostringstream msg;
-
-      msg << "Unexpected state transition in handshake got a " << handshake_type_to_string(handshake_msg);
-
-      if(m_hand_expecting_mask == 0)
-         msg << " not expecting messages";
-      else
-         msg << " expected " << handshake_mask_to_string(m_hand_expecting_mask, '|');
-
-      if(seen_so_far != 0)
-         msg << " seen " << handshake_mask_to_string(seen_so_far, '+');
-
-      throw Unexpected_Message(msg.str());
-      }
-
-   /* We don't know what to expect next, so force a call to
-      set_expected_next; if it doesn't happen, the next transition
-      check will always fail which is what we want.
-   */
-   m_hand_expecting_mask = 0;
+   m_transitions.confirm_transition_to(handshake_msg);
    }
 
 void Handshake_State::set_expected_next(Handshake_Type handshake_msg)
    {
-   m_hand_expecting_mask |= bitmask_for_handshake_type(handshake_msg);
+   m_transitions.set_expected_next(handshake_msg);
    }
 
 bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    {
-   const uint32_t mask = bitmask_for_handshake_type(handshake_msg);
-
-   return (m_hand_received_mask & mask) != 0;
+   return m_transitions.received_handshake_msg(handshake_msg);
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
 Handshake_State::get_next_handshake_msg()
    {
-   const bool expecting_ccs =
-      (bitmask_for_handshake_type(HANDSHAKE_CCS) & m_hand_expecting_mask) != 0;
-
-   return m_handshake_io->get_next_record(expecting_ccs);
+   return m_handshake_io->get_next_record(m_transitions.change_cipher_spec_expected());
    }
 
 std::vector<uint8_t> Handshake_State::session_ticket() const
