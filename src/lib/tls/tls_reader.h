@@ -64,12 +64,27 @@ class TLS_Data_Reader final
          return result;
          }
 
+      uint32_t get_uint24_t()
+         {
+         assert_at_least(3);
+         uint32_t result = make_uint32(0,                 m_buf[m_offset],
+                                       m_buf[m_offset+1], m_buf[m_offset+2]);
+         m_offset += 3;
+         return result;
+         }
+
       uint16_t get_uint16_t()
          {
          assert_at_least(2);
          uint16_t result = make_uint16(m_buf[m_offset], m_buf[m_offset+1]);
          m_offset += 2;
          return result;
+         }
+
+      uint16_t peek_uint16_t() const
+         {
+         assert_at_least(2);
+         return make_uint16(m_buf[m_offset], m_buf[m_offset+1]);
          }
 
       uint8_t get_byte()
@@ -93,6 +108,11 @@ class TLS_Data_Reader final
          m_offset += num_elems * sizeof(T);
 
          return result;
+         }
+
+      std::vector<uint8_t> get_tls_length_value(size_t len_bytes)
+         {
+         return get_fixed<uint8_t>(get_length_field(len_bytes));
          }
 
       template<typename T>
@@ -142,6 +162,8 @@ class TLS_Data_Reader final
             return get_byte();
          else if(len_bytes == 2)
             return get_uint16_t();
+         else if(len_bytes == 3)
+            return get_uint24_t();
 
          throw decode_error("Bad length size");
          }
@@ -195,11 +217,12 @@ void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
    const size_t T_size = sizeof(T);
    const size_t val_bytes = T_size * vals_size;
 
-   if(tag_size != 1 && tag_size != 2)
+   if(tag_size != 1 && tag_size != 2 && tag_size != 3)
       throw Invalid_Argument("append_tls_length_value: invalid tag size");
 
    if((tag_size == 1 && val_bytes > 255) ||
-      (tag_size == 2 && val_bytes > 65535))
+      (tag_size == 2 && val_bytes > 65535) ||
+      (tag_size == 3 && val_bytes > 16777215))
       throw Invalid_Argument("append_tls_length_value: value too large");
 
    for(size_t i = 0; i != tag_size; ++i)
