@@ -11,6 +11,7 @@
 
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
+#include <botan/internal/tls_handshake_transitions.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
@@ -176,8 +177,7 @@ class Handshake_State
 
       std::unique_ptr<Handshake_IO> m_handshake_io;
 
-      uint32_t m_hand_expecting_mask = 0;
-      uint32_t m_hand_received_mask = 0;
+      Handshake_Transitions m_transitions;
       Protocol_Version m_version;
       std::optional<Ciphersuite> m_ciphersuite;
       Session_Keys m_session_keys;
