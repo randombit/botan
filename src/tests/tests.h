@@ -826,7 +826,7 @@ Test::Result CHECK(const char* name, FunT check_fun)
       }
    catch(const std::exception& ex)
       {
-      r.test_failure(std::string("failed with exception: ") + ex.what());
+      r.test_failure("failed unexpectedly", ex.what());
       }
    catch(...)
       {
