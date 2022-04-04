@@ -22,6 +22,8 @@
 #include <unordered_map>
 #include <vector>
 #include <optional>
+#include <variant>
+#include <typeindex>
 
 namespace Botan {
 
@@ -41,11 +43,17 @@ namespace Botan_Tests {
    using Botan::BigInt;
 #endif
 
-class Test_Error final : public Botan::Exception
+class Test_Error : public Botan::Exception
    {
    public:
       explicit Test_Error(const std::string& what) : Exception("Test error", what) {}
       Botan::ErrorType error_type() const noexcept override { return Botan::ErrorType::Unknown; }
+   };
+
+class Test_Aborted final : public Test_Error
+   {
+   public:
+      explicit Test_Aborted(const std::string& what) : Test_Error(what) {}
    };
 
 class Test_Options
@@ -239,6 +247,18 @@ class Test
                return test_eq(what, expr, expected);
                }
 
+            /**
+             * Require a condition, throw Test_Aborted otherwise
+             * Note: works best when combined with CHECK scopes!
+             */
+            void require(const std::string& what, bool expr, bool expected = true)
+               {
+               if(!confirm(what, expr, expected))
+                  {
+                  throw Test_Aborted("test aborted, because required condition was not met");
+                  }
+               }
+
             template<typename T>
             bool test_is_eq(const T& produced, const T& expected)
                {
@@ -415,10 +435,74 @@ class Test
                               expected.data(), expected.size());
                }
 
+         private:
+            class ThrowExpectations
+               {
+               public:
+                  ThrowExpectations(std::function<void()> fn) : m_fn(std::move(fn)), m_expect_success(false), m_consumed(false) {}
+                  ThrowExpectations(const ThrowExpectations&) = delete;
+                  ThrowExpectations& operator=(const ThrowExpectations&) = delete;
+                  ThrowExpectations(ThrowExpectations&&) = default;
+                  ThrowExpectations& operator=(ThrowExpectations&&) = default;
+
+                  ~ThrowExpectations() { BOTAN_ASSERT_NOMSG(m_consumed); }
+
+                  ThrowExpectations& expect_success()
+                     {
+                     BOTAN_ASSERT_NOMSG(!m_expected_message && !m_expected_exception_type);
+                     m_expect_success = true;
+                     return *this;
+                     }
+
+                  ThrowExpectations& expect_message(const std::string& message)
+                     {
+                     BOTAN_ASSERT_NOMSG(!m_expect_success);
+                     m_expected_message = message;
+                     return *this;
+                     }
+
+                  template <typename ExT>
+                  ThrowExpectations& expect_exception_type()
+                     {
+                     BOTAN_ASSERT_NOMSG(!m_expect_success);
+                     m_expected_exception_type = typeid(ExT);
+                     return *this;
+                     }
+
+                  bool check(const std::string& test_name, Test::Result& result);
+
+               private:
+                  std::function<void()>          m_fn;
+                  bool                           m_expect_success;
+                  std::optional<std::string>     m_expected_message;
+                  std::optional<std::type_index> m_expected_exception_type;
+                  bool                           m_consumed;
+               };
+
+         public:
             bool test_throws(const std::string& what, const std::function<void ()>& fn);
 
             bool test_throws(const std::string& what, const std::string& expected,
                              const std::function<void ()>& fn);
+
+            bool test_no_throw(const std::string& what, const std::function<void ()>& fn);
+
+            template <typename ExceptionT>
+            bool test_throws(const std::string& what, const std::function<void ()>& fn)
+               {
+               return ThrowExpectations(fn)
+                      .expect_exception_type<ExceptionT>()
+                      .check(what, *this);
+               }
+
+            template <typename ExceptionT>
+            bool test_throws(const std::string& what, const std::string& expected, const std::function<void ()>& fn)
+               {
+               return ThrowExpectations(fn)
+                      .expect_exception_type<ExceptionT>()
+                      .expect_message(expected)
+                      .check(what, *this);
+               }
 
             void set_ns_consumed(uint64_t ns)
                {
@@ -527,34 +611,78 @@ class TestClassRegistration
 #define BOTAN_REGISTER_TEST(category, name, Test_Class)                 \
    const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name)
 
-typedef Test::Result (*test_fn)();
+typedef Test::Result(*test_fn)();
+typedef std::vector<Test::Result> (*test_fn_vec)();
 
 class FnTest : public Test
    {
+   private:
+      using TestFnVariant = std::variant<test_fn, test_fn_vec>;
+
+      template <typename TestFn>
+      std::vector<TestFnVariant> make_variant_vector(TestFn fn)
+         {
+         using T = std::decay_t<decltype(fn)>;
+         static_assert(std::is_same_v<T, test_fn> || std::is_same_v<T, test_fn_vec>,
+                       "functions passed to BOTAN_REGISTER_TEST_FN must either return a "
+                       "single Test::Result or a std::vector of Test::Result");
+         return { fn };
+         }
+
+      template <typename TestFn, typename... TestFns>
+      std::vector<TestFnVariant> make_variant_vector(const TestFn& fn, const TestFns& ...fns)
+         {
+         auto functions = make_variant_vector(fns...);
+         functions.emplace_back(fn);
+         return functions;
+         }
+
    public:
-      FnTest(test_fn fn) : m_fn(fn) {}
+      template <typename... TestFns>
+      FnTest(TestFns... fns) : m_fns(make_variant_vector(fns...)) {}
 
       std::vector<Test::Result> run() override
          {
-         return {m_fn()};
+         std::vector<Test::Result> result;
+
+         for(auto fn_variant = m_fns.crbegin(); fn_variant != m_fns.crend(); ++fn_variant)
+            {
+            std::visit([&](auto&& fn)
+               {
+               using T = std::decay_t<decltype(fn)>;
+               if constexpr(std::is_same_v<T, test_fn>)
+                  {
+                  result.emplace_back(fn());
+                  }
+               else
+                  {
+                  const auto results = fn();
+                  result.insert(result.end(), results.begin(), results.end());
+                  }
+               },
+            *fn_variant);
+            }
+
+         return result;
          }
 
    private:
-      test_fn m_fn;
+      std::vector<TestFnVariant> m_fns;
    };
 
 class TestFnRegistration
    {
    public:
-      TestFnRegistration(const std::string& category, const std::string& name, test_fn fn)
+      template <typename... TestFns>
+      TestFnRegistration(const std::string& category, const std::string& name, TestFns... fn)
          {
-         auto test_maker = [=]() -> std::unique_ptr<Test> { return std::make_unique<FnTest>(fn); };
+         auto test_maker = [=]() -> std::unique_ptr<Test> { return std::make_unique<FnTest>(fn...); };
          Test::register_test(category, name, test_maker);
          }
    };
 
-#define BOTAN_REGISTER_TEST_FN(category, name, fn_name) \
-   const TestFnRegistration reg_ ## fn_name(category, name, fn_name)
+#define BOTAN_REGISTER_TEST_FN(category, name, ...) \
+   static const TestFnRegistration reg_ ## fn_name(category, name, __VA_ARGS__)
 
 class VarMap
    {
@@ -655,6 +783,58 @@ class Text_Based_Test : public Test
       std::deque<std::string> m_srcs;
       std::vector<uint64_t> m_cpu_flags;
    };
+
+/**
+ * This is a convenience wrapper to write small self-contained and in particular
+ * exception-safe unit tests. If some (unexpected) exception is thrown in one of
+ * the CHECK-scopes, it will fail the particular test gracefully with a human-
+ * understandable failure output.
+ *
+ * Example Usage:
+ *
+ * ```
+ * std::vector<Test::Result> test_something()
+ *    {
+ *    return
+ *       {
+ *       CHECK("some unit test name", [](Test::Result& r)
+ *          {
+ *          r.confirm("some observation", 1+1 == 2);
+ *          }),
+ *       CHECK("some other unit test name", [](Test::Result& r)
+ *          {
+ *          // ...
+ *          })
+ *       };
+ *    }
+ *
+ * BOTAN_REGISTER_TEST_FN("some_category", "some_test_name", test_something);
+ * ```
+ */
+template<typename FunT>
+Test::Result CHECK(const char* name, FunT check_fun)
+   {
+   Botan_Tests::Test::Result r(name);
+
+   try
+      {
+      check_fun(r);
+      }
+   catch(const Botan_Tests::Test_Aborted&)
+      {
+      // pass, failure was already noted in the responsible `require`
+      }
+   catch(const std::exception& ex)
+      {
+      r.test_failure("failed unexpectedly", ex.what());
+      }
+   catch(...)
+      {
+      r.test_failure("failed with unknown exception");
+      }
+
+   return r;
+   }
 
 }
 

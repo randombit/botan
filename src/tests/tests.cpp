@@ -85,46 +85,52 @@ void Test::Result::note_missing(const std::string& whatever)
       }
    }
 
-bool Test::Result::test_throws(const std::string& what, const std::function<void ()>& fn)
+bool Test::Result::ThrowExpectations::check(const std::string& test_name, Test::Result& result)
    {
+   m_consumed = true;
+
    try
       {
-      fn();
-      return test_failure(what + " failed to throw expected exception");
+      m_fn();
+      if(!m_expect_success)
+         return result.test_failure(test_name + " failed to throw expected exception");
       }
-   catch(std::exception& e)
+   catch(const std::exception& ex)
       {
-      return test_success(what + " threw exception " + e.what());
+      if(m_expect_success)
+         return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
+      if(m_expected_exception_type.has_value() && m_expected_exception_type.value() != typeid(ex))
+         return result.test_failure(test_name +  " threw unexpected exception: " + ex.what());
+      if(m_expected_message.has_value() && m_expected_message.value() != ex.what())
+         return result.test_failure(test_name + " threw exception with unexpected message (expected: '" +
+                                    m_expected_message.value() + "', got: '" + ex.what() + "')");
       }
    catch(...)
       {
-      return test_success(what + " threw unknown exception");
+      if(m_expect_success || m_expected_exception_type.has_value() || m_expected_message.has_value())
+         return result.test_failure(test_name + " threw unexpected unknown exception");
       }
+
+   return result.test_success(test_name + " behaved as expected");
+   }
+
+bool Test::Result::test_throws(const std::string& what, const std::function<void ()>& fn)
+   {
+   return ThrowExpectations(fn).check(what, *this);
    }
 
 bool Test::Result::test_throws(const std::string& what, const std::string& expected, const std::function<void ()>& fn)
    {
-   try
-      {
-      fn();
-      return test_failure(what + " failed to throw expected exception");
-      }
-   catch(std::exception& e)
-      {
-      if(expected == e.what())
-         {
-         return test_success(what + " threw exception " + e.what());
-         }
-      else
-         {
-         return test_failure(what + " failed to throw an exception with the expected text:\n  Expected: " + expected +
-                             "\n  Got: " + e.what());
-         }
-      }
-   catch(...)
-      {
-      return test_failure(what + " failed to throw an exception with the expected text:\n  Expected: " + expected);
-      }
+   return ThrowExpectations(fn)
+          .expect_message(expected)
+          .check(what, *this);
+   }
+
+bool Test::Result::test_no_throw(const std::string& what, const std::function<void ()>& fn)
+   {
+   return ThrowExpectations(fn)
+          .expect_success()
+          .check(what, *this);
    }
 
 bool Test::Result::test_success(const std::string& note)
