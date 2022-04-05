@@ -13,7 +13,7 @@
 
 namespace Botan::TLS {
 
-New_Session_Ticket::New_Session_Ticket(Handshake_IO& io,
+New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io,
                                        Handshake_Hash& hash,
                                        const std::vector<uint8_t>& ticket,
                                        uint32_t lifetime) :
@@ -23,13 +23,13 @@ New_Session_Ticket::New_Session_Ticket(Handshake_IO& io,
    hash.update(io.send(*this));
    }
 
-New_Session_Ticket::New_Session_Ticket(Handshake_IO& io,
+New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io,
                                        Handshake_Hash& hash)
    {
    hash.update(io.send(*this));
    }
 
-New_Session_Ticket::New_Session_Ticket(const std::vector<uint8_t>& buf)
+New_Session_Ticket_12::New_Session_Ticket_12(const std::vector<uint8_t>& buf)
    {
    if(buf.size() < 6)
       throw Decoding_Error("Session ticket message too short to be valid");
@@ -41,7 +41,7 @@ New_Session_Ticket::New_Session_Ticket(const std::vector<uint8_t>& buf)
    reader.assert_done();
    }
 
-std::vector<uint8_t> New_Session_Ticket::serialize() const
+std::vector<uint8_t> New_Session_Ticket_12::serialize() const
    {
    std::vector<uint8_t> buf(4);
    store_be(m_ticket_lifetime_hint, buf.data());

@@ -2,15 +2,20 @@
 * Certificate Verify Message
 * (C) 2004,2006,2011,2012 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2021 Elektrobit Automotive GmbH
+*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/tls_messages.h>
-#include <botan/tls_extensions.h>
-#include <botan/internal/tls_reader.h>
+
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_reader.h>
+#include <botan/pk_keys.h>
+#include <botan/tls_algos.h>
+#include <botan/tls_extensions.h>
 
 namespace Botan::TLS {
 
@@ -45,6 +50,10 @@ Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf)
    m_scheme = static_cast<Signature_Scheme>(reader.get_uint16_t());
    m_signature = reader.get_range<uint8_t>(2, 0, 65535);
    reader.assert_done();
+
+   if(m_scheme == Signature_Scheme::NONE)
+      { throw Decoding_Error("Counterparty did not send hash/sig IDS"); }
+
    }
 
 /*
@@ -62,7 +71,7 @@ std::vector<uint8_t> Certificate_Verify::serialize() const
       }
 
    if(m_signature.size() > 0xFFFF)
-      throw Encoding_Error("Certificate_Verify signature too long to encode");
+      { throw Encoding_Error("Certificate_Verify signature too long to encode"); }
 
    const uint16_t sig_len = static_cast<uint16_t>(m_signature.size());
    buf.push_back(get_byte<0>(sig_len));
@@ -72,19 +81,17 @@ std::vector<uint8_t> Certificate_Verify::serialize() const
    return buf;
    }
 
-/*
-* Verify a Certificate Verify message
-*/
-bool Certificate_Verify::verify(const X509_Certificate& cert,
-                                const Handshake_State& state,
-                                const Policy& policy) const
+
+bool Certificate_Verify_12::verify(const X509_Certificate& cert,
+                                   const Handshake_State& state,
+                                   const Policy& policy) const
    {
    std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
    policy.check_peer_key_acceptable(*key);
 
    std::pair<std::string, Signature_Format> format =
-      state.parse_sig_format(*key.get(), m_scheme, true, policy);
+      state.parse_sig_format(*key.get(), m_scheme, state.client_hello()->signature_schemes(), true, policy);
 
    const bool signature_valid =
       state.callbacks().tls_verify_message(*key, format.first, format.second,

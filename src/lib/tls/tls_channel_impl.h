@@ -8,71 +8,40 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_CHANNEL_H_
-#define BOTAN_TLS_CHANNEL_H_
+#ifndef BOTAN_TLS_CHANNEL_IMPL_H_
+#define BOTAN_TLS_CHANNEL_IMPL_H_
 
-#include <botan/tls_session.h>
-#include <botan/tls_alert.h>
-#include <botan/tls_session_manager.h>
-#include <botan/tls_callbacks.h>
-#include <botan/x509cert.h>
+#include <botan/tls_channel.h>
+#include <botan/tls_version.h>
+#include <botan/tls_magic.h>
 
 #include <vector>
-#include <string>
+#include <memory>
 
-namespace Botan::TLS {
+namespace Botan {
 
-/**
-* Generic interface for TLS endpoint
-*/
-class BOTAN_PUBLIC_API(2,0) Channel
+class Credentials_Manager;
+class X509_Certificate;
+
+namespace TLS {
+
+class Channel_Impl
    {
    public:
-      static constexpr size_t IO_BUF_DEFAULT_SIZE = 10*1024;
-
-      virtual ~Channel() = default;
+      virtual ~Channel_Impl() = default;
 
       /**
       * Inject TLS traffic received from counterparty
-      * @return a hint as the how many more bytes we need to process the
+      * @return a hint as the how many more bytes we need to q the
       *         current record (this may be 0 if on a record boundary)
       */
       virtual size_t received_data(const uint8_t buf[], size_t buf_size) = 0;
-
-      /**
-      * Inject TLS traffic received from counterparty
-      * @return a hint as the how many more bytes we need to process the
-      *         current record (this may be 0 if on a record boundary)
-      */
-      size_t received_data(const std::vector<uint8_t>& buf)
-         {
-         return this->received_data(buf.data(), buf.size());
-         }
 
       /**
       * Inject plaintext intended for counterparty
       * Throws an exception if is_active() is false
       */
       virtual void send(const uint8_t buf[], size_t buf_size) = 0;
-
-      /**
-      * Inject plaintext intended for counterparty
-      * Throws an exception if is_active() is false
-      */
-      void send(const std::string& val)
-         {
-         this->send(cast_char_ptr_to_uint8(val.data()), val.size());
-         }
-
-      /**
-      * Inject plaintext intended for counterparty
-      * Throws an exception if is_active() is false
-      */
-      template<typename Alloc>
-      void send(const std::vector<unsigned char, Alloc>& val)
-         {
-         send(val.data(), val.size());
-         }
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal
@@ -84,17 +53,17 @@ class BOTAN_PUBLIC_API(2,0) Channel
       /**
       * Send a warning alert
       */
-      virtual void send_warning_alert(Alert::Type type) = 0;
+      void send_warning_alert(Alert::Type type) { send_alert(Alert(type, false)); }
 
       /**
       * Send a fatal alert
       */
-      virtual void send_fatal_alert(Alert::Type type) = 0;
+      void send_fatal_alert(Alert::Type type) { send_alert(Alert(type, true)); }
 
       /**
       * Send a close notification alert
       */
-      virtual void close() = 0;
+      void close() { send_warning_alert(Alert::CLOSE_NOTIFY); }
 
       /**
       * @return true iff the connection is active for sending application data
@@ -145,6 +114,9 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       virtual std::string application_protocol() const = 0;
    };
+
+}
+
 }
 
 #endif

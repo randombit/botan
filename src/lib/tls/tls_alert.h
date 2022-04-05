@@ -50,6 +50,7 @@ class BOTAN_PUBLIC_API(2,0) Alert final
          INAPPROPRIATE_FALLBACK          = 86,
          USER_CANCELED                   = 90,
          NO_RENEGOTIATION                = 100,
+         MISSING_EXTENSION               = 109, // RFC 8446
          UNSUPPORTED_EXTENSION           = 110,
          CERTIFICATE_UNOBTAINABLE        = 111,
          UNRECOGNIZED_NAME               = 112,
@@ -71,6 +72,12 @@ class BOTAN_PUBLIC_API(2,0) Alert final
 
       /**
       * @return if this alert is a fatal one or not
+      *
+      * Note:
+      *    RFC 8446 6.
+      *       In TLS 1.3, the severity is implicit in the type of alert being sent,
+      *       and the "level" field can safely be ignored.
+      *    Everything is considered fatal except for USER_CANCELED and CLOSE_NOTIFY (RFC 8446 6.1)
       */
       bool is_fatal() const { return m_fatal; }
 

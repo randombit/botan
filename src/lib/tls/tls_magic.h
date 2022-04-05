@@ -8,6 +8,8 @@
 #ifndef BOTAN_TLS_PROTOCOL_MAGIC_H_
 #define BOTAN_TLS_PROTOCOL_MAGIC_H_
 
+#include <vector>
+
 #include <botan/types.h>
 
 //BOTAN_FUTURE_INTERNAL_HEADER(tls_magic.h)
@@ -18,11 +20,15 @@ namespace TLS {
 
 /**
 * Protocol Constants for SSL/TLS
+*
+* TODO: this should not be an enum
 */
-enum Size_Limits {
+enum Size_Limits : size_t {
    TLS_HEADER_SIZE    = 5,
    DTLS_HEADER_SIZE   = TLS_HEADER_SIZE + 8,
 
+   // The "TLSInnerPlaintext" length, i.e. the maximum amount of plaintext
+   // application data that can be transmitted in a single TLS record.
    MAX_PLAINTEXT_SIZE = 16*1024,
    MAX_COMPRESSED_SIZE = MAX_PLAINTEXT_SIZE + 1024,
    MAX_CIPHERTEXT_SIZE = MAX_COMPRESSED_SIZE + 1024,
@@ -64,6 +70,8 @@ enum Handshake_Type {
 };
 
 const char* handshake_type_to_string(Handshake_Type t);
+
+using Transcript_Hash = std::vector<uint8_t>;
 
 }
 

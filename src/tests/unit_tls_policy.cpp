@@ -148,7 +148,6 @@ class TLS_Policy_Unit_Tests final : public Test
 #endif
          return result;
          }
-
    };
 
 BOTAN_REGISTER_TEST("tls", "tls_policy", TLS_Policy_Unit_Tests);

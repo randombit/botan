@@ -140,7 +140,7 @@ class TLS_Client_Hello_Reader final : public Command
 
          try
             {
-            Botan::TLS::Client_Hello hello(input);
+            Botan::TLS::Client_Hello_12 hello(input);
 
             output() << format_hello(hello);
             }
@@ -151,10 +151,10 @@ class TLS_Client_Hello_Reader final : public Command
          }
 
    private:
-      static std::string format_hello(const Botan::TLS::Client_Hello& hello)
+      static std::string format_hello(const Botan::TLS::Client_Hello_12& hello)
          {
          std::ostringstream oss;
-         oss << "Version: " << hello.version().to_string() << "\n"
+         oss << "Version: " << hello.legacy_version().to_string() << "\n"
              << "Random: " << Botan::hex_encode(hello.random()) << "\n";
 
          if(!hello.session_id().empty())

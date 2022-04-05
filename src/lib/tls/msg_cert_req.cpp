@@ -1,6 +1,8 @@
 /*
 * Certificate Request Message
 * (C) 2004-2006,2012 Jack Lloyd
+*     2021 Elektrobit Automotive GmbH
+*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,6 +16,11 @@
 #include <botan/ber_dec.h>
 
 namespace Botan::TLS {
+
+Handshake_Type Certificate_Req::type() const
+   {
+   return CERTIFICATE_REQUEST;
+   }
 
 namespace {
 
@@ -108,6 +115,21 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf)
       }
    }
 
+const std::vector<std::string>& Certificate_Req::acceptable_cert_types() const
+   {
+   return m_cert_key_types;
+   }
+
+const std::vector<X509_DN>& Certificate_Req::acceptable_CAs() const
+   {
+   return m_names;
+   }
+
+const std::vector<Signature_Scheme>& Certificate_Req::signature_schemes() const
+   {
+   return m_schemes;
+   }
+
 /**
 * Serialize a Certificate Request message
 */
@@ -131,6 +153,7 @@ std::vector<uint8_t> Certificate_Req::serialize() const
       {
       DER_Encoder encoder;
       encoder.encode(name);
+
       append_tls_length_value(encoded_names, encoder.get_contents(), 2);
       }
 

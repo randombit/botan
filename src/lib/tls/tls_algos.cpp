@@ -167,7 +167,6 @@ std::string group_param_to_string(Group_Params group)
       }
    }
 
-
 std::string hash_function_of_scheme(Signature_Scheme scheme)
    {
    switch(scheme)

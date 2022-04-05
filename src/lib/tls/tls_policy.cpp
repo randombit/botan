@@ -3,6 +3,7 @@
 * (C) 2004-2010,2012,2015,2016 Jack Lloyd
 *     2016 Christian Mainka
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,6 +14,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
 #include <botan/pk_keys.h>
+#include <optional>
 #include <sstream>
 
 namespace Botan::TLS {
@@ -291,7 +293,7 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite& ciphersuite) const
 bool Policy::allow_client_initiated_renegotiation() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
-bool Policy::allow_tls12()  const { return true; }
+bool Policy::allow_tls12() const { return true; }
 bool Policy::allow_dtls12() const { return true; }
 bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
@@ -299,6 +301,7 @@ bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 bool Policy::negotiate_encrypt_then_mac() const { return true; }
 bool Policy::support_cert_status_message() const { return true; }
 bool Policy::allow_resumption_for_renegotiation() const { return true; }
+bool Policy::hash_hello_random() const { return true; }
 bool Policy::only_resume_with_exact_version() const { return true; }
 bool Policy::require_client_certificate_authentication() const { return false; }
 bool Policy::request_client_certificate_authentication() const { return require_client_certificate_authentication(); }
@@ -418,31 +421,36 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version) const
       if(!this->acceptable_ciphersuite(suite))
          continue;
 
-      if(!value_exists(kex, suite.kex_algo()))
-         continue; // unsupported key exchange
-
       if(!value_exists(ciphers, suite.cipher_algo()))
          continue; // unsupported cipher
 
-      if(!value_exists(macs, suite.mac_algo()))
-         continue; // unsupported MAC algo
-
-      if(!value_exists(sigs, suite.sig_algo()))
+      // these checks are irrelevant for TLS 1.3
+      // TODO: consider making a method for this logic
+      if(version.is_pre_tls_13())
          {
-         // allow if it's an empty sig algo and we want to use PSK
-         if(suite.auth_method() != Auth_Method::IMPLICIT || !suite.psk_ciphersuite())
-            continue;
-         }
+         if(!value_exists(kex, suite.kex_algo()))
+            continue; // unsupported key exchange
 
-      /*
-      CECPQ1 always uses x25519 for ECDH, so treat the applications
-      removal of x25519 from the ECC curve list as equivalent to
-      saying they do not trust CECPQ1
-      */
-      if(suite.kex_method() == Kex_Algo::CECPQ1)
-         {
-         if(value_exists(key_exchange_groups(), Group_Params::X25519) == false)
-            continue;
+         if(!value_exists(macs, suite.mac_algo()))
+            continue; // unsupported MAC algo
+
+         if(!value_exists(sigs, suite.sig_algo()))
+            {
+            // allow if it's an empty sig algo and we want to use PSK
+            if(suite.auth_method() != Auth_Method::IMPLICIT || !suite.psk_ciphersuite())
+               continue;
+            }
+
+         /*
+         CECPQ1 always uses x25519 for ECDH, so treat the applications
+         removal of x25519 from the ECC curve list as equivalent to
+         saying they do not trust CECPQ1
+         */
+         if(suite.kex_method() == Kex_Algo::CECPQ1)
+            {
+            if(value_exists(key_exchange_groups(), Group_Params::X25519) == false)
+               continue;
+            }
          }
 
       // OK, consider it
@@ -512,7 +520,6 @@ void Policy::print(std::ostream& o) const
    print_vec(o, "signature_methods", allowed_signature_methods());
    print_vec(o, "key_exchange_methods", allowed_key_exchange_methods());
    print_vec(o, "key_exchange_groups", key_exchange_groups());
-
    print_bool(o, "allow_insecure_renegotiation", allow_insecure_renegotiation());
    print_bool(o, "include_time_in_hello_random", include_time_in_hello_random());
    print_bool(o, "allow_server_initiated_renegotiation", allow_server_initiated_renegotiation());
@@ -520,6 +527,7 @@ void Policy::print(std::ostream& o) const
    print_bool(o, "server_uses_own_ciphersuite_preferences", server_uses_own_ciphersuite_preferences());
    print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
    print_bool(o, "support_cert_status_message", support_cert_status_message());
+   print_bool(o, "hash_hello_random", hash_hello_random());
    o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
    o << "minimum_ecdh_group_size = " << minimum_ecdh_group_size() << '\n';

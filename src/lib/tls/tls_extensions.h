@@ -3,6 +3,8 @@
 * (C) 2011,2012,2016,2018,2019 Jack Lloyd
 * (C) 2016 Juraj Somorovsky
 * (C) 2016 Matthias Gierlings
+* (C) 2021 Elektrobit Automotive GmbH
+* (C) 2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,37 +17,41 @@
 #include <botan/tls_version.h>
 #include <botan/secmem.h>
 #include <botan/pkix_types.h>
+
+#include <algorithm>
+#include <optional>
+#include <variant>
 #include <vector>
 #include <string>
-#include <map>
 #include <set>
 
 namespace Botan {
 
+class RandomNumberGenerator;
+
 namespace TLS {
 
 class Policy;
-
 class TLS_Data_Reader;
 
 // This will become an enum class in a future major release
 enum Handshake_Extension_Type {
-   TLSEXT_SERVER_NAME_INDICATION = 0,
-   TLSEXT_CERT_STATUS_REQUEST    = 5,
+   TLSEXT_SERVER_NAME_INDICATION    = 0,
+   TLSEXT_CERT_STATUS_REQUEST       = 5,
 
-   TLSEXT_CERTIFICATE_TYPES      = 9,
-   TLSEXT_SUPPORTED_GROUPS       = 10,
-   TLSEXT_EC_POINT_FORMATS       = 11,
-   TLSEXT_SIGNATURE_ALGORITHMS   = 13,
-   TLSEXT_USE_SRTP               = 14,
-   TLSEXT_ALPN                   = 16,
+   TLSEXT_CERTIFICATE_TYPES         = 9,
+   TLSEXT_SUPPORTED_GROUPS          = 10,
+   TLSEXT_EC_POINT_FORMATS          = 11,
+   TLSEXT_SIGNATURE_ALGORITHMS      = 13,
+   TLSEXT_USE_SRTP                  = 14,
+   TLSEXT_ALPN                      = 16,
 
-   TLSEXT_ENCRYPT_THEN_MAC       = 22,
-   TLSEXT_EXTENDED_MASTER_SECRET = 23,
+   TLSEXT_ENCRYPT_THEN_MAC          = 22,
+   TLSEXT_EXTENDED_MASTER_SECRET    = 23,
 
-   TLSEXT_SESSION_TICKET         = 35,
+   TLSEXT_SESSION_TICKET            = 35,
 
-   TLSEXT_SUPPORTED_VERSIONS     = 43,
+   TLSEXT_SUPPORTED_VERSIONS        = 43,
 
    TLSEXT_SAFE_RENEGOTIATION     = 65281,
 };
@@ -70,6 +76,11 @@ class BOTAN_UNSTABLE_API Extension
       * @return if we should encode this extension or not
       */
       virtual bool empty() const = 0;
+
+      /**
+       * @return true if this extension is known and implemented by Botan
+       */
+      virtual bool is_implemented() const { return true; }
 
       virtual ~Extension() = default;
    };
@@ -156,7 +167,8 @@ class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public 
          m_protocols(protocols) {}
 
       Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
-                                              uint16_t extension_size);
+                                              uint16_t extension_size,
+                                              Connection_Side from);
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -216,6 +228,7 @@ class BOTAN_UNSTABLE_API Supported_Groups final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
+      const std::vector<Group_Params>& groups() const;
       std::vector<Group_Params> ec_groups() const;
       std::vector<Group_Params> dh_groups() const;
 
@@ -384,6 +397,11 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
          return m_extension_bytes;
          }
 
+      const std::vector<uint8_t>& get_ocsp_response() const
+         {
+         return m_response;
+         }
+
       // Server generated version: empty
       Certificate_Status_Request() {}
 
@@ -393,11 +411,13 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
 
       Certificate_Status_Request(TLS_Data_Reader& reader,
                                  uint16_t extension_size,
-                                 Connection_Side side);
+                                 Connection_Side side,
+                                 Handshake_Type message_type);
    private:
       std::vector<uint8_t> m_ocsp_names;
       std::vector<std::vector<uint8_t>> m_ocsp_keys; // is this field really needed
       std::vector<uint8_t> m_extension_bytes;
+      std::vector<uint8_t> m_response;
    };
 
 /**
@@ -428,10 +448,12 @@ class BOTAN_UNSTABLE_API Supported_Versions final : public Extension
 
       bool supports(Protocol_Version version) const;
 
-      const std::vector<Protocol_Version> versions() const { return m_versions; }
+      const std::vector<Protocol_Version>& versions() const { return m_versions; }
    private:
       std::vector<Protocol_Version> m_versions;
    };
+
+using Named_Group = Group_Params;
 
 /**
 * Unknown extensions are deserialized as this type
@@ -450,6 +472,8 @@ class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
       bool empty() const override { return false; }
 
       Handshake_Extension_Type type() const override { return m_type; }
+
+      bool is_implemented() const override { return false; }
 
    private:
       Handshake_Extension_Type m_type;
@@ -476,48 +500,90 @@ class BOTAN_UNSTABLE_API Extensions final
          return get<T>() != nullptr;
          }
 
-      void add(std::unique_ptr<Extension> extn)
+      bool has(Handshake_Extension_Type type) const
          {
-         m_extensions[extn->type()].reset(extn.release());
+         return get(type) != nullptr;
          }
+
+      size_t size() const
+         {
+         return m_extensions.size();
+         }
+
+      void add(std::unique_ptr<Extension> extn);
 
       void add(Extension* extn)
          {
-         m_extensions[extn->type()].reset(extn);
+         add(std::unique_ptr<Extension>(extn));
          }
 
       Extension* get(Handshake_Extension_Type type) const
          {
-         auto i = m_extensions.find(type);
+         const auto i = std::find_if(m_extensions.cbegin(), m_extensions.cend(),
+                                     [type](const auto &ext) {
+                                        return ext->type() == type;
+                                     });
 
-         if(i != m_extensions.end())
-            return i->second.get();
-         return nullptr;
+         return (i != m_extensions.end()) ? i->get() : nullptr;
          }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const;
 
-      void deserialize(TLS_Data_Reader& reader, Connection_Side from);
+      void deserialize(TLS_Data_Reader& reader,
+                       const Connection_Side from,
+                       const Handshake_Type message_type);
+
+      /**
+       * Take the extension with the given type out of the extensions list.
+       * Returns a nullptr if the extension didn't exist.
+       */
+      template<typename T>
+      decltype(auto) take()
+         {
+         std::unique_ptr<T> out_ptr;
+
+         auto ext = take(T::static_type());
+         if (ext != nullptr) {
+            out_ptr.reset(dynamic_cast<T*>(ext.get()));
+            BOTAN_ASSERT_NOMSG(out_ptr != nullptr);
+            ext.release();
+         }
+
+         return out_ptr;
+         }
+
+      /**
+       * Take the extension with the given type out of the extensions list.
+       * Returns a nullptr if the extension didn't exist.
+       */
+      std::unique_ptr<Extension> take(Handshake_Extension_Type type);
 
       /**
       * Remove an extension from this extensions object, if it exists.
       * Returns true if the extension existed (and thus is now removed),
       * otherwise false (the extension wasn't set in the first place).
+      *
+      * Note: not used internally, might be used in Callbacks::tls_modify_extensions()
       */
-      bool remove_extension(Handshake_Extension_Type typ);
+      bool remove_extension(Handshake_Extension_Type type)
+         {
+         return take(type) != nullptr;
+         }
 
       Extensions() = default;
+      Extensions(Extensions&&) = default;
+      Extensions& operator=(Extensions&&) = default;
 
-      Extensions(TLS_Data_Reader& reader, Connection_Side side)
+      Extensions(TLS_Data_Reader& reader, Connection_Side side, Handshake_Type message_type)
          {
-         deserialize(reader, side);
+         deserialize(reader, side, message_type);
          }
 
    private:
       Extensions(const Extensions&) = delete;
       Extensions& operator=(const Extensions&) = delete;
 
-      std::map<Handshake_Extension_Type, std::unique_ptr<Extension>> m_extensions;
+      std::vector<std::unique_ptr<Extension>> m_extensions;
    };
 
 }

@@ -21,6 +21,7 @@ Dan Brown
 Daniel Neus (Rohde & Schwarz Cybersecurity)
 Daniel Seither (Kullo GmbH)
 Daniel Wyatt
+Elektrobit Automotive GmbH
 Eric Cornelius
 Erwan Chaussy
 etcimon
@@ -66,6 +67,7 @@ Matthias Gierlings (Hackmanit GmbH)
 Matt Johnston
 Michael Boric (Rohde & Schwarz Cybersecurity)
 Nathan Hourt
+neXenio GmbH
 Nicolas Sendrier
 Nuno Goncalves
 Ori Peleg
