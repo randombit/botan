@@ -13,6 +13,7 @@
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
 #include <botan/pubkey.h>
+#include <botan/ocsp.h>
 #include <optional>
 
 namespace Botan {

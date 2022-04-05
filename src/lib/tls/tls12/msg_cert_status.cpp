@@ -12,6 +12,7 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/ocsp.h>
 
 namespace Botan::TLS {
 

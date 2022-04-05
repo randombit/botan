@@ -23,6 +23,8 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_hash.h>
 
+#include <chrono>
+
 namespace Botan::TLS {
 
 enum
