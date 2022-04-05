@@ -672,7 +672,7 @@ void OS::page_named(void* page, size_t size)
    int r = prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, reinterpret_cast<uintptr_t>(page), size, name);
    BOTAN_UNUSED(r);
 #else
-   BOTAN_UNUSED(page, size);
+   BOTAN_UNUSED(page, size, name);
 #endif
    }
 
