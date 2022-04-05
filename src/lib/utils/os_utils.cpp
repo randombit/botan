@@ -67,6 +67,14 @@
   #include <mach/vm_statistics.h>
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_PRCTL)
+  #include <sys/prctl.h>
+  #if !defined(PR_SET_VMA)
+    #define PR_SET_VMA 0x53564d41
+    #define PR_SET_VMA_ANON_NAME 0
+  #endif
+#endif
+
 namespace Botan {
 
 // Not defined in OS namespace for historical reasons
@@ -587,6 +595,8 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
 
       std::memset(ptr, 0, 3*page_size); // zero data page and both guard pages
 
+      // Attempts to name the data page
+      page_named(ptr, 3*page_size);
       // Make guard page preceeding the data page
       page_prohibit_access(static_cast<uint8_t*>(ptr));
       // Make guard page following the data page
@@ -653,6 +663,16 @@ void OS::free_locked_pages(const std::vector<void*>& pages)
       ::VirtualFree(static_cast<uint8_t*>(ptr) - page_size, 0, MEM_RELEASE);
 #endif
       }
+   }
+
+void OS::page_named(void* page, size_t size)
+   {
+   constexpr char name[] = "Botan";
+#if defined(BOTAN_TARGET_OS_HAS_PRCTL)
+   (void)prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, reinterpret_cast<uintptr_t>(page), size, name);
+#else
+   (void)name;
+#endif
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
