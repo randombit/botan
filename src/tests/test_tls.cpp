@@ -327,8 +327,7 @@ class Test_TLS_Policy_Text : public Test
          for(const std::string& policy : policies)
             {
             const std::string from_policy_obj = tls_policy_string(policy);
-            std::string from_file =
-               read_tls_policy(policy);
+            std::string from_file = read_tls_policy(policy);
 
             result.test_eq("Values for TLS " + policy + " policy", from_file, from_policy_obj);
             }

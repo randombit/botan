@@ -8,7 +8,6 @@
 #define BOTAN_TLS_ALGO_IDS_H_
 
 #include <botan/types.h>
-#include <botan/asn1_obj.h>
 #include <string>
 #include <vector>
 
