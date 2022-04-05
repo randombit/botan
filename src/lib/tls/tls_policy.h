@@ -259,25 +259,6 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool negotiate_encrypt_then_mac() const;
 
       /**
-      * TODO: This should probably be removed as it doesn't have an effect on either
-      *       TLS 1.2 or 1.3.
-      *
-      * Indicates whether the extended master secret extension (RFC 7627) should be used.
-      *
-      * This is always enabled if the client supports TLS 1.2 (the option has no effect).
-      * For TLS 1.3 _only_ clients the extension is disabled by default.
-      *
-      * RFC 8446 Appendix D:
-      *   TLS 1.2 and prior supported an "Extended Master Secret" [RFC7627]
-      *   extension which digested large parts of the handshake transcript into
-      *   the master secret.  Because TLS 1.3 always hashes in the transcript
-      *   up to the server Finished, implementations which support both TLS 1.3
-      *   and earlier versions SHOULD indicate the use of the Extended Master
-      *   Secret extension in their APIs whenever TLS 1.3 is used.
-      */
-      virtual bool use_extended_master_secret() const;
-
-      /**
       * Indicates whether certificate status messages should be supported
       */
       virtual bool support_cert_status_message() const;
@@ -549,8 +530,6 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool server_uses_own_ciphersuite_preferences() const override;
 
       bool negotiate_encrypt_then_mac() const override;
-
-      bool use_extended_master_secret() const override;
 
       bool support_cert_status_message() const override;
 
