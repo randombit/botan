@@ -76,13 +76,23 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          m_buf.insert(m_buf.end(), output.begin(), output.end());
          }
 
+      /**
+       * Provide a non-fixed RNG as fallback to be used once the Fixed_Output_RNG runs out of bytes.
+       * If more bytes are provided after that, those will be preferred over the fallback again.
+       */
+      Fixed_Output_RNG(RandomNumberGenerator& fallback_rng)
+         : m_fallback(&fallback_rng) {}
+
       Fixed_Output_RNG() = default;
    protected:
       uint8_t random()
          {
          if(m_buf.empty())
             {
-            throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
+            if(m_fallback.has_value())
+               return m_fallback.value()->next_byte();
+            else
+               throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
             }
 
          uint8_t out = m_buf.front();
@@ -92,6 +102,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
    private:
       std::deque<uint8_t> m_buf;
+      std::optional<RandomNumberGenerator*> m_fallback;
    };
 
 /**
