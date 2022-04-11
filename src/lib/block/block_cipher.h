@@ -221,6 +221,7 @@ template<size_t BS, size_t KMIN, size_t KMAX = 0, size_t KMOD = 1, typename Base
 class Block_Cipher_Fixed_Params : public BaseClass
    {
    public:
+      enum { BLOCK_SIZE_ = BS };
       size_t block_size() const final override { return BS; }
 
       // override to take advantage of compile time constant block size
