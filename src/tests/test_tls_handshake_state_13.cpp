@@ -56,7 +56,7 @@ std::vector<Test::Result> finished_message_handling()
 
          Finished_13 client_finished(client_finished_message);
 
-         auto client_fin = state.sent(std::move(client_finished));
+         auto client_fin = state.sending(std::move(client_finished));
          result.require("client can send client finished",
                         std::holds_alternative<std::reference_wrapper<Finished_13>>(client_fin));
          result.test_throws("not stored as server Finished", [&]
@@ -84,7 +84,7 @@ std::vector<Test::Result> handshake_message_filtering()
          {
          Client_Handshake_State_13 state;
 
-         auto filtered = state.sent(Client_Hello_13(client_hello_message));
+         auto filtered = state.sending(Client_Hello_13(client_hello_message));
          result.confirm("client can send client hello",
                         std::holds_alternative<std::reference_wrapper<Client_Hello_13>>(filtered));
 

@@ -101,7 +101,7 @@ class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Ba
    public:
       Handshake_State_13() : Handshake_State_13_Base(whoami) {}
 
-      decltype(auto) sent(Outbound_Message_T message)
+      decltype(auto) sending(Outbound_Message_T message)
          {
          return std::visit([&](auto msg) -> Handshake_Message_13_Ref
             {

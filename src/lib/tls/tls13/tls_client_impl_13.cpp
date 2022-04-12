@@ -38,7 +38,7 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
       { expect_downgrade(info); }
 #endif
 
-   auto msg = send_handshake_message(m_handshake_state.sent(Client_Hello_13(
+   auto msg = send_handshake_message(m_handshake_state.sending(Client_Hello_13(
                              policy,
                              callbacks,
                              rng,
@@ -417,7 +417,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
       { throw TLS_Exception(Alert::DECRYPT_ERROR, "Finished message didn't verify"); }
 
    // send client finished handshake message (still using handshake traffic secrets)
-   send_handshake_message(m_handshake_state.sent(Finished_13(m_cipher_state.get(),
+   send_handshake_message(m_handshake_state.sending(Finished_13(m_cipher_state.get(),
                           m_transcript_hash.current())));
 
    // derives the application traffic secrets and _replaces_ the handshake traffic secrets
