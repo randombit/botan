@@ -10,6 +10,7 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/hash.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_channel_impl_13.h>
 #include <botan/internal/tls_cipher_state.h>
 #include <botan/tls_client.h>
@@ -373,9 +374,25 @@ void Client_Impl_13::handle(const Certificate_13& certificate_msg)
 
 void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    {
+   // RFC 8446 4.4.3
+   //    If the CertificateVerify message is sent by a server, the signature
+   //    algorithm MUST be one offered in the client's "signature_algorithms"
+   //    extension unless no valid certificate chain can be produced without
+   //    unsupported algorithms.
+   //
+   // Note: if the server failed to produce a certificate chain without using
+   //       an unsupported signature scheme, we opt to abort the handshake.
+   const auto offered = m_handshake_state.client_hello().signature_schemes();
+   if(!value_exists(offered, certificate_verify_msg.signature_scheme()))
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "We did not offer the usage of " +
+                          sig_scheme_to_string(certificate_verify_msg.signature_scheme()) +
+                          " as a signature scheme");
+      }
+
    bool sig_valid = certificate_verify_msg.verify(
                        m_handshake_state.certificate().cert_chain().front().certificate,
-                       m_handshake_state.client_hello().signature_schemes(),
                        callbacks(),
                        m_transcript_hash.previous());
 

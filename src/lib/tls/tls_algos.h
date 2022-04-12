@@ -9,6 +9,7 @@
 
 #include <botan/types.h>
 #include <botan/asn1_obj.h>
+#include <botan/pk_keys.h>
 #include <string>
 #include <vector>
 
@@ -116,6 +117,7 @@ std::string BOTAN_UNSTABLE_API hash_function_of_scheme(Signature_Scheme scheme);
 std::string BOTAN_UNSTABLE_API padding_string_for_scheme(Signature_Scheme scheme);
 std::string signature_algorithm_of_scheme(Signature_Scheme scheme);
 AlgorithmIdentifier algorithm_identifier_for_scheme(Signature_Scheme scheme);
+Signature_Format signature_format_of_scheme(Signature_Scheme scheme);
 
 /*
 * Matches with wire encoding
