@@ -211,11 +211,6 @@ Channel_Impl_13::AggregatedMessages::AggregatedMessages(Channel_Impl_13& channel
    , m_transcript_hash(transcript_hash)
    {}
 
-Channel_Impl_13::AggregatedMessages::~AggregatedMessages()
-   {
-   BOTAN_ASSERT(m_message_buffer.empty(), "Coalesced messages were sent before destruction");
-   }
-
 Channel_Impl_13::AggregatedMessages&
 Channel_Impl_13::AggregatedMessages::add(const Handshake_Message_13_Ref message)
    {

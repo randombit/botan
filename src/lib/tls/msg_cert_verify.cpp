@@ -13,6 +13,7 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/internal/stl_util.h>
 #include <botan/pk_keys.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_extensions.h>
@@ -20,13 +21,13 @@
 namespace Botan::TLS {
 
 /*
-* Create a new Certificate Verify message
+* Create a new Certificate Verify message for TLS 1.2
 */
-Certificate_Verify::Certificate_Verify(Handshake_IO& io,
-                                       Handshake_State& state,
-                                       const Policy& policy,
-                                       RandomNumberGenerator& rng,
-                                       const Private_Key* priv_key)
+Certificate_Verify_12::Certificate_Verify_12(Handshake_IO& io,
+                                             Handshake_State& state,
+                                             const Policy& policy,
+                                             RandomNumberGenerator& rng,
+                                             const Private_Key* priv_key)
    {
    BOTAN_ASSERT_NONNULL(priv_key);
 
@@ -106,8 +107,73 @@ bool Certificate_Verify_12::verify(const X509_Certificate& cert,
 
 #if defined(BOTAN_HAS_TLS_13)
 
+namespace {
+
+std::vector<uint8_t> message(Connection_Side side, const Transcript_Hash& hash)
+   {
+   std::vector<uint8_t> msg(64, 0x20);
+   msg.reserve(64 + 32 + 1 + hash.size());
+
+   const std::string context_string = (side == Botan::TLS::Connection_Side::SERVER)
+                                      ? "TLS 1.3, server CertificateVerify"
+                                      : "TLS 1.3, client CertificateVerify";
+
+   msg.insert(msg.end(), context_string.cbegin(), context_string.cend());
+   msg.push_back(0x00);
+
+   msg.insert(msg.end(), hash.cbegin(), hash.cend());
+   return msg;
+   }
+
+Signature_Scheme choose_signature_scheme(
+      const Private_Key& key,
+      const std::vector<Signature_Scheme>& allowed_schemes,
+      const std::vector<Signature_Scheme>& peer_allowed_schemes)
+   {
+   for(Signature_Scheme scheme : allowed_schemes)
+      {
+      if(scheme.is_available()
+         && scheme.is_suitable_for(key)
+         && value_exists(peer_allowed_schemes, scheme))
+         {
+         return scheme;
+         }
+      }
+
+   throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Failed to agree on a signature algorithm");
+   }
+
+}
+
+/*
+* Create a new Certificate Verify message for TLS 1.3
+*/
+Certificate_Verify_13::Certificate_Verify_13(
+      const std::vector<Signature_Scheme>& peer_allowed_schemes,
+      Connection_Side whoami,
+      const Private_Key& key,
+      const Policy& policy,
+      const Transcript_Hash& hash,
+      Callbacks& callbacks,
+      RandomNumberGenerator& rng)
+   : m_side(whoami)
+   {
+   m_scheme = choose_signature_scheme(key, policy.allowed_signature_schemes(), peer_allowed_schemes);
+   BOTAN_ASSERT_NOMSG(m_scheme.is_available());
+
+   // we need to verify that the provided private key is strong enough for TLS 1.3
+
+   m_signature =
+      callbacks.tls_sign_message(key,
+                                 rng,
+                                 m_scheme.padding_string(),
+                                 m_scheme.format().value(),
+                                 message(m_side, hash));
+   }
+
+
 Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf,
-      const Connection_Side side)
+                                             const Connection_Side side)
    : Certificate_Verify(buf)
    , m_side(side)
    {
@@ -133,24 +199,12 @@ bool Certificate_Verify_13::verify(const X509_Certificate& cert,
    if(m_scheme.algorithm_identifier() != cert.subject_public_key_algo())
       { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Signature algorithm does not match certificate's public key"); }
 
-   std::vector<uint8_t> msg(64, 0x20);
-   msg.reserve(64 + 32 + 1 + transcript_hash.size());
-
-   const std::string context_string = (m_side == Botan::TLS::Connection_Side::SERVER)
-                                      ? "TLS 1.3, server CertificateVerify"
-                                      : "TLS 1.3, client CertificateVerify";
-
-   msg.insert(msg.end(), context_string.cbegin(), context_string.cend());
-   msg.push_back(0x00);
-
-   msg.insert(msg.end(), transcript_hash.cbegin(), transcript_hash.cend());
-
    const auto key = cert.load_subject_public_key();
    const bool signature_valid =
       callbacks.tls_verify_message(*key,
                                    m_scheme.padding_string(),
                                    m_scheme.format().value(),
-                                   msg,
+                                   message(m_side, transcript_hash),
                                    m_signature);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)

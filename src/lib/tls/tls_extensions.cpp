@@ -12,6 +12,7 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
+#include <botan/ber_dec.h>
 
 #include <iterator>
 
@@ -72,6 +73,9 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 
       case TLSEXT_PSK_KEY_EXCHANGE_MODES:
          return std::make_unique<PSK_Key_Exchange_Modes>(reader, size);
+
+      case TLSEXT_CERTIFICATE_AUTHORITIES:
+         return std::make_unique<Certificate_Authorities>(reader, size);
 
       case TLSEXT_SIGNATURE_ALGORITHMS_CERT:
          return std::make_unique<Signature_Algorithms_Cert>(reader, size);
@@ -796,6 +800,33 @@ PSK_Key_Exchange_Modes::PSK_Key_Exchange_Modes(TLS_Data_Reader& reader, uint16_t
       m_modes.push_back(PSK_Key_Exchange_Mode(mode));
       }
    }
+
+
+std::vector<uint8_t> Certificate_Authorities::serialize(Connection_Side) const
+   { throw Botan::Not_Implemented("serializing Certificate_Authorities is NYI"); }
+
+Certificate_Authorities::Certificate_Authorities(TLS_Data_Reader& reader, uint16_t extension_size)
+   {
+   if (extension_size < 2)
+      {
+      throw Decoding_Error("Empty certificate_authorities extension is illegal");
+      }
+
+   const uint16_t purported_size = reader.get_uint16_t();
+
+   if(reader.remaining_bytes() != purported_size)
+      throw Decoding_Error("Inconsistent length in certificate_authorities extension");
+
+   while(reader.has_remaining())
+      {
+      std::vector<uint8_t> name_bits = reader.get_tls_length_value(2);
+
+      BER_Decoder decoder(name_bits.data(), name_bits.size());
+      m_distinguished_names.emplace_back();
+      decoder.decode(m_distinguished_names.back());
+      }
+   }
+
 
 Signature_Algorithms_Cert::Signature_Algorithms_Cert(const std::vector<Signature_Scheme>& schemes)
       : m_siganture_algorithms(schemes)

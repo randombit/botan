@@ -49,6 +49,12 @@ void Certificate_13::validate_extensions(const std::set<Handshake_Extension_Type
       }
    }
 
+const X509_Certificate& Certificate_13::leaf() const
+   {
+   BOTAN_STATE_CHECK(!empty());
+   return m_entries.front().certificate;
+   }
+
 void Certificate_13::verify(Callbacks& callbacks,
                             const Policy& policy,
                             Credentials_Manager& creds,
@@ -94,6 +100,17 @@ void Certificate_13::verify(Callbacks& callbacks,
 
    const auto usage = (m_side == CLIENT) ? Usage_Type::TLS_CLIENT_AUTH : Usage_Type::TLS_SERVER_AUTH;
    callbacks.tls_verify_cert_chain(certs, ocsp_responses, trusted_CAs, usage, hostname, policy);
+   }
+
+Certificate_13::Certificate_13(const std::vector<X509_Certificate>& certs,
+                               const Connection_Side side,
+                               const std::vector<uint8_t> &request_context)
+   : m_request_context(request_context)
+   , m_side(side)
+   {
+   // TODO: proper extensions
+   for (const auto& c : certs)
+      { m_entries.emplace_back(Certificate_Entry{c, Extensions()}); }
    }
 
 /**
@@ -161,7 +178,7 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
       //    message as well.
       if(entry.extensions.contains_implemented_extensions_other_than({
             TLSEXT_CERT_STATUS_REQUEST,
-            // SIGNED_CERTIFICATE_TIMESTAMP
+            // TLSEXT_SIGNED_CERTIFICATE_TIMESTAMP
          }))
          {
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Certificate Entry contained an extension that is not allowed");
@@ -202,8 +219,20 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
 */
 std::vector<uint8_t> Certificate_13::serialize() const
    {
-   // Needed only for server implementation or client authentication
-   throw Not_Implemented("NYI");
+   std::vector<uint8_t> buf;
+
+   append_tls_length_value(buf, m_request_context, 1);
+
+   std::vector<uint8_t> entries;
+   for(const auto& entry : m_entries)
+      {
+      append_tls_length_value(entries, entry.certificate.BER_encode(), 3);
+      append_tls_length_value(entries, entry.extensions.serialize(m_side), 2);
+      }
+
+   append_tls_length_value(buf, entries, 3);
+
+   return buf;
    }
 
 }

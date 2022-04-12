@@ -364,8 +364,29 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       }
    }
 
+void Client_Impl_13::handle(const Certificate_Request_13& certificate_request_msg)
+   {
+   // RFC 8446 4.3.2
+   //    [The 'context' field] SHALL be zero length unless used for the
+   //    post-handshake authentication exchanges described in Section 4.6.2.
+   if(!m_handshake_state.handshake_finished() && !certificate_request_msg.context().empty())
+      {
+      throw TLS_Exception(Alert::DECODE_ERROR, "Certificate_Request context must be empty in the main handshake");
+      }
+
+   m_transitions.set_expected_next(CERTIFICATE);
+   }
+
 void Client_Impl_13::handle(const Certificate_13& certificate_msg)
    {
+   // RFC 8446 4.4.2
+   //    certificate_request_context:  [...] In the case of server authentication,
+   //    this field SHALL be zero length.
+   if(!certificate_msg.request_context().empty())
+      {
+      throw TLS_Exception(Alert::DECODE_ERROR, "Received a server certificate message with non-empty request context");
+      }
+
    certificate_msg.validate_extensions(m_handshake_state.client_hello().extensions().extension_types());
    certificate_msg.verify(callbacks(),
                           policy(),
@@ -396,7 +417,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
       }
 
    bool sig_valid = certificate_verify_msg.verify(
-                       m_handshake_state.certificate().cert_chain().front().certificate,
+                       m_handshake_state.server_certificate().leaf(),
                        callbacks(),
                        m_transcript_hash.previous());
 
@@ -404,6 +425,65 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
       { throw TLS_Exception(Alert::DECRYPT_ERROR, "Server certificate verification failed"); }
 
    m_transitions.set_expected_next(FINISHED);
+   }
+
+void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedMessages& flight)
+   {
+   BOTAN_ASSERT_NOMSG(m_handshake_state.has_certificate_request());
+   const auto& cert_request = m_handshake_state.certificate_request();
+
+   // From all the schemes the server advertised, we need to filter for those
+   // that we can actually support and that are suitable for this protocol version.
+   std::vector<std::string> peer_allowed_signature_algos;
+   for(const Signature_Scheme& scheme : cert_request.signature_schemes())
+      {
+      if(scheme.is_available() && scheme.is_compatible_with(Protocol_Version::TLS_V13))
+         peer_allowed_signature_algos.push_back(scheme.algorithm_name());
+      }
+
+   if(peer_allowed_signature_algos.empty())
+      {
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Failed to negotiate a common signature algorithm for client authentication");
+      }
+
+   std::vector<X509_Certificate> client_certs = credentials_manager().find_cert_chain(
+         peer_allowed_signature_algos,
+         cert_request.acceptable_CAs(),
+         "tls-client",
+         m_info.hostname());
+
+   // RFC 4.4.2
+   //    certificate_request_context:  If this message is in response to a
+   //       CertificateRequest, the value of certificate_request_context in
+   //       that message.
+   flight.add(m_handshake_state.sending(
+      Certificate_13(std::move(client_certs), CLIENT, cert_request.context())));
+
+   // RFC 4.4.2
+   //    If the server requests client authentication but no suitable certificate
+   //    is available, the client MUST send a Certificate message containing no
+   //    certificates.
+   //
+   // In that case, no Certificate Verify message will be sent.
+   if(!m_handshake_state.client_certificate().cert_chain().empty())
+      {
+      Private_Key* private_key = credentials_manager().private_key_for(
+            m_handshake_state.client_certificate().leaf(),
+            "tls-client",
+            m_info.hostname());
+
+      BOTAN_ASSERT_NONNULL(private_key);
+
+      flight.add(m_handshake_state.sending(Certificate_Verify_13(
+         cert_request.signature_schemes(),
+         Connection_Side::CLIENT,
+         *private_key,
+         policy(),
+         m_transcript_hash.current(),
+         callbacks(),
+         rng()
+      )));
+      }
    }
 
 void Client_Impl_13::handle(const Finished_13& finished_msg)
@@ -416,13 +496,26 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
                            m_transcript_hash.previous()))
       { throw TLS_Exception(Alert::DECRYPT_ERROR, "Finished message didn't verify"); }
 
+   // save the current transcript hash as client auth might update the hash multiple times
+   const auto th_server_finished = m_transcript_hash.current();
+
+   auto flight = aggregate_handshake_messages();
+
+   // RFC 8446 4.4.2
+   //    The client MUST send a Certificate message if and only if the server
+   //    has requested client authentication via a CertificateRequest message.
+   if(m_handshake_state.has_certificate_request())
+      { send_client_authentication(flight); }
+
    // send client finished handshake message (still using handshake traffic secrets)
-   send_handshake_message(m_handshake_state.sending(Finished_13(m_cipher_state.get(),
-                          m_transcript_hash.current())));
+   flight.add(m_handshake_state.sending(Finished_13(m_cipher_state.get(),
+                                                 m_transcript_hash.current())));
+
+   flight.send();
 
    // derives the application traffic secrets and _replaces_ the handshake traffic secrets
    // Note: this MUST happen AFTER the client finished message was sent!
-   m_cipher_state->advance_with_server_finished(m_transcript_hash.previous());
+   m_cipher_state->advance_with_server_finished(th_server_finished);
    m_cipher_state->advance_with_client_finished(m_transcript_hash.current());
 
    // TODO: save session and invoke tls_session_established callback
