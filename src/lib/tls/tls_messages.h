@@ -602,6 +602,8 @@ class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message
    public:
       Handshake_Type type() const override { return CERTIFICATE_VERIFY; }
 
+      Signature_Scheme signature_scheme() const { return m_scheme; }
+
       Certificate_Verify(Handshake_IO& io,
                          Handshake_State& state,
                          const Policy& policy,
@@ -653,7 +655,6 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
                             const Connection_Side side);
 
       bool verify(const X509_Certificate& cert,
-                  const std::vector<Signature_Scheme>& offered_schemes,
                   Callbacks& callbacks,
                   const Transcript_Hash& transcript_hash) const;
 
