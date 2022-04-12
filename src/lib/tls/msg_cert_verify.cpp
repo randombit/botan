@@ -111,98 +111,37 @@ bool Certificate_Verify_12::verify(const X509_Certificate& cert,
 Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf,
       const Connection_Side side)
    : Certificate_Verify(buf)
-   , m_side(side) {}
-
-namespace {
-
-std::pair<std::string, Signature_Format>
-parse_sig_format(const std::string& key_type,
-                 const Signature_Scheme scheme,
-                 const std::vector<Signature_Scheme>& offered_schemes)
+   , m_side(side)
    {
-   if(key_type != signature_algorithm_of_scheme(scheme))
-      { throw Decoding_Error("Counterparty sent inconsistent key and sig types"); }
-
-   if(!signature_scheme_is_known(scheme))
-      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                          "Peer sent unknown signature scheme");
-
-   const std::string hash_algo = hash_function_of_scheme(scheme);
+   if(!signature_scheme_is_known(m_scheme))
+      { throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Peer sent unknown signature scheme"); }
 
    // RFC 8446 4.4.3:
    //   The SHA-1 algorithm MUST NOT be used in any signatures of
    //   CertificateVerify messages.
-   if(scheme == Signature_Scheme::RSA_PKCS1_SHA1
-         || scheme == Signature_Scheme::ECDSA_SHA1
-         || scheme == Signature_Scheme::DSA_SHA1)
-      {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "SHA-1 algorithm must not be used");
-      }
-
-   // TODO this corresponds to supported_algos_include from tls_handshake_state.cpp
-   auto supported = [](const std::vector<Signature_Scheme>& schemes,
-                       const std::string& key_algo,
-                       const std::string& hash_type)
-      {
-      for(const Signature_Scheme& s : schemes)
-         {
-         if(signature_scheme_is_known(s) &&
-               hash_function_of_scheme(s) == hash_type &&
-               signature_algorithm_of_scheme(s) == key_algo)
-            {
-            return true;
-            }
-         }
-
-      return false;
-      };
-
-   if(!supported(offered_schemes, key_type, hash_algo))
-      {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
-                          "TLS signature extension did not allow for " +
-                          key_type + "/" + hash_algo + " signature");
-      }
+   if(m_scheme == Signature_Scheme::RSA_PKCS1_SHA1
+         || m_scheme == Signature_Scheme::ECDSA_SHA1
+         || m_scheme == Signature_Scheme::DSA_SHA1)
+      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "SHA-1 algorithm must not be used"); }
 
    // RFC 8446 4.4.3:
    //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
    //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
-   if(key_type == "RSA" &&
-         (scheme == Signature_Scheme::RSA_PKCS1_SHA1
-          || scheme == Signature_Scheme::RSA_PKCS1_SHA256
-          || scheme == Signature_Scheme::RSA_PKCS1_SHA384
-          || scheme == Signature_Scheme::RSA_PKCS1_SHA512))
-      {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "RSA signatures must use an RSASSA-PSS algorithm");
-      }
-
-   if(key_type == "RSA")
-      {
-      return std::make_pair(padding_string_for_scheme(scheme), IEEE_1363);
-      }
-   else if(key_type == "DSA" || key_type == "ECDSA")
-      {
-      return std::make_pair(padding_string_for_scheme(scheme), DER_SEQUENCE);
-      }
-
-   throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures");
+   if(m_scheme == Signature_Scheme::RSA_PKCS1_SHA1
+         || m_scheme == Signature_Scheme::RSA_PKCS1_SHA256
+         || m_scheme == Signature_Scheme::RSA_PKCS1_SHA384
+         || m_scheme == Signature_Scheme::RSA_PKCS1_SHA512)
+      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "RSA signatures must use an RSASSA-PSS algorithm"); }
    }
-
-}
 
 /*
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify_13::verify(const X509_Certificate& cert,
-                                   const std::vector<Signature_Scheme>& offered_schemes,
                                    Callbacks& callbacks,
                                    const Transcript_Hash& transcript_hash) const
    {
    auto key = cert.load_subject_public_key();
-
-   // TODO: won't work for client auth
-   std::pair<std::string, Signature_Format> format =
-      parse_sig_format(key->algo_name(), m_scheme, offered_schemes);
 
    // RFC 8446 4.2.3
    //    The keys found in certificates MUST [...] be of appropriate type for
@@ -222,8 +161,12 @@ bool Certificate_Verify_13::verify(const X509_Certificate& cert,
 
    msg.insert(msg.end(), transcript_hash.cbegin(), transcript_hash.cend());
 
-   const bool signature_valid = callbacks.tls_verify_message(*key, format.first, format.second,
-                                msg, m_signature);
+   const bool signature_valid =
+      callbacks.tls_verify_message(*key,
+                                   padding_string_for_scheme(m_scheme),
+                                   signature_format_of_scheme(m_scheme),
+                                   msg,
+                                   m_signature);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    BOTAN_UNUSED(signature_valid);

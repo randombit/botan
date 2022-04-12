@@ -207,7 +207,6 @@ std::string map_to_bogo_error(const std::string& e)
          { "Received an encrypted record that exceeds maximum plaintext size", ":DATA_LENGTH_TOO_LONG:" },
          { "TLS record type had unexpected value", ":UNEXPECTED_RECORD:" },
          { "TLS record version had unexpected value", ":WRONG_VERSION_NUMBER:" },
-         { "TLS signature extension did not allow for RSA/SHA-256 signature", ":WRONG_SIGNATURE_TYPE:", },
          { "Test requires rejecting cert", ":CERTIFICATE_VERIFY_FAILED:" },
          { "Unexpected ALPN protocol", ":INVALID_ALPN_PROTOCOL:" },
          { "Unexpected record type 42 from counterparty", ":UNEXPECTED_RECORD:" },
@@ -257,6 +256,8 @@ std::string map_to_bogo_error(const std::string& e)
          { "Signature algorithm does not match certificate's public key", ":WRONG_SIGNATURE_TYPE:" },
          { "unprotected record received where protected traffic was expected", ":INVALID_OUTER_RECORD_TYPE:" },
          { "Error alert not marked fatal", ":BAD_ALERT:" },
+         { "Peer sent unknown signature scheme", ":WRONG_SIGNATURE_TYPE:" },
+         { "We did not offer the usage of RSA_PSS_SHA256 as a signature scheme", ":WRONG_SIGNATURE_TYPE:" },
       };
 
    auto err_map_i = err_map.find(e);
