@@ -34,10 +34,10 @@ Handshake_Type handshake_type_from_byte(uint8_t type)
          {
          case CLIENT_HELLO:
          case SERVER_HELLO:
-         case END_OF_EARLY_DATA:
+         // case END_OF_EARLY_DATA:  // NYI: needs PSK/resumption support -- won't be offered in Client Hello for now
          case ENCRYPTED_EXTENSIONS:
          case CERTIFICATE:
-         case CERTIFICATE_REQUEST:
+         // case CERTIFICATE_REQUEST:  // NYI: client auth -- server might still request, resulting in handshake failure
          case CERTIFICATE_VERIFY:
          case FINISHED:
             return Handshake_Type(type);
@@ -50,6 +50,7 @@ Handshake_Type handshake_type_from_byte(uint8_t type)
          {
          case NEW_SESSION_TICKET:
          case KEY_UPDATE:
+         // case CERTIFICATE_REQUEST:  // NYI: post-handshake client auth (RFC 8446 4.6.2) -- won't be offered in Client Hello for now
             return Handshake_Type(type);
          }
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Unknown post-handshake message received");
