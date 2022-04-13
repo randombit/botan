@@ -106,15 +106,15 @@ class Key_Share_Entry
             auto skey = std::make_unique<DH_PrivateKey>(rng, DL_Group(cb.tls_decode_group_param(group)));
             m_key_exchange = skey->public_value();
             m_private_key = std::move(skey);
-#if defined(BOTAN_HAS_CURVE_25519)
             }
+#if defined(BOTAN_HAS_CURVE_25519)
          else if(is_x25519(group))
             {
             auto skey = std::make_unique<X25519_PrivateKey>(rng);
             m_key_exchange = skey->public_value();
             m_private_key = std::move(skey);
-#endif
             }
+#endif
          else
             {
             throw Decoding_Error("cannot create a key offering without a group definition");

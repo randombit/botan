@@ -716,7 +716,7 @@ class Stream
                                 m_context.m_policy,
                                 m_context.m_rng,
                                 m_context.m_server_info,
-                                Protocol_Version::TLS_V12));  // TODO don't hardcode
+                                Protocol_Version::latest_tls_version()));
                   }
                else
                   {
