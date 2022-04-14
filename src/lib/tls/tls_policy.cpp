@@ -23,12 +23,10 @@ std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const
    {
    std::vector<Signature_Scheme> schemes;
 
-   for(Signature_Scheme scheme : all_signature_schemes())
+   for(Signature_Scheme scheme : Signature_Scheme::all_available_schemes())
       {
-      if(signature_scheme_is_known(scheme) == false)
-         continue;
-      const bool sig_allowed = allowed_signature_method(signature_algorithm_of_scheme(scheme));
-      const bool hash_allowed = allowed_signature_hash(hash_function_of_scheme(scheme));
+      const bool sig_allowed = allowed_signature_method(scheme.algorithm_name());
+      const bool hash_allowed = allowed_signature_hash(scheme.hash_function_name());
 
       if(sig_allowed && hash_allowed)
          {

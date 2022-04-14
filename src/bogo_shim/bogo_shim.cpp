@@ -822,10 +822,10 @@ class Shim_Policy final : public Botan::TLS::Policy
             std::vector<std::string> pref_hash;
             for(size_t pref : m_args.get_int_vec_opt("signing-prefs"))
                {
-               const auto scheme = static_cast<Botan::TLS::Signature_Scheme>(pref);
-               if(Botan::TLS::signature_scheme_is_known(scheme) == false)
+               const Botan::TLS::Signature_Scheme scheme(pref);
+               if(!scheme.is_available())
                   continue;
-               pref_hash.push_back(Botan::TLS::hash_function_of_scheme(scheme));
+               pref_hash.push_back(scheme.hash_function_name());
                }
 
             if(m_args.flag_set("server"))
@@ -857,7 +857,7 @@ class Shim_Policy final : public Botan::TLS::Policy
             std::vector<Botan::TLS::Signature_Scheme> schemes;
             for(size_t pref : m_args.get_int_vec_opt("verify-prefs"))
                {
-               schemes.push_back(static_cast<Botan::TLS::Signature_Scheme>(pref));
+               schemes.emplace_back(static_cast<uint16_t>(pref));
                }
 
             return schemes;
@@ -873,14 +873,14 @@ class Shim_Policy final : public Botan::TLS::Policy
             std::vector<Botan::TLS::Signature_Scheme> schemes;
             for(size_t pref : m_args.get_int_vec_opt("signing-prefs"))
                {
-               schemes.push_back(static_cast<Botan::TLS::Signature_Scheme>(pref));
+               schemes.emplace_back(static_cast<uint16_t>(pref));
                }
 
             // BoGo gets sad if these are not included in our signature_algorithms extension
             if(!m_args.flag_set("server"))
                {
-               schemes.push_back(Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA256);
-               schemes.push_back(Botan::TLS::Signature_Scheme::ECDSA_SHA256);
+               schemes.emplace_back(Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA256);
+               schemes.emplace_back(Botan::TLS::Signature_Scheme::ECDSA_SHA256);
                }
 
             return schemes;
@@ -1381,14 +1381,17 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          {
          if(m_args.option_used("expect-peer-signature-algorithm"))
             {
-            const auto scheme = static_cast<Botan::TLS::Signature_Scheme>(m_args.get_int_opt("expect-peer-signature-algorithm"));
-            if(scheme != Botan::TLS::Signature_Scheme::NONE)
-               {
-               const std::string exp_emsa = Botan::TLS::padding_string_for_scheme(scheme);
-               if(emsa != exp_emsa)
-                  shim_exit_with_error("Unexpected signature scheme got " + emsa + " expected " + exp_emsa);
-               }
+            const Botan::TLS::Signature_Scheme scheme(
+                  static_cast<uint16_t>(m_args.get_int_opt("expect-peer-signature-algorithm")));
+
+            if(!scheme.is_available())
+               shim_exit_with_error(std::string("Unsupported signature scheme provided by BoGo: ") + scheme.to_string());
+
+            const std::string exp_emsa = scheme.padding_string();
+            if(emsa != exp_emsa)
+               shim_exit_with_error("Unexpected signature scheme got " + emsa + " expected " + exp_emsa);
             }
+
          return Botan::TLS::Callbacks::tls_verify_message(key, emsa, format, msg, sig);
          }
 

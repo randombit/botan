@@ -9,6 +9,7 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_record.h>
 #include <botan/tls_messages.h>
+#include <botan/tls_signature_scheme.h>
 #include <botan/kdf.h>
 #include <sstream>
 
@@ -287,12 +288,12 @@ Handshake_State::choose_sig_format(const Private_Key& key,
 
    for(Signature_Scheme scheme : allowed)
       {
-      if(signature_scheme_is_known(scheme) == false)
+      if(!scheme.is_available())
          {
          continue;
          }
 
-      if(signature_algorithm_of_scheme(scheme) == sig_algo)
+      if(scheme.algorithm_name() == sig_algo)
          {
          if(std::find(requested.begin(), requested.end(), scheme) != requested.end())
             {
@@ -302,7 +303,7 @@ Handshake_State::choose_sig_format(const Private_Key& key,
          }
       }
 
-   const std::string hash = hash_function_of_scheme(chosen_scheme);
+   const std::string hash = chosen_scheme.hash_function_name();
 
    if(!policy.allowed_signature_hash(hash))
       {
@@ -310,16 +311,10 @@ Handshake_State::choose_sig_format(const Private_Key& key,
                           "Policy refuses to accept signing with any hash supported by peer");
       }
 
-   if(sig_algo == "RSA")
-      {
-      return std::make_pair(padding_string_for_scheme(chosen_scheme), IEEE_1363);
-      }
-   else if(sig_algo == "DSA" || sig_algo == "ECDSA")
-      {
-      return std::make_pair(padding_string_for_scheme(chosen_scheme), DER_SEQUENCE);
-      }
+   if(!chosen_scheme.format().has_value())
+      { throw Invalid_Argument(sig_algo + " is invalid/unknown for TLS signatures"); }
 
-   throw Invalid_Argument(sig_algo + " is invalid/unknown for TLS signatures");
+   return std::make_pair(chosen_scheme.padding_string(), chosen_scheme.format().value());
    }
 
 namespace {
@@ -331,9 +326,9 @@ bool supported_algos_include(
    {
    for(Signature_Scheme scheme : schemes)
       {
-      if(signature_scheme_is_known(scheme) &&
-            hash_function_of_scheme(scheme) == hash_type &&
-            signature_algorithm_of_scheme(scheme) == key_type)
+      if(scheme.is_available() &&
+         hash_type == scheme.hash_function_name() &&
+         key_type == scheme.algorithm_name())
          {
          return true;
          }
@@ -359,10 +354,13 @@ Handshake_State::parse_sig_format(const Public_Key& key,
                           "Rejecting " + key_type + " signature");
       }
 
-   if(scheme == Signature_Scheme::NONE)
-      { throw Decoding_Error("Counterparty did not send hash/sig IDS"); }
+   if(!scheme.is_available())
+      {
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Peer sent unknown signature scheme");
+      }
 
-   if(key_type != signature_algorithm_of_scheme(scheme))
+   if(key_type != scheme.algorithm_name())
       { throw Decoding_Error("Counterparty sent inconsistent key and sig types"); }
 
    if(for_client_auth && !cert_req())
@@ -380,21 +378,13 @@ Handshake_State::parse_sig_format(const Public_Key& key,
       for_client_auth ? cert_req()->signature_schemes() :
       offered_schemes;
 
-   if(!signature_scheme_is_known(scheme))
-      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                          "Peer sent unknown signature scheme");
-
-   const std::string hash_algo = hash_function_of_scheme(scheme);
+   const std::string hash_algo = scheme.hash_function_name();
 
    // RFC 8446 4.4.3:
    //   The SHA-1 algorithm MUST NOT be used in any signatures of
    //   CertificateVerify messages.
-   if(scheme == Signature_Scheme::RSA_PKCS1_SHA1
-         || scheme == Signature_Scheme::ECDSA_SHA1
-         || scheme == Signature_Scheme::DSA_SHA1)
-      {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "SHA-1 algorithm must not be used");
-      }
+   if(scheme.is_sha1())
+      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "SHA-1 algorithm must not be used"); }
 
    if(!supported_algos_include(supported_algos, key_type, hash_algo))
       {
@@ -403,29 +393,10 @@ Handshake_State::parse_sig_format(const Public_Key& key,
                           key_type + "/" + hash_algo + " signature");
       }
 
+   if(!scheme.format().has_value())
+      { throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures"); }
 
-   // RFC 8446 4.4.3:
-   //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
-   //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
-   if(version() == Protocol_Version::TLS_V13 && key_type == "RSA" &&
-         (scheme == Signature_Scheme::RSA_PKCS1_SHA1
-          || scheme == Signature_Scheme::RSA_PKCS1_SHA256
-          || scheme == Signature_Scheme::RSA_PKCS1_SHA384
-          || scheme == Signature_Scheme::RSA_PKCS1_SHA512))
-      {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "RSA signatures must use an RSASSA-PSS algorithm");
-      }
-
-   if(key_type == "RSA")
-      {
-      return std::make_pair(padding_string_for_scheme(scheme), IEEE_1363);
-      }
-   else if(key_type == "DSA" || key_type == "ECDSA")
-      {
-      return std::make_pair(padding_string_for_scheme(scheme), DER_SEQUENCE);
-      }
-
-   throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures");
+   return std::make_pair(scheme.padding_string(), scheme.format().value());
    }
 
 }

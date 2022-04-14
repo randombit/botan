@@ -30,6 +30,7 @@ namespace TLS {
 
 class Callbacks;
 class Policy;
+class Signature_Scheme;
 
 class Hello_Verify_Request;
 class Client_Hello_12;
