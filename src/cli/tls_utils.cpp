@@ -183,12 +183,12 @@ class TLS_Client_Hello_Reader final : public Command
                {
                try
                   {
-                  auto s = sig_scheme_to_string(scheme);
+                  auto s = scheme.to_string();
                   oss << s << " ";
                   }
                catch(...)
                   {
-                  oss << "(" << std::hex << static_cast<uint16_t>(scheme) << ") ";
+                  oss << "(" << std::hex << scheme.wire_code() << ") ";
                   }
                }
             oss << "\n";

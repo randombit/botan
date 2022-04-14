@@ -333,7 +333,7 @@ class TLS_Handshake_Test final
                   {
                   std::vector<Botan::TLS::Signature_Scheme> schemes = sig_algs->supported_schemes();
                   // 0x0301 is RSA PKCS1/SHA-224, which is not supported anymore
-                  schemes.insert(schemes.begin(), static_cast<Botan::TLS::Signature_Scheme>(0x0301));
+                  schemes.insert(schemes.begin(), 0x0301);
                   // This replaces the previous extension value
                   extn.add(new Botan::TLS::Signature_Algorithms(schemes));
                   }

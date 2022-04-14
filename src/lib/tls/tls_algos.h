@@ -78,48 +78,6 @@ std::string BOTAN_TEST_API auth_method_to_string(Auth_Method method);
 Auth_Method BOTAN_TEST_API auth_method_from_string(const std::string& str);
 
 /*
-* This matches the wire encoding
-*/
-enum class Signature_Scheme : uint16_t {
-   NONE             = 0x0000,
-
-   RSA_PKCS1_SHA256 = 0x0401,
-   RSA_PKCS1_SHA384 = 0x0501,
-   RSA_PKCS1_SHA512 = 0x0601,
-
-   ECDSA_SHA256 = 0x0403,
-   ECDSA_SHA384 = 0x0503,
-   ECDSA_SHA512 = 0x0603,
-
-   RSA_PSS_SHA256 = 0x0804,
-   RSA_PSS_SHA384 = 0x0805,
-   RSA_PSS_SHA512 = 0x0806,
-
-   EDDSA_25519 = 0x0807,
-   EDDSA_448   = 0x0808,
-
-   // provided but not actually supported
-   // required for TLS 1.3 test based on RFC 8448
-   ECDSA_SHA1     = 0x0203,
-   RSA_PKCS1_SHA1 = 0x0201,
-
-   DSA_SHA1   = 0x0202,
-   DSA_SHA256 = 0x0402,
-   DSA_SHA384 = 0x0502,
-   DSA_SHA512 = 0x0602
-};
-
-BOTAN_UNSTABLE_API const std::vector<Signature_Scheme>& all_signature_schemes();
-
-bool BOTAN_UNSTABLE_API signature_scheme_is_known(Signature_Scheme scheme);
-std::string BOTAN_UNSTABLE_API sig_scheme_to_string(Signature_Scheme scheme);
-std::string BOTAN_UNSTABLE_API hash_function_of_scheme(Signature_Scheme scheme);
-std::string BOTAN_UNSTABLE_API padding_string_for_scheme(Signature_Scheme scheme);
-std::string signature_algorithm_of_scheme(Signature_Scheme scheme);
-AlgorithmIdentifier algorithm_identifier_for_scheme(Signature_Scheme scheme);
-Signature_Format signature_format_of_scheme(Signature_Scheme scheme);
-
-/*
 * Matches with wire encoding
 */
 enum class Group_Params : uint16_t {

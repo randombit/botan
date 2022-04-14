@@ -387,7 +387,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
       {
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                           "We did not offer the usage of " +
-                          sig_scheme_to_string(certificate_verify_msg.signature_scheme()) +
+                          certificate_verify_msg.signature_scheme().to_string() +
                           " as a signature scheme");
       }
 

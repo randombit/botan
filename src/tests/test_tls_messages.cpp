@@ -364,7 +364,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test
                         const auto expected_sig_scheme = Botan::make_uint16(expected_content.at(offset), expected_content.at(offset+1));
 
                         result.confirm("signature_algorithms_cert extension - sig scheme check",
-                           static_cast<Botan::TLS::Signature_Scheme>(expected_sig_scheme) == sig_scheme);
+                           Botan::TLS::Signature_Scheme(expected_sig_scheme) == sig_scheme);
 
                         offset += 2;
                      }

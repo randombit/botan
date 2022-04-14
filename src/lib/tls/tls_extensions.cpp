@@ -487,10 +487,8 @@ std::vector<uint8_t> Signature_Algorithms::serialize(Connection_Side /*whoami*/)
 
    for(Signature_Scheme scheme : m_schemes)
       {
-      const uint16_t scheme_code = static_cast<uint16_t>(scheme);
-
-      buf.push_back(get_byte<0>(scheme_code));
-      buf.push_back(get_byte<1>(scheme_code));
+      buf.push_back(get_byte<0>(scheme.wire_code()));
+      buf.push_back(get_byte<1>(scheme.wire_code()));
       }
 
    return buf;
@@ -508,8 +506,7 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
 
    while(len)
       {
-      const uint16_t scheme_code = reader.get_uint16_t();
-      m_schemes.push_back(static_cast<Signature_Scheme>(scheme_code));
+      m_schemes.emplace_back(reader.get_uint16_t());
       len -= 2;
       }
    }
