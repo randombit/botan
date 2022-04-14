@@ -450,12 +450,12 @@ class Test_TLS_Algo_Strings : public Test
          {
          Test::Result result("TLS::Signature_Scheme");
 
-         std::vector<Botan::TLS::Signature_Scheme> schemes = Botan::TLS::all_signature_schemes();
+         std::vector<Botan::TLS::Signature_Scheme> schemes = Botan::TLS::Signature_Scheme::all_available_schemes();
 
          std::set<std::string> scheme_strs;
          for(auto scheme : schemes)
             {
-            std::string scheme_str = Botan::TLS::sig_scheme_to_string(scheme);
+            std::string scheme_str = scheme.to_string();
 
             result.test_eq("Scheme strings unique", scheme_strs.count(scheme_str), 0);
 

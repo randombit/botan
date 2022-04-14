@@ -17,6 +17,7 @@
 #include <botan/tls_version.h>
 #include <botan/secmem.h>
 #include <botan/pkix_types.h>
+#include <botan/tls_signature_scheme.h>
 
 #include <algorithm>
 #include <optional>

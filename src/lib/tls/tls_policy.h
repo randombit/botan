@@ -10,8 +10,8 @@
 #define BOTAN_TLS_POLICY_H_
 
 #include <botan/tls_version.h>
-#include <botan/tls_algos.h>
 #include <botan/tls_ciphersuite.h>
+#include <botan/tls_signature_scheme.h>
 #include <optional>
 #include <vector>
 #include <map>

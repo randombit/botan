@@ -47,11 +47,11 @@ Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf)
    {
    TLS_Data_Reader reader("CertificateVerify", buf);
 
-   m_scheme = static_cast<Signature_Scheme>(reader.get_uint16_t());
+   m_scheme = Signature_Scheme(reader.get_uint16_t());
    m_signature = reader.get_range<uint8_t>(2, 0, 65535);
    reader.assert_done();
 
-   if(m_scheme == Signature_Scheme::NONE)
+   if(!m_scheme.is_set())
       { throw Decoding_Error("Counterparty did not send hash/sig IDS"); }
    }
 
@@ -62,11 +62,11 @@ std::vector<uint8_t> Certificate_Verify::serialize() const
    {
    std::vector<uint8_t> buf;
 
-   if(m_scheme != Signature_Scheme::NONE)
+   // TODO: both for TLS 1.2 and 1.3 this should never happen and the message would be invalid
+   if(m_scheme.is_set())
       {
-      const uint16_t scheme_code = static_cast<uint16_t>(m_scheme);
-      buf.push_back(get_byte<0>(scheme_code));
-      buf.push_back(get_byte<1>(scheme_code));
+      buf.push_back(get_byte<0>(m_scheme.wire_code()));
+      buf.push_back(get_byte<1>(m_scheme.wire_code()));
       }
 
    if(m_signature.size() > 0xFFFF)
@@ -113,24 +113,19 @@ Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf,
    : Certificate_Verify(buf)
    , m_side(side)
    {
-   if(!signature_scheme_is_known(m_scheme))
+   if(!m_scheme.is_available())
       { throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Peer sent unknown signature scheme"); }
 
    // RFC 8446 4.4.3:
    //   The SHA-1 algorithm MUST NOT be used in any signatures of
    //   CertificateVerify messages.
-   if(m_scheme == Signature_Scheme::RSA_PKCS1_SHA1
-         || m_scheme == Signature_Scheme::ECDSA_SHA1
-         || m_scheme == Signature_Scheme::DSA_SHA1)
+   if(m_scheme.is_sha1())
       { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "SHA-1 algorithm must not be used"); }
 
    // RFC 8446 4.4.3:
    //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
    //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
-   if(m_scheme == Signature_Scheme::RSA_PKCS1_SHA1
-         || m_scheme == Signature_Scheme::RSA_PKCS1_SHA256
-         || m_scheme == Signature_Scheme::RSA_PKCS1_SHA384
-         || m_scheme == Signature_Scheme::RSA_PKCS1_SHA512)
+   if(m_scheme.is_pkcs1())
       { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "RSA signatures must use an RSASSA-PSS algorithm"); }
    }
 
@@ -141,12 +136,12 @@ bool Certificate_Verify_13::verify(const X509_Certificate& cert,
                                    Callbacks& callbacks,
                                    const Transcript_Hash& transcript_hash) const
    {
-   auto key = cert.load_subject_public_key();
+   BOTAN_ASSERT_NOMSG(m_scheme.is_available());
 
    // RFC 8446 4.2.3
    //    The keys found in certificates MUST [...] be of appropriate type for
    //    the signature algorithms they are used with.
-   if(algorithm_identifier_for_scheme(m_scheme) != cert.subject_public_key_algo())
+   if(m_scheme.algorithm_identifier() != cert.subject_public_key_algo())
       { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Signature algorithm does not match certificate's public key"); }
 
    std::vector<uint8_t> msg(64, 0x20);
@@ -161,10 +156,11 @@ bool Certificate_Verify_13::verify(const X509_Certificate& cert,
 
    msg.insert(msg.end(), transcript_hash.cbegin(), transcript_hash.cend());
 
+   const auto key = cert.load_subject_public_key();
    const bool signature_valid =
       callbacks.tls_verify_message(*key,
-                                   padding_string_for_scheme(m_scheme),
-                                   signature_format_of_scheme(m_scheme),
+                                   m_scheme.padding_string(),
+                                   m_scheme.format().value(),
                                    msg,
                                    m_signature);
 

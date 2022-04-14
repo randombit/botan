@@ -617,7 +617,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message
 
    protected:
       std::vector<uint8_t> m_signature;
-      Signature_Scheme m_scheme = Signature_Scheme::NONE;
+      Signature_Scheme m_scheme;
    };
 
 /**
@@ -773,7 +773,7 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
       std::vector<uint8_t> m_params;
 
       std::vector<uint8_t> m_signature;
-      Signature_Scheme m_scheme = Signature_Scheme::NONE;
+      Signature_Scheme m_scheme;
    };
 
 /**

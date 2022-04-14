@@ -20,6 +20,7 @@ tls_policy.h
 tls_server.h
 tls_session.h
 tls_session_manager.h
+tls_signature_scheme.h
 tls_version.h
 </header:public>
 
