@@ -21,9 +21,13 @@ namespace Botan::TLS {
 class BOTAN_PUBLIC_API(3,0) Signature_Scheme
 {
 public:
-/*
-* Matches with wire encoding
-*/
+/**
+ * Matches with wire encoding
+ *
+ * Note that this is intentionally left as a bare enum. It emulates the Botan 2
+ * API where `Signature_Scheme` was an enum class with associated free-standing
+ * functions. Leaving it as a bare enum resembles the legacy user-facing API.
+ */
 enum Code : uint16_t {
    NONE = 0x0000,
 
@@ -86,7 +90,7 @@ public:
    std::optional<Signature_Format> format() const noexcept;
 
    bool is_sha1() const noexcept;
-   bool is_pkcs1() const noexcept;
+   bool is_rsa_pkcs1() const noexcept;
 
    bool operator==(const Signature_Scheme& rhs) const { return m_code == rhs.m_code; }
    bool operator!=(const Signature_Scheme& rhs) const { return !(*this == rhs); }

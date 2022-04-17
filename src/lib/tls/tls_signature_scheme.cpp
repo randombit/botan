@@ -19,9 +19,13 @@ const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes()
    */
    static const std::vector<Signature_Scheme> all_schemes = {
 
-#if defined(BOTAN_HAS_ED25519)
-      EDDSA_25519,
-#endif
+// EdDSA 25519 is currently not supported as a signature scheme for certificates
+// certificate authentication.
+// See: https://github.com/randombit/botan/pull/2958#discussion_r851294715
+//
+// #if defined(BOTAN_HAS_ED25519)
+//       EDDSA_25519,
+// #endif
 
       RSA_PSS_SHA384,
       RSA_PSS_SHA256,
@@ -285,7 +289,7 @@ bool Signature_Scheme::is_sha1() const noexcept
    return hash_function_name() == "SHA-1";
    }
 
-bool Signature_Scheme::is_pkcs1() const noexcept
+bool Signature_Scheme::is_rsa_pkcs1() const noexcept
    {
    return
       m_code == RSA_PKCS1_SHA1 ||
