@@ -60,14 +60,12 @@ Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf)
 */
 std::vector<uint8_t> Certificate_Verify::serialize() const
    {
+   BOTAN_ASSERT_NOMSG(m_scheme.is_set());
    std::vector<uint8_t> buf;
 
-   // TODO: both for TLS 1.2 and 1.3 this should never happen and the message would be invalid
-   if(m_scheme.is_set())
-      {
-      buf.push_back(get_byte<0>(m_scheme.wire_code()));
-      buf.push_back(get_byte<1>(m_scheme.wire_code()));
-      }
+   const auto code = m_scheme.wire_code();
+   buf.push_back(get_byte<0>(code));
+   buf.push_back(get_byte<1>(code));
 
    if(m_signature.size() > 0xFFFF)
       { throw Encoding_Error("Certificate_Verify signature too long to encode"); }
@@ -125,7 +123,7 @@ Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf,
    // RFC 8446 4.4.3:
    //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
    //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
-   if(m_scheme.is_pkcs1())
+   if(m_scheme.is_rsa_pkcs1())
       { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "RSA signatures must use an RSASSA-PSS algorithm"); }
    }
 
