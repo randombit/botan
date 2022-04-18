@@ -8,6 +8,8 @@
 #include <botan/tls_signature_scheme.h>
 
 #include <botan/ec_group.h>
+#include <botan/tls_exceptn.h>
+#include <botan/tls_version.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan::TLS {
@@ -284,18 +286,58 @@ std::optional<Signature_Format> Signature_Scheme::format() const noexcept
       }
    }
 
-bool Signature_Scheme::is_sha1() const noexcept
+bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_version) const noexcept
    {
-   return hash_function_name() == "SHA-1";
+   // RFC 8446 4.4.3:
+   //   The SHA-1 algorithm MUST NOT be used in any signatures of
+   //   CertificateVerify messages.
+   //
+   // Note that Botan enforces that for TLS 1.2 as well.
+   if(hash_function_name() == "SHA-1")
+      return false;
+
+   // RFC 8446 4.4.3:
+   //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
+   //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
+   //
+   // Note that this is enforced for TLS 1.3 and above only.
+   if(!protocol_version.is_pre_tls_13() &&
+       (m_code == RSA_PKCS1_SHA1   ||
+        m_code == RSA_PKCS1_SHA256 ||
+        m_code == RSA_PKCS1_SHA384 ||
+        m_code == RSA_PKCS1_SHA512))
+      return false;
+
+   return true;
    }
 
-bool Signature_Scheme::is_rsa_pkcs1() const noexcept
+bool Signature_Scheme::is_suitable_for(const Private_Key &private_key) const noexcept
    {
-   return
-      m_code == RSA_PKCS1_SHA1 ||
-      m_code == RSA_PKCS1_SHA256 ||
-      m_code == RSA_PKCS1_SHA384 ||
-      m_code == RSA_PKCS1_SHA512;
+   if(algorithm_name() != private_key.algo_name())
+      return false;
+
+   if(algorithm_name() == "ECDSA")
+      {
+      // SHA-1 is generally undesirable
+      if(m_code == ECDSA_SHA1)
+         return false;
+
+      // The ECDSA private key length must match the utilized hash output length.
+      const auto keylen = private_key.key_length();
+      if(keylen <= 250)
+         return false;
+
+      if(m_code == ECDSA_SHA256 && !(keylen >= 250 && keylen <= 350))
+         return false;
+
+      if(m_code == ECDSA_SHA384 && !(keylen >= 350 && keylen <= 450))
+         return false;
+
+      if(m_code == ECDSA_SHA512 && !(keylen >= 450 && keylen <= 550))
+         return false;
+      }
+
+   return true;
    }
 
 }  // Botan::TLS

@@ -380,11 +380,8 @@ Handshake_State::parse_sig_format(const Public_Key& key,
 
    const std::string hash_algo = scheme.hash_function_name();
 
-   // RFC 8446 4.4.3:
-   //   The SHA-1 algorithm MUST NOT be used in any signatures of
-   //   CertificateVerify messages.
-   if(scheme.is_sha1())
-      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "SHA-1 algorithm must not be used"); }
+   if(!scheme.is_compatible_with(Protocol_Version::TLS_V12))
+      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Peer sent unexceptable signature scheme"); }
 
    if(!supported_algos_include(supported_algos, key_type, hash_algo))
       {

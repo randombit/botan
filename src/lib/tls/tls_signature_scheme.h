@@ -18,6 +18,8 @@
 
 namespace Botan::TLS {
 
+class Protocol_Version;
+
 class BOTAN_PUBLIC_API(3,0) Signature_Scheme
 {
 public:
@@ -89,8 +91,8 @@ public:
    AlgorithmIdentifier algorithm_identifier() const noexcept;
    std::optional<Signature_Format> format() const noexcept;
 
-   bool is_sha1() const noexcept;
-   bool is_rsa_pkcs1() const noexcept;
+   bool is_compatible_with(const Protocol_Version& protocol_version) const noexcept;
+   bool is_suitable_for(const Private_Key& private_key) const noexcept;
 
    bool operator==(const Signature_Scheme& rhs) const { return m_code == rhs.m_code; }
    bool operator!=(const Signature_Scheme& rhs) const { return !(*this == rhs); }
