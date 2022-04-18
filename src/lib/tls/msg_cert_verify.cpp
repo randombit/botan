@@ -114,17 +114,8 @@ Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf,
    if(!m_scheme.is_available())
       { throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Peer sent unknown signature scheme"); }
 
-   // RFC 8446 4.4.3:
-   //   The SHA-1 algorithm MUST NOT be used in any signatures of
-   //   CertificateVerify messages.
-   if(m_scheme.is_sha1())
-      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "SHA-1 algorithm must not be used"); }
-
-   // RFC 8446 4.4.3:
-   //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
-   //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
-   if(m_scheme.is_rsa_pkcs1())
-      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "RSA signatures must use an RSASSA-PSS algorithm"); }
+   if(!m_scheme.is_compatible_with(Protocol_Version::TLS_V13))
+      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Peer sent signature algorithm that is not suitable for TLS 1.3"); }
    }
 
 /*
