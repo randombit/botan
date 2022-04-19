@@ -175,7 +175,7 @@ class TLS_All_Policy final : public Botan::TLS::Policy
             "AES-128",
             "Camellia-256",
             "Camellia-128",
-            "SEED"
+            "SEED",
             "3DES"
             };
          }
