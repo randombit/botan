@@ -10,6 +10,7 @@
 #include <botan/build.h>
 #include <functional>
 #include <ostream>
+#include <optional>
 #include <map>
 #include <memory>
 #include <string>
@@ -145,6 +146,11 @@ class Command
       * Like get_arg() but if the argument was not specified or is empty, returns otherwise
       */
       std::string get_arg_or(const std::string& opt_name, const std::string& otherwise) const;
+
+      /*
+      * Like get_arg() but if the argument was not specified or is empty, returns std::nullopt
+      */
+      std::optional<std::string> get_arg_maybe(const std::string& opt_name) const;
 
       size_t get_arg_sz(const std::string& opt_name) const;
 
