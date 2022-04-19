@@ -215,7 +215,7 @@ from which a policy description will be read.
   Prints the list of ciphersuites that will be offered under a particular
   policy/version.
 
-``tls_client host --port=443 --print-certs --policy=default --tls1.0 --tls1.1 --tls1.2 --skip-system-cert-store --trusted-cas= --session-db= --session-db-pass= --next-protocols= --type=tcp``
+``tls_client host --port=443 --print-certs --policy=default --tls1.0 --tls1.1 --tls1.2 --skip-system-cert-store --trusted-cas= --session-db= --session-db-pass= --next-protocols= --type=tcp --client-cert= --client-cert-key=``
   Implements a testing TLS client, which connects to *host* via TCP or UDP on
   port *port*. The TLS version can be set with the flags *tls1.0*, *tls1.1* and
   *tls1.2* of which the lowest specified version is automatically chosen.  If
@@ -224,6 +224,8 @@ from which a policy description will be read.
   prints all certificates in the chain, if *print-certs* is passed.
   *next-protocols* is a comma separated list and specifies the protocols to
   advertise with Application-Layer Protocol Negotiation (ALPN).
+  Pass a path to a client certificate PEM and unencrypted PKCS8 encoded private
+  key if client authentication is required.
 
 ``tls_server cert key --port=443 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0``
   Implements a testing TLS server, which allows TLS clients to connect and which
