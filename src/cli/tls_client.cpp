@@ -35,7 +35,8 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
       TLS_Client()
          : Command("tls_client host --port=443 --print-certs --policy=default "
                    "--skip-system-cert-store --trusted-cas= "
-                   "--session-db= --session-db-pass= --next-protocols= --type=tcp")
+                   "--session-db= --session-db-pass= --next-protocols= --type=tcp "
+                   "--client-cert= --client-cert-key=")
          {
          init_sockets();
          }
@@ -62,8 +63,6 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
       void go() override
          {
-         // TODO client cert auth
-
          std::unique_ptr<Botan::TLS::Session_Manager> session_mgr;
 
          const std::string sessions_db = get_arg("session-db");
@@ -124,7 +123,10 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          m_sockfd = connect_to_host(host, port, use_tcp);
 
-         Basic_Credentials_Manager creds(use_system_cert_store, trusted_CAs);
+         const auto client_crt_path = get_arg_maybe("client-cert");
+         const auto client_key_path = get_arg_maybe("client-cert-key");
+
+         Basic_Credentials_Manager creds(use_system_cert_store, trusted_CAs, client_crt_path, client_key_path);
 
          Botan::TLS::Client client(*this, *session_mgr, creds, *policy, rng(),
                                    Botan::TLS::Server_Information(hostname, port),
@@ -384,6 +386,17 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             {
             output() << buf[i];
             }
+         }
+
+      std::vector<uint8_t> tls_sign_message(
+         const Botan::Private_Key& key,
+         Botan::RandomNumberGenerator& rng,
+         const std::string& emsa,
+         Botan::Signature_Format format,
+         const std::vector<uint8_t>& msg) override
+         {
+         output() << "Performing client authentication\n";
+         return Botan::TLS::Callbacks::tls_sign_message(key, rng, emsa, format, msg);
          }
 
       socket_type m_sockfd = invalid_socket();

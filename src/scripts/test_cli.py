@@ -892,8 +892,12 @@ def cli_tls_socket_tests(tmp_dir):
 
     time.sleep(wait_time)
 
-    tls_client.stdin.write(client_msg)
-    tls_client.stdin.flush()
+    try:
+        tls_client.stdin.write(client_msg)
+        tls_client.stdin.flush()
+    except BrokenPipeError:
+        pass # On handshake failure, the stdin pipe of is already closed here
+             # and error reporting below would not be reached.
 
     time.sleep(wait_time)
 
@@ -908,7 +912,10 @@ def cli_tls_socket_tests(tmp_dir):
     if client_msg not in stdout:
         logging.error("Missing client message from stdout %s", stdout)
 
-    tls_server.communicate()
+    (srv_stdout, srv_stderr) = tls_server.communicate()
+    if srv_stderr:
+        logging.error("server said (stdout): %s", srv_stdout)
+        logging.error("server said (stderr): %s", srv_stderr)
 
 def cli_tls_http_server_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_http_server"):
