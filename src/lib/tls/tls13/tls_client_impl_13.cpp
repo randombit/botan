@@ -38,12 +38,15 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
       { expect_downgrade(info); }
 #endif
 
-   send_handshake_message(m_handshake_state.sent(Client_Hello_13(
+   auto msg = send_handshake_message(m_handshake_state.sent(Client_Hello_13(
                              policy,
                              callbacks,
                              rng,
                              m_info.hostname(),
                              next_protocols)));
+
+   if(expects_downgrade())
+      { preserve_client_hello(msg); }
 
    // RFC 8446 Appendix D.4
    //    If not offering early data, the client sends a dummy change_cipher_spec

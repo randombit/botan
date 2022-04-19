@@ -202,16 +202,33 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
       }
    }
 
-void Channel_Impl_13::send_handshake_message(const Handshake_Message_13_Ref message)
+
+Channel_Impl_13::AggregatedMessages::AggregatedMessages(Channel_Impl_13& channel,
+                                                        Handshake_Layer& handshake_layer,
+                                                        Transcript_Hash_State& transcript_hash)
+   : m_channel(channel)
+   , m_handshake_layer(handshake_layer)
+   , m_transcript_hash(transcript_hash)
+   {}
+
+Channel_Impl_13::AggregatedMessages::~AggregatedMessages()
    {
-   std::visit([&](const auto msg) { callbacks().tls_inspect_handshake_msg(msg.get()); }, message);
+   BOTAN_ASSERT(m_message_buffer.empty(), "Coalesced messages were sent before destruction");
+   }
 
-   auto msg = m_handshake_layer.prepare_message(message, m_transcript_hash);
+Channel_Impl_13::AggregatedMessages&
+Channel_Impl_13::AggregatedMessages::add(const Handshake_Message_13_Ref message)
+   {
+   std::visit([&](const auto msg) { m_channel.callbacks().tls_inspect_handshake_msg(msg.get()); }, message);
+   m_message_buffer += m_handshake_layer.prepare_message(message, m_transcript_hash);
+   return *this;
+   }
 
-   if(expects_downgrade() && std::holds_alternative<std::reference_wrapper<Client_Hello_13>>(message))
-      { preserve_client_hello(msg); }
-
-   send_record(Record_Type::HANDSHAKE, msg);
+std::vector<uint8_t> Channel_Impl_13::AggregatedMessages::send()
+   {
+   BOTAN_STATE_CHECK(!m_message_buffer.empty());
+   m_channel.send_record(Record_Type::HANDSHAKE, m_message_buffer);
+   return std::exchange(m_message_buffer, {});
    }
 
 void Channel_Impl_13::send_post_handshake_message(const Post_Handshake_Message_13 message)
