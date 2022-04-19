@@ -36,13 +36,47 @@ inline bool value_exists(const std::vector<std::string>& vec,
 
 class Basic_Credentials_Manager : public Botan::Credentials_Manager
    {
+   protected:
+      void load_credentials(const std::string& crt, const std::string& key)
+         {
+         Certificate_Info cert;
+
+         Botan::DataSource_Stream key_in(key);
+         cert.key = Botan::PKCS8::load_key(key_in);
+
+         Botan::DataSource_Stream in(crt);
+         while(!in.end_of_data())
+            {
+            try
+               {
+               cert.certs.push_back(Botan::X509_Certificate(in));
+               }
+            catch(std::exception&)
+               {
+               }
+            }
+
+         // TODO: attempt to validate chain ourselves
+
+         m_creds.push_back(cert);
+         }
+
    public:
       Basic_Credentials_Manager(bool use_system_store,
-                                const std::string& ca_path)
+                                std::string ca_path,
+                                std::optional<std::string> client_crt = std::nullopt,
+                                std::optional<std::string> client_key = std::nullopt)
          {
          if(ca_path.empty() == false)
             {
             m_certstores.push_back(std::make_shared<Botan::Certificate_Store_In_Memory>(ca_path));
+            }
+
+         BOTAN_ARG_CHECK(client_crt.has_value() == client_key.has_value(), "either provide both client certificate and key or neither");
+
+         if(client_crt.has_value() && client_key.has_value())
+            {
+            load_credentials(client_crt.value(), client_key.value());
             }
 
 #if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
@@ -58,26 +92,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
       Basic_Credentials_Manager(const std::string& server_crt,
                                 const std::string& server_key)
          {
-         Certificate_Info cert;
-
-         Botan::DataSource_Stream key_in(server_key);
-         cert.key = Botan::PKCS8::load_key(key_in);
-
-         Botan::DataSource_Stream in(server_crt);
-         while(!in.end_of_data())
-            {
-            try
-               {
-               cert.certs.push_back(Botan::X509_Certificate(in));
-               }
-            catch(std::exception&)
-               {
-               }
-            }
-
-         // TODO: attempt to validate chain ourselves
-
-         m_creds.push_back(cert);
+         load_credentials(server_crt, server_key);
          }
 
       std::vector<Botan::Certificate_Store*>
@@ -100,29 +115,42 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
          return v;
          }
 
-      std::vector<Botan::X509_Certificate> cert_chain(
+      std::vector<Botan::X509_Certificate> find_cert_chain(
          const std::vector<std::string>& algos,
+         const std::vector<Botan::X509_DN>& acceptable_cas,
          const std::string& type,
          const std::string& hostname) override
          {
-         BOTAN_UNUSED(type);
-
-         for(auto const& i : m_creds)
+         if(type == "tls-client")
             {
-            if(std::find(algos.begin(), algos.end(), i.key->algo_name()) == algos.end())
+            for(const auto& dn : acceptable_cas)
                {
-               continue;
+               for(const auto &cred : m_creds)
+                  {
+                  if(dn == cred.certs[0].issuer_dn())
+                     return cred.certs;
+                  }
                }
-
-            if(hostname != "" && !i.certs[0].matches_dns_name(hostname))
+            }
+         else if(type == "tls-server")
+            {
+            for(auto const& i : m_creds)
                {
-               continue;
-               }
+               if(std::find(algos.begin(), algos.end(), i.key->algo_name()) == algos.end())
+                  {
+                  continue;
+                  }
 
-            return i.certs;
+               if(hostname != "" && !i.certs[0].matches_dns_name(hostname))
+                  {
+                  continue;
+                  }
+
+               return i.certs;
+               }
             }
 
-         return std::vector<Botan::X509_Certificate>();
+         return {};
          }
 
       Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
