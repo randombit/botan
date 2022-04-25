@@ -92,7 +92,7 @@ Botan::PointGFp create_random_point(Botan::RandomNumberGenerator& rng,
       const Botan::BigInt x3 = mod_p.multiply(x, mod_p.square(x));
       const Botan::BigInt ax = mod_p.multiply(group.get_a(), x);
       const Botan::BigInt y = mod_p.reduce(x3 + ax + group.get_b());
-      const Botan::BigInt sqrt_y = ressol(y, p);
+      const Botan::BigInt sqrt_y = Botan::sqrt_modulo_prime(y, p);
 
       if(sqrt_y > 1)
          {

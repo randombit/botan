@@ -88,10 +88,10 @@ BigInt BOTAN_PUBLIC_API(2,0) power_mod(const BigInt& b,
 * about its arguments.
 *
 * @param x the input
-* @param p the prime
+* @param p the prime modulus
 * @return y such that (y*y)%p == x, or -1 if no such integer
 */
-BigInt BOTAN_PUBLIC_API(2,0) ressol(const BigInt& x, const BigInt& p);
+BigInt BOTAN_PUBLIC_API(3,0) sqrt_modulo_prime(const BigInt& x, const BigInt& p);
 
 /**
 * @param x an integer

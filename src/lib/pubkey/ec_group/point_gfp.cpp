@@ -650,7 +650,7 @@ BigInt decompress_point(bool yMod2,
    g += curve_b;
    g = g % curve_p;
 
-   BigInt z = ressol(g, curve_p);
+   BigInt z = sqrt_modulo_prime(g, curve_p);
 
    if(z < 0)
       throw Decoding_Error("Error during EC point decompression");

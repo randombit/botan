@@ -33,7 +33,7 @@ Botan::BigInt decompress_point(bool yMod2,
    g += curve_b;
    g = g % curve_p;
 
-   Botan::BigInt z = ressol(g, curve_p);
+   Botan::BigInt z = sqrt_modulo_prime(g, curve_p);
 
    if(z < 0)
       throw Botan::Exception("Could not perform square root");
