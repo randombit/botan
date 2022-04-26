@@ -151,7 +151,13 @@ class Test
       class Result final
          {
          public:
-            explicit Result(const std::string& who) : m_who(who) {}
+            explicit Result(std::string who) : m_who(std::move(who)) {}
+
+            /**
+             * This 'consolidation constructor' creates a single test result from
+             * a vector of downstream test result objects.
+             */
+            Result(std::string who, std::vector<Result> downstream_results);
 
             size_t tests_passed() const
                {
@@ -215,7 +221,7 @@ class Test
                   }
                }
 
-            void merge(const Result& other);
+            void merge(const Result& other, bool ignore_test_name = false);
 
             void test_note(const std::string& note, const char* extra = nullptr);
 

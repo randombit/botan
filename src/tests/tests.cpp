@@ -30,9 +30,9 @@
 
 namespace Botan_Tests {
 
-void Test::Result::merge(const Result& other)
+void Test::Result::merge(const Result& other, bool ignore_test_name)
    {
-   if(who() != other.who())
+   if(!ignore_test_name && who() != other.who())
       {
       throw Test_Error("Merging tests from different sources");
       }
@@ -420,6 +420,13 @@ std::string Test::format_time(uint64_t ns)
       }
 
    return o.str();
+   }
+
+Test::Result::Result(std::string who, std::vector<Result> downstream_results)
+   : Result(std::move(who))
+   {
+   for(const auto& result : downstream_results)
+      merge(result, true /* ignore non-matching test names */);
    }
 
 std::string Test::Result::result_string() const
