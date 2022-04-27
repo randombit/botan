@@ -196,20 +196,8 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
 */
 std::vector<uint8_t> Certificate_13::serialize() const
    {
-   std::vector<uint8_t> buf;
-
-   append_tls_length_value(buf, m_request_context, 1);
-
-   std::vector<uint8_t> entries;
-   for(const auto& entry : m_entries)
-      {
-      append_tls_length_value(entries, entry.certificate.BER_encode(), 3);
-      append_tls_length_value(entries, entry.extensions.serialize(m_side), 2);
-      }
-
-   append_tls_length_value(buf, entries, 3);
-
-   return buf;
+   // Needed only for server implementation or client authentication
+   throw Not_Implemented("NYI");
    }
 
 }
