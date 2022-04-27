@@ -67,6 +67,10 @@
   #include <mach/vm_statistics.h>
 #endif
 
+#if defined(BOTAN_TARGET_OS_IS_FREEBSD) || defined(BOTAN_TARGET_OS_IS_NETBSD)
+  #include <sys/param.h>
+#endif
+
 #if defined(BOTAN_TARGET_OS_HAS_PRCTL)
   #include <sys/prctl.h>
   #if !defined(PR_SET_VMA)
@@ -128,6 +132,10 @@ size_t OS::get_cache_line_size()
    size_t size = sizeof(cache_line_size_vl);
    if(::sysctlbyname("hw.cachelinesize", &cache_line_size_vl, &size, nullptr, 0) == 0)
       return static_cast<size_t>(cache_line_size_vl);
+#endif
+
+#if defined(BOTAN_TARGET_OS_IS_FREEBSD) || defined(BOTAN_TARGET_OS_IS_NETBSD)
+   return static_cast<size_t>(CACHE_LINE_SIZE);
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(_SC_LEVEL1_DCACHE_LINESIZE)
