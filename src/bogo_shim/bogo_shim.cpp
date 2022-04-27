@@ -840,19 +840,6 @@ class Shim_Policy final : public Botan::TLS::Policy
 
       //std::vector<std::string> allowed_macs() const override;
 
-      std::vector<std::string> allowed_key_exchange_methods() const override
-         {
-         return {
-            "ECDHE_PSK",
-            "DHE_PSK",
-            "PSK",
-            "CECPQ1",
-            "ECDH",
-            "DH",
-            "RSA",
-         };
-         }
-
       std::vector<std::string> allowed_signature_methods() const override
          {
          return {
@@ -1077,11 +1064,6 @@ class Shim_Policy final : public Botan::TLS::Policy
       //size_t dtls_initial_timeout() const override;
 
       //size_t dtls_maximum_timeout() const override;
-
-      bool allow_resumption_for_renegotiation() const override
-         {
-         return false; // BoGo expects this
-         }
 
       bool abort_connection_on_undesired_renegotiation() const override
          {
