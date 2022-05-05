@@ -25,6 +25,14 @@
 1.3.6.1.4.1.2.267.10.3.3 = Kyber-768-90s-r3
 1.3.6.1.4.1.2.267.10.4.4 = Kyber-1024-90s-r3
 
+# Dilithium OIDs are currently in Botan's private arc
+1.3.6.1.4.1.25258.1.9.1 = Dilithium-r3/4x4
+1.3.6.1.4.1.25258.1.9.2 = Dilithium-r3/6x5
+1.3.6.1.4.1.25258.1.9.3 = Dilithium-r3/8x7
+1.3.6.1.4.1.25258.1.10.1 = Dilithium-AES-r3/4x4
+1.3.6.1.4.1.25258.1.10.2 = Dilithium-AES-r3/6x5
+1.3.6.1.4.1.25258.1.10.3 = Dilithium-AES-r3/8x7
+
 # XMSS
 1.3.6.1.4.1.25258.1.5 = XMSS-draft6
 1.3.6.1.4.1.25258.1.8 = XMSS-draft12
