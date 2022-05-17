@@ -220,14 +220,25 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
                       Callbacks& cb,
                       RandomNumberGenerator& rng,
                       const std::string& hostname,
-                      const std::vector<std::string>& next_protocols);
-
+                      const std::vector<std::string>& next_protocols,
+                      const std::optional<Session>& session = std::nullopt);
 
       void retry(const Hello_Retry_Request& hrr,
+                 const Transcript_Hash_State& transcript_hash_state,
                  Callbacks& cb,
                  RandomNumberGenerator& rng);
 
       std::vector<Protocol_Version> supported_versions() const;
+
+   private:
+      /**
+       * If the Client Hello contains a PSK extensions with identities this will
+       * generate the PSK binders as described in RFC 8446 4.2.11.2.
+       * Note that the passed in \p transcript_hash_state might be virgin for
+       * the initial Client Hello and should be primed with ClientHello1 and
+       * HelloRetryRequest for an updated Client Hello.
+       */
+      void calculate_psk_binders(Transcript_Hash_State transcript_hash_state);
    };
 
 #endif // BOTAN_HAS_TLS_13

@@ -23,6 +23,11 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_hash.h>
 
+#ifdef BOTAN_HAS_TLS_13
+#include <botan/internal/tls_transcript_hash_13.h>
+#include <botan/internal/tls_handshake_layer_13.h>
+#endif
+
 #include <chrono>
 
 namespace Botan::TLS {
@@ -485,7 +490,8 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  Callbacks& cb,
                                  RandomNumberGenerator& rng,
                                  const std::string& hostname,
-                                 const std::vector<std::string>& next_protocols)
+                                 const std::vector<std::string>& next_protocols,
+                                 const std::optional<Session>& session)
    {
    // RFC 8446 4.1.2
    //    In TLS 1.3, the client indicates its version preferences in the
@@ -522,6 +528,11 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
 
    m_extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
 
+   // TODO: Support for PSK-only mode without a key exchange.
+   //       This should be configurable in TLS::Policy and should allow no PSK
+   //       support at all (e.g. to disable support for session resumption).
+   m_extensions.add(new PSK_Key_Exchange_Modes({PSK_Key_Exchange_Mode::PSK_DHE_KE}));
+
    // TODO: Add a signature_algorithms_cert extension negotiating the acceptable
    //       signature algorithms in a server certificate chain's certificates.
 
@@ -552,10 +563,26 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
          m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
 
+   // TODO: Some extensions require a certain order or pose other assumptions.
+   //       We should check those after the user was allowed to make changes to
+   //       the extensions.
    cb.tls_modify_extensions(m_extensions, CLIENT);
+
+   // RFC 8446 4.2.11
+   //    The "pre_shared_key" extension MUST be the last extension in the
+   //    ClientHello (this facilitates implementation [...]).
+   //
+   // The PSK extension takes the partial transcript hash into account. Passing
+   // into Callbacks::tls_modify_extensions() does not make sense therefore.
+   if(session.has_value())
+      {
+      m_extensions.add(new PSK(session.value(), cb));
+      calculate_psk_binders({});
+      }
    }
 
 void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
+                            const Transcript_Hash_State& transcript_hash_state,
                             Callbacks& cb,
                             RandomNumberGenerator& rng)
    {
@@ -586,6 +613,44 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    //       invocations to this callback due to the first Client_Hello or the
    //       retried Client_Hello after receiving a Hello_Retry_Request.
    cb.tls_modify_extensions(m_extensions, CLIENT);
+
+   auto psk = m_extensions.get<PSK>();
+   if(psk)
+      {
+      // Cipher suite should always be a known suite as this is checked upstream
+      const auto cipher = Ciphersuite::by_id(hrr.ciphersuite());
+      BOTAN_ASSERT_NOMSG(cipher.has_value());
+
+      // RFC 8446 4.1.4
+      //    In [...] its updated ClientHello, the client SHOULD NOT offer
+      //    any pre-shared keys associated with a hash other than that of the
+      //    selected cipher suite.
+      psk->filter(cipher.value());
+
+      // RFC 8446 4.2.11.2
+      //    If the server responds with a HelloRetryRequest and the client
+      //    then sends ClientHello2, its binder will be computed over: [...].
+      calculate_psk_binders(transcript_hash_state.clone());
+      }
+   }
+
+void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths)
+   {
+   auto psk = m_extensions.get<PSK>();
+   if(!psk || psk->empty())
+      return;
+
+   // RFC 8446 4.2.11.2
+   //    Each entry in the binders list is computed as an HMAC over a
+   //    transcript hash (see Section 4.4.1) containing a partial ClientHello
+   //    [...].
+   //
+   // Therefore we marshal the entire message prematurely to obtain the
+   // (truncated) transcript hash, calculate the PSK binders with it, update
+   // the Client Hello thus finalizing the message. Down the road, it will be
+   // re-marshalled with the correct binders and sent over the wire.
+   Handshake_Layer::prepare_message(*this, ths);
+   psk->calculate_binders(ths);
    }
 
 #endif // BOTAN_HAS_TLS_13
