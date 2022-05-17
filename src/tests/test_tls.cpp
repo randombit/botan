@@ -29,6 +29,22 @@ namespace Botan_Tests {
 
 class TLS_Session_Tests final : public Test
    {
+   private:
+      std::string session_rev20160812 =
+         "-----BEGIN TLS SESSION-----\n"
+         "MIICCQIEATOhLAIEYoOgCgIBAwIBAwQCqrsEEEJCQkJCQkJCQkJCQkJCQkICAwDA\n"
+         "LwIBAAIBAQIBAAEB/wEBAAQCEAIEggG2MIIBsjCCARugAwIBAgIBATANBgkqhkiG\n"
+         "9w0BAQsFADARMQ8wDQYDVQQDEwZjbGllbnQwHhcNMTYwNzMwMDEyMzU5WhcNMjYw\n"
+         "NzMwMDEyMzU5WjARMQ8wDQYDVQQDEwZjbGllbnQwgZ8wDQYJKoZIhvcNAQEBBQAD\n"
+         "gY0AMIGJAoGBAMOBdeAEpo0JP4I7nDedIB+8C7ehx5GQXj+/doR+ROdR67zTYL2U\n"
+         "XIHlIivMiEbTqKD5Ppv1vrq9ku3x3h/xkCFwPnq2wJAVE/l+ObER8JyTSJcceyEZ\n"
+         "hKdUzUX+CVrw6kI2gpvM96f+myiI54q0d2kKW54cy+kcakoPl6fgKEIBAgMBAAGj\n"
+         "GjAYMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgeAMA0GCSqGSIb3DQEBCwUAA4GBABp6\n"
+         "WgGFMrAirwdn1IYWDP8tFnoZFdI4NbVFlJFtxoC+XS5iYHbF1Sci68x3XX2Z+YC+\n"
+         "L8lNNKz2zAC6kMvPsGCKoefjlx7wwHpB1HrYNF0fgf5Bihz0EFRCn9IXvXd9wc8I\n"
+         "8F35B5nGWTYeDxqO5KwPeJdCC9vII9qAovK6IwgcDANyc2EMAAIBAAwAAgEA\n"
+         "-----END TLS SESSION-----\n";
+
    public:
       std::vector<Test::Result> run() override
          {
@@ -104,6 +120,22 @@ class TLS_Session_Tests final : public Test
          result.test_throws("unknown ciphersuite during session parsing",
                             "Serialized TLS session contains unknown cipher suite (47789)",
                             [&] { Botan::TLS::Session{pem_with_unknown_ciphersuite}; });
+
+         Botan::TLS::Session legacy_session(session_rev20160812);
+
+         // check a few fields that were present in this revision already
+         result.confirm("protocol version", legacy_session.version().is_pre_tls_13());
+         result.test_eq("master secret", legacy_session.master_secret(), Botan::secure_vector<uint8_t>{0x10, 0x02});
+         result.confirm("encrypt_then_mac", legacy_session.supports_extended_master_secret());
+         result.test_eq("peer certificate", legacy_session.peer_certs().at(0).subject_info("CN").at(0), "client");
+         result.test_eq("ticket", legacy_session.session_ticket(), std::vector<uint8_t>(16, 0x42));
+         result.test_is_eq("SRTP profile", legacy_session.dtls_srtp_profile(), uint16_t(0x0000));
+
+         // check newly added fields (default values are added)
+         result.confirm("no early data", !legacy_session.supports_early_data());
+         result.test_is_eq("no early data bytes", legacy_session.max_early_data_bytes(), uint32_t(0));
+         result.test_is_eq("no age adder", legacy_session.session_age_add(), uint32_t(0));
+         result.confirm("no lifetime hint", legacy_session.lifetime_hint().count() == 0);
 
          return {result};
          }

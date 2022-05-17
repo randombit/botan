@@ -17,6 +17,20 @@
 
 namespace Botan::TLS {
 
+Session::Session() :
+   m_start_time(std::chrono::system_clock::time_point::min()),
+   m_version(),
+   m_ciphersuite(0),
+   m_connection_side(static_cast<Connection_Side>(0)),
+   m_srtp_profile(0),
+   m_extended_master_secret(false),
+   m_encrypt_then_mac(false),
+   m_early_data_allowed(false),
+   m_max_early_data_bytes(0),
+   m_ticket_age_add(0),
+   m_lifetime_hint(0)
+   {}
+
 Session::Session(const std::vector<uint8_t>& session_identifier,
                  const secure_vector<uint8_t>& master_secret,
                  Protocol_Version version,
@@ -40,8 +54,61 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
    m_extended_master_secret(extended_master_secret),
    m_encrypt_then_mac(encrypt_then_mac),
    m_peer_certs(certs),
-   m_server_info(server_info)
+   m_server_info(server_info),
+   m_early_data_allowed(false),
+   m_max_early_data_bytes(0),
+   m_ticket_age_add(0),
+   m_lifetime_hint(0)
    {
+   BOTAN_ARG_CHECK(version.is_pre_tls_13(),
+                   "Instantiated a TLS 1.2 session object with a TLS version newer than 1.2");
+   }
+
+Session::Session(const std::vector<uint8_t>& session_ticket,
+                 const secure_vector<uint8_t>& session_psk,
+                 const std::optional<uint32_t>& max_early_data_bytes,
+                 uint32_t ticket_age_add,
+                 uint32_t lifetime_hint,
+                 Protocol_Version version,
+                 uint16_t ciphersuite,
+                 Connection_Side side,
+                 const std::vector<X509_Certificate>& peer_certs,
+                 const Server_Information& server_info,
+                 std::chrono::system_clock::time_point current_timestamp) :
+   m_start_time(current_timestamp),
+
+   // In TLS 1.3 the PSK and Session Resumption concepts were merged and the
+   // explicit SessionID was retired. Instead an opaque session ticket is used
+   // to identify sessions during resumption. Hence, we deliberately set the
+   // legacy m_identifier as "empty".
+   m_identifier(),
+   m_session_ticket(session_ticket),
+   m_master_secret(session_psk),
+   m_version(version),
+   m_ciphersuite(ciphersuite),
+   m_connection_side(side),
+
+   // TODO: Might become necessary when DTLS 1.3 is being implemented.
+   m_srtp_profile(0),
+
+   // RFC 8446 Appendix D
+   //    Because TLS 1.3 always hashes in the transcript up to the server
+   //    Finished, implementations which support both TLS 1.3 and earlier
+   //    versions SHOULD indicate the use of the Extended Master Secret
+   //    extension in their APIs whenever TLS 1.3 is used.
+   m_extended_master_secret(true),
+
+   // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
+   m_encrypt_then_mac(false),
+   m_peer_certs(peer_certs),
+   m_server_info(server_info),
+   m_early_data_allowed(max_early_data_bytes.has_value()),
+   m_max_early_data_bytes(max_early_data_bytes.value_or(0)),
+   m_ticket_age_add(ticket_age_add),
+   m_lifetime_hint(lifetime_hint)
+   {
+   BOTAN_ARG_CHECK(!version.is_pre_tls_13(),
+                   "Instantiated a TLS 1.3 session object with a TLS version older than 1.3");
    }
 
 Session::Session(const std::string& pem)
@@ -70,10 +137,13 @@ Session::Session(const uint8_t ber[], size_t ber_len)
    size_t compression_method = 0;
    uint16_t ciphersuite_code = 0;
 
-   BER_Decoder(ber, ber_len)
-      .start_sequence()
-        .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
-                          "Unknown version in serialized TLS session")
+   size_t struct_version = 0;
+
+   BER_Decoder dec(ber, ber_len);
+   auto seqdec = dec.start_sequence();
+
+   seqdec
+        .decode_integer_type(struct_version)
         .decode_integer_type(start_time)
         .decode_integer_type(major_version)
         .decode_integer_type(minor_version)
@@ -91,9 +161,35 @@ Session::Session(const uint8_t ber[], size_t ber_len)
         .decode(server_service)
         .decode(server_port)
         .decode(srp_identifier_str)
-        .decode(srtp_profile)
-      .end_cons()
-      .verify_end();
+        .decode(srtp_profile);
+
+   m_version = Protocol_Version(major_version, minor_version);
+
+   if(struct_version == TLS_SESSION_PARAM_STRUCT_VERSION_TLS12)
+      {
+      if(!m_version.is_pre_tls_13())
+         throw Decoding_Error("Serialized TLS session scheme does not match the protocol version expectations");
+
+      m_early_data_allowed = false;
+      m_max_early_data_bytes = 0;
+      m_ticket_age_add = 0;
+      m_lifetime_hint = 0;
+      }
+   else if(struct_version == TLS_SESSION_PARAM_STRUCT_VERSION_TLS13)
+      {
+      seqdec
+         .decode(m_early_data_allowed)
+         .decode_integer_type(m_max_early_data_bytes)
+         .decode_integer_type(m_ticket_age_add)
+         .decode_integer_type(m_lifetime_hint);
+      }
+   else
+      {
+      throw Decoding_Error("Unknown TLS Session object revision: " + std::to_string(struct_version));
+      }
+
+   seqdec.end_cons();
+   dec.verify_end();
 
    /*
    * Compression is not supported and must be zero
@@ -120,7 +216,6 @@ Session::Session(const uint8_t ber[], size_t ber_len)
       }
 
    m_ciphersuite = ciphersuite_code;
-   m_version = Protocol_Version(major_version, minor_version);
    m_start_time = std::chrono::system_clock::from_time_t(start_time);
    m_connection_side = static_cast<Connection_Side>(side_code);
    m_srtp_profile = static_cast<uint16_t>(srtp_profile);
@@ -150,7 +245,7 @@ secure_vector<uint8_t> Session::DER_encode() const
 
    return DER_Encoder()
       .start_sequence()
-         .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
+         .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION_TLS13))
          .encode(static_cast<size_t>(std::chrono::system_clock::to_time_t(m_start_time)))
          .encode(static_cast<size_t>(m_version.major_version()))
          .encode(static_cast<size_t>(m_version.minor_version()))
@@ -169,6 +264,12 @@ secure_vector<uint8_t> Session::DER_encode() const
          .encode(static_cast<size_t>(m_server_info.port()))
          .encode(ASN1_String("", ASN1_Type::Utf8String)) // old srp identifier
          .encode(static_cast<size_t>(m_srtp_profile))
+
+         // the fields below were introduced for TLS 1.3 session tickets
+         .encode(m_early_data_allowed)
+         .encode(static_cast<size_t>(m_max_early_data_bytes))
+         .encode(static_cast<size_t>(m_ticket_age_add))
+         .encode(static_cast<size_t>(m_lifetime_hint))
       .end_cons()
    .get_contents();
    }
@@ -187,6 +288,19 @@ Ciphersuite Session::ciphersuite() const
                            std::to_string(m_ciphersuite));
       }
    return suite.value();
+   }
+
+const std::vector<uint8_t>& Session::session_id() const
+   {
+   if(m_version.is_pre_tls_13())
+      return m_identifier;
+
+   // RFC 8446 4.6.1
+   //    ticket:  The value of the ticket to be used as the PSK identity.  The
+   //             ticket itself is an opaque label.  It MAY be either a database
+   //             lookup key or a self-encrypted and self-authenticated value.
+   BOTAN_ASSERT_NOMSG(m_identifier.empty());
+   return m_session_ticket;
    }
 
 namespace {
