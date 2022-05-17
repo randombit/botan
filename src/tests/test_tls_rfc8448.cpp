@@ -27,6 +27,7 @@
    #include <botan/auto_rng.h>  // TODO: replace me, otherwise we depend on auto_rng module
    #include <botan/credentials_manager.h>
    #include <botan/rsa.h>
+   #include <botan/hash.h>
    #include <botan/tls_alert.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_client.h>
@@ -162,6 +163,12 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          {
          count_callback_invocation("tls_session_activated");
          session_activated_called = true;
+         }
+
+      bool tls_session_ticket_received(const Session&) override
+         {
+         count_callback_invocation("tls_session_ticket_received");
+         return true; // should always store the session
          }
 
       void tls_verify_cert_chain(
@@ -356,6 +363,92 @@ class RFC8448_Text_Policy : public Botan::TLS::Text_Policy
    };
 
 /**
+ * In-Memory Session Manager that stores sessions verbatim, without encryption.
+ * Therefor it is not dependent on a random number generator and can easily be
+ * instrumented for test inspection.
+ */
+class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
+   {
+   private:
+      template<typename K, typename M>
+      bool load(const K& key, const M& map, Session& session)
+         {
+         const auto session_itr = map.find(key);
+         if(session_itr == map.end())
+            return false;
+
+         const auto& der = session_itr->second;
+         session = Session(der.data(), der.size());
+         return true;
+         }
+
+   public:
+      std::vector<std::vector<uint8_t>> all_sessions() const
+         {
+         std::vector<std::vector<uint8_t>> sessions;
+         std::transform(m_sessions_by_si.cbegin(), m_sessions_by_si.cend(), std::back_inserter(sessions),
+                        [](const auto& session) { return session.second; });
+         return sessions;
+         }
+
+      bool load_from_session_id(const std::vector<uint8_t>& session_id,
+                                Session& session) override
+         {
+         return load(id(session_id), m_sessions_by_sid, session);
+         }
+
+      bool load_from_server_info(const Server_Information& info,
+                                 Session& session) override
+         {
+         return load(info, m_sessions_by_si, session);
+         }
+
+      void remove_entry(const std::vector<uint8_t>& session_id) override
+         {
+         Session s;
+         const auto session_found = load_from_session_id(session_id, s);
+         if(!session_found)
+            return;
+
+         const auto sid = id(session_id);
+         m_sessions_by_sid.erase(sid);
+         m_sessions_by_si.erase(s.server_info());
+         }
+
+      size_t remove_all() override
+         {
+         const auto sessions = m_sessions_by_sid.size();
+         m_sessions_by_sid.clear();
+         m_sessions_by_si.clear();
+         return sessions;
+         }
+
+      void save(const Session& session) override
+         {
+         const auto sid = id(session.session_id());
+         const auto der = unlock(session.DER_encode());
+         m_sessions_by_sid[sid] = der;
+         m_sessions_by_si[session.server_info()] = der;
+         }
+
+      std::chrono::seconds session_lifetime() const override
+         {
+         return std::chrono::seconds(42);
+         }
+
+   private:
+      std::string id(const std::vector<uint8_t>& session_id) const
+         {
+         auto h = HashFunction::create_or_throw("SHA-256");
+         return Botan::hex_encode(h->process(session_id));
+         }
+
+   private:
+      std::map<std::string, std::vector<uint8_t>> m_sessions_by_sid;
+      std::map<Server_Information, std::vector<uint8_t>> m_sessions_by_si;
+   };
+
+/**
  * This steers the TLS client handle and is the central entry point for the
  * test cases to interact with the TLS 1.3 implementation.
  *
@@ -367,12 +460,17 @@ class TLS_Context
       TLS_Context(std::unique_ptr<Botan::RandomNumberGenerator> rng_in,
                   RFC8448_Text_Policy policy,
                   Modify_Exts_Fn modify_exts_cb,
-                  uint64_t timestamp)
+                  uint64_t timestamp,
+                  std::optional<std::vector<uint8_t>> session)
          : m_callbacks(std::move(modify_exts_cb), timestamp)
          , m_rng(std::move(rng_in))
-         , m_session_mgr(*m_rng)
          , m_policy(std::move(policy))
-         {}
+         {
+         if(session.has_value())
+            {
+            m_session_mgr.save(Session(session->data(), session->size()));
+            }
+         }
 
    public:
       virtual ~TLS_Context() = default;
@@ -420,6 +518,11 @@ class TLS_Context
          m_callbacks.reset_callback_invocation_counters();
          }
 
+      std::vector<std::vector<uint8_t>> stored_sessions() const
+         {
+         return m_session_mgr.all_sessions();
+         }
+
       const std::vector<Botan::X509_Certificate>& certs_verified() const
          {
          return m_callbacks.certificate_chain;
@@ -432,7 +535,7 @@ class TLS_Context
       Botan::Credentials_Manager m_creds;
 
       std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
-      Botan::TLS::Session_Manager_In_Memory         m_session_mgr;
+      RFC8448_Session_Manager                       m_session_mgr;
       RFC8448_Text_Policy                           m_policy;
    };
 
@@ -442,8 +545,9 @@ class Client_Context : public TLS_Context
       Client_Context(std::unique_ptr<Botan::RandomNumberGenerator> rng_in,
                      RFC8448_Text_Policy policy,
                      Modify_Exts_Fn modify_exts_cb,
-                     uint64_t timestamp)
-         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), timestamp)
+                     uint64_t timestamp,
+                     std::optional<std::vector<uint8_t>> session = std::nullopt)
+         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), timestamp, std::move(session))
          , client(m_callbacks, m_session_mgr, m_creds, m_policy, *m_rng,
                   Botan::TLS::Server_Information("server"),
                   Botan::TLS::Protocol_Version::TLS_V13)
@@ -472,6 +576,7 @@ void sort_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side s
          Botan::TLS::Handshake_Extension_Type::TLSEXT_SUPPORTED_GROUPS,
          Botan::TLS::Handshake_Extension_Type::TLSEXT_SESSION_TICKET,
          Botan::TLS::Handshake_Extension_Type::TLSEXT_KEY_SHARE,
+         Botan::TLS::Handshake_Extension_Type::TLSEXT_EARLY_DATA,
          Botan::TLS::Handshake_Extension_Type::TLSEXT_SUPPORTED_VERSIONS,
          Botan::TLS::Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS,
          Botan::TLS::Handshake_Extension_Type::TLSEXT_COOKIE,
@@ -496,6 +601,11 @@ void add_renegotiation_extension(Botan::TLS::Extensions& exts)
    // Renegotiation is not possible in TLS 1.3. Nevertheless, RFC 8448 requires
    // to add this to the Client Hello for reasons.
    exts.add(new Renegotiation_Extension());
+   }
+
+void add_early_data_indication(Botan::TLS::Extensions& exts)
+   {
+   exts.add(new Botan::TLS::EarlyDataIndication());
    }
 
 }  // namespace
@@ -527,13 +637,15 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
    {
    public:
       Test_TLS_RFC8448()
-         : Text_Based_Test("tls_13_rfc8448/transcripts.vec", "RNG_Pool,CurrentTimestamp,ClientHello_1,ServerHello,ServerHandshakeMessages,ClientFinished,Client_CloseNotify,Server_CloseNotify", "HelloRetryRequest,ClientHello_2,NewSessionTicket,Client_AppData,Client_AppData_Record,Server_AppData,Server_AppData_Record") {}
+         : Text_Based_Test("tls_13_rfc8448/transcripts.vec", "RNG_Pool,CurrentTimestamp,ClientHello_1,ServerHello,ServerHandshakeMessages,ClientFinished,Client_CloseNotify,Server_CloseNotify", "HelloRetryRequest,ClientHello_2,NewSessionTicket,Client_AppData,Client_AppData_Record,Server_AppData,Server_AppData_Record,Client_EarlyAppData,Client_EarlyAppData_Record,SessionTicket") {}
 
    Test::Result run_one_test(const std::string& header,
                              const VarMap& vars) override
       {
       if(header == "Simple_1RTT_Handshake")
          return Test::Result("Simple 1-RTT (Client side)", simple_1_rtt_client_hello(vars));
+      else if(header == "Resumed_0RTT_Handshake")
+         return Test::Result("Resumption with 0-RTT data", resumed_handshake_with_0_rtt(vars));
       else if(header == "HelloRetryRequest_Handshake")
          return Test::Result("Handshake involving Hello Retry Request (Client side)", hello_retry_request(vars));
       else if(header == "Middlebox_Compatibility_Mode")
@@ -546,7 +658,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
       static std::vector<Test::Result> simple_1_rtt_client_hello(const VarMap& vars)
          {
          auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
-         rng->add_entropy(std::vector<uint8_t>(32).data(), 32);  // used by session mgr for session key
 
          // 32 - for client hello random
          // 32 - for KeyShare (eph. x25519 key pair)
@@ -578,6 +689,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Server Hello", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                const auto server_hello = vars.get_req_bin("ServerHello");
                // splitting the input data to test partial reads
                const std::vector<uint8_t> server_hello_a(server_hello.begin(), server_hello.begin() + 20);
@@ -594,6 +706,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Server HS messages .. Client Finished", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.received_data(vars.get_req_bin("ServerHandshakeMessages"));
 
                ctx->check_callback_invocations(result, "encrypted handshake messages received",
@@ -617,14 +730,24 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Post-Handshake: NewSessionTicket", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
+               result.require("no sessions so far", ctx->stored_sessions().empty());
                ctx->client.received_data(vars.get_req_bin("NewSessionTicket"));
 
-               // TODO: once we implement session resumption, this should probably expect some callback
-               ctx->check_callback_invocations(result, "new session ticket received", { });
+               ctx->check_callback_invocations(result, "new session ticket received",
+                  {
+                  "tls_session_ticket_received",
+                  "tls_current_timestamp"
+                  });
+               if(result.test_eq("session was stored", ctx->stored_sessions().size(), 1))
+                  {
+                  result.test_eq("session was serialized as expected", ctx->stored_sessions().front(), vars.get_req_bin("SessionTicket"));
+                  }
                }),
 
             Botan_Tests::CHECK("Send Application Data", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->send(vars.get_req_bin("Client_AppData"));
 
                ctx->check_callback_invocations(result, "application data sent", { "tls_emit_data" });
@@ -635,6 +758,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Receive Application Data", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.received_data(vars.get_req_bin("Server_AppData_Record"));
 
                ctx->check_callback_invocations(result, "application data sent", { "tls_record_received" });
@@ -646,6 +770,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Close Connection", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.close();
 
                result.test_eq("close payload", ctx->pull_send_buffer(), vars.get_req_bin("Client_CloseNotify"));
@@ -656,6 +781,51 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
                result.confirm("connection is closed", ctx->client.is_closed());
                }),
+            };
+         }
+
+      static std::vector<Test::Result> resumed_handshake_with_0_rtt(const VarMap& vars)
+         {
+         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+
+         // 32 - for client hello random
+         // 32 - for KeyShare (eph. x25519 key pair)
+         add_entropy(*rng, vars.get_req_bin("RNG_Pool"));
+
+         auto add_extensions_and_sort = [](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side)
+            {
+            exts.add(new Padding(87));
+
+            add_renegotiation_extension(exts);
+
+            // TODO: Implement early data support and remove this 'hack'.
+            //
+            // Currently, the production implementation will never add this
+            // extension even if the resumed session would allow early data.
+            add_early_data_indication(exts);
+            sort_extensions(exts, side);
+            };
+
+         std::unique_ptr<Client_Context> ctx;
+
+         return {
+            Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
+               {
+               ctx = std::make_unique<Client_Context>(std::move(rng),
+                                                      read_tls_policy("rfc8448_1rtt"),
+                                                      add_extensions_and_sort,
+                                                      vars.get_req_u64("CurrentTimestamp"),
+                                                      vars.get_req_bin("SessionTicket"));
+
+               result.confirm("client not closed", !ctx->client.is_closed());
+               ctx->check_callback_invocations(result, "client hello prepared", { "tls_emit_data", "tls_inspect_handshake_msg_client_hello", "tls_modify_extensions", "tls_current_timestamp" });
+
+               result.test_eq("TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
+               })
+
+            // TODO: The rest of this test vector requires 0-RTT which is not
+            //       yet implemented. For now we can only test the client's
+            //       ability to offer a session resumption via PSK.
             };
          }
 
@@ -684,8 +854,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          auto& fallback_rng = Test::rng();
          auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>(fallback_rng);
 
-         rng->add_entropy(std::vector<uint8_t>(32).data(), 32);  // used by session mgr for session key
-
          // 32 - client hello random
          // 32 - eph. x25519 key pair
          // 32 - eph. P-256 key pair
@@ -706,6 +874,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Hello Retry Request .. second Client Hello", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.received_data(vars.get_req_bin("HelloRetryRequest"));
 
                ctx->check_callback_invocations(result, "hello retry request received",
@@ -723,6 +892,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Server Hello", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.received_data(vars.get_req_bin("ServerHello"));
 
                ctx->check_callback_invocations(result, "server hello received", { "tls_inspect_handshake_msg_server_hello", "tls_examine_extensions", "tls_decode_group_param" });
@@ -730,6 +900,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Server HS Messages .. Client Finished", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.received_data(vars.get_req_bin("ServerHandshakeMessages"));
 
                ctx->check_callback_invocations(result, "encrypted handshake messages received",
@@ -750,6 +921,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Close Connection", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.close();
                ctx->check_callback_invocations(result, "encrypted handshake messages received", { "tls_emit_data" });
                result.test_eq("client close notify", ctx->pull_send_buffer(), vars.get_req_bin("Client_CloseNotify"));
@@ -765,7 +937,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
       static std::vector<Test::Result> middlebox_compatibility(const VarMap& vars)
          {
          auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
-         rng->add_entropy(std::vector<uint8_t>(32).data(), 32);  // used by session mgr for session key
 
          // 32 - client hello random
          // 32 - legacy session ID
@@ -790,6 +961,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Server Hello + other handshake messages", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.received_data(Botan::concat(vars.get_req_bin("ServerHello"),
                                                       // ServerHandshakeMessages contains the expected ChangeCipherSpec record
                                                       vars.get_req_bin("ServerHandshakeMessages")));
@@ -803,6 +975,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Close connection", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.close();
 
                result.test_eq("Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Client_CloseNotify"));
