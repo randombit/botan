@@ -102,6 +102,16 @@ class Padding final : public Botan::TLS::Extension
 using namespace Botan;
 using namespace Botan::TLS;
 
+std::chrono::system_clock::time_point from_milliseconds_since_epoch(uint64_t msecs)
+   {
+   const int64_t  secs_since_epoch  = msecs / 1000;
+   const uint32_t additional_millis = msecs % 1000;
+
+   BOTAN_ASSERT_NOMSG(secs_since_epoch <= std::numeric_limits<time_t>::max());
+   return std::chrono::system_clock::from_time_t(static_cast<time_t>(secs_since_epoch)) +
+          std::chrono::milliseconds(additional_millis);
+   }
+
 /**
  * Subclass of the Botan::TLS::Callbacks instrumenting all available callbacks.
  * The invocation counts can be checked in the integration tests to make sure
@@ -112,8 +122,10 @@ using Modify_Exts_Fn = std::function<void(Botan::TLS::Extensions&, Botan::TLS::C
 class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
    {
    public:
-      Test_TLS_13_Callbacks(Modify_Exts_Fn modify_exts_cb) :
-         session_activated_called(false), m_modify_exts(std::move(modify_exts_cb))
+      Test_TLS_13_Callbacks(Modify_Exts_Fn modify_exts_cb, uint64_t timestamp) :
+         session_activated_called(false),
+         m_modify_exts(std::move(modify_exts_cb)),
+         m_timestamp(from_milliseconds_since_epoch(timestamp))
          {}
 
       void tls_emit_data(const uint8_t data[], size_t size) override
@@ -258,6 +270,12 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          return Callbacks::tls_peer_network_identity();
          }
 
+      std::chrono::system_clock::time_point tls_current_timestamp() override
+         {
+         count_callback_invocation("tls_current_timestamp");
+         return m_timestamp;
+         }
+
       std::vector<uint8_t> pull_send_buffer()
          {
          return std::exchange(send_buffer, std::vector<uint8_t>());
@@ -295,10 +313,11 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
       std::vector<Botan::X509_Certificate> certificate_chain;
 
    private:
-      std::vector<uint8_t> send_buffer;
-      std::vector<uint8_t> receive_buffer;
-      uint64_t             received_seq_no;
-      Modify_Exts_Fn       m_modify_exts;
+      std::vector<uint8_t>                  send_buffer;
+      std::vector<uint8_t>                  receive_buffer;
+      uint64_t                              received_seq_no;
+      Modify_Exts_Fn                        m_modify_exts;
+      std::chrono::system_clock::time_point m_timestamp;
 
       mutable std::map<std::string, unsigned int> m_callback_invocations;
    };
@@ -347,8 +366,9 @@ class TLS_Context
    protected:
       TLS_Context(std::unique_ptr<Botan::RandomNumberGenerator> rng_in,
                   RFC8448_Text_Policy policy,
-                  Modify_Exts_Fn modify_exts_cb)
-         : m_callbacks(std::move(modify_exts_cb))
+                  Modify_Exts_Fn modify_exts_cb,
+                  uint64_t timestamp)
+         : m_callbacks(std::move(modify_exts_cb), timestamp)
          , m_rng(std::move(rng_in))
          , m_session_mgr(*m_rng)
          , m_policy(std::move(policy))
@@ -421,8 +441,9 @@ class Client_Context : public TLS_Context
    public:
       Client_Context(std::unique_ptr<Botan::RandomNumberGenerator> rng_in,
                      RFC8448_Text_Policy policy,
-                     Modify_Exts_Fn modify_exts_cb)
-         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb))
+                     Modify_Exts_Fn modify_exts_cb,
+                     uint64_t timestamp)
+         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), timestamp)
          , client(m_callbacks, m_session_mgr, m_creds, m_policy, *m_rng,
                   Botan::TLS::Server_Information("server"),
                   Botan::TLS::Protocol_Version::TLS_V13)
@@ -515,7 +536,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
    {
    public:
       Test_TLS_RFC8448()
-         : Text_Based_Test("tls_13_rfc8448/transcripts.vec", "RNG_Pool,ClientHello_1,ServerHello,ServerHandshakeMessages,ClientFinished,Client_CloseNotify,Server_CloseNotify", "HelloRetryRequest,ClientHello_2,NewSessionTicket,Client_AppData,Client_AppData_Record,Server_AppData,Server_AppData_Record") {}
+         : Text_Based_Test("tls_13_rfc8448/transcripts.vec", "RNG_Pool,CurrentTimestamp,ClientHello_1,ServerHello,ServerHandshakeMessages,ClientFinished,Client_CloseNotify,Server_CloseNotify", "HelloRetryRequest,ClientHello_2,NewSessionTicket,Client_AppData,Client_AppData_Record,Server_AppData,Server_AppData_Record") {}
 
    Test::Result run_one_test(const std::string& header,
                              const VarMap& vars) override
@@ -557,7 +578,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          return {
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), add_extensions_and_sort);
+               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), add_extensions_and_sort, vars.get_req_u64("CurrentTimestamp"));
 
                result.confirm("client not closed", !ctx->client.is_closed());
                ctx->check_callback_invocations(result, "client hello prepared", { "tls_emit_data", "tls_inspect_handshake_msg_client_hello", "tls_modify_extensions" });
@@ -606,6 +627,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             Botan_Tests::CHECK("Post-Handshake: NewSessionTicket", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->client.received_data(vars.get_req_bin("NewSessionTicket"));
 
                // TODO: once we implement session resumption, this should probably expect some callback
@@ -686,7 +708,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          return {
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_hrr"), add_extensions_and_sort);
+               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_hrr"), add_extensions_and_sort, vars.get_req_u64("CurrentTimestamp"));
                result.confirm("client not closed", !ctx->client.is_closed());
 
                ctx->check_callback_invocations(result, "client hello prepared", { "tls_emit_data", "tls_inspect_handshake_msg_client_hello", "tls_modify_extensions" });
@@ -774,7 +796,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          return {
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_compat"), add_extensions_and_sort);
+               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_compat"), add_extensions_and_sort, vars.get_req_u64("CurrentTimestamp"));
 
                result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
                }),

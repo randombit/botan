@@ -1290,7 +1290,8 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          m_warning_alerts(0),
          m_empty_records(0),
          m_sessions_established(0),
-         m_got_close(false)
+         m_got_close(false),
+         m_clock_skew(0)
          {}
 
       size_t sessions_established() const { return m_sessions_established; }
@@ -1299,6 +1300,8 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          {
          m_channel = channel;
          }
+
+      void set_clock_skew(std::chrono::seconds clock_skew) { m_clock_skew = clock_skew; }
 
       bool saw_close_notify() const { return m_got_close; }
 
@@ -1601,6 +1604,16 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             }
          }
 
+      std::chrono::system_clock::time_point tls_current_timestamp() override
+         {
+         // Some tests require precise timings. Hence, the TLS 'now' timestamp
+         // is frozen on first access and rounded to the last full second. E.g.
+         // storage of sessions does store the timestamp with second-resolution.
+         using sec = std::chrono::seconds;
+         static auto g_now = std::chrono::floor<sec>(std::chrono::system_clock::now());
+         return g_now + m_clock_skew;
+         }
+
    private:
       Botan::TLS::Channel* m_channel;
       const Shim_Arguments& m_args;
@@ -1611,6 +1624,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
       size_t m_empty_records;
       size_t m_sessions_established;
       bool m_got_close;
+      std::chrono::seconds m_clock_skew;
    };
 
 }
@@ -1646,6 +1660,12 @@ int main(int /*argc*/, char* argv[])
 
          Shim_Policy policy(*args);
          Shim_Callbacks callbacks(*args, socket, policy);
+
+         if(args->option_used("resumption-delay") && i > 0)
+            {
+            shim_log("skewing the clock by " + std::to_string(args->get_int_opt("resumption-delay")) + " seconds");
+            callbacks.set_clock_skew(std::chrono::seconds(args->get_int_opt("resumption-delay")));
+            }
 
          std::unique_ptr<Botan::TLS::Channel> chan;
 

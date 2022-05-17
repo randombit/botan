@@ -45,10 +45,11 @@ bool random_signals_hello_retry_request(const std::vector<uint8_t>& random)
 std::vector<uint8_t>
 make_server_hello_random(RandomNumberGenerator& rng,
                          Protocol_Version offered_version,
+                         Callbacks& cb,
                          const Policy& policy)
    {
    BOTAN_UNUSED(offered_version);
-   auto random = make_hello_random(rng, policy);
+   auto random = make_hello_random(rng, cb, policy);
    return random;
    }
 
@@ -224,7 +225,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
    Server_Hello(std::make_unique<Server_Hello_Internal>(
                    server_settings.protocol_version(),
                    server_settings.session_id(),
-                   make_server_hello_random(rng, server_settings.protocol_version(), policy),
+                   make_server_hello_random(rng, server_settings.protocol_version(), cb, policy),
                    server_settings.ciphersuite(),
                    uint8_t(0)))
    {
@@ -308,7 +309,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
    Server_Hello(std::make_unique<Server_Hello_Internal>(
                    resumed_session.version(),
                    client_hello.session_id(),
-                   make_hello_random(rng, policy),
+                   make_hello_random(rng, cb, policy),
                    resumed_session.ciphersuite_code(),
                    uint8_t(0)))
    {

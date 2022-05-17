@@ -63,6 +63,7 @@ namespace {
 bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
                       Credentials_Manager& credentials,
+                      Callbacks& cb,
                       const Client_Hello_12* client_hello,
                       std::chrono::seconds session_ticket_lifetime)
    {
@@ -88,7 +89,7 @@ bool check_for_resume(Session& session_info,
             credentials.psk("tls-server", "session-ticket", ""));
 
          if(session_ticket_lifetime != std::chrono::seconds(0) &&
-            session_info.session_age() > session_ticket_lifetime)
+            session_info.session_age(cb.tls_current_timestamp()) > session_ticket_lifetime)
             return false; // ticket has expired
          }
       catch(...)
@@ -490,6 +491,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
       check_for_resume(session_info,
                        session_manager(),
                        m_creds,
+                       callbacks(),
                        pending_state.client_hello(),
                        std::chrono::seconds(policy().session_ticket_lifetime()));
 
@@ -638,7 +640,8 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
          get_peer_cert_chain(pending_state),
          std::vector<uint8_t>(),
          Server_Information(pending_state.client_hello()->sni_hostname()),
-         pending_state.server_hello()->srtp_profile());
+         pending_state.server_hello()->srtp_profile(),
+         callbacks().tls_current_timestamp());
 
       if(save_session(session_info))
          {
@@ -826,7 +829,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
                                                    *pending_state.client_hello());
 
    Server_Hello_12::Settings srv_settings(
-      make_hello_random(rng(), policy()), // new session ID
+      make_hello_random(rng(), callbacks(), policy()), // new session ID
       pending_state.version(),
       ciphersuite,
       have_session_ticket_key);

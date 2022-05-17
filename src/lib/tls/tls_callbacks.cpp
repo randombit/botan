@@ -37,6 +37,11 @@ std::string TLS::Callbacks::tls_peer_network_identity()
    return "";
    }
 
+std::chrono::system_clock::time_point TLS::Callbacks::tls_current_timestamp()
+   {
+   return std::chrono::system_clock::now();
+   }
+
 void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/, Connection_Side /*unused*/)
    {
    }
@@ -70,7 +75,7 @@ void TLS::Callbacks::tls_verify_cert_chain(
                          trusted_roots,
                          (usage == Usage_Type::TLS_SERVER_AUTH ? hostname : ""),
                          usage,
-                         std::chrono::system_clock::now(),
+                         tls_current_timestamp(),
                          tls_verify_cert_chain_ocsp_timeout(),
                          ocsp_responses);
 

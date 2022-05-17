@@ -33,6 +33,7 @@ enum
    };
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
+                                       Callbacks& cb,
                                        const Policy& policy)
    {
    std::vector<uint8_t> buf(32);
@@ -51,7 +52,7 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
    if(policy.include_time_in_hello_random() && (policy.allow_tls12() || policy.allow_dtls12()))
       {
       const uint32_t time32 = static_cast<uint32_t>(
-                                 std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+                                 std::chrono::system_clock::to_time_t(cb.tls_current_timestamp()));
 
       store_be(time32, buf.data());
       }
@@ -362,7 +363,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  const std::vector<std::string>& next_protocols)
    {
    m_legacy_version = client_settings.protocol_version();
-   m_random = make_hello_random(rng, policy);
+   m_random = make_hello_random(rng, cb, policy);
    m_suites = policy.ciphersuite_list(client_settings.protocol_version());
 
    if(!policy.acceptable_protocol_version(m_legacy_version))
@@ -425,7 +426,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  const std::vector<std::string>& next_protocols)
    {
    m_legacy_version = session.version();
-   m_random = make_hello_random(rng, policy);
+   m_random = make_hello_random(rng, cb, policy);
    m_session_id = session.session_id();
    m_suites = policy.ciphersuite_list(m_legacy_version);
 
@@ -492,7 +493,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    //    legacy_version field MUST be set to 0x0303, which is the version
    //    number for TLS 1.2.
    m_legacy_version = Protocol_Version::TLS_V12;
-   m_random = make_hello_random(rng, policy);
+   m_random = make_hello_random(rng, cb, policy);
    m_suites = policy.ciphersuite_list(Protocol_Version::TLS_V13);
 
    if(policy.allow_tls12())  // Note: DTLS 1.3 is NYI, hence dtls_12 is not checked

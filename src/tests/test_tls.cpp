@@ -52,7 +52,8 @@ class TLS_Session_Tests final : public Test
                                      std::vector<Botan::X509_Certificate>(),
                                      std::vector<uint8_t>(),
                                      Botan::TLS::Server_Information("server"),
-                                     0x0000);
+                                     0x0000,
+                                     std::chrono::system_clock::now());
 
          const std::string pem = session.PEM_encode();
          Botan::TLS::Session session_from_pem(pem);
@@ -96,7 +97,8 @@ class TLS_Session_Tests final : public Test
                                      std::vector<Botan::X509_Certificate>(),
                                      std::vector<uint8_t>(),
                                      Botan::TLS::Server_Information("server"),
-                                     0x0000);
+                                     0x0000,
+                                     std::chrono::system_clock::now());
          const std::string pem_with_unknown_ciphersuite = session2.PEM_encode();
 
          result.test_throws("unknown ciphersuite during session parsing",

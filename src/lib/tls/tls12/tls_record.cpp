@@ -9,6 +9,7 @@
 
 #include <botan/internal/tls_record.h>
 #include <botan/tls_ciphersuite.h>
+#include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_seq_numbers.h>
@@ -28,8 +29,10 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  bool our_side,
                                                  const Ciphersuite& suite,
                                                  const Session_Keys& keys,
+                                                 Callbacks& cb,
                                                  bool uses_encrypt_then_mac) :
-   m_start_time(std::chrono::system_clock::now())
+   m_callbacks(cb),
+   m_start_time(m_callbacks.tls_current_timestamp())
    {
    m_nonce_format = suite.nonce_format();
    m_nonce_bytes_from_record = suite.nonce_bytes_from_record(version);
@@ -173,6 +176,12 @@ Connection_Cipher_State::format_ad(uint64_t msg_sequence,
    ad[12] = get_byte<1>(msg_length);
 
    return ad;
+   }
+
+std::chrono::seconds Connection_Cipher_State::age() const
+   {
+   return std::chrono::duration_cast<std::chrono::seconds>(
+      m_callbacks.tls_current_timestamp() - m_start_time);
    }
 
 namespace {

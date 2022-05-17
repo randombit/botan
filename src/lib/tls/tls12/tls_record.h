@@ -21,6 +21,7 @@ namespace Botan {
 
 namespace TLS {
 
+class Callbacks;
 class Ciphersuite;
 class Session_Keys;
 
@@ -40,6 +41,7 @@ class Connection_Cipher_State final
                               bool is_our_side,
                               const Ciphersuite& suite,
                               const Session_Keys& keys,
+                              Callbacks& cb,
                               bool uses_encrypt_then_mac);
 
       AEAD_Mode& aead()
@@ -61,13 +63,11 @@ class Connection_Cipher_State final
 
       Nonce_Format nonce_format() const { return m_nonce_format; }
 
-      std::chrono::seconds age() const
-         {
-         return std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::system_clock::now() - m_start_time);
-         }
+      std::chrono::seconds age() const;
 
    private:
+      Callbacks& m_callbacks;
+
       std::chrono::system_clock::time_point m_start_time;
       std::unique_ptr<AEAD_Mode> m_aead;
 
