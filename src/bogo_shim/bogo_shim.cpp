@@ -192,6 +192,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Version downgrade received after Hello Retry", ":SECOND_SERVERHELLO_VERSION_MISMATCH:" },
          { "protected change cipher spec received", ":UNEXPECTED_RECORD:" },
          { "Server sent an unsupported extension", ":UNEXPECTED_EXTENSION:" },
+         { "Unsupported extension found in Server Hello", ":UNEXPECTED_EXTENSION:" },
          { "Unexpected extension received", ":UNEXPECTED_EXTENSION:" },
          { "server hello must contain key exchange information", ":MISSING_KEY_SHARE:"},
          { "Peer sent duplicated extensions", ":DUPLICATE_EXTENSION:" },

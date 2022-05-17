@@ -491,15 +491,6 @@ void sort_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side s
       }
    }
 
-void add_psk_exchange_modes(Botan::TLS::Extensions& exts)
-   {
-   // Currently we do not support PSK and session resumption in TLS 1.3.
-   // Hence, we add this extension to please the test vector. The actual
-   // resumption is not exercised in this test, though. Once PSK is
-   // implemented, this should be removed and added in Client_Hello_13.
-   exts.add(new PSK_Key_Exchange_Modes({PSK_Key_Exchange_Mode::PSK_DHE_KE}));
-   }
-
 void add_renegotiation_extension(Botan::TLS::Extensions& exts)
    {
    // Renegotiation is not possible in TLS 1.3. Nevertheless, RFC 8448 requires
@@ -568,7 +559,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
             // this obsoleted extension in a TLS 1.3 client.
             exts.add(new Botan::TLS::Session_Ticket());
 
-            add_psk_exchange_modes(exts);
             add_renegotiation_extension(exts);
             sort_extensions(exts, side);
             };
@@ -677,7 +667,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
             if(flights == 1)
                {
-               add_psk_exchange_modes(exts);
                add_renegotiation_extension(exts);
                }
 
@@ -786,7 +775,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          auto add_extensions_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side)
             {
             add_renegotiation_extension(exts);
-            add_psk_exchange_modes(exts);
             sort_extensions(exts, side);
             };
 

@@ -460,6 +460,49 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test
 
          Test::Result result("TLS 1.3 " + algo + " parsing");
 
+         if(algo == "client_hello")
+            {
+            try
+               {
+               const std::string extensions = vars.get_req_str("AdditionalData");
+
+               // TODO: When implementing a TLS 1.3 server we will likely switch to
+               //       a Client_Hello::parse() factory method that distinguishes
+               //       TLS 1.2 and TLS 1.3 client hellos while parsing and returns
+               //       a std::variant<> similarly to Server_Hello::parse().
+               //
+               // For now we perform a hard-coded distinction.
+               if(msg_type == "client_hello_13")
+                  {
+                  Botan::TLS::Client_Hello_13 ch(buffer);
+
+                  std::vector<uint8_t> exts_buffer;
+                  for(Botan::TLS::Handshake_Extension_Type const& type : ch.extensions().extension_types())
+                     {
+                     uint16_t u16type = static_cast<uint16_t>(type);
+                     exts_buffer.push_back(Botan::get_byte<0>(u16type));
+                     exts_buffer.push_back(Botan::get_byte<1>(u16type));
+                     }
+                  result.test_eq("Hello extensions", Botan::hex_encode(exts_buffer), extensions);
+
+                  std::vector<uint8_t> ciphersuites_buffer;
+                  for(const auto& cs : ch.ciphersuites())
+                     {
+                     ciphersuites_buffer.push_back(Botan::get_byte<0>(cs));
+                     ciphersuites_buffer.push_back(Botan::get_byte<1>(cs));
+                     }
+                  result.test_eq("Supported ciphersuites", ciphersuites_buffer, ciphersuite);
+                  }
+
+                  result.confirm("this is a positive test that should not have failed yet", is_positive_test);
+               }
+            catch (const std::exception &ex)
+               {
+               result.test_eq("correct error produced", ex.what(), exception);
+               result.confirm("negative test", !is_positive_test);
+               }
+            }
+
          if(algo == "server_hello")
             {
             const std::string extensions = vars.get_req_str("AdditionalData");
@@ -498,7 +541,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test
             catch(const std::exception &ex)
                {
                result.test_eq("correct error produced", ex.what(), exception);
-               result.require("negative test", !is_positive_test);
+               result.confirm("negative test", !is_positive_test);
                }
             }
 
