@@ -110,7 +110,7 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader, const Policy
       switch(type)
          {
          case NEW_SESSION_TICKET:
-            return New_Session_Ticket_13(msg);
+            return New_Session_Ticket_13(msg, peer_side);
          case KEY_UPDATE:
             return Key_Update(msg);
          default:
