@@ -263,7 +263,13 @@ std::vector<uint8_t> PSK::serialize(Connection_Side side) const
 void PSK::calculate_binders(const Transcript_Hash_State& truncated_transcript_hash)
    {
    BOTAN_ASSERT_NOMSG(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
-   throw Not_Implemented("Requires truncated transcript hashes: see next few commits");
+   for(auto& psk : std::get<std::vector<Client_PSK>>(m_impl->psk))
+      {
+      auto tth = truncated_transcript_hash.clone();
+      tth.set_algorithm(psk.hash_algorithm);
+      BOTAN_ASSERT_NONNULL(psk.cipher_state);
+      psk.binder = psk.cipher_state->psk_binder_mac(tth.truncated());
+      }
    }
 
 }  // Botan::TLS
