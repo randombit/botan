@@ -11,6 +11,8 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/loadstor.h>
 
+#include <botan/tls_exceptn.h>
+
 namespace Botan::TLS {
 
 New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io,
@@ -51,14 +53,45 @@ std::vector<uint8_t> New_Session_Ticket_12::serialize() const
 
 #if defined (BOTAN_HAS_TLS_13)
 
-New_Session_Ticket_13::New_Session_Ticket_13(const std::vector<uint8_t>&)
+New_Session_Ticket_13::New_Session_Ticket_13(const std::vector<uint8_t>& buf,
+                                             Connection_Side from)
    {
-   // TODO: Implement
+   TLS_Data_Reader reader("New_Session_Ticket_13", buf);
+
+   m_ticket_lifetime_hint = reader.get_uint32_t();
+
+   // RFC 8446 4.6.1
+   //    Servers MUST NOT use any value [of ticket_lifetime] greater than 604800
+   //    seconds (7 days).
+   if(m_ticket_lifetime_hint > 604800)
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Received a session ticket with lifetime longer than one week.");
+      }
+
+   m_ticket_age_add = reader.get_uint32_t();
+   m_ticket_nonce = reader.get_tls_length_value(1);
+   m_ticket = reader.get_tls_length_value(2);
+
+   m_extensions.deserialize(reader, from, type());
+
+   reader.assert_done();
+   }
+
+std::optional<uint32_t> New_Session_Ticket_13::early_data_byte_limit() const
+   {
+   if(!m_extensions.has<EarlyDataIndication>())
+      return std::nullopt;
+
+   const auto ext = m_extensions.get<EarlyDataIndication>();
+   BOTAN_ASSERT_NOMSG(ext->max_early_data_size().has_value());
+   return ext->max_early_data_size().value();
    }
 
 std::vector<uint8_t> New_Session_Ticket_13::serialize() const
    {
-   return {};
+   // TODO: might be needed once TLS 1.3 server is implemented
+   throw Not_Implemented("serializing New_Session_Ticket_13 is NYI");
    }
 
 #endif

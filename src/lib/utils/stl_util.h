@@ -141,6 +141,12 @@ constexpr bool holds_any_of(const std::variant<Ts...>& v) noexcept {
     return (std::holds_alternative<Alts>(v) || ...);
 }
 
+// This is a helper utility to emulate pattern matching with std::visit.
+// See https://en.cppreference.com/w/cpp/utility/variant/visit for more info.
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+// explicit deduction guide (not needed as of C++20)
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
 }
 
 #endif

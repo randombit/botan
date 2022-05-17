@@ -866,13 +866,35 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
    public:
       Handshake_Type type() const override { return NEW_SESSION_TICKET; }
 
-      explicit New_Session_Ticket_13(const std::vector<uint8_t>& buf);
+      New_Session_Ticket_13(const std::vector<uint8_t>& buf,
+                            Connection_Side from);
 
       std::vector<uint8_t> serialize() const override;
 
-   private:
+      const std::vector<uint8_t>& ticket() const { return m_ticket; }
+      const std::vector<uint8_t>& nonce() const { return m_ticket_nonce; }
+      uint32_t ticket_age_add() const { return m_ticket_age_add; }
+      uint32_t lifetime_hint() const { return m_ticket_lifetime_hint; }
 
-      // TODO: implement this message fully
+      /**
+       * @return  the number of bytes allowed for early data or std::nullopt
+       *          when early data is not allowed at all
+       */
+      std::optional<uint32_t> early_data_byte_limit() const;
+
+   private:
+      // RFC 8446 4.6.1
+      //    Clients MUST NOT cache tickets for longer than 7 days, regardless of
+      //    the ticket_lifetime, and MAY delete tickets earlier based on local
+      //    policy.  A server MAY treat a ticket as valid for a shorter period
+      //    of time than what is stated in the ticket_lifetime.
+      //
+      // ... hence we call it 'lifetime hint'.
+      uint32_t m_ticket_lifetime_hint;
+      uint32_t m_ticket_age_add;
+      std::vector<uint8_t> m_ticket_nonce;
+      std::vector<uint8_t> m_ticket;
+      Extensions m_extensions;
    };
 
 #endif
