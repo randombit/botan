@@ -35,7 +35,8 @@ class Ciphersuite;
  * each facilitate certain cryptographic functionality:
  *
  * * init_with_psk()
- *   not yet implemented
+ *   sets up the cipher state with a pre-shared key (out of band or via session
+ *   ticket). will allow sending early data in the future
  *
  * * init_with_server_hello() / advance_with_server_hello()
  *   allows encrypting and decrypting handshake traffic, as well as producing
@@ -59,7 +60,23 @@ class Ciphersuite;
 class BOTAN_TEST_API Cipher_State
    {
    public:
+      enum class PSK_Type
+         {
+         RESUMPTION,
+         EXTERNAL
+         };
+
+   public:
       ~Cipher_State();
+
+      /**
+       * Construct a Cipher_State from a Pre-Shared-Key.
+       */
+      static std::unique_ptr<Cipher_State> init_with_psk(
+         const Connection_Side side,
+         const PSK_Type type,
+         secure_vector<uint8_t>&& psk,
+         const Ciphersuite& cipher);
 
       /**
        * Construct a Cipher_State after receiving a server hello message.
@@ -69,6 +86,19 @@ class BOTAN_TEST_API Cipher_State
          secure_vector<uint8_t>&& shared_secret,
          const Ciphersuite& cipher,
          const Transcript_Hash& transcript_hash);
+
+      /**
+       * Transition internal secrets/keys for transporting early application data.
+       * Note that this state transition is legal only for handshakes using PSK.
+       */
+      void advance_with_client_hello(const Transcript_Hash& transcript_hash);
+
+      /**
+       * Transition internal secrets/keys for transporting handshake data.
+       */
+      void advance_with_server_hello(const Ciphersuite& cipher,
+                                     secure_vector<uint8_t>&& shared_secret,
+                                     const Transcript_Hash& transcript_hash);
 
       /**
        * Transition internal secrets/keys for transporting application data.
@@ -116,6 +146,13 @@ class BOTAN_TEST_API Cipher_State
       size_t minimum_decryption_input_length() const;
 
       /**
+       * Calculates the MAC for a PSK binder value in Client Hellos. Note that
+       * the transcript hash passed into this method is computed from a partial
+       * Client Hello (RFC 8446 4.2.11.2)
+       */
+      std::vector<uint8_t> psk_binder_mac(const Transcript_Hash& transcript_hash_with_truncated_client_hello);
+
+      /**
        * Calculate the MAC for a TLS "Finished" handshake message (RFC 8446 4.4.4)
        */
       std::vector<uint8_t> finished_mac(const Transcript_Hash& transcript_hash) const;
@@ -156,7 +193,9 @@ class BOTAN_TEST_API Cipher_State
        */
       bool can_export_keys() const
          {
-         return (m_state == State::ApplicationTraffic || m_state == State::Completed) &&
+         return (m_state == State::EarlyTraffic       ||
+                 m_state == State::ApplicationTraffic ||
+                 m_state == State::Completed) &&
                 !m_exporter_master_secret.empty();
          }
 
@@ -165,9 +204,20 @@ class BOTAN_TEST_API Cipher_State
        */
       bool can_encrypt_application_traffic() const
          {
+         // TODO: when implementing early traffic (0-RTT) this will likely need
+         //       to allow `State::EarlyTraffic`.
          return m_state != State::Uninitialized && m_state != State::HandshakeTraffic
                 && !m_write_key.empty() && !m_write_iv.empty();
          }
+
+      /**
+       * @returns  true if the selected cipher primitives are compatible with
+       *           the \p cipher suite.
+       *
+       * Note that cipher suites are considered "compatible" as long as the
+       * already selected cipher primitives in this cipher state are compatible.
+       */
+      bool is_compatible_with(const Ciphersuite& cipher) const;
 
       /**
        * Updates the key material used for decrypting data
@@ -199,15 +249,13 @@ class BOTAN_TEST_API Cipher_State
 
    private:
       /**
-       * @param cipher  the negotiated cipher suite
-       * @param whoami  whether we play the SERVER or CLIENT
+       * @param hash_function  the negotiated hash function to be used
+       * @param whoami         whether we play the SERVER or CLIENT
        */
-      Cipher_State(Connection_Side whoami, const Ciphersuite& cipher);
+      Cipher_State(Connection_Side whoami, const std::string& hash_function);
 
+      void advance_with_psk(PSK_Type type, secure_vector<uint8_t>&& psk);
       void advance_without_psk();
-
-      void advance_with_server_hello(secure_vector<uint8_t>&& shared_secret,
-                                     const Transcript_Hash& transcript_hash);
 
       std::vector<uint8_t> current_nonce(const uint64_t seq_no,
                                          const secure_vector<uint8_t>& iv) const;
@@ -245,6 +293,7 @@ class BOTAN_TEST_API Cipher_State
       enum class State
          {
          Uninitialized,
+         PskBinder,
          EarlyTraffic,
          HandshakeTraffic,
          ApplicationTraffic,
@@ -279,6 +328,9 @@ class BOTAN_TEST_API Cipher_State
       secure_vector<uint8_t> m_peer_finished_key;
       secure_vector<uint8_t> m_exporter_master_secret;
       secure_vector<uint8_t> m_resumption_master_secret;
+
+      secure_vector<uint8_t> m_early_secret;
+      secure_vector<uint8_t> m_binder_key;
    };
 
 }
