@@ -55,6 +55,15 @@ std::string TLS::Callbacks::tls_decode_group_param(Group_Params group_param)
    return group_param_to_string(group_param);
    }
 
+
+bool TLS::Callbacks::tls_session_ticket_received(const Session& session)
+   {
+   // RFC 8446 4.6.1
+   //    [A ticket_lifetime] of zero indicates that the ticket should be discarded
+   //    immediately.
+   return session.lifetime_hint().count() > 0;
+   }
+
 void TLS::Callbacks::tls_verify_cert_chain(
    const std::vector<X509_Certificate>& cert_chain,
    const std::vector<std::optional<OCSP::Response>>& ocsp_responses,

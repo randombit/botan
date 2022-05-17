@@ -282,7 +282,7 @@ class Test
                {
                if(!confirm(what, expr, expected))
                   {
-                  throw Test_Aborted("test aborted, because required condition was not met");
+                  throw Test_Aborted("test aborted, because required condition was not met: " + what);
                   }
                }
 
