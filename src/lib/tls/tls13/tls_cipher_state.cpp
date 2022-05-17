@@ -16,6 +16,10 @@
  *                                     |
  *                                     +-----> Derive-Secret(., "ext binder" | "res binder", "")
  *                                     |                     = binder_key
+ *                              STATE PSK BINDER
+ * This state is reached by constructing the Cipher_State using init_with_psk().
+ * The state can then be further advanced using advance_with_client_hello() once
+ * the initial Client Hello is fully generated.
  *                                     |
  *                                     +-----> Derive-Secret(., "c e traffic", ClientHello)
  *                                     |                     = client_early_traffic_secret
@@ -27,7 +31,7 @@
  *                                     |
  *                                     *
  *                             STATE EARLY TRAFFIC
- * This state is reached by constructing Cipher_State using init_with_psk() (not yet implemented).
+ * This state is reached by constructing Cipher_State using init_with_psk().
  * The state can then be further advanced using advance_with_server_hello().
  *                                     *
  *                                     |
@@ -113,10 +117,41 @@ std::unique_ptr<Cipher_State> Cipher_State::init_with_server_hello(
    const Ciphersuite& cipher,
    const Transcript_Hash& transcript_hash)
    {
-   auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, cipher));
+   auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, cipher.prf_algo()));
    cs->advance_without_psk();
-   cs->advance_with_server_hello(std::move(shared_secret), transcript_hash);
+   cs->advance_with_server_hello(cipher, std::move(shared_secret), transcript_hash);
    return cs;
+   }
+
+std::unique_ptr<Cipher_State> Cipher_State::init_with_psk(
+         const Connection_Side side,
+         const Cipher_State::PSK_Type type,
+         secure_vector<uint8_t>&& psk,
+         const Ciphersuite& cipher)
+   {
+   auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, cipher.prf_algo()));
+   cs->advance_with_psk(type, std::move(psk));
+   return cs;
+   }
+
+void Cipher_State::advance_with_client_hello(const Transcript_Hash &transcript_hash)
+   {
+   BOTAN_ASSERT_NOMSG(m_state == State::PskBinder);
+
+   zap(m_binder_key);
+
+   // TODO: Currently 0-RTT is not yet implemented, hence we don't derive the
+   //       early traffic secret for now.
+   //
+   // const auto client_early_traffic_secret = derive_secret(m_early_secret, "c e traffic", transcript_hash);
+   // derive_write_traffic_key(client_early_traffic_secret);
+
+   m_exporter_master_secret = derive_secret(m_early_secret, "e exp master", transcript_hash);
+
+   m_salt = derive_secret(m_early_secret, "derived", empty_hash());
+   zap(m_early_secret);
+
+   m_state = State::EarlyTraffic;
    }
 
 void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcript_hash)
@@ -183,6 +218,8 @@ std::vector<uint8_t> Cipher_State::current_nonce(const uint64_t seq_no, const se
 
 uint64_t Cipher_State::encrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& fragment)
    {
+   BOTAN_ASSERT_NONNULL(m_encrypt);
+
    m_encrypt->set_key(m_write_key);
    m_encrypt->set_associated_data_vec(header);
    m_encrypt->start(current_nonce(m_write_seq_no, m_write_iv));
@@ -194,6 +231,7 @@ uint64_t Cipher_State::encrypt_record_fragment(const std::vector<uint8_t>& heade
 uint64_t Cipher_State::decrypt_record_fragment(const std::vector<uint8_t>& header,
       secure_vector<uint8_t>& encrypted_fragment)
    {
+   BOTAN_ASSERT_NONNULL(m_decrypt);
    BOTAN_ARG_CHECK(encrypted_fragment.size() >= m_decrypt->minimum_final_size(),
          "fragment too short to decrypt");
 
@@ -208,17 +246,50 @@ uint64_t Cipher_State::decrypt_record_fragment(const std::vector<uint8_t>& heade
 
 size_t Cipher_State::encrypt_output_length(const size_t input_length) const
    {
+   BOTAN_ASSERT_NONNULL(m_encrypt);
    return m_encrypt->output_length(input_length);
    }
 
 size_t Cipher_State::decrypt_output_length(const size_t input_length) const
    {
+   BOTAN_ASSERT_NONNULL(m_decrypt);
    return m_decrypt->output_length(input_length);
    }
 
 size_t Cipher_State::minimum_decryption_input_length() const
    {
+   BOTAN_ASSERT_NONNULL(m_decrypt);
    return m_decrypt->minimum_final_size();
+   }
+
+bool Cipher_State::is_compatible_with(const Ciphersuite& cipher) const
+   {
+   if(!cipher.usable_in_version(Protocol_Version::TLS_V13))
+      return false;
+
+   if(m_hash && m_hash->name() != cipher.prf_algo())
+      return false;
+
+   BOTAN_ASSERT_NOMSG((m_encrypt == nullptr) == (m_decrypt == nullptr));
+   // TODO: Find a better way to check that the instantiated cipher algorithm
+   //       is compatible with the one required by the cipher suite.
+   // AEAD_Mode::create() sets defaults the tag length to 16 which is then
+   // reported via AEAD_Mode::name() and hinders the trivial string comparison.
+   if(m_encrypt && m_encrypt->name() != cipher.cipher_algo() &&
+                   m_encrypt->name() != cipher.cipher_algo() + "(16)")
+      return false;
+
+   return true;
+   }
+
+std::vector<uint8_t> Cipher_State::psk_binder_mac(const Transcript_Hash& transcript_hash_with_truncated_client_hello)
+   {
+   BOTAN_ASSERT_NOMSG(m_state == State::PskBinder);
+
+   auto hmac = HMAC(m_hash->new_object());
+   hmac.set_key(m_binder_key);
+   hmac.update(transcript_hash_with_truncated_client_hello);
+   return hmac.final_stdvec();
    }
 
 std::vector<uint8_t> Cipher_State::finished_mac(const Transcript_Hash& transcript_hash) const
@@ -265,21 +336,19 @@ secure_vector<uint8_t> Cipher_State::export_key(const std::string& label,
 
 namespace {
 
-std::unique_ptr<MessageAuthenticationCode> create_hmac(const Ciphersuite& cipher)
+std::unique_ptr<MessageAuthenticationCode> create_hmac(const std::string& hash)
    {
-   return std::make_unique<HMAC>(HashFunction::create_or_throw(cipher.prf_algo()));
+   return std::make_unique<HMAC>(HashFunction::create_or_throw(hash));
    }
 
 }
 
-Cipher_State::Cipher_State(Connection_Side whoami, const Ciphersuite& cipher)
+Cipher_State::Cipher_State(Connection_Side whoami, const std::string& hash_function)
    : m_state(State::Uninitialized)
    , m_connection_side(whoami)
-   , m_encrypt(AEAD_Mode::create(cipher.cipher_algo(), ENCRYPTION))
-   , m_decrypt(AEAD_Mode::create(cipher.cipher_algo(), DECRYPTION))
-   , m_extract(std::make_unique<HKDF_Extract>(create_hmac(cipher)))
-   , m_expand(std::make_unique<HKDF_Expand>(create_hmac(cipher)))
-   , m_hash(HashFunction::create_or_throw(cipher.prf_algo()))
+   , m_extract(std::make_unique<HKDF_Extract>(create_hmac(hash_function)))
+   , m_expand(std::make_unique<HKDF_Expand>(create_hmac(hash_function)))
+   , m_hash(HashFunction::create_or_throw(hash_function))
    , m_salt(m_hash->output_length(), 0x00)
    , m_write_seq_no(0)
    , m_read_seq_no(0) {}
@@ -290,16 +359,49 @@ void Cipher_State::advance_without_psk()
    {
    BOTAN_ASSERT_NOMSG(m_state == State::Uninitialized);
 
+   // We are not using `m_early_secret` here because the secret won't be needed
+   // in any further state advancement methods.
    const auto early_secret = hkdf_extract(secure_vector<uint8_t>(m_hash->output_length(), 0x00));
    m_salt = derive_secret(early_secret, "derived", empty_hash());
 
+   // Without PSK we skip the `PskBinder` state and go right to `EarlyTraffic`.
    m_state = State::EarlyTraffic;
    }
 
-void Cipher_State::advance_with_server_hello(secure_vector<uint8_t>&& shared_secret,
+void Cipher_State::advance_with_psk(PSK_Type type, secure_vector<uint8_t>&& psk)
+   {
+   BOTAN_ASSERT_NOMSG(m_state == State::Uninitialized);
+
+   m_early_secret = hkdf_extract(std::move(psk));
+
+   const char* binder_label =
+      (type == PSK_Type::RESUMPTION)
+         ? "res binder"
+         : "ext binder";
+
+   // RFC 8446 4.2.11.2
+   //    The PskBinderEntry is computed in the same way as the Finished message
+   //    [...] but with the BaseKey being the binder_key derived via the key
+   //    schedule from the corresponding PSK which is being offered.
+   //
+   // Hence we are doing the binder key derivation and expansion in one go.
+   const auto binder_key = derive_secret(m_early_secret, binder_label, empty_hash());
+   m_binder_key = hkdf_expand_label(binder_key, "finished", {}, m_hash->output_length());
+
+   m_state = State::PskBinder;
+   }
+
+void Cipher_State::advance_with_server_hello(const Ciphersuite& cipher,
+      secure_vector<uint8_t>&& shared_secret,
       const Transcript_Hash& transcript_hash)
    {
    BOTAN_ASSERT_NOMSG(m_state == State::EarlyTraffic);
+   BOTAN_ASSERT_NOMSG(!m_encrypt);
+   BOTAN_ASSERT_NOMSG(!m_decrypt);
+   BOTAN_STATE_CHECK(is_compatible_with(cipher));
+
+   m_encrypt = AEAD_Mode::create_or_throw(cipher.cipher_algo(), ENCRYPTION);
+   m_decrypt = AEAD_Mode::create_or_throw(cipher.cipher_algo(), DECRYPTION);
 
    const auto handshake_secret = hkdf_extract(std::move(shared_secret));
 
@@ -325,6 +427,8 @@ void Cipher_State::advance_with_server_hello(secure_vector<uint8_t>&& shared_sec
 void Cipher_State::derive_write_traffic_key(const secure_vector<uint8_t>& traffic_secret,
       const bool handshake_traffic_secret)
    {
+   BOTAN_ASSERT_NONNULL(m_encrypt);
+
    m_write_key    = hkdf_expand_label(traffic_secret, "key", {}, m_encrypt->minimum_keylength());
    m_write_iv     = hkdf_expand_label(traffic_secret, "iv", {}, NONCE_LENGTH);
    m_write_seq_no = 0;
@@ -340,6 +444,8 @@ void Cipher_State::derive_write_traffic_key(const secure_vector<uint8_t>& traffi
 void Cipher_State::derive_read_traffic_key(const secure_vector<uint8_t>& traffic_secret,
       const bool handshake_traffic_secret)
    {
+   BOTAN_ASSERT_NONNULL(m_encrypt);
+
    m_read_key    = hkdf_expand_label(traffic_secret, "key", {}, m_encrypt->minimum_keylength());
    m_read_iv     = hkdf_expand_label(traffic_secret, "iv", {}, NONCE_LENGTH);
    m_read_seq_no = 0;
