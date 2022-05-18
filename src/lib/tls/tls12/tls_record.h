@@ -21,6 +21,7 @@ namespace Botan {
 
 namespace TLS {
 
+class Callbacks;
 class Ciphersuite;
 class Session_Keys;
 
@@ -60,12 +61,6 @@ class Connection_Cipher_State final
       size_t nonce_bytes_from_record() const { return m_nonce_bytes_from_record; }
 
       Nonce_Format nonce_format() const { return m_nonce_format; }
-
-      std::chrono::seconds age() const
-         {
-         return std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::system_clock::now() - m_start_time);
-         }
 
    private:
       std::chrono::system_clock::time_point m_start_time;

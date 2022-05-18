@@ -47,6 +47,7 @@ class Callbacks;
 class Cipher_State;
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
+                                       Callbacks& cb,
                                        const Policy& policy);
 
 /**

@@ -9,6 +9,7 @@
 
 #include <botan/internal/tls_record.h>
 #include <botan/tls_ciphersuite.h>
+#include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_seq_numbers.h>
@@ -28,8 +29,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  bool our_side,
                                                  const Ciphersuite& suite,
                                                  const Session_Keys& keys,
-                                                 bool uses_encrypt_then_mac) :
-   m_start_time(std::chrono::system_clock::now())
+                                                 bool uses_encrypt_then_mac)
    {
    m_nonce_format = suite.nonce_format();
    m_nonce_bytes_from_record = suite.nonce_bytes_from_record(version);
