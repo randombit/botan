@@ -27,8 +27,9 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
                  const std::vector<X509_Certificate>& certs,
                  const std::vector<uint8_t>& ticket,
                  const Server_Information& server_info,
-                 uint16_t srtp_profile) :
-   m_start_time(std::chrono::system_clock::now()),
+                 uint16_t srtp_profile,
+                 std::chrono::system_clock::time_point current_timestamp) :
+   m_start_time(current_timestamp),
    m_identifier(session_identifier),
    m_session_ticket(ticket),
    m_master_secret(master_secret),
@@ -186,12 +187,6 @@ Ciphersuite Session::ciphersuite() const
                            std::to_string(m_ciphersuite));
       }
    return suite.value();
-   }
-
-std::chrono::seconds Session::session_age() const
-   {
-   return std::chrono::duration_cast<std::chrono::seconds>(
-      std::chrono::system_clock::now() - m_start_time);
    }
 
 namespace {

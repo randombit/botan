@@ -15,6 +15,7 @@
 #include <botan/pubkey.h>
 #include <botan/ocsp.h>
 #include <optional>
+#include <chrono>
 
 namespace Botan {
 
@@ -356,6 +357,17 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * It is only called if the dtls-cookie-secret PSK is also defined.
        */
        virtual std::string tls_peer_network_identity();
+
+       /**
+       * Optional callback: return a custom time stamp value
+       *
+       * This allows the library user to specify a custom "now" timestamp when
+       * needed. By default it will use the current system clock time.
+       *
+       * Note that typical usages will not need to override this callback but it
+       * is useful for testing purposes to allow for deterministic test outcomes.
+       */
+       virtual std::chrono::system_clock::time_point tls_current_timestamp();
 
        /**
        * Optional callback: error logging. (not currently called)

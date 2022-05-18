@@ -711,7 +711,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       const std::vector<uint8_t>& session_ticket = state.session_ticket();
 
       if(session_id.empty() && !session_ticket.empty())
-         session_id = make_hello_random(rng(), policy());
+         session_id = make_hello_random(rng(), callbacks(), policy());
 
       Session session_info(
          session_id,
@@ -724,7 +724,8 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          get_peer_cert_chain(state),
          session_ticket,
          m_info,
-         state.server_hello()->srtp_profile()
+         state.server_hello()->srtp_profile(),
+         callbacks().tls_current_timestamp()
          );
 
       const bool should_save = save_session(session_info);

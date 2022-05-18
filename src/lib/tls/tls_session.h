@@ -54,7 +54,8 @@ class BOTAN_PUBLIC_API(2,0) Session final
               const std::vector<X509_Certificate>& peer_certs,
               const std::vector<uint8_t>& session_ticket,
               const Server_Information& server_info,
-              uint16_t srtp_profile);
+              uint16_t srtp_profile,
+              std::chrono::system_clock::time_point current_timestamp);
 
       /**
       * Load a session from DER representation (created by DER_encode)
@@ -160,11 +161,6 @@ class BOTAN_PUBLIC_API(2,0) Session final
       * Get the wall clock time this session began
       */
       std::chrono::system_clock::time_point start_time() const { return m_start_time; }
-
-      /**
-      * Return how long this session has existed (in seconds)
-      */
-      std::chrono::seconds session_age() const;
 
       /**
       * Return the session ticket the server gave us

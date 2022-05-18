@@ -294,7 +294,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                trusted_roots,
                hostname,
                usage,
-               std::chrono::system_clock::now(),
+               tls_current_timestamp(),
                ocsp_timeout,
                ocsp);
 
