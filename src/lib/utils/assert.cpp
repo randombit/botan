@@ -6,7 +6,13 @@
 */
 
 #include <botan/exceptn.h>
+#include <botan/build.h>
 #include <sstream>
+
+#if defined(BOTAN_TERMINATE_ON_ASSERTS)
+  #include <cstdlib>
+  #include <iostream>
+#endif
 
 namespace Botan {
 
@@ -48,7 +54,12 @@ void assertion_failure(const char* expr_str,
 
    format << "@" << file << ":" << line;
 
+#if defined(BOTAN_TERMINATE_ON_ASSERTS)
+   std::cerr << format.str() << '\n';
+   std::abort();
+#else
    throw Internal_Error(format.str());
+#endif
    }
 
 }
