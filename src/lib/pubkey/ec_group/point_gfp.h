@@ -195,7 +195,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       */
       void add(const PointGFp& other, std::vector<BigInt>& workspace)
          {
-         BOTAN_ASSERT_NOMSG(m_curve == other.m_curve);
+         BOTAN_ARG_CHECK(m_curve == other.m_curve, "cannot add points on different curves");
 
          const size_t p_words = m_curve.get_p_words();
 
