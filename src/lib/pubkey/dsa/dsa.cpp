@@ -23,10 +23,21 @@ namespace Botan {
 /*
 * DSA_PublicKey Constructor
 */
+
+DSA_PublicKey::DSA_PublicKey(const AlgorithmIdentifier& alg_id,
+                             const std::vector<uint8_t>& key_bits) :
+   DL_Scheme_PublicKey(alg_id, key_bits, DL_Group_Format::ANSI_X9_57)
+   {
+   BOTAN_ARG_CHECK(group_q().bytes() > 0, "Q parameter must be set for DSA");
+   }
+
+
 DSA_PublicKey::DSA_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    m_group = grp;
    m_y = y1;
+
+   BOTAN_ARG_CHECK(grp.q_bytes() > 0, "Q parameter must be set for DSA");
    }
 
 /*
