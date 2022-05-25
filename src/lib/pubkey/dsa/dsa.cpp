@@ -52,7 +52,10 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
    if(x_arg == 0)
       m_x = BigInt::random_integer(rng, 2, group_q());
    else
+      {
+      BOTAN_ARG_CHECK(m_x.bits() <= m_group.q_bits(), "x must not be larger than q");
       m_x = x_arg;
+      }
 
    m_y = m_group.power_g_p(m_x, m_group.q_bits());
    }
@@ -61,6 +64,7 @@ DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                                const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group_Format::ANSI_X9_57)
    {
+   BOTAN_ARG_CHECK(m_x.bits() <= m_group.q_bits(), "x must not be larger than q");
    m_y = m_group.power_g_p(m_x, m_group.q_bits());
    }
 
