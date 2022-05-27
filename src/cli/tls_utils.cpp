@@ -188,7 +188,7 @@ class TLS_Client_Hello_Reader final : public Command
                   }
                catch(...)
                   {
-                  oss << "(" << std::hex << scheme.wire_code() << ") ";
+                  oss << "(" << std::hex << static_cast<unsigned int>(scheme.wire_code()) << ") ";
                   }
                }
             oss << "\n";
