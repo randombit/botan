@@ -299,6 +299,7 @@ void Channel_Impl_13::update_traffic_keys(bool request_peer_update)
    {
    BOTAN_STATE_CHECK(!is_downgrading());
    BOTAN_STATE_CHECK(handshake_finished());
+   BOTAN_ASSERT_NONNULL(m_cipher_state);
    send_post_handshake_message(Key_Update(request_peer_update));
    m_cipher_state->update_write_keys();
    }
@@ -326,7 +327,8 @@ void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record)
    if(is_close_notify_alert(alert))
       {
       m_can_read = false;
-      m_cipher_state->clear_read_keys();
+      if(m_cipher_state)
+         m_cipher_state->clear_read_keys();
       m_record_layer.clear_read_buffer();
       }
 
