@@ -1,0 +1,17 @@
+allow_tls10 = false
+allow_tls11 = false
+allow_tls12 = false
+allow_tls13 = true
+allow_dtls10 = false
+allow_dtls12 = false
+ciphers = ChaCha20Poly1305 AES-256/GCM
+macs = AEAD
+signature_hashes = SHA-512 SHA-384 SHA-256
+signature_methods = ECDSA RSA
+key_exchange_groups = x25519/Kyber-512-r3 secp384r1/Kyber-768-r3
+key_exchange_groups_to_offer = x25519/Kyber-512-r3
+hide_unknown_users = false
+session_ticket_lifetime = 86400
+minimum_ecdh_group_size = 255
+minimum_rsa_bits = 2048
+minimum_signature_strength = 110
