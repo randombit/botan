@@ -372,7 +372,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
    m_transcript_hash = Transcript_Hash_State::recreate_after_hello_retry_request(cipher.value().prf_algo(),
                        m_transcript_hash);
 
-   ch.retry(hrr, m_transcript_hash, callbacks(), rng());
+   ch.retry(hrr, m_transcript_hash, policy(), callbacks(), rng());
 
    callbacks().tls_examine_extensions(hrr.extensions(), SERVER, Handshake_Type::HELLO_RETRY_REQUEST);
 

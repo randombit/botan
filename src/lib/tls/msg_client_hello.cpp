@@ -710,6 +710,7 @@ Client_Hello_13::parse(const std::vector<uint8_t>& buf)
 
 void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
                             const Transcript_Hash_State& transcript_hash_state,
+                            const Policy& policy,
                             Callbacks& cb,
                             RandomNumberGenerator& rng)
    {
@@ -720,7 +721,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    const auto& supported_groups = m_data->extensions.get<Supported_Groups>()->groups();
 
    if(hrr.extensions().has<Key_Share>())
-      m_data->extensions.get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, cb, rng);
+      m_data->extensions.get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, policy, cb, rng);
 
    // RFC 8446 4.2.2
    //    When sending the new ClientHello, the client MUST copy

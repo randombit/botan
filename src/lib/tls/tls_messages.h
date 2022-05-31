@@ -227,6 +227,7 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
 
       void retry(const Hello_Retry_Request& hrr,
                  const Transcript_Hash_State& transcript_hash_state,
+                 const Policy& policy,
                  Callbacks& cb,
                  RandomNumberGenerator& rng);
 

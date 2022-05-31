@@ -700,7 +700,11 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension
        *
        * This will create new Key_Share_Entries and should only be called on a ClientHello Key_Share with a HelloRetryRequest Key_Share.
        */
-      void retry_offer(const Key_Share& retry_request_keyshare, const std::vector<Named_Group>& supported_groups, Callbacks& cb, RandomNumberGenerator& rng);
+      void retry_offer(const Key_Share& retry_request_keyshare,
+                       const std::vector<Named_Group>& supported_groups,
+                       const Policy& policy,
+                       Callbacks& cb,
+                       RandomNumberGenerator& rng);
 
       /**
        * Delete all private keys that might be contained in Key_Share_Entries in this extension.
