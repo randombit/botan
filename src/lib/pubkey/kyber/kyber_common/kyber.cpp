@@ -1176,19 +1176,21 @@ class Kyber_KEM_Cryptor
          }
    };
 
-class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption, protected Kyber_KEM_Cryptor
+class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
+                                  protected Kyber_KEM_Cryptor
    {
    public:
-      Kyber_KEM_Encryptor(const Kyber_PublicKey& key) : Kyber_KEM_Cryptor(key.m_public->mode()), m_key(key)
+      Kyber_KEM_Encryptor(const Kyber_PublicKey& key, const std::string& kdf)
+         : KEM_Encryption_with_KDF(kdf)
+         , Kyber_KEM_Cryptor(key.m_public->mode())
+         , m_key(key)
          {
          }
 
-      void kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key, secure_vector<uint8_t>& out_shared_key,
-                       size_t desired_shared_key_len, RandomNumberGenerator& rng, const uint8_t salt[],
-                       size_t salt_len) override
+      void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
+                           secure_vector<uint8_t>& out_shared_key,
+                           RandomNumberGenerator& rng) override
          {
-         BOTAN_UNUSED(desired_shared_key_len, salt, salt_len);
-
          // naming from kyber spec
          auto H = m_mode.H();
          auto G = m_mode.G();
@@ -1217,18 +1219,19 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption, protected Kyber
       const Kyber_PublicKey& m_key;
    };
 
-class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption, protected Kyber_KEM_Cryptor
+class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
+                                  protected Kyber_KEM_Cryptor
    {
    public:
-      Kyber_KEM_Decryptor(const Kyber_PrivateKey& key) : Kyber_KEM_Cryptor(key.m_private->mode()), m_key(key)
+      Kyber_KEM_Decryptor(const Kyber_PrivateKey& key, const std::string& kdf)
+         : PK_Ops::KEM_Decryption_with_KDF(kdf)
+         , Kyber_KEM_Cryptor(key.m_private->mode())
+         , m_key(key)
          {
          }
 
-      secure_vector<uint8_t> kem_decrypt(const uint8_t encap_key[], size_t len_encap_key, size_t desired_shared_key_len,
-                                         const uint8_t salt[], size_t salt_len) override
+      secure_vector<uint8_t> raw_kem_decrypt(const uint8_t encap_key[], size_t len_encap_key) override
          {
-         BOTAN_UNUSED(desired_shared_key_len, salt, salt_len);
-
          // naming from kyber spec
          auto H = m_mode.H();
          auto G = m_mode.G();
@@ -1513,16 +1516,20 @@ std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_o
       const std::string& params,
       const std::string& provider) const
    {
-   BOTAN_UNUSED(rng, params, provider);
-   return std::unique_ptr<PK_Ops::KEM_Encryption>(new Kyber_KEM_Encryptor(*this));
+   BOTAN_UNUSED(rng);
+   if(provider.empty() || provider == "base")
+      return std::make_unique<Kyber_KEM_Encryptor>(*this, params);
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
       const std::string& params,
       const std::string& provider) const
    {
-   BOTAN_UNUSED(rng, params, provider);
-   return std::unique_ptr<PK_Ops::KEM_Decryption>(new Kyber_KEM_Decryptor(*this));
+   BOTAN_UNUSED(rng);
+   if(provider.empty() || provider == "base")
+      return std::make_unique<Kyber_KEM_Decryptor>(*this, params);
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 } // namespace Botan
