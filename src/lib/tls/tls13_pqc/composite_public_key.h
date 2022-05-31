@@ -52,7 +52,7 @@ class Composite_PublicKey : public virtual Public_Key
                                   const std::string& provider = "base") const override;
 
    protected:
-      Composite_PublicKey(Group_Params groups) : m_groups(groups) {};
+      Composite_PublicKey(Group_Params groups) : m_groups(groups) {}
 
    protected:
       Group_Params                             m_groups;
