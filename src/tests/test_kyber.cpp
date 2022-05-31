@@ -18,11 +18,11 @@
 #include <memory>
 
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-   #include <botan/block_cipher.h>
    #include <botan/hex.h>
    #include <botan/kyber.h>
    #include <botan/oids.h>
    #include <botan/rng.h>
+   #include <botan/pubkey.h>
 #endif
 
 namespace Botan_Tests {
@@ -35,8 +35,6 @@ class KYBER_Tests final : public Test
       static Test::Result run_kyber_test(const char* test_name, Botan::KyberMode mode, size_t strength)
          {
          Test::Result result(test_name);
-
-         const size_t shared_secret_length = 32;
 
          // Alice
          const Botan::Kyber_PrivateKey priv_key(Test::rng(), mode);
@@ -51,16 +49,14 @@ class KYBER_Tests final : public Test
 
          // Bob (reading from serialized public key)
          Botan::Kyber_PublicKey alice_pub_key(pub_key_bits, mode, Botan::KyberKeyEncoding::Full);
-         const auto enc = alice_pub_key.create_kem_encryption_op(Test::rng(), "", "");
-
+         auto enc = Botan::PK_KEM_Encryptor(alice_pub_key, Test::rng(), "Raw", "base");
          Botan::secure_vector<uint8_t> cipher_text, key_bob;
-         enc->kem_encrypt(cipher_text, key_bob, shared_secret_length, Test::rng(), nullptr, 0);
+         enc.encrypt(cipher_text, key_bob, 0 /* no KDF */, Test::rng());
 
          // Alice (reading from serialized private key)
          Botan::Kyber_PrivateKey alice_priv_key(priv_key_bits, mode, Botan::KyberKeyEncoding::Full);
-         const auto dec = alice_priv_key.create_kem_decryption_op(Test::rng(), "", "");
-         const auto key_alice =
-            dec->kem_decrypt(cipher_text.data(), cipher_text.size(), shared_secret_length, nullptr, 0);
+         auto dec = Botan::PK_KEM_Decryptor(alice_priv_key, Test::rng(), "Raw", "base");
+         const auto key_alice = dec.decrypt(cipher_text, 0 /* no KDF */, std::vector<uint8_t>());
 
          result.confirm("shared secrets are equal", key_alice == key_bob);
 
@@ -71,14 +67,16 @@ class KYBER_Tests final : public Test
          // Broken cipher_text from Alice (wrong length)
          result.test_throws("fail to read cipher_text", "unexpected length of ciphertext buffer", [&]
             {
-            dec->kem_decrypt(cipher_text.data(), cipher_text.size() - 5, shared_secret_length, nullptr, 0);
+            auto short_cipher_text = cipher_text;
+            short_cipher_text.pop_back();
+            dec.decrypt(short_cipher_text, 0, std::vector<uint8_t>());
             });
 
          // Invalid cipher_text from Alice
          Botan::secure_vector<uint8_t> reverse_cipher_text;
          std::copy(cipher_text.crbegin(), cipher_text.crend(), std::back_inserter(reverse_cipher_text));
          const auto key_alice2 =
-            dec->kem_decrypt(reverse_cipher_text.data(), reverse_cipher_text.size(), shared_secret_length, nullptr, 0);
+            dec.decrypt(reverse_cipher_text, 0, std::vector<uint8_t>());
          result.confirm("shared secrets are not equal", key_alice != key_alice2);
 
          return result;
@@ -118,8 +116,6 @@ Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::Ky
    const auto ct_in = vars.get_req_bin("CT");
    const auto ss_in = vars.get_req_bin("SS");
 
-   const size_t shared_secret_length = 32;
-
    // Kyber test RNG
    Fixed_Output_RNG kyber_test_rng(random_in);
 
@@ -131,19 +127,20 @@ Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::Ky
    result.test_eq("Secret Key Output", priv_key.private_key_bits(), sk_in);
 
    // Bob
-   auto enc = pub_key->create_kem_encryption_op(kyber_test_rng, "", "");
+   auto enc = Botan::PK_KEM_Encryptor(*pub_key, kyber_test_rng, "Raw", "base");
    Botan::secure_vector<uint8_t> cipher_text, key_bob;
-   enc->kem_encrypt(cipher_text, key_bob, shared_secret_length, kyber_test_rng, nullptr, 0);
+   enc.encrypt(cipher_text, key_bob, 0 /* no KDF */, kyber_test_rng);
    result.test_eq("Cipher-Text Output", cipher_text, ct_in);
    result.test_eq("Key B Output", key_bob, ss_in);
 
    // Alice
-   auto dec = priv_key.create_kem_decryption_op(kyber_test_rng, "", "");
-   auto key_alice = dec->kem_decrypt(cipher_text.data(), cipher_text.size(), shared_secret_length, nullptr, 0);
+   auto dec = Botan::PK_KEM_Decryptor(priv_key, kyber_test_rng, "Raw", "base");
+   const auto key_alice = dec.decrypt(cipher_text, 0 /* no KDF */, std::vector<uint8_t>());
    result.test_eq("Key A Output", key_alice, ss_in);
 
    // Algorithm identifiers
-   result.test_eq("algo name", priv_key.algo_name(), algo_name);
+   result.test_eq("algo name", priv_key.algo_name(), "Kyber-r3");
+   result.confirm("algo mode", priv_key.mode() == mode);
    result.test_eq("algo id", Botan::OIDS::oid2str_or_throw(priv_key.algorithm_identifier().oid()), algo_name);
 
    return result;
