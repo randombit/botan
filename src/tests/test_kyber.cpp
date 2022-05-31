@@ -204,6 +204,22 @@ class Kyber_Encoding_Test : public Text_Based_Test
          }
 
    public:
+      bool skip_this_test(const std::string &algo_name, const VarMap &) override
+         {
+         const auto mode = name_to_mode(algo_name);
+#if defined(BOTAN_HAS_KYBER)
+         if(!mode.is_90s())
+            return false;
+#endif
+#if defined(BOTAN_HAS_KYBER_90S)
+         if(mode.is_90s())
+            return false;
+#endif
+
+         BOTAN_UNUSED(algo_name, mode);
+         return true;
+         }
+
       Test::Result run_one_test(const std::string& algo_name, const VarMap& vars) override
          {
          Test::Result result("kyber_encodings");
