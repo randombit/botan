@@ -1,0 +1,14 @@
+<defines>
+TLS_13_PQC -> 20210721
+</defines>
+
+<header:public>
+</header:public>
+
+<header:internal>
+composite_public_key.h
+</header:internal>
+
+<requires>
+tls13
+</requires>

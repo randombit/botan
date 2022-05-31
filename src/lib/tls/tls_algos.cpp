@@ -135,6 +135,36 @@ Group_Params group_param_from_string(const std::string& group_name)
    if(group_name == "ffdhe/ietf/8192")
       return Group_Params::FFDHE_8192;
 
+#if defined(BOTAN_HAS_TLS_13_PQC)
+   if(group_name == "Kyber-512-r3")
+      return Group_Params::KYBER_R3_512;
+   if(group_name == "Kyber-768-r3")
+      return Group_Params::KYBER_R3_768;
+   if(group_name == "Kyber-1024-r3")
+      return Group_Params::KYBER_R3_1024;
+   if(group_name == "Kyber-512-90s-r3")
+      return Group_Params::KYBER_90s_R3_512;
+   if(group_name == "Kyber-768-90s-r3")
+      return Group_Params::KYBER_90s_R3_768;
+   if(group_name == "Kyber-1024-90s-r3")
+      return Group_Params::KYBER_90s_R3_1024;
+
+   if(group_name == "x25519/Kyber-512-r3")
+      return Group_Params::X25519_KYBER_R3_512;
+   if(group_name == "secp256r1/Kyber-512-r3")
+      return Group_Params::SECP256R1_KYBER_R3_512;
+   if(group_name == "secp384r1/Kyber-768-r3")
+      return Group_Params::SECP384R1_KYBER_R3_768;
+   if(group_name == "secp521r1/Kyber-1024-r3")
+      return Group_Params::SECP521R1_KYBER_R3_1024;
+   if(group_name == "secp256r1/Kyber-512-90s-r3")
+      return Group_Params::SECP256R1_KYBER_90s_R3_512;
+   if(group_name == "secp384r1/Kyber-768-90s-r3")
+      return Group_Params::SECP384R1_KYBER_90s_R3_768;
+   if(group_name == "secp521r1/Kyber-1024-90s-r3")
+      return Group_Params::SECP521R1_KYBER_90s_R3_1024;
+#endif
+
    return Group_Params::NONE; // unknown
    }
 
@@ -167,6 +197,36 @@ std::string group_param_to_string(Group_Params group)
          return "ffdhe/ietf/6144";
       case Group_Params::FFDHE_8192:
          return "ffdhe/ietf/8192";
+
+#if defined(BOTAN_HAS_TLS_13_PQC)
+      case Group_Params::KYBER_R3_512:
+         return "Kyber-r3-512";
+      case Group_Params::KYBER_R3_768:
+         return "Kyber-r3-768";
+      case Group_Params::KYBER_R3_1024:
+         return "Kyber-r3-1024";
+      case Group_Params::KYBER_90s_R3_512:
+         return "Kyber90s-r3-512";
+      case Group_Params::KYBER_90s_R3_768:
+         return "Kyber90s-r3-768";
+      case Group_Params::KYBER_90s_R3_1024:
+         return "Kyber90s-r3-1024";
+
+      case Group_Params::X25519_KYBER_R3_512:
+         return "x25519/Kyber-r3-512";
+      case Group_Params::SECP256R1_KYBER_R3_512:
+         return "secp256r1/Kyber-r3-512";
+      case Group_Params::SECP384R1_KYBER_R3_768:
+         return "secp384r1/Kyber-r3-768";
+      case Group_Params::SECP521R1_KYBER_R3_1024:
+         return "secp521r1/Kyber-r3-1024";
+      case Group_Params::SECP256R1_KYBER_90s_R3_512:
+         return "secp256r1/Kyber90s-r3-512";
+      case Group_Params::SECP384R1_KYBER_90s_R3_768:
+         return "secp384r1/Kyber90s-r3-768";
+      case Group_Params::SECP521R1_KYBER_90s_R3_1024:
+         return "secp521r1/Kyber90s-r3-1024";
+#endif
 
       default:
          return "";

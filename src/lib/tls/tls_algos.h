@@ -97,6 +97,33 @@ enum class Group_Params : uint16_t {
    FFDHE_4096 = 258,
    FFDHE_6144 = 259,
    FFDHE_8192 = 260,
+
+#if defined(BOTAN_HAS_TLS_13_PQC)
+   // Post-quantum key exchange group IDs are not yet defined by IANA. These
+   // values are taken from OQS for interoperability purposes.
+   // https://github.com/open-quantum-safe/openssl/blob/OQS-OpenSSL_1_1_1-stable/oqs-template/oqs-kem-info.md
+   KYBER_R3_512      = 0x023A,
+   KYBER_R3_768      = 0x023C,
+   KYBER_R3_1024     = 0x023D,
+   KYBER_90s_R3_512  = 0x023E,
+   KYBER_90s_R3_768  = 0x023F,
+   KYBER_90s_R3_1024 = 0x0240,
+
+   // draft-ietf-tls-hybrid-design-04
+   //    Each particular combination of algorithms in a hybrid key exchange will
+   //    be represented as a NamedGroup and sent in the supported_groups
+   //    extension.  No internal structure or grammar is implied or required in
+   //    the value of the identifier; they are simply opaque identifiers.  Each
+   //    value representing a hybrid key exchange will correspond to an ordered
+   //    pair of two algorithms.
+   X25519_KYBER_R3_512         = 0x2F39,
+   SECP256R1_KYBER_R3_512      = 0x2F3A,
+   SECP384R1_KYBER_R3_768      = 0x2F3C,
+   SECP521R1_KYBER_R3_1024     = 0x2F3D,
+   SECP256R1_KYBER_90s_R3_512  = 0x2F3E,
+   SECP384R1_KYBER_90s_R3_768  = 0x2F3F,
+   SECP521R1_KYBER_90s_R3_1024 = 0x2F40,
+#endif
 };
 
 std::string group_param_to_string(Group_Params group);
