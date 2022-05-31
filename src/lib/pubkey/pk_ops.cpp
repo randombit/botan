@@ -143,14 +143,17 @@ void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_en
    secure_vector<uint8_t> raw_shared;
    this->raw_kem_encrypt(out_encapsulated_key, raw_shared, rng);
 
-   out_shared_key = m_kdf->derive_key(desired_shared_key_len,
-                                      raw_shared.data(), raw_shared.size(),
-                                      salt, salt_len);
+   out_shared_key = (m_kdf)
+      ? m_kdf->derive_key(desired_shared_key_len,
+                          raw_shared.data(), raw_shared.size(),
+                          salt, salt_len)
+      : raw_shared;
    }
 
 PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(const std::string& kdf)
    {
-   m_kdf = KDF::create_or_throw(kdf);
+   if(kdf != "Raw")
+      m_kdf = KDF::create_or_throw(kdf);
    }
 
 secure_vector<uint8_t>
@@ -162,14 +165,17 @@ PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(const uint8_t encap_key[],
    {
    secure_vector<uint8_t> raw_shared = this->raw_kem_decrypt(encap_key, len);
 
-   return m_kdf->derive_key(desired_shared_key_len,
-                            raw_shared.data(), raw_shared.size(),
-                            salt, salt_len);
+   if(m_kdf)
+      return m_kdf->derive_key(desired_shared_key_len,
+                               raw_shared.data(), raw_shared.size(),
+                               salt, salt_len);
+   return raw_shared;
    }
 
 PK_Ops::KEM_Decryption_with_KDF::KEM_Decryption_with_KDF(const std::string& kdf)
    {
-   m_kdf = KDF::create_or_throw(kdf);
+   if(kdf != "Raw")
+      m_kdf = KDF::create_or_throw(kdf);
    }
 
 }
