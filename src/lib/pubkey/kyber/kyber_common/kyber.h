@@ -14,6 +14,7 @@
 #ifndef BOTAN_KYBER_COMMON_H_
 #define BOTAN_KYBER_COMMON_H_
 
+#include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
@@ -25,14 +26,34 @@
 #endif
 
 namespace Botan {
-enum class KyberMode
+
+class BOTAN_PUBLIC_API(3, 0) KyberMode
    {
-   Kyber512,
-   Kyber512_90s,
-   Kyber768,
-   Kyber768_90s,
-   Kyber1024,
-   Kyber1024_90s
+   public:
+      enum Mode
+         {
+         Kyber512,
+         Kyber512_90s,
+         Kyber768,
+         Kyber768_90s,
+         Kyber1024,
+         Kyber1024_90s
+         };
+
+      KyberMode(Mode mode);
+      KyberMode(const OID& oid);
+
+      OID get_oid() const;
+      std::string to_string() const;
+
+      Mode mode() const { return m_mode; }
+      bool is_90s() const { return m_mode == Kyber512_90s || m_mode == Kyber768_90s || m_mode == Kyber1024_90s; }
+
+      bool operator==(const KyberMode& other) const { return m_mode == other.m_mode; }
+      bool operator!=(const KyberMode& other) const { return !(*this == other); }
+
+   private:
+      Mode m_mode;
    };
 
 enum class KyberKeyEncoding
@@ -55,7 +76,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
 
       virtual ~Kyber_PublicKey() = default;
 
-      std::string algo_name() const override;
+      std::string algo_name() const override { return "Kyber-r3"; }
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
@@ -70,6 +91,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
       std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(RandomNumberGenerator& rng,
             const std::string& params,
             const std::string& provider) const override;
+
+      KyberMode mode() const;
 
       void set_binary_encoding(KyberKeyEncoding encoding)
          {
