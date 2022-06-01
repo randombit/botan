@@ -39,15 +39,15 @@ void sub_abs(BigInt& z, const BigInt& x, const BigInt& y)
 */
 BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p)
    {
-   if(p <= 1)
-      throw Invalid_Argument("sqrt_modulo_prime: invalid prime");
-   if(a >= p)
-      throw Invalid_Argument("sqrt_modulo_prime: value to solve for must be less than p");
-   if(a < 0)
-      throw Invalid_Argument("sqrt_modulo_prime: value to solve for must be positive");
+   BOTAN_ARG_CHECK(p > 1, "invalid prime");
+   BOTAN_ARG_CHECK(a < p, "value to solve for must be less than p");
+   BOTAN_ARG_CHECK(a >= 0, "value to solve for must not be negative");
 
+   // some very easy cases
    if(p == 2 || a <= 1)
       return a;
+
+   BOTAN_ARG_CHECK(p.is_odd(), "invalid prime");
 
    if(jacobi(a, p) != 1) // not a quadratic residue
       return BigInt::from_s32(-1);
