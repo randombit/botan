@@ -48,12 +48,13 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
                                const BigInt& x_arg)
    {
    m_group = grp;
+   BOTAN_ARG_CHECK(x_arg.is_positive(), "x must be positive");
 
    if(x_arg == 0)
       m_x = BigInt::random_integer(rng, 2, group_q());
    else
       {
-      BOTAN_ARG_CHECK(m_x.bits() <= m_group.q_bits(), "x must not be larger than q");
+      BOTAN_ARG_CHECK(m_x < m_group.get_q(), "x must not be larger than q");
       m_x = x_arg;
       }
 
@@ -64,7 +65,8 @@ DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                                const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group_Format::ANSI_X9_57)
    {
-   BOTAN_ARG_CHECK(m_x.bits() <= m_group.q_bits(), "x must not be larger than q");
+   BOTAN_ARG_CHECK(m_x > 0, "x must be greater than zero");
+   BOTAN_ARG_CHECK(m_x < m_group.get_q(), "x must not be larger than q");
    m_y = m_group.power_g_p(m_x, m_group.q_bits());
    }
 
