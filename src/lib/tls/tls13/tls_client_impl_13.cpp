@@ -18,6 +18,7 @@
 #include <botan/build.h>
 
 #include <iterator>
+#include <utility>
 
 namespace Botan::TLS {
 

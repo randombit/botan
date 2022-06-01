@@ -17,6 +17,7 @@
 
 #include <vector>
 #include <memory>
+#include <utility>
 
 namespace Botan {
 
