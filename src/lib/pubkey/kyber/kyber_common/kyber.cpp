@@ -43,6 +43,61 @@
 #include <limits>
 
 namespace Botan {
+
+namespace {
+
+KyberMode::Mode mode_from_string(const std::string& str)
+   {
+   if(str == "Kyber-512-90s-r3")
+      return KyberMode::Kyber512_90s;
+   if(str == "Kyber-768-90s-r3")
+      return KyberMode::Kyber768_90s;
+   if(str == "Kyber-1024-90s-r3")
+      return KyberMode::Kyber1024_90s;
+   if(str == "Kyber-512-r3")
+      return KyberMode::Kyber512;
+   if(str == "Kyber-768-r3")
+      return KyberMode::Kyber768;
+   if(str == "Kyber-1024-r3")
+      return KyberMode::Kyber1024;
+
+   throw Invalid_Argument(str + " is not a valid Kyber mode name");
+   }
+
+}
+
+KyberMode::KyberMode(Mode mode)
+   : m_mode(mode) {}
+
+KyberMode::KyberMode(const OID& oid)
+   : m_mode(mode_from_string(oid.to_string())) {}
+
+OID KyberMode::get_oid() const
+   {
+   return OID::from_string(to_string());
+   }
+
+std::string KyberMode::to_string() const
+   {
+   switch (m_mode)
+      {
+      case Kyber512_90s:
+         return "Kyber-512-90s-r3";
+      case Kyber768_90s:
+         return "Kyber-768-90s-r3";
+      case Kyber1024_90s:
+         return "Kyber-1024-90s-r3";
+      case Kyber512:
+         return "Kyber-512-r3";
+      case Kyber768:
+         return "Kyber-768-r3";
+      case Kyber1024:
+         return "Kyber-1024-r3";
+      }
+
+   unreachable();
+   }
+
 namespace {
 
 class KyberConstants
@@ -85,7 +140,7 @@ class KyberConstants
    public:
       KyberConstants(const KyberMode mode) : m_mode(mode)
          {
-         switch(mode)
+         switch(mode.mode())
             {
             case KyberMode::Kyber512:
             case KyberMode::Kyber512_90s:
@@ -109,39 +164,14 @@ class KyberConstants
                break;
             }
 
-         m_algo_name = [mode]
-            {
-            switch(mode)
-               {
-               case KyberMode::Kyber512:
-                  return "Kyber-512-r3";
-               case KyberMode::Kyber512_90s:
-                  return "Kyber-512-90s-r3";
-               case KyberMode::Kyber768:
-                  return "Kyber-768-r3";
-               case KyberMode::Kyber768_90s:
-                  return "Kyber-768-90s-r3";
-               case KyberMode::Kyber1024:
-                  return "Kyber-1024-r3";
-               case KyberMode::Kyber1024_90s:
-                  return "Kyber-1024-90s-r3";
-               }
-
-            // GCC 9 couldn't figure out that all enum cases were covered above...
-            unreachable();
-            }();
-
-         const bool kyber_90s =
-            (mode == KyberMode::Kyber512_90s || mode == KyberMode::Kyber768_90s || mode == KyberMode::Kyber1024_90s);
-
 #ifdef BOTAN_HAS_KYBER_90S
-         if(kyber_90s)
+         if(mode.is_90s())
             {
             m_symmetric_primitives = std::make_unique<Kyber_90s_Symmetric_Primitives>();
             }
 #endif
 #ifdef BOTAN_HAS_KYBER
-         if(!kyber_90s)
+         if(!mode.is_90s())
             {
             m_symmetric_primitives = std::make_unique<Kyber_Modern_Symmetric_Primitives>();
             }
@@ -163,9 +193,9 @@ class KyberConstants
       KyberConstants& operator=(const KyberConstants& other) = delete;
       KyberConstants& operator=(KyberConstants&& other) = default;
 
-      std::string algo_name() const
+      KyberMode mode() const
          {
-         return m_algo_name;
+         return m_mode;
          }
 
       size_t estimated_strength() const
@@ -229,7 +259,6 @@ class KyberConstants
    private:
       KyberMode m_mode;
       std::unique_ptr<Kyber_Symmetric_Primitives> m_symmetric_primitives;
-      const char* m_algo_name;
       size_t m_nist_strength;
       uint8_t m_k;
       uint8_t m_eta1;
@@ -1147,19 +1176,21 @@ class Kyber_KEM_Cryptor
          }
    };
 
-class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption, protected Kyber_KEM_Cryptor
+class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
+                                  protected Kyber_KEM_Cryptor
    {
    public:
-      Kyber_KEM_Encryptor(const Kyber_PublicKey& key) : Kyber_KEM_Cryptor(key.m_public->mode()), m_key(key)
+      Kyber_KEM_Encryptor(const Kyber_PublicKey& key, const std::string& kdf)
+         : KEM_Encryption_with_KDF(kdf)
+         , Kyber_KEM_Cryptor(key.m_public->mode())
+         , m_key(key)
          {
          }
 
-      void kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key, secure_vector<uint8_t>& out_shared_key,
-                       size_t desired_shared_key_len, RandomNumberGenerator& rng, const uint8_t salt[],
-                       size_t salt_len) override
+      void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
+                           secure_vector<uint8_t>& out_shared_key,
+                           RandomNumberGenerator& rng) override
          {
-         BOTAN_UNUSED(desired_shared_key_len, salt, salt_len);
-
          // naming from kyber spec
          auto H = m_mode.H();
          auto G = m_mode.G();
@@ -1188,18 +1219,19 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption, protected Kyber
       const Kyber_PublicKey& m_key;
    };
 
-class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption, protected Kyber_KEM_Cryptor
+class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
+                                  protected Kyber_KEM_Cryptor
    {
    public:
-      Kyber_KEM_Decryptor(const Kyber_PrivateKey& key) : Kyber_KEM_Cryptor(key.m_private->mode()), m_key(key)
+      Kyber_KEM_Decryptor(const Kyber_PrivateKey& key, const std::string& kdf)
+         : PK_Ops::KEM_Decryption_with_KDF(kdf)
+         , Kyber_KEM_Cryptor(key.m_private->mode())
+         , m_key(key)
          {
          }
 
-      secure_vector<uint8_t> kem_decrypt(const uint8_t encap_key[], size_t len_encap_key, size_t desired_shared_key_len,
-                                         const uint8_t salt[], size_t salt_len) override
+      secure_vector<uint8_t> raw_kem_decrypt(const uint8_t encap_key[], size_t len_encap_key) override
          {
-         BOTAN_UNUSED(desired_shared_key_len, salt, salt_len);
-
          // naming from kyber spec
          auto H = m_mode.H();
          auto G = m_mode.G();
@@ -1254,14 +1286,14 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption, protected Kyber
       const Kyber_PrivateKey& m_key;
    };
 
-std::string Kyber_PublicKey::algo_name() const
+KyberMode Kyber_PublicKey::mode() const
    {
-   return m_public->mode().algo_name();
+   return m_public->mode().mode();
    }
 
 AlgorithmIdentifier Kyber_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
+   return AlgorithmIdentifier(mode().get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
 size_t Kyber_PublicKey::estimated_strength() const
@@ -1484,16 +1516,20 @@ std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_o
       const std::string& params,
       const std::string& provider) const
    {
-   BOTAN_UNUSED(rng, params, provider);
-   return std::unique_ptr<PK_Ops::KEM_Encryption>(new Kyber_KEM_Encryptor(*this));
+   BOTAN_UNUSED(rng);
+   if(provider.empty() || provider == "base")
+      return std::make_unique<Kyber_KEM_Encryptor>(*this, params);
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
       const std::string& params,
       const std::string& provider) const
    {
-   BOTAN_UNUSED(rng, params, provider);
-   return std::unique_ptr<PK_Ops::KEM_Decryption>(new Kyber_KEM_Decryptor(*this));
+   BOTAN_UNUSED(rng);
+   if(provider.empty() || provider == "base")
+      return std::make_unique<Kyber_KEM_Decryptor>(*this, params);
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 } // namespace Botan
