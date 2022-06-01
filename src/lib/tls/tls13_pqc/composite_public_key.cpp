@@ -8,6 +8,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <iterator>
+
 #include <botan/ecdh.h>
 #include <botan/tls_policy.h>
 
