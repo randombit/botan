@@ -1,4 +1,12 @@
-[RESSOL]
+[SqrtModuloPrime]
+Input = 0
+Modulus = 2
+Output = 0
+
+Input = 1
+Modulus = 2
+Output = 1
+
 Input = 5
 Modulus = 11
 Output = 4

@@ -21,7 +21,7 @@ void fuzz(const uint8_t in[], size_t len)
    try
       {
       const Botan::BigInt a = Botan::BigInt::decode(in, len);
-      Botan::BigInt a_sqrt = Botan::ressol(a, p);
+      Botan::BigInt a_sqrt = Botan::sqrt_modulo_prime(a, p);
 
       if(a_sqrt > 0)
          {

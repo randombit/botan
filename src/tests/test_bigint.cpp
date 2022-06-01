@@ -629,22 +629,22 @@ class BigInt_IsSquare_Test final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("math", "bn_issquare", BigInt_IsSquare_Test);
 
-class BigInt_Ressol_Test final : public Text_Based_Test
+class BigInt_Sqrt_Modulo_Prime_Test final : public Text_Based_Test
    {
    public:
-      BigInt_Ressol_Test() : Text_Based_Test("bn/ressol.vec", "Input,Modulus,Output") {}
+      BigInt_Sqrt_Modulo_Prime_Test() : Text_Based_Test("bn/sqrt_modulo_prime.vec", "Input,Modulus,Output") {}
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
-         Test::Result result("BigInt Ressol");
+         Test::Result result("BigInt Sqrt Modulo Prime");
 
          const Botan::BigInt a = vars.get_req_bn("Input");
          const Botan::BigInt p = vars.get_req_bn("Modulus");
          const Botan::BigInt exp = vars.get_req_bn("Output");
 
-         const Botan::BigInt a_sqrt = Botan::ressol(a, p);
+         const Botan::BigInt a_sqrt = Botan::sqrt_modulo_prime(a, p);
 
-         result.test_eq("ressol", a_sqrt, exp);
+         result.test_eq("sqrt_modulo_prime", a_sqrt, exp);
 
          if(a_sqrt > 1)
             {
@@ -656,7 +656,7 @@ class BigInt_Ressol_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("math", "bn_ressol", BigInt_Ressol_Test);
+BOTAN_REGISTER_TEST("math", "bn_sqrt_modulo_prime", BigInt_Sqrt_Modulo_Prime_Test);
 
 class BigInt_InvMod_Test final : public Text_Based_Test
    {

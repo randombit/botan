@@ -37,19 +37,16 @@ void sub_abs(BigInt& z, const BigInt& x, const BigInt& y)
 /*
 * Tonelli-Shanks algorithm
 */
-BigInt ressol(const BigInt& a, const BigInt& p)
+BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p)
    {
-   if(p <= 1 || p.is_even())
-      throw Invalid_Argument("ressol: invalid prime");
+   if(p <= 1)
+      throw Invalid_Argument("sqrt_modulo_prime: invalid prime");
+   if(a >= p)
+      throw Invalid_Argument("sqrt_modulo_prime: value to solve for must be less than p");
+   if(a < 0)
+      throw Invalid_Argument("sqrt_modulo_prime: value to solve for must be positive");
 
-   if(a == 0)
-      return BigInt::zero();
-   else if(a < 0)
-      throw Invalid_Argument("ressol: value to solve for must be positive");
-   else if(a >= p)
-      throw Invalid_Argument("ressol: value to solve for must be less than p");
-
-   if(p == 2)
+   if(p == 2 || a <= 1)
       return a;
 
    if(jacobi(a, p) != 1) // not a quadratic residue
@@ -63,6 +60,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
       return monty_exp_vartime(monty_p, a, ((p+1) >> 2));
       }
 
+   // Otherwise we have to use Shanks-Tonelli
    size_t s = low_zero_bits(p - 1);
    BigInt q = p >> s;
 
