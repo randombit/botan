@@ -21,12 +21,11 @@ class HashFunction;
 class HKDF_Extract;
 class HKDF_Expand;
 
-namespace TLS {
-class Ciphersuite;
-}
 }
 
 namespace Botan::TLS {
+
+class Ciphersuite;
 
 /**
  * This class implements the key schedule for TLS 1.3 as described in RFC 8446 7.1.

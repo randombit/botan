@@ -43,8 +43,10 @@ void Certificate_13::validate_extensions(const std::set<Handshake_Extension_Type
    //    the Certificate message from the client MUST correspond to
    //    extensions in the CertificateRequest message from the server.
    for(const auto& entry : m_entries)
+      {
       if(entry.extensions.contains_other_than(requested_extensions))
          { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Certificate Entry contained an extension that was not offered"); }
+      }
    }
 
 void Certificate_13::verify(Callbacks& callbacks,
@@ -69,13 +71,17 @@ void Certificate_13::verify(Callbacks& callbacks,
       if(use_ocsp)
          {
          if(entry.extensions.has<Certificate_Status_Request>())
+            {
             ocsp_responses.push_back(
                callbacks.tls_parse_ocsp_response(
                   entry.extensions.get<Certificate_Status_Request>()->get_ocsp_response()));
+            }
          else
+            {
             // Note: The make_optional instead of simply nullopt is necessary to work around a GCC <= 10.0 bug
             //       see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=80635
-            { ocsp_responses.push_back(std::make_optional<OCSP::Response>()); }
+            ocsp_responses.push_back(std::make_optional<OCSP::Response>());
+            }
          }
       }
 

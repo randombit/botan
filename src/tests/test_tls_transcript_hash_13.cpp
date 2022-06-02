@@ -15,9 +15,9 @@
 
 using namespace Botan::TLS;
 
-namespace {
+namespace Botan_Tests {
 
-using Test = Botan_Tests::Test;
+namespace {
 
 std::vector<Test::Result> transcript_hash()
    {
@@ -147,11 +147,10 @@ std::vector<Test::Result> transcript_hash()
       };
    }
 
-}
-
-namespace Botan_Tests {
+}  // namespace
 
 BOTAN_REGISTER_TEST_FN("tls", "tls_transcript_hash_13", transcript_hash);
 
-}
+}  // namespace Botan_Tests
+
 #endif

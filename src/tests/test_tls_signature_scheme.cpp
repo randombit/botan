@@ -13,9 +13,9 @@
 
 #include <botan/ec_group.h>
 
-namespace {
+namespace Botan_Tests {
 
-using Test = Botan_Tests::Test;
+namespace {
 
 std::vector<Test::Result> test_signature_scheme()
    {
@@ -66,8 +66,8 @@ std::vector<Test::Result> test_signature_scheme()
 
 }  // namespace
 
-namespace Botan_Tests {
 BOTAN_REGISTER_TEST_FN("tls", "tls_signature_scheme", test_signature_scheme);
-}
+
+}  // namespace Botan_Tests
 
 #endif  // BOTAN_HAS_TLS

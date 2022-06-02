@@ -618,15 +618,4 @@ std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
    return { "CECPQ1", "ECDH" };
    }
 
-bool Strict_Policy::allow_tls12()  const { return true;  }
-bool Strict_Policy::allow_tls13()  const
-{
-#if defined(BOTAN_HAS_TLS_13)
-   return true;
-#else
-   return false;
-#endif
-}
-bool Strict_Policy::allow_dtls12() const { return true;  }
-
 }

@@ -538,11 +538,9 @@ void Server_Hello_13::basic_validation() const
       throw TLS_Exception(Alert::DECODE_ERROR, "compression is not supported in TLS 1.3");
       }
 
-   const auto& exts = extensions();
-
    // RFC 8446 4.1.3
    //    All TLS 1.3 ServerHello messages MUST contain the "supported_versions" extension.
-   if(!exts.has<Supported_Versions>())
+   if(!extensions().has<Supported_Versions>())
       {
       throw TLS_Exception(Alert::MISSING_EXTENSION,
                           "server hello did not contain 'supported version' extension");
@@ -576,7 +574,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    //
    // Note that further validation dependent on the client hello is done in the
    // TLS client implementation.
-   std::set<Handshake_Extension_Type> allowed =
+   const std::set<Handshake_Extension_Type> allowed =
       {
       TLSEXT_KEY_SHARE,
       TLSEXT_PSK_KEY_EXCHANGE_MODES,
@@ -615,7 +613,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Se
    //     -  supported_versions (see Section 4.2.1)
    //     -  cookie (see Section 4.2.2)
    //     -  key_share (see Section 4.2.8)
-   std::set<Handshake_Extension_Type> allowed =
+   const std::set<Handshake_Extension_Type> allowed =
       {
       TLSEXT_COOKIE,
       TLSEXT_SUPPORTED_VERSIONS,
@@ -624,7 +622,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Se
 
    // As the Hello Retry Request shall only contain essential extensions, we
    // don't give any slack for extensions not implemented by Botan here.
-   if(extensions().contains_other_than(allowed))
+   if(exts.contains_other_than(allowed))
       {
       throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION,
                           "Hello Retry Request contained an extension that is not allowed");

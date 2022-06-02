@@ -18,10 +18,11 @@
 
 #include <botan/internal/tls_record_layer_13.h>
 
+namespace Botan_Tests {
+
 namespace {
 
 namespace TLS = Botan::TLS;
-using Test = Botan_Tests::Test;
 
 using Records = std::vector<TLS::Record>;
 
@@ -966,13 +967,13 @@ std::vector<Test::Result> record_size_limits()
 
 }  // namespace
 
-namespace Botan_Tests {
 BOTAN_REGISTER_TEST_FN("tls", "tls_record_layer_13",
                        basic_sanitization_parse_records_client,
                        basic_sanitization_parse_records_server,
                        read_full_records, read_fragmented_records, write_records,
                        read_encrypted_records, write_encrypted_records,
                        legacy_version_handling, record_size_limits);
-}
+
+}  // namespace Botan_Tests
 
 #endif

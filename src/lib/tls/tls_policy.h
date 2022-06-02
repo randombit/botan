@@ -558,10 +558,6 @@ class BOTAN_PUBLIC_API(2,0) Strict_Policy : public Policy
       std::vector<std::string> allowed_macs() const override;
 
       std::vector<std::string> allowed_key_exchange_methods() const override;
-
-      bool allow_tls12()  const override;
-      bool allow_tls13()  const override;
-      bool allow_dtls12() const override;
    };
 
 class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
