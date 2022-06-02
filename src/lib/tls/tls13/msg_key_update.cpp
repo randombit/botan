@@ -6,9 +6,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/build.h>
-#if defined(BOTAN_HAS_TLS_13)
-
 #include <botan/tls_messages.h>
 #include <botan/tls_exceptn.h>
 
@@ -42,5 +39,3 @@ std::vector<uint8_t> Key_Update::serialize() const
    }
 
 }
-
-#endif

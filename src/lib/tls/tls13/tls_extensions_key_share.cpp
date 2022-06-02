@@ -23,8 +23,6 @@
 #include <botan/dh.h>
 #include <botan/ecdh.h>
 
-#if defined(BOTAN_HAS_TLS_13)
-
 namespace Botan::TLS {
 
 namespace {
@@ -549,5 +547,3 @@ void Key_Share::erase()
    }
 
 }  // Botan::TLS
-
-#endif  // HAS_TLS_13

@@ -6,9 +6,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/build.h>
-#if defined(BOTAN_HAS_TLS_13)
-
 #include <botan/tls_messages.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/tls_reader.h>
@@ -62,5 +59,3 @@ Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf)
    }
 
 }
-
-#endif
