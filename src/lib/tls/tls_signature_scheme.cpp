@@ -321,9 +321,9 @@ bool Signature_Scheme::is_suitable_for(const Private_Key &private_key) const noe
    if(keylen <= 250)
       return false;
 
-   if(m_code == ECDSA_SHA256 && !(keylen >= 250 && keylen <= 350))
-      return false;
-
+   if(m_code == ECDSA_SHA256 && !(keylen >= 250 && keylen <= 350)) // lgtm [cpp/constant-comparison]
+      return false;                                                // `keylen >= 250` will always be true, because keylen <= 250
+                                                                   // was checked before. Leaving it in for readability.
    if(m_code == ECDSA_SHA384 && !(keylen >= 350 && keylen <= 450))
       return false;
 
