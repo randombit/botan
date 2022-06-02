@@ -99,7 +99,7 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
 
          if(record.type == HANDSHAKE)
             {
-            m_handshake_layer.copy_data(unlock(record.fragment));  // TODO: record fragment should be an ordinary std::vector
+            m_handshake_layer.copy_data(record.fragment);
 
             if(!handshake_finished())
                {

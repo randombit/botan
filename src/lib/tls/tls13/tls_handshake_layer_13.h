@@ -36,7 +36,7 @@ class BOTAN_TEST_API Handshake_Layer
        *
        * @param data_from_peer  The data to be parsed.
        */
-      void copy_data(const std::vector<uint8_t>& data_from_peer);
+      void copy_data(const secure_vector<uint8_t>& data_from_peer);
 
       /**
        * Parses one handshake message off the internal buffer that is being filled using `copy_data`.

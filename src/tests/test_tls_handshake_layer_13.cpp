@@ -41,7 +41,7 @@ const Handshake_Message_13& get_message(
    return std::get<T>(read_result.value());
    }
 
-const auto client_hello_message = Botan::hex_decode(  // from RFC 8448
+const auto client_hello_message = Botan::hex_decode_locked(  // from RFC 8448
                                      "01 00 00 c0 03 03 cb"
                                      "34 ec b1 e7 81 63 ba 1c 38 c6 da cb 19 6a 6d ff a2 1a 8d 99 12"
                                      "ec 18 a2 ef 62 83 02 4d ec e7 00 00 06 13 01 13 03 13 02 01 00"
@@ -53,26 +53,26 @@ const auto client_hello_message = Botan::hex_decode(  // from RFC 8448
                                      "04 03 05 03 06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02"
                                      "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01");
 
-const auto server_hello_message = Botan::hex_decode(
+const auto server_hello_message = Botan::hex_decode_locked(
                                      "02 00 00 56 03 03 a6"
                                      "af 06 a4 12 18 60 dc 5e 6e 60 24 9c d3 4c 95 93 0c 8a c5 cb 14"
                                      "34 da c1 55 77 2e d3 e2 69 28 00 13 01 00 00 2e 00 33 00 24 00"
                                      "1d 00 20 c9 82 88 76 11 20 95 fe 66 76 2b db f7 c6 72 e1 56 d6"
                                      "cc 25 3b 83 3d f1 dd 69 b1 b0 4e 75 1f 0f 00 2b 00 02 03 04");
 
-const auto server_hello_12_message = Botan::hex_decode(
+const auto server_hello_12_message = Botan::hex_decode_locked(
                                      "02 00 00 3e 03 03 ff ea 0b cf ba 56 4a 4c e1 77 c6 a4 44 b0 eb"
                                      "df f5 62 9b 27 72 93 c6 18 c1 12 5f 23 1e 86 28 dd 00 c0 30 00"
                                      "00 16 ff 01 00 01 00 00 0b 00 04 03 00 01 02 00 23 00 00 00 0f"
                                      "00 01 01");
 
-const auto encrypted_extensions = Botan::hex_decode(
+const auto encrypted_extensions = Botan::hex_decode_locked(
                                      "08 00 00 24 00 22 00 0a 00 14 00"
                                      "12 00 1d 00 17 00 18 00 19 01 00 01 01 01 02 01 03 01 04 00 1c"
                                      "00 02 40 01 00 00 00 00");
 
 const auto server_handshake_messages = // except server hello
-   Botan::hex_decode(
+   Botan::hex_decode_locked(
       "08 00 00 24 00 22 00 0a 00 14 00 12 00 1d"
       "00 17 00 18 00 19 01 00 01 01 01 02 01 03 01 04 00 1c 00 02 40"
       "01 00 00 00 00 0b 00 01 b9 00 00 01 b5 00 01 b0 30 82 01 ac 30"
@@ -106,7 +106,7 @@ const auto server_handshake_messages = // except server hello
       "00 20 9b 9b 14 1d 90 63 37 fb d2 cb dc e7 1d f4 de da 4a b4 2c"
       "30 95 72 cb 7f ff ee 54 54 b7 8f 07 18");
 
-const auto client_finished_message = Botan::hex_decode(
+const auto client_finished_message = Botan::hex_decode_locked(
                                         "14 00 00 20 a8 ec 43 6d 67 76 34 ae 52 5a c1"
                                         "fc eb e1 1a 03 9e c1 76 94 fa c6 e9 85 27 b6 42 f2 ed d5 ce 61");
 
@@ -114,7 +114,7 @@ const auto client_finished_message = Botan::hex_decode(
 // ###################################################################
 //
 
-const auto hrr_client_hello_msg = Botan::hex_decode(
+const auto hrr_client_hello_msg = Botan::hex_decode_locked(
       "01 00 00 b0 03 03 b0 b1 c5 a5 aa 37 c5"
       "91 9f 2e d1 d5 c6 ff f7 fc b7 84 97 16 94 5a 2b 8c ee 92 58 a3"
       "46 67 7b 6f 00 00 06 13 01 13 03 13 02 01 00 00 81 00 00 00 0b"
@@ -125,7 +125,7 @@ const auto hrr_client_hello_msg = Botan::hex_decode(
       "03 05 03 06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02 01"
       "04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01");
 
-const auto hrr_hello_retry_request_msg = Botan::hex_decode(
+const auto hrr_hello_retry_request_msg = Botan::hex_decode_locked(
       "02 00 00 ac 03 03 cf 21 ad 74 e5 9a 61"
       "11 be 1d 8c 02 1e 65 b8 91 c2 a2 11 16 7a bb 8c 5e 07 9e 09 e2"
       "c8 a8 33 9c 00 13 01 00 00 84 00 33 00 02 00 17 00 2c 00 74 00"
@@ -136,7 +136,7 @@ const auto hrr_hello_retry_request_msg = Botan::hex_decode(
       "e7 78 25 7d 16 aa 30 30 e9 e7 84 1d d9 e4 c0 34 22 67 e8 ca 0c"
       "af 57 1f b2 b7 cf f0 f9 34 b0 00 2b 00 02 03 04");
 
-const std::vector<std::vector<uint8_t>> tls_12_only_messages
+const std::vector<Botan::secure_vector<uint8_t>> tls_12_only_messages
    {
       {HELLO_REQUEST, 0x00, 0x00, 0x02, 0x42, 0x42},
       {HELLO_VERIFY_REQUEST, 0x00, 0x00, 0x02, 0x42, 0x42},
@@ -210,13 +210,13 @@ std::vector<Test::Result> read_handshake_messages()
          Handshake_Layer hl(Connection_Side::CLIENT);
          Transcript_Hash_State th("SHA-256");
 
-         const std::vector<uint8_t> partial_client_hello_message(
+         const Botan::secure_vector<uint8_t> partial_client_hello_message(
             client_hello_message.cbegin(), client_hello_message.cend() - 15);
          hl.copy_data(partial_client_hello_message);
          result.confirm("needs more bytes", !hl.next_message(Policy(), th));
          result.confirm("holds pending message data", hl.has_pending_data());
 
-         const std::vector<uint8_t> remaining_client_hello_message(
+         const Botan::secure_vector<uint8_t> remaining_client_hello_message(
             client_hello_message.cend() - 15, client_hello_message.cend());
          hl.copy_data(remaining_client_hello_message);
          result.confirm("is a client hello", has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
@@ -256,7 +256,7 @@ std::vector<Test::Result> read_handshake_messages()
          // to "random data" with an insensible type tag and a long (insensible) length field.
          // This caused a deadlock as we waited to receive the complete message, rather than validating the type
          // tag to exit early.
-         const auto data = Botan::hex_decode("D4B028717D0FA310FF8664127B9448D7952E06A4F9EA23");
+         const auto data = Botan::hex_decode_locked("D4B028717D0FA310FF8664127B9448D7952E06A4F9EA23");
          // data from the bogo test --          ~~~~~~ <- length
          //                                   ~~ <- bogus message type
          Handshake_Layer hl(Connection_Side::CLIENT);
