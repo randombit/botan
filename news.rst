@@ -4,8 +4,15 @@ Release Notes
 Version 2.19.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add support for parallel computation in Argon2 (GH #2937 #2926)
+
+* Add SSSE3 implementation of Argon2 (GH #2937 #2927)
+
 * The OpenSSL provider was incompatible with OpenSSL 3.0.
   It has been removed (GH #2902)
+
+* Avoid using reserve in secure_vector appending, which caused
+  a performance problem (GH #2945 #2920)
 
 * Fix TLS::Text_Policy behavior when X25519 is disabled
   at build time (GH #2894)
