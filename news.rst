@@ -143,6 +143,32 @@ Version 3.0.0, Not Yet Released
 
 * Generate a ``compile_commands.json`` for use with Clang tooling.
 
+Version 2.19.2, 2022-06-03
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add support for parallel computation in Argon2 (GH #2937 #2926)
+
+* Add SSSE3 implementation of Argon2 (GH #2937 #2927)
+
+* The OpenSSL provider was incompatible with OpenSSL 3.0.
+  It has been removed (GH #2902)
+
+* Avoid using reserve in secure_vector appending, which caused
+  a performance problem (GH #2945 #2920)
+
+* Fix TLS::Text_Policy behavior when X25519 is disabled
+  at build time (GH #2894)
+
+* Fix several warnings from Clang (#2888 #2886)
+
+Version 2.19.1, 2022-01-21
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a compilation problem affecting macOS XCode (GH #2880)
+
+* Fix a build problem preventing amalgamation builds in 2.19.0
+  (GH #2879)
+
 Version 2.19.0, 2022-01-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
