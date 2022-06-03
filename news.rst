@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.19.2, Not Yet Released
+Version 2.19.2, 2022-06-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add support for parallel computation in Argon2 (GH #2937 #2926)
