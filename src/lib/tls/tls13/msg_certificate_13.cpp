@@ -35,7 +35,7 @@ bool certificate_allows_signing(const X509_Certificate& cert)
 
 }
 
-void Certificate_13::validate_extensions(const std::set<Handshake_Extension_Type>& requested_extensions) const
+void Certificate_13::validate_extensions(const std::set<Handshake_Extension_Type>& requested_extensions, Callbacks& cb) const
    {
    // RFC 8446 4.4.2
    //    Extensions in the Certificate message from the server MUST
@@ -46,6 +46,8 @@ void Certificate_13::validate_extensions(const std::set<Handshake_Extension_Type
       {
       if(entry.extensions.contains_other_than(requested_extensions))
          { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Certificate Entry contained an extension that was not offered"); }
+
+      cb.tls_examine_extensions(entry.extensions, m_side, type());
       }
    }
 

@@ -806,6 +806,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_inspect_handshake_msg_certificate_verify",
                   "tls_inspect_handshake_msg_finished",
                   "tls_examine_extensions_encrypted_extensions",
+                  "tls_examine_extensions_certificate",
                   "tls_examine_extensions-deprecated",
                   "tls_emit_data",
                   "tls_session_activated",
@@ -827,6 +828,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
                ctx->check_callback_invocations(result, "new session ticket received",
                   {
+                  "tls_examine_extensions_new_session_ticket",
                   "tls_session_ticket_received",
                   "tls_current_timestamp"
                   });
@@ -1027,6 +1029,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_inspect_handshake_msg_certificate_verify",
                   "tls_inspect_handshake_msg_finished",
                   "tls_examine_extensions_encrypted_extensions",
+                  "tls_examine_extensions_certificate",
                   "tls_examine_extensions-deprecated",
                   "tls_emit_data",
                   "tls_session_activated",
@@ -1129,6 +1132,8 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_sign_message",
                   "tls_emit_data",
                   "tls_examine_extensions_encrypted_extensions",
+                  "tls_examine_extensions_certificate",
+                  "tls_examine_extensions_certificate_request",
                   "tls_examine_extensions-deprecated",
                   "tls_inspect_handshake_msg_certificate",
                   "tls_inspect_handshake_msg_certificate_request",
@@ -1215,6 +1220,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_inspect_handshake_msg_finished",
                   "tls_examine_extensions_server_hello",
                   "tls_examine_extensions_encrypted_extensions",
+                  "tls_examine_extensions_certificate",
                   "tls_examine_extensions-deprecated",
                   "tls_emit_data",
                   "tls_session_activated",
