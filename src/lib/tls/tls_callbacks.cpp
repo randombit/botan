@@ -2,6 +2,7 @@
 * TLS Callbacks
 * (C) 2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -46,8 +47,38 @@ void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/, Connection_Si
    {
    }
 
+void TLS::Callbacks::tls_modify_extensions(Extensions& exts, Connection_Side which_side, Handshake_Type which_message)
+   {
+   // Legacy behaviour: extensions in messages other than client/server hello
+   //                   are not forwarded to the deprecated callback.
+   if(which_message == Handshake_Type::CLIENT_HELLO ||
+      which_message == Handshake_Type::SERVER_HELLO ||
+      which_message == Handshake_Type::ENCRYPTED_EXTENSIONS)
+      {
+      BOTAN_DIAGNOSTIC_PUSH;
+      BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED;
+      tls_modify_extensions(exts, which_side);
+      BOTAN_DIAGNOSTIC_POP;
+      }
+   }
+
 void TLS::Callbacks::tls_examine_extensions(const Extensions& /*unused*/, Connection_Side /*unused*/)
    {
+   }
+
+void TLS::Callbacks::tls_examine_extensions(const Extensions& exts, Connection_Side which_side, Handshake_Type which_message)
+   {
+   // Legacy behaviour: extensions in messages other than client/server hello
+   //                   are not forwarded to the deprecated callback.
+   if(which_message == Handshake_Type::CLIENT_HELLO ||
+      which_message == Handshake_Type::SERVER_HELLO ||
+      which_message == Handshake_Type::ENCRYPTED_EXTENSIONS)
+      {
+      BOTAN_DIAGNOSTIC_PUSH;
+      BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED;
+      tls_examine_extensions(exts, which_side);
+      BOTAN_DIAGNOSTIC_POP;
+      }
    }
 
 std::string TLS::Callbacks::tls_decode_group_param(Group_Params group_param)

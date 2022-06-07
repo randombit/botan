@@ -324,7 +324,7 @@ class TLS_Handshake_Test final
                // ignore
                }
 
-            void tls_modify_extensions(Botan::TLS::Extensions& extn, Botan::TLS::Connection_Side which_side) override
+            void tls_modify_extensions(Botan::TLS::Extensions& extn, Botan::TLS::Connection_Side which_side, Botan::TLS::Handshake_Type /* unused */) override
                {
                extn.add(new Test_Extension(which_side));
 

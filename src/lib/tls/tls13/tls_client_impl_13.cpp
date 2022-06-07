@@ -331,7 +331,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
                                                             m_transcript_hash.current());
       }
 
-   callbacks().tls_examine_extensions(sh.extensions(), SERVER);
+   callbacks().tls_examine_extensions(sh.extensions(), SERVER, Handshake_Type::SERVER_HELLO);
 
    m_transitions.set_expected_next(ENCRYPTED_EXTENSIONS);
    }
@@ -365,7 +365,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
 
    ch.retry(hrr, m_transcript_hash, callbacks(), rng());
 
-   callbacks().tls_examine_extensions(hrr.extensions(), SERVER);
+   callbacks().tls_examine_extensions(hrr.extensions(), SERVER, Handshake_Type::HELLO_RETRY_REQUEST);
 
    send_handshake_message(ch);
 
@@ -405,7 +405,7 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
       }
 
-   callbacks().tls_examine_extensions(encrypted_extensions_msg.extensions(), SERVER);
+   callbacks().tls_examine_extensions(encrypted_extensions_msg.extensions(), SERVER, Handshake_Type::ENCRYPTED_EXTENSIONS);
 
    if(m_handshake_state.server_hello().extensions().has<PSK>())
       {

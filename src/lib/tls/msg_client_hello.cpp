@@ -414,7 +414,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(m_legacy_version.is_datagram_protocol())
       { m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles())); }
 
-   cb.tls_modify_extensions(m_extensions, CLIENT);
+   cb.tls_modify_extensions(m_extensions, CLIENT, type());
 
    hash.update(io.send(*this));
    }
@@ -477,7 +477,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(reneg_info.empty() && !next_protocols.empty())
       { m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols)); }
 
-   cb.tls_modify_extensions(m_extensions, CLIENT);
+   cb.tls_modify_extensions(m_extensions, CLIENT, type());
 
    hash.update(io.send(*this));
    }
@@ -567,7 +567,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    // TODO: Some extensions require a certain order or pose other assumptions.
    //       We should check those after the user was allowed to make changes to
    //       the extensions.
-   cb.tls_modify_extensions(m_extensions, CLIENT);
+   cb.tls_modify_extensions(m_extensions, CLIENT, type());
 
    // RFC 8446 4.2.11
    //    The "pre_shared_key" extension MUST be the last extension in the
@@ -610,10 +610,11 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
       m_extensions.add(new Cookie(hrr.extensions().get<Cookie>()->get_cookie()));
       }
 
-   // TODO: the consumer of the TLS implementation won't be able to distinguish
+   // Note: the consumer of the TLS implementation won't be able to distinguish
    //       invocations to this callback due to the first Client_Hello or the
-   //       retried Client_Hello after receiving a Hello_Retry_Request.
-   cb.tls_modify_extensions(m_extensions, CLIENT);
+   //       retried Client_Hello after receiving a Hello_Retry_Request. We assume
+   //       that the user keeps and detects this state themselves.
+   cb.tls_modify_extensions(m_extensions, CLIENT, type());
 
    auto psk = m_extensions.get<PSK>();
    if(psk)
