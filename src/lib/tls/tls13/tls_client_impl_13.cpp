@@ -523,7 +523,7 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedMessa
    //       CertificateRequest, the value of certificate_request_context in
    //       that message.
    flight.add(m_handshake_state.sending(
-      Certificate_13(std::move(client_certs), CLIENT, cert_request.context())));
+      Certificate_13(std::move(client_certs), CLIENT, cert_request.context(), callbacks())));
 
    // RFC 4.4.2
    //    If the server requests client authentication but no suitable certificate

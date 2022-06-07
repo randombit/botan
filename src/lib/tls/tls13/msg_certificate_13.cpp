@@ -106,13 +106,17 @@ void Certificate_13::verify(Callbacks& callbacks,
 
 Certificate_13::Certificate_13(const std::vector<X509_Certificate>& certs,
                                const Connection_Side side,
-                               const std::vector<uint8_t> &request_context)
+                               const std::vector<uint8_t> &request_context,
+                               Callbacks& callbacks)
    : m_request_context(request_context)
    , m_side(side)
    {
-   // TODO: proper extensions
    for (const auto& c : certs)
-      { m_entries.emplace_back(Certificate_Entry{c, Extensions()}); }
+      {
+      auto exts = Extensions();
+      callbacks.tls_modify_extensions(exts, side, type());
+      m_entries.emplace_back(Certificate_Entry{c, std::move(exts)});
+      }
    }
 
 /**

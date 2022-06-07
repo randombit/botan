@@ -509,12 +509,15 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
        * Create a Certificate message
        *
        * @param certs            the certificate (chain) to be used for authentication
+       * @param side             the connection side which constructs this message
        * @param request_context  the context provided in the Certificate Request
        *                         message when performing post-handshake client auth
+       * @param callbacks        the "callbacks" handle to use (for tls_modify_extensions)
        */
       Certificate_13(const std::vector<X509_Certificate>& certs,
                      const Connection_Side side,
-                     const std::vector<uint8_t> &request_context = {});
+                     const std::vector<uint8_t>& request_context,
+                     Callbacks& callbacks);
 
       /**
       * Deserialize a Certificate message

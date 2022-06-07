@@ -1135,6 +1135,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_examine_extensions_certificate",
                   "tls_examine_extensions_certificate_request",
                   "tls_examine_extensions-deprecated",
+                  "tls_modify_extensions_certificate",
                   "tls_inspect_handshake_msg_certificate",
                   "tls_inspect_handshake_msg_certificate_request",
                   "tls_inspect_handshake_msg_certificate_verify",
