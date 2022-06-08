@@ -60,18 +60,7 @@ class Key_Share_Entry
          {
          // TODO check that the group actually exists before casting...
          m_group = static_cast<Named_Group>(reader.get_uint16_t());
-         const auto key_exchange_length = reader.get_uint16_t();
-         m_key_exchange = reader.get_fixed<uint8_t>(key_exchange_length);
-         }
-
-      Key_Share_Entry(Named_Group group, std::vector<uint8_t> key_exchange)
-         : m_group(group)
-         , m_key_exchange(std::move(key_exchange))
-         {
-         if(m_key_exchange.empty())
-            {
-            throw Decoding_Error("Size of key_exchange in KeyShareEntry must be at least 1 byte.");
-            }
+         m_key_exchange = reader.get_tls_length_value(2);
          }
 
       Key_Share_Entry(const TLS::Group_Params group, Callbacks& cb, RandomNumberGenerator& rng)
@@ -218,12 +207,7 @@ class Key_Share_ServerHello
 
       std::vector<uint8_t> serialize() const
          {
-         std::vector<uint8_t> buf;
-
-         const auto server_share_serialized = m_server_share.serialize();
-         buf.insert(buf.end(), server_share_serialized.cbegin(), server_share_serialized.cend());
-
-         return buf;
+         return m_server_share.serialize();
          }
 
       bool empty() const
@@ -255,23 +239,7 @@ class Key_Share_ClientHello
 
          while(reader.has_remaining() && ((reader.read_so_far() - read_bytes_so_far_begin) < client_key_share_length))
             {
-            const auto group = reader.get_uint16_t();
-            const auto key_exchange_length = reader.get_uint16_t();
-
-            if(key_exchange_length > reader.remaining_bytes())
-               {
-               throw Decoding_Error("Not enough bytes in the buffer to decode KeyShare (ClientHello) extension");
-               }
-
-            std::vector<uint8_t> client_share;
-            client_share.reserve(key_exchange_length);
-
-            for(auto i = 0u; i < key_exchange_length; ++i)
-               {
-               client_share.push_back(reader.get_byte());
-               }
-
-            m_client_shares.emplace_back(static_cast<Named_Group>(group), client_share);
+            m_client_shares.emplace_back(reader);
             }
 
          if((reader.read_so_far() - read_bytes_so_far_begin) != client_key_share_length)
@@ -474,7 +442,7 @@ Key_Share::Key_Share(TLS_Data_Reader& reader,
 Key_Share::Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng) :
    m_impl(std::make_unique<Key_Share_Impl>(Key_Share_ClientHello(policy, cb, rng))) {}
 
-Key_Share::~Key_Share() {}
+Key_Share::~Key_Share() = default;
 
 std::vector<uint8_t> Key_Share::serialize(Connection_Side /*whoami*/) const
    {
