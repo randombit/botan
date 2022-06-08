@@ -446,6 +446,13 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedMessa
       throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Failed to negotiate a common signature algorithm for client authentication");
       }
 
+   // RFC 4.4.2.1
+   //    A server MAY request that a client present an OCSP response with its
+   //    certificate by sending an empty "status_request" extension in its
+   //    CertificateRequest message.
+   //
+   // TODO: Implement OCSP stapling for client certificates.
+
    std::vector<X509_Certificate> client_certs = credentials_manager().find_cert_chain(
          peer_allowed_signature_algos,
          cert_request.acceptable_CAs(),
