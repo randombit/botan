@@ -14,6 +14,8 @@
 #include <botan/tls_extensions.h>
 #include <botan/tls_session.h>
 
+#include <utility>
+
 #if defined(BOTAN_HAS_TLS_13)
 
 namespace Botan::TLS {
