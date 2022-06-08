@@ -94,11 +94,6 @@ bool Text_Policy::negotiate_encrypt_then_mac() const
    return get_bool("negotiate_encrypt_then_mac", Policy::negotiate_encrypt_then_mac());
    }
 
-bool Text_Policy::use_extended_master_secret() const
-   {
-   return get_bool("use_extended_master_secret", Policy::use_extended_master_secret());
-   }
-
 std::optional<uint16_t> Text_Policy::record_size_limit() const
    {
    const auto limit = get_len("record_size_limit", 0);

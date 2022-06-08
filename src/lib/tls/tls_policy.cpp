@@ -351,7 +351,6 @@ bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 bool Policy::negotiate_encrypt_then_mac() const { return true; }
-bool Policy::use_extended_master_secret() const { return allow_tls12() || allow_dtls12(); }
 std::optional<uint16_t> Policy::record_size_limit() const { return std::nullopt; }
 bool Policy::support_cert_status_message() const { return true; }
 bool Policy::allow_resumption_for_renegotiation() const { return true; }
@@ -588,7 +587,6 @@ void Policy::print(std::ostream& o) const
    print_bool(o, "hide_unknown_users", hide_unknown_users());
    print_bool(o, "server_uses_own_ciphersuite_preferences", server_uses_own_ciphersuite_preferences());
    print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
-   print_bool(o, "use_extended_master_secret", use_extended_master_secret());
    print_bool(o, "support_cert_status_message", support_cert_status_message());
    print_bool(o, "tls_13_middlebox_compatibility_mode", tls_13_middlebox_compatibility_mode());
    print_bool(o, "hash_hello_random", hash_hello_random());
