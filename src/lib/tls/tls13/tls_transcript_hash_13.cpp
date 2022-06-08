@@ -8,6 +8,8 @@
 
 #include <botan/internal/tls_transcript_hash_13.h>
 
+#include <utility>
+
 namespace Botan::TLS {
 
 Transcript_Hash_State::Transcript_Hash_State(const std::string &algo_spec)
