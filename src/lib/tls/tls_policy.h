@@ -93,24 +93,25 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual std::vector<Group_Params> key_exchange_groups() const;
 
       /**
-      * TLS 1.3 specific
       * Return a list of groups to provide prepared key share offers in the
       * initial client hello for. Groups in this list must be reflected in
       * key_exchange_groups() and in the same order. By default this returns
       * the most preferred group from key_exchange_groups().
       * If an empty list is returned, no prepared key share offers are sent
       * and the decision of the group to use is left to the server.
+      *
+      * @note Has an effect on TLS 1.3 clients, only.
       */
       virtual std::vector<Group_Params> key_exchange_groups_to_offer() const;
 
       /**
       * Request that ECC curve points are sent compressed
-      * This does not have an effect on TLS 1.3 as it always uses uncompressed ECC points.
       *
-      * RFC 8446 P. 50:
-      *    Versions of TLS prior to 1.3 permitted point format
-      *    negotiation; TLS 1.3 removes this feature in favor of a single point
-      *    format for each curve.
+      * @note Has no effect for TLS 1.3 connections.
+      *       RFC 8446 4.2.8.2
+      *          Versions of TLS prior to 1.3 permitted point format
+      *          negotiation; TLS 1.3 removes this feature in favor of a single
+      *          point format for each curve.
       */
       virtual bool use_ecc_point_compression() const;
 
@@ -125,7 +126,9 @@ class BOTAN_PUBLIC_API(2,0) Policy
       * support the secure renegotiation extension.
       *
       * @warning Changing this to true exposes you to injected
-      * plaintext attacks. Read RFC 5746 for background.
+      *          plaintext attacks. Read RFC 5746 for background.
+      *
+      * @note Has no effect for TLS 1.3 connections.
       */
       virtual bool allow_insecure_renegotiation() const;
 
@@ -139,17 +142,23 @@ class BOTAN_PUBLIC_API(2,0) Policy
 
       /**
       * Consulted by server side. If true, allows clients to initiate a new handshake
+      *
+      * @note Has no effect for TLS 1.3 connections.
       */
       virtual bool allow_client_initiated_renegotiation() const;
 
       /**
       * Consulted by client side. If true, allows servers to initiate a new handshake
+      *
+      * @note Has no effect for TLS 1.3 connections.
       */
       virtual bool allow_server_initiated_renegotiation() const;
 
       /**
       * If true, a request to renegotiate will close the connection with
       * a fatal alert. Otherwise, a warning alert is sent.
+      *
+      * @note Has no effect for TLS 1.3 connections.
       */
       virtual bool abort_connection_on_undesired_renegotiation() const;
 
@@ -170,6 +179,9 @@ class BOTAN_PUBLIC_API(2,0) Policy
       */
       virtual bool allow_dtls12() const;
 
+      /**
+      * @note Has no effect for TLS 1.3 connections.
+      */
       virtual Group_Params default_dh_group() const;
 
       /**
@@ -243,15 +255,15 @@ class BOTAN_PUBLIC_API(2,0) Policy
 
       /**
       * @return true if and only if we are willing to accept this version
-      * Default accepts TLS v1.0 and later or DTLS v1.2 or later.
+      * Default accepts TLS v1.2 and later or DTLS v1.2 or later.
       */
       virtual bool acceptable_protocol_version(Protocol_Version version) const;
 
       /**
-      * Returns the more recent protocol version we are willing to
+      * Returns the most recent protocol version we are willing to
       * use, for either TLS or DTLS depending on datagram param.
       * Shouldn't ever need to override this unless you want to allow
-      * a user to disable use of TLS v1.2 (which is *not recommended*)
+      * a user to disable specific TLS versions.
       */
       virtual Protocol_Version latest_supported_version(bool datagram) const;
 
@@ -271,17 +283,16 @@ class BOTAN_PUBLIC_API(2,0) Policy
       /**
       * Indicates whether the encrypt-then-MAC extension should be negotiated
       * (RFC 7366)
+      *
+      * @note Has no effect for TLS 1.3 connections.
       */
       virtual bool negotiate_encrypt_then_mac() const;
 
       /**
-      * TODO: This should probably be removed as it doesn't have an effect on either
-      *       TLS 1.2 or 1.3.
-      *
       * Indicates whether the extended master secret extension (RFC 7627) should be used.
       *
       * This is always enabled if the client supports TLS 1.2 (the option has no effect).
-      * For TLS 1.3 _only_ clients the extension is disabled by default.
+      * For TLS 1.3-only clients the extension is disabled by default.
       *
       * RFC 8446 Appendix D:
       *   TLS 1.2 and prior supported an "Extended Master Secret" [RFC7627]
@@ -301,7 +312,7 @@ class BOTAN_PUBLIC_API(2,0) Policy
        *
        * This value may be between 64 and 16385 (TLS 1.3) or 16384 (TLS 1.2).
        *
-       * TODO: This is currently not implemented for TLS 1.2, hence the limit
+       * @note This is currently not implemented for TLS 1.2, hence the limit
        *       won't be negotiated by TLS 1.3 clients that support downgrading
        *       to TLS 1.2 (i.e. ::allow_tls12() returning true).
        */
@@ -361,18 +372,21 @@ class BOTAN_PUBLIC_API(2,0) Policy
       */
       virtual size_t maximum_certificate_chain_size() const;
 
+      /**
+      * @note Has no effect for TLS 1.3 connections.
+      */
       virtual bool allow_resumption_for_renegotiation() const;
 
       /**
-       * Defines whether or not the middlebox compatibility mode should be
-       * used.
-       *
-       * RFC 8446 Appendix D.4
-       *    [This makes] the TLS 1.3 handshake resemble TLS 1.2 session resumption,
-       *    which improves the chance of successfully connecting through middleboxes.
-       *
-       * Enabled by default.
-       */
+      * Defines whether or not the middlebox compatibility mode should be
+      * used. Enabled by default.
+      *
+      * RFC 8446 Appendix D.4
+      *    [This makes] the TLS 1.3 handshake resemble TLS 1.2 session resumption,
+      *    which improves the chance of successfully connecting through middleboxes.
+      *
+      * @note Has an effect on TLS 1.3 connections, only.
+      */
       virtual bool tls_13_middlebox_compatibility_mode() const;
 
       /**
