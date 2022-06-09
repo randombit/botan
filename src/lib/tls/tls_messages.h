@@ -577,8 +577,7 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
    };
 
 /**
-* Certificate Request Message
-* TODO: this is 1.2 only
+* Certificate Request Message (TLS 1.2)
 */
 class BOTAN_UNSTABLE_API Certificate_Request_12 final : public Handshake_Message
    {
