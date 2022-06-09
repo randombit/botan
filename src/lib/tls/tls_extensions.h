@@ -478,7 +478,7 @@ using Named_Group = Group_Params;
 /**
 * Record Size Limit (RFC 8449)
 *
-* TODO: the record size limit will currently not be honored by the record protocol
+* TODO: the record size limit is currently not honored by the TLS 1.2 stack
 */
 class BOTAN_UNSTABLE_API Record_Size_Limit final : public Extension
    {
