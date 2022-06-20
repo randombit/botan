@@ -105,12 +105,15 @@ noekeon
 noekeon_simd
 seed
 serpent
-serpent_simd
 serpent_avx2
+serpent_simd
 shacal2
-shacal2_x86
+shacal2_armv8
+shacal2_avx2
 shacal2_simd
+shacal2_x86
 sm4
+sm4_armv8
 threefish_512
 threefish_512_avx2
 twofish
@@ -146,8 +149,8 @@ ed25519
 elgamal
 gost_3410
 mce
-rfc6979
 newhope
+rfc6979
 sm2
 
 # pk_pad
@@ -179,7 +182,7 @@ poly1305
 siphash
 x919_mac
 
-# misc
+# passhash
 bcrypt
 
 </prohibited>
