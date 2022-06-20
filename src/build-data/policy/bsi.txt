@@ -178,6 +178,7 @@ keccak
 chacha_rng
 
 # mac
+blake2mac
 poly1305
 siphash
 x919_mac
