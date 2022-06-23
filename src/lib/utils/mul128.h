@@ -12,7 +12,11 @@
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
   #include <intrin.h>
+  #if defined(_M_ARM64)
+  #pragma intrinsic(__umulh)
+  #else
   #pragma intrinsic(_umul128)
+  #endif
 #endif
 
 namespace Botan {
@@ -40,7 +44,12 @@ inline void mul64x64_128(uint64_t a, uint64_t b, uint64_t* lo, uint64_t* hi)
    *lo = (r      ) & 0xFFFFFFFFFFFFFFFF;
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
-   *lo = _umul128(a, b, hi);
+    #if defined(_M_ARM64)
+    *lo = a * b;
+    *hi = __umulh(a, b);
+    #else
+    *lo = _umul128(a, b, hi);
+    #endif
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
    asm("mulq %3"
