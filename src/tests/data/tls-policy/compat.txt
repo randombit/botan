@@ -8,6 +8,7 @@
 allow_tls10 = true
 allow_tls11 = true
 allow_tls12 = true
+allow_tls13 = false
 allow_dtls10 = false
 allow_dtls12 = false
 ciphers = ChaCha20Poly1305 AES-256/GCM AES-128/GCM AES-256 AES-128 3DES

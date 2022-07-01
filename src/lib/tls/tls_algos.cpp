@@ -4,6 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/ec_group.h>
+#include <botan/oids.h>
 #include <botan/tls_algos.h>
 #include <botan/exceptn.h>
 
@@ -40,6 +42,8 @@ std::string kex_method_to_string(Kex_Algo method)
          return "PSK";
       case Kex_Algo::ECDHE_PSK:
          return "ECDHE_PSK";
+      case Kex_Algo::UNDEFINED:
+         return "UNDEFINED";
       }
 
    throw Invalid_State("kex_method_to_string unknown enum value");
@@ -65,6 +69,9 @@ Kex_Algo kex_method_from_string(const std::string& str)
    if(str == "ECDHE_PSK")
       return Kex_Algo::ECDHE_PSK;
 
+   if(str == "UNDEFINED")
+      return Kex_Algo::UNDEFINED;
+
    throw Invalid_Argument("Unknown kex method " + str);
    }
 
@@ -78,6 +85,8 @@ std::string auth_method_to_string(Auth_Method method)
          return "ECDSA";
       case Auth_Method::IMPLICIT:
          return "IMPLICIT";
+      case Auth_Method::UNDEFINED:
+         return "UNDEFINED";
       }
 
     throw Invalid_State("auth_method_to_string unknown enum value");
@@ -91,6 +100,8 @@ Auth_Method auth_method_from_string(const std::string& str)
       return Auth_Method::ECDSA;
    if(str == "IMPLICIT")
       return Auth_Method::IMPLICIT;
+   if(str == "UNDEFINED")
+      return Auth_Method::UNDEFINED;
 
    throw Invalid_Argument("Bad signature method " + str);
    }
@@ -165,187 +176,6 @@ std::string group_param_to_string(Group_Params group)
       default:
          return "";
       }
-   }
-
-std::string hash_function_of_scheme(Signature_Scheme scheme)
-   {
-   switch(scheme)
-      {
-      case Signature_Scheme::ECDSA_SHA256:
-      case Signature_Scheme::RSA_PKCS1_SHA256:
-      case Signature_Scheme::RSA_PSS_SHA256:
-         return "SHA-256";
-
-      case Signature_Scheme::ECDSA_SHA384:
-      case Signature_Scheme::RSA_PKCS1_SHA384:
-      case Signature_Scheme::RSA_PSS_SHA384:
-         return "SHA-384";
-
-      case Signature_Scheme::ECDSA_SHA512:
-      case Signature_Scheme::RSA_PKCS1_SHA512:
-      case Signature_Scheme::RSA_PSS_SHA512:
-         return "SHA-512";
-
-      case Signature_Scheme::EDDSA_25519:
-      case Signature_Scheme::EDDSA_448:
-         return "Pure";
-
-      case Signature_Scheme::NONE:
-         return "";
-      }
-
-   throw Invalid_State("hash_function_of_scheme: Unknown signature algorithm enum");
-   }
-
-const std::vector<Signature_Scheme>& all_signature_schemes()
-   {
-   /*
-   * This is ordered in some approximate order of preference
-   */
-   static const std::vector<Signature_Scheme> all_schemes = {
-      //Signature_Scheme::EDDSA_448,
-      //Signature_Scheme::EDDSA_25519,
-
-      Signature_Scheme::RSA_PSS_SHA384,
-      Signature_Scheme::RSA_PSS_SHA256,
-      Signature_Scheme::RSA_PSS_SHA512,
-
-      Signature_Scheme::RSA_PKCS1_SHA384,
-      Signature_Scheme::RSA_PKCS1_SHA512,
-      Signature_Scheme::RSA_PKCS1_SHA256,
-
-      Signature_Scheme::ECDSA_SHA384,
-      Signature_Scheme::ECDSA_SHA512,
-      Signature_Scheme::ECDSA_SHA256,
-   };
-
-   return all_schemes;
-   }
-
-bool signature_scheme_is_known(Signature_Scheme scheme)
-   {
-   switch(scheme)
-      {
-      case Signature_Scheme::RSA_PKCS1_SHA256:
-      case Signature_Scheme::RSA_PKCS1_SHA384:
-      case Signature_Scheme::RSA_PKCS1_SHA512:
-      case Signature_Scheme::RSA_PSS_SHA256:
-      case Signature_Scheme::RSA_PSS_SHA384:
-      case Signature_Scheme::RSA_PSS_SHA512:
-
-      case Signature_Scheme::ECDSA_SHA256:
-      case Signature_Scheme::ECDSA_SHA384:
-      case Signature_Scheme::ECDSA_SHA512:
-         return true;
-
-      default:
-         return false;
-      }
-
-   }
-
-std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
-   {
-   switch(scheme)
-      {
-      case Signature_Scheme::RSA_PKCS1_SHA256:
-      case Signature_Scheme::RSA_PKCS1_SHA384:
-      case Signature_Scheme::RSA_PKCS1_SHA512:
-      case Signature_Scheme::RSA_PSS_SHA256:
-      case Signature_Scheme::RSA_PSS_SHA384:
-      case Signature_Scheme::RSA_PSS_SHA512:
-         return "RSA";
-
-      case Signature_Scheme::ECDSA_SHA256:
-      case Signature_Scheme::ECDSA_SHA384:
-      case Signature_Scheme::ECDSA_SHA512:
-         return "ECDSA";
-
-      case Signature_Scheme::EDDSA_25519:
-         return "Ed25519";
-
-      case Signature_Scheme::EDDSA_448:
-         return "Ed448";
-
-      case Signature_Scheme::NONE:
-         return "";
-      }
-
-   throw Invalid_State("signature_algorithm_of_scheme: Unknown signature algorithm enum");
-   }
-
-std::string sig_scheme_to_string(Signature_Scheme scheme)
-   {
-   switch(scheme)
-      {
-      case Signature_Scheme::RSA_PKCS1_SHA256:
-         return "RSA_PKCS1_SHA256";
-      case Signature_Scheme::RSA_PKCS1_SHA384:
-         return "RSA_PKCS1_SHA384";
-      case Signature_Scheme::RSA_PKCS1_SHA512:
-         return "RSA_PKCS1_SHA512";
-
-      case Signature_Scheme::ECDSA_SHA256:
-         return "ECDSA_SHA256";
-      case Signature_Scheme::ECDSA_SHA384:
-         return "ECDSA_SHA384";
-      case Signature_Scheme::ECDSA_SHA512:
-         return "ECDSA_SHA512";
-
-      case Signature_Scheme::RSA_PSS_SHA256:
-         return "RSA_PSS_SHA256";
-      case Signature_Scheme::RSA_PSS_SHA384:
-         return "RSA_PSS_SHA384";
-      case Signature_Scheme::RSA_PSS_SHA512:
-         return "RSA_PSS_SHA512";
-
-      case Signature_Scheme::EDDSA_25519:
-         return "EDDSA_25519";
-      case Signature_Scheme::EDDSA_448:
-         return "EDDSA_448";
-
-      case Signature_Scheme::NONE:
-         return "";
-      }
-
-   throw Invalid_State("sig_scheme_to_string: Unknown signature algorithm enum");
-   }
-
-std::string padding_string_for_scheme(Signature_Scheme scheme)
-   {
-   switch(scheme)
-      {
-      case Signature_Scheme::RSA_PKCS1_SHA256:
-         return "EMSA_PKCS1(SHA-256)";
-      case Signature_Scheme::RSA_PKCS1_SHA384:
-         return "EMSA_PKCS1(SHA-384)";
-      case Signature_Scheme::RSA_PKCS1_SHA512:
-         return "EMSA_PKCS1(SHA-512)";
-
-      case Signature_Scheme::ECDSA_SHA256:
-         return "EMSA1(SHA-256)";
-      case Signature_Scheme::ECDSA_SHA384:
-         return "EMSA1(SHA-384)";
-      case Signature_Scheme::ECDSA_SHA512:
-         return "EMSA1(SHA-512)";
-
-      case Signature_Scheme::RSA_PSS_SHA256:
-         return "PSSR(SHA-256,MGF1,32)";
-      case Signature_Scheme::RSA_PSS_SHA384:
-         return "PSSR(SHA-384,MGF1,48)";
-      case Signature_Scheme::RSA_PSS_SHA512:
-         return "PSSR(SHA-512,MGF1,64)";
-
-      case Signature_Scheme::EDDSA_25519:
-         return "Pure";
-      case Signature_Scheme::EDDSA_448:
-         return "Pure";
-
-      case Signature_Scheme::NONE:
-         return "";
-      }
-
-   throw Invalid_State("padding_string_for_scheme: Unknown signature algorithm enum");
    }
 
 }

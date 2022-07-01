@@ -17,6 +17,7 @@
 #include <botan/tls_version.h>
 #include <botan/secmem.h>
 #include <botan/pkix_types.h>
+#include <botan/tls_signature_scheme.h>
 
 #include <algorithm>
 #include <optional>
@@ -31,6 +32,15 @@ class RandomNumberGenerator;
 
 namespace TLS {
 
+#if defined(BOTAN_HAS_TLS_13)
+class Callbacks;
+
+enum class PSK_Key_Exchange_Mode : uint8_t {
+   PSK_KE = 0,
+   PSK_DHE_KE = 1
+};
+
+#endif
 class Policy;
 class TLS_Data_Reader;
 
@@ -49,9 +59,19 @@ enum Handshake_Extension_Type {
    TLSEXT_ENCRYPT_THEN_MAC          = 22,
    TLSEXT_EXTENDED_MASTER_SECRET    = 23,
 
+   TLSEXT_RECORD_SIZE_LIMIT         = 28,
+
    TLSEXT_SESSION_TICKET            = 35,
 
    TLSEXT_SUPPORTED_VERSIONS        = 43,
+#if defined(BOTAN_HAS_TLS_13)
+   TLSEXT_COOKIE                    = 44,
+
+   TLSEXT_PSK_KEY_EXCHANGE_MODES    = 45,
+
+   TLSEXT_SIGNATURE_ALGORITHMS_CERT = 50,
+   TLSEXT_KEY_SHARE                 = 51,
+#endif
 
    TLSEXT_SAFE_RENEGOTIATION     = 65281,
 };
@@ -456,6 +476,163 @@ class BOTAN_UNSTABLE_API Supported_Versions final : public Extension
 using Named_Group = Group_Params;
 
 /**
+* Record Size Limit (RFC 8449)
+*
+* TODO: the record size limit is currently not honored by the TLS 1.2 stack
+*/
+class BOTAN_UNSTABLE_API Record_Size_Limit final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_RECORD_SIZE_LIMIT; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      explicit Record_Size_Limit(const uint16_t limit);
+
+      Record_Size_Limit(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
+
+      uint16_t limit() const { return m_limit; }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override { return m_limit == 0; }
+
+   private:
+      uint16_t m_limit;
+   };
+
+using Named_Group = Group_Params;
+
+#if defined(BOTAN_HAS_TLS_13)
+/**
+* Cookie from RFC 8446 4.2.2
+*/
+class BOTAN_UNSTABLE_API Cookie final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_COOKIE; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override { return m_cookie.empty(); }
+
+      const std::vector<uint8_t>& get_cookie() const { return m_cookie; }
+
+      explicit Cookie(const std::vector<uint8_t>& cookie);
+
+      explicit Cookie(TLS_Data_Reader& reader,
+                      uint16_t extension_size);
+
+   private:
+      std::vector<uint8_t> m_cookie;
+   };
+
+/**
+* Pre-Shared Key Exchange Modes from RFC 8446 4.2.9
+*/
+class BOTAN_UNSTABLE_API PSK_Key_Exchange_Modes final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_PSK_KEY_EXCHANGE_MODES; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override { return m_modes.empty(); }
+
+      const std::vector<PSK_Key_Exchange_Mode>& modes() const { return m_modes; }
+
+      explicit PSK_Key_Exchange_Modes(std::vector<PSK_Key_Exchange_Mode> modes)
+         : m_modes(std::move(modes)) {}
+
+      explicit PSK_Key_Exchange_Modes(TLS_Data_Reader& reader, uint16_t extension_size);
+
+   private:
+      std::vector<PSK_Key_Exchange_Mode> m_modes;
+   };
+
+
+/**
+* Signature_Algorithms_Cert from RFC 8446
+*/
+class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_SIGNATURE_ALGORITHMS_CERT; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      const std::vector<Signature_Scheme>& supported_schemes() const { return m_siganture_algorithms.supported_schemes(); }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override { return m_siganture_algorithms.empty(); }
+
+      explicit Signature_Algorithms_Cert(const std::vector<Signature_Scheme>& schemes);
+
+      Signature_Algorithms_Cert(TLS_Data_Reader& reader, uint16_t extension_size);
+
+   private:
+      const Signature_Algorithms m_siganture_algorithms;
+   };
+
+/**
+* Key_Share from RFC 8446 4.2.8
+*/
+class BOTAN_UNSTABLE_API Key_Share final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_KEY_SHARE; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override;
+
+      /**
+       * Perform key exchange with the peer's key share.
+       * This method can be called on a ClientHello's Key_Share with a ServerHello's Key_Share or vice versa.
+       */
+      secure_vector<uint8_t> exchange(const Key_Share& peer_keyshare, const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng) const;
+
+      /**
+       * Update a ClientHello's Key_Share to comply with a HelloRetryRequest.
+       *
+       * This will create new Key_Share_Entries and should only be called on a ClientHello Key_Share with a HelloRetryRequest Key_Share.
+       */
+      void retry_offer(const Key_Share& retry_request_keyshare, const std::vector<Named_Group>& supported_groups, Callbacks& cb, RandomNumberGenerator& rng);
+
+      /**
+       * Delete all private keys that might be contained in Key_Share_Entries in this extension.
+       */
+      void erase();
+
+      explicit Key_Share(TLS_Data_Reader& reader,
+                         uint16_t extension_size,
+                         Handshake_Type message_type);
+
+      // constuctor used for ClientHello msg
+      explicit Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng);
+
+      // destructor implemented in .cpp to hide Key_Share_Impl
+      ~Key_Share();
+
+   private:
+      class Key_Share_Impl;
+      std::unique_ptr<Key_Share_Impl> m_impl;
+   };
+#endif
+
+/**
 * Unknown extensions are deserialized as this type
 */
 class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
@@ -532,6 +709,24 @@ class BOTAN_UNSTABLE_API Extensions final
       void deserialize(TLS_Data_Reader& reader,
                        const Connection_Side from,
                        const Handshake_Type message_type);
+
+      /**
+       * @param allowed_extensions        extension types that are allowed
+       * @param allow_unknown_extensions  if true, ignores unrecognized extensions
+       * @returns true if this contains any extensions that are not contained in @p allowed_extensions.
+       */
+      bool contains_other_than(const std::set<Handshake_Extension_Type>& allowed_extensions,
+                               const bool allow_unknown_extensions = false) const;
+
+      /**
+       * @param allowed_extensions  extension types that are allowed
+       * @returns true if this contains any extensions implemented by Botan that
+       *          are not contained in @p allowed_extensions.
+       */
+      bool contains_implemented_extensions_other_than(const std::set<Handshake_Extension_Type>& allowed_extensions) const
+         {
+         return contains_other_than(allowed_extensions, true);
+         }
 
       /**
        * Take the extension with the given type out of the extensions list.

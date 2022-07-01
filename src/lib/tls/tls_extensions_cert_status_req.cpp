@@ -45,12 +45,38 @@ std::vector<uint8_t> Certificate_Status_Request::serialize(Connection_Side whoam
 Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
                                                        uint16_t extension_size,
                                                        Connection_Side from,
-                                                       Handshake_Type)
+                                                       Handshake_Type message_type)
    {
    if(from == Connection_Side::SERVER)
       {
-      if(extension_size != 0)
-         throw Decoding_Error("Server sent non-empty Certificate_Status_Request extension in Server Hello");
+      // RFC 8446 4.4.2.1
+      //    In TLS 1.2 and below, the server replies with an empty extension
+      //    [in its Server Hello] [...]. In TLS 1.3, the server's OCSP information
+      //    is carried in an extension in the [Certificate handshake message]
+      //    containing the associated certificate.
+      //
+      // We use the `message_type` context information as an indication which
+      // type of Certificate_Status_Request extension to expect.
+      if(message_type == Handshake_Type::SERVER_HELLO)
+         {
+         // ... in a Server Hello the extension must have a zero-length body
+         if(extension_size != 0)
+            throw Decoding_Error("Server sent non-empty Certificate_Status_Request extension in Server Hello");
+         }
+      else if(message_type == Handshake_Type::CERTIFICATE)
+         {
+         // RFC 8446 4.4.2.1
+         //    In TLS 1.3, the server's OCSP information is carried in an
+         //    extension in the CertificateEntry [in a Certificate handshake
+         //    message] [...]. Specifically, the body of the "status_request"
+         //    extension from the server MUST be a CertificateStatus structure
+         //    as defined in [RFC6066] [...].
+         m_response = Certificate_Status(reader.get_fixed<uint8_t>(extension_size)).response();
+         }
+      else
+         {
+         throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION, "Server sent a Certificate_Status_Request extension in an unsupported context");
+         }
       }
    else if(extension_size > 0)
       {

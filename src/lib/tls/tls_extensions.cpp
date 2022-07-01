@@ -54,6 +54,9 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
       case TLSEXT_EXTENDED_MASTER_SECRET:
          return std::make_unique<Extended_Master_Secret>(reader, size);
 
+      case TLSEXT_RECORD_SIZE_LIMIT:
+         return std::make_unique<Record_Size_Limit>(reader, size, from);
+
       case TLSEXT_ENCRYPT_THEN_MAC:
          return std::make_unique<Encrypt_then_MAC>(reader, size);
 
@@ -62,6 +65,20 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 
       case TLSEXT_SUPPORTED_VERSIONS:
          return std::make_unique<Supported_Versions>(reader, size, from);
+
+#if defined(BOTAN_HAS_TLS_13)
+      case TLSEXT_COOKIE:
+         return std::make_unique<Cookie>(reader, size);
+
+      case TLSEXT_PSK_KEY_EXCHANGE_MODES:
+         return std::make_unique<PSK_Key_Exchange_Modes>(reader, size);
+
+      case TLSEXT_SIGNATURE_ALGORITHMS_CERT:
+         return std::make_unique<Signature_Algorithms_Cert>(reader, size);
+
+      case TLSEXT_KEY_SHARE:
+         return std::make_unique<Key_Share>(reader, size, message_type);
+#endif
       }
 
    return std::make_unique<Unknown_Extension>(static_cast<Handshake_Extension_Type>(code),
@@ -105,6 +122,34 @@ void Extensions::deserialize(TLS_Data_Reader& reader,
          this->add(make_extension(reader, extension_code, extension_size, from, message_type));
          }
       }
+   }
+
+bool Extensions::contains_other_than(const std::set<Handshake_Extension_Type>& allowed_extensions,
+                                     const bool allow_unknown_extensions) const
+   {
+   const auto found = extension_types();
+
+   std::vector<Handshake_Extension_Type> diff;
+   std::set_difference(found.cbegin(), found.end(),
+                       allowed_extensions.cbegin(), allowed_extensions.cend(),
+                       std::back_inserter(diff));
+
+   if(allow_unknown_extensions)
+      {
+      // Go through the found unexpected extensions whether any of those
+      // is known to this TLS implementation.
+      const auto itr = std::find_if(diff.cbegin(), diff.cend(),
+                                    [this](const auto ext_type)
+         {
+         const auto ext = get(ext_type);
+         return ext && ext->is_implemented();
+         });
+
+      // ... if yes, `contains_other_than` is true
+      return itr != diff.cend();
+      }
+
+   return !diff.empty();
    }
 
 std::unique_ptr<Extension> Extensions::take(Handshake_Extension_Type type)
@@ -442,10 +487,8 @@ std::vector<uint8_t> Signature_Algorithms::serialize(Connection_Side /*whoami*/)
 
    for(Signature_Scheme scheme : m_schemes)
       {
-      const uint16_t scheme_code = static_cast<uint16_t>(scheme);
-
-      buf.push_back(get_byte<0>(scheme_code));
-      buf.push_back(get_byte<1>(scheme_code));
+      buf.push_back(get_byte<0>(scheme.wire_code()));
+      buf.push_back(get_byte<1>(scheme.wire_code()));
       }
 
    return buf;
@@ -463,8 +506,7 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
 
    while(len)
       {
-      const uint16_t scheme_code = reader.get_uint16_t();
-      m_schemes.push_back(static_cast<Signature_Scheme>(scheme_code));
+      m_schemes.emplace_back(reader.get_uint16_t());
       len -= 2;
       }
    }
@@ -560,13 +602,21 @@ Supported_Versions::Supported_Versions(Protocol_Version offer, const Policy& pol
    {
    if(offer.is_datagram_protocol())
       {
+#if defined(BOTAN_HAS_TLS_12)
       if(offer >= Protocol_Version::DTLS_V12 && policy.allow_dtls12())
          m_versions.push_back(Protocol_Version::DTLS_V12);
+#endif
       }
    else
       {
+#if defined(BOTAN_HAS_TLS_13)
+      if(offer >= Protocol_Version::TLS_V13 && policy.allow_tls13())
+         m_versions.push_back(Protocol_Version::TLS_V13);
+#endif
+#if defined(BOTAN_HAS_TLS_12)
       if(offer >= Protocol_Version::TLS_V12 && policy.allow_tls12())
          m_versions.push_back(Protocol_Version::TLS_V12);
+#endif
       }
    }
 
@@ -600,4 +650,167 @@ bool Supported_Versions::supports(Protocol_Version version) const
    return false;
    }
 
+
+Record_Size_Limit::Record_Size_Limit(const uint16_t limit)
+   : m_limit(limit)
+   {
+   BOTAN_ASSERT(limit >= 64,
+                "RFC 8449 does not allow record size limits smaller than 64 bytes");
+   BOTAN_ASSERT(limit <= MAX_PLAINTEXT_SIZE + 1 /* encrypted content type byte */,
+                "RFC 8449 does not allow record size limits larger than 2^14+1");
+   }
+
+Record_Size_Limit::Record_Size_Limit(TLS_Data_Reader& reader,
+                                     uint16_t extension_size,
+                                     Connection_Side from)
+   {
+   if(extension_size != 2)
+      {
+      throw TLS_Exception(Alert::DECODE_ERROR, "invalid record_size_limit extension");
+      }
+
+   m_limit = reader.get_uint16_t();
+
+   // RFC 8449 4.
+   //    This value is the length of the plaintext of a protected record.
+   //    The value includes the content type and padding added in TLS 1.3 (that
+   //    is, the complete length of TLSInnerPlaintext).
+   //
+   //    A server MUST NOT enforce this restriction; a client might advertise
+   //    a higher limit that is enabled by an extension or version the server
+   //    does not understand. A client MAY abort the handshake with an
+   //    "illegal_parameter" alert.
+   //
+   // Note: We are currently supporting this extension in TLS 1.3 only, hence
+   //       we check for the TLS 1.3 limit. The TLS 1.2 limit would not include
+   //       the "content type byte" and hence be one byte less!
+   if(m_limit > MAX_PLAINTEXT_SIZE + 1 /* encrypted content type byte */ && from == SERVER)
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Server requested a record size limit larger than the protocol's maximum");
+      }
+
+   // RFC 8449 4.
+   //    Endpoints MUST NOT send a "record_size_limit" extension with a value
+   //    smaller than 64.  An endpoint MUST treat receipt of a smaller value
+   //    as a fatal error and generate an "illegal_parameter" alert.
+   if(m_limit < 64)
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Received a record size limit smaller than 64 bytes");
+      }
+   }
+
+std::vector<uint8_t> Record_Size_Limit::serialize(Connection_Side) const
+   {
+   std::vector<uint8_t> buf;
+
+   buf.push_back(get_byte<0>(m_limit));
+   buf.push_back(get_byte<1>(m_limit));
+
+   return buf;
+   }
+
+
+#if defined(BOTAN_HAS_TLS_13)
+Cookie::Cookie(const std::vector<uint8_t>& cookie) :
+   m_cookie(cookie)
+   {
+   }
+
+Cookie::Cookie(TLS_Data_Reader& reader,
+               uint16_t extension_size)
+   {
+   if (extension_size == 0)
+      {
+      return;
+      }
+
+   const uint16_t len = reader.get_uint16_t();
+
+   if (len == 0)
+      {
+      // Based on RFC 8446 4.2.2, len of the Cookie buffer must be at least 1
+      throw Decoding_Error("Cookie length must be at least 1 byte");
+      }
+
+   if (len > reader.remaining_bytes())
+      {
+      throw Decoding_Error("Not enough bytes in the buffer to decode Cookie");
+      }
+
+   for (auto i = 0u; i < len; ++i)
+      {
+      m_cookie.push_back(reader.get_byte());
+      }
+   }
+
+std::vector<uint8_t> Cookie::serialize(Connection_Side /*whoami*/) const
+   {
+   std::vector<uint8_t> buf;
+
+   const uint16_t len = static_cast<uint16_t>(m_cookie.size());
+
+   buf.push_back(get_byte<0>(len));
+   buf.push_back(get_byte<1>(len));
+
+   for (const auto& cookie_byte : m_cookie)
+      {
+      buf.push_back(cookie_byte);
+      }
+
+   return buf;
+   }
+
+
+std::vector<uint8_t> PSK_Key_Exchange_Modes::serialize(Connection_Side) const
+   {
+   std::vector<uint8_t> buf;
+
+   BOTAN_ASSERT_NOMSG(m_modes.size() < 256);
+   buf.push_back(static_cast<uint8_t>(m_modes.size()));
+   for (const auto& mode : m_modes)
+      {
+      buf.push_back(static_cast<uint8_t>(mode));
+      }
+
+   return buf;
+   }
+
+PSK_Key_Exchange_Modes::PSK_Key_Exchange_Modes(TLS_Data_Reader& reader, uint16_t extension_size)
+   {
+   if (extension_size < 2)
+      {
+      throw Decoding_Error("Empty psk_key_exchange_modes extension is illegal");
+      }
+
+   const auto mode_count = reader.get_byte();
+   for(uint16_t i = 0; i < mode_count; ++i)
+      {
+      const uint8_t mode = reader.get_byte();
+      if (mode != 0 && mode != 1)
+         {
+         throw Decoding_Error("Unexpected PSK mode: " + std::to_string(mode));
+         }
+
+      m_modes.push_back(PSK_Key_Exchange_Mode(mode));
+      }
+   }
+
+Signature_Algorithms_Cert::Signature_Algorithms_Cert(const std::vector<Signature_Scheme>& schemes)
+      : m_siganture_algorithms(schemes)
+   {
+   }
+
+Signature_Algorithms_Cert::Signature_Algorithms_Cert(TLS_Data_Reader& reader, uint16_t extension_size)
+   : m_siganture_algorithms(reader, extension_size)
+   {
+   }
+
+std::vector<uint8_t> Signature_Algorithms_Cert::serialize(Connection_Side whoami) const
+   {
+      return m_siganture_algorithms.serialize(whoami);
+   }
+
+#endif
 }

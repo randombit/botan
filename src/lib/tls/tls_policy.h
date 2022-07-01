@@ -10,8 +10,8 @@
 #define BOTAN_TLS_POLICY_H_
 
 #include <botan/tls_version.h>
-#include <botan/tls_algos.h>
 #include <botan/tls_ciphersuite.h>
+#include <botan/tls_signature_scheme.h>
 #include <optional>
 #include <vector>
 #include <map>
@@ -93,6 +93,17 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual std::vector<Group_Params> key_exchange_groups() const;
 
       /**
+      * TLS 1.3 specific
+      * Return a list of groups to provide prepared key share offers in the
+      * initial client hello for. Groups in this list must be reflected in
+      * key_exchange_groups() and in the same order. By default this returns
+      * the most preferred group from key_exchange_groups().
+      * If an empty list is returned, no prepared key share offers are sent
+      * and the decision of the group to use is left to the server.
+      */
+      virtual std::vector<Group_Params> key_exchange_groups_to_offer() const;
+
+      /**
       * Request that ECC curve points are sent compressed
       * This does not have an effect on TLS 1.3 as it always uses uncompressed ECC points.
       *
@@ -148,6 +159,11 @@ class BOTAN_PUBLIC_API(2,0) Policy
       * Allow TLS v1.2
       */
       virtual bool allow_tls12() const;
+
+      /**
+      * Allow TLS v1.3
+      */
+      virtual bool allow_tls13() const;
 
       /**
       * Allow DTLS v1.2
@@ -259,6 +275,39 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool negotiate_encrypt_then_mac() const;
 
       /**
+      * TODO: This should probably be removed as it doesn't have an effect on either
+      *       TLS 1.2 or 1.3.
+      *
+      * Indicates whether the extended master secret extension (RFC 7627) should be used.
+      *
+      * This is always enabled if the client supports TLS 1.2 (the option has no effect).
+      * For TLS 1.3 _only_ clients the extension is disabled by default.
+      *
+      * RFC 8446 Appendix D:
+      *   TLS 1.2 and prior supported an "Extended Master Secret" [RFC7627]
+      *   extension which digested large parts of the handshake transcript into
+      *   the master secret.  Because TLS 1.3 always hashes in the transcript
+      *   up to the server Finished, implementations which support both TLS 1.3
+      *   and earlier versions SHOULD indicate the use of the Extended Master
+      *   Secret extension in their APIs whenever TLS 1.3 is used.
+      */
+      virtual bool use_extended_master_secret() const;
+
+      /**
+       * Defines the maximum TLS record length for TLS connections.
+       * This is based on the Record Size Limit extension described in RFC 8449.
+       * By default (i.e. if std::nullopt is returned), TLS clients will omit
+       * this extension altogether.
+       *
+       * This value may be between 64 and 16385 (TLS 1.3) or 16384 (TLS 1.2).
+       *
+       * TODO: This is currently not implemented for TLS 1.2, hence the limit
+       *       won't be negotiated by TLS 1.3 clients that support downgrading
+       *       to TLS 1.2 (i.e. ::allow_tls12() returning true).
+       */
+      virtual std::optional<uint16_t> record_size_limit() const;
+
+      /**
       * Indicates whether certificate status messages should be supported
       */
       virtual bool support_cert_status_message() const;
@@ -313,6 +362,18 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual size_t maximum_certificate_chain_size() const;
 
       virtual bool allow_resumption_for_renegotiation() const;
+
+      /**
+       * Defines whether or not the middlebox compatibility mode should be
+       * used.
+       *
+       * RFC 8446 Appendix D.4
+       *    [This makes] the TLS 1.3 handshake resemble TLS 1.2 session resumption,
+       *    which improves the chance of successfully connecting through middleboxes.
+       *
+       * Enabled by default.
+       */
+      virtual bool tls_13_middlebox_compatibility_mode() const;
 
       /**
        * Hash the RNG output for the client/server hello random. This is a pre-caution
@@ -370,6 +431,7 @@ class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 : public Policy
       size_t minimum_signature_strength() const override { return 128; }
 
       bool allow_tls12()  const override { return true;  }
+      bool allow_tls13()  const override { return false; }
       bool allow_dtls12() const override { return false; }
    };
 
@@ -400,6 +462,7 @@ class BOTAN_PUBLIC_API(2,7) NSA_Suite_B_192 : public Policy
       size_t minimum_signature_strength() const override { return 192; }
 
       bool allow_tls12()  const override { return true;  }
+      bool allow_tls13()  const override { return false; }
       bool allow_dtls12() const override { return false; }
    };
 
@@ -460,6 +523,7 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
       size_t minimum_ecdsa_group_size() const override { return 250; }
 
       bool allow_tls12()  const override { return true;  }
+      bool allow_tls13()  const override { return false; }
       bool allow_dtls12() const override { return false; }
    };
 
@@ -473,6 +537,7 @@ class BOTAN_PUBLIC_API(2,0) Datagram_Policy : public Policy
          { return std::vector<std::string>({"AEAD"}); }
 
       bool allow_tls12()  const override { return false; }
+      bool allow_tls13()  const override { return false; }
       bool allow_dtls12() const override { return true;  }
    };
 
@@ -493,9 +558,6 @@ class BOTAN_PUBLIC_API(2,0) Strict_Policy : public Policy
       std::vector<std::string> allowed_macs() const override;
 
       std::vector<std::string> allowed_key_exchange_methods() const override;
-
-      bool allow_tls12()  const override;
-      bool allow_dtls12() const override;
    };
 
 class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
@@ -514,9 +576,13 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       std::vector<Group_Params> key_exchange_groups() const override;
 
+      std::vector<Group_Params> key_exchange_groups_to_offer() const override;
+
       bool use_ecc_point_compression() const override;
 
       bool allow_tls12() const override;
+
+      bool allow_tls13() const override;
 
       bool allow_dtls12() const override;
 
@@ -530,6 +596,10 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool server_uses_own_ciphersuite_preferences() const override;
 
       bool negotiate_encrypt_then_mac() const override;
+
+      bool use_extended_master_secret() const override;
+
+      std::optional<uint16_t> record_size_limit() const override;
 
       bool support_cert_status_message() const override;
 
@@ -556,6 +626,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool hide_unknown_users() const override;
 
       uint32_t session_ticket_lifetime() const override;
+
+      bool tls_13_middlebox_compatibility_mode() const override;
 
       bool hash_hello_random() const override;
 

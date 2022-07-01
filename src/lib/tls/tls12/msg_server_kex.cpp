@@ -216,7 +216,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
 
    if(auth_method != Auth_Method::IMPLICIT)
       {
-      m_scheme = static_cast<Signature_Scheme>(reader.get_uint16_t());
+      m_scheme = Signature_Scheme(reader.get_uint16_t());
       m_signature = reader.get_range<uint8_t>(2, 0, 65535);
       }
 
@@ -232,11 +232,10 @@ std::vector<uint8_t> Server_Key_Exchange::serialize() const
 
    if(!m_signature.empty())
       {
-      if(m_scheme != Signature_Scheme::NONE)
+      if(m_scheme.is_set())
          {
-         const uint16_t scheme_code = static_cast<uint16_t>(m_scheme);
-         buf.push_back(get_byte<0>(scheme_code));
-         buf.push_back(get_byte<1>(scheme_code));
+         buf.push_back(get_byte<0>(m_scheme.wire_code()));
+         buf.push_back(get_byte<1>(m_scheme.wire_code()));
          }
 
       append_tls_length_value(buf, m_signature, 2);

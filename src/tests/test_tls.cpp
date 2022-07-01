@@ -329,7 +329,12 @@ class Test_TLS_Policy_Text : public Test
          for(const std::string& policy : policies)
             {
             const std::string from_policy_obj = tls_policy_string(policy);
-            std::string from_file = read_tls_policy(policy);
+            std::string from_file =
+#if defined(BOTAN_HAS_TLS_13)
+               read_tls_policy(policy + (policy == "default" || policy == "strict" ? "_tls13" : ""));
+#else
+               read_tls_policy(policy);
+#endif
 
             result.test_eq("Values for TLS " + policy + " policy", from_file, from_policy_obj);
             }
@@ -445,12 +450,12 @@ class Test_TLS_Algo_Strings : public Test
          {
          Test::Result result("TLS::Signature_Scheme");
 
-         std::vector<Botan::TLS::Signature_Scheme> schemes = Botan::TLS::all_signature_schemes();
+         std::vector<Botan::TLS::Signature_Scheme> schemes = Botan::TLS::Signature_Scheme::all_available_schemes();
 
          std::set<std::string> scheme_strs;
          for(auto scheme : schemes)
             {
-            std::string scheme_str = Botan::TLS::sig_scheme_to_string(scheme);
+            std::string scheme_str = scheme.to_string();
 
             result.test_eq("Scheme strings unique", scheme_strs.count(scheme_str), 0);
 

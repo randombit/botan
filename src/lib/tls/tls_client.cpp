@@ -14,6 +14,9 @@
 #include <botan/internal/stl_util.h>
 
 #include <botan/internal/tls_client_impl_12.h>
+#if defined(BOTAN_HAS_TLS_13)
+  #include <botan/internal/tls_client_impl_13.h>
+#endif
 
 #include <iterator>
 #include <sstream>
@@ -34,17 +37,44 @@ Client::Client(Callbacks& callbacks,
                size_t io_buf_sz)
    {
    Protocol_Version effective_version = offer_version;
-   m_impl = std::make_unique<Client_Impl_12>(
-              callbacks, session_manager, creds, policy,
-              rng, info, effective_version.is_datagram_protocol(),
-              next_protocols, io_buf_sz);
+#if defined(BOTAN_HAS_TLS_13)
+   // downgrade to TLS 1.2 directly if we have a legacy session to resume
+   if(effective_version == Protocol_Version::TLS_V13)
+      {
+      Session session;
+      const bool found = session_manager.load_from_server_info(info, session);
+      if(found && session.version().is_pre_tls_13())
+         effective_version = session.version();
+      }
+
+   if(effective_version == Protocol_Version::TLS_V13)
+      m_impl = std::make_unique<Client_Impl_13>(
+                  callbacks, session_manager, creds, policy,
+                  rng, info, next_protocols);
+   else
+#endif
+      m_impl = std::make_unique<Client_Impl_12>(
+                  callbacks, session_manager, creds, policy,
+                  rng, info, effective_version.is_datagram_protocol(),
+                  next_protocols, io_buf_sz);
    }
 
 Client::~Client() = default;
 
 size_t Client::received_data(const uint8_t buf[], size_t buf_size)
    {
-   return m_impl->received_data(buf, buf_size);
+   auto read = m_impl->received_data(buf, buf_size);
+
+   if(m_impl->is_downgrading())
+      {
+      auto info = m_impl->extract_downgrade_info();
+      m_impl = std::make_unique<Client_Impl_12>(*info);
+
+      // replay peer data received so far
+      read = m_impl->received_data(info->peer_transcript.data(), info->peer_transcript.size());
+      }
+
+   return read;
    }
 
 bool Client::is_active() const
@@ -72,6 +102,11 @@ SymmetricKey Client::key_material_export(const std::string& label,
 void Client::renegotiate(bool force_full_renegotiation)
    {
    m_impl->renegotiate(force_full_renegotiation);
+   }
+
+void Client::update_traffic_keys(bool request_peer_update)
+   {
+   m_impl->update_traffic_keys(request_peer_update);
    }
 
 bool Client::secure_renegotiation_supported() const

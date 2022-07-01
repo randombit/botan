@@ -221,6 +221,12 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @param rng a random number generator
        *
        * @return a pair consisting of the agreed raw secret and our public value
+       *
+       * TODO: Currently, this is called in TLS 1.2 only. The key agreement mechanics
+       *       changed in TLS 1.3, so this callback would (at least) need to be aware
+       *       of the negotiated protocol version.
+       *       Suggestion: Lets think about a more generic interface for this and
+       *                   deprecate/remove this callback in Botan 3.0
        */
        virtual std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> tls_dh_agree(
           const std::vector<uint8_t>& modulus,
@@ -242,6 +248,12 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @param compressed the compression preference for our public value
        *
        * @return a pair consisting of the agreed raw secret and our public value
+       *
+       * TODO: Currently, this is called in TLS 1.2 only. The key agreement mechanics
+       *       changed in TLS 1.3, so this callback would (at least) need to be aware
+       *       of the negotiated protocol version.
+       *       Suggestion: Lets think about a more generic interface for this and
+       *                   deprecate/remove this callback in Botan 3.0
        */
        virtual std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> tls_ecdh_agree(
           const std::string& curve_name,

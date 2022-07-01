@@ -96,7 +96,7 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf)
 
    for(size_t i = 0; i != algs.size(); i += 2)
       {
-      m_schemes.push_back(static_cast<Signature_Scheme>(make_uint16(algs[i], algs[i+1])));
+      m_schemes.emplace_back(make_uint16(algs[i], algs[i+1]));
       }
 
    const uint16_t purported_size = reader.get_uint16_t();
@@ -161,5 +161,4 @@ std::vector<uint8_t> Certificate_Req::serialize() const
 
    return buf;
    }
-
 }

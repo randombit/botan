@@ -130,6 +130,14 @@ class BOTAN_PUBLIC_API(2,0) Channel
       virtual void renegotiate(bool force_full_renegotiation = false) = 0;
 
       /**
+      * Attempt to update the session's traffic key material
+      * Note that this is possible with a TLS 1.3 channel, only.
+      *
+      * @param request_peer_update if true, require a reciprocal key update
+      */
+      virtual void update_traffic_keys(bool request_peer_update = false) = 0;
+
+      /**
       * @return true iff the counterparty supports the secure
       * renegotiation extensions.
       */

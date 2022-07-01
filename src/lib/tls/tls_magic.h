@@ -30,8 +30,16 @@ enum Size_Limits : size_t {
    // The "TLSInnerPlaintext" length, i.e. the maximum amount of plaintext
    // application data that can be transmitted in a single TLS record.
    MAX_PLAINTEXT_SIZE = 16*1024,
+
    MAX_COMPRESSED_SIZE = MAX_PLAINTEXT_SIZE + 1024,
    MAX_CIPHERTEXT_SIZE = MAX_COMPRESSED_SIZE + 1024,
+
+   // RFC 8446 5.2:
+   //   This limit is derived from the maximum TLSInnerPlaintext length of 2^14
+   //   octets + 1 octet for ContentType + the maximum AEAD expansion of 255
+   //   octets.
+   MAX_AEAD_EXPANSION_SIZE_TLS13 = 255,
+   MAX_CIPHERTEXT_SIZE_TLS13 = MAX_PLAINTEXT_SIZE + MAX_AEAD_EXPANSION_SIZE_TLS13 + 1
 };
 
 // This will become an enum class in a future major release
@@ -39,10 +47,14 @@ enum Connection_Side { CLIENT = 1, SERVER = 2 };
 
 // This will become an enum class in a future major release
 enum Record_Type {
+   INVALID            = 0,  // RFC 8446 (TLS 1.3)
+
    CHANGE_CIPHER_SPEC = 20,
    ALERT              = 21,
    HANDSHAKE          = 22,
    APPLICATION_DATA   = 23,
+
+   HEARTBEAT          = 24, // RFC 6520 (TLS 1.3)
 
    NO_RECORD          = 256
 };
@@ -54,6 +66,10 @@ enum Handshake_Type {
    SERVER_HELLO         = 2,
    HELLO_VERIFY_REQUEST = 3,
    NEW_SESSION_TICKET   = 4, // RFC 5077
+
+   END_OF_EARLY_DATA    = 5, // RFC 8446 (TLS 1.3)
+   ENCRYPTED_EXTENSIONS = 8, // RFC 8446 (TLS 1.3)
+
    CERTIFICATE          = 11,
    SERVER_KEX           = 12,
    CERTIFICATE_REQUEST  = 13,
@@ -65,7 +81,10 @@ enum Handshake_Type {
    CERTIFICATE_URL      = 21,
    CERTIFICATE_STATUS   = 22,
 
-   HANDSHAKE_CCS        = 254, // Not a wire value
+   KEY_UPDATE           = 24,  // RFC 8446 (TLS 1.3)
+
+   HELLO_RETRY_REQUEST  = 253, // Not a wire value (HRR appears as an ordinary Server Hello)
+   HANDSHAKE_CCS        = 254, // Not a wire value (TLS 1.3 uses this value for 'message_hash' -- RFC 8446 4.4.1)
    HANDSHAKE_NONE       = 255  // Null value
 };
 

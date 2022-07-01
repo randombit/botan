@@ -123,6 +123,14 @@ class Channel_Impl_12 : public Channel_Impl
       void renegotiate(bool force_full_renegotiation = false) override;
 
       /**
+      * Attempt to update the session's traffic key material
+      * Note that this is possible with a TLS 1.3 channel, only.
+      *
+      * @param request_peer_update if true, require a reciprocal key update
+      */
+      void update_traffic_keys(bool request_peer_update = false) override;
+
+      /**
       * @return true iff the counterparty supports the secure
       * renegotiation extensions.
       */

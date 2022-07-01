@@ -10,6 +10,7 @@
 #include <botan/tls_server.h>
 #include <botan/tls_messages.h>
 #include <botan/tls_version.h>
+#include <botan/ocsp.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_server_impl_12.h>
@@ -215,11 +216,11 @@ uint16_t choose_ciphersuite(
 
          for(Signature_Scheme scheme : client_sig_methods)
             {
-            if(signature_scheme_is_known(scheme) == false)
+            if(!scheme.is_available())
                continue;
 
-            if(signature_algorithm_of_scheme(scheme) == suite->sig_algo() &&
-               policy.allowed_signature_hash(hash_function_of_scheme(scheme)))
+            if(scheme.algorithm_name() == suite->sig_algo() &&
+               policy.allowed_signature_hash(scheme.hash_function_name()))
                {
                we_support_some_hash_by_client = true;
                }

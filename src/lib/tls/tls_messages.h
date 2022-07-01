@@ -209,12 +209,44 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello
       void update_hello_cookie(const Hello_Verify_Request& hello_verify);
    };
 
+#if defined(BOTAN_HAS_TLS_13)
+
+class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
+   {
+   public:
+      explicit Client_Hello_13(const std::vector<uint8_t>& buf) : Client_Hello(buf) {}
+
+      Client_Hello_13(const Policy& policy,
+                      Callbacks& cb,
+                      RandomNumberGenerator& rng,
+                      const std::string& hostname,
+                      const std::vector<std::string>& next_protocols);
+
+
+      void retry(const Hello_Retry_Request& hrr,
+                 Callbacks& cb,
+                 RandomNumberGenerator& rng);
+
+      std::vector<Protocol_Version> supported_versions() const;
+   };
+
+#endif // BOTAN_HAS_TLS_13
+
+class Server_Hello_Internal;
+
 /**
 * Server Hello Message
 */
 class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message
    {
    public:
+      Server_Hello(const Server_Hello&) = delete;
+      Server_Hello& operator=(const Server_Hello&) = delete;
+      Server_Hello(Server_Hello&&);
+      Server_Hello& operator=(Server_Hello&&);
+
+      ~Server_Hello();
+
       std::vector<uint8_t> serialize() const override;
 
       Handshake_Type type() const override;
@@ -227,38 +259,7 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message
       virtual Protocol_Version selected_version() const = 0;
 
    protected:
-      /**
-       * Version-agnostic internal server hello data container that allows
-       * parsing Server_Hello messages without prior knowledge of the contained
-       * protocol version.
-       */
-      class Internal
-         {
-         public:
-            Internal(const std::vector<uint8_t>& buf);
-
-            Internal(Protocol_Version legacy_version,
-                     std::vector<uint8_t> session_id,
-                     std::vector<uint8_t> random,
-                     const uint16_t ciphersuite,
-                     const uint8_t comp_method);
-
-            Protocol_Version version() const;
-
-         public:
-            Protocol_Version legacy_version;
-            std::vector<uint8_t> session_id;
-            std::vector<uint8_t> random;
-            bool is_hello_retry_request;
-            uint16_t ciphersuite;
-            uint8_t  comp_method;
-
-            Extensions  extensions;
-         };
-
-   protected:
-      explicit Server_Hello(std::unique_ptr<Internal> data)
-         : m_data(std::move(data)) {}
+      explicit Server_Hello(std::unique_ptr<Server_Hello_Internal> data);
 
       // methods used internally and potentially exposed by one of the subclasses
       std::set<Handshake_Extension_Type> extension_types() const;
@@ -267,7 +268,7 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message
       Protocol_Version legacy_version() const;
 
    protected:
-      std::unique_ptr<Internal> m_data;
+      std::unique_ptr<Server_Hello_Internal> m_data;
    };
 
 class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello
@@ -322,7 +323,7 @@ class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello
 
    protected:
       friend class Server_Hello_13;  // to allow construction by Server_Hello_13::parse()
-      explicit Server_Hello_12(std::unique_ptr<Server_Hello::Internal> data);
+      explicit Server_Hello_12(std::unique_ptr<Server_Hello_Internal> data);
 
    public:
       using Server_Hello::random;
@@ -356,6 +357,63 @@ class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello
        * Return desired downgrade version indicated by hello random, if any.
        */
       std::optional<Protocol_Version> random_signals_downgrade() const;
+   };
+
+#if defined(BOTAN_HAS_TLS_13)
+
+class Hello_Retry_Request;
+
+class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello
+   {
+   protected:
+      static struct Server_Hello_Tag {} as_server_hello;
+      static struct Hello_Retry_Request_Tag {} as_hello_retry_request;
+
+      explicit Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Server_Hello_Tag tag = as_server_hello);
+      explicit Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Hello_Retry_Request_Tag tag);
+      void basic_validation() const;
+
+   public:
+      static std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12>
+      parse(const std::vector<uint8_t>& buf);
+
+      /**
+       * Return desired downgrade version indicated by hello random, if any.
+       */
+      std::optional<Protocol_Version> random_signals_downgrade() const;
+
+      /**
+       * @returns the selected version as indicated by the supported_versions extension
+       */
+      Protocol_Version selected_version() const override;
+   };
+
+class BOTAN_UNSTABLE_API Hello_Retry_Request final : public Server_Hello_13
+   {
+   protected:
+      friend class Server_Hello_13;  // to allow construction by Server_Hello_13::parse()
+      explicit Hello_Retry_Request(std::unique_ptr<Server_Hello_Internal> data);
+
+   public:
+      Handshake_Type type() const override { return HELLO_RETRY_REQUEST; }
+      Handshake_Type wire_type() const override { return SERVER_HELLO; }
+   };
+
+#endif // BOTAN_HAS_TLS_13
+
+class BOTAN_UNSTABLE_API Encrypted_Extensions final : public Handshake_Message
+   {
+   public:
+      explicit Encrypted_Extensions(const std::vector<uint8_t>& buf);
+
+      Handshake_Type type() const override { return Handshake_Type::ENCRYPTED_EXTENSIONS; }
+
+      const Extensions& extensions() const { return m_extensions; }
+
+      std::vector<uint8_t> serialize() const override { return {}; }
+
+   private:
+      Extensions m_extensions;
    };
 
 /**
@@ -414,6 +472,70 @@ class BOTAN_UNSTABLE_API Certificate_12 final : public Handshake_Message
 
    private:
       std::vector<X509_Certificate> m_certs;
+   };
+
+/**
+* Certificate Message of TLS 1.3
+*/
+class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
+   {
+   public:
+      struct Certificate_Entry
+         {
+         // TODO: RFC 8446 4.4.2 specifies the possibility to negotiate the usage
+         //       of a single raw public key in lieu of the X.509 certificate
+         //       chain. This is left for future work.
+         X509_Certificate certificate;
+         Extensions       extensions;
+         };
+
+   public:
+      Handshake_Type type() const override { return CERTIFICATE; }
+      const std::vector<Certificate_Entry>& cert_chain() const { return m_entries; }
+
+      size_t count() const { return m_entries.size(); }
+      bool empty() const { return m_entries.empty(); }
+
+      /**
+      * Deserialize a Certificate message
+      * @param buf the serialized message
+      * @param policy the TLS policy
+      * @param side is this a SERVER or CLIENT certificate message
+      */
+      Certificate_13(const std::vector<uint8_t>& buf,
+                     const Policy& policy,
+                     const Connection_Side side);
+
+      /**
+      * Validate a Certificate message regarding what extensions are expected based on
+      * previous handshake messages.
+      *
+      * @param requested_extensions Extensions of Client_Hello or Certificate_Req messages
+      */
+      void validate_extensions(const std::set<Handshake_Extension_Type>& requested_extensions) const;
+
+      /**
+       * Verify the certificate chain
+       *
+       * @throws if verification fails.
+       */
+      void verify(Callbacks& callbacks,
+                  const Policy& policy,
+                  Credentials_Manager& creds,
+                  const std::string& hostname,
+                  bool use_ocsp) const;
+
+      std::vector<uint8_t> serialize() const override;
+
+   private:
+      // RFC 8446 4.4.2
+      //    [...] (in the case of server authentication),
+      //    this field SHALL be zero length.
+      //
+      // TODO: implement when adding support for client certificates
+      std::vector<uint8_t>           m_request_context;
+      std::vector<Certificate_Entry> m_entries;
+      Connection_Side                m_side;
    };
 
 /**
@@ -481,6 +603,8 @@ class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message
    public:
       Handshake_Type type() const override { return CERTIFICATE_VERIFY; }
 
+      Signature_Scheme signature_scheme() const { return m_scheme; }
+
       Certificate_Verify(Handshake_IO& io,
                          Handshake_State& state,
                          const Policy& policy,
@@ -493,7 +617,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message
 
    protected:
       std::vector<uint8_t> m_signature;
-      Signature_Scheme m_scheme = Signature_Scheme::NONE;
+      Signature_Scheme m_scheme;
    };
 
 /**
@@ -514,6 +638,32 @@ class BOTAN_UNSTABLE_API Certificate_Verify_12 final : public Certificate_Verify
                   const Handshake_State& state,
                   const Policy& policy) const;
    };
+
+#if defined(BOTAN_HAS_TLS_13)
+
+/**
+* Certificate Verify Message
+*/
+class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
+   {
+   public:
+      /**
+      * Deserialize a Certificate message
+      * @param buf the serialized message
+      * @param side is this a SERVER or CLIENT certificate message
+      */
+      Certificate_Verify_13(const std::vector<uint8_t>& buf,
+                            const Connection_Side side);
+
+      bool verify(const X509_Certificate& cert,
+                  Callbacks& callbacks,
+                  const Transcript_Hash& transcript_hash) const;
+
+   private:
+      Connection_Side m_side;
+   };
+
+#endif
 
 /**
 * Finished Message
@@ -544,6 +694,19 @@ class BOTAN_UNSTABLE_API Finished_12 final : public Finished
 
       bool verify(const Handshake_State& state, Connection_Side side) const;
    };
+
+#if defined(BOTAN_HAS_TLS_13)
+class BOTAN_UNSTABLE_API Finished_13 final : public Finished
+   {
+   public:
+      using Finished::Finished;
+      Finished_13(Cipher_State* cipher_state,
+                  const Transcript_Hash& transcript_hash);
+
+      bool verify(Cipher_State* cipher_state,
+                  const Transcript_Hash& transcript_hash) const;
+   };
+#endif
 
 /**
 * Hello Request Message
@@ -610,7 +773,7 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
       std::vector<uint8_t> m_params;
 
       std::vector<uint8_t> m_signature;
-      Signature_Scheme m_scheme = Signature_Scheme::NONE;
+      Signature_Scheme m_scheme;
    };
 
 /**
@@ -656,6 +819,24 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message
       std::vector<uint8_t> m_ticket;
    };
 
+#if defined(BOTAN_HAS_TLS_13)
+
+class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
+   {
+   public:
+      Handshake_Type type() const override { return NEW_SESSION_TICKET; }
+
+      explicit New_Session_Ticket_13(const std::vector<uint8_t>& buf);
+
+      std::vector<uint8_t> serialize() const override;
+
+   private:
+
+      // TODO: implement this message fully
+   };
+
+#endif
+
 /**
 * Change Cipher Spec
 */
@@ -667,6 +848,80 @@ class BOTAN_UNSTABLE_API Change_Cipher_Spec final : public Handshake_Message
       std::vector<uint8_t> serialize() const override
          { return std::vector<uint8_t>(1, 1); }
    };
+
+class BOTAN_UNSTABLE_API Key_Update final : public Handshake_Message
+   {
+   public:
+      Handshake_Type type() const override { return  KEY_UPDATE; }
+
+      explicit Key_Update(const bool request_peer_update);
+      explicit Key_Update(const std::vector<uint8_t>& buf);
+
+      std::vector<uint8_t> serialize() const override;
+
+      bool expects_reciprocation() const { return m_update_requested; }
+
+   private:
+      bool m_update_requested;
+   };
+
+#if defined(BOTAN_HAS_TLS_13)
+
+namespace {
+template <typename T>
+struct as_wrapped_references
+   {
+   };
+
+template <typename... AlternativeTs>
+struct as_wrapped_references<std::variant<AlternativeTs...>>
+   {
+   using type = std::variant<std::reference_wrapper<AlternativeTs>...>;
+   };
+
+template <typename T>
+using as_wrapped_references_t = typename as_wrapped_references<T>::type;
+}
+
+// Handshake message types from RFC 8446 4.
+using Handshake_Message_13 = std::variant<
+                             Client_Hello_13,
+                             Server_Hello_13,
+                             Server_Hello_12,
+                             Hello_Retry_Request,
+                             // End_Of_Early_Data,
+                             Encrypted_Extensions,
+                             Certificate_13,
+                             // Certificate_Req_13,
+                             Certificate_Verify_13,
+                             Finished_13>;
+using Handshake_Message_13_Ref = as_wrapped_references_t<Handshake_Message_13>;
+
+using Post_Handshake_Message_13 = std::variant<
+                                  New_Session_Ticket_13,
+                                  Key_Update>;
+
+using Server_Handshake_13_Message = std::variant<
+                                    Server_Hello_13,
+                                    Server_Hello_12,  // indicates a TLS version downgrade
+                                    Hello_Retry_Request,
+                                    Encrypted_Extensions,
+                                    Certificate_13,
+                                    Certificate_Verify_13,
+                                    Finished_13>;
+                                    // Post-Handshake Messages
+                                    // New_Session_Ticket_13,
+                                    // Key_Update>;
+using Server_Handshake_13_Message_Ref = as_wrapped_references_t<Server_Handshake_13_Message>;
+
+using Client_Handshake_13_Message = std::variant<
+                                    Client_Hello_13,
+                                    Finished_13>;
+                                    // Post-Handshake Messages
+                                    // Key_Update>;
+using Client_Handshake_13_Message_Ref = as_wrapped_references_t<Client_Handshake_13_Message>;
+
+#endif // BOTAN_HAS_TLS_13
 
 }
 

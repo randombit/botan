@@ -47,13 +47,12 @@ Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf)
    {
    TLS_Data_Reader reader("CertificateVerify", buf);
 
-   m_scheme = static_cast<Signature_Scheme>(reader.get_uint16_t());
+   m_scheme = Signature_Scheme(reader.get_uint16_t());
    m_signature = reader.get_range<uint8_t>(2, 0, 65535);
    reader.assert_done();
 
-   if(m_scheme == Signature_Scheme::NONE)
+   if(!m_scheme.is_set())
       { throw Decoding_Error("Counterparty did not send hash/sig IDS"); }
-
    }
 
 /*
@@ -61,14 +60,12 @@ Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf)
 */
 std::vector<uint8_t> Certificate_Verify::serialize() const
    {
+   BOTAN_ASSERT_NOMSG(m_scheme.is_set());
    std::vector<uint8_t> buf;
 
-   if(m_scheme != Signature_Scheme::NONE)
-      {
-      const uint16_t scheme_code = static_cast<uint16_t>(m_scheme);
-      buf.push_back(get_byte<0>(scheme_code));
-      buf.push_back(get_byte<1>(scheme_code));
-      }
+   const auto code = m_scheme.wire_code();
+   buf.push_back(get_byte<0>(code));
+   buf.push_back(get_byte<1>(code));
 
    if(m_signature.size() > 0xFFFF)
       { throw Encoding_Error("Certificate_Verify signature too long to encode"); }
@@ -100,9 +97,70 @@ bool Certificate_Verify_12::verify(const X509_Certificate& cert,
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    BOTAN_UNUSED(signature_valid);
    return true;
+
+#else
+   return signature_valid;
+
+#endif
+   }
+
+#if defined(BOTAN_HAS_TLS_13)
+
+Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf,
+      const Connection_Side side)
+   : Certificate_Verify(buf)
+   , m_side(side)
+   {
+   if(!m_scheme.is_available())
+      { throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Peer sent unknown signature scheme"); }
+
+   if(!m_scheme.is_compatible_with(Protocol_Version::TLS_V13))
+      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Peer sent signature algorithm that is not suitable for TLS 1.3"); }
+   }
+
+/*
+* Verify a Certificate Verify message
+*/
+bool Certificate_Verify_13::verify(const X509_Certificate& cert,
+                                   Callbacks& callbacks,
+                                   const Transcript_Hash& transcript_hash) const
+   {
+   BOTAN_ASSERT_NOMSG(m_scheme.is_available());
+
+   // RFC 8446 4.2.3
+   //    The keys found in certificates MUST [...] be of appropriate type for
+   //    the signature algorithms they are used with.
+   if(m_scheme.algorithm_identifier() != cert.subject_public_key_algo())
+      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Signature algorithm does not match certificate's public key"); }
+
+   std::vector<uint8_t> msg(64, 0x20);
+   msg.reserve(64 + 32 + 1 + transcript_hash.size());
+
+   const std::string context_string = (m_side == Botan::TLS::Connection_Side::SERVER)
+                                      ? "TLS 1.3, server CertificateVerify"
+                                      : "TLS 1.3, client CertificateVerify";
+
+   msg.insert(msg.end(), context_string.cbegin(), context_string.cend());
+   msg.push_back(0x00);
+
+   msg.insert(msg.end(), transcript_hash.cbegin(), transcript_hash.cend());
+
+   const auto key = cert.load_subject_public_key();
+   const bool signature_valid =
+      callbacks.tls_verify_message(*key,
+                                   m_scheme.padding_string(),
+                                   m_scheme.format().value(),
+                                   msg,
+                                   m_signature);
+
+#if defined(BOTAN_UNSAFE_FUZZER_MODE)
+   BOTAN_UNUSED(signature_valid);
+   return true;
 #else
    return signature_valid;
 #endif
    }
+
+#endif  // BOTAN_HAS_TLS_13
 
 }
