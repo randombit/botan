@@ -10,6 +10,9 @@ Under ``src`` there are directories
 * ``lib`` is the library itself, more on that below
 * ``cli`` is the command line application ``botan``
 * ``tests`` contain what you would expect. Input files go under ``tests/data``.
+* ``bogo_shim`` contains the shim binary and configuration for
+  `BoringSSL's TLS test suite <https://github.com/google/boringssl/tree/master/ssl/test>`_
+* ``fuzzer`` contains fuzz targets for various modules of the library
 * ``build-data`` contains files read by the configure script. For
   example ``build-data/cc/gcc.txt`` describes various gcc options.
 * ``scripts`` contains misc scripts: install, distribution, various
@@ -17,37 +20,48 @@ Under ``src`` there are directories
 * ``configs`` contains configuration files for emacs, astyle, pylint, etc
 * ``python/botan2.py`` is the Python ctypes wrapper
 
+Under ``doc`` one finds the sources of this documentation
+
 Library Layout
 ----------------------------------------
 
+Under ``src/lib`` are several directories
+
+* ``asn1`` is the DER encoder/decoder
 * ``base`` defines some high level types
-* ``utils`` contains various utility functions and types
-* ``codec`` has hex, base64
 * ``block`` contains the block cipher implementations
-* ``modes`` contains block cipher modes (CBC, GCM, etc)
-* ``stream`` contains the stream ciphers
+* ``codec`` has hex, base64, base32, base58
+* ``compat`` a (partial) compatibility layer for the libsodium API
+* ``compression`` has the compression wrappers (zlib, bzip2, lzma)
+* ``entropy`` has various entropy sources used by some of the RNGs
+* ``ffi`` is the C99 API
+* ``filters`` is a filter/pipe API for data transforms
 * ``hash`` contains the hash function implementations
-* ``passhash`` contains password hashing algorithms for authentication
 * ``kdf`` contains the key derivation functions
 * ``mac`` contains the message authentication codes
-* ``pbkdf`` contains password hashing algorithms for key derivation
 * ``math`` is the big integer math library. It is divided into three parts:
   ``mp`` which are the low level algorithms; ``bigint`` which is a C++ wrapper
   around ``mp``, and ``numbertheory`` which contains higher level algorithms like
   primality testing and exponentiation
-* ``pubkey`` contains the public key algorithms
-* ``pk_pad`` contains padding schemes for public key algorithms
-* ``rng`` contains the random number generators
-* ``entropy`` has various entropy sources used by some of the RNGs
-* ``asn1`` is the DER encoder/decoder
-* ``x509`` is X.509 certificates, PKCS #10 requests, OCSP
-* ``tls`` contains the TLS implementation
-* ``filters`` is a filter/pipe API for data transforms
-* ``compression`` has the compression wrappers (zlib, bzip2, lzma)
-* ``ffi`` is the C99 API
-* ``prov`` contains bindings to external libraries such as PKCS #11
 * ``misc`` contains odds and ends: format preserving encryption, SRP, threshold
   secret sharing, all or nothing transform, and others
+* ``modes`` contains block cipher modes (CBC, GCM, etc)
+* ``passhash`` contains password hashing algorithms for authentication
+* ``pbkdf`` contains password hashing algorithms for key derivation
+* ``pk_pad`` contains padding schemes for public key algorithms
+* ``prov`` contains bindings to external libraries such as PKCS #11
+* ``psk_db`` contains a generic interface for a Pre-Shared-Key database
+* ``pubkey`` contains the public key algorithms
+* ``rng`` contains the random number generators
+* ``stream`` contains the stream ciphers
+* ``tls`` contains the TLS implementation
+* ``utils`` contains various utility functions and types
+* ``x509`` is X.509 certificates, PKCS #10 requests, OCSP
+
+Each of these folders can contain subfolders which are treated as modules if they
+contain an ``info.txt`` file. These submodules have an implicit dependency on their
+parent module. The chapter :ref:`configure_script` contains more information on
+Botan's module architecture.
 
 Sending patches
 ----------------------------------------

@@ -1,3 +1,5 @@
+.. _configure_script:
+
 Understanding configure.py
 ============================
 
@@ -91,10 +93,23 @@ to the output unmodified. The template elements are:
    any variables expanded. As with the for loop syntax, both the start and end
    of the conditional must be on their own lines with no additional text.
 
+Build.h
+-------
+
+The ``build.h`` header file is generated and overwritten each time the
+``configure.py`` script is executed. This header can be included in any header
+or source file and provides plenty of compile-time information in the form of
+preprocessor ``#define``s.
+
+It is helpful to check which modules are included in the current build of the
+library via macro defines of the form "BOTAN_HAS" followed by the module name.
+Also, it contains :ref:`version information macros <versioning>` and compile-time
+library configurations.
+
 Adding a new module
 --------------------
 
-Create a directory in the appropriate place and create a info.txt file.
+Create a directory in the appropriate place and create a ``info.txt`` file.
 
 Syntax of ``info.txt``
 ------------------------
@@ -342,6 +357,7 @@ Variables:
   * ``stack_protector_flags`` gives compiler flags to enable stack overflow checking.
   * ``shared_flags`` gives compiler flags to use when generation shared libraries.
   * ``lang_flags`` gives compiler flags used to enable the required version of C++.
+  * ``lang_binary_linker_flags`` gives flags to be passed to the linker when creating a binary
   * ``warning_flags`` gives warning flags to enable.
   * ``maintainer_warning_flags`` gives extra warning flags to enable during maintainer
     mode builds.
