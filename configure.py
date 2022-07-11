@@ -19,6 +19,8 @@ CPython 2.5 and earlier are not supported.
 On Jython target detection does not work (use --os and --cpu).
 """
 
+# pylint: disable=too-many-lines
+
 import collections
 import copy
 import json
@@ -3232,7 +3234,7 @@ def check_compiler_arch(options, ccinfo, archinfo, source_paths):
     return cc_output
 
 def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, source_paths, template_vars, options):
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-arguments
 
     try:
         robust_rmtree(build_paths.build_dir)
@@ -3320,20 +3322,20 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
     if options.with_doxygen:
         for module_name, info in info_modules.items():
             write_template_with_variables(in_build_module_info(module_name + '.dox'), in_build_data('module_info.in'),
-                {
-                  'parent': info.parent_module,
-                  'identifier': module_name,
-                  'title': info.name,
-                  'brief': info.brief,
-                  'public_headers': info.header_public,
-                  'internal_headers': info.header_internal,
-                  'sources': info.sources(),
-                  'dependencies': info.requires,
-                  'os_features': info.os_features,
-                  'cpu_features': info.isa,
-                  'arch_requirements': info.arch,
-                  'compiler_requirements': info.cc
-                })
+                                          {
+                                              'parent': info.parent_module,
+                                              'identifier': module_name,
+                                              'title': info.name,
+                                              'brief': info.brief,
+                                              'public_headers': info.header_public,
+                                              'internal_headers': info.header_internal,
+                                              'sources': info.sources(),
+                                              'dependencies': info.requires,
+                                              'os_features': info.os_features,
+                                              'cpu_features': info.isa,
+                                              'arch_requirements': info.arch,
+                                              'compiler_requirements': info.cc
+                                          })
 
     if options.with_rst2man:
         rst2man_file = os.path.join(build_paths.build_dir, 'botan.rst')
