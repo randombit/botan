@@ -2,6 +2,11 @@
 SRP6 -> 20161017
 </defines>
 
+<module_info>
+name -> "SRP-6a"
+brief -> "Secure Remote Password protocol - RFC 5054 compatible"
+</module_info>
+
 <requires>
 bigint
 dl_group

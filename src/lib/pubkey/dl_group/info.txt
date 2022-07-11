@@ -2,6 +2,11 @@
 DL_GROUP -> 20131128
 </defines>
 
+<module_info>
+name -> "DL Group"
+brief -> "Wrapper for discrete logarithm groups and named groups"
+</module_info>
+
 <requires>
 asn1
 bigint

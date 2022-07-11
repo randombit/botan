@@ -2,6 +2,10 @@
 AEAD_SIV -> 20131202
 </defines>
 
+<module_info>
+name -> "SIV"
+</module_info>
+
 <requires>
 cmac
 ctr

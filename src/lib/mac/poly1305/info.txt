@@ -1,3 +1,7 @@
 <defines>
 POLY1305 -> 20141227
 </defines>
+
+<module_info>
+name -> "Poly1305"
+</module_info>

@@ -2,6 +2,10 @@
 SM3 -> 20170402
 </defines>
 
+<module_info>
+name -> "SM3"
+</module_info>
+
 <requires>
 mdx_hash
 </requires>

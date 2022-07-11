@@ -2,6 +2,10 @@
 EMSA_PKCS1 -> 20140118
 </defines>
 
+<module_info>
+name -> "EMSA PKCS #1 v1.5"
+</module_info>
+
 <requires>
 hash_id
 </requires>

@@ -2,6 +2,10 @@
 KYBER_90S -> 20220107
 </defines>
 
+<module_info>
+name -> "Kyber 90s"
+</module_info>
+
 <requires>
 kyber_common
 aes

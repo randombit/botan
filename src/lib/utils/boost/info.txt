@@ -2,6 +2,10 @@
 BOOST_ASIO -> 20131228
 </defines>
 
+<module_info>
+name -> "Boost"
+</module_info>
+
 load_on vendor
 
 <libs>

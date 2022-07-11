@@ -2,6 +2,11 @@
 ASN1 -> 20201106
 </defines>
 
+<module_info>
+name -> "ASN.1 Handling"
+brief -> "Process/encode/decode ASN.1 data structures and map OIDs"
+</module_info>
+
 <requires>
 bigint
 </requires>

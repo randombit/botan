@@ -2,3 +2,7 @@
 EME_PKCS1v15 -> 20131128
 EME_PKCS1 -> 20190426
 </defines>
+
+<module_info>
+name -> "EME PKCS #1 v1.5"
+</module_info>

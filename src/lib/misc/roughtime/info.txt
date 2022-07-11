@@ -2,6 +2,11 @@
 ROUGHTIME -> 20190220
 </defines>
 
+<module_info>
+name -> "Roughtime"
+brief -> "Authenticated Time Synchronzation Protocol"
+</module_info>
+
 <requires>
 ed25519
 rng

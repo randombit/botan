@@ -2,6 +2,10 @@
 ELGAMAL -> 20131128
 </defines>
 
+<module_info>
+name -> "ElGamal"
+</module_info>
+
 <requires>
 dl_algo
 dl_group

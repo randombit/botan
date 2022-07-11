@@ -1,3 +1,7 @@
 <defines>
 HASH_ID -> 20131128
 </defines>
+
+<module_info>
+name -> "Hash Function Identification"
+</module_info>

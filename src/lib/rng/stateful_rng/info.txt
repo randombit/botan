@@ -2,6 +2,11 @@
 STATEFUL_RNG -> 20160819
 </defines>
 
+<module_info>
+name -> "Stateful RNG"
+brief -> "Base class for RNGs that must keep an internal state"
+</module_info>
+
 <header:public>
 stateful_rng.h
 </header:public>

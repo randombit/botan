@@ -2,6 +2,10 @@
 CECPQ1 -> 20161116
 </defines>
 
+<module_info>
+name -> "CECPQ1"
+</module_info>
+
 <requires>
 newhope
 curve25519

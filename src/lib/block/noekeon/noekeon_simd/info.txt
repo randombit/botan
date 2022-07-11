@@ -2,6 +2,11 @@
 NOEKEON_SIMD -> 20160903
 </defines>
 
+<module_info>
+name -> "Noekeon SIMD"
+brief -> "Noekeon using SIMD instructions"
+</module_info>
+
 <requires>
 noekeon
 simd

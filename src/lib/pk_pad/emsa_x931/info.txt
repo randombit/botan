@@ -2,6 +2,10 @@
 EMSA_X931 -> 20140118
 </defines>
 
+<module_info>
+name -> "X9.31"
+</module_info>
+
 <requires>
 hash_id
 </requires>

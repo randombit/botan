@@ -2,6 +2,11 @@
 HMAC_DRBG -> 20140319
 </defines>
 
+<module_info>
+name -> "HMAC DRBG"
+brief -> "As defined in NIST SP800-90A"
+</module_info>
+
 <requires>
 hmac
 stateful_rng

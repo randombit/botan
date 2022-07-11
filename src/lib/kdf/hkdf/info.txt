@@ -2,6 +2,10 @@
 HKDF -> 20170927
 </defines>
 
+<module_info>
+name -> "HMAC"
+</module_info>
+
 <requires>
 hmac
 </requires>

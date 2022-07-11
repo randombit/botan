@@ -2,6 +2,11 @@
 AES_NI -> 20131128
 </defines>
 
+<module_info>
+name -> "AES-NI"
+brief -> "AES using AES-NI and SIMD instructions"
+</module_info>
+
 <isa>
 sse2
 ssse3

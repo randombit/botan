@@ -2,6 +2,11 @@
 SHA2_32_ARMV8 -> 20170117
 </defines>
 
+<module_info>
+name -> "SHA-256 ARMv8"
+brief -> "SHA-256 using ARMv8 crypto instructions"
+</module_info>
+
 <isa>
 armv8crypto
 </isa>

@@ -2,6 +2,11 @@
 PSK_DB -> 20171119
 </defines>
 
+<module_info>
+name -> "PSK Database"
+brief -> "Interface for a generic pre-shared key) database"
+</module_info>
+
 <requires>
 aes
 hmac

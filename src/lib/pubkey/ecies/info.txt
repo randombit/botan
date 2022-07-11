@@ -2,6 +2,10 @@
 ECIES -> 20160128
 </defines>
 
+<module_info>
+name -> "ECIES"
+</module_info>
+
 <requires>
 kdf
 mac

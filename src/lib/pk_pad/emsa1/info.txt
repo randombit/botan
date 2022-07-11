@@ -1,3 +1,7 @@
 <defines>
 EMSA1 -> 20131128
 </defines>
+
+<module_info>
+name -> "EMSA 1"
+</module_info>

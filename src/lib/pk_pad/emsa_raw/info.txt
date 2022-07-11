@@ -1,3 +1,7 @@
 <defines>
 EMSA_RAW -> 20131128
 </defines>
+
+<module_info>
+name -> "EMSA Raw Padding"
+</module_info>

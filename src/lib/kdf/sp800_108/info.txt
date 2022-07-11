@@ -2,6 +2,10 @@
 SP800_108 -> 20160128
 </defines>
 
+<module_info>
+name -> "NIST SP800-108"
+</module_info>
+
 <requires>
 mac
 hmac

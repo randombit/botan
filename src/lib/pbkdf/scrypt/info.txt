@@ -2,6 +2,10 @@
 SCRYPT -> 20180902
 </defines>
 
+<module_info>
+name -> "Scrypt"
+</module_info>
+
 <requires>
 salsa20
 pbkdf2

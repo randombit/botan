@@ -2,6 +2,11 @@
 BASE32_CODEC -> 20180418
 </defines>
 
+<module_info>
+name -> "Base32"
+brief -> "Base32 encoder and decoder"
+</module_info>
+
 <header:public>
 base32.h
 </header:public>

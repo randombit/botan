@@ -2,6 +2,11 @@
 ZFEC -> 20211211
 </defines>
 
+<module_info>
+name -> "ZFEC"
+brief -> "Forward error correction based on Vandermonde matrices"
+</module_info>
+
 <header:public>
 zfec.h
 </header:public>

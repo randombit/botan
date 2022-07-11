@@ -2,6 +2,10 @@
 RSA -> 20160730
 </defines>
 
+<module_info>
+name -> "RSA"
+</module_info>
+
 <requires>
 keypair
 numbertheory

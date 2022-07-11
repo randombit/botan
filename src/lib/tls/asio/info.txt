@@ -2,6 +2,11 @@
 TLS_ASIO_STREAM -> 20181218
 </defines>
 
+<module_info>
+name -> "TLS ASIO Stream"
+brief -> "Boost ASIO stream interface as a wrapper around the TLS implementation"
+</module_info>
+
 <header:public>
 asio_context.h
 asio_stream.h

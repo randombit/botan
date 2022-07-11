@@ -2,6 +2,11 @@
 IDEA_SSE2 -> 20131128
 </defines>
 
+<module_info>
+name -> "IDEA SSE2"
+brief -> "IDEA using SSE2 SIMD instructions"
+</module_info>
+
 <isa>
 sse2
 </isa>

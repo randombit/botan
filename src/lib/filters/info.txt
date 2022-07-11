@@ -3,6 +3,11 @@ FILTERS -> 20160415
 CODEC_FILTERS -> 20131128
 </defines>
 
+<module_info>
+name -> "Filters"
+brief -> "Filter/Pipe API for data transformations"
+</module_info>
+
 <header:public>
 data_snk.h
 filter.h

@@ -2,6 +2,11 @@
 GHASH_CLMUL_VPERM -> 20201002
 </defines>
 
+<module_info>
+name -> "GHASH Vector Permutations"
+brief -> "GHASH using Vector Permutation instructions"
+</module_info>
+
 <isa>
 sse2
 ssse3

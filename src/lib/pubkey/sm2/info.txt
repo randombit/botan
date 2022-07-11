@@ -2,6 +2,10 @@
 SM2 -> 20180801
 </defines>
 
+<module_info>
+name -> "SM2"
+</module_info>
+
 <requires>
 asn1
 ec_group

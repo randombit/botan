@@ -2,6 +2,11 @@
 DYNAMIC_LOADER -> 20160310
 </defines>
 
+<module_info>
+name -> "Dynamic Loader"
+brief -> "Helper class to represent a dynamically loaded library"
+</module_info>
+
 load_on dep
 
 <os_features>

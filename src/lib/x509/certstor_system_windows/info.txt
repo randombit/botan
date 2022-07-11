@@ -2,6 +2,11 @@
 CERTSTOR_WINDOWS -> 20190430
 </defines>
 
+<module_info>
+name -> "Windows Certificate Store"
+brief -> "Adapter to access Windows' system trust store"
+</module_info>
+
 <os_features>
 win32,certificate_store
 </os_features>

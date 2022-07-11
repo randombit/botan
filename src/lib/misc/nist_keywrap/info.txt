@@ -2,6 +2,11 @@
 NIST_KEYWRAP -> 20171119
 </defines>
 
+<module_info>
+name -> "NIST KeyWrap"
+brief -> "Key Wrapping as described in NIST SP800-38F"
+</module_info>
+
 <requires>
 block
 </requires>

@@ -2,6 +2,10 @@
 EME_OAEP -> 20180305
 </defines>
 
+<module_info>
+name -> "OAEP"
+</module_info>
+
 <requires>
 mgf1
 </requires>

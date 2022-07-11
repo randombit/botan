@@ -2,6 +2,10 @@
 THREAD_UTILS -> 20190922
 </defines>
 
+<module_info>
+name -> "Thread Utilities"
+</module_info>
+
 <header:internal>
 rwlock.h
 barrier.h

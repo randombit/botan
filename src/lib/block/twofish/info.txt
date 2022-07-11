@@ -1,3 +1,7 @@
 <defines>
 TWOFISH -> 20131128
 </defines>
+
+<module_info>
+name -> "Twofish"
+</module_info>

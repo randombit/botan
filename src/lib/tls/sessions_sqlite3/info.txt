@@ -2,6 +2,11 @@
 TLS_SQLITE3_SESSION_MANAGER -> 20131128
 </defines>
 
+<module_info>
+name -> "SQLite Session Manager"
+brief -> "TLS Session Manager based on an SQLite database"
+</module_info>
+
 <requires>
 sessions_sql
 sqlite3

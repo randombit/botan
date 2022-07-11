@@ -2,6 +2,11 @@
 GHASH_CLMUL_CPU -> 20201002
 </defines>
 
+<module_info>
+name -> "GHASH SIMD"
+brief -> "GHASH using SIMD instructions"
+</module_info>
+
 endian little
 
 <requires>

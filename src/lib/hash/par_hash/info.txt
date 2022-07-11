@@ -1,3 +1,8 @@
 <defines>
 PARALLEL_HASH -> 20131128
 </defines>
+
+<module_info>
+name -> "Parallel Hashes"
+brief -> "Base class for parallel hash functions"
+</module_info>

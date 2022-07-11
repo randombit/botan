@@ -2,6 +2,11 @@
 SHA2_64_BMI2 -> 20190117
 </defines>
 
+<module_info>
+name -> "SHA-512 BMI2"
+brief -> "SHA-512 using BMI2 instructions"
+</module_info>
+
 <isa>
 bmi2
 </isa>

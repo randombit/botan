@@ -2,6 +2,11 @@
 ENTROPY_SRC_WIN32 -> 20200209
 </defines>
 
+<module_info>
+name -> "Win32 Statistics"
+brief -> "Entropy collection based on Windows statistics counters"
+</module_info>
+
 <header:internal>
 es_win32.h
 </header:internal>

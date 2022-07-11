@@ -2,6 +2,10 @@
 PBKDF2 -> 20180902
 </defines>
 
+<module_info>
+name -> "PBKDF2"
+</module_info>
+
 <requires>
 hmac
 </requires>

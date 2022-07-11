@@ -3,6 +3,11 @@ PBKDF -> 20180902
 PASSWORD_HASHING -> 20210419
 </defines>
 
+<module_info>
+name -> "Password Based Key Derivation Functions"
+brief -> "Implementations of Password Based Key Derivation Functions"
+</module_info>
+
 <requires>
 mac
 hash

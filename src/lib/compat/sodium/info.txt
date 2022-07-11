@@ -2,6 +2,11 @@
 SODIUM_API -> 20190615
 </defines>
 
+<module_info>
+name -> "libsodium API"
+brief -> "Partial compatibility implementation of the libsodium API"
+</module_info>
+
 <requires>
 chacha
 salsa20
