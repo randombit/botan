@@ -2,6 +2,11 @@
 THREEFISH_512_AVX2 -> 20160903
 </defines>
 
+<module_info>
+name -> "Threefish-512 AVX2"
+brief -> "Threefish-512 using AVX2 instructions"
+</module_info>
+
 <isa>
 avx2
 </isa>

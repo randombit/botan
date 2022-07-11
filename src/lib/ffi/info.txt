@@ -2,6 +2,11 @@
 FFI -> 20210628
 </defines>
 
+<module_info>
+name -> "Foreign Function Interface"
+brief -> "C API for Botan's functionality"
+</module_info>
+
 <header:internal>
 ffi_mp.h
 ffi_pkey.h

@@ -2,6 +2,10 @@
 AEAD_CHACHA20_POLY1305 -> 20180807
 </defines>
 
+<module_info>
+name -> "ChaCha20Poly1305"
+</module_info>
+
 <requires>
 chacha
 poly1305

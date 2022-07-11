@@ -2,6 +2,11 @@
 SIMD_32 -> 20131128
 </defines>
 
+<module_info>
+name -> "SIMD"
+brief -> "Helpers for working with SIMD instructions"
+</module_info>
+
 <header:internal>
 simd_32.h
 </header:internal>

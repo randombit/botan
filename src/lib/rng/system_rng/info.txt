@@ -2,6 +2,11 @@
 SYSTEM_RNG -> 20141202
 </defines>
 
+<module_info>
+name -> "System RNG"
+brief -> "Wrapper around the system-provided standard RNG"
+</module_info>
+
 <os_features>
 dev_random,posix1
 arc4random

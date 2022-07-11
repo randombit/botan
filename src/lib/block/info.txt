@@ -2,6 +2,11 @@
 BLOCK_CIPHER -> 20131128
 </defines>
 
+<module_info>
+name -> "Block Ciphers"
+brief -> "Implementations of block cipher algorithms"
+</module_info>
+
 <header:public>
 block_cipher.h
 </header:public>

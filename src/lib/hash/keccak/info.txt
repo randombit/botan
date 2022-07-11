@@ -2,6 +2,10 @@
 KECCAK -> 20131128
 </defines>
 
+<module_info>
+name -> "Keccak"
+</module_info>
+
 <requires>
 sha3
 </requires>

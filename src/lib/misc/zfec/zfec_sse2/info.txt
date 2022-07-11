@@ -2,6 +2,11 @@
 ZFEC_SSE2 -> 20211211
 </defines>
 
+<module_info>
+name -> "ZFEC SSE2"
+brief -> "ZFEC using SSE2 instructions"
+</module_info>
+
 <isa>
 sse2
 </isa>

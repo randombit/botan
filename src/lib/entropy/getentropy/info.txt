@@ -2,6 +2,11 @@
 ENTROPY_SRC_GETENTROPY -> 20170327
 </defines>
 
+<module_info>
+name -> "getentropy"
+brief -> "Wrapper for BSD's getentropy system call"
+</module_info>
+
 <header:internal>
 getentropy.h
 </header:internal>

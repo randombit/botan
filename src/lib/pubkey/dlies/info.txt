@@ -2,6 +2,10 @@
 DLIES -> 20160713
 </defines>
 
+<module_info>
+name -> "DLIES"
+</module_info>
+
 <requires>
 dh
 kdf

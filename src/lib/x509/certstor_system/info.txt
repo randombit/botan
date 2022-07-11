@@ -2,6 +2,11 @@
 CERTSTOR_SYSTEM -> 20190411
 </defines>
 
+<module_info>
+name -> "System Certificate Store"
+brief -> "Certificate trust store backed by the system's trust store"
+</module_info>
+
 <os_features>
 apple_keychain
 filesystem

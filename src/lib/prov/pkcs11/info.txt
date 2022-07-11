@@ -2,6 +2,11 @@
 PKCS11 -> 20160219
 </defines>
 
+<module_info>
+name -> "PKCS #11"
+brief -> "Wrapper classes to interact with PKCS #11 modules"
+</module_info>
+
 <requires>
 dyn_load
 rng

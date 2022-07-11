@@ -2,6 +2,11 @@
 SHAKE_CIPHER -> 20161018
 </defines>
 
+<module_info>
+name -> "Shake-128 XOF"
+brief -> "SHAKE-128 XOF presented as a stream cipher"
+</module_info>
+
 <requires>
 sha3
 </requires>

@@ -2,6 +2,11 @@
 TLS -> 20201128
 </defines>
 
+<module_info>
+name -> "Transport Layer Security"
+brief -> "TLS protocol implementation"
+</module_info>
+
 <header:public>
 credentials_manager.h
 tls_alert.h

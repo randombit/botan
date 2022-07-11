@@ -1,3 +1,7 @@
 <defines>
 MGF1 -> 20140118
 </defines>
+
+<module_info>
+name -> "MGF1"
+</module_info>

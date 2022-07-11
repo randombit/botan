@@ -2,4 +2,6 @@
 SHACAL2 -> 20170813
 </defines>
 
-
+<module_info>
+name -> "SHACAL-2"
+</module_info>

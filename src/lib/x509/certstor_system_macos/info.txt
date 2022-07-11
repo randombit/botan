@@ -2,6 +2,11 @@
 CERTSTOR_MACOS -> 20190207
 </defines>
 
+<module_info>
+name -> "macOS Certificate Store"
+brief -> "Adapter to access macOS' system trust store"
+</module_info>
+
 <os_features>
 apple_keychain
 </os_features>

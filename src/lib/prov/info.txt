@@ -1,0 +1,5 @@
+<module_info>
+name -> "Providers"
+brief -> "Adapters to external crypto providers"
+type -> "Virtual"
+</module_info>

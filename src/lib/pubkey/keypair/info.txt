@@ -1,3 +1,8 @@
 <header:internal>
 keypair.h
 </header:internal>
+
+<module_info>
+name -> "Keypair"
+brief -> "Helper functions for key pair and signature consistency checks"
+</module_info>

@@ -2,6 +2,11 @@
 AEAD_MODES -> 20131128
 </defines>
 
+<module_info>
+name -> "AEAD Modes"
+brief -> "Implementations of Authenticated Encryption Associated Data block cipher modes"
+</module_info>
+
 <header:public>
 aead.h
 </header:public>

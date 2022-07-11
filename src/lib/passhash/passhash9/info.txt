@@ -2,6 +2,11 @@
 PASSHASH9 -> 20131128
 </defines>
 
+<module_info>
+name -> "Passhash 9"
+brief -> "Passhash 9 password hash function"
+</module_info>
+
 <requires>
 pbkdf2
 rng

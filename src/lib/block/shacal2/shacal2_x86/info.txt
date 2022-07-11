@@ -2,6 +2,11 @@
 SHACAL2_X86 -> 20170814
 </defines>
 
+<module_info>
+name -> "SHACAL-2 X86"
+brief -> "SHACAL-2 using SSE instructions on x86"
+</module_info>
+
 <requires>
 shacal2
 </requires>

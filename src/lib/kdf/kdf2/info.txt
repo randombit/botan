@@ -2,6 +2,10 @@
 KDF2 -> 20131128
 </defines>
 
+<module_info>
+name -> "KDF2"
+</module_info>
+
 <requires>
 hash
 </requires>

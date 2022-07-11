@@ -2,6 +2,11 @@
 KDF_BASE -> 20131128
 </defines>
 
+<module_info>
+name -> "Key Derivation Functions"
+brief -> "Implementations of Key Derivation Functions"
+</module_info>
+
 <requires>
 mac
 hash

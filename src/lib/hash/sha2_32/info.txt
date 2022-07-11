@@ -2,6 +2,10 @@
 SHA2_32 -> 20131128
 </defines>
 
+<module_info>
+name -> "SHA-256"
+</module_info>
+
 <requires>
 mdx_hash
 </requires>

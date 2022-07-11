@@ -2,6 +2,10 @@
 AEAD_EAX -> 20131128
 </defines>
 
+<module_info>
+name -> "EAX"
+</module_info>
+
 <requires>
 cmac
 ctr

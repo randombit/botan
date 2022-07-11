@@ -1,3 +1,7 @@
 <defines>
 BLAKE2B -> 20130131
 </defines>
+
+<module_info>
+name -> "BLAKE2b"
+</module_info>

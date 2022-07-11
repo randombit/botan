@@ -1,0 +1,5 @@
+<module_info>
+name -> "Compatibility"
+brief -> "Helpers for compatibility with other libraries"
+type -> "Virtual"
+</module_info>

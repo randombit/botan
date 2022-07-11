@@ -2,6 +2,10 @@
 SQLITE3 -> 20171118
 </defines>
 
+<module_info>
+name -> "SQLite 3"
+</module_info>
+
 load_on vendor
 
 <libs>

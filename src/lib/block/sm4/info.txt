@@ -1,3 +1,7 @@
 <defines>
 SM4 -> 20170716
 </defines>
+
+<module_info>
+name -> "SM4"
+</module_info>

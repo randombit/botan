@@ -2,6 +2,11 @@
 AES_VPERM -> 20190901
 </defines>
 
+<module_info>
+name -> "AES Vector Permutation"
+brief -> "AES using Vector Permutation Instructions"
+</module_info>
+
 endian little
 
 <isa>

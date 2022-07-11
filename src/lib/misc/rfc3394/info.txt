@@ -2,6 +2,11 @@
 RFC3394_KEYWRAP -> 20131128
 </defines>
 
+<module_info>
+name -> "RFC 3394 KeyWrap"
+brief -> "Key Wrapping as described in RFC 3394"
+</module_info>
+
 <requires>
 aes
 nist_keywrap

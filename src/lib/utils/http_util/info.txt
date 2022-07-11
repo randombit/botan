@@ -2,6 +2,10 @@
 HTTP_UTIL -> 20171003
 </defines>
 
+<module_info>
+name -> "HTTP"
+</module_info>
+
 <requires>
 socket
 </requires>

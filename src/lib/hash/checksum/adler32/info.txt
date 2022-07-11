@@ -1,3 +1,7 @@
 <defines>
 ADLER32 -> 20131128
 </defines>
+
+<module_info>
+name -> "Adler32"
+</module_info>

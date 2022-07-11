@@ -3,6 +3,10 @@ GOST_34_10_2001 -> 20131128
 GOST_34_10_2012 -> 20190801
 </defines>
 
+<module_info>
+name -> "GOST 34.10-2001"
+</module_info>
+
 <requires>
 asn1
 ec_group

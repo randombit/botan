@@ -2,6 +2,11 @@
 SIMD_AVX2 -> 20180824
 </defines>
 
+<module_info>
+name -> "AVX2"
+brief -> "Helpers for working with AVX2 instructions"
+</module_info>
+
 <isa>
 avx2
 </isa>

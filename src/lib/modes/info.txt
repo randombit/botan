@@ -3,6 +3,11 @@ MODES -> 20150626
 CIPHER_MODES -> 20180124
 </defines>
 
+<module_info>
+name -> "Block Cipher Modes"
+brief -> "Implementations of block cipher modes of operation"
+</module_info>
+
 <header:public>
 cipher_mode.h
 </header:public>

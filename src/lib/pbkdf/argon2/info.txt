@@ -2,6 +2,10 @@
 ARGON2 -> 20210407
 </defines>
 
+<module_info>
+name -> "Argon2"
+</module_info>
+
 <requires>
 blake2
 </requires>

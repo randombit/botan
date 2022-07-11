@@ -2,6 +2,11 @@
 SHA2_32_X86 -> 20170518
 </defines>
 
+<module_info>
+name -> "SHA-256 SIMD"
+brief -> "SHA-256 using SIMD instructions on x86"
+</module_info>
+
 <isa>
 sha
 sse2

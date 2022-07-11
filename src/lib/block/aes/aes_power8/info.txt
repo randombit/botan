@@ -2,6 +2,11 @@
 AES_POWER8 -> 20180223
 </defines>
 
+<module_info>
+name -> "AES Power8"
+brief -> "AES using Power8 instructions"
+</module_info>
+
 <arch>
 ppc64
 </arch>

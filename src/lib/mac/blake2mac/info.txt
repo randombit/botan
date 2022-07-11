@@ -2,6 +2,10 @@
 BLAKE2BMAC -> 20201123
 </defines>
 
+<module_info>
+name -> "Blake2B MAC"
+</module_info>
+
 <requires>
 blake2
 </requires>

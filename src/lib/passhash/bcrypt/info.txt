@@ -2,6 +2,11 @@
 BCRYPT -> 20131128
 </defines>
 
+<module_info>
+name -> "BCrypt"
+brief -> "BCrypt password hash function"
+</module_info>
+
 <requires>
 blowfish
 rng

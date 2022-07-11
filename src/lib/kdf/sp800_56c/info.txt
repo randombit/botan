@@ -2,6 +2,10 @@
 SP800_56C -> 20160211
 </defines>
 
+<module_info>
+name -> "NIST SP800-56C"
+</module_info>
+
 <requires>
 sp800_108
 hmac

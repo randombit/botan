@@ -2,6 +2,11 @@
 MAC -> 20150626
 </defines>
 
+<module_info>
+name -> "Message Authentication Codes"
+brief -> "Implementations of Message Authentication Codes"
+</module_info>
+
 <header:public>
 mac.h
 </header:public>
