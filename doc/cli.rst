@@ -330,6 +330,24 @@ Data Encoding/Decoding
 ``hex_enc file``
   Decode Hex encoded *file*.
 
+Forward Error Correction
+------------------------
+
+``fec_encode --suffix=fec --prefix= --output-dir= k n input``
+  Split a given ``input`` file into ``n`` shares where ``k`` shares are required
+  to recreate the original file. The output shares a written to files with the
+  file extension specified in ``--suffix`` and either the original file name or
+  the one specified in ``--prefix``. The output directory is either equal to the
+  input file's directory or the one specified in ``--output-dir``.
+
+``fec_decode *shares``
+  If given enough shares, this will output the original input file's content to
+  stdout. Otherwise an error is printed on stderr.
+
+``fec_info share``
+  Given a single share this will print information about the share.
+  For instance: ``FEC share 4/4 with 3 needed for recovery``
+
 Miscellaneous Commands
 -------------------------------------
 ``version --full``
