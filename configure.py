@@ -795,10 +795,13 @@ class InfoObject(object):
         self.lives_in = dirname
         if basename == 'info.txt':
             (obj_dir, self.basename) = os.path.split(dirname)
-            if os.access(os.path.join(obj_dir, 'info.txt'), os.R_OK):
-                self.parent_module = os.path.basename(obj_dir)
-            else:
-                self.parent_module = None
+            self.parent_module = None
+
+            while obj_dir:
+                if os.access(os.path.join(obj_dir, 'info.txt'), os.R_OK):
+                    self.parent_module = os.path.basename(obj_dir)
+                    break
+                (obj_dir, _) = os.path.split(obj_dir)
         else:
             self.basename = basename.replace('.txt', '')
 
