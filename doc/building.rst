@@ -96,6 +96,33 @@ include any random number generator, which is needed for example to
 generate keys, nonces and IVs. See :doc:`api_ref/rng` on which random number
 generators are available.
 
+Common Build Targets
+--------------------
+
+Build everthing that is configured::
+
+ $ make all
+
+Build the unit test binary (``./botan-test`` to run)::
+
+ $ make tests
+
+Build and run the tests::
+
+ $ make check
+
+Build the documentation (Doxygen API reference and Sphinx handbook)::
+
+ $ make docs
+
+Install the library::
+
+ $ make install
+
+Remove all generated artefacts::
+
+ $ make clean
+
 Cross Compiling
 ---------------------
 
