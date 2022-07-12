@@ -146,7 +146,7 @@ Module Syntax
 ---------------------
 
 The ``info.txt`` files have the following elements. Not all are required; a minimal
-file for a module with no dependencies might just contain a macro define.
+file for a module with no dependencies might just contain a macro define and module_info.
 
 Lists:
  * ``comment`` and ``warning`` provides block-comments which
@@ -181,6 +181,12 @@ Lists:
 Maps:
  * ``defines`` is a map from macros to datestamps. These macros will be defined in
    the generated ``build.h``.
+ * ``module_info`` contains documentation-friendly information about the module.
+   Available mappings:
+
+   * ``name`` must contain a human-understandable name for the module
+   * ``brief`` may provide a short description about the module's contents
+
  * ``libs`` specifies additional libraries which should be linked if this module is
    included. It maps from the OS name to a list of libraries (comma seperated).
  * ``frameworks`` is a macOS/iOS specific feature which maps from an OS name to
@@ -204,6 +210,11 @@ An example::
    DEFINE1 -> 20180104
    DEFINE2 -> 20190301
    </defines>
+
+   <module_info>
+   name -> "This Is Just To Say"
+   brief -> "Contains a poem by William Carlos Williams"
+   </module_info>
 
    <comment>
    I have eaten
