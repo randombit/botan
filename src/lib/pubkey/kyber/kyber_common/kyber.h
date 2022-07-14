@@ -110,6 +110,9 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
 
       void initialize_from_encoding(std::vector<uint8_t> pub_key, KyberMode m, KyberKeyEncoding encoding);
 
+      std::vector<uint8_t> public_key_bits_raw() const;
+      std::vector<uint8_t> public_key_bits_der() const;
+
    protected:
       friend class Kyber_KEM_Encryptor;
       friend class Kyber_KEM_Decryptor;
@@ -132,6 +135,10 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
             const std::string& params,
             const std::string& provider) const override;
+
+   private:
+      secure_vector<uint8_t> private_key_bits_raw() const;
+      secure_vector<uint8_t> private_key_bits_der() const;
 
    private:
       friend class Kyber_KEM_Decryptor;

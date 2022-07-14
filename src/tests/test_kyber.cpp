@@ -34,9 +34,14 @@ class KYBER_Tests final : public Test
    public:
       // Regression test for GH #2993: https://github.com/randombit/botan/issues/2993
       //
-      // The decrypted shared secret did not match when either the public or the
-      // private key was encoded and re-decoded with `KyberKeyEncoding::Raw`.
-      // Whether or not a KDF was used did not have an effect.
+      // The resulting shared secrets did not match when the encapsulating public-
+      // key used a different encoding (Kyber_PublicKey::set_binary_encoding())
+      // from the private key decapsulating the ciphertext.
+      //
+      // The public key encoding used in Kyber's internal Fujisaki-Okamoto
+      // transform depended on that setting. I.e. if the encoding settings for
+      // encapsulation and decapsulation did not match, the resulting shared
+      // secret did not match either.
       static void regression_gh2993(Test::Result &result, Botan::KyberMode mode)
          {
          auto sk = std::make_unique<Botan::Kyber_PrivateKey>(Test::rng(), mode);

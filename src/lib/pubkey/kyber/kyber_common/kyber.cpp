@@ -25,6 +25,7 @@
 #include <botan/internal/kyber_symmetric_primitives.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_KYBER)
    #include <botan/internal/kyber_modern.h>
@@ -1201,7 +1202,7 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
 
          // Multitarget countermeasure for coins + contributory KEM
          G->update(shared_secret);
-         G->update(H->process(m_key.public_key_bits()));
+         G->update(H->process(m_key.public_key_bits_raw()));
          const auto g_out = G->final();
 
          const auto middle = G->output_length() / 2;
@@ -1241,7 +1242,7 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
 
          // Multitarget countermeasure for coins + contributory KEM
          G->update(shared_secret);
-         G->update(H->process(m_key.public_key_bits()));
+         G->update(H->process(m_key.public_key_bits_raw()));
 
          const auto g_out = G->final();
 
@@ -1352,22 +1353,32 @@ Kyber_PublicKey::Kyber_PublicKey(const Kyber_PublicKey& other)
 
 std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const
    {
-   std::vector<uint8_t> output;
-   DER_Encoder der(output);
-
    switch(m_key_encoding)
       {
       case KyberKeyEncoding::Full:
-         der.start_sequence()
-         .encode(m_public->polynomials().to_bytes<std::vector<uint8_t>>(), ASN1_Type::OctetString)
-         .encode(m_public->seed(), ASN1_Type::OctetString)
-         .end_cons();
-         break;
+         return public_key_bits_der();
       case KyberKeyEncoding::Raw:
-         output = m_public->polynomials().to_bytes<std::vector<uint8_t>>();
-         output.insert(output.end(), m_public->seed().begin(), m_public->seed().end());
-         break;
+         return public_key_bits_raw();
       }
+
+   Botan::unreachable();
+   }
+
+std::vector<uint8_t> Kyber_PublicKey::public_key_bits_raw() const
+   {
+   return concat(m_public->polynomials().to_bytes<std::vector<uint8_t>>(),
+                 m_public->seed());
+   }
+
+std::vector<uint8_t> Kyber_PublicKey::public_key_bits_der() const
+   {
+   std::vector<uint8_t> output;
+   DER_Encoder der(output);
+
+   der.start_sequence()
+      .encode(m_public->polynomials().to_bytes<std::vector<uint8_t>>(), ASN1_Type::OctetString)
+      .encode(m_public->seed(), ASN1_Type::OctetString)
+      .end_cons();
 
    return output;
    }
@@ -1485,29 +1496,43 @@ std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const
    {
-   secure_vector<uint8_t> output;
-   DER_Encoder der(output);
-   const auto pub_key = public_key_bits();
-   const auto pub_key_hash = m_private->mode().H()->process(pub_key);
-
    switch(m_key_encoding)
       {
       case KyberKeyEncoding::Full:
-         der.start_sequence()
-         .encode(size_t(0), ASN1_Type::Integer, ASN1_Class::Universal)
-         .encode(m_private->z(), ASN1_Type::OctetString)
-         .encode(m_private->polynomials().to_bytes<secure_vector<uint8_t>>(), ASN1_Type::OctetString)
-         .raw_bytes(pub_key)
-         .encode(pub_key_hash, ASN1_Type::OctetString)
-         .end_cons();
-         break;
+         return private_key_bits_der();
       case KyberKeyEncoding::Raw:
-         output = m_private->polynomials().to_bytes<secure_vector<uint8_t>>();
-         output.insert(output.end(), pub_key.begin(), pub_key.end());
-         output.insert(output.end(), pub_key_hash.begin(), pub_key_hash.end());
-         output.insert(output.end(), m_private->z().begin(), m_private->z().end());
-         break;
+         return private_key_bits_raw();
       }
+
+   Botan::unreachable();
+   }
+
+secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits_raw() const
+   {
+   const auto pub_key = public_key_bits_raw();
+   const auto pub_key_sv = secure_vector<uint8_t>(pub_key.begin(), pub_key.end());
+   const auto pub_key_hash = m_private->mode().H()->process(pub_key);
+
+   return concat(m_private->polynomials().to_bytes<secure_vector<uint8_t>>(),
+                 pub_key_sv, pub_key_hash,
+                 m_private->z());
+   }
+
+secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits_der() const
+   {
+   secure_vector<uint8_t> output;
+   DER_Encoder der(output);
+
+   const auto pub_key = public_key_bits_der();
+   const auto pub_key_hash = m_private->mode().H()->process(pub_key);
+
+   der.start_sequence()
+      .encode(size_t(0), ASN1_Type::Integer, ASN1_Class::Universal)
+      .encode(m_private->z(), ASN1_Type::OctetString)
+      .encode(m_private->polynomials().to_bytes<secure_vector<uint8_t>>(), ASN1_Type::OctetString)
+      .raw_bytes(pub_key)
+      .encode(pub_key_hash, ASN1_Type::OctetString)
+      .end_cons();
 
    return output;
    }
