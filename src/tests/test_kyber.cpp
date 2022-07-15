@@ -32,6 +32,70 @@ namespace Botan_Tests {
 class KYBER_Tests final : public Test
    {
    public:
+      // Regression test for GH #2993: https://github.com/randombit/botan/issues/2993
+      //
+      // The resulting shared secrets did not match when the encapsulating public-
+      // key used a different encoding (Kyber_PublicKey::set_binary_encoding())
+      // from the private key decapsulating the ciphertext.
+      //
+      // The public key encoding used in Kyber's internal Fujisaki-Okamoto
+      // transform depended on that setting. I.e. if the encoding settings for
+      // encapsulation and decapsulation did not match, the resulting shared
+      // secret did not match either.
+      static void regression_gh2993(Test::Result &result, Botan::KyberMode mode)
+         {
+         auto sk = std::make_unique<Botan::Kyber_PrivateKey>(Test::rng(), mode);
+
+         sk->set_binary_encoding(Botan::KyberKeyEncoding::Raw);
+         auto sk_codec_raw = std::make_unique<Botan::Kyber_PrivateKey>(sk->private_key_bits(), mode, Botan::KyberKeyEncoding::Raw);
+         auto pk_raw = sk->public_key();
+         auto pk_codec_raw = std::make_unique<Botan::Kyber_PublicKey>(pk_raw->public_key_bits(), mode, Botan::KyberKeyEncoding::Raw);
+
+         sk->set_binary_encoding(Botan::KyberKeyEncoding::Full);
+         auto sk_codec_full = std::make_unique<Botan::Kyber_PrivateKey>(sk->private_key_bits(), mode, Botan::KyberKeyEncoding::Full);
+         auto pk_full = sk->public_key();
+         auto pk_codec_full = std::make_unique<Botan::Kyber_PublicKey>(pk_full->public_key_bits(), mode, Botan::KyberKeyEncoding::Full);
+
+         auto roundtrip = [&] (const auto& pkey, const auto& skey, const std::string context, const std::string kdf)
+            {
+            auto e = Botan::PK_KEM_Encryptor(*pkey, Test::rng(), kdf, "base");
+            Botan::secure_vector<uint8_t> ct, shared_key;
+            e.encrypt(ct, shared_key, 64, Test::rng());
+
+            auto d = Botan::PK_KEM_Decryptor(*skey, Test::rng(), kdf, "base");
+            const auto shared_key2 = d.decrypt(ct.data(), ct.size(), 64);
+
+            result.confirm("shared secrets are equal, when " + context + ", using " + kdf, shared_key == shared_key2);
+            };
+
+   #if defined(BOTAN_HAS_HKDF) && defined(BOTAN_HAS_SHA2_32)
+         sk->set_binary_encoding(Botan::KyberKeyEncoding::Raw);
+         roundtrip(pk_raw, sk, "both keys are in-memory", "HKDF(SHA-256)");
+         roundtrip(pk_codec_raw, sk, "pubkey is encoded/decoded as 'raw'", "HKDF(SHA-256)");
+         roundtrip(pk_raw, sk_codec_raw, "privkey is encoded/decoded as 'raw'", "HKDF(SHA-256)");
+         roundtrip(pk_codec_raw, sk_codec_raw, "both keys are encoded/decoded as 'raw'", "HKDF(SHA-256)");
+
+         sk->set_binary_encoding(Botan::KyberKeyEncoding::Full);
+         roundtrip(pk_full, sk, "both keys are in-memory", "HKDF(SHA-256)");
+         roundtrip(pk_codec_full, sk, "pubkey is encoded/decoded as 'full'", "HKDF(SHA-256)");
+         roundtrip(pk_full, sk_codec_full, "privkey is encoded/decoded as 'full'", "HKDF(SHA-256)");
+         roundtrip(pk_codec_full, sk_codec_full, "both keys are encoded/decoded as 'full'", "HKDF(SHA-256)");
+   #endif
+
+         sk->set_binary_encoding(Botan::KyberKeyEncoding::Raw);
+         roundtrip(pk_raw, sk, "both keys are in-memory", "Raw");
+         roundtrip(pk_codec_raw, sk, "pubkey is encoded/decoded as 'raw'", "Raw");
+         roundtrip(pk_raw, sk_codec_raw, "privkey is encoded/decoded as 'raw'", "Raw");
+         roundtrip(pk_codec_raw, sk_codec_raw, "both keys are encoded/decoded as 'raw'", "Raw");
+
+         sk->set_binary_encoding(Botan::KyberKeyEncoding::Full);
+         roundtrip(pk_full, sk, "both keys are in-memory", "Raw");
+         roundtrip(pk_codec_full, sk, "pubkey is encoded/decoded as 'full'", "Raw");
+         roundtrip(pk_full, sk_codec_full, "privkey is encoded/decoded as 'full'", "Raw");
+         roundtrip(pk_codec_full, sk_codec_full, "both keys are encoded/decoded as 'full'", "Raw");
+
+         }
+
       static Test::Result run_kyber_test(const char* test_name, Botan::KyberMode mode, size_t strength)
          {
          Test::Result result(test_name);
@@ -78,6 +142,11 @@ class KYBER_Tests final : public Test
          const auto key_alice2 =
             dec.decrypt(reverse_cipher_text, 0, std::vector<uint8_t>());
          result.confirm("shared secrets are not equal", key_alice != key_alice2);
+
+         //
+         // regression tests
+         //
+         regression_gh2993(result, mode);
 
          return result;
          }
