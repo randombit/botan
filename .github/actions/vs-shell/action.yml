@@ -1,0 +1,178 @@
+name: Visual Studio shell
+description: Set up Visual Studio paths and environment variables
+
+inputs:
+  arch:
+    description: Target architecture
+    required: false
+    default: x64
+
+runs:
+  using: composite
+  steps:
+    - run: |
+        function Normalize-Arch {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $Arch
+            )
+            if ($Arch -eq 'Win32') {
+                # 'Win32' is a common name for x86, and the scripts seem to
+                # only support 'x86'.
+                'x86'
+            } elseif ($Arch -eq 'x86_64') {
+                'x64'
+            } else {
+                # Default to the user-provided value, in case something like
+                # 'ARM' is supported.
+                $arch
+            }
+        }
+
+        New-Variable arch -Value (Normalize-Arch '${{ inputs.arch }}') -Option Constant
+
+        function Locate-VSWhere {
+            $path = Get-Command 'vswhere' -ErrorAction SilentlyContinue
+            if ($path) {
+                $path.Path
+            } else {
+                Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio' 'Installer' 'vswhere'
+            }
+        }
+
+        function Locate-VS {
+            # vswhere doesn't search for Build Tools by default, God knows why.
+            # https://github.com/microsoft/vswhere/issues/22
+            $products = 'Community','Professional','Enterprise','BuildTools' | %{ "Microsoft.VisualStudio.Product.$_" }
+            $vswhere = Locate-VSWhere
+            & $vswhere -products $products -latest -format json | ConvertFrom-Json
+        }
+
+        function Import-PS {
+            # VS 2019 includes Microsoft.VisualStudio.DevShell.dll, which does
+            # what we want.
+            #
+            # It also includes Launch-VsDevShell.ps1, which sort of does the
+            # same thing this function does, but it always sets up 32-bit
+            # shell, which is stupid.  I use the same workaround as in
+            # https://developercommunity.visualstudio.com/idea/943058/x64-developer-powershell-for-vs-2019.html
+
+            param(
+                [Parameter(Mandatory=$true)]
+                [object] $Info,
+                [Parameter(Mandatory=$true)]
+                [string] $Arch
+            )
+
+            $tools_path = Join-Path $Info.installationPath 'Common7' 'Tools'
+            $module_name = 'Microsoft.VisualStudio.DevShell.dll'
+            $module_path = Join-Path $tools_path $module_name
+
+            if (!(Test-Path $module_path -Type Leaf)) {
+                $module_path = Join-Path $tools_path 'vsdevshell' $module_name
+            }
+
+            if (!(Test-Path $module_path -Type Leaf)) {
+                throw "Couldn't find module '$module_name'"
+            }
+
+            Import-Module $module_path
+            Enter-VsDevShell -VsInstanceId $Info.instanceId -SkipAutomaticLocation -DevCmdArguments "-arch=$Arch -no_logo"
+        }
+
+        function Import-CMD {
+            # For Visual Studio 2017, there's no Microsoft.VisualStudio.DevShell.dll,
+            # so we have to work around that.  One workaround I found here:
+            # https://github.com/microsoft/vswhere/issues/150
+
+            param(
+                [Parameter(Mandatory=$true)]
+                [object] $Info,
+                [Parameter(Mandatory=$true)]
+                [string] $Arch
+            )
+
+            $tools_path = Join-Path $Info.installationPath 'Common7' 'Tools'
+            $script_name = 'VsDevCmd.bat'
+            $script_path = Join-Path $tools_path $script_name
+
+            if (!(Test-Path $script_path -Type Leaf)) {
+                throw "Couldn't find script '$script_name'"
+            }
+
+            # OK, the following issue is royally stupid.  At one point, I
+            # started getting errors like this:
+            #
+            #     Conversion from JSON failed with error: Unexpected character encountered while parsing value: W.
+            #
+            # They appeared out of nowhere, without any changes in the code.
+            # Turns out, ConvertTo-Json is pretty much unusable by default.
+            # See, it has a `-Depth` parameter, which has a default value of 2,
+            # which is insanely low.  I don't know what it does if the input
+            # exceeds the nesting depth of 2, but I do know that starting from
+            # Powershell 7.1, ConvertTo-Json prints a "helpful" warning in this
+            # case.  The warning looks like this:
+            #
+            #     WARNING: Resulting JSON is truncated as serialization has exceeded the set depth of 2.
+            #
+            # Apparently, PowerShell on windows-2016 images got upgraded, hence
+            # the failure to parse the letter W.  I _accidentally_ fixed it by
+            # adding "Select-Object Name,Value" to the pipeline, cutting the
+            # nesting depth, so keeping that part in the pipeline is important.
+            #
+            # See also:
+            #
+            #     * https://github.com/PowerShell/PowerShell/issues/8393
+            #     * https://stackoverflow.com/q/53583677/514684
+            #     * https://stackoverflow.com/q/53562942/514684
+
+            $json = $(& "${env:COMSPEC}" /s /c "`"$script_path`" -arch=$Arch -no_logo && pwsh -Command `"Get-ChildItem env: | Select-Object Name,Value | ConvertTo-Json`"")
+            if ($LASTEXITCODE -ne 0) {
+                throw $json
+            } else {
+                try {
+                    $json | ConvertFrom-Json | %{ Set-Content "env:$($_.Name)" $_.Value }
+                } catch {
+                    echo 'There was a problem with the following JSON:'
+                    echo $json
+                    throw
+                }
+            }
+        }
+
+        if ('${{ runner.os }}' -ne 'Windows') {
+            echo 'Not going to set up a Visual Studio shell on ${{ runner.os }}'
+        } else {
+            $old_values = @{}
+            Get-ChildItem env: | %{ $old_values.Add($_.Name, $_.Value) }
+
+            $info = Locate-VS
+            try {
+                Import-PS $info $arch
+            } catch {
+                echo $_
+                Import-CMD $info $arch
+            }
+
+            $new_values = @{}
+            Get-ChildItem env: | %{ $new_values.Add($_.Name, $_.Value) }
+
+            # Some diagnostics as to which exact variables were modified follows:
+            echo '----------------------------------------------------------------'
+            echo 'New variables'
+            echo '----------------------------------------------------------------'
+            $new_values.GetEnumerator() | where { -not $old_values.ContainsKey($_.Name) } | Format-List
+
+            echo '----------------------------------------------------------------'
+            echo 'Modified variables'
+            echo '----------------------------------------------------------------'
+            $new_values.GetEnumerator() | where { $old_values.ContainsKey($_.Name) -and $old_values[$_.Name] -ne $_.Value } | Format-List
+
+            # Update the current environment:
+            Get-ChildItem env: | %{ echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
+        }
+      shell: pwsh
+
+branding:
+  icon: star
+  color: green
