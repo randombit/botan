@@ -20,6 +20,7 @@ shared_flags "-fPIC"
 coverage_flags "--coverage"
 stack_protector_flags "-fstack-protector"
 
+add_system_include_dir_option "-isystem"
 add_sysroot_option "--sysroot="
 
 <sanitizers>

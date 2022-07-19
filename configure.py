@@ -267,11 +267,12 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
 
     def format_include_paths(self, cc, external_includes):
         dash_i = cc.add_include_dir_option
-        output = dash_i + self.include_dir
+        dash_isystem = cc.add_system_include_dir_option
+        output = dash_i + ' ' + self.include_dir
         if self.external_headers:
-            output += ' ' + dash_i + self.external_include_dir
+            output += ' ' + dash_isystem + ' ' + self.external_include_dir
         for external_include in external_includes:
-            output += ' ' + dash_i + external_include
+            output += ' ' + dash_isystem + ' ' + external_include
         return output
 
     def src_info(self, typ):
@@ -1149,6 +1150,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'output_to_object': '-o ',
                 'output_to_exe': '-o ',
                 'add_include_dir_option': '-I',
+                'add_system_include_dir_option': '-I',
                 'add_lib_dir_option': '-L',
                 'add_compile_definition_option': '-D',
                 'add_sysroot_option': '',
@@ -1177,6 +1179,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         self.add_framework_option = lex.add_framework_option
         self.add_include_dir_option = lex.add_include_dir_option
+        self.add_system_include_dir_option = lex.add_system_include_dir_option
         self.add_lib_dir_option = lex.add_lib_dir_option
         self.add_lib_option = lex.add_lib_option
         self.add_compile_definition_option = lex.add_compile_definition_option
