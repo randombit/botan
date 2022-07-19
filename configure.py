@@ -509,8 +509,6 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
                            help=optparse.SUPPRESS_HELP)
     build_group.add_option('--without-pkg-config', dest='with_pkg_config', action='store_false',
                            help=optparse.SUPPRESS_HELP)
-    build_group.add_option('--boost-library-name', dest='boost_libnames', default=[],
-                           help="file name of some boost library to link", action='append')
 
     docs_group = optparse.OptionGroup(parser, 'Documentation Options')
 
@@ -1880,33 +1878,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     def external_link_cmd():
         return ' '.join([cc.add_lib_dir_option + libdir for libdir in options.with_external_libdir])
 
-    def adjust_library_name(info_txt_libname):
-        """
-        Apply custom library name mappings where necessary
-        """
-
-        # potentially map boost library names to the associated name provided
-        # via ./configure.py --boost-library-name <build/platform specific name>
-        #
-        # We assume that info.txt contains the library name's "stem", i.e.
-        # 'boost_system'. While the user-provided (actual) library will contain
-        # the same stem plus a set of prefixes and/or suffixes, e.g.
-        # libboost_system-vc140-mt-x64-1_69.lib. We use the stem for selecting
-        # the correct user-provided library name override.
-        if options.boost_libnames and 'boost_' in info_txt_libname:
-            adjusted_libnames = [chosen_libname for chosen_libname in options.boost_libnames \
-                                 if info_txt_libname in chosen_libname]
-
-            if len(adjusted_libnames) > 1:
-                logging.warning('Ambiguous boost library names: %s',
-                                ', '.join(adjusted_libnames))
-            if len(adjusted_libnames) == 1:
-                logging.debug('Replacing boost library name %s -> %s',
-                              info_txt_libname, adjusted_libnames[0])
-                return adjusted_libnames[0]
-
-        return info_txt_libname
-
     def link_to(module_member_name):
         """
         Figure out what external libraries/frameworks are needed based on selected modules
@@ -1926,7 +1897,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
                         if osinfo.basename not in exceptions:
                             libs |= set(module_link_to)
 
-        return sorted([adjust_library_name(lib) for lib in libs])
+        return sorted(libs)
 
     def choose_mp_bits():
         mp_bits = arch.wordsize # allow command line override?

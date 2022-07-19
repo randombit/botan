@@ -5,5 +5,10 @@ BOOST_ASIO -> 20131228
 load_on vendor
 
 <libs>
-all -> boost_system
+linux -> rt
+mingw -> ws2_32
+windows -> ws2_32
+haiku -> network
+solaris -> socket,nsl
+qnx -> socket
 </libs>
