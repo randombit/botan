@@ -20,6 +20,9 @@ if type -p "apt-get"; then
     if [ "$TARGET" = "valgrind" ]; then
         sudo apt-get -qq install valgrind
 
+    elif [ "$TARGET" = "static" ] || [ "$TARGET" = "amalgamation" ] || [ "$TARGET" = "shared" ]; then
+        sudo apt-get -qq install libboost-all-dev
+
     elif [ "$TARGET" = "clang" ]; then
         sudo apt-get -qq install clang
 
@@ -71,6 +74,9 @@ else
 
     if [ "$TARGET" = "emscripten" ]; then
         brew install emscripten
+
+    elif [ "$TARGET" = "static" ] || [ "$TARGET" = "amalgamation" ] || [ "$TARGET" = "shared" ]; then
+        brew install boost
     fi
 fi
 

@@ -275,18 +275,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        if target == 'coverage':
+        if target in ['coverage', 'shared', 'static', 'amalgamation']:
             flags += ['--with-boost']
+            if target_cc == 'clang':
+                # make sure clang ignores warnings in boost headers
+                flags += ["--extra-cxxflags=--system-header-prefix=boost/"]
 
-        if target_os == 'windows' and target in ['shared', 'static']:
-            # ./configure.py needs extra hand-holding for boost on windows
-            boost_root = os.environ.get('BOOST_ROOT') # remove this with appveyor
-            boost_incl = os.environ.get('BOOST_INCLUDEDIR')
-
-            if boost_root:
-                flags += ['--with-external-includedir', boost_root]
-            elif boost_incl:
-                flags += ['--with-external-includedir', boost_incl]
+            if target_os in ['windows', 'mingw']:
+                # ./configure.py needs boost's location on Windows
+                assert 'BOOST_INCLUDEDIR' in os.environ, "Windows needs to know where to find boost (via BOOST_INCLUDEDIR)"
+                flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
 
             if target_os == 'mingw':
                 # apparently mingw needs this legacy socket library version for reasons

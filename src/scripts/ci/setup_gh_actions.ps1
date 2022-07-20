@@ -12,3 +12,7 @@ choco install -y sccache
 $raw_cl = (sccache --stats-format json --show-stats | ConvertFrom-Json).cache_location
 $cache_location = ([regex] 'Local disk: "(.*)"').Match($raw_cl).groups[1].value
 echo "COMPILER_CACHE_LOCATION=$cache_location" >> $env:GITHUB_ENV
+
+# define a build requirements directory (to be populated in setup_gh_actions_after_vcvars.ps1)
+$depsdir = Join-Path -Path (Get-Location) -ChildPath dependencies
+echo "DEPENDENCIES_LOCATION=$depsdir" >> $env:GITHUB_ENV

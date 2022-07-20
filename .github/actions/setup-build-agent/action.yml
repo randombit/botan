@@ -23,7 +23,7 @@ runs:
   using: composite
   steps:
     - name: Setup Build Agent (Windows)
-      run: ./src/scripts/ci/setup_gh_actions.ps1
+      run: ./src/scripts/ci/setup_gh_actions.ps1 ${{ inputs.target }}
       shell: pwsh
       if: runner.os == 'Windows'
     - name: Setup Build Agent (Unix-like)
@@ -46,4 +46,9 @@ runs:
       uses: ./.github/actions/vs-shell
       with:
         arch: ${{ inputs.arch }}
+      if: runner.os == 'Windows'
+
+    - name: Install Build Dependencies # after setting up Visual Studio Environment
+      run: ./src/scripts/ci/setup_gh_actions_after_vcvars.ps1 ${{ inputs.target }}
+      shell: pwsh
       if: runner.os == 'Windows'
