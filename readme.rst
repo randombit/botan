@@ -40,10 +40,6 @@ such as Fedora, Debian, Arch and Homebrew.
     :target: https://travis-ci.com/github/randombit/botan
     :alt: Travis CI status
 
-.. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce/branch/master?svg=true
-    :target: https://ci.appveyor.com/project/randombit/botan/branch/master
-    :alt: AppVeyor CI status
-
 .. image:: https://codecov.io/github/randombit/botan/coverage.svg?branch=master
     :target: https://codecov.io/github/randombit/botan
     :alt: Code coverage report
