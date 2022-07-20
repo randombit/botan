@@ -1,3 +1,4 @@
 Test Case: CERT_PATH_EXT_16
 
 Purpose: Checks the behaviour of an application when the intermediate certificate contains a non-critical Name Constraints extension. This path is invalid because this extension must be critical.
+However, as of GH #2736 / GH #2738 (Botan 2.18.1) the library accepts this path to become compatible with other implementations (i.e OpenSSL) that also accept non-critical extensions.
