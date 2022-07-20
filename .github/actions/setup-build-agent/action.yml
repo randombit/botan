@@ -47,3 +47,8 @@ runs:
       with:
         arch: ${{ env.VSENV_ARCH }} # set by setup_gh_actions.ps1
       if: runner.os == 'Windows'
+
+    - name: Install Build Dependencies # after setting up Visual Studio Environment
+      run: ./src/scripts/ci/setup_gh_actions_after_vcvars.ps1 ${{ inputs.target }}
+      shell: pwsh
+      if: runner.os == 'Windows'
