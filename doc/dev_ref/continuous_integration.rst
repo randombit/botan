@@ -4,21 +4,26 @@ Continuous Integration and Automated Testing
 CI Build Script
 ----------------
 
-The Github Actions, AppVeyor and Travis builds are orchestrated using a script
+The Github Actions builds are orchestrated using a script
 ``src/scripts/ci_build.py``. This allows one to easily reproduce the CI process
 on a local machine.
 
 Github Actions
 ---------------
 
-Github Actions is the primary CI, and tests the Linux, macOS, and iOS
+Github Actions is the primary CI, and tests the Linux, Windows, macOS, and iOS
 builds. Among other things it runs tests using valgrind, cross-compilation
 for various architectures (currently including ARM and PPC64), MinGW build,
 and a build that produces the coverage report.
 
-The Github Actions configuration is in ``.github/workflows/ci.yml``
-which executes a setup script ``src/scripts/ci/setup_gh_actions.sh`` to
-install needed packages.  Then ``src/scripts/ci_build.py`` is invoked.
+The Github Actions configuration is in ``.github/workflows/ci.yml`` which
+executes platform dependent setup scripts ``src/scripts/ci/setup_gh_actions.sh``
+or ``src/scripts/ci/setup_gh_actions.ps1`` and ``.../setup_gh_actions_after_vcvars.ps1``
+to install needed packages and detect certain platform specifics like compiler
+cache locations.
+
+Then ``src/scripts/ci_build.py`` is invoked to steer the actual build and test
+runs.
 
 Travis CI
 ----------
@@ -27,19 +32,6 @@ https://travis-ci.com/github/randombit/botan
 
 This CI is primarily used to run builds which cannot be run on Github Actions,
 specifically native builds for s390x, ppc64le, aarch64 and armv7.
-
-AppVeyor
-----------
-
-https://ci.appveyor.com/project/randombit/botan
-
-Runs a build/test cycle using MSVC on Windows. Like Github Actions it uses
-``src/scripts/ci_build.py``. The AppVeyor setup script is in
-``src/scripts/ci/setup_appveyor.bat``
-
-The AppVeyor build uses `sccache <https://github.com/mozilla/sccache>`_ as a
-compiler cache. Since that is not available in the AppVeyor images, the setup
-script downloads a release binary from the upstream repository.
 
 LGTM
 ---------
