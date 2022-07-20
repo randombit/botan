@@ -23,6 +23,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  windows:
+    name: "Windows (Basic)"
+    strategy:
+      fail-fast: false
+
+      matrix:
+        # basic configuration combinations should run on all target platforms
+        target:    [ static, shared, amalgamation ]
+        arch:      [ x86_64, x86 ]
+        host_os:   [ windows-2022, windows-2019 ]
+
+        exclude:
+          # fails due to "abstract class marked final"
+          # see TODOs here: https://github.com/randombit/botan/pull/3007
+          - target: amalgamation
+
+          # currently failing
+          # see TODOs here: https://github.com/randombit/botan/pull/3007
+          - arch: x86
+
+    runs-on: ${{ matrix.host_os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: ${{ matrix.target }}
+          cache-key: ${{ matrix.host_os }}-msvc-${{ matrix.arch }}-${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+
+      - name: Build and Test Botan
+        run: python3 ./src/scripts/ci_build.py --cc='msvc' --make-tool='jom' --cpu='${{ matrix.arch }}' ${{ matrix.target }}
+
   linux:
     name: "Linux (Basic)"
     strategy:
@@ -114,6 +149,10 @@ jobs:
           - target: bsi
             compiler: gcc
             host_os: ubuntu-latest
+          - target: sanitizer
+            compiler: msvc
+            host_os: windows-latest
+            make_tool: jom
           - target: lint
             compiler: gcc
             host_os: ubuntu-latest
