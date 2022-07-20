@@ -91,14 +91,18 @@ jobs:
             host_os: macos-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent (Unix-like)
+        run: ./src/scripts/ci/setup_gh_actions.sh ${{ matrix.target }}
+
+      - name: Check Availability of Compiler Cache
+        run: echo "::warning ::No compiler cache available, build times might suffer"
+        if: env.COMPILER_CACHE_LOCATION == ''
       - uses: actions/cache@v2
+        if: env.COMPILER_CACHE_LOCATION != ''
         with:
-            path: |
-              ~/.ccache
-              /Users/runner/Library/Caches/ccache
+            path: ${{ env.COMPILER_CACHE_LOCATION }}
             key: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-${{ github.run_id }}
-            restore-keys: |
-               ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-
-      - run: ./src/scripts/ci/setup_gh_actions.sh ${{ matrix.target }}
+            restore-keys: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-
       - run: ./src/scripts/ci_build.py --cc '${{ matrix.compiler }}' ${{ matrix.target }}
