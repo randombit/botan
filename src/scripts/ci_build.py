@@ -144,6 +144,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         # this test compiles under MinGW but fails when run under Wine
         disabled_tests.append('certstor_system')
 
+    if target_os == 'mingw':
+        # make sure to link against static versions of libstdc++, libgcc* and winpthread
+        flags += ['--ldflags=-static']
+
     if target == 'coverage':
         flags += ['--with-coverage-info', '--with-debug-info', '--test-mode']
 
@@ -283,6 +287,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
                 flags += ['--with-external-includedir', boost_root]
             elif boost_incl:
                 flags += ['--with-external-includedir', boost_incl]
+
+            if target_os == 'mingw':
+                # apparently mingw needs this legacy socket library version for reasons
+                # as per: https://stackoverflow.com/questions/38770895/how-to-fix-undefined-reference-to-getacceptexsockaddrs-boost-asio-in-clion#comment105791579_38771260
+                flags += ['--ldflags=-static -lwsock32']
 
         if target_os == 'linux':
             flags += ['--with-lzma']
