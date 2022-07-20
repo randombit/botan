@@ -25,14 +25,6 @@ cache locations.
 Then ``src/scripts/ci_build.py`` is invoked to steer the actual build and test
 runs.
 
-Travis CI
-----------
-
-https://travis-ci.com/github/randombit/botan
-
-This CI is primarily used to run builds which cannot be run on Github Actions,
-specifically native builds for s390x, ppc64le, aarch64 and armv7.
-
 LGTM
 ---------
 
