@@ -93,16 +93,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Build Agent (Unix-like)
-        run: ./src/scripts/ci/setup_gh_actions.sh ${{ matrix.target }}
-
-      - name: Check Availability of Compiler Cache
-        run: echo "::warning ::No compiler cache available, build times might suffer"
-        if: env.COMPILER_CACHE_LOCATION == ''
-      - uses: actions/cache@v2
-        if: env.COMPILER_CACHE_LOCATION != ''
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
         with:
-            path: ${{ env.COMPILER_CACHE_LOCATION }}
-            key: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-${{ github.run_id }}
-            restore-keys: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-
+          target: ${{ matrix.target }}
+          cache-key: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-
+
       - run: ./src/scripts/ci_build.py --cc '${{ matrix.compiler }}' ${{ matrix.target }}
