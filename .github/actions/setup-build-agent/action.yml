@@ -22,9 +22,14 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Setup Build Agent (Windows)
+      run: ./src/scripts/ci/setup_gh_actions.ps1 "${{ inputs.target }}" "${{ inputs.arch }}"
+      shell: pwsh
+      if: runner.os == 'Windows'
     - name: Setup Build Agent (Unix-like)
-      run: ./src/scripts/ci/setup_gh_actions.sh ${{ inputs.target }}
+      run: ./src/scripts/ci/setup_gh_actions.sh "${{ inputs.target }}" "${{ inputs.arch }}"
       shell: bash
+      if: runner.os != 'Windows'
 
     - name: Check Availability of Compiler Cache
       run: print("::warning ::No compiler cache available, build times might suffer")
@@ -36,3 +41,9 @@ runs:
           path: ${{ env.COMPILER_CACHE_LOCATION }}
           key: ${{ inputs.cache-key }}-${{ github.run_id }}
           restore-keys: ${{ inputs.cache-key }}
+
+    - name: Setup Visual Studio Environment
+      uses: egor-tensin/vs-shell@v2
+      with:
+        arch: ${{ env.VSENV_ARCH }} # set by setup_gh_actions.ps1
+      if: runner.os == 'Windows'

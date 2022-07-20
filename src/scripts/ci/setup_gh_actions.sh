@@ -11,7 +11,8 @@ command -v shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if
 
 set -ex
 
-TARGET=$1
+TARGET="$1"
+ARCH="$2"
 
 if type -p "apt-get"; then
     sudo apt-get -qq update
