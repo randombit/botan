@@ -276,15 +276,13 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
         if target_os == 'windows' and target in ['shared', 'static']:
             # ./configure.py needs extra hand-holding for boost on windows
-            boost_root = os.environ.get('BOOST_ROOT')
-            boost_libs = os.environ.get('BOOST_LIBRARYDIR')
-            boost_system = os.environ.get('BOOST_SYSTEM_LIBRARY')
+            boost_root = os.environ.get('BOOST_ROOT') # remove this with appveyor
+            boost_incl = os.environ.get('BOOST_INCLUDEDIR')
 
-            if boost_root and boost_libs and boost_system:
-                flags += ['--with-boost',
-                          '--with-external-includedir', boost_root,
-                          '--with-external-libdir', boost_libs,
-                          '--boost-library-name', boost_system]
+            if boost_root:
+                flags += ['--with-external-includedir', boost_root]
+            elif boost_incl:
+                flags += ['--with-external-includedir', boost_incl]
 
         if target_os == 'linux':
             flags += ['--with-lzma']

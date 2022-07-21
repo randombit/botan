@@ -14,6 +14,7 @@ optimization_flags "-O3"
 sanitizer_optimization_flags "-O1 -fno-optimize-sibling-calls -fno-omit-frame-pointer"
 size_optimization_flags "-Os"
 
+add_system_include_dir_option "-isystem"
 add_sysroot_option "--sysroot="
 
 <sanitizers>

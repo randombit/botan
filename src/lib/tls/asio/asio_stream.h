@@ -589,9 +589,6 @@ class Stream
        *
        * This class is provided to the stream's native_handle (Botan::TLS::Channel) and implements the callback
        * functions triggered by the native_handle.
-       *
-       * @param receive_buffer reference to the buffer where decrypted data should be placed
-       * @param send_buffer reference to the buffer where encrypted data should be placed
        */
       class StreamCore : public Botan::TLS::Callbacks
          {
