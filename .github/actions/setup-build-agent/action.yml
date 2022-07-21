@@ -1,3 +1,9 @@
+
+# (C) 2022 Jack Lloyd
+# (C) 2022 René Meusel, Rohde & Schwarz Cybersecurity
+#
+# Botan is released under the Simplified BSD License (see license.txt)
+
 name: Setup Botan Build Agent
 description: Set up a build agent for building and testing the Botan library
 

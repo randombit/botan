@@ -484,13 +484,11 @@ def main(args=None):
     if options.compiler_cache is None:
         # Autodetect compiler cache
         if have_prog('sccache'):
-            print('Found \'sccache\' installed, will use it...')
             options.compiler_cache = 'sccache'
         elif have_prog('ccache'):
-            print('Found \'ccache\' installed, will use it...')
             options.compiler_cache = 'ccache'
-        else:
-            print('No compiler cache specified or auto-detected, won\'t cache...')
+        if options.compiler_cache:
+            print("Found '%s' installed, will use it..." % (options.compiler_cache))
 
     if options.compiler_cache not in [None, 'ccache', 'sccache']:
         raise Exception("Don't know about %s as a compiler cache" % (options.compiler_cache))
