@@ -542,6 +542,9 @@ def main(args=None):
 
         cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
 
+        if options.make_tool == '':
+            options.make_tool = 'make'
+
         make_cmd = [options.make_tool]
         if root_dir != '.':
             make_cmd += ['-C', root_dir]

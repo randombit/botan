@@ -96,35 +96,27 @@ jobs:
           - target: coverage
             compiler: gcc
             host_os: ubuntu-latest
-            make_tool: make
           - target: valgrind
             compiler: gcc
             host_os: ubuntu-latest
-            make_tool: make
           - target: fuzzers
             compiler: gcc
             host_os: ubuntu-latest
-            make_tool: make
           - target: emscripten
             compiler: emcc
             host_os: macos-latest
-            make_tool: make
           - target: baremetal
             compiler: gcc
             host_os: ubuntu-latest
-            make_tool: make
           - target: minimized
             compiler: gcc
             host_os: ubuntu-latest
-            make_tool: make
           - target: bsi
             compiler: gcc
             host_os: ubuntu-latest
-            make_tool: make
           - target: lint
             compiler: gcc
             host_os: ubuntu-latest
-            make_tool: make
 
     runs-on: ${{ matrix.host_os }}
 
