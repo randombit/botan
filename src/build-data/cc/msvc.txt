@@ -42,9 +42,10 @@ ar_options "/nologo"
 ar_output_to "/OUT:"
 
 <sanitizers>
-default -> iterator
+default -> address
 
 iterator -> "/D_ITERATOR_DEBUG_LEVEL=1"
+address   -> "/fsanitize=address"
 </sanitizers>
 
 <isa_flags>

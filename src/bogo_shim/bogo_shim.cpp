@@ -301,6 +301,8 @@ class Shim_Socket final
       static void close_socket(socket_type s) { ::close(s); }
       static std::string get_last_socket_error() { return ::strerror(errno); }
 
+      using unique_addrinfo_t = std::unique_ptr<addrinfo, decltype(&::freeaddrinfo)>;
+
    public:
       Shim_Socket(const std::string& hostname, int port) : m_socket(-1)
          {
@@ -309,10 +311,16 @@ class Shim_Socket final
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = SOCK_STREAM;
          hints.ai_flags = AI_NUMERICSERV;
-         addrinfo* res;
 
          const std::string service = std::to_string(port);
-         int rc = ::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res);
+
+         // TODO: C++23 will introduce std::out_ptr() that should replace the
+         //       temporary variable for the call to ::getaddrinfo() and
+         //       std::unique_ptr<>::reset().
+         unique_addrinfo_t::pointer res_tmp;
+         int rc = ::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res_tmp);
+         unique_addrinfo_t res(res_tmp, &::freeaddrinfo);
+
          shim_log("Connecting " + hostname + ":" + service);
 
          if(rc != 0)
@@ -320,7 +328,7 @@ class Shim_Socket final
             throw Shim_Exception("Name resolution failed for " + hostname);
             }
 
-         for(addrinfo* rp = res; (m_socket == -1) && (rp != nullptr); rp = rp->ai_next)
+         for(addrinfo* rp = res.get(); (m_socket == -1) && (rp != nullptr); rp = rp->ai_next)
             {
             if(rp->ai_family != AF_INET && rp->ai_family != AF_INET6)
                continue;

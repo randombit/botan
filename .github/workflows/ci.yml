@@ -155,7 +155,14 @@ jobs:
           - target: sanitizer
             compiler: msvc
             host_os: windows-latest
-            make_tool: jom
+            make_tool: nmake # to force a serial build (otherwise multi-process PDB handling chokes)
+                             # See: https://github.com/randombit/botan/pull/3012#discussion_r1033621569
+          - target: sanitizer
+            compiler: clang
+            host_os: ubuntu-22.04
+          - target: sanitizer
+            compiler: gcc
+            host_os: ubuntu-22.04
           - target: lint
             compiler: gcc
             host_os: ubuntu-22.04
@@ -177,7 +184,7 @@ jobs:
           repository: reneme/boringssl
           ref: rene/runner-20220322 # TODO: merge changes to Botan's boring fork
           path: ./boringssl
-        if: matrix.target == 'coverage'
+        if: matrix.target == 'coverage' || matrix.target == 'sanitizer'
 
       - name: Setup Build Agent
         uses: ./source/.github/actions/setup-build-agent

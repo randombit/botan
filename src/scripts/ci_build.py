@@ -75,6 +75,8 @@ def build_targets(target, target_os):
 
     if target in ['coverage']:
         yield 'bogo_shim'
+    if target in ['sanitizer'] and target_os not in ['windows']:
+        yield 'bogo_shim'
 
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                     root_dir, build_dir, test_results_dir, pkcs11_lib, use_gdb,
@@ -168,7 +170,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         flags += ['--ldflags=-static']
 
     if target == 'coverage':
-        flags += ['--with-coverage-info', '--with-debug-info', '--test-mode', '--terminate-on-asserts']
+        flags += ['--with-coverage-info']
+
+    if target in ['coverage', 'sanitizer']:
+        flags += ['--with-debug-info', '--test-mode', '--terminate-on-asserts']
 
     if target == 'valgrind':
         flags += ['--with-valgrind']
@@ -203,7 +208,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         if target_cc in ['clang', 'gcc']:
             flags += ['--enable-sanitizers=address,undefined']
         else:
-            flags += ['--with-sanitizers']
+            flags += ['--enable-sanitizers=address']
 
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
@@ -301,7 +306,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        if target in ['coverage', 'shared', 'static', 'amalgamation']:
+        if target in ['coverage', 'sanitizer', 'shared', 'static', 'amalgamation']:
             flags += ['--with-boost']
             if target_cc == 'clang':
                 # make sure clang ignores warnings in boost headers
@@ -591,7 +596,7 @@ def main(args=None):
             if target in ['coverage', 'fuzzers']:
                 make_targets += ['fuzzer_corpus_zip', 'fuzzers']
 
-            if target in ['coverage']:
+            if target in ['coverage', 'sanitizer'] and options.os not in ['windows']:
                 make_targets += ['bogo_shim']
 
             cmds.append(make_prefix + make_cmd + make_targets)
@@ -602,7 +607,7 @@ def main(args=None):
         if run_test_command is not None:
             cmds.append(run_test_command)
 
-        if target == 'coverage':
+        if target in ['coverage', 'sanitizer'] and options.os != 'windows':
             if not options.boringssl_dir:
                 raise Exception('coverage build needs --boringssl-dir')
 
@@ -619,11 +624,11 @@ def main(args=None):
                          os.path.join(build_dir, 'fuzzer_corpus'),
                          os.path.join(build_dir, 'build/fuzzer')])
 
-        if target in ['shared', 'coverage'] and options.os != 'windows':
+        if target in ['shared', 'coverage', 'sanitizer'] and options.os != 'windows':
             botan_exe = os.path.join(build_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
 
             args = ['--threads=%d' % (options.build_jobs)]
-            if target == 'coverage':
+            if target in ['coverage', 'sanitizer']:
                 args.append('--run-slow-tests')
             if root_dir != '.':
                 args.append('--test-data-dir=%s' % root_dir)
