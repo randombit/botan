@@ -1,5 +1,7 @@
 
-# (C) 2020 Jack Lloyd
+# (C) 2020,2022 Jack Lloyd
+# (C) 2022      René Meusel, Rohde & Schwarz Cybersecurity
+#
 # Botan is released under the Simplified BSD License (see license.txt)
 
 name: ci
@@ -14,13 +16,78 @@ on:
   pull_request:
     branches: [ master ]
 
+# cancel running workflows when new commits are being pushed in pull requests
+# but not on the master branch
+concurrency:
+  group: ${{ github.workflow }} @ ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
-  ci:
-    runs-on: ${{ matrix.host_os }}
+  linux:
+    name: "Linux (Basic)"
+    strategy:
+      fail-fast: false
 
-    env:
-      ANDROID_NDK: android-ndk-r21d
+      matrix:
+        # basic configuration combinations should run on all target platforms
+        target:   [ static, shared, amalgamation ]
+        compiler: [ clang, gcc ]
 
+        exclude:
+          # fails due to "abstract class marked final"
+          # see TODOs here: https://github.com/randombit/botan/pull/3007
+          - compiler: clang
+            target: amalgamation
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: ${{ matrix.target }}
+          cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+
+      - name: Build and Test Botan
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' ${{ matrix.target }}
+
+  macos:
+    name: "macOS (Basic)"
+    strategy:
+      fail-fast: false
+
+      matrix:
+        # basic configuration combinations should run on all target platforms
+        target:   [ static, shared, amalgamation ]
+        compiler: [ clang, gcc ]
+
+        exclude:
+          # fails due to "abstract class marked final"
+          # see TODOs here: https://github.com/randombit/botan/pull/3007
+          - compiler: clang
+            target: amalgamation
+          # currently failing
+          # see TODOs here: https://github.com/randombit/botan/pull/3007
+          - compiler: gcc
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: ${{ matrix.target }}
+          cache-key: macos-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+
+      - name: Build and Test Botan
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' ${{ matrix.target }}
+
+  specials:
+    name: "Metrics and Specials"
     strategy:
       fail-fast: false
 
@@ -28,71 +95,85 @@ jobs:
         include:
           - target: coverage
             compiler: gcc
-            host_os: ubuntu-20.04
-          - target: shared
-            compiler: gcc
-            host_os: ubuntu-20.04
-          - target: shared
-            compiler: clang
-            host_os: ubuntu-20.04
+            host_os: ubuntu-latest
           - target: valgrind
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-latest
           - target: fuzzers
             compiler: gcc
-            host_os: ubuntu-20.04
-          - target: cross-i386
-            compiler: gcc
-            host_os: ubuntu-20.04
-          - target: cross-arm64
-            compiler: gcc
-            host_os: ubuntu-20.04
-          - target: cross-ppc64
-            compiler: gcc
-            host_os: ubuntu-20.04
-          - target: cross-android-arm32
-            compiler: clang
-            host_os: ubuntu-20.04
-          - target: cross-android-arm64
-            compiler: clang
-            host_os: ubuntu-20.04
-          - target: cross-win64
-            compiler: gcc
-            host_os: ubuntu-20.04
-          - target: amalgamation
-            compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-latest
           - target: emscripten
             compiler: emcc
             host_os: macos-latest
           - target: baremetal
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-latest
           - target: minimized
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-latest
           - target: bsi
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-latest
           - target: lint
             compiler: gcc
-            host_os: ubuntu-20.04
-          - target: shared
+            host_os: ubuntu-latest
+
+    runs-on: ${{ matrix.host_os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: ${{ matrix.target }}
+          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+
+      - name: Build and Test Botan
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' ${{ matrix.target }}
+
+  x-compile:
+    name: "Cross-Compilation"
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - target: cross-i386
+            compiler: gcc
+            host_os: ubuntu-latest
+          - target: cross-arm64
+            compiler: gcc
+            host_os: ubuntu-latest
+          - target: cross-ppc64
+            compiler: gcc
+            host_os: ubuntu-latest
+          - target: cross-android-arm32
             compiler: clang
-            host_os: macos-latest
+            host_os: ubuntu-latest
+          - target: cross-android-arm64
+            compiler: clang
+            host_os: ubuntu-latest
+          - target: cross-win64
+            compiler: gcc
+            host_os: ubuntu-latest
           - target: cross-ios-arm64
             compiler: clang
             host_os: macos-latest
 
+    runs-on: ${{ matrix.host_os }}
+
+    env:
+      ANDROID_NDK: android-ndk-r21d
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
         with:
-            path: |
-              ~/.ccache
-              /Users/runner/Library/Caches/ccache
-            key: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-${{ github.run_id }}
-            restore-keys: |
-               ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.target }}-
-      - run: ./src/scripts/ci/setup_gh_actions.sh ${{ matrix.target }}
-      - run: ./src/scripts/ci_build.py --cc '${{ matrix.compiler }}' ${{ matrix.target }}
+          target: ${{ matrix.target }}
+          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
+
+      - name: Build and Test Botan
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' ${{ matrix.target }}

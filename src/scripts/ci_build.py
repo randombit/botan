@@ -428,8 +428,9 @@ def have_prog(prog):
     """
     for path in os.environ['PATH'].split(os.pathsep):
         exe_file = os.path.join(path, prog)
-        if os.path.exists(exe_file) and os.access(exe_file, os.X_OK):
-            return True
+        for ef in [exe_file, exe_file + ".exe"]:
+            if os.path.exists(ef) and os.access(ef, os.X_OK):
+                return True
     return False
 
 def main(args=None):
@@ -480,10 +481,14 @@ def main(args=None):
             print('Error unknown compiler %s' % (options.cc))
             return 1
 
-    if options.compiler_cache is None and options.cc != 'msvc':
-        # Autodetect ccache
-        if have_prog('ccache'):
+    if options.compiler_cache is None:
+        # Autodetect compiler cache
+        if have_prog('sccache'):
+            options.compiler_cache = 'sccache'
+        elif have_prog('ccache'):
             options.compiler_cache = 'ccache'
+        if options.compiler_cache:
+            print("Found '%s' installed, will use it..." % (options.compiler_cache))
 
     if options.compiler_cache not in [None, 'ccache', 'sccache']:
         raise Exception("Don't know about %s as a compiler cache" % (options.compiler_cache))
@@ -536,6 +541,9 @@ def main(args=None):
             options.extra_cxxflags, options.disabled_tests)
 
         cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
+
+        if options.make_tool == '':
+            options.make_tool = 'make'
 
         make_cmd = [options.make_tool]
         if root_dir != '.':

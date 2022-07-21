@@ -73,3 +73,9 @@ else
         brew install emscripten
     fi
 fi
+
+# find the ccache cache location and store it in the build job's environment
+if type -p "ccache"; then
+    cache_location="$( ccache --get-config cache_dir )"
+    echo "COMPILER_CACHE_LOCATION=${cache_location}" >> "${GITHUB_ENV}"
+fi

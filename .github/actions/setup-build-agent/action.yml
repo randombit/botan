@@ -1,0 +1,38 @@
+
+# (C) 2022 Jack Lloyd
+# (C) 2022 René Meusel, Rohde & Schwarz Cybersecurity
+#
+# Botan is released under the Simplified BSD License (see license.txt)
+
+name: Setup Botan Build Agent
+description: Set up a build agent for building and testing the Botan library
+
+inputs:
+  target:
+    description: The ci_build.py target going to be built on this agent
+    required: true
+  cache-key:
+    description: The actions/cache key to be used for this runs, caching will be disabled when no key is provided
+    required: false
+  arch:
+    description: Target CPU architecture
+    required: false
+    default: x64
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Build Agent (Unix-like)
+      run: ./src/scripts/ci/setup_gh_actions.sh ${{ inputs.target }}
+      shell: bash
+
+    - name: Check Availability of Compiler Cache
+      run: print("::warning ::No compiler cache available, build times might suffer")
+      shell: python
+      if: env.COMPILER_CACHE_LOCATION == '' && inputs.cache-key != ''
+    - uses: actions/cache@v2
+      if: env.COMPILER_CACHE_LOCATION != '' && inputs.cache-key != ''
+      with:
+          path: ${{ env.COMPILER_CACHE_LOCATION }}
+          key: ${{ inputs.cache-key }}-${{ github.run_id }}
+          restore-keys: ${{ inputs.cache-key }}
