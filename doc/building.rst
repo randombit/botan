@@ -96,6 +96,33 @@ include any random number generator, which is needed for example to
 generate keys, nonces and IVs. See :doc:`api_ref/rng` on which random number
 generators are available.
 
+Common Build Targets
+--------------------
+
+Build everthing that is configured::
+
+ $ make all
+
+Build the unit test binary (``./botan-test`` to run)::
+
+ $ make tests
+
+Build and run the tests::
+
+ $ make check
+
+Build the documentation (Doxygen API reference and Sphinx handbook)::
+
+ $ make docs
+
+Install the library::
+
+ $ make install
+
+Remove all generated artefacts::
+
+ $ make clean
+
 Cross Compiling
 ---------------------
 
@@ -620,6 +647,11 @@ If not provided, the value of the ``AR_OPTIONS`` environment variable is used if
 Specify the MSVC runtime to use (MT, MD, MTd, or MDd). If not specified,
 picks either MD or MDd depending on if debug mode is set.
 
+``--compiler-cache``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify a compiler cache (like ccache) to use for each compiler invocation.
+
 ``--with-endian=ORDER``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -709,6 +741,12 @@ Disable use of ARMv8 Crypto intrinsics
 
 Disable use of POWER Crypto intrinsics
 
+``--system-cert-bundle=PATH``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set a path to a file containing one or more trusted CA certificates in
+PEM format. If not given, some default locations are checked.
+
 ``--with-debug-info``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -770,11 +808,11 @@ Enable debug info and disable optimizations
 
 Use amalgamation to build
 
-``--system-cert-bundle=PATH``
+``--name-amalgamation``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Set a path to a file containing one or more trusted CA certificates in
-PEM format. If not given, some default locations are checked.
+Specify an alternative amalgamation file name. By default we use `botan_all`.
+
 
 ``--with-build-dir=DIR``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1010,3 +1048,9 @@ Set the man page installation dir.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Set the include file installation dir.
+
+``--list-modules``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+List all modules that could be enabled or disabled using `--enable-modules` or
+`--disable-modules`.

@@ -1,8 +1,9 @@
 #ifndef BOTAN_BUILD_CONFIG_H_
 #define BOTAN_BUILD_CONFIG_H_
 
-/*
-* Build configuration for Botan %{version}
+/**
+* @file  build.h
+* @brief Build configuration for Botan %{version}
 *
 * Automatically generated from
 * '%{command_line}'
@@ -12,6 +13,16 @@
 *  - Arch: %{arch}
 *  - OS: %{os}
 */
+
+/**
+ * @defgroup buildinfo Build Information
+ */
+
+/**
+ * @ingroup buildinfo
+ * @defgroup buildinfo_version Build version information
+ * @{
+ */
 
 #define BOTAN_VERSION_MAJOR %{version_major}
 #define BOTAN_VERSION_MINOR %{version_minor}
@@ -29,10 +40,24 @@
 
 #define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
 
-/* How many bits per limb in a BigInt */
+/**
+ * @}
+ */
+
+/**
+ * @ingroup buildinfo
+ * @defgroup buildinfo_configuration Build configurations
+ * @{
+ */
+
+/** How many bits per limb in a BigInt */
 #define BOTAN_MP_WORD_BITS %{mp_bits}
 
 %{if fuzzer_mode}
+/** Disables certain validation checks to easy fuzzability of the library
+ * @warning This causes the library build to be insecure, hence, it must not be
+ *          used in a production environment!
+ */
 #define BOTAN_UNSAFE_FUZZER_MODE
 %{endif}
 %{if fuzzer_type}
@@ -98,6 +123,16 @@
 #define BOTAN_OPTIMIZE_FOR_SIZE
 %{endif}
 
+/**
+ * @}
+ */
+
+/**
+ * @ingroup buildinfo
+ * @defgroup buildinfo_modules Enabled modules and API versions
+ * @{
+ */
+
 /*
 * Module availability definitions
 */
@@ -105,45 +140,55 @@
 #define BOTAN_HAS_%{i}
 %{endfor}
 
-/*
-* Local/misc configuration options (if any) follow
-*/
+/**
+ * @}
+ */
+
+/**
+ * @addtogroup buildinfo_configuration
+ * @{
+ */
+
+/** Local/misc configuration options (if any) follow */
 %{local_config}
 
 /*
 * Things you can edit (but probably shouldn't)
 */
 
-/* How much to allocate for a buffer of no particular size */
+/** How much to allocate for a buffer of no particular size */
 #define BOTAN_DEFAULT_BUFFER_SIZE 1024
 
-/*
+/**
 * Total maximum amount of RAM (in KiB) we will lock into memory, even
 * if the OS would let us lock more
 */
 #define BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB 512
 
-/*
-* If BOTAN_MEM_POOL_USE_MMU_PROTECTIONS is defined, the Memory_Pool
-* class used for mlock'ed memory will use OS calls to set page
-* permissions so as to prohibit access to pages on the free list, then
-* enable read/write access when the page is set to be used. This will
-* turn (some) use after free bugs into a crash.
-*
-* The additional syscalls have a substantial performance impact, which
-* is why this option is not enabled by default.
-*/
 #if defined(BOTAN_HAS_VALGRIND) || defined(BOTAN_ENABLE_DEBUG_ASSERTS)
+   /**
+    * @brief Prohibits access to unused memory pages in Botan's memory pool
+    *
+    * If BOTAN_MEM_POOL_USE_MMU_PROTECTIONS is defined, the Memory_Pool
+    * class used for mlock'ed memory will use OS calls to set page
+    * permissions so as to prohibit access to pages on the free list, then
+    * enable read/write access when the page is set to be used. This will
+    * turn (some) use after free bugs into a crash.
+    *
+    * The additional syscalls have a substantial performance impact, which
+    * is why this option is not enabled by default. It is used when built for
+    * running in valgrind or debug assertions are enabled.
+    */
    #define BOTAN_MEM_POOL_USE_MMU_PROTECTIONS
 #endif
 
-/*
+/**
 * If enabled uses memset via volatile function pointer to zero memory,
 * otherwise does a byte at a time write via a volatile pointer.
 */
 #define BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO 1
 
-/*
+/**
 * Normally blinding is performed by choosing a random starting point (plus
 * its inverse, of a form appropriate to the algorithm being blinded), and
 * then choosing new blinding operands by successive squaring of both
@@ -156,27 +201,29 @@
 */
 #define BOTAN_BLINDING_REINIT_INTERVAL 64
 
-/*
+/**
 * Userspace RNGs like HMAC_DRBG will reseed after a specified number
 * of outputs are generated. Set to zero to disable automatic reseeding.
 */
 #define BOTAN_RNG_DEFAULT_RESEED_INTERVAL 1024
+
+/** Number of entropy bits polled for reseeding userspace RNGs like HMAC_DRBG */
 #define BOTAN_RNG_RESEED_POLL_BITS 256
 
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
 
-/*
+/**
 * Specifies (in order) the list of entropy sources that will be used
 * to seed an in-memory RNG.
 */
 #define BOTAN_ENTROPY_DEFAULT_SOURCES \
    { "rdseed", "hwrng", "getentropy", "system_rng", "system_stats" }
 
-/* Multiplier on a block cipher's native parallelism */
+/** Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
 
-/*
+/**
 * This directory will be monitored by ProcWalking_EntropySource and
 * the contents provided as entropy inputs to the RNG. May also be
 * usefully set to something like "/sys", depending on the system being
@@ -192,13 +239,13 @@
 #define BOTAN_SYSTEM_RNG_POLL_REQUEST 64
 #define BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS 20
 
-/*
+/**
 * When a PBKDF is self-tuning parameters, it will attempt to take about this
 * amount of time to self-benchmark.
 */
 #define BOTAN_PBKDF_TUNING_TIME std::chrono::milliseconds(10)
 
-/*
+/**
 * If no way of dynamically determining the cache line size for the
 * system exists, this value is used as the default. Used by the side
 * channel countermeasures rather than for alignment purposes, so it is
@@ -209,20 +256,22 @@
   #define BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE 32
 #endif
 
-/**
-* Controls how AutoSeeded_RNG is instantiated
-*/
 #if !defined(BOTAN_AUTO_RNG_HMAC)
 
   #if defined(BOTAN_HAS_SHA2_64)
+    /** Controls how AutoSeeded_RNG is instantiated */
     #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-384)"
   #elif defined(BOTAN_HAS_SHA2_32)
+    /** Controls how AutoSeeded_RNG is instantiated */
     #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-256)"
   #elif defined(BOTAN_HAS_SHA3)
+    /** Controls how AutoSeeded_RNG is instantiated */
     #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-3(256))"
   #elif defined(BOTAN_HAS_SHA1)
+    /** Controls how AutoSeeded_RNG is instantiated */
     #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-1)"
   #endif
+
   /* Otherwise, no hash found: leave BOTAN_AUTO_RNG_HMAC undefined */
 
 #endif
