@@ -12,7 +12,7 @@
 
 namespace {
 
-Botan::TLS::Handshake_Layer prepare(const std::vector<uint8_t>& data)
+Botan::TLS::Handshake_Layer prepare(const Botan::secure_vector<uint8_t>& data)
    {
    Botan::TLS::Handshake_Layer hl(Botan::TLS::Connection_Side::CLIENT);
    hl.copy_data(data);
@@ -28,7 +28,7 @@ void fuzz(const uint8_t in[], size_t len)
 
    try
       {
-      std::vector<uint8_t> v(in, in + len);
+      Botan::secure_vector<uint8_t> v(in, in + len);
       auto hl1 = prepare(v);
       Botan::TLS::Transcript_Hash_State ths("SHA-256");
       while (hl1.next_message(policy, ths).has_value()) {};
