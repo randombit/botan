@@ -103,7 +103,48 @@ class ZFEC_KAT final : public Text_Based_Test
          result.test_eq("Correct number of shares decoded",
                         shares_decoded.size(), K);
 
-         // Now remove N-K shares:
+         // And test error correction. Corrupt E<=(N-K)/2 shares by changing
+         // a single byte in each. Expect to recover the original data.
+         shares_decoded.clear();
+         const size_t shares_to_corrupt = (N-K)/2;
+
+         std::map<size_t, std::vector<uint8_t>> input_corrupted;
+         std::map<size_t, uint8_t*> shares_corrupted;
+         for(size_t i = 0; i != N; ++i)
+            {
+            auto elem = input_corrupted.insert(std::make_pair(i, std::vector<uint8_t>(shares[i], shares[i] + share_size))).first;
+            shares_corrupted[i] = elem->second.data();
+            }
+         const size_t corruption_offset = rng().next_byte() % share_size;
+         for(size_t i = 0; i < shares_to_corrupt; ++i)
+            {
+            const size_t which = rng().next_byte() % N;
+            input_corrupted[which][corruption_offset] ^= 0xff;
+            }
+
+         zfec.decode_corrected(shares_corrupted, share_size, zfec_dec_fn);
+
+         result.test_eq("Correct number of shares decoded",
+                        shares_decoded.size(), K);
+
+         // Now remove N-K-1 shares and corrupt one. correct() should be able to recognize the
+         // inconsistency but not be able to resolve it.
+         shares_decoded.clear();
+         input_corrupted.clear();
+         shares_corrupted.clear();
+
+         for(size_t i = N-K-1; i < N; ++i)
+            {
+            auto elem = input_corrupted.insert(std::make_pair(i, std::vector<uint8_t>(shares[i], shares[i] + share_size))).first;
+            shares_corrupted[i] = elem->second.data();
+            }
+         input_corrupted[N-1][0] ^= 0xAA;
+
+         result.test_throws("too many errors", [&]() {
+            zfec.correct(shares_corrupted, share_size);
+            });
+
+         // Back to the uncorrupted input. Now remove random N-K shares to get the smallest possible set:
          shares_decoded.clear();
 
          while(shares.size() != K)

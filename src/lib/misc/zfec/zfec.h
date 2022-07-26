@@ -18,6 +18,9 @@
 
 namespace Botan {
 
+// forward-declaration of a helper class
+class GFMat;
+
 /**
 * A forward error correction code compatible with the zfec
 * library (https://github.com/tahoe-lafs/zfec)
@@ -76,6 +79,34 @@ class BOTAN_PUBLIC_API(3,0) ZFEC
          const output_cb_t& output_cb)
          const;
 
+      /**
+       * Implements the Berlekamp-Welch algorithm for correcting
+       * errors in the given FEC-encoded data. It will correct the
+       * supplied shares, mutating the underlying bytes.
+       * @param shares the available shares
+       * @param share_size size in bytes of each share
+       * @return a map (identical to shares other than in const-ness) which can be
+       *         used in a following call to decode_shares()
+       */
+      std::map<size_t, const uint8_t*> correct(
+         const std::map<size_t, uint8_t*>& shares,
+         size_t share_size)
+         const;
+
+      /**
+       * Performs Berlekamp-Welch error correction on the given FEC-
+       * encoded data, then decodes the data. This is the same as
+       * calling correct() and decode_shares() separately.
+       */
+      void decode_corrected(
+         const std::map<size_t, uint8_t*>& shares,
+         size_t share_size,
+         const output_cb_t& output_cb)
+         const;
+
+      // This helper class needs to be able to access the addmul() method.
+      friend class GFMat;
+
    private:
       static void addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size);
 
@@ -87,8 +118,15 @@ class BOTAN_PUBLIC_API(3,0) ZFEC
       static size_t addmul_vperm(uint8_t z[], const uint8_t x[], uint8_t y, size_t size);
 #endif
 
+      std::vector<uint8_t> berlekamp_welch(
+         const std::vector<uint8_t*>& shares,
+         const std::vector<size_t>& share_numbers,
+         int index)
+         const;
+
       const size_t m_K, m_N;
       std::vector<uint8_t> m_enc_matrix;
+      std::vector<uint8_t> m_vand_matrix;
    };
 
 }

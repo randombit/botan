@@ -4,14 +4,37 @@
 * (C) 1997-1998 Luigi Rizzo (luigi@iet.unipi.it)
 * (C) 2009,2010,2021 Jack Lloyd
 * (C) 2011 Billy Brumley (billy.brumley@aalto.fi)
+* (C) 2016-2017 Vivint, Inc.
 *
 * Botan is released under the Simplified BSD License (see license.txt)
+*
+* Portions of this code are also subject to the terms of the MIT License:
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
 */
 
 #include <botan/zfec.h>
 #include <botan/exceptn.h>
 #include <botan/internal/cpuid.h>
 #include <botan/mem_ops.h>
+#include <algorithm>
+#include <iterator>
 #include <vector>
 #include <cstring>
 
@@ -323,6 +346,506 @@ void create_inverted_vdm(uint8_t vdm[], size_t K)
       }
    }
 
+// helpers for Galois field arithmetic
+
+uint8_t gf_add(uint8_t a, uint8_t b)
+   {
+   return a ^ b;
+   }
+
+uint8_t gf_mul(uint8_t a, uint8_t b)
+   {
+   return GF_MUL_TABLE(a)[b];
+   }
+
+uint8_t gf_pow(uint8_t base, size_t power)
+   {
+   uint8_t out = 1;
+   auto mul_base = GF_MUL_TABLE(base);
+   for(size_t i = 0; i < power; ++i)
+      {
+      out = mul_base[out];
+      }
+   return out;
+   }
+
+uint8_t gf_div(uint8_t a, uint8_t b)
+   {
+   if(b == 0)
+      {
+      throw Internal_Error("division by zero");
+      }
+   if(a == 0)
+      {
+      return 0;
+      }
+   return GF_EXP[(GF_LOG[a] - GF_LOG[b]) % 255];
+   }
+
+uint8_t gf_inv(uint8_t v)
+   {
+   if(v == 0)
+      {
+      throw Internal_Error("inversion of zero");
+      }
+   return GF_EXP[(255 - GF_LOG[v]) % 255];
+   }
+
+uint8_t gf_dot(const uint8_t* a, const uint8_t* b, int size)
+   {
+   uint8_t out = 0;
+   for(int i = 0; i < size; ++i)
+      {
+      out = gf_add(out, gf_mul(a[i], b[i]));
+      }
+   return out;
+   }
+
+// represents a polynomial over Galois fields
+class GFPoly
+   {
+   public:
+      GFPoly()
+         : start_at {0} {}
+
+      explicit GFPoly(std::vector<uint8_t> values_)
+         : values {std::move(values_)}
+         , start_at {0} {}
+
+      explicit GFPoly(int size)
+         : values {std::vector<uint8_t>(size, 0)}
+         , start_at {0} {}
+
+      int size() const
+         {
+         return static_cast<int>(values.size()) - start_at;
+         }
+
+      int deg() const
+         {
+         return static_cast<int>(size()) - 1;
+         }
+
+      GFPoly scale(uint8_t factor) const
+         {
+         std::vector<uint8_t> out(size(), 0);
+         for(int i = 0; i < static_cast<int>(out.size()); ++i)
+            {
+            out[i] = gf_mul((*this)[i], factor);
+            }
+         return GFPoly(std::move(out));
+         }
+
+      uint8_t index(int power) const
+         {
+         if(power < 0)
+            {
+            return 0;
+            }
+         int which = deg() - power;
+         if(which < 0)
+            {
+            return 0;
+            }
+         return (*this)[which];
+         }
+
+      void set(int pow, uint8_t coef)
+         {
+         int which = deg() - pow;
+         if(which < 0)
+            {
+            std::vector<uint8_t> tmp = std::move(values);
+            values = std::vector<uint8_t>(-which, 0);
+            values.insert(values.end(), tmp.begin() + start_at, tmp.end());
+            which = deg() - pow;
+            start_at = 0;
+            }
+         values[start_at + which] = coef;
+         }
+
+      GFPoly add(const GFPoly& b) const
+         {
+         auto len = size();
+         if(b.size() > len)
+            {
+            len = b.size();
+            }
+         GFPoly out(len);
+         for(int i = 0; i < out.size(); ++i)
+            {
+            auto ai = index(i);
+            auto bi = b.index(i);
+            out.set(i, gf_add(ai, bi));
+            }
+         return out;
+         }
+
+      bool is_zero() const
+         {
+         return std::all_of(values.begin() + start_at, values.end(), [](uint8_t v) -> bool { return v == 0; });
+         }
+
+      void remove_leading_zeroes()
+         {
+         while(start_at < static_cast<int>(values.size()) && values[start_at] == 0)
+            {
+            ++start_at;
+            }
+         }
+
+      void push_back(uint8_t v)
+         {
+         values.push_back(v);
+         }
+
+      // Calculates *this divided by b; returns the quotient and remainder.
+      // Throws Internal_Error on divide by zero.
+      [[nodiscard]] std::pair<GFPoly, GFPoly> div(GFPoly b)
+         {
+         // sanitize the divisor by removing leading zeros.
+         b.remove_leading_zeroes();
+         if(b.size() == 0)
+            {
+            throw Internal_Error("polynomial divide by zero");
+            }
+
+         // sanitize the base poly as well
+         GFPoly p = *this;
+         p.remove_leading_zeroes();
+         if(p.size() == 0)
+            {
+            return std::make_pair(GFPoly(1), GFPoly(1));
+            }
+
+         GFPoly q;
+         while(b.deg() <= p.deg())
+            {
+            auto leading_p = p.index(p.deg());
+            auto leading_b = b.index(b.deg());
+
+            auto coef = gf_div(leading_p, leading_b);
+            q.push_back(coef);
+
+            auto padded = b.scale(coef);
+            std::vector<uint8_t> zeros_to_append(p.deg() - padded.deg(), 0);
+            std::copy(zeros_to_append.begin(), zeros_to_append.end(), std::back_inserter(padded.values));
+
+            p = p.add(padded);
+            if(p[0] != 0)
+               {
+               throw Internal_Error("algebraic error in polynomial division");
+               }
+            p.shift(1);
+            }
+
+         while(p.size() > 1 && p[0] == 0)
+            {
+            p.shift(1);
+            }
+
+         return std::make_pair(q, p);
+         }
+
+      uint8_t& operator[](int index)
+         {
+         if(static_cast<int>(values.size()) - start_at <= index)
+            {
+            throw Lookup_Error("index out of bounds");
+            }
+         return values[index + start_at];
+         }
+
+      const uint8_t& operator[](int index) const
+         {
+         if(static_cast<int>(values.size()) - start_at <= index)
+            {
+            throw Lookup_Error("index out of bounds");
+            }
+         return values[index + start_at];
+         }
+
+      void shift(int elements)
+         {
+         if(static_cast<int>(values.size()) - start_at < elements)
+            {
+            throw Internal_Error("can't shift this polynomial to requested extent");
+            }
+         start_at += elements;
+         }
+
+      uint8_t eval(uint8_t x) const
+         {
+         uint8_t out = 0;
+         for(int i = 0; i <= deg(); ++i)
+            {
+            auto x_i = gf_pow(x, i);
+            auto p_i = index(i);
+            out = gf_add(out, gf_mul(p_i, x_i));
+            }
+         return out;
+         }
+
+   private:
+      std::vector<uint8_t> values;
+      // This class is implemented using an index into the array, because
+      // "remove elements from the beginning of the array" is something that
+      // is needed quite frequently in the course of our berlekamp-welch error
+      // correction. All lookups into `values` should add `start_at` to the
+      // desired index.
+      int start_at;
+   };
+
+}
+
+// Helper class for matrix algebra over Galois fields
+class GFMat
+   {
+   public:
+      GFMat(int i, int j)
+         : m_d(i*j)
+         , m_r(i)
+         , m_c(j) {}
+
+      [[nodiscard]] int index(int i, int j) const
+         {
+         return m_c * i + j;
+         }
+
+      [[nodiscard]] uint8_t get(int i, int j) const
+         {
+         return m_d[index(i, j)];
+         }
+
+      void set(int i, int j, uint8_t val)
+         {
+         m_d[index(i, j)] = val;
+         }
+
+      uint8_t* index_row(int i)
+         {
+         return &m_d[index(i, 0)];
+         }
+
+      void swap_row(int i, int j)
+         {
+         std::vector<uint8_t> tmp(m_c);
+         auto ri = index_row(i);
+         auto rj = index_row(j);
+         std::copy(ri, ri + m_c, tmp.begin());
+         std::copy(rj, rj + m_c, ri);
+         std::copy(tmp.begin(), tmp.begin() + m_c, rj);
+         }
+
+      void scale_row(int r, uint8_t val)
+         {
+         auto ri = index_row(r);
+         for(int i = 0; i < m_c; ++i)
+            {
+            ri[i] = gf_mul(ri[i], val);
+            }
+         }
+
+      void addmul_row(int i, int j, uint8_t val)
+         {
+         auto ri = index_row(i);
+         auto rj = index_row(j);
+         ZFEC::addmul(rj, ri, val, m_c);
+         }
+
+      // in-place invert. the output is put into a, and *this is turned into
+      // the identity matrix. a is expected to be the identity matrix.
+      void invert_with(GFMat& a)
+         {
+         for(int i = 0; i < m_r; ++i)
+            {
+            int p_row = i;
+            auto p_val = get(i, i);
+            for(int j = i + 1; j < m_r && p_val == 0; ++j)
+               {
+               p_row = j;
+               p_val = get(j, i);
+               }
+            if(p_val == 0)
+               {
+               continue;
+               }
+
+            if(p_row != i)
+               {
+               swap_row(i, p_row);
+               a.swap_row(i, p_row);
+               }
+
+            auto inv = gf_inv(p_val);
+            scale_row(i, inv);
+            a.scale_row(i, inv);
+
+            for(int j = i + 1; j < m_r; ++j)
+               {
+               auto leading = get(j, i);
+               addmul_row(i, j, leading);
+               a.addmul_row(i, j, leading);
+               }
+            }
+
+         for(int i = m_r - 1; i > 0; --i)
+            {
+            for(int j = i - 1; j >= 0; --j)
+               {
+               auto trailing = get(j, i);
+               addmul_row(i, j, trailing);
+               a.addmul_row(i, j, trailing);
+               }
+            }
+         }
+
+      // in-place standardize.
+      void standardize()
+         {
+         for(int i = 0; i < m_r; ++i)
+            {
+            int p_row = i;
+            auto p_val = get(i, i);
+            for(int j = i + 1; j < m_r && p_val == 0; ++j)
+               {
+               p_row = j;
+               p_val = get(j, i);
+               }
+            if(p_val == 0)
+               {
+               continue;
+               }
+
+            if(p_row != i)
+               {
+               swap_row(i, p_row);
+               }
+
+            auto inv = gf_inv(p_val);
+            scale_row(i, inv);
+
+            for(int j = i + 1; j < m_r; ++j)
+               {
+               auto leading = get(j, i);
+               addmul_row(i, j, leading);
+               }
+            }
+
+         for(int i = m_r - 1; i > 0; --i)
+            {
+            for(int j = i - 1; j >= 0; --j)
+               {
+               auto trailing = get(j, i);
+               addmul_row(i, j, trailing);
+               }
+            }
+         }
+
+      // parity() returns the new matrix because it changes dimensions.
+      // It can be done in place, but is easier to implement with a copy.
+      GFMat parity() const
+         {
+         // we assume *this is in standard form already.
+         // it is of form [I_r | P]
+         // our output will be [-P_transpose | I_(c - r)]
+         // but our field is of characteristic 2 so we do not need the negative.
+
+         // In terms of *this:
+         // I_r has r rows and r columns.
+         // P has r rows and c-r columns.
+         // P_transpose has c-r rows, and r columns.
+         // I_(c-r) has c-r rows and c-r columns.
+         // so: out.r == c-r, out.c == r + c - r == c
+
+         GFMat out(m_c-m_r, m_c);
+
+         // step 1. fill in the identity. it starts at column offset r.
+         for(int i = 0; i < m_c-m_r; i++)
+            {
+            out.set(i, i+m_r, 1);
+            }
+
+         // step 2: fill in the transposed P matrix. i and j are in terms of out.
+         for(int i = 0; i < m_c-m_r; i++)
+            {
+            for(int j = 0; j < m_r; j++)
+               {
+               out.set(i, j, get(j, i+m_r));
+               }
+            }
+
+         return out;
+         }
+
+      int get_r() const
+         {
+         return m_r;
+         }
+
+      int get_c() const
+         {
+         return m_c;
+         }
+
+   private:
+      std::vector<uint8_t> m_d;
+      int m_r;
+      int m_c;
+   };
+
+namespace {
+
+GFMat syndrome_matrix(
+   int k, int n,
+   const std::vector<uint8_t>& vand_matrix,
+   const std::vector<size_t>& share_nums)
+   {
+   // get a list of keepers
+   std::vector<bool> keepers(n);
+   int share_count = 0;
+   for(auto share_num : share_nums)
+      {
+      if(!keepers[share_num])
+         {
+         keepers[share_num] = true;
+         ++share_count;
+         }
+      }
+
+   // create a vandermonde matrix but skip columns where we're missing
+   // the share.
+   GFMat out(k, share_count);
+   for(int i = 0; i < k; ++i)
+      {
+      int skipped = 0;
+      for(int j = 0; j < n; ++j)
+         {
+         if(!keepers[j])
+            {
+            ++skipped;
+            continue;
+            }
+         out.set(i, j-skipped, vand_matrix[i*n+j]);
+         }
+      }
+
+   // standardize the output and convert into parity form
+   out.standardize();
+   return out.parity();
+   }
+
+const uint8_t interp_base = 2;
+
+uint8_t eval_point(int num)
+   {
+   if(num == 0)
+      {
+      return 0;
+      }
+   return gf_pow(interp_base, num - 1);
+   }
+
 }
 
 /*
@@ -403,7 +926,7 @@ void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size)
 * ZFEC constructor
 */
 ZFEC::ZFEC(size_t K, size_t N) :
-   m_K(K), m_N(N), m_enc_matrix(N * K)
+   m_K(K), m_N(N), m_enc_matrix(N * K), m_vand_matrix(K * N)
    {
    if(m_K == 0 || m_N == 0 || m_K > 256 || m_N > 256 || m_K > N)
       throw Invalid_Argument("ZFEC: violated 1 <= K <= N <= 256");
@@ -442,6 +965,23 @@ ZFEC::ZFEC(size_t K, size_t N) :
             }
          m_enc_matrix[row * m_K + col] = acc;
          }
+      }
+
+   /*
+   * compute another Vandermonde matrix (N*K), for use with
+   * Berlekamp-Welch error correction.
+   */
+   m_vand_matrix[0] = 1;
+   uint8_t g = 1;
+   for(size_t row = 0; row < m_K; ++row)
+      {
+      uint8_t a = 1;
+      for(size_t col = 1; col < m_N; ++col)
+         {
+         m_vand_matrix[row * m_N + col] = a;
+         a = GF_MUL_TABLE(g)[a];
+         }
+      g = GF_MUL_TABLE(2)[g];
       }
    }
 
@@ -611,6 +1151,159 @@ std::string ZFEC::provider() const
 #endif
 
    return "base";
+   }
+
+std::vector<uint8_t> ZFEC::berlekamp_welch(
+   const std::vector<uint8_t*>& shares,
+   const std::vector<size_t>& share_numbers,
+   int index) const
+   {
+   auto r = static_cast<int>(shares.size()); // required + redundancy size
+   auto e = (r - static_cast<int>(m_K)) / 2; // degree of E polynomial
+   auto q = e + static_cast<int>(m_K);       // degree of Q polynomial
+
+   if(e <= 0)
+      {
+      throw Decoding_Error("ZFEC: could not correct, need more than K surviving shares");
+      }
+
+   int dim = q + e;
+
+   // build the system of equations s * u = f
+   GFMat s(dim, dim);           // constraint matrix
+   GFMat a(dim, dim);           // augmented matrix
+   std::vector<uint8_t> f(dim); // constant column vector
+   std::vector<uint8_t> u(dim); // solution vector
+
+   for(int i = 0; i < dim; ++i)
+      {
+      auto x_i = eval_point(static_cast<int>(share_numbers[i]));
+      auto r_i = shares[i][index];
+      f[i] = gf_mul(gf_pow(x_i, e), r_i);
+
+      for(int j = 0; j < q; ++j)
+         {
+         s.set(i, j, gf_pow(x_i, j));
+         if(i == j)
+            {
+            a.set(i, j, 1);
+            }
+         }
+
+      for(int k = 0; k < e; ++k)
+         {
+         auto j = k + q;
+         s.set(i, j, gf_mul(gf_pow(x_i, k), r_i));
+         if(i == j)
+            {
+            a.set(i, j, 1);
+            }
+         }
+      }
+
+   // invert and put the result in a
+   s.invert_with(a);
+
+   // multiply the inverted matrix by the column vector
+   for(int i = 0; i < dim; ++i)
+      {
+      auto ri = a.index_row(i);
+      u[i] = gf_dot(ri, f.data(), dim);
+      }
+
+   // reverse u for easier construction of the polynomials
+   std::reverse(u.begin(), u.end());
+
+   GFPoly q_poly(u);
+   q_poly.shift(e);
+   GFPoly e_poly(e+1);
+   e_poly[0] = 1;
+   std::copy(u.begin(), u.begin() + e, &e_poly[1]);
+
+   auto [p_poly, rem] = q_poly.div(e_poly);
+   if(!rem.is_zero())
+      {
+      throw Decoding_Error("ZFEC: could not correct; too many errors encountered");
+      }
+
+   std::vector<uint8_t> out(m_N);
+   for(size_t i = 0; i < m_N; ++i)
+      {
+      uint8_t pt = 0;
+      if(i != 0)
+         {
+         pt = gf_pow(interp_base, i - 1);
+         }
+      out[i] = p_poly.eval(pt);
+      }
+
+   return out;
+   }
+
+std::map<size_t, const uint8_t*> ZFEC::correct(
+   const std::map<size_t, uint8_t*>& shares,
+   size_t share_size) const
+   {
+   if(shares.size() < m_K)
+      {
+      throw Decoding_Error("ZFEC: could not correct, less than K surviving shares");
+      }
+
+   std::vector<uint8_t*> shares_vec;
+   std::vector<size_t> shares_nums;
+   shares_vec.reserve(shares.size());
+   shares_nums.reserve(shares.size());
+   std::map<size_t, const uint8_t*> result;
+   for(auto [num, data] : shares)
+      {
+      shares_vec.push_back(data);
+      shares_nums.push_back(num);
+      result[num] = data;
+      }
+
+   // fast path: check to see if there are no errors by evaluating it with
+   // the syndrome matrix.
+   auto synd = syndrome_matrix(static_cast<int>(m_K), static_cast<int>(m_N), m_vand_matrix, shares_nums);
+   std::vector<uint8_t> buf(share_size);
+
+   for(int i = 0; i < synd.get_r(); ++i)
+      {
+      std::fill(buf.begin(), buf.end(), 0);
+      for(int j = 0; j < synd.get_c(); ++j)
+         {
+         addmul(&buf[0], shares_vec[j],
+                synd.get(i, j), share_size);
+         }
+
+      for(int j = 0; j < static_cast<int>(buf.size()); ++j)
+         {
+         if(buf[j] == 0)
+            {
+            continue;
+            }
+         auto data = berlekamp_welch(shares_vec, shares_nums, j);
+         for(auto [share_num, share] : shares)
+            {
+            share[j] = data[share_num];
+            }
+         }
+      }
+
+   // Return a map that the caller can use when calling decode_shares() after
+   // this. We could *probably* get away with returning
+   // reinterpret_cast<std::map<size_t, const uint8_t*>*>(&shares), but this
+   // separately-constructed map is probably worth the runtime cost for the
+   // sake of more correct code.
+   return result;
+   }
+
+void ZFEC::decode_corrected(
+   const std::map<size_t, uint8_t*>& shares,
+   size_t share_size,
+   const output_cb_t& output_cb) const
+   {
+   auto consted_map = correct(shares, share_size);
+   decode_shares(consted_map, share_size, output_cb);
    }
 
 }
