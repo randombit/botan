@@ -28,6 +28,7 @@ sp800_56c
 
 # pbkdf
 argon2
+argon2fmt
 
 # pk_pad
 eme_oaep
