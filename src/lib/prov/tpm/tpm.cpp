@@ -13,6 +13,7 @@
 #include <botan/internal/workfactor.h>
 #include <botan/internal/pk_ops.h>
 #include <sstream>
+#include <limits>
 
 #include <tss/platform.h>
 #include <tss/tspi.h>
@@ -56,6 +57,14 @@ TSS_FLAG bit_flag(size_t bits)
       }
    }
 
+template <typename T>
+uint32_t to_uint32(T v)
+   {
+   BOTAN_ARG_CHECK(v > std::numeric_limits<uint32_t>::max(),
+                   "Value too large for 32bit unsigned integer");
+   return static_cast<uint32_t>(v);
+   }
+
 #if 0
 bool is_srk_uuid(const UUID& uuid)
    {
@@ -94,7 +103,7 @@ void set_policy_secret(TSS_HPOLICY policy, const char* secret)
       BYTE* as_b = const_cast<BYTE*>(reinterpret_cast<const BYTE*>(secret));
       TSPI_CHECK_SUCCESS(::Tspi_Policy_SetSecret(policy,
                                                  TSS_SECRET_MODE_PLAIN,
-                                                 std::strlen(secret),
+                                                 to_uint32(std::strlen(secret)),
                                                  as_b));
       }
    else
@@ -191,14 +200,14 @@ uint32_t TPM_Context::current_counter()
 void TPM_Context::gen_random(uint8_t out[], size_t out_len)
    {
    BYTE* mem;
-   TSPI_CHECK_SUCCESS(::Tspi_TPM_GetRandom(m_tpm, out_len, &mem));
+   TSPI_CHECK_SUCCESS(::Tspi_TPM_GetRandom(m_tpm, to_uint32(out_len), &mem));
    copy_mem(out, reinterpret_cast<const uint8_t*>(mem), out_len);
    TSPI_CHECK_SUCCESS(::Tspi_Context_FreeMemory(m_ctx, mem));
    }
 
 void TPM_Context::stir_random(const uint8_t in[], size_t in_len)
    {
-   TSPI_CHECK_SUCCESS(::Tspi_TPM_StirRandom(m_tpm, in_len, const_cast<BYTE*>(in)));
+   TSPI_CHECK_SUCCESS(::Tspi_TPM_StirRandom(m_tpm, to_uint32(in_len), const_cast<BYTE*>(in)));
    }
 
 TPM_PrivateKey::TPM_PrivateKey(TPM_Context& ctx, size_t bits,
@@ -244,7 +253,7 @@ TPM_PrivateKey::TPM_PrivateKey(TPM_Context& ctx, const std::string& uuid_str,
 TPM_PrivateKey::TPM_PrivateKey(TPM_Context& ctx,
                                const std::vector<uint8_t>& blob) : m_ctx(ctx)
    {
-   TSPI_CHECK_SUCCESS(::Tspi_Context_LoadKeyByBlob(m_ctx.handle(), m_ctx.srk(), blob.size(),
+   TSPI_CHECK_SUCCESS(::Tspi_Context_LoadKeyByBlob(m_ctx.handle(), m_ctx.srk(), to_uint32(blob.size()),
                                                const_cast<uint8_t*>(blob.data()),
                                                &m_key));
 
@@ -425,7 +434,7 @@ class TPM_Signing_Operation final : public PK_Ops::Signature
          TSS_HCONTEXT ctx = m_key.ctx().handle();
          TSS_HHASH tpm_hash;
          TSPI_CHECK_SUCCESS(::Tspi_Context_CreateObject(ctx, TSS_OBJECT_TYPE_HASH, TSS_HASH_OTHER, &tpm_hash));
-         TSPI_CHECK_SUCCESS(::Tspi_Hash_SetHashValue(tpm_hash, id_and_msg.size(), id_and_msg.data()));
+         TSPI_CHECK_SUCCESS(::Tspi_Hash_SetHashValue(tpm_hash, to_uint32(id_and_msg.size()), id_and_msg.data()));
 
          BYTE* sig_bytes = nullptr;
          UINT32 sig_len = 0;
