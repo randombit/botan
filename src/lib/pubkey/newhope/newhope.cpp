@@ -776,7 +776,7 @@ void newhope_sharedb(uint8_t* sharedkey, uint8_t* send, const uint8_t* received,
    hash->final(sharedkey);
    }
 
-void newhope_shareda(uint8_t sharedkey[],
+void newhope_shareda(uint8_t* sharedkey,
                      const poly* sk,
                      const uint8_t received[],
                      Newhope_Mode mode)
