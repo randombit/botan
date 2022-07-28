@@ -792,12 +792,12 @@ void bigint_comba_sqr24(word out[48], const word in[24]);
 * z_size >= 2*(p_size + 1)
 * ws_size >= z_size
 */
-void bigint_monty_redc_4(word z[], const word p[], word p_dash, word ws[]);
-void bigint_monty_redc_6(word z[], const word p[], word p_dash, word ws[]);
-void bigint_monty_redc_8(word z[], const word p[], word p_dash, word ws[]);
-void bigint_monty_redc_16(word z[], const word p[], word p_dash, word ws[]);
-void bigint_monty_redc_24(word z[], const word p[], word p_dash, word ws[]);
-void bigint_monty_redc_32(word z[], const word p[], word p_dash, word ws[]);
+void bigint_monty_redc_4(word z[], const word p[4], word p_dash, word ws[]);
+void bigint_monty_redc_6(word z[], const word p[6], word p_dash, word ws[]);
+void bigint_monty_redc_8(word z[], const word p[8], word p_dash, word ws[]);
+void bigint_monty_redc_16(word z[], const word p[16], word p_dash, word ws[]);
+void bigint_monty_redc_24(word z[], const word p[24], word p_dash, word ws[]);
+void bigint_monty_redc_32(word z[], const word p[32], word p_dash, word ws[]);
 
 void bigint_monty_redc_generic(word z[], size_t z_size,
                                const word p[], size_t p_size, word p_dash,
