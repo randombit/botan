@@ -29,7 +29,7 @@ namespace Botan {
  *     Release: May 2018.
  *     https://datatracker.ietf.org/doc/rfc8391/
  **/
-class XMSS_WOTS_Parameters final
+class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
    {
    public:
       enum ots_algorithm_t
@@ -131,7 +131,7 @@ typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
  * A Winternitz One Time Signature public key for use with Extended Hash-Based
  * Signatures.
  **/
-class XMSS_WOTS_PublicKey : virtual public Public_Key
+class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
    {
    public:
       class TreeSignature final
@@ -452,7 +452,7 @@ class XMSS_WOTS_PublicKey : virtual public Public_Key
 /** A Winternitz One Time Signature private key for use with Extended Hash-Based
  * Signatures.
  **/
-class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
+class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
    public virtual Private_Key
    {
    public:
