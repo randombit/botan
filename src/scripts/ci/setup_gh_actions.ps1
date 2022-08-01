@@ -8,6 +8,8 @@
 choco install -y jom
 choco install -y sccache
 
+pip install --user unittest-xml-reporting
+
 # find the sccache cache location and store it in the build job's environment
 $raw_cl = (sccache --stats-format json --show-stats | ConvertFrom-Json).cache_location
 $cache_location = ([regex] 'Local disk: "(.*)"').Match($raw_cl).groups[1].value

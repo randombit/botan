@@ -15,7 +15,7 @@ TARGET=$1
 
 if type -p "apt-get"; then
     sudo apt-get -qq update
-    sudo apt-get -qq install ccache
+    sudo apt-get -qq install ccache python3-xmlrunner
 
     if [ "$TARGET" = "valgrind" ]; then
         sudo apt-get -qq install valgrind
@@ -71,6 +71,7 @@ if type -p "apt-get"; then
 else
     export HOMEBREW_NO_AUTO_UPDATE=1
     brew install ccache
+    pip install --user unittest-xml-reporting
 
     if [ "$TARGET" = "emscripten" ]; then
         brew install emscripten
