@@ -5,6 +5,7 @@
 */
 
 #include "test_runner.h"
+#include "test_xml_reporter.h"
 #include "tests.h"
 
 #include <botan/version.h>
@@ -82,6 +83,11 @@ int Test_Runner::run(const Test_Options& opts)
    {
    std::vector<std::string> req = opts.requested_tests();
    const std::set<std::string>& to_skip = opts.skip_tests();
+
+   if (!opts.xml_results_dir().empty())
+      {
+      m_xml_reporter = XmlReporter(opts.xml_results_dir());
+      }
 
    if(req.empty())
       {
@@ -207,7 +213,8 @@ class Test_Result_State
          {}
 
       std::string record(const std::string& test_name,
-                         const std::vector<Botan_Tests::Test::Result>& results);
+                         const std::vector<Botan_Tests::Test::Result>& results,
+                         std::optional<XmlReporter>& xml);
 
       std::string final_summary();
 
@@ -222,7 +229,8 @@ class Test_Result_State
    };
 
 std::string Test_Result_State::record(const std::string& test_name,
-                                      const std::vector<Botan_Tests::Test::Result>& results)
+                                      const std::vector<Botan_Tests::Test::Result>& results,
+                                      std::optional<XmlReporter>& xml)
    {
    std::ostringstream out;
 
@@ -252,6 +260,14 @@ std::string Test_Result_State::record(const std::string& test_name,
          m_tests_failed += result.second.tests_failed();
          m_tests_failed_names.insert(test_name);
          }
+      }
+
+   if(xml.has_value())
+      {
+      std::vector<const Test::Result*> rs;
+      std::transform(combined.begin(), combined.end(), std::back_inserter(rs),
+                     [&](const auto& r) { return &r.second; });
+      xml->record(test_name, rs);
       }
 
    return out.str();
@@ -389,7 +405,7 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
       for(size_t i = 0; i != m_fut_results.size(); ++i)
          {
          output() << tests_to_run[i] << ':' << std::endl;
-         output() << state.record(tests_to_run[i], m_fut_results[i].get()) << std::flush;
+         output() << state.record(tests_to_run[i], m_fut_results[i].get(), m_xml_reporter) << std::flush;
          }
 
       pool.shutdown();
@@ -408,7 +424,7 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
    for(auto const& test_name : tests_to_run)
       {
       output() << test_name << ':' << std::endl;
-      output() << state.record(test_name, run_a_test(test_name)) << std::flush;
+      output() << state.record(test_name, run_a_test(test_name), m_xml_reporter) << std::flush;
       }
 
    output() << state.final_summary();

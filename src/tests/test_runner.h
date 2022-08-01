@@ -7,10 +7,13 @@
 #ifndef BOTAN_TEST_RUNNER_H_
 #define BOTAN_TEST_RUNNER_H_
 
+#include "test_xml_reporter.h"
+
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <memory>
+#include <optional>
 
 namespace Botan_Tests {
 
@@ -32,6 +35,7 @@ class Test_Runner final
                        size_t tot_test_runs);
 
       std::ostream& m_output;
+      std::optional<XmlReporter> m_xml_reporter;
    };
 
 }
