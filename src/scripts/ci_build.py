@@ -609,7 +609,7 @@ def main(args=None):
 
         python_tests = os.path.join(root_dir, 'src/scripts/test_python.py')
 
-        if target in ['shared', 'coverage']:-
+        if target in ['shared', 'coverage']:
             if options.os == 'windows':
                 if options.cpu == 'x86':
                     # Python on AppVeyor is a 32-bit binary so only test for 32-bit

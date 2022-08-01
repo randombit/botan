@@ -15,7 +15,9 @@ TARGET=$1
 
 if type -p "apt-get"; then
     sudo apt-get -qq update
-    sudo apt-get -qq install ccache python3-xmlrunner
+    sudo apt-get -qq install ccache
+
+    pip install --user unittest-xml-reporting
 
     if [ "$TARGET" = "valgrind" ]; then
         sudo apt-get -qq install valgrind
