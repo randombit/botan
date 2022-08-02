@@ -106,7 +106,7 @@ class Client_Policy : public Botan::TLS::Strict_Policy
          return
             {
             static_cast<Botan::TLS::Group_Params>(0xFE00)
-            };    
+            };
          }
 };
 
@@ -139,7 +139,7 @@ int main()
       }
 
    // register name to specified oid
-   Botan::OIDS::add_oid(oid, "testcurve1102"); 
+   Botan::OIDS::add_oid(oid, "testcurve1102");
 
    // prepare all the parameters
    Callbacks callbacks;

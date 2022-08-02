@@ -4,7 +4,7 @@
 
 #include <assert.h>
 
-std::string compute_mac(const std::string& msg, const Botan::secure_vector<uint8_t>& key)
+static std::string compute_mac(const std::string& msg, const Botan::secure_vector<uint8_t>& key)
    {
    auto hmac = Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
 

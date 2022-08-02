@@ -16,7 +16,8 @@ int main (int argc, char* argv[])
    std::unique_ptr<Botan::RandomNumberGenerator> rng(new Botan::AutoSeeded_RNG);
 
    //load keypair
-   std::unique_ptr<Botan::Private_Key> kp(Botan::PKCS8::load_key(argv[1],*rng.get()));
+   Botan::DataSource_Stream in(argv[1]);
+   std::unique_ptr<Botan::Private_Key> kp(Botan::PKCS8::load_key(in));
 
    //encrypt with pk
    Botan::PK_Encryptor_EME enc(*kp,*rng.get(), "EME1(SHA-256)");
