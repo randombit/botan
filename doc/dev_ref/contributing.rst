@@ -15,6 +15,7 @@ Under ``src`` there are directories
 * ``fuzzer`` contains fuzz targets for various modules of the library
 * ``build-data`` contains files read by the configure script. For
   example ``build-data/cc/gcc.txt`` describes various gcc options.
+* ``examples`` contains usage examples used in the documentation.
 * ``scripts`` contains misc scripts: install, distribution, various
   codegen things. Scripts controlling CI go under ``scripts/ci``.
 * ``configs`` contains configuration files for emacs, astyle, pylint, etc
