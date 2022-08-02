@@ -290,7 +290,7 @@ parameters and ANSI_X9_42 encodes the created group for further usage with DH.
     	  std::cout << std::endl << "p: " << group->get_p();
     	  std::cout << std::endl << "q: " << group->get_q();
     	  std::cout << std::endl << "g: " << group->get_q();
-    	  std::cout << std::endl << "ANSI_X9_42: " << std::endl << group->PEM_encode(Botan::DL_Group::ANSI_X9_42);
+    	  std::cout << std::endl << "ANSI_X9_42: " << std::endl << group->PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
 
         return 0;
        }
@@ -338,6 +338,7 @@ loaded key. If the key check fails a respective error is thrown.
     #include <botan/x509cert.h>
     #include <botan/auto_rng.h>
     #include <botan/rng.h>
+    #include <botan/pk_keys.h>
 
     int main()
        {

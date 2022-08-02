@@ -388,6 +388,7 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
 
 .. code-block:: cpp
 
+    #include <botan/certstor_system.h>
     #include <botan/tls_client.h>
     #include <botan/tls_callbacks.h>
     #include <botan/tls_session_manager.h>
@@ -547,11 +548,13 @@ The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
 
     #include <botan/tls_client.h>
     #include <botan/tls_callbacks.h>
+    #include <botan/tls_server.h>
     #include <botan/tls_session_manager.h>
     #include <botan/tls_policy.h>
     #include <botan/auto_rng.h>
     #include <botan/certstor.h>
     #include <botan/pk_keys.h>
+    #include <botan/pkcs8.h>
 
     #include <memory>
 
@@ -601,8 +604,10 @@ The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
     class Server_Credentials : public Botan::Credentials_Manager
     {
        public:
-	  Server_Credentials() : m_key(Botan::PKCS8::load_key("botan.randombit.net.key"))
+          Server_Credentials()
              {
+                Botan::DataSource_Stream in("botan.randombit.net.key");
+                m_key = Botan::PKCS8::load_key(in);
              }
 
           std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(
@@ -612,7 +617,7 @@ The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
              // if client authentication is required, this function
              // shall return a list of certificates of CAs we trust
              // for tls client certificates, otherwise return an empty list
-             return std::vector<Certificate_Store*>();
+             return std::vector<Botan::Certificate_Store*>();
              }
 
           std::vector<Botan::X509_Certificate> cert_chain(
@@ -631,7 +636,7 @@ The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
              {
              // return the private key associated with the leaf certificate,
              // in this case the one associated with "botan.randombit.net.crt"
-             return &m_key;
+             return m_key.get();
              }
 
           private:
@@ -1531,8 +1536,10 @@ Server Code Example
     class Server_Credentials : public Botan::Credentials_Manager
     {
        public:
-          Server_Credentials() : m_key(Botan::PKCS8::load_key("botan.randombit.net.key")
+          Server_Credentials()
              {
+                Botan::DataSource_Stream in("botan.randombit.net.key");
+                m_key = Botan::PKCS8::load_key(in);
              }
 
           std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(
