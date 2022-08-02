@@ -156,7 +156,9 @@ class Test
       class Result final
          {
          public:
-            explicit Result(std::string who) : m_who(std::move(who)) {}
+            explicit Result(std::string who)
+               : m_who(std::move(who))
+               , m_timestamp(std::chrono::system_clock::now()) {}
 
             /**
              * This 'consolidation constructor' creates a single test result from
@@ -188,6 +190,23 @@ class Test
 
             const std::vector<std::string>& failures() const { return m_fail_log; }
             const std::vector<std::string>& notes() const { return m_log; }
+
+            std::optional<std::chrono::nanoseconds> elapsed_time() const
+               {
+               if (m_ns_taken == 0)
+                  {
+                  return std::nullopt;
+                  }
+               else
+                  {
+                  return std::chrono::nanoseconds(m_ns_taken);
+                  }
+               }
+
+            const std::chrono::system_clock::time_point& timestamp() const
+               {
+               return m_timestamp;
+               }
 
             std::string result_string() const;
 
@@ -528,6 +547,7 @@ class Test
 
          private:
             std::string m_who;
+            std::chrono::system_clock::time_point m_timestamp;
             uint64_t m_started = 0;
             uint64_t m_ns_taken = 0;
             size_t m_tests_passed = 0;

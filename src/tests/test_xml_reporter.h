@@ -10,22 +10,34 @@
 
 #include "tests.h"
 
+#include <memory>
+
 namespace Botan_Tests {
+
+class XmlReporterInternal;
 
 class XmlReporter
    {
    public:
-   	  XmlReporter(std::string output_dir) : m_output_dir(std::move(output_dir)) {}
-   	  ~XmlReporter() = default;
-   	  XmlReporter(const XmlReporter&) = delete;
-   	  XmlReporter& operator=(const XmlReporter&) = delete;
-   	  XmlReporter(XmlReporter&&) = default;
-   	  XmlReporter& operator=(XmlReporter&&) = default;
+      XmlReporter(std::string output_dir);
+      ~XmlReporter();
+      XmlReporter(const XmlReporter&) = delete;
+      XmlReporter& operator=(const XmlReporter&) = delete;
+      XmlReporter(XmlReporter&&) = default;
+      XmlReporter& operator=(XmlReporter&&) = default;
 
-   	  void record(const std::string& name, const std::vector<const Test::Result*>& results);
+      void record(const std::string& name, const Test::Result& result);
+      void render(std::ostream& output_stream) const;
 
    private:
-   	  std::string m_output_dir;
+      size_t tests() const;
+      size_t passed() const;
+      size_t failed() const;
+      std::chrono::nanoseconds elapsed_time() const;
+
+   private:
+      std::string m_output_dir;
+      std::unique_ptr<XmlReporterInternal> m_internal;
    };
 
 }

@@ -86,7 +86,7 @@ int Test_Runner::run(const Test_Options& opts)
 
    if (!opts.xml_results_dir().empty())
       {
-      m_xml_reporter = XmlReporter(opts.xml_results_dir());
+      m_xml_reporter.emplace(opts.xml_results_dir());
       }
 
    if(req.empty())
@@ -260,14 +260,11 @@ std::string Test_Result_State::record(const std::string& test_name,
          m_tests_failed += result.second.tests_failed();
          m_tests_failed_names.insert(test_name);
          }
-      }
 
-   if(xml.has_value())
-      {
-      std::vector<const Test::Result*> rs;
-      std::transform(combined.begin(), combined.end(), std::back_inserter(rs),
-                     [&](const auto& r) { return &r.second; });
-      xml->record(test_name, rs);
+      if(xml.has_value())
+         {
+         xml->record(test_name, result.second);
+         }
       }
 
    return out.str();
@@ -412,6 +409,11 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
 
       output() << state.final_summary();
 
+      if(m_xml_reporter.has_value())
+         {
+         m_xml_reporter->render(output());
+         }
+
       return state.tests_failed();
       }
 #else
@@ -428,6 +430,11 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
       }
 
    output() << state.final_summary();
+
+   if(m_xml_reporter.has_value())
+      {
+      m_xml_reporter->render(output());
+      }
 
    return state.tests_failed();
    }
