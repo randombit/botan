@@ -37,11 +37,11 @@ create_private_key(const std::string& algo_name,
                    const std::string& provider = "");
 
 
+class EC_Group;
+
 /**
 * Create a new ECC key
 */
-class EC_Group;
-
 BOTAN_PUBLIC_API(3,0) std::unique_ptr<Private_Key>
 create_ec_private_key(const std::string& algo_name,
                       const EC_Group& group,
