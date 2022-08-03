@@ -8,36 +8,35 @@
 #ifndef BOTAN_TEST_XML_REPORTER_H_
 #define BOTAN_TEST_XML_REPORTER_H_
 
-#include "../tests.h"
-
-#include <memory>
+#include "test_reporter.h"
 
 namespace Botan_Tests {
 
-class XmlReporterInternal;
-
-class XmlReporter
+/**
+ * XML JUnit exporter for test results
+ *
+ * JUnit schema follows:
+ *   https://github.com/junit-team/junit5/blob/main/platform-tests/src/test/resources/jenkins-junit.xsd
+ */
+class XmlReporter : public Reporter
    {
    public:
-      XmlReporter(std::string output_dir);
-      ~XmlReporter();
-      XmlReporter(const XmlReporter&) = delete;
-      XmlReporter& operator=(const XmlReporter&) = delete;
-      XmlReporter(XmlReporter&&) = default;
-      XmlReporter& operator=(XmlReporter&&) = default;
+      XmlReporter(const Test_Options& opts, std::string output_dir);
 
-      void record(const std::string& name, const Test::Result& result);
-      void render(std::ostream& output_stream) const;
+      void render() const override;
+
+      void next_run() override;
 
    private:
-      size_t tests() const;
-      size_t passed() const;
-      size_t failed() const;
-      std::chrono::nanoseconds elapsed_time() const;
+      void render_preamble(std::ostream& out) const;
+      void render_properties(std::ostream& out) const;
+      void render_testsuites(std::ostream& out) const;
+      void render_testsuite(std::ostream& out, const Testsuite& suite) const;
+      void render_testcase(std::ostream& out, const TestSummary& test) const;
+      void render_failures_and_stdout(std::ostream& out, const TestSummary& test) const;
 
    private:
       std::string m_output_dir;
-      std::unique_ptr<XmlReporterInternal> m_internal;
    };
 
 }

@@ -14,170 +14,28 @@
 
 namespace Botan_Tests {
 
-namespace {
+XmlReporter::XmlReporter(const Test_Options& opts, std::string output_dir)
+   : Reporter(opts)
+   , m_output_dir(std::move(output_dir)) {}
 
-template <typename T>
-constexpr std::optional<T>
-operator+(const std::optional<T>& a, const std::optional<T>& b)
+void XmlReporter::render() const
    {
-   if(!a.has_value() || !b.has_value())
-      {
-      return std::nullopt;
-      }
-
-   return a.value() + b.value();
+   std::ostringstream out;
+   render_preamble(out);
+   render_properties(out);
+   render_testsuites(out);
+   std::cout << out.str() << std::endl;
    }
 
-class XmlTest
+void XmlReporter::next_run()
    {
-   public:
-      XmlTest(const Test::Result& result)
-         : m_name(result.who())
-         , m_notes(result.notes())
-         , m_failures(result.failures())
-         , m_assertions(result.tests_run())
-         , m_timestamp(result.timestamp())
-         , m_elapsed(result.elapsed_time()) {}
-
-      bool passed() const { return m_failures.empty(); }
-      bool failed() const { return !m_failures.empty(); }
-      decltype(auto) timestamp() const { return m_timestamp; }
-      decltype(auto) elapsed_time() const { return m_elapsed; }
-
-      void render(std::ostream& os) const;
-
-   private:
-      void render_failures_and_notes(std::ostream& os) const;
-
-   private:
-      const std::string m_name;
-
-      const std::vector<std::string> m_notes;
-      const std::vector<std::string> m_failures;
-
-      const size_t m_assertions;
-
-      const std::chrono::system_clock::time_point m_timestamp;
-      const std::optional<std::chrono::nanoseconds> m_elapsed;
-   };
-
-class XmlTestsuite
-   {
-   public:
-      XmlTestsuite(std::string name) : m_name(std::move(name)) {}
-
-      void record(const Test::Result& result)
-         {
-         m_results.emplace_back(result);
-         }
-
-      void render(std::ostream& os) const;
-
-      size_t tests() const { return m_results.size(); }
-
-      size_t passed() const
-         {
-         return std::count_if(m_results.begin(), m_results.end(),
-                              [](const auto& r) { return r.passed(); });
-         }
-
-      size_t failed() const
-         {
-         return std::count_if(m_results.begin(), m_results.end(),
-                              [](const auto& r) { return r.failed(); });
-         }
-
-      /// Returns the oldest time stamp in all contained test cases
-      std::chrono::system_clock::time_point timestamp() const
-         {
-         return std::transform_reduce(
-            m_results.begin(), m_results.end(),
-            std::chrono::system_clock::time_point::max(),
-            [](const auto& a, const auto& b) { return std::min(a, b); },
-            [](const auto& result) { return result.timestamp(); });
-         }
-
-      /// Returns the cumulative elapsed time of all contained test cases
-      std::optional<std::chrono::nanoseconds> elapsed_time() const
-         {
-         return std::transform_reduce(
-            m_results.begin(), m_results.end(),
-            std::make_optional(std::chrono::nanoseconds::zero()),
-            [](const auto& a, const auto& b) { return a + b; },
-            [](const auto& result) { return result.elapsed_time(); });
-         }
-
-   private:
-      const std::string m_name;
-      std::vector<XmlTest> m_results;
-   };
-
-}
-
-
-struct XmlReporterInternal
-   {
-   XmlReporterInternal()
-      : start_time(std::chrono::high_resolution_clock::now()) {}
-
-   std::map<std::string, XmlTestsuite> testsuites;
-   std::chrono::high_resolution_clock::time_point start_time;
-   };
-
-
-XmlReporter::XmlReporter(std::string output_dir)
-   : m_output_dir(std::move(output_dir))
-   , m_internal(std::make_unique<XmlReporterInternal>()) {}
-
-
-XmlReporter::~XmlReporter() = default;
-
-
-void XmlReporter::record(const std::string& name, const Test::Result& result)
-   {
-   auto& suite = m_internal->testsuites.try_emplace(name, name).first->second;
-   suite.record(result);
+   // TODO: implement file management
    }
 
 
-size_t XmlReporter::tests() const
-   {
-   return std::transform_reduce(
-      m_internal->testsuites.begin(), m_internal->testsuites.end(),
-      size_t(0), std::plus{},
-      [](const auto& testsuite) { return testsuite.second.tests(); });
-   }
-
-
-size_t XmlReporter::passed() const
-   {
-   return std::transform_reduce(
-      m_internal->testsuites.begin(), m_internal->testsuites.end(),
-      size_t(0), std::plus{},
-      [](const auto& testsuite) { return testsuite.second.passed(); });
-   }
-
-
-size_t XmlReporter::failed() const
-   {
-   return std::transform_reduce(
-      m_internal->testsuites.begin(), m_internal->testsuites.end(),
-      size_t(0), std::plus{},
-      [](const auto& testsuite) { return testsuite.second.failed(); });
-   }
-
-
-std::chrono::nanoseconds XmlReporter::elapsed_time() const
-   {
-   return std::chrono::high_resolution_clock::now() - m_internal->start_time;
-   }
-
-
-//
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-// Rendering
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-//
+// == == == == == == == == == == == == == == == == == == == == == == == == == ==
+// XML Rendering
+// == == == == == == == == == == == == == == == == == == == == == == == == == ==
 
 
 namespace {
@@ -248,103 +106,119 @@ std::string format(const std::chrono::nanoseconds& dur)
 
 }
 
-
-void XmlReporter::render(std::ostream& os) const
+void XmlReporter::render_preamble(std::ostream& out) const
    {
-   os << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-   os << "<testsuites"
-      << " tests=\"" << tests() << "\""
-      << " failures=\"" << failed() << "\""
-      << " time=\"" << format(elapsed_time()) << "\">\n";
-
-   for(const auto& suite : m_internal->testsuites)
-      {
-      suite.second.render(os);
-      }
-
-   os << "</testsuites>\n";
+   out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
    }
 
-
-void XmlTestsuite::render(std::ostream& os) const
+void XmlReporter::render_properties(std::ostream& out) const
    {
-   os << "<testsuite"
-      << " name=\"" << escape(m_name) << "\""
-      << " tests=\"" << tests() << "\""
-      << " failures=\"" << failed() << "\""
-      << " errors=\"0\"" // we cannot currently distinguish that
-      << " skipped=\"0\"" // we do not currently track that
-      << " timestamp=\"" << format(timestamp()) << "\"";
-
-   const auto elapsed = elapsed_time();
-   if(elapsed)
+   if(properties().empty())
       {
-      os << " time=\"" << format(elapsed.value()) << "\"";
+      return;
       }
 
-   if(m_results.empty())
+   out << "<properties>\n";
+   for(const auto& prop : properties())
       {
-      os << " />\n";
+      out << "<property"
+          << " name=\"" << escape(prop.first) << "\""
+          << " value=\"" << escape(prop.second) << "\""
+          << " />\n";
+      }
+   out << "</properties>\n";
+   }
+
+void XmlReporter::render_testsuites(std::ostream& out) const
+   {
+   // render an empty testsuites tag even if no tests were run
+   out << "<testsuites"
+       << " tests=\"" << tests_run() << "\""
+       << " failures=\"" << tests_failed() << "\""
+       << " time=\"" << format(elapsed_time()) << "\">\n";
+
+   for(const auto& suite : testsuites())
+      {
+      render_testsuite(out, suite.second);
+      }
+
+   out << "</testsuites>\n";
+   }
+
+void XmlReporter::render_testsuite(std::ostream& out, const Testsuite& suite) const
+   {
+   out << "<testsuite"
+       << " name=\"" << escape(suite.name()) << "\""
+       << " tests=\"" << suite.tests_run() << "\""
+       << " failures=\"" << suite.tests_failed() << "\""
+       << " timestamp=\"" << format(suite.timestamp()) << "\"";
+
+   const auto elapsed = suite.elapsed_time();
+   if(elapsed.has_value())
+      {
+      out << " time=\"" << format(elapsed.value()) << "\"";
+      }
+
+   if(suite.results().empty())
+      {
+      out << " />\n";
       }
    else
       {
-      os << ">\n";
+      out << ">\n";
 
-      for(const auto& result : m_results)
+      for(const auto& result : suite.results())
          {
-         result.render(os);
+         render_testcase(out, result);
          }
 
-      os << "</testsuite>\n";
+      out << "</testsuite>\n";
       }
    }
 
-
-void XmlTest::render(std::ostream& os) const
+void XmlReporter::render_testcase(std::ostream& out, const TestSummary& test) const
    {
-   os << "<testcase"
-      << " name=\"" << escape(m_name) << "\""
-      << " assertions=\"" << m_assertions << "\""
-      << " timestamp=\"" << format(m_timestamp) << "\"";
+   out << "<testcase"
+      << " name=\"" << escape(test.name) << "\""
+      << " assertions=\"" << test.assertions << "\""
+      << " timestamp=\"" << format(test.timestamp) << "\"";
 
-   auto elapsed = elapsed_time();
-   if(elapsed)
+   if(test.elapsed_time.has_value())
       {
-      os << " time=\"" << format(elapsed.value()) << "\"";
+      out << " time=\"" << format(test.elapsed_time.value()) << "\"";
       }
 
-   if(m_failures.empty() && m_notes.empty())
+   if(test.failures.empty() && test.notes.empty())
       {
-      os << " />\n";
+      out << " />\n";
       }
    else
       {
-      os << ">\n";
-      render_failures_and_notes(os);
-      os << "</testcase>\n";
+      out << ">\n";
+      render_failures_and_stdout(out, test);
+      out << "</testcase>\n";
       }
    }
 
-
-void XmlTest::render_failures_and_notes(std::ostream& os) const
+void XmlReporter::render_failures_and_stdout(std::ostream& out, const TestSummary& test) const
    {
-   for(const auto& failure : m_failures)
+   for(const auto& failure : test.failures)
       {
-      os << "<failure>\n"
-         << format_cdata(failure) << "\n"
-         << "</failure>\n";
+      out << "<failure>\n"
+          << format_cdata(failure) << "\n"
+          << "</failure>\n";
       }
 
    // xUnit format does not have a special tag for test notes, hence we
    // render it into the freetext 'system-out'
-   if(!m_notes.empty())
+   if(!test.notes.empty())
       {
-      os << "<system-out>\n";
-      for(unsigned int i = 0; i < m_notes.size(); ++i)
+      out << "<system-out>\n";
+      for(const auto& note : test.notes)
          {
-         os << format_cdata(m_notes[i]) << '\n';
+         out << format_cdata(note) << '\n';
          }
-      os << "</system-out>\n";
+      out << "</system-out>\n";
       }
    }
 

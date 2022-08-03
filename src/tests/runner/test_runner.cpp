@@ -8,6 +8,7 @@
 
 #include "test_runner.h"
 #include "test_stdout_reporter.h"
+#include "test_xml_reporter.h"
 
 #include <botan/version.h>
 #include <botan/internal/loadstor.h>
@@ -87,6 +88,10 @@ int Test_Runner::run(const Test_Options& opts)
    const std::set<std::string>& to_skip = opts.skip_tests();
 
    m_reporters.emplace_back(std::make_unique<StdoutReporter>(opts, output()));
+   if(!opts.xml_results_dir().empty())
+      {
+      m_reporters.emplace_back(std::make_unique<XmlReporter>(opts, opts.xml_results_dir()));
+      }
 
    if(req.empty())
       {
