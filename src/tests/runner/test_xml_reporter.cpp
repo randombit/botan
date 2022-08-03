@@ -7,7 +7,10 @@
 
 #include "test_xml_reporter.h"
 
-#include <iostream>
+#include <botan/internal/loadstor.h>
+#include <botan/version.h>
+
+#include <filesystem>
 #include <ctime>
 #include <iomanip>
 #include <numeric>
@@ -18,18 +21,56 @@ XmlReporter::XmlReporter(const Test_Options& opts, std::string output_dir)
    : Reporter(opts)
    , m_output_dir(std::move(output_dir)) {}
 
+XmlReporter::~XmlReporter()
+   {
+   if(m_outfile.has_value() && m_outfile->good())
+      {
+      m_outfile->close();
+      }
+   }
+
 void XmlReporter::render() const
    {
-   std::ostringstream out;
-   render_preamble(out);
-   render_properties(out);
-   render_testsuites(out);
-   std::cout << out.str() << std::endl;
+   BOTAN_STATE_CHECK(m_outfile.has_value() && m_outfile->good());
+
+   render_preamble(m_outfile.value());
+   render_properties(m_outfile.value());
+   render_testsuites(m_outfile.value());
+   }
+
+namespace fs = std::filesystem;
+
+std::string XmlReporter::get_unique_output_filename() const
+   {
+   fs::path path(m_output_dir);
+   fs::create_directories(path);
+
+   const uint64_t ts = Botan_Tests::Test::timestamp();
+   std::vector<uint8_t> seed(8);
+   Botan::store_be(ts, seed.data());
+
+   std::stringstream ss;
+   ss << "Botan-"
+      << Botan::short_version_string()
+      << "-tests-"
+      << Botan::hex_encode(seed, false)
+      << ".xml";
+
+   return (path / ss.str()).string();
    }
 
 void XmlReporter::next_run()
    {
-   // TODO: implement file management
+   if(m_outfile.has_value() && m_outfile->good())
+      {
+      m_outfile->close();
+      m_outfile.reset();
+      }
+
+   set_property("current test run", std::to_string(current_test_run()));
+   set_property("total test runs", std::to_string(total_test_runs()));
+   m_outfile = std::ofstream(get_unique_output_filename(),
+                             std::ofstream::out |  std::ofstream::trunc);
    }
 
 

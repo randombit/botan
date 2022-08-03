@@ -10,6 +10,9 @@
 
 #include "test_reporter.h"
 
+#include <optional>
+#include <fstream>
+
 namespace Botan_Tests {
 
 /**
@@ -22,12 +25,15 @@ class XmlReporter : public Reporter
    {
    public:
       XmlReporter(const Test_Options& opts, std::string output_dir);
+      ~XmlReporter();
 
       void render() const override;
 
       void next_run() override;
 
    private:
+      std::string get_unique_output_filename() const;
+
       void render_preamble(std::ostream& out) const;
       void render_properties(std::ostream& out) const;
       void render_testsuites(std::ostream& out) const;
@@ -37,6 +43,8 @@ class XmlReporter : public Reporter
 
    private:
       std::string m_output_dir;
+
+      mutable std::optional<std::ofstream> m_outfile;
    };
 
 }
