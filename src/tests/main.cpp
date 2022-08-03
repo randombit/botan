@@ -5,7 +5,7 @@
 */
 
 #include "../cli/argparse.h"
-#include "test_runner.h"
+#include "runner/test_runner.h"
 #include "tests.h"
 #include <iostream>
 #include <vector>

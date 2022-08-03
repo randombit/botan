@@ -573,6 +573,10 @@ class Test
       static std::string data_file(const std::string& what);
 
       static std::string format_time(uint64_t nanoseconds);
+      static std::string format_time(const std::chrono::nanoseconds nanoseconds)
+         {
+         return format_time(nanoseconds.count());
+         }
 
       template<typename Alloc>
       static std::vector<uint8_t, Alloc>

@@ -8,7 +8,7 @@
 #ifndef BOTAN_TEST_XML_REPORTER_H_
 #define BOTAN_TEST_XML_REPORTER_H_
 
-#include "tests.h"
+#include "../tests.h"
 
 #include <memory>
 
