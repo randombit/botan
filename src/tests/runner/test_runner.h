@@ -24,7 +24,8 @@ class Test_Runner final
       Test_Runner(std::ostream& out);
       ~Test_Runner();
 
-      int run(const Test_Options& options);
+      /// @return true iff all tests have passed
+      bool run(const Test_Options& options);
 
    private:
       std::ostream& output() const { return m_output; }

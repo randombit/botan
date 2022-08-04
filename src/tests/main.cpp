@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 
       Botan_Tests::Test_Runner tests(std::cout);
 
-      return tests.run(opts);
+      return tests.run(opts) ? 0 : 1;
       }
    catch(std::exception& e)
       {

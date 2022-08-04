@@ -82,7 +82,7 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 
 }
 
-int Test_Runner::run(const Test_Options& opts)
+bool Test_Runner::run(const Test_Options& opts)
    {
    std::vector<std::string> req = opts.requested_tests();
    const std::set<std::string>& to_skip = opts.skip_tests();
@@ -196,7 +196,7 @@ int Test_Runner::run(const Test_Options& opts)
          reporter->next_test_run();
          }
 
-      const size_t failed =
+      const bool passed =
          (opts.test_threads() > 1)
             ? run_tests_multithreaded(req, opts.test_threads())
             : run_tests(req);
@@ -206,11 +206,11 @@ int Test_Runner::run(const Test_Options& opts)
          reporter->render();
          }
 
-      if(failed > 0)
-         return static_cast<int>(failed);
+      if(!passed)
+         return false;
       }
 
-   return 0;
+   return true;
    }
 
 namespace {
