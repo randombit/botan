@@ -1,5 +1,6 @@
 /*
 * (C) 2017 Jack Lloyd
+* (C) 2022 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,6 +9,7 @@
 
 #include "test_runner.h"
 #include "test_stdout_reporter.h"
+#include "test_xml_reporter.h"
 
 #include <botan/version.h>
 #include <botan/internal/loadstor.h>
@@ -89,6 +91,14 @@ bool Test_Runner::run(const Test_Options& opts)
    const std::set<std::string>& to_skip = opts.skip_tests();
 
    m_reporters.emplace_back(std::make_unique<StdoutReporter>(opts, output()));
+   if(!opts.xml_results_dir().empty())
+      {
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+      m_reporters.emplace_back(std::make_unique<XmlReporter>(opts, opts.xml_results_dir()));
+#else
+      output() << "Generating test report files is not supported on this platform\n";
+#endif
+      }
 
    if(req.empty())
       {

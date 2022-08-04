@@ -1,5 +1,6 @@
 /*
 * (C) 2017 Jack Lloyd
+* (C) 2022 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
