@@ -79,7 +79,7 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 
 }
 
-int Test_Runner::run(const Test_Options& opts)
+bool Test_Runner::run(const Test_Options& opts)
    {
    std::vector<std::string> req = opts.requested_tests();
    const std::set<std::string>& to_skip = opts.skip_tests();
@@ -186,12 +186,16 @@ int Test_Runner::run(const Test_Options& opts)
 
       Botan_Tests::Test::set_test_rng(std::move(rng));
 
-      const size_t failed = run_tests(req, opts.test_threads(), i, opts.test_runs());
-      if(failed > 0)
-         return static_cast<int>(failed);
+      const bool passed =
+         (opts.test_threads() > 1)
+            ? run_tests_multithreaded(req, opts.test_threads(), i, opts.test_runs())
+            : run_tests(req, i, opts.test_runs());
+
+      if(!passed)
+         return false;
       }
 
-   return 0;
+   return true;
    }
 
 namespace {
@@ -345,66 +349,71 @@ bool needs_serialization(const std::string& test_name)
 
 }
 
-size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
-                              size_t test_threads,
-                              size_t test_run,
-                              size_t tot_test_runs)
+bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_to_run,
+                                          size_t test_threads,
+                                          size_t test_run,
+                                          size_t tot_test_runs)
    {
+   BOTAN_ASSERT_NOMSG(test_threads > 1);
+
+#if !defined(BOTAN_HAS_THREAD_UTILS)
+   output() << "Running tests in multiple threads not enabled in this build\n";
+   return run_tests(tests_to_run);
+
+#else
    Test_Result_State state(test_run, tot_test_runs);
 
-#if defined(BOTAN_HAS_THREAD_UTILS)
-   if(test_threads != 1)
+   // If 0 then we let thread pool select the count
+   Botan::Thread_Pool pool(test_threads);
+   Botan::RWLock rwlock;
+
+   std::vector<std::future<std::vector<Test::Result>>> m_fut_results;
+
+   auto run_test_exclusive = [&](const std::string& test_name) {
+      rwlock.lock();
+      std::vector<Test::Result> results = run_a_test(test_name);
+      rwlock.unlock();
+      return results;
+   };
+
+   auto run_test_shared = [&](const std::string& test_name) {
+      rwlock.lock_shared();
+      std::vector<Test::Result> results = run_a_test(test_name);
+      rwlock.unlock_shared();
+      return results;
+   };
+
+   for(auto const& test_name : tests_to_run)
       {
-      // If 0 then we let thread pool select the count
-      Botan::Thread_Pool pool(test_threads);
-      Botan::RWLock rwlock;
-
-      std::vector<std::future<std::vector<Test::Result>>> m_fut_results;
-
-      auto run_test_exclusive = [&](const std::string& test_name) {
-         rwlock.lock();
-         std::vector<Test::Result> results = run_a_test(test_name);
-         rwlock.unlock();
-         return results;
-      };
-
-      auto run_test_shared = [&](const std::string& test_name) {
-         rwlock.lock_shared();
-         std::vector<Test::Result> results = run_a_test(test_name);
-         rwlock.unlock_shared();
-         return results;
-      };
-
-      for(auto const& test_name : tests_to_run)
+      if(needs_serialization(test_name))
          {
-         if(needs_serialization(test_name))
-            {
-            m_fut_results.push_back(pool.run(run_test_exclusive, test_name));
-            }
-         else
-            {
-            m_fut_results.push_back(pool.run(run_test_shared, test_name));
-            }
+         m_fut_results.push_back(pool.run(run_test_exclusive, test_name));
          }
-
-      for(size_t i = 0; i != m_fut_results.size(); ++i)
+      else
          {
-         output() << tests_to_run[i] << ':' << std::endl;
-         output() << state.record(tests_to_run[i], m_fut_results[i].get()) << std::flush;
+         m_fut_results.push_back(pool.run(run_test_shared, test_name));
          }
-
-      pool.shutdown();
-
-      output() << state.final_summary();
-
-      return state.tests_failed();
       }
-#else
-   if(test_threads > 1)
+
+   for(size_t i = 0; i != m_fut_results.size(); ++i)
       {
-      output() << "Running tests in multiple threads not enabled in this build\n";
+      output() << tests_to_run[i] << ':' << std::endl;
+      output() << state.record(tests_to_run[i], m_fut_results[i].get()) << std::flush;
       }
+
+   output() << state.final_summary();
+
+   pool.shutdown();
+
+   return state.tests_failed() == 0;
 #endif
+   }
+
+bool Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
+                            size_t test_run,
+                            size_t tot_test_runs)
+   {
+   Test_Result_State state(test_run, tot_test_runs);
 
    for(auto const& test_name : tests_to_run)
       {
@@ -414,8 +423,7 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
 
    output() << state.final_summary();
 
-   return state.tests_failed();
+   return state.tests_failed() == 0;
    }
 
 }
-

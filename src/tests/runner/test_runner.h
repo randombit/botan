@@ -21,15 +21,20 @@ class Test_Runner final
    public:
       Test_Runner(std::ostream& out);
 
-      int run(const Test_Options& options);
+      /// @return true iff all tests have passed
+      bool run(const Test_Options& options);
 
    private:
       std::ostream& output() const { return m_output; }
 
-      size_t run_tests(const std::vector<std::string>& tests_to_run,
-                       size_t test_threads,
-                       size_t test_run,
-                       size_t tot_test_runs);
+      /// @return true iff all tests passed
+      bool run_tests(const std::vector<std::string>& tests_to_run,
+                     size_t test_run,
+                     size_t tot_test_runs);
+      bool run_tests_multithreaded(const std::vector<std::string>& tests_to_run,
+                                   size_t test_threads,
+                                   size_t test_run,
+                                   size_t tot_test_runs);
 
       std::ostream& m_output;
    };
