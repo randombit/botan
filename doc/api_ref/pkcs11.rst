@@ -116,7 +116,7 @@ Getting started
 
 An object of this class can be instantiated by providing a :cpp:type:`FunctionListPtr` to the :cpp:class:`LowLevel` constructor:
 
-   .. cpp:function:: explicit LowLevel(FunctionListPtr ptr)
+   .. cpp:function:: explicit LowLevel::LowLevel(FunctionListPtr ptr)
 
 The :cpp:class:`LowLevel` class provides a static method to retrieve a :cpp:type:`FunctionListPtr`
 from a PKCS#11 module file:
@@ -462,7 +462,7 @@ This class represents the common attributes of all PKCS#11 objects.
 
 The constructor is defined as follows:
 
-   .. cpp:function:: ObjectProperties(ObjectClass object_class)
+   .. cpp:function:: ObjectProperties::ObjectProperties(ObjectClass object_class)
 
       Every PKCS#11 object needs an object class attribute.
 
@@ -474,7 +474,7 @@ The next level defines the :cpp:class:`StorageObjectProperties` class which inhe
 The only mandatory attribute is the object class, so the constructor is
 defined as follows:
 
-   .. cpp:function:: StorageObjectProperties(ObjectClass object_class)
+   .. cpp:function:: StorageObjectProperties::StorageObjectProperties(ObjectClass object_class)
 
 But in contrast to the :cpp:class:`ObjectProperties` class there are various setter methods. For example to
 set the :cpp:enumerator:`AttributeType::Label`:
@@ -499,11 +499,11 @@ PKCS#11 objects themselves are represented by the :cpp:class:`Object` class.
 
 Following constructors are defined:
 
-   .. cpp:function:: Object(Session& session, ObjectHandle handle)
+   .. cpp:function:: Object::Object(Session& session, ObjectHandle handle)
 
       Takes ownership over an existing object.
 
-   .. cpp:function:: Object(Session& session, const ObjectProperties& obj_props)
+   .. cpp:function:: Object::Object(Session& session, const ObjectProperties& obj_props)
 
       Creates a new object with the :cpp:class:`ObjectProperties` provided in ``obj_props``.
 
@@ -557,7 +557,7 @@ and :cpp:func:`C_FindObjectsFinal`.
 
 The constructor has the following signature:
 
-   .. cpp:function:: ObjectFinder(Session& session, const std::vector<Attribute>& search_template)
+   .. cpp:function:: ObjectFinder::ObjectFinder(Session& session, const std::vector<Attribute>& search_template)
 
       A search can be prepared with an :cpp:class:`ObjectSearcher` by passing a :cpp:class:`Session` and a ``search_template``.
 
