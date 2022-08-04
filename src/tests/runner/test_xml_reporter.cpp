@@ -11,9 +11,9 @@
 #include <botan/version.h>
 
 #include <filesystem>
-#include <ctime>
 #include <iomanip>
 #include <numeric>
+#include <time.h>
 
 namespace Botan_Tests {
 
@@ -131,7 +131,8 @@ std::string format(const std::chrono::system_clock::time_point& tp)
    auto seconds_since_epoch = std::chrono::system_clock::to_time_t(tp);
 
    std::ostringstream out;
-   out << std::put_time(std::localtime(&seconds_since_epoch), "%FT%T%z");
+   std::tm buffer{};
+   out << std::put_time(localtime_r(&seconds_since_epoch, &buffer), "%FT%T%z");
    return out.str();
    }
 

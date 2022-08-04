@@ -76,13 +76,13 @@ class Reporter
       using PropertyMap = std::map<std::string, std::string>;
 
    public:
-      Reporter(const Test_Options& opts);
+      explicit Reporter(const Test_Options& opts);
 
       virtual ~Reporter() = default;
       Reporter(const Reporter&) = delete;
       Reporter& operator=(const Reporter&) = delete;
-      Reporter(Reporter&&) = default;
-      Reporter& operator=(Reporter&&) = default;
+      Reporter(Reporter&&) = delete;
+      Reporter& operator=(Reporter&&) = delete;
 
       /**
        * @brief Sets test-specific properties to be added to the report
