@@ -7,6 +7,8 @@
 
 #include "test_xml_reporter.h"
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
 #include <botan/internal/loadstor.h>
 #include <botan/version.h>
 
@@ -265,3 +267,5 @@ void XmlReporter::render_failures_and_stdout(std::ostream& out, const TestSummar
    }
 
 }
+
+#endif  // defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)

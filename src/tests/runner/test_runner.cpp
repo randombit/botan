@@ -90,7 +90,11 @@ bool Test_Runner::run(const Test_Options& opts)
    m_reporters.emplace_back(std::make_unique<StdoutReporter>(opts, output()));
    if(!opts.xml_results_dir().empty())
       {
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       m_reporters.emplace_back(std::make_unique<XmlReporter>(opts, opts.xml_results_dir()));
+#else
+      output() << "Generating test report files is not supported on this platform\n";
+#endif
       }
 
    if(req.empty())

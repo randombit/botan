@@ -8,6 +8,9 @@
 #ifndef BOTAN_TEST_XML_REPORTER_H_
 #define BOTAN_TEST_XML_REPORTER_H_
 
+#include <botan/build.h>
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
 #include "test_reporter.h"
 
 #include <optional>
@@ -49,4 +52,6 @@ class XmlReporter : public Reporter
 
 }
 
-#endif
+#endif  // defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+#endif  // BOTAN_TEST_XML_REPORTER_H_
