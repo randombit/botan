@@ -5,7 +5,8 @@
 */
 
 #include "test_runner.h"
-#include "tests.h"
+
+#include "../tests.h"
 
 #include <botan/version.h>
 #include <botan/internal/loadstor.h>
