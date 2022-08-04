@@ -76,7 +76,7 @@ class EMSA_PKCS1v15_Raw final : public EMSA
       EMSA_PKCS1v15_Raw();
 
       /**
-      * @param hash_algo t he digest id for that hash is included in
+      * @param hash_algo the digest id for that hash is included in
       * the signature.
       */
       EMSA_PKCS1v15_Raw(const std::string& hash_algo);
