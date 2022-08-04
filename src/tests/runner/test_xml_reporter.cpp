@@ -127,6 +127,16 @@ std::string format_cdata(std::string str)
    return out.str();
    }
 
+std::tm* localtime(const time_t* timer, std::tm *buffer)
+   {
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   localtime_s(buffer, timer);
+#else
+   localtime_r(timer, buffer);
+#endif
+   return buffer;
+   }
+
 /// formats a given time point in ISO 8601 format (with time zone)
 std::string format(const std::chrono::system_clock::time_point& tp)
    {
@@ -134,7 +144,7 @@ std::string format(const std::chrono::system_clock::time_point& tp)
 
    std::ostringstream out;
    std::tm buffer{};
-   out << std::put_time(localtime_r(&seconds_since_epoch, &buffer), "%FT%T%z");
+   out << std::put_time(localtime(&seconds_since_epoch, &buffer), "%FT%T%z");
    return out.str();
    }
 
