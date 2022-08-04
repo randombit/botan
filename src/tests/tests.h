@@ -181,6 +181,18 @@ class Test
                return m_who;
                }
 
+            std::optional<std::chrono::nanoseconds> elapsed_time() const
+               {
+               if (m_ns_taken == 0)
+                  {
+                  return std::nullopt;
+                  }
+               else
+                  {
+                  return std::chrono::nanoseconds(m_ns_taken);
+                  }
+               }
+
             std::string result_string() const;
 
             static Result Failure(const std::string& who,
@@ -545,6 +557,10 @@ class Test
       static std::string data_file(const std::string& what);
 
       static std::string format_time(uint64_t nanoseconds);
+      static std::string format_time(const std::chrono::nanoseconds nanoseconds)
+         {
+         return format_time(nanoseconds.count());
+         }
 
       template<typename Alloc>
       static std::vector<uint8_t, Alloc>

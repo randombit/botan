@@ -11,15 +11,18 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <optional>
 
 namespace Botan_Tests {
 
 class Test_Options;
+class Reporter;
 
 class Test_Runner final
    {
    public:
       Test_Runner(std::ostream& out);
+      ~Test_Runner();
 
       /// @return true iff all tests have passed
       bool run(const Test_Options& options);
@@ -28,15 +31,12 @@ class Test_Runner final
       std::ostream& output() const { return m_output; }
 
       /// @return true iff all tests passed
-      bool run_tests(const std::vector<std::string>& tests_to_run,
-                     size_t test_run,
-                     size_t tot_test_runs);
+      bool run_tests(const std::vector<std::string>& tests_to_run);
       bool run_tests_multithreaded(const std::vector<std::string>& tests_to_run,
-                                   size_t test_threads,
-                                   size_t test_run,
-                                   size_t tot_test_runs);
+                                   size_t test_threads);
 
       std::ostream& m_output;
+      std::vector<std::unique_ptr<Reporter>> m_reporters;
    };
 
 }
