@@ -56,7 +56,7 @@ jobs:
           arch: ${{ matrix.arch }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='msvc' --make-tool='jom' --cpu='${{ matrix.arch }}' ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='msvc' --make-tool='jom' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   linux:
     name: "Linux (Basic)"
@@ -86,7 +86,7 @@ jobs:
           cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   macos:
     name: "macOS (Basic)"
@@ -119,7 +119,7 @@ jobs:
           cache-key: macos-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   specials:
     name: "Metrics and Specials"
@@ -176,7 +176,7 @@ jobs:
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   x-compile:
     name: "Cross-Compilation"
@@ -222,4 +222,4 @@ jobs:
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
