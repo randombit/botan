@@ -106,14 +106,6 @@ class BOTAN_TEST_API EMSA
    };
 
 /**
-* Factory method for EMSA (message-encoding methods for signatures
-* with appendix) objects
-* @param algo_spec the name of the EMSA to create
-* @return pointer to newly allocated object of that type
-*/
-BOTAN_TEST_API EMSA* get_emsa(const std::string& algo_spec);
-
-/**
 * Returns the hash function used in the given EMSA scheme
 * If the hash function is not specified or not understood,
 * returns "SHA-512"
