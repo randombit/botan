@@ -308,6 +308,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         if disabled_tests:
             test_cmd += ['--skip-tests=%s' % (','.join(disabled_tests))]
 
+        # generate JUnit test result report
+        test_results_dir = os.path.join(root_dir, "test_results")
+        os.mkdir(test_results_dir)
+        test_cmd += ['--test-results-dir=%s' % (test_results_dir)]
+
         if use_gdb:
             (cmd, args) = test_cmd[0], test_cmd[1:]
             run_test_command = test_prefix + ['gdb', cmd,
