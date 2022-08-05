@@ -53,6 +53,12 @@ jobs:
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' ${{ matrix.target }}
 
+      - name: Visualize Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: 'test-results/*.xml'
+
   macos:
     name: "macOS (Basic)"
     strategy:
@@ -85,6 +91,12 @@ jobs:
 
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' ${{ matrix.target }}
+
+      - name: Visualize Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: 'test-results/*.xml'
 
   specials:
     name: "Metrics and Specials"
@@ -131,6 +143,12 @@ jobs:
 
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' ${{ matrix.target }}
+
+      - name: Visualize Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: 'test-results/*.xml'
 
   x-compile:
     name: "Cross-Compilation"
