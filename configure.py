@@ -814,7 +814,7 @@ class ModuleInfo(InfoObject):
             infofile,
             ['header:internal', 'header:public', 'header:external', 'requires',
              'os_features', 'arch', 'isa', 'cc', 'comment', 'warning'],
-            ['defines', 'libs', 'frameworks'],
+            ['defines', 'libs', 'frameworks', 'module_info'],
             {
                 'load_on': 'auto',
                 'endian': 'any',
@@ -872,6 +872,7 @@ class ModuleInfo(InfoObject):
         self.requires = lex.requires
         self.warning = combine_lines(lex.warning)
         self.endian = lex.endian
+        self._parse_module_info(lex)
 
         # Modify members
         self.source = [normalize_source_path(os.path.join(self.lives_in, s)) for s in self.source]
@@ -893,6 +894,18 @@ class ModuleInfo(InfoObject):
         intersect_check('public', self.header_public, 'internal', self.header_internal)
         intersect_check('public', self.header_public, 'external', self.header_external)
         intersect_check('external', self.header_external, 'internal', self.header_internal)
+
+    def _parse_module_info(self, lex):
+        try:
+            info = lex.module_info
+            self.name = info["name"]
+            self.brief = info["brief"] if "brief" in info else None
+            self.type = info["type"] if "type" in info else "Public"
+        except:
+            raise InternalError("Module '%s' does not contain a <module_info> section with at least a documentation-friendly 'name' definition" % self.basename)
+
+        if self.type not in ["Public", "Internal", "Virtual"]:
+            raise InternalError("Module '%s' has an unknown type: %s" % (self.basename, self.type))
 
     @staticmethod
     def _validate_defines_content(defines):
