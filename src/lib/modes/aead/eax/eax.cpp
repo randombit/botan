@@ -131,7 +131,7 @@ size_t EAX_Encryption::process(uint8_t buf[], size_t sz)
 
 void EAX_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT_NOMSG(m_nonce_mac.empty() == false);
+   BOTAN_STATE_CHECK(!m_nonce_mac.empty());
    update(buffer, offset);
 
    secure_vector<uint8_t> data_mac = m_cmac->final();
@@ -157,7 +157,7 @@ size_t EAX_Decryption::process(uint8_t buf[], size_t sz)
 
 void EAX_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 

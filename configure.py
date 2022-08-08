@@ -503,6 +503,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-debug-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
+    build_group.add_option('--terminate-on-asserts', action='store_true', default=False,
+                           help=optparse.SUPPRESS_HELP)
+
     build_group.add_option('--build-targets', default=None, dest="build_targets", action='append',
                            help="build specific targets and tools (%s)" % ', '.join(ACCEPTABLE_BUILD_TARGETS))
 
@@ -2178,6 +2181,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'with_valgrind': options.with_valgrind,
         'with_debug_asserts': options.with_debug_asserts,
+        'terminate_on_asserts': options.terminate_on_asserts,
         'test_mode': options.test_mode,
         'optimize_for_size': options.optimize_for_size,
 

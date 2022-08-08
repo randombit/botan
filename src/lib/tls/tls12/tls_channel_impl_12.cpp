@@ -573,7 +573,8 @@ void Channel_Impl_12::send(const uint8_t buf[], size_t buf_size)
 
 void Channel_Impl_12::send_alert(const Alert& alert)
    {
-   if(alert.is_valid() && !is_closed())
+   const bool ready_to_send_anything = !is_closed() && m_sequence_numbers;
+   if(alert.is_valid() && ready_to_send_anything)
       {
       try
          {

@@ -145,7 +145,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         disabled_tests.append('certstor_system')
 
     if target == 'coverage':
-        flags += ['--with-coverage-info', '--with-debug-info', '--test-mode']
+        flags += ['--with-coverage-info', '--with-debug-info', '--test-mode', '--terminate-on-asserts']
 
     if target == 'valgrind':
         flags += ['--with-valgrind']
@@ -165,7 +165,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         disabled_tests += slow_tests
 
     if target == 'fuzzers':
-        flags += ['--unsafe-fuzzer-mode']
+        flags += ['--unsafe-fuzzer-mode', '--terminate-on-asserts']
 
     if target in ['fuzzers', 'coverage']:
         flags += ['--build-fuzzers=test']

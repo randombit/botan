@@ -150,7 +150,7 @@ int32_t ASN1_Time::cmp(const ASN1_Time& other) const
 
 void ASN1_Time::set_to(const std::string& t_spec, ASN1_Type spec_tag)
    {
-   BOTAN_ASSERT(spec_tag == ASN1_Type::UtcTime || spec_tag == ASN1_Type::GeneralizedTime, "Invalid tag.");
+   BOTAN_ARG_CHECK(spec_tag == ASN1_Type::UtcTime || spec_tag == ASN1_Type::GeneralizedTime, "Invalid tag.");
 
    if(spec_tag == ASN1_Type::GeneralizedTime)
       {
