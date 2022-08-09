@@ -102,6 +102,9 @@ jobs:
           - target: fuzzers
             compiler: gcc
             host_os: ubuntu-latest
+          - target: examples
+            compiler: gcc
+            host_os: ubuntu-latest
           - target: emscripten
             compiler: emcc
             host_os: macos-latest
