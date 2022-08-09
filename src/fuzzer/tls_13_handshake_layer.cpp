@@ -1,6 +1,7 @@
 /*
 * (C) 2022 Jack Lloyd
-* (C) 2002 René Meusel - neXenio GmbH
+* (C) 2022 René Meusel - neXenio GmbH
+* (C) 2022 Lukas Zeller - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
