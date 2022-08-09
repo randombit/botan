@@ -804,7 +804,7 @@ Test::Result test_rsa_encrypt_decrypt()
    // generate key pair
    PKCS11_RSA_KeyPair keypair = generate_rsa_keypair(test_session);
 
-   auto encrypt_and_decrypt = [&keypair, &result](const std::vector<uint8_t>& plaintext, const std::string& padding)
+   auto encrypt_and_decrypt = [&keypair, &result](const std::vector<uint8_t>& plaintext, const std::string& padding, const bool blinding)
       {
       std::vector<uint8_t> encrypted;
 
@@ -822,6 +822,7 @@ Test::Result test_rsa_encrypt_decrypt()
 
       try
          {
+         keypair.second.set_use_software_padding(blinding);
          Botan::PK_Decryptor_EME decryptor(keypair.second, Test::rng(), padding);
          decrypted = decryptor.decrypt(encrypted);
          }
@@ -835,12 +836,14 @@ Test::Result test_rsa_encrypt_decrypt()
 
    std::vector<uint8_t> plaintext(256);
    std::iota(std::begin(plaintext), std::end(plaintext), static_cast<uint8_t>(0));
-   encrypt_and_decrypt(plaintext, "Raw");
+   encrypt_and_decrypt(plaintext, "Raw", false);
 
    plaintext = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x00 };
-   encrypt_and_decrypt(plaintext, "EME-PKCS1-v1_5");
+   encrypt_and_decrypt(plaintext, "EME-PKCS1-v1_5", false);
+   encrypt_and_decrypt(plaintext, "EME-PKCS1-v1_5", true);
 
-   encrypt_and_decrypt(plaintext, "OAEP(SHA-1)");
+   encrypt_and_decrypt(plaintext, "OAEP(SHA-1)", false);
+   encrypt_and_decrypt(plaintext, "OAEP(SHA-1)", true);
 
    keypair.first.destroy();
    keypair.second.destroy();
