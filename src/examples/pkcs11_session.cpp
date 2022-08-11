@@ -2,9 +2,15 @@
 #include <botan/p11_types.h>
 
 #include <iostream>
+#include <vector>
 
 int main()
    {
+   Botan::PKCS11::Module module( "C:\\pkcs11-middleware\\library.dll" );
+   // use first slot with connected token
+   std::vector<Botan::PKCS11::SlotId> slots = Botan::PKCS11::Slot::get_available_slots( module, true );
+   Botan::PKCS11::Slot slot( module, slots.at( 0 ) );
+
    // open read only session
    {
    Botan::PKCS11::Session read_only_session( slot, true );

@@ -6,6 +6,7 @@
 #include <botan/p11.h>
 #include <botan/p11_ecc_key.h>
 #include <botan/p11_ecdsa.h>
+#include <botan/p11_types.h>
 #include <botan/pubkey.h>
 
 #include <string>
@@ -13,6 +14,12 @@
 
 int main()
    {
+   Botan::PKCS11::Module module( "C:\\pkcs11-middleware\\library.dll" );
+   // open write session to first slot with connected token
+   std::vector<Botan::PKCS11::SlotId> slots = Botan::PKCS11::Slot::get_available_slots( module, true );
+   Botan::PKCS11::Slot slot( module, slots.at( 0 ) );
+   Botan::PKCS11::Session session( slot, false );
+
    Botan::PKCS11::secure_string pin = { '1', '2', '3', '4', '5', '6' };
    session.login( Botan::PKCS11::UserType::User, pin );
 
@@ -46,9 +53,11 @@ int main()
    /************ import ECDSA public key *************/
 
    // import to card
-   Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props( priv_key_sw.DER_domain(),
-      Botan::DER_Encoder().encode(priv_key_sw.public_point().encode(Botan::PointGFp::Compression_Type::UNCOMPRESSED ),
-      Botan::ASN1_Tag::OCTET_STRING ).get_contents_unlocked() );
+   std::vector<uint8_t> ec_point;
+   Botan::DER_Encoder(ec_point).encode(
+      priv_key_sw.public_point().encode( Botan::PointGFp::Compression_Type::UNCOMPRESSED ),
+      Botan::ASN1_Type::OctetString );
+   Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props( priv_key_sw.DER_domain(), ec_point );
 
    pub_import_props.set_token( true );
    pub_import_props.set_verify( true );
@@ -96,4 +105,6 @@ int main()
 
    Botan::PK_Verifier token_verifier( key_pair.first, "Raw", Botan::IEEE_1363, "pkcs11" );
    bool ecdsa_ok = token_verifier.verify_message( plaintext, signature );
+
+   return ecdsa_ok ? 0 : 1;
    }

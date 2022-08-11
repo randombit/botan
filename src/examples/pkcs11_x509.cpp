@@ -1,9 +1,19 @@
+#include <botan/p11.h>
+#include <botan/p11_types.h>
 #include <botan/p11_x509.h>
 #include <botan/pkix_types.h>
 #include <botan/x509cert.h>
 
+#include <vector>
+
 int main()
    {
+   Botan::PKCS11::Module module( "C:\\pkcs11-middleware\\library.dll" );
+   // open write session to first slot with connected token
+   std::vector<Botan::PKCS11::SlotId> slots = Botan::PKCS11::Slot::get_available_slots( module, true );
+   Botan::PKCS11::Slot slot( module, slots.at( 0 ) );
+   Botan::PKCS11::Session session( slot, false );
+
    // load existing certificate
    Botan::X509_Certificate root( "test.crt" );
 

@@ -1,11 +1,20 @@
 #include <botan/auto_rng.h>
 #include <botan/p11.h>
 #include <botan/p11_rsa.h>
+#include <botan/p11_types.h>
 #include <botan/pubkey.h>
 #include <botan/rsa.h>
 
+#include <vector>
+
 int main()
    {
+   Botan::PKCS11::Module module( "C:\\pkcs11-middleware\\library.dll" );
+   // open write session to first slot with connected token
+   std::vector<Botan::PKCS11::SlotId> slots = Botan::PKCS11::Slot::get_available_slots( module, true );
+   Botan::PKCS11::Slot slot( module, slots.at( 0 ) );
+   Botan::PKCS11::Session session( slot, false );
+
    Botan::PKCS11::secure_string pin = { '1', '2', '3', '4', '5', '6' };
    session.login( Botan::PKCS11::UserType::User, pin );
 
@@ -92,4 +101,6 @@ int main()
 
    Botan::PK_Verifier verifier( rsa_keypair.first, "EMSA4(SHA-256)", Botan::IEEE_1363 );
    auto ok = verifier.verify_message( plaintext, signature );
+
+   return ok ? 0 : 1;
    }

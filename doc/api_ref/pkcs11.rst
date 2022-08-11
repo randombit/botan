@@ -114,30 +114,14 @@ passed as ``return_value``, the exact return value is ignored and the method jus
 Getting started
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An object of this class can be instantiated by providing a :cpp:type:`FunctionListPtr` to the :cpp:class:`LowLevel` constructor:
-
-   .. cpp:function:: explicit LowLevel::LowLevel(FunctionListPtr ptr)
-
-The :cpp:class:`LowLevel` class provides a static method to retrieve a :cpp:type:`FunctionListPtr`
-from a PKCS#11 module file:
-
-   .. cpp:function:: static bool C_GetFunctionList(Dynamically_Loaded_Library& pkcs11_module, FunctionListPtr* function_list_ptr_ptr, ReturnValue* return_value = ThrowException)
+An object of this class can be accessed by the ``Module::operator->()`` method.
 
 ----------
 
-Code Example: Object Instantiation
+Code Example:
 
-.. literalinclude:: /../src/examples/pkcs11_object_instantiation.cpp
+.. literalinclude:: /../src/examples/pkcs11_low_level.cpp
    :language: cpp
-
-----------
-
-Code Example: PKCS#11 Module Initialization
-
-.. literalinclude:: /../src/examples/pkcs11_module_initialization.cpp
-   :language: cpp
-
-More code examples can be found in the test suite in the ``test_pkcs11_low_level.cpp`` file.
 
 .. _pkcs11_high_level:
 
