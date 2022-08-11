@@ -127,29 +127,15 @@ from a PKCS#11 module file:
 
 Code Example: Object Instantiation
 
-   .. code-block:: cpp
-
-      Botan::Dynamically_Loaded_Library pkcs11_module( "C:\\pkcs11-middleware\\library.dll" );
-      Botan::PKCS11::FunctionListPtr func_list = nullptr;
-      Botan::PKCS11::LowLevel::C_GetFunctionList( pkcs11_module, &func_list );
-      Botan::PKCS11::LowLevel p11_low_level( func_list );
+.. literalinclude:: /../src/examples/pkcs11_object_instantiation.cpp
+   :language: cpp
 
 ----------
 
 Code Example: PKCS#11 Module Initialization
 
-   .. code-block:: cpp
-
-      Botan::PKCS11::LowLevel p11_low_level(func_list);
-
-      Botan::PKCS11::C_InitializeArgs init_args = { nullptr, nullptr, nullptr, nullptr,
-              static_cast<CK_FLAGS>(Botan::PKCS11::Flag::OsLockingOk), nullptr };
-
-      p11_low_level.C_Initialize(&init_args);
-
-      // work with the token
-
-      p11_low_level.C_Finalize(nullptr);
+.. literalinclude:: /../src/examples/pkcs11_module_initialization.cpp
+   :language: cpp
 
 More code examples can be found in the test suite in the ``test_pkcs11_low_level.cpp`` file.
 
@@ -210,18 +196,8 @@ The other one is for getting general information about the PKCS#11 module:
 
 Code example:
 
-   .. code-block:: cpp
-
-      Botan::PKCS11::Module module( "C:\\pkcs11-middleware\\library.dll" );
-
-      // Sometimes useful if a newly connected token is not detected by the PKCS#11 module
-      module.reload();
-
-      Botan::PKCS11::Info info = module.get_info();
-
-      // print library version
-      std::cout << std::to_string( info.libraryVersion.major ) << "."
-         << std::to_string( info.libraryVersion.minor ) << std::endl;
+.. literalinclude:: /../src/examples/pkcs11_module.cpp
+   :language: cpp
 
 Slot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -272,37 +248,8 @@ A PKCS#11 slot is usually a smart card reader that potentially contains a token.
 
 Code example:
 
-   .. code-block:: cpp
-
-      // only slots with connected token
-      std::vector<Botan::PKCS11::SlotId> slots = Botan::PKCS11::Slot::get_available_slots( module, true );
-
-      // use first slot
-      Botan::PKCS11::Slot slot( module, slots.at( 0 ) );
-
-      // print firmware version of the slot
-      Botan::PKCS11::SlotInfo slot_info = slot.get_slot_info();
-      std::cout << std::to_string( slot_info.firmwareVersion.major ) << "."
-         << std::to_string( slot_info.firmwareVersion.minor ) << std::endl;
-
-      // print firmware version of the token
-      Botan::PKCS11::TokenInfo token_info = slot.get_token_info();
-      std::cout << std::to_string( token_info.firmwareVersion.major ) << "."
-         << std::to_string( token_info.firmwareVersion.minor ) << std::endl;
-
-      // retrieve all mechanisms supported by the token
-      std::vector<Botan::PKCS11::MechanismType> mechanisms = slot.get_mechanism_list();
-
-      // retrieve information about a particular mechanism
-      Botan::PKCS11::MechanismInfo mech_info =
-         slot.get_mechanism_info( Botan::PKCS11::MechanismType::RsaPkcsOaep );
-
-      // maximum RSA key length supported:
-      std::cout << mech_info.ulMaxKeySize << std::endl;
-
-      // initialize the token
-      Botan::PKCS11::secure_string so_pin( 8, '0' );
-      slot.initialize( "Botan PKCS11 documentation test label", so_pin );
+.. literalinclude:: /../src/examples/pkcs11_slot.cpp
+   :language: cpp
 
 Session
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -362,57 +309,8 @@ A session is a logical connection between an application and a token.
 
 Code example:
 
-   .. code-block:: cpp
-
-      // open read only session
-      {
-      Botan::PKCS11::Session read_only_session( slot, true );
-      }
-
-      // open read write session
-      {
-      Botan::PKCS11::Session read_write_session( slot, false );
-      }
-
-      // open read write session by passing flags
-      {
-      Botan::PKCS11::Flags flags =
-         Botan::PKCS11::flags( Botan::PKCS11::Flag::SerialSession | Botan::PKCS11::Flag::RwSession );
-
-      Botan::PKCS11::Session read_write_session( slot, flags, nullptr, nullptr );
-      }
-
-      // move ownership of a session
-      {
-      Botan::PKCS11::Session session( slot, false );
-      Botan::PKCS11::SessionHandle handle = session.release();
-
-      Botan::PKCS11::Session session2( slot, handle );
-      }
-
-      Botan::PKCS11::Session session( slot, false );
-
-      // get session info
-      Botan::PKCS11::SessionInfo info = session.get_info();
-      std::cout << info.slotID << std::endl;
-
-      // login
-      Botan::PKCS11::secure_string pin = { '1', '2', '3', '4', '5', '6' };
-      session.login( Botan::PKCS11::UserType::User, pin );
-
-      // set pin
-      Botan::PKCS11::secure_string new_pin = { '6', '5', '4', '3', '2', '1' };
-      session.set_pin( pin, new_pin );
-
-      // logoff
-      session.logoff();
-
-      // log in as security officer
-      Botan::PKCS11::secure_string so_pin = { '0', '0', '0', '0', '0', '0', '0', '0' };
-      session.login( Botan::PKCS11::UserType::SO, so_pin );
-
-      // change pin to old pin
-      session.init_pin( pin );
+.. literalinclude:: /../src/examples/pkcs11_session.cpp
+   :language: cpp
 
 Objects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -577,45 +475,8 @@ The actual search operation is started by calling the :cpp:func:`find` method:
 
 Code example:
 
-   .. code-block:: cpp
-
-      // create an simple data object
-      Botan::secure_vector<uint8_t> value = { 0x00, 0x01 ,0x02, 0x03 };
-      std::size_t id = 1337;
-      std::string label = "test data object";
-
-      // set properties of the new object
-      Botan::PKCS11::DataObjectProperties data_obj_props;
-      data_obj_props.set_label( label );
-      data_obj_props.set_value( value );
-      data_obj_props.set_token( true );
-      data_obj_props.set_modifiable( true );
-      data_obj_props.set_object_id( Botan::DER_Encoder().encode( id ).get_contents_unlocked() );
-
-      // create the object
-      Botan::PKCS11::Object data_obj( session, data_obj_props );
-
-      // get label of this object
-      Botan::PKCS11::secure_string retrieved_label =
-         data_obj.get_attribute_value( Botan::PKCS11::AttributeType::Label );
-
-      // set a new label
-      Botan::PKCS11::secure_string new_label = { 'B', 'o', 't', 'a', 'n' };
-      data_obj.set_attribute_value( Botan::PKCS11::AttributeType::Label, new_label );
-
-      // copy the object
-      Botan::PKCS11::AttributeContainer copy_attributes;
-      copy_attributes.add_string( Botan::PKCS11::AttributeType::Label, "copied object" );
-      Botan::PKCS11::ObjectHandle copied_obj_handle = data_obj.copy( copy_attributes );
-
-      // search for an object
-      Botan::PKCS11::AttributeContainer search_template;
-      search_template.add_string( Botan::PKCS11::AttributeType::Label, "Botan" );
-      auto found_objs =
-         Botan::PKCS11::Object::search<Botan::PKCS11::Object>( session, search_template.attributes() );
-
-      // destroy the object
-      data_obj.destroy();
+.. literalinclude:: /../src/examples/pkcs11_objects.cpp
+   :language: cpp
 
 RSA
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -678,94 +539,8 @@ PKCS#11 RSA key pairs can be generated with the following free function:
 
 Code example:
 
-   .. code-block:: cpp
-
-      Botan::PKCS11::secure_string pin = { '1', '2', '3', '4', '5', '6' };
-      session.login( Botan::PKCS11::UserType::User, pin );
-
-      /************ import RSA private key *************/
-
-      // create private key in software
-      Botan::AutoSeeded_RNG rng;
-      Botan::RSA_PrivateKey priv_key_sw( rng, 2048 );
-
-      // set the private key import properties
-      Botan::PKCS11::RSA_PrivateKeyImportProperties
-         priv_import_props( priv_key_sw.get_n(), priv_key_sw.get_d() );
-
-      priv_import_props.set_pub_exponent( priv_key_sw.get_e() );
-      priv_import_props.set_prime_1( priv_key_sw.get_p() );
-      priv_import_props.set_prime_2( priv_key_sw.get_q() );
-      priv_import_props.set_coefficient( priv_key_sw.get_c() );
-      priv_import_props.set_exponent_1( priv_key_sw.get_d1() );
-      priv_import_props.set_exponent_2( priv_key_sw.get_d2() );
-
-      priv_import_props.set_token( true );
-      priv_import_props.set_private( true );
-      priv_import_props.set_decrypt( true );
-      priv_import_props.set_sign( true );
-
-      // import
-      Botan::PKCS11::PKCS11_RSA_PrivateKey priv_key( session, priv_import_props );
-
-      /************ export PKCS#11 RSA private key *************/
-      Botan::RSA_PrivateKey exported = priv_key.export_key();
-
-      /************ import RSA public key *************/
-
-      // set the public key import properties
-      Botan::PKCS11::RSA_PublicKeyImportProperties pub_import_props( priv_key.get_n(), priv_key.get_e() );
-      pub_import_props.set_token( true );
-      pub_import_props.set_encrypt( true );
-      pub_import_props.set_private( false );
-
-      // import
-      Botan::PKCS11::PKCS11_RSA_PublicKey public_key( session, pub_import_props );
-
-      /************ generate RSA private key *************/
-
-      Botan::PKCS11::RSA_PrivateKeyGenerationProperties priv_generate_props;
-      priv_generate_props.set_token( true );
-      priv_generate_props.set_private( true );
-      priv_generate_props.set_sign( true );
-      priv_generate_props.set_decrypt( true );
-      priv_generate_props.set_label( "BOTAN_TEST_RSA_PRIV_KEY" );
-
-      Botan::PKCS11::PKCS11_RSA_PrivateKey private_key2( session, 2048, priv_generate_props );
-
-      /************ generate RSA key pair *************/
-
-      Botan::PKCS11::RSA_PublicKeyGenerationProperties pub_generate_props( 2048UL );
-      pub_generate_props.set_pub_exponent();
-      pub_generate_props.set_label( "BOTAN_TEST_RSA_PUB_KEY" );
-      pub_generate_props.set_token( true );
-      pub_generate_props.set_encrypt( true );
-      pub_generate_props.set_verify( true );
-      pub_generate_props.set_private( false );
-
-      Botan::PKCS11::PKCS11_RSA_KeyPair rsa_keypair =
-         Botan::PKCS11::generate_rsa_keypair( session, pub_generate_props, priv_generate_props );
-
-      /************ RSA encrypt *************/
-
-      Botan::secure_vector<uint8_t> plaintext = { 0x00, 0x01, 0x02, 0x03 };
-      Botan::PK_Encryptor_EME encryptor( rsa_keypair.first, rng, "Raw" );
-      auto ciphertext = encryptor.encrypt( plaintext, rng );
-
-      /************ RSA decrypt *************/
-
-      Botan::PK_Decryptor_EME decryptor( rsa_keypair.second, rng, "Raw" );
-      plaintext = decryptor.decrypt( ciphertext );
-
-      /************ RSA sign *************/
-
-      Botan::PK_Signer signer( rsa_keypair.second, rng, "EMSA4(SHA-256)", Botan::IEEE_1363 );
-      auto signature = signer.sign_message( plaintext, rng );
-
-      /************ RSA verify *************/
-
-      Botan::PK_Verifier verifier( rsa_keypair.first, "EMSA4(SHA-256)", Botan::IEEE_1363 );
-      auto ok = verifier.verify_message( plaintext, signature );
+.. literalinclude:: /../src/examples/pkcs11_rsa.cpp
+   :language: cpp
 
 ECDSA
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -831,91 +606,8 @@ PKCS#11 ECDSA key pairs can be generated with the following free function:
 
 Code example:
 
-   .. code-block:: cpp
-
-      Botan::PKCS11::secure_string pin = { '1', '2', '3', '4', '5', '6' };
-      session.login( Botan::PKCS11::UserType::User, pin );
-
-      /************ import ECDSA private key *************/
-
-      // create private key in software
-      Botan::AutoSeeded_RNG rng;
-
-      Botan::ECDSA_PrivateKey priv_key_sw( rng, Botan::EC_Group( "secp256r1" ) );
-      priv_key_sw.set_parameter_encoding( Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID );
-
-      // set the private key import properties
-      Botan::PKCS11::EC_PrivateKeyImportProperties priv_import_props(
-         priv_key_sw.DER_domain(), priv_key_sw.private_value() );
-
-      priv_import_props.set_token( true );
-      priv_import_props.set_private( true );
-      priv_import_props.set_sign( true );
-      priv_import_props.set_extractable( true );
-
-      // label
-      std::string label = "test ECDSA key";
-      priv_import_props.set_label( label );
-
-      // import to card
-      Botan::PKCS11::PKCS11_ECDSA_PrivateKey priv_key( session, priv_import_props );
-
-      /************ export PKCS#11 ECDSA private key *************/
-      Botan::ECDSA_PrivateKey priv_exported = priv_key.export_key();
-
-      /************ import ECDSA public key *************/
-
-      // import to card
-      Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props( priv_key_sw.DER_domain(),
-         Botan::DER_Encoder().encode(priv_key_sw.public_point().encode(Botan::PointGFp::Compression_Type::UNCOMPRESSED ),
-         Botan::ASN1_Tag::OCTET_STRING ).get_contents_unlocked() );
-
-      pub_import_props.set_token( true );
-      pub_import_props.set_verify( true );
-      pub_import_props.set_private( false );
-
-      // label
-      label = "test ECDSA pub key";
-      pub_import_props.set_label( label );
-
-      Botan::PKCS11::PKCS11_ECDSA_PublicKey public_key( session, pub_import_props );
-
-      /************ export PKCS#11 ECDSA public key *************/
-      Botan::ECDSA_PublicKey pub_exported = public_key.export_key();
-
-      /************ generate PKCS#11 ECDSA private key *************/
-      Botan::PKCS11::EC_PrivateKeyGenerationProperties priv_generate_props;
-      priv_generate_props.set_token( true );
-      priv_generate_props.set_private( true );
-      priv_generate_props.set_sign( true );
-
-      Botan::PKCS11::PKCS11_ECDSA_PrivateKey pk( session,
-         Botan::EC_Group( "secp256r1" ).DER_encode( Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID ),
-         priv_generate_props );
-
-      /************ generate PKCS#11 ECDSA key pair *************/
-
-      Botan::PKCS11::EC_PublicKeyGenerationProperties pub_generate_props(
-         Botan::EC_Group( "secp256r1" ).DER_encode(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID ) );
-
-      pub_generate_props.set_label( "BOTAN_TEST_ECDSA_PUB_KEY" );
-      pub_generate_props.set_token( true );
-      pub_generate_props.set_verify( true );
-      pub_generate_props.set_private( false );
-      pub_generate_props.set_modifiable( true );
-
-      Botan::PKCS11::PKCS11_ECDSA_KeyPair key_pair = Botan::PKCS11::generate_ecdsa_keypair( session,
-         pub_generate_props, priv_generate_props );
-
-      /************ PKCS#11 ECDSA sign and verify *************/
-
-      std::vector<uint8_t> plaintext( 20, 0x01 );
-
-      Botan::PK_Signer signer( key_pair.second, rng, "Raw", Botan::IEEE_1363, "pkcs11" );
-      auto signature = signer.sign_message( plaintext, rng );
-
-      Botan::PK_Verifier token_verifier( key_pair.first, "Raw", Botan::IEEE_1363, "pkcs11" );
-      bool ecdsa_ok = token_verifier.verify_message( plaintext, signature );
+.. literalinclude:: /../src/examples/pkcs11_ecdsa.cpp
+   :language: cpp
 
 ECDH
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -982,100 +674,8 @@ PKCS#11 ECDH key pairs can be generated with the following free function:
 
 Code example:
 
-   .. code-block:: cpp
-
-      Botan::PKCS11::secure_string pin = { '1', '2', '3', '4', '5', '6' };
-      session.login( Botan::PKCS11::UserType::User, pin );
-
-      /************ import ECDH private key *************/
-
-      Botan::AutoSeeded_RNG rng;
-
-      // create private key in software
-      Botan::ECDH_PrivateKey priv_key_sw( rng, Botan::EC_Group( "secp256r1" ) );
-      priv_key_sw.set_parameter_encoding( Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID );
-
-      // set import properties
-      Botan::PKCS11::EC_PrivateKeyImportProperties priv_import_props(
-         priv_key_sw.DER_domain(), priv_key_sw.private_value() );
-
-      priv_import_props.set_token( true );
-      priv_import_props.set_private( true );
-      priv_import_props.set_derive( true );
-      priv_import_props.set_extractable( true );
-
-      // label
-      std::string label = "test ECDH key";
-      priv_import_props.set_label( label );
-
-      // import to card
-      Botan::PKCS11::PKCS11_ECDH_PrivateKey priv_key( session, priv_import_props );
-
-      /************ export ECDH private key *************/
-      Botan::ECDH_PrivateKey exported = priv_key.export_key();
-
-      /************ import ECDH public key *************/
-
-      // set import properties
-      Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props( priv_key_sw.DER_domain(),
-         Botan::DER_Encoder().encode(
-           priv_key_sw.public_point().encode(Botan::PointGFp::Compression_Type::UNCOMPRESSED ),
-           Botan::ASN1_Tag::OCTET_STRING ).get_contents_unlocked() );
-
-      pub_import_props.set_token( true );
-      pub_import_props.set_private( false );
-      pub_import_props.set_derive( true );
-
-      // label
-      label = "test ECDH pub key";
-      pub_import_props.set_label( label );
-
-      // import
-      Botan::PKCS11::PKCS11_ECDH_PublicKey pub_key( session, pub_import_props );
-
-      /************ export ECDH private key *************/
-      Botan::ECDH_PublicKey exported_pub = pub_key.export_key();
-
-      /************ generate ECDH private key *************/
-
-      Botan::PKCS11::EC_PrivateKeyGenerationProperties priv_generate_props;
-      priv_generate_props.set_token( true );
-      priv_generate_props.set_private( true );
-      priv_generate_props.set_derive( true );
-
-      Botan::PKCS11::PKCS11_ECDH_PrivateKey priv_key2( session,
-         Botan::EC_Group( "secp256r1" ).DER_encode( Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID ),
-         priv_generate_props );
-
-      /************ generate ECDH key pair *************/
-
-      Botan::PKCS11::EC_PublicKeyGenerationProperties pub_generate_props(
-         Botan::EC_Group( "secp256r1" ).DER_encode( Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID ) );
-
-      pub_generate_props.set_label( label + "_PUB_KEY" );
-      pub_generate_props.set_token( true );
-      pub_generate_props.set_derive( true );
-      pub_generate_props.set_private( false );
-      pub_generate_props.set_modifiable( true );
-
-      Botan::PKCS11::PKCS11_ECDH_KeyPair key_pair = Botan::PKCS11::generate_ecdh_keypair(
-         session, pub_generate_props, priv_generate_props );
-
-      /************ ECDH derive *************/
-
-      Botan::PKCS11::PKCS11_ECDH_KeyPair key_pair_other = Botan::PKCS11::generate_ecdh_keypair(
-         session, pub_generate_props, priv_generate_props );
-
-      Botan::PK_Key_Agreement ka( key_pair.second, rng, "Raw", "pkcs11" );
-      Botan::PK_Key_Agreement kb( key_pair_other.second, rng, "Raw", "pkcs11" );
-
-      Botan::SymmetricKey alice_key = ka.derive_key( 32,
-         key_pair_other.first.public_point().encode(Botan::PointGFp::UNCOMPRESSED));
-
-      Botan::SymmetricKey bob_key = kb.derive_key( 32,
-         key_pair.first.public_point().encode(Botan::PointGFp::UNCOMPRESSED));
-
-      bool eq = alice_key == bob_key;
+.. literalinclude:: /../src/examples/pkcs11_ecdh.cpp
+   :language: cpp
 
 RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1101,22 +701,8 @@ implements the :cpp:class:`Hardware_RNG` interface.
 
 Code example:
 
-   .. code-block:: cpp
-
-      Botan::PKCS11::PKCS11_RNG p11_rng( session );
-
-      /************ generate random data *************/
-      std::vector<uint8_t> random( 20 );
-      p11_rng.randomize( random.data(), random.size() );
-
-      /************ add entropy *************/
-      Botan::AutoSeeded_RNG auto_rng;
-      auto auto_rng_random = auto_rng.random_vec( 20 );
-      p11_rng.add_entropy( auto_rng_random.data(), auto_rng_random.size() );
-
-      /************ use PKCS#11 RNG to seed HMAC_DRBG *************/
-      Botan::HMAC_DRBG drbg( Botan::MessageAuthenticationCode::create( "HMAC(SHA-512)" ), p11_rng );
-      drbg.randomize( random.data(), random.size() );
+.. literalinclude:: /../src/examples/pkcs11_rng.cpp
+   :language: cpp
 
 Token Management Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1143,42 +729,8 @@ The header file ``<botan/p11.h>`` also defines some free functions for token man
 
 Code example:
 
-   .. code-block:: cpp
-
-      /************ set pin *************/
-
-      Botan::PKCS11::Module module( Middleware_path );
-
-      // only slots with connected token
-      std::vector<Botan::PKCS11::SlotId> slots = Botan::PKCS11::Slot::get_available_slots( module, true );
-
-      // use first slot
-      Botan::PKCS11::Slot slot( module, slots.at( 0 ) );
-
-      Botan::PKCS11::secure_string so_pin = { '1', '2', '3', '4', '5', '6', '7', '8' };
-      Botan::PKCS11::secure_string pin = { '1', '2', '3', '4', '5', '6' };
-      Botan::PKCS11::secure_string test_pin = { '6', '5', '4', '3', '2', '1' };
-
-      // set pin
-      Botan::PKCS11::set_pin( slot, so_pin, test_pin );
-
-      // change back
-      Botan::PKCS11::set_pin( slot, so_pin, pin );
-
-      /************ initialize *************/
-      Botan::PKCS11::initialize_token( slot, "Botan handbook example", so_pin, pin );
-
-      /************ change pin *************/
-      Botan::PKCS11::change_pin( slot, pin, test_pin );
-
-      // change back
-      Botan::PKCS11::change_pin( slot, test_pin, pin );
-
-      /************ change security officer pin *************/
-      Botan::PKCS11::change_so_pin( slot, so_pin, test_pin );
-
-      // change back
-      Botan::PKCS11::change_so_pin( slot, test_pin, so_pin );
+.. literalinclude:: /../src/examples/pkcs11_token_management.cpp
+   :language: cpp
 
 X.509
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1201,24 +753,8 @@ and the class :cpp:class:`PKCS11_X509_Certificate`.
 
 Code example:
 
-   .. code-block:: cpp
-
-      // load existing certificate
-      Botan::X509_Certificate root( "test.crt" );
-
-      // set props
-      Botan::PKCS11::X509_CertificateProperties props(
-         root.subject_dn().DER_encode(), root.BER_encode());
-
-      props.set_label( "Botan PKCS#11 test certificate" );
-      props.set_private( false );
-      props.set_token( true );
-
-      // import
-      Botan::PKCS11::PKCS11_X509_Certificate pkcs11_cert( session, props );
-
-      // load by handle
-      Botan::PKCS11::PKCS11_X509_Certificate pkcs11_cert2( session, pkcs11_cert.handle() );
+.. literalinclude:: /../src/examples/pkcs11_x509.cpp
+   :language: cpp
 
 Tests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
