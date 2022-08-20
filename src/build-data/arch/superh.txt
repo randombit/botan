@@ -2,4 +2,6 @@
 <aliases>
 sh4
 sh4a
+sh4eb
+sh4aeb
 </aliases>
