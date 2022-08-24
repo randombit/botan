@@ -100,7 +100,7 @@ void XMSS_Signature_Operation::initialize()
       { return; }
 
    secure_vector<uint8_t> index_bytes;
-   // reserve leaf index so it can not be reused in by another signature
+   // reserve leaf index so it can not be reused by another signature
    // operation using the same private key.
    m_leaf_idx = static_cast<uint32_t>(m_priv_key.reserve_unused_leaf_index());
 

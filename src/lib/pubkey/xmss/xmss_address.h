@@ -116,7 +116,7 @@ class XMSS_Address final
          }
 
       /**
-       * Retrieves the mode the address os currently set to. (See
+       * Retrieves the mode the address is currently set to. (See
        * XMSS_Address::Key_Mask for details.)
        *
        * @return currently active mode

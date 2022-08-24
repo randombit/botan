@@ -230,7 +230,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
          {}
 
       /**
-       * Creates a XMSS_WOTS_PublicKey form a message and signature using
+       * Creates a XMSS_WOTS_PublicKey from a message and signature using
        * Algorithm 6 WOTS_pkFromSig defined in the XMSS standard. This
        * overload is used to verify a message using a public key.
        *
@@ -450,7 +450,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
        * Constructs a WOTS private key. Chains will be generated on demand
        * applying a hash function to a unique value generated from a secret
        * seed and a counter. The secret seed of length n, will be
-       * automatically generated using AutoSeeded_RNG(). "n" equals
+       * automatically generated using @p rng. "n" equals
        * the element size of the chosen WOTS security parameter set.
        *
        * @param oid Identifier for the selected signature method.

@@ -84,7 +84,7 @@ XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(ots_algorithm_t oid)
    m_len_2 = static_cast<size_t>(
                 floor(log2(m_len_1 * (wots_parameter() - 1)) / m_lg_w) + 1);
    BOTAN_ASSERT(m_len == m_len_1 + m_len_2, "Invalid XMSS WOTS parameter "
-                "\"len\" detedted.");
+                "\"len\" detected.");
    }
 
 secure_vector<uint8_t>

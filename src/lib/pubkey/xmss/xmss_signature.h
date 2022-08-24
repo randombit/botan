@@ -17,6 +17,9 @@
 
 namespace Botan {
 
+/**
+ * Helper class for marshalling an XMSS signature
+ */
 class XMSS_Signature final
    {
    public:

@@ -21,15 +21,21 @@ XMSS_WOTS_PublicKey::chain(secure_vector<uint8_t>& result,
                            const secure_vector<uint8_t>& seed,
                            XMSS_Hash& hash)
    {
+   BOTAN_ASSERT_NOMSG(start_idx + steps < m_wots_params.wots_parameter());
    secure_vector<uint8_t> prf_output(hash.output_length());
 
+   // Note that RFC 8391 defines this algorithm recursively (building up the
+   // iterations before any calculation) using 'steps' as the iterator and a
+   // recursion base with 'steps == 0'.
+   // Instead, we implement it iteratively using 'i' as iterator. This makes
+   // 'adrs.set_hash_address(i)' equivalent to 'ADRS.setHashAddress(i + s - 1)'.
    for(size_t i = start_idx;
          i < (start_idx + steps) && i < m_wots_params.wots_parameter();
          i++)
       {
       adrs.set_hash_address(static_cast<uint32_t>(i));
 
-      //Calculate tmp XOR bitmask
+      // Calculate tmp XOR bitmask
       adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Mask_Mode);
       hash.prf(prf_output, seed, adrs.bytes());
       xor_buf(result, prf_output, result.size());
@@ -37,7 +43,7 @@ XMSS_WOTS_PublicKey::chain(secure_vector<uint8_t>& result,
       // Calculate key
       adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Key_Mode);
 
-      //Calculate f(key, tmp XOR bitmask)
+      // Calculate f(key, tmp XOR bitmask)
       hash.prf(prf_output, seed, adrs.bytes());
       hash.f(result, prf_output, result);
       }
