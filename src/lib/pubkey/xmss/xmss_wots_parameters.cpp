@@ -91,6 +91,8 @@ secure_vector<uint8_t>
 XMSS_WOTS_Parameters::base_w(const secure_vector<uint8_t>& msg, size_t out_size) const
    {
    secure_vector<uint8_t> result;
+   result.reserve(out_size);
+
    size_t in = 0;
    size_t total = 0;
    size_t bits = 0;
