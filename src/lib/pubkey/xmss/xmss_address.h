@@ -9,6 +9,7 @@
 #define BOTAN_XMSS_ADDRESS_H_
 
 #include <botan/types.h>
+#include <botan/secmem.h>
 
 namespace Botan {
 
