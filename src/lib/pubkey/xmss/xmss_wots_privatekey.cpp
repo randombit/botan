@@ -41,7 +41,7 @@ XMSS_WOTS_PrivateKey::generate_public_key(XMSS_Address& adrs)
 
 void
 XMSS_WOTS_PrivateKey::generate_public_key(XMSS_WOTS_PublicKey& pub_key,
-                                          wots_keysig_t&& in_key_data,
+                                          wots_keysig_t in_key_data,
                                           XMSS_Address& adrs,
                                           XMSS_Hash& hash)
    {

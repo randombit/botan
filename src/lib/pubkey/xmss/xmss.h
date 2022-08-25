@@ -61,22 +61,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
        * @param public_seed Public seed value.
        **/
       XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
-                     const secure_vector<uint8_t>& root,
-                     const secure_vector<uint8_t>& public_seed)
-         : m_xmss_params(xmss_oid), m_wots_params(m_xmss_params.ots_oid()),
-           m_root(root), m_public_seed(public_seed) {}
-
-      /**
-       * Creates a new XMSS public key for a chosen XMSS signature method as
-       * well as pre-computed root node and public_seed values.
-       *
-       * @param xmss_oid Identifier for the selected XMSS signature method.
-       * @param root Root node value.
-       * @param public_seed Public seed value.
-       **/
-      XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
-                     secure_vector<uint8_t>&& root,
-                     secure_vector<uint8_t>&& public_seed)
+                     secure_vector<uint8_t> root,
+                     secure_vector<uint8_t> public_seed)
          : m_xmss_params(xmss_oid), m_wots_params(m_xmss_params.ots_oid()),
            m_root(std::move(root)), m_public_seed(std::move(public_seed)) {}
 
@@ -148,12 +134,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
          return m_root;
          }
 
-      void set_root(const secure_vector<uint8_t>& root)
-         {
-         m_root = root;
-         }
-
-      void set_root(secure_vector<uint8_t>&& root)
+      void set_root(secure_vector<uint8_t> root)
          {
          m_root = std::move(root);
          }
@@ -168,12 +149,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
          return m_public_seed;
          }
 
-      virtual void set_public_seed(const secure_vector<uint8_t>& public_seed)
-         {
-         m_public_seed = public_seed;
-         }
-
-      virtual void set_public_seed(secure_vector<uint8_t>&& public_seed)
+      virtual void set_public_seed(secure_vector<uint8_t> public_seed)
          {
          m_public_seed = std::move(public_seed);
          }
@@ -307,10 +283,10 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        **/
       XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                       size_t idx_leaf,
-                      const secure_vector<uint8_t>& wots_priv_seed,
-                      const secure_vector<uint8_t>& prf,
-                      const secure_vector<uint8_t>& root,
-                      const secure_vector<uint8_t>& public_seed);
+                      secure_vector<uint8_t> wots_priv_seed,
+                      secure_vector<uint8_t> prf,
+                      secure_vector<uint8_t> root,
+                      secure_vector<uint8_t> public_seed);
 
       bool stateful_operation() const override { return true; }
 
@@ -368,14 +344,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
          return m_prf;
          }
 
-      void set_public_seed(
-         const secure_vector<uint8_t>& public_seed) override
-         {
-         m_public_seed = public_seed;
-         m_wots_priv_key.set_public_seed(public_seed);
-         }
-
-      void set_public_seed(secure_vector<uint8_t>&& public_seed) override
+      void set_public_seed(secure_vector<uint8_t> public_seed) override
          {
          m_public_seed = std::move(public_seed);
          m_wots_priv_key.set_public_seed(m_public_seed);

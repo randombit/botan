@@ -26,21 +26,12 @@ class XMSS_WOTS_Addressed_PrivateKey final :
       public virtual Private_Key
    {
    public:
-      XMSS_WOTS_Addressed_PrivateKey(const XMSS_WOTS_PrivateKey& private_key)
-         : XMSS_WOTS_Addressed_PublicKey(private_key),
-           m_priv_key(private_key) {}
-
-      XMSS_WOTS_Addressed_PrivateKey(const XMSS_WOTS_PrivateKey& private_key,
-                                     const XMSS_Address& adrs)
-         : XMSS_WOTS_Addressed_PublicKey(private_key, adrs),
-           m_priv_key(private_key) {}
-
-      XMSS_WOTS_Addressed_PrivateKey(XMSS_WOTS_PrivateKey&& private_key)
+      XMSS_WOTS_Addressed_PrivateKey(XMSS_WOTS_PrivateKey private_key)
          : XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey(private_key)),
            m_priv_key(std::move(private_key)) {}
 
-      XMSS_WOTS_Addressed_PrivateKey(XMSS_WOTS_PrivateKey&& private_key,
-                                     XMSS_Address&& adrs)
+      XMSS_WOTS_Addressed_PrivateKey(XMSS_WOTS_PrivateKey private_key,
+                                     XMSS_Address adrs)
          : XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey(private_key),
                                          std::move(adrs)),
            m_priv_key(std::move(private_key)) {}

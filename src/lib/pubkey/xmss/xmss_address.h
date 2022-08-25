@@ -349,13 +349,7 @@ class XMSS_Address final
          set_type(type);
          }
 
-      XMSS_Address(const secure_vector<uint8_t>& data) : m_data(data)
-         {
-         BOTAN_ASSERT(m_data.size() == m_address_size,
-                      "XMSS_Address must be of 256 bits size.");
-         }
-
-      XMSS_Address(secure_vector<uint8_t>&& data) : m_data(std::move(data))
+      XMSS_Address(secure_vector<uint8_t> data) : m_data(std::move(data))
          {
          BOTAN_ASSERT(m_data.size() == m_address_size,
                       "XMSS_Address must be of 256 bits size.");
