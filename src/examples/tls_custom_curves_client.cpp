@@ -73,7 +73,7 @@ class Client_Credentials : public Botan::Credentials_Manager
          {
          // return a list of certificates of CAs we trust for tls server certificates,
          // e.g., all the certificates in the local directory "cas"
-         return { new Botan::Certificate_Store_In_Memory("cas") };
+         return {&m_cert_store};
          }
 
       std::vector<Botan::X509_Certificate> cert_chain(
@@ -84,7 +84,7 @@ class Client_Credentials : public Botan::Credentials_Manager
          // when using tls client authentication (optional), return
          // a certificate chain being sent to the tls server,
          // else an empty list
-         return std::vector<Botan::X509_Certificate>();
+         return {};
          }
 
       Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
@@ -95,6 +95,9 @@ class Client_Credentials : public Botan::Credentials_Manager
          // associated with the leaf certificate here
          return nullptr;
          }
+
+   private:
+      Botan::Certificate_Store_In_Memory m_cert_store{"cas"};
 };
 
 class Client_Policy : public Botan::TLS::Strict_Policy
@@ -165,4 +168,6 @@ int main()
       // send data to the tls server using client.send()
 
       }
+
+   return 0;
    }

@@ -1,6 +1,6 @@
+#include <botan/auto_rng.h>
 #include <botan/mac.h>
 #include <botan/hex.h>
-#include <botan/system_rng.h>
 
 #include <assert.h>
 
@@ -16,7 +16,7 @@ static std::string compute_mac(const std::string& msg, const Botan::secure_vecto
 
 int main()
    {
-   Botan::System_RNG rng;
+   Botan::AutoSeeded_RNG rng;
 
    const auto key = rng.random_vec(32); // 256 bit random key
 
@@ -28,4 +28,6 @@ int main()
    // Recomputing with original input message results in identical tag
    std::string tag3 = compute_mac("Message", key);
    assert(tag1 == tag3);
+
+   return 0;
    }

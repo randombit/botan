@@ -34,9 +34,11 @@ int main()
    if(verifier.check_signature(sig.data(), sig.size()))
       {
       std::cout << "Success." << std::endl;
+      return 0;
       }
    else
       {
       std::cout << "Error." << std::endl;
+      return 1;
       }
    }

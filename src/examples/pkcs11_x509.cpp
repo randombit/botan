@@ -30,4 +30,6 @@ int main()
 
    // load by handle
    Botan::PKCS11::PKCS11_X509_Certificate pkcs11_cert2( session, pkcs11_cert.handle() );
+
+   return 0;
    }

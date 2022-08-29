@@ -29,4 +29,6 @@ int main()
    /************ use PKCS#11 RNG to seed HMAC_DRBG *************/
    Botan::HMAC_DRBG drbg( Botan::MessageAuthenticationCode::create( "HMAC(SHA-512)" ), p11_rng );
    drbg.randomize( random.data(), random.size() );
+
+   return 0;
    }

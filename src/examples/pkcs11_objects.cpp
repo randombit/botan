@@ -56,4 +56,6 @@ int main()
 
    // destroy the object
    data_obj.destroy();
+
+   return 0;
    }

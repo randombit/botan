@@ -69,7 +69,7 @@ class Server_Credentials : public Botan::Credentials_Manager
          // if client authentication is required, this function
          // shall return a list of certificates of CAs we trust
          // for tls client certificates, otherwise return an empty list
-         return std::vector<Botan::Certificate_Store*>();
+         return {};
          }
 
       std::vector<Botan::X509_Certificate> cert_chain(
@@ -117,4 +117,6 @@ int main()
 
    // send data to the tls client using server.send()
    // ...
+
+   return 0;
    }

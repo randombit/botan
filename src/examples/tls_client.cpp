@@ -44,25 +44,20 @@ class Callbacks : public Botan::TLS::Callbacks
 /**
  * @brief Credentials storage for the tls client.
  *
- * It returns a list of trusted CA certificates from a local directory.
+ * It returns a list of trusted CA certificates.
+ * Here we base trust on the system managed trusted CA list.
  * TLS client authentication is disabled. See src/lib/tls/credentials_manager.h.
  */
 class Client_Credentials : public Botan::Credentials_Manager
    {
    public:
-      Client_Credentials()
-         {
-         // Here we base trust on the system managed trusted CA list
-         m_stores.push_back(new Botan::System_Certificate_Store);
-         }
-
       std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(
          const std::string& type,
          const std::string& context) override
          {
          // return a list of certificates of CAs we trust for tls server certificates
          // ownership of the pointers remains with Credentials_Manager
-         return m_stores;
+         return {&m_cert_store};
          }
 
       std::vector<Botan::X509_Certificate> cert_chain(
@@ -73,7 +68,7 @@ class Client_Credentials : public Botan::Credentials_Manager
          // when using tls client authentication (optional), return
          // a certificate chain being sent to the tls server,
          // else an empty list
-         return std::vector<Botan::X509_Certificate>();
+         return {};
          }
 
       Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
@@ -86,7 +81,7 @@ class Client_Credentials : public Botan::Credentials_Manager
          }
 
    private:
-      std::vector<Botan::Certificate_Store*> m_stores;
+      Botan::System_Certificate_Store m_cert_store;
 };
 
 int main()
@@ -114,4 +109,6 @@ int main()
 
       // send data to the tls server using client.send()
       }
+
+   return 0;
    }

@@ -60,4 +60,6 @@ int main()
 
    // change pin to old pin
    session.init_pin( pin );
+
+   return 0;
    }

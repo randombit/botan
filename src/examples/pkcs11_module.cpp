@@ -16,4 +16,6 @@ int main()
    // print library version
    std::cout << std::to_string( info.libraryVersion.major ) << "."
       << std::to_string( info.libraryVersion.minor ) << std::endl;
+
+   return 0;
    }

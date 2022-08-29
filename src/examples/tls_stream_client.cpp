@@ -20,11 +20,11 @@ class Credentials_Manager : public Botan::Credentials_Manager
       std::vector<Botan::Certificate_Store*>
       trusted_certificate_authorities(const std::string&, const std::string&) override
          {
-         return {&cert_store_};
+         return {&m_cert_store};
          }
 
    private:
-      Botan::System_Certificate_Store cert_store_;
+      Botan::System_Certificate_Store m_cert_store;
    };
 
 // a simple https client based on TLS::Stream
@@ -34,15 +34,15 @@ class client
       client(boost::asio::io_context&                 io_context,
                boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
                http::request<http::string_body>         req)
-         : request_(req)
-         , ctx_(credentials_mgr_,
-                  rng_,
-                  session_mgr_,
-                  policy_,
+         : m_request(req)
+         , m_ctx(m_credentials_mgr,
+                  m_rng,
+                  m_session_mgr,
+                  m_policy,
                   Botan::TLS::Server_Information())
-         , stream_(io_context, ctx_)
+         , m_stream(io_context, m_ctx)
          {
-         boost::asio::async_connect(stream_.lowest_layer(), endpoint_iterator,
+         boost::asio::async_connect(m_stream.lowest_layer(), endpoint_iterator,
                                     boost::bind(&client::handle_connect, this, _::error));
          }
 
@@ -53,7 +53,7 @@ class client
             std::cout << "Connect failed: " << error.message() << "\n";
             return;
             }
-         stream_.async_handshake(Botan::TLS::Connection_Side::CLIENT,
+         m_stream.async_handshake(Botan::TLS::Connection_Side::CLIENT,
                                  boost::bind(&client::handle_handshake, this, _::error));
          }
 
@@ -64,7 +64,7 @@ class client
             std::cout << "Handshake failed: " << error.message() << "\n";
             return;
             }
-         http::async_write(stream_, request_,
+         http::async_write(m_stream, m_request,
                            boost::bind(&client::handle_write, this, _::error, _::bytes_transferred));
          }
 
@@ -75,7 +75,7 @@ class client
             std::cout << "Write failed: " << error.message() << "\n";
             return;
             }
-         http::async_read(stream_, reply_, response_,
+         http::async_read(m_stream, m_reply, m_response,
                            boost::bind(&client::handle_read, this, _::error, _::bytes_transferred));
          }
 
@@ -84,7 +84,7 @@ class client
          if(!error)
             {
             std::cout << "Reply: ";
-            std::cout << response_.body() << "\n";
+            std::cout << m_response.body() << "\n";
             }
          else
             {
@@ -93,17 +93,17 @@ class client
          }
 
    private:
-      http::request<http::dynamic_body> request_;
-      http::response<http::string_body> response_;
-      boost::beast::flat_buffer         reply_;
+      http::request<http::dynamic_body> m_request;
+      http::response<http::string_body> m_response;
+      boost::beast::flat_buffer         m_reply;
 
-      Botan::TLS::Session_Manager_Noop session_mgr_;
-      Botan::AutoSeeded_RNG            rng_;
-      Credentials_Manager              credentials_mgr_;
-      Botan::TLS::Policy               policy_;
+      Botan::TLS::Session_Manager_Noop m_session_mgr;
+      Botan::AutoSeeded_RNG            m_rng;
+      Credentials_Manager              m_credentials_mgr;
+      Botan::TLS::Policy               m_policy;
 
-      Botan::TLS::Context                              ctx_;
-      Botan::TLS::Stream<boost::asio::ip::tcp::socket> stream_;
+      Botan::TLS::Context                              m_ctx;
+      Botan::TLS::Stream<boost::asio::ip::tcp::socket> m_stream;
    };
 
 int main()
@@ -123,4 +123,6 @@ int main()
    client c(io_context, iterator, req);
 
    io_context.run();
+
+   return 0;
    }

@@ -15,4 +15,6 @@ int main()
    [[maybe_unused]] bool success = module->C_GetSlotList(true, slot_ids);
 
    // C_Finalize is automatically called by the destructor of the Module
+
+   return 0;
    }

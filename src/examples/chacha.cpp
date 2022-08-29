@@ -12,9 +12,9 @@ int main()
    std::unique_ptr<Botan::StreamCipher> cipher(Botan::StreamCipher::create("ChaCha(20)"));
 
    //generate fresh nonce (IV)
-   std::unique_ptr<Botan::RandomNumberGenerator> rng(new Botan::AutoSeeded_RNG);
+   Botan::AutoSeeded_RNG rng;
    std::vector<uint8_t> iv(8);
-   rng->randomize(iv.data(),iv.size());
+   rng.randomize(iv.data(),iv.size());
 
    //set key and IV
    cipher->set_key(key);

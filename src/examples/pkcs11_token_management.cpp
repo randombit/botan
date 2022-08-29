@@ -39,4 +39,6 @@ int main()
 
    // change back
    Botan::PKCS11::change_so_pin( slot, test_pin, so_pin );
+
+   return 0;
    }
