@@ -4,18 +4,17 @@
 #include <iostream>
 #include <string>
 
-int main()
-   {
-   Botan::PKCS11::Module module( "C:\\pkcs11-middleware\\library.dll" );
+int main() {
+  Botan::PKCS11::Module module("C:\\pkcs11-middleware\\library.dll");
 
-   // Sometimes useful if a newly connected token is not detected by the PKCS#11 module
-   module.reload();
+  // Sometimes useful if a newly connected token is not detected by the PKCS#11 module
+  module.reload();
 
-   Botan::PKCS11::Info info = module.get_info();
+  Botan::PKCS11::Info info = module.get_info();
 
-   // print library version
-   std::cout << std::to_string( info.libraryVersion.major ) << "."
-      << std::to_string( info.libraryVersion.minor ) << std::endl;
+  // print library version
+  std::cout << std::to_string(info.libraryVersion.major) << "."
+            << std::to_string(info.libraryVersion.minor) << std::endl;
 
-   return 0;
-   }
+  return 0;
+}
