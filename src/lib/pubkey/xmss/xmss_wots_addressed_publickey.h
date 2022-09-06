@@ -24,18 +24,11 @@ namespace Botan {
 class XMSS_WOTS_Addressed_PublicKey : public virtual Public_Key
    {
    public:
-      XMSS_WOTS_Addressed_PublicKey(const XMSS_WOTS_PublicKey& public_key)
-         : m_pub_key(public_key), m_adrs() {}
-
-      XMSS_WOTS_Addressed_PublicKey(const XMSS_WOTS_PublicKey& public_key,
-                                    const XMSS_Address& adrs)
-         : m_pub_key(public_key), m_adrs(adrs) {}
-
-      XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey&& public_key)
+      XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey public_key)
          : m_pub_key(std::move(public_key)), m_adrs() {}
 
-      XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey&& public_key,
-                                    XMSS_Address&& adrs)
+      XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey public_key,
+                                    XMSS_Address adrs)
          : m_pub_key(std::move(public_key)), m_adrs(std::move(adrs)) {}
 
       const XMSS_WOTS_PublicKey& public_key() const { return m_pub_key; }

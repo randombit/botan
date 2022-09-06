@@ -118,16 +118,16 @@ XMSS_PrivateKey::XMSS_PrivateKey(
 
 XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                  size_t idx_leaf,
-                                 const secure_vector<uint8_t>& wots_priv_seed,
-                                 const secure_vector<uint8_t>& prf,
-                                 const secure_vector<uint8_t>& root,
-                                 const secure_vector<uint8_t>& public_seed)
-   : XMSS_PublicKey(xmss_algo_id, root, public_seed),
+                                 secure_vector<uint8_t> wots_priv_seed,
+                                 secure_vector<uint8_t> prf,
+                                 secure_vector<uint8_t> root,
+                                 secure_vector<uint8_t> public_seed)
+   : XMSS_PublicKey(xmss_algo_id, std::move(root), public_seed /* copied on purpose */),
      m_wots_priv_key(XMSS_PublicKey::m_xmss_params.ots_oid(),
-                     public_seed,
-                     wots_priv_seed),
+                     std::move(public_seed),
+                     std::move(wots_priv_seed)),
      m_hash(XMSS_PublicKey::m_xmss_params.hash_function_name()),
-     m_prf(prf),
+     m_prf(std::move(prf)),
      m_index_reg(XMSS_Index_Registry::get_instance())
    {
    set_unused_leaf_index(idx_leaf);

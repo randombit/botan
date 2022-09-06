@@ -9,6 +9,7 @@
 #define BOTAN_XMSS_ADDRESS_H_
 
 #include <botan/types.h>
+#include <botan/secmem.h>
 
 namespace Botan {
 
@@ -115,7 +116,7 @@ class XMSS_Address final
          }
 
       /**
-       * Retrieves the mode the address os currently set to. (See
+       * Retrieves the mode the address is currently set to. (See
        * XMSS_Address::Key_Mask for details.)
        *
        * @return currently active mode
@@ -349,13 +350,7 @@ class XMSS_Address final
          set_type(type);
          }
 
-      XMSS_Address(const secure_vector<uint8_t>& data) : m_data(data)
-         {
-         BOTAN_ASSERT(m_data.size() == m_address_size,
-                      "XMSS_Address must be of 256 bits size.");
-         }
-
-      XMSS_Address(secure_vector<uint8_t>&& data) : m_data(std::move(data))
+      XMSS_Address(secure_vector<uint8_t> data) : m_data(std::move(data))
          {
          BOTAN_ASSERT(m_data.size() == m_address_size,
                       "XMSS_Address must be of 256 bits size.");

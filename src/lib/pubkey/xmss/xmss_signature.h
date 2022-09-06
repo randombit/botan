@@ -17,6 +17,9 @@
 
 namespace Botan {
 
+/**
+ * Helper class for marshalling an XMSS signature
+ */
 class XMSS_Signature final
    {
    public:
@@ -40,22 +43,8 @@ class XMSS_Signature final
        * @param tree_sig A tree signature.
        **/
       XMSS_Signature(size_t leaf_idx,
-                     const secure_vector<uint8_t>& randomness,
-                     const XMSS_WOTS_PublicKey::TreeSignature& tree_sig)
-         : m_leaf_idx(leaf_idx), m_randomness(randomness),
-           m_tree_sig(tree_sig) {}
-
-      /**
-       * Creates an XMSS Signature from a leaf index used for signature
-       * generation, a random value and a tree signature.
-       *
-       * @param leaf_idx Leaf index used to generate the signature.
-       * @param randomness A random value.
-       * @param tree_sig A tree signature.
-       **/
-      XMSS_Signature(size_t leaf_idx,
-                     secure_vector<uint8_t>&& randomness,
-                     XMSS_WOTS_PublicKey::TreeSignature&& tree_sig)
+                     secure_vector<uint8_t> randomness,
+                     XMSS_WOTS_PublicKey::TreeSignature tree_sig)
          : m_leaf_idx(leaf_idx), m_randomness(std::move(randomness)),
            m_tree_sig(std::move(tree_sig)) {}
 
@@ -72,12 +61,7 @@ class XMSS_Signature final
          return m_randomness;
          }
 
-      void set_randomness(const secure_vector<uint8_t>& randomness)
-         {
-         m_randomness = randomness;
-         }
-
-      void set_randomness(secure_vector<uint8_t>&& randomness)
+      void set_randomness(secure_vector<uint8_t> randomness)
          {
          m_randomness = std::move(randomness);
          }
@@ -92,12 +76,7 @@ class XMSS_Signature final
          return m_tree_sig;
          }
 
-      void set_tree(const XMSS_WOTS_PublicKey::TreeSignature& tree_sig)
-         {
-         m_tree_sig = tree_sig;
-         }
-
-      void set_tree(XMSS_WOTS_PublicKey::TreeSignature&& tree_sig)
+      void set_tree(XMSS_WOTS_PublicKey::TreeSignature tree_sig)
          {
          m_tree_sig = std::move(tree_sig);
          }

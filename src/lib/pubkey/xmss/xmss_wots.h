@@ -139,13 +139,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
          public:
             TreeSignature() = default;
 
-            TreeSignature(const wots_keysig_t& ots_sig,
-                          const wots_keysig_t& auth_path)
-               : m_ots_sig(ots_sig), m_auth_path(auth_path)
-               {}
-
-            TreeSignature(wots_keysig_t&& ots_sig,
-                          wots_keysig_t&& auth_path)
+            TreeSignature(wots_keysig_t ots_sig,
+                          wots_keysig_t auth_path)
                : m_ots_sig(std::move(ots_sig)),
                  m_auth_path(std::move(auth_path))
                {}
@@ -213,7 +208,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
                           secure_vector<uint8_t> public_seed)
          : m_wots_params(oid),
            m_hash(m_wots_params.hash_function_name()),
-           m_public_seed(public_seed) {}
+           m_public_seed(std::move(public_seed)) {}
 
       /**
        * Creates a XMSS_WOTS_PublicKey for the signature method identified by
@@ -226,8 +221,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
        * @param key Precomputed raw key data of the XMSS_WOTS_PublicKey.
        **/
       XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                          secure_vector<uint8_t>&& public_seed,
-                          wots_keysig_t&& key)
+                          secure_vector<uint8_t> public_seed,
+                          wots_keysig_t key)
          : m_wots_params(oid),
            m_hash(m_wots_params.hash_function_name()),
            m_key(std::move(key)),
@@ -235,26 +230,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
          {}
 
       /**
-       * Creates a XMSS_WOTS_PublicKey for the signature method identified by
-       * oid. The public seed will be initialized with a precomputed seed and
-       * and precomputed key data which should be derived from a
-       * XMSS_WOTS_PrivateKey.
-       *
-       * @param oid Identifier for the selected signature methods.
-       * @param public_seed A precomputed public seed of n-bytes length.
-       * @param key Precomputed raw key data of the XMSS_WOTS_PublicKey.
-       **/
-      XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                          const secure_vector<uint8_t>& public_seed,
-                          const wots_keysig_t& key)
-         : m_wots_params(oid),
-           m_hash(m_wots_params.hash_function_name()),
-           m_key(key),
-           m_public_seed(public_seed)
-         {}
-
-      /**
-       * Creates a XMSS_WOTS_PublicKey form a message and signature using
+       * Creates a XMSS_WOTS_PublicKey from a message and signature using
        * Algorithm 6 WOTS_pkFromSig defined in the XMSS standard. This
        * overload is used to verify a message using a public key.
        *
@@ -304,12 +280,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
 
       secure_vector<uint8_t>& public_seed() { return m_public_seed; }
 
-      void set_public_seed(const secure_vector<uint8_t>& public_seed)
-         {
-         m_public_seed = public_seed;
-         }
-
-      void set_public_seed(secure_vector<uint8_t>&& public_seed)
+      void set_public_seed(secure_vector<uint8_t> public_seed)
          {
          m_public_seed = std::move(public_seed);
          }
@@ -318,12 +289,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
 
       wots_keysig_t& key_data() { return m_key; }
 
-      void set_key_data(const wots_keysig_t& key_data)
-         {
-         m_key = key_data;
-         }
-
-      void set_key_data(wots_keysig_t&& key_data)
+      void set_key_data(wots_keysig_t key_data)
          {
          m_key = std::move(key_data);
          }
@@ -484,7 +450,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
        * Constructs a WOTS private key. Chains will be generated on demand
        * applying a hash function to a unique value generated from a secret
        * seed and a counter. The secret seed of length n, will be
-       * automatically generated using AutoSeeded_RNG(). "n" equals
+       * automatically generated using @p rng. "n" equals
        * the element size of the chosen WOTS security parameter set.
        *
        * @param oid Identifier for the selected signature method.
@@ -493,9 +459,9 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
        * @param rng A random number generator to use for key generation.
        **/
       XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                           const secure_vector<uint8_t>& public_seed,
+                           secure_vector<uint8_t> public_seed,
                            RandomNumberGenerator& rng)
-         : XMSS_WOTS_PublicKey(oid, public_seed),
+         : XMSS_WOTS_PublicKey(oid, std::move(public_seed)),
            m_private_seed(rng.random_vec(m_wots_params.element_size()))
          {
          set_key_data(generate(m_private_seed));
@@ -513,8 +479,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
        *        of public keys derived from this private key.
        **/
       XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                           const secure_vector<uint8_t>& public_seed)
-         : XMSS_WOTS_PublicKey(oid, public_seed)
+                           secure_vector<uint8_t> public_seed)
+         : XMSS_WOTS_PublicKey(oid, std::move(public_seed))
          {}
 
       /**
@@ -528,10 +494,10 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
        * @param private_seed A secret uniformly random n-byte value.
        **/
       XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                           const secure_vector<uint8_t>& public_seed,
-                           const secure_vector<uint8_t>& private_seed)
-         : XMSS_WOTS_PublicKey(oid, public_seed),
-           m_private_seed(private_seed)
+                           secure_vector<uint8_t> public_seed,
+                           secure_vector<uint8_t> private_seed)
+         : XMSS_WOTS_PublicKey(oid, std::move(public_seed)),
+           m_private_seed(std::move(private_seed))
          {
          set_key_data(generate(private_seed));
          }
@@ -624,7 +590,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
        *        executing generate_public_key.
        **/
       void generate_public_key(XMSS_WOTS_PublicKey& pub_key,
-                               wots_keysig_t&& in_key_data,
+                               wots_keysig_t in_key_data,
                                XMSS_Address& adrs,
                                XMSS_Hash& hash);
       /**
@@ -640,10 +606,10 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
        *        the WOTS+ key pair within a greater structure.
        **/
       inline void generate_public_key(XMSS_WOTS_PublicKey& pub_key,
-                                      wots_keysig_t&& in_key_data,
+                                      wots_keysig_t in_key_data,
                                       XMSS_Address& adrs)
          {
-         generate_public_key(pub_key, std::forward<wots_keysig_t>(in_key_data), adrs, m_hash);
+         generate_public_key(pub_key, std::move(in_key_data), adrs, m_hash);
          }
 
       /**
@@ -699,18 +665,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
        *
        * @param private_seed Uniformly random n-byte value.
        **/
-      void set_private_seed(const secure_vector<uint8_t>& private_seed)
-         {
-         m_private_seed = private_seed;
-         }
-
-      /**
-       * Sets the secret seed used to generate WOTS+ chains. The seed
-       * should be a uniformly random n-byte value.
-       *
-       * @param private_seed Uniformly random n-byte value.
-       **/
-      void set_private_seed(secure_vector<uint8_t>&& private_seed)
+      void set_private_seed(secure_vector<uint8_t> private_seed)
          {
          m_private_seed = std::move(private_seed);
          }
