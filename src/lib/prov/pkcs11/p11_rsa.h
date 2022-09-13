@@ -198,6 +198,16 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
       /// @return the exported RSA private key
       RSA_PrivateKey export_key() const;
 
+      /**
+       * If enabled, the PKCS#11 module gets to perform the raw RSA decryption
+       * using a blinded ciphertext. The EME unpadding is performed in software.
+       * This essenially hides the plaintext value from the PKCS#11 module.
+       *
+       * @param software_padding  if true, perform the unpadding in software
+       */
+      void set_use_software_padding(bool software_padding) { m_use_software_padding = software_padding; }
+      bool uses_software_padding() const { return m_use_software_padding; }
+
       secure_vector<uint8_t> private_key_bits() const override;
 
       std::unique_ptr<Public_Key> public_key() const override;
@@ -211,6 +221,9 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
          create_signature_op(RandomNumberGenerator& rng,
                              const std::string& params,
                              const std::string& provider) const override;
+
+   private:
+      bool m_use_software_padding;
    };
 
 using PKCS11_RSA_KeyPair = std::pair<PKCS11_RSA_PublicKey, PKCS11_RSA_PrivateKey>;

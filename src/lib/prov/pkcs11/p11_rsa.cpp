@@ -13,6 +13,8 @@
 
 #include <botan/internal/p11_mechanism.h>
 #include <botan/internal/pk_ops.h>
+#include <botan/internal/pk_ops_impl.h>
+#include <botan/pubkey.h>
 #include <botan/rng.h>
 #include <botan/internal/blinding.h>
 
@@ -61,13 +63,14 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, ObjectHandle hand
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, const RSA_PrivateKeyImportProperties& priv_key_props)
    : Object(session, priv_key_props),
      RSA_PublicKey(priv_key_props.modulus(),
-                   BigInt::decode(get_attribute_value(AttributeType::PublicExponent)))
+                   BigInt::decode(get_attribute_value(AttributeType::PublicExponent))),
+     m_use_software_padding(false)
    {
    }
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, uint32_t bits,
                                              const RSA_PrivateKeyGenerationProperties& priv_key_props)
-   : Object(session), RSA_PublicKey()
+   : Object(session), RSA_PublicKey(), m_use_software_padding(false)
    {
    RSA_PublicKeyGenerationProperties pub_key_props(bits);
    pub_key_props.set_encrypt(true);
@@ -169,6 +172,32 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
       MechanismWrapper m_mechanism;
       size_t m_bits = 0;
       Blinder m_blinder;
+   };
+
+// note: multiple-part decryption operations (with C_DecryptUpdate/C_DecryptFinal)
+// are not supported (PK_Ops::Decryption does not provide an `update` method)
+class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryption_with_EME
+   {
+   public:
+      PKCS11_RSA_Decryption_Operation_Software_EME(const PKCS11_RSA_PrivateKey& key,
+                                                   const std::string& padding,
+                                                   RandomNumberGenerator& rng)
+         : PK_Ops::Decryption_with_EME(padding)
+         , m_raw_decryptor(key, rng, "Raw")
+         {}
+
+      size_t plaintext_length(size_t ctext_len) const override
+         {
+         return m_raw_decryptor.plaintext_length(ctext_len);
+         }
+
+      secure_vector<uint8_t> raw_decrypt(const uint8_t input[], size_t input_len) override
+         {
+         return m_raw_decryptor.decrypt(input, input_len);
+         }
+
+   private:
+      Botan::PK_Decryptor_EME m_raw_decryptor;
    };
 
 // note: multiple-part encryption operations (with C_EncryptUpdate/C_EncryptFinal)
@@ -345,7 +374,14 @@ PKCS11_RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
                                             const std::string& params,
                                             const std::string& /*provider*/) const
    {
-   return std::make_unique<PKCS11_RSA_Decryption_Operation>(*this, params, rng);
+   if(params != "Raw" && m_use_software_padding)
+      {
+      return std::make_unique<PKCS11_RSA_Decryption_Operation_Software_EME>(*this, params, rng);
+      }
+   else
+      {
+      return std::make_unique<PKCS11_RSA_Decryption_Operation>(*this, params, rng);
+      }
    }
 
 std::unique_ptr<PK_Ops::Signature>
