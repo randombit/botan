@@ -23,6 +23,16 @@ namespace {
    */
    const size_t HWRNG_RETRIES = 10;
 
+#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+   /**
+    * PowerISA 3.0 p.78:
+    *    When the error value is obtained, software is expected to repeat the
+    *    operation. [...] The recommended number of attempts may be
+    *    implementation specific. In the absence of other guidance, ten attempts
+    *    should be adequate.
+    */
+   const size_t HWRNG_RETRIES = 10;
+
 #else
    /*
    * Lacking specific guidance we give the CPU quite a bit of leeway
