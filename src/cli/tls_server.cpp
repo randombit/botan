@@ -258,7 +258,8 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
 
          if(m_is_tcp)
             {
-            if(::listen(fd, 100) != 0)
+            constexpr int backlog = std::min(100, SOMAXCONN);
+            if(::listen(fd, backlog) != 0)
                {
                close_socket(fd);
                throw CLI_Error("listen failed");
