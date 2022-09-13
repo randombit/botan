@@ -44,6 +44,7 @@ version_info = parse_version_file('../../build-data/version.txt')
 version_major = version_info['release_major']
 version_minor = version_info['release_minor']
 version_patch = version_info['release_patch']
+version_suffix = version_info['release_suffix']
 
 is_website_build = check_for_tag('website')
 
@@ -58,10 +59,10 @@ source_encoding = 'utf-8-sig'
 master_doc = 'contents'
 
 project = u'botan'
-copyright = u'2000-2017, The Botan Authors'
+copyright = u'2000-2022, The Botan Authors'
 
 version = '%d.%d' % (version_major, version_minor)
-release = '%d.%d.%d' % (version_major, version_minor, version_patch)
+release = '%d.%d.%d%s' % (version_major, version_minor, version_patch, version_suffix)
 
 #today = ''
 today_fmt = '%Y-%m-%d'
