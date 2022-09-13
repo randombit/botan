@@ -2,6 +2,11 @@
 PROCESSOR_RNG -> 20200508
 </defines>
 
+<module_info>
+name -> "Processor RNG"
+brief -> "Directly invokes a CPU specific instruction to generate random numbers"
+</module_info>
+
 <cc>
 gcc
 clang

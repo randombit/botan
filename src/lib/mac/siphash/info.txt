@@ -1,3 +1,7 @@
 <defines>
 SIPHASH -> 20150110
 </defines>
+
+<module_info>
+name -> "SipHash"
+</module_info>

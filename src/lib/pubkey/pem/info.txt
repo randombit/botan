@@ -2,6 +2,11 @@
 PEM_CODEC -> 20131128
 </defines>
 
+<module_info>
+name -> "PEM"
+brief -> "Helpers and utilities for handling PEM containers"
+</module_info>
+
 <requires>
 base64
 </requires>

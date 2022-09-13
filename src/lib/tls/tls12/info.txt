@@ -2,6 +2,10 @@
 TLS_12 -> 20210608
 </defines>
 
+<module_info>
+name -> "TLS 1.2"
+</module_info>
+
 <header:public>
 </header:public>
 

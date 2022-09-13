@@ -2,6 +2,10 @@
 AEAD_OCB -> 20131128
 </defines>
 
+<module_info>
+name -> "OCB"
+</module_info>
+
 <requires>
 block
 poly_dbl

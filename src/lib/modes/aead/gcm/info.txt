@@ -2,6 +2,10 @@
 AEAD_GCM -> 20131128
 </defines>
 
+<module_info>
+name -> "GCM"
+</module_info>
+
 <requires>
 block
 ctr

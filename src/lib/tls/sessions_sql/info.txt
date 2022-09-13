@@ -2,6 +2,11 @@
 TLS_SESSION_MANAGER_SQL_DB -> 20141219
 </defines>
 
+<module_info>
+name -> "SQL Session Manager"
+brief -> "TLS Session Manager based on an SQL database"
+</module_info>
+
 <requires>
 pbkdf2
 </requires>

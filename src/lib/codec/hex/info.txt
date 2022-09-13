@@ -2,6 +2,11 @@
 HEX_CODEC -> 20131128
 </defines>
 
+<module_info>
+name -> "Hex"
+brief -> "Hex encoder and decoder"
+</module_info>
+
 <header:public>
 hex.h
 </header:public>

@@ -2,6 +2,10 @@
 ED25519 -> 20170607
 </defines>
 
+<module_info>
+name -> "Ed25519"
+</module_info>
+
 <requires>
 sha2_64
 </requires>

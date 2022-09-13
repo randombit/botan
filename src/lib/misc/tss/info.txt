@@ -2,6 +2,11 @@
 THRESHOLD_SECRET_SHARING -> 20131128
 </defines>
 
+<module_info>
+name -> "Threshold Secret Sharing"
+brief -> "Implementation based on draft-mcgrew-tss-03"
+</module_info>
+
 <requires>
 rng
 hex

@@ -2,6 +2,10 @@
 XMSS_RFC8391 -> 20201101
 </defines>
 
+<module_info>
+name -> "XMSS"
+</module_info>
+
 <header:public>
 xmss.h
 xmss_hash.h

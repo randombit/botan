@@ -2,6 +2,11 @@
 TPM -> 20151126
 </defines>
 
+<module_info>
+name -> "TPM"
+brief -> "Wrappers and Utilites to interact with TPMs"
+</module_info>
+
 load_on vendor
 
 <libs>

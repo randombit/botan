@@ -1,3 +1,7 @@
 <defines>
 CAMELLIA -> 20150922
 </defines>
+
+<module_info>
+name -> "Camellia"
+</module_info>

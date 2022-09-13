@@ -2,6 +2,11 @@
 BASE64_CODEC -> 20131128
 </defines>
 
+<module_info>
+name -> "Base64"
+brief -> "Base64 encoder and decoder"
+</module_info>
+
 <header:public>
 base64.h
 </header:public>

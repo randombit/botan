@@ -2,6 +2,10 @@
 SHAKE -> 20161009
 </defines>
 
+<module_info>
+name -> "SHAKE"
+</module_info>
+
 <requires>
 sha3
 </requires>

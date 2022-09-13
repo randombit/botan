@@ -1,3 +1,7 @@
 <defines>
 GOST_28147_89 -> 20131128
 </defines>
+
+<module_info>
+name -> "GOST 28147-89"
+</module_info>

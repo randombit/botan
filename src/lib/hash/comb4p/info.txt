@@ -1,3 +1,7 @@
 <defines>
 COMB4P -> 20131128
 </defines>
+
+<module_info>
+name -> "Comb4P"
+</module_info>

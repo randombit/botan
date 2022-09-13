@@ -2,6 +2,10 @@
 ISO_9796 -> 20161121
 </defines>
 
+<module_info>
+name -> "ISO-9796-2"
+</module_info>
+
 <requires>
 mgf1
 hash_id

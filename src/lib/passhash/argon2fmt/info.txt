@@ -2,6 +2,11 @@
 ARGON2_FMT -> 20210407
 </defines>
 
+<module_info>
+name -> "Argon2 Formatted"
+brief -> "Generates formatted Argon2 password hash outputs"
+</module_info>
+
 <requires>
 argon2
 base64

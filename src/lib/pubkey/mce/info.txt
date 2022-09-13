@@ -2,6 +2,10 @@
 MCELIECE -> 20150922
 </defines>
 
+<module_info>
+name -> "McEliece"
+</module_info>
+
 <header:public>
 mceliece.h
 </header:public>

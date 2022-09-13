@@ -2,6 +2,11 @@
 AES_ARMV8 -> 20170903
 </defines>
 
+<module_info>
+name -> "AES ARMv8"
+brief -> "AES using ARMv8 crypto instructions"
+</module_info>
+
 <isa>
 armv8crypto
 </isa>

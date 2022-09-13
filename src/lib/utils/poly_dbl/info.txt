@@ -2,6 +2,10 @@
 POLY_DBL -> 20170927
 </defines>
 
+<module_info>
+name -> "Polynomial Doubling"
+</module_info>
+
 <header:internal>
 poly_dbl.h
 </header:internal>

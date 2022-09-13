@@ -2,6 +2,11 @@
 LOCKING_ALLOCATOR -> 20131128
 </defines>
 
+<module_info>
+name -> "Locking Allocator"
+brief -> "STL allocator using mlock to lock memory"
+</module_info>
+
 <os_features>
 posix1
 virtual_lock

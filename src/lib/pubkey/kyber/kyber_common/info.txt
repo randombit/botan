@@ -2,6 +2,12 @@
 KYBER_COMMON -> 20220107
 </defines>
 
+<module_info>
+name -> "Kyber (common)"
+brief -> "Base implementation of CRYSTALS-Kyber"
+type -> "Internal"
+</module_info>
+
 <requires>
 pubkey
 hash

@@ -2,6 +2,11 @@
 ZFEC_VPERM -> 20211211
 </defines>
 
+<module_info>
+name -> "ZFEC Vector Permutation"
+brief -> "ZFEC using Vector Permutation Instructions"
+</module_info>
+
 <isa>
 x86_32:sse2
 x86_64:sse2

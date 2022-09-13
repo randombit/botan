@@ -2,6 +2,11 @@
 RFC6979_GENERATOR -> 20140321
 </defines>
 
+<module_info>
+name -> "RFC 6979"
+brief -> "RFC 6979 Deterministic Nonce Generator"
+</module_info>
+
 <requires>
 bigint
 hmac_drbg

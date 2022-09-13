@@ -2,6 +2,11 @@
 BASE58_CODEC -> 20181209
 </defines>
 
+<module_info>
+name -> "Base58"
+brief -> "Base58 encoder and decoder"
+</module_info>
+
 <requires>
 sha2_32
 bigint

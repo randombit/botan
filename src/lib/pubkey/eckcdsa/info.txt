@@ -2,6 +2,10 @@
 ECKCDSA -> 20160413
 </defines>
 
+<module_info>
+name -> "ECKCDSA"
+</module_info>
+
 <requires>
 asn1
 bigint

@@ -1,0 +1,5 @@
+<module_info>
+name -> "Miscellaneous"
+brief -> "Odds and ends: Algorithms and protocols that don't fit any of the other modules"
+type -> "Virtual"
+</module_info>

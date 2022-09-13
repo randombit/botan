@@ -2,6 +2,10 @@
 SOCKETS -> 20171216
 </defines>
 
+<module_info>
+name -> "Socket"
+</module_info>
+
 <header:internal>
 uri.h
 socket.h

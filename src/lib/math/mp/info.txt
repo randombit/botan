@@ -2,6 +2,11 @@
 BIGINT_MP -> 20151225
 </defines>
 
+<module_info>
+name -> "Big Integer (Low-Level)"
+brief -> "Low level big integer math algorithms"
+</module_info>
+
 <header:internal>
 mp_core.h
 mp_asmi.h

@@ -2,6 +2,11 @@
 DL_PUBLIC_KEY_FAMILY -> 20131128
 </defines>
 
+<module_info>
+name -> "Discrete Logarithm"
+brief -> "Base classes for discrete logarithm based schemes"
+</module_info>
+
 <requires>
 asn1
 dl_group

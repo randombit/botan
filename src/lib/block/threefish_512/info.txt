@@ -1,3 +1,7 @@
 <defines>
 THREEFISH_512 -> 20131224
 </defines>
+
+<module_info>
+name -> "Threefish-512"
+</module_info>

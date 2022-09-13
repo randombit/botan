@@ -1,3 +1,7 @@
 <defines>
 AES -> 20131128
 </defines>
+
+<module_info>
+name -> "AES"
+</module_info>

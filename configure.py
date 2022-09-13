@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# pylint: disable=too-many-lines
+
 """
 Configuration program for botan
 
@@ -794,10 +796,13 @@ class InfoObject(object):
         self.lives_in = dirname
         if basename == 'info.txt':
             (obj_dir, self.basename) = os.path.split(dirname)
-            if os.access(os.path.join(obj_dir, 'info.txt'), os.R_OK):
-                self.parent_module = os.path.basename(obj_dir)
-            else:
-                self.parent_module = None
+            self.parent_module = None
+
+            while obj_dir:
+                if os.access(os.path.join(obj_dir, 'info.txt'), os.R_OK):
+                    self.parent_module = os.path.basename(obj_dir)
+                    break
+                (obj_dir, _) = os.path.split(obj_dir)
         else:
             self.basename = basename.replace('.txt', '')
 
@@ -814,7 +819,7 @@ class ModuleInfo(InfoObject):
             infofile,
             ['header:internal', 'header:public', 'header:external', 'requires',
              'os_features', 'arch', 'isa', 'cc', 'comment', 'warning'],
-            ['defines', 'libs', 'frameworks'],
+            ['defines', 'libs', 'frameworks', 'module_info'],
             {
                 'load_on': 'auto',
                 'endian': 'any',
@@ -872,6 +877,7 @@ class ModuleInfo(InfoObject):
         self.requires = lex.requires
         self.warning = combine_lines(lex.warning)
         self.endian = lex.endian
+        self._parse_module_info(lex)
 
         # Modify members
         self.source = [normalize_source_path(os.path.join(self.lives_in, s)) for s in self.source]
@@ -893,6 +899,23 @@ class ModuleInfo(InfoObject):
         intersect_check('public', self.header_public, 'internal', self.header_internal)
         intersect_check('public', self.header_public, 'external', self.header_external)
         intersect_check('external', self.header_external, 'internal', self.header_internal)
+
+        # Check module type constraints
+        source_file_count = len(all_source_files) + len(all_header_files)
+        if self.is_virtual() and source_file_count > 0:
+            logging.error("Module '%s' is virtual but contains %d source code files", self.basename, source_file_count)
+
+    def _parse_module_info(self, lex):
+        try:
+            info = lex.module_info
+            self.name = info["name"]
+            self.brief = info["brief"] if "brief" in info else None
+            self.type = info["type"] if "type" in info else "Public"
+        except:
+            raise InternalError("Module '%s' does not contain a <module_info> section with at least a documentation-friendly 'name' definition" % self.basename)
+
+        if self.type not in ["Public", "Internal", "Virtual"]:
+            raise InternalError("Module '%s' has an unknown type: %s" % (self.basename, self.type))
 
     @staticmethod
     def _validate_defines_content(defines):
@@ -1069,11 +1092,34 @@ class ModuleInfo(InfoObject):
         about any that do not
         """
 
-        missing = [s for s in self.dependencies(None) if s not in modules]
+        def is_dependency_on_virtual(this_module, dependency):
+            if not dependency.is_virtual():
+                return False
 
-        if missing:
-            logging.error("Module '%s', dep of '%s', does not exist",
-                          missing, self.basename)
+            if this_module.parent_module == dependency.basename:
+                return False
+
+            return True
+
+        missing = [s for s in self.dependencies(None) if s not in modules or is_dependency_on_virtual(self, modules[s])]
+
+        for modname in missing:
+            if modname not in modules:
+                logging.error("Module '%s', dep of '%s', does not exist",
+                              missing, self.basename)
+            else:
+                assert modules[modname].is_virtual()
+                logging.error("Module '%s' is virtual and cannot be depended on by '%s'",
+                              modname, self.basename)
+
+    def is_public(self):
+        return self.type == "Public"
+
+    def is_internal(self):
+        return self.type == "Internal"
+
+    def is_virtual(self):
+        return self.type == "Virtual"
 
 class ModulePolicyInfo(InfoObject):
     def __init__(self, infofile):
@@ -2277,15 +2323,19 @@ class ModulesChooser(object):
         return True
 
     @staticmethod
-    def _display_module_information_unused(skipped_modules):
+    def _remove_virtual_modules(all_modules, modnames):
+        return [mod for mod in modnames if not all_modules[mod].is_virtual()]
+
+    @classmethod
+    def _display_module_information_unused(cls, all_modules, skipped_modules):
         for reason in sorted(skipped_modules.keys()):
-            disabled_mods = sorted(skipped_modules[reason])
+            disabled_mods = cls._remove_virtual_modules(all_modules, sorted(skipped_modules[reason]))
             if disabled_mods:
                 logging.info('Skipping (%s): %s', reason, ' '.join(disabled_mods))
 
-    @staticmethod
-    def _display_module_information_to_load(all_modules, modules_to_load):
-        sorted_modules_to_load = sorted(modules_to_load)
+    @classmethod
+    def _display_module_information_to_load(cls, all_modules, modules_to_load):
+        sorted_modules_to_load = cls._remove_virtual_modules(all_modules, sorted(modules_to_load))
 
         for modname in sorted_modules_to_load:
             if all_modules[modname].comment:
@@ -2319,23 +2369,31 @@ class ModulesChooser(object):
         for modname in enabled_modules:
             if modname not in modules:
                 logging.error("Module not found: %s", modname)
+            if not modules[modname].is_public():
+                logging.error("Module '%s' is meant for internal use only", modname)
 
         for modname in disabled_modules:
             if modname not in modules:
                 logging.warning("Disabled module not found: %s", modname)
+            if not modules[modname].is_public():
+                logging.error("Module '%s' is meant for internal use only", modname)
 
-    def _handle_by_module_policy(self, modname, usable):
+    def _handle_by_module_policy(self, modname, module, usable):
         if self._module_policy is not None:
             if modname in self._module_policy.required:
                 if not usable:
                     logging.error('Module policy requires module %s not usable on this platform', modname)
                 elif modname in self._options.disabled_modules:
                     logging.error('Module %s was disabled but is required by policy', modname)
+                elif module.is_virtual():
+                    logging.error("Module %s is meant for internal use only", modname)
                 self._to_load.add(modname)
                 return True
             elif modname in self._module_policy.if_available:
                 if modname in self._options.disabled_modules:
                     self._not_using_because['disabled by user'].add(modname)
+                elif module.is_virtual():
+                    logging.error("Module %s is meant for internal use only", modname)
                 elif usable:
                     logging.debug('Enabling optional module %s', modname)
                     self._to_load.add(modname)
@@ -2449,7 +2507,7 @@ class ModulesChooser(object):
         for (modname, module) in self._modules.items():
             usable = self._check_usable(module, modname)
 
-            module_handled = self._handle_by_module_policy(modname, usable)
+            module_handled = self._handle_by_module_policy(modname, module, usable)
             if module_handled:
                 continue
 
@@ -2475,7 +2533,7 @@ class ModulesChooser(object):
             self._not_using_because['not requested'].add(not_a_dep)
 
         ModulesChooser._validate_state(self._to_load, self._not_using_because)
-        ModulesChooser._display_module_information_unused(self._not_using_because)
+        ModulesChooser._display_module_information_unused(self._modules, self._not_using_because)
         ModulesChooser._display_module_information_to_load(self._modules, self._to_load)
 
         return self._to_load
@@ -3342,7 +3400,8 @@ def main(argv):
     info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
 
     if options.list_modules:
-        for mod in sorted(info_modules.keys()):
+        public_modules = [name for (name, info) in info_modules.items() if info.is_public()]
+        for mod in sorted(public_modules):
             print(mod)
         return 0
 

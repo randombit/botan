@@ -2,6 +2,10 @@
 MD4 -> 20131128
 </defines>
 
+<module_info>
+name -> "MD4"
+</module_info>
+
 <requires>
 mdx_hash
 </requires>

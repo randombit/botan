@@ -2,6 +2,11 @@
 SHACAL2_AVX2 -> 20180826
 </defines>
 
+<module_info>
+name -> "SHACAL-2 AVX2"
+brief -> "SHACAL-2 using AVX2 instructions"
+</module_info>
+
 <isa>
 avx2
 </isa>

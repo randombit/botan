@@ -1,3 +1,7 @@
 <defines>
 STREEBOG -> 20170623
 </defines>
+
+<module_info>
+name -> "Streebog"
+</module_info>

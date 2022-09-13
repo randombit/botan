@@ -2,6 +2,10 @@
 BZIP2 -> 20160412
 </defines>
 
+<module_info>
+name -> "BZIP2"
+</module_info>
+
 load_on vendor
 
 <libs>

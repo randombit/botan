@@ -2,6 +2,11 @@
 SHA2_32_X86_BMI2 -> 20180526
 </defines>
 
+<module_info>
+name -> "SHA-256 BMI2"
+brief -> "SHA-256 using BMI2 instructions"
+</module_info>
+
 <isa>
 bmi2
 </isa>

@@ -2,3 +2,7 @@
 CAST -> 20131128
 CAST_128 -> 20171203
 </defines>
+
+<module_info>
+name -> "CAST-128"
+</module_info>

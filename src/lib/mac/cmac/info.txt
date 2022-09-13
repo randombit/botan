@@ -2,6 +2,10 @@
 CMAC -> 20131128
 </defines>
 
+<module_info>
+name -> "CMAC"
+</module_info>
+
 <requires>
 block
 poly_dbl

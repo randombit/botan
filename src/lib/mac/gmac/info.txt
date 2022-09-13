@@ -2,6 +2,10 @@
 GMAC -> 20160207
 </defines>
 
+<module_info>
+name -> "GMAC"
+</module_info>
+
 <requires>
 ghash
 block

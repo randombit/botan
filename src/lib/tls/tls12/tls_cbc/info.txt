@@ -2,6 +2,11 @@
 TLS_CBC -> 20161008
 </defines>
 
+<module_info>
+name -> "TLS 1.2 CBC AEAD"
+brief -> "CBC + HMAC AEAD mode of operation for TLS 1.2"
+</module_info>
+
 <header:internal>
 tls_cbc.h
 </header:internal>

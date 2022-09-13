@@ -2,6 +2,11 @@
 CERTSTOR_SQLITE3 -> 20160818
 </defines>
 
+<module_info>
+name -> "SQLite Certificate Store"
+brief -> "Certificate trust store based on an SQLite database"
+</module_info>
+
 <requires>
 certstor_sql
 sqlite3

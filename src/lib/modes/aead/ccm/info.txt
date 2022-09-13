@@ -2,6 +2,10 @@
 AEAD_CCM -> 20131128
 </defines>
 
+<module_info>
+name -> "CCM"
+</module_info>
+
 <requires>
 block
 </requires>

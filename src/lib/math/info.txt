@@ -1,0 +1,5 @@
+<module_info>
+name -> "Math"
+brief -> "Mathematical helpers; mostly big integer math"
+type -> "Virtual"
+</module_info>

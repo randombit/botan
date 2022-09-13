@@ -1,3 +1,7 @@
 <defines>
 BLOWFISH -> 20180718
 </defines>
+
+<module_info>
+name -> "Blowfish"
+</module_info>

@@ -4,6 +4,11 @@ X509 -> 20201106
 OCSP -> 20201106
 </defines>
 
+<module_info>
+name -> "X.509"
+brief -> "Handles X.509 certificates and their validation"
+</module_info>
+
 <requires>
 asn1
 pubkey

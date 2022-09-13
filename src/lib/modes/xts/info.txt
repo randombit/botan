@@ -2,6 +2,10 @@
 MODE_XTS -> 20131128
 </defines>
 
+<module_info>
+name -> "XTS"
+</module_info>
+
 <requires>
 block
 poly_dbl

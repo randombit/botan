@@ -2,6 +2,11 @@
 SHACAL2_ARMV8 -> 20201221
 </defines>
 
+<module_info>
+name -> "SHACAL-2 ARMv8"
+brief -> "SHACAL-2 using ARMv8 crypto instructions"
+</module_info>
+
 <requires>
 shacal2
 </requires>

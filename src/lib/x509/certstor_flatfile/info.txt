@@ -2,6 +2,11 @@
 CERTSTOR_FLATFILE -> 20190410
 </defines>
 
+<module_info>
+name -> "File Certificate Store"
+brief -> "Certificate trust store based on a flat file containing PEM-encoded trusted certificates"
+</module_info>
+
 <os_features>
 filesystem
 </os_features>

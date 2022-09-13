@@ -3,6 +3,10 @@ PGP_S2K -> 20170527
 RFC4880 -> 20210407
 </defines>
 
+<module_info>
+name -> "S2K"
+</module_info>
+
 <requires>
 hash
 </requires>

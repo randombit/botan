@@ -2,6 +2,10 @@
 KYBER -> 20220107
 </defines>
 
+<module_info>
+name -> "Kyber"
+</module_info>
+
 <requires>
 kyber_common
 shake

@@ -1,3 +1,7 @@
 <defines>
 SALSA20 -> 20171114
 </defines>
+
+<module_info>
+name -> "Salsa20"
+</module_info>

@@ -2,6 +2,11 @@
 CHACHA_SIMD32 -> 20181104
 </defines>
 
+<module_info>
+name -> "ChaCha20 SIMD"
+brief -> "ChaCha20 using SIMD instructions"
+</module_info>
+
 <requires>
 simd
 </requires>

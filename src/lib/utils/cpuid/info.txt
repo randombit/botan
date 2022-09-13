@@ -1,3 +1,8 @@
 <defines>
 CPUID -> 20170917
 </defines>
+
+<module_info>
+name -> "CPUID"
+brief -> "Handle runtime feature detection of the current CPU"
+</module_info>

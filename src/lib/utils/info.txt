@@ -2,6 +2,11 @@
 UTIL_FUNCTIONS -> 20180903
 </defines>
 
+<module_info>
+name -> "Utilities"
+brief -> "Various utility functions and types"
+</module_info>
+
 load_on always
 
 <header:public>

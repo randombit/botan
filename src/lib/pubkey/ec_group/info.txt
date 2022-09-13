@@ -3,6 +3,11 @@ ECC_GROUP -> 20170225
 EC_CURVE_GFP -> 20131128
 </defines>
 
+<module_info>
+name -> "EC Group"
+brief -> "Wrapper for elliptic curve groups"
+</module_info>
+
 <requires>
 asn1
 numbertheory

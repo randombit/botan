@@ -1,3 +1,7 @@
 <defines>
 CIPHER_MODE_PADDING -> 20131128
 </defines>
+
+<module_info>
+name -> "CBC Padding Methods"
+</module_info>

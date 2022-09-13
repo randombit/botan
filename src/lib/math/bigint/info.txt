@@ -2,6 +2,11 @@
 BIGINT -> 20210423
 </defines>
 
+<module_info>
+name -> "Big Integer"
+brief -> "Wrapper classes for handling big integer math"
+</module_info>
+
 <header:public>
 bigint.h
 </header:public>

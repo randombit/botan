@@ -2,6 +2,11 @@
 CERTSTOR_SQL -> 20160818
 </defines>
 
+<module_info>
+name -> "SQL Certificate Store"
+brief -> "Certificate trust store based on an SQL database"
+</module_info>
+
 <header:public>
 certstor_sql.h
 </header:public>
