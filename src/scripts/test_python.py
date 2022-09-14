@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 (C) 2015,2017,2018,2019 Jack Lloyd

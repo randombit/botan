@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
 
 # (C) 2017 Jack Lloyd
 # Botan is released under the Simplified BSD License (see license.txt)

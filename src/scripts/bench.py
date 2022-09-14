@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
 Compare Botan with OpenSSL using their respective benchmark utils
