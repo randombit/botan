@@ -1,8 +1,6 @@
 
 default_compiler emcc
 
-obj_suffix bc
-
 static_suffix a
 program_suffix .html
 
