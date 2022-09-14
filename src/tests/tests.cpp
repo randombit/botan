@@ -429,6 +429,7 @@ Test::Result::Result(std::string who, std::vector<Result> downstream_results)
       merge(result, true /* ignore non-matching test names */);
    }
 
+// TODO: this should move to `StdoutReporter`
 std::string Test::Result::result_string() const
    {
    const bool verbose = Test::options().verbose();

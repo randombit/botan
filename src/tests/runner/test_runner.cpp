@@ -4,8 +4,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "../tests.h"
+
 #include "test_runner.h"
-#include "tests.h"
+#include "test_stdout_reporter.h"
 
 #include <botan/version.h>
 #include <botan/internal/loadstor.h>
@@ -19,6 +21,7 @@
 namespace Botan_Tests {
 
 Test_Runner::Test_Runner(std::ostream& out) : m_output(out) {}
+Test_Runner::~Test_Runner() = default;
 
 namespace {
 
@@ -78,10 +81,12 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 
 }
 
-int Test_Runner::run(const Test_Options& opts)
+bool Test_Runner::run(const Test_Options& opts)
    {
    std::vector<std::string> req = opts.requested_tests();
    const std::set<std::string>& to_skip = opts.skip_tests();
+
+   m_reporters.emplace_back(std::make_unique<StdoutReporter>(opts, output()));
 
    if(req.empty())
       {
@@ -150,23 +155,6 @@ int Test_Runner::run(const Test_Options& opts)
          }
       }
 
-   output() << "Testing " << Botan::version_string() << "\n";
-
-   const std::string cpuid = Botan::CPUID::to_string();
-   if(!cpuid.empty())
-      output() << "CPU flags: " << cpuid << "\n";
-   output() << "Starting tests";
-
-   if(!opts.pkcs11_lib().empty())
-      {
-      output() << " pkcs11 library:" << opts.pkcs11_lib();
-      }
-
-   if(!opts.provider().empty())
-      {
-      output() << " provider:" << opts.provider();
-      }
-
    std::vector<uint8_t> seed = Botan::hex_decode(opts.drbg_seed());
    if(seed.empty())
       {
@@ -175,7 +163,20 @@ int Test_Runner::run(const Test_Options& opts)
       Botan::store_be(ts, seed.data());
       }
 
-   output() << " drbg_seed:" << Botan::hex_encode(seed) << "\n";
+   for(auto& reporter : m_reporters)
+      {
+      const std::string cpuid = Botan::CPUID::to_string();
+      if(!cpuid.empty())
+         reporter->set_property("CPU flags", cpuid);
+
+      if(!opts.pkcs11_lib().empty())
+         reporter->set_property("pkcs11 library", opts.pkcs11_lib());
+
+      if(!opts.provider().empty())
+         reporter->set_property("provider", opts.provider());
+
+      reporter->set_property("drbg_seed", Botan::hex_encode(seed));
+      }
 
    Botan_Tests::Test::set_test_options(opts);
 
@@ -185,115 +186,29 @@ int Test_Runner::run(const Test_Options& opts)
 
       Botan_Tests::Test::set_test_rng(std::move(rng));
 
-      const size_t failed = run_tests(req, opts.test_threads(), i, opts.test_runs());
-      if(failed > 0)
-         return static_cast<int>(failed);
+      for(const auto& reporter : m_reporters)
+         {
+         reporter->next_test_run();
+         }
+
+      const bool passed =
+         (opts.test_threads() == 1)
+            ? run_tests(req)
+            : run_tests_multithreaded(req, opts.test_threads());
+
+      for(const auto& reporter : m_reporters)
+         {
+         reporter->render();
+         }
+
+      if(!passed)
+         return false;
       }
 
-   return 0;
+   return true;
    }
 
 namespace {
-
-class Test_Result_State
-   {
-   public:
-      Test_Result_State(size_t test_run, size_t tot_test_runs) :
-         m_test_run(test_run),
-         m_tot_test_runs(tot_test_runs),
-         m_tests_failed(0),
-         m_tests_run(0),
-         m_start_time(Botan_Tests::Test::timestamp())
-         {}
-
-      std::string record(const std::string& test_name,
-                         const std::vector<Botan_Tests::Test::Result>& results);
-
-      std::string final_summary();
-
-      size_t tests_failed() const { return m_tests_failed; }
-   private:
-      std::set<std::string> m_tests_failed_names;
-      size_t m_test_run;
-      size_t m_tot_test_runs;
-      size_t m_tests_failed;
-      size_t m_tests_run;
-      uint64_t m_start_time;
-   };
-
-std::string Test_Result_State::record(const std::string& test_name,
-                                      const std::vector<Botan_Tests::Test::Result>& results)
-   {
-   std::ostringstream out;
-
-   std::map<std::string, Botan_Tests::Test::Result> combined;
-   for(auto const& result : results)
-      {
-      const std::string who = result.who();
-      auto i = combined.find(who);
-      if(i == combined.end())
-         {
-         combined.insert(std::make_pair(who, Botan_Tests::Test::Result(who)));
-         i = combined.find(who);
-         }
-
-      i->second.merge(result);
-      }
-
-   for(auto const& result : combined)
-      {
-      out << result.second.result_string();
-      m_tests_run += result.second.tests_run();
-
-      const size_t failed = result.second.tests_failed();
-
-      if(failed > 0)
-         {
-         m_tests_failed += result.second.tests_failed();
-         m_tests_failed_names.insert(test_name);
-         }
-      }
-
-   return out.str();
-   }
-
-std::string Test_Result_State::final_summary()
-   {
-   const uint64_t total_ns = Botan_Tests::Test::timestamp() - m_start_time;
-
-   std::ostringstream oss;
-
-   if(m_test_run == 0 && m_tot_test_runs == 1)
-      oss << "Tests";
-   else
-      oss << "Test run " << (1+m_test_run) << "/" << m_tot_test_runs;
-
-   oss << " complete ran " << m_tests_run << " tests in "
-            << Botan_Tests::Test::format_time(total_ns) << " ";
-
-   if(m_tests_failed > 0)
-      {
-      oss << m_tests_failed << " tests failed (in ";
-
-      bool first = true;
-      for(auto& test : m_tests_failed_names)
-         {
-         if(!first)
-            oss << " ";
-         first = false;
-         oss << test;
-         }
-
-      oss << ")";
-      }
-   else if(m_tests_run > 0)
-      {
-      oss << "all tests ok";
-      }
-
-   oss << "\n";
-   return oss.str();
-   }
 
 std::vector<Test::Result> run_a_test(const std::string& test_name)
    {
@@ -342,79 +257,88 @@ bool needs_serialization(const std::string& test_name)
 
 #endif
 
-}
-
-size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
-                              size_t test_threads,
-                              size_t test_run,
-                              size_t tot_test_runs)
+bool all_passed(const std::vector<Test::Result>& results)
    {
-   Test_Result_State state(test_run, tot_test_runs);
-
-#if defined(BOTAN_HAS_THREAD_UTILS)
-   if(test_threads != 1)
-      {
-      // If 0 then we let thread pool select the count
-      Botan::Thread_Pool pool(test_threads);
-      Botan::RWLock rwlock;
-
-      std::vector<std::future<std::vector<Test::Result>>> m_fut_results;
-
-      auto run_test_exclusive = [&](const std::string& test_name) {
-         rwlock.lock();
-         std::vector<Test::Result> results = run_a_test(test_name);
-         rwlock.unlock();
-         return results;
-      };
-
-      auto run_test_shared = [&](const std::string& test_name) {
-         rwlock.lock_shared();
-         std::vector<Test::Result> results = run_a_test(test_name);
-         rwlock.unlock_shared();
-         return results;
-      };
-
-      for(auto const& test_name : tests_to_run)
-         {
-         if(needs_serialization(test_name))
-            {
-            m_fut_results.push_back(pool.run(run_test_exclusive, test_name));
-            }
-         else
-            {
-            m_fut_results.push_back(pool.run(run_test_shared, test_name));
-            }
-         }
-
-      for(size_t i = 0; i != m_fut_results.size(); ++i)
-         {
-         output() << tests_to_run[i] << ':' << std::endl;
-         output() << state.record(tests_to_run[i], m_fut_results[i].get()) << std::flush;
-         }
-
-      pool.shutdown();
-
-      output() << state.final_summary();
-
-      return state.tests_failed();
-      }
-#else
-   if(test_threads > 1)
-      {
-      output() << "Running tests in multiple threads not enabled in this build\n";
-      }
-#endif
-
-   for(auto const& test_name : tests_to_run)
-      {
-      output() << test_name << ':' << std::endl;
-      output() << state.record(test_name, run_a_test(test_name)) << std::flush;
-      }
-
-   output() << state.final_summary();
-
-   return state.tests_failed();
+   return std::all_of(results.begin(), results.end(),
+                      [](const auto& r) { return r.tests_failed() == 0; });
    }
 
 }
 
+bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_to_run,
+                                          size_t test_threads)
+   {
+   // If 0 then we let thread pool select the count
+   BOTAN_ASSERT_NOMSG(test_threads != 1);
+
+#if !defined(BOTAN_HAS_THREAD_UTILS)
+   output() << "Running tests in multiple threads not enabled in this build\n";
+   return run_tests(tests_to_run);
+
+#else
+   Botan::Thread_Pool pool(test_threads);
+   Botan::RWLock rwlock;
+
+   std::vector<std::future<std::vector<Test::Result>>> m_fut_results;
+
+   auto run_test_exclusive = [&](const std::string& test_name) {
+      rwlock.lock();
+      std::vector<Test::Result> results = run_a_test(test_name);
+      rwlock.unlock();
+      return results;
+   };
+
+   auto run_test_shared = [&](const std::string& test_name) {
+      rwlock.lock_shared();
+      std::vector<Test::Result> results = run_a_test(test_name);
+      rwlock.unlock_shared();
+      return results;
+   };
+
+   for(auto const& test_name : tests_to_run)
+      {
+      if(needs_serialization(test_name))
+         {
+         m_fut_results.push_back(pool.run(run_test_exclusive, test_name));
+         }
+      else
+         {
+         m_fut_results.push_back(pool.run(run_test_shared, test_name));
+         }
+      }
+
+   bool passed = true;
+   for(size_t i = 0; i != m_fut_results.size(); ++i)
+      {
+      const auto results = m_fut_results[i].get();
+      for(auto& reporter : m_reporters)
+         {
+         reporter->record(tests_to_run[i], results);
+         }
+      passed &= all_passed(results);
+      }
+
+   pool.shutdown();
+
+   return passed;
+#endif
+   }
+
+bool Test_Runner::run_tests(const std::vector<std::string>& tests_to_run)
+   {
+   bool passed = true;
+   for(auto const& test_name : tests_to_run)
+      {
+      const auto results = run_a_test(test_name);
+
+      for(auto& reporter : m_reporters)
+         {
+         reporter->record(test_name, results);
+         }
+      passed &= all_passed(results);
+      }
+
+   return passed;
+   }
+
+}
