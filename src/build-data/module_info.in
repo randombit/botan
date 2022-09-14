@@ -1,0 +1,87 @@
+/**
+%{if parent}
+ * @ingroup %{parent}
+%{endif}
+ * @defgroup %{identifier} %{title}
+%{if brief}
+ * @brief %{brief}
+%{endif}
+%{if internal}
+ * @note This module is not part of the library's public interface.
+ *       Library users may not enable or disable it directly, neither via a
+ *       build policy nor `--enable-modules`. Instead it will be automatically
+ *       added as a dependency of other modules as needed.
+ *
+%{endif}
+%{if virtual}
+ * @note This module is a container for other modules.
+ *       Library users may not enable or disable it directly, neither via a
+ *       build policy nor `--enable-modules`. Please feel free to enable/disable
+ *       the sub-modules listed.
+ *
+%{endif}
+ *
+%{if dependencies}
+ * This module depends on:
+%{endif}
+%{for dependencies}
+ * * @ref %{i}
+%{endfor}
+ *
+%{if os_features}
+ * This module requires special operating system features:
+%{endif}
+%{for os_features}
+ * * %{i}
+%{endfor}
+ *
+%{if cpu_features}
+ * This module requires special CPU features:
+%{endif}
+%{for cpu_features}
+ * * %{i}
+%{endfor}
+ *
+%{if arch_requirements}
+ * This module is exclusively available on some CPU architectures:
+%{endif}
+%{for arch_requirements}
+ * * %{i}
+%{endfor}
+ *
+%{if compiler_requirements}
+ * This module is exclusively compatible with certain compilers:
+%{endif}
+%{for compiler_requirements}
+ * * %{i}
+%{endfor}
+ */
+
+/**
+ * @addtogroup %{identifier}
+ * @{
+%{for public_headers}
+ *   @file  %{i}
+ *   @brief Public Header
+%{endfor}
+ * @}
+ */
+
+/**
+ * @addtogroup %{identifier}
+ * @{
+%{for internal_headers}
+ *   @file  %{i}
+ *   @brief Internal Header
+%{endfor}
+ * @}
+ */
+
+/**
+ * @addtogroup %{identifier}
+ * @{
+%{for sources}
+ *   @file  %{i}
+%{endfor}
+ * @}
+ */

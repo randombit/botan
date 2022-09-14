@@ -211,6 +211,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
         self.handbook_output_dir = os.path.join(self.doc_output_dir, 'handbook')
         self.doc_output_dir_doxygen = os.path.join(self.doc_output_dir, 'doxygen') if options.with_doxygen else None
+        self.doc_module_info = os.path.join(self.build_dir, 'module_info') if options.with_doxygen else None
 
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.botan_include_dir = os.path.join(self.include_dir, 'botan')
@@ -261,7 +262,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
             self.handbook_output_dir,
         ]
         if self.doc_output_dir_doxygen:
-            out += [self.doc_output_dir_doxygen]
+            out += [self.doc_output_dir_doxygen, self.doc_module_info]
         if self.fuzzer_output_dir:
             out += [self.fuzzobj_dir]
             out += [self.fuzzer_output_dir]
@@ -2119,6 +2120,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'out_dir': build_dir,
         'build_dir': build_paths.build_dir,
+        'module_info_dir': build_paths.doc_module_info,
 
         'doc_stamp_file': os.path.join(build_paths.build_dir, 'doc.stamp'),
         'makefile_path': os.path.join(build_paths.build_dir, '..', 'Makefile'),
@@ -3256,8 +3258,8 @@ def check_compiler_arch(options, ccinfo, archinfo, source_paths):
     logging.info('Auto-detected compiler arch %s', cc_output)
     return cc_output
 
-def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, template_vars, options):
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, source_paths, template_vars, options):
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-arguments
 
     try:
         robust_rmtree(build_paths.build_dir)
@@ -3272,14 +3274,19 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
             if e.errno != errno.EEXIST:
                 logging.error('Error while creating "%s": %s', build_dir, e)
 
-    def write_template(sink, template):
+    def write_template_with_variables(sink, template, variables):
         with open(sink, 'w') as f:
-            f.write(process_template(template, template_vars))
+            f.write(process_template(template, variables))
+
+    def write_template(sink, template):
+        write_template_with_variables(sink, template, template_vars)
 
     def in_build_dir(p):
         return os.path.join(build_paths.build_dir, p)
     def in_build_data(p):
         return os.path.join(source_paths.build_data_dir, p)
+    def in_build_module_info(p):
+        return os.path.join(build_paths.doc_module_info, p)
 
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
@@ -3336,6 +3343,26 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
         write_template('CMakeLists.txt', in_build_data('cmake.in'))
     else:
         write_template(template_vars['makefile_path'], in_build_data('makefile.in'))
+
+    if options.with_doxygen:
+        for module_name, info in info_modules.items():
+            write_template_with_variables(in_build_module_info(module_name + '.dox'), in_build_data('module_info.in'),
+                                          {
+                                              'parent': info.parent_module,
+                                              'identifier': module_name,
+                                              'title': info.name,
+                                              'internal': info.is_internal(),
+                                              'virtual': info.is_virtual(),
+                                              'brief': info.brief,
+                                              'public_headers': info.header_public,
+                                              'internal_headers': info.header_internal,
+                                              'sources': info.sources(),
+                                              'dependencies': info.requires,
+                                              'os_features': info.os_features,
+                                              'cpu_features': info.isa,
+                                              'arch_requirements': info.arch,
+                                              'compiler_requirements': info.cc
+                                          })
 
     if options.with_rst2man:
         rst2man_file = os.path.join(build_paths.build_dir, 'botan.rst')
@@ -3485,7 +3512,7 @@ def main(argv):
     template_vars = create_template_vars(source_paths, build_paths, options, using_mods, cc, arch, osinfo)
 
     # Now we start writing to disk
-    do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, template_vars, options)
+    do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, source_paths, template_vars, options)
 
     return 0
 
