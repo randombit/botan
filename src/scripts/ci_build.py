@@ -418,16 +418,6 @@ def parse_args(args):
     parser.add_option('--pkcs11-lib', default=os.getenv('PKCS11_LIB'), metavar='LIB',
                       help='Set PKCS11 lib to use for testing')
 
-    parser.add_option('--with-python3', dest='use_python3', action='store_true', default=None,
-                      help='Enable using python3')
-    parser.add_option('--without-python3', dest='use_python3', action='store_false',
-                      help='Disable using python3')
-
-    parser.add_option('--with-pylint3', dest='use_pylint3', action='store_true', default=True,
-                      help='Enable using python3 pylint')
-    parser.add_option('--without-pylint3', dest='use_pylint3', action='store_false',
-                      help='Disable using python3 pylint')
-
     parser.add_option('--disable-werror', action='store_true', default=False,
                       help='Allow warnings to compile')
 
@@ -473,15 +463,7 @@ def main(args=None):
         print("Unknown target '%s'" % (target))
         return 2
 
-    if options.use_python3 is None:
-        use_python3 = have_prog('python3')
-    else:
-        use_python3 = options.use_python3
-
-    py_interp = 'python'
-    if use_python3:
-        py_interp = 'python3'
-
+    py_interp = 'python3'
     if options.cc_bin is None:
         if options.cc == 'gcc':
             options.cc_bin = 'g++'
@@ -519,10 +501,6 @@ def main(args=None):
         pylint_rc = '--rcfile=%s' % (os.path.join(root_dir, 'src/configs/pylint.rc'))
         pylint_flags = [pylint_rc, '--reports=no']
 
-        # Some disabled rules specific to Python3
-        # useless-object-inheritance: complains about code still useful in Python2
-        py3_flags = '--disable=useless-object-inheritance'
-
         py_scripts = [
             'configure.py',
             'src/python/botan2.py',
@@ -543,9 +521,7 @@ def main(args=None):
             'src/editors/sublime/build.py']
 
         full_paths = [os.path.join(root_dir, s) for s in py_scripts]
-
-        if use_python3 and options.use_pylint3:
-            cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags] + full_paths)
+        cmds.append([py_interp, '-m', 'pylint'] + pylint_flags + full_paths)
 
     else:
         config_flags, run_test_command, make_prefix, install_prefix = determine_flags(
@@ -617,14 +593,7 @@ def main(args=None):
         python_tests = os.path.join(root_dir, 'src/scripts/test_python.py')
 
         if target in ['shared', 'coverage']:
-
-            if options.os == 'windows':
-                if options.cpu == 'x86':
-                    # Python on AppVeyor is a 32-bit binary so only test for 32-bit
-                    cmds.append([py_interp, '-b', python_tests])
-            else:
-                if use_python3:
-                    cmds.append(['python3', '-b', python_tests])
+            cmds.append([py_interp, '-b', python_tests])
 
         if target in ['shared', 'static', 'bsi', 'nist']:
             cmds.append(make_cmd + ['install'])

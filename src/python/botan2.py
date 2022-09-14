@@ -21,7 +21,7 @@ Botan 2.8
 from ctypes import CDLL, POINTER, byref, create_string_buffer, \
     c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char_p
 
-from sys import version_info, platform
+from sys import platform
 from time import strptime, mktime, time as system_time
 from binascii import hexlify
 from datetime import datetime
@@ -504,38 +504,21 @@ def _ctype_str(s):
     if s is None:
         return None
     assert isinstance(s, str)
-    if version_info[0] < 3:
-        return s
-    else:
-        return s.encode('utf-8')
+    return s.encode('utf-8')
 
 def _ctype_to_str(s):
-    if version_info[0] < 3:
-        return s.encode('utf-8')
-    else:
-        return s.decode('utf-8')
+    return s.decode('utf-8')
 
 def _ctype_bits(s):
-    if version_info[0] < 3:
-        if isinstance(s, str):
-            return s
-        elif isinstance(s, unicode): # pylint: disable=undefined-variable
-            return s.decode('utf-8')
-        else:
-            raise Exception("Internal error - unexpected type %s provided to _ctype_bits" % (type(s).__name__))
+    if isinstance(s, bytes):
+        return s
+    elif isinstance(s, str):
+        return s.encode('utf-8')
     else:
-        if isinstance(s, bytes):
-            return s
-        elif isinstance(s, str):
-            return s.encode('utf-8')
-        else:
-            raise Exception("Internal error - unexpected type %s provided to _ctype_bits" % (type(s).__name__))
+        raise Exception("Internal error - unexpected type %s provided to _ctype_bits" % (type(s).__name__))
 
 def _ctype_bufout(buf):
-    if version_info[0] < 3:
-        return str(buf.raw)
-    else:
-        return buf.raw
+    return buf.raw
 
 def _hex_encode(buf):
     return hexlify(buf).decode('ascii')
@@ -572,7 +555,7 @@ def const_time_compare(x, y):
 #
 # RNG
 #
-class RandomNumberGenerator(object):
+class RandomNumberGenerator:
     # Can also use type "system"
     def __init__(self, rng_type='system'):
         self.__obj = c_void_p(0)
@@ -602,7 +585,7 @@ class RandomNumberGenerator(object):
 #
 # Block cipher
 #
-class BlockCipher(object):
+class BlockCipher:
     def __init__(self, algo):
 
         if isinstance(algo, c_void_p):
@@ -666,7 +649,7 @@ class BlockCipher(object):
 #
 # Hash function
 #
-class HashFunction(object):
+class HashFunction:
     def __init__(self, algo):
 
         if isinstance(algo, c_void_p):
@@ -710,7 +693,7 @@ class HashFunction(object):
 #
 # Message authentication codes
 #
-class MsgAuthCode(object):
+class MsgAuthCode:
     def __init__(self, algo):
         flags = c_uint32(0) # always zero in this API version
         self.__obj = c_void_p(0)
@@ -758,7 +741,7 @@ class MsgAuthCode(object):
         _DLL.botan_mac_final(self.__obj, out)
         return _ctype_bufout(out)
 
-class SymmetricCipher(object):
+class SymmetricCipher:
     def __init__(self, algo, encrypt=True):
         flags = 0 if encrypt else 1
         self.__obj = c_void_p(0)
@@ -932,7 +915,7 @@ def kdf(algo, secret, out_len, salt, label):
 #
 # Public key
 #
-class PublicKey(object): # pylint: disable=invalid-name
+class PublicKey: # pylint: disable=invalid-name
 
     def __init__(self, obj=c_void_p(0)):
         self.__obj = obj
@@ -1054,7 +1037,7 @@ class PublicKey(object): # pylint: disable=invalid-name
 #
 # Private Key
 #
-class PrivateKey(object):
+class PrivateKey:
 
     def __init__(self, obj=c_void_p(0)):
         self.__obj = obj
@@ -1196,7 +1179,7 @@ class PrivateKey(object):
         _DLL.botan_privkey_get_field(v.handle_(), self.__obj, _ctype_str(field_name))
         return int(v)
 
-class PKEncrypt(object):
+class PKEncrypt:
     def __init__(self, key, padding):
         self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
@@ -1213,7 +1196,7 @@ class PKEncrypt(object):
         return outbuf.raw[0:int(outbuf_sz.value)]
 
 
-class PKDecrypt(object):
+class PKDecrypt:
     def __init__(self, key, padding):
         self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
@@ -1229,7 +1212,7 @@ class PKDecrypt(object):
         _DLL.botan_pk_op_decrypt(self.__obj, outbuf, byref(outbuf_sz), _ctype_bits(msg), len(msg))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
-class PKSign(object): # pylint: disable=invalid-name
+class PKSign: # pylint: disable=invalid-name
     def __init__(self, key, padding, der=False):
         self.__obj = c_void_p(0)
         flags = c_uint32(1) if der else c_uint32(0)
@@ -1248,7 +1231,7 @@ class PKSign(object): # pylint: disable=invalid-name
         _DLL.botan_pk_op_sign_finish(self.__obj, rng_obj.handle_(), outbuf, byref(outbuf_sz))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
-class PKVerify(object):
+class PKVerify:
     def __init__(self, key, padding, der=False):
         self.__obj = c_void_p(0)
         flags = c_uint32(1) if der else c_uint32(0)
@@ -1266,7 +1249,7 @@ class PKVerify(object):
             return True
         return False
 
-class PKKeyAgreement(object):
+class PKKeyAgreement:
     def __init__(self, key, kdf_name):
         self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
@@ -1314,7 +1297,7 @@ def _load_buf_or_file(filename, buf, file_fn, buf_fn):
 #
 # X.509 certificates
 #
-class X509Cert(object): # pylint: disable=invalid-name
+class X509Cert: # pylint: disable=invalid-name
     def __init__(self, filename=None, buf=None):
         self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_cert_load_file, _DLL.botan_x509_cert_load)
 
@@ -1493,7 +1476,7 @@ class X509Cert(object): # pylint: disable=invalid-name
 #
 # X.509 Certificate revocation lists
 #
-class X509CRL(object):
+class X509CRL:
     def __init__(self, filename=None, buf=None):
         self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_crl_load_file, _DLL.botan_x509_crl_load)
 
@@ -1504,7 +1487,7 @@ class X509CRL(object):
         return self.__obj
 
 
-class MPI(object): # pylint: disable=too-many-public-methods
+class MPI: # pylint: disable=too-many-public-methods
 
     def __init__(self, initial_value=None, radix=None):
 
@@ -1720,7 +1703,7 @@ class MPI(object): # pylint: disable=too-many-public-methods
     def set_bit(self, bit):
         _DLL.botan_mp_set_bit(self.__obj, c_size_t(bit))
 
-class FormatPreservingEncryptionFE1(object):
+class FormatPreservingEncryptionFE1:
 
     def __init__(self, modulus, key, rounds=5, compat_mode=False):
         flags = c_uint32(1 if compat_mode else 0)
@@ -1740,7 +1723,7 @@ class FormatPreservingEncryptionFE1(object):
         _DLL.botan_fpe_decrypt(self.__obj, r.handle_(), _ctype_bits(tweak), len(tweak))
         return r
 
-class HOTP(object):
+class HOTP:
     def __init__(self, key, digest="SHA-1", digits=6):
         self.__obj = c_void_p(0)
         _DLL.botan_hotp_init(byref(self.__obj), key, len(key), _ctype_str(digest), digits)
@@ -1761,7 +1744,7 @@ class HOTP(object):
         else:
             return (False, counter)
 
-class TOTP(object):
+class TOTP:
     def __init__(self, key, digest="SHA-1", digits=6, timestep=30):
         self.__obj = c_void_p(0)
         _DLL.botan_totp_init(byref(self.__obj), key, len(key), _ctype_str(digest), digits, timestep)
@@ -1796,7 +1779,7 @@ def nist_key_unwrap(kek, wrapped):
     _DLL.botan_key_unwrap3394(wrapped, len(wrapped), kek, len(kek), output, byref(out_len))
     return output[0:int(out_len.value)]
 
-class Srp6ServerSession(object):
+class Srp6ServerSession:
     __obj = c_void_p(0)
 
     def __init__(self):

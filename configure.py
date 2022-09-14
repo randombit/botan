@@ -77,7 +77,7 @@ def parse_version_file(version_path):
             results[key] = val
     return results
 
-class Version(object):
+class Version:
     """
     Version information are all static members
     """
@@ -169,7 +169,7 @@ class Version(object):
 
 
 
-class SourcePaths(object):
+class SourcePaths:
     """
     A collection of paths defined by the project structure and
     independent of user configurations.
@@ -193,7 +193,7 @@ class SourcePaths(object):
         self.sphinx_config_dir = os.path.join(self.configs_dir, 'sphinx')
 
 
-class BuildPaths(object): # pylint: disable=too-many-instance-attributes
+class BuildPaths: # pylint: disable=too-many-instance-attributes
     """
     Constructor
     """
@@ -699,7 +699,7 @@ def take_options_from_env(options):
     options.cxxflags = update_from_env(options.cxxflags, 'CXXFLAGS', 'cxxflags')
     options.ldflags = update_from_env(options.ldflags, 'LDFLAGS', 'ldflags')
 
-class LexResult(object):
+class LexResult:
     pass
 
 
@@ -788,7 +788,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
 
     return out
 
-class InfoObject(object):
+class InfoObject:
     def __init__(self, infofile):
         """
         Constructor sets members `infofile`, `lives_in`, `parent_module` and `basename`
@@ -1705,7 +1705,7 @@ def process_template_string(template_text, variables, template_source):
 
     The template language supports (un-nested) conditionals.
     """
-    class SimpleTemplate(object):
+    class SimpleTemplate:
 
         def __init__(self, vals):
             self.vals = vals
@@ -2300,7 +2300,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
     return variables
 
-class ModulesChooser(object):
+class ModulesChooser:
     """
     Determine which modules to load based on options, target, etc
     """
@@ -2609,7 +2609,7 @@ def portable_symlink(file_path, target_dir, method):
         raise UserError('Unknown link method %s' % (method))
 
 
-class AmalgamationHelper(object):
+class AmalgamationHelper:
     # All include types may have trailing comment like e.g. '#include <vector> // IWYU pragma: export'
     _any_include = re.compile(r'#include <(.*)>')
     _botan_include = re.compile(r'#include <botan/(.*)>')
@@ -2663,7 +2663,7 @@ class AmalgamationHelper(object):
 """ % (Version.as_string()))
 
 
-class AmalgamationHeader(object):
+class AmalgamationHeader:
     def __init__(self, input_filepaths):
 
         self.included_already = set()
@@ -2724,16 +2724,13 @@ class AmalgamationHeader(object):
             f.write("\n#endif // %s\n" % (include_guard))
 
 
-class AmalgamationGenerator(object):
+class AmalgamationGenerator:
     _header_guard_pattern = re.compile(r'^#define BOTAN_.*_H_\s*$')
     _header_endif_pattern = re.compile(r'^#endif.*$')
 
     @staticmethod
     def read_header(filepath):
-        encoding_kwords = {}
-        if sys.version_info[0] == 3:
-            encoding_kwords['encoding'] = 'utf8'
-        with open(filepath, **encoding_kwords) as f:
+        with open(filepath, encoding='utf8') as f:
             raw_content = f.readlines()
             return AmalgamationGenerator.strip_header_goop(filepath, raw_content)
 
@@ -2773,10 +2770,6 @@ class AmalgamationGenerator(object):
         self._options = options
 
     def generate(self):
-        encoding_kwords = {}
-        if sys.version_info[0] == 3:
-            encoding_kwords['encoding'] = 'utf8'
-
         pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
         amalgamation_header_fsname = '%s.h' % (self._filename_prefix)
         logging.info('Writing amalgamation header to %s', amalgamation_header_fsname)
@@ -2791,7 +2784,7 @@ class AmalgamationGenerator(object):
         amalgamation_fsname = '%s.cpp' % (self._filename_prefix)
         logging.info('Writing amalgamation source to %s', amalgamation_fsname)
 
-        amalgamation_file = open(amalgamation_fsname, 'w', **encoding_kwords)
+        amalgamation_file = open(amalgamation_fsname, 'w', encoding='utf8')
 
         AmalgamationHelper.write_banner(amalgamation_file)
         amalgamation_file.write('\n#include "%s"\n\n' % (amalgamation_header_fsname))
@@ -2804,7 +2797,7 @@ class AmalgamationGenerator(object):
 
         for mod in sorted(self._modules, key=lambda module: module.basename):
             for src in sorted(mod.source):
-                with open(src, 'r', **encoding_kwords) as f:
+                with open(src, 'r', encoding='utf8') as f:
                     for line in f:
                         if AmalgamationHelper.is_botan_include(line):
                             # Botan headers are inlined in amalgamation headers
@@ -2849,7 +2842,7 @@ def have_program(program):
     return False
 
 
-class BotanConfigureLogHandler(logging.StreamHandler, object):
+class BotanConfigureLogHandler(logging.StreamHandler):
     def emit(self, record):
         # Do the default stuff first
         super(BotanConfigureLogHandler, self).emit(record)

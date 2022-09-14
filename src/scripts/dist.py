@@ -299,7 +299,7 @@ def write_archive(version, output_basename, archive_type, rel_epoch, all_files, 
     return output_archive
 
 def configure_logging(options):
-    class ExitOnErrorLogHandler(logging.StreamHandler, object):
+    class ExitOnErrorLogHandler(logging.StreamHandler):
         def emit(self, record):
             super(ExitOnErrorLogHandler, self).emit(record)
             # Exit script if and ERROR or worse occurred
