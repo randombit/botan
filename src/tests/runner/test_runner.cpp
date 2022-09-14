@@ -192,9 +192,9 @@ bool Test_Runner::run(const Test_Options& opts)
          }
 
       const bool passed =
-         (opts.test_threads() > 1)
-            ? run_tests_multithreaded(req, opts.test_threads())
-            : run_tests(req);
+         (opts.test_threads() == 1)
+            ? run_tests(req)
+            : run_tests_multithreaded(req, opts.test_threads());
 
       for(const auto& reporter : m_reporters)
          {
@@ -268,14 +268,14 @@ bool all_passed(const std::vector<Test::Result>& results)
 bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_to_run,
                                           size_t test_threads)
    {
-   BOTAN_ASSERT_NOMSG(test_threads > 1);
+   // If 0 then we let thread pool select the count
+   BOTAN_ASSERT_NOMSG(test_threads != 1);
 
 #if !defined(BOTAN_HAS_THREAD_UTILS)
    output() << "Running tests in multiple threads not enabled in this build\n";
    return run_tests(tests_to_run);
 
 #else
-   // If 0 then we let thread pool select the count
    Botan::Thread_Pool pool(test_threads);
    Botan::RWLock rwlock;
 
