@@ -32,7 +32,6 @@ void Reporter::next_test_run()
 void Reporter::record(const std::string& testsuite_name,
                       const std::vector<Botan_Tests::Test::Result>& results)
    {
-   // TODO: Is that still required or could it be modernized?
    std::map<std::string, Botan_Tests::Test::Result> combined;
    for(auto const& result : results)
       {
