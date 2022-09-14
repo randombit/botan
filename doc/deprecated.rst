@@ -108,9 +108,3 @@ Other API deprecations
   directly on ``MessageAuthenticationCode`` and ``HashFunction``. So
   this only affects you if you are directly referencing
   ``Botan::Buffered_Computation`` in some way.
-
-Deprecated Build Targets
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- Configuring a build (with ``configure.py``) using Python2. In a future
-  major release, Python3 will be required.

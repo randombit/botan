@@ -10,7 +10,7 @@ https://botan.randombit.net
 Botan is released under the Simplified BSD License (see license.txt)
 
 This module uses the ctypes module and is usable by programs running
-under at least CPython 2.7, CPython 3.x, and PyPy
+under at least CPython 3.x, and PyPy
 
 It uses botan's ffi module, which exposes a C API. This version of the
 module requires FFI API version 20180713, which was introduced in

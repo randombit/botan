@@ -7,16 +7,12 @@ Configuration program for botan
 
 (C) 2009-2020 Jack Lloyd
 (C) 2015,2016,2017 Simon Warta (Kullo GmbH)
+(C) 2019-2022 René Meusel (neXenio GmbH, Rohde & Schwarz Cybersecurity GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
 
-This script is regularly tested with CPython 2.7 and 3.5, and
-occasionally tested with CPython 2.6 and PyPy 4.
-
-Support for CPython 2.6 will be dropped eventually, but is kept up for as
-long as reasonably convenient.
-
-CPython 2.5 and earlier are not supported.
+This script is regularly tested with CPython 3.x, and
+occasionally tested PyPy 4.
 
 On Jython target detection does not work (use --os and --cpu).
 """

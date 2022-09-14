@@ -3,7 +3,7 @@
 """
 Release script for botan (https://botan.randombit.net/)
 
-This script requires Python 2.7 or 3.6
+This script requires Python 3.6
 
 (C) 2011,2012,2013,2015,2016,2017 Jack Lloyd
 

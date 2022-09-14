@@ -18,7 +18,7 @@ system, primarily due to lack of access and interest.  Please contact the
 maintainer if you would like to build Botan on such a system.
 
 Botan's build is controlled by configure.py, which is a `Python
-<https://www.python.org>`_ script. Python 2.7 or later is required.
+<https://www.python.org>`_ script. Python 3.x or later is required.
 
 .. highlight:: none
 
@@ -31,10 +31,10 @@ For the impatient, this works for most systems::
 Or using ``nmake``, if you're compiling on Windows with Visual C++. On
 platforms that do not understand the '#!' convention for beginning
 script files, or that have Python installed in an unusual spot, you
-might need to prefix the ``configure.py`` command with ``python`` or
-``/path/to/python``::
+might need to prefix the ``configure.py`` command with ``python3`` or
+``/path/to/python3``::
 
-  $ python ./configure.py [arguments]
+  $ python3 ./configure.py [arguments]
 
 Configuring the Build
 ---------------------------------
@@ -42,7 +42,7 @@ Configuring the Build
 The first step is to run ``configure.py``, which is a Python script
 that creates various directories, config files, and a Makefile for
 building everything. This script should run under a vanilla install of
-Python 2.7 or Python 3.x.
+Python 3.x.
 
 The script will attempt to guess what kind of system you are trying to
 compile for (and will print messages telling you what it guessed).
@@ -204,7 +204,7 @@ You need to have a copy of Python installed, and have both Python and
 your chosen compiler in your path. Open a command shell (or the SDK
 shell), and run::
 
-   $ python configure.py --cc=msvc --os=windows
+   $ python3 configure.py --cc=msvc --os=windows
    $ nmake
    $ nmake check
    $ nmake install
@@ -214,7 +214,7 @@ which enables you to run multiple build jobs in parallel.
 
 For MinGW, use::
 
-   $ python configure.py --cc=gcc --os=mingw
+   $ python3 configure.py --cc=gcc --os=mingw
    $ make
 
 By default the install target will be ``C:\botan``; you can modify
