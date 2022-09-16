@@ -969,7 +969,7 @@ def cli_tls_http_server_tests(tmp_dir):
     if resp.status != 405:
         logging.error('Unexpected response status %d', resp.status)
 
-    rc = tls_server.wait(5) # pylint: disable=too-many-function-args
+    rc = tls_server.wait(5)
 
     if rc != 0:
         logging.error("Unexpected return code from https_server %d", rc)
@@ -1062,7 +1062,7 @@ def cli_tls_proxy_tests(tmp_dir):
         if body != server_response:
             logging.error('Unexpected response from server %s', body)
 
-    rc = tls_proxy.wait(5) # pylint: disable=too-many-function-args
+    rc = tls_proxy.wait(5)
 
     if rc != 0:
         logging.error('Unexpected return code %d', rc)
