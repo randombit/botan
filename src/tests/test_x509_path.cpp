@@ -1076,12 +1076,53 @@ class Path_Validation_With_OCSP_Tests final : public Test
          return result;
          }
 
+
+      Test::Result validate_with_forged_ocsp_using_self_signed_cert()
+         {
+         Test::Result result("path check with forged ocsp using self-signed certificate");
+         Botan::Certificate_Store_In_Memory trusted;
+
+         auto restrictions = Botan::Path_Validation_Restrictions(true,   // require revocation info
+                                                                 110,    // minimum key strength
+                                                                 false); // OCSP for all intermediates
+
+         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
+         trusted.add_certificate(trust_root);
+
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
+
+         auto check_path = [&](const std::string &forged_ocsp,
+                               const Botan::Certificate_Status_Code not_expected) // TODO: once a fix is implemented,
+                                                                                  //       this should expect a proper
+                                                                                  //       error status code.
+            {
+               auto ocsp = load_test_OCSP_resp(forged_ocsp);
+               const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
+                                        Botan::calendar_point(2016, 11, 18, 12, 30, 0).to_std_timepoint(), std::chrono::milliseconds(0), {ocsp});
+
+               result.confirm(std::string("Path validation with forged OCSP response should not fail with '") + Botan::to_string(not_expected) + "'",
+                              path_result.result() != not_expected);
+               result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
+            };
+
+         // In both cases the path validation should detect the forged OCSP
+         // response and generate an appropriate error. By no means it should
+         // follow the unauthentic OCSP response.
+         check_path("x509/ocsp/randombit_ocsp_forged_valid.der", Botan::Certificate_Status_Code::OK);
+         check_path("x509/ocsp/randombit_ocsp_forged_revoked.der", Botan::Certificate_Status_Code::CERT_IS_REVOKED);
+
+         return result;
+         }
+
       std::vector<Test::Result> run() override
          {
          return  {validate_with_ocsp_with_next_update_without_max_age(),
                   validate_with_ocsp_with_next_update_with_max_age(),
                   validate_with_ocsp_without_next_update_without_max_age(),
-                  validate_with_ocsp_without_next_update_with_max_age()};
+                  validate_with_ocsp_without_next_update_with_max_age(),
+                  validate_with_forged_ocsp_using_self_signed_cert()};
          }
 
    };
