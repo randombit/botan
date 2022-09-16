@@ -71,29 +71,28 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
 
       const bool at_self_signed_root = (i == cert_path.size() - 1);
 
-      const std::optional<X509_Certificate>& subject = cert_path[i];
+      const X509_Certificate& subject = cert_path[i];
+      const X509_Certificate& issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
 
-      const std::optional<X509_Certificate>& issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
-
-      if(at_self_signed_root && (issuer->is_self_signed() == false))
+      if(at_self_signed_root && (issuer.is_self_signed() == false))
          {
          status.insert(Certificate_Status_Code::CHAIN_LACKS_TRUST_ROOT);
          }
 
-      if(subject->issuer_dn() != issuer->subject_dn())
+      if(subject.issuer_dn() != issuer.subject_dn())
          {
          status.insert(Certificate_Status_Code::CHAIN_NAME_MISMATCH);
          }
 
       // Check the serial number
-      if(subject->is_serial_negative())
+      if(subject.is_serial_negative())
          {
          status.insert(Certificate_Status_Code::CERT_SERIAL_NEGATIVE);
          }
 
       // Check the subject's DN components' length
 
-      for(const auto& dn_pair : subject->subject_dn().dn_info())
+      for(const auto& dn_pair : subject.subject_dn().dn_info())
          {
          const size_t dn_ub = X509_DN::lookup_ub(dn_pair.first);
          // dn_pair = <OID,str>
@@ -104,20 +103,20 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
          }
 
       // Check all certs for valid time range
-      if(validation_time < subject->not_before())
+      if(validation_time < subject.not_before())
          status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
 
-      if(validation_time > subject->not_after())
+      if(validation_time > subject.not_after())
          status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
 
       // Check issuer constraints
-      if(!issuer->is_CA_cert() && !self_signed_ee_cert)
+      if(!issuer.is_CA_cert() && !self_signed_ee_cert)
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
 
-      std::unique_ptr<Public_Key> issuer_key(issuer->subject_public_key());
+      std::unique_ptr<Public_Key> issuer_key(issuer.subject_public_key());
 
       // Check the signature algorithm is known
-      if(OIDS::oid2str_or_empty(subject->signature_algorithm().get_oid()).empty())
+      if(OIDS::oid2str_or_empty(subject.signature_algorithm().get_oid()).empty())
          {
          status.insert(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN);
          }
@@ -130,7 +129,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
             }
          else
             {
-            const Certificate_Status_Code sig_status = subject->verify_signature(*issuer_key);
+            const Certificate_Status_Code sig_status = subject.verify_signature(*issuer_key);
 
             if(sig_status != Certificate_Status_Code::VERIFIED)
                status.insert(sig_status);
@@ -142,31 +141,31 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
          // Ignore untrusted hashes on self-signed roots
          if(!trusted_hashes.empty() && !at_self_signed_root)
             {
-            if(trusted_hashes.count(subject->hash_used_for_signature()) == 0)
+            if(trusted_hashes.count(subject.hash_used_for_signature()) == 0)
                status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
             }
          }
 
       // Check cert extensions
 
-      if(subject->x509_version() == 1)
+      if(subject.x509_version() == 1)
          {
-         if(subject->v2_issuer_key_id().empty() == false ||
-            subject->v2_subject_key_id().empty() == false)
+         if(subject.v2_issuer_key_id().empty() == false ||
+            subject.v2_subject_key_id().empty() == false)
             {
             status.insert(Certificate_Status_Code::V2_IDENTIFIERS_IN_V1_CERT);
             }
          }
 
-      Extensions extensions = subject->v3_extensions();
+      Extensions extensions = subject.v3_extensions();
       const auto& extensions_vec = extensions.extensions();
-      if(subject->x509_version() < 3 && !extensions_vec.empty())
+      if(subject.x509_version() < 3 && !extensions_vec.empty())
          {
          status.insert(Certificate_Status_Code::EXT_IN_V1_V2_CERT);
          }
       for(auto& extension : extensions_vec)
          {
-         extension.first->validate(*subject, *issuer, cert_path, cert_status, i);
+         extension.first->validate(subject, issuer, cert_path, cert_status, i);
          }
       if(extensions.extensions().size() != extensions.get_extension_oids().size())
          {
@@ -179,13 +178,13 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
    for(size_t i = cert_path.size() - 1; i > 0 ; --i)
       {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
-      const std::optional<X509_Certificate>& subject = cert_path[i];
+      const X509_Certificate& subject = cert_path[i];
 
       /*
       * If the certificate was not self-issued, verify that max_path_length is
       * greater than zero and decrement max_path_length by 1.
       */
-      if(subject->subject_dn() != subject->issuer_dn())
+      if(subject.subject_dn() != subject.issuer_dn())
          {
          if(max_path_length > 0)
             {
@@ -201,9 +200,9 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
       * If pathLenConstraint is present in the certificate and is less than max_path_length,
       * set max_path_length to the value of pathLenConstraint.
       */
-      if(subject->path_limit() != Cert_Extension::NO_CERT_PATH_LIMIT && subject->path_limit() < max_path_length)
+      if(subject.path_limit() != Cert_Extension::NO_CERT_PATH_LIMIT && subject.path_limit() < max_path_length)
          {
-         max_path_length = subject->path_limit();
+         max_path_length = subject.path_limit();
          }
       }
 
@@ -226,8 +225,8 @@ PKIX::check_ocsp(const std::vector<X509_Certificate>& cert_path,
       {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
 
-      std::optional<X509_Certificate> subject = cert_path.at(i);
-      std::optional<X509_Certificate> ca = cert_path.at(i+1);
+      const X509_Certificate& subject = cert_path.at(i);
+      const X509_Certificate& ca = cert_path.at(i+1);
 
       if(i < ocsp_responses.size() && (ocsp_responses.at(i) != std::nullopt)
             && (ocsp_responses.at(i)->status() == OCSP::Response_Status_Code::Successful))
@@ -239,7 +238,7 @@ PKIX::check_ocsp(const std::vector<X509_Certificate>& cert_path,
             if(ocsp_signature_status == Certificate_Status_Code::OCSP_SIGNATURE_OK)
                {
                // Signature ok, so check the claimed status
-               Certificate_Status_Code ocsp_status = ocsp_responses.at(i)->status_for(*ca, *subject, ref_time, max_ocsp_age);
+               Certificate_Status_Code ocsp_status = ocsp_responses.at(i)->status_for(ca, subject, ref_time, max_ocsp_age);
                status.insert(ocsp_status);
                }
             else
@@ -278,10 +277,10 @@ PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
 
       if(i < crls.size() && crls[i].has_value())
          {
-         std::optional<X509_Certificate> subject = cert_path.at(i);
-         std::optional<X509_Certificate> ca = cert_path.at(i+1);
+         const X509_Certificate& subject = cert_path.at(i);
+         const X509_Certificate& ca = cert_path.at(i+1);
 
-         if(!ca->allowed_usage(CRL_SIGN))
+         if(!ca.allowed_usage(CRL_SIGN))
             status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER);
 
          if(validation_time < crls[i]->this_update())
@@ -290,15 +289,15 @@ PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
          if(validation_time > crls[i]->next_update())
             status.insert(Certificate_Status_Code::CRL_HAS_EXPIRED);
 
-         if(crls[i]->check_signature(ca->subject_public_key()) == false)
+         if(crls[i]->check_signature(ca.subject_public_key()) == false)
             status.insert(Certificate_Status_Code::CRL_BAD_SIGNATURE);
 
          status.insert(Certificate_Status_Code::VALID_CRL_CHECKED);
 
-         if(crls[i]->is_revoked(*subject))
+         if(crls[i]->is_revoked(subject))
             status.insert(Certificate_Status_Code::CERT_IS_REVOKED);
 
-         std::string dp = subject->crl_distribution_point();
+         std::string dp = subject.crl_distribution_point();
          if(!dp.empty())
             {
             if(dp != crls[i]->crl_issuing_distribution_point())
@@ -381,10 +380,10 @@ PKIX::check_ocsp_online(const std::vector<X509_Certificate>& cert_path,
 
    for(size_t i = 0; i < to_ocsp; ++i)
       {
-      const std::optional<X509_Certificate>& subject = cert_path.at(i);
-      const std::optional<X509_Certificate>& issuer = cert_path.at(i+1);
+      const X509_Certificate& subject = cert_path.at(i);
+      const X509_Certificate& issuer = cert_path.at(i+1);
 
-      if(subject->ocsp_responder().empty())
+      if(subject.ocsp_responder().empty())
          {
          ocsp_response_futures.emplace_back(std::async(std::launch::deferred, [&]() -> std::optional<OCSP::Response> {
                   return OCSP::Response(Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
@@ -393,16 +392,16 @@ PKIX::check_ocsp_online(const std::vector<X509_Certificate>& cert_path,
       else
          {
          ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]() -> std::optional<OCSP::Response> {
-               OCSP::Request req(*issuer, BigInt::decode(subject->serial_number()));
+               OCSP::Request req(issuer, BigInt::decode(subject.serial_number()));
 
                HTTP::Response http;
                try
                   {
-                  http = HTTP::POST_sync(subject->ocsp_responder(),
-                                                "application/ocsp-request",
-                                                req.BER_encode(),
-                                                /*redirects*/1,
-                                                timeout);
+                  http = HTTP::POST_sync(subject.ocsp_responder(),
+                                         "application/ocsp-request",
+                                         req.BER_encode(),
+                                         /*redirects*/1,
+                                         timeout);
                   }
                catch(std::exception&)
                   {
