@@ -99,7 +99,7 @@ Build.h
 The ``build.h`` header file is generated and overwritten each time the
 ``configure.py`` script is executed. This header can be included in any header
 or source file and provides plenty of compile-time information in the form of
-preprocessor ``#define``s.
+preprocessor ``#define``\ s.
 
 It is helpful to check which modules are included in the current build of the
 library via macro defines of the form "BOTAN_HAS" followed by the module name.

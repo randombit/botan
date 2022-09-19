@@ -307,10 +307,10 @@ Data Encoding/Decoding
 ------------------------
 
 ``base32_dec file``
-  Encode *file* to Base32.
+  Decode *file* to Base32.
 
 ``base32_enc file``
-  Decode Base32 encoded *file*.
+  Encode Base32 encoded *file*.
 
 ``base58_enc --check file``
   Encode *file* to Base58. If ``--check`` is provided Base58Check is used.
@@ -319,16 +319,16 @@ Data Encoding/Decoding
   Decode Base58 encoded *file*. If ``--check`` is provided Base58Check is used.
 
 ``base64_dec file``
-  Encode *file* to Base64.
+  Decode *file* to Base64.
 
 ``base64_enc file``
-  Decode Base64 encoded *file*.
+  Encode Base64 encoded *file*.
 
 ``hex_dec file``
-  Encode *file* to Hex.
+  Decode *file* to Hex.
 
 ``hex_enc file``
-  Decode Hex encoded *file*.
+  Encode Hex encoded *file*.
 
 Forward Error Correction
 ------------------------
