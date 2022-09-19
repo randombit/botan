@@ -453,6 +453,35 @@ class CRL_Issuing_Distribution_Point final : public Certificate_Extension
    };
 
 /**
+* OCSP NoCheck Extension
+*
+* RFC6960 4.2.2.2.1
+*    A CA may specify that an OCSP client can trust a responder for the
+*    lifetime of the responder's certificate.  The CA does so by
+*    including the extension id-pkix-ocsp-nocheck.
+*
+* In other words: OCSP responder certificates with this extension do not need
+*                 to be validated against some revocation info.
+*/
+class OCSP_NoCheck final : public Certificate_Extension
+   {
+   public:
+      OCSP_NoCheck() = default;
+
+      std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<OCSP_NoCheck>(); }
+      static OID static_oid() { return OID("1.3.6.1.5.5.7.48.1.5"); }
+      OID oid_of() const override { return static_oid(); }
+
+   private:
+      std::string oid_name() const override
+         { return "PKIX.OCSP.NoCheck"; }
+
+      bool should_encode() const override { return true; }
+      std::vector<uint8_t> encode_inner() const override { return {}; }
+      void decode_inner(const std::vector<uint8_t>&) override;
+   };
+
+/**
 * An unknown X.509 extension
 * Will add a failure to the path validation result, if critical
 */

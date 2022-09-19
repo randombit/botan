@@ -1,5 +1,6 @@
 /*
 * (C) 2016 Jack Lloyd
+* (C) 2022 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -342,6 +343,22 @@ class OCSP_Tests final : public Test
          }
 #endif
 
+      static Test::Result test_responder_cert_with_nocheck_extension()
+         {
+         Test::Result result("BDr's OCSP response contains certificate featuring NoCheck extension");
+
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
+         const bool contains_cert_with_nocheck =
+            std::find_if(ocsp.certificates().cbegin(), ocsp.certificates().cend(),
+                         [](const auto& cert) {
+                            return cert.v3_extensions().extension_set(Botan::OID::from_string("PKIX.OCSP.NoCheck"));
+                         }) != ocsp.certificates().end();
+
+         result.confirm("Contains NoCheck extension", contains_cert_with_nocheck);
+
+         return result;
+         }
+
    public:
       std::vector<Test::Result> run() override
          {
@@ -355,6 +372,7 @@ class OCSP_Tests final : public Test
          results.push_back(test_response_verification_without_next_update_with_max_age());
          results.push_back(test_response_verification_without_next_update_without_max_age());
          results.push_back(test_response_verification_softfail());
+         results.push_back(test_responder_cert_with_nocheck_extension());
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
          if(Test::options().run_online_tests())
