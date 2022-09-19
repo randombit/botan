@@ -1076,6 +1076,49 @@ class Path_Validation_With_OCSP_Tests final : public Test
          return result;
          }
 
+      Test::Result validate_with_ocsp_with_authorized_responder()
+         {
+         Test::Result result("path check with ocsp response from authorized responder certificate");
+         Botan::Certificate_Store_In_Memory trusted;
+
+         auto restrictions = Botan::Path_Validation_Restrictions(true,  // require revocation info
+                                                                 110,   // minimum key strength
+                                                                 true); // OCSP for all intermediates
+
+         auto ee = load_test_X509_cert("x509/ocsp/bdr.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/bdr-root.pem");
+
+         // These OCSP responses are signed by an authorized OCSP responder
+         // certificate issued by `ca` and `trust_root` respectively. Note that
+         // the responder certificates contain the "OCSP No Check" extension,
+         // meaning that they themselves do not need a revocation check via OCSP.
+         auto ocsp_ee = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
+         auto ocsp_ca = load_test_OCSP_resp("x509/ocsp/bdr-int-ocsp-resp.der");
+
+         trusted.add_certificate(trust_root);
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
+
+         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                               const Botan::Certificate_Status_Code expected)
+            {
+            const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
+                                     valid_time, std::chrono::milliseconds(0), {ocsp_ee, ocsp_ca});
+
+            return result.confirm(std::string("Status: '") + Botan::to_string(expected)
+                                  + "' should match '" + Botan::to_string(path_result.result()) + "'",
+                                  path_result.result()==expected);
+            };
+
+         check_path(Botan::calendar_point(2022, 9, 18, 16, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_NOT_YET_VALID);
+         check_path(Botan::calendar_point(2022, 9, 19, 16, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OK);
+         check_path(Botan::calendar_point(2022, 9, 20, 16, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED);
+
+         return result;
+         }
 
       Test::Result validate_with_forged_ocsp_using_self_signed_cert()
          {
@@ -1152,6 +1195,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
                   validate_with_ocsp_with_next_update_with_max_age(),
                   validate_with_ocsp_without_next_update_without_max_age(),
                   validate_with_ocsp_without_next_update_with_max_age(),
+                  validate_with_ocsp_with_authorized_responder(),
                   validate_with_forged_ocsp_using_self_signed_cert(),
                   validate_with_ocsp_self_signed_by_intermediate_cert()};
          }
