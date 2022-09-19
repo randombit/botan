@@ -97,97 +97,23 @@ The Botan MAC computation is split into five stages.
 Code Examples
 ------------------------
 
-The following example computes an HMAC with a random key then verifies the tag::
+The following example computes an HMAC with a random key then verifies the tag.
 
-    #include <botan/mac.h>
-    #include <botan/hex.h>
-    #include <botan/system_rng.h>
-    #include <assert.h>
-
-    std::string compute_mac(const std::string& msg, const Botan::secure_vector<uint8_t>& key)
-       {
-       auto hmac = Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
-
-       hmac->set_key(key);
-       hmac->update(msg);
-
-       return Botan::hex_encode(hmac->final());
-       }
-
-    int main()
-       {
-       Botan::System_RNG rng;
-
-       const auto key = rng.random_vec(32); // 256 bit random key
-
-       // "Message" != "Mussage" so tags will also not match
-       std::string tag1 = compute_mac("Message", key);
-       std::string tag2 = compute_mac("Mussage", key);
-       assert(tag1 != tag2);
-
-       // Recomputing with original input message results in identical tag
-       std::string tag3 = compute_mac("Message", key);
-       assert(tag1 == tag3);
-       }
-
+.. literalinclude:: /../src/examples/hmac.cpp
+   :language: cpp
 
 The following example code computes a AES-256 GMAC and subsequently verifies the
 tag.  Unlike most other MACs, GMAC requires a nonce *which must not repeat or
 all security is lost*.
 
-.. code-block:: cpp
-
-    #include <botan/mac.h>
-    #include <botan/hex.h>
-    #include <iostream>
-
-    int main()
-       {
-       const std::vector<uint8_t> key = Botan::hex_decode("1337133713371337133713371337133713371337133713371337133713371337");
-       const std::vector<uint8_t> nonce = Botan::hex_decode("FFFFFFFFFFFFFFFFFFFFFFFF");
-       const std::vector<uint8_t> data = Botan::hex_decode("6BC1BEE22E409F96E93D7E117393172A");
-       std::unique_ptr<Botan::MessageAuthenticationCode> mac(Botan::MessageAuthenticationCode::create("GMAC(AES-256)"));
-       if(!mac)
-          return 1;
-       mac->set_key(key);
-       mac->start(nonce);
-       mac->update(data);
-       Botan::secure_vector<uint8_t> tag = mac->final();
-       std::cout << mac->name() << ": " << Botan::hex_encode(tag) << std::endl;
-
-       //Verify created MAC
-       mac->start(nonce);
-       mac->update(data);
-       std::cout << "Verification: " << (mac->verify_mac(tag) ? "success" : "failure");
-       return 0;
-       }
+.. literalinclude:: /../src/examples/gmac.cpp
+   :language: cpp
 
 The following example code computes a valid AES-128 CMAC tag and modifies the
 data to demonstrate a MAC verification failure.
 
-.. code-block:: cpp
-
-  #include <botan/mac.h>
-  #include <botan/hex.h>
-  #include <iostream>
-
-    int main()
-       {
-       const std::vector<uint8_t> key = Botan::hex_decode("2B7E151628AED2A6ABF7158809CF4F3C");
-       std::vector<uint8_t> data = Botan::hex_decode("6BC1BEE22E409F96E93D7E117393172A");
-       std::unique_ptr<Botan::MessageAuthenticationCode> mac(Botan::MessageAuthenticationCode::create("CMAC(AES-128)"));
-       if(!mac)
-          return 1;
-       mac->set_key(key);
-       mac->update(data);
-       Botan::secure_vector<uint8_t> tag = mac->final();
-       //Corrupting data
-       data.back()++;
-       //Verify with corrupted data
-       mac->update(data);
-       std::cout << "Verification with malformed data: " << (mac->verify_mac(tag) ? "success" : "failure");
-       return 0;
-       }
+.. literalinclude:: /../src/examples/cmac.cpp
+   :language: cpp
 
 Available MACs
 ------------------------------------------

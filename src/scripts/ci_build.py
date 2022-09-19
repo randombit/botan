@@ -43,6 +43,7 @@ def known_targets():
         'cross-win64',
         'docs',
         'emscripten',
+        'examples',
         'fuzzers',
         'lint',
         'minimized',
@@ -56,7 +57,7 @@ def known_targets():
 def build_targets(target, target_os):
     if target in ['shared', 'minimized', 'bsi', 'nist']:
         yield 'shared'
-    elif target in ['static', 'fuzzers', 'baremetal', 'emscripten']:
+    elif target in ['static', 'examples', 'fuzzers', 'baremetal', 'emscripten']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
@@ -163,6 +164,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             'ed25519_sign', 'elgamal_keygen', 'x509_path_rsa_pss']
 
         disabled_tests += slow_tests
+
+    if target == 'examples':
+        flags += ['--with-boost']
+        test_cmd = None
 
     if target == 'fuzzers':
         flags += ['--unsafe-fuzzer-mode', '--terminate-on-asserts']
@@ -317,7 +322,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         else:
             run_test_command = test_prefix + test_cmd
 
-    return flags, run_test_command, make_prefix
+    return flags, run_test_command, make_prefix, install_prefix
 
 def run_cmd(cmd, root_dir):
     """
@@ -534,7 +539,7 @@ def main(args=None):
             cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags] + full_paths)
 
     else:
-        config_flags, run_test_command, make_prefix = determine_flags(
+        config_flags, run_test_command, make_prefix, install_prefix = determine_flags(
             target, options.os, options.cpu, options.cc,
             options.cc_bin, options.compiler_cache, root_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
@@ -616,6 +621,12 @@ def main(args=None):
             cmds.append(make_cmd + ['install'])
             build_config = os.path.join(root_dir, 'build', 'build_config.json')
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), build_config])
+
+        if target in ['examples']:
+            cmds.append(make_cmd + ['install'])
+            cmds.append([options.make_tool, '-C', os.path.join(root_dir, 'src/examples'),
+                         'INCLUDES=-I %s/include/botan-3' % (install_prefix),
+                         'BUILD_DIR_LINK_PATH=-L%s/lib' % (install_prefix)])
 
         if target in ['coverage']:
             if not have_prog('lcov'):

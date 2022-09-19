@@ -276,24 +276,8 @@ Code Example
 The example below creates a new 2048 bit ``DL_Group``, prints the generated
 parameters and ANSI_X9_42 encodes the created group for further usage with DH.
 
-.. code-block:: cpp
-
-    #include <botan/dl_group.h>
-    #include <botan/auto_rng.h>
-    #include <botan/rng.h>
-    #include <iostream>
-
-    int main()
-       {
-    	  std::unique_ptr<Botan::RandomNumberGenerator> rng(new Botan::AutoSeeded_RNG);
-    	  std::unique_ptr<Botan::DL_Group> group(new Botan::DL_Group(*rng.get(), Botan::DL_Group::Strong, 2048));
-    	  std::cout << std::endl << "p: " << group->get_p();
-    	  std::cout << std::endl << "q: " << group->get_q();
-    	  std::cout << std::endl << "g: " << group->get_q();
-    	  std::cout << std::endl << "ANSI_X9_42: " << std::endl << group->PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
-
-        return 0;
-       }
+.. literalinclude:: /../src/examples/dl_group.cpp
+   :language: cpp
 
 
 .. _ec_group:
@@ -333,23 +317,8 @@ is not checked, the implementation might be vulnerable to algorithm specific att
 The following example loads the Subject Public Key from the x509 certificate ``cert.pem`` and checks the
 loaded key. If the key check fails a respective error is thrown.
 
-.. code-block:: cpp
-
-    #include <botan/x509cert.h>
-    #include <botan/auto_rng.h>
-    #include <botan/rng.h>
-    #include <botan/pk_keys.h>
-
-    int main()
-       {
-       Botan::X509_Certificate cert("cert.pem");
-       std::unique_ptr<Botan::RandomNumberGenerator> rng(new Botan::AutoSeeded_RNG);
-       std::unique_ptr<Botan::Public_Key> key(cert.subject_public_key());
-       if(!key->check_key(*rng.get(), false))
-          {
-          throw std::invalid_argument("Loaded key is invalid");
-          }
-       }
+.. literalinclude:: /../src/examples/check_key.cpp
+   :language: cpp
 
 Encryption
 ---------------------------------
@@ -462,36 +431,8 @@ subsequently encrypts a fixed plaintext with the included public key, using EME1
 with SHA-256. For the sake of completeness, the ciphertext is then decrypted using
 the private key.
 
-.. code-block:: cpp
-
-  #include <botan/pkcs8.h>
-  #include <botan/hex.h>
-  #include <botan/pk_keys.h>
-  #include <botan/pubkey.h>
-  #include <botan/auto_rng.h>
-  #include <botan/rng.h>
-  #include <iostream>
-  int main (int argc, char* argv[])
-    {
-    if(argc!=2)
-       return 1;
-    std::string plaintext("Your great-grandfather gave this watch to your granddad for good luck. Unfortunately, Dane's luck wasn't as good as his old man's.");
-    std::vector<uint8_t> pt(plaintext.data(),plaintext.data()+plaintext.length());
-    std::unique_ptr<Botan::RandomNumberGenerator> rng(new Botan::AutoSeeded_RNG);
-
-    //load keypair
-    std::unique_ptr<Botan::Private_Key> kp(Botan::PKCS8::load_key(argv[1],*rng.get()));
-
-    //encrypt with pk
-    Botan::PK_Encryptor_EME enc(*kp,*rng.get(), "EME1(SHA-256)");
-    std::vector<uint8_t> ct = enc.encrypt(pt,*rng.get());
-
-    //decrypt with sk
-    Botan::PK_Decryptor_EME dec(*kp,*rng.get(), "EME1(SHA-256)");
-    std::cout << std::endl << "enc: " << Botan::hex_encode(ct) << std::endl << "dec: "<< Botan::hex_encode(dec.decrypt(ct));
-
-    return 0;
-    }
+.. literalinclude:: /../src/examples/encrypt_with_pkcs8_key.cpp
+   :language: cpp
 
 
 Signatures
@@ -613,34 +554,8 @@ Code Example
 The following sample program below demonstrates the generation of a new ECDSA keypair over the curve secp512r1
 and a ECDSA signature using EMSA1 with SHA-256. Subsequently the computed signature is validated.
 
-.. code-block:: cpp
-
-  #include <botan/auto_rng.h>
-  #include <botan/ecdsa.h>
-  #include <botan/ec_group.h>
-  #include <botan/pubkey.h>
-  #include <botan/hex.h>
-  #include <iostream>
-
-  int main()
-    {
-    Botan::AutoSeeded_RNG rng;
-    // Generate ECDSA keypair
-    Botan::ECDSA_PrivateKey key(rng, Botan::EC_Group("secp521r1"));
-
-    std::string text("This is a tasty burger!");
-    std::vector<uint8_t> data(text.data(),text.data()+text.length());
-    // sign data
-    Botan::PK_Signer signer(key, rng, "EMSA1(SHA-256)");
-    signer.update(data);
-    std::vector<uint8_t> signature = signer.signature(rng);
-    std::cout << "Signature:" << std::endl << Botan::hex_encode(signature);
-    // verify signature
-    Botan::PK_Verifier verifier(key, "EMSA1(SHA-256)");
-    verifier.update(data);
-    std::cout << std::endl << "is " << (verifier.check_signature(signature)? "valid" : "invalid");
-    return 0;
-    }
+.. literalinclude:: /../src/examples/ecdsa.cpp
+   :language: cpp
 
 
 Ed25519 Variants
@@ -722,37 +637,8 @@ Code Example
 The code below performs an unauthenticated ECDH key agreement using the secp521r elliptic curve and
 applies the key derivation function KDF2(SHA-256) with 256 bit output length to the computed shared secret.
 
-.. code-block:: cpp
-
-  #include <botan/auto_rng.h>
-  #include <botan/ecdh.h>
-  #include <botan/ec_group.h>
-  #include <botan/pubkey.h>
-  #include <botan/hex.h>
-  #include <iostream>
-
-  int main()
-     {
-     Botan::AutoSeeded_RNG rng;
-     // ec domain and
-     Botan::EC_Group domain("secp521r1");
-     std::string kdf = "KDF2(SHA-256)";
-     // generate ECDH keys
-     Botan::ECDH_PrivateKey keyA(rng, domain);
-     Botan::ECDH_PrivateKey keyB(rng, domain);
-     // Construct key agreements
-     Botan::PK_Key_Agreement ecdhA(keyA,rng,kdf);
-     Botan::PK_Key_Agreement ecdhB(keyB,rng,kdf);
-     // Agree on shared secret and derive symmetric key of 256 bit length
-     Botan::secure_vector<uint8_t> sA = ecdhA.derive_key(32,keyB.public_value()).bits_of();
-     Botan::secure_vector<uint8_t> sB = ecdhB.derive_key(32,keyA.public_value()).bits_of();
-
-     if(sA != sB)
-        return 1;
-
-     std::cout << "agreed key: " << std::endl << Botan::hex_encode(sA);
-     return 0;
-     }
+.. literalinclude:: /../src/examples/ecdh.cpp
+   :language: cpp
 
 
 .. _mceliece:
@@ -868,47 +754,5 @@ The following code snippet shows a minimum example on how to create an XMSS
 public/private key pair and how to use these keys to create and verify a
 signature:
 
-.. code-block:: cpp
-
-    #include <botan/auto_rng.h>
-    #include <botan/pubkey.h>
-    #include <botan/secmem.h>
-    #include <botan/xmss.h>
-
-    #include <iostream>
-    #include <vector>
-
-    int main()
-       {
-       // Create a random number generator used for key generation.
-       Botan::AutoSeeded_RNG rng;
-
-       // create a new public/private key pair using SHA2 256 as hash
-       // function and a tree height of 10.
-       Botan::XMSS_PrivateKey private_key(
-          Botan::XMSS_Parameters::xmss_algorithm_t::XMSS_SHA2_10_256,
-          rng);
-       Botan::XMSS_PublicKey public_key(private_key);
-
-       // create Public Key Signer using the private key.
-       Botan::PK_Signer signer(private_key, rng, "");
-
-       // create and sign a message using the Public Key Signer.
-       Botan::secure_vector<uint8_t> msg { 0x01, 0x02, 0x03, 0x04 };
-       signer.update(msg.data(), msg.size());
-       std::vector<uint8_t> sig = signer.signature(rng);
-
-       // create Public Key Verifier using the public key
-       Botan::PK_Verifier verifier(public_key, "");
-
-       // verify the signature for the previously generated message.
-       verifier.update(msg.data(), msg.size());
-       if(verifier.check_signature(sig.data(), sig.size()))
-          {
-          std::cout << "Success." << std::endl;
-          }
-       else
-          {
-          std::cout << "Error." << std::endl;
-          }
-       }
+.. literalinclude:: /../src/examples/xmss.cpp
+   :language: cpp
