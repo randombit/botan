@@ -1116,13 +1116,44 @@ class Path_Validation_With_OCSP_Tests final : public Test
          return result;
          }
 
+      Test::Result validate_with_ocsp_self_signed_by_intermediate_cert()
+         {
+         Test::Result result("path check with ocsp response for intermediate that is (maliciously) self-signed by the intermediate");
+         Botan::Certificate_Store_In_Memory trusted;
+
+         auto restrictions = Botan::Path_Validation_Restrictions(true,  // require revocation info
+                                                                 110,   // minimum key strength
+                                                                 true); // OCSP for all intermediates
+
+         auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
+
+         // this OCSP response for EE is valid (signed by intermediate cert)
+         auto ocsp_ee = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee.der");
+
+         // this OCSP response for Intermediate is malicious (signed by intermediate itself)
+         auto ocsp_ca = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_int_self_signed.der");
+
+         trusted.add_certificate(trust_root);
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
+
+         const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
+                                  Botan::calendar_point(2022, 9, 22, 22, 30, 0).to_std_timepoint(), std::chrono::milliseconds(0), {ocsp_ee, ocsp_ca});
+         result.confirm("should reject intermediate OCSP response", path_result.result() == Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
+         result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
+
+         return result;
+         }
+
       std::vector<Test::Result> run() override
          {
          return  {validate_with_ocsp_with_next_update_without_max_age(),
                   validate_with_ocsp_with_next_update_with_max_age(),
                   validate_with_ocsp_without_next_update_without_max_age(),
                   validate_with_ocsp_without_next_update_with_max_age(),
-                  validate_with_forged_ocsp_using_self_signed_cert()};
+                  validate_with_forged_ocsp_using_self_signed_cert(),
+                  validate_with_ocsp_self_signed_by_intermediate_cert()};
          }
 
    };
