@@ -82,7 +82,7 @@ WARN_AS_ERROR          = YES
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = %{src_dir}/lib %{build_dir}/build.h
+INPUT                  = %{src_dir}/lib %{build_dir}/build.h %{module_info_dir}
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          =
 RECURSIVE              = YES
