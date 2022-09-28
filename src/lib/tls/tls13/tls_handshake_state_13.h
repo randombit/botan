@@ -50,6 +50,7 @@ class BOTAN_TEST_API Handshake_State_13_Base
       Handshake_State_13_Base(Connection_Side whoami) : m_side(whoami) {}
 
       Client_Hello_13&        store(Client_Hello_13 client_hello, const bool from_peer);
+      Client_Hello_12&        store(Client_Hello_12 client_hello, const bool from_peer);
       Server_Hello_13&        store(Server_Hello_13 server_hello, const bool from_peer);
       Server_Hello_12&        store(Server_Hello_12 server_hello, const bool from_peer);
       Hello_Retry_Request&    store(Hello_Retry_Request hello_retry_request, const bool from_peer);
@@ -79,6 +80,7 @@ class BOTAN_TEST_API Handshake_State_13_Base
       Connection_Side m_side;
 
       std::optional<Client_Hello_13> m_client_hello;
+      std::optional<Client_Hello_12> m_client_hello_12;
       std::optional<Server_Hello_13> m_server_hello;
       std::optional<Server_Hello_12> m_server_hello_12;
       std::optional<Hello_Retry_Request> m_hello_retry_request;

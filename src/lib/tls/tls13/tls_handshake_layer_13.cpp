@@ -78,15 +78,15 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader, const Policy
       {
       switch(type)
          {
+         // CLIENT_HELLO and SERVER_HELLO messages are ambiguous. Both may come
+         // from non-TLS 1.3 peers. Hence, their parsing is somewhat different.
          case CLIENT_HELLO:
-            return Client_Hello_13(msg);
+            // ... might be TLS 1.2 Client Hello or TLS 1.3 Client Hello
+            return generalize_to<Handshake_Message_13>(Client_Hello_13::parse(msg));
          case SERVER_HELLO:
-            // SERVER_HELLO might be either an actual server_hello (1.2 or 1.3) or a
-            // hello_retry_request. Hence, this construction is exceptionally
-            // funneled through a factory method and then transformed into a
-            // generic Handshake_Message_13.
-            return std::visit([](auto message) -> Handshake_Message_13
-               { return message; }, Server_Hello_13::parse(msg));
+            // ... might be TLS 1.2 Server Hello or TLS 1.3 Server Hello or
+            // a TLS 1.3 Hello Retry Request disguising as a Server Hello
+            return generalize_to<Handshake_Message_13>(Server_Hello_13::parse(msg));
          // case END_OF_EARLY_DATA:
          //    return End_Of_Early_Data(msg);
          case ENCRYPTED_EXTENSIONS:

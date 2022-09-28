@@ -84,7 +84,9 @@ std::vector<Test::Result> handshake_message_filtering()
          {
          Client_Handshake_State_13 state;
 
-         auto filtered = state.sending(Client_Hello_13(client_hello_message));
+         auto client_hello = std::get<Client_Hello_13>(Client_Hello_13::parse(client_hello_message));
+
+         auto filtered = state.sending(std::move(client_hello));
          result.confirm("client can send client hello",
                         std::holds_alternative<std::reference_wrapper<Client_Hello_13>>(filtered));
 
@@ -93,7 +95,8 @@ std::vector<Test::Result> handshake_message_filtering()
          result.template test_throws<TLS_Exception>("client cannot receive client hello",
                "received an illegal handshake message", [&]
             {
-            state.received(Client_Hello_13(client_hello_message));
+            auto ch = std::get<Client_Hello_13>(Client_Hello_13::parse(client_hello_message));
+            state.received(std::move(ch));
             });
          }),
       Botan_Tests::CHECK("Client with server hello", [&](auto& result)

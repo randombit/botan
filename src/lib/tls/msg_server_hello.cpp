@@ -481,8 +481,6 @@ Server_Hello_13::Hello_Retry_Request_Tag Server_Hello_13::as_hello_retry_request
 std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12>
 Server_Hello_13::parse(const std::vector<uint8_t>& buf)
    {
-   TLS_Data_Reader reader("Server_Hello_13::parse", buf);
-
    auto data = std::make_unique<Server_Hello_Internal>(buf);
    const auto version = data->version();
 
