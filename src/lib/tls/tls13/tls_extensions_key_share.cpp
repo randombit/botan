@@ -454,14 +454,6 @@ bool Key_Share::empty() const
    return std::visit([](const auto& key_share) { return key_share.empty(); }, m_impl->key_share);
    }
 
-namespace {
-// This is a helper utility to emulate pattern matching with std::visit.
-// See https://en.cppreference.com/w/cpp/utility/variant/visit for more info.
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-// explicit deduction guide (not needed as of C++20)
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-}
-
 secure_vector<uint8_t> Key_Share::exchange(const Key_Share& peer_keyshare,
       const Policy& policy,
       Callbacks& cb,

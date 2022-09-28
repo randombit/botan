@@ -68,6 +68,12 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
          return std::make_unique<Supported_Versions>(reader, size, from);
 
 #if defined(BOTAN_HAS_TLS_13)
+      case TLSEXT_PSK:
+         return std::make_unique<PSK>(reader, size, message_type);
+
+      case TLSEXT_EARLY_DATA:
+         return std::make_unique<EarlyDataIndication>(reader, size, message_type);
+
       case TLSEXT_COOKIE:
          return std::make_unique<Cookie>(reader, size);
 
@@ -841,6 +847,49 @@ Signature_Algorithms_Cert::Signature_Algorithms_Cert(TLS_Data_Reader& reader, ui
 std::vector<uint8_t> Signature_Algorithms_Cert::serialize(Connection_Side whoami) const
    {
       return m_siganture_algorithms.serialize(whoami);
+   }
+
+std::vector<uint8_t> EarlyDataIndication::serialize(Connection_Side) const
+   {
+   std::vector<uint8_t> result;
+   if(m_max_early_data_size.has_value())
+      {
+      const auto max_data = m_max_early_data_size.value();
+      result.push_back(get_byte<0>(max_data));
+      result.push_back(get_byte<1>(max_data));
+      result.push_back(get_byte<2>(max_data));
+      result.push_back(get_byte<3>(max_data));
+      }
+   return result;
+   }
+
+EarlyDataIndication::EarlyDataIndication(TLS_Data_Reader& reader,
+                                         uint16_t extension_size,
+                                         Handshake_Type message_type)
+   {
+   if(message_type == NEW_SESSION_TICKET)
+      {
+      if(extension_size != 4)
+         {
+         throw TLS_Exception(Alert::DECODE_ERROR,
+                             "Received an early_data extension in a NewSessionTicket message "
+                             "without maximum early data size indication");
+         }
+
+      m_max_early_data_size = reader.get_uint32_t();
+      }
+   else if(extension_size != 0)
+      {
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "Received an early_data extension containing an unexpected data "
+                          "size indication");
+      }
+   }
+
+bool EarlyDataIndication::empty() const
+   {
+   // This extension may be empty by definition but still carry information
+   return false;
    }
 
 #endif

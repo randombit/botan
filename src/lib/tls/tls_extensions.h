@@ -34,6 +34,10 @@ namespace TLS {
 
 #if defined(BOTAN_HAS_TLS_13)
 class Callbacks;
+class Session;
+class Cipher_State;
+class Ciphersuite;
+class Transcript_Hash_State;
 
 enum class PSK_Key_Exchange_Mode : uint8_t {
    PSK_KE = 0,
@@ -67,6 +71,8 @@ enum Handshake_Extension_Type {
 
    TLSEXT_SUPPORTED_VERSIONS        = 43,
 #if defined(BOTAN_HAS_TLS_13)
+   TLSEXT_PSK                       = 41,
+   TLSEXT_EARLY_DATA                = 42,
    TLSEXT_COOKIE                    = 44,
 
    TLSEXT_PSK_KEY_EXCHANGE_MODES    = 45,
@@ -586,6 +592,52 @@ class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension
       std::vector<X509_DN> m_distinguished_names;
    };
 
+
+/**
+ * Pre-Shared Key extension from RFC 8446 4.2.11
+ */
+class BOTAN_UNSTABLE_API PSK final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type() { return TLSEXT_PSK; }
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<uint8_t> serialize(Connection_Side side) const override;
+
+      /**
+       * Returns the cipher state representing the PSK selected by the server.
+       * Note that this destructs the list of offered PSKs and its cipher states
+       * and must therefore not be called more than once.
+       */
+      std::unique_ptr<Cipher_State> select_cipher_state(const PSK& server_psk,
+                                                        const Ciphersuite& cipher);
+
+      /**
+       * Remove PSK identities from the list in \p m_psk that are not compatible
+       * with the passed in \p cipher suite.
+       * This is useful to react to Hello Retry Requests. See RFC 8446 4.1.4.
+       */
+      void filter(const Ciphersuite& cipher);
+
+      bool empty() const override;
+
+      PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type);
+
+      PSK(const Session& session_to_resume, Callbacks& callbacks);
+
+      ~PSK();
+
+      void calculate_binders(const Transcript_Hash_State& truncated_transcript_hash);
+
+      // TODO: Implement pure PSK negotiation that is not used for session
+      //       resumption.
+
+   private:
+      class PSK_Internal;
+      std::unique_ptr<PSK_Internal> m_impl;
+   };
+
+
 /**
 * Signature_Algorithms_Cert from RFC 8446
 */
@@ -658,6 +710,40 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension
       class Key_Share_Impl;
       std::unique_ptr<Key_Share_Impl> m_impl;
    };
+
+/**
+ * Indicates usage or support of early data as described in RFC 8446 4.2.10.
+ */
+class BOTAN_UNSTABLE_API EarlyDataIndication final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_EARLY_DATA; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override;
+
+      std::optional<uint32_t> max_early_data_size() const
+         { return m_max_early_data_size; }
+
+      EarlyDataIndication(TLS_Data_Reader& reader,
+                          uint16_t extension_size,
+                          Handshake_Type message_type);
+
+      /**
+       * The max_early_data_size is exclusively provided by servers when using
+       * this extension in the NewSessionTicket message! Otherwise it stays
+       * std::nullopt and results in an empty extension. (RFC 8446 4.2.10).
+       */
+      EarlyDataIndication(std::optional<uint32_t> max_early_data_size = std::nullopt)
+         : m_max_early_data_size(std::move(max_early_data_size)) {}
+
+   private:
+      std::optional<uint32_t> m_max_early_data_size;
+   };
+
 #endif
 
 /**

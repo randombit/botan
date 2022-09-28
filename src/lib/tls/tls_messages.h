@@ -220,14 +220,25 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
                       Callbacks& cb,
                       RandomNumberGenerator& rng,
                       const std::string& hostname,
-                      const std::vector<std::string>& next_protocols);
-
+                      const std::vector<std::string>& next_protocols,
+                      const std::optional<Session>& session = std::nullopt);
 
       void retry(const Hello_Retry_Request& hrr,
+                 const Transcript_Hash_State& transcript_hash_state,
                  Callbacks& cb,
                  RandomNumberGenerator& rng);
 
       std::vector<Protocol_Version> supported_versions() const;
+
+   private:
+      /**
+       * If the Client Hello contains a PSK extensions with identities this will
+       * generate the PSK binders as described in RFC 8446 4.2.11.2.
+       * Note that the passed in \p transcript_hash_state might be virgin for
+       * the initial Client Hello and should be primed with ClientHello1 and
+       * HelloRetryRequest for an updated Client Hello.
+       */
+      void calculate_psk_binders(Transcript_Hash_State transcript_hash_state);
    };
 
 #endif // BOTAN_HAS_TLS_13
@@ -866,13 +877,35 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
    public:
       Handshake_Type type() const override { return NEW_SESSION_TICKET; }
 
-      explicit New_Session_Ticket_13(const std::vector<uint8_t>& buf);
+      New_Session_Ticket_13(const std::vector<uint8_t>& buf,
+                            Connection_Side from);
 
       std::vector<uint8_t> serialize() const override;
 
-   private:
+      const std::vector<uint8_t>& ticket() const { return m_ticket; }
+      const std::vector<uint8_t>& nonce() const { return m_ticket_nonce; }
+      uint32_t ticket_age_add() const { return m_ticket_age_add; }
+      uint32_t lifetime_hint() const { return m_ticket_lifetime_hint; }
 
-      // TODO: implement this message fully
+      /**
+       * @return  the number of bytes allowed for early data or std::nullopt
+       *          when early data is not allowed at all
+       */
+      std::optional<uint32_t> early_data_byte_limit() const;
+
+   private:
+      // RFC 8446 4.6.1
+      //    Clients MUST NOT cache tickets for longer than 7 days, regardless of
+      //    the ticket_lifetime, and MAY delete tickets earlier based on local
+      //    policy.  A server MAY treat a ticket as valid for a shorter period
+      //    of time than what is stated in the ticket_lifetime.
+      //
+      // ... hence we call it 'lifetime hint'.
+      uint32_t m_ticket_lifetime_hint;
+      uint32_t m_ticket_age_add;
+      std::vector<uint8_t> m_ticket_nonce;
+      std::vector<uint8_t> m_ticket;
+      Extensions m_extensions;
    };
 
 #endif

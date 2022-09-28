@@ -66,7 +66,7 @@ class BOTAN_TEST_API Handshake_Layer
        *
        * @return the marshalled handshake message
        */
-      std::vector<uint8_t> prepare_message(const Handshake_Message_13_Ref message, Transcript_Hash_State& transcript_hash);
+      static std::vector<uint8_t> prepare_message(const Handshake_Message_13_Ref message, Transcript_Hash_State& transcript_hash);
 
       /**
        * Marshalls one post-handshake message for sending in an (encrypted) record.
@@ -75,7 +75,7 @@ class BOTAN_TEST_API Handshake_Layer
        *
        * @return the marshalled post-handshake message
        */
-      std::vector<uint8_t> prepare_post_handshake_message(const Post_Handshake_Message_13& message);
+      static std::vector<uint8_t> prepare_post_handshake_message(const Post_Handshake_Message_13& message);
 
       /**
        * Check if the Handshake_Layer has stored a partial message in its internal buffer.

@@ -69,6 +69,18 @@ class BOTAN_TEST_API Transcript_Hash_State
        */
       const Transcript_Hash& previous() const;
 
+      /**
+       * returns a truncated transcript hash (see RFC 8446 4.2.11.2)
+       *
+       * This is useful for implementing PSK binders in the PSK extension of
+       * client hello. It is a transcript over a partially marshalled client
+       * hello message. This hash is available only if the last processed
+       * message was a client hello with a PSK extension.
+       *
+       * throws if no 'truncated' hash is available
+       */
+      const Transcript_Hash& truncated() const;
+
       void set_algorithm(const std::string& algo_spec);
 
       Transcript_Hash_State clone() const;
@@ -85,6 +97,7 @@ class BOTAN_TEST_API Transcript_Hash_State
 
       Transcript_Hash m_current;
       Transcript_Hash m_previous;
+      Transcript_Hash m_truncated;
    };
 
 }

@@ -31,7 +31,8 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
                                const std::vector<std::string>& next_protocols) :
    Channel_Impl_13(callbacks, session_manager, creds, rng, policy, false /* is_server */),
    m_info(info),
-   m_should_send_ccs(false)
+   m_should_send_ccs(false),
+   m_resumed_session(find_session_for_resumption())
    {
 #if defined(BOTAN_HAS_TLS_12)
    if(policy.allow_tls12())
@@ -43,7 +44,8 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
                              callbacks,
                              rng,
                              m_info.hostname(),
-                             next_protocols)));
+                             next_protocols,
+                             m_resumed_session)));
 
    if(expects_downgrade())
       { preserve_client_hello(msg); }
@@ -108,6 +110,29 @@ void Client_Impl_13::process_dummy_change_cipher_spec()
 bool Client_Impl_13::handshake_finished() const
    {
    return m_handshake_state.handshake_finished();
+   }
+
+std::optional<Session> Client_Impl_13::find_session_for_resumption()
+   {
+   Session session;
+   if(!session_manager().load_from_server_info(m_info, session))
+      return std::nullopt;
+
+   // Ignore sessions that were not negotiated as TLS 1.3
+   if(session.version().is_pre_tls_13())
+      return std::nullopt;
+
+   // RFC 8446 4.2.11.1
+   //    Clients MUST NOT attempt to use tickets which have ages greater than
+   //    the "ticket_lifetime" value which was provided with the ticket.
+   const auto session_age = callbacks().tls_current_timestamp() - session.start_time();
+   if(session_age > session.lifetime_hint())
+      {
+      session_manager().remove_entry(session.session_id());
+      return std::nullopt;
+      }
+
+   return session;
    }
 
 void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
@@ -259,23 +284,52 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Server replied using a ciphersuite not allowed in version it offered");
       }
 
+   // RFC 8446 4.2.11
+   //    Clients MUST verify that [...] a server "key_share" extension is present
+   //    if required by the ClientHello "psk_key_exchange_modes" extension.  If
+   //    these values are not consistent, the client MUST abort the handshake
+   //    with an "illegal_parameter" alert.
+   //
+   // Currently, we don't support PSK-only mode, hence a key share extension is
+   // considered mandatory.
+   //
+   // TODO: Implement PSK-only mode.
    if(!sh.extensions().has<Key_Share>())
       {
-      throw Not_Implemented("PSK mode (without key agreement) is NYI");
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Server Hello did not contain a key share extension");
       }
 
-   // TODO: this is assuming a standard handshake without any PSK mode!
-   BOTAN_ASSERT_NOMSG(ch.extensions().has<Key_Share>());
    auto my_keyshare = ch.extensions().get<Key_Share>();
    auto shared_secret = my_keyshare->exchange(*sh.extensions().get<Key_Share>(), policy(), callbacks(), rng());
    my_keyshare->erase();
 
    m_transcript_hash.set_algorithm(cipher.value().prf_algo());
 
-   m_cipher_state = Cipher_State::init_with_server_hello(m_side,
-                    std::move(shared_secret),
-                    cipher.value(),
-                    m_transcript_hash.current());
+   if(sh.extensions().has<PSK>())
+      {
+      m_cipher_state =
+         ch.extensions().get<PSK>()->select_cipher_state(
+            *sh.extensions().get<PSK>(), cipher.value());
+
+      // TODO: When implementing pure PSK (negotiated out-of-band not as session
+      //       tickets), we might mix resumption and external PSKs in a single
+      //       handshake. In that case we might need to reset `m_resumed_session`
+      //       if the server selected an out-of-band PSK over a resumption PSK!
+
+      // TODO: When implementing early data, `advance_with_client_hello` must
+      //       happen _before_ encrypting any early application data.
+      //       Same when we want to support early key export.
+      m_cipher_state->advance_with_client_hello(m_transcript_hash.previous());
+      m_cipher_state->advance_with_server_hello(cipher.value(), std::move(shared_secret), m_transcript_hash.current());
+      }
+   else
+      {
+      m_resumed_session.reset(); // might have been set if we attempted a resumption
+      m_cipher_state = Cipher_State::init_with_server_hello(m_side,
+                                                            std::move(shared_secret),
+                                                            cipher.value(),
+                                                            m_transcript_hash.current());
+      }
 
    callbacks().tls_examine_extensions(sh.extensions(), SERVER);
 
@@ -309,7 +363,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
    m_transcript_hash = Transcript_Hash_State::recreate_after_hello_retry_request(cipher.value().prf_algo(),
                        m_transcript_hash);
 
-   ch.retry(hrr, callbacks(), rng());
+   ch.retry(hrr, m_transcript_hash, callbacks(), rng());
 
    callbacks().tls_examine_extensions(hrr.extensions(), SERVER);
 
@@ -353,9 +407,11 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
 
    callbacks().tls_examine_extensions(encrypted_extensions_msg.extensions(), SERVER);
 
-   bool psk_mode = false;  // TODO
-   if(psk_mode)
+   if(m_handshake_state.server_hello().extensions().has<PSK>())
       {
+      // RFC 8446 2.2
+      //    As the server is authenticating via a PSK, it does not send a
+      //    Certificate or a CertificateVerify message.
       m_transitions.set_expected_next(FINISHED);
       }
    else
@@ -525,7 +581,9 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
    m_cipher_state->advance_with_server_finished(th_server_finished);
    m_cipher_state->advance_with_client_finished(m_transcript_hash.current());
 
-   // TODO: save session and invoke tls_session_established callback
+   // TODO: Create a dummy session object and invoke tls_session_established.
+   //       Alternatively, consider changing the expectations described in the
+   //       callback's doc string.
 
    // no more handshake messages expected
    m_transitions.set_expected_next({});
@@ -533,10 +591,24 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
    callbacks().tls_session_activated();
    }
 
-void TLS::Client_Impl_13::handle(const New_Session_Ticket_13&)
+void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket)
    {
-   // TODO: resumption is not yet implemented, hence we ignore session tickets
-   //       received from the server.
+   Session session(new_session_ticket.ticket(),
+                   m_cipher_state->psk(new_session_ticket.nonce()),
+                   new_session_ticket.early_data_byte_limit(),
+                   new_session_ticket.ticket_age_add(),
+                   new_session_ticket.lifetime_hint(),
+                   m_handshake_state.server_hello().selected_version(),
+                   m_handshake_state.server_hello().ciphersuite(),
+                   Connection_Side::CLIENT,
+                   peer_cert_chain(),
+                   m_info,
+                   callbacks().tls_current_timestamp());
+
+   if(callbacks().tls_session_ticket_received(session))
+      {
+      session_manager().save(session);
+      }
    }
 
 void TLS::Client_Impl_13::handle(const Key_Update& key_update)
@@ -563,8 +635,20 @@ void TLS::Client_Impl_13::handle(const Key_Update& key_update)
 
 std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const
    {
-   throw Not_Implemented("peer cert chain is not implemented");
-   return std::vector<X509_Certificate>();
+   std::vector<X509_Certificate> result;
+
+   if(m_handshake_state.has_server_certificate_chain())
+      {
+      const auto& cert_chain = m_handshake_state.server_certificate().cert_chain();
+      std::transform(cert_chain.cbegin(), cert_chain.cend(), std::back_inserter(result),
+                     [](const auto& cert_entry) { return cert_entry.certificate; });
+      }
+   else if(m_resumed_session.has_value())
+      {
+      result = m_resumed_session->peer_certs();
+      }
+
+   return result;
    }
 
 bool Client_Impl_13::prepend_ccs()
