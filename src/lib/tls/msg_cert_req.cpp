@@ -17,7 +17,7 @@
 
 namespace Botan::TLS {
 
-Handshake_Type Certificate_Req::type() const
+Handshake_Type Certificate_Request_12::type() const
    {
    return CERTIFICATE_REQUEST;
    }
@@ -56,7 +56,7 @@ uint8_t cert_type_name_to_code(const std::string& name)
 /**
 * Create a new Certificate Request message
 */
-Certificate_Req::Certificate_Req(Handshake_IO& io,
+Certificate_Request_12::Certificate_Request_12(Handshake_IO& io,
                                  Handshake_Hash& hash,
                                  const Policy& policy,
                                  const std::vector<X509_DN>& ca_certs) :
@@ -70,7 +70,7 @@ Certificate_Req::Certificate_Req(Handshake_IO& io,
 /**
 * Deserialize a Certificate Request message
 */
-Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf)
+Certificate_Request_12::Certificate_Request_12(const std::vector<uint8_t>& buf)
    {
    if(buf.size() < 4)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
@@ -115,17 +115,17 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf)
       }
    }
 
-const std::vector<std::string>& Certificate_Req::acceptable_cert_types() const
+const std::vector<std::string>& Certificate_Request_12::acceptable_cert_types() const
    {
    return m_cert_key_types;
    }
 
-const std::vector<X509_DN>& Certificate_Req::acceptable_CAs() const
+const std::vector<X509_DN>& Certificate_Request_12::acceptable_CAs() const
    {
    return m_names;
    }
 
-const std::vector<Signature_Scheme>& Certificate_Req::signature_schemes() const
+const std::vector<Signature_Scheme>& Certificate_Request_12::signature_schemes() const
    {
    return m_schemes;
    }
@@ -133,7 +133,7 @@ const std::vector<Signature_Scheme>& Certificate_Req::signature_schemes() const
 /**
 * Serialize a Certificate Request message
 */
-std::vector<uint8_t> Certificate_Req::serialize() const
+std::vector<uint8_t> Certificate_Request_12::serialize() const
    {
    std::vector<uint8_t> buf;
 

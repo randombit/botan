@@ -26,32 +26,37 @@ class BOTAN_TEST_API Handshake_State_13_Base
    public:
       bool has_client_hello() const { return m_client_hello.has_value(); }
       bool has_hello_retry_request() const { return m_hello_retry_request.has_value(); }
+      bool has_certificate_request() const { return m_certificate_request.has_value(); }
       bool has_server_finished() const { return m_server_finished.has_value(); }
       bool has_client_finished() const { return m_client_finished.has_value(); }
 
       bool handshake_finished() const { return has_server_finished() && has_client_finished(); }
 
       // Client_Hello_13 cannot be const because it might need modification due to a Hello_Retry_Request
-      Client_Hello_13&             client_hello() { return get(m_client_hello); }
-      const Server_Hello_13&       server_hello() const { return get(m_server_hello); }
-      const Hello_Retry_Request&   hello_retry_request() const { return get(m_hello_retry_request); }
-      const Encrypted_Extensions&  encrypted_extensions() const { return get(m_encrypted_extensions); }
-      const Certificate_13&        certificate() const { return get(m_server_certs); }
-      const Certificate_Verify_13& certificate_verify() const { return get(m_server_verify); }
-      const Finished_13&           client_finished() const { return get(m_client_finished); }
-      const Finished_13&           server_finished() const { return get(m_server_finished); }
+      Client_Hello_13&              client_hello() { return get(m_client_hello); }
+      const Server_Hello_13&        server_hello() const { return get(m_server_hello); }
+      const Hello_Retry_Request&    hello_retry_request() const { return get(m_hello_retry_request); }
+      const Encrypted_Extensions&   encrypted_extensions() const { return get(m_encrypted_extensions); }
+      const Certificate_Request_13& certificate_request() const { return get(m_certificate_request); }
+      const Certificate_13&         server_certificate() const { return get(m_server_certificate); }
+      const Certificate_13&         client_certificate() const { return get(m_client_certificate); }
+      const Certificate_Verify_13&  server_certificate_verify() const { return get(m_server_certificate_verify); }
+      const Certificate_Verify_13&  client_certificate_verify() const { return get(m_client_certificate_verify); }
+      const Finished_13&            server_finished() const { return get(m_server_finished); }
+      const Finished_13&            client_finished() const { return get(m_client_finished); }
 
    protected:
       Handshake_State_13_Base(Connection_Side whoami) : m_side(whoami) {}
 
-      Client_Hello_13&       store(Client_Hello_13 client_hello, const bool from_peer);
-      Server_Hello_13&       store(Server_Hello_13 server_hello, const bool from_peer);
-      Server_Hello_12&       store(Server_Hello_12 server_hello, const bool from_peer);
-      Hello_Retry_Request&   store(Hello_Retry_Request hello_retry_request, const bool from_peer);
-      Encrypted_Extensions&  store(Encrypted_Extensions encrypted_extensions, const bool from_peer);
-      Certificate_13&        store(Certificate_13 certificate, const bool from_peer);
-      Certificate_Verify_13& store(Certificate_Verify_13 certificate_verify, const bool from_peer);
-      Finished_13&           store(Finished_13 finished, const bool from_peer);
+      Client_Hello_13&        store(Client_Hello_13 client_hello, const bool from_peer);
+      Server_Hello_13&        store(Server_Hello_13 server_hello, const bool from_peer);
+      Server_Hello_12&        store(Server_Hello_12 server_hello, const bool from_peer);
+      Hello_Retry_Request&    store(Hello_Retry_Request hello_retry_request, const bool from_peer);
+      Encrypted_Extensions&   store(Encrypted_Extensions encrypted_extensions, const bool from_peer);
+      Certificate_Request_13& store(Certificate_Request_13 certificate_request, const bool from_peer);
+      Certificate_13&         store(Certificate_13 certificate, const bool from_peer);
+      Certificate_Verify_13&  store(Certificate_Verify_13 certificate_verify, const bool from_peer);
+      Finished_13&            store(Finished_13 finished, const bool from_peer);
 
    private:
       template<typename MessageT>
@@ -77,8 +82,11 @@ class BOTAN_TEST_API Handshake_State_13_Base
       std::optional<Server_Hello_12> m_server_hello_12;
       std::optional<Hello_Retry_Request> m_hello_retry_request;
       std::optional<Encrypted_Extensions> m_encrypted_extensions;
-      std::optional<Certificate_13> m_server_certs;
-      std::optional<Certificate_Verify_13> m_server_verify;
+      std::optional<Certificate_Request_13> m_certificate_request;
+      std::optional<Certificate_13> m_server_certificate;
+      std::optional<Certificate_13> m_client_certificate;
+      std::optional<Certificate_Verify_13> m_server_certificate_verify;
+      std::optional<Certificate_Verify_13> m_client_certificate_verify;
       std::optional<Finished_13> m_server_finished;
       std::optional<Finished_13> m_client_finished;
    };
@@ -101,7 +109,7 @@ class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Ba
    public:
       Handshake_State_13() : Handshake_State_13_Base(whoami) {}
 
-      decltype(auto) sent(Outbound_Message_T message)
+      decltype(auto) sending(Outbound_Message_T message)
          {
          return std::visit([&](auto msg) -> Handshake_Message_13_Ref
             {

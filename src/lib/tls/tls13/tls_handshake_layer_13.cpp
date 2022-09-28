@@ -37,7 +37,7 @@ Handshake_Type handshake_type_from_byte(uint8_t type)
          // case END_OF_EARLY_DATA:  // NYI: needs PSK/resumption support -- won't be offered in Client Hello for now
          case ENCRYPTED_EXTENSIONS:
          case CERTIFICATE:
-         // case CERTIFICATE_REQUEST:  // NYI: client auth -- server might still request, resulting in handshake failure
+         case CERTIFICATE_REQUEST:
          case CERTIFICATE_VERIFY:
          case FINISHED:
             return Handshake_Type(type);
@@ -93,8 +93,8 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader, const Policy
             return Encrypted_Extensions(msg);
          case CERTIFICATE:
             return Certificate_13(msg, policy, peer_side);
-         // case CERTIFICATE_REQUEST:
-         //    return Certificate_Req_13(msg);
+         case CERTIFICATE_REQUEST:
+            return Certificate_Request_13(msg, peer_side);
          case CERTIFICATE_VERIFY:
             return Certificate_Verify_13(msg, peer_side);
          case FINISHED:
