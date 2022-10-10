@@ -352,6 +352,12 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     target_group.add_option('--compiler-cache',
                             help='specify a compiler cache to use')
 
+    target_group.add_option('--with-compilation-database', dest='with_compilation_database',
+                            action='store_true', default=True, help=optparse.SUPPRESS_HELP)
+
+    target_group.add_option('--without-compilation-database', dest='with_compilation_database',
+                            action='store_false', help='disable generation of compile_commands.json')
+
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
 
@@ -3344,7 +3350,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
     with open(os.path.join(build_paths.build_dir, 'build_config.json'), 'w') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
-    if options.compiler == 'clang':
+    if options.with_compilation_database:
         write_template(in_build_dir('compile_commands.json'), in_build_data('compile_commands.json.in'))
 
     if options.with_cmake:
