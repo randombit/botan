@@ -1710,6 +1710,7 @@ def process_template_string(template_text, variables, template_source):
             self.value_pattern = re.compile(r'%{([a-z][a-z_0-9\|]+)}')
             self.cond_pattern = re.compile('%{(if|unless) ([a-z][a-z_0-9]+)}')
             self.for_pattern = re.compile('(.*)%{for ([a-z][a-z_0-9]+)}')
+            self.omitlast_pattern = re.compile('(.*)%{omitlast ([^}]*)}(.*)', re.DOTALL)
             self.join_pattern = re.compile('(.*)%{join ([a-z][a-z_0-9]+)}')
 
         def substitute(self, template):
@@ -1778,7 +1779,7 @@ def process_template_string(template_text, variables, template_source):
                         for_body += lines[idx] + "\n"
                         idx += 1
 
-                    for v in var:
+                    for i, v in enumerate(var):
                         if isinstance(v, dict):
                             for_val = for_body
                             for ik, iv in v.items():
@@ -1786,6 +1787,14 @@ def process_template_string(template_text, variables, template_source):
                             output += for_val + "\n"
                         else:
                             output += for_body.replace('%{i}', v).replace('%{i|upper}', v.upper())
+
+                        omitlast_match = self.omitlast_pattern.match(output)
+                        if omitlast_match:
+                            output = omitlast_match.group(1)
+                            if i + 1 < len(var):
+                                output += omitlast_match.group(2)
+                            output += omitlast_match.group(3)
+
                     output += "\n"
                 else:
                     output += lines[idx] + "\n"
