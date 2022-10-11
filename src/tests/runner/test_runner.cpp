@@ -225,6 +225,15 @@ std::vector<Test::Result> run_a_test(const std::string& test_name)
       else if(std::unique_ptr<Test> test = Test::get_test(test_name))
          {
          std::vector<Test::Result> test_results = test->run();
+         for (auto& result : test_results)
+            {
+            if(test->registration_location() && !result.code_location())
+               {
+               // If a test result has no specific code location associated to it,
+               // we fall back to the test case's registration location.
+               result.set_code_location(test->registration_location().value());
+               }
+            }
          results.insert(results.end(), test_results.begin(), test_results.end());
          }
       else

@@ -32,9 +32,14 @@ namespace Botan_Tests {
 
 void Test::Result::merge(const Result& other, bool ignore_test_name)
    {
-   if(!ignore_test_name && who() != other.who())
+   if(!ignore_test_name)
       {
-      throw Test_Error("Merging tests from different sources");
+      if(who() != other.who())
+         throw Test_Error("Merging tests from different sources");
+
+      // When deliberately merging results with different names, the code location is
+      // likely inconsistent and must be discarded.
+      m_where = other.m_where;
       }
 
    m_ns_taken += other.m_ns_taken;
@@ -471,7 +476,12 @@ std::string Test::Result::result_string() const
 
    for(size_t i = 0; i != m_fail_log.size(); ++i)
       {
-      report << "Failure " << (i + 1) << ": " << m_fail_log[i] << "\n";
+      report << "Failure " << (i + 1) << ": " << m_fail_log[i];
+      if(m_where)
+         {
+         report << " (at " << m_where->path << ":" << m_where->line << ")";
+         }
+       report << "\n";
       }
 
    if(!m_fail_log.empty() || tests_run() == 0 || verbose)
