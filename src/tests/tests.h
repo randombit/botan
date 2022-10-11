@@ -641,15 +641,20 @@ template<typename Test_Class>
 class TestClassRegistration
    {
    public:
-      TestClassRegistration(const std::string& category, const std::string& name)
+      TestClassRegistration(std::string category, std::string name, CodeLocation registration_location)
          {
-         auto test_maker = []() -> std::unique_ptr<Test> { return std::make_unique<Test_Class>(); };
+         auto test_maker = [=]() -> std::unique_ptr<Test>
+            {
+            auto test = std::make_unique<Test_Class>();
+            test->set_registration_location(std::move(registration_location));
+            return test;
+            };
          Test::register_test(category, name, test_maker);
          }
    };
 
 #define BOTAN_REGISTER_TEST(category, name, Test_Class)                 \
-   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name)
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, {__FILE__, __LINE__})
 
 typedef Test::Result(*test_fn)();
 typedef std::vector<Test::Result> (*test_fn_vec)();
@@ -714,15 +719,20 @@ class TestFnRegistration
    {
    public:
       template <typename... TestFns>
-      TestFnRegistration(const std::string& category, const std::string& name, TestFns... fn)
+      TestFnRegistration(std::string category, std::string name, CodeLocation registration_location, TestFns... fn)
          {
-         auto test_maker = [=]() -> std::unique_ptr<Test> { return std::make_unique<FnTest>(fn...); };
+         auto test_maker = [=]() -> std::unique_ptr<Test>
+            {
+            auto test = std::make_unique<FnTest>(fn...);
+            test->set_registration_location(std::move(registration_location));
+            return test;
+            };
          Test::register_test(category, name, test_maker);
          }
    };
 
 #define BOTAN_REGISTER_TEST_FN(category, name, ...) \
-   static const TestFnRegistration reg_ ## fn_name(category, name, __VA_ARGS__)
+   static const TestFnRegistration reg_ ## fn_name(category, name, {__FILE__, __LINE__}, __VA_ARGS__)
 
 class VarMap
    {
