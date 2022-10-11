@@ -14,6 +14,8 @@
 #include <string>
 #include <map>
 #include <set>
+#include <tuple>
+
 #include <botan/secmem.h>
 
 namespace Botan {
@@ -106,13 +108,32 @@ void map_remove_if(Pred pred, T& assoc)
       }
    }
 
-template <typename T> T concat(T buffer) { return buffer; }
-template <typename T, typename... Ts>
-T concat(const T& buffer, const Ts& ...buffers)
+/**
+ * Concatenate an arbitrary number of buffers.
+ * @return the concatenation of \p buffers as the container type of the first buffer
+ */
+template <typename... Ts>
+decltype(auto) concat(Ts&& ...buffers)
    {
-   auto result = concat(buffers...);
-   result.insert(result.begin(), buffer.begin(), buffer.end());
+   static_assert(sizeof...(buffers) > 0, "concat requires at least one buffer");
+
+   // TODO: C++20: use std::remove_cvref_t
+   using result_t = std::remove_cv_t<std::remove_reference_t<std::tuple_element_t<0, std::tuple<Ts...>>>>;
+   result_t result;
+   result.reserve((buffers.size() + ...));
+   (result.insert(result.end(), buffers.begin(), buffers.end()), ...);
    return result;
+   }
+
+/**
+ * Concatenate an arbitrary number of buffers and define the output buffer
+ * type as a mandatory template parameter.
+ * @return the concatenation of \p buffers as the user-defined container type
+ */
+template <typename ResultT, typename... Ts>
+ResultT concat_as(Ts&& ...buffers)
+   {
+   return concat(ResultT(), std::forward<Ts>(buffers)...);
    }
 
 template<typename... Alts, typename... Ts>
