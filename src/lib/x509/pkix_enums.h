@@ -31,10 +31,6 @@ enum class Certificate_Status_Code {
    OCSP_NO_REVOCATION_URL = 502,
    OCSP_SERVER_NOT_AVAILABLE = 503,
 
-   // Typo versions of above - will be removed in future major release
-   OSCP_NO_REVOCATION_URL = 502,
-   OSCP_SERVER_NOT_AVAILABLE = 503,
-
    // Errors
    FIRST_ERROR_STATUS = 1000,
 
