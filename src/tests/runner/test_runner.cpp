@@ -18,6 +18,8 @@
    #include <botan/internal/rwlock.h>
 #endif
 
+#include <shared_mutex>
+
 namespace Botan_Tests {
 
 Test_Runner::Test_Runner(std::ostream& out) : m_output(out) {}
@@ -282,17 +284,13 @@ bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_
    std::vector<std::future<std::vector<Test::Result>>> m_fut_results;
 
    auto run_test_exclusive = [&](const std::string& test_name) {
-      rwlock.lock();
-      std::vector<Test::Result> results = run_a_test(test_name);
-      rwlock.unlock();
-      return results;
+      std::unique_lock lk(rwlock);
+      return run_a_test(test_name);
    };
 
    auto run_test_shared = [&](const std::string& test_name) {
-      rwlock.lock_shared();
-      std::vector<Test::Result> results = run_a_test(test_name);
-      rwlock.unlock_shared();
-      return results;
+      std::shared_lock lk(rwlock);
+      return run_a_test(test_name);
    };
 
    for(auto const& test_name : tests_to_run)
