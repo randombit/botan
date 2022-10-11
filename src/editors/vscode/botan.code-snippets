@@ -1,0 +1,37 @@
+{
+    "Botan Copyright Notice (C++)": {
+        "prefix": [
+            "copyright",
+            "header"
+        ],
+        "body": [
+            "/**",
+            " * ${1:<brief file content description>}",
+            " * (C) ${2:<year>} Jack Lloyd",
+            " *     ${3:<year>} ${4:<your name(s)>} - ${5:<your company name (optional)>}",
+            " *",
+            " * Botan is released under the Simplified BSD License (see license.txt)",
+            " */"
+        ],
+        "description": "The copyright header provided in all of Botan's C++ and header files",
+        "scope": "c,cpp"
+    },
+    "Botan Copyright Notice (Python)": {
+        "prefix": [
+            "copyright",
+            "header"
+        ],
+        "body": [
+            "\"\"\"",
+            "${1:<brief file content description>}",
+            "",
+            "(C) ${2:<year>} Jack Lloyd",
+            "    ${3:<year>} ${4:<your name(s)>} (${5:<your company name (optional)>})",
+            "",
+            "Botan is released under the Simplified BSD License (see license.txt)",
+            "\"\"\""
+        ],
+        "description": "The copyright header provided in all of Botan's Python scripts",
+        "scope": "python"
+    }
+}
