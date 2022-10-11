@@ -42,6 +42,15 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
       throw TLS_Exception(Alert::MISSING_EXTENSION, "Certificate_Request message did not provide a signature_algorithms extension");
       }
 
+   // RFC 8446 4.2.
+   //    The table below indicates the messages where a given extension may
+   //    appear [...].  If an implementation receives an extension which it
+   //    recognizes and which is not specified for the message in which it
+   //    appears, it MUST abort the handshake with an "illegal_parameter" alert.
+   //
+   // For Certificate Request said table states:
+   //    "status_request", "signature_algorithms", "signed_certificate_timestamp",
+   //     "certificate_authorities", "oid_filters", "signature_algorithms_cert",
    std::set<Handshake_Extension_Type> allowed_extensions =
       {
       TLSEXT_CERT_STATUS_REQUEST,
@@ -54,7 +63,7 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
 
    if(m_extensions.contains_implemented_extensions_other_than(allowed_extensions))
       {
-      throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION,
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                           "Certificate Request contained an extension that is not allowed");
       }
    }

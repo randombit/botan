@@ -112,7 +112,7 @@ namespace {
 std::vector<uint8_t> message(Connection_Side side, const Transcript_Hash& hash)
    {
    std::vector<uint8_t> msg(64, 0x20);
-   msg.reserve(64 + 32 + 1 + hash.size());
+   msg.reserve(64 + 33 + 1 + hash.size());
 
    const std::string context_string = (side == Botan::TLS::Connection_Side::SERVER)
                                       ? "TLS 1.3, server CertificateVerify"
@@ -161,7 +161,7 @@ Certificate_Verify_13::Certificate_Verify_13(
    m_scheme = choose_signature_scheme(key, policy.allowed_signature_schemes(), peer_allowed_schemes);
    BOTAN_ASSERT_NOMSG(m_scheme.is_available());
 
-   // we need to verify that the provided private key is strong enough for TLS 1.3
+   // TODO: we need to verify that the provided private key is strong enough for TLS 1.3
 
    m_signature =
       callbacks.tls_sign_message(key,

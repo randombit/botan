@@ -50,10 +50,10 @@ class Channel_Impl_13 : public Channel_Impl
             AggregatedMessages& add(const Handshake_Message_13_Ref message);
 
             /**
-             * Send the messages aggregated in the message buffer. A reference
-             * to that buffer is returned if the sender needs to also handle it
-             * somehow. Most notable use: book keeping for a potential protocol
-             * downgrade in the client implementation.
+             * Send the messages aggregated in the message buffer. The buffer
+             * is returned if the sender needs to also handle it somehow.
+             * Most notable use: book keeping for a potential protocol downgrade
+             * in the client implementation.
              */
             std::vector<uint8_t> send();
 
