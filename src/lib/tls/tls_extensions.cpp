@@ -484,18 +484,20 @@ Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
       }
    }
 
-std::vector<uint8_t> Signature_Algorithms::serialize(Connection_Side /*whoami*/) const
+namespace {
+
+std::vector<uint8_t> serialize_signature_algorithms(const std::vector<Signature_Scheme>& schemes)
    {
-   BOTAN_ASSERT(m_schemes.size() < 256, "Too many signature schemes");
+   BOTAN_ASSERT(schemes.size() < 256, "Too many signature schemes");
 
    std::vector<uint8_t> buf;
 
-   const uint16_t len = static_cast<uint16_t>(m_schemes.size() * 2);
+   const uint16_t len = static_cast<uint16_t>(schemes.size() * 2);
 
    buf.push_back(get_byte<0>(len));
    buf.push_back(get_byte<1>(len));
 
-   for(Signature_Scheme scheme : m_schemes)
+   for(Signature_Scheme scheme : schemes)
       {
       buf.push_back(get_byte<0>(scheme.wire_code()));
       buf.push_back(get_byte<1>(scheme.wire_code()));
@@ -504,8 +506,8 @@ std::vector<uint8_t> Signature_Algorithms::serialize(Connection_Side /*whoami*/)
    return buf;
    }
 
-Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
-                                           uint16_t extension_size)
+std::vector<Signature_Scheme> parse_signature_algorithms(TLS_Data_Reader& reader,
+                                                         uint16_t extension_size)
    {
    uint16_t len = reader.get_uint16_t();
 
@@ -514,12 +516,42 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
       throw Decoding_Error("Bad encoding on signature algorithms extension");
       }
 
+   std::vector<Signature_Scheme> schemes;
+   schemes.reserve(len / 2);
    while(len)
       {
-      m_schemes.emplace_back(reader.get_uint16_t());
+      schemes.emplace_back(reader.get_uint16_t());
       len -= 2;
       }
+
+   return schemes;
    }
+
+}
+
+std::vector<uint8_t> Signature_Algorithms::serialize(Connection_Side /*whoami*/) const
+   {
+   return serialize_signature_algorithms(m_schemes);
+   }
+
+Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
+                                           uint16_t extension_size)
+   : m_schemes(parse_signature_algorithms(reader, extension_size))
+   {}
+
+#if defined(BOTAN_HAS_TLS_13)
+
+std::vector<uint8_t> Signature_Algorithms_Cert::serialize(Connection_Side /*whoami*/) const
+   {
+   return serialize_signature_algorithms(m_schemes);
+   }
+
+Signature_Algorithms_Cert::Signature_Algorithms_Cert(TLS_Data_Reader& reader,
+                                                     uint16_t extension_size)
+   : m_schemes(parse_signature_algorithms(reader, extension_size))
+   {}
+
+#endif
 
 Session_Ticket::Session_Ticket(TLS_Data_Reader& reader,
                                uint16_t extension_size) : m_ticket(reader.get_elem<uint8_t, std::vector<uint8_t>>(extension_size))
@@ -833,21 +865,6 @@ Certificate_Authorities::Certificate_Authorities(TLS_Data_Reader& reader, uint16
       }
    }
 
-
-Signature_Algorithms_Cert::Signature_Algorithms_Cert(const std::vector<Signature_Scheme>& schemes)
-      : m_siganture_algorithms(schemes)
-   {
-   }
-
-Signature_Algorithms_Cert::Signature_Algorithms_Cert(TLS_Data_Reader& reader, uint16_t extension_size)
-   : m_siganture_algorithms(reader, extension_size)
-   {
-   }
-
-std::vector<uint8_t> Signature_Algorithms_Cert::serialize(Connection_Side whoami) const
-   {
-      return m_siganture_algorithms.serialize(whoami);
-   }
 
 std::vector<uint8_t> EarlyDataIndication::serialize(Connection_Side) const
    {

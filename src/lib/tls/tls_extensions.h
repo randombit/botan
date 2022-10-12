@@ -327,14 +327,51 @@ class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
 
       bool empty() const override { return m_schemes.empty(); }
 
-      explicit Signature_Algorithms(const std::vector<Signature_Scheme>& schemes) :
-         m_schemes(schemes) {}
+      explicit Signature_Algorithms(std::vector<Signature_Scheme> schemes) :
+         m_schemes(std::move(schemes)) {}
 
       Signature_Algorithms(TLS_Data_Reader& reader,
                            uint16_t extension_size);
    private:
       std::vector<Signature_Scheme> m_schemes;
    };
+
+#if defined(BOTAN_HAS_TLS_13)
+
+/**
+* Signature_Algorithms_Cert for TLS 1.3 (RFC 8446)
+*
+* RFC 8446 4.2.3
+*    TLS 1.3 provides two extensions for indicating which signature algorithms
+*    may be used in digital signatures.  The "signature_algorithms_cert"
+*    extension applies to signatures in certificates, and the
+*    "signature_algorithms" extension, which originally appeared in TLS 1.2,
+*    applies to signatures in CertificateVerify messages.
+*/
+class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_SIGNATURE_ALGORITHMS_CERT; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      const std::vector<Signature_Scheme>& supported_schemes() const { return m_schemes; }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override { return m_schemes.empty(); }
+
+      explicit Signature_Algorithms_Cert(std::vector<Signature_Scheme> schemes)
+         : m_schemes(std::move(schemes)) {}
+
+      Signature_Algorithms_Cert(TLS_Data_Reader& reader, uint16_t extension_size);
+
+   private:
+      std::vector<Signature_Scheme> m_schemes;
+   };
+
+#endif
 
 /**
 * Used to indicate SRTP algorithms for DTLS (RFC 5764)
@@ -634,31 +671,6 @@ class BOTAN_UNSTABLE_API PSK final : public Extension
    private:
       class PSK_Internal;
       std::unique_ptr<PSK_Internal> m_impl;
-   };
-
-/**
-* Signature_Algorithms_Cert from RFC 8446
-*/
-class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
-   {
-   public:
-      static Handshake_Extension_Type static_type()
-         { return TLSEXT_SIGNATURE_ALGORITHMS_CERT; }
-
-      Handshake_Extension_Type type() const override { return static_type(); }
-
-      const std::vector<Signature_Scheme>& supported_schemes() const { return m_siganture_algorithms.supported_schemes(); }
-
-      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
-
-      bool empty() const override { return m_siganture_algorithms.empty(); }
-
-      explicit Signature_Algorithms_Cert(const std::vector<Signature_Scheme>& schemes);
-
-      Signature_Algorithms_Cert(TLS_Data_Reader& reader, uint16_t extension_size);
-
-   private:
-      const Signature_Algorithms m_siganture_algorithms;
    };
 
 /**
