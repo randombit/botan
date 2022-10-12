@@ -24,6 +24,9 @@ LIB_LINKS_TO        = %{external_link_cmd} %{link_to}
 BUILD_DIR_LINK_PATH = %{build_dir_link_path}
 EXE_LINKS_TO        = %{link_to_botan} $(LIB_LINKS_TO) %{extra_libs}
 
+# Note: Remember to adapt the generation of compile_commands.json, when changing
+#       any of those variables or their associations to compilation units.
+#       See compile_commands.json.in and configure.py (generate_build_info)
 BUILD_FLAGS    = $(ABI_FLAGS) $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}

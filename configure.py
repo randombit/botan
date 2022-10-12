@@ -352,6 +352,12 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     target_group.add_option('--compiler-cache',
                             help='specify a compiler cache to use')
 
+    target_group.add_option('--with-compilation-database', dest='with_compilation_database',
+                            action='store_true', default=True, help=optparse.SUPPRESS_HELP)
+
+    target_group.add_option('--without-compilation-database', dest='with_compilation_database',
+                            action='store_false', help='disable generation of compile_commands.json')
+
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
 
@@ -1710,6 +1716,7 @@ def process_template_string(template_text, variables, template_source):
             self.value_pattern = re.compile(r'%{([a-z][a-z_0-9\|]+)}')
             self.cond_pattern = re.compile('%{(if|unless) ([a-z][a-z_0-9]+)}')
             self.for_pattern = re.compile('(.*)%{for ([a-z][a-z_0-9]+)}')
+            self.omitlast_pattern = re.compile('(.*)%{omitlast ([^}]*)}(.*)', re.DOTALL)
             self.join_pattern = re.compile('(.*)%{join ([a-z][a-z_0-9]+)}')
 
         def substitute(self, template):
@@ -1778,7 +1785,7 @@ def process_template_string(template_text, variables, template_source):
                         for_body += lines[idx] + "\n"
                         idx += 1
 
-                    for v in var:
+                    for i, v in enumerate(var):
                         if isinstance(v, dict):
                             for_val = for_body
                             for ik, iv in v.items():
@@ -1786,6 +1793,14 @@ def process_template_string(template_text, variables, template_source):
                             output += for_val + "\n"
                         else:
                             output += for_body.replace('%{i}', v).replace('%{i|upper}', v.upper())
+
+                        omitlast_match = self.omitlast_pattern.match(output)
+                        if omitlast_match:
+                            output = omitlast_match.group(1)
+                            if i + 1 < len(var):
+                                output += omitlast_match.group(2)
+                            output += omitlast_match.group(3)
+
                     output += "\n"
                 else:
                     output += lines[idx] + "\n"
@@ -3335,7 +3350,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
     with open(os.path.join(build_paths.build_dir, 'build_config.json'), 'w') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
-    if options.compiler == 'clang':
+    if options.with_compilation_database:
         write_template(in_build_dir('compile_commands.json'), in_build_data('compile_commands.json.in'))
 
     if options.with_cmake:
