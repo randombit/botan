@@ -227,7 +227,7 @@ std::vector<Test::Result> run_a_test(const std::string& test_name)
          std::vector<Test::Result> test_results = test->run();
          for (auto& result : test_results)
             {
-            if(test->registration_location() && !result.code_location())
+            if(!result.code_location() && test->registration_location())
                {
                // If a test result has no specific code location associated to it,
                // we fall back to the test case's registration location.

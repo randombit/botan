@@ -32,13 +32,17 @@ namespace Botan_Tests {
 
 void Test::Result::merge(const Result& other, bool ignore_test_name)
    {
-   if(!ignore_test_name)
+   if(who() != other.who())
       {
-      if(who() != other.who())
+      if(!ignore_test_name)
          throw Test_Error("Merging tests from different sources");
 
       // When deliberately merging results with different names, the code location is
       // likely inconsistent and must be discarded.
+      m_where.reset();
+      }
+   else
+      {
       m_where = other.m_where;
       }
 
