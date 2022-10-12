@@ -2,7 +2,9 @@
 
 """
 CI build script
-(C) 2017,2020 Jack Lloyd
+(C) 2017-2022 Jack Lloyd
+    2022 René Meusel - Rohde & Schwarz Cybersecurity
+
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
