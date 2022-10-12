@@ -599,7 +599,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
    else if(type == CERTIFICATE_REQUEST)
       {
       state.set_expected_next(SERVER_HELLO_DONE);
-      state.cert_req(new Certificate_Req(contents));
+      state.cert_req(new Certificate_Request_12(contents));
       }
    else if(type == SERVER_HELLO_DONE)
       {

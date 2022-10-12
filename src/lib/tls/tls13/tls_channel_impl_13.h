@@ -22,6 +22,49 @@ namespace Botan::TLS {
 */
 class Channel_Impl_13 : public Channel_Impl
    {
+   protected:
+      /**
+       * Helper class to coalesce handshake messages into a single TLS record of type
+       * 'Handshake'. This is used entirely internally in the Channel, Client and Server
+       * implementation.
+       */
+      class AggregatedMessages
+         {
+         public:
+            AggregatedMessages(Channel_Impl_13& channel,
+                               Handshake_Layer& handshake_layer,
+                               Transcript_Hash_State& transcript_hash);
+
+            AggregatedMessages(const AggregatedMessages&) = delete;
+            AggregatedMessages& operator=(const AggregatedMessages&) = delete;
+            AggregatedMessages(AggregatedMessages&&) = delete;
+            AggregatedMessages& operator=(AggregatedMessages&&) = delete;
+
+            ~AggregatedMessages() = default;
+
+            /**
+             * Adds a single handshake message to the send buffer. Note that this
+             * updates the handshake transcript hash regardless of sending the
+             * message.
+             */
+            AggregatedMessages& add(const Handshake_Message_13_Ref message);
+
+            /**
+             * Send the messages aggregated in the message buffer. The buffer
+             * is returned if the sender needs to also handle it somehow.
+             * Most notable use: book keeping for a potential protocol downgrade
+             * in the client implementation.
+             */
+            std::vector<uint8_t> send();
+
+         private:
+            std::vector<uint8_t> m_message_buffer;
+
+            Channel_Impl_13&       m_channel;
+            Handshake_Layer&       m_handshake_layer;
+            Transcript_Hash_State& m_transcript_hash;
+         };
+
    public:
       /**
       * Set up a new TLS 1.3 session
@@ -145,9 +188,19 @@ class Channel_Impl_13 : public Channel_Impl
        */
       void opportunistically_update_traffic_keys() { m_opportunistic_key_update = true; }
 
-      void send_handshake_message(const Handshake_Message_13_Ref message);
+      std::vector<uint8_t> send_handshake_message(const Handshake_Message_13_Ref message)
+         {
+         return aggregate_handshake_messages()
+                   .add(message)
+                   .send();
+         }
       void send_post_handshake_message(const Post_Handshake_Message_13 message);
       void send_dummy_change_cipher_spec();
+
+      AggregatedMessages aggregate_handshake_messages()
+         {
+         return AggregatedMessages(*this, m_handshake_layer, m_transcript_hash);
+         }
 
       Callbacks& callbacks() const { return m_callbacks; }
       Session_Manager& session_manager() { return m_session_manager; }

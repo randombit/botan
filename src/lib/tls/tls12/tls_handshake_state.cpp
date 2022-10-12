@@ -156,7 +156,7 @@ void Handshake_State::server_kex(Server_Key_Exchange* server_kex)
    note_message(*m_server_kex);
    }
 
-void Handshake_State::cert_req(Certificate_Req* cert_req)
+void Handshake_State::cert_req(Certificate_Request_12* cert_req)
    {
    m_cert_req.reset(cert_req);
    note_message(*m_cert_req);

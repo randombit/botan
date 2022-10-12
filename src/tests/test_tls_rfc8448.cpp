@@ -44,6 +44,7 @@
 
    #include <botan/internal/loadstor.h>
 
+   #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
    #include <botan/data_src.h>
 #endif
@@ -71,6 +72,23 @@ Botan::X509_Certificate server_certificate()
    // self-signed certificate with an RSA1024 public key valid until:
    //   Jul 30 01:23:59 2026 GMT
    Botan::DataSource_Memory in(Test::read_data_file("tls_13_rfc8448/server_certificate.pem"));
+   return Botan::X509_Certificate(in);
+   }
+
+std::unique_ptr<Botan::Private_Key> client_private_key()
+   {
+   // RFC 8448 does not actually provide that key. Hence we generate one on the
+   // fly as a stand-in. Instead of actually using it, the signatures generated
+   // by this private key must be hard-coded in `Callbacks::sign_message()`; see
+   // `MockSignature_Fn` for more details.
+   return create_private_key("RSA", Test::rng(), "1024");
+   }
+
+Botan::X509_Certificate client_certificate()
+   {
+   // self-signed certificate with an RSA1024 public key valid until:
+   //   Jul 30 01:23:59 2026 GMT
+   Botan::DataSource_Memory in(Test::read_data_file("tls_13_rfc8448/client_certificate.pem"));
    return Botan::X509_Certificate(in);
    }
 
@@ -112,19 +130,25 @@ std::chrono::system_clock::time_point from_milliseconds_since_epoch(uint64_t mse
           std::chrono::milliseconds(additional_millis);
    }
 
+using Modify_Exts_Fn = std::function<void(Botan::TLS::Extensions&, Botan::TLS::Connection_Side)>;
+using MockSignature_Fn = std::function<std::vector<uint8_t>(const std::vector<uint8_t>&,const std::string&,Signature_Format)>;
+
 /**
  * Subclass of the Botan::TLS::Callbacks instrumenting all available callbacks.
  * The invocation counts can be checked in the integration tests to make sure
  * all expected callbacks are hit. Furthermore collects the received application
  * data and sent record bytes for further inspection by the test cases.
  */
-using Modify_Exts_Fn = std::function<void(Botan::TLS::Extensions&, Botan::TLS::Connection_Side)>;
 class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
    {
    public:
-      Test_TLS_13_Callbacks(Modify_Exts_Fn modify_exts_cb, uint64_t timestamp) :
+      Test_TLS_13_Callbacks(
+         Modify_Exts_Fn modify_exts_cb,
+         MockSignature_Fn mock_signature_fn,
+         uint64_t timestamp) :
          session_activated_called(false),
          m_modify_exts(std::move(modify_exts_cb)),
+         m_mock_signature(std::move(mock_signature_fn)),
          m_timestamp(from_milliseconds_since_epoch(timestamp))
          {}
 
@@ -197,9 +221,12 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          const std::vector<uint8_t>& msg) override
          {
          count_callback_invocation("tls_sign_message");
-         return Callbacks::tls_sign_message(key, rng, emsa, format, msg);
-         }
 
+         auto mock_signature = m_mock_signature(msg, emsa, format);
+         return (mock_signature.empty())
+            ? Callbacks::tls_sign_message(key, rng, emsa, format, msg)
+            : mock_signature;
+         }
 
       bool tls_verify_message(
          const Public_Key& key,
@@ -317,9 +344,38 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
       std::vector<uint8_t>                  receive_buffer;
       uint64_t                              received_seq_no;
       Modify_Exts_Fn                        m_modify_exts;
+      MockSignature_Fn     m_mock_signature;
       std::chrono::system_clock::time_point m_timestamp;
 
       mutable std::map<std::string, unsigned int> m_callback_invocations;
+   };
+
+class Test_Client_Credentials : public Botan::Credentials_Manager
+   {
+   public:
+      Test_Client_Credentials() : m_bogus_key(client_private_key()) {}
+
+      std::vector<Botan::X509_Certificate> cert_chain(
+         const std::vector<std::string>& cert_key_types,
+         const std::string& type,
+         const std::string& context) override
+         {
+         BOTAN_UNUSED(cert_key_types, type, context);
+         return { client_certificate() };
+         }
+
+      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
+                                          const std::string& type,
+                                          const std::string& context) override
+         {
+         BOTAN_UNUSED(cert, type, context);
+         // Note that this key is just a stand-in and not the actual private
+         // key for the client certificate. RFC 8448 does not reveal this key.
+         return m_bogus_key.get();
+         }
+
+   private:
+      std::unique_ptr<Botan::Private_Key> m_bogus_key;
    };
 
 class RFC8448_Text_Policy : public Botan::TLS::Text_Policy
@@ -367,8 +423,9 @@ class TLS_Context
       TLS_Context(std::unique_ptr<Botan::RandomNumberGenerator> rng_in,
                   RFC8448_Text_Policy policy,
                   Modify_Exts_Fn modify_exts_cb,
+                  MockSignature_Fn mock_signature_cb,
                   uint64_t timestamp)
-         : m_callbacks(std::move(modify_exts_cb), timestamp)
+         : m_callbacks(std::move(modify_exts_cb), std::move(mock_signature_cb), timestamp)
          , m_rng(std::move(rng_in))
          , m_session_mgr(*m_rng)
          , m_policy(std::move(policy))
@@ -428,8 +485,8 @@ class TLS_Context
       virtual void send(const std::vector<uint8_t>& data) = 0;
 
    protected:
-      Test_TLS_13_Callbacks      m_callbacks;
-      Botan::Credentials_Manager m_creds;
+      Test_TLS_13_Callbacks   m_callbacks;
+      Test_Client_Credentials m_creds;
 
       std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
       Botan::TLS::Session_Manager_In_Memory         m_session_mgr;
@@ -441,9 +498,10 @@ class Client_Context : public TLS_Context
    public:
       Client_Context(std::unique_ptr<Botan::RandomNumberGenerator> rng_in,
                      RFC8448_Text_Policy policy,
+                     uint64_t timestamp,
                      Modify_Exts_Fn modify_exts_cb,
-                     uint64_t timestamp)
-         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), timestamp)
+                     MockSignature_Fn mock_signature_cb = [](auto,auto,auto) { return std::vector<uint8_t>(); })
+         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), std::move(mock_signature_cb), timestamp)
          , client(m_callbacks, m_session_mgr, m_creds, m_policy, *m_rng,
                   Botan::TLS::Server_Information("server"),
                   Botan::TLS::Protocol_Version::TLS_V13)
@@ -536,7 +594,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
    {
    public:
       Test_TLS_RFC8448()
-         : Text_Based_Test("tls_13_rfc8448/transcripts.vec", "RNG_Pool,CurrentTimestamp,ClientHello_1,ServerHello,ServerHandshakeMessages,ClientFinished,Client_CloseNotify,Server_CloseNotify", "HelloRetryRequest,ClientHello_2,NewSessionTicket,Client_AppData,Client_AppData_Record,Server_AppData,Server_AppData_Record") {}
+         : Text_Based_Test("tls_13_rfc8448/transcripts.vec", "RNG_Pool,CurrentTimestamp,ClientHello_1,ServerHello,ServerHandshakeMessages,ClientFinished,Client_CloseNotify,Server_CloseNotify", "HelloRetryRequest,ClientHello_2,NewSessionTicket,Client_AppData,Client_AppData_Record,Server_AppData,Server_AppData_Record,MessageToSign,MessageSignature") {}
 
    Test::Result run_one_test(const std::string& header,
                              const VarMap& vars) override
@@ -545,6 +603,8 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          return Test::Result("Simple 1-RTT (Client side)", simple_1_rtt_client_hello(vars));
       else if(header == "HelloRetryRequest_Handshake")
          return Test::Result("Handshake involving Hello Retry Request (Client side)", hello_retry_request(vars));
+      else if(header == "Client_Authentication_Handshake")
+         return Test::Result("Client Authentication (Client side)", client_authentication(vars));
       else if(header == "Middlebox_Compatibility_Mode")
          return Test::Result("Middlebox Compatibility Mode (Client side)", middlebox_compatibility(vars));
       else
@@ -578,7 +638,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          return {
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), add_extensions_and_sort, vars.get_req_u64("CurrentTimestamp"));
+               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
 
                result.confirm("client not closed", !ctx->client.is_closed());
                ctx->check_callback_invocations(result, "client hello prepared", { "tls_emit_data", "tls_inspect_handshake_msg_client_hello", "tls_modify_extensions" });
@@ -707,7 +767,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          return {
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_hrr"), add_extensions_and_sort, vars.get_req_u64("CurrentTimestamp"));
+               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_hrr"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
                result.confirm("client not closed", !ctx->client.is_closed());
 
                ctx->check_callback_invocations(result, "client hello prepared", { "tls_emit_data", "tls_inspect_handshake_msg_client_hello", "tls_modify_extensions" });
@@ -773,6 +833,112 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
             };
          }
 
+      static std::vector<Test::Result> client_authentication(const VarMap& vars)
+         {
+         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         rng->add_entropy(std::vector<uint8_t>(32).data(), 32);  // used by session mgr for session key
+
+         // 32 - for client hello random
+         // 32 - for eph. x25519 key pair
+         add_entropy(*rng, vars.get_req_bin("RNG_Pool"));
+
+         auto add_extensions_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side)
+            {
+            add_psk_exchange_modes(exts);
+            add_renegotiation_extension(exts);
+            sort_extensions(exts, side);
+            };
+
+         auto sign_certificate_verify = [&](const std::vector<uint8_t>& msg,
+                                            const std::string& emsa,
+                                            Signature_Format format)
+            {
+            BOTAN_UNUSED(emsa, format);
+
+            if(msg != vars.get_req_bin("MessageToSign"))
+               {
+               throw Test_Error("Unexpected message to be signed: " + Botan::hex_encode(msg));
+               }
+
+            if(emsa != "PSSR(SHA-256,MGF1,32)" || format != Signature_Format::IEEE_1363)
+               {
+               throw Test_Error("TLS implementation selected unexpected signature format ("
+                                + std::to_string(format)
+                                + ") or EMSA: "
+                                + emsa);
+               }
+
+            return vars.get_req_bin("MessageSignature");
+            };
+
+         std::unique_ptr<Client_Context> ctx;
+
+         return {
+            Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
+               {
+               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort, sign_certificate_verify);
+
+               ctx->check_callback_invocations(result, "initial callbacks", {
+                  "tls_emit_data",
+                  "tls_inspect_handshake_msg_client_hello",
+                  "tls_modify_extensions",
+                  });
+
+               result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
+               }),
+
+            Botan_Tests::CHECK("Server Hello", [&](auto& result)
+               {
+               ctx->client.received_data(vars.get_req_bin("ServerHello"));
+
+               ctx->check_callback_invocations(result, "callbacks after server hello", {
+                  "tls_examine_extensions",
+                  "tls_inspect_handshake_msg_server_hello",
+                  });
+               }),
+
+            Botan_Tests::CHECK("other handshake messages and client auth", [&](Test::Result& result)
+               {
+               ctx->client.received_data(vars.get_req_bin("ServerHandshakeMessages"));
+
+               ctx->check_callback_invocations(result, "signing callbacks invoked", {
+                  "tls_sign_message",
+                  "tls_emit_data",
+                  "tls_examine_extensions",
+                  "tls_inspect_handshake_msg_certificate",
+                  "tls_inspect_handshake_msg_certificate_request",
+                  "tls_inspect_handshake_msg_certificate_verify",
+                  "tls_inspect_handshake_msg_encrypted_extensions",
+                  "tls_inspect_handshake_msg_finished",
+                  "tls_session_activated",
+                  "tls_verify_cert_chain",
+                  "tls_verify_message",
+                  });
+
+               // ClientFinished contains the entire coalesced client authentication flight
+               // Messages: Certificate, CertificateVerify, Finished
+               result.test_eq("Client Auth and Finished", ctx->pull_send_buffer(), vars.get_req_bin("ClientFinished"));
+               }),
+
+            Botan_Tests::CHECK("Close Connection", [&](Test::Result& result)
+               {
+               ctx->client.close();
+               result.test_eq("Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Client_CloseNotify"));
+
+               ctx->check_callback_invocations(result, "after sending close notify", {
+                  "tls_emit_data",
+                  });
+
+               ctx->client.received_data(vars.get_req_bin("Server_CloseNotify"));
+               result.confirm("connection closed", ctx->client.is_closed());
+
+               ctx->check_callback_invocations(result, "after receiving close notify", {
+                  "tls_alert",
+                  });
+               }),
+         };
+      }
+
       static std::vector<Test::Result> middlebox_compatibility(const VarMap& vars)
          {
          auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
@@ -795,7 +961,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          return {
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_compat"), add_extensions_and_sort, vars.get_req_u64("CurrentTimestamp"));
+               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_compat"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
 
                result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
                }),

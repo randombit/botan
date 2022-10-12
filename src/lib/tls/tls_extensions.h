@@ -56,6 +56,8 @@ enum Handshake_Extension_Type {
    TLSEXT_USE_SRTP                  = 14,
    TLSEXT_ALPN                      = 16,
 
+   // TLSEXT_SIGNED_CERTIFICATE_TIMESTAMP = 18,  // NYI
+
    TLSEXT_ENCRYPT_THEN_MAC          = 22,
    TLSEXT_EXTENDED_MASTER_SECRET    = 23,
 
@@ -68,6 +70,8 @@ enum Handshake_Extension_Type {
    TLSEXT_COOKIE                    = 44,
 
    TLSEXT_PSK_KEY_EXCHANGE_MODES    = 45,
+   TLSEXT_CERTIFICATE_AUTHORITIES   = 47,
+   // TLSEXT_OID_FILTERS               = 48,  // NYI
 
    TLSEXT_SIGNATURE_ALGORITHMS_CERT = 50,
    TLSEXT_KEY_SHARE                 = 51,
@@ -557,6 +561,30 @@ class BOTAN_UNSTABLE_API PSK_Key_Exchange_Modes final : public Extension
       std::vector<PSK_Key_Exchange_Mode> m_modes;
    };
 
+
+/**
+ * Certificate Authorities Extension from RFC 8446 4.2.4
+ */
+class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_CERTIFICATE_AUTHORITIES; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      bool empty() const override { return m_distinguished_names.empty(); }
+
+      const std::vector<X509_DN>& distinguished_names() const
+         { return m_distinguished_names; }
+
+      explicit Certificate_Authorities(TLS_Data_Reader& reader, uint16_t extension_size);
+
+   private:
+      std::vector<X509_DN> m_distinguished_names;
+   };
 
 /**
 * Signature_Algorithms_Cert from RFC 8446

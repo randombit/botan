@@ -38,7 +38,7 @@ class Server_Hello_12;
 class Certificate_12;
 class Certificate_Status;
 class Server_Key_Exchange;
-class Certificate_Req;
+class Certificate_Request_12;
 class Server_Hello_Done;
 class Client_Key_Exchange;
 class Certificate_Verify_12;
@@ -117,7 +117,7 @@ class Handshake_State
       void server_hello(Server_Hello_12* server_hello);
       void server_cert_status(Certificate_Status* server_cert_status);
       void server_kex(Server_Key_Exchange* server_kex);
-      void cert_req(Certificate_Req* cert_req);
+      void cert_req(Certificate_Request_12* cert_req);
       void server_hello_done(Server_Hello_Done* server_hello_done);
       void client_kex(Client_Key_Exchange* client_kex);
 
@@ -144,7 +144,7 @@ class Handshake_State
       const Server_Key_Exchange* server_kex() const
          { return m_server_kex.get(); }
 
-      const Certificate_Req* cert_req() const
+      const Certificate_Request_12* cert_req() const
          { return m_cert_req.get(); }
 
       const Server_Hello_Done* server_hello_done() const
@@ -207,7 +207,7 @@ class Handshake_State
       std::unique_ptr<Certificate_12> m_server_certs;
       std::unique_ptr<Certificate_Status> m_server_cert_status;
       std::unique_ptr<Server_Key_Exchange> m_server_kex;
-      std::unique_ptr<Certificate_Req> m_cert_req;
+      std::unique_ptr<Certificate_Request_12> m_cert_req;
       std::unique_ptr<Server_Hello_Done> m_server_hello_done;
       std::unique_ptr<Certificate_12> m_client_certs;
       std::unique_ptr<Client_Key_Exchange> m_client_kex;
