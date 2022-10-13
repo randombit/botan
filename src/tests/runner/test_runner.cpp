@@ -18,6 +18,8 @@
    #include <botan/internal/rwlock.h>
 #endif
 
+#include <shared_mutex>
+
 namespace Botan_Tests {
 
 Test_Runner::Test_Runner(std::ostream& out) : m_output(out) {}
@@ -223,6 +225,15 @@ std::vector<Test::Result> run_a_test(const std::string& test_name)
       else if(std::unique_ptr<Test> test = Test::get_test(test_name))
          {
          std::vector<Test::Result> test_results = test->run();
+         for (auto& result : test_results)
+            {
+            if(!result.code_location() && test->registration_location())
+               {
+               // If a test result has no specific code location associated to it,
+               // we fall back to the test case's registration location.
+               result.set_code_location(test->registration_location().value());
+               }
+            }
          results.insert(results.end(), test_results.begin(), test_results.end());
          }
       else
@@ -282,17 +293,13 @@ bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_
    std::vector<std::future<std::vector<Test::Result>>> m_fut_results;
 
    auto run_test_exclusive = [&](const std::string& test_name) {
-      rwlock.lock();
-      std::vector<Test::Result> results = run_a_test(test_name);
-      rwlock.unlock();
-      return results;
+      std::unique_lock lk(rwlock);
+      return run_a_test(test_name);
    };
 
    auto run_test_shared = [&](const std::string& test_name) {
-      rwlock.lock_shared();
-      std::vector<Test::Result> results = run_a_test(test_name);
-      rwlock.unlock_shared();
-      return results;
+      std::shared_lock lk(rwlock);
+      return run_a_test(test_name);
    };
 
    for(auto const& test_name : tests_to_run)
