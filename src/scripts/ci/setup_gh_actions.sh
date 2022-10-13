@@ -11,7 +11,8 @@ command -v shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if
 
 set -ex
 
-TARGET=$1
+TARGET="$1"
+ARCH="$2"
 
 if type -p "apt-get"; then
     sudo apt-get -qq update
@@ -19,6 +20,9 @@ if type -p "apt-get"; then
 
     if [ "$TARGET" = "valgrind" ]; then
         sudo apt-get -qq install valgrind
+
+    elif [ "$TARGET" = "static" ] || [ "$TARGET" = "amalgamation" ] || [ "$TARGET" = "shared" ]; then
+        sudo apt-get -qq install libboost-all-dev
 
     elif [ "$TARGET" = "clang" ]; then
         sudo apt-get -qq install clang
@@ -74,6 +78,9 @@ else
 
     if [ "$TARGET" = "emscripten" ]; then
         brew install emscripten
+
+    elif [ "$TARGET" = "static" ] || [ "$TARGET" = "amalgamation" ] || [ "$TARGET" = "shared" ]; then
+        brew install boost
     fi
 fi
 

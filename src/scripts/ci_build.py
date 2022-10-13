@@ -2,7 +2,9 @@
 
 """
 CI build script
-(C) 2017,2020 Jack Lloyd
+(C) 2017-2022 Jack Lloyd
+    2022 René Meusel - Rohde & Schwarz Cybersecurity
+
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -145,6 +147,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         # this test compiles under MinGW but fails when run under Wine
         disabled_tests.append('certstor_system')
 
+    if target_os == 'mingw':
+        # make sure to link against static versions of libstdc++, libgcc* and winpthread
+        flags += ['--ldflags=-static']
+
     if target == 'coverage':
         flags += ['--with-coverage-info', '--with-debug-info', '--test-mode', '--terminate-on-asserts']
 
@@ -276,18 +282,21 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        if target == 'coverage':
+        if target in ['coverage', 'shared', 'static', 'amalgamation']:
             flags += ['--with-boost']
+            if target_cc == 'clang':
+                # make sure clang ignores warnings in boost headers
+                flags += ["--extra-cxxflags=--system-header-prefix=boost/"]
 
-        if target_os == 'windows' and target in ['shared', 'static']:
-            # ./configure.py needs extra hand-holding for boost on windows
-            boost_root = os.environ.get('BOOST_ROOT') # remove this with appveyor
-            boost_incl = os.environ.get('BOOST_INCLUDEDIR')
+            if target_os in ['windows', 'mingw']:
+                # ./configure.py needs boost's location on Windows
+                assert 'BOOST_INCLUDEDIR' in os.environ, "Windows needs to know where to find boost (via BOOST_INCLUDEDIR)"
+                flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
 
-            if boost_root:
-                flags += ['--with-external-includedir', boost_root]
-            elif boost_incl:
-                flags += ['--with-external-includedir', boost_incl]
+            if target_os == 'mingw':
+                # apparently mingw needs this legacy socket library version for reasons
+                # as per: https://stackoverflow.com/questions/38770895/how-to-fix-undefined-reference-to-getacceptexsockaddrs-boost-asio-in-clion#comment105791579_38771260
+                flags += ['--ldflags=-static -lwsock32']
 
         if target_os == 'linux':
             flags += ['--with-lzma']
