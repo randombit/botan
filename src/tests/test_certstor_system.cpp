@@ -107,12 +107,6 @@ Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore)
    return result;
    }
 
-/*
- * test case conditionally disabled for now, see:
- * https://github.com/randombit/botan/pull/1931
- * https://github.com/randombit/botan/pull/2280
-*/
-#if !defined(BOTAN_HAS_CERTSTOR_WINDOWS)
 Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore)
    {
    Test::Result result("System Certificate Store - Find Certificate by UTF8 subject DN");
@@ -139,7 +133,6 @@ Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore)
 
    return result;
    }
-#endif
 
 Test::Result find_cert_by_subject_dn_and_key_id(Botan::Certificate_Store& certstore)
    {
@@ -366,9 +359,7 @@ class Certstor_System_Tests final : public Test
          results.push_back(find_certs_by_subject_dn_and_key_id(*system));
          results.push_back(find_all_subjects(*system));
          results.push_back(no_certificate_matches(*system));
-#if !defined(BOTAN_HAS_CERTSTOR_WINDOWS)
          results.push_back(find_cert_by_utf8_subject_dn(*system));
-#endif
 #if defined(BOTAN_HAS_CERTSTOR_MACOS)
          results.push_back(certificate_matching_with_dn_normalization(*system));
 #endif
