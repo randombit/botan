@@ -60,11 +60,6 @@ Makefile, ``build.h`` and other artifacts.
 When Modifying ``configure.py``
 --------------------------------
 
-For now, any changes to ``configure.py`` must work under both CPython 2.7 and
-CPython 3.x. In a future major release, support for CPython2 will be dropped,
-but until then if making modifications verify the code works as expected on
-both versions.
-
 Run ``./src/scripts/ci_build.py lint`` to run Pylint checks after any change.
 
 Template Language

@@ -97,7 +97,7 @@ Build The Windows Installer
 
 On Windows, run ``configure.py`` to setup a build::
 
- $ python ./configure.py --cc=msvc --cpu=$ARCH --distribution-info=unmodified
+ $ python3 ./configure.py --cc=msvc --cpu=$ARCH --distribution-info=unmodified
 
 After completing the build (and running the tests), use `InnoSetup
 <http://www.jrsoftware.org/isinfo.php>`_ to create the installer.  A

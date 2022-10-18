@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Release script for botan (https://botan.randombit.net/)
 
-This script requires Python 2.7 or 3.6
+This script requires Python 3.6
 
 (C) 2011,2012,2013,2015,2016,2017 Jack Lloyd
 
@@ -299,7 +299,7 @@ def write_archive(version, output_basename, archive_type, rel_epoch, all_files, 
     return output_archive
 
 def configure_logging(options):
-    class ExitOnErrorLogHandler(logging.StreamHandler, object):
+    class ExitOnErrorLogHandler(logging.StreamHandler):
         def emit(self, record):
             super(ExitOnErrorLogHandler, self).emit(record)
             # Exit script if and ERROR or worse occurred

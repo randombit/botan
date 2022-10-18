@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
 
 # (C) 2017 Jack Lloyd
 # Botan is released under the Simplified BSD License (see license.txt)
@@ -9,11 +9,11 @@ import subprocess
 import re
 
 def format_report(client_output):
-    version_re = re.compile('TLS (v1\.[0-2]) using ([A-Z0-9_]+)')
+    version_re = re.compile('TLS (v1\.[0-3]) using ([A-Z0-9_]+)')
 
     version_match = version_re.search(client_output)
 
-    #print client_output
+    #print(client_output)
 
     if version_match:
         return "Established %s %s" % (version_match.group(1), version_match.group(2))
@@ -25,7 +25,7 @@ def scanner(args = None):
         args = sys.argv
 
     if len(args) != 2:
-        print "Error: Usage tls_scanner.py host_file"
+        print("Error: Usage tls_scanner.py host_file")
         return 2
 
     scanners = {}
@@ -41,21 +41,21 @@ def scanner(args = None):
     timeout = 10
 
     for url in scanners.keys():
-        print "waiting for", url
+        print("waiting for", url)
 
         for i in range(timeout):
             scanners[url].poll()
             if scanners[url].returncode != None:
                 break
-            #print "Waiting %d more seconds for %s" % (timeout-i, url)
+            #print("Waiting %d more seconds for %s" % (timeout-i, url))
             time.sleep(1)
 
         if scanners[url].returncode != None:
             output = scanners[url].stdout.read() + scanners[url].stderr.read()
-            report[url] = format_report(output)
+            report[url] = format_report(output.decode("utf-8"))
 
     for url in report.keys():
-        print url, ":", report[url]
+        print(url, ":", report[url])
 
     return 0
 

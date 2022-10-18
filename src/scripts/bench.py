@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
 Compare Botan with OpenSSL using their respective benchmark utils
@@ -28,7 +28,7 @@ def setup_logging(options):
     else:
         log_level = logging.INFO
 
-    class LogOnErrorHandler(logging.StreamHandler, object):
+    class LogOnErrorHandler(logging.StreamHandler):
         def emit(self, record):
             super(LogOnErrorHandler, self).emit(record)
             if record.levelno >= logging.ERROR:
@@ -135,7 +135,7 @@ def run_botan_bench(botan, runtime, buf_sizes, algo):
 
     return output
 
-class BenchmarkResult(object):
+class BenchmarkResult:
     def __init__(self, algo, buf_sizes, openssl_results, botan_results):
         self.algo = algo
         self.results = {}

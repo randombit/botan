@@ -120,25 +120,23 @@ review/understanding of the change.
 Python
 ----------------------------------------
 
-Scripts should be in Python whenever possible.
+Scripts should be in Python 3 whenever possible.
 
 For configure.py (and helper scripts install.py, cleanup.py and build_docs.py)
-the target is stock (no modules outside the standard library) CPython 2.7 plus
-latest CPython 3.x. Support for CPython 2.6, PyPy, etc is great when viable (in
-the sense of not causing problems for 2.7 or 3.x, and not requiring huge blocks
-of version dependent code). As running this program successfully is required for
-a working build, making it as portable as possible is considered key.
+the target is stock (no modules outside the standard library) CPython 3.x.
+Support for PyPy, etc is great when viable (in the sense of not causing problems
+for 3.x, and not requiring huge blocks of version dependent code). As running
+this program successfully is required for a working build, making it as portable
+as possible is considered key.
 
-The python wrapper botan2.py targets CPython 2.7, 3.x, and latest PyPy. Note that
+The python wrapper botan2.py targets CPython 3.x, and latest PyPy. Note that
 a single file is used to avoid dealing with any of Python's various crazy module
 distribution issues.
 
 For random scripts not typically run by an end-user (codegen, visualization, and
-so on) there isn't any need to worry about 2.6 and even just running under
-Python2 xor Python3 is acceptable if needed. Here it's fine to depend on any
-useful modules such as graphviz or matplotlib, regardless if it is available
-from a stock CPython install. Since Python2 is now end of life, prefer Python3
-for new scripts of this sort.
+so on) there isn't any need to worry about platform independence. Here it's fine
+to depend on any useful modules such as graphviz or matplotlib, regardless if it
+is available from a stock CPython install.
 
 Build Tools and Hints
 ----------------------------------------

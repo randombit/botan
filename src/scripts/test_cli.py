@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """
 (C) 2018,2019 Jack Lloyd
@@ -33,7 +33,7 @@ def run_socket_tests():
     # Connecting to the server port fails. Possibly a local firewall?
     return platform.system().lower() != "freebsd"
 
-class TestLogHandler(logging.StreamHandler, object):
+class TestLogHandler(logging.StreamHandler):
     def emit(self, record):
         # Do the default stuff first
         super(TestLogHandler, self).emit(record)
@@ -483,16 +483,10 @@ def cli_compress_tests(tmp_dir):
     if not os.access(output_file, os.R_OK):
         logging.error("Compression did not created expected output file")
 
-    is_py3 = sys.version_info[0] == 3
-
     output_hdr = open(output_file, 'rb').read(2)
 
-    if is_py3:
-        if output_hdr[0] != 0x1F or output_hdr[1] != 0x8B:
-            logging.error("Did not see expected gzip header")
-    else:
-        if ord(output_hdr[0]) != 0x1F or ord(output_hdr[1]) != 0x8B:
-            logging.error("Did not see expected gzip header")
+    if output_hdr[0] != 0x1F or output_hdr[1] != 0x8B:
+        logging.error("Did not see expected gzip header")
 
     os.unlink(input_file)
 
@@ -975,10 +969,7 @@ def cli_tls_http_server_tests(tmp_dir):
     if resp.status != 405:
         logging.error('Unexpected response status %d', resp.status)
 
-    if sys.version_info.major >= 3:
-        rc = tls_server.wait(5) # pylint: disable=too-many-function-args
-    else:
-        rc = tls_server.wait()
+    rc = tls_server.wait(5)
 
     if rc != 0:
         logging.error("Unexpected return code from https_server %d", rc)
@@ -1071,10 +1062,7 @@ def cli_tls_proxy_tests(tmp_dir):
         if body != server_response:
             logging.error('Unexpected response from server %s', body)
 
-    if sys.version_info.major >= 3:
-        rc = tls_proxy.wait(5) # pylint: disable=too-many-function-args
-    else:
-        rc = tls_proxy.wait()
+    rc = tls_proxy.wait(5)
 
     if rc != 0:
         logging.error('Unexpected return code %d', rc)
@@ -1087,11 +1075,7 @@ def cli_trust_root_tests(tmp_dir):
 
     dn_re = re.compile('(.+=\".+\")(,.+=\".+\")')
 
-    encoding_kwords = {}
-    if sys.version_info[0] == 3:
-        encoding_kwords['encoding'] = 'utf8'
-
-    for line in open(dn_file, **encoding_kwords):
+    for line in open(dn_file, encoding='utf8'):
         if dn_re.match(line) is None:
             logging.error("Unexpected DN line %s", line)
 
