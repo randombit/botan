@@ -83,8 +83,6 @@ class Client_Impl_13 : public Channel_Impl_13
       void handle(const Key_Update& key_update);
 
       void send_client_authentication(Channel_Impl_13::AggregatedMessages& flight);
-
-   private:
       std::optional<Session> find_session_for_resumption();
 
    private:

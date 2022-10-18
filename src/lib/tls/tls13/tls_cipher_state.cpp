@@ -32,6 +32,7 @@
  *                                     *
  *                             STATE EARLY TRAFFIC
  * This state is reached by constructing Cipher_State using init_with_psk().
+ * In this state the early data traffic secrets are available. TODO: implement early data.
  * The state can then be further advanced using advance_with_server_hello().
  *                                     *
  *                                     |
@@ -50,9 +51,9 @@
  *                                     |
  *                                     *
  *                          STATE HANDSHAKE TRAFFIC
- * This state is reached by constructing Cipher_State using init_with_server_hello().
- * In this state the handshake traffic secrets are available. The state can then be further
- * advanced using advance_with_server_finished().
+ * This state is reached by constructing Cipher_State using init_with_server_hello() or
+ * advance_with_server_hello(). In this state the handshake traffic secrets are available.
+ * The state can then be further advanced using advance_with_server_finished().
  *                                     *
  *                                     |
  *                                     v
@@ -79,6 +80,8 @@
  *                                                           ClientHello...client Finished)
  *                                                           = resumption_master_secret
  *                             STATE COMPLETED
+ * Once this state is reached the handshake is finished and no further cipher state advances
+ * are possible.
  */
 
 #include <limits>

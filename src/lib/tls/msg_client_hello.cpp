@@ -24,8 +24,8 @@
 #include <botan/internal/tls_handshake_hash.h>
 
 #ifdef BOTAN_HAS_TLS_13
-#include <botan/internal/tls_transcript_hash_13.h>
-#include <botan/internal/tls_handshake_layer_13.h>
+  #include <botan/internal/tls_transcript_hash_13.h>
+  #include <botan/internal/tls_handshake_layer_13.h>
 #endif
 
 #include <chrono>
