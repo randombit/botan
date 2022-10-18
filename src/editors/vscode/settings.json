@@ -7,5 +7,11 @@
         "--suffix=none"
     ],
     "C_Cpp.default.cppStandard": "c++17",
-    "C_Cpp.default.cStandard": "c17"
+    "C_Cpp.default.cStandard": "c17",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintArgs": [
+        "--rcfile=src/configs/pylint.rc"
+    ],
+    "python.linting.lintOnSave": true
 }
