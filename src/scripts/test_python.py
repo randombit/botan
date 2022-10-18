@@ -8,7 +8,17 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import unittest
 import binascii
-import botan2
+import os
+import platform
+
+# Starting with Python 3.8 DLL search locations are more restricted on Windows.
+# Hence, we need to explicitly add the current working directory before trying
+# to load the botan python wrapper.
+# See: https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
+if platform.system() == "Windows" and hasattr(os, "add_dll_directory"):
+    os.add_dll_directory(os.getcwd())
+
+import botan2 # pylint: disable=wrong-import-position
 
 def hex_encode(buf):
     return binascii.hexlify(buf).decode('ascii')
