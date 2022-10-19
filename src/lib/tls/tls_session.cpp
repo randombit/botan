@@ -137,13 +137,10 @@ Session::Session(const uint8_t ber[], size_t ber_len)
    size_t compression_method = 0;
    uint16_t ciphersuite_code = 0;
 
-   size_t struct_version = 0;
-
-   BER_Decoder dec(ber, ber_len);
-   auto seqdec = dec.start_sequence();
-
-   seqdec
-        .decode_integer_type(struct_version)
+   BER_Decoder(ber, ber_len)
+      .start_sequence()
+        .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
+                          "Unknown version in serialized TLS session")
         .decode_integer_type(start_time)
         .decode_integer_type(major_version)
         .decode_integer_type(minor_version)
@@ -161,35 +158,13 @@ Session::Session(const uint8_t ber[], size_t ber_len)
         .decode(server_service)
         .decode(server_port)
         .decode(srp_identifier_str)
-        .decode(srtp_profile);
-
-   m_version = Protocol_Version(major_version, minor_version);
-
-   if(struct_version == TLS_SESSION_PARAM_STRUCT_VERSION_TLS12)
-      {
-      if(!m_version.is_pre_tls_13())
-         throw Decoding_Error("Serialized TLS session scheme does not match the protocol version expectations");
-
-      m_early_data_allowed = false;
-      m_max_early_data_bytes = 0;
-      m_ticket_age_add = 0;
-      m_lifetime_hint = 0;
-      }
-   else if(struct_version == TLS_SESSION_PARAM_STRUCT_VERSION_TLS13)
-      {
-      seqdec
-         .decode(m_early_data_allowed)
-         .decode_integer_type(m_max_early_data_bytes)
-         .decode_integer_type(m_ticket_age_add)
-         .decode_integer_type(m_lifetime_hint);
-      }
-   else
-      {
-      throw Decoding_Error("Unknown TLS Session object revision: " + std::to_string(struct_version));
-      }
-
-   seqdec.end_cons();
-   dec.verify_end();
+        .decode(srtp_profile)
+        .decode(m_early_data_allowed)
+        .decode_integer_type(m_max_early_data_bytes)
+        .decode_integer_type(m_ticket_age_add)
+        .decode_integer_type(m_lifetime_hint)
+      .end_cons()
+      .verify_end();
 
    /*
    * Compression is not supported and must be zero
@@ -216,6 +191,7 @@ Session::Session(const uint8_t ber[], size_t ber_len)
       }
 
    m_ciphersuite = ciphersuite_code;
+   m_version = Protocol_Version(major_version, minor_version);
    m_start_time = std::chrono::system_clock::from_time_t(start_time);
    m_connection_side = static_cast<Connection_Side>(side_code);
    m_srtp_profile = static_cast<uint16_t>(srtp_profile);
@@ -245,7 +221,7 @@ secure_vector<uint8_t> Session::DER_encode() const
 
    return DER_Encoder()
       .start_sequence()
-         .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION_TLS13))
+         .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
          .encode(static_cast<size_t>(std::chrono::system_clock::to_time_t(m_start_time)))
          .encode(static_cast<size_t>(m_version.major_version()))
          .encode(static_cast<size_t>(m_version.minor_version()))

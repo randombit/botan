@@ -211,8 +211,7 @@ class BOTAN_PUBLIC_API(2,0) Session final
       //              - m_lifetime_hint
       enum
          {
-         TLS_SESSION_PARAM_STRUCT_VERSION_TLS12 = 20160812,
-         TLS_SESSION_PARAM_STRUCT_VERSION_TLS13 = 20220505
+         TLS_SESSION_PARAM_STRUCT_VERSION = 20220505
          };
 
       std::chrono::system_clock::time_point m_start_time;
