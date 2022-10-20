@@ -268,8 +268,17 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
       }
    }
 
-std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side /*whoami*/) const
+std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side whoami) const
    {
+   // RFC 6066
+   //    [...] the server SHALL include an extension of type "server_name" in
+   //    the (extended) server hello. The "extension_data" field of this
+   //    extension SHALL be empty.
+   if(whoami == Connection_Side::SERVER)
+      {
+      return {};
+      }
+
    std::vector<uint8_t> buf;
 
    size_t name_len = m_sni_host_name.size();

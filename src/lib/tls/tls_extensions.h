@@ -136,7 +136,8 @@ class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
-      bool empty() const override { return m_sni_host_name.empty(); }
+      bool empty() const override { return false; }
+
    private:
       std::string m_sni_host_name;
    };
