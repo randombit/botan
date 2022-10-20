@@ -99,6 +99,21 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        virtual void tls_session_activated() {}
 
        /**
+       * Optional callback: New session ticket received
+       * Called when we receive a session ticket from the server at any point
+       * after the initial handshake has finished. Clients may decide to keep or
+       * discard the session ticket in the configured session manager.
+       *
+       * Note: this is called for connections that negotiated TLS 1.3 only.
+       *
+       * @param session the session descriptor
+       *
+       * @return false to prevent the session from being cached, and true to
+       *         cache the session in the configured session manager
+       */
+       virtual bool tls_session_ticket_received(const Session& session);
+
+       /**
        * Optional callback with default impl: verify cert chain
        *
        * Default implementation performs a standard PKIX validation

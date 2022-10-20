@@ -83,6 +83,7 @@ class Client_Impl_13 : public Channel_Impl_13
       void handle(const Key_Update& key_update);
 
       void send_client_authentication(Channel_Impl_13::AggregatedMessages& flight);
+      std::optional<Session> find_session_for_resumption();
 
    private:
       const Server_Information m_info;
@@ -90,7 +91,8 @@ class Client_Impl_13 : public Channel_Impl_13
       Client_Handshake_State_13 m_handshake_state;
       Handshake_Transitions m_transitions;
 
-      bool m_should_send_ccs;
+      bool                   m_should_send_ccs;
+      std::optional<Session> m_resumed_session;
    };
 
 }

@@ -36,6 +36,21 @@ Functionality removed from the TLS implementation includes
 * AES-128 OCB ciphersuites
 * DHE_PSK ciphersuites
 
+TLS 1.3 API adaptions
+---------------------
+
+Sessions
+^^^^^^^^
+
+Old (pre-Botan 3.0) sessions won't load in Botan 3.0 anymore and should be
+discarded.
+
+``Session::session_id()`` is equal to the "session ticket" for TLS 1.3 sessions.
+This ticket might be longer than a typical ID (up to 64kB). If your application
+depends on a short ID for each session, it is safe to just hash the returned
+buffer.
+
+
 Algorithms Removed
 -------------------
 

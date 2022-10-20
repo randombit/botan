@@ -31,18 +31,10 @@ class BOTAN_PUBLIC_API(2,0) Session final
       /**
       * Uninitialized session
       */
-      Session() :
-         m_start_time(std::chrono::system_clock::time_point::min()),
-         m_version(),
-         m_ciphersuite(0),
-         m_connection_side(static_cast<Connection_Side>(0)),
-         m_srtp_profile(0),
-         m_extended_master_secret(false),
-         m_encrypt_then_mac(false)
-            {}
+      Session();
 
       /**
-      * New session (sets session start time)
+      * New TLS 1.2 session (sets session start time)
       */
       Session(const std::vector<uint8_t>& session_id,
               const secure_vector<uint8_t>& master_secret,
@@ -55,6 +47,21 @@ class BOTAN_PUBLIC_API(2,0) Session final
               const std::vector<uint8_t>& session_ticket,
               const Server_Information& server_info,
               uint16_t srtp_profile,
+              std::chrono::system_clock::time_point current_timestamp);
+
+      /**
+      * New TLS 1.3 session (sets session start time)
+      */
+      Session(const std::vector<uint8_t>& session_ticket,
+              const secure_vector<uint8_t>& session_psk,
+              const std::optional<uint32_t>& max_early_data_bytes,
+              uint32_t ticket_age_add,
+              uint32_t lifetime_hint,
+              Protocol_Version version,
+              uint16_t ciphersuite,
+              Connection_Side side,
+              const std::vector<X509_Certificate>& peer_certs,
+              const Server_Information& server_info,
               std::chrono::system_clock::time_point current_timestamp);
 
       /**
@@ -140,8 +147,11 @@ class BOTAN_PUBLIC_API(2,0) Session final
 
       /**
       * Get the session identifier
+      *
+      * Note that for TLS 1.3 sessions this will be equal to the session ticket
+      * and might therefore be a up to 2^16-1 bytes long.
       */
-      const std::vector<uint8_t>& session_id() const { return m_identifier; }
+      const std::vector<uint8_t>& session_id() const;
 
       /**
       * Get the negotiated DTLS-SRTP algorithm (RFC 5764)
@@ -151,6 +161,8 @@ class BOTAN_PUBLIC_API(2,0) Session final
       bool supports_extended_master_secret() const { return m_extended_master_secret; }
 
       bool supports_encrypt_then_mac() const { return m_encrypt_then_mac; }
+
+      bool supports_early_data() const { return m_early_data_allowed; }
 
       /**
       * Return the certificate chain of the peer (possibly empty)
@@ -163,6 +175,16 @@ class BOTAN_PUBLIC_API(2,0) Session final
       std::chrono::system_clock::time_point start_time() const { return m_start_time; }
 
       /**
+      * Return the ticket obfuscation adder
+      */
+      uint32_t session_age_add() const { return m_ticket_age_add; }
+
+      /**
+      * Return the number of bytes allowed for 0-RTT early data
+      */
+      uint32_t max_early_data_bytes() const { return m_max_early_data_bytes; }
+
+      /**
       * Return the session ticket the server gave us
       */
       const std::vector<uint8_t>& session_ticket() const { return m_session_ticket; }
@@ -172,8 +194,25 @@ class BOTAN_PUBLIC_API(2,0) Session final
       */
       const Server_Information& server_info() const { return m_server_info; }
 
+      /**
+      * @return the lifetime of the ticket as defined by the TLS server
+      */
+      std::chrono::seconds lifetime_hint() const { return std::chrono::seconds(m_lifetime_hint); }
+
    private:
-      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20160812 };
+      // Struct Version history
+      //
+      // 20160812 - Pre TLS 1.3
+      // 20220505 - Introduction of TLS 1.3 sessions
+      //            - added fields:
+      //              - m_early_data_allowed
+      //              - m_max_early_data_bytes
+      //              - m_ticket_age_add
+      //              - m_lifetime_hint
+      enum
+         {
+         TLS_SESSION_PARAM_STRUCT_VERSION = 20220505
+         };
 
       std::chrono::system_clock::time_point m_start_time;
 
@@ -190,6 +229,11 @@ class BOTAN_PUBLIC_API(2,0) Session final
 
       std::vector<X509_Certificate> m_peer_certs;
       Server_Information m_server_info; // optional
+
+      bool m_early_data_allowed;
+      uint32_t m_max_early_data_bytes;
+      uint32_t m_ticket_age_add;
+      uint32_t m_lifetime_hint; // in milliseconds
    };
 
 }

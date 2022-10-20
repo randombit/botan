@@ -579,6 +579,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
       TLSEXT_KEY_SHARE,
       TLSEXT_PSK_KEY_EXCHANGE_MODES,
       TLSEXT_SUPPORTED_VERSIONS,
+      TLSEXT_PSK,
       };
 
    // As the ServerHello shall only contain essential extensions, we don't give
