@@ -518,7 +518,10 @@ def main(args=None):
             'src/scripts/test_cli.py',
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py',
-            'src/editors/sublime/build.py']
+            'src/editors/sublime/build.py',
+            'src/editors/vscode/scripts/bogo.py',
+            'src/editors/vscode/scripts/common.py',
+            'src/editors/vscode/scripts/test.py']
 
         full_paths = [os.path.join(root_dir, s) for s in py_scripts]
         cmds.append([py_interp, '-m', 'pylint'] + pylint_flags + full_paths)

@@ -1,0 +1,190 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Configure (gcc)",
+            "detail": "Default ./configure.py invocation. Run your own if you want.",
+            "group": "build",
+            "type": "shell",
+            "command": "python3 ./configure.py --cc gcc --compiler-cache=ccache --without-documentation --debug-mode --build-targets=\"static,tests,bogo_shim\"",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "close": true
+            }
+        },
+        {
+            "label": "Build All",
+            "group": "build",
+            "type": "shell",
+            "linux": {
+                "command": "make -j $(nproc)"
+            },
+            "osx": {
+                "command": "make -j $(sysctl -n hw.logicalcpu)"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "close": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build Unittests",
+            "group": "build",
+            "type": "shell",
+            "linux": {
+                "command": "make -j $(nproc) tests"
+            },
+            "osx": {
+                "command": "make -j $(sysctl -n hw.logicalcpu) tests"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "close": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build BoGo Shim",
+            "group": "build",
+            "type": "shell",
+            "linux": {
+                "command": "make -j $(nproc) bogo_shim"
+            },
+            "osx": {
+                "command": "make -j $(sysctl -n hw.logicalcpu) bogo_shim"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "close": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run Unittests",
+            "detail": "run all unittests",
+            "group": "test",
+            "type": "shell",
+            "command": "python3 ${workspaceFolder}/src/editors/vscode/scripts/test.py",
+            "dependsOn": "Build Unittests",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "close": false
+            },
+            "problemMatcher": [
+                {
+                    "owner": "cpp",
+                    "pattern": {
+                        "regexp": "^Failure \\d+: (.+Internal error: False assertion .*) @(.*):(.*)$",
+                        "message": 1,
+                        "file": 2,
+                        "line": 3,
+                        "column": 0,
+                        "endColumn": 0
+                    }
+                },
+                {
+                    "owner": "cpp",
+                    "pattern": {
+                        "regexp": "Failure \\d+: (.*) \\(at ([^:]+):(\\d+)\\)",
+                        "message": 1,
+                        "file": 2,
+                        "line": 3,
+                        "column": 0,
+                        "endColumn": 0
+                    }
+                },
+                {
+                    "owner": "cpp",
+                    "pattern": {
+                        "regexp": "Failure \\d+: (.*)",
+                        "message": 1,
+                        "file": 0,
+                        "line": 0,
+                        "column": 0,
+                        "endColumn": 0
+                    }
+                }
+            ]
+        },
+        {
+            "label": "Run Current Unittest File",
+            "detail": "run the unittest file that is currently in focus",
+            "group": "test",
+            "type": "shell",
+            "command": "python3 ${workspaceFolder}/src/editors/vscode/scripts/test.py ${relativeFile}",
+            "dependsOn": "Build Unittests",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "close": false
+            },
+            "problemMatcher": [
+                {
+                    "owner": "cpp",
+                    "pattern": {
+                        "regexp": "^Failure \\d+: (.+Internal error: False assertion .*) @(.*):(.*)$",
+                        "message": 1,
+                        "file": 2,
+                        "line": 3,
+                        "column": 0,
+                        "endColumn": 0
+                    }
+                },
+                {
+                    "owner": "cpp",
+                    "pattern": {
+                        "regexp": "Failure \\d+: (.*) \\(at ([^:]+):(\\d+)\\)",
+                        "message": 1,
+                        "file": 2,
+                        "line": 3,
+                        "column": 0,
+                        "endColumn": 0
+                    }
+                },
+                {
+                    "owner": "cpp",
+                    "pattern": {
+                        "regexp": "Failure \\d+: (.*)",
+                        "message": 1,
+                        "file": 0,
+                        "line": 0,
+                        "column": 0,
+                        "endColumn": 0
+                    }
+                }
+            ]
+        },
+        {
+            "label": "Run BoGo Tests",
+            "group": "test",
+            "type": "shell",
+            "command": "python3 ${workspaceFolder}/src/editors/vscode/scripts/bogo.py",
+            "dependsOn": "Build BoGo Shim",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "close": false
+            },
+            "problemMatcher": {
+                "owner": "cpp",
+                "pattern": [
+                    {
+                        "regexp": "^FAILED \\(([^\\)]+)\\)$",
+                        "kind": "file",
+                        "file": 1
+                    },
+                    {
+                        "regexp": "^(.*)stdout:$",
+                        "message": 1
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -12,6 +12,7 @@ libbotan*.so.*
 *.exe
 *.manifest
 build
+build_deps
 build.log
 botan
 botan-test

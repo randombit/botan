@@ -14,4 +14,4 @@ tab_width = 3
 
 [*.py]
 indent_size = 4
-tab_width = 47
+tab_width = 4
