@@ -66,14 +66,6 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       * tied to the session and a later renegotiation of the same
       * session can choose a new protocol.
       */
-      std::string next_protocol() const { return application_protocol(); }
-
-      /**
-      * Return the protocol notification set by the client (using the
-      * ALPN extension) for this connection, if any. This value is not
-      * tied to the session and a later renegotiation of the same
-      * session can choose a new protocol.
-      */
       std::string application_protocol() const override;
 
       size_t received_data(const uint8_t buf[], size_t buf_size) override;

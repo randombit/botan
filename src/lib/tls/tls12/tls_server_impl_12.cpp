@@ -507,12 +507,6 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
    if(pending_state.client_hello()->supports_alpn())
       {
       m_next_protocol = callbacks().tls_server_choose_app_protocol(pending_state.client_hello()->next_protocols());
-
-      // if the callback return was empty, fall back to the (deprecated) std::function
-      if(m_next_protocol.empty() && m_choose_next_protocol)
-         {
-         m_next_protocol = m_choose_next_protocol(pending_state.client_hello()->next_protocols());
-         }
       }
 
    if(resuming)

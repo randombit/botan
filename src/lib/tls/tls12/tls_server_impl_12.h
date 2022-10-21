@@ -110,9 +110,6 @@ class Server_Impl_12 : public Channel_Impl_12
 
       Credentials_Manager& m_creds;
       std::string m_next_protocol;
-
-      // Set by deprecated constructor, Server calls both this fn and Callbacks version
-      next_protocol_fn m_choose_next_protocol;
    };
 
 }
