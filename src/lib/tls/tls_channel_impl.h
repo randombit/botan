@@ -121,6 +121,11 @@ class Channel_Impl
       */
       virtual bool timeout_check() = 0;
 
+      /**
+      * Return the protocol notification set for this connection, if any (ALPN).
+      * This value is not tied to the session and a later renegotiation of the
+      * same session can choose a new protocol.
+      */
       virtual std::string application_protocol() const = 0;
 
    protected:

@@ -271,7 +271,6 @@ Server_Impl_12::Server_Impl_12(Callbacks& callbacks,
                                size_t io_buf_sz) :
    Channel_Impl_12(callbacks, session_manager, rng, policy,
                   true, is_datagram, io_buf_sz),
-   Server_Impl(static_cast<Channel_Impl&>(*this)),
    m_creds(creds)
    {
    }

@@ -20,7 +20,7 @@ namespace Botan {
 
 namespace TLS {
 
-class Server_Impl;
+class Channel_Impl;
 
 /**
 * TLS Server
@@ -66,7 +66,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       * tied to the session and a later renegotiation of the same
       * session can choose a new protocol.
       */
-      std::string next_protocol() const;
+      std::string next_protocol() const { return application_protocol(); }
 
       /**
       * Return the protocol notification set by the client (using the
@@ -111,7 +111,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       bool timeout_check() override;
 
    private:
-      std::unique_ptr<Server_Impl> m_impl;
+      std::unique_ptr<Channel_Impl> m_impl;
    };
 }
 

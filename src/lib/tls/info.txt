@@ -33,7 +33,6 @@ tls_version.h
 tls_channel_impl.h
 tls_handshake_transitions.h
 tls_reader.h
-tls_server_impl.h
 </header:internal>
 
 <requires>
