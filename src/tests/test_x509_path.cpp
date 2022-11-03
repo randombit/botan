@@ -1137,24 +1137,22 @@ class Path_Validation_With_OCSP_Tests final : public Test
          const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
          auto check_path = [&](const std::string &forged_ocsp,
-                               const Botan::Certificate_Status_Code not_expected) // TODO: once a fix is implemented,
-                                                                                  //       this should expect a proper
-                                                                                  //       error status code.
+                               const Botan::Certificate_Status_Code expected)
             {
                auto ocsp = load_test_OCSP_resp(forged_ocsp);
                const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
                                         Botan::calendar_point(2016, 11, 18, 12, 30, 0).to_std_timepoint(), std::chrono::milliseconds(0), {ocsp});
 
-               result.confirm(std::string("Path validation with forged OCSP response should not fail with '") + Botan::to_string(not_expected) + "'",
-                              path_result.result() != not_expected);
+               result.confirm(std::string("Path validation with forged OCSP response should fail with '") + Botan::to_string(expected) + "'",
+                              path_result.result() == expected);
                result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
             };
 
          // In both cases the path validation should detect the forged OCSP
          // response and generate an appropriate error. By no means it should
          // follow the unauthentic OCSP response.
-         check_path("x509/ocsp/randombit_ocsp_forged_valid.der", Botan::Certificate_Status_Code::OK);
-         check_path("x509/ocsp/randombit_ocsp_forged_revoked.der", Botan::Certificate_Status_Code::CERT_IS_REVOKED);
+         check_path("x509/ocsp/randombit_ocsp_forged_valid.der", Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
+         check_path("x509/ocsp/randombit_ocsp_forged_revoked.der", Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
 
          return result;
          }
