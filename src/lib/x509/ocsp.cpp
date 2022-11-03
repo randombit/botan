@@ -291,7 +291,7 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
             return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
             }
 
-         // Sub-optimal fix for a vulnerability found in Botan 2.19.2 and older.
+         // Sub-optimal fix for CVE-2022-43705 found in Botan 2.19.2 and older.
          //
          // This certificate validation is incomplete. Missing checks:
          //  * validity check against the reference time

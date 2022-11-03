@@ -1122,7 +1122,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
       Test::Result validate_with_forged_ocsp_using_self_signed_cert()
          {
-         Test::Result result("path check with forged ocsp using self-signed certificate");
+         Test::Result result("path check with forged ocsp using self-signed certificate (CVE-2022-43705)");
          Botan::Certificate_Store_In_Memory trusted;
 
          auto restrictions = Botan::Path_Validation_Restrictions(true,   // require revocation info
