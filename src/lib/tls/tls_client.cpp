@@ -48,9 +48,14 @@ Client::Client(Callbacks& callbacks,
       }
 
    if(effective_version == Protocol_Version::TLS_V13)
+      {
       m_impl = std::make_unique<Client_Impl_13>(
                   callbacks, session_manager, creds, policy,
                   rng, info, next_protocols);
+
+      if(m_impl->expects_downgrade())
+         { m_impl->set_io_buffer_size(io_buf_sz); }
+      }
    else
 #endif
       m_impl = std::make_unique<Client_Impl_12>(

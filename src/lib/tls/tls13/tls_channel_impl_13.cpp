@@ -421,6 +421,7 @@ void Channel_Impl_13::expect_downgrade(const Server_Information& server_info)
          {},
          {},
       server_info,
+      Botan::TLS::Channel::IO_BUF_DEFAULT_SIZE,
       callbacks(),
       session_manager(),
       credentials_manager(),

@@ -26,6 +26,9 @@ class X509_Certificate;
 
 namespace TLS {
 
+class Client;
+class Server;
+
 class Channel_Impl
    {
    public:
@@ -148,6 +151,7 @@ class Channel_Impl
          std::vector<uint8_t> peer_transcript;
 
          Server_Information server_info;
+         size_t io_buffer_size;
 
          Callbacks& callbacks;
          Session_Manager& session_manager;
@@ -172,6 +176,14 @@ class Channel_Impl
          {
          BOTAN_STATE_CHECK(m_downgrade_info);
          m_downgrade_info->client_hello_message = msg;
+         }
+
+      friend class Client;
+      friend class Server;
+      void set_io_buffer_size(size_t io_buf_sz)
+         {
+         BOTAN_STATE_CHECK(m_downgrade_info);
+         m_downgrade_info->io_buffer_size = io_buf_sz;
          }
 
    public:
