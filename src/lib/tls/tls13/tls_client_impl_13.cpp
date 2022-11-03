@@ -142,6 +142,15 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Version downgrade received after Hello Retry");
       }
 
+   // RFC 8446 Appendix D.1
+   //    If the version chosen by the server is not supported by the client
+   //    (or is not acceptable), the client MUST abort the handshake with a
+   //    "protocol_version" alert.
+   if(!expects_downgrade())
+      {
+      throw TLS_Exception(Alert::PROTOCOL_VERSION, "Received an unexpected legacy Server Hello");
+      }
+
    // RFC 8446 4.1.3
    //    TLS 1.3 has a downgrade protection mechanism embedded in the server's
    //    random value.  TLS 1.3 servers which negotiate TLS 1.2 or below in
@@ -188,8 +197,6 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
       // (Thanks BoGo test EchoTLS13CompatibilitySessionID!)
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Unexpected session ID during downgrade");
       }
-
-   BOTAN_ASSERT_NOMSG(expects_downgrade());
 
    // After this, no further messages are expected here because this instance will be replaced
    // by a Client_Impl_12.
