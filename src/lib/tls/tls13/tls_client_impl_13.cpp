@@ -198,6 +198,8 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Unexpected session ID during downgrade");
       }
 
+   request_downgrade();
+
    // After this, no further messages are expected here because this instance will be replaced
    // by a Client_Impl_12.
    m_transitions.set_expected_next({});

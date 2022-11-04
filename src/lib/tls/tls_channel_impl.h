@@ -186,6 +186,20 @@ class Channel_Impl
          m_downgrade_info->io_buffer_size = io_buf_sz;
          }
 
+      /**
+       * Implementations use this to signal that the peer indicated a protocol
+       * version downgrade. After calling `request_downgrade()` no further
+       * state changes must be perfomed by the implementation. Particularly, no
+       * further handshake messages must be emitted. Instead, they must yield
+       * control flow back to the underlying Channel implementation to perform
+       * the protocol version downgrade.
+       */
+      void request_downgrade()
+         {
+         BOTAN_STATE_CHECK(m_downgrade_info && !m_downgrade_info->will_downgrade);
+         m_downgrade_info->will_downgrade = true;
+         }
+
    public:
       /**
        * Indicates whether a downgrade to TLS 1.2 or lower is in progress
