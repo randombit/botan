@@ -100,6 +100,9 @@ class BOTAN_TEST_API Record_Layer
       void set_record_size_limits(const uint16_t outgoing_limit,
                                   const uint16_t incoming_limit);
 
+      void disable_sending_compat_mode() { m_sending_compat_mode = false; }
+      void disable_receiving_compat_mode() { m_receiving_compat_mode = false; }
+
    private:
       std::vector<uint8_t> m_read_buffer;
       Connection_Side      m_side;
@@ -110,10 +113,10 @@ class BOTAN_TEST_API Record_Layer
       uint16_t m_incoming_record_size_limit;
 
       // Those status flags are required for version validation where the initial
-      // record for sending and receiving is handled differently for backward
-      // compatibility reasons.
-      bool m_first_sent_record;
-      bool m_first_rcvd_record;
+      // records for sending and receiving is handled differently for backward
+      // compatibility reasons. (RFC 8446 5.1 regarding "legacy_record_version")
+      bool m_sending_compat_mode;
+      bool m_receiving_compat_mode;
    };
 
 }
