@@ -243,6 +243,12 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * Returns true if and only if OID @param ex_constraint is
       * included in the extended key extension.
       */
+      bool has_ex_constraint(const std::string& ex_constraint) const;
+
+      /**
+      * Returns true if and only if OID @param ex_constraint is
+      * included in the extended key extension.
+      */
       bool has_ex_constraint(const OID& ex_constraint) const;
 
       /**

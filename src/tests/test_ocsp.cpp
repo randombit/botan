@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "tests.h"
+#include "botan/build.h"
 
 #if defined(BOTAN_HAS_OCSP)
    #include <botan/ocsp.h>
@@ -14,6 +14,8 @@
    #include <botan/internal/calendar.h>
    #include <fstream>
 #endif
+
+#include "tests.h"
 
 namespace Botan_Tests {
 
@@ -146,7 +148,7 @@ class OCSP_Tests final : public Test
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
             {
-            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, Botan::Path_Validation_Restrictions());
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
@@ -187,7 +189,8 @@ class OCSP_Tests final : public Test
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
             {
-            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, max_age);
+            Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, pvr);
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
@@ -228,7 +231,8 @@ class OCSP_Tests final : public Test
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
             {
-            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, max_age);
+            Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, pvr);
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
@@ -264,7 +268,7 @@ class OCSP_Tests final : public Test
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
             {
-            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, Botan::Path_Validation_Restrictions());
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
@@ -299,13 +303,13 @@ class OCSP_Tests final : public Test
 
          // Some arbitrary time within the validity period of the test certs
          const auto valid_time = Botan::calendar_point(2016, 11, 20, 8, 30, 0).to_std_timepoint();
-         const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
+         const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, Botan::Path_Validation_Restrictions());
 
          if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
             {
             if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1))
                {
-               result.confirm("Status warning", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_NO_REVOCATION_URL) > 0);
+               result.test_gt("Status warning", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_NO_REVOCATION_URL), 0);
                }
             }
 
@@ -327,7 +331,7 @@ class OCSP_Tests final : public Test
 
          const auto ocsp_timeout = std::chrono::milliseconds(3000);
          const auto now = std::chrono::system_clock::now();
-         auto ocsp_status = Botan::PKIX::check_ocsp_online(cert_path, { &certstore }, now, ocsp_timeout, false);
+         auto ocsp_status = Botan::PKIX::check_ocsp_online(cert_path, { &certstore }, now, ocsp_timeout, Botan::Path_Validation_Restrictions());
 
          if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
             {

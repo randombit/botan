@@ -1168,7 +1168,7 @@ class XMSS_Path_Validation_Tests final : public Test
       auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
 
       auto status = Botan::PKIX::overall_status(Botan::PKIX::check_chain(cert_path, valid_time,
-				                                 "", Botan::Usage_Type::UNSPECIFIED, restrictions.minimum_key_strength(), restrictions.trusted_hashes()));
+				                                 "", Botan::Usage_Type::UNSPECIFIED, restrictions));
       result.test_eq("Cert validation status",
                   Botan::to_string(status), "Verified");
       return result;

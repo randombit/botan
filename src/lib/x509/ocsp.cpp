@@ -15,6 +15,8 @@
 #include <botan/pubkey.h>
 #include <botan/internal/parsing.h>
 
+#include <functional>
+
 #if defined(BOTAN_HAS_HTTP_UTIL)
   #include <botan/internal/http_util.h>
 #endif
@@ -89,16 +91,14 @@ std::string Request::base64_encode() const
    }
 
 Response::Response(Certificate_Status_Code status)
+   : m_status(Response_Status_Code::Successful)
+   , m_dummy_response_status(status)
    {
-   m_status = Response_Status_Code::Successful;
-   m_dummy_response_status = status;
    }
 
 Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
    m_response_bits(response_bits, response_bits + response_bits_len)
    {
-   m_dummy_response_status = Certificate_Status_Code::OCSP_RESPONSE_INVALID;
-
    BER_Decoder response_outer = BER_Decoder(m_response_bits).start_sequence();
 
    size_t resp_status = 0;
@@ -154,8 +154,14 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
 Certificate_Status_Code Response::verify_signature(const X509_Certificate& issuer) const
    {
-   if (m_responses.empty())
-      return m_dummy_response_status;
+   if(m_dummy_response_status)
+      return m_dummy_response_status.value();
+
+   if(m_signer_name.empty() && m_key_hash.empty())
+      return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
+
+   if(!is_issued_by(issuer))
+      return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
 
    try
       {
@@ -183,96 +189,52 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
       }
    }
 
-Certificate_Status_Code Response::check_signature(const std::vector<Certificate_Store*>& trusted_roots,
-                                                  const std::vector<X509_Certificate>& ee_cert_path) const
+
+std::optional<X509_Certificate>
+Response::find_signing_certificate(const X509_Certificate& issuer_certificate,
+                                   const Certificate_Store* trusted_ocsp_responders) const
    {
-   if (m_responses.empty())
-      return m_dummy_response_status;
+   using namespace std::placeholders;
 
-   std::optional<X509_Certificate> signing_cert;
-
-   for(const auto& trusted_root : trusted_roots)
+   // Check whether the CA issuing the certificate in question also signed this
+   if(is_issued_by(issuer_certificate))
       {
-      if(m_signer_name.empty() && m_key_hash.empty())
-         return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
-
-      if(!m_signer_name.empty())
-         {
-         signing_cert = trusted_root->find_cert(m_signer_name, std::vector<uint8_t>());
-         if(signing_cert)
-            {
-            break;
-            }
-         }
-
-      if(!m_key_hash.empty())
-         {
-         signing_cert = trusted_root->find_cert_by_pubkey_sha1(m_key_hash);
-         if(signing_cert)
-            {
-            break;
-            }
-         }
+      return issuer_certificate;
       }
 
-   if(!signing_cert && ee_cert_path.size() > 1)
+   // Then try to find a delegated responder certificate in the stapled certs
+   auto match = std::find_if(m_certs.begin(), m_certs.end(), std::bind(&Response::is_issued_by, this, _1));
+   if(match != m_certs.end())
       {
-      // End entity cert is not allowed to sign their own OCSP request :)
-      for(size_t i = 1; i < ee_cert_path.size(); ++i)
-         {
-         // Check all CA certificates in the (assumed validated) EE cert path
-         if(!m_signer_name.empty() && ee_cert_path[i].subject_dn() == m_signer_name)
-            {
-            signing_cert = ee_cert_path[i];
-            break;
-            }
+      return *match;
+      }
 
-         if(!m_key_hash.empty() && ee_cert_path[i].subject_public_key_bitstring_sha1() == m_key_hash)
-            {
-            signing_cert = ee_cert_path[i];
-            break;
-            }
+   // Last resort: check the additionally provides trusted OCSP responders
+   if(trusted_ocsp_responders)
+      {
+      std::optional<X509_Certificate> signing_cert;
+      if(!m_key_hash.empty() && (signing_cert = trusted_ocsp_responders->find_cert_by_pubkey_sha1(m_key_hash)))
+         {
+         return signing_cert;
+         }
+
+      if(!m_signer_name.empty() && (signing_cert = trusted_ocsp_responders->find_cert(m_signer_name, {})))
+         {
+         return signing_cert;
          }
       }
 
-   if(!signing_cert && !m_certs.empty())
-      {
-      for(const auto& cert : m_certs)
-         {
-         // Check all CA certificates in the (assumed validated) EE cert path
-         if(!m_signer_name.empty() && cert.subject_dn() == m_signer_name)
-            {
-            signing_cert = cert;
-            break;
-            }
-
-         if(!m_key_hash.empty() && cert.subject_public_key_bitstring_sha1() == m_key_hash)
-            {
-            signing_cert = cert;
-            break;
-            }
-         }
-      }
-
-   if(!signing_cert)
-      return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
-
-   if(!signing_cert->allowed_usage(CRL_SIGN) &&
-      !signing_cert->allowed_extended_usage("PKIX.OCSPSigning"))
-      {
-      return Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE;
-      }
-
-   return this->verify_signature(*signing_cert);
+   return std::nullopt;
    }
+
 
 Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
       const X509_Certificate& subject,
       std::chrono::system_clock::time_point ref_time,
       std::chrono::seconds max_age) const
    {
-   if(m_responses.empty())
-      { return m_dummy_response_status; }
+   if(m_dummy_response_status)
+      { return m_dummy_response_status.value(); }
 
    for(const auto& response : m_responses)
       {
@@ -309,7 +271,6 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
 Response online_check(const X509_Certificate& issuer,
                       const BigInt& subject_serial,
                       const std::string& ocsp_responder,
-                      Certificate_Store* trusted_roots,
                       std::chrono::milliseconds timeout)
    {
    if(ocsp_responder.empty())
@@ -327,21 +288,12 @@ Response online_check(const X509_Certificate& issuer,
 
    // Check the MIME type?
 
-   OCSP::Response response(http.body());
-
-   std::vector<Certificate_Store*> trusted_roots_vec;
-   trusted_roots_vec.push_back(trusted_roots);
-
-   if(trusted_roots)
-      response.check_signature(trusted_roots_vec);
-
-   return response;
+   return OCSP::Response(http.body());
    }
 
 
 Response online_check(const X509_Certificate& issuer,
                       const X509_Certificate& subject,
-                      Certificate_Store* trusted_roots,
                       std::chrono::milliseconds timeout)
    {
    if(subject.issuer_dn() != issuer.subject_dn())
@@ -350,7 +302,6 @@ Response online_check(const X509_Certificate& issuer,
    return online_check(issuer,
                        BigInt::decode(subject.serial_number()),
                        subject.ocsp_responder(),
-                       trusted_roots,
                        timeout);
    }
 
