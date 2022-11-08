@@ -97,6 +97,14 @@ should either call a specific function on ``X509_Certificate`` which returns the
 same information, or lacking that, iterate over the result of
 ``X509_Certificate::v3_extensions``.
 
+OCSP Response Validation
+------------------------
+
+After mitigating CVE-2022-43705 the OCSP response signature validation was refactored.
+This led to the removal of the `OCSP::Response::check_signature()` method. If you
+must validate OCSP responses directly in your application please use the new method
+`OCSP::Response::find_signing_certificate()` and `OCSP::Response::verify_signature()`.
+
 Use of ``enum class``
 --------------------------------
 
