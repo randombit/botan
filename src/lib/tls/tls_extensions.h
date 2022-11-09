@@ -767,7 +767,7 @@ class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
                         TLS_Data_Reader& reader,
                         uint16_t extension_size);
 
-      std::vector<uint8_t> serialize(Connection_Side whoami) const override; // always fails
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       const std::vector<uint8_t>& value() { return m_value; }
 

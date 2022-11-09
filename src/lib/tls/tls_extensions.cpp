@@ -233,7 +233,7 @@ Unknown_Extension::Unknown_Extension(Handshake_Extension_Type type,
 
 std::vector<uint8_t> Unknown_Extension::serialize(Connection_Side /*whoami*/) const
    {
-   throw Invalid_State("Cannot encode an unknown TLS extension");
+   return m_value;
    }
 
 Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
