@@ -69,6 +69,18 @@ std::map<std::string, std::string> read_results(const std::string& results_file,
    return m;
    }
 
+std::set<Botan::Certificate_Status_Code> flatten(const Botan::CertificatePathStatusCodes& codes)
+   {
+   std::set<Botan::Certificate_Status_Code> result;
+
+   for(const auto& statuses : codes)
+      {
+      result.insert(statuses.begin(), statuses.end());
+      }
+
+   return result;
+   }
+
 class X509test_Path_Validation_Tests final : public Test
    {
    public:
@@ -1145,14 +1157,18 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
          auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::OCSP::Response& ocsp_ee,
-                               const Botan::Certificate_Status_Code expected)
+                               const Botan::Certificate_Status_Code expected,
+                               const std::optional<Botan::Certificate_Status_Code> also_expected = std::nullopt)
             {
             const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
                                      valid_time, std::chrono::milliseconds(0), {ocsp_ee});
 
-            return result.confirm(std::string("Status: '") + Botan::to_string(expected)
-                                  + "' should match '" + Botan::to_string(path_result.result()) + "'",
-                                  path_result.result()==expected);
+            result.test_is_eq("should result in expected validation status code",
+                              path_result.result(), expected);
+            if(also_expected)
+               {
+               result.confirm("Secondary error is also present", flatten(path_result.all_statuses()).count(also_expected.value()) > 0);
+               }
             };
 
          check_path(
@@ -1162,11 +1178,13 @@ class Path_Validation_With_OCSP_Tests final : public Test
          check_path(
             Botan::calendar_point(2022, 10, 8, 23, 30, 0).to_std_timepoint(),
             ocsp_ee_delegate,
-            Botan::Certificate_Status_Code::CERT_HAS_EXPIRED);
+            Botan::Certificate_Status_Code::CERT_HAS_EXPIRED,
+            Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
          check_path(
             Botan::calendar_point(2022, 9, 22, 23, 30, 0).to_std_timepoint(),
             ocsp_ee_delegate_malformed,
-            Botan::Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE);
+            Botan::Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE,
+            Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
 
          return result;
          }
@@ -1188,7 +1206,8 @@ class Path_Validation_With_OCSP_Tests final : public Test
          const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
          auto check_path = [&](const std::string &forged_ocsp,
-                               const Botan::Certificate_Status_Code expected)
+                               const Botan::Certificate_Status_Code expected,
+                               const Botan::Certificate_Status_Code also_expected)
             {
                auto ocsp = load_test_OCSP_resp(forged_ocsp);
                const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
@@ -1196,14 +1215,15 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
                result.test_is_eq("Path validation with forged OCSP response should fail with",
                                  path_result.result(), expected);
+               result.confirm("Secondary error is also present", flatten(path_result.all_statuses()).count(also_expected) > 0);
                result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
             };
 
          // In both cases the path validation should detect the forged OCSP
          // response and generate an appropriate error. By no means it should
          // follow the unauthentic OCSP response.
-         check_path("x509/ocsp/randombit_ocsp_forged_valid.der", Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
-         check_path("x509/ocsp/randombit_ocsp_forged_revoked.der", Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
+         check_path("x509/ocsp/randombit_ocsp_forged_valid.der", Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND, Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
+         check_path("x509/ocsp/randombit_ocsp_forged_revoked.der", Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND, Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
 
          return result;
          }

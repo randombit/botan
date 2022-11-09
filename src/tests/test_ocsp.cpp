@@ -402,7 +402,7 @@ class OCSP_Tests final : public Test
          // without providing the 3rd party responder certificate no issuer will be found
          result.test_is_eq("cannot find signing certificate without trusted responders",
                            ocsp.find_signing_certificate(ca), nullopt_cert);
-         result.test_is_eq("cannot verify signature without additional help",
+         result.test_is_eq("cannot find signing certificate without additional help",
                            ocsp.find_signing_certificate(ca, &trusted_responders), nullopt_cert);
 
          // add the 3rd party responder certificate to the list of trusted OCSP responder certs

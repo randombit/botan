@@ -38,6 +38,7 @@ enum class Certificate_Status_Code {
    UNTRUSTED_HASH = 1001,
    NO_REVOCATION_DATA = 1002,
    NO_MATCHING_CRLDP = 1003,
+   OCSP_ISSUER_NOT_TRUSTED = 1004,
 
    // Time problems
    CERT_NOT_YET_VALID = 2000,

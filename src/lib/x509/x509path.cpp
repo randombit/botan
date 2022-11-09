@@ -318,6 +318,7 @@ PKIX::check_ocsp(const std::vector<X509_Certificate>& cert_path,
                     ocsp_signing_cert_status > Certificate_Status_Code::FIRST_ERROR_STATUS)
                {
                status.insert(ocsp_signing_cert_status);
+               status.insert(Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
                }
             else
                {
