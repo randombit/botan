@@ -71,17 +71,19 @@
  *                                     |                     ClientHello...server Finished)
  *                                     |                     = exporter_master_secret
  *                                     *
- *                         STATE APPLICATION TRAFFIC
- * This state is reached by calling advance_with_server_finished(). The state can then be further
- * advanced using advance_with_client_finished().
+ *                      STATE SERVER APPLICATION TRAFFIC
+ * This state is reached by calling advance_with_server_finished(). It allows the server
+ * to send application traffic and the client to receive it. The opposite direction is not
+ * yet possible in this state. The state can then be further advanced using
+ * advance_with_client_finished().
  *                                     *
  *                                     |
  *                                     +-----> Derive-Secret(., "res master",
  *                                                           ClientHello...client Finished)
  *                                                           = resumption_master_secret
  *                             STATE COMPLETED
- * Once this state is reached the handshake is finished and no further cipher state advances
- * are possible.
+ * Once this state is reached the handshake is finished, both client and server can exchange
+ * application data and no further cipher state advances are possible.
  */
 
 #include <limits>
@@ -161,17 +163,16 @@ void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcrip
    {
    BOTAN_ASSERT_NOMSG(m_state == State::HandshakeTraffic);
 
-   zap(m_finished_key);
-   zap(m_peer_finished_key);
-
    const auto master_secret = hkdf_extract(secure_vector<uint8_t>(m_hash->output_length(), 0x00));
 
    auto client_application_traffic_secret = derive_secret(master_secret, "c ap traffic", transcript_hash);
    auto server_application_traffic_secret = derive_secret(master_secret, "s ap traffic", transcript_hash);
 
+   // Note: the secrets for processing client's application data
+   //       are not derived before the client's Finished message
+   //       was seen and the handshake can be considered finished.
    if(m_connection_side == Connection_Side::SERVER)
       {
-      derive_read_traffic_key(client_application_traffic_secret);
       derive_write_traffic_key(server_application_traffic_secret);
       m_read_application_traffic_secret = std::move(client_application_traffic_secret);
       m_write_application_traffic_secret      = std::move(server_application_traffic_secret);
@@ -179,19 +180,32 @@ void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcrip
    else
       {
       derive_read_traffic_key(server_application_traffic_secret);
-      derive_write_traffic_key(client_application_traffic_secret);
       m_read_application_traffic_secret = std::move(server_application_traffic_secret);
       m_write_application_traffic_secret      = std::move(client_application_traffic_secret);
       }
 
    m_exporter_master_secret = derive_secret(master_secret, "exp master", transcript_hash);
 
-   m_state = State::ApplicationTraffic;
+   m_state = State::ServerApplicationTraffic;
    }
 
 void Cipher_State::advance_with_client_finished(const Transcript_Hash& transcript_hash)
    {
-   BOTAN_ASSERT_NOMSG(m_state == State::ApplicationTraffic);
+   BOTAN_ASSERT_NOMSG(m_state == State::ServerApplicationTraffic);
+
+   zap(m_finished_key);
+   zap(m_peer_finished_key);
+
+   // With the client's Finished message, the handshake is complete and
+   // we can process client application data.
+   if(m_connection_side == Connection_Side::SERVER)
+      {
+      derive_read_traffic_key(m_read_application_traffic_secret);
+      }
+   else
+      {
+      derive_write_traffic_key(m_write_application_traffic_secret);
+      }
 
    const auto master_secret = hkdf_extract(secure_vector<uint8_t>(m_hash->output_length(), 0x00));
 
@@ -265,6 +279,34 @@ size_t Cipher_State::minimum_decryption_input_length() const
    return m_decrypt->minimum_final_size();
    }
 
+bool Cipher_State::can_encrypt_application_traffic() const
+   {
+   // TODO: when implementing early traffic (0-RTT) this will likely need
+   //       to allow `State::EarlyTraffic`.
+
+   if(m_connection_side == Connection_Side::CLIENT && m_state != State::Completed)
+      { return false; }
+
+   if (m_connection_side == Connection_Side::SERVER && m_state != State::ServerApplicationTraffic && m_state != State::Completed)
+      { return false; }
+
+   return !m_write_key.empty() && !m_write_iv.empty();
+   }
+
+bool Cipher_State::can_decrypt_application_traffic() const
+   {
+   // TODO: when implementing early traffic (0-RTT) this will likely need
+   //       to allow `State::EarlyTraffic`.
+
+   if(m_connection_side == Connection_Side::CLIENT && m_state != State::ServerApplicationTraffic && m_state != State::Completed)
+      { return false; }
+
+   if(m_connection_side == Connection_Side::SERVER && m_state != State::Completed)
+      { return false; }
+
+   return !m_read_key.empty() && !m_read_iv.empty();
+   }
+
 bool Cipher_State::is_compatible_with(const Ciphersuite& cipher) const
    {
    if(!cipher.usable_in_version(Protocol_Version::TLS_V13))
@@ -297,7 +339,9 @@ std::vector<uint8_t> Cipher_State::psk_binder_mac(const Transcript_Hash& transcr
 
 std::vector<uint8_t> Cipher_State::finished_mac(const Transcript_Hash& transcript_hash) const
    {
-   BOTAN_ASSERT_NOMSG(m_state == State::HandshakeTraffic);
+   BOTAN_ASSERT_NOMSG(m_connection_side != Connection_Side::SERVER || m_state == State::HandshakeTraffic);
+   BOTAN_ASSERT_NOMSG(m_connection_side != Connection_Side::CLIENT || m_state == State::ServerApplicationTraffic);
+   BOTAN_ASSERT_NOMSG(!m_finished_key.empty());
 
    auto hmac = HMAC(m_hash->new_object());
    hmac.set_key(m_finished_key);
@@ -308,7 +352,9 @@ std::vector<uint8_t> Cipher_State::finished_mac(const Transcript_Hash& transcrip
 bool Cipher_State::verify_peer_finished_mac(const Transcript_Hash& transcript_hash,
       const std::vector<uint8_t>& peer_mac) const
    {
-   BOTAN_ASSERT_NOMSG(m_state == State::HandshakeTraffic);
+   BOTAN_ASSERT_NOMSG(m_connection_side != Connection_Side::SERVER || m_state == State::ServerApplicationTraffic);
+   BOTAN_ASSERT_NOMSG(m_connection_side != Connection_Side::CLIENT || m_state == State::HandshakeTraffic);
+   BOTAN_ASSERT_NOMSG(!m_peer_finished_key.empty());
 
    auto hmac = HMAC(m_hash->new_object());
    hmac.set_key(m_peer_finished_key);
@@ -456,7 +502,7 @@ void Cipher_State::derive_read_traffic_key(const secure_vector<uint8_t>& traffic
    if(handshake_traffic_secret)
       {
       // Key derivation for the MAC in the "Finished" handshake message as described in RFC 8446 4.4.4
-      // (will be cleared in advance_with_server_finished())
+      // (will be cleared in advance_with_client_finished())
       m_peer_finished_key = hkdf_expand_label(traffic_secret, "finished", {}, m_hash->output_length());
       }
    }
@@ -519,7 +565,7 @@ std::vector<uint8_t> Cipher_State::empty_hash() const
 
 void Cipher_State::update_read_keys()
    {
-   BOTAN_ASSERT_NOMSG(m_state == State::ApplicationTraffic ||
+   BOTAN_ASSERT_NOMSG(m_state == State::ServerApplicationTraffic ||
                       m_state == State::Completed);
 
    m_read_application_traffic_secret =
@@ -530,7 +576,7 @@ void Cipher_State::update_read_keys()
 
 void Cipher_State::update_write_keys()
    {
-   BOTAN_ASSERT_NOMSG(m_state == State::ApplicationTraffic ||
+   BOTAN_ASSERT_NOMSG(m_state == State::ServerApplicationTraffic ||
                       m_state == State::Completed);
    m_write_application_traffic_secret =
       hkdf_expand_label(m_write_application_traffic_secret, "traffic upd", {}, m_hash->output_length());

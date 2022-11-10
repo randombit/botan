@@ -571,8 +571,9 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
                            m_transcript_hash.previous()))
       { throw TLS_Exception(Alert::DECRYPT_ERROR, "Finished message didn't verify"); }
 
-   // save the current transcript hash as client auth might update the hash multiple times
-   const auto th_server_finished = m_transcript_hash.current();
+   // Derives the secrets for receiving application data but defers
+   // the derivation of sending application data.
+   m_cipher_state->advance_with_server_finished(m_transcript_hash.current());
 
    auto flight = aggregate_handshake_messages();
 
@@ -588,9 +589,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
 
    flight.send();
 
-   // derives the application traffic secrets and _replaces_ the handshake traffic secrets
-   // Note: this MUST happen AFTER the client finished message was sent!
-   m_cipher_state->advance_with_server_finished(th_server_finished);
+   // derives the sending application traffic secrets
    m_cipher_state->advance_with_client_finished(m_transcript_hash.current());
 
    // TODO: Create a dummy session object and invoke tls_session_established.

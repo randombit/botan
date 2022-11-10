@@ -283,6 +283,16 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
          result.confirm("expecting the correct MAC for server finished", cs->verify_peer_finished_mac(th_pre_server_finished,
                         expected_server_mac));
 
+         // advance Cipher_State with client_hello...server_Finished
+         // (allows receiving of application data, but does not yet allow such sending)
+         result.test_no_throw("state advancement is legal", [&]
+               {
+               cs->advance_with_server_finished(th_server_finished);
+               });
+
+         result.confirm("can read application data", cs->can_decrypt_application_traffic());
+         result.confirm("can not yet write application data", !cs->can_encrypt_application_traffic());
+
          // generate the MAC for the client Finished message
          const auto expected_client_mac = Botan::hex_decode("a8 ec 43 6d 67 76 34 ae 52 5a c1 fc eb e1 1a 03"
                                                             "9e c1 76 94 fa c6 e9 85 27 b6 42 f2 ed d5 ce 61");
@@ -292,14 +302,15 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
          // (under the client handshake traffic secret)
          encrypted_client_finished_message.encrypt(result, cs.get());
 
-         // advance Cipher_State with client_hello...server_Finished
-         // (allows sending of application data)
+         // advance Cipher_State with client_hello...client_Finished
+         // (allows generation of resumption PSKs)
          result.test_no_throw("state advancement is legal", [&]
                {
-               cs->advance_with_server_finished(th_server_finished);
+               cs->advance_with_client_finished(th_client_finished);
                });
 
          result.confirm("can write application data", cs->can_encrypt_application_traffic());
+         result.confirm("can read application data", cs->can_decrypt_application_traffic());
          result.confirm("can export key material", cs->can_export_keys());
          result.test_eq("key export produces expected result", cs->export_key(export_label, export_context, 16), expected_key_export);
 
@@ -313,13 +324,6 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
          // decrypt application data from server
          // (encrypted under the application traffic secret -- and a new sequence number)
          encrypted_application_data_server.decrypt(result, cs.get());
-
-         // advance Cipher_State with client_hello...client_Finished
-         // (allows generation of resumption PSKs)
-         result.test_no_throw("state advancement is legal", [&]
-               {
-               cs->advance_with_client_finished(th_client_finished);
-               });
 
          result.confirm("can export key material still", cs->can_export_keys());
          result.test_eq("key export result did not change", cs->export_key(export_label, export_context, 16), expected_key_export);
@@ -532,6 +536,19 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
          result.confirm("expecting the correct MAC for server finished", cs->verify_peer_finished_mac(th_pre_server_finished,
                         expected_server_mac));
 
+         result.confirm("cannot read application data", !cs->can_decrypt_application_traffic());
+         result.confirm("cannot write application data", !cs->can_encrypt_application_traffic());
+
+         // advance Cipher_State with client_hello...server_Finished
+         // (allows receiving of application data, but no such sending)
+         result.test_no_throw("state advancement is legal", [&]
+               {
+               cs->advance_with_server_finished(th_server_finished);
+               });
+
+         result.confirm("can read application data", cs->can_decrypt_application_traffic());
+         result.confirm("cannot write application data", !cs->can_encrypt_application_traffic());
+
          // generate the MAC for the client Finished message
          const auto expected_client_mac = Botan::hex_decode("72 30 a9 c9 52 c2 5c d6 13 8f c5 e6 62 83 08 c4"
                                                             "1c 53 35 dd 81 b9 f9 6b ce a5 0f d3 2b da 41 6d");
@@ -544,14 +561,16 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
 
       Botan_Tests::CHECK("application traffic after PSK (client side)", [&](Test::Result& result)
          {
-         // advance Cipher_State with client_hello...server_Finished
-         // (allows sending of application data)
+         // advance Cipher_State with client_hello...client_Finished
+         // (allows generation of resumption PSKs)
          result.test_no_throw("state advancement is legal", [&]
                {
-               cs->advance_with_server_finished(th_server_finished);
+               cs->advance_with_client_finished(th_client_finished);
                });
 
+         result.confirm("can read application data", cs->can_decrypt_application_traffic());
          result.confirm("can write application data", cs->can_encrypt_application_traffic());
+
          result.confirm("can export key material", cs->can_export_keys());
          result.test_eq("key export produces expected result", cs->export_key(export_label, export_context, 16), expected_key_export);
 
@@ -561,19 +580,6 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
          // decrypt application data from server
          // (encrypted under the application traffic secret -- and a new sequence number)
          encrypted_application_data_server.decrypt(result, cs.get());
-         }),
-
-      Botan_Tests::CHECK("final state advancement", [&](Test::Result& result)
-         {
-         // advance Cipher_State with client_hello...client_Finished
-         // (allows generation of resumption PSKs)
-         result.test_no_throw("state advancement is legal", [&]
-               {
-               cs->advance_with_client_finished(th_client_finished);
-               });
-
-         result.confirm("can export key material still", cs->can_export_keys());
-         result.test_eq("key export result did not change", cs->export_key(export_label, export_context, 16), expected_key_export);
          })
       };
    }

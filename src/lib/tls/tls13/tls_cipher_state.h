@@ -194,7 +194,7 @@ class BOTAN_TEST_API Cipher_State
       bool can_export_keys() const
          {
          return (m_state == State::EarlyTraffic       ||
-                 m_state == State::ApplicationTraffic ||
+                 m_state == State::ServerApplicationTraffic ||
                  m_state == State::Completed) &&
                 !m_exporter_master_secret.empty();
          }
@@ -202,13 +202,12 @@ class BOTAN_TEST_API Cipher_State
       /**
        * Indicates whether the appropriate secrets to encrypt application traffic are available
        */
-      bool can_encrypt_application_traffic() const
-         {
-         // TODO: when implementing early traffic (0-RTT) this will likely need
-         //       to allow `State::EarlyTraffic`.
-         return m_state != State::Uninitialized && m_state != State::HandshakeTraffic
-                && !m_write_key.empty() && !m_write_iv.empty();
-         }
+      bool can_encrypt_application_traffic() const;
+
+      /**
+       * Indicates whether the appropriate secrets to decrypt application traffic are available
+       */
+      bool can_decrypt_application_traffic() const;
 
       /**
        * @returns  true if the selected cipher primitives are compatible with
@@ -296,7 +295,7 @@ class BOTAN_TEST_API Cipher_State
          PskBinder,
          EarlyTraffic,
          HandshakeTraffic,
-         ApplicationTraffic,
+         ServerApplicationTraffic,
          Completed
          };
 
