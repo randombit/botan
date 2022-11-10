@@ -54,7 +54,9 @@ Channel_Impl_13::Channel_Impl_13(Callbacks& callbacks,
    m_handshake_layer(m_side),
    m_can_read(true),
    m_can_write(true),
-   m_opportunistic_key_update(false)
+   m_opportunistic_key_update(false),
+   m_first_message_sent(false),
+   m_first_message_received(false)
    {
    }
 
@@ -145,6 +147,15 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
 
                      // Downgrade can only happen if the first received message is a Server_Hello_12. This was not the case.
                      m_downgrade_info.reset();
+                     }
+
+                  // After the initial handshake message is received, the record
+                  // layer must be more restrictive.
+                  // See RFC 8446 5.1 regarding "legacy_record_version"
+                  if(!m_first_message_received)
+                     {
+                     m_record_layer.disable_receiving_compat_mode();
+                     m_first_message_received = true;
                      }
                   }
                }
@@ -321,9 +332,22 @@ void Channel_Impl_13::send_record(uint8_t record_type, const std::vector<uint8_t
    BOTAN_STATE_CHECK(!is_downgrading());
    BOTAN_STATE_CHECK(m_can_write);
 
-   auto to_write = m_record_layer.prepare_records(static_cast<Record_Type>(record_type), record, m_cipher_state.get());
+   const auto type = static_cast<Record_Type>(record_type);
+   auto to_write = m_record_layer.prepare_records(type, record, m_cipher_state.get());
 
-   if(prepend_ccs())
+   // After the initial handshake message is sent, the record layer must
+   // adhere to a more strict record specification. Note that for the
+   // server case this is a NOOP.
+   // See (RFC 8446 5.1. regarding "legacy_record_version")
+   if(!m_first_message_sent && type == Record_Type::HANDSHAKE)
+      {
+      m_record_layer.disable_sending_compat_mode();
+      m_first_message_sent = true;
+      }
+
+   // The dummy CCS must not be prepended if the following record is
+   // an unprotected Alert record.
+   if(prepend_ccs() && (m_cipher_state || record_type != Record_Type::ALERT))
       {
       const auto ccs = m_record_layer.prepare_records(Record_Type::CHANGE_CIPHER_SPEC, {0x01}, m_cipher_state.get());
       to_write = concat(ccs, to_write);

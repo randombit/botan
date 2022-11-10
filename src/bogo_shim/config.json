@@ -107,7 +107,7 @@
         "SupportedVersionSelection-TLS12": "We just ignore the version extension in this case",
 
         "Downgrade-*-Client-Ignore": "Not possible to ignore downgrade indicator",
-        "Downgrade-TLS12-*": "Not a downgrade when we don't support v1.3",
+        "Downgrade-TLS12-Server": "Not a downgrade when we don't support v1.3",
 
         "Agree-Digest-SHA1": "No SHA-1 in TLS 1.2",
         "ServerAuth-SHA1-Fallback-*": "No SHA-1 in TLS 1.2",

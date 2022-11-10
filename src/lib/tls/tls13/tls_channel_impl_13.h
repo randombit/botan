@@ -262,6 +262,8 @@ class Channel_Impl_13 : public Channel_Impl
       bool m_can_write;
 
       bool m_opportunistic_key_update;
+      bool m_first_message_sent;
+      bool m_first_message_received;
    };
 }
 

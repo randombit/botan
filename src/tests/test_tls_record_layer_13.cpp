@@ -26,27 +26,24 @@ namespace TLS = Botan::TLS;
 
 using Records = std::vector<TLS::Record>;
 
-TLS::Record_Layer record_layer_client(const bool skip_initial_record=false)
+TLS::Record_Layer record_layer_client(const bool skip_client_hello=false)
    {
    auto rl = TLS::Record_Layer(TLS::Connection_Side::CLIENT);
 
    // this is relevant for tests that rely on the legacy version in the record
-   if(skip_initial_record)
-      rl.prepare_records(TLS::Record_Type::HANDSHAKE, {0, 0, 0});
+   if(skip_client_hello)
+      { rl.disable_sending_compat_mode(); }
 
    return rl;
    }
 
-TLS::Record_Layer record_layer_server(const bool skip_initial_record=false)
+TLS::Record_Layer record_layer_server(const bool skip_client_hello=false)
    {
    auto rl = TLS::Record_Layer(TLS::Connection_Side::SERVER);
 
    // this is relevant for tests that rely on the legacy version in the record
-   if(skip_initial_record)
-      {
-      rl.copy_data(Botan::hex_decode("16 03 01 00 03 00 00 00"));
-      rl.next_record();  // result is ignored
-      }
+   if(skip_client_hello)
+      { rl.disable_receiving_compat_mode(); }
 
    return rl;
    }
@@ -277,14 +274,28 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
             });
          }),
 
-      Botan_Tests::CHECK("initial received record version might be 0x03XX ", [&](auto& result)
+      Botan_Tests::CHECK("initial received record versions might be 0x03XX ", [&](auto& result)
          {
-         auto rl = record_layer_client(true);
+         auto rl = record_layer_client();
          rl.copy_data({0x16, 0x03, 0x00, 0x00, 0x01, 0x42});
-         result.test_no_throw("0x03 0x00 should be fine for first record", [&] { rl.next_record(); });
+         result.test_no_throw("0x03 0x00 should be fine for first records", [&] { rl.next_record(); });
 
-         rl.copy_data({0x16, 0x03, 0x00, 0x00, 0x01, 0x42});
-         result.test_throws("0x03 0x00 not okay for any other record", [&] { rl.next_record(); });
+         rl.copy_data({0x16, 0x03, 0x01, 0x00, 0x01, 0x42});
+         result.test_no_throw("0x03 0x01 should be fine for first records", [&] { rl.next_record(); });
+
+         rl.copy_data({0x16, 0x03, 0x02, 0x00, 0x01, 0x42});
+         result.test_no_throw("0x03 0x02 should be fine for first records", [&] { rl.next_record(); });
+
+         rl.copy_data({0x16, 0x03, 0x03, 0x00, 0x01, 0x42});
+         result.test_no_throw("0x03 0x03 should be fine for first records", [&] { rl.next_record(); });
+
+         rl.disable_receiving_compat_mode();
+
+         rl.copy_data({0x16, 0x03, 0x03, 0x00, 0x01, 0x42});
+         result.test_no_throw("0x03 0x03 is okay regardless", [&] { rl.next_record(); });
+
+         rl.copy_data({0x16, 0x03, 0x01, 0x00, 0x01, 0x42});
+         result.test_throws("0x03 0x01 not okay once client hello was received", [&] { rl.next_record(); });
          }),
 
       Botan_Tests::CHECK("malformed change cipher spec", [&](auto& result)
@@ -761,8 +772,18 @@ std::vector<Test::Result> legacy_version_handling()
    auto has_version = [](const auto& record, const uint16_t version) -> bool
       {
       TLS::TLS_Data_Reader dr("header reader", record);
-      dr.discard_next(1);
-      return dr.get_uint16_t() == version;
+
+      while(dr.has_remaining())
+         {
+         dr.discard_next(1);  // record type
+         if(dr.get_uint16_t() != version)
+            return false;
+         const auto record_size = dr.get_uint16_t();
+         dr.discard_next(record_size);
+         }
+
+      dr.assert_done();
+      return true;
       };
 
    auto parse_record = [](auto& record_layer, const std::vector<uint8_t>& data)
@@ -779,7 +800,21 @@ std::vector<Test::Result> legacy_version_handling()
          auto rec = rl.prepare_records(TLS::Record_Type::HANDSHAKE, std::vector<uint8_t>(5));
          result.confirm("first record has version 0x0301", has_version(rec, 0x0301));
 
+         rl.disable_sending_compat_mode();
+
          rec = rl.prepare_records(TLS::Record_Type::HANDSHAKE, std::vector<uint8_t>(5));
+         result.confirm("next record has version 0x0303", has_version(rec, 0x0303));
+         }),
+
+      Botan_Tests::CHECK("client side starts with version 0x0301 (even if multiple reconds are required)", [&](Test::Result& result)
+         {
+         auto rl = record_layer_client();
+         auto rec = rl.prepare_records(TLS::Record_Type::HANDSHAKE, std::vector<uint8_t>(5 * Botan::TLS::MAX_PLAINTEXT_SIZE));
+         result.confirm("first record has version 0x0301", has_version(rec, 0x0301));
+
+         rl.disable_sending_compat_mode();
+
+         rec = rl.prepare_records(TLS::Record_Type::HANDSHAKE, std::vector<uint8_t>(5 * Botan::TLS::MAX_PLAINTEXT_SIZE));
          result.confirm("next record has version 0x0303", has_version(rec, 0x0303));
          }),
 
@@ -815,15 +850,16 @@ std::vector<Test::Result> legacy_version_handling()
          result.test_no_throw("parsing initial record", [&] { parse_record(rl, first_record);});
          }),
 
-      Botan_Tests::CHECK("server side does not accept version 0x0301 for the second record", [&](Test::Result& result)
+      Botan_Tests::CHECK("server side does not accept version 0x0301 after receiving client hello", [&](Test::Result& result)
          {
          const auto record = Botan::hex_decode("16 03 01 00 05 00 00 00 00 00");
          auto rl = record_layer_server();
          result.test_no_throw("parsing initial record", [&] { parse_record(rl, record);});
+         rl.disable_receiving_compat_mode();
          result.test_throws("parsing second record", [&] { parse_record(rl, record);});
          }),
 
-      Botan_Tests::CHECK("server side does not accept other versions (after the first record)", [&](Test::Result& result)
+      Botan_Tests::CHECK("server side does not accept other versions (after receiving client hello)", [&](Test::Result& result)
          {
          auto rl = record_layer_server(true);
          result.test_throws("does not accept 0x0300", [&] { parse_record(rl, Botan::hex_decode("16 03 00 00 05 00 00 00 00 00"));});
