@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 from common import run_cmd, get_concurrency
 
 
@@ -23,8 +24,11 @@ def main():
     # make doubly sure we're on the correct branch
     run_cmd("git -C %s checkout %s" % (BORING_PATH, BORING_BRANCH))
 
-    run_cmd("go test -pipe -num-workers %d -shim-path %s -shim-config %s" %
-            (get_concurrency(), os.path.abspath(SHIM_PATH), os.path.abspath(SHIM_CONFIG)), BOGO_PATH)
+    extra_args = "-debug -test '%s'" % ';'.join(
+        sys.argv[1:]) if len(sys.argv) > 1 else ''
+
+    run_cmd("go test -pipe -num-workers %d -shim-path %s -shim-config %s %s" %
+            (get_concurrency(), os.path.abspath(SHIM_PATH), os.path.abspath(SHIM_CONFIG), extra_args), BOGO_PATH)
 
 
 if __name__ == '__main__':

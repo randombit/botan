@@ -345,7 +345,9 @@ void Channel_Impl_13::send_record(uint8_t record_type, const std::vector<uint8_t
       m_first_message_sent = true;
       }
 
-   if(prepend_ccs())
+   // The dummy CCS must not be prepended if the following record is
+   // an unprotected Alert record.
+   if(prepend_ccs() && (m_cipher_state || record_type != Record_Type::ALERT))
       {
       const auto ccs = m_record_layer.prepare_records(Record_Type::CHANGE_CIPHER_SPEC, {0x01}, m_cipher_state.get());
       to_write = concat(ccs, to_write);
