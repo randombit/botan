@@ -124,16 +124,27 @@ bool Policy::use_ecc_point_compression() const
    return false;
    }
 
-Group_Params Policy::choose_key_exchange_group(const std::vector<Group_Params>& peer_groups) const
+Group_Params Policy::choose_key_exchange_group(const std::vector<Group_Params>& supported_by_peer,
+                                               const std::vector<Group_Params>& offered_by_peer) const
    {
-   if(peer_groups.empty())
+   if(supported_by_peer.empty())
       return Group_Params::NONE;
 
    const std::vector<Group_Params> our_groups = key_exchange_groups();
 
+   // Prefer groups that were offered by the peer for the sake of saving
+   // an additional round trip. For TLS 1.2, this won't be used.
+   for(auto g : offered_by_peer)
+      {
+      if(value_exists(our_groups, g))
+         return g;
+      }
+
+   // If no pre-offered groups fit our supported set, we prioritize our
+   // own preference.
    for(auto g : our_groups)
       {
-      if(value_exists(peer_groups, g))
+      if(value_exists(supported_by_peer, g))
          return g;
       }
 

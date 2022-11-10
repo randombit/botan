@@ -66,7 +66,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          }
       else
          {
-         shared_group = policy.choose_key_exchange_group(dh_groups);
+         shared_group = policy.choose_key_exchange_group(dh_groups, {});
          }
 
       if(shared_group == Group_Params::NONE)
@@ -90,7 +90,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       if(ec_groups.empty())
          throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
 
-      Group_Params shared_group = policy.choose_key_exchange_group(ec_groups);
+      Group_Params shared_group = policy.choose_key_exchange_group(ec_groups, {});
 
       if(shared_group == Group_Params::NONE)
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "No shared ECC group with client");
@@ -109,7 +109,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          }
       else
          {
-         Group_Params curve = policy.choose_key_exchange_group(ec_groups);
+         Group_Params curve = policy.choose_key_exchange_group(ec_groups, {});
 
          const std::string curve_name = state.callbacks().tls_decode_group_param(curve);
 

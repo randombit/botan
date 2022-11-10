@@ -117,9 +117,16 @@ class BOTAN_PUBLIC_API(2,0) Policy
 
       /**
       * Select a key exchange group to use, from the list of groups sent by the
-      * peer. If none are acceptable, return Group_Params::NONE
+      * peer. In TLS 1.3 handshakes the peer might have provided cryptographic material
+      * for a subset of its available groups. Choosing a group for which no share was
+      * provided will result in an additional round trip. If none are acceptable, return
+      * Group_Params::NONE.
+      *
+      * By default this will try to optimize for less round trips even if this results
+      * in the usage of a less preferred group.
       */
-      virtual Group_Params choose_key_exchange_group(const std::vector<Group_Params>& peer_groups) const;
+      virtual Group_Params choose_key_exchange_group(const std::vector<Group_Params>& supported_by_peer,
+                                                     const std::vector<Group_Params>& offered_by_peer) const;
 
       /**
       * Allow renegotiation even if the counterparty doesn't
