@@ -574,6 +574,9 @@ class Stream
       //! @}
 
       //! @brief Indicates whether a close_notify alert has been received from the peer.
+      //!
+      //! Note that we cannot m_core.is_closed_for_reading() because this wants to
+      //! explicitly check that the peer sent close_notify.
       bool shutdown_received() const
          {
          return m_core.shutdown_received;
@@ -611,6 +614,13 @@ class Stream
                receive_buffer.commit(
                   boost::asio::buffer_copy(receive_buffer.prepare(size), boost::asio::const_buffer(data, size))
                );
+               }
+
+            bool tls_peer_closed_connection() override
+               {
+               // Instruct the TLS implementation to reply with our close_notify to obtain
+               // the same behaviour for TLS 1.2 and TLS 1.3.
+               return true;
                }
 
             void tls_alert(TLS::Alert alert) override

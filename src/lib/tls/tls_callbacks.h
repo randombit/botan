@@ -3,6 +3,7 @@
 * (C) 2016 Matthias Gierlings
 *     2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2022 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -97,6 +98,31 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * Called when a session is active and can be written to
        */
        virtual void tls_session_activated() {}
+
+       /**
+       * Optional callback: peer closed connection (sent a "close_notify" alert)
+       *
+       * The peer signaled that it wishes to shut down the connection. The
+       * application should not expect to receive any more data from the peer
+       * and may tear down the underlying transport socket.
+       *
+       * Prior to TLS 1.3 it was required that peers discard pending writes
+       * and immediately respond with their own "close_notify". With TLS 1.3,
+       * applications can continue to send data despite the peer having already
+       * signaled their wish to shut down.
+       *
+       * Returning `true` will cause the TLS 1.3 implementation to write all
+       * pending data and then also signal a connection shut down. Otherwise
+       * the application is responsible to call the `Channel::close()` method.
+       *
+       * For TLS 1.2 the return value has no effect.
+       *
+       * @return true causes the implementation to respond with a "close_notify"
+       */
+       virtual bool tls_peer_closed_connection()
+         {
+         return true;
+         }
 
        /**
        * Optional callback: New session ticket received

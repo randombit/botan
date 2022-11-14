@@ -173,6 +173,13 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          // handle a tls alert received from the tls server
          }
 
+      bool tls_peer_closed_connection() override
+         {
+         count_callback_invocation("tls_peer_closed_connection");
+         // we want to handle the closure ourselves
+         return false;
+         }
+
       bool tls_session_established(const Botan::TLS::Session& session) override
          {
          count_callback_invocation("tls_session_established");
@@ -870,7 +877,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx->check_callback_invocations(result, "CLOSE_NOTIFY sent", { "tls_emit_data" });
 
                ctx->client.received_data(vars.get_req_bin("Server_CloseNotify"));
-               ctx->check_callback_invocations(result, "CLOSE_NOTIFY received", { "tls_alert" });
+               ctx->check_callback_invocations(result, "CLOSE_NOTIFY received", { "tls_alert", "tls_peer_closed_connection" });
 
                result.confirm("connection is closed", ctx->client.is_closed());
                }),
@@ -1048,7 +1055,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                result.test_eq("client close notify", ctx->pull_send_buffer(), vars.get_req_bin("Client_CloseNotify"));
 
                ctx->client.received_data(vars.get_req_bin("Server_CloseNotify"));
-               ctx->check_callback_invocations(result, "encrypted handshake messages received", { "tls_alert" });
+               ctx->check_callback_invocations(result, "encrypted handshake messages received", { "tls_alert", "tls_peer_closed_connection" });
 
                result.confirm("connection is closed", ctx->client.is_closed());
                }),
@@ -1165,6 +1172,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
                ctx->check_callback_invocations(result, "after receiving close notify", {
                   "tls_alert",
+                  "tls_peer_closed_connection"
                   });
                }),
          };

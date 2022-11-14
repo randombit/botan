@@ -501,7 +501,12 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record)
        }
 
     if(alert_msg.type() == Alert::CLOSE_NOTIFY)
+       {
+       // TLS 1.2 requires us to immediately react with our "close_notify",
+       // the return value of the application's callback has no effect on that.
+       callbacks().tls_peer_closed_connection();
        send_warning_alert(Alert::CLOSE_NOTIFY); // reply in kind
+       }
 
     if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
        {
