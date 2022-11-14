@@ -122,23 +122,29 @@ class Client_Hello_Internal
          //    which are compliant with this specification and which also support
          //    TLS 1.2 MUST negotiate TLS 1.2 or prior as specified in [RFC5246],
          //    even if ClientHello.legacy_version is 0x0304 or later.
-         if(extensions.has<Supported_Versions>())
+         //
+         // RFC 8446 4.2.1
+         //    Servers MUST be prepared to receive ClientHellos that include
+         //    [the supported_versions] extension but do not include 0x0304 in
+         //    the list of versions.
+         //
+         // RFC 8446 4.1.2
+         //    TLS 1.3 ClientHellos are identified as having a legacy_version of
+         //    0x0303 and a supported_versions extension present with 0x0304 as
+         //    the highest version indicated therein.
+         if(!extensions.has<Supported_Versions>() ||
+            !extensions.get<Supported_Versions>()->supports(Protocol_Version::TLS_V13))
             {
-            // Note: The Client_Hello_13 class will make sure that legacy_version
-            //       is exactly 0x0303 (aka ossified TLS 1.2)
-            return Protocol_Version::TLS_V13;
+            // The exact legacy_version is ignored we just inspect it to
+            // distinguish TLS and DTLS.
+            return (legacy_version.is_datagram_protocol())
+               ? Protocol_Version::DTLS_V12
+               : Protocol_Version::TLS_V12;
             }
 
-         // We seem to have encountered a pre-TLS 1.3 Client Hello
-         if(legacy_version.is_pre_tls_13())
-            return legacy_version;
-
-         // "supported_versions" is not set and legacy_version is some strange
-         // value. Let the TLS 1.2 implementation worry about it, as RFC 8446
-         // demands.
-         return (legacy_version.is_datagram_protocol())
-            ? Protocol_Version::DTLS_V12
-            : Protocol_Version::TLS_V12;
+         // Note: The Client_Hello_13 class will make sure that legacy_version
+         //       is exactly 0x0303 (aka ossified TLS 1.2)
+         return Protocol_Version::TLS_V13;
          }
 
    public:
