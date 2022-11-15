@@ -37,7 +37,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          : Command("tls_client host --port=443 --print-certs --policy=default "
                    "--skip-system-cert-store --trusted-cas= --tls-version=default "
                    "--session-db= --session-db-pass= --next-protocols= --type=tcp "
-                   "--client-cert= --client-cert-key=")
+                   "--client-cert= --client-cert-key= --debug")
          {
          init_sockets();
          }
@@ -178,6 +178,11 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                   {
                   output() << "Socket error: " << errno << " " << err_to_string(errno) << "\n";
                   continue;
+                  }
+
+               if(flag_set("debug"))
+                  {
+                  output() << ">> " << Botan::hex_encode(buf, got) << "\n";
                   }
 
                client.received_data(buf, got);
@@ -363,6 +368,11 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
       void tls_emit_data(const uint8_t buf[], size_t length) override
          {
          size_t offset = 0;
+
+         if(flag_set("debug"))
+            {
+            output() << "<< " << Botan::hex_encode(buf, length) << "\n";
+            }
 
          while(length)
             {
