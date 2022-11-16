@@ -806,6 +806,8 @@ class InfoObject:
                     self.parent_module = os.path.basename(obj_dir)
                     break
                 (obj_dir, _) = os.path.split(obj_dir)
+                if obj_dir == '/':
+                    obj_dir = None
         else:
             self.basename = basename.replace('.txt', '')
 
