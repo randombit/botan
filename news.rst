@@ -143,6 +143,13 @@ Version 3.0.0, Not Yet Released
 
 * Generate a ``compile_commands.json`` for use with Clang tooling.
 
+Version 2.19.3, 2022-11-16
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* CVE-2022-43705: A malicious OCSP responder could forge OCSP
+  responses due to a failure to validate that an embedded certificate
+  was issued by the end-entity issuing certificate authority.
+
 Version 2.19.2, 2022-06-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
