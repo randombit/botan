@@ -241,7 +241,6 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
       {
       for(size_t i = 0; i < m_certs.size(); ++i)
          {
-         // Check all CA certificates in the (assumed validated) EE cert path
          if(!m_signer_name.empty() && m_certs[i].subject_dn() == m_signer_name)
             {
             signing_cert = std::make_shared<const X509_Certificate>(m_certs[i]);
@@ -252,6 +251,73 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
             {
             signing_cert = std::make_shared<const X509_Certificate>(m_certs[i]);
             break;
+            }
+         }
+
+      // RFC 6960 4.2.2.2
+      //    OCSP signing delegation SHALL be designated by the inclusion of
+      //    id-kp-OCSPSigning in an extended key usage certificate extension
+      //    included in the OCSP response signer's certificate. This certificate
+      //    MUST be issued directly by the CA that is identified in the request.
+      //
+      //    The CA SHOULD use the same issuing key to issue a delegation
+      //    certificate as that used to sign the certificate being checked for
+      //    revocation.  Systems relying on OCSP responses MUST recognize a
+      //    delegation certificate as being issued by the CA that issued the
+      //    certificate in question only if the delegation certificate and the
+      //    certificate being checked for revocation were signed by the same key.
+      //
+      // I.e. it is safe to assume that the certificate's issuer also signed the
+      // responder's certificate.
+      //
+      // Note: The 'SHOULD' in the second paragraph above allows for backward
+      //       compatibility to RFC 2560 that is "strongly discouraged". This
+      //       implementation explicitly _does not_ implement this backward
+      //       compatibility.
+      if(signing_cert)
+         {
+         const auto issuer =
+            Certificate_Store_In_Memory(ee_cert_path)
+               .find_cert(signing_cert->issuer_dn(), signing_cert->authority_key_id());
+
+         // User did not provide the certificate path to verify the delegation
+         if(!issuer)
+            {
+            return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
+            }
+
+         if(!issuer->is_CA_cert())
+            {
+            return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
+            }
+
+         // Sub-optimal fix for CVE-2022-43705 found in Botan 2.19.2 and older.
+         //
+         // This certificate validation is incomplete. Missing checks:
+         //  * validity check against the reference time
+         //  * revocation status check of the responder certificate
+         //  * certificate extension validations
+         //  * ... potentially more
+         //
+         // A more comprehensive validation will be introduced with Botan 3.0
+         try
+            {
+            const auto issuer_pubkey = issuer->load_subject_public_key();
+            const auto sig = signing_cert->verify_signature(*issuer_pubkey);
+
+            if(sig != Certificate_Status_Code::VERIFIED)
+               {
+               return Certificate_Status_Code::OCSP_SIGNATURE_ERROR;
+               }
+
+            if(!signing_cert->has_ex_constraint(OID::from_string("PKIX.OCSPSigning")))
+               {
+               return Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE;
+               }
+            }
+         catch(const Exception& ex)
+            {
+            return Certificate_Status_Code::OCSP_SIGNATURE_ERROR;
             }
          }
       }

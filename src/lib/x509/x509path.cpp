@@ -234,7 +234,11 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
          {
          try
             {
-            Certificate_Status_Code ocsp_signature_status = ocsp_responses.at(i)->check_signature(trusted_certstores, cert_path);
+            // When verifying intermediate certificates we need to truncate the
+            // cert_path so that the intermediate under investigation becomes the
+            // last certificate in the chain.
+            std::vector<std::shared_ptr<const X509_Certificate>> ocsp_cert_path(cert_path.begin() + i, cert_path.end());
+            Certificate_Status_Code ocsp_signature_status = ocsp_responses.at(i)->check_signature(trusted_certstores, ocsp_cert_path);
 
             if(ocsp_signature_status == Certificate_Status_Code::OCSP_SIGNATURE_OK)
                {
