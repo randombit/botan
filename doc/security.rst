@@ -15,6 +15,30 @@ mail please use::
 This key can be found in the file ``doc/pgpkey.txt`` or online at
 https://keybase.io/jacklloyd and on most PGP keyservers.
 
+2022
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* 2022-11-16: Failure to correctly check OCSP responder embedded certificate
+
+  OCSP responses for some end entity are either signed by the issuing CA certificate of
+  the PKI, or an OCSP responder certificate that the PKI authorized to sign responses in
+  their name. In the latter case, the responder certificate (and its validation path
+  certificate) may be embedded into the OCSP response and clients must verify that such
+  certificates are indeed authorized by the CA when validating OCSP responses.
+
+  The OCSP implementation failed to verify that an authorized responder certificate
+  embedded in an OCSP response is authorized by the issuing CA. As a result, any valid
+  signature by an embedded certificate passed the check and was allowed to make claims
+  about the revocation status of certificates of any CA.
+
+  Attackers that are in a position to spoof OCSP responses for a client could therefore
+  render legitimate certificates of a 3rd party CA as revoked or even use a compromised
+  (and actually revoked) certificate by spoofing an OCSP-"OK" response. E.g. an attacker
+  could exploit this to impersonate a legitimate TLS server using a compromised
+  certificate of that host and get around the revocation check using OCSP stapling.
+
+  Introduced in 1.11.34, fixed in 2.19.3
+
 2020
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
