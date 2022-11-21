@@ -1821,13 +1821,12 @@ def yield_objectfile_list(sources, obj_dir, obj_suffix, options):
 
     for src in sources:
         (directory, filename) = os.path.split(os.path.normpath(src))
-        parts = directory.split(os.sep)
+        parts_in_src = directory.split('src' + os.sep)
+        parts = []
 
-        if 'src' in parts:
-            parts = parts[parts.index('src')+2:]
-        elif options.amalgamation and filename.find(options.name_amalgamation) != -1:
-            parts = []
-        else:
+        if len(parts_in_src) > 1:
+            parts = (parts_in_src[-1].split(os.sep))[1:]
+        elif not options.amalgamation or filename.find(options.name_amalgamation) == -1:
             raise InternalError("Unexpected file '%s/%s'" % (directory, filename))
 
         if parts != []:
