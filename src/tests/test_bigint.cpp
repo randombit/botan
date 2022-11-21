@@ -207,6 +207,10 @@ class BigInt_Unit_Tests final : public Test
          result.test_eq("output 33 dec", oss.str(), "33");
 
          oss.str("");
+         oss << -n;
+         result.test_eq("output -33 dec", oss.str(), "-33");
+
+         oss.str("");
          oss << std::hex << n;
          result.test_eq("output 33 hex", oss.str(), "0x21");
 
