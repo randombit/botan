@@ -26,9 +26,6 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
       stream.write("0", 1);
    else
       {
-      if(n.is_negative())
-         stream.write("-", 1);
-
       std::string enc;
 
       if(base == 10)
