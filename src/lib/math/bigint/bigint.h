@@ -506,7 +506,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      /**
      * Convert this value to a hexadecimal string.
      */
-     std::string to_hex_string() const;
+     std::string to_hex_string(const bool with_hex_prefix = true) const;
 
      /**
      * @param n the offset to get a byte from

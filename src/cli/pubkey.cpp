@@ -392,11 +392,12 @@ class EC_Group_Info final : public Command
             }
          else
             {
-            output() << "P = " << std::hex << ec_group.get_p() << "\n"
-                     << "A = " << std::hex << ec_group.get_a() << "\n"
-                     << "B = " << std::hex << ec_group.get_b() << "\n"
-                     << "N = " << std::hex << ec_group.get_order() << "\n"
-                     << "G = " << ec_group.get_g_x() << "," << ec_group.get_g_y() << "\n";
+            output() << "P = 0x" << std::hex << ec_group.get_p() << "\n"
+                     << "A = 0x" << std::hex << ec_group.get_a() << "\n"
+                     << "B = 0x" << std::hex << ec_group.get_b() << "\n"
+                     << "N = 0x" << std::hex << ec_group.get_order() << "\n"
+                     << "G = 0x" << std::hex << ec_group.get_g_x() << ",0x"
+                     << std::hex << ec_group.get_g_y() << "\n";
             }
 
          }
@@ -433,8 +434,8 @@ class DL_Group_Info final : public Command
             }
          else
             {
-            output() << "P = " << std::hex << dl_group.get_p() << "\n"
-                     << "G = " << dl_group.get_g() << "\n";
+            output() << "P = 0x" << std::hex << dl_group.get_p() << "\n"
+                     << "G = 0x" << std::hex << dl_group.get_g() << "\n";
             }
 
          }
