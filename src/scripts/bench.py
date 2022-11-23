@@ -45,7 +45,7 @@ def run_command(cmd):
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
-                            universal_newlines=True)
+                            universal_newlines=True) # pylint: disable=consider-using-with
     stdout, stderr = proc.communicate()
 
     if proc.returncode != 0:
@@ -100,14 +100,13 @@ def run_openssl_bench(openssl, algo):
     ignored = re.compile(r'\+(H|F):.*')
 
     results = []
-
-    result = None
+    result = {}
 
     for l in output.splitlines():
         if ignored.match(l):
             continue
 
-        if result is None:
+        if not result:
             match = buf_header.match(l)
             if match is None:
                 logging.error("Unexpected output from OpenSSL %s", l)

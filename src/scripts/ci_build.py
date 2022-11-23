@@ -87,7 +87,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target_os not in ['linux', 'osx', 'windows', 'freebsd']:
         print('Error unknown OS %s' % (target_os))
-        return (None, None, None)
+        return (None, None, None, None)
 
     if is_cross_target:
         if target_os == 'osx':
@@ -351,7 +351,7 @@ def run_cmd(cmd, root_dir):
 
     redirect_stdout = None
     if len(cmd) >= 3 and cmd[-2] == '>':
-        redirect_stdout = open(cmd[-1], 'w')
+        redirect_stdout = open(cmd[-1], 'wb') # pylint: disable=consider-using-with
         cmd = cmd[:-2]
     if len(cmd) > 1 and cmd[0].startswith('indir:'):
         cwd = cmd[0][6:]
@@ -361,7 +361,7 @@ def run_cmd(cmd, root_dir):
         sub_env[env_key] = env_val
         cmd = cmd[1:]
 
-    proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout)
+    proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout) # pylint: disable=consider-using-with
     proc.communicate()
 
     time_taken = int(time.time() - start)

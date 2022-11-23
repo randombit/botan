@@ -155,8 +155,8 @@ def parse_args(args):
 def remove_file_if_exists(fspath):
     try:
         os.unlink(fspath)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
+    except OSError as ex:
+        if ex.errno != errno.ENOENT:
             raise
 
 def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, rel_date):
@@ -164,7 +164,8 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
     if snapshot_branch:
         assert target_version == snapshot_branch
 
-    contents = open(version_file).readlines()
+    with open(version_file, encoding='utf-8') as f:
+        contents = f.readlines()
 
     version_re = re.compile('release_(major|minor|patch) = ([0-9]+)')
     version_suffix_re = re.compile('release_suffix = \'(-(alpha|beta|rc)[0-9]+)\'')
@@ -209,7 +210,7 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
 
         if not snapshot_branch:
             for req_var in ["major", "minor", "patch", "suffix"]:
-                if req_var not in version_info.keys():
+                if req_var not in version_info:
                     raise Exception('Missing version field for %s in version file' % (req_var))
 
             marked_version = "%d.%d.%d%s" % (version_info["major"],
@@ -222,7 +223,8 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
                     marked_version, target_version))
 
     new_contents = ''.join(list(content_rewriter(target_version)))
-    open(version_file, 'w').write(new_contents)
+    with open(version_file, 'w', encoding='utf-8') as f:
+        f.write(new_contents)
 
 def write_archive(version, output_basename, archive_type, rel_epoch, all_files, hash_file):
     # pylint: disable=too-many-locals
@@ -355,7 +357,7 @@ def main(args=None):
     elif len(args) == 1:
         try:
             logging.info('Creating release for version %s', target_version)
-        except ValueError as e:
+        except ValueError:
             logging.error('Invalid version number %s', target_version)
 
     rev_id = revision_of(target_version)
@@ -416,26 +418,21 @@ def main(args=None):
 
     try:
         os.makedirs(options.output_dir)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            logging.error('Creating dir %s failed %s', options.output_dir, e)
+    except OSError as ex:
+        if ex.errno != errno.EEXIST:
+            logging.error('Creating dir %s failed %s', options.output_dir, ex)
 
     output_files = []
 
-    hash_file = None
     if options.write_hash_file is not None:
-        hash_file = open(options.write_hash_file, 'w')
-
-    for archive_type in archives:
-        output_files.append(write_archive(target_version,
-                                          output_basename,
-                                          archive_type,
-                                          rel_epoch,
-                                          all_files,
-                                          hash_file))
-
-    if hash_file is not None:
-        hash_file.close()
+        with open(options.write_hash_file, 'w', encoding='utf-8') as hash_file:
+            for archive_type in archives:
+                output_files.append(write_archive(target_version,
+                                                  output_basename,
+                                                  archive_type,
+                                                  rel_epoch,
+                                                  all_files,
+                                                  hash_file))
 
     shutil.rmtree(output_basename)
 

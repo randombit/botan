@@ -83,19 +83,13 @@ def main(args=None):
         # No build dir: clean enough!
         return 0
 
-    build_config_path = os.path.join(build_dir, 'build_config.json')
-    build_config_str = None
-
     try:
-        build_config_file = open(build_config_path)
-        build_config_str = build_config_file.read()
-        build_config_file.close()
+        with open(os.path.join(build_dir, 'build_config.json'), encoding='utf-8') as build_config_file:
+            build_config = json.load(build_config_file)
     except Exception: # pylint: disable=broad-except
         # Ugh have to do generic catch as different exception type thrown in Python2
         logging.error("Unable to access build_config.json in build dir")
         return 1
-
-    build_config = json.loads(build_config_str)
 
     if options.distclean:
         build_dir = build_config['build_dir']

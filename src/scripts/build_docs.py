@@ -52,7 +52,7 @@ def touch(fname):
     try:
         os.utime(fname, None)
     except OSError:
-        open(fname, 'a').close()
+        open(fname, 'a', encoding='utf-8').close() # pylint: disable=consider-using-with
 
 def copy_files(src_path, dest_dir):
 
@@ -126,13 +126,10 @@ def parse_options(args):
 
 def read_config(config):
     try:
-        f = open(config)
-        cfg = json.load(f)
-        f.close()
+        with open(config, encoding='utf-8') as f:
+            return json.load(f)
     except OSError:
         raise Exception('Failed to load build config %s - is build dir correct?' % (config))
-
-    return cfg
 
 def main(args=None):
     # pylint: disable=too-many-branches

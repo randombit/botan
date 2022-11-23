@@ -90,17 +90,17 @@ def makedirs(dirname, exist_ok=True):
     try:
         logging.debug('Creating directory %s', dirname)
         os.makedirs(dirname)
-    except OSError as e:
-        if e.errno != errno.EEXIST or not exist_ok:
-            raise e
+    except OSError as ex:
+        if ex.errno != errno.EEXIST or not exist_ok:
+            raise ex
 
 # Clear link and create new one
 def force_symlink(target, linkname):
     try:
         os.unlink(linkname)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            raise e
+    except OSError as ex:
+        if ex.errno != errno.ENOENT:
+            raise ex
     os.symlink(target, linkname)
 
 def calculate_exec_mode(options):
@@ -132,7 +132,7 @@ def main(args):
         logging.debug('Make %s executable', dst)
         os.chmod(dst, exe_mode)
 
-    with open(os.path.join(build_dir, 'build_config.json')) as f:
+    with open(os.path.join(build_dir, 'build_config.json'), encoding='utf-8') as f:
         cfg = json.load(f)
 
     ver_major = int(cfg['version_major'])

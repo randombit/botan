@@ -20,7 +20,7 @@ def run_and_check(cmd_line, env=None, cwd=None):
     logging.info("Starting %s", ' '.join(cmd_line))
 
     try:
-        proc = subprocess.Popen(cmd_line, cwd=cwd, env=env)
+        proc = subprocess.Popen(cmd_line, cwd=cwd, env=env) # pylint: disable=consider-using-with
         proc.communicate()
     except OSError as e:
         logging.error("Executing %s failed (%s)", ' '.join(cmd_line), e)
@@ -60,7 +60,7 @@ def parse_options(args):
 
 def read_config(config):
     try:
-        with open(config) as f:
+        with open(config, encoding='utf-8') as f:
             return json.load(f)
     except OSError:
         raise Exception('Failed to load build config %s - is build dir correct?' % (config))

@@ -55,26 +55,26 @@ def normalize_source_path(source):
     return os.path.normpath(source).replace('\\', '/')
 
 def parse_version_file(version_path):
-    version_file = open(version_path)
     key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9:\-\']+)")
-
     results = {}
-    for line in version_file.readlines():
-        if not line or line[0] == '#':
-            continue
-        match = key_and_val.match(line)
-        if match:
-            key = match.group(1)
-            val = match.group(2)
 
-            if val == 'None':
-                val = None
-            elif val.startswith("'") and val.endswith("'"):
-                val = val[1:len(val)-1]
-            else:
-                val = int(val)
+    with open(version_path, encoding='utf-8') as version_file:
+        for line in version_file.readlines():
+            if not line or line[0] == '#':
+                continue
+            match = key_and_val.match(line)
+            if match:
+                key = match.group(1)
+                val = match.group(2)
 
-            results[key] = val
+                if val == 'None':
+                    val = None
+                elif val.startswith("'") and val.endswith("'"):
+                    val = val[1:len(val)-1]
+                else:
+                    val = int(val)
+
+                results[key] = val
     return results
 
 class Version:
@@ -151,7 +151,7 @@ class Version:
                 vc_command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                universal_newlines=True)
+                universal_newlines=True) # pylint: disable=consider-using-with
             (stdout, stderr) = vc.communicate()
 
             if vc.returncode != 0:
@@ -163,8 +163,8 @@ class Version:
             logging.debug('%s reported revision %s', cmdname, rev)
 
             return '%s:%s' % (cmdname, rev)
-        except OSError as e:
-            logging.debug('Error getting rev from %s - %s', cmdname, e.strerror)
+        except OSError as ex:
+            logging.debug('Error getting rev from %s - %s', cmdname, ex.strerror)
             return 'unknown'
 
 
@@ -736,7 +736,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
     def py_var(group):
         return group.replace(':', '_')
 
-    lexer = shlex.shlex(open(infofile), infofile, posix=True)
+    lexer = shlex.shlex(open(infofile, encoding='utf-8'), infofile, posix=True) # pylint: disable=consider-using-with
     lexer.wordchars += '=:.<>/,-!?+*' # handle various funky chars in info.txt
 
     groups = allowed_groups + allowed_maps
@@ -1695,7 +1695,7 @@ def read_textfile(filepath):
     if filepath is None:
         return ''
 
-    with open(filepath) as f:
+    with open(filepath, encoding='utf-8') as f:
         return ''.join(f.readlines())
 
 
@@ -1808,10 +1808,10 @@ def process_template_string(template_text, variables, template_source):
 
     try:
         return SimpleTemplate(variables).substitute(template_text)
-    except KeyError as e:
-        logging.error('Unbound var %s in template %s', e, template_source)
-    except Exception as e: # pylint: disable=broad-except
-        logging.error('Exception %s during template processing file %s', e, template_source)
+    except KeyError as ex:
+        logging.error('Unbound var %s in template %s', ex, template_source)
+    except Exception as ex: # pylint: disable=broad-except
+        logging.error('Exception %s during template processing file %s', ex, template_source)
 
 def process_template(template_file, variables):
     return process_template_string(read_textfile(template_file), variables, template_file)
@@ -2675,8 +2675,8 @@ class AmalgamationHeader:
             try:
                 contents = AmalgamationGenerator.read_header(filepath)
                 self.file_contents[os.path.basename(filepath)] = contents
-            except IOError as e:
-                logging.error('Error processing file %s for amalgamation: %s', filepath, e)
+            except IOError as ex:
+                logging.error('Error processing file %s for amalgamation: %s', filepath, ex)
 
         self.contents = ''
         for name in sorted(self.file_contents):
@@ -2717,7 +2717,7 @@ class AmalgamationHeader:
                     yield line
 
     def write_to_file(self, filepath, include_guard):
-        with open(filepath, 'w') as f:
+        with open(filepath, 'w', encoding='utf-8') as f:
             AmalgamationHelper.write_banner(f)
             f.write("\n#ifndef %s\n#define %s\n\n" % (include_guard, include_guard))
             f.write(self.header_includes)
@@ -2785,7 +2785,7 @@ class AmalgamationGenerator:
         amalgamation_fsname = '%s.cpp' % (self._filename_prefix)
         logging.info('Writing amalgamation source to %s', amalgamation_fsname)
 
-        amalgamation_file = open(amalgamation_fsname, 'w', encoding='utf8')
+        amalgamation_file = open(amalgamation_fsname, 'w', encoding='utf8') # pylint: disable=consider-using-with
 
         AmalgamationHelper.write_banner(amalgamation_file)
         amalgamation_file.write('\n#include "%s"\n\n' % (amalgamation_header_fsname))
@@ -2915,8 +2915,8 @@ def robust_makedirs(directory, max_retries=5):
         try:
             os.makedirs(directory)
             return
-        except OSError as e:
-            if e.errno == errno.EEXIST:
+        except OSError as ex:
+            if ex.errno == errno.EEXIST:
                 raise
 
         time.sleep(0.1)
@@ -3195,10 +3195,10 @@ def run_compiler_preproc(options, ccinfo, source_file, default_return, extra_fla
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True).communicate()
+            universal_newlines=True).communicate() # pylint: disable=consider-using-with
         cc_output = stdout
-    except OSError as e:
-        logging.warning('Could not execute %s: %s', cmd, e)
+    except OSError as ex:
+        logging.warning('Could not execute %s: %s', cmd, ex)
         return default_return
 
     def cleanup_output(output):
@@ -3268,19 +3268,19 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
 
     try:
         robust_rmtree(build_paths.build_dir)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            logging.error('Problem while removing build dir: %s', e)
+    except OSError as ex:
+        if ex.errno != errno.ENOENT:
+            logging.error('Problem while removing build dir: %s', ex)
 
     for build_dir in build_paths.build_dirs():
         try:
             robust_makedirs(build_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                logging.error('Error while creating "%s": %s', build_dir, e)
+        except OSError as ex:
+            if ex.errno != errno.EEXIST:
+                logging.error('Error while creating "%s": %s', build_dir, ex)
 
     def write_template_with_variables(sink, template, variables):
-        with open(sink, 'w') as f:
+        with open(sink, 'w', encoding='utf-8') as f:
             f.write(process_template(template, variables))
 
     def write_template(sink, template):
@@ -3310,9 +3310,9 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
         for header_file in headers:
             try:
                 portable_symlink(header_file, directory, link_method)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise UserError('Error linking %s into %s: %s' % (header_file, directory, e))
+            except OSError as ex:
+                if ex.errno != errno.EEXIST:
+                    raise UserError('Error linking %s into %s: %s' % (header_file, directory, ex))
 
     link_headers(build_paths.public_headers, 'public',
                  build_paths.botan_include_dir)
@@ -3337,7 +3337,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
 
     template_vars.update(generate_build_info(build_paths, using_mods, cc, arch, osinfo, options))
 
-    with open(os.path.join(build_paths.build_dir, 'build_config.json'), 'w') as f:
+    with open(os.path.join(build_paths.build_dir, 'build_config.json'), 'w', encoding='utf-8') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.with_compilation_database:
@@ -3373,7 +3373,8 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
         rst2man_file = os.path.join(build_paths.build_dir, 'botan.rst')
         cli_doc = os.path.join(source_paths.doc_dir, 'cli.rst')
 
-        cli_doc_contents = open(cli_doc).readlines()
+        with open(cli_doc, encoding='utf-8') as f:
+            cli_doc_contents = f.readlines()
 
         while cli_doc_contents[0] != "\n":
             cli_doc_contents.pop(0)
@@ -3387,7 +3388,7 @@ botan
 
         """.strip()
 
-        with open(rst2man_file, 'w') as f:
+        with open(rst2man_file, 'w', encoding='utf-8') as f:
             f.write(rst2man_header)
             f.write("\n")
             for line in cli_doc_contents:
