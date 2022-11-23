@@ -53,7 +53,7 @@ if type -p "apt-get"; then
         sudo apt-get -qq install pylint
 
     elif [ "$TARGET" = "coverage" ]; then
-        sudo apt-get -qq install g++-8 softhsm2 libtspi-dev lcov python-coverage libboost-all-dev gdb
+        sudo apt-get -qq install g++-9 softhsm2 libtspi-dev lcov python-coverage libboost-all-dev gdb
         pip install --user codecov
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
