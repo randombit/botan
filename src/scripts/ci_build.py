@@ -76,7 +76,7 @@ def build_targets(target, target_os):
         yield 'bogo_shim'
 
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
-                    ccache, root_dir, pkcs11_lib, use_gdb, disable_werror, extra_cxxflags,
+                    ccache, root_dir, test_results_dir, pkcs11_lib, use_gdb, disable_werror, extra_cxxflags,
                     disabled_tests):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
@@ -109,6 +109,20 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     make_prefix = []
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
+
+    # generate JUnit test report
+    if test_results_dir:
+        if not os.path.isdir(test_results_dir):
+            raise Exception("Test results directory does not exist")
+
+        def sanitize_kv(some_string):
+            return some_string.replace(':', '').replace(',', '')
+
+        report_props = {"ci_target": target, "os": target_os}
+
+        test_cmd += ['--test-results-dir=%s' % test_results_dir]
+        test_cmd += ['--report-properties=%s' %
+                     ','.join(['%s:%s' % (sanitize_kv(k), sanitize_kv(v)) for k, v in report_props.items()])]
 
     install_prefix = tempfile.mkdtemp(prefix='botan-install-')
 
@@ -424,6 +438,9 @@ def parse_args(args):
     parser.add_option('--run-under-gdb', dest='use_gdb', action='store_true', default=False,
                       help='Run test suite under gdb and capture backtrace')
 
+    parser.add_option('--test-results-dir', default=None,
+                      help='Directory to store JUnit XML test reports')
+
     return parser.parse_args(args)
 
 def have_prog(prog):
@@ -527,9 +544,12 @@ def main(args=None):
         cmds.append([py_interp, '-m', 'pylint'] + pylint_flags + full_paths)
 
     else:
+        if options.test_results_dir:
+            os.makedirs(options.test_results_dir)
+
         config_flags, run_test_command, make_prefix, install_prefix = determine_flags(
             target, options.os, options.cpu, options.cc,
-            options.cc_bin, options.compiler_cache, root_dir,
+            options.cc_bin, options.compiler_cache, root_dir, options.test_results_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
             options.extra_cxxflags, options.disabled_tests)
 

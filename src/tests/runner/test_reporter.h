@@ -13,6 +13,59 @@
 namespace Botan_Tests {
 
 /**
+ * Summary data holder for an individual test (i.e. one `Test::Result` instance)
+ */
+class TestSummary final
+   {
+   public:
+      TestSummary(const Test::Result& result);
+
+      bool passed() const { return failures.empty(); }
+      bool failed() const { return !failures.empty(); }
+
+   public:
+      const std::string name;
+      const std::optional<CodeLocation> code_location;
+
+      const size_t assertions;
+      const std::vector<std::string> notes;
+      const std::vector<std::string> failures;
+
+      const std::chrono::system_clock::time_point timestamp;
+      const std::optional<std::chrono::nanoseconds> elapsed_time;
+   };
+
+
+/**
+ * Summary data holder for a test suite containing potentially many test cases
+ */
+class Testsuite final
+   {
+   public:
+      Testsuite(std::string name);
+
+      void record(const Test::Result& result);
+
+      size_t tests_run() const { return m_results.size(); }
+      size_t tests_passed() const;
+      size_t tests_failed() const;
+
+      /// Returns the oldest time stamp in all contained test cases
+      std::chrono::system_clock::time_point timestamp() const;
+
+      /// Returns the cumulative elapsed time of all contained test cases
+      std::optional<std::chrono::nanoseconds> elapsed_time() const;
+
+      const std::string& name() const { return m_name; }
+      const std::vector<TestSummary>& results() const { return m_results; }
+
+   private:
+      const std::string        m_name;
+      std::vector<TestSummary> m_results;
+   };
+
+
+/**
  * @brief Base class for Botan's test result reporting facility
  *
  * Note that this class is currently not thread safe.
@@ -20,6 +73,7 @@ namespace Botan_Tests {
 class Reporter
    {
    public:
+      using TestsuiteMap = std::map<std::string, Testsuite>;
       using PropertyMap = std::map<std::string, std::string>;
 
    public:
@@ -59,17 +113,19 @@ class Reporter
       /**
        * @brief Reports a single test result
        *
-       * The default implementation doesn't do any reporting.
+       * The default implementation records the result as `Testsuite` and
+       * `TestSummary` objects but doesn't do any reporting.
        *
-       * Subclasses should override this method to add custom handling.
+       * Subclasses should override this method to add custom handling and/or
+       * replace the test summary recording entirely. Note that the protected
+       * accessor methods won't work as expected if this method isn't up-called.
        *
-       * @param name    The name of the test case the result was created
+       * @param name    The name of the test case the result was created in
+       *                Note that multiple results can be reported under the
+       *                same name. The `Reporter` will coalesce those.
        * @param result  The test result data structure of a finished test case
        */
-      virtual void record(const std::string& name, const Test::Result& result)
-         {
-         BOTAN_UNUSED(name, result);
-         }
+      virtual void record(const std::string& name, const Test::Result& result);
 
       /**
        * @brief Reports a list of test results for a given test suite
@@ -104,9 +160,14 @@ class Reporter
        */
       virtual void next_run() = 0;
 
+      size_t tests_run() const;
+      size_t tests_passed() const;
+      size_t tests_failed() const;
+
       std::chrono::nanoseconds elapsed_time() const;
 
       const PropertyMap& properties() const { return m_properties; }
+      const TestsuiteMap& testsuites() const { return m_testsuites; }
 
       size_t current_test_run() const { return m_current_test_run; }
       size_t total_test_runs() const { return m_total_test_runs; }
@@ -117,6 +178,7 @@ class Reporter
 
       PropertyMap m_properties;
 
+      TestsuiteMap m_testsuites;
       std::chrono::high_resolution_clock::time_point m_start_time;
    };
 

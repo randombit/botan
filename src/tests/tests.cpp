@@ -46,6 +46,7 @@ void Test::Result::merge(const Result& other, bool ignore_test_name)
       m_where = other.m_where;
       }
 
+   m_timestamp = std::min(m_timestamp, other.m_timestamp);
    m_ns_taken += other.m_ns_taken;
    m_tests_passed += other.m_tests_passed;
    m_fail_log.insert(m_fail_log.end(), other.m_fail_log.begin(), other.m_fail_log.end());
@@ -1178,6 +1179,26 @@ std::vector<Test::Result> Text_Based_Test::run()
    m_first = true;
 
    return results;
+   }
+
+std::map<std::string, std::string> Test_Options::report_properties() const
+   {
+   std::map<std::string, std::string> result;
+
+   for(const auto& prop : m_report_properties)
+      {
+      const auto colon = prop.find(':');
+      // props without a colon separator or without a name are not allowed
+      if(colon == std::string::npos || colon == 0)
+         {
+         throw Test_Error("--report-properties should be of the form <key>:<value>,<key>:<value>,...");
+         }
+
+      result.insert_or_assign(prop.substr(0, colon),
+                              prop.substr(colon + 1, prop.size() - colon - 1));
+      }
+
+   return result;
    }
 
 }
