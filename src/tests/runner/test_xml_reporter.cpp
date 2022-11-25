@@ -68,14 +68,6 @@ XmlReporter::XmlReporter(const Test_Options& opts, std::string output_dir)
       }
    }
 
-XmlReporter::~XmlReporter()
-   {
-   if(m_outfile.has_value() && m_outfile->good())
-      {
-      m_outfile->close();
-      }
-   }
-
 void XmlReporter::render() const
    {
    BOTAN_STATE_CHECK(m_outfile.has_value() && m_outfile->good());
@@ -103,9 +95,8 @@ std::string XmlReporter::get_unique_output_filename() const
 
 void XmlReporter::next_run()
    {
-   if(m_outfile.has_value() && m_outfile->good())
+   if(m_outfile.has_value())
       {
-      m_outfile->close();
       m_outfile.reset();
       }
 

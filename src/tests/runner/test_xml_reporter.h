@@ -28,7 +28,6 @@ class XmlReporter : public Reporter
    {
    public:
       XmlReporter(const Test_Options& opts, std::string output_dir);
-      ~XmlReporter();
 
       void render() const override;
 

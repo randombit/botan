@@ -115,13 +115,14 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         if not os.path.isdir(test_results_dir):
             raise Exception("Test results directory does not exist")
 
-        def escape(some_string):
+        def sanitize_kv(some_string):
             return some_string.replace(':', '').replace(',', '')
 
         report_props = {"ci_target": target, "os": target_os}
 
         test_cmd += ['--test-results-dir=%s' % test_results_dir]
-        test_cmd += ['--report-properties=%s' % ','.join(['%s:%s' % (escape(k), escape(v)) for k, v in report_props.items()])]
+        test_cmd += ['--report-properties=%s' %
+                     ','.join(['%s:%s' % (sanitize_kv(k), sanitize_kv(v)) for k, v in report_props.items()])]
 
     install_prefix = tempfile.mkdtemp(prefix='botan-install-')
 
