@@ -85,7 +85,7 @@ std::string BigInt::to_dec_string() const
    return s;
    }
 
-std::string BigInt::to_hex_string(const bool with_hex_prefix /*= true*/) const
+std::string BigInt::to_hex_string(const bool with_hex_prefix) const
    {
    std::vector<uint8_t> bits = BigInt::encode(*this);
 
