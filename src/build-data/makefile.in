@@ -91,7 +91,7 @@ fuzzer_corpus:
 	git clone --depth=1 https://github.com/randombit/crypto-corpus.git fuzzer_corpus
 
 fuzzer_corpus_zip: fuzzer_corpus
-	./src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}
+	%{base_dir}/src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}
 
 %{endif}
 

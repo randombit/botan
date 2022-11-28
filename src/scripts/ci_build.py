@@ -76,9 +76,9 @@ def build_targets(target, target_os):
     if target in ['coverage']:
         yield 'bogo_shim'
 
-def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
-                    ccache, root_dir, test_results_dir, pkcs11_lib, use_gdb, disable_werror, extra_cxxflags,
-                    disabled_tests):
+def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
+                    root_dir, build_dir, test_results_dir, pkcs11_lib, use_gdb,
+                    disable_werror, extra_cxxflags, disabled_tests):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
     """
@@ -109,7 +109,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     make_prefix = []
     test_prefix = []
-    test_cmd = [os.path.join(root_dir, 'botan-test')]
+    test_cmd = [os.path.join(build_dir, 'botan-test'), '--data-dir=%s' % os.path.join(root_dir, 'src', 'tests', 'data')]
 
     # generate JUnit test report
     if test_results_dir:
@@ -130,7 +130,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     flags = ['--prefix=%s' % (install_prefix),
              '--cc=%s' % (target_cc),
              '--os=%s' % (target_os),
-             '--build-targets=%s' % ','.join(build_targets(target, target_os))]
+             '--build-targets=%s' % ','.join(build_targets(target, target_os)),
+             '--with-build-dir=%s' % build_dir]
 
     if ccache is not None:
         flags += ['--no-store-vc-rev', '--compiler-cache=%s' % (ccache)]
@@ -351,7 +352,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     return flags, run_test_command, make_prefix, install_prefix
 
-def run_cmd(cmd, root_dir):
+def run_cmd(cmd, root_dir, build_dir):
     """
     Execute a command, die if it failed
     """
@@ -362,8 +363,8 @@ def run_cmd(cmd, root_dir):
 
     cmd = [os.path.expandvars(elem) for elem in cmd]
     sub_env = os.environ.copy()
-    sub_env['LD_LIBRARY_PATH'] = os.path.abspath(root_dir)
-    sub_env['DYLD_LIBRARY_PATH'] = os.path.abspath(root_dir)
+    sub_env['LD_LIBRARY_PATH'] = os.path.abspath(build_dir)
+    sub_env['DYLD_LIBRARY_PATH'] = os.path.abspath(build_dir)
     sub_env['PYTHONPATH'] = os.path.abspath(os.path.join(root_dir, 'src/python'))
     cwd = None
 
@@ -415,6 +416,8 @@ def parse_args(args):
                       help='Set path to compiler')
     parser.add_option('--root-dir', metavar='D', default='.',
                       help='Set directory to execute from (default %default)')
+    parser.add_option('--build-dir', metavar='D', default='.',
+                      help='Set directory to place build artifacts into (default %default)')
     parser.add_option('--boringssl-dir', metavar='D', default='boringssl',
                       help='Set directory of BoringSSL checkout to use for BoGo tests')
 
@@ -513,9 +516,14 @@ def main(args=None):
         raise Exception("Don't know about %s as a compiler cache" % (options.compiler_cache))
 
     root_dir = options.root_dir
+    build_dir = options.build_dir
 
     if not os.access(root_dir, os.R_OK):
         raise Exception('Bad root dir setting, dir %s not readable' % (root_dir))
+    if not os.path.exists(build_dir):
+        os.makedirs(build_dir)
+    elif not os.path.isdir(build_dir) or not os.access(build_dir, os.R_OK | os.W_OK):
+        raise Exception("Bad build dir setting %s is not a directory or not accessible" % (build_dir))
 
     cmds = []
 
@@ -554,8 +562,8 @@ def main(args=None):
             os.makedirs(options.test_results_dir)
 
         config_flags, run_test_command, make_prefix, install_prefix = determine_flags(
-            target, options.os, options.cpu, options.cc,
-            options.cc_bin, options.compiler_cache, root_dir, options.test_results_dir,
+            target, options.os, options.cpu, options.cc, options.cc_bin,
+            options.compiler_cache, root_dir, build_dir, options.test_results_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
             options.extra_cxxflags, options.disabled_tests)
 
@@ -565,8 +573,8 @@ def main(args=None):
             options.make_tool = 'make'
 
         make_cmd = [options.make_tool]
-        if root_dir != '.':
-            make_cmd += ['-C', root_dir]
+        if build_dir != '.':
+            make_cmd = ['indir:%s' % build_dir] + make_cmd
         if options.build_jobs > 1 and options.make_tool != 'nmake':
             make_cmd += ['-j%d' % (options.build_jobs)]
 
@@ -603,33 +611,38 @@ def main(args=None):
             cmds.append(['indir:%s' % (runner_dir),
                          'go', 'test', '-pipe',
                          '-num-workers', str(4*get_concurrency()),
-                         '-shim-path', os.path.abspath(os.path.join(root_dir, 'botan_bogo_shim')),
+                         '-shim-path', os.path.abspath(os.path.join(build_dir, 'botan_bogo_shim')),
                          '-shim-config', os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config.json'))])
 
         if target in ['coverage', 'fuzzers']:
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_fuzzers.py'),
-                         os.path.join(root_dir, 'fuzzer_corpus'),
-                         os.path.join(root_dir, 'build/fuzzer')])
+                         os.path.join(build_dir, 'fuzzer_corpus'),
+                         os.path.join(build_dir, 'build/fuzzer')])
 
         if target in ['shared', 'coverage'] and options.os != 'windows':
-            botan_exe = os.path.join(root_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
+            botan_exe = os.path.join(build_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
 
             args = ['--threads=%d' % (options.build_jobs)]
             if target == 'coverage':
                 args.append('--run-slow-tests')
+            if root_dir != '.':
+                args.append('--test-data-dir=%s' % root_dir)
             test_scripts = ['test_cli.py', 'test_cli_crypt.py']
             for script in test_scripts:
+                test_data_arg = []
                 cmds.append([py_interp, os.path.join(root_dir, 'src/scripts', script)] +
-                            args + [botan_exe])
+                            args + test_data_arg + [botan_exe])
 
-        python_tests = os.path.join(root_dir, 'src/scripts/test_python.py')
+        python_tests = [os.path.join(root_dir, 'src/scripts/test_python.py')]
+        if root_dir != '.':
+            python_tests.append('--test-data-dir=%s' % root_dir)
 
         if target in ['shared', 'coverage']:
-            cmds.append([py_interp, '-b', python_tests])
+            cmds.append([py_interp, '-b'] + python_tests)
 
         if target in ['shared', 'static', 'bsi', 'nist']:
             cmds.append(make_cmd + ['install'])
-            build_config = os.path.join(root_dir, 'build', 'build_config.json')
+            build_config = os.path.join(build_dir, 'build', 'build_config.json')
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), build_config])
 
         if target in ['examples']:
@@ -647,25 +660,25 @@ def main(args=None):
                 print('Error: gcov not found in PATH (%s)' % (os.getenv('PATH')))
                 return 1
 
-            cov_file = 'coverage.info'
-            raw_cov_file = 'coverage.info.raw'
+            cov_file = os.path.join(build_dir, 'coverage.info')
+            raw_cov_file = os.path.join(build_dir, 'coverage.info.raw')
 
-            cmds.append(['lcov', '--capture', '--directory', options.root_dir,
+            cmds.append(['lcov', '--capture', '--directory', build_dir,
                          '--output-file', raw_cov_file])
             cmds.append(['lcov', '--remove', raw_cov_file, '/usr/*', '--output-file', cov_file])
             cmds.append(['lcov', '--list', cov_file])
 
             if have_prog('coverage'):
                 cmds.append(['coverage', 'run', '--branch',
-                             '--rcfile', os.path.join(root_dir, 'src/configs/coverage.rc'),
-                             python_tests])
+                             '--rcfile', os.path.join(root_dir, 'src/configs/coverage.rc')] +
+                            python_tests)
 
             if have_prog('codecov'):
                 # If codecov exists assume we are in CI and report to codecov.io
-                cmds.append(['codecov', '>', 'codecov_stdout.log'])
+                cmds.append(['codecov', '>', os.path.join(build_dir, 'codecov_stdout.log')])
             else:
                 # Otherwise generate a local HTML report
-                cmds.append(['genhtml', cov_file, '--output-directory', 'lcov-out'])
+                cmds.append(['genhtml', cov_file, '--output-directory', os.path.join(build_dir, 'lcov-out')])
 
         cmds.append(make_cmd + ['clean'])
         cmds.append(make_cmd + ['distclean'])
@@ -674,7 +687,7 @@ def main(args=None):
         if options.dry_run:
             print('$ ' + ' '.join(cmd))
         else:
-            run_cmd(cmd, root_dir)
+            run_cmd(cmd, root_dir, build_dir)
 
     return 0
 
