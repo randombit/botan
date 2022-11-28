@@ -10,6 +10,8 @@ import unittest
 import binascii
 import os
 import platform
+import argparse
+import sys
 
 # Starting with Python 3.8 DLL search locations are more restricted on Windows.
 # Hence, we need to explicitly add the current working directory before trying
@@ -25,6 +27,13 @@ def hex_encode(buf):
 
 def hex_decode(buf):
     return binascii.unhexlify(buf.encode('ascii'))
+
+# pylint: disable=global-statement
+
+TEST_DATA_DIR = '.'
+
+def test_data(relpath):
+    return os.path.join(TEST_DATA_DIR, relpath)
 
 class BotanPythonTests(unittest.TestCase):
     # pylint: disable=too-many-public-methods,too-many-locals
@@ -450,7 +459,7 @@ ofvkP1EDmpx50fHLawIDAQAB
 
     def test_certs(self):
         # pylint: disable=too-many-statements
-        cert = botan2.X509Cert(filename="src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt")
+        cert = botan2.X509Cert(filename=test_data("src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt"))
         pubkey = cert.subject_public_key()
 
         self.assertEqual(pubkey.algo_name(), 'ECDSA')
@@ -487,16 +496,16 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertFalse(cert.allowed_usage(["DIGITAL_SIGNATURE"]))
         self.assertFalse(cert.allowed_usage(["DIGITAL_SIGNATURE", "CRL_SIGN"]))
 
-        root = botan2.X509Cert("src/tests/data/x509/nist/root.crt")
+        root = botan2.X509Cert(test_data("src/tests/data/x509/nist/root.crt"))
 
-        int09 = botan2.X509Cert("src/tests/data/x509/nist/test09/int.crt")
-        end09 = botan2.X509Cert("src/tests/data/x509/nist/test09/end.crt")
+        int09 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test09/int.crt"))
+        end09 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test09/end.crt"))
         self.assertEqual(end09.verify([int09], [root]), 2001)
 
-        end04 = botan2.X509Cert("src/tests/data/x509/nist/test04/end.crt")
-        int04_1 = botan2.X509Cert("src/tests/data/x509/nist/test04/int1.crt")
-        int04_2 = botan2.X509Cert("src/tests/data/x509/nist/test04/int2.crt")
-        self.assertEqual(end04.verify([int04_1, int04_2], [], "src/tests/data/x509/nist/", required_strength=80), 0)
+        end04 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test04/end.crt"))
+        int04_1 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test04/int1.crt"))
+        int04_2 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test04/int2.crt"))
+        self.assertEqual(end04.verify([int04_1, int04_2], [], test_data("src/tests/data/x509/nist/"), required_strength=80), 0)
         self.assertEqual(end04.verify([int04_1, int04_2], [], required_strength=80), 3000)
         self.assertEqual(end04.verify([int04_1, int04_2], [root], required_strength=80, hostname="User1-CP.02.01"), 0)
         self.assertEqual(end04.verify([int04_1, int04_2], [root], required_strength=80, hostname="invalid"), 4008)
@@ -506,21 +515,21 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(botan2.X509Cert.validation_status(3000), 'Certificate issuer not found')
         self.assertEqual(botan2.X509Cert.validation_status(4008), 'Certificate does not match provided name')
 
-        rootcrl = botan2.X509CRL("src/tests/data/x509/nist/root.crl")
+        rootcrl = botan2.X509CRL(test_data("src/tests/data/x509/nist/root.crl"))
 
-        end01 = botan2.X509Cert("src/tests/data/x509/nist/test01/end.crt")
+        end01 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test01/end.crt"))
         self.assertEqual(end01.verify([], [root], required_strength=80, crls=[rootcrl]), 0)
 
-        int20 = botan2.X509Cert("src/tests/data/x509/nist/test20/int.crt")
-        end20 = botan2.X509Cert("src/tests/data/x509/nist/test20/end.crt")
-        int20crl = botan2.X509CRL("src/tests/data/x509/nist/test20/int.crl")
+        int20 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test20/int.crt"))
+        end20 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test20/end.crt"))
+        int20crl = botan2.X509CRL(test_data("src/tests/data/x509/nist/test20/int.crl"))
 
         self.assertEqual(end20.verify([int20], [root], required_strength=80, crls=[int20crl, rootcrl]), 5000)
         self.assertEqual(botan2.X509Cert.validation_status(5000), 'Certificate is revoked')
 
-        int21 = botan2.X509Cert("src/tests/data/x509/nist/test21/int.crt")
-        end21 = botan2.X509Cert("src/tests/data/x509/nist/test21/end.crt")
-        int21crl = botan2.X509CRL("src/tests/data/x509/nist/test21/int.crl")
+        int21 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test21/int.crt"))
+        end21 = botan2.X509Cert(test_data("src/tests/data/x509/nist/test21/end.crt"))
+        int21crl = botan2.X509CRL(test_data("src/tests/data/x509/nist/test21/int.crl"))
         self.assertEqual(end21.verify([int21], [root], required_strength=80, crls=[int21crl, rootcrl]), 5000)
 
         self.assertTrue(int20.is_revoked(rootcrl))
@@ -733,5 +742,17 @@ ofvkP1EDmpx50fHLawIDAQAB
         except botan2.BotanException as e:
             self.assertEqual(str(e), "botan_srp6_server_session_step2 failed: -32 (Bad parameter)")
 
-if __name__ == '__main__':
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--test-data-dir', default='.')
+    parser.add_argument('unittest_args', nargs='*')
+
+    args = parser.parse_args()
+    global TEST_DATA_DIR
+    TEST_DATA_DIR = args.test_data_dir
+
+    sys.argv[1:] = args.unittest_args
     unittest.main()
+
+if __name__ == '__main__':
+    main()
