@@ -14,6 +14,8 @@ set -ex
 TARGET="$1"
 ARCH="$2"
 
+SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
+
 if type -p "apt-get"; then
     sudo apt-get -qq update
     sudo apt-get -qq install ccache
@@ -52,8 +54,8 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "baremetal" ]; then
         sudo apt-get -qq install gcc-arm-none-eabi libstdc++-arm-none-eabi-newlib
 
-        echo 'extern "C" void __sync_synchronize() {}' >> src/tests/main.cpp
-        echo 'extern "C" void __sync_synchronize() {}' >> src/cli/main.cpp
+        echo 'extern "C" void __sync_synchronize() {}' >> "${SCRIPT_LOCATION}/../../tests/main.cpp"
+        echo 'extern "C" void __sync_synchronize() {}' >> "${SCRIPT_LOCATION}/../../cli/main.cpp"
 
     elif [ "$TARGET" = "lint" ]; then
         sudo apt-get -qq install pylint
