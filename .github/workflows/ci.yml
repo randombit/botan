@@ -169,6 +169,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Fetch BoringSSL fork for BoGo tests
+        uses: actions/checkout@v3
+        with:
+          repository: reneme/boringssl
+          ref: rene/runner-20220322 # TODO: merge changes to Botan's boring fork
+          path: ./boringssl
+        if: matrix.target == 'coverage'
+
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:
@@ -176,7 +184,7 @@ jobs:
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./source/src/scripts/ci_build.py --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   x-compile:
     name: "Cross-Compilation"

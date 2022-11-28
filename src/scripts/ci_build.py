@@ -415,6 +415,8 @@ def parse_args(args):
                       help='Set path to compiler')
     parser.add_option('--root-dir', metavar='D', default='.',
                       help='Set directory to execute from (default %default)')
+    parser.add_option('--boringssl-dir', metavar='D', default='boringssl',
+                      help='Set directory of BoringSSL checkout to use for BoGo tests')
 
     parser.add_option('--make-tool', metavar='TOOL', default='make',
                       help='Specify tool to run to build source (default %default)')
@@ -593,7 +595,10 @@ def main(args=None):
             cmds.append(run_test_command)
 
         if target == 'coverage':
-            runner_dir = os.path.abspath(os.path.join(root_dir, 'boringssl', 'ssl', 'test', 'runner'))
+            if not options.boringssl_dir:
+                raise Exception('coverage build needs --boringssl-dir')
+
+            runner_dir = os.path.abspath(os.path.join(options.boringssl_dir, 'ssl', 'test', 'runner'))
 
             cmds.append(['indir:%s' % (runner_dir),
                          'go', 'test', '-pipe',
