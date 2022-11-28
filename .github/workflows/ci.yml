@@ -168,6 +168,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          path: ./source
 
       - name: Fetch BoringSSL fork for BoGo tests
         uses: actions/checkout@v3
@@ -178,13 +180,13 @@ jobs:
         if: matrix.target == 'coverage'
 
       - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
+        uses: ./source/.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./source/src/scripts/ci_build.py --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   x-compile:
     name: "Cross-Compilation"
