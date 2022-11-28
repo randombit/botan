@@ -31,7 +31,7 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
       if(base == 10)
          enc = n.to_dec_string();
       else
-         enc = n.to_hex_string(false /*without hex prefix*/);
+         enc = n.to_hex_string();
 
       stream.write(enc.data(), enc.size());
       }

@@ -85,7 +85,7 @@ std::string BigInt::to_dec_string() const
    return s;
    }
 
-std::string BigInt::to_hex_string(const bool with_hex_prefix) const
+std::string BigInt::to_hex_string() const
    {
    std::vector<uint8_t> bits = BigInt::encode(*this);
 
@@ -95,8 +95,6 @@ std::string BigInt::to_hex_string(const bool with_hex_prefix) const
    std::string hrep;
    if(is_negative())
       hrep += "-";
-   if(with_hex_prefix)
-      hrep += "0x";
    hrep += hex_encode(bits);
    return hrep;
    }

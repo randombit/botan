@@ -1415,7 +1415,7 @@ class FFI_Unit_Tests final : public Test
          result.test_eq("botan_mp_num_bits", x_bits, 9);
 
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
-         result.test_eq("botan_mp_to_hex", std::string(str_buf), "0x0103");
+         result.test_eq("botan_mp_to_hex", std::string(str_buf), "0103");
 
          uint32_t x_32;
          TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));
@@ -1426,11 +1426,11 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_mp_set_bit, (x, 87));
          TEST_FFI_RC(1, botan_mp_get_bit, (x, 87));
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
-         result.test_eq("botan_mp_set_bit", std::string(str_buf), "0x8000000000000000000103");
+         result.test_eq("botan_mp_set_bit", std::string(str_buf), "8000000000000000000103");
 
          TEST_FFI_OK(botan_mp_clear_bit, (x, 87));
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
-         result.test_eq("botan_mp_set_bit", std::string(str_buf), "0x0103");
+         result.test_eq("botan_mp_set_bit", std::string(str_buf), "0103");
 
          botan_mp_t y;
          TEST_FFI_OK(botan_mp_init, (&y));
