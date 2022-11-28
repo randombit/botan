@@ -505,6 +505,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      /**
      * Convert this value to a hexadecimal string.
+     * @param with_hex_prefix if true, use a '0x' prefix for the result
      */
      std::string to_hex_string(const bool with_hex_prefix = true) const;
 
