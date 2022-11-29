@@ -125,19 +125,19 @@ int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj)
 
 int botan_privkey_algo_name(botan_privkey_t key, char out[], size_t* out_len)
    {
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k, { return write_str_output(out, out_len, k.algo_name()); });
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) { return write_str_output(out, out_len, k.algo_name()); });
    }
 
 int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
    {
-   return BOTAN_FFI_DO(Botan::Public_Key, key, k, { return write_str_output(out, out_len, k.algo_name()); });
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) { return write_str_output(out, out_len, k.algo_name()); });
    }
 
 int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags)
    {
    const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
 
-   return BOTAN_FFI_RETURNING(Botan::Public_Key, key, k, {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       return (k.check_key(safe_get(rng), strong) == true) ? 0 : BOTAN_FFI_ERROR_INVALID_INPUT;
       });
    }
@@ -145,14 +145,14 @@ int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags)
 int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags)
    {
    const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
-   return BOTAN_FFI_RETURNING(Botan::Private_Key, key, k, {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       return (k.check_key(safe_get(rng), strong) == true) ? 0 : BOTAN_FFI_ERROR_INVALID_INPUT;
       });
    }
 
 int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
    {
-   return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
       if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
          return write_vec_output(out, out_len, Botan::X509::BER_encode(k));
       else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
@@ -164,7 +164,7 @@ int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint
 
 int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
    {
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
       if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
          return write_vec_output(out, out_len, Botan::PKCS8::BER_encode(k));
       else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
@@ -194,7 +194,7 @@ int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
                                               const char* maybe_pbkdf_hash,
                                               uint32_t flags)
    {
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       const std::chrono::milliseconds pbkdf_time(pbkdf_msec);
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
@@ -227,7 +227,7 @@ int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key,
                                               const char* maybe_pbkdf_hash,
                                               uint32_t flags)
    {
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
       const std::string cipher = (maybe_cipher ? maybe_cipher : "");
@@ -252,13 +252,13 @@ int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key,
 
 int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estimate)
    {
-   return BOTAN_FFI_DO(Botan::Public_Key, key, k, { *estimate = k.estimated_strength(); });
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) { *estimate = k.estimated_strength(); });
    }
 
 int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash_fn,
                              uint8_t out[], size_t* out_len)
    {
-   return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       std::unique_ptr<Botan::HashFunction> h(Botan::HashFunction::create(hash_fn));
       return write_vec_output(out, out_len, h->process(k.public_key_bits()));
       });

@@ -40,7 +40,7 @@ extern "C" {
                                        const char* hash_id, botan_rng_t rng_obj,
                                        uint8_t b_pub[], size_t* b_pub_len)
       {
-      return BOTAN_FFI_DO(Botan::SRP6_Server_Session, srp6, s,
+      return BOTAN_FFI_VISIT(srp6, [=](auto& s) -> int
          {
          if(!verifier || !group_id || !hash_id || !rng_obj)
             {
@@ -69,7 +69,7 @@ extern "C" {
                                        const uint8_t a[], size_t a_len,
                                        uint8_t key[], size_t* key_len)
       {
-      return BOTAN_FFI_DO(Botan::SRP6_Server_Session, srp6, s,
+      return BOTAN_FFI_VISIT(srp6, [=](auto& s) -> int
          {
          if(!a)
             {

@@ -167,22 +167,22 @@ int botan_rng_destroy(botan_rng_t rng)
 
 int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
    {
-   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.randomize(out, out_len); });
+   return BOTAN_FFI_VISIT(rng, [=](auto& r) { r.randomize(out, out_len); });
    }
 
 int botan_rng_reseed(botan_rng_t rng, size_t bits)
    {
-   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(Botan::system_rng(), bits); });
+   return BOTAN_FFI_VISIT(rng, [=](auto& r) { r.reseed_from_rng(Botan::system_rng(), bits); });
    }
 
 int botan_rng_add_entropy(botan_rng_t rng, const uint8_t* input, size_t len)
    {
-   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.add_entropy(input, len); });
+   return BOTAN_FFI_VISIT(rng, [=](auto& r) { r.add_entropy(input, len); });
    }
 
 int botan_rng_reseed_from_rng(botan_rng_t rng, botan_rng_t source_rng, size_t bits)
    {
-   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(safe_get(source_rng), bits); });
+   return BOTAN_FFI_VISIT(rng, [=](auto& r) { r.reseed_from_rng(safe_get(source_rng), bits); });
    }
 
 }
