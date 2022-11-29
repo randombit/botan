@@ -40,19 +40,19 @@ int botan_hash_output_length(botan_hash_t hash, size_t* out)
    {
    if(out == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
-   return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { *out = h.output_length(); });
+   return BOTAN_FFI_VISIT(hash, [=](const auto& h) { *out = h.output_length(); });
    }
 
 int botan_hash_block_size(botan_hash_t hash, size_t* out)
    {
    if(out == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
-   return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { *out = h.hash_block_size(); });
+   return BOTAN_FFI_VISIT(hash, [=](const auto& h) { *out = h.hash_block_size(); });
    }
 
 int botan_hash_clear(botan_hash_t hash)
    {
-   return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { h.clear(); });
+   return BOTAN_FFI_VISIT(hash, [](auto& h) { h.clear(); });
    }
 
 int botan_hash_update(botan_hash_t hash, const uint8_t* buf, size_t len)
@@ -63,19 +63,19 @@ int botan_hash_update(botan_hash_t hash, const uint8_t* buf, size_t len)
    if(buf == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
-   return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { h.update(buf, len); });
+   return BOTAN_FFI_VISIT(hash, [=](auto& h) { h.update(buf, len); });
    }
 
 int botan_hash_final(botan_hash_t hash, uint8_t out[])
    {
    if(out == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
-   return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { h.final(out); });
+   return BOTAN_FFI_VISIT(hash, [=](auto& h) { h.final(out); });
    }
 
 int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source)
    {
-   return BOTAN_FFI_DO(Botan::HashFunction, source, src, {
+   return BOTAN_FFI_VISIT(source, [=](const auto& src) {
       *dest = new botan_hash_struct(src.copy_state()); });
    }
 
@@ -84,7 +84,7 @@ int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len)
    if(name_len == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
-   return BOTAN_FFI_DO(Botan::HashFunction, hash, h, {
+   return BOTAN_FFI_VISIT(hash, [=](const auto& h) {
       return write_str_output(name, name_len, h.name()); });
    }
 

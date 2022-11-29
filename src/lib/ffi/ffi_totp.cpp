@@ -63,7 +63,7 @@ int botan_totp_generate(botan_totp_t totp,
    if(totp == nullptr || totp_code == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
-   return BOTAN_FFI_DO(Botan::TOTP, totp, t, {
+   return BOTAN_FFI_VISIT(totp, [=](auto& t) {
       *totp_code = t.generate_totp(timestamp);
       });
 
@@ -79,7 +79,7 @@ int botan_totp_check(botan_totp_t totp,
                      size_t acceptable_clock_drift)
    {
 #if defined(BOTAN_HAS_TOTP)
-   return BOTAN_FFI_RETURNING(Botan::TOTP, totp, t, {
+   return BOTAN_FFI_VISIT(totp, [=](auto& t) {
       const bool ok = t.verify_totp(totp_code, timestamp, acceptable_clock_drift);
       return (ok ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER);
       });

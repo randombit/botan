@@ -63,7 +63,7 @@ int botan_hotp_generate(botan_hotp_t hotp,
    if(hotp == nullptr || hotp_code == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
-   return BOTAN_FFI_DO(Botan::HOTP, hotp, h, {
+   return BOTAN_FFI_VISIT(hotp, [=](auto& h) {
       *hotp_code = h.generate_hotp(hotp_counter);
       });
 
@@ -80,8 +80,7 @@ int botan_hotp_check(botan_hotp_t hotp,
                      size_t resync_range)
    {
 #if defined(BOTAN_HAS_HOTP)
-   return BOTAN_FFI_RETURNING(Botan::HOTP, hotp, h, {
-
+   return BOTAN_FFI_VISIT(hotp, [=](auto& h) {
       auto resp = h.verify_hotp(hotp_code, hotp_counter, resync_range);
 
       if(next_hotp_counter)

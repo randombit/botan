@@ -104,7 +104,7 @@ int botan_x509_cert_get_issuer_dn(botan_x509_cert_t cert,
                                   uint8_t out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.issuer_info(key).at(index)); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_str_output(out, out_len, c.issuer_info(key).at(index)); });
 #else
    BOTAN_UNUSED(cert, key, index, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -116,7 +116,7 @@ int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert,
                                    uint8_t out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.subject_info(key).at(index)); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_str_output(out, out_len, c.subject_info(key).at(index)); });
 #else
    BOTAN_UNUSED(cert, key, index, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -126,7 +126,7 @@ int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert,
 int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.to_string()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_str_output(out, out_len, c.to_string()); });
 #else
    BOTAN_UNUSED(cert, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -136,7 +136,7 @@ int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_le
 int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_RETURNING(Botan::X509_Certificate, cert, c, {
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
       const Botan::Key_Constraints k = static_cast<Botan::Key_Constraints>(key_usage);
       if(c.allowed_usage(k))
          return BOTAN_FFI_SUCCESS;
@@ -161,7 +161,7 @@ int botan_x509_cert_destroy(botan_x509_cert_t cert)
 int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.not_before().to_string()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_str_output(out, out_len, c.not_before().to_string()); });
 #else
    BOTAN_UNUSED(cert, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -171,7 +171,7 @@ int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* 
 int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.not_after().to_string()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_str_output(out, out_len, c.not_after().to_string()); });
 #else
    BOTAN_UNUSED(cert, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -181,7 +181,7 @@ int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t*
 int botan_x509_cert_not_before(botan_x509_cert_t cert, uint64_t* time_since_epoch)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) {
       *time_since_epoch = c.not_before().time_since_epoch();
       });
 #else
@@ -193,7 +193,7 @@ int botan_x509_cert_not_before(botan_x509_cert_t cert, uint64_t* time_since_epoc
 int botan_x509_cert_not_after(botan_x509_cert_t cert, uint64_t* time_since_epoch)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) {
       *time_since_epoch = c.not_after().time_since_epoch();
       });
 #else
@@ -205,7 +205,7 @@ int botan_x509_cert_not_after(botan_x509_cert_t cert, uint64_t* time_since_epoch
 int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_vec_output(out, out_len, c.serial_number()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_vec_output(out, out_len, c.serial_number()); });
 #else
    BOTAN_UNUSED(cert, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -215,7 +215,7 @@ int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], siz
 int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char* hash, uint8_t out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.fingerprint(hash)); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_str_output(out, out_len, c.fingerprint(hash)); });
 #else
    BOTAN_UNUSED(cert, hash, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -225,7 +225,7 @@ int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char* hash, ui
 int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_vec_output(out, out_len, c.authority_key_id()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_vec_output(out, out_len, c.authority_key_id()); });
 #else
    BOTAN_UNUSED(cert, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -235,7 +235,7 @@ int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], 
 int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_vec_output(out, out_len, c.subject_key_id()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_vec_output(out, out_len, c.subject_key_id()); });
 #else
    BOTAN_UNUSED(cert, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -245,7 +245,7 @@ int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], si
 int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_vec_output(out, out_len, c.subject_public_key_bits()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_vec_output(out, out_len, c.subject_public_key_bits()); });
 #else
    BOTAN_UNUSED(cert, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -258,8 +258,7 @@ int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c,
-                       { return c.matches_dns_name(hostname) ? 0 : -1; });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return c.matches_dns_name(hostname) ? 0 : -1; });
 #else
    BOTAN_UNUSED(cert);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -405,7 +404,8 @@ int botan_x509_crl_destroy(botan_x509_crl_t crl)
 int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_RETURNING(Botan::X509_CRL, crl, c, {
+   return BOTAN_FFI_VISIT(crl, [=] (const auto& c)
+      {
       return c.is_revoked(safe_get(cert)) ? 0 : -1;
       });
 #else
