@@ -231,8 +231,8 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
             DER_Sequence& operator=(const DER_Sequence& seq) = default;
 
          private:
-             ASN1_Type m_type_tag;
-             ASN1_Class m_class_tag;
+            ASN1_Type m_type_tag;
+            ASN1_Class m_class_tag;
             secure_vector<uint8_t> m_contents;
             std::vector< secure_vector<uint8_t> > m_set_contents;
          };

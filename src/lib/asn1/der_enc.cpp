@@ -90,7 +90,7 @@ DER_Encoder::DER_Encoder(std::vector<uint8_t>& vec)
 */
 void DER_Encoder::DER_Sequence::push_contents(DER_Encoder& der)
    {
-       const auto real_class_tag = m_class_tag | ASN1_Class::Constructed;
+   const auto real_class_tag = m_class_tag | ASN1_Class::Constructed;
 
    if(m_type_tag == ASN1_Type::Set)
       {
