@@ -154,6 +154,7 @@ Server_Hello::~Server_Hello() = default;
 std::vector<uint8_t> Server_Hello::serialize() const
    {
    std::vector<uint8_t> buf;
+   buf.reserve(1024); // working around GCC warning
 
    buf.push_back(m_data->legacy_version.major_version());
    buf.push_back(m_data->legacy_version.minor_version());

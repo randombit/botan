@@ -160,13 +160,15 @@ bool Base32::check_bad_char(uint8_t bin, char input, bool ignore_ws)
       }
    else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
       {
-      std::string bad_char(1, input);
-      if(bad_char == "\t")
+      std::string bad_char;
+      if(input == '\t')
          { bad_char = "\\t"; }
-      else if(bad_char == "\n")
+      else if(input == '\n')
          { bad_char = "\\n"; }
-      else if(bad_char == "\r")
+      else if(input == '\r')
          { bad_char = "\\r"; }
+      else
+         { bad_char = input; }
 
       throw Invalid_Argument(
          std::string("base32_decode: invalid base32 character '") +

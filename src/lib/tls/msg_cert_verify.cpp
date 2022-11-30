@@ -63,6 +63,7 @@ std::vector<uint8_t> Certificate_Verify::serialize() const
    {
    BOTAN_ASSERT_NOMSG(m_scheme.is_set());
    std::vector<uint8_t> buf;
+   buf.reserve(2 + 2 + m_signature.size()); // work around GCC warning
 
    const auto code = m_scheme.wire_code();
    buf.push_back(get_byte<0>(code));

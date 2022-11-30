@@ -106,11 +106,15 @@ size_t hex_decode(uint8_t output[],
          if(bin == 0x80 && ignore_ws)
             continue;
 
-         std::string bad_char(1, input[i]);
-         if(bad_char == "\t")
-           bad_char = "\\t";
-         else if(bad_char == "\n")
-           bad_char = "\\n";
+         std::string bad_char;
+         if(input[i] == '\t')
+            { bad_char = "\\t"; }
+         else if(input[i] == '\n')
+            { bad_char = "\\n"; }
+         else if(input[i] == '\r')
+            { bad_char = "\\r"; }
+         else
+            { bad_char = input[i]; }
 
          throw Invalid_Argument(
            std::string("hex_decode: invalid hex character '") +

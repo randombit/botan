@@ -67,14 +67,19 @@ std::string UUID::to_string() const
    if(is_valid() == false)
       throw Invalid_State("UUID object is empty cannot convert to string");
 
-   std::string h = hex_encode(m_uuid);
+   std::string raw = hex_encode(m_uuid);
 
-   h.insert(8, "-");
-   h.insert(13, "-");
-   h.insert(18, "-");
-   h.insert(23, "-");
+   std::string formatted;
+   formatted.reserve(raw.size() + 4);
 
-   return h;
+   for(size_t i = 0; i != raw.size(); ++i)
+      {
+      if(i == 8 || i == 12 || i == 16 || i == 20)
+         formatted += "-";
+      formatted += raw[i];
+      }
+
+   return formatted;
    }
 
 }

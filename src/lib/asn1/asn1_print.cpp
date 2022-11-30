@@ -246,23 +246,23 @@ std::string format_type(ASN1_Type type_tag, ASN1_Class class_tag)
    if(class_tag == ASN1_Class::Constructed && (type_tag == ASN1_Type::Sequence || type_tag == ASN1_Type::Set))
       return asn1_tag_to_string(type_tag);
 
-   std::string name;
+   std::ostringstream oss;
 
    if(intersects(class_tag, ASN1_Class::Constructed))
-      name += "cons ";
+      oss << "cons ";
 
-   name += "[" + std::to_string(static_cast<uint32_t>(type_tag)) + "]";
+   oss << "[" << std::to_string(static_cast<uint32_t>(type_tag)) << "]";
 
    if(intersects(class_tag, ASN1_Class::Application))
       {
-      name += " appl";
+      oss << " appl";
       }
    if(intersects(class_tag, ASN1_Class::ContextSpecific))
       {
-      name += " context";
+      oss << " context";
       }
 
-   return name;
+   return oss.str();
    }
 
 }

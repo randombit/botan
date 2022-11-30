@@ -174,6 +174,7 @@ void Client_Hello_12::update_hello_cookie(const Hello_Verify_Request& hello_veri
 std::vector<uint8_t> Client_Hello::serialize() const
    {
    std::vector<uint8_t> buf;
+   buf.reserve(1024); // working around GCC warning
 
    buf.push_back(m_legacy_version.major_version());
    buf.push_back(m_legacy_version.minor_version());

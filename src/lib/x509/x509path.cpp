@@ -1077,7 +1077,13 @@ std::string Path_Validation_Result::warnings_string() const
    for(size_t i = 0; i < m_warnings.size(); i++)
       {
       for(auto code : m_warnings[i])
-         res += "[" + std::to_string(i) + "] " + status_string(code) + sep;
+         {
+         res += "[";
+         res += std::to_string(i);
+         res += "] ";
+         res += status_string(code);
+         res += sep;
+         }
       }
    // remove last sep
    if(res.size() >= sep.size())
