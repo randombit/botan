@@ -36,7 +36,6 @@
 
         "AllExtensions-*": "Not all extensions are implemented",
 
-        "EchoTLS13CompatibilitySessionID": "Succeeds, but we prepend a TLS 1.3 CCS and BoGo doesn't like that",
         "VersionTolerance-TLS13": "We are not tolerating 0x0400 as Client Hello legacy_version",
 
         "Server-JDK11-*": "We don't implement JDK-specific workarounds",
@@ -59,11 +58,6 @@
         "Resume-Server-*": "No TLS 1.3 server, yet",
 
         "ExportKeyingMaterial-Server-HalfRTT-TLS13": "No TLS 1.3 server, yet",
-        "RequireAnyClientCertificate-TLS13": "No TLS 1.3 server, yet",
-        "SecondClientHelloMissingKeyShare-TLS13": "No TLS 1.3 server, yet",
-        "SecondClientHelloWrongCurve-TLS13": "No TLS 1.3 server, yet",
-        "SendExtensionOnClientCertificate-TLS13": "No TLS 1.3 server, yet",
-        "SkipClientCertificate-TLS13": "No TLS 1.3 server, yet",
         "TLS13-TicketAgeSkew-*": "No TLS 1.3 server, yet",
 
         "HttpGET": "TLS 1.3 server does not detect HTTP",
@@ -73,15 +67,6 @@
         "HttpCONNECT": "TLS 1.3 server does not detect HTTP",
 
         "ExtraClientEncryptedExtension-TLS-TLS13": "TLS 1.3 server UNIMPLEMENTED",
-        "TLS13-1RTT-Server-TLS-Sync": "TLS 1.3 server UNIMPLEMENTED",
-        "TLS13-1RTT-Server-TLS-Sync-ImplicitHandshake": "TLS 1.3 server UNIMPLEMENTED",
-        "TLS13-1RTT-Server-TLS-Sync-SplitHandshakeRecords": "TLS 1.3 server UNIMPLEMENTED",
-        "TLS13-1RTT-Server-TLS-Sync-PackHandshake": "TLS 1.3 server UNIMPLEMENTED",
-        "TLS13-1RTT-Server-TLS-Async": "TLS 1.3 server UNIMPLEMENTED",
-        "TLS13-1RTT-Server-TLS-Async-ImplicitHandshake": "TLS 1.3 server UNIMPLEMENTED",
-        "TLS13-1RTT-Server-TLS-Async-SplitHandshakeRecords": "TLS 1.3 server UNIMPLEMENTED",
-        "TLS13-1RTT-Server-TLS-Async-PackHandshake": "TLS 1.3 server UNIMPLEMENTED",
-        "CertCompressionNoCommonAlgs-TLS13": "TLS 1.3 server UNIMPLEMENTED",
 
         "ALPNServer-Decline-TLS-TLS13": "TLS 1.3 server session resumption NYI",
         "ALPNServer-TLS-TLS13": "TLS 1.3 server session resumption NYI",
@@ -101,36 +86,12 @@
         "TLS13-SendUnknownModeSessionTicket-Server": "TLS 1.3 server session resumption NYI",
         "TLS13-SendBadKEModeSessionTicket-Server": "TLS 1.3 server session resumption NYI",
         "TLS13-HelloRetryRequest-Server-*": "TLS 1.3 server session resumption NYI",
-
-        "OCSPStapling-Server-TLS13-*": "TLS 1.3 server OCSP NYI",
-        "ServerOCSPCallback-Decline-TLS13-*": "TLS 1.3 server OCSP NYI",
-        "ServerOCSPCallback-Fail-TLS13-*": "TLS 1.3 server OCSP NYI",
-        "ServerOCSPCallback-SetInCallback-TLS13-*": "TLS 1.3 server OCSP NYI",
+        "OCSPStapling-Server-TLS13-*":  "TLS 1.3 server session resumption NYI",
+        "ServerOCSPCallback*-TLS13-*":  "TLS 1.3 server session resumption NYI",
+        "TLS13-1RTT-Server-*":  "TLS 1.3 server session resumption NYI",
 
         "*EarlyData*": "No TLS 1.3 Early Data, yet",
         "TLS13-1RTT-Client-*": "No TLS 1.3 Early Data, yet",
-
-        "Server-InvalidSignature-*": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "ClientAuth-Enforced-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertificateVerificationFail-Server-TLS13-*": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "WrongMessageType-TLS13-ClientCertificate-TLS": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "WrongMessageType-TLS13-ClientCertificateVerify-TLS": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "TrailingMessageData-TLS13-ClientCertificateVerify-TLS": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "TrailingMessageData-TLS13-ClientCertificate-TLS": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "ServerSkipCertificateVerify-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "ECDSAKeyUsage-Server-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "GarbageCertificate-Server-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertCompressionShrinksClient-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertCompressionExpandsClient-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertCompressionBadAlgIDClient-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertCompressionTooSmallClient-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertCompressionTooLargeClient-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertCompressionShrinks-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertCompressionRandom-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertCompressionPriority-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "RSAKeyUsage-Server-WantSignature-GotEncipherment-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "CertCompressionExpands-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
-        "Verify-ClientAuth-SignatureType-TLS13": "No TLS 1.3 (server-side) Client Authentication, yet",
 
         "SendNoClientCertificateExtensions-TLS13": "-signed-cert-timestamps currently not supported in the shim",
         "KeyUpdate-RequestACK-UnfinishedWrite": "-read-with-unfinished-write currently not supported in the shim",
@@ -141,6 +102,7 @@
         "ECH*": "No ECH support",
 
         "DuplicateCertCompressionExt*": "No support for 1.3 cert compression extension",
+        "CertCompression*-TLS13": "No support for 1.3 cert compression extension",
 
         "SupportedVersionSelection-TLS12": "We just ignore the version extension in this case",
 
