@@ -86,22 +86,22 @@ class polyn_gf2m
       std::shared_ptr<GF2m_Field> get_sp_field() const
          { return m_sp_field; }
 
-      gf2m& operator[](size_t i) { return coeff[i]; }
+      gf2m& operator[](size_t i) { return m_coeff[i]; }
 
-      gf2m operator[](size_t i) const { return coeff[i]; }
+      gf2m operator[](size_t i) const { return m_coeff[i]; }
 
-      gf2m get_lead_coef() const { return coeff[m_deg]; }
+      gf2m get_lead_coef() const { return m_coeff[m_deg]; }
 
-      gf2m get_coef(size_t i) const { return coeff[i]; }
+      gf2m get_coef(size_t i) const { return m_coeff[i]; }
 
       inline void set_coef(size_t i, gf2m v)
          {
-         coeff[i] = v;
+         m_coeff[i] = v;
          }
 
       inline void add_to_coef(size_t i, gf2m v)
          {
-         coeff[i] ^= v;
+         m_coeff[i] ^= v;
          }
 
       std::string to_string() const;
@@ -148,14 +148,9 @@ class polyn_gf2m
       static void remainder(polyn_gf2m & p, const polyn_gf2m & g);
 
       static polyn_gf2m gcd_aux(polyn_gf2m& p1, polyn_gf2m& p2);
-   public:
-      // public member variable:
+   private:
       int m_deg;
-
-      // public member variable:
-      secure_vector<gf2m> coeff;
-
-      // public member variable:
+      secure_vector<gf2m> m_coeff;
       std::shared_ptr<GF2m_Field> m_sp_field;
    };
 
