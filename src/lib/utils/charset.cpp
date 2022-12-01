@@ -105,5 +105,21 @@ std::string latin1_to_utf8(const uint8_t chars[], size_t len)
    return s;
    }
 
+std::string format_char_for_display(char c)
+   {
+   std::string str;
+
+   if(c == '\t')
+      { str = "\\t"; }
+   else if(c == '\n')
+      { str = "\\n"; }
+   else if(c == '\r')
+      { str = "\\r"; }
+   else
+      { str = c; }
+
+   return str;
+   }
+
 }
 

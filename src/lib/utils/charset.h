@@ -31,6 +31,13 @@ BOTAN_TEST_API std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len);
 
 BOTAN_TEST_API std::string latin1_to_utf8(const uint8_t latin1[], size_t len);
 
+/**
+* Return a string containing 'c', possibly escaped
+*
+* Currently this function escapes tab, newlines and carriage return
+*/
+std::string format_char_for_display(char c);
+
 }
 
 #endif

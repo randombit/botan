@@ -8,7 +8,9 @@
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/exceptn.h>
+#include <botan/internal/charset.h>
 #include <botan/internal/ct_utils.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -106,19 +108,11 @@ size_t hex_decode(uint8_t output[],
          if(bin == 0x80 && ignore_ws)
             continue;
 
-         std::string bad_char;
-         if(input[i] == '\t')
-            { bad_char = "\\t"; }
-         else if(input[i] == '\n')
-            { bad_char = "\\n"; }
-         else if(input[i] == '\r')
-            { bad_char = "\\r"; }
-         else
-            { bad_char = input[i]; }
-
-         throw Invalid_Argument(
-           std::string("hex_decode: invalid hex character '") +
-           bad_char + "'");
+         std::ostringstream err;
+         err << "hex_decode: invalid character '"
+             << format_char_for_display(input[i])
+             << "'";
+         throw Invalid_Argument(err.str());
          }
 
       if(top_nibble)
