@@ -444,7 +444,7 @@ Signature generation is performed using
 
    .. cpp:function:: PK_Signer(const Private_Key& key, \
       const std::string& emsa, \
-      Signature_Format format = IEEE_1363)
+      Signature_Format format = Siganture_Format::Standard)
 
      Constructs a new signer object for the private key *key* using the
      signature format *emsa*. The key must support signature operations.  In
@@ -471,10 +471,11 @@ Signature generation is performed using
      EMSA3 (also called "EMSA-PKCS1-v1_5"). For DSA, ECDSA, ECKCDSA, ECGDSA and
      GOST 34.10-2001 you should use EMSA1.
 
-     The *format* defaults to ``IEEE_1363`` which is the only available
-     format for RSA. For DSA, ECDSA, ECGDSA and ECKCDSA you can also use
-     ``DER_SEQUENCE``, which will format the signature as an ASN.1
-     SEQUENCE value.
+     The *format* defaults to ``Standard`` which is either the usual, or the
+     only, available formatting method, depending on the algorithm. For certain
+     signature schemes including ECDSA, DSA ECGDSA and ECKCDSA you can also use
+     ``DerSequence``, which will format the signature as an ASN.1 SEQUENCE
+     value.
 
    .. cpp:function:: void update(const uint8_t* in, size_t length)
    .. cpp:function:: void update(const std::vector<uint8_t>& in)
@@ -504,7 +505,7 @@ Signatures are verified using
 .. cpp:class:: PK_Verifier
 
    .. cpp:function:: PK_Verifier(const Public_Key& pub_key, \
-          const std::string& emsa, Signature_Format format = IEEE_1363)
+          const std::string& emsa, Signature_Format format = Signature_Format::Standard)
 
       Construct a new verifier for signatures associated with public
       key *pub_key*. The *emsa* and *format* should be the same as

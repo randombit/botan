@@ -178,7 +178,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       PK_Signer(const Private_Key& key,
                 RandomNumberGenerator& rng,
                 const std::string& emsa,
-                Signature_Format format = IEEE_1363,
+                Signature_Format format = Signature_Format::Standard,
                 const std::string& provider = "");
 
       ~PK_Signer();
@@ -291,7 +291,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       */
       PK_Verifier(const Public_Key& pub_key,
                   const std::string& emsa,
-                  Signature_Format format = IEEE_1363,
+                  Signature_Format format = Signature_Format::Standard,
                   const std::string& provider = "");
 
       ~PK_Verifier();

@@ -214,7 +214,7 @@ SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
 
 static void check_der_format_supported(Signature_Format format, size_t parts)
    {
-      if(format != IEEE_1363 && parts == 1)
+      if(format != Signature_Format::Standard && parts == 1)
          throw Invalid_Argument("PK: This algorithm does not support DER encoding");
    }
 
@@ -265,11 +265,11 @@ std::vector<uint8_t> der_encode_signature(const std::vector<uint8_t>& sig,
 
 size_t PK_Signer::signature_length() const
    {
-   if(m_sig_format == IEEE_1363)
+   if(m_sig_format == Signature_Format::Standard)
       {
       return m_op->signature_length();
       }
-   else if(m_sig_format == DER_SEQUENCE)
+   else if(m_sig_format == Signature_Format::DerSequence)
       {
       // This is a large over-estimate but its easier than computing
       // the exact value
@@ -283,11 +283,11 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
    {
    std::vector<uint8_t> sig = unlock(m_op->sign(rng));
 
-   if(m_sig_format == IEEE_1363)
+   if(m_sig_format == Signature_Format::Standard)
       {
       return sig;
       }
-   else if(m_sig_format == DER_SEQUENCE)
+   else if(m_sig_format == Signature_Format::DerSequence)
       {
       return der_encode_signature(sig, m_parts, m_part_size);
       }
@@ -332,11 +332,11 @@ void PK_Verifier::update(const uint8_t in[], size_t length)
 bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
    {
    try {
-      if(m_sig_format == IEEE_1363)
+      if(m_sig_format == Signature_Format::Standard)
          {
          return m_op->is_valid_signature(sig, length);
          }
-      else if(m_sig_format == DER_SEQUENCE)
+      else if(m_sig_format == Signature_Format::DerSequence)
          {
          std::vector<uint8_t> real_sig;
          BER_Decoder decoder(sig, length);

@@ -267,7 +267,7 @@ std::optional<Signature_Format> Signature_Scheme::format() const noexcept
       case RSA_PSS_SHA256:
       case RSA_PSS_SHA384:
       case RSA_PSS_SHA512:
-         return IEEE_1363;
+         return Signature_Format::Standard;
 
       case ECDSA_SHA1:
       case ECDSA_SHA256:
@@ -279,7 +279,7 @@ std::optional<Signature_Format> Signature_Scheme::format() const noexcept
       case DSA_SHA256:
       case DSA_SHA384:
       case DSA_SHA512:
-         return DER_SEQUENCE;
+         return Signature_Format::DerSequence;
 
       default:
          return std::nullopt;

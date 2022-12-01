@@ -208,7 +208,7 @@ class PK_Sign final : public Command
             choose_sig_padding(key->algo_name(), get_arg("emsa"), get_arg("hash"));
 
          const Botan::Signature_Format format =
-            flag_set("der-format") ? Botan::DER_SEQUENCE : Botan::IEEE_1363;
+            flag_set("der-format") ? Botan::Signature_Format::DerSequence : Botan::Signature_Format::Standard;
 
          const std::string provider = get_arg("provider");
 
@@ -264,7 +264,7 @@ class PK_Verify final : public Command
             choose_sig_padding(key->algo_name(), get_arg("emsa"), get_arg("hash"));
 
          const Botan::Signature_Format format =
-            flag_set("der-format") ? Botan::DER_SEQUENCE : Botan::IEEE_1363;
+            flag_set("der-format") ? Botan::Signature_Format::DerSequence : Botan::Signature_Format::Standard;
 
          Botan::PK_Verifier verifier(*key, sig_padding, format);
          auto onData = [&verifier](const uint8_t b[], size_t l)
