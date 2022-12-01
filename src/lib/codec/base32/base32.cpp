@@ -163,9 +163,7 @@ bool Base32::check_bad_char(uint8_t bin, char input, bool ignore_ws)
    else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
       {
       std::ostringstream err;
-      err << "base32_decode: invalid character '"
-          << format_char_for_display(input)
-          << "'";
+      err << "base32_decode: invalid character " << format_char_for_display(input);
       throw Invalid_Argument(err.str());
       }
    return false;

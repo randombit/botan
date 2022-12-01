@@ -32,9 +32,14 @@ BOTAN_TEST_API std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len);
 BOTAN_TEST_API std::string latin1_to_utf8(const uint8_t latin1[], size_t len);
 
 /**
-* Return a string containing 'c', possibly escaped
+* Return a string containing 'c', quoted and possibly escaped
+*
+* This is used when creating an error message nothing an invalid character
+* in some codex (for example during hex decoding)
 *
 * Currently this function escapes tab, newlines and carriage return
+* as "\t", "\n", and "\r", and also escapes characters > 0x7F as
+* "\xHH" where HH is the hex code.
 */
 std::string format_char_for_display(char c);
 

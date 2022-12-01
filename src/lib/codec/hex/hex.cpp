@@ -109,9 +109,7 @@ size_t hex_decode(uint8_t output[],
             continue;
 
          std::ostringstream err;
-         err << "hex_decode: invalid character '"
-             << format_char_for_display(input[i])
-             << "'";
+         err << "hex_decode: invalid character " << format_char_for_display(input[i]);
          throw Invalid_Argument(err.str());
          }
 

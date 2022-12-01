@@ -8,6 +8,7 @@
 #include <botan/internal/charset.h>
 #include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -107,18 +108,27 @@ std::string latin1_to_utf8(const uint8_t chars[], size_t len)
 
 std::string format_char_for_display(char c)
    {
-   std::string str;
+   std::ostringstream oss;
+
+   oss << "'";
 
    if(c == '\t')
-      { str = "\\t"; }
+      { oss << "\\t"; }
    else if(c == '\n')
-      { str = "\\n"; }
+      { oss << "\\n"; }
    else if(c == '\r')
-      { str = "\\r"; }
+      { oss << "\\r"; }
+   else if(c < 0)
+      {
+      unsigned char z = static_cast<unsigned char>(c);
+      oss << "\\x" << std::hex << std::uppercase << static_cast<int>(z);
+      }
    else
-      { str = c; }
+      { oss << c; }
 
-   return str;
+   oss << "'";
+
+   return oss.str();
    }
 
 }
