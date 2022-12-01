@@ -1843,8 +1843,8 @@ class Speed final : public Command
          {
          std::vector<uint8_t> message, signature, bad_signature;
 
-         Botan::PK_Signer   sig(key, rng(), padding, Botan::IEEE_1363, provider);
-         Botan::PK_Verifier ver(key, padding, Botan::IEEE_1363, provider);
+         Botan::PK_Signer   sig(key, rng(), padding, Botan::Signature_Format::Standard, provider);
+         Botan::PK_Verifier ver(key, padding, Botan::Signature_Format::Standard, provider);
 
          auto sig_timer = make_timer(nm + " " + padding, provider, "sign");
          auto ver_timer = make_timer(nm + " " + padding, provider, "verify");
@@ -1979,7 +1979,7 @@ class Speed final : public Command
                signer.update(message);
                std::vector<uint8_t> signature = signer.signature(rng());
 
-               Botan::PK_Verifier verifier(key, "Raw", Botan::IEEE_1363, "base");
+               Botan::PK_Verifier verifier(key, "Raw", Botan::Signature_Format::Standard, "base");
                verifier.update(message);
                BOTAN_ASSERT(verifier.check_signature(signature), "Valid signature");
 

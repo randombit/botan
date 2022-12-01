@@ -1019,12 +1019,14 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                throw Test_Error("Unexpected message to be signed: " + Botan::hex_encode(msg));
                }
 
-            if(emsa != "PSSR(SHA-256,MGF1,32)" || format != Signature_Format::IEEE_1363)
+            if(format != Signature_Format::Standard)
                {
-               throw Test_Error("TLS implementation selected unexpected signature format ("
-                                + std::to_string(format)
-                                + ") or EMSA: "
-                                + emsa);
+               throw Test_Error("TLS implementation selected unexpected signature format");
+               }
+
+            if(emsa != "PSSR(SHA-256,MGF1,32)")
+               {
+               throw Test_Error("TLS implementation selected unexpected padding " + emsa);
                }
 
             return vars.get_req_bin("MessageSignature");

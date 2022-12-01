@@ -132,7 +132,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
 
       try
          {
-         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider));
          }
       catch(Botan::Lookup_Error&)
          {
@@ -154,7 +154,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
 
       try
          {
-         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::IEEE_1363, sign_provider));
+         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::Signature_Format::Standard, sign_provider));
 
          if(vars.has_key("Nonce"))
             {
@@ -198,7 +198,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
 Botan::Signature_Format
 PK_Signature_Verification_Test::sig_format() const
    {
-   return Botan::IEEE_1363;
+   return Botan::Signature_Format::Standard;
    }
 
 Test::Result
@@ -274,7 +274,7 @@ PK_Signature_NonVerification_Test::run_one_test(const std::string& pad_hdr, cons
 
       try
          {
-         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider));
          result.test_eq("incorrect signature rejected", verifier->verify_message(message, invalid_signature), false);
          }
       catch(Botan::Lookup_Error&)
@@ -303,8 +303,8 @@ PK_Sign_Verify_DER_Test::run()
 
       try
          {
-         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::DER_SEQUENCE, provider));
-         verifier.reset(new Botan::PK_Verifier(*privkey, padding, Botan::DER_SEQUENCE, provider));
+         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::Signature_Format::DerSequence, provider));
+         verifier.reset(new Botan::PK_Verifier(*privkey, padding, Botan::Signature_Format::DerSequence, provider));
          }
       catch(Botan::Lookup_Error& e)
          {

@@ -69,7 +69,7 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
 
       Botan::Signature_Format sig_format() const override
          {
-         return Botan::DER_SEQUENCE;
+         return Botan::Signature_Format::DerSequence;
          }
 
       bool test_random_invalid_sigs() const override { return false; }

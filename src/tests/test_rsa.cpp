@@ -275,8 +275,8 @@ class RSA_Blinding_Tests final : public Test
          * are used as an additional test on the blinders.
          */
 
-         Botan::PK_Signer signer(rsa, Test::rng(), "Raw", Botan::IEEE_1363, "base"); // don't try this at home
-         Botan::PK_Verifier verifier(rsa, "Raw", Botan::IEEE_1363, "base");
+         Botan::PK_Signer signer(rsa, Test::rng(), "Raw", Botan::Signature_Format::Standard, "base"); // don't try this at home
+         Botan::PK_Verifier verifier(rsa, "Raw", Botan::Signature_Format::Standard, "base");
 
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL * 6; ++i)
             {
