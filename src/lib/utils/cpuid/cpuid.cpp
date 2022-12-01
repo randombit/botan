@@ -171,7 +171,7 @@ CPUID::bit_from_string(const std::string& tok)
    if(tok == "avx512_icelake")
       return {Botan::CPUID::CPUID_AVX512_ICL_BIT};
    // there were two if statements testing "sha" and "intel_sha" separately; combined
-   if(tok == "sha" || tok=="intel_sha")
+   if(tok == "sha" || tok == "intel_sha")
       return {Botan::CPUID::CPUID_SHA_BIT};
    if(tok == "rdtsc")
       return {Botan::CPUID::CPUID_RDTSC_BIT};
