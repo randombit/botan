@@ -311,7 +311,8 @@ Record_Layer::ReadResult<Record> Record_Layer::next_record(Cipher_State* cipher_
    //    An implementation may receive an unencrypted [CCS] at any time
    if(cipher_state != nullptr
          && plaintext_header.type != APPLICATION_DATA
-         && plaintext_header.type != CHANGE_CIPHER_SPEC)
+         && plaintext_header.type != CHANGE_CIPHER_SPEC
+         && (!cipher_state->must_expect_unprotected_alert_traffic() || plaintext_header.type != ALERT))
       {
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
             "unprotected record received where protected traffic was expected");

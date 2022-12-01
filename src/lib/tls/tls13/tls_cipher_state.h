@@ -200,6 +200,11 @@ class BOTAN_TEST_API Cipher_State
          }
 
       /**
+       * Indicates whether unprotected Alert records are to be expected
+       */
+      bool must_expect_unprotected_alert_traffic() const;
+
+      /**
        * Indicates whether the appropriate secrets to encrypt application traffic are available
        */
       bool can_encrypt_application_traffic() const;

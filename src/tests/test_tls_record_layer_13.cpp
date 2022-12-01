@@ -610,6 +610,45 @@ read_encrypted_records()
             });
          }),
 
+      Botan_Tests::CHECK("unprotected Alert message might be legal", [&](Test::Result& result)
+         {
+         const auto alert = Botan::hex_decode("15030300020232"); // decode error
+         const auto hsmsg = Botan::hex_decode( // factored 'certificate_request' message
+            "160303002a0d000027000024000d0020001e040305030603"
+            "020308040805080604010501060102010402050206020202");
+
+         result.test_no_throw("Server allows unprotected alerts after its first flight", [&]
+            {
+            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::SERVER);
+            auto rl = parse_records(alert);
+            rl.next_record(cs.get());
+            });
+
+         result.test_throws<Botan::TLS::TLS_Exception>("Unprotected handshake messages are not allowed for servers",
+               "unprotected record received where protected traffic was expected", [&]
+            {
+            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::SERVER);
+            auto rl = parse_records(hsmsg);
+            rl.next_record(cs.get());
+            });
+
+         result.test_throws<Botan::TLS::TLS_Exception>("Clients don't allow unprotected alerts after Server Hello",
+               "unprotected record received where protected traffic was expected", [&]
+            {
+            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::CLIENT);
+            auto rl = parse_records(alert);
+            rl.next_record(cs.get());
+            });
+
+         result.test_throws<Botan::TLS::TLS_Exception>("Unprotected handshake messages are not allowed for clients",
+               "unprotected record received where protected traffic was expected", [&]
+            {
+            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::CLIENT);
+            auto rl = parse_records(hsmsg);
+            rl.next_record(cs.get());
+            });
+         }),
+
       Botan_Tests::CHECK("unprotected traffic is illegal when encrypted traffic is expected", [&](Test::Result& result)
          {
          result.test_throws("unprotected record is unacceptable",  [&]

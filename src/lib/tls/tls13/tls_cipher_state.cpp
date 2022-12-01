@@ -31,7 +31,7 @@
  *                                     |
  *                                     *
  *                             STATE EARLY TRAFFIC
- * This state is reached by constructing Cipher_State using init_with_psk().
+ * This state is reached by calling advance_with_client_hello().
  * In this state the early data traffic secrets are available. TODO: implement early data.
  * The state can then be further advanced using advance_with_server_hello().
  *                                     *
@@ -277,6 +277,31 @@ size_t Cipher_State::minimum_decryption_input_length() const
    {
    BOTAN_ASSERT_NONNULL(m_decrypt);
    return m_decrypt->minimum_final_size();
+   }
+
+bool Cipher_State::must_expect_unprotected_alert_traffic() const
+   {
+   // Client side:
+   //   After successfully receiving a Server Hello we expect servers to send
+   //   alerts as protected records only, just like they start protecting their
+   //   handshake data at this point.
+   if(m_connection_side == CLIENT && m_state == State::EarlyTraffic)
+      { return true; }
+
+   // Server side:
+   //   Servers must expect clients to send unprotected alerts during the hand-
+   //   shake. In particular, in the response to the server's first protected
+   //   flight. We don't expect the client to send alerts protected under the
+   //   early traffic secret.
+   //
+   // TODO: when implementing PSK and/or early data for the server, we might
+   //       need to reconsider this decision.
+   if(m_connection_side == SERVER &&
+         (m_state == State::HandshakeTraffic ||
+          m_state == State::ServerApplicationTraffic))
+      { return true; }
+
+   return false;
    }
 
 bool Cipher_State::can_encrypt_application_traffic() const

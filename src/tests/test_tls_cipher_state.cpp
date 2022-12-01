@@ -309,13 +309,23 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
 
    return flatten(
       {
-      CHECK_both("ciphersuite compatibility", [&](Cipher_State* cs, Connection_Side, Test::Result& result)
+      CHECK_both("ciphersuite compatibility", [&](Cipher_State* cs, Connection_Side side, Test::Result& result)
          {
          result.confirm("self-compatibility", cs->is_compatible_with(cipher));
          result.confirm("fully defined state is not compatible to other suites",
                         !cs->is_compatible_with(Ciphersuite::from_name("CHACHA20_POLY1305_SHA256").value()) &&
                         !cs->is_compatible_with(Ciphersuite::from_name("AES_128_CCM_SHA256").value()) &&
                         !cs->is_compatible_with(Ciphersuite::from_name("PSK_WITH_AES_128_GCM_SHA256").value()));
+         if(side == Connection_Side::CLIENT)
+            {
+            result.confirm("Clients don't expect unprotected alerts after server hello",
+                           !cs->must_expect_unprotected_alert_traffic());
+            }
+         else
+            {
+            result.confirm("Servers must expect unprotected alerts in response to their server hello",
+                           cs->must_expect_unprotected_alert_traffic());
+            }
          }),
 
       CHECK_both("handshake traffic without PSK", [&](Cipher_State* cs, Connection_Side side, Test::Result& result)
@@ -350,11 +360,15 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
             {
             result.confirm("can read application data", cs->can_decrypt_application_traffic());
             result.confirm("can not yet write application data", !cs->can_encrypt_application_traffic());
+            result.confirm("Clients don't expect unprotected alerts after server hello",
+                           !cs->must_expect_unprotected_alert_traffic());
             }
          else
             {
             result.confirm("can not yet read application data", !cs->can_decrypt_application_traffic());
             result.confirm("can write application data", cs->can_encrypt_application_traffic());
+            result.confirm("Servers must expect unprotected alerts in response to their first flight",
+                           cs->must_expect_unprotected_alert_traffic());
             }
 
          // generate the MAC for the client Finished message
@@ -382,6 +396,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
 
          result.confirm("can write application data", cs->can_encrypt_application_traffic());
          result.confirm("can read application data", cs->can_decrypt_application_traffic());
+         result.confirm("doesn't need to expect unprotected alerts", !cs->must_expect_unprotected_alert_traffic());
          result.confirm("can export key material", cs->can_export_keys());
          result.test_eq("key export produces expected result", cs->export_key(export_label, export_context, 16), expected_key_export);
 
@@ -595,11 +610,22 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
                         !cs->is_compatible_with(Ciphersuite::from_name("AES_256_GCM_SHA384").value()));
          }),
 
-      CHECK_both("calculate the early traffic secrets", [&] (Cipher_State* cs, Connection_Side, Test::Result& result)
+      CHECK_both("calculate the early traffic secrets", [&] (Cipher_State* cs, Connection_Side side, Test::Result& result)
          {
          cs->advance_with_client_hello(th_client_hello);
          result.require("early key export is possible", cs->can_export_keys());
          result.test_eq("early key export produces expected result", cs->export_key(early_export_label, early_export_context, 16), early_expected_key_export);
+
+         if(side == Connection_Side::CLIENT)
+            {
+            result.confirm("Clients must expect servers to respond with an unprotected alert",
+                           cs->must_expect_unprotected_alert_traffic());
+            }
+         else
+            {
+            result.confirm("Servers do not expect clients to send alerts protected with the early data secret",
+                           !cs->must_expect_unprotected_alert_traffic());
+            }
 
          // TODO: Once 0-RTT traffic is implemented this will likely allow handling of
          //       application traffic in this state.
@@ -623,11 +649,15 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
             {
             result.confirm("expecting the correct MAC for server finished", cs->verify_peer_finished_mac(th_pre_server_finished,
                            expected_server_mac));
+            result.confirm("Clients don't expect unprotected alerts after server hello",
+                           !cs->must_expect_unprotected_alert_traffic());
             }
          else
             {
             result.test_eq("expecting the correct MAC for server finished", cs->finished_mac(th_pre_server_finished),
                            expected_server_mac);
+            result.confirm("Servers must expect unprotected alerts in response to their server hello",
+                           cs->must_expect_unprotected_alert_traffic());
             }
 
          result.confirm("cannot read application data", !cs->can_decrypt_application_traffic());
@@ -644,11 +674,15 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
             {
             result.confirm("can read application data", cs->can_decrypt_application_traffic());
             result.confirm("cannot write application data", !cs->can_encrypt_application_traffic());
+            result.confirm("Clients don't expect unprotected alerts after server hello",
+                           !cs->must_expect_unprotected_alert_traffic());
             }
          else
             {
             result.confirm("cannot read application data", !cs->can_decrypt_application_traffic());
             result.confirm("can write application data", cs->can_encrypt_application_traffic());
+            result.confirm("Servers must expect unprotected alerts in response to their first flight",
+                           cs->must_expect_unprotected_alert_traffic());
             }
 
          // generate the MAC for the client Finished message
@@ -679,7 +713,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
 
          result.confirm("can read application data", cs->can_decrypt_application_traffic());
          result.confirm("can write application data", cs->can_encrypt_application_traffic());
-
+         result.confirm("doesn't need to expect unprotected alerts", !cs->must_expect_unprotected_alert_traffic());
          result.confirm("can export key material", cs->can_export_keys());
          result.test_eq("key export produces expected result", cs->export_key(export_label, export_context, 16), expected_key_export);
 
