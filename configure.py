@@ -55,7 +55,7 @@ def normalize_source_path(source):
     return os.path.normpath(source).replace('\\', '/')
 
 def parse_version_file(version_path):
-    version_file = open(version_path)
+    version_file = open(version_path, encoding='utf8')
     key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9:\-\']+)")
 
     results = {}
@@ -736,7 +736,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
     def py_var(group):
         return group.replace(':', '_')
 
-    lexer = shlex.shlex(open(infofile), infofile, posix=True)
+    lexer = shlex.shlex(open(infofile, encoding='utf8'), infofile, posix=True)
     lexer.wordchars += '=:.<>/,-!?+*' # handle various funky chars in info.txt
 
     groups = allowed_groups + allowed_maps
@@ -1695,7 +1695,7 @@ def read_textfile(filepath):
     if filepath is None:
         return ''
 
-    with open(filepath) as f:
+    with open(filepath, encoding='utf8') as f:
         return ''.join(f.readlines())
 
 
@@ -2717,7 +2717,7 @@ class AmalgamationHeader:
                     yield line
 
     def write_to_file(self, filepath, include_guard):
-        with open(filepath, 'w') as f:
+        with open(filepath, 'w', encoding='utf8') as f:
             AmalgamationHelper.write_banner(f)
             f.write("\n#ifndef %s\n#define %s\n\n" % (include_guard, include_guard))
             f.write(self.header_includes)
@@ -3280,7 +3280,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
                 logging.error('Error while creating "%s": %s', build_dir, e)
 
     def write_template_with_variables(sink, template, variables):
-        with open(sink, 'w') as f:
+        with open(sink, 'w', encoding='utf8') as f:
             f.write(process_template(template, variables))
 
     def write_template(sink, template):
@@ -3337,7 +3337,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
 
     template_vars.update(generate_build_info(build_paths, using_mods, cc, arch, osinfo, options))
 
-    with open(os.path.join(build_paths.build_dir, 'build_config.json'), 'w') as f:
+    with open(os.path.join(build_paths.build_dir, 'build_config.json'), 'w', encoding='utf8') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.with_compilation_database:
@@ -3373,7 +3373,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
         rst2man_file = os.path.join(build_paths.build_dir, 'botan.rst')
         cli_doc = os.path.join(source_paths.doc_dir, 'cli.rst')
 
-        cli_doc_contents = open(cli_doc).readlines()
+        cli_doc_contents = open(cli_doc, encoding='utf8').readlines()
 
         while cli_doc_contents[0] != "\n":
             cli_doc_contents.pop(0)
@@ -3387,7 +3387,7 @@ botan
 
         """.strip()
 
-        with open(rst2man_file, 'w') as f:
+        with open(rst2man_file, 'w', encoding='utf8') as f:
             f.write(rst2man_header)
             f.write("\n")
             for line in cli_doc_contents:

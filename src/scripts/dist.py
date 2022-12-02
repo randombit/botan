@@ -164,7 +164,7 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
     if snapshot_branch:
         assert target_version == snapshot_branch
 
-    contents = open(version_file).readlines()
+    contents = open(version_file, encoding='utf8').readlines()
 
     version_re = re.compile('release_(major|minor|patch) = ([0-9]+)')
     version_suffix_re = re.compile('release_suffix = \'(-(alpha|beta|rc)[0-9]+)\'')
@@ -222,7 +222,7 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
                     marked_version, target_version))
 
     new_contents = ''.join(list(content_rewriter(target_version)))
-    open(version_file, 'w').write(new_contents)
+    open(version_file, 'w', encoding='utf8').write(new_contents)
 
 def write_archive(version, output_basename, archive_type, rel_epoch, all_files, hash_file):
     # pylint: disable=too-many-locals
@@ -424,7 +424,7 @@ def main(args=None):
 
     hash_file = None
     if options.write_hash_file is not None:
-        hash_file = open(options.write_hash_file, 'w')
+        hash_file = open(options.write_hash_file, 'w', encoding='utf8')
 
     for archive_type in archives:
         output_files.append(write_archive(target_version,

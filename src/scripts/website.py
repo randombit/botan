@@ -72,7 +72,7 @@ def run_sphinx(botan_dir, tmp_dir, output_dir):
    API Reference <https://botan.randombit.net/doxygen>
 """
 
-    contents_rst = open(os.path.join(sphinx_dir, 'contents.rst'), 'w')
+    contents_rst = open(os.path.join(sphinx_dir, 'contents.rst'), 'w', encoding='utf8')
     contents_rst.write(toc)
     contents_rst.close()
 
@@ -156,7 +156,7 @@ def main(args):
     for f in ['doc/pgpkey.txt', 'license.txt']:
         shutil.copy(os.path.join(botan_dir, f), output_dir)
 
-    favicon = open(os.path.join(output_dir, 'favicon.ico'), 'w')
+    favicon = open(os.path.join(output_dir, 'favicon.ico'), 'w', encoding='utf8')
     # Create an empty favicon.ico file so it gets cached by browsers
     favicon.close()
 

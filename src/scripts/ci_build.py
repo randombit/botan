@@ -365,7 +365,7 @@ def run_cmd(cmd, root_dir):
 
     redirect_stdout = None
     if len(cmd) >= 3 and cmd[-2] == '>':
-        redirect_stdout = open(cmd[-1], 'w')
+        redirect_stdout = open(cmd[-1], 'w', encoding='utf8')
         cmd = cmd[:-2]
     if len(cmd) > 1 and cmd[0].startswith('indir:'):
         cwd = cmd[0][6:]

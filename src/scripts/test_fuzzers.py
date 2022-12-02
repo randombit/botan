@@ -32,7 +32,7 @@ def run_fuzzer_gdb(args):
 
 def run_fuzzer(args):
     (fuzzer_bin, corpus_file) = args
-    corpus_fd = open(corpus_file, 'r')
+    corpus_fd = open(corpus_file, 'rb')
     fuzzer_proc = subprocess.Popen([fuzzer_bin], stdin=corpus_fd,
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
     (stdout, stderr) = fuzzer_proc.communicate()
