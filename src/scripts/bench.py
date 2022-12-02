@@ -3,7 +3,7 @@
 """
 Compare Botan with OpenSSL using their respective benchmark utils
 
-(C) 2017 Jack Lloyd
+(C) 2017,2022 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -70,7 +70,6 @@ def get_botan_version(botan):
     return run_command([botan, 'version']).strip()
 
 EVP_MAP = {
-    'Blowfish': 'bf-ecb',
     'AES-128/GCM': 'aes-128-gcm',
     'AES-256/GCM': 'aes-256-gcm',
     'ChaCha20': 'chacha20',
@@ -86,7 +85,7 @@ def run_openssl_bench(openssl, algo):
 
     logging.info('Running OpenSSL benchmark for %s', algo)
 
-    cmd = [openssl, 'speed', '-mr']
+    cmd = [openssl, 'speed', '-seconds', '1', '-mr']
 
     if algo in EVP_MAP:
         cmd += ['-evp', EVP_MAP[algo]]
@@ -95,19 +94,19 @@ def run_openssl_bench(openssl, algo):
 
     output = run_command(cmd)
 
-    buf_header = re.compile(r'\+DT:([a-z0-9-]+):([0-9]+):([0-9]+)$')
-    res_header = re.compile(r'\+R:([0-9]+):[a-z0-9-]+:([0-9]+\.[0-9]+)$')
+    buf_header = re.compile(r'\+DT:([a-zA-Z0-9-]+):([0-9]+):([0-9]+)$')
+    res_header = re.compile(r'\+R:([0-9]+):[a-zA-Z0-9-]+:([0-9]+\.[0-9]+)$')
     ignored = re.compile(r'\+(H|F):.*')
 
     results = []
 
-    result = None
+    result = {}
 
     for l in output.splitlines():
         if ignored.match(l):
             continue
 
-        if result is None:
+        if not result:
             match = buf_header.match(l)
             if match is None:
                 logging.error("Unexpected output from OpenSSL %s", l)
@@ -120,14 +119,11 @@ def run_openssl_bench(openssl, algo):
             result['runtime'] = float(match.group(2))
             result['bps'] = int(result['bytes'] / result['runtime'])
             results.append(result)
-            result = None
+            result = {}
 
     return results
 
 def run_botan_bench(botan, runtime, buf_sizes, algo):
-
-    runtime = .05
-
     cmd = [botan, 'speed', '--format=json', '--msec=%d' % int(runtime * 1000),
            '--buf-size=%s' % (','.join([str(i) for i in buf_sizes])), algo]
     output = run_command(cmd)
@@ -156,15 +152,23 @@ class BenchmarkResult:
 
         out = ""
         for (k, v) in self.results.items():
-            out += "algo %s buf_size % 6d botan % 12d bps openssl % 12d bps adv %.02f\n" % (
-                self.algo, k, v['botan'], v['openssl'], float(v['botan']) / v['openssl'])
+
+            if v['openssl'] > v['botan']:
+                winner = 'openssl'
+                ratio = float(v['openssl']) / v['botan']
+            else:
+                winner = 'botan'
+                ratio = float(v['botan']) / v['openssl']
+
+            out += "algo %s buf_size % 6d botan % 12d bps openssl % 12d bps adv %s by %.02f\n" % (
+                self.algo, k, v['botan'], v['openssl'], winner, ratio)
         return out
 
 def bench_algo(openssl, botan, algo):
     openssl_results = run_openssl_bench(openssl, algo)
 
     buf_sizes = sorted([x['buf_size'] for x in openssl_results])
-    runtime = sum(x['runtime'] for x in openssl_results) / len(openssl_results)
+    runtime = sum(x['runtime'] for x in openssl_results) / len(openssl_results) / len(buf_sizes)
 
     botan_results = run_botan_bench(botan, runtime, buf_sizes, algo)
 
