@@ -74,7 +74,7 @@ jobs:
           - compiler: clang
             target: amalgamation
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v3
@@ -130,35 +130,35 @@ jobs:
         include:
           - target: coverage
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: valgrind
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: fuzzers
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: examples
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: emscripten
             compiler: emcc
             host_os: macos-latest
           - target: baremetal
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: minimized
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: bsi
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: sanitizer
             compiler: msvc
             host_os: windows-latest
             make_tool: jom
           - target: lint
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: static
             compiler: gcc
             host_os: windows-latest
@@ -187,22 +187,22 @@ jobs:
         include:
           - target: cross-i386
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: cross-arm64
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: cross-ppc64
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: cross-android-arm32
             compiler: clang
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: cross-android-arm64
             compiler: clang
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: cross-win64
             compiler: gcc
-            host_os: ubuntu-latest
+            host_os: ubuntu-22.04
           - target: cross-ios-arm64
             compiler: clang
             host_os: macos-latest
