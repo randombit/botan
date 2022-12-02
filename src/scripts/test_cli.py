@@ -1167,7 +1167,7 @@ def cli_tls_client_hello_tests(_tmp_dir):
 
     output = test_cli("tls_client_hello", ["--hex", "-"], None, chello)
 
-    output_hash = "8EBFC3205ACFA98461128FE5D081D19254237AF84F7DAF000A3C992C3CF6DE44"
+    output_hash = "D8D6717258CE7F2B10A6F59CCD065937CB9F3B6138319A548A7E0CFC2DF062BF"
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", "-"], output_hash, output)
 
 def cli_speed_pk_tests(_tmp_dir):
