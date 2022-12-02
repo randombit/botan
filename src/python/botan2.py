@@ -1171,7 +1171,6 @@ class PrivateKey:
         msec = c_uint32(msec)
         _iters = c_size_t(0)
 
-        # pylint: disable=unnecessary-lambda-assignment
         cb = lambda b, bl: _DLL.botan_privkey_export_encrypted_pbkdf_msec(
             self.__obj, b, bl, rng_obj.handle_(), _ctype_str(passphrase),
             msec, byref(_iters), _ctype_str(cipher), _ctype_str(pbkdf), flags)

@@ -37,7 +37,7 @@ confidence=
 #   not libraries
 # * fixme is marking TODOs in the future
 # * no-else-return is often awkward
-disable=missing-docstring,fixme,no-else-return,consider-using-f-string,consider-using-with
+disable=missing-docstring,fixme,duplicate-code,no-else-return,consider-using-f-string,consider-using-with
 
 [REPORTS]
 
