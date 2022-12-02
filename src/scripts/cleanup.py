@@ -87,7 +87,7 @@ def main(args=None):
     build_config_str = None
 
     try:
-        build_config_file = open(build_config_path)
+        build_config_file = open(build_config_path, encoding='utf8')
         build_config_str = build_config_file.read()
         build_config_file.close()
     except Exception: # pylint: disable=broad-except

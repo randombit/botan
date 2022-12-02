@@ -132,7 +132,7 @@ def main(args):
         logging.debug('Make %s executable', dst)
         os.chmod(dst, exe_mode)
 
-    with open(os.path.join(build_dir, 'build_config.json')) as f:
+    with open(os.path.join(build_dir, 'build_config.json'), encoding='utf8') as f:
         cfg = json.load(f)
 
     ver_major = int(cfg['version_major'])

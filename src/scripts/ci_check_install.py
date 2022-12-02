@@ -83,7 +83,7 @@ def main(args=None):
         print("Usage: %s <build_config.json>" % args[0])
         return 1
 
-    with open(os.path.join(args[1])) as f:
+    with open(os.path.join(args[1]), encoding='utf8') as f:
         build_config = json.load(f)
 
     install_prefix = build_config['prefix']

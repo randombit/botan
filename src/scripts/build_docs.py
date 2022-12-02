@@ -52,7 +52,7 @@ def touch(fname):
     try:
         os.utime(fname, None)
     except OSError:
-        open(fname, 'a').close()
+        open(fname, 'a', encoding='utf8').close()
 
 def copy_files(src_path, dest_dir):
 
@@ -126,7 +126,7 @@ def parse_options(args):
 
 def read_config(config):
     try:
-        f = open(config)
+        f = open(config, encoding='utf8')
         cfg = json.load(f)
         f.close()
     except OSError:
