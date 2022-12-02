@@ -10,6 +10,8 @@
 #include <botan/exceptn.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/charset.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -165,17 +167,9 @@ bool Base64::check_bad_char(uint8_t bin, char input, bool ignore_ws)
       }
    else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
       {
-      std::string bad_char(1, input);
-      if(bad_char == "\t")
-         { bad_char = "\\t"; }
-      else if(bad_char == "\n")
-         { bad_char = "\\n"; }
-      else if(bad_char == "\r")
-         { bad_char = "\\r"; }
-
-      throw Invalid_Argument(
-         std::string("base64_decode: invalid base64 character '") +
-         bad_char + "'");
+      std::ostringstream err;
+      err << "base64_decode: invalid character " << format_char_for_display(input);
+      throw Invalid_Argument(err.str());
       }
    return false;
    }

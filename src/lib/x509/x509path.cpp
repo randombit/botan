@@ -1073,12 +1073,16 @@ const char* Path_Validation_Result::status_string(Certificate_Status_Code code)
 std::string Path_Validation_Result::warnings_string() const
    {
    const std::string sep(", ");
-   std::string res;
+   std::ostringstream oss;
    for(size_t i = 0; i < m_warnings.size(); i++)
       {
       for(auto code : m_warnings[i])
-         res += "[" + std::to_string(i) + "] " + status_string(code) + sep;
+         {
+         oss << "[" << std::to_string(i) << "] " << status_string(code) << sep;
+         }
       }
+
+   std::string res = oss.str();
    // remove last sep
    if(res.size() >= sep.size())
       res = res.substr(0, res.size() - sep.size());

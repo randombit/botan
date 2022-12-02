@@ -87,10 +87,11 @@ std::string BigInt::to_dec_string() const
 
 std::string BigInt::to_hex_string() const
    {
-   std::vector<uint8_t> bits = BigInt::encode(*this);
+   const size_t this_bytes = this->bytes();
+   std::vector<uint8_t> bits(std::max<size_t>(1, this_bytes));
 
-   if(bits.empty())
-      bits.push_back(0);
+   if(this_bytes > 0)
+      this->binary_encode(bits.data());
 
    std::string hrep;
    if(is_negative())

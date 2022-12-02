@@ -57,6 +57,7 @@ std::vector<uint8_t> Certificate_Status::serialize() const
    const uint32_t response_len = static_cast<uint32_t>(m_response.size());
 
    std::vector<uint8_t> buf;
+   buf.reserve(1 + 3 + m_response.size());
    buf.push_back(1); // type OCSP
    for(size_t i = 1; i < 4; ++i)
       buf.push_back(get_byte_var(i, response_len));
