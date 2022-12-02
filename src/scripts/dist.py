@@ -301,7 +301,7 @@ def write_archive(version, output_basename, archive_type, rel_epoch, all_files, 
 def configure_logging(options):
     class ExitOnErrorLogHandler(logging.StreamHandler):
         def emit(self, record):
-            super(ExitOnErrorLogHandler, self).emit(record)
+            super().emit(record)
             # Exit script if and ERROR or worse occurred
             if record.levelno >= logging.ERROR:
                 if sys.exc_info()[2] is not None:

@@ -6,21 +6,27 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
+import base64
+import binascii
+import json
+import logging
+import multiprocessing
+import optparse # pylint: disable=deprecated-module
+import os
+import platform
+import random
+import re
+import shutil
+import socket
+import ssl
 import subprocess
 import sys
-import os
-import logging
-import optparse # pylint: disable=deprecated-module
-import time
-import shutil
 import tempfile
-import re
-import random
-import json
-import binascii
-import platform
-import multiprocessing
+import threading
+import time
 from multiprocessing.pool import ThreadPool
+from http.client import HTTPSConnection
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # pylint: disable=global-statement,unused-argument
 
@@ -36,7 +42,7 @@ def run_socket_tests():
 class TestLogHandler(logging.StreamHandler):
     def emit(self, record):
         # Do the default stuff first
-        super(TestLogHandler, self).emit(record)
+        super().emit(record)
         if record.levelno >= logging.ERROR:
             global TESTS_FAILED
             TESTS_FAILED += 1
@@ -560,10 +566,6 @@ ed25519 cj8GsiNlRkqiDElAeNMSBBMwrAl15hYPgX50+GWX/lA= Tsy82BBU2xxVqNe1ip11OyEGoKW
 def cli_roughtime_tests(tmp_dir):
     # pylint: disable=line-too-long
     # pylint: disable=too-many-locals
-    import socket
-    import base64
-    import threading
-
     if not check_for_command("roughtime"):
         return
 
@@ -916,15 +918,6 @@ def cli_tls_http_server_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_http_server"):
         return
 
-    try:
-        from http.client import HTTPSConnection
-    except ImportError:
-        try:
-            from httplib import HTTPSConnection
-        except ImportError:
-            return
-    import ssl
-
     server_port = random_port_number()
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
@@ -978,25 +971,6 @@ def cli_tls_proxy_tests(tmp_dir):
     # pylint: disable=too-many-locals,too-many-statements
     if not run_socket_tests() or not check_for_command("tls_proxy"):
         return
-
-    try:
-        from http.client import HTTPSConnection
-    except ImportError:
-        try:
-            from httplib import HTTPSConnection
-        except ImportError:
-            return
-
-    try:
-        from http.server import HTTPServer, BaseHTTPRequestHandler
-    except ImportError:
-        try:
-            from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
-        except ImportError:
-            return
-
-    import ssl
-    import threading
 
     server_port = random_port_number()
     proxy_port = random_port_number()
