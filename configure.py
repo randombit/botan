@@ -163,8 +163,8 @@ class Version:
             logging.debug('%s reported revision %s', cmdname, rev)
 
             return '%s:%s' % (cmdname, rev)
-        except OSError as e:
-            logging.debug('Error getting rev from %s - %s', cmdname, e.strerror)
+        except OSError as ex:
+            logging.debug('Error getting rev from %s - %s', cmdname, ex.strerror)
             return 'unknown'
 
 
@@ -1808,10 +1808,10 @@ def process_template_string(template_text, variables, template_source):
 
     try:
         return SimpleTemplate(variables).substitute(template_text)
-    except KeyError as e:
-        logging.error('Unbound var %s in template %s', e, template_source)
-    except Exception as e: # pylint: disable=broad-except
-        logging.error('Exception %s during template processing file %s', e, template_source)
+    except KeyError as ex:
+        logging.error('Unbound var %s in template %s', ex, template_source)
+    except Exception as ex: # pylint: disable=broad-except
+        logging.error('Exception %s during template processing file %s', ex, template_source)
 
 def process_template(template_file, variables):
     return process_template_string(read_textfile(template_file), variables, template_file)
@@ -2675,8 +2675,8 @@ class AmalgamationHeader:
             try:
                 contents = AmalgamationGenerator.read_header(filepath)
                 self.file_contents[os.path.basename(filepath)] = contents
-            except IOError as e:
-                logging.error('Error processing file %s for amalgamation: %s', filepath, e)
+            except IOError as ex:
+                logging.error('Error processing file %s for amalgamation: %s', filepath, ex)
 
         self.contents = ''
         for name in sorted(self.file_contents):
@@ -2915,8 +2915,8 @@ def robust_makedirs(directory, max_retries=5):
         try:
             os.makedirs(directory)
             return
-        except OSError as e:
-            if e.errno == errno.EEXIST:
+        except OSError as ex:
+            if ex.errno == errno.EEXIST:
                 raise
 
         time.sleep(0.1)
@@ -3197,8 +3197,8 @@ def run_compiler_preproc(options, ccinfo, source_file, default_return, extra_fla
             stderr=subprocess.PIPE,
             universal_newlines=True).communicate()
         cc_output = stdout
-    except OSError as e:
-        logging.warning('Could not execute %s: %s', cmd, e)
+    except OSError as ex:
+        logging.warning('Could not execute %s: %s', cmd, ex)
         return default_return
 
     def cleanup_output(output):
@@ -3268,16 +3268,16 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
 
     try:
         robust_rmtree(build_paths.build_dir)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            logging.error('Problem while removing build dir: %s', e)
+    except OSError as ex:
+        if ex.errno != errno.ENOENT:
+            logging.error('Problem while removing build dir: %s', ex)
 
     for build_dir in build_paths.build_dirs():
         try:
             robust_makedirs(build_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                logging.error('Error while creating "%s": %s', build_dir, e)
+        except OSError as ex:
+            if ex.errno != errno.EEXIST:
+                logging.error('Error while creating "%s": %s', build_dir, ex)
 
     def write_template_with_variables(sink, template, variables):
         with open(sink, 'w', encoding='utf8') as f:
@@ -3310,9 +3310,9 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
         for header_file in headers:
             try:
                 portable_symlink(header_file, directory, link_method)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise UserError('Error linking %s into %s: %s' % (header_file, directory, e))
+            except OSError as ex:
+                if ex.errno != errno.EEXIST:
+                    raise UserError('Error linking %s into %s: %s' % (header_file, directory, ex))
 
     link_headers(build_paths.public_headers, 'public',
                  build_paths.botan_include_dir)

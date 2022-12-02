@@ -1,22 +1,7 @@
 [MASTER]
 
-# Specify a configuration file.
-#rcfile=
-
-# Python code to execute, usually for sys.path manipulation such as
-# pygtk.require().
-#init-hook=
-
-# Add files or directories to the blacklist. They should be base names, not
-# paths.
-ignore=CVS
-
 # Pickle collected data for later comparisons.
 persistent=yes
-
-# List of plugins (as comma separated values of python modules names) to load,
-# usually to register additional checkers.
-load-plugins=
 
 # Use multiple processes to speed up Pylint.
 jobs=3
@@ -24,20 +9,6 @@ jobs=3
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
 unsafe-load-any-extension=no
-
-# A comma-separated list of package or module names from where C extensions may
-# be loaded. Extensions are loading into the active Python interpreter and may
-# run arbitrary code
-extension-pkg-whitelist=
-
-# Allow optimization of some AST trees. This will activate a peephole AST
-# optimizer, which will apply various small optimizations. For instance, it can
-# be used to obtain the result of joining multiple strings with the addition
-# operator. Joining a lot of strings can lead to a maximum recursion error in
-# Pylint and this flag can prevent that. It has one side effect, the resulting
-# AST will be different than the one from reality.
-optimize-ast=no
-
 
 [MESSAGES CONTROL]
 
@@ -60,7 +31,7 @@ confidence=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 
-disable=missing-docstring,no-else-return,locally-disabled,import-outside-toplevel,super-with-arguments,raise-missing-from,duplicate-code,consider-using-f-string,fixme
+disable=missing-docstring,no-else-return,locally-disabled,import-outside-toplevel,super-with-arguments,raise-missing-from,duplicate-code,consider-using-f-string,fixme,consider-using-with
 
 
 [REPORTS]
@@ -69,11 +40,6 @@ disable=missing-docstring,no-else-return,locally-disabled,import-outside-topleve
 # (visual studio) and html. You can also give a reporter class, eg
 # mypackage.mymodule.MyReporterClass.
 output-format=text
-
-# Put messages in a separate file for each module / package specified on the
-# command line instead of printing them on stdout. Reports (if any) will be
-# written in a file name "pylint_global.[txt|html]".
-files-output=no
 
 # Tells whether to display a full report or only the messages
 reports=no
@@ -99,9 +65,6 @@ logging-modules=logging
 
 [BASIC]
 
-# List of builtins function names that should not be used, separated by a comma
-bad-functions=map,filter
-
 # Good variable names which should always be accepted, separated by a comma
 good-names=i,j,k,ex,Run,_
 
@@ -118,62 +81,32 @@ include-naming-hint=no
 # Regular expression matching correct argument names
 argument-rgx=[a-z_][a-z0-9_]{0,30}$
 
-# Naming hint for argument names
-argument-name-hint=[a-z_][a-z0-9_]{0,30}$
-
 # Regular expression matching correct function names
 function-rgx=[a-z_][a-z0-9_]{2,45}$
-
-# Naming hint for function names
-function-name-hint=[a-z_][a-z0-9_]{2,45}$
 
 # Regular expression matching correct variable names
 variable-rgx=[a-z_][a-z0-9_]{0,45}$
 
-# Naming hint for variable names
-variable-name-hint=[a-z_][a-z0-9_]{0,45}$
-
 # Regular expression matching correct attribute names
 attr-rgx=[a-z_][a-z0-9_]{1,30}$
-
-# Naming hint for attribute names
-attr-name-hint=[a-z_][a-z0-9_]{1,30}$
 
 # Regular expression matching correct class names
 class-rgx=[A-Z_][a-zA-Z0-9]+$
 
-# Naming hint for class names
-class-name-hint=[A-Z_][a-zA-Z0-9]+$
-
 # Regular expression matching correct inline iteration names
 inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
-
-# Naming hint for inline iteration names
-inlinevar-name-hint=[A-Za-z_][A-Za-z0-9_]*$
 
 # Regular expression matching correct method names
 method-rgx=[a-z_][a-z0-9_]{2,45}$
 
-# Naming hint for method names
-method-name-hint=[a-z_][a-z0-9_]{2,45}$
-
 # Regular expression matching correct constant names
 const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
-
-# Naming hint for constant names
-const-name-hint=(([A-Z_][A-Z0-9_]*)|(__.*__))$
 
 # Regular expression matching correct class attribute names
 class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
 
-# Naming hint for class attribute names
-class-attribute-name-hint=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
-
 # Regular expression matching correct module names
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
-
-# Naming hint for module names
-module-name-hint=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
@@ -263,12 +196,6 @@ ignore-long-lines=^\s*(# )?<?https?://\S+>?$
 # Allow the body of an if to be on the same line as the test if there is no
 # else.
 single-line-if-stmt=no
-
-# List of optional constructs for which whitespace checking is disabled. `dict-
-# separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
-# `trailing-comma` allows a space between comma and closing bracket: (a, ).
-# `empty-line` allows space-only lines.
-no-space-check=trailing-comma,dict-separator
 
 # Maximum number of lines in a module
 max-module-lines=3500

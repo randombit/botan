@@ -645,6 +645,9 @@ class BlockCipher:
     def maximum_keylength(self):
         return self.__max_keylen
 
+    def keylength_modulo(self):
+        return self.__mod_keylen
+
 
 #
 # Hash function
@@ -729,6 +732,9 @@ class MsgAuthCode:
 
     def maximum_keylength(self):
         return self.__max_keylen
+
+    def keylength_modulo(self):
+        return self.__mod_keylen
 
     def set_key(self, key):
         _DLL.botan_mac_set_key(self.__obj, key, len(key))

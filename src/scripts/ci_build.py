@@ -87,7 +87,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target_os not in ['linux', 'osx', 'windows', 'freebsd']:
         print('Error unknown OS %s' % (target_os))
-        return (None, None, None)
+        return (None, None, None, None)
 
     if is_cross_target:
         if target_os == 'osx':
