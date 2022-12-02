@@ -25,15 +25,6 @@ cache locations.
 Then ``src/scripts/ci_build.py`` is invoked to steer the actual build and test
 runs.
 
-LGTM
----------
-
-https://lgtm.com/projects/g/randombit/botan/
-
-An automated linter that is integrated with Github. It automatically checks each
-incoming PR. It also supports custom queries/alerts, which likely would be worth
-investigating but is not something currently in use.
-
 Coverity
 ---------
 
