@@ -36,8 +36,6 @@ std::string kex_method_to_string(Kex_Algo method)
          return "DH";
       case Kex_Algo::ECDH:
          return "ECDH";
-      case Kex_Algo::CECPQ1:
-         return "CECPQ1";
       case Kex_Algo::PSK:
          return "PSK";
       case Kex_Algo::ECDHE_PSK:
@@ -59,9 +57,6 @@ Kex_Algo kex_method_from_string(const std::string& str)
 
    if(str == "ECDH")
       return Kex_Algo::ECDH;
-
-   if(str == "CECPQ1")
-      return Kex_Algo::CECPQ1;
 
    if(str == "PSK")
       return Kex_Algo::PSK;

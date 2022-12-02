@@ -19,10 +19,6 @@
 
 #include <botan/rsa.h>
 
-#if defined(BOTAN_HAS_CECPQ1)
-  #include <botan/cecpq1.h>
-#endif
-
 namespace Botan::TLS {
 
 /*
@@ -138,21 +134,6 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          append_tls_length_value(m_key_material, ecdh_result.second, 1);
          }
-#if defined(BOTAN_HAS_CECPQ1)
-      else if(kex_algo == Kex_Algo::CECPQ1)
-         {
-         const std::vector<uint8_t> cecpq1_offer = reader.get_range<uint8_t>(2, 1, 65535);
-
-         if(cecpq1_offer.size() != CECPQ1_OFFER_BYTES)
-            throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid CECPQ1 key size");
-
-         std::vector<uint8_t> newhope_accept(CECPQ1_ACCEPT_BYTES);
-         secure_vector<uint8_t> shared_secret(CECPQ1_SHARED_KEY_BYTES);
-         CECPQ1_accept(shared_secret.data(), newhope_accept.data(), cecpq1_offer.data(), rng);
-         append_tls_length_value(m_key_material, newhope_accept, 2);
-         m_pre_master = shared_secret;
-         }
-#endif
       else
          {
          throw Internal_Error("Client_Key_Exchange: Unknown key exchange method was negotiated");
@@ -275,19 +256,6 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
          append_tls_length_value(m_pre_master, zeros, 2);
          append_tls_length_value(m_pre_master, psk.bits_of(), 2);
          }
-#if defined(BOTAN_HAS_CECPQ1)
-      else if(kex_algo == Kex_Algo::CECPQ1)
-         {
-         const CECPQ1_key& cecpq1_offer = state.server_kex()->cecpq1_key();
-
-         const std::vector<uint8_t> cecpq1_accept = reader.get_range<uint8_t>(2, 0, 65535);
-         if(cecpq1_accept.size() != CECPQ1_ACCEPT_BYTES)
-            throw Decoding_Error("Invalid size for CECPQ1 accept message");
-
-         m_pre_master.resize(CECPQ1_SHARED_KEY_BYTES);
-         CECPQ1_finish(m_pre_master.data(), cecpq1_offer, cecpq1_accept.data());
-         }
-#endif
       else if(kex_algo == Kex_Algo::DH ||
               kex_algo == Kex_Algo::ECDH ||
               kex_algo == Kex_Algo::ECDHE_PSK)

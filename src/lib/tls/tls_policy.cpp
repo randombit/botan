@@ -92,7 +92,6 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    return {
       //"ECDHE_PSK",
       //"PSK",
-      "CECPQ1",
       "ECDH",
       "DH",
       //"RSA",
@@ -484,17 +483,6 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version) const
             if(suite.auth_method() != Auth_Method::IMPLICIT || !suite.psk_ciphersuite())
                continue;
             }
-
-         /*
-         CECPQ1 always uses x25519 for ECDH, so treat the applications
-         removal of x25519 from the ECC curve list as equivalent to
-         saying they do not trust CECPQ1
-         */
-         if(suite.kex_method() == Kex_Algo::CECPQ1)
-            {
-            if(value_exists(key_exchange_groups(), Group_Params::X25519) == false)
-               continue;
-            }
          }
 
       // OK, consider it
@@ -615,7 +603,7 @@ std::vector<std::string> Strict_Policy::allowed_macs() const
 
 std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
    {
-   return { "CECPQ1", "ECDH" };
+   return { "ECDH" };
    }
 
 }

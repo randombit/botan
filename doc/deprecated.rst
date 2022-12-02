@@ -32,8 +32,6 @@ in a future major release:
 
 - All DHE ciphersuites
 
-- CECPQ1 key exchange
-
 - Support for renegotiation in TLS v1.2
 
 - All ciphersuites using static RSA key exchange
@@ -51,9 +49,6 @@ in a future major release.
 - Hash function GOST 34.11-94, MD4
 
 - X9.42 KDF
-
-- NewHope lattice based KEM. This will be replaced by a newer and more
-  well studied design (probably Kyber)
 
 - The current McEliece implementation (in ``pubkey/mce``) will be
   replaced by a more modern code-based KEM from the NIST

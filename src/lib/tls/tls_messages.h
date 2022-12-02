@@ -24,10 +24,6 @@
 #include <botan/pk_keys.h>
 #include <botan/x509cert.h>
 
-#if defined(BOTAN_HAS_CECPQ1)
-  #include <botan/cecpq1.h>
-#endif
-
 namespace Botan {
 
 class Public_Key;
@@ -791,15 +787,6 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
       // Only valid for certain kex types
       const Private_Key& server_kex_key() const;
 
-#if defined(BOTAN_HAS_CECPQ1)
-      // Only valid for CECPQ1 negotiation
-      const CECPQ1_key& cecpq1_key() const
-         {
-         BOTAN_ASSERT_NONNULL(m_cecpq1_key);
-         return *m_cecpq1_key;
-         }
-#endif
-
       Server_Key_Exchange(Handshake_IO& io,
                           Handshake_State& state,
                           const Policy& policy,
@@ -814,10 +801,6 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
 
    private:
       std::vector<uint8_t> serialize() const override;
-
-#if defined(BOTAN_HAS_CECPQ1)
-      std::unique_ptr<CECPQ1_key> m_cecpq1_key;
-#endif
 
       std::unique_ptr<Private_Key> m_kex_key;
 

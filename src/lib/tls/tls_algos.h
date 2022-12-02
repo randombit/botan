@@ -107,7 +107,6 @@ enum class Kex_Algo {
    STATIC_RSA,
    DH,
    ECDH,
-   CECPQ1,
    PSK,
    ECDHE_PSK,
 

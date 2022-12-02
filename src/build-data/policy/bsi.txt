@@ -143,14 +143,12 @@ prf_x942
 sp800_56a
 
 # pubkey
-cecpq1
 curve25519
 ec_h2c
 ed25519
 elgamal
 gost_3410
 mce
-newhope
 rfc6979
 sm2
 

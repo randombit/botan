@@ -48,7 +48,6 @@ ffi
 
 tls
 prf_tls
-newhope
 ed25519
 
 ghash_cpu
