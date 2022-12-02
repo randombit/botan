@@ -2,7 +2,7 @@ macro_name CLANG
 
 binary_name clang++
 
-lang_flags "-std=c++17 -D_REENTRANT"
+lang_flags "-std=c++20 -D_REENTRANT"
 
 warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wshorten-64-to-32 -Wcomma -Wdocumentation"
 

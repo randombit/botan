@@ -25,7 +25,7 @@ debug_info_flags "/Zi /FS"
 
 preproc_flags "/nologo /EP"
 
-lang_flags "/std:c++17 /EHs /GR"
+lang_flags "/std:c++20 /EHs /GR"
 
 # 4250: diamond inheritence warning
 # 4251: STL types used in DLL interface

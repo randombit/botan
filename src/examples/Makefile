@@ -9,7 +9,7 @@ LINKER         = $(CXX)
 
 # Compiler Flags
 ABI_FLAGS      = -fstack-protector -m64 -pthread
-LANG_FLAGS     = -std=c++17 -D_REENTRANT
+LANG_FLAGS     = -std=c++20 -D_REENTRANT
 LANG_EXE_FLAGS =
 CXXFLAGS       = -O3
 WARN_FLAGS     = -Wall -Wextra -Wpedantic -Wstrict-aliasing -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor -Wold-style-cast -Wsuggest-override -Wshadow -Wextra-semi -Werror -Wno-error=strict-overflow -Wno-error=zero-as-null-pointer-constant -Wno-error=non-virtual-dtor -Wno-unused-parameter

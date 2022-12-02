@@ -4,7 +4,7 @@ binary_name xlC
 
 optimization_flags "-O2"
 
-lang_flags "-std=c++17"
+lang_flags "-std=c++20"
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
