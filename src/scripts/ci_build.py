@@ -232,8 +232,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
             api_lvl = int(os.getenv('ANDROID_API_LEVEL', '0'))
             if api_lvl == 0:
-                # If not set arbitrarily choose API 16 (Android 4.1) for ARMv7 and 28 (Android 9) for AArch64
-                api_lvl = 16 if target == 'cross-android-arm32' else 28
+                # If not set arbitrarily choose API 19 (Android 4.4) for ARMv7 and 28 (Android 9) for AArch64
+                api_lvl = 19 if target == 'cross-android-arm32' else 28
 
             toolchain_dir = os.path.join(ndk, 'toolchains/llvm/prebuilt/linux-x86_64/bin')
             test_cmd = None
@@ -241,11 +241,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             if target == 'cross-android-arm32':
                 cc_bin = os.path.join(toolchain_dir, 'armv7a-linux-androideabi%d-clang++' % (api_lvl))
                 flags += ['--cpu=armv7',
-                          '--ar-command=%s' % (os.path.join(toolchain_dir, 'arm-linux-androideabi-ar'))]
+                          '--ar-command=%s' % (os.path.join(toolchain_dir, 'llvm-ar'))]
             elif target == 'cross-android-arm64':
                 cc_bin = os.path.join(toolchain_dir, 'aarch64-linux-android%d-clang++' % (api_lvl))
                 flags += ['--cpu=arm64',
-                          '--ar-command=%s' % (os.path.join(toolchain_dir, 'aarch64-linux-android-ar'))]
+                          '--ar-command=%s' % (os.path.join(toolchain_dir, 'llvm-ar'))]
 
             if api_lvl < 18:
                 flags += ['--without-os-features=getauxval']
