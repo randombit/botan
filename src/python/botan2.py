@@ -38,7 +38,7 @@ class BotanException(Exception):
         self.__rc = rc
 
         if rc == 0:
-            super(BotanException, self).__init__(message)
+            super().__init__(message)
         else:
             exn_msg = _DLL.botan_error_last_exception_message().decode('ascii')
             err_descr = _DLL.botan_error_description(rc).decode('ascii')
@@ -47,7 +47,7 @@ class BotanException(Exception):
             if exn_msg != "":
                 formatted_msg += ': ' + exn_msg
 
-            super(BotanException, self).__init__(formatted_msg)
+            super().__init__(formatted_msg)
 
     def error_code(self):
         return self.__rc

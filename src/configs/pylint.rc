@@ -31,8 +31,13 @@ confidence=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 
-disable=missing-docstring,no-else-return,locally-disabled,import-outside-toplevel,super-with-arguments,raise-missing-from,duplicate-code,consider-using-f-string,fixme,consider-using-with
-
+# * consider-using-f-string and consider-using-with could be fixed now
+#   that we support only Python3, but neither seems that important
+# * missing-docstring isn't considered important because these are scripts
+#   not libraries
+# * fixme is marking TODOs in the future
+# * no-else-return is often awkward
+disable=missing-docstring,fixme,duplicate-code,no-else-return,consider-using-f-string,consider-using-with
 
 [REPORTS]
 

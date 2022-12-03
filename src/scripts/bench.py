@@ -30,7 +30,7 @@ def setup_logging(options):
 
     class LogOnErrorHandler(logging.StreamHandler):
         def emit(self, record):
-            super(LogOnErrorHandler, self).emit(record)
+            super().emit(record)
             if record.levelno >= logging.ERROR:
                 sys.exit(1)
 

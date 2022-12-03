@@ -16,13 +16,13 @@ import sys
 import time
 import tempfile
 import optparse # pylint: disable=deprecated-module
+import multiprocessing
 
 def get_concurrency():
     def_concurrency = 2
     max_concurrency = 16
 
     try:
-        import multiprocessing
         return min(max_concurrency, multiprocessing.cpu_count())
     except ImportError:
         return def_concurrency

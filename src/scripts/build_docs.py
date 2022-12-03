@@ -17,6 +17,7 @@ import json
 import tempfile
 import os
 import stat
+import multiprocessing
 
 def get_concurrency():
     """
@@ -25,7 +26,6 @@ def get_concurrency():
     def_concurrency = 2
 
     try:
-        import multiprocessing
         return max(def_concurrency, multiprocessing.cpu_count())
     except ImportError:
         return def_concurrency
@@ -129,8 +129,8 @@ def read_config(config):
         f = open(config, encoding='utf8')
         cfg = json.load(f)
         f.close()
-    except OSError:
-        raise Exception('Failed to load build config %s - is build dir correct?' % (config))
+    except OSError as ex:
+        raise Exception('Failed to load build config %s - is build dir correct?' % (config)) from ex
 
     return cfg
 

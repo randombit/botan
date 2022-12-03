@@ -277,14 +277,13 @@ class BuildPaths: # pylint: disable=too-many-instance-attributes
     def src_info(self, typ):
         if typ == 'lib':
             return (self.lib_sources, self.libobj_dir)
-        elif typ == 'cli':
+        if typ == 'cli':
             return (self.cli_sources, self.cliobj_dir)
-        elif typ == 'test':
+        if typ == 'test':
             return (self.test_sources, self.testobj_dir)
-        elif typ == 'fuzzer':
+        if typ == 'fuzzer':
             return (self.fuzzer_sources, self.fuzzobj_dir)
-        else:
-            raise InternalError("Unknown src info type '%s'" % (typ))
+        raise InternalError("Unknown src info type '%s'" % (typ))
 
 ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim"]
 
@@ -705,7 +704,7 @@ class LexResult:
 
 class LexerError(InternalError):
     def __init__(self, msg, lexfile, line):
-        super(LexerError, self).__init__(msg)
+        super().__init__(msg)
         self.msg = msg
         self.lexfile = lexfile
         self.line = line
@@ -819,7 +818,7 @@ class ModuleInfo(InfoObject):
 
     def __init__(self, infofile):
         # pylint: disable=too-many-statements
-        super(ModuleInfo, self).__init__(infofile)
+        super().__init__(infofile)
         lex = lex_me_harder(
             infofile,
             ['header:internal', 'header:public', 'header:external', 'requires',
@@ -911,13 +910,14 @@ class ModuleInfo(InfoObject):
             logging.error("Module '%s' is virtual but contains %d source code files", self.basename, source_file_count)
 
     def _parse_module_info(self, lex):
-        try:
-            info = lex.module_info
-            self.name = info["name"]
-            self.brief = info["brief"] if "brief" in info else None
-            self.type = info["type"] if "type" in info else "Public"
-        except:
+        info = lex.module_info
+
+        if "name" not in info:
             raise InternalError("Module '%s' does not contain a <module_info> section with at least a documentation-friendly 'name' definition" % self.basename)
+
+        self.name = info["name"]
+        self.brief = info.get("brief") # possibly None
+        self.type = info.get("type") or "Public"
 
         if self.type not in ["Public", "Internal", "Virtual"]:
             raise InternalError("Module '%s' has an unknown type: %s" % (self.basename, self.type))
@@ -1128,7 +1128,7 @@ class ModuleInfo(InfoObject):
 
 class ModulePolicyInfo(InfoObject):
     def __init__(self, infofile):
-        super(ModulePolicyInfo, self).__init__(infofile)
+        super().__init__(infofile)
         lex = lex_me_harder(
             infofile,
             ['required', 'if_available', 'prohibited'],
@@ -1153,7 +1153,7 @@ class ModulePolicyInfo(InfoObject):
 
 class ArchInfo(InfoObject):
     def __init__(self, infofile):
-        super(ArchInfo, self).__init__(infofile)
+        super().__init__(infofile)
         lex = lex_me_harder(
             infofile,
             ['aliases', 'isa_extensions'],
@@ -1191,7 +1191,7 @@ class ArchInfo(InfoObject):
 
 class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def __init__(self, infofile):
-        super(CompilerInfo, self).__init__(infofile)
+        super().__init__(infofile)
         lex = lex_me_harder(
             infofile,
             [],
@@ -1527,7 +1527,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
 class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def __init__(self, infofile):
-        super(OsInfo, self).__init__(infofile)
+        super().__init__(infofile)
         lex = lex_me_harder(
             infofile,
             ['aliases', 'target_features', 'feature_macros'],
@@ -1974,10 +1974,9 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             inno_arch = {'x86_32': '',
                          'x86_64': 'x64',
                          'ia64': 'ia64'}
-            if arch in inno_arch:
-                return inno_arch[arch]
-            else:
+            if arch not in inno_arch:
                 logging.warning('Unknown arch %s in innosetup_arch', arch)
+            return inno_arch.get(arch)
         return None
 
     def configure_command_line():
@@ -2632,26 +2631,17 @@ class AmalgamationHelper:
     @staticmethod
     def is_botan_include(cpp_source_line):
         match = AmalgamationHelper._botan_include.search(cpp_source_line)
-        if match:
-            return match.group(1)
-        else:
-            return None
+        return match.group(1) if match else None
 
     @staticmethod
     def is_unconditional_any_include(cpp_source_line):
         match = AmalgamationHelper._unconditional_any_include.search(cpp_source_line)
-        if match:
-            return match.group(1)
-        else:
-            return None
+        return match.group(1) if match else None
 
     @staticmethod
     def is_unconditional_std_include(cpp_source_line):
         match = AmalgamationHelper._unconditional_std_include.search(cpp_source_line)
-        if match:
-            return match.group(1)
-        else:
-            return None
+        return match.group(1) if match else None
 
     @staticmethod
     def write_banner(fd):
@@ -2846,7 +2836,7 @@ def have_program(program):
 class BotanConfigureLogHandler(logging.StreamHandler):
     def emit(self, record):
         # Do the default stuff first
-        super(BotanConfigureLogHandler, self).emit(record)
+        super().emit(record)
         # Exit script if and ERROR or worse occurred
         if record.levelno >= logging.ERROR:
             sys.exit(1)
@@ -2928,8 +2918,7 @@ def python_platform_identifier():
     system_from_python = platform.system().lower()
     if re.match('^cygwin_.*', system_from_python):
         return 'cygwin'
-    else:
-        return system_from_python
+    return system_from_python
 
 # This is for otions that have --with-XYZ and --without-XYZ. If user does not
 # set any of those, we choose a default here.
@@ -3312,7 +3301,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
                 portable_symlink(header_file, directory, link_method)
             except OSError as ex:
                 if ex.errno != errno.EEXIST:
-                    raise UserError('Error linking %s into %s: %s' % (header_file, directory, ex))
+                    raise UserError('Error linking %s into %s: %s' % (header_file, directory, ex)) from ex
 
     link_headers(build_paths.public_headers, 'public',
                  build_paths.botan_include_dir)
@@ -3498,7 +3487,7 @@ def main(argv):
 
         if options.cpu.endswith('eb') or options.cpu.endswith('be'):
             return 'big'
-        elif options.cpu.endswith('el') or options.cpu.endswith('le'):
+        if options.cpu.endswith('el') or options.cpu.endswith('le'):
             return 'little'
 
         if arch_info.endian:

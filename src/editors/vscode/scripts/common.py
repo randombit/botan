@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import re
-
+import multiprocessing
 
 class BuildError(Exception):
     pass
@@ -16,7 +16,6 @@ def get_concurrency():
     max_concurrency = 16
 
     try:
-        import multiprocessing
         return min(max_concurrency, multiprocessing.cpu_count())
     except ImportError:
         return def_concurrency
@@ -33,8 +32,8 @@ def run_cmd(cmd, workingdir=None):
 
     try:
         subprocess.run(cmd, shell=shell, check=True, cwd=workingdir)
-    except subprocess.CalledProcessError:
-        raise BuildError('External command failed, aborting...')
+    except subprocess.CalledProcessError as ex:
+        raise BuildError('External command failed, aborting...') from ex
 
 
 def _find_regex_in_makefile(regex):

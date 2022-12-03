@@ -32,8 +32,8 @@ def run_cmd(cmd):
 
     try:
         subprocess.run(cmd, shell=shell, check=True)
-    except subprocess.CalledProcessError:
-        raise BuildError('Command failed, aborting...')
+    except subprocess.CalledProcessError as ex:
+        raise BuildError('Command failed, aborting...') from ex
 
 
 def _find_regex_in_makefile(regex):
@@ -114,9 +114,9 @@ def apply_astyle_format(format_file):
                  '--suffix=none',  # do not create a backup copy of the unformatted file
                  '--project=src/configs/astyle.rc',
                  format_file])
-    except FileNotFoundError:
+    except FileNotFoundError as ex:
         raise BuildError(
-            "astyle utility not installed, cannot apply formatting")
+            "astyle utility not installed, cannot apply formatting") from ex
 
 
 def main():
