@@ -73,6 +73,9 @@ KyberMode::KyberMode(Mode mode)
 KyberMode::KyberMode(const OID& oid)
    : m_mode(mode_from_string(oid.to_string())) {}
 
+KyberMode::KyberMode(const std::string& str)
+   : m_mode(mode_from_string(str)) {}
+
 OID KyberMode::get_oid() const
    {
    return OID::from_string(to_string());
@@ -1302,7 +1305,9 @@ size_t Kyber_PublicKey::estimated_strength() const
    return m_public->mode().estimated_strength();
    }
 
-void Kyber_PublicKey::initialize_from_encoding(std::vector<uint8_t> pub_key, KyberMode m, KyberKeyEncoding encoding)
+void Kyber_PublicKey::initialize_from_encoding(const std::vector<uint8_t>& pub_key,
+                                               KyberMode m,
+                                               KyberKeyEncoding encoding)
    {
    KyberConstants mode(m);
 
@@ -1340,10 +1345,12 @@ void Kyber_PublicKey::initialize_from_encoding(std::vector<uint8_t> pub_key, Kyb
    m_public = std::make_shared<Kyber_PublicKeyInternal>(std::move(mode), std::move(poly_vec), std::move(seed));
    }
 
-Kyber_PublicKey::Kyber_PublicKey(std::vector<uint8_t> pub_key, KyberMode m, KyberKeyEncoding encoding)
+Kyber_PublicKey::Kyber_PublicKey(const std::vector<uint8_t>& pub_key,
+                                 KyberMode m,
+                                 KyberKeyEncoding encoding)
    : Kyber_PublicKey()
    {
-   initialize_from_encoding(std::move(pub_key), m, encoding);
+   initialize_from_encoding(pub_key, m, encoding);
    }
 
 Kyber_PublicKey::Kyber_PublicKey(const Kyber_PublicKey& other)
@@ -1421,7 +1428,9 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m)
                rng.random_vec(KyberConstants::kZLength));
    }
 
-Kyber_PrivateKey::Kyber_PrivateKey(secure_vector<uint8_t> sk, KyberMode m, KyberKeyEncoding encoding)
+Kyber_PrivateKey::Kyber_PrivateKey(const secure_vector<uint8_t>& sk,
+                                   KyberMode m,
+                                   KyberKeyEncoding encoding)
    {
    KyberConstants mode(m);
 
@@ -1479,7 +1488,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(secure_vector<uint8_t> sk, KyberMode m, Kyber
       // skipping the public key hash
       auto z = secure_vector<uint8_t>(sk.end() - KyberConstants::kZLength, sk.end());
 
-      initialize_from_encoding(std::move(pub_key), m, encoding);
+      initialize_from_encoding(pub_key, m, encoding);
       m_private = std::make_shared<Kyber_PrivateKeyInternal>(std::move(mode),
                   PolynomialVector::from_bytes(skpv, mode), std::move(z));
       }

@@ -41,7 +41,8 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode
          };
 
       KyberMode(Mode mode);
-      KyberMode(const OID& oid);
+      explicit KyberMode(const OID& oid);
+      explicit KyberMode(const std::string& str);
 
       OID get_oid() const;
       std::string to_string() const;
@@ -69,7 +70,9 @@ class Kyber_PrivateKeyInternal;
 class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
    {
    public:
-      Kyber_PublicKey(std::vector<uint8_t> pub_key, KyberMode mode, KyberKeyEncoding encoding);
+      Kyber_PublicKey(const std::vector<uint8_t>& pub_key,
+                      KyberMode mode,
+                      KyberKeyEncoding encoding);
 
       Kyber_PublicKey(const Kyber_PublicKey& other);
 
@@ -109,7 +112,9 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
          {
          }
 
-      void initialize_from_encoding(std::vector<uint8_t> pub_key, KyberMode m, KyberKeyEncoding encoding);
+      void initialize_from_encoding(const std::vector<uint8_t>& pub_key,
+                                    KyberMode m,
+                                    KyberKeyEncoding encoding);
 
       std::vector<uint8_t> public_key_bits_raw() const;
       std::vector<uint8_t> public_key_bits_der() const;
@@ -127,7 +132,9 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
    public:
       Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode);
 
-      Kyber_PrivateKey(secure_vector<uint8_t> sk, KyberMode mode, KyberKeyEncoding encoding);
+      Kyber_PrivateKey(const secure_vector<uint8_t>& sk,
+                       KyberMode mode,
+                       KyberKeyEncoding encoding);
 
       std::unique_ptr<Public_Key> public_key() const override;
 
