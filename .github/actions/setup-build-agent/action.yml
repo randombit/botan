@@ -35,7 +35,7 @@ runs:
       run: print("::warning ::No compiler cache available, build times might suffer")
       shell: python
       if: env.COMPILER_CACHE_LOCATION == '' && inputs.cache-key != ''
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       if: env.COMPILER_CACHE_LOCATION != '' && inputs.cache-key != ''
       with:
           path: ${{ env.COMPILER_CACHE_LOCATION }}
