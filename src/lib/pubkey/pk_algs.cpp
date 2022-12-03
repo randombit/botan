@@ -64,6 +64,10 @@
   #include <botan/mceliece.h>
 #endif
 
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+  #include <botan/kyber.h>
+#endif
+
 #if defined(BOTAN_HAS_XMSS_RFC8391)
   #include <botan/xmss.h>
 #endif
@@ -95,6 +99,11 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece")
       return std::make_unique<McEliece_PublicKey>(key_bits);
+#endif
+
+#if 0 && (defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S))
+   if(alg_name == "Kyber")
+      return std::make_unique<Kyber_PublicKey>(alg_id, key_bits);
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
@@ -189,6 +198,11 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_DSA)
    if(alg_name == "DSA")
       return std::make_unique<DSA_PrivateKey>(alg_id, key_bits);
+#endif
+
+#if 0 && (defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S))
+   if(alg_name == "Kyber")
+      return std::make_unique<Kyber_PrivateKey>(key_bits);
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
@@ -331,6 +345,14 @@ create_private_key(const std::string& alg_name,
       size_t mce_t = Botan::to_u32bit(mce_param[1]);
 
       return std::make_unique<Botan::McEliece_PrivateKey>(rng, mce_n, mce_t);
+      }
+#endif
+
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+   if(alg_name == "Kyber")
+      {
+      const KyberMode mode(params.empty() ? "Kyber-1024-r3" : params);
+      return std::make_unique<Kyber_PrivateKey>(rng, mode);
       }
 #endif
 
