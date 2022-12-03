@@ -634,7 +634,7 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
    private:
       void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                            secure_vector<uint8_t>& raw_shared_key,
-                           Botan::RandomNumberGenerator& rng) override
+                           RandomNumberGenerator& rng) override
          {
          const BigInt r = BigInt::random_integer(rng, 1, get_n());
          const BigInt c = public_op(r);

@@ -327,7 +327,7 @@ class MCE_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF
    private:
       void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                            secure_vector<uint8_t>& raw_shared_key,
-                           Botan::RandomNumberGenerator& rng) override
+                           RandomNumberGenerator& rng) override
          {
          secure_vector<uint8_t> plaintext = m_key.random_plaintext_element(rng);
 

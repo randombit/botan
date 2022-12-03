@@ -154,7 +154,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
       throw Invalid_Argument("ECIES: other public key point is zero");
       }
 
-   std::unique_ptr<KDF> kdf = Botan::KDF::create_or_throw(m_params.kdf_spec());
+   std::unique_ptr<KDF> kdf = KDF::create_or_throw(m_params.kdf_spec());
 
    PointGFp other_point = other_public_key_point;
 
@@ -221,10 +221,10 @@ ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::stri
 
 std::unique_ptr<MessageAuthenticationCode> ECIES_System_Params::create_mac() const
    {
-   return Botan::MessageAuthenticationCode::create_or_throw(m_mac_spec);
+   return MessageAuthenticationCode::create_or_throw(m_mac_spec);
    }
 
-std::unique_ptr<Cipher_Mode> ECIES_System_Params::create_cipher(Botan::Cipher_Dir direction) const
+std::unique_ptr<Cipher_Mode> ECIES_System_Params::create_cipher(Cipher_Dir direction) const
    {
    return Cipher_Mode::create_or_throw(m_dem_spec, direction);
    }
@@ -330,8 +330,8 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
    // ISO 18033: "If v > 1 and CheckMode = 0, then we must have gcd(u, v) = 1." (v = index, u= order)
    if(!ecies_params.check_mode())
       {
-      const Botan::BigInt& cofactor = m_params.domain().get_cofactor();
-      if(cofactor > 1 && Botan::gcd(cofactor, m_params.domain().get_order()) != 1)
+      const BigInt& cofactor = m_params.domain().get_cofactor();
+      if(cofactor > 1 && gcd(cofactor, m_params.domain().get_order()) != 1)
          {
          throw Invalid_Argument("ECIES: gcd of cofactor and order must be 1 if check_mode is 0");
          }

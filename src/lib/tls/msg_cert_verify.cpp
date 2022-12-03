@@ -115,7 +115,7 @@ std::vector<uint8_t> message(Connection_Side side, const Transcript_Hash& hash)
    std::vector<uint8_t> msg(64, 0x20);
    msg.reserve(64 + 33 + 1 + hash.size());
 
-   const std::string context_string = (side == Botan::TLS::Connection_Side::SERVER)
+   const std::string context_string = (side == TLS::Connection_Side::SERVER)
                                       ? "TLS 1.3, server CertificateVerify"
                                       : "TLS 1.3, client CertificateVerify";
 

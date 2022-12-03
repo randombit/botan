@@ -197,7 +197,7 @@ class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryp
          }
 
    private:
-      Botan::PK_Decryptor_EME m_raw_decryptor;
+      PK_Decryptor_EME m_raw_decryptor;
    };
 
 // note: multiple-part encryption operations (with C_EncryptUpdate/C_EncryptFinal)

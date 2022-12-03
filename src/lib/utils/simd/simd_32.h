@@ -163,7 +163,7 @@ class SIMD_4x32 final
          return SIMD_4x32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
          uint32_t R[4];
-         Botan::load_le(R, static_cast<const uint8_t*>(in), 4);
+         load_le(R, static_cast<const uint8_t*>(in), 4);
          return SIMD_4x32(R);
 #elif defined(BOTAN_SIMD_USE_NEON)
          SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
@@ -181,7 +181,7 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
          uint32_t R[4];
-         Botan::load_be(R, static_cast<const uint8_t*>(in), 4);
+         load_be(R, static_cast<const uint8_t*>(in), 4);
          return SIMD_4x32(R);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
@@ -216,7 +216,7 @@ class SIMD_4x32 final
             uint32_t R[4];
             } vec;
          vec.V = raw();
-         Botan::store_le(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
+         store_le(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
          if(CPUID::is_little_endian())
@@ -246,7 +246,7 @@ class SIMD_4x32 final
             uint32_t R[4];
             } vec;
          vec.V = m_simd;
-         Botan::store_be(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
+         store_be(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
          if(CPUID::is_little_endian())

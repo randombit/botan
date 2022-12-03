@@ -309,7 +309,7 @@ void Server_Impl_12::initiate_handshake(Handshake_State& state,
 
 namespace {
 
-Protocol_Version select_version(const Botan::TLS::Policy& policy,
+Protocol_Version select_version(const TLS::Policy& policy,
                                 Protocol_Version client_offer,
                                 Protocol_Version active_version,
                                 const std::vector<Protocol_Version>& supported_versions)

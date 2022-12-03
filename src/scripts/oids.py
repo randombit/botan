@@ -129,12 +129,15 @@ def format_dn_ub_map(dn_ub, oid2str):
     for k in sorted(dn_ub.keys()):
         v = dn_ub[k]
 
-        s += '   { Botan::OID({%s}), %s }, // %s\n' % (k.replace('.',','),v,oid2str[k])
+        expr = "   { OID({%s}), %s }, " % (k.replace('.',','), v)
+        s += expr
+        s += ' '*(32 - len(expr))
+        s += ' // %s\n' % (oid2str[k])
 
     # delete last ',' and \n
     idx = s.rfind(',')
     if idx != -1:
-        s = s[:idx] + s[idx+1:-1]
+        s = s[:idx] + ' ' + s[idx+1:-1]
 
     return s
 
@@ -151,9 +154,11 @@ def format_dn_ub_as_map(dn_ub, oid2str):
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/x509_dn.h>
-#include <botan/asn1_oid.h>
+#include <botan/pkix_types.h>
+#include <botan/asn1_obj.h>
 #include <map>
+
+namespace Botan {
 
 namespace {
 
@@ -163,13 +168,12 @@ namespace {
  * Maps OID string representations instead of human readable strings in order
  * to avoid an additional lookup.
  */
-static const std::map<Botan::OID, size_t> DN_UB =
+static const std::map<OID, size_t> DN_UB =
    {
 %s
    };
-}
 
-namespace Botan {
+}
 
 //static
 size_t X509_DN::lookup_ub(const OID& oid)

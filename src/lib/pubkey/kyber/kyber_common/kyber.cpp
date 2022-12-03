@@ -325,7 +325,7 @@ class Polynomial
 
          for(size_t i = 0; i < r.m_coeffs.size() / 8; ++i)
             {
-            uint32_t t = Botan::load_le<uint32_t>(buf.data(), i);
+            uint32_t t = load_le<uint32_t>(buf.data(), i);
             uint32_t d = t & 0x55555555;
             d += (t >> 1) & 0x55555555;
 
@@ -352,11 +352,11 @@ class Polynomial
 
          BOTAN_ASSERT(buf.size() == (3 * r.m_coeffs.size() / 4), "wrong input buffer size for cbd3");
 
-         // Note: Botan::load_le<> does not support loading a 3-byte value
+         // Note: load_le<> does not support loading a 3-byte value
          const auto load_le24 = [](const uint8_t in[], const size_t off)
             {
             const auto off3 = off * 3;
-            return Botan::make_uint32(0, in[off3 + 2], in[off3 + 1], in[off3]);
+            return make_uint32(0, in[off3 + 2], in[off3 + 1], in[off3]);
             };
 
          for(size_t i = 0; i < r.m_coeffs.size() / 4; ++i)
@@ -433,7 +433,7 @@ class Polynomial
          return r;
          }
 
-      template <typename T = Botan::secure_vector<uint8_t>> T to_message()
+      template <typename T = secure_vector<uint8_t>> T to_message()
          {
          T result(m_coeffs.size() / 8);
 
@@ -828,7 +828,7 @@ class Ciphertext
          {
          }
 
-      static Ciphertext from_bytes(Botan::secure_vector<uint8_t> buffer, const KyberConstants& mode)
+      static Ciphertext from_bytes(secure_vector<uint8_t> buffer, const KyberConstants& mode)
          {
          const auto expected_length = polynomial_vector_compressed_bytes(mode) + polynomial_compressed_bytes(mode);
 
@@ -837,13 +837,13 @@ class Ciphertext
             throw Invalid_Argument("unexpected length of ciphertext buffer");
             }
 
-         Botan::secure_vector<uint8_t> pv(buffer.begin(), buffer.begin() + polynomial_vector_compressed_bytes(mode));
-         Botan::secure_vector<uint8_t> p(buffer.begin() + polynomial_vector_compressed_bytes(mode), buffer.end());
+         secure_vector<uint8_t> pv(buffer.begin(), buffer.begin() + polynomial_vector_compressed_bytes(mode));
+         secure_vector<uint8_t> p(buffer.begin() + polynomial_vector_compressed_bytes(mode), buffer.end());
 
          return Ciphertext(decompress_polynomial_vector(pv, mode), decompress_polynomial(p, mode), mode);
          }
 
-      Botan::secure_vector<uint8_t> to_bytes()
+      secure_vector<uint8_t> to_bytes()
          {
          auto ct = compress(b, m_mode);
          const auto p = compress(v, m_mode);
@@ -865,9 +865,9 @@ class Ciphertext
          return (k == 2 || k == 3) ? 128 : 160;
          }
 
-      static Botan::secure_vector<uint8_t> compress(PolynomialVector& pv, const KyberConstants& mode)
+      static secure_vector<uint8_t> compress(PolynomialVector& pv, const KyberConstants& mode)
          {
-         Botan::secure_vector<uint8_t> r(polynomial_vector_compressed_bytes(mode));
+         secure_vector<uint8_t> r(polynomial_vector_compressed_bytes(mode));
 
          pv.csubq();
 
@@ -927,9 +927,9 @@ class Ciphertext
          return r;
          }
 
-      static Botan::secure_vector<uint8_t> compress(Polynomial& p, const KyberConstants& mode)
+      static secure_vector<uint8_t> compress(Polynomial& p, const KyberConstants& mode)
          {
-         Botan::secure_vector<uint8_t> r(polynomial_compressed_bytes(mode));
+         secure_vector<uint8_t> r(polynomial_compressed_bytes(mode));
 
          p.csubq();
 
@@ -973,7 +973,7 @@ class Ciphertext
          return r;
          }
 
-      static PolynomialVector decompress_polynomial_vector(const Botan::secure_vector<uint8_t>& buffer,
+      static PolynomialVector decompress_polynomial_vector(const secure_vector<uint8_t>& buffer,
             const KyberConstants& mode)
          {
          BOTAN_ASSERT(buffer.size() == polynomial_vector_compressed_bytes(mode),
@@ -1028,7 +1028,7 @@ class Ciphertext
          return r;
          }
 
-      static Polynomial decompress_polynomial(const Botan::secure_vector<uint8_t>& buffer, const KyberConstants& mode)
+      static Polynomial decompress_polynomial(const secure_vector<uint8_t>& buffer, const KyberConstants& mode)
          {
          BOTAN_ASSERT(buffer.size() == polynomial_compressed_bytes(mode), "unexpected length of compressed polynomial");
 
@@ -1147,8 +1147,8 @@ class Kyber_KEM_Cryptor
          {
          }
 
-      secure_vector<uint8_t> indcpa_enc(const Botan::secure_vector<uint8_t>& m,
-                                        const Botan::secure_vector<uint8_t>& coins,
+      secure_vector<uint8_t> indcpa_enc(const secure_vector<uint8_t>& m,
+                                        const secure_vector<uint8_t>& coins,
                                         const std::shared_ptr<Kyber_PublicKeyInternal> pk)
          {
          auto sp = PolynomialVector::getnoise_eta1(coins, 0, m_mode);
@@ -1272,7 +1272,7 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
    private:
       secure_vector<uint8_t> indcpa_dec(const uint8_t* c, size_t c_len)
          {
-         auto ct = Ciphertext::from_bytes(Botan::secure_vector<uint8_t>(c, c + c_len), m_mode);
+         auto ct = Ciphertext::from_bytes(secure_vector<uint8_t>(c, c + c_len), m_mode);
 
          ct.b.ntt();
          auto mp = PolynomialVector::pointwise_acc_montgomery(m_key.m_private->polynomials(), ct.b);
@@ -1320,7 +1320,7 @@ void Kyber_PublicKey::initialize_from_encoding(std::vector<uint8_t> pub_key, Kyb
       case KyberKeyEncoding::Raw:
          if(pub_key.size() != mode.public_key_byte_length())
             {
-            throw Botan::Invalid_Argument("kyber public key does not have the correct byte count");
+            throw Invalid_Argument("kyber public key does not have the correct byte count");
             }
          poly_vec = std::vector<uint8_t>(pub_key.begin(), pub_key.end() - KyberConstants::kSeedLength);
          seed = std::vector<uint8_t>(pub_key.end() - KyberConstants::kSeedLength, pub_key.end());
@@ -1329,12 +1329,12 @@ void Kyber_PublicKey::initialize_from_encoding(std::vector<uint8_t> pub_key, Kyb
 
    if(poly_vec.size() != mode.polynomial_vector_byte_length())
       {
-      throw Botan::Invalid_Argument("kyber public key t-param does not have the correct byte count");
+      throw Invalid_Argument("kyber public key t-param does not have the correct byte count");
       }
 
    if(seed.size() != KyberConstants::kSeedLength)
       {
-      throw Botan::Invalid_Argument("kyber public key rho-param does not have the correct byte count");
+      throw Invalid_Argument("kyber public key rho-param does not have the correct byte count");
       }
 
    m_public = std::make_shared<Kyber_PublicKeyInternal>(std::move(mode), std::move(poly_vec), std::move(seed));
@@ -1361,7 +1361,7 @@ std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const
          return public_key_bits_raw();
       }
 
-   Botan::unreachable();
+   unreachable();
    }
 
 std::vector<uint8_t> Kyber_PublicKey::public_key_bits_raw() const
@@ -1444,7 +1444,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(secure_vector<uint8_t> sk, KyberMode m, Kyber
          }
       catch(const BER_Decoding_Error&)
          {
-         throw Botan::Invalid_Argument("reading private key without an embedded public key is not supported");
+         throw Invalid_Argument("reading private key without an embedded public key is not supported");
          }
 
       // skipping the public key hash
@@ -1452,12 +1452,12 @@ Kyber_PrivateKey::Kyber_PrivateKey(secure_vector<uint8_t> sk, KyberMode m, Kyber
 
       if(skpv.size() != mode.polynomial_vector_byte_length())
          {
-         throw Botan::Invalid_Argument("kyber private key sample-param does not have the correct byte count");
+         throw Invalid_Argument("kyber private key sample-param does not have the correct byte count");
          }
 
       if(z.size() != KyberConstants::kZLength)
          {
-         throw Botan::Invalid_Argument("kyber private key z-param does not have the correct byte count");
+         throw Invalid_Argument("kyber private key z-param does not have the correct byte count");
          }
 
       m_public = std::make_shared<Kyber_PublicKeyInternal>(m, std::move(pkpv), std::move(seed));
@@ -1468,7 +1468,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(secure_vector<uint8_t> sk, KyberMode m, Kyber
       {
       if(mode.private_key_byte_length() != sk.size())
          {
-         throw Botan::Invalid_Argument("kyber private key does not have the correct byte count");
+         throw Invalid_Argument("kyber private key does not have the correct byte count");
          }
 
       const auto off_pub_key = mode.polynomial_vector_byte_length();
@@ -1504,7 +1504,7 @@ secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const
          return private_key_bits_raw();
       }
 
-   Botan::unreachable();
+   unreachable();
    }
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits_raw() const

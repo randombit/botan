@@ -471,7 +471,7 @@ secure_vector<uint8_t> Key_Share::exchange(const Key_Share& peer_keyshare,
          },
       [](const auto&, const auto&) -> secure_vector<uint8_t>
          {
-         throw Botan::Invalid_Argument("can only exchange with ServerHello and ClientHello Key_Share");
+         throw Invalid_Argument("can only exchange with ServerHello and ClientHello Key_Share");
          }
       }, m_impl->key_share, peer_keyshare.m_impl->key_share);
    }
@@ -496,7 +496,7 @@ void Key_Share::retry_offer(const Key_Share& retry_request_keyshare,
          },
       [](const auto&, const auto&)
          {
-         throw Botan::Invalid_Argument("can only retry with HelloRetryRequest on a ClientHello Key_Share");
+         throw Invalid_Argument("can only retry with HelloRetryRequest on a ClientHello Key_Share");
          }
       }, m_impl->key_share, retry_request_keyshare.m_impl->key_share);
    }

@@ -150,7 +150,7 @@ PK_KEM_Encryptor::~PK_KEM_Encryptor() = default;
 void PK_KEM_Encryptor::encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                                secure_vector<uint8_t>& out_shared_key,
                                size_t desired_shared_key_len,
-                               Botan::RandomNumberGenerator& rng,
+                               RandomNumberGenerator& rng,
                                const uint8_t salt[],
                                size_t salt_len)
    {
