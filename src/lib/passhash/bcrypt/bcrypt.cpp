@@ -81,7 +81,7 @@ std::string bcrypt_base64_encode(const uint8_t input[], size_t length)
       b64 = b64.substr(0, b64.size() - 1);
 
    for(size_t i = 0; i != b64.size(); ++i)
-      b64[i] = static_cast<char>(base64_to_bcrypt_encoding(static_cast<uint8_t>(b64[i])));;
+      b64[i] = static_cast<char>(base64_to_bcrypt_encoding(static_cast<uint8_t>(b64[i])));
 
    return b64;
    }

@@ -132,7 +132,7 @@ class Roughtime final : public Test
          {
          Test::Result result("roughtime nonce");
 
-         auto rand64 = Botan::unlock(Test::rng().random_vec(64));;
+         auto rand64 = Botan::unlock(Test::rng().random_vec(64));
          Botan::Roughtime::Nonce nonce_v(rand64);
          result.confirm("nonce from vector", nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>
                         (rand64.data()));
@@ -154,7 +154,7 @@ class Roughtime final : public Test
          Botan::Roughtime::Chain c1;
          result.confirm("default constructed is empty", c1.links().empty() && c1.responses().empty());
 
-         auto rand64 = Botan::unlock(Test::rng().random_vec(64));;
+         auto rand64 = Botan::unlock(Test::rng().random_vec(64));
          Botan::Roughtime::Nonce nonce_v(rand64);
          result.confirm("empty chain nonce is blind",
                         c1.next_nonce(nonce_v).get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));

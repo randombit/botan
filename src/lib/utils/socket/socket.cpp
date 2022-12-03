@@ -341,7 +341,7 @@ class BSD_Socket final : public OS::Socket
          {
          struct timeval tv;
          tv.tv_sec = static_cast<decltype(timeval::tv_sec)>(m_timeout.count() / 1000000);
-         tv.tv_usec = static_cast<decltype(timeval::tv_usec)>(m_timeout.count() % 1000000);;
+         tv.tv_usec = static_cast<decltype(timeval::tv_usec)>(m_timeout.count() % 1000000);
          return tv;
          }
 
