@@ -92,7 +92,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
       }
 
    return std::make_unique<Unknown_Extension>(static_cast<Handshake_Extension_Type>(code),
-                                              reader, size);;
+                                              reader, size);
    }
 
 }

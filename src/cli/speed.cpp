@@ -2171,7 +2171,7 @@ class Speed final : public Command
             std::unique_ptr<Botan::Private_Key> key = keygen_timer->run([&]
                {
                return std::make_unique<Botan::McEliece_PrivateKey>(rng(), n, t);
-               });;
+               });
 
             record_result(keygen_timer);
             bench_pk_kem(*key, nm, provider, "KDF2(SHA-256)", msec);

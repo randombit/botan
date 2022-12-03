@@ -61,7 +61,7 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
 
       __m128i MSG;
 
-      __m128i TMSG0 = _mm_shuffle_epi8(_mm_loadu_si128(input_mm), MASK);;
+      __m128i TMSG0 = _mm_shuffle_epi8(_mm_loadu_si128(input_mm), MASK);
       __m128i TMSG1 = _mm_shuffle_epi8(_mm_loadu_si128(input_mm + 1), MASK);
       __m128i TMSG2 = _mm_shuffle_epi8(_mm_loadu_si128(input_mm + 2), MASK);
       __m128i TMSG3 = _mm_shuffle_epi8(_mm_loadu_si128(input_mm + 3), MASK);

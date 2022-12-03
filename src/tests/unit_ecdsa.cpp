@@ -222,7 +222,7 @@ Test::Result test_ecdsa_create_save_load()
       }
 
    Botan::DataSource_Memory pem_src(ecc_private_key_pem);
-   std::unique_ptr<Botan::Private_Key> loaded_key = Botan::PKCS8::load_key(pem_src);;
+   std::unique_ptr<Botan::Private_Key> loaded_key = Botan::PKCS8::load_key(pem_src);
    Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
    result.confirm("the loaded key could be converted into an ECDSA_PrivateKey", loaded_ec_key != nullptr);
 

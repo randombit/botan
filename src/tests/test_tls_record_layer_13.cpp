@@ -418,7 +418,7 @@ std::vector<Test::Result> write_records()
          }),
       Botan_Tests::CHECK("prepare a dummy CCS", [&](auto& result)
          {
-         auto record = record_layer_client(true).prepare_records(Botan::TLS::Record_Type::CHANGE_CIPHER_SPEC, {0x01});;
+         auto record = record_layer_client(true).prepare_records(Botan::TLS::Record_Type::CHANGE_CIPHER_SPEC, {0x01});
          result.require("record was created", record.size() == Botan::TLS::TLS_HEADER_SIZE + 1);
 
          result.test_eq("CCS record is well-formed", record, Botan::hex_decode("140303000101"));
@@ -724,7 +724,7 @@ std::vector<Test::Result> write_encrypted_records()
 
       Botan_Tests::CHECK("write a dummy CCS (that must not be encrypted)", [&](auto& result)
          {
-         auto record = record_layer_client(true).prepare_records(Botan::TLS::Record_Type::CHANGE_CIPHER_SPEC, {0x01}, cs.get());;
+         auto record = record_layer_client(true).prepare_records(Botan::TLS::Record_Type::CHANGE_CIPHER_SPEC, {0x01}, cs.get());
          result.require("record was created and not encrypted", record.size() == Botan::TLS::TLS_HEADER_SIZE + 1);
 
          result.test_eq("CCS record is well-formed", record, Botan::hex_decode("140303000101"));
