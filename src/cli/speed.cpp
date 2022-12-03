@@ -111,6 +111,10 @@
    #include <botan/mceliece.h>
 #endif
 
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+   #include <botan/kyber.h>
+#endif
+
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/ecdsa.h>
 #endif
@@ -407,6 +411,7 @@ class Speed final : public Command
             "Curve25519",
             "NEWHOPE",
             "McEliece",
+            "Kyber",
             };
          }
 
@@ -631,6 +636,12 @@ class Speed final : public Command
             else if(algo == "McEliece")
                {
                bench_mceliece(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+            else if(algo == "Kyber")
+               {
+               bench_kyber(provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_XMSS_RFC8391)
@@ -2164,6 +2175,47 @@ class Speed final : public Command
 
             record_result(keygen_timer);
             bench_pk_kem(*key, nm, provider, "KDF2(SHA-256)", msec);
+            }
+         }
+#endif
+
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+      void bench_kyber(const std::string& provider,
+                       std::chrono::milliseconds msec)
+         {
+         const Botan::KyberMode::Mode all_modes[] = {
+            Botan::KyberMode::Kyber512,
+            Botan::KyberMode::Kyber512_90s,
+            Botan::KyberMode::Kyber768,
+            Botan::KyberMode::Kyber768_90s,
+            Botan::KyberMode::Kyber1024,
+            Botan::KyberMode::Kyber1024_90s,
+         };
+
+         for(auto modet: all_modes)
+            {
+            Botan::KyberMode mode(modet);
+
+#if !defined(BOTAN_HAS_KYBER)
+            if(mode.is_modern())
+               continue;
+#endif
+
+#if !defined(BOTAN_HAS_KYBER_90S)
+            if(mode.is_90s())
+               continue;
+#endif
+
+            auto keygen_timer = make_timer(mode.to_string(), provider, "keygen");
+
+            auto key = keygen_timer->run([&]
+               {
+               return Botan::Kyber_PrivateKey(rng(), mode);
+               });
+
+            record_result(keygen_timer);
+
+            bench_pk_kem(key, mode.to_string(), provider, "Raw", msec);
             }
          }
 #endif
