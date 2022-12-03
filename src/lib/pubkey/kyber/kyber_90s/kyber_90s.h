@@ -42,7 +42,7 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
          {
          std::array<uint8_t, 12> iv = {std::get<0>(matrix_position), std::get<1>(matrix_position), 0};
 
-         auto cipher = Botan::StreamCipher::create_or_throw("CTR-BE(AES-256)");
+         auto cipher = StreamCipher::create_or_throw("CTR-BE(AES-256)");
          cipher->set_key(seed);
          cipher->set_iv(iv.data(), iv.size());
 
@@ -52,7 +52,7 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
       secure_vector<uint8_t> PRF(const secure_vector<uint8_t>& seed, const uint8_t nonce,
                                  const size_t outlen) const override
          {
-         auto cipher = Botan::StreamCipher::create_or_throw("CTR-BE(AES-256)");
+         auto cipher = StreamCipher::create_or_throw("CTR-BE(AES-256)");
          cipher->set_key(seed);
 
          const std::array<uint8_t, 12> iv = {nonce, 0};

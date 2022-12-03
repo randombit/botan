@@ -33,7 +33,7 @@ class BOTAN_PUBLIC_API(2,0) SQL_Database
                m_rc(rc)
                {}
 
-            ErrorType error_type() const noexcept override { return Botan::ErrorType::DatabaseError; }
+            ErrorType error_type() const noexcept override { return ErrorType::DatabaseError; }
 
             int error_code() const noexcept override { return m_rc; }
          private:

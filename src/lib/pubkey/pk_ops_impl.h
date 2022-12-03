@@ -185,14 +185,14 @@ class KEM_Encryption_with_KDF : public KEM_Encryption
       void kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                        secure_vector<uint8_t>& out_shared_key,
                        size_t desired_shared_key_len,
-                       Botan::RandomNumberGenerator& rng,
+                       RandomNumberGenerator& rng,
                        const uint8_t salt[],
                        size_t salt_len) override;
 
    protected:
       virtual void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                                    secure_vector<uint8_t>& raw_shared_key,
-                                   Botan::RandomNumberGenerator& rng) = 0;
+                                   RandomNumberGenerator& rng) = 0;
 
       explicit KEM_Encryption_with_KDF(const std::string& kdf);
       ~KEM_Encryption_with_KDF() = default;

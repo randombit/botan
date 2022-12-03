@@ -336,15 +336,15 @@ create_private_key(const std::string& alg_name,
    if(alg_name == "McEliece")
       {
       std::vector<std::string> mce_param =
-         Botan::split_on(params.empty() ? "2960,57" : params, ',');
+         split_on(params.empty() ? "2960,57" : params, ',');
 
       if(mce_param.size() != 2)
          throw Invalid_Argument("create_private_key bad McEliece parameters " + params);
 
-      size_t mce_n = Botan::to_u32bit(mce_param[0]);
-      size_t mce_t = Botan::to_u32bit(mce_param[1]);
+      size_t mce_n = to_u32bit(mce_param[0]);
+      size_t mce_t = to_u32bit(mce_param[1]);
 
-      return std::make_unique<Botan::McEliece_PrivateKey>(rng, mce_n, mce_t);
+      return std::make_unique<McEliece_PrivateKey>(rng, mce_n, mce_t);
       }
 #endif
 

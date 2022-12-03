@@ -136,7 +136,7 @@ bool PK_Ops::Verification_with_EMSA::is_valid_signature(const uint8_t sig[], siz
 void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                                                   secure_vector<uint8_t>& out_shared_key,
                                                   size_t desired_shared_key_len,
-                                                  Botan::RandomNumberGenerator& rng,
+                                                  RandomNumberGenerator& rng,
                                                   const uint8_t salt[],
                                                   size_t salt_len)
    {

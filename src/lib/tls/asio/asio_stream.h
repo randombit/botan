@@ -42,7 +42,7 @@ namespace TLS {
  * @brief boost::asio compatible SSL/TLS stream
  *
  * @tparam StreamLayer type of the next layer, usually a network socket
- * @tparam ChannelT type of the native_handle, defaults to Botan::TLS::Channel, only needed for testing purposes
+ * @tparam ChannelT type of the native_handle, defaults to TLS::Channel, only needed for testing purposes
  */
 template <class StreamLayer, class ChannelT = Channel>
 class Stream
@@ -177,7 +177,7 @@ class Stream
       void set_verify_depth(int depth, boost::system::error_code& ec)
          {
          BOTAN_UNUSED(depth);
-         ec = Botan::ErrorType::NotImplemented;
+         ec = ErrorType::NotImplemented;
          }
 
       //! @throws Not_Implemented
@@ -197,7 +197,7 @@ class Stream
       void set_verify_mode(verify_mode v, boost::system::error_code& ec)
          {
          BOTAN_UNUSED(v);
-         ec = Botan::ErrorType::NotImplemented;
+         ec = ErrorType::NotImplemented;
          }
 
       //! @}
@@ -262,7 +262,7 @@ class Stream
       auto async_handshake(Botan::TLS::Connection_Side side, CompletionToken&& completion_token)
          {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
-                   [this](auto&& completion_handler, Botan::TLS::Connection_Side connection_side)
+                   [this](auto&& completion_handler, TLS::Connection_Side connection_side)
             {
             using completion_handler_t = std::decay_t<decltype(completion_handler)>;
 
@@ -393,7 +393,7 @@ class Stream
 
             using write_handler_t = Wrapper<completion_handler_t, typename Stream::executor_type>;
 
-            Botan::TLS::detail::AsyncWriteOperation<write_handler_t, Stream> op
+            TLS::detail::AsyncWriteOperation<write_handler_t, Stream> op
                {
                write_handler_t{std::forward<completion_handler_t>(completion_handler), get_executor()},
                *this,
@@ -585,12 +585,12 @@ class Stream
       template <class H, class S, class A> friend class detail::AsyncHandshakeOperation;
 
       /**
-       * @brief Helper class that implements Botan::TLS::Callbacks
+       * @brief Helper class that implements TLS::Callbacks
        *
-       * This class is provided to the stream's native_handle (Botan::TLS::Channel) and implements the callback
+       * This class is provided to the stream's native_handle (TLS::Channel) and implements the callback
        * functions triggered by the native_handle.
        */
-      class StreamCore : public Botan::TLS::Callbacks
+      class StreamCore : public TLS::Callbacks
          {
          public:
             StreamCore(Botan::TLS::Context &context)
@@ -613,9 +613,9 @@ class Stream
                );
                }
 
-            void tls_alert(Botan::TLS::Alert alert) override
+            void tls_alert(TLS::Alert alert) override
                {
-               if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
+               if(alert.type() == TLS::Alert::CLOSE_NOTIFY)
                   {
                   shutdown_received = true;
                   // Channel::process_alert will automatically write the corresponding close_notify response to the
@@ -628,7 +628,7 @@ class Stream
                return std::chrono::milliseconds(1000);
                }
 
-            bool tls_session_established(const Botan::TLS::Session&) override
+            bool tls_session_established(const TLS::Session&) override
                {
                // TODO: it should be possible to configure this in the using application (via callback?)
                return true;
@@ -657,7 +657,7 @@ class Stream
             boost::beast::flat_buffer send_buffer;
 
          private:
-            Botan::TLS::Context& m_context;
+            TLS::Context& m_context;
          };
 
       const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
@@ -688,8 +688,8 @@ class Stream
       /**
        * @brief Create the native handle.
        *
-       * Depending on the desired connection side, this function will create a Botan::TLS::Client or a
-       * Botan::TLS::Server.
+       * Depending on the desired connection side, this function will create a TLS::Client or a
+       * TLS::Server.
        *
        * @param side The desired connection side (client or server)
        * @param ec Set to indicate what error occurred, if any.
@@ -805,13 +805,13 @@ class Stream
             {
             ec = e.type();
             }
-         catch(const Botan::Exception& e)
+         catch(const Exception& e)
             {
             ec = e.error_type();
             }
          catch(const std::exception&)
             {
-            ec = Botan::ErrorType::Unknown;
+            ec = ErrorType::Unknown;
             }
          }
 

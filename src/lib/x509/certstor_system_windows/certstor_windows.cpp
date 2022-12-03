@@ -112,7 +112,7 @@ HCERTSTORE open_cert_store(const char* cert_store_name)
    auto store = CertOpenSystemStoreA(WINCRYPT_UNUSED_PARAM, cert_store_name);
    if(!store)
       {
-      throw Botan::Internal_Error(
+      throw Internal_Error(
          "failed to open windows certificate store '" + std::string(cert_store_name) +
          "' (Error Code: " +
          std::to_string(::GetLastError()) + ")");
@@ -158,7 +158,7 @@ bool already_contains_certificate(const std::vector<X509_Certificate>& certs, X5
       });
    }
 
-std::vector<X509_Certificate> find_cert_by_dn_and_key_id(const Botan::X509_DN& subject_dn,
+std::vector<X509_Certificate> find_cert_by_dn_and_key_id(const X509_DN& subject_dn,
                                        const std::vector<uint8_t>& key_id,
                                        bool return_on_first_found)
    {
@@ -217,7 +217,7 @@ std::vector<X509_DN> Certificate_Store_Windows::all_subjects() const
    }
 
 std::optional<X509_Certificate>
-Certificate_Store_Windows::find_cert(const Botan::X509_DN& subject_dn,
+Certificate_Store_Windows::find_cert(const X509_DN& subject_dn,
                                      const std::vector<uint8_t>& key_id) const
    {
    const auto certs = find_cert_by_dn_and_key_id(subject_dn, key_id, true);

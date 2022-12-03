@@ -96,7 +96,7 @@ class BOTAN_PUBLIC_API(2,0) Exception : public std::exception
       /**
       * Return the "type" of error which occurred.
       */
-      virtual ErrorType error_type() const noexcept { return Botan::ErrorType::Unknown; }
+      virtual ErrorType error_type() const noexcept { return ErrorType::Unknown; }
 
       /**
       * Return an error code associated with this exception, or otherwise 0.

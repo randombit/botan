@@ -14,7 +14,7 @@ namespace Botan::TLS
 
 Handshake_Type Certificate_Request_13::type() const
    {
-   return Botan::TLS::Handshake_Type::CERTIFICATE_REQUEST;
+   return TLS::Handshake_Type::CERTIFICATE_REQUEST;
    }
 
 Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, const Connection_Side side)
@@ -86,7 +86,7 @@ const std::vector<Signature_Scheme>& Certificate_Request_13::signature_schemes()
 
 std::vector<uint8_t> Certificate_Request_13::serialize() const
    {
-   throw Botan::Not_Implemented("Certificate_Request_13::serialize");
+   throw Not_Implemented("Certificate_Request_13::serialize");
    }
 
 }  // namespace Botan::TLS

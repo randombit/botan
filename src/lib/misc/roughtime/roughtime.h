@@ -142,19 +142,19 @@ struct BOTAN_PUBLIC_API(2, 13) Server_Information final
    {
 public:
    Server_Information(const std::string& name,
-                      const Botan::Ed25519_PublicKey& public_key,
+                      const Ed25519_PublicKey& public_key,
                       const std::vector<std::string>& addresses)
       : m_name { name }
       , m_public_key { public_key }
       , m_addresses { addresses }
       {}
    const std::string& name() const {return m_name;}
-   const Botan::Ed25519_PublicKey& public_key() const {return m_public_key;}
+   const Ed25519_PublicKey& public_key() const {return m_public_key;}
    const std::vector<std::string>& addresses() const {return m_addresses;}
 
 private:
    std::string m_name;
-   Botan::Ed25519_PublicKey m_public_key;
+   Ed25519_PublicKey m_public_key;
    std::vector<std::string> m_addresses;
    };
 

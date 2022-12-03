@@ -233,11 +233,11 @@ AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
       {
       // case ECDSA_SHA1:  not defined
       case ECDSA_SHA256:
-         return { "ECDSA", Botan::EC_Group("secp256r1").DER_encode(Botan::EC_Group_Encoding::NamedCurve) };
+         return { "ECDSA", EC_Group("secp256r1").DER_encode(EC_Group_Encoding::NamedCurve) };
       case ECDSA_SHA384:
-         return { "ECDSA", Botan::EC_Group("secp384r1").DER_encode(Botan::EC_Group_Encoding::NamedCurve) };
+         return { "ECDSA", EC_Group("secp384r1").DER_encode(EC_Group_Encoding::NamedCurve) };
       case ECDSA_SHA512:
-         return { "ECDSA", Botan::EC_Group("secp521r1").DER_encode(Botan::EC_Group_Encoding::NamedCurve) };
+         return { "ECDSA", EC_Group("secp521r1").DER_encode(EC_Group_Encoding::NamedCurve) };
 
       case EDDSA_25519:
          return { "Ed25519", AlgorithmIdentifier::USE_EMPTY_PARAM };

@@ -342,7 +342,7 @@ class Certificate_Store_MacOS_Impl
          }
 
       /**
-       * Convert a CFTypeRef object into a Botan::X509_Certificate
+       * Convert a CFTypeRef object into a X509_Certificate
        */
       X509_Certificate readCertificate(CFTypeRef object) const
          {
@@ -376,7 +376,7 @@ class Certificate_Store_MacOS_Impl
 //
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //
-//   Implementation of Botan::Certificate_Store interface ...
+//   Implementation of Certificate_Store interface ...
 //
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //
@@ -391,7 +391,7 @@ std::vector<X509_DN> Certificate_Store_MacOS::all_subjects() const
    // Note: This fetches and parses all certificates in the trust store.
    //       Apple's API provides SecCertificateCopyNormalizedSubjectSequence
    //       which facilitates reading the certificate DN without parsing the
-   //       entire certificate via Botan::X509_Certificate. However, this
+   //       entire certificate via X509_Certificate. However, this
    //       function applies the same DN "normalization" as stated above.
    const auto certificates = m_impl->findAll({});
 

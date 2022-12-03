@@ -157,7 +157,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_System_Params final : public ECIES_KA_Params
       std::unique_ptr<MessageAuthenticationCode> create_mac() const;
 
       /// creates an instance of the data encryption method
-      std::unique_ptr<Cipher_Mode> create_cipher(Botan::Cipher_Dir direction) const;
+      std::unique_ptr<Cipher_Mode> create_cipher(Cipher_Dir direction) const;
 
       /// returns the length of the key used by the data encryption method
       inline size_t dem_keylen() const
@@ -234,7 +234,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_Encryptor final : public PK_Encryptor
       ECIES_Encryptor(RandomNumberGenerator& rng, const ECIES_System_Params& ecies_params);
 
       /// Set the public key of the other party
-      inline void set_other_key(const Botan::PointGFp& public_point)
+      inline void set_other_key(const PointGFp& public_point)
          {
          m_other_point = public_point;
          }

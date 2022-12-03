@@ -240,7 +240,7 @@ Nonce nonce_from_blind(const std::vector<uint8_t>& previous_response,
    {
    std::array<uint8_t, 64> ret;
    const auto blind_arr = blind.get_nonce();
-   std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create_or_throw("SHA-512"));
+   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw("SHA-512"));
    hash->update(previous_response);
    hash->update(hash->final());
    hash->update(blind_arr.data(), blind_arr.size());
@@ -271,7 +271,7 @@ Chain::Chain(const std::string& str)
          {
          throw Decoding_Error(ERROR_MESSAGE);
          }
-      const auto serverPublicKey = Botan::Ed25519_PublicKey(Botan::base64_decode(s.substr(start, end-start)));
+      const auto serverPublicKey = Ed25519_PublicKey(base64_decode(s.substr(start, end-start)));
 
       start = end + 1;
       end = s.find(' ', start);
@@ -283,8 +283,8 @@ Chain::Chain(const std::string& str)
          {
          throw Decoding_Error("Nonce has invalid length");
          }
-      const auto vec = Botan::base64_decode(s.substr(start, end-start));
-      const auto nonceOrBlind = Nonce(vector_to_array<64>(Botan::base64_decode(s.substr(start, end-start))));
+      const auto vec = base64_decode(s.substr(start, end-start));
+      const auto nonceOrBlind = Nonce(vector_to_array<64>(base64_decode(s.substr(start, end-start))));
 
       start = end + 1;
       end = s.find(' ', start);
@@ -292,7 +292,7 @@ Chain::Chain(const std::string& str)
          {
          throw Decoding_Error(ERROR_MESSAGE);
          }
-      const auto response = Botan::unlock(Botan::base64_decode(s.substr(start)));
+      const auto response = unlock(base64_decode(s.substr(start)));
 
       m_links.push_back({response, serverPublicKey, nonceOrBlind});
       }
@@ -351,11 +351,11 @@ std::string Chain::to_string() const
       {
       s += "ed25519";
       s += ' ';
-      s += Botan::base64_encode(link.public_key().get_public_key());
+      s += base64_encode(link.public_key().get_public_key());
       s += ' ';
-      s += Botan::base64_encode(link.nonce_or_blind().get_nonce().data(), link.nonce_or_blind().get_nonce().size());
+      s += base64_encode(link.nonce_or_blind().get_nonce().data(), link.nonce_or_blind().get_nonce().size());
       s += ' ';
-      s += Botan::base64_encode(link.response());
+      s += base64_encode(link.response());
       s += '\n';
       }
    return s;
@@ -424,7 +424,7 @@ std::vector<Server_Information> servers_from_str(const std::string& str)
          throw Decoding_Error(ERROR_MESSAGE);
          }
       const auto publicKeyBase64 = s.substr(start, end-start);
-      const auto publicKey = Botan::Ed25519_PublicKey(Botan::base64_decode(publicKeyBase64));
+      const auto publicKey = Ed25519_PublicKey(base64_decode(publicKeyBase64));
 
       start = end + 1;
       end = s.find(' ', start);

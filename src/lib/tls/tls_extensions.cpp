@@ -809,7 +809,7 @@ PSK_Key_Exchange_Modes::PSK_Key_Exchange_Modes(TLS_Data_Reader& reader, uint16_t
 
 
 std::vector<uint8_t> Certificate_Authorities::serialize(Connection_Side) const
-   { throw Botan::Not_Implemented("serializing Certificate_Authorities is NYI"); }
+   { throw Not_Implemented("serializing Certificate_Authorities is NYI"); }
 
 Certificate_Authorities::Certificate_Authorities(TLS_Data_Reader& reader, uint16_t extension_size)
    {

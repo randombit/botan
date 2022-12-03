@@ -66,7 +66,7 @@ class Channel_Impl_12 : public Channel_Impl
                                const Policy& policy,
                                bool is_server,
                                bool is_datagram,
-                               size_t io_buf_sz = Botan::TLS::Channel::IO_BUF_DEFAULT_SIZE);
+                               size_t io_buf_sz = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
       explicit Channel_Impl_12(const Channel_Impl_12&) = delete;
 
