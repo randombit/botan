@@ -33,6 +33,9 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-win64" ]; then
         sudo apt-get -qq install wine-development g++-mingw-w64-x86-64
 
+    elif [ "$TARGET" = "cross-arm32" ]; then
+        sudo apt-get -qq install qemu-user g++-arm-linux-gnueabihf
+
     elif [ "$TARGET" = "cross-arm64" ]; then
         sudo apt-get -qq install qemu-user g++-aarch64-linux-gnu
 
