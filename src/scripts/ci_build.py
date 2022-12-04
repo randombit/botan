@@ -42,6 +42,7 @@ def known_targets():
         'cross-mips64',
         'cross-ppc32',
         'cross-ppc64',
+        'cross-riscv64',
         'cross-win64',
         'docs',
         'emscripten',
@@ -279,6 +280,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
                 flags += ['--cpu=ppc64', '--with-endian=little']
                 cc_bin = 'powerpc64le-linux-gnu-g++'
                 test_prefix = ['qemu-ppc64le', '-cpu', 'power10', '-L', '/usr/powerpc64le-linux-gnu/']
+            elif target == 'cross-riscv64':
+                flags += ['--cpu=riscv64']
+                cc_bin = 'riscv64-linux-gnu-g++'
+                test_prefix = ['qemu-riscv64', '-L', '/usr/riscv64-linux-gnu/']
             elif target == 'cross-mips64':
                 flags += ['--cpu=mips64', '--with-endian=big']
                 cc_bin = 'mips64-linux-gnuabi64-g++'
