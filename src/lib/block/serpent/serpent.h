@@ -37,8 +37,8 @@ class Serpent final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
-      void avx2_encrypt_8(const uint8_t in[64], uint8_t out[64]) const;
-      void avx2_decrypt_8(const uint8_t in[64], uint8_t out[64]) const;
+      void avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const;
+      void avx2_decrypt_8(const uint8_t in[128], uint8_t out[128]) const;
 #endif
 
       void key_schedule(const uint8_t key[], size_t length) override;
