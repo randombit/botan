@@ -139,6 +139,10 @@
   #include <botan/zfec.h>
 #endif
 
+#if defined(BOTAN_HAS_PAIRING_BN256)
+  #include <botan/bn256.h>
+#endif
+
 namespace Botan_CLI {
 
 using Botan::Timer;
@@ -690,6 +694,13 @@ class Speed final : public Command
             else if(algo == "poly_dbl")
                {
                bench_poly_dbl(msec);
+               }
+#endif
+
+#if defined(BOTAN_HAS_PAIRING_BN256)
+            else if(algo == "bn256")
+               {
+               bench_bn256(provider, msec);
                }
 #endif
 
@@ -2470,6 +2481,52 @@ class Speed final : public Command
                   }
                }
             }
+         }
+
+#endif
+
+#if defined(BOTAN_HAS_PAIRING_BN256)
+
+      void bench_bn256(const std::string& /*provider*/,
+                       std::chrono::milliseconds msec)
+         {
+         std::unique_ptr<Timer> pairing_timer = make_timer("BN256", "", "pairing");
+         std::unique_ptr<Timer> g1_exp_timer = make_timer("BN256", "", "G1 exp");
+         std::unique_ptr<Timer> g2_exp_timer = make_timer("BN256", "", "G2 exp");
+         std::unique_ptr<Timer> gt_exp_timer = make_timer("BN256", "", "GT exp");
+
+         Botan::BN_256 bn256;
+
+         while(pairing_timer->under(msec))
+            {
+            const Botan::BigInt s1(rng(), 254);
+            const Botan::BigInt s2(rng(), 254);
+            const Botan::BigInt s3(rng(), 254);
+
+            auto x1 = g1_exp_timer->run([&]() { return bn256.g1_generator() * s1; });
+            auto x2 = g1_exp_timer->run([&]() { return bn256.g1_generator() * s2; });
+            auto x3 = g1_exp_timer->run([&]() { return bn256.g1_generator() * s3; });
+
+            auto y1 = g2_exp_timer->run([&]() { return bn256.g2_generator() * s1; });
+            auto y2 = g2_exp_timer->run([&]() { return bn256.g2_generator() * s2; });
+            auto y3 = g2_exp_timer->run([&]() { return bn256.g2_generator() * s3; });
+
+            auto z1 = pairing_timer->run([&]() { return bn256.pairing(x2, y3); });
+            auto z2 = pairing_timer->run([&]() { return bn256.pairing(x1, y3); });
+            auto z3 = pairing_timer->run([&]() { return bn256.pairing(x1, y2); });
+
+            auto k1 = gt_exp_timer->run([&]() { return z1 * s1; });
+            auto k2 = gt_exp_timer->run([&]() { return z2 * s2; });
+            auto k3 = gt_exp_timer->run([&]() { return z3 * s3; });
+
+            if(k1 != k2 || k2 != k3)
+               error_output() << "Pairing computation failed\n";
+            }
+
+         record_result(g1_exp_timer);
+         record_result(g2_exp_timer);
+         record_result(gt_exp_timer);
+         record_result(pairing_timer);
          }
 
 #endif
