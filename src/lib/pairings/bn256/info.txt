@@ -2,6 +2,10 @@
 PAIRING_BN256 -> 20180113
 </defines>
 
+<module_info>
+name -> "BN-256"
+</module_info>
+
 <header:public>
 bn256.h
 </header:public>
