@@ -28,11 +28,11 @@ supported as well.
 Botan 3.x
 ----------------------------------------
 
-Botan 3 is currently planned for release in 2021. Botan 2 will remain
-supported for several years past that, to allow plenty of time for
-applications to switch over.
+Botan 3 is currently in progress, with a release date yet to be decided. Botan 2
+will remain supported for several years past the point that 3.0 is released, to
+allow plenty of time for applications to switch over.
 
-This version will adopt C++17 and use new std types such as string_view,
+This version will adopt C++20 and use new std types such as string_view,
 optional, and any, along with adopting memory span and guarded integer
 types. All deprecated features/APIs of 2.x (which notably includes TLS v1.0/v1.1
 support) will be removed. Beyond explicitly deprecated functionality, there

@@ -2,7 +2,7 @@ macro_name CLANG
 
 binary_name em++
 
-lang_flags "-s DISABLE_EXCEPTION_CATCHING=0 -std=c++17 -D_REENTRANT"
+lang_flags "-s DISABLE_EXCEPTION_CATCHING=0 -std=c++20 -D_REENTRANT"
 lang_binary_linker_flags "-s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s NO_DISABLE_EXCEPTION_CATCHING"
 
 warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wshorten-64-to-32"
