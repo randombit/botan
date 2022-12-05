@@ -203,12 +203,6 @@ bool Ciphersuite::is_usable() const
       return false;
 #endif
       }
-   else if(kex_method() == Kex_Algo::CECPQ1)
-      {
-#if !defined(BOTAN_HAS_CECPQ1)
-      return false;
-#endif
-      }
 
    if(auth_method() == Auth_Method::ECDSA)
       {

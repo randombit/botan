@@ -833,28 +833,6 @@ class TLS_Unit_Tests final : public Test
          test_modern_versions("ARIA/GCM ECDH", results, *client_ses, *server_ses, *creds, "ECDH", "ARIA-128/GCM", "AEAD");
 #endif
 
-#if defined(BOTAN_HAS_CECPQ1)
-
-#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM)
-         test_modern_versions("AES-256/GCM CECPQ1", results, *client_ses, *server_ses, *creds, "CECPQ1", "AES-256/GCM", "AEAD");
-#endif
-
-#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_OCB)
-         test_modern_versions("AES-256/OCB CECPQ1", results, *client_ses, *server_ses, *creds,
-                              "CECPQ1", "AES-256/OCB(12)", "AEAD");
-         test_modern_versions("AES-256/OCB CECPQ1 RSA", results, *client_ses, *server_ses, *creds,
-                              "CECPQ1", "AES-256/OCB(12)", "AEAD",
-                              {{ "signature_methods", "RSA" }});
-#endif
-
-#if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
-         test_modern_versions("ChaCha20Poly1305 CECPQ1", results, *client_ses, *server_ses, *creds,
-                              "CECPQ1", "ChaCha20Poly1305", "AEAD",
-                              { { "signature_methods", "RSA" }});
-#endif
-
-#endif
-
          test_modern_versions("AES-128/GCM point compression", results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "use_ecc_point_compression", "true" } });
          test_modern_versions("AES-256/GCM p521", results, *client_ses, *server_ses, *creds, "ECDH", "AES-256/GCM", "AEAD",

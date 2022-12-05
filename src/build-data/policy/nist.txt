@@ -136,8 +136,6 @@ elgamal
 gost_3410
 mce
 rfc6979
-newhope
-cecpq1
 xmss
 sm2
 

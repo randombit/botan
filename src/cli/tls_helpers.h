@@ -210,7 +210,7 @@ class TLS_All_Policy final : public Botan::TLS::Policy
 
       std::vector<std::string> allowed_key_exchange_methods() const override
          {
-         return { "ECDHE_PSK", "DHE_PSK", "PSK", "CECPQ1", "ECDH", "DH", "RSA" };
+         return { "ECDHE_PSK", "DHE_PSK", "PSK", "ECDH", "DH", "RSA" };
          }
 
       std::vector<std::string> allowed_signature_methods() const override

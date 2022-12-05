@@ -630,7 +630,7 @@ Botan implements the following key agreement methods:
 #. ECDH over x25519
 #. DH over prime fields
 #. McEliece
-#. NewHope
+#. Kyber
 
 Code Example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

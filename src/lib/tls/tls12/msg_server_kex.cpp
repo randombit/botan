@@ -22,10 +22,6 @@
   #include <botan/curve25519.h>
 #endif
 
-#if defined(BOTAN_HAS_CECPQ1)
-  #include <botan/cecpq1.h>
-#endif
-
 namespace Botan::TLS {
 
 /**
@@ -131,15 +127,6 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       append_tls_length_value(m_params, ecdh_public_val, 1);
       }
-#if defined(BOTAN_HAS_CECPQ1)
-   else if(kex_algo == Kex_Algo::CECPQ1)
-      {
-      std::vector<uint8_t> cecpq1_offer(CECPQ1_OFFER_BYTES);
-      m_cecpq1_key.reset(new CECPQ1_key);
-      CECPQ1_offer(cecpq1_offer.data(), m_cecpq1_key.get(), rng);
-      append_tls_length_value(m_params, cecpq1_offer, 2);
-      }
-#endif
    else if(kex_algo != Kex_Algo::PSK)
       {
       throw Internal_Error("Server_Key_Exchange: Unknown kex type " +
@@ -202,11 +189,6 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
       reader.get_byte(); // curve type
       reader.get_uint16_t(); // curve id
       reader.get_range<uint8_t>(1, 1, 255); // public key
-      }
-   else if(kex_algo == Kex_Algo::CECPQ1)
-      {
-      // u16 blob
-      reader.get_range<uint8_t>(2, 1, 65535);
       }
    else if(kex_algo != Kex_Algo::PSK)
       throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " +

@@ -72,7 +72,7 @@ Transport Layer Security (TLS) Protocol
 * Supports authentication using certificates or preshared keys (PSK)
 * Supports record encryption with ChaCha20Poly1305, AES/OCB, AES/GCM, AES/CCM,
   Camellia/GCM as well as legacy CBC ciphersuites.
-* Key exchange using CECPQ1, ECDH, FFDHE, or RSA
+* Key exchange using ECDH, FFDHE, or RSA
 
 Public Key Infrastructure
 ----------------------------------------
@@ -91,7 +91,7 @@ Public Key Cryptography
 * DH and ECDH key agreement
 * Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, GOST 34.10
 * Post-quantum signature scheme XMSS
-* Post-quantum key agreement schemes McEliece and NewHope
+* Post-quantum key agreement schemes McEliece and Kyber
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 

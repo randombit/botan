@@ -2,8 +2,8 @@
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* (tls-parameters.txt sha256 ab105c99c5d0828af3742aaa6cf5a7ce8c890f8322f824ffa2abb41028a60d72)
-* by tls_suite_info.py on 2021-07-29
+* (tls-parameters.txt sha256 d5d17a3099e352466f701d0fa37aaa2c2fd3a36d5f078e5d81a67b49e7fe3a3c)
+* by ./src/scripts/tls_suite_info.py on 2022-12-02
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -43,10 +43,6 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
       Ciphersuite(0x1303, "CHACHA20_POLY1305_SHA256", Auth_Method::UNDEFINED, Kex_Algo::UNDEFINED, "ChaCha20Poly1305", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0x1304, "AES_128_CCM_SHA256", Auth_Method::UNDEFINED, Kex_Algo::UNDEFINED, "AES-128/CCM", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_IMPLICIT_4),
       Ciphersuite(0x1305, "AES_128_CCM_8_SHA256", Auth_Method::UNDEFINED, Kex_Algo::UNDEFINED, "AES-128/CCM(8)", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_IMPLICIT_4),
-      Ciphersuite(0x16B7, "CECPQ1_RSA_WITH_CHACHA20_POLY1305_SHA256", Auth_Method::RSA, Kex_Algo::CECPQ1, "ChaCha20Poly1305", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0x16B8, "CECPQ1_ECDSA_WITH_CHACHA20_POLY1305_SHA256", Auth_Method::ECDSA, Kex_Algo::CECPQ1, "ChaCha20Poly1305", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0x16B9, "CECPQ1_RSA_WITH_AES_256_GCM_SHA384", Auth_Method::RSA, Kex_Algo::CECPQ1, "AES-256/GCM", 32, "AEAD", 0, KDF_Algo::SHA_384, Nonce_Format::AEAD_IMPLICIT_4),
-      Ciphersuite(0x16BA, "CECPQ1_ECDSA_WITH_AES_256_GCM_SHA384", Auth_Method::ECDSA, Kex_Algo::CECPQ1, "AES-256/GCM", 32, "AEAD", 0, KDF_Algo::SHA_384, Nonce_Format::AEAD_IMPLICIT_4),
       Ciphersuite(0xC008, "ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA", Auth_Method::ECDSA, Kex_Algo::ECDH, "3DES", 24, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
       Ciphersuite(0xC009, "ECDHE_ECDSA_WITH_AES_128_CBC_SHA", Auth_Method::ECDSA, Kex_Algo::ECDH, "AES-128", 16, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
       Ciphersuite(0xC00A, "ECDHE_ECDSA_WITH_AES_256_CBC_SHA", Auth_Method::ECDSA, Kex_Algo::ECDH, "AES-256", 32, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
@@ -115,8 +111,6 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
       Ciphersuite(0xFFC5, "ECDHE_ECDSA_WITH_AES_256_OCB_SHA256", Auth_Method::ECDSA, Kex_Algo::ECDH, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0xFFC7, "PSK_WITH_AES_256_OCB_SHA256", Auth_Method::IMPLICIT, Kex_Algo::PSK, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       Ciphersuite(0xFFCB, "ECDHE_PSK_WITH_AES_256_OCB_SHA256", Auth_Method::IMPLICIT, Kex_Algo::ECDHE_PSK, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0xFFCC, "CECPQ1_RSA_WITH_AES_256_OCB_SHA256", Auth_Method::RSA, Kex_Algo::CECPQ1, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
-      Ciphersuite(0xFFCD, "CECPQ1_ECDSA_WITH_AES_256_OCB_SHA256", Auth_Method::ECDSA, Kex_Algo::CECPQ1, "AES-256/OCB(12)", 32, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_XOR_12),
       };
 
    return g_ciphersuite_list;

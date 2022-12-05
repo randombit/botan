@@ -1141,14 +1141,14 @@ def cli_tls_client_hello_tests(_tmp_dir):
 
     output = test_cli("tls_client_hello", ["--hex", "-"], None, chello)
 
-    output_hash = "8EBFC3205ACFA98461128FE5D081D19254237AF84F7DAF000A3C992C3CF6DE44"
+    output_hash = "D8D6717258CE7F2B10A6F59CCD065937CB9F3B6138319A548A7E0CFC2DF062BF"
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", "-"], output_hash, output)
 
 def cli_speed_pk_tests(_tmp_dir):
     msec = 1
 
     pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
-                "DH", "DSA", "ElGamal", "Ed25519", "Curve25519", "NEWHOPE", "McEliece",
+                "DH", "DSA", "ElGamal", "Ed25519", "Curve25519", "McEliece",
                 "RSA", "RSA_keygen", "XMSS", "ec_h2c", "Kyber"]
 
     output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')

@@ -119,10 +119,6 @@
    #include <botan/ecdsa.h>
 #endif
 
-#if defined(BOTAN_HAS_NEWHOPE)
-   #include <botan/newhope.h>
-#endif
-
 #if defined(BOTAN_HAS_BCRYPT)
    #include <botan/bcrypt.h>
 #endif
@@ -409,7 +405,6 @@ class Speed final : public Command
             "ECDSA",
             "Ed25519",
             "Curve25519",
-            "NEWHOPE",
             "McEliece",
             "Kyber",
             };
@@ -648,12 +643,6 @@ class Speed final : public Command
             else if(algo == "XMSS")
                {
                bench_xmss(provider, msec);
-               }
-#endif
-#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA_RNG)
-            else if(algo == "NEWHOPE")
-               {
-               bench_newhope(provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_SCRYPT)
@@ -2472,46 +2461,6 @@ class Speed final : public Command
             }
          }
 
-#endif
-
-#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA_RNG)
-      void bench_newhope(const std::string& /*provider*/,
-                         std::chrono::milliseconds msec)
-         {
-         const std::string nm = "NEWHOPE";
-
-         auto keygen_timer = make_timer(nm, "", "keygen");
-         auto shareda_timer = make_timer(nm, "", "shareda");
-         auto sharedb_timer = make_timer(nm, "", "sharedb");
-
-         Botan::ChaCha_RNG nh_rng(Botan::secure_vector<uint8_t>(32));
-
-         while(sharedb_timer->under(msec))
-            {
-            std::vector<uint8_t> send_a(Botan::NEWHOPE_SENDABYTES), send_b(Botan::NEWHOPE_SENDBBYTES);
-            std::vector<uint8_t> shared_a(32), shared_b(32);
-
-            Botan::newhope_poly sk_a;
-
-            keygen_timer->start();
-            Botan::newhope_keygen(send_a.data(), &sk_a, nh_rng);
-            keygen_timer->stop();
-
-            sharedb_timer->start();
-            Botan::newhope_sharedb(shared_b.data(), send_b.data(), send_a.data(), nh_rng);
-            sharedb_timer->stop();
-
-            shareda_timer->start();
-            Botan::newhope_shareda(shared_a.data(), &sk_a, send_b.data());
-            shareda_timer->stop();
-
-            BOTAN_ASSERT(shared_a == shared_b, "Same derived key");
-            }
-
-         record_result(keygen_timer);
-         record_result(shareda_timer);
-         record_result(sharedb_timer);
-         }
 #endif
 
    };
