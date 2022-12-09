@@ -207,6 +207,22 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
           return std::vector<uint8_t>();
           }
 
+      /**
+       * Called by TLS 1.3 client or server whenever the peer indicated that
+       * OCSP stapling is supported. In contrast to `tls_provide_cert_status`,
+       * this allows providing OCSP responses for each certificate in the chain.
+       *
+       * The default implementation invokes `tls_provide_cert_status` assuming
+       * that no OCSP responses for intermediate certificates are available.
+       *
+       * @return a vector of OCSP response buffers. An empty buffer indicates
+       *         that no OCSP response should be provided for the respective
+       *         certificate (at the same list index). The returned vector
+       *         MUST be exactly the same length as the incoming \p chain.
+       */
+      virtual std::vector<std::vector<uint8_t>> tls_provide_cert_chain_status(const std::vector<X509_Certificate>& chain,
+                                                                              const Certificate_Status_Request& csr);
+
        /**
        * Optional callback with default impl: sign a message
        *

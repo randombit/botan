@@ -139,6 +139,19 @@ std::optional<OCSP::Response> TLS::Callbacks::tls_parse_ocsp_response(const std:
       }
    }
 
+
+std::vector<std::vector<uint8_t>> TLS::Callbacks::tls_provide_cert_chain_status(
+   const std::vector<X509_Certificate>& chain,
+   const Certificate_Status_Request& csr)
+   {
+   std::vector<std::vector<uint8_t>> result(chain.size());
+   if(!chain.empty())
+      {
+      result[0] = tls_provide_cert_status(chain, csr);
+      }
+   return result;
+   }
+
 std::vector<uint8_t> TLS::Callbacks::tls_sign_message(
    const Private_Key& key,
    RandomNumberGenerator& rng,
