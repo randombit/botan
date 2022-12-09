@@ -13,8 +13,6 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/tls_exceptn.h>
 
-#include <iostream>
-
 namespace Botan::TLS
 {
 

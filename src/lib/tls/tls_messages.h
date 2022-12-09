@@ -595,6 +595,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
 
    private:
       void setup_entries(std::vector<X509_Certificate> cert_chain,
+                         const Certificate_Status_Request* csr,
                          Callbacks& callbacks);
 
    private:
