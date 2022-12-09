@@ -625,7 +625,8 @@ class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension
       const std::vector<X509_DN>& distinguished_names() const
          { return m_distinguished_names; }
 
-      explicit Certificate_Authorities(TLS_Data_Reader& reader, uint16_t extension_size);
+      Certificate_Authorities(TLS_Data_Reader& reader, uint16_t extension_size);
+      explicit Certificate_Authorities(std::vector<X509_DN> acceptable_DNs);
 
    private:
       std::vector<X509_DN> m_distinguished_names;

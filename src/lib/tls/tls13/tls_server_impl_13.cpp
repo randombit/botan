@@ -39,9 +39,11 @@ std::string Server_Impl_13::application_protocol() const
 
 std::vector<X509_Certificate> Server_Impl_13::peer_cert_chain() const
    {
-   return {}; // TODO: implement!
-              //       Should return the client authentication certificate chain
-              //       once client authentication for the server side is ready.
+   return (m_handshake_state.has_client_certificate_chain())
+      ? m_handshake_state.client_certificate().cert_chain()
+      // TODO: after implementing session resumption, this may return the
+      //       client's certificate chain stored in the previous session.
+      : std::vector<X509_Certificate>{};
    }
 
 void Server_Impl_13::process_handshake_msg(Handshake_Message_13 message)
@@ -120,8 +122,37 @@ void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_
    //       suggestions sent by the client. This might happen in the Encrypted
    //       Extensions constructor. Also implement Channel::application_protocol().
 
-   aggregate_handshake_messages()
-      .add(m_handshake_state.sending(Encrypted_Extensions(client_hello, policy(), callbacks())))
+   auto flight = aggregate_handshake_messages();
+   flight
+      .add(m_handshake_state.sending(Encrypted_Extensions(client_hello, policy(), callbacks())));
+
+   // RFC 8446 4.3.2
+   //    A server which is authenticating with a certificate MAY optionally
+   //    request a certificate from the client. This message, if sent, MUST
+   //    follow EncryptedExtensions.
+   //
+   // Note: When implementing PSK, this message must not be sent
+   if(auto certificate_request = Certificate_Request_13::maybe_create(client_hello,
+                                                                      credentials_manager(),
+                                                                      callbacks(),
+                                                                      policy()))
+      {
+      flight.add(m_handshake_state.sending(std::move(certificate_request.value())));
+
+      // RFC 8446 4.4.2
+      //    The client MUST send a Certificate message if and only if the server
+      //    has requested client authentication via a CertificateRequest message
+      //    [...]. If the server requests client authentication but no
+      //    suitable certificate is available, the client MUST send a Certificate
+      //    message containing no certificates [...].
+      m_transitions.set_expected_next(CERTIFICATE);
+      }
+   else
+      {
+      m_transitions.set_expected_next(FINISHED);
+      }
+
+   flight
       .add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks())))
       .add(m_handshake_state.sending(Certificate_Verify_13(
                                         m_handshake_state.server_certificate(),
@@ -137,10 +168,6 @@ void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_
       .send();
 
    m_cipher_state->advance_with_server_finished(m_transcript_hash.current());
-
-   // TODO: For Client Authentication this should expect appropriate client handshake messages
-   //       once we support/implement it.
-   m_transitions.set_expected_next(FINISHED);
    }
 
 void Server_Impl_13::handle_reply_to_client_hello(const Hello_Retry_Request& hello_retry_request)
@@ -263,14 +290,92 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello)
 
 void Server_Impl_13::handle(const Certificate_13& certificate_msg)
    {
-   BOTAN_UNUSED(certificate_msg);
-   throw Not_Implemented("Client Auth is currently not supported by the server");
+   // RFC 8446 4.3.2
+   //    certificate_request_context:  [...] This field SHALL be zero length
+   //    unless used for the post-handshake authentication exchanges [...].
+   if(!handshake_finished() && !certificate_msg.request_context().empty())
+      {
+      throw TLS_Exception(Alert::DECODE_ERROR, "Received a client certificate message with non-empty request context");
+      }
+
+   // RFC 8446 4.4.2
+   //    Extensions in the Certificate message from the client MUST correspond
+   //    to extensions in the CertificateRequest message from the server.
+   certificate_msg.validate_extensions(m_handshake_state.certificate_request().extensions().extension_types(), callbacks());
+
+   // RFC 8446 4.4.2.4
+   //   If the client does not send any certificates (i.e., it sends an empty
+   //   Certificate message), the server MAY at its discretion either continue
+   //   the handshake without client authentication or abort the handshake with
+   //   a "certificate_required" alert.
+   if(certificate_msg.empty())
+      {
+      if(policy().require_client_certificate_authentication())
+         {
+         throw TLS_Exception(Alert::CERTIFICATE_REQUIRED, "Policy requires client send a certificate, but it did not");
+         }
+
+      // RFC 8446 4.4.2
+      //    A Finished message MUST be sent regardless of whether the
+      //    Certificate message is empty.
+      m_transitions.set_expected_next(FINISHED);
+      }
+   else
+      {
+      // RFC 8446 4.4.2.4
+      //    [...], if some aspect of the certificate chain was unacceptable
+      //    (e.g., it was not signed by a known, trusted CA), the server MAY at
+      //    its discretion either continue the handshake (considering the client
+      //    unauthenticated) or abort the handshake.
+      //
+      // TODO: We could make this dependent on Policy::require_client_auth().
+      //       Though, apps may also override Callbacks::tls_verify_cert_chain()
+      //       and 'ignore' validation issues to a certain extent.
+      certificate_msg.verify(callbacks(),
+                             policy(),
+                             credentials_manager(),
+                             m_handshake_state.client_hello().sni_hostname(),
+                             m_handshake_state.client_hello().extensions().has<Certificate_Status_Request>());
+
+      // RFC 8446 4.4.3
+      //    Clients MUST send this message whenever authenticating via a
+      //    certificate (i.e., when the Certificate message
+      //    is non-empty). When sent, this message MUST appear immediately after
+      //    the Certificate message [...].
+      m_transitions.set_expected_next(CERTIFICATE_VERIFY);
+      }
    }
 
 void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    {
-   BOTAN_UNUSED(certificate_verify_msg);
-   throw Not_Implemented("Client Auth is currently not supported by the server");
+   // RFC 8446 4.4.3
+   //    If sent by a client, the signature algorithm used in the signature
+   //    MUST be one of those present in the supported_signature_algorithms
+   //    field of the "signature_algorithms" extension in the
+   //    CertificateRequest message.
+   const auto offered = m_handshake_state.certificate_request().signature_schemes();
+   if(!value_exists(offered, certificate_verify_msg.signature_scheme()))
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "We did not offer the usage of " +
+                          certificate_verify_msg.signature_scheme().to_string() +
+                          " as a signature scheme");
+      }
+
+   BOTAN_ASSERT_NOMSG(m_handshake_state.has_client_certificate_chain() &&
+                      !m_handshake_state.client_certificate().empty());
+   bool sig_valid = certificate_verify_msg.verify(
+                       m_handshake_state.client_certificate().leaf(),
+                       callbacks(),
+                       m_transcript_hash.previous());
+
+   // RFC 8446 4.4.3
+   //   If the verification fails, the receiver MUST terminate the handshake
+   //   with a "decrypt_error" alert.
+   if(!sig_valid)
+      { throw TLS_Exception(Alert::DECRYPT_ERROR, "Client certificate verification failed"); }
+
+   m_transitions.set_expected_next(FINISHED);
    }
 
 void Server_Impl_13::handle(const Finished_13& finished_msg)

@@ -671,6 +671,13 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
 
       Certificate_Request_13(const std::vector<uint8_t>& buf, const Connection_Side side);
 
+      //! Creates a Certificate_Request message if it is required by the configuration
+      //! @return std::nullopt if configuration does not require client authentication
+      static std::optional<Certificate_Request_13> maybe_create(const Client_Hello_13& sni_hostname,
+                                                                Credentials_Manager& cred_mgr,
+                                                                Callbacks& callbacks,
+                                                                const Policy& policy);
+
       std::vector<X509_DN> acceptable_CAs() const;
       const std::vector<Signature_Scheme>& signature_schemes() const;
       const Extensions& extensions() const { return m_extensions; }
@@ -678,6 +685,11 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
       std::vector<uint8_t> serialize() const override;
 
       const std::vector<uint8_t> context() const { return m_context; }
+
+   private:
+      Certificate_Request_13(std::vector<Signature_Scheme> signature_schemes,
+                             std::vector<X509_DN> acceptable_CAs,
+                             Callbacks& callbacks);
 
    private:
       std::vector<uint8_t> m_context;
