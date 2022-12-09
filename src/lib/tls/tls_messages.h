@@ -231,18 +231,6 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
                  RandomNumberGenerator& rng);
 
       /**
-       * Select an available certificate chain that is compatible with the
-       * signature algorithm and hostname requirements advertised by the
-       * client.
-       *
-       * This method throws an exception if @p cerds cannot produce a usable
-       * server certificate chain.
-       *
-       * @returns a server certificate chain
-       */
-      std::vector<X509_Certificate> find_certificate_chain(Credentials_Manager& creds) const;
-
-      /**
        * Select the highest protocol version from the list of versions
        * supported by the client. If no such version can be determind this
        * returns std::nullopt.
@@ -529,6 +517,8 @@ class BOTAN_UNSTABLE_API Certificate_12 final : public Handshake_Message
       std::vector<X509_Certificate> m_certs;
    };
 
+class Certificate_Request_13;
+
 /**
 * Certificate Message of TLS 1.3
 */
@@ -546,7 +536,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
 
    public:
       Handshake_Type type() const override { return CERTIFICATE; }
-      const std::vector<Certificate_Entry>& cert_chain() const { return m_entries; }
+      std::vector<X509_Certificate> cert_chain() const;
 
       size_t count() const { return m_entries.size(); }
       bool empty() const { return m_entries.empty(); }
@@ -554,17 +544,21 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
       const std::vector<uint8_t>& request_context() const { return m_request_context; }
 
       /**
-       * Create a Certificate message
-       *
-       * @param certs            the certificate (chain) to be used for authentication
-       * @param side             the connection side which constructs this message
-       * @param request_context  the context provided in the Certificate Request
-       *                         message when performing post-handshake client auth
-       * @param callbacks        the "callbacks" handle to use (for tls_modify_extensions)
+       * Create a Client Certificate message
+       * ... in response to a Certificate Request message.
        */
-      Certificate_13(const std::vector<X509_Certificate>& certs,
-                     const Connection_Side side,
-                     const std::vector<uint8_t>& request_context,
+      Certificate_13(const Certificate_Request_13& cert_request,
+                     const std::string& hostname,
+                     Credentials_Manager& credentials_manager,
+                     Callbacks& callbacks);
+
+      /**
+       * Create a Server Certificate message
+       * ... in response to a Client Hello indicating the need to authenticate
+       *     with a server certificate.
+       */
+      Certificate_13(const Client_Hello_13& client_hello,
+                     Credentials_Manager& credentials_manager,
                      Callbacks& callbacks);
 
       /**
@@ -598,6 +592,10 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
                   bool use_ocsp) const;
 
       std::vector<uint8_t> serialize() const override;
+
+   private:
+      void setup_entries(std::vector<X509_Certificate> cert_chain,
+                         Callbacks& callbacks);
 
    private:
       std::vector<uint8_t>           m_request_context;

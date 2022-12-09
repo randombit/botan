@@ -116,25 +116,29 @@ void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_
    m_cipher_state = Cipher_State::init_with_server_hello(m_side, std::move(shared_secret), cipher.value(),
                     m_transcript_hash.current());
 
-   // TODO: OCSP stapling: Invoke Callbacks::tls_provide_cert_status() to obtain an OCSP response
-   auto server_cert_chain = client_hello.find_certificate_chain(credentials_manager());
-   BOTAN_ASSERT_NOMSG(!server_cert_chain.empty());
-
-   auto private_key = credentials_manager().private_key_for(server_cert_chain.front(), "tls-server",
-                      client_hello.sni_hostname());
-   BOTAN_ASSERT_NONNULL(private_key);
-
    // TODO: ALPN - Invoke Callbacks::tls_server_choose_app_protocol() with
    //       suggestions sent by the client. This might happen in the Encrypted
    //       Extensions constructor. Also implement Channel::application_protocol().
+   auto flight = aggregate_handshake_messages();
 
-   aggregate_handshake_messages()
-   .add(m_handshake_state.sending(Encrypted_Extensions(client_hello, policy(), callbacks())))
-   .add(m_handshake_state.sending(Certificate_13(server_cert_chain, Connection_Side::SERVER, {}, callbacks())))
-   .add(m_handshake_state.sending(Certificate_Verify_13(client_hello.signature_schemes(), Connection_Side::SERVER,
-                                  *private_key, policy(), m_transcript_hash.current(), callbacks(), rng())))
-   .add(m_handshake_state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash.current())))
-   .send();
+   flight
+      .add(m_handshake_state.sending(Encrypted_Extensions(client_hello, policy(), callbacks())))
+      .add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks())));
+
+   auto private_key = credentials_manager().private_key_for(
+                         m_handshake_state.server_certificate().leaf(),
+                         "tls-server",
+                         client_hello.sni_hostname());
+   if(!private_key)
+      {
+      throw TLS_Exception(Alert::INTERNAL_ERROR, "Application did not provide a private key for its certificate");
+      }
+
+   flight
+      .add(m_handshake_state.sending(Certificate_Verify_13(client_hello.signature_schemes(), Connection_Side::SERVER,
+                                     *private_key, policy(), m_transcript_hash.current(), callbacks(), rng())))
+      .add(m_handshake_state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash.current())))
+      .send();
 
    m_cipher_state->advance_with_server_finished(m_transcript_hash.current());
 

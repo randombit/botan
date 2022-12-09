@@ -25,6 +25,7 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <memory>
 
 namespace Botan {
 
