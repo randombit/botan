@@ -119,24 +119,20 @@ void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_
    // TODO: ALPN - Invoke Callbacks::tls_server_choose_app_protocol() with
    //       suggestions sent by the client. This might happen in the Encrypted
    //       Extensions constructor. Also implement Channel::application_protocol().
-   auto flight = aggregate_handshake_messages();
 
-   flight
+   aggregate_handshake_messages()
       .add(m_handshake_state.sending(Encrypted_Extensions(client_hello, policy(), callbacks())))
-      .add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks())));
-
-   auto private_key = credentials_manager().private_key_for(
-                         m_handshake_state.server_certificate().leaf(),
-                         "tls-server",
-                         client_hello.sni_hostname());
-   if(!private_key)
-      {
-      throw TLS_Exception(Alert::INTERNAL_ERROR, "Application did not provide a private key for its certificate");
-      }
-
-   flight
-      .add(m_handshake_state.sending(Certificate_Verify_13(client_hello.signature_schemes(), Connection_Side::SERVER,
-                                     *private_key, policy(), m_transcript_hash.current(), callbacks(), rng())))
+      .add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks())))
+      .add(m_handshake_state.sending(Certificate_Verify_13(
+                                        m_handshake_state.server_certificate(),
+                                        client_hello.signature_schemes(),
+                                        client_hello.sni_hostname(),
+                                        m_transcript_hash.current(),
+                                        Connection_Side::SERVER,
+                                        credentials_manager(),
+                                        policy(),
+                                        callbacks(),
+                                        rng())))
       .add(m_handshake_state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash.current())))
       .send();
 

@@ -523,19 +523,14 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedMessa
    // In that case, no Certificate Verify message will be sent.
    if(!m_handshake_state.client_certificate().empty())
       {
-      Private_Key* private_key = credentials_manager().private_key_for(
-            m_handshake_state.client_certificate().leaf(),
-            "tls-client",
-            m_info.hostname());
-
-      BOTAN_ASSERT_NONNULL(private_key);
-
       flight.add(m_handshake_state.sending(Certificate_Verify_13(
+         m_handshake_state.client_certificate(),
          cert_request.signature_schemes(),
-         Connection_Side::CLIENT,
-         *private_key,
-         policy(),
+         m_info.hostname(),
          m_transcript_hash.current(),
+         Connection_Side::CLIENT,
+         credentials_manager(),
+         policy(),
          callbacks(),
          rng()
       )));

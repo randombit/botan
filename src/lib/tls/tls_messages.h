@@ -745,11 +745,13 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
                             const Connection_Side side);
 
       Certificate_Verify_13(
+            const Certificate_13& certificate_message,
             const std::vector<Signature_Scheme>& peer_allowed_schemes,
-            Connection_Side whoami,
-            const Private_Key& key,
-            const Policy& policy,
+            const std::string& hostname,
             const Transcript_Hash& hash,
+            Connection_Side whoami,
+            Credentials_Manager& creds_mgr,
+            const Policy& policy,
             Callbacks& callbacks,
             RandomNumberGenerator& rng);
 
