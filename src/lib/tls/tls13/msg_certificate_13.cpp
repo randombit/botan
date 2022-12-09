@@ -20,6 +20,8 @@
 #include <botan/internal/loadstor.h>
 #include <botan/data_src.h>
 
+#include <iterator>
+
 namespace Botan::TLS {
 
 namespace {
@@ -261,6 +263,11 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
       //    OCSP Status extension [RFC6066] and the SignedCertificateTimestamp
       //    extension [RFC6962]; future extensions may be defined for this
       //    message as well.
+      //
+      // RFC 8446 4.4.2.1
+      //    A server MAY request that a client present an OCSP response with its
+      //    certificate by sending an empty "status_request" extension in its
+      //    CertificateRequest message.
       if(entry.extensions.contains_implemented_extensions_other_than({
             TLSEXT_CERT_STATUS_REQUEST,
             // TLSEXT_SIGNED_CERTIFICATE_TIMESTAMP

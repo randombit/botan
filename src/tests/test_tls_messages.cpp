@@ -148,7 +148,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   }
                else if(algo == "cert_status")
                   {
-                  Botan::TLS::Certificate_Status message(buffer);
+                  Botan::TLS::Certificate_Status message(buffer, Botan::TLS::Connection_Side::SERVER);
 
                   Botan::OCSP::Response resp(message.response());
 
@@ -205,7 +205,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                {
                result.test_throws("invalid cert_status input", exception, [&buffer]()
                   {
-                  Botan::TLS::Certificate_Status message(buffer);
+                  Botan::TLS::Certificate_Status message(buffer, Botan::TLS::Connection_Side::SERVER);
                   });
                }
             else if(algo == "new_session_ticket")

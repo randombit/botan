@@ -561,7 +561,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == CERTIFICATE_STATUS)
       {
-      state.server_cert_status(new Certificate_Status(contents));
+      state.server_cert_status(new Certificate_Status(contents, Connection_Side::SERVER));
 
       if(state.ciphersuite().kex_method() != Kex_Algo::STATIC_RSA)
          {

@@ -36,7 +36,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
          return std::make_unique<Supported_Groups>(reader, size);
 
       case TLSEXT_CERT_STATUS_REQUEST:
-         return std::make_unique<Certificate_Status_Request>(reader, size, from, message_type);
+         return std::make_unique<Certificate_Status_Request>(reader, size, message_type, from);
 
       case TLSEXT_EC_POINT_FORMATS:
          return std::make_unique<Supported_Point_Formats>(reader, size);
