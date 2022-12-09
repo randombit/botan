@@ -17,7 +17,8 @@
    defined(BOTAN_HAS_AES) && \
    defined(BOTAN_HAS_CURVE_25519) && \
    defined(BOTAN_HAS_SHA2_32) && \
-   defined(BOTAN_HAS_SHA2_64)
+   defined(BOTAN_HAS_SHA2_64) && \
+   defined(BOTAN_HAS_ECDSA)
    #define BOTAN_CAN_RUN_TEST_TLS_RFC8448
 #endif
 
@@ -25,10 +26,10 @@
    #include "test_rng.h"
    #include "test_tls_utils.h"
 
-   #include <botan/auto_rng.h>  // TODO: replace me, otherwise we depend on auto_rng module
    #include <botan/credentials_manager.h>
    #include <botan/rsa.h>
    #include <botan/hash.h>
+   #include <botan/ecdsa.h>
    #include <botan/tls_alert.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_client.h>
@@ -62,10 +63,21 @@ void add_entropy(Botan_Tests::Fixed_Output_RNG& rng, const std::vector<uint8_t>&
    rng.add_entropy(bin.data(), bin.size());
    }
 
-std::unique_ptr<Botan::Private_Key> server_private_key()
+Botan::Private_Key* server_private_key()
    {
-   Botan::DataSource_Memory in(Test::read_data_file("tls_13_rfc8448/server_key.pem"));
-   return Botan::PKCS8::load_key(in);
+   static Botan::DataSource_Memory in(Test::read_data_file("tls_13_rfc8448/server_key.pem"));
+   static auto key = Botan::PKCS8::load_key(in);
+   return key.get();
+   }
+
+Botan::Private_Key* bogus_alternative_server_private_key()
+   {
+   // RFC 8448 does not actually provide that key. Hence we generate one on the
+   // fly as a stand-in. Instead of actually using it, the signatures generated
+   // by this private key must be hard-coded in `Callbacks::sign_message()`; see
+   // `MockSignature_Fn` for more details.
+   static auto key = Botan::ECDSA_PrivateKey(Test::rng(), Botan::EC_Group("secp256r1"));
+   return &key;
    }
 
 Botan::X509_Certificate server_certificate()
@@ -76,13 +88,25 @@ Botan::X509_Certificate server_certificate()
    return Botan::X509_Certificate(in);
    }
 
-std::unique_ptr<Botan::Private_Key> client_private_key()
+Botan::X509_Certificate alternative_server_certificate()
+   {
+   // self-signed certificate with a P-256 public key valid until:
+   //   Jul 30 01:24:00 2026 GMT
+   //
+   // This certificate is presented by the server in the "Client Authentication"
+   // test case. Why the certificate differs in that case remains unclear.
+   Botan::DataSource_Memory in(Test::read_data_file("tls_13_rfc8448/server_certificate_client_auth.pem"));
+   return Botan::X509_Certificate(in);
+   }
+
+Botan::Private_Key* client_private_key()
    {
    // RFC 8448 does not actually provide that key. Hence we generate one on the
    // fly as a stand-in. Instead of actually using it, the signatures generated
    // by this private key must be hard-coded in `Callbacks::sign_message()`; see
    // `MockSignature_Fn` for more details.
-   return create_private_key("RSA", Test::rng(), "1024");
+   static auto key = create_private_key("RSA", Test::rng(), "1024");
+   return key.get();
    }
 
 Botan::X509_Certificate client_certificate()
@@ -248,14 +272,34 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          BOTAN_UNUSED(key, rng);
          count_callback_invocation("tls_sign_message");
 
-         if(format != Signature_Format::Standard)
+         if(key.algo_name() == "RSA")
             {
-            throw Test_Error("TLS implementation selected unexpected signature format");
-            }
+            if(format != Signature_Format::Standard)
+               {
+               throw Test_Error("TLS implementation selected unexpected signature format for RSA");
+               }
 
-         if(emsa != "PSSR(SHA-256,MGF1,32)")
+            if(emsa != "PSSR(SHA-256,MGF1,32)")
+               {
+               throw Test_Error("TLS implementation selected unexpected padding for RSA: " + emsa);
+               }
+            }
+         else if(key.algo_name() == "ECDSA")
             {
-            throw Test_Error("TLS implementation selected unexpected padding " + emsa);
+            if(format != Signature_Format::DerSequence)
+               {
+               throw Test_Error("TLS implementation selected unexpected signature format for ECDSA");
+               }
+
+            if(emsa != "EMSA1(SHA-256)")
+               {
+               throw Test_Error("TLS implementation selected unexpected padding for ECDSA: " + emsa);
+               }
+            }
+         else
+            {
+            throw Test_Error("TLS implementation trying to sign with unexpected algorithm ("
+                              + key.algo_name() + ")");
             }
 
          for(const auto& mock : m_mock_signatures)
@@ -411,9 +455,8 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
 class Test_Credentials : public Botan::Credentials_Manager
    {
    public:
-      Test_Credentials()
-         : m_bogus_client_key(client_private_key())
-         , m_server_key(server_private_key()) {}
+      explicit Test_Credentials(bool use_alternative_server_certificate)
+         : m_alternative_server_certificate(use_alternative_server_certificate) {}
 
       std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& cert_key_types,
@@ -425,7 +468,9 @@ class Test_Credentials : public Botan::Credentials_Manager
             {
             (type == "tls-client")
             ? client_certificate()
-            : server_certificate()
+            : ((m_alternative_server_certificate)
+               ? alternative_server_certificate()
+               : server_certificate())
             };
          }
 
@@ -436,15 +481,14 @@ class Test_Credentials : public Botan::Credentials_Manager
          BOTAN_UNUSED(cert, context);
 
          return (type == "tls-client")
-         // Note that this key is just a stand-in and not the actual private
-         // key for the client certificate. RFC 8448 does not reveal this key.
-            ? m_bogus_client_key.get()
-            : m_server_key.get();
+            ? client_private_key()
+            : ((m_alternative_server_certificate)
+               ? bogus_alternative_server_private_key()
+               : server_private_key());
          }
 
    private:
-      std::unique_ptr<Botan::Private_Key> m_bogus_client_key;
-      std::unique_ptr<Botan::Private_Key> m_server_key;
+      bool m_alternative_server_certificate;
    };
 
 class RFC8448_Text_Policy : public Botan::TLS::Text_Policy
@@ -600,8 +644,10 @@ class TLS_Context
                   Modify_Exts_Fn modify_exts_cb,
                   std::vector<MockSignature> mock_signatures,
                   uint64_t timestamp,
-                  std::optional<std::vector<uint8_t>> session)
+                  std::optional<std::vector<uint8_t>> session,
+                  bool use_alternative_server_certificate)
          : m_callbacks(std::move(modify_exts_cb), std::move(mock_signatures), timestamp)
+         , m_creds(use_alternative_server_certificate)
          , m_rng(std::move(rng_in))
          , m_policy(std::move(policy))
          {
@@ -695,7 +741,7 @@ class Client_Context : public TLS_Context
                      Modify_Exts_Fn modify_exts_cb,
                      std::optional<std::vector<uint8_t>> session = std::nullopt,
                      std::vector<MockSignature> mock_signatures = {})
-         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), std::move(mock_signatures), timestamp, std::move(session))
+         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), std::move(mock_signatures), timestamp, std::move(session), false)
          , client(m_callbacks, m_session_mgr, m_creds, m_policy, *m_rng,
                   Botan::TLS::Server_Information("server"),
                   Botan::TLS::Protocol_Version::TLS_V13)
@@ -716,12 +762,14 @@ class Server_Context : public TLS_Context
                      RFC8448_Text_Policy policy,
                      uint64_t timestamp,
                      Modify_Exts_Fn modify_exts_cb,
-                     std::vector<MockSignature> mock_signatures)
+                     std::vector<MockSignature> mock_signatures,
+                     bool use_alternative_server_certificate = false)
          : TLS_Context(std::move(rng), std::move(policy),
             std::move(modify_exts_cb),
             std::move(mock_signatures),
             timestamp,
-            std::nullopt /* session not yet needed */)
+            std::nullopt /* session not yet needed */,
+            use_alternative_server_certificate)
          , server(m_callbacks, m_session_mgr, m_creds, m_policy, *m_rng, false /* DTLS NYI */) {}
 
       void send(const std::vector<uint8_t>& data) override
@@ -852,6 +900,9 @@ std::vector<MockSignature> make_mock_signatures(const VarMap& vars)
  * tls_13_rfc8448/server_key.pem
  *   The server certificate and its associated private key.
  *
+ * tls_13_rfc8448/server_certificate_client_auth.pem
+ *   The server certificate used in the Client Authentication test case.
+ *
  * tls-policy/rfc8448_*.txt
  *   Each RFC 8448 section test required a slightly adapted Botan TLS policy
  *   to enable/disable certain features under test.
@@ -887,6 +938,7 @@ class Test_TLS_RFC8448 : public Text_Based_Test
                            // optional data fields
                            "Message_ServerHello,"
                            "Message_EncryptedExtensions,"
+                           "Message_CertificateRequest,"
                            "Message_Server_Certificate,"
                            "Message_Server_CertificateVerify,"
                            "Message_Server_Finished,"
