@@ -88,7 +88,9 @@ bool is_lucas_probable_prime(const BigInt& C, const Modular_Reducer& mod_C)
 
 bool is_bailie_psw_probable_prime(const BigInt& n, const Modular_Reducer& mod_n)
    {
-   if(n < 3 || n.is_even())
+   if(n == 2)
+      return true;
+   else if(n <= 1 || n.is_even())
       return false;
 
    auto monty_n = std::make_shared<Montgomery_Params>(n, mod_n);
