@@ -148,8 +148,8 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
          BER_Decoder& get_next_value(T &out,
                                      ASN1_Type type_tag,
                                      ASN1_Class class_tag = ASN1_Class::ContextSpecific)
+         requires std::is_standard_layout<T>::value && std::is_trivial<T>::value
          {
-         static_assert(std::is_standard_layout<T>::value && std::is_trivial<T>::value, "Type must be POD");
 
          BER_Object obj = get_next_object();
          obj.assert_is_a(type_tag, class_tag);

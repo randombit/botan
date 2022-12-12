@@ -124,8 +124,8 @@ template<typename T> inline constexpr void clear_mem(T* ptr, size_t n)
 * @param n the number of elements of in/out
 */
 template<typename T> inline constexpr void copy_mem(T* out, const T* in, size_t n)
+   requires std::is_trivial<typename std::decay<T>::type>::value
    {
-   static_assert(std::is_trivial<typename std::decay<T>::type>::value, "");
    BOTAN_ASSERT_IMPLICATION(n > 0, in != nullptr && out != nullptr,
                             "If n > 0 then args are not null");
 
@@ -136,14 +136,14 @@ template<typename T> inline constexpr void copy_mem(T* out, const T* in, size_t 
    }
 
 template<typename T> inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
+   requires std::is_trivially_copyable<T>::value
    {
-   static_assert(std::is_trivially_copyable<T>::value, "Safe to memcpy");
    std::memcpy(out, in, sizeof(T)*N);
    }
 
 template<typename T> inline constexpr void typecast_copy(T out[], const uint8_t in[], size_t N)
+   requires std::is_trivial<T>::value
    {
-   static_assert(std::is_trivial<T>::value, "Safe to memcpy");
    std::memcpy(out, in, sizeof(T)*N);
    }
 
@@ -153,14 +153,14 @@ template<typename T> inline constexpr void typecast_copy(uint8_t out[], T in)
    }
 
 template<typename T> inline constexpr void typecast_copy(T& out, const uint8_t in[])
+   requires std::is_trivial<typename std::decay<T>::type>::value
    {
-   static_assert(std::is_trivial<typename std::decay<T>::type>::value, "Safe case");
    typecast_copy(&out, in, 1);
    }
 
 template <class To, class From> inline constexpr To typecast_copy(const From *src) noexcept
+   requires std::is_trivially_copyable<From>::value && std::is_trivial<To>::value
    {
-   static_assert(std::is_trivially_copyable<From>::value && std::is_trivial<To>::value, "Safe for memcpy");
    To dst;
    std::memcpy(&dst, src, sizeof(To));
    return dst;
