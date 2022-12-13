@@ -675,7 +675,7 @@ def main(args=None):
 
             if have_prog('codecov'):
                 # If codecov exists assume we are in CI and report to codecov.io
-                cmds.append(['codecov', '>', os.path.join(build_dir, 'codecov_stdout.log')])
+                cmds.append(['indir:%s' % root_dir, 'codecov', '--required', '--gcov-root', build_dir, '>', os.path.join(build_dir, 'codecov_stdout.log')])
             else:
                 # Otherwise generate a local HTML report
                 cmds.append(['genhtml', cov_file, '--output-directory', os.path.join(build_dir, 'lcov-out')])
