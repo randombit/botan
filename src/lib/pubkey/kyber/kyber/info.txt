@@ -6,6 +6,8 @@ KYBER -> 20220107
 name -> "Kyber"
 </module_info>
 
+load_on experimental
+
 <requires>
 kyber_common
 shake

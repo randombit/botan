@@ -136,6 +136,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if ccache is not None:
         flags += ['--no-store-vc-rev', '--compiler-cache=%s' % (ccache)]
 
+    flags += ['--include-experimental-modules']
+
     if not disable_werror:
         flags += ['--werror-mode']
 

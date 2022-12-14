@@ -6,6 +6,8 @@ KYBER_90S -> 20220107
 name -> "Kyber 90s"
 </module_info>
 
+load_on experimental
+
 <requires>
 kyber_common
 aes

@@ -587,7 +587,8 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
                               const=mod,
                               dest='disabled_modules')
 
-    mods_group.add_option('--with-everything', help=optparse.SUPPRESS_HELP,
+    mods_group.add_option('--include-experimental-modules',
+                          help='enable experimental code that is not necessarily stable',
                           action='store_true', default=False)
 
     install_group = optparse.OptionGroup(parser, 'Installation options')
@@ -911,6 +912,9 @@ class ModuleInfo(InfoObject):
         source_file_count = len(all_source_files) + len(all_header_files)
         if self.is_virtual() and source_file_count > 0:
             logging.error("Module '%s' is virtual but contains %d source code files", self.basename, source_file_count)
+
+        if self.load_on not in ['auto', 'vendor', 'dep', 'experimental', 'always', 'never']:
+            logging.error("Module '%s' uses unknown load_on entry '%s'", self.basename, self.load_on)
 
     def _parse_module_info(self, lex):
         info = lex.module_info
@@ -2361,6 +2365,8 @@ class ModulesChooser:
                 logging.warning('%s: %s', modname, all_modules[modname].warning)
             if all_modules[modname].load_on == 'vendor':
                 logging.info('Enabling use of external dependency %s', modname)
+            if all_modules[modname].load_on == 'experimental':
+                logging.warning('Enabling use of experimental/unstable module %s', modname)
 
         if sorted_modules_to_load:
             logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
@@ -2495,16 +2501,13 @@ class ModulesChooser:
         modname = module.basename
         if module.load_on == 'never':
             self._not_using_because['disabled as buggy'].add(modname)
-        elif module.load_on == 'request':
-            if self._options.with_everything:
+        elif module.load_on == 'experimental':
+            if self._options.with_experimental:
                 self._to_load.add(modname)
             else:
-                self._not_using_because['by request only'].add(modname)
+                self._not_using_because['experimental code disabled by default'].add(modname)
         elif module.load_on == 'vendor':
-            if self._options.with_everything:
-                self._to_load.add(modname)
-            else:
-                self._not_using_because['requires external dependency'].add(modname)
+            self._not_using_because['requires external dependency'].add(modname)
         elif module.load_on == 'dep':
             self._maybe_dep.add(modname)
 

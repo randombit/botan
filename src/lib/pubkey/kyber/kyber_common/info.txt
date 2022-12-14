@@ -8,6 +8,8 @@ brief -> "Base implementation of CRYSTALS-Kyber"
 type -> "Internal"
 </module_info>
 
+load_on experimental
+
 <requires>
 pubkey
 hash
