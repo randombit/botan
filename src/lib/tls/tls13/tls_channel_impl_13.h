@@ -186,6 +186,8 @@ class Channel_Impl_13 : public Channel_Impl
        */
       virtual bool prepend_ccs() { return false; }
 
+      void handle(const Key_Update& key_update);
+
       /**
        * Schedule a traffic key update to opportunistically happen before the
        * channel sends application data the next time. Such a key update will

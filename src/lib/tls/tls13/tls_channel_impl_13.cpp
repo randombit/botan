@@ -159,10 +159,6 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
                {
                while(auto handshake_msg = m_handshake_layer.next_post_handshake_message(policy()))
                   {
-                  // make sure Key_Update appears only at the end of a record; see description above
-                  if(std::holds_alternative<Key_Update>(handshake_msg.value()) && m_handshake_layer.has_pending_data())
-                     { throw Unexpected_Message("Unexpected additional post-handshake message data found in record"); }
-
                   process_post_handshake_msg(std::move(handshake_msg.value()));
                   }
                }
@@ -206,6 +202,32 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
       {
       send_fatal_alert(Alert::INTERNAL_ERROR);
       throw;
+      }
+   }
+
+void Channel_Impl_13::handle(const Key_Update& key_update)
+   {
+   // make sure Key_Update appears only at the end of a record; see description above
+   if(m_handshake_layer.has_pending_data())
+      { throw Unexpected_Message("Unexpected additional post-handshake message data found in record"); }
+
+   m_cipher_state->update_read_keys();
+
+   // TODO: introduce some kind of rate limit of key updates, otherwise we
+   //       might be forced into an endless loop of key updates.
+
+   // RFC 8446 4.6.3
+   //    If the request_update field is set to "update_requested", then the
+   //    receiver MUST send a KeyUpdate of its own with request_update set to
+   //    "update_not_requested" prior to sending its next Application Data
+   //    record.
+   if(key_update.expects_reciprocation())
+      {
+      // RFC 8446 4.6.3
+      //    This mechanism allows either side to force an update to the
+      //    multiple KeyUpdates while it is silent to respond with a single
+      //    update.
+      opportunistically_update_traffic_keys();
       }
    }
 

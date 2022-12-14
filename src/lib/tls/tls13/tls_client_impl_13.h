@@ -71,6 +71,7 @@ class Client_Impl_13 : public Channel_Impl_13
       bool handshake_finished() const override;
       bool prepend_ccs() override;
 
+      using Channel_Impl_13::handle;
       void handle(const Server_Hello_12& server_hello_msg);
       void handle(const Server_Hello_13& server_hello_msg);
       void handle(const Hello_Retry_Request& hrr_msg);
@@ -80,7 +81,6 @@ class Client_Impl_13 : public Channel_Impl_13
       void handle(const Certificate_Verify_13& certificate_verify_msg);
       void handle(const Finished_13& finished_msg);
       void handle(const New_Session_Ticket_13& new_session_ticket);
-      void handle(const Key_Update& key_update);
 
       void send_client_authentication(Channel_Impl_13::AggregatedMessages& flight);
       std::optional<Session> find_session_for_resumption();
