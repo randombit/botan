@@ -1025,6 +1025,12 @@ using Post_Handshake_Message_13 = std::variant<
                                   New_Session_Ticket_13,
                                   Key_Update>;
 
+// Key_Update is handled generically by the Channel. The messages assigned
+// to those variants are the ones that need to be handled by the specific
+// client and/or server implementations.
+using Server_Post_Handshake_13_Message = std::variant<New_Session_Ticket_13, Key_Update>;
+using Client_Post_Handshake_13_Message = std::variant<Key_Update>;
+
 using Server_Handshake_13_Message = std::variant<
                                     Server_Hello_13,
                                     Server_Hello_12,  // indicates a TLS version downgrade
