@@ -851,16 +851,18 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
     test_cli("asn1print", "--pem -", expected, input_pem)
 
 def cli_tls_socket_tests(tmp_dir):
+    # pylint: disable=too-many-locals
     if not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
         return
 
-    client_msg = b'Client message %d\n' % (random.randint(0, 2**128))
+    client_msg = b'Client message %d with extra stuff to test record_size_limit: %s\n' % (random.randint(0, 2**128), b'oO' * 64)
     server_port = random_port_number()
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
     crt_req = os.path.join(tmp_dir, 'crt.req')
     server_cert = os.path.join(tmp_dir, 'server.crt')
+    tls_policy = os.path.join(tmp_dir, 'test_policy.txt')
 
     test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
 
@@ -884,9 +886,25 @@ def cli_tls_socket_tests(tmp_dir):
     time.sleep(wait_time)
 
     for tls_version in ['1.2', '1.3']:
+        with open(tls_policy, 'w', encoding='utf8') as f:
+            # At the moment, TLS 1.2 does not implement record_size_limit.
+            # Therefore, clients can offer it only with TLS 1.2 being disabled.
+            # Otherwise, a server negotiating TLS 1.2 and using the record_size_limit
+            # would not work for us.
+            #
+            # TODO: Remove this crutch after implementing record_size_limit for TLS 1.2
+            #       and extend the test to use it for both TLS 1.2 and 1.3.
+            if tls_version == '1.3':
+                f.write("allow_tls12=false\n")
+                f.write("allow_tls13=true\n")
+                f.write("record_size_limit=64\n")
+            else:
+                f.write("allow_tls12=true\n")
+                f.write("allow_tls13=true\n")
+
         tls_client = subprocess.Popen([CLI_PATH, 'tls_client', 'localhost',
                                        '--port=%d' % (server_port), '--trusted-cas=%s' % (ca_cert),
-                                       '--tls-version=%s' % (tls_version)],
+                                       '--tls-version=%s' % (tls_version), '--policy=%s' % (tls_policy)],
                                       stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         time.sleep(wait_time)
