@@ -74,8 +74,8 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * Incorporate some additional data into the RNG state.
       */
       template<typename T> void add_entropy_T(const T& t)
+         requires std::is_standard_layout<T>::value && std::is_trivial<T>::value
          {
-         static_assert(std::is_standard_layout<T>::value && std::is_trivial<T>::value, "add_entropy_T data must be POD");
          this->add_entropy(reinterpret_cast<const uint8_t*>(&t), sizeof(T));
          }
 

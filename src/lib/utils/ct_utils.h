@@ -82,10 +82,10 @@ inline void unpoison(T& p)
 * since you never know what a compiler might do.
 */
 template<typename T>
+requires std::is_unsigned<T>::value
 class Mask
    {
    public:
-      static_assert(std::is_unsigned<T>::value, "CT::Mask only defined for unsigned integer types");
 
       Mask(const Mask<T>& other) = default;
       Mask<T>& operator=(const Mask<T>& other) = default;
