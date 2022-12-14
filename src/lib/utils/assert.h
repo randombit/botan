@@ -10,6 +10,13 @@
 #define BOTAN_ASSERTION_CHECKING_H_
 
 #include <botan/build.h>
+#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ < 11)
+#include <experimental/source_location>
+#define BOTAN_SOURCE_LOCATION std::experimental::source_location
+#else
+#include <source_location>
+#define BOTAN_SOURCE_LOCATION std::source_location
+#endif
 
 namespace Botan {
 
@@ -20,97 +27,83 @@ namespace Botan {
 [[noreturn]] void BOTAN_PUBLIC_API(2,0)
    assertion_failure(const char* expr_str,
                      const char* assertion_made,
-                     const char* func,
-                     const char* file,
-                     int line);
+                     const BOTAN_SOURCE_LOCATION &location);
 
 /**
 * Called when an invalid argument is used
 * Throws Invalid_Argument
 */
 [[noreturn]] void BOTAN_UNSTABLE_API throw_invalid_argument(const char* message,
-                                                            const char* func,
-                                                            const char* file);
+                                                            const BOTAN_SOURCE_LOCATION &location);
 
 
 #define BOTAN_ARG_CHECK(expr, msg)                                      \
-   do { if(!(expr)) Botan::throw_invalid_argument(msg, __func__, __FILE__); } while(0)
+   do { if(!(expr)) Botan::throw_invalid_argument(msg, BOTAN_SOURCE_LOCATION::current()); } while(0)
 
 /**
 * Called when an invalid state is encountered
 * Throws Invalid_State
 */
 [[noreturn]] void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
-                                                         const char* func,
-                                                         const char* file);
+                                                         const BOTAN_SOURCE_LOCATION &location);
 
 
 #define BOTAN_STATE_CHECK(expr)                                     \
-   do { if(!(expr)) Botan::throw_invalid_state(#expr, __func__, __FILE__); } while(0)
+   do { if(!(expr)) Botan::throw_invalid_state(#expr, BOTAN_SOURCE_LOCATION::current()); } while(0)
 
 /**
 * Make an assertion
 */
-#define BOTAN_ASSERT(expr, assertion_made)                \
-   do {                                                   \
-      if(!(expr))                                         \
-         Botan::assertion_failure(#expr,                  \
-                                  assertion_made,         \
-                                  __func__,               \
-                                  __FILE__,               \
-                                  __LINE__);              \
+#define BOTAN_ASSERT(expr, assertion_made)                                              \
+   do {                                                                                 \
+      if(!(expr))                                                                       \
+         Botan::assertion_failure(#expr,                                                \
+                                  assertion_made,         				\
+                                  BOTAN_SOURCE_LOCATION::current());                    \
    } while(0)
 
 /**
 * Make an assertion
 */
-#define BOTAN_ASSERT_NOMSG(expr)                          \
-   do {                                                   \
-      if(!(expr))                                         \
-         Botan::assertion_failure(#expr,                  \
-                                  "",                     \
-                                  __func__,               \
-                                  __FILE__,               \
-                                  __LINE__);              \
+#define BOTAN_ASSERT_NOMSG(expr)                          				\
+   do {                                                   				\
+      if(!(expr))                                         				\
+         Botan::assertion_failure(#expr,                  				\
+                                  "",                     				\
+                                  BOTAN_SOURCE_LOCATION::current()); 			\
    } while(0)
 
 /**
 * Assert that value1 == value2
 */
-#define BOTAN_ASSERT_EQUAL(expr1, expr2, assertion_made)   \
-   do {                                                    \
-     if((expr1) != (expr2))                                \
-       Botan::assertion_failure(#expr1 " == " #expr2,      \
-                                assertion_made,            \
-                                __func__,                  \
-                                __FILE__,                  \
-                                __LINE__);                 \
+#define BOTAN_ASSERT_EQUAL(expr1, expr2, assertion_made)   				\
+   do {                                                    				\
+     if((expr1) != (expr2))                                				\
+       Botan::assertion_failure(#expr1 " == " #expr2,      				\
+                                assertion_made,            				\
+                               	BOTAN_SOURCE_LOCATION::current()); 			\
    } while(0)
 
 /**
 * Assert that expr1 (if true) implies expr2 is also true
 */
-#define BOTAN_ASSERT_IMPLICATION(expr1, expr2, msg)        \
-   do {                                                    \
-     if((expr1) && !(expr2))                               \
-       Botan::assertion_failure(#expr1 " implies " #expr2, \
-                                msg,                       \
-                                __func__,                  \
-                                __FILE__,                  \
-                                __LINE__);                 \
+#define BOTAN_ASSERT_IMPLICATION(expr1, expr2, msg)        				\
+   do {                                                    				\
+     if((expr1) && !(expr2))                               				\
+       Botan::assertion_failure(#expr1 " implies " #expr2, 				\
+                                msg,                       				\
+                                BOTAN_SOURCE_LOCATION::current()); 			\
    } while(0)
 
 /**
 * Assert that a pointer is not null
 */
-#define BOTAN_ASSERT_NONNULL(ptr)                          \
-   do {                                                    \
-     if((ptr) == nullptr)                                  \
-         Botan::assertion_failure(#ptr " is not null",     \
-                                  "",                      \
-                                  __func__,                \
-                                  __FILE__,                \
-                                  __LINE__);               \
+#define BOTAN_ASSERT_NONNULL(ptr)                          				\
+   do {                                                    				\
+     if((ptr) == nullptr)                                  				\
+         Botan::assertion_failure(#ptr " is not null",     				\
+                                  "",                      				\
+                                  BOTAN_SOURCE_LOCATION::current()); 			\
    } while(0)
 
 #if defined(BOTAN_ENABLE_DEBUG_ASSERTS)

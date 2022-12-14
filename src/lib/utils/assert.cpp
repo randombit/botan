@@ -17,28 +17,24 @@
 namespace Botan {
 
 void throw_invalid_argument(const char* message,
-                            const char* func,
-                            const char* file)
+                            const BOTAN_SOURCE_LOCATION &location)
    {
    std::ostringstream format;
-   format << message << " in " << func << ":" << file;
+   format << message << " in " << location.function_name() << ":" << location.file_name();
    throw Invalid_Argument(format.str());
    }
 
 void throw_invalid_state(const char* expr,
-                         const char* func,
-                         const char* file)
+                         const BOTAN_SOURCE_LOCATION &location)
    {
    std::ostringstream format;
-   format << "Invalid state: " << expr << " was false in " << func << ":" << file;
+   format << "Invalid state: " << expr << " was false in " << location.function_name() << ":" << location.file_name();
    throw Invalid_State(format.str());
    }
 
 void assertion_failure(const char* expr_str,
                        const char* assertion_made,
-                       const char* func,
-                       const char* file,
-                       int line)
+                       const BOTAN_SOURCE_LOCATION &location)
    {
    std::ostringstream format;
 
@@ -49,10 +45,13 @@ void assertion_failure(const char* expr_str,
    else
       format << expr_str << " ";
 
-   if(func)
-      format << "in " << func << " ";
+   format << "in " << location.function_name() << " ";
 
-   format << "@" << file << ":" << line;
+   format << "@" << location.file_name() << ":" << location.line();
+   if (location.column() > 0)
+   {
+   format << " (" << location.column() << ")";
+   }
 
 #if defined(BOTAN_TERMINATE_ON_ASSERTS)
    std::cerr << format.str() << '\n';

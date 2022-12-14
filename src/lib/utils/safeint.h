@@ -16,20 +16,20 @@ namespace Botan {
 class Integer_Overflow_Detected final : public Exception
    {
    public:
-      Integer_Overflow_Detected(const std::string& file, int line) :
-         Exception("Integer overflow detected at " + file + ":" + std::to_string(line))
+      Integer_Overflow_Detected(const BOTAN_SOURCE_LOCATION &location) :
+         Exception("Integer overflow detected at " + std::string(location.file_name()) + ":" + std::to_string(location.line()) + "/" + std::to_string(location.column()))
          {}
 
       ErrorType error_type() const noexcept override { return ErrorType::InternalError; }
    };
 
-inline size_t checked_add(size_t x, size_t y, const char* file, int line)
+inline size_t checked_add(size_t x, size_t y, BOTAN_SOURCE_LOCATION location)
    {
    // TODO: use __builtin_x_overflow on GCC and Clang
    size_t z = x + y;
    if(z < x) [[unlikely]]
       {
-      throw Integer_Overflow_Detected(file, line);
+      throw Integer_Overflow_Detected(location);
       }
    return z;
    }
@@ -43,7 +43,7 @@ RT checked_cast_to(AT i)
    return c;
    }
 
-#define BOTAN_CHECKED_ADD(x,y) checked_add(x,y,__FILE__,__LINE__)
+#define BOTAN_CHECKED_ADD(x,y) checked_add(x,y,BOTAN_SOURCE_LOCATION::current())
 
 }
 

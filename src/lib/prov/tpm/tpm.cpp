@@ -14,10 +14,10 @@
 #include <botan/internal/pk_ops.h>
 #include <sstream>
 #include <limits>
+#include <source_location>
 
 #include <tss/platform.h>
 #include <tss/tspi.h>
-#include <trousers/trousers.h>
 
 // TODO: dynamically load the TPM libraries?
 
@@ -25,12 +25,12 @@ namespace Botan {
 
 namespace {
 
-void tss_error(TSS_RESULT res, const char* expr, const char* file, int line)
+void tss_error(TSS_RESULT res, const char* expr, const BOTAN_SOURCE_LOCATION &location)
    {
    std::ostringstream err;
    err << "TPM error " << Trspi_Error_String(res)
        << " layer " << Trspi_Error_Layer(res)
-       << " in " << expr << " at " << file << ":" << line;
+       << " in " << expr << " at " << location.file_name() << ":" << location.line();
 
    throw TPM_Error(err.str());
    }
@@ -74,10 +74,10 @@ bool is_srk_uuid(const UUID& uuid)
    }
 #endif
 
-#define TSPI_CHECK_SUCCESS(expr) do {   \
-   TSS_RESULT res = expr;           \
-   if(res != TSS_SUCCESS)           \
-      tss_error(res, #expr, __FILE__, __LINE__);         \
+#define TSPI_CHECK_SUCCESS(expr) do {   			\
+   TSS_RESULT res = expr;           				\
+   if(res != TSS_SUCCESS)           				\
+      tss_error(res, #expr, BOTAN_SOURCE_LOCATION::current());   \
    } while(0)
 
 std::vector<uint8_t> get_obj_attr(TSS_HCONTEXT ctx,
