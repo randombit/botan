@@ -42,6 +42,7 @@ class Server_Impl_13 : public Channel_Impl_13
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;
       void process_dummy_change_cipher_spec() override;
 
+      using Channel_Impl_13::handle;
       void handle(const Client_Hello_12& client_hello_msg);
       void handle(const Client_Hello_13& client_hello_msg);
       void handle(const Certificate_13& certificate_msg);
