@@ -279,6 +279,18 @@ std::vector<Signature_Scheme> Client_Hello::signature_schemes() const
    return {};
    }
 
+std::vector<Signature_Scheme> Client_Hello::certificate_signature_schemes() const
+   {
+   // RFC 8446 4.2.3
+   //   If no "signature_algorithms_cert" extension is present, then the
+   //   "signature_algorithms" extension also applies to signatures appearing
+   //   in certificates.
+   if(Signature_Algorithms_Cert* sigs = m_data->extensions.get<Signature_Algorithms_Cert>())
+      { return sigs->supported_schemes(); }
+   else
+      { return signature_schemes(); }
+   }
+
 std::vector<Group_Params> Client_Hello::supported_ecc_curves() const
    {
    if(Supported_Groups* groups = m_data->extensions.get<Supported_Groups>())
@@ -483,6 +495,14 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    m_data->extensions.add(supported_groups.release());
 
    m_data->extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes())
+      {
+      // RFC 8446 4.2.3
+      //    TLS 1.2 implementations SHOULD also process this extension.
+      //    Implementations which have the same policy in both cases MAY omit
+      //    the "signature_algorithms_cert" extension.
+      m_data->extensions.add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
+      }
 
    if(reneg_info.empty() && !next_protocols.empty())
       { m_data->extensions.add(new Application_Layer_Protocol_Notification(next_protocols)); }
@@ -549,6 +569,14 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    m_data->extensions.add(supported_groups.release());
 
    m_data->extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes())
+      {
+      // RFC 8446 4.2.3
+      //    TLS 1.2 implementations SHOULD also process this extension.
+      //    Implementations which have the same policy in both cases MAY omit
+      //    the "signature_algorithms_cert" extension.
+      m_data->extensions.add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
+      }
 
    if(reneg_info.empty() && !next_protocols.empty())
       { m_data->extensions.add(new Application_Layer_Protocol_Notification(next_protocols)); }
@@ -735,14 +763,18 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    m_data->extensions.add(new Supported_Versions(Protocol_Version::TLS_V13, policy));
 
    m_data->extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes())
+      {
+      // RFC 8446 4.2.3
+      //    Implementations which have the same policy in both cases MAY omit
+      //    the "signature_algorithms_cert" extension.
+      m_data->extensions.add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
+      }
 
    // TODO: Support for PSK-only mode without a key exchange.
    //       This should be configurable in TLS::Policy and should allow no PSK
    //       support at all (e.g. to disable support for session resumption).
    m_data->extensions.add(new PSK_Key_Exchange_Modes({PSK_Key_Exchange_Mode::PSK_DHE_KE}));
-
-   // TODO: Add a signature_algorithms_cert extension negotiating the acceptable
-   //       signature algorithms in a server certificate chain's certificates.
 
    if(policy.support_cert_status_message())
       m_data->extensions.add(new Certificate_Status_Request({}, {}));

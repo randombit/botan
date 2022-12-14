@@ -67,6 +67,8 @@ class BOTAN_PUBLIC_API(2,0) Policy
       */
       virtual std::vector<Signature_Scheme> acceptable_signature_schemes() const;
 
+      virtual std::optional<std::vector<Signature_Scheme>> acceptable_certificate_signature_schemes() const;
+
       /**
       * The minimum signature strength we will accept
       * Returning 80 allows RSA 1024 and SHA-1. Values larger than 80 disable SHA-1 support.

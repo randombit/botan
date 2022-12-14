@@ -70,8 +70,8 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
       }
    }
 
-Certificate_Request_13::Certificate_Request_13(std::vector<Signature_Scheme> signature_schemes,
-                                               std::vector<X509_DN> acceptable_CAs,
+Certificate_Request_13::Certificate_Request_13(std::vector<X509_DN> acceptable_CAs,
+                                               const Policy& policy,
                                                Callbacks&)
    {
    // RFC 8446 4.3.2
@@ -91,9 +91,14 @@ Certificate_Request_13::Certificate_Request_13(std::vector<Signature_Scheme> sig
    //
    //    The "signature_algorithms" extension MUST be specified, and other
    //    extensions may optionally be included if defined for this message.
-   //
-   // TODO: fully support 'signature_algorithms_cert'
-   m_extensions.add(std::make_unique<Signature_Algorithms>(std::move(signature_schemes)));
+   m_extensions.add(std::make_unique<Signature_Algorithms>(policy.acceptable_signature_schemes()));
+   if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes())
+      {
+      // RFC 8446 4.2.3
+      //    Implementations which have the same policy in both cases MAY omit
+      //    the "signature_algorithms_cert" extension.
+      m_extensions.add(std::make_unique<Signature_Algorithms_Cert>(std::move(cert_signing_prefs.value())));
+      }
 
    if(!acceptable_CAs.empty())
       {
@@ -127,8 +132,8 @@ Certificate_Request_13::maybe_create(const Client_Hello_13& client_hello,
       return std::nullopt;
       }
 
-   return Certificate_Request_13(policy.acceptable_signature_schemes(),
-                                 std::move(client_auth_CAs),
+   return Certificate_Request_13(std::move(client_auth_CAs),
+                                 policy,
                                  callbacks);
    }
 
@@ -146,6 +151,18 @@ const std::vector<Signature_Scheme>& Certificate_Request_13::signature_schemes()
    BOTAN_ASSERT_NOMSG(m_extensions.has<Signature_Algorithms>());
 
    return m_extensions.get<Signature_Algorithms>()->supported_schemes();
+   }
+
+const std::vector<Signature_Scheme>& Certificate_Request_13::certificate_signature_schemes() const
+   {
+   // RFC 8446 4.2.3
+   //   If no "signature_algorithms_cert" extension is present, then the
+   //   "signature_algorithms" extension also applies to signatures appearing
+   //   in certificates.
+   if(auto sig_schemes_cert = m_extensions.get<Signature_Algorithms_Cert>())
+      { return sig_schemes_cert->supported_schemes(); }
+   else
+      { return signature_schemes(); }
    }
 
 std::vector<uint8_t> Certificate_Request_13::serialize() const
