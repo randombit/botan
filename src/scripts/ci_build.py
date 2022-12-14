@@ -111,7 +111,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     make_prefix = []
     test_prefix = []
-    test_cmd = [os.path.join(build_dir, 'botan-test'), '--data-dir=%s' % os.path.join(root_dir, 'src', 'tests', 'data')]
+    test_cmd = [os.path.join(build_dir, 'botan-test'), '--data-dir=%s' % os.path.join(root_dir, 'src', 'tests', 'data'), '--run-memory-intensive-tests']
 
     # generate JUnit test report
     if test_results_dir:
@@ -332,6 +332,13 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
 
     if target in ['coverage', 'sanitizer']:
+        if target_os == 'windows' and target == 'sanitizer':
+            # GitHub Actions worker intermittently ran out of memory when
+            # asked to allocate multi-gigabyte buffers under MSVC's ASan.
+            try:
+                test_cmd.remove('--run-memory-intensive-tests')
+            except ValueError:
+                pass
         test_cmd += ['--run-long-tests']
 
     flags += ['--cc-bin=%s' % (cc_bin)]
