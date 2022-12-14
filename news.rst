@@ -4,8 +4,8 @@ Release Notes
 Version 3.0.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Botan is now a C++17 codebase; compiler requirements have been
-  increased to GCC 9, Clang 7, or MSVC 2019. (GH #2455)
+* Botan is now a C++20 codebase; compiler requirements have been
+  increased to GCC 11, Clang 14, or MSVC 2019. (GH #2455 #3086)
 
 * Add support for Kyber post-quantum KEM (GH #2872 #2500)
 
@@ -17,13 +17,13 @@ Version 3.0.0, Not Yet Released
   now been made internal (GH #2456)
 
 * Remove several deprecated algorithms including CAST-256, MISTY1, Kasumi,
-  DESX, XTEA, PBKDF1, MCEIES, CBC-MAC and Tiger (GH #2434)
+  DESX, XTEA, PBKDF1, MCEIES, CBC-MAC, Tiger, NEWHOPE, and CECPQ1 (GH #2434 #3094)
 
 * Remove several deprecated features in TLS including DSA ciphersuites (GH #2505),
   anonymous ciphersuites (GH #2497), SHA-1 signatures in TLS 1.2 (GH #2537),
   SRP ciphersuites (GH #2506), SEED ciphersuites (GH #2509),
   Camellia CBC ciphersuites (GH #2509), AES-128 OCB ciphersuites (GH #2511),
-  DHE_PSK suites (GH #2512)
+  DHE_PSK suites (GH #2512), CECPQ1 ciphersuites (GH #3094)
 
 * Resolve an issue in the modular square root function which could cause
   a near-infinite loop if used with a composite modulus of a certain form
@@ -79,7 +79,8 @@ Version 3.0.0, Not Yet Released
 * Optimizations for SHACAL2, especially improving ARMv8 and POWER (GH #2556 #2557)
 
 * Several enums including ``DL_Group::Format``, ``EC_Group_Formatting``,
-  ``CRL_Code``, and ``ASN1_Tag`` are now ``enum class``. (GH #2551 #2552)
+  ``CRL_Code``, ``ASN1_Tag``, and ``Signature_Format`` are now ``enum class``.
+  (GH #2551 #2552 #3084)
 
 * ``ASN1_Tag`` enum has been split into ``ASN1_Type`` and ``ASN1_Class``.
   (GH #2584)
