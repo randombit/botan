@@ -123,16 +123,27 @@ bool Policy::use_ecc_point_compression() const
    return false;
    }
 
-Group_Params Policy::choose_key_exchange_group(const std::vector<Group_Params>& peer_groups) const
+Group_Params Policy::choose_key_exchange_group(const std::vector<Group_Params>& supported_by_peer,
+                                               const std::vector<Group_Params>& offered_by_peer) const
    {
-   if(peer_groups.empty())
+   if(supported_by_peer.empty())
       return Group_Params::NONE;
 
    const std::vector<Group_Params> our_groups = key_exchange_groups();
 
+   // Prefer groups that were offered by the peer for the sake of saving
+   // an additional round trip. For TLS 1.2, this won't be used.
+   for(auto g : offered_by_peer)
+      {
+      if(value_exists(our_groups, g))
+         return g;
+      }
+
+   // If no pre-offered groups fit our supported set, we prioritize our
+   // own preference.
    for(auto g : our_groups)
       {
-      if(value_exists(peer_groups, g))
+      if(value_exists(supported_by_peer, g))
          return g;
       }
 
@@ -339,7 +350,6 @@ bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 bool Policy::negotiate_encrypt_then_mac() const { return true; }
-bool Policy::use_extended_master_secret() const { return allow_tls12() || allow_dtls12(); }
 std::optional<uint16_t> Policy::record_size_limit() const { return std::nullopt; }
 bool Policy::support_cert_status_message() const { return true; }
 bool Policy::allow_resumption_for_renegotiation() const { return true; }
@@ -565,7 +575,6 @@ void Policy::print(std::ostream& o) const
    print_bool(o, "hide_unknown_users", hide_unknown_users());
    print_bool(o, "server_uses_own_ciphersuite_preferences", server_uses_own_ciphersuite_preferences());
    print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
-   print_bool(o, "use_extended_master_secret", use_extended_master_secret());
    print_bool(o, "support_cert_status_message", support_cert_status_message());
    print_bool(o, "tls_13_middlebox_compatibility_mode", tls_13_middlebox_compatibility_mode());
    print_bool(o, "hash_hello_random", hash_hello_random());

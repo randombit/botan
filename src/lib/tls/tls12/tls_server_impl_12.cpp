@@ -162,7 +162,7 @@ uint16_t choose_ciphersuite(
                           "Policy forbids us from negotiating any ciphersuite");
 
    const bool have_shared_ecc_curve =
-      (policy.choose_key_exchange_group(client_hello.supported_ecc_curves()) != Group_Params::NONE);
+      (policy.choose_key_exchange_group(client_hello.supported_ecc_curves(), {}) != Group_Params::NONE);
 
    /*
    Walk down one list in preference order
