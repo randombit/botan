@@ -339,7 +339,7 @@ class TLS_Handshake_Test final
                   }
                }
 
-            void tls_examine_extensions(const Botan::TLS::Extensions& extn, Botan::TLS::Connection_Side which_side) override
+            void tls_examine_extensions(const Botan::TLS::Extensions& extn, Botan::TLS::Connection_Side which_side, Botan::TLS::Handshake_Type /*unused*/) override
                {
                Botan::TLS::Extension* test_extn = extn.get(static_cast<Botan::TLS::Handshake_Extension_Type>(666));
 

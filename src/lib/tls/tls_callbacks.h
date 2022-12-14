@@ -351,32 +351,6 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        */
        virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos);
 
-       /**
-       * Optional callback: examine/modify Extensions before sending.
-       *
-       * Both client and server will call this callback on the Extensions object
-       * before serializing it in the client/server hellos. This allows an
-       * application to modify which extensions are sent during the
-       * handshake.
-       *
-       * @note For TLS 1.3 this will be exclusively called for Client Hello, Server Hello and
-       *       Encrypted Extensions but not for other messages that may carry extensions.
-       *       Use the newer overload of tls_modify_extensions instead.
-       *
-       * Default implementation does nothing.
-       *
-       * @param extn the extensions
-       * @param which_side will be CLIENT or SERVER which is the current
-       * applications role in the exchange.
-       *
-       * @deprecated Starting with Botan 3.0.0 you should the tls_modify_extensions overload
-       *             that provides context on which handshake message carries the extensions
-       *             being modified. TLS 1.3 uses extensions more ubiquitously than previous
-       *             protocol versions.
-       */
-       BOTAN_DEPRECATED("Use three-parameter overload of tls_modify_extensions")
-       virtual void tls_modify_extensions(Extensions& extn, Connection_Side which_side);
-
       /**
        * Optional callback: examine/modify Extensions before sending.
        *
@@ -392,33 +366,6 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @param which_message will state the handshake message type containing the extensions
        */
        virtual void tls_modify_extensions(Extensions& extn, Connection_Side which_side, Handshake_Type which_message);
-
-       /**
-       * Optional callback: examine peer extensions.
-       *
-       * Both client and server will call this callback with the Extensions
-       * object after receiving it from the peer. This allows examining the
-       * Extensions, for example to implement a custom extension. It also allows
-       * an application to require that a particular extension be implemented;
-       * throw an exception from this function to abort the handshake.
-       *
-       * @note For TLS 1.3 this will be exclusively called for Client Hello, Server Hello and
-       *       Encrypted Extensions but not for other messages that may carry extensions.
-       *       Use the newer overload of tls_examine_extensions instead.
-       *
-       * Default implementation does nothing.
-       *
-       * @param extn the extensions
-       * @param which_side will be CLIENT if these are are the clients extensions (ie we are
-       *        the server) or SERVER if these are the server extensions (we are the client).
-       *
-       * @deprecated Starting with Botan 3.0.0 you should the tls_examine_extensions overload
-       *             that provides context on which handshake message carries the extensions
-       *             being examined. TLS 1.3 uses extensions more ubiquitously than previous
-       *             protocol versions.
-       */
-       BOTAN_DEPRECATED("Use three-parameter overload of tls_examine_extensions")
-       virtual void tls_examine_extensions(const Extensions& extn, Connection_Side which_side);
 
        /**
        * Optional callback: examine peer extensions.

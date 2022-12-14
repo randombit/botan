@@ -300,21 +300,6 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          return Callbacks::tls_examine_extensions(extn, which_side, which_message);
          }
 
-      BOTAN_DIAGNOSTIC_PUSH
-      BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED
-      void tls_modify_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side) override
-         {
-         count_callback_invocation("tls_modify_extensions-deprecated");
-         Callbacks::tls_modify_extensions(exts, side);
-         }
-
-      void tls_examine_extensions(const Botan::TLS::Extensions& extn, Connection_Side which_side) override
-         {
-         count_callback_invocation("tls_examine_extensions-deprecated");
-         return Callbacks::tls_examine_extensions(extn, which_side);
-         }
-      BOTAN_DIAGNOSTIC_POP
-
       std::string tls_decode_group_param(Group_Params group_param) override
          {
          count_callback_invocation("tls_decode_group_param");
@@ -772,8 +757,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   {
                   "tls_emit_data",
                   "tls_inspect_handshake_msg_client_hello",
-                  "tls_modify_extensions_client_hello",
-                  "tls_modify_extensions-deprecated"
+                  "tls_modify_extensions_client_hello"
                   });
 
                result.test_eq("TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
@@ -794,8 +778,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx->check_callback_invocations(result, "server hello received",
                   {
                   "tls_inspect_handshake_msg_server_hello",
-                  "tls_examine_extensions_server_hello",
-                  "tls_examine_extensions-deprecated"
+                  "tls_examine_extensions_server_hello"
                   });
 
                result.confirm("client is not yet active", !ctx->client.is_active());
@@ -814,7 +797,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_inspect_handshake_msg_finished",
                   "tls_examine_extensions_encrypted_extensions",
                   "tls_examine_extensions_certificate",
-                  "tls_examine_extensions-deprecated",
                   "tls_emit_data",
                   "tls_session_activated",
                   "tls_verify_cert_chain",
@@ -926,7 +908,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_emit_data",
                   "tls_inspect_handshake_msg_client_hello",
                   "tls_modify_extensions_client_hello",
-                  "tls_modify_extensions-deprecated",
                   "tls_current_timestamp"
                   });
 
@@ -985,7 +966,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_emit_data",
                   "tls_inspect_handshake_msg_client_hello",
                   "tls_modify_extensions_client_hello",
-                  "tls_modify_extensions-deprecated"
                   });
 
                result.test_eq("TLS client hello (1)", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
@@ -1003,7 +983,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_examine_extensions_hello_retry_request",
                   "tls_inspect_handshake_msg_client_hello",
                   "tls_modify_extensions_client_hello",
-                  "tls_modify_extensions-deprecated",
                   "tls_decode_group_param"
                   });
 
@@ -1019,7 +998,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   {
                   "tls_inspect_handshake_msg_server_hello",
                   "tls_examine_extensions_server_hello",
-                  "tls_examine_extensions-deprecated",
                   "tls_decode_group_param"
                   });
                }),
@@ -1037,7 +1015,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_inspect_handshake_msg_finished",
                   "tls_examine_extensions_encrypted_extensions",
                   "tls_examine_extensions_certificate",
-                  "tls_examine_extensions-deprecated",
                   "tls_emit_data",
                   "tls_session_activated",
                   "tls_verify_cert_chain",
@@ -1114,7 +1091,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_emit_data",
                   "tls_inspect_handshake_msg_client_hello",
                   "tls_modify_extensions_client_hello",
-                  "tls_modify_extensions-deprecated",
                   });
 
                result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
@@ -1126,7 +1102,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
                ctx->check_callback_invocations(result, "callbacks after server hello", {
                   "tls_examine_extensions_server_hello",
-                  "tls_examine_extensions-deprecated",
                   "tls_inspect_handshake_msg_server_hello",
                   });
                }),
@@ -1141,7 +1116,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_examine_extensions_encrypted_extensions",
                   "tls_examine_extensions_certificate",
                   "tls_examine_extensions_certificate_request",
-                  "tls_examine_extensions-deprecated",
                   "tls_modify_extensions_certificate",
                   "tls_inspect_handshake_msg_certificate",
                   "tls_inspect_handshake_msg_certificate_request",
@@ -1210,7 +1184,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_emit_data",
                   "tls_inspect_handshake_msg_client_hello",
                   "tls_modify_extensions_client_hello",
-                  "tls_modify_extensions-deprecated"
                   });
                }),
 
@@ -1230,7 +1203,6 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_examine_extensions_server_hello",
                   "tls_examine_extensions_encrypted_extensions",
                   "tls_examine_extensions_certificate",
-                  "tls_examine_extensions-deprecated",
                   "tls_emit_data",
                   "tls_session_activated",
                   "tls_verify_cert_chain",

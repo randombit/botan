@@ -43,42 +43,12 @@ std::chrono::system_clock::time_point TLS::Callbacks::tls_current_timestamp()
    return std::chrono::system_clock::now();
    }
 
-void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/, Connection_Side /*unused*/)
+void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/, Connection_Side /*unused*/, Handshake_Type /*unused*/)
    {
    }
 
-void TLS::Callbacks::tls_modify_extensions(Extensions& exts, Connection_Side which_side, Handshake_Type which_message)
+void TLS::Callbacks::tls_examine_extensions(const Extensions& /*unused*/, Connection_Side /*unused*/, Handshake_Type /*unused*/)
    {
-   // Legacy behaviour: extensions in messages other than client/server hello
-   //                   are not forwarded to the deprecated callback.
-   if(which_message == Handshake_Type::CLIENT_HELLO ||
-      which_message == Handshake_Type::SERVER_HELLO ||
-      which_message == Handshake_Type::ENCRYPTED_EXTENSIONS)
-      {
-      BOTAN_DIAGNOSTIC_PUSH;
-      BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED;
-      tls_modify_extensions(exts, which_side);
-      BOTAN_DIAGNOSTIC_POP;
-      }
-   }
-
-void TLS::Callbacks::tls_examine_extensions(const Extensions& /*unused*/, Connection_Side /*unused*/)
-   {
-   }
-
-void TLS::Callbacks::tls_examine_extensions(const Extensions& exts, Connection_Side which_side, Handshake_Type which_message)
-   {
-   // Legacy behaviour: extensions in messages other than client/server hello
-   //                   are not forwarded to the deprecated callback.
-   if(which_message == Handshake_Type::CLIENT_HELLO ||
-      which_message == Handshake_Type::SERVER_HELLO ||
-      which_message == Handshake_Type::ENCRYPTED_EXTENSIONS)
-      {
-      BOTAN_DIAGNOSTIC_PUSH;
-      BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED;
-      tls_examine_extensions(exts, which_side);
-      BOTAN_DIAGNOSTIC_POP;
-      }
    }
 
 std::string TLS::Callbacks::tls_decode_group_param(Group_Params group_param)
