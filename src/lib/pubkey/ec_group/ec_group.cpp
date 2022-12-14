@@ -358,7 +358,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
    BER_Decoder ber(bits, len);
    BER_Object obj = ber.get_next_object();
 
-   if(obj.type() == ASN1_Type::Null)
+   if(obj.type() == ASN1_Type::Null) [[unlikely]]
       {
       throw Decoding_Error("Cannot handle ImplicitCA ECC parameters");
       }

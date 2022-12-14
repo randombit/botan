@@ -27,7 +27,7 @@ inline size_t checked_add(size_t x, size_t y, const char* file, int line)
    {
    // TODO: use __builtin_x_overflow on GCC and Clang
    size_t z = x + y;
-   if(z < x)
+   if(z < x) [[unlikely]]
       {
       throw Integer_Overflow_Detected(file, line);
       }

@@ -43,7 +43,7 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size)
 
 void deallocate_memory(void* p, size_t elems, size_t elem_size)
    {
-   if(p == nullptr)
+   if(p == nullptr) [[unlikely]]
       return;
 
    secure_scrub_memory(p, elems * elem_size);
