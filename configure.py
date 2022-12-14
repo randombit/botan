@@ -50,9 +50,12 @@ def flatten(l):
 
 def normalize_source_path(source):
     """
-    cmake needs this, and nothing else minds
+    cmake and some versions of make need this, and nothing else minds
     """
     return os.path.normpath(source).replace('\\', '/')
+
+def normalize_source_paths(sources):
+    return [normalize_source_path(p) for p in sources]
 
 def parse_version_file(version_path):
     version_file = open(version_path, encoding='utf8')
@@ -218,7 +221,7 @@ class BuildPaths: # pylint: disable=too-many-instance-attributes
         self.external_headers = sorted(flatten([m.external_headers() for m in modules]))
 
         # this is overwritten if amalgamation is used
-        self.lib_sources = [normalize_source_path(s) for s in sorted(flatten([mod.sources() for mod in modules]))]
+        self.lib_sources = normalize_source_paths(sorted(flatten([mod.sources() for mod in modules])))
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
@@ -234,9 +237,9 @@ class BuildPaths: # pylint: disable=too-many-instance-attributes
                     if filename.endswith('.h') and not filename.startswith('.'):
                         yield os.path.join(dirpath, filename)
 
-        self.cli_sources = [normalize_source_path(s) for s in find_sources_in(source_paths.src_dir, 'cli')]
-        self.cli_headers = [normalize_source_path(s) for s in find_headers_in(source_paths.src_dir, 'cli')]
-        self.test_sources = [normalize_source_path(s) for s in find_sources_in(source_paths.src_dir, 'tests')]
+        self.cli_sources = normalize_source_paths(find_sources_in(source_paths.src_dir, 'cli'))
+        self.cli_headers = normalize_source_paths(find_headers_in(source_paths.src_dir, 'cli'))
+        self.test_sources = normalize_source_paths(find_sources_in(source_paths.src_dir, 'tests'))
 
         if options.build_fuzzers:
             self.fuzzer_sources = list(find_sources_in(source_paths.src_dir, 'fuzzer'))
@@ -267,11 +270,11 @@ class BuildPaths: # pylint: disable=too-many-instance-attributes
     def format_include_paths(self, cc, external_includes):
         dash_i = cc.add_include_dir_option
         dash_isystem = cc.add_system_include_dir_option
-        output = dash_i + ' ' + self.include_dir
+        output = dash_i + ' ' + normalize_source_path(self.include_dir)
         if self.external_headers:
-            output += ' ' + dash_isystem + ' ' + self.external_include_dir
+            output += ' ' + dash_isystem + ' ' + normalize_source_path(self.external_include_dir)
         for external_include in external_includes:
-            output += ' ' + dash_isystem + ' ' + external_include
+            output += ' ' + dash_isystem + ' ' + normalize_source_path(external_include)
         return output
 
     def src_info(self, typ):
@@ -1851,7 +1854,7 @@ def yield_objectfile_list(sources, obj_dir, obj_suffix, options):
             name = filename
 
         name = name.replace('.cpp', obj_suffix)
-        yield os.path.join(obj_dir, name)
+        yield normalize_source_path(os.path.join(obj_dir, name))
 
 def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
     # pylint: disable=too-many-locals
@@ -2012,10 +2015,16 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     program_suffix = options.program_suffix or osinfo.program_suffix
 
     def join_with_build_dir(path):
-        # For some unknown reason MinGW doesn't like ./foo
-        if build_dir == os.path.curdir and options.os == 'mingw':
-            return path
-        return os.path.join(build_dir, path)
+        # jom (and mingw32-make) seem to string-compare Makefile targets and
+        # requirements. For them, `./botan.lib` is NOT equal to `botan.lib` or
+        # `C:\botan\botan-test.exe` is NOT equal to `C:\botan/botan-test.exe`
+        #
+        # `normalize_source_path` will "fix" the path slashes but remove
+        # a redundant `./` for the "trivial" relative path.
+        normalized = normalize_source_path(os.path.join(build_dir, path))
+        if build_dir == '.':
+            normalized = './%s' % normalized
+        return normalized
 
     def all_targets(options):
         yield 'libs'
@@ -2043,12 +2052,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         return os.path.join(options.prefix or osinfo.install_root, p)
 
     def choose_python_exe():
-        exe = sys.executable
-
-        if options.os == 'mingw':  # mingw doesn't handle the backslashes in the absolute path well
-            return exe.replace('\\', '/')
-
-        return exe
+        return normalize_source_path(sys.executable)
 
     def choose_cxx_exe():
         cxx = options.compiler_binary or cc.binary_name
@@ -2129,11 +2133,11 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'with_doxygen': options.with_doxygen,
         'maintainer_mode': options.maintainer_mode,
 
-        'out_dir': build_dir,
-        'build_dir': build_paths.build_dir,
+        'out_dir': normalize_source_path(build_dir),
+        'build_dir': normalize_source_path(build_paths.build_dir),
         'module_info_dir': build_paths.doc_module_info,
 
-        'doc_stamp_file': os.path.join(build_paths.build_dir, 'doc.stamp'),
+        'doc_stamp_file': normalize_source_path(os.path.join(build_paths.build_dir, 'doc.stamp')),
         'makefile_path': os.path.join(build_paths.build_dir, '..', 'Makefile'),
 
         'build_static_lib': options.build_static_lib,
@@ -2293,7 +2297,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     if options.os == 'llvm' or options.compiler == 'msvc':
         # llvm-link and msvc require just naming the file directly
         variables['build_dir_link_path'] = ''
-        variables['link_to_botan'] = os.path.join(build_dir, variables['static_lib_name'])
+        variables['link_to_botan'] = normalize_source_path(os.path.join(build_dir, variables['static_lib_name']))
     else:
         variables['build_dir_link_path'] = '%s%s' % (cc.add_lib_dir_option, build_dir)
         variables['link_to_botan'] = cc.add_lib_option % variables['libname']

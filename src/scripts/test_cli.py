@@ -31,6 +31,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 # pylint: disable=global-statement,unused-argument
 
 CLI_PATH = None
+TEST_DATA_DIR = '.'
 TESTS_RUN = 0
 TESTS_FAILED = 0
 
@@ -807,7 +808,7 @@ def cli_timing_test_tests(_tmp_dir):
     output_re = re.compile('[0-9]+;[0-9];[0-9]+')
 
     for suite in timing_tests:
-        output = test_cli("timing_test", [suite, "--measurement-runs=16", "--warmup-runs=3"], None).split('\n')
+        output = test_cli("timing_test", [suite, "--measurement-runs=16", "--warmup-runs=3", "--test-data-dir=%s" % TEST_DATA_DIR], None).split('\n')
 
         for line in output:
             if output_re.match(line) is None:
@@ -1336,6 +1337,7 @@ def main(args=None):
     parser.add_option('--quiet', action='store_true', default=False)
     parser.add_option('--threads', action='store', type='int', default=0)
     parser.add_option('--run-slow-tests', action='store_true', default=False)
+    parser.add_option('--test-data-dir', default='.')
 
     (options, args) = parser.parse_args(args)
 
@@ -1355,6 +1357,9 @@ def main(args=None):
 
     global CLI_PATH
     CLI_PATH = args[1]
+
+    global TEST_DATA_DIR
+    TEST_DATA_DIR = os.path.join(options.test_data_dir, 'src/tests/data/timing/')
 
     test_regex = None
     if len(args) == 3:

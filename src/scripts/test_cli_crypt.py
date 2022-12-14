@@ -165,6 +165,7 @@ def main(args=None):
     parser.add_argument('--verbose', action='store_true', default=False)
     parser.add_argument('--quiet', action='store_true', default=False)
     parser.add_argument('--run-slow-tests', action='store_true', default=False)
+    parser.add_argument('--test-data-dir', default='.')
     args = parser.parse_args()
 
     setup_logging(args)
@@ -176,7 +177,7 @@ def main(args=None):
     if threads == 0:
         threads = multiprocessing.cpu_count()
 
-    test_data_dir = os.path.join('src', 'tests', 'data')
+    test_data_dir = os.path.join(args.test_data_dir, 'src', 'tests', 'data')
 
     mode_test_data = [
         os.path.join(test_data_dir, 'aead', 'ccm.vec'),
