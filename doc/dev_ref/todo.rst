@@ -24,7 +24,7 @@ Improved Ciphers Implementations
 
 * Stiched AES/GCM mode for CPUs supporting both AES and CLMUL
 * Combine AES-NI, ARMv8 and POWER AES implementations (as already done for CLMUL)
-* Support for VAES (Zen3/Ice Lake)
+* Support for VAES (Zen4/Ice Lake)
 * Vector permute AES only supports little-endian systems; fix for big-endian
 * SM4 using AES-NI (https://github.com/mjosaarinen/sm4ni) or vector permute
 * Poly1305 using AVX2
@@ -33,9 +33,10 @@ Improved Ciphers Implementations
 * SHA-512 using BMI2+AVX2
 * Constant time bitsliced DES
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
-* Salsa implementations (SIMD_4x32 and/or AVX2)
+* Improved Salsa implementations (SIMD_4x32 and/or AVX2)
 * AVX-512 implementations? (SHACAL2, Serpent, ChaCha)
-* Support parallel execution via thread pool in scrypt and Argon2
+* Support parallel execution via thread pool in scrypt
+* AVX2 version of Blakma function in Argon2
 * Add CLMUL/PMULL implementations for CRC24/CRC32
 
 Public Key Crypto, Math
@@ -58,7 +59,6 @@ Public Key Crypto, Math
 Utility Functions
 ------------------
 
-* Add a memory span type
 * Make Memory_Pool more concurrent (currently uses a global lock)
 * Guarded integer type to prevent overflow bugs
 * Add logging callbacks
