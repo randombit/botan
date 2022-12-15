@@ -29,15 +29,22 @@ jobs:
       fail-fast: false
 
       matrix:
-        # basic configuration combinations should run on all target platforms
-        target:    [ static, shared, amalgamation ]
-        arch:      [ x86_64, x86 ]
-        host_os:   [ windows-2022, windows-2019 ]
-
-        exclude:
-          # currently failing
-          # see TODOs here: https://github.com/randombit/botan/pull/3007
-          - arch: x86
+        include:
+          - target: shared
+            arch: x86_64
+            host_os: windows-2022
+          - target: static
+            arch: x86_64
+            host_os: windows-2022
+          - target: amalgamation
+            arch: x86_64
+            host_os: windows-2022
+          - target: shared
+            arch: x86
+            host_os: windows-2022
+          - target: shared
+            arch: x86_64
+            host_os: windows-2019
 
     runs-on: ${{ matrix.host_os }}
 
@@ -60,9 +67,19 @@ jobs:
       fail-fast: false
 
       matrix:
-        # basic configuration combinations should run on all target platforms
-        target:   [ static, shared, amalgamation ]
-        compiler: [ clang, gcc ]
+        include:
+          - compiler: gcc
+            target: shared
+          - compiler: clang
+            target: shared
+
+          - compiler: gcc
+            target: amalgamation
+          - compiler: clang
+            target: amalgamation
+
+          - compiler: gcc
+            target: static
 
     runs-on: ubuntu-22.04
 
@@ -84,14 +101,11 @@ jobs:
       fail-fast: false
 
       matrix:
-        # basic configuration combinations should run on all target platforms
-        target:   [ static, shared, amalgamation ]
-        compiler: [ clang, gcc ]
-
-        exclude:
-          # currently failing
-          # see TODOs here: https://github.com/randombit/botan/pull/3007
-          - compiler: gcc
+        include:
+          - target: shared
+            compiler: clang
+          - target: amalgamation
+            compiler: clang
 
     runs-on: macos-latest
 
@@ -129,9 +143,6 @@ jobs:
           - target: emscripten
             compiler: emcc
             host_os: macos-latest
-          - target: baremetal
-            compiler: gcc
-            host_os: ubuntu-22.04
           - target: minimized
             compiler: gcc
             host_os: ubuntu-22.04
@@ -140,7 +151,7 @@ jobs:
             host_os: ubuntu-22.04
           - target: sanitizer
             compiler: msvc
-            host_os: windows-latest
+            host_os: windows-2022
             make_tool: nmake # to force a serial build (otherwise multi-process PDB handling chokes)
                              # See: https://github.com/randombit/botan/pull/3012#discussion_r1033621569
           - target: sanitizer
@@ -154,7 +165,7 @@ jobs:
             host_os: ubuntu-22.04
           - target: static
             compiler: gcc
-            host_os: windows-latest
+            host_os: windows-2022
             make_tool: mingw32-make
 
     runs-on: ${{ matrix.host_os }}
@@ -191,10 +202,13 @@ jobs:
           - target: cross-i386
             compiler: gcc
             host_os: ubuntu-22.04
-          - target: cross-arm64
+          - target: cross-arm32-baremetal
             compiler: gcc
             host_os: ubuntu-22.04
           - target: cross-arm32
+            compiler: gcc
+            host_os: ubuntu-22.04
+          - target: cross-arm64
             compiler: gcc
             host_os: ubuntu-22.04
           - target: cross-ppc64
