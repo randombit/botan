@@ -246,7 +246,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
          m_s2c.clear();
 
-         if(m_s2c_pending.empty() && m_tls.is_closed())
+         if(m_s2c_pending.empty() && m_tls.is_closed_for_writing())
             {
             m_client_socket.close();
             }
@@ -292,7 +292,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
                {
                const std::string http_summary = summarize_request(request);
 
-               const std::string report = m_session_summary + m_chello_summary + http_summary;
+               const std::string report = m_connection_summary + m_session_summary + m_chello_summary + http_summary;
 
                response << "HTTP/1.0 200 OK\r\n";
                response << "Server: " << Botan::version_string() << "\r\n";
@@ -340,11 +340,18 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
             }
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session) override
+      void tls_session_activated() override
          {
          std::ostringstream strm;
 
          strm << "TLS negotiation with " << Botan::version_string() << " test server\n\n";
+
+         m_connection_summary = strm.str();
+         }
+
+      bool tls_session_established(const Botan::TLS::Session& session) override
+         {
+         std::ostringstream strm;
 
          strm << "Version: " << session.version().to_string() << "\n";
          strm << "Ciphersuite: " << session.ciphersuite().to_string() << "\n";
@@ -413,6 +420,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
       std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
       Botan::TLS::Server m_tls;
       std::string m_chello_summary;
+      std::string m_connection_summary;
       std::string m_session_summary;
       std::unique_ptr<HTTP_Parser> m_http_parser;
 

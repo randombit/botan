@@ -27,7 +27,8 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
          TLS_V11            = 0x0302,  // not supported by Botan
          TLS_V12            = 0x0303,
          TLS_V13            = 0x0304,
-         DTLS_V12           = 0xFEFD
+         DTLS_V12           = 0xFEFD,
+         DTLS_V13           = 0xFEFC,  // not supported by Botan
       };
 
       /**
@@ -106,6 +107,11 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
        * @return true if this version indicates (D)TLS 1.2 or older
        */
       bool is_pre_tls_13() const;
+
+      /**
+       * @return true if this version indicates a (D)TLS newer than 1.3
+       */
+      bool is_tls_13_or_later() const;
 
       /**
       * @return if this version is equal to other

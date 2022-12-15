@@ -161,8 +161,7 @@ Certificate_Verify_13::Certificate_Verify_13(
    {
    m_scheme = choose_signature_scheme(key, policy.allowed_signature_schemes(), peer_allowed_schemes);
    BOTAN_ASSERT_NOMSG(m_scheme.is_available());
-
-   // TODO: we need to verify that the provided private key is strong enough for TLS 1.3
+   BOTAN_ASSERT_NOMSG(m_scheme.is_compatible_with(Protocol_Version::TLS_V13));
 
    m_signature =
       callbacks.tls_sign_message(key,

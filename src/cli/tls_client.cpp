@@ -315,6 +315,11 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             }
          }
 
+      void tls_session_activated() override
+         {
+         output() << "Handshake complete\n";
+         }
+
       bool tls_session_established(const Botan::TLS::Session& session) override
          {
          output() << "Handshake complete, " << session.version().to_string()

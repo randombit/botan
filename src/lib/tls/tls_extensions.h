@@ -703,16 +703,32 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension
       void retry_offer(const Key_Share& retry_request_keyshare, const std::vector<Named_Group>& supported_groups, Callbacks& cb, RandomNumberGenerator& rng);
 
       /**
+       * @return key exchange groups the peer offered key share entries for
+       */
+      std::vector<Named_Group> offered_groups() const;
+
+      /**
+       * @return key exchange group that was selected by a Hello Retry Request
+       */
+      Named_Group selected_group() const;
+
+      /**
        * Delete all private keys that might be contained in Key_Share_Entries in this extension.
        */
       void erase();
 
-      explicit Key_Share(TLS_Data_Reader& reader,
-                         uint16_t extension_size,
-                         Handshake_Type message_type);
+      Key_Share(TLS_Data_Reader& reader,
+                uint16_t extension_size,
+                Handshake_Type message_type);
 
-      // constuctor used for ClientHello msg
-      explicit Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng);
+      // constructor used for ClientHello msg
+      Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng);
+
+      // constructor used for ServerHello msg
+      Key_Share(Named_Group group, Callbacks& cb, RandomNumberGenerator& rng);
+
+      // constructor used for HelloRetryRequest msg
+      Key_Share(Named_Group selected_group);
 
       // destructor implemented in .cpp to hide Key_Share_Impl
       ~Key_Share();

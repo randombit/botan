@@ -32,6 +32,16 @@
       #include <botan/tls_session_manager_sqlite.h>
    #endif
 
+namespace Botan::TLS {
+
+// TODO: remove this, once TLS 1.3 is fully implemented
+class Strict_Policy_Without_TLS13 : public Strict_Policy
+   {
+   bool allow_tls13() const override { return false; }
+   };
+
+}
+
 #endif
 
 namespace Botan_Tests {
@@ -608,9 +618,10 @@ class Test_Policy final : public Botan::TLS::Text_Policy
    {
    public:
       Test_Policy() : Text_Policy("") {}
-      bool acceptable_protocol_version(Botan::TLS::Protocol_Version /*version*/) const override
+      bool acceptable_protocol_version(Botan::TLS::Protocol_Version version) const override
          {
-         return true;
+         // TODO: handle TLS 1.3 server once the time is ripe.
+         return version.is_pre_tls_13();
          }
 
       size_t dtls_initial_timeout() const override
@@ -801,7 +812,7 @@ class TLS_Unit_Tests final : public Test
 
 #endif
 
-         Botan::TLS::Strict_Policy strict_policy;
+         Botan::TLS::Strict_Policy_Without_TLS13 strict_policy;
          test_with_policy("Strict policy", results, *client_ses, *server_ses, *creds,
             {Botan::TLS::Protocol_Version::TLS_V12}, strict_policy);
 

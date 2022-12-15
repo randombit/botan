@@ -85,6 +85,18 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
                                        const std::string& context,
                                        size_t length) const override;
 
+      /**
+       * Creates a new session ticket along with optional application specific
+       * data. Note that this works for TLS 1.3 connections only.
+       *
+       * @param lifetime          in seconds from the current time
+       * @param application_data  an optional buffer of application specific data
+       *                          associated to the new session
+       */
+      // TODO: use value instead of ref? Ude optional?
+      void send_new_session_ticket(std::chrono::seconds lifetime,
+                                   const std::vector<uint8_t>& application_data = {});
+
       void renegotiate(bool force_full_renegotiation = false) override;
 
       void update_traffic_keys(bool request_peer_update = false) override;

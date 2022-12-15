@@ -723,7 +723,7 @@ class Stream
                                 m_context.m_policy,
                                 m_context.m_rng,
                                 m_context.m_server_info,
-                                Protocol_Version::latest_tls_version()));
+                                m_context.m_policy.latest_supported_version(false /* no DTLS */)));
                   }
                else
                   {

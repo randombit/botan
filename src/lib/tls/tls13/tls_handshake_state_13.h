@@ -17,6 +17,7 @@
 #include <botan/tls_magic.h>
 #include <botan/tls_messages.h>
 #include <botan/tls_exceptn.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan::TLS {
 
@@ -112,11 +113,24 @@ class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Ba
    public:
       Handshake_State_13() : Handshake_State_13_Base(whoami) {}
 
-      decltype(auto) sending(Outbound_Message_T message)
+      template<typename MsgT>
+      std::reference_wrapper<MsgT> sending(MsgT msg)
          {
-         return std::visit([&](auto msg) -> Handshake_Message_13_Ref
+         static_assert(std::is_constructible_v<Outbound_Message_T, MsgT>,
+                       "Cannot send handshake message of type MsgT");
+
+         return std::reference_wrapper<decltype(msg)>(store(std::move(msg), false));
+         }
+
+      template<typename... MsgTs>
+      decltype(auto) sending(std::variant<MsgTs...> message)
+         {
+         static_assert(is_generalizable_to<Outbound_Message_T>(message),
+                       "Cannot send handshake message of types MsgTs...");
+
+         return std::visit([&](auto msg) -> as_wrapped_references_t<std::variant<MsgTs...>>
             {
-            return std::reference_wrapper<decltype(msg)>(store(std::move(msg), false));
+            return sending(std::move(msg));
             }, std::move(message));
          }
 

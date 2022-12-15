@@ -8,9 +8,62 @@
 
 #include <botan/tls_messages.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_callbacks.h>
 #include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
+
+Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello, const Policy& policy, Callbacks& cb)
+   {
+   const auto& exts = client_hello.extensions();
+
+   // RFC 8446 4.2.7
+   //    As of TLS 1.3, servers are permitted to send the "supported_groups"
+   //    extension to the client.  Clients [...] MAY use the information
+   //    learned from a successfully completed handshake to change what groups
+   //    they use in their "key_share" extension in subsequent connections.
+   if(exts.has<Supported_Groups>())
+      {
+      m_extensions.add(new Supported_Groups(policy.key_exchange_groups()));
+      }
+
+   const auto record_size_limit = policy.record_size_limit();
+   const auto max_record_size = MAX_PLAINTEXT_SIZE + 1 /* encrypted content type byte */;
+   if(exts.has<Record_Size_Limit>())
+      {
+      // RFC 8449 4
+      //    Endpoints SHOULD advertise the "record_size_limit" extension, even
+      //    if they have no need to limit the size of records. [...]  For
+      //    servers, this allows clients to know that their limit will be
+      //    respected.
+      m_extensions.add(new Record_Size_Limit(record_size_limit.value_or(max_record_size)));
+      }
+   else if(record_size_limit.has_value() && record_size_limit.value() < max_record_size)
+      {
+      // RFC 8449 4
+      //    Endpoints SHOULD advertise the "record_size_limit" extension, even if
+      //    they have no need to limit the size of records. For clients, this
+      //    allows servers to advertise a limit at their discretion.
+      throw TLS_Exception(Alert::MISSING_EXTENSION,
+                          "Server cannot enforce record size limit without the client supporting it");
+      }
+
+   // RFC 6066 3
+   //    A server that receives a client hello containing the "server_name"
+   //    extension [...] SHALL include an extension of type "server_name" in the
+   //    (extended) server hello. The "extension_data" field of this extension
+   //    SHALL be empty.
+   if(exts.has<Server_Name_Indicator>())
+      {
+      m_extensions.add(new Server_Name_Indicator(""));
+      }
+
+   // TODO: Implement handling for (at least)
+   //       * SRTP
+   //       * ALPN
+
+   cb.tls_modify_extensions(m_extensions, SERVER, type());
+   }
 
 Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf)
    {
@@ -56,6 +109,11 @@ Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf)
                           "Encrypted Extensions contained an extension that is not allowed");
       }
 
+   }
+
+std::vector<uint8_t> Encrypted_Extensions::serialize() const
+   {
+   return m_extensions.serialize(Connection_Side::SERVER);
    }
 
 }

@@ -10,6 +10,7 @@
 
 #include <botan/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/internal/stl_util.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/ber_dec.h>
@@ -446,8 +447,10 @@ Supported_Groups::Supported_Groups(TLS_Data_Reader& reader,
 
    for(size_t i = 0; i != elems; ++i)
       {
-      const uint16_t id = reader.get_uint16_t();
-      m_groups.push_back(static_cast<Group_Params>(id));
+      const auto group = static_cast<Group_Params>(reader.get_uint16_t());
+      // Note: RFC 8446 does not explicitly enforce that groups must be unique.
+      if(!value_exists(m_groups, group))
+         m_groups.push_back(group);
       }
    }
 

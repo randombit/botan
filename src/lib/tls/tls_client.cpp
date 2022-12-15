@@ -37,6 +37,9 @@ Client::Client(Callbacks& callbacks,
                size_t io_buf_sz)
    {
    Protocol_Version effective_version = offer_version;
+   BOTAN_ARG_CHECK(policy.acceptable_protocol_version(offer_version),
+                   "Policy does not allow to offer requested protocol version");
+
 #if defined(BOTAN_HAS_TLS_13)
    // downgrade to TLS 1.2 directly if we have a legacy session to resume
    if(effective_version == Protocol_Version::TLS_V13)

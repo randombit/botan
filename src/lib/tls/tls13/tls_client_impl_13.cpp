@@ -376,7 +376,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
 
    callbacks().tls_examine_extensions(hrr.extensions(), SERVER, Handshake_Type::HELLO_RETRY_REQUEST);
 
-   send_handshake_message(ch);
+   send_handshake_message(std::reference_wrapper(ch));
 
    // RFC 8446 4.1.4
    //    If a client receives a second HelloRetryRequest in the same connection [...],

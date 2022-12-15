@@ -57,6 +57,9 @@ class Server_Impl_12 : public Channel_Impl_12
                               RandomNumberGenerator& rng,
                               bool is_datagram = false,
                               size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
+
+      explicit Server_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info);
+
    private:
       /**
       * Return the protocol notification set by the client (using the

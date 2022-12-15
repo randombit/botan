@@ -21,6 +21,10 @@ namespace Botan {
 
 namespace TLS {
 
+class Client_Hello_13;
+class Server_Hello_13;
+class Callbacks;
+
 /**
 * Class representing a TLS session state
 */
@@ -49,6 +53,8 @@ class BOTAN_PUBLIC_API(2,0) Session final
               uint16_t srtp_profile,
               std::chrono::system_clock::time_point current_timestamp);
 
+#if defined(BOTAN_HAS_TLS_13)
+
       /**
       * New TLS 1.3 session (sets session start time)
       */
@@ -63,6 +69,21 @@ class BOTAN_PUBLIC_API(2,0) Session final
               const std::vector<X509_Certificate>& peer_certs,
               const Server_Information& server_info,
               std::chrono::system_clock::time_point current_timestamp);
+
+      /**
+       * Create a new TLS 1.3 session object from server data structures
+       * after a successful handshake with a TLS 1.3 client
+       */
+      Session(secure_vector<uint8_t>&& session_psk,
+              const std::optional<uint32_t>& max_early_data_bytes,
+              std::chrono::seconds lifetime_hint,
+              const std::vector<X509_Certificate>& peer_certs,
+              const Client_Hello_13& client_hello,
+              const Server_Hello_13& server_hello,
+              Callbacks& callbacks,
+              RandomNumberGenerator& rng);
+
+#endif
 
       /**
       * Load a session from DER representation (created by DER_encode)

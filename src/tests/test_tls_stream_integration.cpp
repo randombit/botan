@@ -863,6 +863,14 @@ std::vector<SystemConfiguration> get_configurations()
          Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=false")),
 #if defined(BOTAN_HAS_TLS_13)
       SystemConfiguration(
+         "TLS 1.3 only",
+         Botan::TLS::Text_Policy("allow_tls12=false\nallow_tls13=true"),
+         Botan::TLS::Text_Policy("allow_tls12=false\nallow_tls13=true")),
+      SystemConfiguration(
+         "TLS 1.x server, TLS 1.2 client",
+         Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=false"),
+         Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=true")),
+      SystemConfiguration(
          "TLS 1.2 server, TLS 1.x client",
          Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=true"),
          Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=false")),

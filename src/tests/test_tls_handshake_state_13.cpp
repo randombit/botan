@@ -56,9 +56,8 @@ std::vector<Test::Result> finished_message_handling()
 
          Finished_13 client_finished(client_finished_message);
 
-         auto client_fin = state.sending(std::move(client_finished));
-         result.require("client can send client finished",
-                        std::holds_alternative<std::reference_wrapper<Finished_13>>(client_fin));
+         [[maybe_unused]] // just making sure that the return type of .sending is correct
+         std::reference_wrapper<Botan::TLS::Finished_13> client_fin = state.sending(std::move(client_finished));
          result.test_throws("not stored as server Finished", [&]
             {
             state.server_finished();
@@ -86,10 +85,8 @@ std::vector<Test::Result> handshake_message_filtering()
 
          auto client_hello = std::get<Client_Hello_13>(Client_Hello_13::parse(client_hello_message));
 
-         auto filtered = state.sending(std::move(client_hello));
-         result.confirm("client can send client hello",
-                        std::holds_alternative<std::reference_wrapper<Client_Hello_13>>(filtered));
-
+         [[maybe_unused]] // just making sure that the return type of .sending is correct
+         std::reference_wrapper<Client_Hello_13> filtered = state.sending(std::move(client_hello));
          result.test_eq("correct client hello stored", state.client_hello().serialize(), client_hello_message);
 
          result.template test_throws<TLS_Exception>("client cannot receive client hello",
