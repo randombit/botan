@@ -1145,6 +1145,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
                                                                  110,    // minimum key strength
                                                                  false); // OCSP for all intermediates
 
+         // See `src/scripts/mychain_creater.sh` if you need to recreate those
          auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
          auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
          auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
@@ -1237,6 +1238,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
                                                                  110,   // minimum key strength
                                                                  true); // OCSP for all intermediates
 
+         // See `src/scripts/mychain_creater.sh` if you need to recreate those
          auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
          auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
          auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");

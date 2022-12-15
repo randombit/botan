@@ -151,6 +151,7 @@ class OCSP_Tests final : public Test
 
          // OCSP response is signed by 3rd party responder certificate that is
          // not included in the OCSP response itself
+         // See `src/scripts/randombit_ocsp_forger.sh` for a helper script to recreate those.
          auto randombit_alt_resp_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp_forged_valid_nocerts.der");
          auto randombit_alt_resp_cert = load_test_X509_cert("x509/ocsp/randombit_ocsp_forged_responder.pem");
 
@@ -391,6 +392,7 @@ class OCSP_Tests final : public Test
 
          // OCSP response is signed by 3rd party responder certificate that is
          // not included in the OCSP response itself
+         // See `src/scripts/randombit_ocsp_forger.sh` for a helper script to recreate those.
          auto ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp_forged_valid_nocerts.der");
          auto responder = load_test_X509_cert("x509/ocsp/randombit_ocsp_forged_responder.pem");
          auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
