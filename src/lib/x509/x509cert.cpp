@@ -558,7 +558,7 @@ bool X509_Certificate::allowed_usage(Usage_Type usage) const
          return (allowed_usage(DIGITAL_SIGNATURE) || allowed_usage(KEY_AGREEMENT)) && allowed_extended_usage("PKIX.ClientAuth");
 
       case Usage_Type::OCSP_RESPONDER:
-         return (allowed_usage(DIGITAL_SIGNATURE) || allowed_usage(NON_REPUDIATION)) && allowed_extended_usage("PKIX.OCSPSigning");
+         return (allowed_usage(DIGITAL_SIGNATURE) || allowed_usage(NON_REPUDIATION)) && has_ex_constraint("PKIX.OCSPSigning");
 
       case Usage_Type::CERTIFICATE_AUTHORITY:
          return is_CA_cert();
@@ -578,6 +578,11 @@ bool X509_Certificate::has_constraints(Key_Constraints constraints) const
       }
 
    return ((this->constraints() & constraints) != 0);
+   }
+
+bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const
+   {
+   return has_ex_constraint(OID::from_string(ex_constraint));
    }
 
 bool X509_Certificate::has_ex_constraint(const OID& usage) const

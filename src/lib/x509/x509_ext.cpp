@@ -848,6 +848,11 @@ void CRL_Issuing_Distribution_Point::decode_inner(const std::vector<uint8_t>& bu
    BER_Decoder(buf).decode(m_distribution_point).verify_end();
    }
 
+void OCSP_NoCheck::decode_inner(const std::vector<uint8_t>& buf)
+   {
+   BER_Decoder(buf).verify_end();
+   }
+
 std::vector<uint8_t> Unknown_Extension::encode_inner() const
    {
    return m_bytes;

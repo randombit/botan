@@ -144,6 +144,41 @@ class Test_Options
       bool m_abort_on_first_fail;
    };
 
+namespace detail {
+
+template <typename, typename = void>
+constexpr bool has_Botan_to_string = false;
+template <typename T>
+constexpr bool has_Botan_to_string<
+    T,
+    std::void_t<decltype(Botan::to_string(std::declval<T>()))>
+> = true;
+
+template <typename, typename = void>
+constexpr bool has_std_to_string = false;
+template <typename T>
+constexpr bool has_std_to_string<
+    T,
+    std::void_t<decltype(std::to_string(std::declval<T>()))>
+> = true;
+
+template <typename, typename = void>
+constexpr bool has_ostream_operator = false;
+template <typename T>
+constexpr bool has_ostream_operator<
+    T,
+    std::void_t<decltype(operator<<(std::declval<std::ostringstream&>(), std::declval<T>()))>
+> = true;
+
+template <typename T>
+struct is_optional : std::false_type { };
+template <typename T>
+struct is_optional<std::optional<T>> : std::true_type { };
+template <typename T>
+constexpr bool is_optional_v = is_optional<T>::value;
+
+}  // namespace detail
+
 /**
  * A code location consisting of the source file path and a line
  */
@@ -325,7 +360,7 @@ class Test
                   }
                else
                   {
-                  out << " produced unexpected result '" << produced << "' expected '" << expected << "'";
+                  out << " produced unexpected result '" << to_string(produced) << "' expected '" << to_string(expected) << "'";
                   return test_failure(out.str());
                   }
                }
@@ -561,6 +596,26 @@ class Test
 
             void set_code_location(CodeLocation where) { m_where = std::move(where); }
             const std::optional<CodeLocation>& code_location() const { return m_where; }
+
+         private:
+            template <typename T>
+            std::string to_string(const T& v)
+               {
+               if constexpr(detail::is_optional_v<T>)
+                  return (v.has_value()) ? to_string(v.value()) : std::string("std::nullopt");
+               else if constexpr(detail::has_Botan_to_string<T>)
+                  return Botan::to_string(v);
+               else if constexpr(detail::has_ostream_operator<T>)
+                  {
+                  std::ostringstream oss;
+                  oss << v;
+                  return oss.str();
+                  }
+               else if constexpr(detail::has_std_to_string<T>)
+                  return std::to_string(v);
+               else
+                   return "<?>";
+               }
 
          private:
             std::string m_who;

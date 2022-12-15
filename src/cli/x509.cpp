@@ -228,7 +228,7 @@ class OCSP_Check final : public Command
 
          Botan::Certificate_Store_In_Memory cas;
          cas.add_certificate(issuer);
-         Botan::OCSP::Response resp = Botan::OCSP::online_check(issuer, subject, &cas, timeout);
+         Botan::OCSP::Response resp = Botan::OCSP::online_check(issuer, subject, timeout);
 
          auto status = resp.status_for(issuer, subject, std::chrono::system_clock::now());
 

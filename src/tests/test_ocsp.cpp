@@ -1,10 +1,11 @@
 /*
 * (C) 2016 Jack Lloyd
+* (C) 2022 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "tests.h"
+#include "botan/build.h"
 
 #if defined(BOTAN_HAS_OCSP)
    #include <botan/ocsp.h>
@@ -13,6 +14,8 @@
    #include <botan/internal/calendar.h>
    #include <fstream>
 #endif
+
+#include "tests.h"
 
 namespace Botan_Tests {
 
@@ -127,6 +130,45 @@ class OCSP_Tests final : public Test
          return result;
          }
 
+      static Test::Result test_response_find_signing_certificate()
+         {
+         Test::Result result("OCSP response finding signature certificates");
+
+         const std::optional<Botan::X509_Certificate> nullopt_cert;
+
+         // OCSP response is signed by the issuing CA itself
+         auto randombit_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+         auto randombit_ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+
+         // OCSP response is signed by an authorized responder certificate
+         // issued by the issuing CA and embedded in the response
+         auto bdr_ocsp = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
+         auto bdr_responder = load_test_X509_cert("x509/ocsp/bdr-ocsp-responder.pem");
+         auto bdr_ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
+
+         // Dummy OCSP response is not signed at all
+         auto dummy_ocsp = Botan::OCSP::Response(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
+
+         // OCSP response is signed by 3rd party responder certificate that is
+         // not included in the OCSP response itself
+         // See `src/scripts/randombit_ocsp_forger.sh` for a helper script to recreate those.
+         auto randombit_alt_resp_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp_forged_valid_nocerts.der");
+         auto randombit_alt_resp_cert = load_test_X509_cert("x509/ocsp/randombit_ocsp_forged_responder.pem");
+
+         result.test_is_eq("Dummy has no signing certificate", dummy_ocsp.find_signing_certificate(Botan::X509_Certificate()), nullopt_cert);
+
+         result.test_is_eq("CA is returned as signing certificate", randombit_ocsp.find_signing_certificate(randombit_ca), std::optional(randombit_ca));
+         result.test_is_eq("No signer certificate is returned when signer couldn't be determined", randombit_ocsp.find_signing_certificate(bdr_ca), nullopt_cert);
+
+         result.test_is_eq("Delegated responder certificate is returned for further validation", bdr_ocsp.find_signing_certificate(bdr_ca), std::optional(bdr_responder));
+
+         result.test_is_eq("Delegated responder without stapled certs does not find signer without user-provided certs", randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca), nullopt_cert);
+         auto trusted_responders = std::make_unique<Botan::Certificate_Store_In_Memory>(randombit_alt_resp_cert);
+         result.test_is_eq("Delegated responder returns user-provided cert", randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca, trusted_responders.get()), std::optional(randombit_alt_resp_cert));
+
+         return result;
+         }
+
       static Test::Result test_response_verification_with_next_update_without_max_age()
          {
          Test::Result result("OCSP request check with next_update w/o max_age");
@@ -145,7 +187,7 @@ class OCSP_Tests final : public Test
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
             {
-            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, Botan::Path_Validation_Restrictions());
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
@@ -186,7 +228,8 @@ class OCSP_Tests final : public Test
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
             {
-            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, max_age);
+            Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, pvr);
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
@@ -227,7 +270,8 @@ class OCSP_Tests final : public Test
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
             {
-            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, max_age);
+            Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, pvr);
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
@@ -263,7 +307,7 @@ class OCSP_Tests final : public Test
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
             {
-            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, Botan::Path_Validation_Restrictions());
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
@@ -298,13 +342,13 @@ class OCSP_Tests final : public Test
 
          // Some arbitrary time within the validity period of the test certs
          const auto valid_time = Botan::calendar_point(2016, 11, 20, 8, 30, 0).to_std_timepoint();
-         const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
+         const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, Botan::Path_Validation_Restrictions());
 
          if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
             {
             if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1))
                {
-               result.confirm("Status warning", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_NO_REVOCATION_URL) > 0);
+               result.test_gt("Status warning", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_NO_REVOCATION_URL), 0);
                }
             }
 
@@ -326,7 +370,7 @@ class OCSP_Tests final : public Test
 
          const auto ocsp_timeout = std::chrono::milliseconds(3000);
          const auto now = std::chrono::system_clock::now();
-         auto ocsp_status = Botan::PKIX::check_ocsp_online(cert_path, { &certstore }, now, ocsp_timeout, false);
+         auto ocsp_status = Botan::PKIX::check_ocsp_online(cert_path, { &certstore }, now, ocsp_timeout, Botan::Path_Validation_Restrictions());
 
          if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
             {
@@ -342,6 +386,55 @@ class OCSP_Tests final : public Test
          }
 #endif
 
+      static Test::Result test_response_verification_with_additionally_trusted_responder()
+         {
+         Test::Result result("OCSP response with user-defined (additional) responder certificate");
+
+         // OCSP response is signed by 3rd party responder certificate that is
+         // not included in the OCSP response itself
+         // See `src/scripts/randombit_ocsp_forger.sh` for a helper script to recreate those.
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp_forged_valid_nocerts.der");
+         auto responder = load_test_X509_cert("x509/ocsp/randombit_ocsp_forged_responder.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+
+         std::optional<Botan::X509_Certificate> nullopt_cert;
+
+         Botan::Certificate_Store_In_Memory trusted_responders;
+
+         // without providing the 3rd party responder certificate no issuer will be found
+         result.test_is_eq("cannot find signing certificate without trusted responders",
+                           ocsp.find_signing_certificate(ca), nullopt_cert);
+         result.test_is_eq("cannot find signing certificate without additional help",
+                           ocsp.find_signing_certificate(ca, &trusted_responders), nullopt_cert);
+
+         // add the 3rd party responder certificate to the list of trusted OCSP responder certs
+         // to find the issuer certificate of this response
+         trusted_responders.add_certificate(responder);
+         result.test_is_eq("the responder certificate is returned when it is trusted",
+                           ocsp.find_signing_certificate(ca, &trusted_responders), std::optional(responder));
+
+         result.test_is_eq("the responder's signature checks out",
+                           ocsp.verify_signature(responder), Botan::Certificate_Status_Code::OCSP_SIGNATURE_OK);
+
+         return result;
+         }
+
+      static Test::Result test_responder_cert_with_nocheck_extension()
+         {
+         Test::Result result("BDr's OCSP response contains certificate featuring NoCheck extension");
+
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
+         const bool contains_cert_with_nocheck =
+            std::find_if(ocsp.certificates().cbegin(), ocsp.certificates().cend(),
+                         [](const auto& cert) {
+                            return cert.v3_extensions().extension_set(Botan::OID::from_string("PKIX.OCSP.NoCheck"));
+                         }) != ocsp.certificates().end();
+
+         result.confirm("Contains NoCheck extension", contains_cert_with_nocheck);
+
+         return result;
+         }
+
    public:
       std::vector<Test::Result> run() override
          {
@@ -350,11 +443,14 @@ class OCSP_Tests final : public Test
          results.push_back(test_request_encoding());
          results.push_back(test_response_parsing());
          results.push_back(test_response_certificate_access());
+         results.push_back(test_response_find_signing_certificate());
          results.push_back(test_response_verification_with_next_update_without_max_age());
          results.push_back(test_response_verification_with_next_update_with_max_age());
          results.push_back(test_response_verification_without_next_update_with_max_age());
          results.push_back(test_response_verification_without_next_update_without_max_age());
          results.push_back(test_response_verification_softfail());
+         results.push_back(test_response_verification_with_additionally_trusted_responder());
+         results.push_back(test_responder_cert_with_nocheck_extension());
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
          if(Test::options().run_online_tests())

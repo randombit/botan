@@ -29,6 +29,8 @@ const char* to_string(Certificate_Status_Code code)
          return "OCSP URL not available";
       case Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE:
          return "OCSP server not available";
+      case Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED:
+         return "OCSP issuer is not trustworthy";
 
       case Certificate_Status_Code::NO_REVOCATION_DATA:
          return "No revocation data";

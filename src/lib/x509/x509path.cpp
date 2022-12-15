@@ -11,6 +11,7 @@
 #include <botan/pk_keys.h>
 #include <botan/ocsp.h>
 #include <botan/oids.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
 #include <chrono>
 #include <vector>
@@ -33,8 +34,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
                   std::chrono::system_clock::time_point ref_time,
                   const std::string& hostname,
                   Usage_Type usage,
-                  size_t min_signature_algo_strength,
-                  const std::set<std::string>& trusted_hashes)
+                  const Path_Validation_Restrictions& restrictions)
    {
    if(cert_path.empty())
       throw Invalid_Argument("PKIX::check_chain cert_path empty");
@@ -49,7 +49,11 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
       cert_status[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
 
    if(!cert_path[0].allowed_usage(usage))
+      {
+      if(usage == Usage_Type::OCSP_RESPONDER)
+         cert_status[0].insert(Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE);
       cert_status[0].insert(Certificate_Status_Code::INVALID_USAGE);
+      }
 
    if(cert_path[0].is_CA_cert() == false &&
       cert_path[0].has_constraints(KEY_CERT_SIGN))
@@ -134,11 +138,12 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
             if(sig_status != Certificate_Status_Code::VERIFIED)
                status.insert(sig_status);
 
-            if(issuer_key->estimated_strength() < min_signature_algo_strength)
+            if(issuer_key->estimated_strength() < restrictions.minimum_key_strength())
                status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
             }
 
          // Ignore untrusted hashes on self-signed roots
+         const auto& trusted_hashes = restrictions.trusted_hashes();
          if(!trusted_hashes.empty() && !at_self_signed_root)
             {
             if(trusted_hashes.count(subject.hash_used_for_signature()) == 0)
@@ -209,12 +214,76 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
    return cert_status;
    }
 
+namespace {
+
+Certificate_Status_Code verify_ocsp_signing_cert(
+      const X509_Certificate& signing_cert,
+      const X509_Certificate& ca,
+      const std::vector<X509_Certificate>& extra_certs,
+      const std::vector<Certificate_Store*>& certstores,
+      std::chrono::system_clock::time_point ref_time,
+      const Path_Validation_Restrictions& restrictions)
+   {
+   // RFC 6960 4.2.2.2
+   //    [Applications] MUST reject the response if the certificate
+   //    required to validate the signature on the response does not
+   //    meet at least one of the following criteria:
+   //
+   //    1. Matches a local configuration of OCSP signing authority
+   //       for the certificate in question, or
+   if(restrictions.trusted_ocsp_responders()->certificate_known(signing_cert))
+      return Certificate_Status_Code::OK;
+
+   // RFC 6960 4.2.2.2
+   //
+   //    2. Is the certificate of the CA that issued the certificate
+   //       in question, or
+   if(signing_cert == ca)
+      return Certificate_Status_Code::OK;
+
+   // RFC 6960 4.2.2.2
+   //
+   //    3. Includes a value of id-kp-OCSPSigning in an extended key
+   //       usage extension and is issued by the CA that issued the
+   //       certificate in question as stated above.
+
+   // TODO: Implement OCSP revocation check of OCSP signer certificate
+   // Note: This needs special care to prevent endless loops on specifically
+   //       forged chains of OCSP responses referring to each other.
+   //
+   // Currently, we're disabling OCSP-based revocation checks by setting the
+   // timeout to 0. Additionally, the library's API would not allow an
+   // application to pass in the required "second order" OCSP responses. I.e.
+   // "second order" OCSP checks would need to rely on `check_ocsp_online()`
+   // which is not an option for some applications (e.g. that require a proxy
+   // for external HTTP requests).
+   const auto ocsp_timeout = std::chrono::milliseconds::zero();
+   const auto relaxed_restrictions =
+      Path_Validation_Restrictions(false /* do not enforce revocation data */,
+                                   restrictions.minimum_key_strength(),
+                                   false /* OCSP is not available, so don't try for intermediates */,
+                                   restrictions.trusted_hashes());
+
+   const auto validation_result = x509_path_validate(
+                                    concat(std::vector{signing_cert}, extra_certs),
+                                    relaxed_restrictions,
+                                    certstores,
+                                    {} /* hostname */,
+                                    Botan::Usage_Type::OCSP_RESPONDER,
+                                    ref_time,
+                                    ocsp_timeout);
+
+   return validation_result.result();
+   }
+
+}
+
 CertificatePathStatusCodes
 PKIX::check_ocsp(const std::vector<X509_Certificate>& cert_path,
                  const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
-                 const std::vector<Certificate_Store*>& trusted_certstores,
+                 const std::vector<Certificate_Store*>& certstores,
                  std::chrono::system_clock::time_point ref_time,
-                 std::chrono::seconds max_ocsp_age)
+                 const Path_Validation_Restrictions& restrictions)
    {
    if(cert_path.empty())
       throw Invalid_Argument("PKIX::check_ocsp cert_path empty");
@@ -233,18 +302,27 @@ PKIX::check_ocsp(const std::vector<X509_Certificate>& cert_path,
          {
          try
             {
-            Certificate_Status_Code ocsp_signature_status = ocsp_responses.at(i)->check_signature(trusted_certstores, cert_path);
+            const auto& ocsp_response = ocsp_responses.at(i);
 
-            if(ocsp_signature_status == Certificate_Status_Code::OCSP_SIGNATURE_OK)
+            if(auto dummy_status = ocsp_response->dummy_status())
                {
-               // Signature ok, so check the claimed status
-               Certificate_Status_Code ocsp_status = ocsp_responses.at(i)->status_for(ca, subject, ref_time, max_ocsp_age);
-               status.insert(ocsp_status);
+               // handle softfail conditions
+               status.insert(dummy_status.value());
+               }
+            else if(auto signing_cert = ocsp_response->find_signing_certificate(ca, restrictions.trusted_ocsp_responders());
+                    !signing_cert)
+               {
+               status.insert(Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
+               }
+            else if(auto ocsp_signing_cert_status = verify_ocsp_signing_cert(signing_cert.value(), ca, concat(ocsp_response->certificates(), cert_path), certstores, ref_time, restrictions);
+                    ocsp_signing_cert_status > Certificate_Status_Code::FIRST_ERROR_STATUS)
+               {
+               status.insert(ocsp_signing_cert_status);
+               status.insert(Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
                }
             else
                {
-               // Some signature problem
-               status.insert(ocsp_signature_status);
+               status.insert(ocsp_response->status_for(ca, subject, ref_time, restrictions.max_ocsp_age()));
                }
             }
          catch(Exception&)
@@ -363,8 +441,7 @@ PKIX::check_ocsp_online(const std::vector<X509_Certificate>& cert_path,
                         const std::vector<Certificate_Store*>& trusted_certstores,
                         std::chrono::system_clock::time_point ref_time,
                         std::chrono::milliseconds timeout,
-                        bool ocsp_check_intermediate_CAs,
-                        std::chrono::seconds max_ocsp_age)
+                        const Path_Validation_Restrictions& restrictions)
    {
    if(cert_path.empty())
       throw Invalid_Argument("PKIX::check_ocsp_online cert_path empty");
@@ -373,7 +450,7 @@ PKIX::check_ocsp_online(const std::vector<X509_Certificate>& cert_path,
 
    size_t to_ocsp = 1;
 
-   if(ocsp_check_intermediate_CAs)
+   if(restrictions.ocsp_all_intermediates())
       to_ocsp = cert_path.size() - 1;
    if(cert_path.size() == 1)
       to_ocsp = 0;
@@ -424,7 +501,7 @@ PKIX::check_ocsp_online(const std::vector<X509_Certificate>& cert_path,
       ocsp_responses.push_back(ocsp_response_future.get());
       }
 
-   return PKIX::check_ocsp(cert_path, ocsp_responses, trusted_certstores, ref_time, max_ocsp_age);
+   return PKIX::check_ocsp(cert_path, ocsp_responses, trusted_certstores, ref_time, restrictions);
    }
 
 CertificatePathStatusCodes
@@ -771,8 +848,7 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<X509_Certificate>>& ce
 void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
                                    const CertificatePathStatusCodes& crl,
                                    const CertificatePathStatusCodes& ocsp,
-                                   bool require_rev_on_end_entity,
-                                   bool require_rev_on_intermediates)
+                                   const Path_Validation_Restrictions& restrictions)
    {
    if(chain_status.empty())
       throw Invalid_Argument("PKIX::merge_revocation_status chain_status was empty");
@@ -810,8 +886,8 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
 
       if(had_crl == false && had_ocsp == false)
          {
-         if((require_rev_on_end_entity && i == 0) ||
-            (require_rev_on_intermediates && i > 0))
+         if((restrictions.require_revocation_information() && i == 0) ||
+            (restrictions.ocsp_all_intermediates() && i > 0))
             {
             chain_status[i].insert(Certificate_Status_Code::NO_REVOCATION_DATA);
             }
@@ -879,9 +955,7 @@ Path_Validation_Result x509_path_validate(
       {
       CertificatePathStatusCodes status =
          PKIX::check_chain(cert_path, ref_time,
-                           hostname, usage,
-                           restrictions.minimum_key_strength(),
-                           restrictions.trusted_hashes());
+                           hostname, usage, restrictions);
 
       CertificatePathStatusCodes crl_status =
          PKIX::check_crl(cert_path, trusted_roots, ref_time);
@@ -890,23 +964,21 @@ Path_Validation_Result x509_path_validate(
 
       if(!ocsp_resp.empty())
          {
-         ocsp_status = PKIX::check_ocsp(cert_path, ocsp_resp, trusted_roots, ref_time, restrictions.max_ocsp_age());
+         ocsp_status = PKIX::check_ocsp(cert_path, ocsp_resp, trusted_roots, ref_time, restrictions);
          }
 
       if(ocsp_status.empty() && ocsp_timeout != std::chrono::milliseconds(0))
          {
 #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
          ocsp_status = PKIX::check_ocsp_online(cert_path, trusted_roots, ref_time,
-                                               ocsp_timeout, restrictions.ocsp_all_intermediates());
+                                               ocsp_timeout, restrictions);
 #else
          ocsp_status.resize(1);
          ocsp_status[0].insert(Certificate_Status_Code::OCSP_NO_HTTP);
 #endif
          }
 
-      PKIX::merge_revocation_status(status, crl_status, ocsp_status,
-                                    restrictions.require_revocation_information(),
-                                    restrictions.ocsp_all_intermediates());
+      PKIX::merge_revocation_status(status, crl_status, ocsp_status, restrictions);
 
       Path_Validation_Result pvd(status, std::move(cert_path));
       if(pvd.successful_validation())
@@ -974,11 +1046,13 @@ Path_Validation_Result x509_path_validate(
 Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
       size_t key_strength,
       bool ocsp_intermediates,
-      std::chrono::seconds max_ocsp_age) :
+      std::chrono::seconds max_ocsp_age,
+      std::unique_ptr<Certificate_Store> trusted_ocsp_responders) :
    m_require_revocation_information(require_rev),
    m_ocsp_all_intermediates(ocsp_intermediates),
    m_minimum_key_strength(key_strength),
-   m_max_ocsp_age(max_ocsp_age)
+   m_max_ocsp_age(max_ocsp_age),
+   m_trusted_ocsp_responders(std::move(trusted_ocsp_responders))
    {
    if(key_strength <= 80)
       { m_trusted_hashes.insert("SHA-160"); }

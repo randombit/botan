@@ -1,5 +1,6 @@
 /*
 * (C) 2006,2011,2012,2014,2015 Jack Lloyd
+* (C) 2022 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -66,6 +67,18 @@ std::map<std::string, std::string> read_results(const std::string& results_file,
       }
 
    return m;
+   }
+
+std::set<Botan::Certificate_Status_Code> flatten(const Botan::CertificatePathStatusCodes& codes)
+   {
+   std::set<Botan::Certificate_Status_Code> result;
+
+   for(const auto& statuses : codes)
+      {
+      result.insert(statuses.begin(), statuses.end());
+      }
+
+   return result;
    }
 
 class X509test_Path_Validation_Tests final : public Test
@@ -1079,12 +1092,184 @@ class Path_Validation_With_OCSP_Tests final : public Test
          return result;
          }
 
+      static Test::Result validate_with_ocsp_with_authorized_responder()
+         {
+         Test::Result result("path check with ocsp response from authorized responder certificate");
+         Botan::Certificate_Store_In_Memory trusted;
+
+         auto restrictions = Botan::Path_Validation_Restrictions(true,  // require revocation info
+                                                                 110,   // minimum key strength
+                                                                 true); // OCSP for all intermediates
+
+         auto ee = load_test_X509_cert("x509/ocsp/bdr.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/bdr-root.pem");
+
+         // These OCSP responses are signed by an authorized OCSP responder
+         // certificate issued by `ca` and `trust_root` respectively. Note that
+         // the responder certificates contain the "OCSP No Check" extension,
+         // meaning that they themselves do not need a revocation check via OCSP.
+         auto ocsp_ee = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
+         auto ocsp_ca = load_test_OCSP_resp("x509/ocsp/bdr-int-ocsp-resp.der");
+
+         trusted.add_certificate(trust_root);
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
+
+         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                               const Botan::Certificate_Status_Code expected)
+            {
+            const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
+                                     valid_time, std::chrono::milliseconds(0), {ocsp_ee, ocsp_ca});
+
+            return result.confirm(std::string("Status: '") + Botan::to_string(expected)
+                                  + "' should match '" + Botan::to_string(path_result.result()) + "'",
+                                  path_result.result()==expected);
+            };
+
+         check_path(Botan::calendar_point(2022, 9, 18, 16, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_NOT_YET_VALID);
+         check_path(Botan::calendar_point(2022, 9, 19, 16, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OK);
+         check_path(Botan::calendar_point(2022, 9, 20, 16, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED);
+
+         return result;
+         }
+
+      static Test::Result validate_with_ocsp_with_authorized_responder_without_keyusage()
+         {
+         Test::Result result("path check with ocsp response from authorized responder certificate (without sufficient key usage)");
+         Botan::Certificate_Store_In_Memory trusted;
+
+         auto restrictions = Botan::Path_Validation_Restrictions(true,   // require revocation info
+                                                                 110,    // minimum key strength
+                                                                 false); // OCSP for all intermediates
+
+         // See `src/scripts/mychain_creater.sh` if you need to recreate those
+         auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
+
+         auto ocsp_ee_delegate = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee_delegate_signed.der").value();
+         auto ocsp_ee_delegate_malformed = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee_delegate_signed_malformed.der").value();
+
+         trusted.add_certificate(trust_root);
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
+
+         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                               const Botan::OCSP::Response& ocsp_ee,
+                               const Botan::Certificate_Status_Code expected,
+                               const std::optional<Botan::Certificate_Status_Code> also_expected = std::nullopt)
+            {
+            const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
+                                     valid_time, std::chrono::milliseconds(0), {ocsp_ee});
+
+            result.test_is_eq("should result in expected validation status code",
+                              path_result.result(), expected);
+            if(also_expected)
+               {
+               result.confirm("Secondary error is also present", flatten(path_result.all_statuses()).count(also_expected.value()) > 0);
+               }
+            };
+
+         check_path(
+            Botan::calendar_point(2022, 9, 22, 23, 30, 0).to_std_timepoint(),
+            ocsp_ee_delegate,
+            Botan::Certificate_Status_Code::VERIFIED);
+         check_path(
+            Botan::calendar_point(2022, 10, 8, 23, 30, 0).to_std_timepoint(),
+            ocsp_ee_delegate,
+            Botan::Certificate_Status_Code::CERT_HAS_EXPIRED,
+            Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
+         check_path(
+            Botan::calendar_point(2022, 9, 22, 23, 30, 0).to_std_timepoint(),
+            ocsp_ee_delegate_malformed,
+            Botan::Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE,
+            Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
+
+         return result;
+         }
+
+      static Test::Result validate_with_forged_ocsp_using_self_signed_cert()
+         {
+         Test::Result result("path check with forged ocsp using self-signed certificate");
+         Botan::Certificate_Store_In_Memory trusted;
+
+         auto restrictions = Botan::Path_Validation_Restrictions(true,   // require revocation info
+                                                                 110,    // minimum key strength
+                                                                 false); // OCSP for all intermediates
+
+         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
+         trusted.add_certificate(trust_root);
+
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
+
+         auto check_path = [&](const std::string &forged_ocsp,
+                               const Botan::Certificate_Status_Code expected,
+                               const Botan::Certificate_Status_Code also_expected)
+            {
+               auto ocsp = load_test_OCSP_resp(forged_ocsp);
+               const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
+                                        Botan::calendar_point(2016, 11, 18, 12, 30, 0).to_std_timepoint(), std::chrono::milliseconds(0), {ocsp});
+
+               result.test_is_eq("Path validation with forged OCSP response should fail with",
+                                 path_result.result(), expected);
+               result.confirm("Secondary error is also present", flatten(path_result.all_statuses()).count(also_expected) > 0);
+               result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
+            };
+
+         // In both cases the path validation should detect the forged OCSP
+         // response and generate an appropriate error. By no means it should
+         // follow the unauthentic OCSP response.
+         check_path("x509/ocsp/randombit_ocsp_forged_valid.der", Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND, Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
+         check_path("x509/ocsp/randombit_ocsp_forged_revoked.der", Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND, Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
+
+         return result;
+         }
+
+      static Test::Result validate_with_ocsp_self_signed_by_intermediate_cert()
+         {
+         Test::Result result("path check with ocsp response for intermediate that is (maliciously) self-signed by the intermediate");
+         Botan::Certificate_Store_In_Memory trusted;
+
+         auto restrictions = Botan::Path_Validation_Restrictions(true,  // require revocation info
+                                                                 110,   // minimum key strength
+                                                                 true); // OCSP for all intermediates
+
+         // See `src/scripts/mychain_creater.sh` if you need to recreate those
+         auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
+
+         // this OCSP response for EE is valid (signed by intermediate cert)
+         auto ocsp_ee = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee.der");
+
+         // this OCSP response for Intermediate is malicious (signed by intermediate itself)
+         auto ocsp_ca = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_int_self_signed.der");
+
+         trusted.add_certificate(trust_root);
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
+
+         const auto path_result = Botan::x509_path_validate(cert_path, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
+                                  Botan::calendar_point(2022, 9, 22, 22, 30, 0).to_std_timepoint(), std::chrono::milliseconds(0), {ocsp_ee, ocsp_ca});
+         result.confirm("should reject intermediate OCSP response", path_result.result() == Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
+         result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
+
+         return result;
+         }
+
       std::vector<Test::Result> run() override
          {
          return  {validate_with_ocsp_with_next_update_without_max_age(),
                   validate_with_ocsp_with_next_update_with_max_age(),
                   validate_with_ocsp_without_next_update_without_max_age(),
-                  validate_with_ocsp_without_next_update_with_max_age()};
+                  validate_with_ocsp_without_next_update_with_max_age(),
+                  validate_with_ocsp_with_authorized_responder(),
+                  validate_with_ocsp_with_authorized_responder_without_keyusage(),
+                  validate_with_forged_ocsp_using_self_signed_cert(),
+                  validate_with_ocsp_self_signed_by_intermediate_cert()};
          }
 
    };
@@ -1167,7 +1352,7 @@ class XMSS_Path_Validation_Tests final : public Test
       auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
 
       auto status = Botan::PKIX::overall_status(Botan::PKIX::check_chain(cert_path, valid_time,
-				                                 "", Botan::Usage_Type::UNSPECIFIED, restrictions.minimum_key_strength(), restrictions.trusted_hashes()));
+				                                 "", Botan::Usage_Type::UNSPECIFIED, restrictions));
       result.test_eq("Cert validation status",
                   Botan::to_string(status), "Verified");
       return result;
