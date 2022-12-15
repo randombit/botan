@@ -134,7 +134,7 @@ std::chrono::system_clock::time_point from_milliseconds_since_epoch(uint64_t mse
 using Modify_Exts_Fn = std::function<void(Botan::TLS::Extensions&, Botan::TLS::Connection_Side, Botan::TLS::Handshake_Type)>;
 
 /**
- * We cannot actually reprocude the signatures stated in RFC 8448 as their
+ * We cannot actually reproduce the signatures stated in RFC 8448 as their
  * signature scheme is probabilistic and we're lacking the correct RNG
  * input. Hence, signatures are know beforehand and just reproduced by the
  * TLS callback when requested.
