@@ -34,15 +34,6 @@ jobs:
         arch:      [ x86_64, x86 ]
         host_os:   [ windows-2022, windows-2019 ]
 
-        exclude:
-          # fails due to "abstract class marked final"
-          # see TODOs here: https://github.com/randombit/botan/pull/3007
-          - target: amalgamation
-
-          # currently failing
-          # see TODOs here: https://github.com/randombit/botan/pull/3007
-          - arch: x86
-
     runs-on: ${{ matrix.host_os }}
 
     steps:
