@@ -104,7 +104,7 @@ jobs:
           - target: amalgamation
             compiler: clang
 
-    runs-on: macos-latest
+    runs-on: macos-12
 
     steps:
       - uses: actions/checkout@v3
@@ -139,7 +139,7 @@ jobs:
             host_os: ubuntu-22.04
           - target: emscripten
             compiler: emcc
-            host_os: macos-latest
+            host_os: macos-12
           - target: minimized
             compiler: gcc
             host_os: ubuntu-22.04
@@ -224,7 +224,7 @@ jobs:
             host_os: ubuntu-22.04
           - target: cross-ios-arm64
             compiler: clang
-            host_os: macos-latest
+            host_os: macos-12
 
     runs-on: ${{ matrix.host_os }}
 
