@@ -80,6 +80,16 @@ class Channel_Impl
       virtual bool is_closed() const = 0;
 
       /**
+      * @return true iff the connection is active for sending application data
+      */
+      virtual bool is_closed_for_reading() const = 0;
+
+      /**
+      * @return true iff the connection has been definitely closed
+      */
+      virtual bool is_closed_for_writing() const = 0;
+
+      /**
       * @return certificate chain of the peer (may be empty)
       */
       virtual std::vector<X509_Certificate> peer_cert_chain() const = 0;

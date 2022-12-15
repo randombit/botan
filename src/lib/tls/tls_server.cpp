@@ -49,6 +49,16 @@ bool Server::is_closed() const
    return m_impl->is_closed();
    }
 
+bool Server::is_closed_for_reading() const
+   {
+   return m_impl->is_closed_for_reading();
+   }
+
+bool Server::is_closed_for_writing() const
+   {
+   return m_impl->is_closed_for_writing();
+   }
+
 std::vector<X509_Certificate> Server::peer_cert_chain() const
    {
    return m_impl->peer_cert_chain();

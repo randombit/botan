@@ -99,6 +99,9 @@ class Channel_Impl_12 : public Channel_Impl
       */
       bool is_closed() const override;
 
+      bool is_closed_for_reading() const override { return is_closed(); }
+      bool is_closed_for_writing() const override { return is_closed(); }
+
       /**
       * @return certificate chain of the peer (may be empty)
       */

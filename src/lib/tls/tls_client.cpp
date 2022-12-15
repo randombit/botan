@@ -92,6 +92,16 @@ bool Client::is_closed() const
    return m_impl->is_closed();
    }
 
+bool Client::is_closed_for_reading() const
+   {
+   return m_impl->is_closed_for_reading();
+   }
+
+bool Client::is_closed_for_writing() const
+   {
+   return m_impl->is_closed_for_writing();
+   }
+
 std::vector<X509_Certificate> Client::peer_cert_chain() const
    {
    return m_impl->peer_cert_chain();

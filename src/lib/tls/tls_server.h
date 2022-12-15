@@ -76,6 +76,9 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
 
       bool is_closed() const override;
 
+      bool is_closed_for_reading() const override;
+      bool is_closed_for_writing() const override;
+
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
       SymmetricKey key_material_export(const std::string& label,
