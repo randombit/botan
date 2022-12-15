@@ -35,10 +35,6 @@ jobs:
         host_os:   [ windows-2022, windows-2019 ]
 
         exclude:
-          # fails due to "abstract class marked final"
-          # see TODOs here: https://github.com/randombit/botan/pull/3007
-          - target: amalgamation
-
           # currently failing
           # see TODOs here: https://github.com/randombit/botan/pull/3007
           - arch: x86
@@ -68,12 +64,6 @@ jobs:
         target:   [ static, shared, amalgamation ]
         compiler: [ clang, gcc ]
 
-        exclude:
-          # fails due to "abstract class marked final"
-          # see TODOs here: https://github.com/randombit/botan/pull/3007
-          - compiler: clang
-            target: amalgamation
-
     runs-on: ubuntu-22.04
 
     steps:
@@ -99,10 +89,6 @@ jobs:
         compiler: [ clang, gcc ]
 
         exclude:
-          # fails due to "abstract class marked final"
-          # see TODOs here: https://github.com/randombit/botan/pull/3007
-          - compiler: clang
-            target: amalgamation
           # currently failing
           # see TODOs here: https://github.com/randombit/botan/pull/3007
           - compiler: gcc
