@@ -83,15 +83,6 @@ jobs:
         target:   [ static, shared, amalgamation ]
         compiler: [ clang, gcc ]
 
-        exclude:
-          # fails due to "abstract class marked final"
-          # see TODOs here: https://github.com/randombit/botan/pull/3007
-          - compiler: clang
-            target: amalgamation
-          # currently failing
-          # see TODOs here: https://github.com/randombit/botan/pull/3007
-          - compiler: gcc
-
     runs-on: macos-latest
 
     steps:
