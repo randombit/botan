@@ -10,6 +10,7 @@
 
 #include <botan/pk_keys.h>
 #include <botan/x509cert.h>
+#include <botan/asn1_obj.h>
 #include <botan/certstor.h>
 #include <botan/symkey.h>
 #include <string>
@@ -52,9 +53,15 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       * It is assumed that the caller can get the private key of the
       * leaf with private_key_for
       *
+      * For a comprehensive write-up of how to select certificates for TLS
+      * CertificateVerify messages, see RFC 8446 Sections 4.4.2.2 and 4.4.2.3.
+      *
       * @param cert_key_types specifies the key types desired ("RSA",
       *                       "DSA", "ECDSA", etc), or empty if there
       *                       is no preference by the caller.
+      * @param cert_signature_schemes specifies the signature types desired
+      *                               as signatures in the certificate(s) itself,
+      *                               or empty for no preference by the caller.
       *
       * @param acceptable_CAs the CAs the requestor will accept (possibly empty)
       * @param type specifies the type of operation occurring
@@ -62,6 +69,7 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       */
       virtual std::vector<X509_Certificate> find_cert_chain(
          const std::vector<std::string>& cert_key_types,
+         const std::vector<AlgorithmIdentifier>& cert_signature_schemes,
          const std::vector<X509_DN>& acceptable_CAs,
          const std::string& type,
          const std::string& context);
@@ -79,6 +87,9 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       * @param cert_key_types specifies the key types desired ("RSA",
       *                       "DSA", "ECDSA", etc), or empty if there
       *                       is no preference by the caller.
+      * @param cert_signature_schemes specifies the signature types desired
+      *                               as signatures in the certificate(s) itself,
+      *                               or empty for no preference by the caller.
       *
       * @param type specifies the type of operation occurring
       *
@@ -86,6 +97,7 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       */
       virtual std::vector<X509_Certificate> cert_chain(
          const std::vector<std::string>& cert_key_types,
+         const std::vector<AlgorithmIdentifier>& cert_signature_schemes,
          const std::string& type,
          const std::string& context);
 
@@ -98,6 +110,9 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       *
       * @param cert_key_type specifies the type of key requested
       *                      ("RSA", "DSA", "ECDSA", etc)
+      * @param cert_signature_schemes specifies the signature types desired
+      *                               as signatures in the certificate(s) itself,
+      *                               or empty for no preference by the caller.
       *
       * @param type specifies the type of operation occurring
       *
@@ -105,6 +120,7 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       */
       std::vector<X509_Certificate> cert_chain_single_type(
          const std::string& cert_key_type,
+         const std::vector<AlgorithmIdentifier>& cert_signature_schemes,
          const std::string& type,
          const std::string& context);
 

@@ -74,6 +74,7 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager
 
       std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& algos,
+         const std::vector<Botan::AlgorithmIdentifier>& /*signature_schemes*/,
          const std::string& /*type*/,
          const std::string& /*hostname*/) override
          {

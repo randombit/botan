@@ -117,10 +117,13 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
 
       std::vector<Botan::X509_Certificate> find_cert_chain(
          const std::vector<std::string>& algos,
+         const std::vector<Botan::AlgorithmIdentifier>& cert_signature_schemes,
          const std::vector<Botan::X509_DN>& acceptable_cas,
          const std::string& type,
          const std::string& hostname) override
          {
+         BOTAN_UNUSED(cert_signature_schemes);
+
          if(type == "tls-client")
             {
             for(const auto& dn : acceptable_cas)

@@ -179,10 +179,9 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
    m_request_context(cert_request.context()),
    m_side(Connection_Side::CLIENT)
    {
-   // TODO: implement "signature_algorithms_cert"
-   //       -> see c'tor for server certificates
    setup_entries(credentials_manager.find_cert_chain(
                     filter_signature_schemes(cert_request.signature_schemes()),
+                    to_algorithm_identifiers(cert_request.certificate_signature_schemes()),
                     cert_request.acceptable_CAs(),
                     "tls-client",
                     hostname),
@@ -202,20 +201,11 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
    m_request_context(),
    m_side(Connection_Side::SERVER)
    {
-   // TODO: implement "signature_algorithms_cert"
    BOTAN_ASSERT_NOMSG(client_hello.extensions().has<Signature_Algorithms>());
 
-   // TODO: To fully support "signature_algorithm_cert", this would need to
-   //       receive two algorithm names. One for the signature algorithm used
-   //       to sign the certificate and one for the public key contained in
-   //       the certificate. Both must be supported to comply with the
-   //       client's asymmetric key requirements.
-   // Note: This requires a change in the public API of CredentialsManager.
-   //
-   // see: https://github.com/randombit/botan/issues/2714#issuecomment-1057175631
-   // see: RFC 8446 4.4.2.2
    setup_entries(credentials_manager.find_cert_chain(
                     filter_signature_schemes(client_hello.signature_schemes()),
+                    to_algorithm_identifiers(client_hello.certificate_signature_schemes()),
                     {}, "tls-server", client_hello.sni_hostname()),
                  client_hello.extensions().get<Certificate_Status_Request>(),
                  callbacks);

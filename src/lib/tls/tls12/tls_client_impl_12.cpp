@@ -647,6 +647,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
          std::vector<X509_Certificate> client_certs =
             m_creds.find_cert_chain(types,
+                                    {},
                                     state.cert_req()->acceptable_CAs(),
                                     "tls-client",
                                     m_info.hostname());

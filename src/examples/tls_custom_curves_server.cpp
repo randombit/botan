@@ -79,6 +79,7 @@ public:
   }
 
   std::vector<Botan::X509_Certificate> cert_chain(const std::vector<std::string> &cert_key_types,
+                                                  const std::vector<Botan::AlgorithmIdentifier> &cert_signature_schemes,
                                                   const std::string &type,
                                                   const std::string &context) override {
     // return the certificate chain being sent to the tls client

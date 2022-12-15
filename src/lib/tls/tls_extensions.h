@@ -56,6 +56,7 @@ enum class Extension_Code : uint16_t {
    SupportedGroups                     = 10,
    EcPointFormats                      = 11,
    SignatureAlgorithms                 = 13,
+   CertSignatureAlgorithms             = 50,
    UseSrtp                             = 14,
    ApplicationLayerProtocolNegotiation = 16,
 
@@ -78,7 +79,6 @@ enum class Extension_Code : uint16_t {
    CertificateAuthorities              = 47,
    // OidFilters                          = 48,  // NYI
 
-   CertSignatureAlgorithms             = 50,
    KeyShare                            = 51,
 #endif
 
@@ -337,8 +337,6 @@ class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
       std::vector<Signature_Scheme> m_schemes;
    };
 
-#if defined(BOTAN_HAS_TLS_13)
-
 /**
 * Signature_Algorithms_Cert for TLS 1.3 (RFC 8446)
 *
@@ -348,6 +346,9 @@ class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
 *    extension applies to signatures in certificates, and the
 *    "signature_algorithms" extension, which originally appeared in TLS 1.2,
 *    applies to signatures in CertificateVerify messages.
+*
+* RFC 8446 4.2.3
+*    TLS 1.2 implementations SHOULD also process this extension.
 */
 class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
    {
@@ -371,8 +372,6 @@ class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
    private:
       std::vector<Signature_Scheme> m_schemes;
    };
-
-#endif
 
 /**
 * Used to indicate SRTP algorithms for DTLS (RFC 5764)

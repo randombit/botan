@@ -460,10 +460,11 @@ class Test_Credentials : public Botan::Credentials_Manager
 
       std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& cert_key_types,
+         const std::vector<AlgorithmIdentifier>& cert_signature_schemes,
          const std::string& type,
          const std::string& context) override
          {
-         BOTAN_UNUSED(cert_key_types, context);
+         BOTAN_UNUSED(cert_key_types, cert_signature_schemes, context);
          return
             {
             (type == "tls-client")
