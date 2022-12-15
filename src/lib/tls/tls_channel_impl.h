@@ -26,6 +26,9 @@ class X509_Certificate;
 
 namespace TLS {
 
+class Client;
+class Server;
+
 class Channel_Impl
    {
    public:
@@ -77,6 +80,16 @@ class Channel_Impl
       virtual bool is_closed() const = 0;
 
       /**
+      * @return true iff the connection is active for sending application data
+      */
+      virtual bool is_closed_for_reading() const = 0;
+
+      /**
+      * @return true iff the connection has been definitely closed
+      */
+      virtual bool is_closed_for_writing() const = 0;
+
+      /**
       * @return certificate chain of the peer (may be empty)
       */
       virtual std::vector<X509_Certificate> peer_cert_chain() const = 0;
@@ -121,6 +134,11 @@ class Channel_Impl
       */
       virtual bool timeout_check() = 0;
 
+      /**
+      * Return the protocol notification set for this connection, if any (ALPN).
+      * This value is not tied to the session and a later renegotiation of the
+      * same session can choose a new protocol.
+      */
       virtual std::string application_protocol() const = 0;
 
    protected:
@@ -143,6 +161,7 @@ class Channel_Impl
          std::vector<uint8_t> peer_transcript;
 
          Server_Information server_info;
+         size_t io_buffer_size;
 
          Callbacks& callbacks;
          Session_Manager& session_manager;
@@ -167,6 +186,28 @@ class Channel_Impl
          {
          BOTAN_STATE_CHECK(m_downgrade_info);
          m_downgrade_info->client_hello_message = msg;
+         }
+
+      friend class Client;
+      friend class Server;
+      void set_io_buffer_size(size_t io_buf_sz)
+         {
+         BOTAN_STATE_CHECK(m_downgrade_info);
+         m_downgrade_info->io_buffer_size = io_buf_sz;
+         }
+
+      /**
+       * Implementations use this to signal that the peer indicated a protocol
+       * version downgrade. After calling `request_downgrade()` no further
+       * state changes must be perfomed by the implementation. Particularly, no
+       * further handshake messages must be emitted. Instead, they must yield
+       * control flow back to the underlying Channel implementation to perform
+       * the protocol version downgrade.
+       */
+      void request_downgrade()
+         {
+         BOTAN_STATE_CHECK(m_downgrade_info && !m_downgrade_info->will_downgrade);
+         m_downgrade_info->will_downgrade = true;
          }
 
    public:

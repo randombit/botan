@@ -1,6 +1,8 @@
 /*
 * (C) 2016 Juraj Somorovsky
 * (C) 2021 Elektrobit Automotive GmbH
+* (C) 2022 Hannes Rantzsch, René Meusel - neXenio GmbH
+* (C) 2022 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -464,18 +466,17 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test
             {
             try
                {
-               const std::string extensions = vars.get_req_str("AdditionalData");
+               std::visit([&](auto ch) {
+                  if constexpr(std::is_same_v<Botan::TLS::Client_Hello_12, decltype(ch)>)
+                     {
+                     result.confirm("expected Client_Hello_12", msg_type == "client_hello_12");
+                     }
+                  if constexpr(std::is_same_v<Botan::TLS::Client_Hello_13, decltype(ch)>)
+                     {
+                     result.confirm("expected Client_Hello_13", msg_type == "client_hello_13");
+                     }
 
-               // TODO: When implementing a TLS 1.3 server we will likely switch to
-               //       a Client_Hello::parse() factory method that distinguishes
-               //       TLS 1.2 and TLS 1.3 client hellos while parsing and returns
-               //       a std::variant<> similarly to Server_Hello::parse().
-               //
-               // For now we perform a hard-coded distinction.
-               if(msg_type == "client_hello_13")
-                  {
-                  Botan::TLS::Client_Hello_13 ch(buffer);
-
+                  const std::string extensions = vars.get_req_str("AdditionalData");
                   std::vector<uint8_t> exts_buffer;
                   for(Botan::TLS::Handshake_Extension_Type const& type : ch.extensions().extension_types())
                      {
@@ -492,9 +493,9 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test
                      ciphersuites_buffer.push_back(Botan::get_byte<1>(cs));
                      }
                   result.test_eq("Supported ciphersuites", ciphersuites_buffer, ciphersuite);
-                  }
 
                   result.confirm("this is a positive test that should not have failed yet", is_positive_test);
+                  }, Botan::TLS::Client_Hello_13::parse(buffer));
                }
             catch (const std::exception &ex)
                {

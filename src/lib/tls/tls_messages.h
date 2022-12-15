@@ -67,12 +67,21 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message
       std::vector<uint8_t> m_cookie;
    };
 
+class Client_Hello_Internal;
+
 /**
 * Client Hello Message
 */
 class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message
    {
    public:
+      Client_Hello(const Client_Hello&) = delete;
+      Client_Hello& operator=(const Client_Hello&) = delete;
+      Client_Hello(Client_Hello&&);
+      Client_Hello& operator=(Client_Hello&&);
+
+      ~Client_Hello();
+
       Handshake_Type type() const override;
 
       /**
@@ -125,22 +134,13 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message
       const Extensions& extensions() const;
 
    protected:
-      Client_Hello() : m_comp_methods({ 0 }) {}
-
-      explicit Client_Hello(const std::vector<uint8_t>& buf);
+      Client_Hello();
+      explicit Client_Hello(std::unique_ptr<Client_Hello_Internal> data);
 
       const std::vector<uint8_t>& compression_methods() const;
 
    protected:
-      Protocol_Version m_legacy_version;
-      std::vector<uint8_t> m_session_id;
-      std::vector<uint8_t> m_random;
-      std::vector<uint16_t> m_suites;
-      std::vector<uint8_t> m_comp_methods;
-      Extensions m_extensions;
-
-      std::vector<uint8_t> m_hello_cookie; // DTLS only
-      std::vector<uint8_t> m_cookie_input_bits; // DTLS only
+      std::unique_ptr<Client_Hello_Internal> m_data;
    };
 
 class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello
@@ -163,7 +163,7 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello
          };
 
    public:
-      explicit Client_Hello_12(const std::vector<uint8_t>& buf) : Client_Hello(buf) {}
+      explicit Client_Hello_12(const std::vector<uint8_t>& buf);
 
       Client_Hello_12(Handshake_IO& io,
                       Handshake_Hash& hash,
@@ -183,6 +183,11 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello
                       const Session& session,
                       const std::vector<std::string>& next_protocols);
 
+   protected:
+      friend class Client_Hello_13;  // to allow construction by Client_Hello_13::parse()
+      Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data);
+
+   public:
       using Client_Hello::random;
       using Client_Hello::compression_methods;
 
@@ -210,8 +215,6 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello
 class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
    {
    public:
-      explicit Client_Hello_13(const std::vector<uint8_t>& buf) : Client_Hello(buf) {}
-
       Client_Hello_13(const Policy& policy,
                       Callbacks& cb,
                       RandomNumberGenerator& rng,
@@ -219,14 +222,17 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
                       const std::vector<std::string>& next_protocols,
                       const std::optional<Session>& session = std::nullopt);
 
+      static std::variant<Client_Hello_13, Client_Hello_12>
+      parse(const std::vector<uint8_t>& buf);
+
       void retry(const Hello_Retry_Request& hrr,
                  const Transcript_Hash_State& transcript_hash_state,
                  Callbacks& cb,
                  RandomNumberGenerator& rng);
 
-      std::vector<Protocol_Version> supported_versions() const;
-
    private:
+      Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data);
+
       /**
        * If the Client Hello contains a PSK extensions with identities this will
        * generate the PSK binders as described in RFC 8446 4.2.11.2.
@@ -949,6 +955,7 @@ using as_wrapped_references_t = typename as_wrapped_references<T>::type;
 // Handshake message types from RFC 8446 4.
 using Handshake_Message_13 = std::variant<
                              Client_Hello_13,
+                             Client_Hello_12,
                              Server_Hello_13,
                              Server_Hello_12,
                              Hello_Retry_Request,
@@ -977,6 +984,7 @@ using Server_Handshake_13_Message_Ref = as_wrapped_references_t<Server_Handshake
 
 using Client_Handshake_13_Message = std::variant<
                                     Client_Hello_13,
+                                    Client_Hello_12,  // indicates a TLS peer that does not offer TLS 1.3
                                     Certificate_13,
                                     Certificate_Verify_13,
                                     Finished_13>;

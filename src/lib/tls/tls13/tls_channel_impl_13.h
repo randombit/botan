@@ -117,7 +117,11 @@ class Channel_Impl_13 : public Channel_Impl
       * @return true iff the connection has been closed, i.e. CLOSE_NOTIFY
       * has been received from the peer.
       */
-      bool is_closed() const override { return !m_can_read; }
+      bool is_closed() const override { return is_closed_for_reading() && is_closed_for_writing(); }
+
+      bool is_closed_for_reading() const override { return !m_can_read; }
+      bool is_closed_for_writing() const override { return !m_can_write; }
+
 
       /**
       * Key material export (RFC 5705)

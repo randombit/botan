@@ -48,9 +48,14 @@ Client::Client(Callbacks& callbacks,
       }
 
    if(effective_version == Protocol_Version::TLS_V13)
+      {
       m_impl = std::make_unique<Client_Impl_13>(
                   callbacks, session_manager, creds, policy,
                   rng, info, next_protocols);
+
+      if(m_impl->expects_downgrade())
+         { m_impl->set_io_buffer_size(io_buf_sz); }
+      }
    else
 #endif
       m_impl = std::make_unique<Client_Impl_12>(
@@ -85,6 +90,16 @@ bool Client::is_active() const
 bool Client::is_closed() const
    {
    return m_impl->is_closed();
+   }
+
+bool Client::is_closed_for_reading() const
+   {
+   return m_impl->is_closed_for_reading();
+   }
+
+bool Client::is_closed_for_writing() const
+   {
+   return m_impl->is_closed_for_writing();
    }
 
 std::vector<X509_Certificate> Client::peer_cert_chain() const

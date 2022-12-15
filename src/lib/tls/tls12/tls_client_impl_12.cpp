@@ -83,7 +83,8 @@ Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgr
                    downgrade_info.rng,
                    downgrade_info.policy,
                    false /* is_server */,
-                   false /* datagram -- not supported by Botan in TLS 1.3 */),
+                   false /* datagram -- not supported by Botan in TLS 1.3 */,
+                   downgrade_info.io_buffer_size),
    m_creds(downgrade_info.creds),
    m_info(downgrade_info.server_info)
    {

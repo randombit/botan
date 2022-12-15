@@ -13,7 +13,6 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_server_impl_12.h>
-#include <botan/internal/tls_server_impl.h>
 #include <botan/tls_magic.h>
 
 namespace Botan::TLS {
@@ -37,79 +36,84 @@ Server::~Server() = default;
 
 size_t Server::received_data(const uint8_t buf[], size_t buf_size)
    {
-   return m_impl->channel().received_data(buf, buf_size);
+   return m_impl->received_data(buf, buf_size);
    }
 
 bool Server::is_active() const
    {
-   return m_impl->channel().is_active();
+   return m_impl->is_active();
    }
 
 bool Server::is_closed() const
    {
-   return m_impl->channel().is_closed();
+   return m_impl->is_closed();
+   }
+
+bool Server::is_closed_for_reading() const
+   {
+   return m_impl->is_closed_for_reading();
+   }
+
+bool Server::is_closed_for_writing() const
+   {
+   return m_impl->is_closed_for_writing();
    }
 
 std::vector<X509_Certificate> Server::peer_cert_chain() const
    {
-   return m_impl->channel().peer_cert_chain();
+   return m_impl->peer_cert_chain();
    }
 
 SymmetricKey Server::key_material_export(const std::string& label,
       const std::string& context,
       size_t length) const
    {
-   return m_impl->channel().key_material_export(label, context, length);
+   return m_impl->key_material_export(label, context, length);
    }
 
 void Server::renegotiate(bool force_full_renegotiation)
    {
-   m_impl->channel().renegotiate(force_full_renegotiation);
+   m_impl->renegotiate(force_full_renegotiation);
    }
 
 void Server::update_traffic_keys(bool request_peer_update)
    {
-   m_impl->channel().update_traffic_keys(request_peer_update);
+   m_impl->update_traffic_keys(request_peer_update);
    }
 
 bool Server::secure_renegotiation_supported() const
    {
-   return m_impl->channel().secure_renegotiation_supported();
+   return m_impl->secure_renegotiation_supported();
    }
 
 void Server::send(const uint8_t buf[], size_t buf_size)
    {
-   m_impl->channel().send(buf, buf_size);
+   m_impl->send(buf, buf_size);
    }
 
 void Server::send_alert(const Alert& alert)
    {
-   m_impl->channel().send_alert(alert);
+   m_impl->send_alert(alert);
    }
 
 void Server::send_warning_alert(Alert::Type type)
    {
-   m_impl->channel().send_warning_alert(type);
+   m_impl->send_warning_alert(type);
    }
 
 void Server::send_fatal_alert(Alert::Type type)
    {
-   m_impl->channel().send_fatal_alert(type);
+   m_impl->send_fatal_alert(type);
    }
 
 void Server::close()
    {
-   m_impl->channel().close();
+   m_impl->close();
    }
 
 bool Server::timeout_check()
    {
-   return m_impl->channel().timeout_check();
-   }
-
-std::string Server::next_protocol() const
-   {
-   return m_impl->next_protocol();
+   return m_impl->timeout_check();
    }
 
 std::string Server::application_protocol() const

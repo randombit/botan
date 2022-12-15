@@ -16,6 +16,12 @@ Client_Hello_13& Handshake_State_13_Base::store(Client_Hello_13 client_hello, co
     return m_client_hello.value();
 }
 
+Client_Hello_12& Handshake_State_13_Base::store(Client_Hello_12 client_hello, const bool)
+{
+    m_client_hello_12 = std::move(client_hello);
+    return m_client_hello_12.value();
+}
+
 Server_Hello_13& Handshake_State_13_Base::store(Server_Hello_13 server_hello, const bool)
 {
     m_server_hello = std::move(server_hello);

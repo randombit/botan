@@ -122,20 +122,16 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
                   // Note: Server_Hello_12 was deliberately not included in the check below because in TLS 1.2 Server Hello and
                   //       other handshake messages can be legally coalesced in a single record.
                   //
-                  if(holds_any_of<Client_Hello_13/*, EndOfEarlyData,*/, Server_Hello_13, Hello_Retry_Request, Finished_13>
+                  if(holds_any_of<Client_Hello_12, Client_Hello_13/*, EndOfEarlyData,*/, Server_Hello_13, Hello_Retry_Request, Finished_13>
                         (handshake_msg.value())
                         && m_handshake_layer.has_pending_data())
                      { throw Unexpected_Message("Unexpected additional handshake message data found in record"); }
 
-                  const bool downgrade_requested = std::holds_alternative<Server_Hello_12>(handshake_msg.value());
-
                   process_handshake_msg(std::move(handshake_msg.value()));
 
-                  if(downgrade_requested)
+                  if(is_downgrading())
                      {
                      // Downgrade to TLS 1.2 was detected. Stop everything we do and await being replaced by a 1.2 implementation.
-                     BOTAN_STATE_CHECK(m_downgrade_info);
-                     m_downgrade_info->will_downgrade = true;
                      return 0;
                      }
                   else if(m_downgrade_info != nullptr)
@@ -145,7 +141,7 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
                      if(m_downgrade_info->received_tls_13_error_alert)
                         shutdown();
 
-                     // Downgrade can only happen if the first received message is a Server_Hello_12. This was not the case.
+                     // Downgrade can only be indicated in the first received peer message. This was not the case.
                      m_downgrade_info.reset();
                      }
 
@@ -370,28 +366,25 @@ void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record)
 
    // user canceled alerts are ignored
 
-   // TODO: the server doesn't have to expect downgrading; move this to the client
-   if(!expects_downgrade())
+   // RFC 8446 5.
+   //    All the alerts listed in Section 6.2 MUST be sent with
+   //    AlertLevel=fatal and MUST be treated as error alerts when received
+   //    regardless of the AlertLevel in the message.  Unknown Alert types
+   //    MUST be treated as error alerts.
+   if(is_error_alert(alert) && !alert.is_fatal())
       {
-      // RFC 8446 5.
-      //    All the alerts listed in Section 6.2 MUST be sent with
-      //    AlertLevel=fatal and MUST be treated as error alerts when received
-      //    regardless of the AlertLevel in the message.  Unknown Alert types
-      //    MUST be treated as error alerts.
-      if(is_error_alert(alert) && !alert.is_fatal())
+      // In TLS 1.2 error alerts might be marked as 'warnings' and would not
+      // demand an immediate shutdown. Until we are sure to talk to a TLS 1.3
+      // peer we must defer the shutdown and refrain from raising a decode
+      // error.
+      if(expects_downgrade())
+         {
+         m_downgrade_info->received_tls_13_error_alert = true;
+         }
+      else
          {
          throw TLS_Exception(Alert::DECODE_ERROR, "Error alert not marked fatal");  // will shutdown in send_alert
          }
-      }
-   else
-      {
-      // Don't immediately shut down in case we might be dealing with a TLS 1.2 server. In this case,
-      // we cannot immediately shut down on alerts that are warnings in TLS 1.2.
-      // However, if the server turns out to _not_ downgrade, treat this as an error and do shut down.
-      // Note that this should not happen with a valid implementation, as the TLS 1.3 server shouldn't
-      // send a SERVER HELLO after the alert.
-      if(is_error_alert(alert))
-         m_downgrade_info->received_tls_13_error_alert = true;
       }
 
    if(alert.is_fatal())
@@ -421,6 +414,7 @@ void Channel_Impl_13::expect_downgrade(const Server_Information& server_info)
          {},
          {},
       server_info,
+      Botan::TLS::Channel::IO_BUF_DEFAULT_SIZE,
       callbacks(),
       session_manager(),
       credentials_manager(),

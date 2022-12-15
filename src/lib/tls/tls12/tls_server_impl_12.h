@@ -12,7 +12,6 @@
 #include <botan/tls_policy.h>
 #include <botan/credentials_manager.h>
 #include <botan/internal/tls_channel_impl_12.h>
-#include <botan/internal/tls_server_impl.h>
 #include <vector>
 
 namespace Botan {
@@ -25,7 +24,7 @@ class Server_Handshake_State;
 /**
 * SSL/TLS Server 1.2 implementation
 */
-class Server_Impl_12 : public Channel_Impl_12, public Server_Impl
+class Server_Impl_12 : public Channel_Impl_12
    {
    public:
       typedef std::function<std::string(std::vector<std::string>)> next_protocol_fn;
@@ -59,14 +58,6 @@ class Server_Impl_12 : public Channel_Impl_12, public Server_Impl
                               bool is_datagram = false,
                               size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
    private:
-      /**
-      * Return the protocol notification set by the client (using the
-      * ALPN extension) for this connection, if any. This value is not
-      * tied to the session and a later renegotiation of the same
-      * session can choose a new protocol.
-      */
-      std::string next_protocol() const override { return m_next_protocol; }
-
       /**
       * Return the protocol notification set by the client (using the
       * ALPN extension) for this connection, if any. This value is not
@@ -119,9 +110,6 @@ class Server_Impl_12 : public Channel_Impl_12, public Server_Impl
 
       Credentials_Manager& m_creds;
       std::string m_next_protocol;
-
-      // Set by deprecated constructor, Server calls both this fn and Callbacks version
-      next_protocol_fn m_choose_next_protocol;
    };
 
 }

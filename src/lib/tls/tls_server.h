@@ -20,7 +20,7 @@ namespace Botan {
 
 namespace TLS {
 
-class Server_Impl;
+class Channel_Impl;
 
 /**
 * TLS Server
@@ -66,14 +66,6 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       * tied to the session and a later renegotiation of the same
       * session can choose a new protocol.
       */
-      std::string next_protocol() const;
-
-      /**
-      * Return the protocol notification set by the client (using the
-      * ALPN extension) for this connection, if any. This value is not
-      * tied to the session and a later renegotiation of the same
-      * session can choose a new protocol.
-      */
       std::string application_protocol() const override;
 
       size_t received_data(const uint8_t buf[], size_t buf_size) override;
@@ -83,6 +75,9 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       bool is_active() const override;
 
       bool is_closed() const override;
+
+      bool is_closed_for_reading() const override;
+      bool is_closed_for_writing() const override;
 
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
@@ -111,7 +106,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       bool timeout_check() override;
 
    private:
-      std::unique_ptr<Server_Impl> m_impl;
+      std::unique_ptr<Channel_Impl> m_impl;
    };
 }
 

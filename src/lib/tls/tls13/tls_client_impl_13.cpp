@@ -142,6 +142,15 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Version downgrade received after Hello Retry");
       }
 
+   // RFC 8446 Appendix D.1
+   //    If the version chosen by the server is not supported by the client
+   //    (or is not acceptable), the client MUST abort the handshake with a
+   //    "protocol_version" alert.
+   if(!expects_downgrade())
+      {
+      throw TLS_Exception(Alert::PROTOCOL_VERSION, "Received an unexpected legacy Server Hello");
+      }
+
    // RFC 8446 4.1.3
    //    TLS 1.3 has a downgrade protection mechanism embedded in the server's
    //    random value.  TLS 1.3 servers which negotiate TLS 1.2 or below in
@@ -189,7 +198,7 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Unexpected session ID during downgrade");
       }
 
-   BOTAN_ASSERT_NOMSG(expects_downgrade());
+   request_downgrade();
 
    // After this, no further messages are expected here because this instance will be replaced
    // by a Client_Impl_12.
@@ -562,8 +571,9 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
                            m_transcript_hash.previous()))
       { throw TLS_Exception(Alert::DECRYPT_ERROR, "Finished message didn't verify"); }
 
-   // save the current transcript hash as client auth might update the hash multiple times
-   const auto th_server_finished = m_transcript_hash.current();
+   // Derives the secrets for receiving application data but defers
+   // the derivation of sending application data.
+   m_cipher_state->advance_with_server_finished(m_transcript_hash.current());
 
    auto flight = aggregate_handshake_messages();
 
@@ -579,9 +589,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
 
    flight.send();
 
-   // derives the application traffic secrets and _replaces_ the handshake traffic secrets
-   // Note: this MUST happen AFTER the client finished message was sent!
-   m_cipher_state->advance_with_server_finished(th_server_finished);
+   // derives the sending application traffic secrets
    m_cipher_state->advance_with_client_finished(m_transcript_hash.current());
 
    // TODO: Create a dummy session object and invoke tls_session_established.

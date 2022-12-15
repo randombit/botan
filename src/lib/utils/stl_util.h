@@ -141,6 +141,48 @@ constexpr bool holds_any_of(const std::variant<Ts...>& v) noexcept {
     return (std::holds_alternative<Alts>(v) || ...);
 }
 
+template<typename GeneralVariantT, typename SpecialT>
+constexpr bool is_generalizable_to(const SpecialT&) noexcept
+   {
+   return std::is_constructible_v<GeneralVariantT, SpecialT>;
+   }
+
+template<typename GeneralVariantT, typename... SpecialTs>
+constexpr bool is_generalizable_to(const std::variant<SpecialTs...>&) noexcept
+   {
+   return (std::is_constructible_v<GeneralVariantT, SpecialTs> && ...);
+   }
+
+/**
+ * @brief Converts a given variant into another variant-ish whose type states
+ *        are a super set of the given variant.
+ *
+ * This is useful to convert restricted variant types into more general
+ * variants types.
+ */
+template<typename GeneralVariantT, typename SpecialT>
+constexpr GeneralVariantT generalize_to(SpecialT&& specific) noexcept
+   {
+   static_assert(std::is_constructible_v<GeneralVariantT, std::decay_t<SpecialT>>,
+                 "Desired general type must be implicitly constructible by the specific type");
+   return std::forward<SpecialT>(specific);
+   }
+
+/**
+ * @brief Converts a given variant into another variant-ish whose type states
+ *        are a super set of the given variant.
+ *
+ * This is useful to convert restricted variant types into more general
+ * variants types.
+ */
+template<typename GeneralVariantT, typename... SpecialTs>
+constexpr GeneralVariantT generalize_to(std::variant<SpecialTs...> specific) noexcept
+   {
+   static_assert(is_generalizable_to<GeneralVariantT>(specific),
+                 "Desired general type must be implicitly constructible by all types of the specialized std::variant<>");
+   return std::visit([](auto s) -> GeneralVariantT { return s; }, std::move(specific));
+   }
+
 // This is a helper utility to emulate pattern matching with std::visit.
 // See https://en.cppreference.com/w/cpp/utility/variant/visit for more info.
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };

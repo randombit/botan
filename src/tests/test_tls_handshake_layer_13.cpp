@@ -274,7 +274,7 @@ std::vector<Test::Result> prepare_message()
       {
       Botan_Tests::CHECK("prepare client hello", [&](auto& result)
          {
-         Client_Hello_13 hello({client_hello_message.cbegin()+4, client_hello_message.cend()});
+         auto hello = std::get<Client_Hello_13>(Client_Hello_13::parse({client_hello_message.cbegin()+4, client_hello_message.cend()}));
          Handshake_Layer hl(Connection_Side::CLIENT);
          Transcript_Hash_State th("SHA-256");
          result.test_eq("produces the same message", hl.prepare_message(hello, th), client_hello_message);
@@ -303,7 +303,7 @@ std::vector<Test::Result> full_client_handshake()
       {
       Botan_Tests::CHECK("client hello", [&](auto& result)
          {
-         Client_Hello_13 hello({client_hello_message.cbegin()+4, client_hello_message.cend()});
+         auto hello = std::get<Client_Hello_13>(Client_Hello_13::parse({client_hello_message.cbegin()+4, client_hello_message.cend()}));
          hl.prepare_message(hello, th);
          check_transcript_hash_empty(result, th);
          }),
@@ -374,8 +374,9 @@ std::vector<Test::Result> hello_retry_request_handshake()
       {
       Botan_Tests::CHECK("client hello 1", [&](auto& result)
          {
-         Client_Hello_13 hello({hrr_client_hello_msg.cbegin()+4, hrr_client_hello_msg.cend()});
-         hl.prepare_message(hello, th);
+         auto hello = std::get<Client_Hello_13>(Client_Hello_13::parse({hrr_client_hello_msg.cbegin()+4, hrr_client_hello_msg.cend()}));
+         auto msg = hl.prepare_message(hello, th);
+         result.test_eq("parsing and re-marshalling produces same message", msg, hrr_client_hello_msg);
          check_transcript_hash_empty(result, th);
          }),
 

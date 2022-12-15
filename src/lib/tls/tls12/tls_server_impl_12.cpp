@@ -271,7 +271,6 @@ Server_Impl_12::Server_Impl_12(Callbacks& callbacks,
                                size_t io_buf_sz) :
    Channel_Impl_12(callbacks, session_manager, rng, policy,
                   true, is_datagram, io_buf_sz),
-   Server_Impl(static_cast<Channel_Impl&>(*this)),
    m_creds(creds)
    {
    }
@@ -508,12 +507,6 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
    if(pending_state.client_hello()->supports_alpn())
       {
       m_next_protocol = callbacks().tls_server_choose_app_protocol(pending_state.client_hello()->next_protocols());
-
-      // if the callback return was empty, fall back to the (deprecated) std::function
-      if(m_next_protocol.empty() && m_choose_next_protocol)
-         {
-         m_next_protocol = m_choose_next_protocol(pending_state.client_hello()->next_protocols());
-         }
       }
 
    if(resuming)
