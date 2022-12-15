@@ -11,6 +11,9 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_version.h>
 #include <botan/internal/stl_util.h>
+#include <botan/hash.h>
+#include <botan/der_enc.h>
+#include <botan/internal/emsa.h>
 
 namespace Botan::TLS {
 
@@ -208,7 +211,7 @@ std::string Signature_Scheme::algorithm_name() const noexcept
       }
    }
 
-AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
+AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept
    {
    switch(m_code)
       {
@@ -235,6 +238,14 @@ AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
       default:
          return AlgorithmIdentifier();
       }
+   }
+
+AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
+   {
+   auto emsa = EMSA::create(padding_string());
+   if(!emsa)
+      { return AlgorithmIdentifier(); }
+   return emsa->config_for_x509(algorithm_name(), hash_function_name());
    }
 
 std::optional<Signature_Format> Signature_Scheme::format() const noexcept
@@ -308,6 +319,14 @@ bool Signature_Scheme::is_suitable_for(const Private_Key &private_key) const noe
       return false;
 
    return true;
+   }
+
+std::vector<AlgorithmIdentifier> to_algorithm_identifiers(const std::vector<Signature_Scheme>& schemes)
+   {
+   std::vector<AlgorithmIdentifier> result;
+   std::transform(schemes.begin(), schemes.end(), std::back_inserter(result),
+                  [](const auto& scheme) { return scheme.algorithm_identifier(); });
+   return result;
    }
 
 }  // Botan::TLS
