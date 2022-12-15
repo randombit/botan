@@ -208,6 +208,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
 
+    if target_os == 'windows' and target_cc == 'msvc' and target_cpu == 'x86':
+        # MSVC x86 seems to miscompile Argon2
+        flags += ['--disable-modules=argon2_ssse3']
+
     if target == 'baremetal':
         cc_bin = 'arm-none-eabi-c++'
         flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector', '--ldflags=-specs=nosys.specs']
@@ -309,8 +313,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
             if target_os in ['windows', 'mingw']:
                 # ./configure.py needs boost's location on Windows
-                assert 'BOOST_INCLUDEDIR' in os.environ, "Windows needs to know where to find boost (via BOOST_INCLUDEDIR)"
-                flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
+                if 'BOOST_INCLUDEDIR' in os.environ:
+                    flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
 
             if target_os == 'mingw':
                 # apparently mingw needs this legacy socket library version for reasons
