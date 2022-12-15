@@ -75,6 +75,7 @@ class Test_Options
                    bool log_success,
                    bool run_online_tests,
                    bool run_long_tests,
+                   bool run_memory_intensive_tests,
                    bool abort_on_first_fail) :
          m_requested_tests(requested_tests),
          m_skip_tests(skip_tests.begin(), skip_tests.end()),
@@ -90,6 +91,7 @@ class Test_Options
          m_log_success(log_success),
          m_run_online_tests(run_online_tests),
          m_run_long_tests(run_long_tests),
+         m_run_memory_intensive_tests(run_memory_intensive_tests),
          m_abort_on_first_fail(abort_on_first_fail)
          {
          }
@@ -122,6 +124,8 @@ class Test_Options
 
       bool run_long_tests() const { return m_run_long_tests; }
 
+      bool run_memory_intensive_tests() const { return m_run_memory_intensive_tests; }
+
       bool abort_on_first_fail() const { return m_abort_on_first_fail; }
 
       bool verbose() const { return m_verbose; }
@@ -141,6 +145,7 @@ class Test_Options
       bool m_log_success;
       bool m_run_online_tests;
       bool m_run_long_tests;
+      bool m_run_memory_intensive_tests;
       bool m_abort_on_first_fail;
    };
 
@@ -689,6 +694,7 @@ class Test
       static const Test_Options& options() { return m_opts; }
 
       static bool run_long_tests() { return options().run_long_tests(); }
+      static bool run_memory_intensive_tests() { return options().run_memory_intensive_tests(); }
       static const std::string& data_dir() { return options().data_dir(); }
       static const std::string& pkcs11_lib() { return options().pkcs11_lib(); }
 

@@ -60,9 +60,14 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "lint" ]; then
         sudo apt-get -qq install pylint
 
-    elif [ "$TARGET" = "coverage" ]; then
-        sudo apt-get -qq install softhsm2 libtspi-dev lcov python3-coverage libboost-all-dev gdb
-        pip install --user codecov
+    elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
+        if [ "$TARGET" = "coverage" ]; then
+            sudo apt-get -qq install lcov python3-coverage gdb
+            pip install --user codecov
+        fi
+
+        sudo apt-get -qq install softhsm2 libtspi-dev libboost-all-dev
+
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
         sudo chgrp -R "$(id -g)" /var/lib/softhsm/ /etc/softhsm

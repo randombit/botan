@@ -772,7 +772,7 @@ class System_RNG_Tests final : public Test
             rng.add_entropy(out_buf.data(), out_buf.size());
             }
 
-         if(Test::run_long_tests() && (sizeof(size_t) > 4))
+         if(Test::run_long_tests() && Test::run_memory_intensive_tests() && (sizeof(size_t) > 4))
             {
             // Pass buffer with a size greater than 32bit
             const size_t size32BitsMax = std::numeric_limits<uint32_t>::max();

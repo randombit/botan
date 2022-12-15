@@ -57,8 +57,8 @@ int main(int argc, char* argv[])
       const std::string arg_spec =
          "botan-test --verbose --help --data-dir= --pkcs11-lib= --provider= "
          "--log-success --abort-on-first-fail --no-avoid-undefined --skip-tests= "
-         "--test-threads=0 --test-results-dir= --run-long-tests --run-online-tests "
-         "--test-runs=1 --drbg-seed= --report-properties= *suites";
+         "--test-threads=0 --test-results-dir= --run-long-tests --run-memory-intensive-tests "
+         "--run-online-tests --test-runs=1 --drbg-seed= --report-properties= *suites";
 
       Botan_CLI::Argument_Parser parser(arg_spec);
 
@@ -96,6 +96,7 @@ int main(int argc, char* argv[])
          parser.flag_set("log-success"),
          parser.flag_set("run-online-tests"),
          parser.flag_set("run-long-tests"),
+         parser.flag_set("run-memory-intensive-tests"),
          parser.flag_set("abort-on-first-fail"));
 
       Botan_Tests::Test_Runner tests(std::cout);
