@@ -145,18 +145,22 @@
 
 #endif
 
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-
-  #if defined(BOTAN_BUILD_COMPILER_IS_GCC)
-    #define BOTAN_DIAGNOSTIC_PUSH          	_Pragma("GCC diagnostic push")
-    #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED  _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
-    #define BOTAN_DIAGNOSTIC_POP           	_Pragma("GCC diagnostic pop")
-  #elif defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-    #define BOTAN_DIAGNOSTIC_PUSH          	_Pragma("clang diagnostic push")
-    #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED  _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
-    #define BOTAN_DIAGNOSTIC_POP           	_Pragma("clang diagnostic pop")
-  #endif
-
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
+  #define BOTAN_DIAGNOSTIC_PUSH              _Pragma("GCC diagnostic push")
+  #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+  #define BOTAN_DIAGNOSTIC_POP               _Pragma("GCC diagnostic pop")
+#elif defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+  #define BOTAN_DIAGNOSTIC_PUSH              _Pragma("clang diagnostic push")
+  #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
+  #define BOTAN_DIAGNOSTIC_POP               _Pragma("clang diagnostic pop")
+#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+  #define BOTAN_DIAGNOSTIC_PUSH              __pragma(warning(push))
+  #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED __pragma(warning(disable : 4996))
+  #define BOTAN_DIAGNOSTIC_POP               __pragma(warning(pop))
+#else
+  #define BOTAN_DIAGNOSTIC_PUSH
+  #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED
+  #define BOTAN_DIAGNOSTIC_POP
 #endif
 
 #endif

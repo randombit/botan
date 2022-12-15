@@ -2,6 +2,7 @@
 * TLS Callbacks
 * (C) 2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -42,11 +43,11 @@ std::chrono::system_clock::time_point TLS::Callbacks::tls_current_timestamp()
    return std::chrono::system_clock::now();
    }
 
-void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/, Connection_Side /*unused*/)
+void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/, Connection_Side /*unused*/, Handshake_Type /*unused*/)
    {
    }
 
-void TLS::Callbacks::tls_examine_extensions(const Extensions& /*unused*/, Connection_Side /*unused*/)
+void TLS::Callbacks::tls_examine_extensions(const Extensions& /*unused*/, Connection_Side /*unused*/, Handshake_Type /*unused*/)
    {
    }
 
@@ -106,6 +107,19 @@ std::optional<OCSP::Response> TLS::Callbacks::tls_parse_ocsp_response(const std:
       // ignore parsing errors and just ignore the broken OCSP response
       return std::nullopt;
       }
+   }
+
+
+std::vector<std::vector<uint8_t>> TLS::Callbacks::tls_provide_cert_chain_status(
+   const std::vector<X509_Certificate>& chain,
+   const Certificate_Status_Request& csr)
+   {
+   std::vector<std::vector<uint8_t>> result(chain.size());
+   if(!chain.empty())
+      {
+      result[0] = tls_provide_cert_status(chain, csr);
+      }
+   return result;
    }
 
 std::vector<uint8_t> TLS::Callbacks::tls_sign_message(

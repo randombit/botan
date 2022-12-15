@@ -352,7 +352,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
                                 "Server replied with DTLS-SRTP alg we did not send");
          }
 
-      callbacks().tls_examine_extensions(state.server_hello()->extensions(), SERVER);
+      callbacks().tls_examine_extensions(state.server_hello()->extensions(), SERVER, Handshake_Type::SERVER_HELLO);
 
       state.set_version(state.server_hello()->legacy_version());
       m_application_protocol = state.server_hello()->next_protocol();

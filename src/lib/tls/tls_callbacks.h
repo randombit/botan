@@ -3,6 +3,7 @@
 * (C) 2016 Matthias Gierlings
 *     2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2022 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -99,6 +100,31 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        virtual void tls_session_activated() {}
 
        /**
+       * Optional callback: peer closed connection (sent a "close_notify" alert)
+       *
+       * The peer signaled that it wishes to shut down the connection. The
+       * application should not expect to receive any more data from the peer
+       * and may tear down the underlying transport socket.
+       *
+       * Prior to TLS 1.3 it was required that peers discard pending writes
+       * and immediately respond with their own "close_notify". With TLS 1.3,
+       * applications can continue to send data despite the peer having already
+       * signaled their wish to shut down.
+       *
+       * Returning `true` will cause the TLS 1.3 implementation to write all
+       * pending data and then also signal a connection shut down. Otherwise
+       * the application is responsible to call the `Channel::close()` method.
+       *
+       * For TLS 1.2 the return value has no effect.
+       *
+       * @return true causes the implementation to respond with a "close_notify"
+       */
+       virtual bool tls_peer_closed_connection()
+         {
+         return true;
+         }
+
+       /**
        * Optional callback: New session ticket received
        * Called when we receive a session ticket from the server at any point
        * after the initial handshake has finished. Clients may decide to keep or
@@ -180,6 +206,22 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
           BOTAN_UNUSED(csr);
           return std::vector<uint8_t>();
           }
+
+      /**
+       * Called by TLS 1.3 client or server whenever the peer indicated that
+       * OCSP stapling is supported. In contrast to `tls_provide_cert_status`,
+       * this allows providing OCSP responses for each certificate in the chain.
+       *
+       * The default implementation invokes `tls_provide_cert_status` assuming
+       * that no OCSP responses for intermediate certificates are available.
+       *
+       * @return a vector of OCSP response buffers. An empty buffer indicates
+       *         that no OCSP response should be provided for the respective
+       *         certificate (at the same list index). The returned vector
+       *         MUST be exactly the same length as the incoming \p chain.
+       */
+      virtual std::vector<std::vector<uint8_t>> tls_provide_cert_chain_status(const std::vector<X509_Certificate>& chain,
+                                                                              const Certificate_Status_Request& csr);
 
        /**
        * Optional callback with default impl: sign a message
@@ -309,21 +351,21 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        */
        virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos);
 
-       /**
+      /**
        * Optional callback: examine/modify Extensions before sending.
        *
        * Both client and server will call this callback on the Extensions object
-       * before serializing it in the client/server hellos. This allows an
-       * application to modify which extensions are sent during the
-       * handshake.
+       * before serializing it in the specific handshake message. This allows an
+       * application to modify which extensions are sent during the handshake.
        *
        * Default implementation does nothing.
        *
        * @param extn the extensions
        * @param which_side will be CLIENT or SERVER which is the current
-       * applications role in the exchange.
+       *                   applications role in the exchange.
+       * @param which_message will state the handshake message type containing the extensions
        */
-       virtual void tls_modify_extensions(Extensions& extn, Connection_Side which_side);
+       virtual void tls_modify_extensions(Extensions& extn, Connection_Side which_side, Handshake_Type which_message);
 
        /**
        * Optional callback: examine peer extensions.
@@ -339,8 +381,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @param extn the extensions
        * @param which_side will be CLIENT if these are are the clients extensions (ie we are
        *        the server) or SERVER if these are the server extensions (we are the client).
+       * @param which_message will state the handshake message type containing the extensions
        */
-       virtual void tls_examine_extensions(const Extensions& extn, Connection_Side which_side);
+       virtual void tls_examine_extensions(const Extensions& extn, Connection_Side which_side, Handshake_Type which_message);
 
        /**
        * Optional callback: decode TLS group ID

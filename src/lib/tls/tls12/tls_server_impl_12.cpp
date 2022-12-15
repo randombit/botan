@@ -483,7 +483,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
 
    secure_renegotiation_check(pending_state.client_hello());
 
-   callbacks().tls_examine_extensions(pending_state.client_hello()->extensions(), CLIENT);
+   callbacks().tls_examine_extensions(pending_state.client_hello()->extensions(), CLIENT, Handshake_Type::CLIENT_HELLO);
 
    Session session_info;
    const bool resuming =

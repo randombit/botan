@@ -398,6 +398,10 @@ void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record)
       shutdown();
 
    callbacks().tls_alert(alert);
+
+   // Respond with our "close_notify" if the application requests us to.
+   if(is_close_notify_alert(alert) && callbacks().tls_peer_closed_connection())
+      close();
    }
 
 void Channel_Impl_13::shutdown()

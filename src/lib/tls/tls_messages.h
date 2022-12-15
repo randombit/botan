@@ -509,12 +509,15 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
        * Create a Certificate message
        *
        * @param certs            the certificate (chain) to be used for authentication
+       * @param side             the connection side which constructs this message
        * @param request_context  the context provided in the Certificate Request
        *                         message when performing post-handshake client auth
+       * @param callbacks        the "callbacks" handle to use (for tls_modify_extensions)
        */
       Certificate_13(const std::vector<X509_Certificate>& certs,
                      const Connection_Side side,
-                     const std::vector<uint8_t> &request_context = {});
+                     const std::vector<uint8_t>& request_context,
+                     Callbacks& callbacks);
 
       /**
       * Deserialize a Certificate message
@@ -528,11 +531,12 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
 
       /**
       * Validate a Certificate message regarding what extensions are expected based on
-      * previous handshake messages.
+      * previous handshake messages. Also call the tls_examine_extenions() callback
+      * for each entry.
       *
       * @param requested_extensions Extensions of Client_Hello or Certificate_Request messages
       */
-      void validate_extensions(const std::set<Handshake_Extension_Type>& requested_extensions) const;
+      void validate_extensions(const std::set<Handshake_Extension_Type>& requested_extensions, Callbacks& cb) const;
 
       /**
        * Verify the certificate chain
@@ -623,6 +627,7 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
 
       std::vector<X509_DN> acceptable_CAs() const;
       const std::vector<Signature_Scheme>& signature_schemes() const;
+      const Extensions& extensions() const { return m_extensions; }
 
       std::vector<uint8_t> serialize() const override;
 
@@ -864,6 +869,8 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
                             Connection_Side from);
 
       std::vector<uint8_t> serialize() const override;
+
+      const Extensions& extensions() const { return m_extensions; }
 
       const std::vector<uint8_t>& ticket() const { return m_ticket; }
       const std::vector<uint8_t>& nonce() const { return m_ticket_nonce; }

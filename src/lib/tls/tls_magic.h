@@ -88,7 +88,7 @@ enum Handshake_Type {
    HANDSHAKE_NONE       = 255  // Null value
 };
 
-const char* handshake_type_to_string(Handshake_Type t);
+BOTAN_TEST_API const char* handshake_type_to_string(Handshake_Type t);
 
 using Transcript_Hash = std::vector<uint8_t>;
 

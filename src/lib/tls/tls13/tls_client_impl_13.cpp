@@ -331,7 +331,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
                                                             m_transcript_hash.current());
       }
 
-   callbacks().tls_examine_extensions(sh.extensions(), SERVER);
+   callbacks().tls_examine_extensions(sh.extensions(), SERVER, Handshake_Type::SERVER_HELLO);
 
    m_transitions.set_expected_next(ENCRYPTED_EXTENSIONS);
    }
@@ -365,7 +365,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
 
    ch.retry(hrr, m_transcript_hash, callbacks(), rng());
 
-   callbacks().tls_examine_extensions(hrr.extensions(), SERVER);
+   callbacks().tls_examine_extensions(hrr.extensions(), SERVER, Handshake_Type::HELLO_RETRY_REQUEST);
 
    send_handshake_message(ch);
 
@@ -377,20 +377,22 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
 
 void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg)
    {
+   const auto& exts = encrypted_extensions_msg.extensions();
+
    // RFC 8446 4.2
    //    Implementations MUST NOT send extension responses if the remote
    //    endpoint did not send the corresponding extension requests, [...]. Upon
    //    receiving such an extension, an endpoint MUST abort the handshake
    //    with an "unsupported_extension" alert.
    const auto& requested_exts = m_handshake_state.client_hello().extensions().extension_types();
-   if(encrypted_extensions_msg.extensions().contains_other_than(requested_exts))
+   if(exts.contains_other_than(requested_exts))
       { throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION,
             "Encrypted Extensions contained an extension that was not offered"); }
 
    // Note: As per RFC 6066 3. we can check for an empty SNI extensions to
    // determine if the server used the SNI we sent here.
 
-   if(encrypted_extensions_msg.extensions().has<Record_Size_Limit>() &&
+   if(exts.has<Record_Size_Limit>() &&
       m_handshake_state.client_hello().extensions().has<Record_Size_Limit>())
       {
       // RFC 8449 4.
@@ -400,12 +402,12 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       //
       // Hence, the "outgoing" limit is what the server requested and the
       // "incoming" limit is what we requested in the Client Hello.
-      const auto outgoing_limit = encrypted_extensions_msg.extensions().get<Record_Size_Limit>();
+      const auto outgoing_limit = exts.get<Record_Size_Limit>();
       const auto incoming_limit = m_handshake_state.client_hello().extensions().get<Record_Size_Limit>();
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
       }
 
-   callbacks().tls_examine_extensions(encrypted_extensions_msg.extensions(), SERVER);
+   callbacks().tls_examine_extensions(exts, SERVER, Handshake_Type::ENCRYPTED_EXTENSIONS);
 
    if(m_handshake_state.server_hello().extensions().has<PSK>())
       {
@@ -430,6 +432,7 @@ void Client_Impl_13::handle(const Certificate_Request_13& certificate_request_ms
       throw TLS_Exception(Alert::DECODE_ERROR, "Certificate_Request context must be empty in the main handshake");
       }
 
+   callbacks().tls_examine_extensions(certificate_request_msg.extensions(), SERVER, Handshake_Type::CERTIFICATE_REQUEST);
    m_transitions.set_expected_next(CERTIFICATE);
    }
 
@@ -443,7 +446,7 @@ void Client_Impl_13::handle(const Certificate_13& certificate_msg)
       throw TLS_Exception(Alert::DECODE_ERROR, "Received a server certificate message with non-empty request context");
       }
 
-   certificate_msg.validate_extensions(m_handshake_state.client_hello().extensions().extension_types());
+   certificate_msg.validate_extensions(m_handshake_state.client_hello().extensions().extension_types(), callbacks());
    certificate_msg.verify(callbacks(),
                           policy(),
                           credentials_manager(),
@@ -520,7 +523,7 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedMessa
    //       CertificateRequest, the value of certificate_request_context in
    //       that message.
    flight.add(m_handshake_state.sending(
-      Certificate_13(std::move(client_certs), CLIENT, cert_request.context())));
+      Certificate_13(std::move(client_certs), CLIENT, cert_request.context(), callbacks())));
 
    // RFC 4.4.2
    //    If the server requests client authentication but no suitable certificate
@@ -605,6 +608,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
                    m_info,
                    callbacks().tls_current_timestamp());
 
+   callbacks().tls_examine_extensions(new_session_ticket.extensions(), SERVER, Handshake_Type::NEW_SESSION_TICKET);
    if(callbacks().tls_session_ticket_received(session))
       {
       session_manager().save(session);

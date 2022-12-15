@@ -131,7 +131,7 @@ std::chrono::system_clock::time_point from_milliseconds_since_epoch(uint64_t mse
           std::chrono::milliseconds(additional_millis);
    }
 
-using Modify_Exts_Fn = std::function<void(Botan::TLS::Extensions&, Botan::TLS::Connection_Side)>;
+using Modify_Exts_Fn = std::function<void(Botan::TLS::Extensions&, Botan::TLS::Connection_Side, Botan::TLS::Handshake_Type)>;
 using MockSignature_Fn = std::function<std::vector<uint8_t>(const std::vector<uint8_t>&,const std::string&,Signature_Format)>;
 
 /**
@@ -171,6 +171,13 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          count_callback_invocation("tls_alert");
          BOTAN_UNUSED(alert);
          // handle a tls alert received from the tls server
+         }
+
+      bool tls_peer_closed_connection() override
+         {
+         count_callback_invocation("tls_peer_closed_connection");
+         // we want to handle the closure ourselves
+         return false;
          }
 
       bool tls_session_established(const Botan::TLS::Session& session) override
@@ -280,16 +287,17 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          return Callbacks::tls_server_choose_app_protocol(client_protos);
          }
 
-      void tls_modify_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side) override
+      void tls_modify_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message) override
          {
-         count_callback_invocation("tls_modify_extensions");
-         m_modify_exts(exts, side);
+         count_callback_invocation(std::string("tls_modify_extensions_") + handshake_type_to_string(which_message));
+         m_modify_exts(exts, side, which_message);
+         Callbacks::tls_modify_extensions(exts, side, which_message);
          }
 
-      void tls_examine_extensions(const Botan::TLS::Extensions& extn, Connection_Side which_side) override
+      void tls_examine_extensions(const Botan::TLS::Extensions& extn, Connection_Side which_side, Botan::TLS::Handshake_Type which_message) override
          {
-         count_callback_invocation("tls_examine_extensions");
-         return Callbacks::tls_examine_extensions(extn, which_side);
+         count_callback_invocation(std::string("tls_examine_extensions_") + handshake_type_to_string(which_message));
+         return Callbacks::tls_examine_extensions(extn, which_side, which_message);
          }
 
       std::string tls_decode_group_param(Group_Params group_param) override
@@ -723,15 +731,18 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          // 32 - for KeyShare (eph. x25519 key pair)
          add_entropy(*rng, vars.get_req_bin("RNG_Pool"));
 
-         auto add_extensions_and_sort = [](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side)
+         auto add_extensions_and_sort = [](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message)
             {
-            // For some reason, presumably checking compatibility, the RFC 8448 Client
-            // Hello includes a (TLS 1.2) Session_Ticket extension. We don't normally add
-            // this obsoleted extension in a TLS 1.3 client.
-            exts.add(new Botan::TLS::Session_Ticket());
+            if(which_message == Handshake_Type::CLIENT_HELLO)
+               {
+               // For some reason, presumably checking compatibility, the RFC 8448 Client
+               // Hello includes a (TLS 1.2) Session_Ticket extension. We don't normally add
+               // this obsoleted extension in a TLS 1.3 client.
+               exts.add(new Botan::TLS::Session_Ticket());
 
-            add_renegotiation_extension(exts);
-            sort_extensions(exts, side);
+               add_renegotiation_extension(exts);
+               sort_extensions(exts, side);
+               }
             };
 
          std::unique_ptr<Client_Context> ctx;
@@ -742,7 +753,12 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
 
                result.confirm("client not closed", !ctx->client.is_closed());
-               ctx->check_callback_invocations(result, "client hello prepared", { "tls_emit_data", "tls_inspect_handshake_msg_client_hello", "tls_modify_extensions" });
+               ctx->check_callback_invocations(result, "client hello prepared",
+                  {
+                  "tls_emit_data",
+                  "tls_inspect_handshake_msg_client_hello",
+                  "tls_modify_extensions_client_hello"
+                  });
 
                result.test_eq("TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
                }),
@@ -759,7 +775,11 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx->check_callback_invocations(result, "server hello partially received", { });
 
                ctx->client.received_data(server_hello_b);
-               ctx->check_callback_invocations(result, "server hello received", { "tls_inspect_handshake_msg_server_hello", "tls_examine_extensions" });
+               ctx->check_callback_invocations(result, "server hello received",
+                  {
+                  "tls_inspect_handshake_msg_server_hello",
+                  "tls_examine_extensions_server_hello"
+                  });
 
                result.confirm("client is not yet active", !ctx->client.is_active());
                }),
@@ -775,7 +795,8 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_inspect_handshake_msg_certificate",
                   "tls_inspect_handshake_msg_certificate_verify",
                   "tls_inspect_handshake_msg_finished",
-                  "tls_examine_extensions",
+                  "tls_examine_extensions_encrypted_extensions",
+                  "tls_examine_extensions_certificate",
                   "tls_emit_data",
                   "tls_session_activated",
                   "tls_verify_cert_chain",
@@ -796,6 +817,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
                ctx->check_callback_invocations(result, "new session ticket received",
                   {
+                  "tls_examine_extensions_new_session_ticket",
                   "tls_session_ticket_received",
                   "tls_current_timestamp"
                   });
@@ -837,7 +859,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx->check_callback_invocations(result, "CLOSE_NOTIFY sent", { "tls_emit_data" });
 
                ctx->client.received_data(vars.get_req_bin("Server_CloseNotify"));
-               ctx->check_callback_invocations(result, "CLOSE_NOTIFY received", { "tls_alert" });
+               ctx->check_callback_invocations(result, "CLOSE_NOTIFY received", { "tls_alert", "tls_peer_closed_connection" });
 
                result.confirm("connection is closed", ctx->client.is_closed());
                }),
@@ -852,18 +874,21 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          // 32 - for KeyShare (eph. x25519 key pair)
          add_entropy(*rng, vars.get_req_bin("RNG_Pool"));
 
-         auto add_extensions_and_sort = [](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side)
+         auto add_extensions_and_sort = [](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message)
             {
-            exts.add(new Padding(87));
+            if(which_message == Handshake_Type::CLIENT_HELLO)
+               {
+               exts.add(new Padding(87));
 
-            add_renegotiation_extension(exts);
+               add_renegotiation_extension(exts);
 
-            // TODO: Implement early data support and remove this 'hack'.
-            //
-            // Currently, the production implementation will never add this
-            // extension even if the resumed session would allow early data.
-            add_early_data_indication(exts);
-            sort_extensions(exts, side);
+               // TODO: Implement early data support and remove this 'hack'.
+               //
+               // Currently, the production implementation will never add this
+               // extension even if the resumed session would allow early data.
+               add_early_data_indication(exts);
+               sort_extensions(exts, side);
+               }
             };
 
          std::unique_ptr<Client_Context> ctx;
@@ -878,7 +903,13 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                                                       vars.get_req_bin("SessionTicket"));
 
                result.confirm("client not closed", !ctx->client.is_closed());
-               ctx->check_callback_invocations(result, "client hello prepared", { "tls_emit_data", "tls_inspect_handshake_msg_client_hello", "tls_modify_extensions", "tls_current_timestamp" });
+               ctx->check_callback_invocations(result, "client hello prepared",
+                  {
+                  "tls_emit_data",
+                  "tls_inspect_handshake_msg_client_hello",
+                  "tls_modify_extensions_client_hello",
+                  "tls_current_timestamp"
+                  });
 
                result.test_eq("TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
                })
@@ -891,23 +922,26 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
       static std::vector<Test::Result> hello_retry_request(const VarMap& vars)
          {
-         auto add_extensions_and_sort = [flights = 0](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side) mutable
+         auto add_extensions_and_sort = [flights = 0](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message) mutable
             {
-            ++flights;
-
-            if(flights == 1)
+            if(which_message == Handshake_Type::CLIENT_HELLO)
                {
-               add_renegotiation_extension(exts);
-               }
+               ++flights;
 
-            // For some reason RFC8448 decided to require this (fairly obscure) extension
-            // in the second flight of the Client_Hello.
-            if(flights == 2)
-               {
-               exts.add(new Padding(175));
-               }
+               if(flights == 1)
+                  {
+                  add_renegotiation_extension(exts);
+                  }
 
-            sort_extensions(exts, side);
+               // For some reason RFC8448 decided to require this (fairly obscure) extension
+               // in the second flight of the Client_Hello.
+               if(flights == 2)
+                  {
+                  exts.add(new Padding(175));
+                  }
+
+               sort_extensions(exts, side);
+               }
             };
 
          // Fallback RNG is required to for blinding in ECDH with P-256
@@ -927,7 +961,12 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_hrr"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
                result.confirm("client not closed", !ctx->client.is_closed());
 
-               ctx->check_callback_invocations(result, "client hello prepared", { "tls_emit_data", "tls_inspect_handshake_msg_client_hello", "tls_modify_extensions" });
+               ctx->check_callback_invocations(result, "client hello prepared",
+                  {
+                  "tls_emit_data",
+                  "tls_inspect_handshake_msg_client_hello",
+                  "tls_modify_extensions_client_hello",
+                  });
 
                result.test_eq("TLS client hello (1)", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
                }),
@@ -941,9 +980,9 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   {
                   "tls_emit_data",
                   "tls_inspect_handshake_msg_hello_retry_request",
-                  "tls_examine_extensions",
+                  "tls_examine_extensions_hello_retry_request",
                   "tls_inspect_handshake_msg_client_hello",
-                  "tls_modify_extensions",
+                  "tls_modify_extensions_client_hello",
                   "tls_decode_group_param"
                   });
 
@@ -955,7 +994,12 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                result.require("ctx is available", ctx != nullptr);
                ctx->client.received_data(vars.get_req_bin("ServerHello"));
 
-               ctx->check_callback_invocations(result, "server hello received", { "tls_inspect_handshake_msg_server_hello", "tls_examine_extensions", "tls_decode_group_param" });
+               ctx->check_callback_invocations(result, "server hello received",
+                  {
+                  "tls_inspect_handshake_msg_server_hello",
+                  "tls_examine_extensions_server_hello",
+                  "tls_decode_group_param"
+                  });
                }),
 
             Botan_Tests::CHECK("Server HS Messages .. Client Finished", [&](Test::Result& result)
@@ -969,7 +1013,8 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                   "tls_inspect_handshake_msg_certificate",
                   "tls_inspect_handshake_msg_certificate_verify",
                   "tls_inspect_handshake_msg_finished",
-                  "tls_examine_extensions",
+                  "tls_examine_extensions_encrypted_extensions",
+                  "tls_examine_extensions_certificate",
                   "tls_emit_data",
                   "tls_session_activated",
                   "tls_verify_cert_chain",
@@ -987,7 +1032,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                result.test_eq("client close notify", ctx->pull_send_buffer(), vars.get_req_bin("Client_CloseNotify"));
 
                ctx->client.received_data(vars.get_req_bin("Server_CloseNotify"));
-               ctx->check_callback_invocations(result, "encrypted handshake messages received", { "tls_alert" });
+               ctx->check_callback_invocations(result, "encrypted handshake messages received", { "tls_alert", "tls_peer_closed_connection" });
 
                result.confirm("connection is closed", ctx->client.is_closed());
                }),
@@ -1002,10 +1047,13 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          // 32 - for eph. x25519 key pair
          add_entropy(*rng, vars.get_req_bin("RNG_Pool"));
 
-         auto add_extensions_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side)
+         auto add_extensions_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message)
             {
-            add_renegotiation_extension(exts);
-            sort_extensions(exts, side);
+            if(which_message == Handshake_Type::CLIENT_HELLO)
+               {
+               add_renegotiation_extension(exts);
+               sort_extensions(exts, side);
+               }
             };
 
          auto sign_certificate_verify = [&](const std::vector<uint8_t>& msg,
@@ -1042,7 +1090,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx->check_callback_invocations(result, "initial callbacks", {
                   "tls_emit_data",
                   "tls_inspect_handshake_msg_client_hello",
-                  "tls_modify_extensions",
+                  "tls_modify_extensions_client_hello",
                   });
 
                result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
@@ -1053,7 +1101,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx->client.received_data(vars.get_req_bin("ServerHello"));
 
                ctx->check_callback_invocations(result, "callbacks after server hello", {
-                  "tls_examine_extensions",
+                  "tls_examine_extensions_server_hello",
                   "tls_inspect_handshake_msg_server_hello",
                   });
                }),
@@ -1065,7 +1113,10 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx->check_callback_invocations(result, "signing callbacks invoked", {
                   "tls_sign_message",
                   "tls_emit_data",
-                  "tls_examine_extensions",
+                  "tls_examine_extensions_encrypted_extensions",
+                  "tls_examine_extensions_certificate",
+                  "tls_examine_extensions_certificate_request",
+                  "tls_modify_extensions_certificate",
                   "tls_inspect_handshake_msg_certificate",
                   "tls_inspect_handshake_msg_certificate_request",
                   "tls_inspect_handshake_msg_certificate_verify",
@@ -1095,6 +1146,7 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
 
                ctx->check_callback_invocations(result, "after receiving close notify", {
                   "tls_alert",
+                  "tls_peer_closed_connection"
                   });
                }),
          };
@@ -1109,10 +1161,13 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
          // 32 - eph. x25519 key pair
          add_entropy(*rng, vars.get_req_bin("RNG_Pool"));
 
-         auto add_extensions_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side)
+         auto add_extensions_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message)
             {
-            add_renegotiation_extension(exts);
-            sort_extensions(exts, side);
+            if(which_message == Handshake_Type::CLIENT_HELLO)
+               {
+               add_renegotiation_extension(exts);
+               sort_extensions(exts, side);
+               }
             };
 
          std::unique_ptr<Client_Context> ctx;
@@ -1123,6 +1178,13 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_compat"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
 
                result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("ClientHello_1"));
+
+               ctx->check_callback_invocations(result, "client hello prepared",
+                  {
+                  "tls_emit_data",
+                  "tls_inspect_handshake_msg_client_hello",
+                  "tls_modify_extensions_client_hello",
+                  });
                }),
 
             Botan_Tests::CHECK("Server Hello + other handshake messages", [&](Test::Result& result)
@@ -1131,6 +1193,21 @@ class Test_TLS_RFC8448 final : public Text_Based_Test
                ctx->client.received_data(Botan::concat(vars.get_req_bin("ServerHello"),
                                                       // ServerHandshakeMessages contains the expected ChangeCipherSpec record
                                                       vars.get_req_bin("ServerHandshakeMessages")));
+
+               ctx->check_callback_invocations(result, "callbacks after server's first flight", {
+                  "tls_inspect_handshake_msg_server_hello",
+                  "tls_inspect_handshake_msg_encrypted_extensions",
+                  "tls_inspect_handshake_msg_certificate",
+                  "tls_inspect_handshake_msg_certificate_verify",
+                  "tls_inspect_handshake_msg_finished",
+                  "tls_examine_extensions_server_hello",
+                  "tls_examine_extensions_encrypted_extensions",
+                  "tls_examine_extensions_certificate",
+                  "tls_emit_data",
+                  "tls_session_activated",
+                  "tls_verify_cert_chain",
+                  "tls_verify_message"
+                  });
 
                result.test_eq("CCS + Client Finished", ctx->pull_send_buffer(),
                               // ClientFinished contains the expected ChangeCipherSpec record
