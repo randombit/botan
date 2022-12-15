@@ -225,6 +225,7 @@ class BigInt_Unit_Tests final : public Test
 
          check_bigint_formatting(Botan::BigInt(33), "33", "0x21", "-33", "-0x21");
          check_bigint_formatting(Botan::BigInt::from_s32(-33), "-33", "-0x21", "33", "0x21");
+         check_bigint_formatting(Botan::BigInt(255), "255", "0xFF", "-255", "-0xFF");
          check_bigint_formatting(Botan::BigInt(0), "0", "0x00", "0", "0x00");
          check_bigint_formatting(Botan::BigInt(5), "5", "0x05", "-5", "-0x05");
 
