@@ -87,28 +87,31 @@ class Entropy_Source_Tests final : public Test
 
                         result.test_note("poll 2 result", rng2.seed_material());
 
-                        try
+                        if(rng.seed_material().size() > 0 && rng2.seed_material().size() > 0)
                            {
-                           Botan::secure_vector<uint8_t> compressed;
-                           compressed.insert(compressed.end(), rng.seed_material().begin(), rng.seed_material().end());
-                           compressed.insert(compressed.end(), rng2.seed_material().begin(), rng2.seed_material().end());
+                           try
+                              {
+                              Botan::secure_vector<uint8_t> compressed;
+                              compressed.insert(compressed.end(), rng.seed_material().begin(), rng.seed_material().end());
+                              compressed.insert(compressed.end(), rng2.seed_material().begin(), rng2.seed_material().end());
 
-                           comp->start();
-                           comp->finish(compressed);
+                              comp->start();
+                              comp->finish(compressed);
 
-                           size_t comp2_size = compressed.size();
+                              size_t comp2_size = compressed.size();
 
-                           result.test_lt("Two blocks of entropy are larger than one",
-                                          comp1_size, comp2_size);
+                              result.test_lt("Two blocks of entropy are larger than one",
+                                             comp1_size, comp2_size);
 
-                           size_t comp_diff = comp2_size - comp1_size;
+                              size_t comp_diff = comp2_size - comp1_size;
 
-                           result.test_gte(comp_algo + " diff compressed entropy better than advertised",
-                                           comp_diff * 8, bits2);
-                           }
-                        catch(std::exception& e)
-                           {
-                           result.test_failure(comp_algo + " exception while compressing", e.what());
+                              result.test_gte(comp_algo + " diff compressed entropy better than advertised",
+                                              comp_diff * 8, bits2);
+                              }
+                           catch(std::exception& e)
+                              {
+                              result.test_failure(comp_algo + " exception while compressing", e.what());
+                              }
                            }
                         }
                      }
