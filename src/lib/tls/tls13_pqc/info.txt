@@ -2,6 +2,11 @@
 TLS_13_PQC -> 20210721
 </defines>
 
+<module_info>
+name -> "TLS 1.3 (PQC)"
+brief -> "Draft Hybrid Key Exchange for TLS 1.3 with Post-Quantum Algorithms"
+</module_info>
+
 <header:public>
 </header:public>
 
