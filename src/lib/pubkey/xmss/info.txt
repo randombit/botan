@@ -23,8 +23,6 @@ xmss_signature.h
 xmss_signature_operation.h
 xmss_tools.h
 xmss_verification_operation.h
-xmss_wots_addressed_privatekey.h
-xmss_wots_addressed_publickey.h
 </header:internal>
 
 <requires>
