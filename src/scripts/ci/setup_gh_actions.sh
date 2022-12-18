@@ -51,7 +51,7 @@ if type -p "apt-get"; then
         wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux.zip
         unzip -qq "$ANDROID_NDK"-linux.zip
 
-    elif [ "$TARGET" = "baremetal" ]; then
+    elif [ "$TARGET" = "cross-arm32-baremetal" ]; then
         sudo apt-get -qq install gcc-arm-none-eabi libstdc++-arm-none-eabi-newlib
 
         echo 'extern "C" void __sync_synchronize() {}' >> "${SCRIPT_LOCATION}/../../tests/main.cpp"

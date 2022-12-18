@@ -30,12 +30,12 @@ def get_concurrency():
 def known_targets():
     return [
         'amalgamation',
-        'baremetal',
         'bsi',
         'coverage',
         'cross-android-arm32',
         'cross-android-arm64',
         'cross-arm32',
+        'cross-arm32-baremetal',
         'cross-arm64',
         'cross-i386',
         'cross-ios-arm64',
@@ -60,7 +60,7 @@ def known_targets():
 def build_targets(target, target_os):
     if target in ['shared', 'minimized', 'bsi', 'nist']:
         yield 'shared'
-    elif target in ['static', 'examples', 'fuzzers', 'baremetal', 'emscripten']:
+    elif target in ['static', 'examples', 'fuzzers', 'cross-arm32-baremetal', 'emscripten']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
@@ -103,7 +103,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target_os == 'windows' and target_cc == 'gcc':
         target_os = 'mingw'
 
-    if target == 'baremetal':
+    if target == 'cross-arm32-baremetal':
         target_os = 'none'
 
     if target == 'emscripten':
@@ -213,11 +213,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
 
-    if target == 'baremetal':
-        cc_bin = 'arm-none-eabi-c++'
-        flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector', '--ldflags=-specs=nosys.specs']
-        test_cmd = None
-
     if target == 'emscripten':
         flags += ['--cpu=wasm']
         # need to find a way to run the wasm-compiled tests w/o a browser
@@ -295,6 +290,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 cc_bin = 'mips64-linux-gnuabi64-g++'
                 test_prefix = ['qemu-mips64', '-L', '/usr/mips64-linux-gnuabi64/']
                 test_cmd.remove('simd_32') # no SIMD on MIPS
+            elif target in ['cross-arm32-baremetal']:
+                flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector', '--ldflags=-specs=nosys.specs']
+                cc_bin = 'arm-none-eabi-c++'
+                test_cmd = None
             else:
                 raise Exception("Unknown cross target '%s' for Linux" % (target))
     else:
@@ -306,7 +305,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        if target in ['coverage', 'sanitizer', 'shared', 'static', 'amalgamation']:
+        add_boost_support = target in ['coverage', 'sanitizer', 'shared', 'static', 'amalgamation'] \
+            and not (target_os == 'osx' and target_cc == 'gcc')
+
+        if add_boost_support:
             flags += ['--with-boost']
             if target_cc == 'clang':
                 # make sure clang ignores warnings in boost headers
@@ -314,8 +316,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
             if target_os in ['windows', 'mingw']:
                 # ./configure.py needs boost's location on Windows
-                assert 'BOOST_INCLUDEDIR' in os.environ, "Windows needs to know where to find boost (via BOOST_INCLUDEDIR)"
-                flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
+                if 'BOOST_INCLUDEDIR' in os.environ:
+                    flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
 
             if target_os == 'mingw':
                 # apparently mingw needs this legacy socket library version for reasons
@@ -649,7 +651,7 @@ def main(args=None):
         if root_dir != '.':
             python_tests.append('--test-data-dir=%s' % root_dir)
 
-        if target in ['shared', 'coverage']:
+        if target in ['shared', 'coverage'] and not (options.os == 'windows' and options.cpu == 'x86'):
             cmds.append([py_interp, '-b'] + python_tests)
 
         if target in ['shared', 'static', 'bsi', 'nist']:
