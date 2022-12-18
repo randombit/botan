@@ -504,9 +504,6 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-fuzzer-lib', metavar='LIB', default=None, dest='fuzzer_lib',
                            help='additionally link in LIB')
 
-    build_group.add_option('--test-mode', action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
-
     build_group.add_option('--with-debug-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
@@ -2245,7 +2242,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'with_valgrind': options.with_valgrind,
         'with_debug_asserts': options.with_debug_asserts,
         'terminate_on_asserts': options.terminate_on_asserts,
-        'test_mode': options.test_mode,
         'optimize_for_size': options.optimize_for_size,
 
         'mod_list': sorted([m.basename for m in modules]),
