@@ -99,3 +99,5 @@ if type -p "ccache"; then
     cache_location="$( ccache --get-config cache_dir )"
     echo "COMPILER_CACHE_LOCATION=${cache_location}" >> "${GITHUB_ENV}"
 fi
+
+echo "CCACHE_MAXSIZE=200M" >> "${GITHUB_ENV}"
