@@ -155,7 +155,6 @@ New C APIs
 Build/Test
 ----------------------------------------
 
-* Explore using GitHub Actions for Windows builds
 * Code signing for Windows installers
 * Test runner python script that captures backtraces and other
   debug info during CI
