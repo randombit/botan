@@ -25,12 +25,12 @@ bool read_rdseed(secure_vector<uint32_t>& seed)
    * 150 attempts. The maximum ever seen was 230 attempts until success. When
    * idle, RDSEED usually succeeds in 1 or 2 attempts.
    *
-   * We set an upper bound of 512 attempts, because it is possible that due
+   * We set an upper bound of 1024 attempts, because it is possible that due
    * to firmware issue RDSEED is simply broken and never succeeds. We do not
    * want to loop forever in that case. If we exceed that limit, then we assume
    * the hardware is actually just broken, and stop the poll.
    */
-   const size_t RDSEED_RETRIES = 512;
+   const size_t RDSEED_RETRIES = 1024;
 
    for(size_t i = 0; i != RDSEED_RETRIES; ++i)
       {
