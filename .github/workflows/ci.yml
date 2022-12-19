@@ -149,8 +149,7 @@ jobs:
           - target: sanitizer
             compiler: msvc
             host_os: windows-2022
-            make_tool: nmake # to force a serial build (otherwise multi-process PDB handling chokes)
-                             # See: https://github.com/randombit/botan/pull/3012#discussion_r1033621569
+            make_tool: jom
           - target: sanitizer
             compiler: clang
             host_os: ubuntu-22.04

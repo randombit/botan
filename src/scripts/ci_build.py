@@ -172,8 +172,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target == 'coverage':
         flags += ['--with-coverage-info']
 
-    if target in ['coverage', 'sanitizer']:
-        flags += ['--with-debug-info', '--terminate-on-asserts']
+    if target in ['coverage']:
+        flags += ['--with-debug-info']
+
+    if target in ['coverage', 'sanitizer', 'fuzzers']:
+        flags += ['--terminate-on-asserts']
 
     if target == 'valgrind':
         flags += ['--with-valgrind']
@@ -197,7 +200,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         test_cmd = None
 
     if target == 'fuzzers':
-        flags += ['--unsafe-fuzzer-mode', '--terminate-on-asserts']
+        flags += ['--unsafe-fuzzer-mode']
 
     if target in ['fuzzers', 'coverage']:
         flags += ['--build-fuzzers=test']
