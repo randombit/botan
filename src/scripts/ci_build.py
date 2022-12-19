@@ -305,7 +305,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        add_boost_support = target in ['coverage', 'sanitizer', 'shared', 'static', 'amalgamation'] \
+        add_boost_support = target in ['coverage', 'sanitizer', 'shared'] \
             and not (target_os == 'osx' and target_cc == 'gcc')
 
         if add_boost_support:
