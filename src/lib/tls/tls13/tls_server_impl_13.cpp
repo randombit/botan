@@ -159,6 +159,13 @@ void Server_Impl_13::handle(const Client_Hello_12& ch)
    // the TLS 1.2 server implementation.
    BOTAN_UNUSED(ch);
 
+   // After we sent a Hello Retry Request we must not accept a downgrade.
+   if(m_handshake_state.has_hello_retry_request())
+      {
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                          "Received a TLS 1.2 Client Hello after Hello Retry Request");
+      }
+
    // RFC 8446 Appendix D.2
    //    If the "supported_versions" extension is absent and the server only
    //    supports versions greater than ClientHello.legacy_version, the server

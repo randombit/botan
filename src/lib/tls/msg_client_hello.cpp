@@ -856,6 +856,106 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
       }
    }
 
+void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch)
+   {
+   // RFC 8446 4.1.2
+   //    The client will also send a ClientHello when the server has responded
+   //    to its ClientHello with a HelloRetryRequest. In that case, the client
+   //    MUST send the same ClientHello without modification, except as follows:
+
+   if(m_data->session_id != new_ch.m_data->session_id ||
+      m_data->random != new_ch.m_data->random ||
+      m_data->suites != new_ch.m_data->suites ||
+      m_data->comp_methods != new_ch.m_data->comp_methods)
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Client Hello core values changed after Hello Retry Request");
+      }
+
+   const auto oldexts = extension_types();
+   const auto newexts = new_ch.extension_types();
+
+   // Check that extension omissions are justified
+   for(const auto oldext : oldexts)
+      {
+      if(!newexts.contains(oldext))
+         {
+         const auto ext = extensions().get(oldext);
+
+         // We don't make any assumptions about unimplemented extensions.
+         if(!ext->is_implemented())
+            continue;
+
+         // RFC 8446 4.1.2
+         //    Removing the "early_data" extension (Section 4.2.10) if one was
+         //    present.  Early data is not permitted after a HelloRetryRequest.
+         if(oldext == EarlyDataIndication::static_type())
+            continue;
+
+         // RFC 8446 4.1.2
+         //    Optionally adding, removing, or changing the length of the
+         //    "padding" extension.
+         //
+         // TODO: implement the Padding extension
+         // if(oldext == Padding::static_type())
+         //    continue;
+
+         throw TLS_Exception(Alert::MISSING_EXTENSION, "Extension removed in updated Client Hello");
+         }
+      }
+
+   // Check that extension additions are justified
+   for(const auto newext : newexts)
+      {
+      if(!oldexts.contains(newext))
+         {
+         const auto ext = new_ch.extensions().get(newext);
+
+         // We don't make any assumptions about unimplemented extensions.
+         if(!ext->is_implemented())
+            continue;
+
+         // RFC 8446 4.1.2
+         //    Including a "cookie" extension if one was provided in the
+         //    HelloRetryRequest.
+         if(newext == Cookie::static_type())
+            continue;
+
+         // RFC 8446 4.1.2
+         //    Optionally adding, removing, or changing the length of the
+         //    "padding" extension.
+         //
+         // TODO: implement the Padding extension
+         // if(newext == Padding::static_type())
+         //    continue;
+
+         throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION, "Added an extension in updated Client Hello");
+         }
+      }
+
+   // RFC 8446 4.1.2
+   //    Removing the "early_data" extension (Section 4.2.10) if one was
+   //    present.  Early data is not permitted after a HelloRetryRequest.
+   if(new_ch.extensions().has<EarlyDataIndication>())
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Updated Client Hello indicates early data");
+      }
+
+   // TODO: Contents of extensions are not checked for update compatibility, see:
+   //
+   // RFC 8446 4.1.2
+   //    If a "key_share" extension was supplied in the HelloRetryRequest,
+   //    replacing the list of shares with a list containing a single
+   //    KeyShareEntry from the indicated group.
+   //
+   //    Updating the "pre_shared_key" extension if present by recomputing
+   //    the "obfuscated_ticket_age" and binder values and (optionally)
+   //    removing any PSKs which are incompatible with the server's
+   //    indicated cipher suite.
+   //
+   //    Optionally adding, removing, or changing the length of the
+   //    "padding" extension.
+   }
+
 void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths)
    {
    auto psk = m_data->extensions.get<PSK>();
