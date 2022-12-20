@@ -104,13 +104,6 @@ SymmetricKey Server::key_material_export(const std::string& label,
    return m_impl->key_material_export(label, context, length);
    }
 
-
-void Server::send_new_session_ticket(std::chrono::seconds lifetime,
-                                     const std::vector<uint8_t>& application_data)
-   {
-   m_impl->send_new_session_ticket(lifetime, application_data);
-   }
-
 void Server::renegotiate(bool force_full_renegotiation)
    {
    m_impl->renegotiate(force_full_renegotiation);

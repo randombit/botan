@@ -37,9 +37,6 @@ class Server_Impl_13 : public Channel_Impl_13
       */
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
-      void send_new_session_ticket(std::chrono::seconds lifetime,
-                                   const std::vector<uint8_t>& application_data = {}) override;
-
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;

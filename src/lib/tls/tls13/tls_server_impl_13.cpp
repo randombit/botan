@@ -44,13 +44,6 @@ std::vector<X509_Certificate> Server_Impl_13::peer_cert_chain() const
               //       once client authentication for the server side is ready.
    }
 
-void Server_Impl_13::send_new_session_ticket(std::chrono::seconds,
-                                             const std::vector<uint8_t>&)
-   {
-   BOTAN_STATE_CHECK(handshake_finished());
-   throw Not_Implemented("NYI: send_new_session_ticket");
-   }
-
 void Server_Impl_13::process_handshake_msg(Handshake_Message_13 message)
    {
    std::visit([&](auto msg)

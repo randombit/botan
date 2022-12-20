@@ -728,7 +728,7 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension
       Key_Share(Named_Group group, Callbacks& cb, RandomNumberGenerator& rng);
 
       // constructor used for HelloRetryRequest msg
-      Key_Share(Named_Group selected_group);
+      explicit Key_Share(Named_Group selected_group);
 
       // destructor implemented in .cpp to hide Key_Share_Impl
       ~Key_Share();

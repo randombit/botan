@@ -106,16 +106,6 @@ class Channel_Impl
                                        size_t length) const = 0;
 
       /**
-       * Create a new session for the client
-       */
-      virtual void send_new_session_ticket(std::chrono::seconds lifetime,
-                                           const std::vector<uint8_t>& application_data = {})
-         {
-         BOTAN_UNUSED(lifetime, application_data);
-         throw Invalid_State("Cannot create a new session ticket for this peer");
-         }
-
-      /**
       * Attempt to renegotiate the session
       * @param force_full_renegotiation if true, require a full renegotiation,
       * otherwise allow session resumption

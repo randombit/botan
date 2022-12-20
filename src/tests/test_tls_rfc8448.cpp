@@ -1484,7 +1484,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Send Session Ticket", [&](Test::Result&)
                {
-               // ctx->server.send_new_session_ticket(std::chrono::seconds(60));
+               // ctx->server.send_new_session_ticket(???);
                })
             };
          }
