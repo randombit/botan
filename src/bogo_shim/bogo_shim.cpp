@@ -14,6 +14,7 @@
 #include <botan/tls_server.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_algos.h>
+#include <botan/tls_messages.h>
 #include <botan/data_src.h>
 #include <botan/pkcs8.h>
 #include <botan/internal/loadstor.h>
@@ -956,7 +957,22 @@ class Shim_Policy final : public Botan::TLS::Policy
 
       bool use_ecc_point_compression() const override { return false; } // BoGo expects this
 
-      //Botan::TLS::Group_Params choose_key_exchange_group(const std::vector<Botan::TLS::Group_Params>& peer_groups) const override;
+      Botan::TLS::Group_Params choose_key_exchange_group(const std::vector<Botan::TLS::Group_Params>& supported_by_peer,
+                                                         const std::vector<Botan::TLS::Group_Params>& offered_by_peer) const override
+         {
+         BOTAN_UNUSED(offered_by_peer);
+
+         // always insist on our most preferred group regardless of the peer's
+         // pre-offers (BoGo expects it like that)
+         const auto our_groups = key_exchange_groups();
+         for(auto g : our_groups)
+            {
+            if(Botan::value_exists(supported_by_peer, g))
+               return g;
+            }
+
+         return Botan::TLS::Group_Params::NONE;
+         }
 
       bool require_client_certificate_authentication() const override
          {
@@ -1316,6 +1332,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          m_empty_records(0),
          m_sessions_established(0),
          m_got_close(false),
+         m_hello_retry_request(false),
          m_clock_skew(0)
          {}
 
@@ -1625,6 +1642,16 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             m_channel->close();
             }
 
+         if(m_args.flag_set("expect-hrr") && !m_hello_retry_request)
+            {
+            throw Shim_Exception("Expected Hello Retry Request but didn't see one");
+            }
+
+         if(m_args.flag_set("expect-no-hrr") && m_hello_retry_request)
+            {
+            throw Shim_Exception("Hello Retry Request seen but didn't expect one");
+            }
+
          if(m_args.flag_set("key-update"))
             {
             shim_log("Updating traffic keys without asking for reciprocation");
@@ -1642,6 +1669,14 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          return g_now + m_clock_skew;
          }
 
+      void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& msg) override
+         {
+         if(msg.type() == Botan::TLS::Handshake_Type::HELLO_RETRY_REQUEST)
+            {
+            m_hello_retry_request = true;
+            }
+         }
+
    private:
       Botan::TLS::Channel* m_channel;
       const Shim_Arguments& m_args;
@@ -1652,6 +1687,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
       size_t m_empty_records;
       size_t m_sessions_established;
       bool m_got_close;
+      bool m_hello_retry_request;
       std::chrono::seconds m_clock_skew;
    };
 

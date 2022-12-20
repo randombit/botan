@@ -101,6 +101,7 @@
         "TLS13-ExpectNoSessionTicketOnBadKEMode-Server": "TLS 1.3 server session resumption NYI",
         "TLS13-SendUnknownModeSessionTicket-Server": "TLS 1.3 server session resumption NYI",
         "TLS13-SendBadKEModeSessionTicket-Server": "TLS 1.3 server session resumption NYI",
+        "TLS13-HelloRetryRequest-Server-*": "TLS 1.3 server session resumption NYI",
 
         "ALPNServer-TLS-TLS13": "TLS 1.3 server ALPN NYI",
         "ALPNServer-Async-TLS-TLS13": "TLS 1.3 server ALPN NYI",
@@ -110,9 +111,6 @@
         "ServerOCSPCallback-Decline-TLS13-*": "TLS 1.3 server OCSP NYI",
         "ServerOCSPCallback-Fail-TLS13-*": "TLS 1.3 server OCSP NYI",
         "ServerOCSPCallback-SetInCallback-TLS13-*": "TLS 1.3 server OCSP NYI",
-
-        "TLS13-HelloRetryRequest-*": "TLS 1.3 server HRR NYI",
-        "SendHelloRetryRequest-*": "TLS 1.3 server HRR NYI",
 
         "*EarlyData*": "No TLS 1.3 Early Data, yet",
         "TLS13-1RTT-Client-*": "No TLS 1.3 Early Data, yet",
