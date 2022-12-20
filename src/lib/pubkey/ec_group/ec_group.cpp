@@ -288,7 +288,7 @@ class EC_Group_Data_Map final
                If EC_group_identity_from_order returned an OID then looking up that OID
                must always return a result.
                */
-               BOTAN_ASSERT_NOMSG(data != nullptr);
+               BOTAN_ASSUME(data != nullptr);
 
                /*
                It is possible (if unlikely) that someone is registering another group

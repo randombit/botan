@@ -364,7 +364,7 @@ void* Memory_Pool::allocate(size_t n)
 #endif
          buckets.push_front(Bucket(ptr, m_page_size, n_bucket));
          void* p = buckets[0].alloc();
-         BOTAN_ASSERT_NOMSG(p != nullptr);
+         BOTAN_ASSUME(p != nullptr);
          return p;
          }
       }

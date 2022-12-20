@@ -74,6 +74,12 @@ namespace Botan {
                                   __LINE__);              \
    } while(0)
 
+#if defined(NDEBUG)
+#define BOTAN_ASSUME(expr) BOTAN_ASSERT_NOMSG(expr)
+#else
+#define BOTAN_ASSUME(expr) assume(expr)
+#endif
+
 /**
 * Assert that value1 == value2
 */
@@ -169,5 +175,23 @@ namespace Botan {
    }
 
 }
+
+BOTAN_FORCE_INLINE void assume(bool c)
+   {
+#if defined(__GNUC__)
+#if defined(__clang__) && __clang_major__ >= 15 // Note C++23 will have assume annotation
+   __builtin_assume(c);
+#else
+   if (!c) [[unlikely]]
+      {
+      __builtin_unreachable();
+      }
+#endif
+#elif defined(_MSC_VER)
+   __assume(c);
+#else
+   return;
+#endif
+   }
 
 #endif

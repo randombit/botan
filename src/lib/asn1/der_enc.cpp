@@ -38,7 +38,7 @@ void encode_tag(std::vector<uint8_t>& encoded_tag,
       size_t blocks = high_bit(static_cast<uint32_t>(type_tag)) + 6;
       blocks = (blocks - (blocks % 7)) / 7;
 
-      BOTAN_ASSERT_NOMSG(blocks > 0);
+      BOTAN_ASSUME(blocks > 0);
 
       encoded_tag.push_back(static_cast<uint8_t>(class_tag | 0x1F));
       for(size_t i = 0; i != blocks - 1; ++i)
