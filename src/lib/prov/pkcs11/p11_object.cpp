@@ -51,21 +51,20 @@ void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* v
       if(existing_attribute.type == static_cast< CK_ATTRIBUTE_TYPE >(attribute))
          {
          // remove old entries
-         m_strings.erase(std::remove_if(m_strings.begin(), m_strings.end(), [ &existing_attribute ](const std::string& data)
+         m_strings.remove_if([ &existing_attribute ](const std::string& data)
             {
             return data.data() == existing_attribute.pValue;
-            }), m_strings.end());
+            });
 
-         m_numerics.erase(std::remove_if(m_numerics.begin(), m_numerics.end(), [ &existing_attribute ](const uint64_t& data)
+         m_numerics.remove_if([ &existing_attribute ](const uint64_t& data)
             {
             return &data == existing_attribute.pValue;
-            }), m_numerics.end());
+            });
 
-         m_vectors.erase(std::remove_if(m_vectors.begin(),
-                                        m_vectors.end(), [ &existing_attribute ](const secure_vector<uint8_t>& data)
+         m_vectors.remove_if([ &existing_attribute ](const secure_vector<uint8_t>& data)
             {
             return data.data() == existing_attribute.pValue;
-            }), m_vectors.end());
+            });
 
          existing_attribute.pValue = const_cast<uint8_t*>(value);
          existing_attribute.ulValueLen = size;
