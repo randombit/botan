@@ -87,6 +87,9 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
 
       void renegotiate(bool force_full_renegotiation = false) override;
 
+      bool new_session_ticket_supported() const;
+      void send_new_session_tickets(const size_t tickets = 1);
+
       void update_traffic_keys(bool request_peer_update = false) override;
 
       bool secure_renegotiation_supported() const override;

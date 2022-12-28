@@ -324,6 +324,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * Throw an exception to abort the handshake.
        * Default simply ignores the message.
        *
+       * Note: On connections that negotiated TLS 1.3 this callback is also
+       *       invoked for post-handshake messages.
+       *
        * @param message the handshake message
        */
        virtual void tls_inspect_handshake_msg(const Handshake_Message& message);

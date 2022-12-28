@@ -62,7 +62,7 @@ class BOTAN_TEST_API Cipher_State
    public:
       enum class PSK_Type {
          Resumption,
-         External,
+         External,  // currently not implemented
       };
 
    public:
@@ -168,6 +168,13 @@ class BOTAN_TEST_API Cipher_State
       secure_vector<uint8_t> psk(const std::vector<uint8_t>& nonce) const;
 
       /**
+       * Generates a nonce value that is unique for any given Cipher_State object.
+       * Note that the number of nonces is limited to 2^16 and this method will
+       * throw if more nonces are requested.
+       */
+      std::vector<uint8_t> next_ticket_nonce();
+
+      /**
        * Derive key material to export (RFC 8446 7.5 and RFC 5705)
        *
        * TODO: this does not yet support key export based on the `early_exporter_master_secret`.
@@ -265,9 +272,6 @@ class BOTAN_TEST_API Cipher_State
       void advance_with_psk(PSK_Type type, secure_vector<uint8_t>&& psk);
       void advance_without_psk();
 
-      std::vector<uint8_t> current_nonce(const uint64_t seq_no,
-                                         const secure_vector<uint8_t>& iv) const;
-
       void derive_write_traffic_key(const secure_vector<uint8_t>& traffic_secret,
                                     const bool handshake_traffic_secret = false);
       void derive_read_traffic_key(const secure_vector<uint8_t>& traffic_secret,
@@ -331,6 +335,8 @@ class BOTAN_TEST_API Cipher_State
 
       uint64_t m_write_seq_no;
       uint64_t m_read_seq_no;
+
+      uint16_t m_ticket_nonce;
 
       secure_vector<uint8_t> m_finished_key;
       secure_vector<uint8_t> m_peer_finished_key;

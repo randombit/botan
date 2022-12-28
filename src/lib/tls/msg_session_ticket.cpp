@@ -6,6 +6,10 @@
 */
 
 #include <botan/tls_messages.h>
+#include <botan/rng.h>
+#include <botan/tls_session.h>
+#include <botan/tls_session_manager.h>
+#include <botan/tls_callbacks.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_hash.h>
@@ -67,6 +71,18 @@ std::vector<uint8_t> New_Session_Ticket_12::serialize() const
 
 #if defined (BOTAN_HAS_TLS_13)
 
+New_Session_Ticket_13::New_Session_Ticket_13(std::vector<uint8_t> nonce,
+                                             const Session& session,
+                                             const Session_Handle& handle,
+                                             Callbacks& callbacks)
+   : m_ticket_lifetime_hint(session.lifetime_hint())
+   , m_ticket_age_add(session.session_age_add())
+   , m_ticket_nonce(std::move(nonce))
+   , m_handle(handle.opaque_handle())
+   {
+   callbacks.tls_modify_extensions(m_extensions, Connection_Side::Server, type());
+   }
+
 New_Session_Ticket_13::New_Session_Ticket_13(const std::vector<uint8_t>& buf,
                                              Connection_Side from)
    {
@@ -85,7 +101,7 @@ New_Session_Ticket_13::New_Session_Ticket_13(const std::vector<uint8_t>& buf,
 
    m_ticket_age_add = reader.get_uint32_t();
    m_ticket_nonce = reader.get_tls_length_value(1);
-   m_ticket = Session_Ticket(reader.get_tls_length_value(2));
+   m_handle = Opaque_Session_Handle(reader.get_tls_length_value(2));
 
    m_extensions.deserialize(reader, from, type());
 
@@ -114,8 +130,25 @@ std::optional<uint32_t> New_Session_Ticket_13::early_data_byte_limit() const
 
 std::vector<uint8_t> New_Session_Ticket_13::serialize() const
    {
-   // TODO: might be needed once TLS 1.3 server is implemented
-   throw Not_Implemented("serializing New_Session_Ticket_13 is NYI");
+   std::vector<uint8_t> result(8);
+
+   store_lifetime(std::span(result.data(), 4), m_ticket_lifetime_hint);
+   store_be(m_ticket_age_add, result.data() + 4);
+   append_tls_length_value(result, m_ticket_nonce, 1);
+   append_tls_length_value(result, m_handle.get(), 2);
+
+   // TODO: re-evaluate this construction when reworking message marshalling
+   if(m_extensions.size() == 0)
+      {
+      result.push_back(0x00);
+      result.push_back(0x00);
+      }
+   else
+      {
+      result += m_extensions.serialize(Connection_Side::Server);
+      }
+
+   return result;
    }
 
 #endif

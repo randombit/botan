@@ -211,6 +211,11 @@ bool Text_Policy::reuse_session_tickets() const
    return get_bool("reuse_session_tickets", Policy::reuse_session_tickets());
    }
 
+size_t Text_Policy::new_session_tickets_upon_handshake_success() const
+   {
+   return get_len("new_session_tickets_upon_handshake_success", Policy::new_session_tickets_upon_handshake_success());
+   }
+
 std::vector<uint16_t> Text_Policy::srtp_profiles() const
    {
    std::vector<uint16_t> r;

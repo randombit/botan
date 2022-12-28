@@ -15,6 +15,7 @@
 #include <botan/tls_session.h>
 #include <botan/tls_session_manager.h>
 
+#include <algorithm>
 #include <utility>
 
 #if defined(BOTAN_HAS_TLS_13)
@@ -181,6 +182,14 @@ PSK::PSK(const Session_with_Handle& session_to_resume, Callbacks& callbacks)
    }
 
 
+PSK::PSK(Session session_to_resume, const uint16_t psk_index)
+   : m_impl(std::make_unique<PSK_Internal>(
+         Server_PSK{
+            .selected_identity = psk_index,
+            .session_to_resume = std::move(session_to_resume)
+         })) {}
+
+
 PSK::~PSK() = default;
 
 
@@ -232,6 +241,40 @@ std::unique_ptr<Cipher_State> PSK::select_cipher_state(const PSK& server_psk, co
    }
 
 
+std::unique_ptr<PSK> PSK::select_offered_psk(const Ciphersuite& cipher,
+                                             Session_Manager& session_mgr,
+                                             Callbacks& callbacks,
+                                             const Policy& policy)
+   {
+   BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
+
+   auto& psks = std::get<std::vector<Client_PSK>>(m_impl->psk);
+   std::vector<Ticket> tickets;
+   std::transform(psks.begin(), psks.end(), std::back_inserter(tickets),
+                  [&](const auto& psk) { return psk.ticket; });
+
+   if(auto selection = session_mgr.choose_from_offered_tickets(tickets, cipher.prf_algo(), callbacks, policy))
+      {
+      auto& [session, psk_index] = selection.value();
+
+      // RFC 8446 4.6.1
+      //    Any ticket MUST only be resumed with a cipher suite that has the
+      //    same KDF hash algorithm as that used to establish the original
+      //    connection.
+      if(session.ciphersuite().prf_algo() != cipher.prf_algo())
+         {
+         throw TLS_Exception(Alert::InternalError, "Application chose a ticket that is not compatible with the negotiated ciphersuite");
+         }
+
+      return std::unique_ptr<PSK>(new PSK(std::move(session), psk_index));
+      }
+   else
+      {
+      return nullptr;
+      }
+   }
+
+
 void PSK::filter(const Ciphersuite& cipher)
    {
    BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
@@ -243,6 +286,17 @@ void PSK::filter(const Ciphersuite& cipher)
       return !psk.cipher_state->is_compatible_with(cipher);
       });
    psks.erase(r, psks.end());
+   }
+
+
+Session PSK::take_session_to_resume()
+   {
+   BOTAN_STATE_CHECK(std::holds_alternative<Server_PSK>(m_impl->psk));
+   auto& session_to_resume = std::get<Server_PSK>(m_impl->psk).session_to_resume;
+   BOTAN_STATE_CHECK(session_to_resume.has_value());
+   Session s = std::move(session_to_resume.value());
+   session_to_resume = std::nullopt;
+   return s;
    }
 
 
@@ -298,6 +352,18 @@ void PSK::calculate_binders(const Transcript_Hash_State& truncated_transcript_ha
       tth.set_algorithm(psk.cipher_state->hash_algorithm());
       psk.binder = psk.cipher_state->psk_binder_mac(tth.truncated());
       }
+   }
+
+bool PSK::validate_binder(const PSK& server_psk, const std::vector<uint8_t>& binder) const
+   {
+   BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
+   BOTAN_STATE_CHECK(std::holds_alternative<Server_PSK>(server_psk.m_impl->psk));
+
+   const auto index = std::get<Server_PSK>(server_psk.m_impl->psk).selected_identity;
+   const auto& psks = std::get<std::vector<Client_PSK>>(m_impl->psk);
+
+   BOTAN_STATE_CHECK(index < psks.size());
+   return psks[index].binder == binder;
    }
 
 }  // Botan::TLS

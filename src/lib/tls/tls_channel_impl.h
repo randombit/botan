@@ -113,6 +113,17 @@ class Channel_Impl
       virtual void renegotiate(bool force_full_renegotiation = false) = 0;
 
       /**
+      * @return true if this channel can issue TLS 1.3 style session tickets.
+      */
+      virtual bool new_session_ticket_supported() const { return false; }
+
+      /**
+      * Send @p tickets new session tickets to the peer. This is only supported
+      * on TLS 1.3 servers.
+      */
+      virtual void send_new_session_tickets(const size_t tickets) = 0;
+
+      /**
       * Attempt to update the session's traffic key material
       * Note that this is possible with a TLS 1.3 channel, only.
       *

@@ -47,11 +47,65 @@ std::string Server_Impl_13::application_protocol() const
 
 std::vector<X509_Certificate> Server_Impl_13::peer_cert_chain() const
    {
-   return (m_handshake_state.has_client_certificate_chain())
-      ? m_handshake_state.client_certificate().cert_chain()
-      // TODO: after implementing session resumption, this may return the
-      //       client's certificate chain stored in the previous session.
-      : std::vector<X509_Certificate>{};
+   if(m_resumed_session.has_value())
+      { return m_resumed_session->peer_certs(); }
+   else if(m_handshake_state.has_client_certificate_chain())
+      { return m_handshake_state.client_certificate().cert_chain(); }
+   else
+      { return {}; }
+   }
+
+bool Server_Impl_13::new_session_ticket_supported() const
+   {
+   // RFC 8446 4.2.9
+   //    This extension also restricts the modes for use with PSK resumption.
+   //    Servers SHOULD NOT send NewSessionTicket with tickets that are not
+   //    compatible with the advertised modes; however, if a server does so,
+   //    the impact will just be that the client's attempts at resumption fail.
+   //
+   // Note: Applications can overrule this by calling send_new_session_tickets()
+   //       regardless of this method indicating no support for tickets.
+   //
+   // TODO: Implement other PSK KE modes than PSK_DHE_KE
+   return m_handshake_state.handshake_finished() &&
+          m_handshake_state.client_hello().extensions().has<PSK_Key_Exchange_Modes>() &&
+          value_exists(m_handshake_state.client_hello().extensions().get<PSK_Key_Exchange_Modes>()->modes(), PSK_Key_Exchange_Mode::PSK_DHE_KE);
+   }
+
+void Server_Impl_13::send_new_session_tickets(const size_t tickets)
+   {
+   BOTAN_STATE_CHECK(handshake_finished());
+
+   if(tickets == 0)
+      { return; }
+
+   auto flight = aggregate_post_handshake_messages();
+
+   for(size_t i = 0; i < tickets; ++i)
+      {
+      auto nonce = m_cipher_state->next_ticket_nonce();
+      const Session session(m_cipher_state->psk(nonce),
+                            std::nullopt,  // early data not yet implemented
+                            policy().session_ticket_lifetime(),
+                            peer_cert_chain(),
+                            m_handshake_state.client_hello(),
+                            m_handshake_state.server_hello(),
+                            callbacks(),
+                            rng());
+
+      if(auto handle = session_manager().establish(session))
+         {
+         flight.add(New_Session_Ticket_13(std::move(nonce),
+                                          session,
+                                          std::move(handle.value()),
+                                          callbacks()));
+         }
+      }
+
+   if(flight.contains_messages())
+      {
+      flight.send();
+      }
    }
 
 void Server_Impl_13::process_handshake_msg(Handshake_Message_13 message)
@@ -159,10 +213,51 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello)
    const auto& client_hello = m_handshake_state.client_hello();
    const auto& exts = client_hello.extensions();
 
+   const bool uses_psk = server_hello.extensions().has<PSK>();
+
    const auto cipher_opt = Ciphersuite::by_id(server_hello.ciphersuite());
    BOTAN_ASSERT_NOMSG(cipher_opt.has_value());
    const auto& cipher = cipher_opt.value();
    m_transcript_hash.set_algorithm(cipher.prf_algo());
+
+   std::unique_ptr<Cipher_State> psk_cipher_state;
+   if(uses_psk)
+      {
+      auto psk = server_hello.extensions().get<PSK>();
+      m_resumed_session.emplace(psk->take_session_to_resume());
+
+      // TODO: avoid copying the master secret unnecessarily
+      auto master_secret = m_resumed_session->master_secret();
+      psk_cipher_state = Cipher_State::init_with_psk(Connection_Side::Server, Cipher_State::PSK_Type::Resumption, std::move(master_secret), cipher);
+
+      // RFC 8446 4.2.11
+      //    Prior to accepting PSK key establishment, the server MUST validate
+      //    the corresponding binder value (see Section 4.2.11.2 below). If this
+      //    value is not present or does not validate, the server MUST abort the
+      //    handshake.
+      //    Servers SHOULD NOT attempt to validate multiple binders; rather,
+      //    they SHOULD select a single PSK and validate solely the binder that
+      //    corresponds to that PSK.
+      //
+      // Note: PSK selection was performed earlier, resulting in the existence
+      //       of this extension in the first place.
+      if(!exts.get<PSK>()->validate_binder(*psk, psk_cipher_state->psk_binder_mac(m_transcript_hash.truncated())))
+         {
+         throw TLS_Exception(Alert::DecryptError, "PSK binder does not check out");
+         }
+
+      // RFC 8446 4.2.10
+      //   For PSKs provisioned via NewSessionTicket, a server MUST validate
+      //   that the ticket age for the selected PSK identity [...] is within a
+      //   small tolerance of the time since the ticket was issued. If it is
+      //   not, the server SHOULD proceed with the handshake but reject 0-RTT,
+      //   and SHOULD NOT take any other action that assumes that this
+      //   ClientHello is fresh.
+      //
+      // TODO: When implementing Early Data (0-RTT) we should take the above
+      //       paragraph into account. Note that there are BoGo tests that
+      //       validate this behaviour. Namely: TLS13-TicketAgeSkew-*
+      }
 
    // This sends the server_hello to the peer.
    // NOTE: the server_hello variable is moved into the handshake state. Later
@@ -180,40 +275,54 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello)
       auto shared_secret = my_keyshare->exchange(*exts.get<Key_Share>(), policy(), callbacks(), rng());
       my_keyshare->erase();
 
-      return Cipher_State::init_with_server_hello(m_side, std::move(shared_secret), cipher,
-                                                  m_transcript_hash.current());
+      if(uses_psk)
+         {
+         BOTAN_ASSERT_NONNULL(psk_cipher_state);
+         psk_cipher_state->advance_with_client_hello(m_transcript_hash.previous());
+         psk_cipher_state->advance_with_server_hello(cipher, std::move(shared_secret), m_transcript_hash.current());
+
+         return std::move(psk_cipher_state);
+         }
+      else
+         {
+         return Cipher_State::init_with_server_hello(m_side, std::move(shared_secret), cipher,
+                                                     m_transcript_hash.current());
+         }
       }();
 
    auto flight = aggregate_handshake_messages();
    flight
       .add(m_handshake_state.sending(Encrypted_Extensions(client_hello, policy(), callbacks())));
 
-   // RFC 8446 4.3.2
-   //    A server which is authenticating with a certificate MAY optionally
-   //    request a certificate from the client. This message, if sent, MUST
-   //    follow EncryptedExtensions.
-   //
-   // Note: When implementing PSK, this message must not be sent
-   if(auto certificate_request = Certificate_Request_13::maybe_create(client_hello,
-                                                                      credentials_manager(),
-                                                                      callbacks(),
-                                                                      policy()))
+   if(!uses_psk)
       {
-      flight.add(m_handshake_state.sending(std::move(certificate_request.value())));
+      // RFC 8446 4.3.2
+      //    A server which is authenticating with a certificate MAY optionally
+      //    request a certificate from the client. This message, if sent, MUST
+      //    follow EncryptedExtensions.
+      if(auto certificate_request = Certificate_Request_13::maybe_create(client_hello,
+                                                                        credentials_manager(),
+                                                                        callbacks(),
+                                                                        policy()))
+         {
+         flight.add(m_handshake_state.sending(std::move(certificate_request.value())));
+         }
+
+      flight
+         .add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks())))
+         .add(m_handshake_state.sending(Certificate_Verify_13(
+                                          m_handshake_state.server_certificate(),
+                                          client_hello.signature_schemes(),
+                                          client_hello.sni_hostname(),
+                                          m_transcript_hash.current(),
+                                          Connection_Side::Server,
+                                          credentials_manager(),
+                                          policy(),
+                                          callbacks(),
+                                          rng())));
       }
 
    flight
-      .add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks())))
-      .add(m_handshake_state.sending(Certificate_Verify_13(
-                                        m_handshake_state.server_certificate(),
-                                        client_hello.signature_schemes(),
-                                        client_hello.sni_hostname(),
-                                        m_transcript_hash.current(),
-                                        Connection_Side::Server,
-                                        credentials_manager(),
-                                        policy(),
-                                        callbacks(),
-                                        rng())))
       .add(m_handshake_state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash.current())));
 
    if(client_hello.extensions().has<Record_Size_Limit>() &&
@@ -354,6 +463,7 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello)
               Server_Hello_13::create(
                   client_hello,
                   is_initial_client_hello,
+                  session_manager(),
                   rng(),
                   policy(),
                   callbacks()));
@@ -465,6 +575,12 @@ void Server_Impl_13::handle(const Finished_13& finished_msg)
    m_transitions.set_expected_next({});
 
    callbacks().tls_session_activated();
+
+   if(new_session_ticket_supported())
+      {
+      send_new_session_tickets(
+         policy().new_session_tickets_upon_handshake_success());
+      }
    }
 
 }  // namespace Botan::TLS

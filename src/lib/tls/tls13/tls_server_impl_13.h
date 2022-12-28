@@ -30,6 +30,9 @@ class Server_Impl_13 : public Channel_Impl_13
       std::string application_protocol() const override;
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
+      bool new_session_ticket_supported() const override;
+      void send_new_session_tickets(const size_t tickets) override;
+
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;
@@ -54,6 +57,8 @@ class Server_Impl_13 : public Channel_Impl_13
    private:
       Server_Handshake_State_13 m_handshake_state;
       Handshake_Transitions m_transitions;
+
+      std::optional<Session> m_resumed_session;
    };
 
 }

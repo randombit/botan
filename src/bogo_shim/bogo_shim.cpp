@@ -110,7 +110,9 @@ std::string map_to_bogo_error(const std::string& e)
          { "Client certificate verification failed", ":BAD_SIGNATURE:" },
          { "Client did not comply with the requested key exchange group", ":WRONG_CURVE:" },
          { "Client did not offer NULL compression", ":INVALID_COMPRESSION_LIST:" },
+         { "Client did not comply with the requested key exchange group", ":WRONG_CURVE:" },
          { "Client Hello must either contain both key_share and supported_groups extensions or neither", ":MISSING_KEY_SHARE:" },
+         { "Client Hello offered a PSK without a psk_key_exchange_modes extension", ":MISSING_EXTENSION:" },
          { "Client offered DTLS version with major version 0xFF",  ":UNSUPPORTED_PROTOCOL:" },
          { "Client offered SSLv3 which is not supported", ":UNSUPPORTED_PROTOCOL:" },
          { "Client offered TLS version with major version under 3", ":UNSUPPORTED_PROTOCOL:" },
@@ -128,13 +130,18 @@ std::string map_to_bogo_error(const std::string& e)
          { "Non-PSK Client Hello did not contain supported_groups and signature_algorithms extensions", ":NO_SHARED_GROUP:" },
          { "No certificates sent by server", ":PEER_DID_NOT_RETURN_A_CERTIFICATE:" },
          { "Not enough data to read another KeyShareEntry", ":DECODE_ERROR:" },
+         { "Not enough PSK binders", ":PSK_IDENTITY_BINDER_COUNT_MISMATCH:" },
          { "Counterparty sent inconsistent key and sig types", ":WRONG_SIGNATURE_TYPE:" },
          { "Downgrade attack detected", ":TLS13_DOWNGRADE:" },
          { "Empty ALPN protocol not allowed", ":PARSE_TLSEXT:" },
+         { "Empty PSK binders list", ":DECODE_ERROR: "},
          { "Encoding error: Cannot encode PSS string, output length too small", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Expected TLS but got a record with DTLS version", ":WRONG_VERSION_NUMBER:" },
+         { "Extension removed in updated Client Hello", ":INCONSISTENT_CLIENT_HELLO:" },
          { "Failed to agree on a signature algorithm", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Failed to agree on any signature algorithm", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
+         { "Failed to negotiate a common signature algorithm for client authentication", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
+         { "PSK extension was not at the very end of the Client Hello", ":PRE_SHARED_KEY_MUST_BE_LAST:" },
          { "Finished message didn't verify", ":DIGEST_CHECK_FAILED:" },
          { "Have data remaining in buffer after ClientHello", ":EXCESS_HANDSHAKE_DATA:" },
          { "Have data remaining in buffer after Finished", ":EXCESS_HANDSHAKE_DATA:" },
@@ -165,6 +172,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Policy forbids all available TLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
          { "Policy refuses to accept signing with any hash supported by peer", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Policy requires client send a certificate, but it did not", ":PEER_DID_NOT_RETURN_A_CERTIFICATE:" },
+         { "PSK binder does not check out", ":DIGEST_CHECK_FAILED:" },
          { "PSK identity selected by server is out of bounds", ":PSK_IDENTITY_NOT_FOUND:" },
          { "PSK and ciphersuite selected by server are not compatible", ":OLD_SESSION_PRF_HASH_MISMATCH:" },
          { "Received a record that exceeds maximum size", ":ENCRYPTED_LENGTH_TOO_LONG:" },
@@ -229,6 +237,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "TLS record type had unexpected value", ":UNEXPECTED_RECORD:" },
          { "TLS record version had unexpected value", ":WRONG_VERSION_NUMBER:" },
          { "Test requires rejecting cert", ":CERTIFICATE_VERIFY_FAILED:" },
+         { "Too many PSK binders", ":PSK_IDENTITY_BINDER_COUNT_MISMATCH:" },
          { "Unexpected ALPN protocol", ":INVALID_ALPN_PROTOCOL:" },
          { "Unexpected record type 42 from counterparty", ":UNEXPECTED_RECORD:" },
          { "Unexpected state transition in handshake got a certificate_request expected server_hello_done seen server_hello+server_key_exchange", ":UNEXPECTED_MESSAGE:" },
@@ -737,6 +746,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       "expect-advertised-alpn",
       "expect-alpn",
       "expect-client-ca-list",
+      "expect-early-data-reason",
       "expect-late-alpn",
       "expect-msg-callback",
       //"expect-next-proto",
@@ -1070,6 +1080,11 @@ class Shim_Policy final : public Botan::TLS::Policy
       //bool hide_unknown_users() const override;
 
       //std::chrono::seconds session_ticket_lifetime() const override;
+
+      size_t new_session_tickets_upon_handshake_success() const override
+         {
+         return m_args.flag_set("no-ticket") ? 0 : 1;
+         }
 
       std::vector<uint16_t> srtp_profiles() const override
          {

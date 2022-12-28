@@ -36,11 +36,13 @@ class Response;
 
 namespace TLS {
 
+class Session_Manager;
 class Handshake_IO;
 class Handshake_State;
 class Hello_Retry_Request;
 class Callbacks;
 class Cipher_State;
+class Policy;
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
                                        Callbacks& cb,
@@ -410,13 +412,13 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello
 
       // Instantiate a Server Hello as response to a client's Client Hello
       // (called from Server_Hello_13::create())
-      Server_Hello_13(const Client_Hello_13& ch, std::optional<Named_Group> key_exchange_group, RandomNumberGenerator& rng, Callbacks& cb, const Policy& policy);
+      Server_Hello_13(const Client_Hello_13& ch, std::optional<Named_Group> key_exchange_group, Session_Manager& session_mgr, RandomNumberGenerator& rng, Callbacks& cb, const Policy& policy);
 
       explicit Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Hello_Retry_Request_Creation_Tag tag);
 
    public:
       static std::variant<Hello_Retry_Request, Server_Hello_13>
-      create(const Client_Hello_13& ch, bool hello_retry_request_allowed, RandomNumberGenerator& rng, const Policy& policy, Callbacks& cb);
+      create(const Client_Hello_13& ch, bool hello_retry_request_allowed, Session_Manager& session_mgr, RandomNumberGenerator& rng, const Policy& policy, Callbacks& cb);
 
       static std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12>
       parse(const std::vector<uint8_t>& buf);
@@ -934,6 +936,11 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
    public:
       Handshake_Type type() const override { return Handshake_Type::NewSessionTicket; }
 
+      New_Session_Ticket_13(std::vector<uint8_t> nonce,
+                            const Session& session,
+                            const Session_Handle& handle,
+                            Callbacks& callbacks);
+
       New_Session_Ticket_13(const std::vector<uint8_t>& buf,
                             Connection_Side from);
 
@@ -941,7 +948,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
 
       const Extensions& extensions() const { return m_extensions; }
 
-      const Session_Ticket& ticket() const { return m_ticket; }
+      const Opaque_Session_Handle& handle() const { return m_handle; }
       const std::vector<uint8_t>& nonce() const { return m_ticket_nonce; }
       uint32_t ticket_age_add() const { return m_ticket_age_add; }
       std::chrono::seconds lifetime_hint() const { return m_ticket_lifetime_hint; }
@@ -963,7 +970,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
       std::chrono::seconds m_ticket_lifetime_hint;
       uint32_t m_ticket_age_add;
       std::vector<uint8_t> m_ticket_nonce;
-      Session_Ticket m_ticket;
+      Opaque_Session_Handle m_handle;
       Extensions m_extensions;
    };
 

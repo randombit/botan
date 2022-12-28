@@ -600,7 +600,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
    callbacks().tls_examine_extensions(new_session_ticket.extensions(), Connection_Side::Server, Handshake_Type::NewSessionTicket);
    if(callbacks().tls_session_ticket_received(session))
       {
-      session_manager().store(session, new_session_ticket.ticket());
+      session_manager().store(session, new_session_ticket.handle());
       }
    }
 

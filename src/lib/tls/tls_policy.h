@@ -2,6 +2,7 @@
 * Hooks for application level policies on TLS connections
 * (C) 2004-2006,2013 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2022 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +13,7 @@
 #include <botan/tls_version.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_signature_scheme.h>
+#include <chrono>
 #include <optional>
 #include <vector>
 #include <map>
@@ -263,7 +265,9 @@ class BOTAN_PUBLIC_API(2,0) Policy
       /**
       * Return the allowed lifetime of a session ticket. If 0, session
       * tickets do not expire until the session ticket key rolls over.
-      * Expired session tickets cannot be used to resume a session.
+      * For TLS 1.3 session tickets the lifetime must not be longer than
+      * seven days. Expired session tickets cannot be used to resume a
+      * session.
       */
       virtual std::chrono::seconds session_ticket_lifetime() const;
 
@@ -275,6 +279,18 @@ class BOTAN_PUBLIC_API(2,0) Policy
        * are negotiated in the clear anyway.
        */
       virtual bool reuse_session_tickets() const;
+
+      /**
+      * Return the number of new session tickets a TLS 1.3 server should issue
+      * automatically upon a successful handshake. Note that applications can
+      * use `TLS::Server::send_new_session_tickets()` regardless of this policy.
+      *
+      * For convenience (and compatibility with the TLS 1.2 behaviour), this
+      * returns '1' by default.
+      *
+      * @note Has an effect on TLS 1.3 connections, only.
+      */
+      virtual size_t new_session_tickets_upon_handshake_success() const;
 
       /**
       * If this returns a non-empty vector, and DTLS is negotiated,
@@ -656,6 +672,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       std::chrono::seconds session_ticket_lifetime() const override;
 
       bool reuse_session_tickets() const override;
+
+      size_t new_session_tickets_upon_handshake_success() const override;
 
       bool tls_13_middlebox_compatibility_mode() const override;
 

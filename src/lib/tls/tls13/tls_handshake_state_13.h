@@ -38,6 +38,7 @@ class BOTAN_TEST_API Handshake_State_13_Base
 
       // Client_Hello_13 cannot be const because it might need modification due to a Hello_Retry_Request
       Client_Hello_13&              client_hello() { return get(m_client_hello); }
+      const Client_Hello_13&        client_hello() const { return get(m_client_hello); }
       const Server_Hello_13&        server_hello() const { return get(m_server_hello); }
       const Hello_Retry_Request&    hello_retry_request() const { return get(m_hello_retry_request); }
       const Encrypted_Extensions&   encrypted_extensions() const { return get(m_encrypted_extensions); }

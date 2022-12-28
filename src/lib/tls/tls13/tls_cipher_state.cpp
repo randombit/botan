@@ -217,7 +217,9 @@ void Cipher_State::advance_with_client_finished(const Transcript_Hash& transcrip
    m_state = State::Completed;
    }
 
-std::vector<uint8_t> Cipher_State::current_nonce(const uint64_t seq_no, const secure_vector<uint8_t>& iv) const
+namespace {
+
+std::vector<uint8_t> current_nonce(const uint64_t seq_no, const secure_vector<uint8_t>& iv)
    {
    // RFC 8446 5.3
    //    The per-record nonce for the AEAD construction is formed as follows:
@@ -232,6 +234,8 @@ std::vector<uint8_t> Cipher_State::current_nonce(const uint64_t seq_no, const se
    xor_buf(nonce, iv.data(), iv.size());
    return nonce;
    }
+
+}
 
 uint64_t Cipher_State::encrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& fragment)
    {
@@ -400,6 +404,19 @@ secure_vector<uint8_t> Cipher_State::psk(const std::vector<uint8_t>& nonce) cons
    return derive_secret(m_resumption_master_secret, "resumption", nonce);
    }
 
+std::vector<uint8_t> Cipher_State::next_ticket_nonce()
+   {
+   BOTAN_STATE_CHECK(m_state == State::Completed);
+   if(m_ticket_nonce == std::numeric_limits<decltype(m_ticket_nonce)>::max())
+      {
+      throw Botan::Invalid_State("ticket nonce pool exhausted");
+      }
+
+   std::vector<uint8_t> retval(sizeof(m_ticket_nonce));
+   store_be(m_ticket_nonce++, retval.data());
+
+   return retval;
+   }
 
 secure_vector<uint8_t> Cipher_State::export_key(const std::string& label,
       const std::string& context,
@@ -431,7 +448,8 @@ Cipher_State::Cipher_State(Connection_Side whoami, const std::string& hash_funct
    , m_hash(HashFunction::create_or_throw(hash_function))
    , m_salt(m_hash->output_length(), 0x00)
    , m_write_seq_no(0)
-   , m_read_seq_no(0) {}
+   , m_read_seq_no(0)
+   , m_ticket_nonce(0) {}
 
 Cipher_State::~Cipher_State() = default;
 

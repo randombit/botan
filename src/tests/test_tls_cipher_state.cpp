@@ -315,6 +315,14 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
             }
          }),
 
+      CHECK_both("ticket nonce counter is not yet available", [&](Cipher_State* cs, Connection_Side, Test::Result& result)
+         {
+         result.test_throws<Botan::Invalid_State>("nonce counter is disabled", [&]
+            {
+            cs->next_ticket_nonce();
+            });
+         }),
+
       CHECK_both("handshake traffic without PSK", [&](Cipher_State* cs, Connection_Side side, Test::Result& result)
          {
          result.confirm("can not yet write application data", !cs->can_encrypt_application_traffic());
@@ -401,6 +409,24 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
          result.confirm("can export key material still", cs->can_export_keys());
          result.test_eq("key export result did not change", cs->export_key(export_label, export_context, 16), expected_key_export);
       }),
+
+      CHECK_both("ticket nonce counter counts", [&](Cipher_State* cs, Connection_Side, Test::Result& result)
+         {
+         result.test_eq("nonce is 0x00, 0x00", cs->next_ticket_nonce(), std::vector<uint8_t>{0x00, 0x00});
+         result.test_eq("nonce is 0x00, 0x01", cs->next_ticket_nonce(), std::vector<uint8_t>{0x00, 0x01});
+         result.test_eq("nonce is 0x00, 0x02", cs->next_ticket_nonce(), std::vector<uint8_t>{0x00, 0x02});
+
+         for(uint32_t i = 3; i < std::numeric_limits<uint16_t>::max(); ++i)
+            {
+            cs->next_ticket_nonce();
+            }
+
+         // Cannot generate more than 2^16 ticket nonces
+         result.test_throws<Botan::Invalid_State>("nonces are depleted", [&]
+            {
+            cs->next_ticket_nonce();
+            });
+         }),
 
       CHECK_both("PSK", [&](Cipher_State* cs, Connection_Side, Test::Result &result) {
          // derive PSK for resumption

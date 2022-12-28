@@ -16,7 +16,13 @@ allow_server_initiated_renegotiation = false
 hide_unknown_users = false
 server_uses_own_ciphersuite_preferences = true
 negotiate_encrypt_then_mac = true
-session_ticket_lifetime = 86400
+session_ticket_lifetime = 30
+
+# In fact, the 1-RTT server part is supposed to emit a NewSessionTicket message.
+# Though, for the sake of clarity we disable auto-emission and manually call
+# `send_new_session_tickets()` in the test code.
+new_session_tickets_upon_handshake_success = 0
+
 minimum_dh_group_size = 2048
 minimum_ecdh_group_size = 255
 minimum_rsa_bits = 1024

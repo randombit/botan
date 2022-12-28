@@ -108,6 +108,16 @@ void Server::renegotiate(bool force_full_renegotiation)
    m_impl->renegotiate(force_full_renegotiation);
    }
 
+bool Server::new_session_ticket_supported() const
+   {
+   return m_impl->new_session_ticket_supported();
+   }
+
+void Server::send_new_session_tickets(const size_t tickets)
+   {
+   m_impl->send_new_session_tickets(tickets);
+   }
+
 void Server::update_traffic_keys(bool request_peer_update)
    {
    m_impl->update_traffic_keys(request_peer_update);

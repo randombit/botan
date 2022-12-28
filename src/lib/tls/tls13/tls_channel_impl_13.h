@@ -162,6 +162,11 @@ class Channel_Impl_13 : public Channel_Impl
          throw Invalid_Argument("renegotiation is not allowed in TLS 1.3");
          }
 
+      void send_new_session_tickets(const size_t /*tickets*/) override
+         {
+         throw Invalid_Argument("Sending new session ticket is not allowed in this configuration");
+         }
+
       /**
       * Attempt to update the session's traffic key material
       * Note that this is possible with a TLS 1.3 channel, only.

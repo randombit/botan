@@ -178,6 +178,11 @@ void Channel_Impl_12::renegotiate(bool force_full_renegotiation)
       throw Invalid_State("Cannot renegotiate on inactive connection");
    }
 
+void Channel_Impl_12::send_new_session_tickets(const size_t)
+   {
+   throw Invalid_Argument("cannot send new session tickets on a TLS 1.2 channel");
+   }
+
 void Channel_Impl_12::update_traffic_keys(bool)
    {
    throw Invalid_Argument("cannot update traffic keys on a TLS 1.2 channel");

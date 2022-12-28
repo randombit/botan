@@ -125,6 +125,8 @@ class Channel_Impl_12 : public Channel_Impl
       */
       void renegotiate(bool force_full_renegotiation = false) override;
 
+      void send_new_session_tickets(const size_t tickets) override;
+
       /**
       * Attempt to update the session's traffic key material
       * Note that this is possible with a TLS 1.3 channel, only.

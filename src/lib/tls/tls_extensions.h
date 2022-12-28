@@ -36,8 +36,7 @@ namespace TLS {
 
 #if defined(BOTAN_HAS_TLS_13)
 class Callbacks;
-class Session;
-class Session_Handle;
+class Session_Manager;
 class Cipher_State;
 class Ciphersuite;
 class Transcript_Hash_State;
@@ -646,11 +645,26 @@ class BOTAN_UNSTABLE_API PSK final : public Extension
                                                         const Ciphersuite& cipher);
 
       /**
+       * Selects one of the offered PSKs that is compatible with \p cipher.
+       * @retval PSK extension object that can be added to the Server Hello response
+       * @retval std::nullptr if no PSK offered by the client is convenient
+       */
+      std::unique_ptr<PSK> select_offered_psk(const Ciphersuite& cipher,
+                                              Session_Manager& session_mgr,
+                                              Callbacks& callbacks,
+                                              const Policy& policy);
+
+      /**
        * Remove PSK identities from the list in \p m_psk that are not compatible
        * with the passed in \p cipher suite.
        * This is useful to react to Hello Retry Requests. See RFC 8446 4.1.4.
        */
       void filter(const Ciphersuite& cipher);
+
+      /**
+       * Pulls the Session to resume from a PSK extension in Server Hello.
+       */
+      Session take_session_to_resume();
 
       bool empty() const override;
 
@@ -661,9 +675,20 @@ class BOTAN_UNSTABLE_API PSK final : public Extension
       ~PSK();
 
       void calculate_binders(const Transcript_Hash_State& truncated_transcript_hash);
+      bool validate_binder(const PSK& server_psk, const std::vector<uint8_t>& binder) const;
 
       // TODO: Implement pure PSK negotiation that is not used for session
       //       resumption.
+
+   private:
+      /**
+       * Creates a PSK extension that specifies the server's selection of an
+       * offered client PSK. The @p session_to_resume is kept internally
+       * and used later for the initialization of the Cipher_State object.
+       *
+       * Note: This constructor is called internally in PSK::select_offered_psk().
+       */
+      PSK(Session session_to_resume, const uint16_t psk_index);
 
    private:
       class PSK_Internal;

@@ -560,7 +560,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
 
    public:
       RFC8448_Session_Manager()
-         : Session_Manager(m_null_rng) {}
+         : Session_Manager(Test::rng()) {}
 
       const std::vector<Session_with_Handle>& all_sessions() const
          {
@@ -572,10 +572,20 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
          m_sessions.push_back({session, handle});
          }
 
-      std::optional<Session_Handle> establish(const Session& session, const std::optional<Session_ID>& id, bool) override
+      std::optional<Session_Handle> establish(const Session& session, const std::optional<Session_ID>&, bool) override
          {
-         m_sessions.emplace_back(Session_with_Handle{session, id.value_or(Session_ID())});
-         return id;
+         // we assume that the 'mocked' session is already stored in the manager,
+         // verify that it is equivalent to the one created by the testee and
+         // return the associated handle stored with it
+
+         if(m_sessions.size() != 1)
+            { throw Botan_Tests::Test_Error("No mocked session handle available; Test bug?"); }
+
+         const auto& [mocked_session, handle] = m_sessions.front();
+         if(mocked_session.master_secret() != session.master_secret())
+            { throw Botan_Tests::Test_Error("Generated session object does not match the expected mock"); }
+
+         return handle;
          }
 
       std::optional<Session> retrieve_one(const Session_Handle& handle) override
@@ -625,7 +635,6 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
 
    private:
       std::vector<Session_with_Handle> m_sessions;
-      Botan::Null_RNG m_null_rng;
    };
 
 /**
@@ -762,12 +771,13 @@ class Server_Context : public TLS_Context
                      uint64_t timestamp,
                      Modify_Exts_Fn modify_exts_cb,
                      std::vector<MockSignature> mock_signatures,
-                     bool use_alternative_server_certificate = false)
+                     bool use_alternative_server_certificate = false,
+                     std::optional<std::pair<Session, Session_Ticket>> session_and_ticket = std::nullopt)
          : TLS_Context(std::move(rng), std::move(policy),
             std::move(modify_exts_cb),
             std::move(mock_signatures),
             timestamp,
-            std::nullopt /* session not yet needed */,
+            std::move(session_and_ticket),
             use_alternative_server_certificate)
          , server(m_callbacks, m_session_mgr, m_creds, m_policy, *m_rng, false /* DTLS NYI */) {}
 
@@ -831,7 +841,8 @@ void sort_server_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection
          Botan::TLS::Extension_Code::SupportedVersions,
          Botan::TLS::Extension_Code::SignatureAlgorithms,
          Botan::TLS::Extension_Code::RecordSizeLimit,
-         Botan::TLS::Extension_Code::ServerNameIndication
+         Botan::TLS::Extension_Code::ServerNameIndication,
+         Botan::TLS::Extension_Code::EarlyData,
          };
 
       for(const auto ext_type : expected_order)
@@ -1163,8 +1174,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                                                       vars.get_req_u64("CurrentTimestamp"),
                                                       add_extensions_and_sort,
                                                       std::pair{
-                                                      Session(vars.get_req_bin("Client_SessionData")),
-                                                      Session_Ticket(vars.get_req_bin("SessionTicket"))
+                                                      Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
+                                                      Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))
                                                       });
 
                result.confirm("client not closed", !ctx->client.is_closed());
@@ -1500,7 +1511,16 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
          return {
             Botan_Tests::CHECK("Send Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Server_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), sort_server_extensions, make_mock_signatures(vars));
+               auto add_early_data_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type type)
+                  {
+                  if(type == Handshake_Type::NewSessionTicket)
+                     {
+                     exts.add(new EarlyDataIndication(1024));
+                     }
+                  sort_server_extensions(exts, side, type);
+                  };
+
+               ctx = std::make_unique<Server_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_early_data_and_sort, make_mock_signatures(vars), false, std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")), Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
                result.confirm("server not closed", !ctx->server.is_closed());
 
                ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
@@ -1546,15 +1566,126 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
                   });
                }),
 
-            Botan_Tests::CHECK("Send Session Ticket", [&](Test::Result&)
+            Botan_Tests::CHECK("Send Session Ticket", [&](Test::Result& result)
                {
-               // ctx->server.send_new_session_ticket(???);
-               })
+               ctx->server.send_new_session_tickets(1);
+
+               ctx->check_callback_invocations(result, "issued new session ticket", {
+                  "tls_inspect_handshake_msg_new_session_ticket",
+                  "tls_current_timestamp",
+                  "tls_emit_data",
+                  "tls_modify_extensions_new_session_ticket"
+                  });
+               }),
+
+            Botan_Tests::CHECK("Verify generated new session ticket message", [&](Test::Result& result)
+               {
+               result.test_eq("New Session Ticket", ctx->pull_send_buffer(), vars.get_req_bin("Record_NewSessionTicket"));
+               }),
+
+            Botan_Tests::CHECK("Receive Application Data", [&](Test::Result& result)
+               {
+               ctx->server.received_data(vars.get_req_bin("Record_Client_AppData"));
+               ctx->check_callback_invocations(result, "application data received", { "tls_record_received" });
+
+               const auto rcvd = ctx->pull_receive_buffer();
+               result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
+               result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
+               }),
+
+            Botan_Tests::CHECK("Send Application Data", [&](Test::Result& result)
+               {
+               ctx->send(vars.get_req_bin("Server_AppData"));
+
+               ctx->check_callback_invocations(result, "application data sent", { "tls_emit_data" });
+
+               result.test_eq("correct server application data", ctx->pull_send_buffer(),
+                              vars.get_req_bin("Record_Server_AppData"));
+               }),
+
+            Botan_Tests::CHECK("Receive Client's close_notify", [&](Test::Result& result)
+               {
+               ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
+
+               ctx->check_callback_invocations(result, "client finished received", {
+                  "tls_alert",
+                  "tls_peer_closed_connection"
+                  });
+
+               result.confirm("connection is not yet closed", !ctx->server.is_closed());
+               result.confirm("connection is still active", ctx->server.is_active());
+               }),
+
+            Botan_Tests::CHECK("Expect Server close_notify", [&](Test::Result& result)
+               {
+               ctx->server.close();
+
+               result.confirm("connection is now inactive", !ctx->server.is_active());
+               result.confirm("connection is now closed", ctx->server.is_closed());
+               result.test_eq("Server's close notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Server_CloseNotify"));
+               }),
             };
          }
 
-      // TODO: once session resumption is implemented this test trace should be added
-      std::vector<Test::Result> resumed_handshake_with_0_rtt(const VarMap& /*vars*/) override { return {}; }
+      std::vector<Test::Result> resumed_handshake_with_0_rtt(const VarMap& vars) override
+         {
+         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>();
+
+         // 32 - for server hello random
+         // 32 - for KeyShare (eph. x25519 key pair)
+         add_entropy(*rng, vars.get_req_bin("Server_RNG_Pool"));
+
+         std::unique_ptr<Server_Context> ctx;
+
+         return
+            {
+            Botan_Tests::CHECK("Receive Client Hello", [&](Test::Result& result)
+               {
+               auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type type)
+                  {
+                  if(type == Handshake_Type::EncryptedExtensions)
+                     {
+                     exts.add(new EarlyDataIndication());
+                     }
+                  sort_server_extensions(exts, side, type);
+                  };
+
+               ctx = std::make_unique<Server_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_cookie_and_sort, make_mock_signatures(vars), false, std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")), Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
+               result.confirm("server not closed", !ctx->server.is_closed());
+
+               ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
+
+               ctx->check_callback_invocations(result, "client hello received", {
+                  "tls_emit_data",
+                  "tls_current_timestamp",
+                  "tls_examine_extensions_client_hello",
+                  "tls_modify_extensions_server_hello",
+                  "tls_modify_extensions_encrypted_extensions",
+                  "tls_inspect_handshake_msg_client_hello",
+                  "tls_inspect_handshake_msg_server_hello",
+                  "tls_inspect_handshake_msg_encrypted_extensions",
+                  "tls_inspect_handshake_msg_finished",
+                  });
+               }),
+
+            Botan_Tests::CHECK("Verify generated messages in server's first flight", [&](Test::Result& result)
+               {
+               const auto& msgs = ctx->observed_handshake_messages();
+
+               result.test_eq("Server Hello", msgs.at("server_hello")[0], strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+               result.test_eq("Encrypted Extensions", msgs.at("encrypted_extensions")[0], strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+
+               result.test_eq("Server's entire first flight", ctx->pull_send_buffer(), concat(vars.get_req_bin("Record_ServerHello"),
+                                                                                              vars.get_req_bin("Record_ServerHandshakeMessages")));
+
+               result.confirm("Server can now send application data", ctx->server.is_active());
+               }),
+
+            // TODO: The rest of this test vector requires 0-RTT which is not
+            //       yet implemented. For now we can only test the server's
+            //       ability to acknowledge a session resumption via PSK.
+            };
+         }
 
       std::vector<Test::Result> hello_retry_request(const VarMap& vars) override
          {

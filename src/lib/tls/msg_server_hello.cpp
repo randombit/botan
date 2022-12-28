@@ -14,6 +14,7 @@
 #include <botan/tls_extensions.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_session_manager.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/tls_session_key.h>
@@ -501,6 +502,7 @@ Server_Hello_13::Hello_Retry_Request_Creation_Tag Server_Hello_13::as_new_hello_
 
 std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const Client_Hello_13& ch,
       bool hello_retry_request_allowed,
+      Session_Manager& session_mgr,
       RandomNumberGenerator& rng, const Policy& policy, Callbacks& cb)
    {
    const auto& exts = ch.extensions();
@@ -537,7 +539,7 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
       }
    else
       {
-      return Server_Hello_13(ch, selected_group, rng, cb, policy);
+      return Server_Hello_13(ch, selected_group, session_mgr, rng, cb, policy);
       }
    }
 
@@ -718,6 +720,8 @@ uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy)
 
    for(auto suite_id : pref_list)
       {
+      // TODO: take potentially available PSKs into account to select
+      //       a compatible ciphersuite (if possible).
       if(value_exists(other_list, suite_id))
          { return suite_id; }
       }
@@ -733,6 +737,7 @@ uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy)
 
 Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
                                  std::optional<Named_Group> key_exchange_group,
+                                 Session_Manager& session_mgr,
                                  RandomNumberGenerator& rng,
                                  Callbacks& cb,
                                  const Policy& policy)
@@ -740,6 +745,16 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
                      Protocol_Version::TLS_V12,
                      ch.session_id(),
                      make_server_hello_random(rng, Protocol_Version::TLS_V13, cb, policy),
+
+                     // RFC 8446 4.2.11
+                     //    When session resumption is the primary use case of
+                     //    PSKs, the most straightforward way to implement the
+                     //    PSK/cipher suite matching requirements is to negotiate
+                     //    the cipher suite first [...]. If backward compatibility
+                     //    is important, client-provided, externally established
+                     //    PSKs SHOULD influence cipher suite selection.
+                     //
+                     // We go the easy route and select a ciphersuite first...
                      choose_ciphersuite(ch, policy),
                      uint8_t(0) /* compression method */
                   ))
@@ -756,6 +771,34 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
 
    if(key_exchange_group.has_value())
       { m_data->extensions.add(new Key_Share(key_exchange_group.value(), cb, rng)); }
+
+   auto& ch_exts = ch.extensions();
+
+   if(ch_exts.has<PSK>())
+      {
+      const auto cs = Ciphersuite::by_id(m_data->ciphersuite);
+      BOTAN_ASSERT_NOMSG(cs);
+
+      // RFC 8446 4.2.9
+      //    A client MUST provide a "psk_key_exchange_modes" extension if it
+      //    offers a "pre_shared_key" extension.
+      //
+      // Note: Client_Hello_13 constructor already performed a graceful check.
+      const auto psk_modes = ch_exts.get<PSK_Key_Exchange_Modes>();
+      BOTAN_ASSERT_NONNULL(psk_modes);
+
+      // TODO: also support non-DHE PSK Key-Exchange mode
+      if(value_exists(psk_modes->modes(), PSK_Key_Exchange_Mode::PSK_DHE_KE))
+         {
+         if(auto server_psk = ch_exts.get<PSK>()->select_offered_psk(cs.value(), session_mgr, cb, policy))
+            {
+            // RFC 8446 4.2.11
+            //    In order to accept PSK key establishment, the server sends a
+            //    "pre_shared_key" extension indicating the selected identity.
+            m_data->extensions.add(std::move(server_psk));
+            }
+         }
+      }
 
    cb.tls_modify_extensions(m_data->extensions, Connection_Side::Server, type());
    }
