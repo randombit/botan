@@ -802,6 +802,11 @@ class BOTAN_UNSTABLE_API Extensions final
    public:
       std::set<Extension_Code> extension_types() const;
 
+      const std::vector<std::unique_ptr<Extension>>& all() const
+         {
+         return m_extensions;
+         }
+
       template<typename T>
       T* get() const
          {

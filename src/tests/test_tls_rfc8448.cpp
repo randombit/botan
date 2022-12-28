@@ -800,7 +800,8 @@ void sort_client_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection
          Botan::TLS::Extension_Code::Cookie,
          Botan::TLS::Extension_Code::PskKeyExchangeModes,
          Botan::TLS::Extension_Code::RecordSizeLimit,
-         Padding::static_type()
+         Padding::static_type(),
+         Botan::TLS::Extension_Code::PresharedKey,
          };
 
       for(const auto ext_type : expected_order)

@@ -42,8 +42,10 @@ class Server_Impl_13 : public Channel_Impl_13
       void handle(const Certificate_Verify_13& certificate_verify_msg);
       void handle(const Finished_13& finished_msg);
 
-      void handle_reply_to_client_hello(const Server_Hello_13& server_hello);
-      void handle_reply_to_client_hello(const Hello_Retry_Request& hello_retry_request);
+      void handle_reply_to_client_hello(Server_Hello_13 server_hello);
+      void handle_reply_to_client_hello(Hello_Retry_Request hello_retry_request);
+
+      void maybe_handle_compatibility_mode();
 
       bool handshake_finished() const override;
 

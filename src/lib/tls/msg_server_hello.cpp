@@ -504,6 +504,14 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
       RandomNumberGenerator& rng, const Policy& policy, Callbacks& cb)
    {
    const auto& exts = ch.extensions();
+
+   // RFC 8446 4.2.9
+   //    [With PSK with (EC)DHE key establishment], the client and server MUST
+   //    supply "key_share" values [...].
+   //
+   // Note: We currently do not support PSK without (EC)DHE, hence, we can
+   //       assume that those extensions are available.
+   BOTAN_ASSERT_NOMSG(exts.has<Supported_Groups>() && exts.has<Key_Share>());
    const auto& supported_by_client = exts.get<Supported_Groups>()->groups();
    const auto& offered_by_client = exts.get<Key_Share>()->offered_groups();
    const auto selected_group = policy.choose_key_exchange_group(supported_by_client, offered_by_client);
@@ -631,7 +639,6 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    const std::set<Extension_Code> allowed =
       {
       Extension_Code::KeyShare,
-      Extension_Code::PskKeyExchangeModes,
       Extension_Code::SupportedVersions,
       Extension_Code::PresharedKey,
       };

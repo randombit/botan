@@ -26,6 +26,7 @@ class BOTAN_TEST_API Handshake_State_13_Base
    {
    public:
       bool has_client_hello() const { return m_client_hello.has_value(); }
+      bool has_server_hello() const { return m_server_hello.has_value(); }
       bool has_server_certificate_chain() const { return m_server_certificate.has_value(); }
       bool has_client_certificate_chain() const { return m_client_certificate.has_value(); }
       bool has_hello_retry_request() const { return m_hello_retry_request.has_value(); }

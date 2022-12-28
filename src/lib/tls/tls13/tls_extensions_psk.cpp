@@ -25,30 +25,22 @@ namespace {
 
 struct Client_PSK
    {
-   std::vector<uint8_t> identity;
+   Ticket ticket;
    std::vector<uint8_t> binder;
-   uint32_t             obfuscated_ticket_age;
 
-   std::string hash_algorithm;
+   // Clients set up associated cipher states for PSKs
+   // Servers leave this as nullptr
    std::unique_ptr<Cipher_State> cipher_state;
    };
 
 struct Server_PSK
    {
    uint16_t selected_identity;
-   };
 
-// RFC 8446 4.2.11.1
-//    The "obfuscated_ticket_age" field of each PskIdentity contains an
-//    obfuscated version of the ticket age formed by taking the age in
-//    milliseconds and adding the "ticket_age_add" value that was included with
-//    the ticket, modulo 2^32.
-uint32_t obfuscate_ticket_age(std::chrono::milliseconds ticket_age, uint32_t ticket_age_add)
-   {
-   const uint64_t age = ticket_age.count();
-   const uint64_t add = ticket_age_add;
-   return static_cast<uint32_t>(age + add);
-   }
+   // Servers store the Session to resume from the selected PSK
+   // Clients leave this as std::nullopt
+   std::optional<Session> session_to_resume;
+   };
 
 }  // namespace
 
@@ -72,7 +64,13 @@ PSK::PSK(TLS_Data_Reader& reader,
       if(extension_size != 2)
          throw TLS_Exception(Alert::DecodeError, "Server provided a malformed PSK extension");
 
-      m_impl = std::make_unique<PSK_Internal>(Server_PSK{reader.get_uint16_t()});
+      m_impl =
+         std::make_unique<PSK_Internal>(
+            Server_PSK
+               {
+               .selected_identity = reader.get_uint16_t(),
+               .session_to_resume = std::nullopt
+               });
       }
    else if(message_type == Handshake_Type::ClientHello)
       {
@@ -83,9 +81,20 @@ PSK::PSK(TLS_Data_Reader& reader,
 
       while(reader.has_remaining() && (reader.read_so_far() - identities_offset) < identities_length)
          {
-         auto& psk = psks.emplace_back();
-         psk.identity = reader.get_tls_length_value(2);
-         psk.obfuscated_ticket_age = reader.get_uint32_t();
+         auto identity = Opaque_Session_Handle(reader.get_tls_length_value(2));
+         const auto obfuscated_ticket_age = reader.get_uint32_t();
+
+         psks.emplace_back(
+            Client_PSK{
+               .ticket = Ticket(std::move(identity), obfuscated_ticket_age),
+               .binder = {},
+               .cipher_state = nullptr
+            });
+         }
+
+      if(psks.empty())
+         {
+         throw TLS_Exception(Alert::DecodeError, "Empty PSK list");
          }
 
       if(reader.read_so_far() - identities_offset != identities_length)
@@ -96,11 +105,16 @@ PSK::PSK(TLS_Data_Reader& reader,
       const auto binders_length = reader.get_uint16_t();
       const auto binders_offset = reader.read_so_far();
 
+      if(binders_length == 0)
+         {
+         throw TLS_Exception(Alert::DecodeError, "Empty PSK binders list");
+         }
+
       for(auto& psk : psks)
          {
          if(!reader.has_remaining() || reader.read_so_far() - binders_offset >= binders_length)
             {
-            throw TLS_Exception(Alert::DecodeError, "Not enough PSK binders");
+            throw TLS_Exception(Alert::IllegalParameter, "Not enough PSK binders");
             }
 
          psk.binder = reader.get_tls_length_value(1);
@@ -108,7 +122,7 @@ PSK::PSK(TLS_Data_Reader& reader,
 
       if(reader.read_so_far() - binders_offset != binders_length)
          {
-         throw TLS_Exception(Alert::DecodeError, "Inconsistent PSK binders list");
+         throw TLS_Exception(Alert::IllegalParameter, "Too many PSK binders");
          }
 
       m_impl = std::make_unique<PSK_Internal>(std::move(psks));
@@ -122,25 +136,6 @@ PSK::PSK(TLS_Data_Reader& reader,
 
 PSK::PSK(const Session_with_Handle& session_to_resume, Callbacks& callbacks)
    {
-   std::vector<Client_PSK> psks;
-   auto& cpsk = psks.emplace_back();
-
-   cpsk.identity = session_to_resume.handle.opaque_handle().get();
-
-   const auto age =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-         callbacks.tls_current_timestamp() - session_to_resume.session.start_time());
-
-   cpsk.obfuscated_ticket_age =
-      obfuscate_ticket_age(age, session_to_resume.session.session_age_add());
-
-   auto psk = session_to_resume.session.master_secret();
-   cpsk.hash_algorithm = session_to_resume.session.ciphersuite().prf_algo();
-   cpsk.cipher_state = Cipher_State::init_with_psk(Connection_Side::Client,
-                                                   Cipher_State::PSK_Type::Resumption,
-                                                   std::move(psk),
-                                                   session_to_resume.session.ciphersuite());
-
    // RFC 8446 4.2.11.2
    //    Each entry in the binders list is computed as an HMAC over a transcript
    //    hash (see Section 4.4.1) containing a partial ClientHello up to and
@@ -154,10 +149,35 @@ PSK::PSK(const Session_with_Handle& session_to_resume, Callbacks& callbacks)
    // Hence, we fill the binders with dummy values of the correct length and use
    // `Client_Hello_13::truncate()` to split them off before calculating the
    // transcript hash that underpins the PSK binders. S.a. `calculate_binders()`
-   const auto binder_length = HashFunction::create_or_throw(cpsk.hash_algorithm)->output_length();
-   cpsk.binder = std::vector<uint8_t>(binder_length);
+   const auto cipher = session_to_resume.session.ciphersuite();
+   const auto binder_length =
+      HashFunction::create_or_throw(cipher.prf_algo())->output_length();
 
-   m_impl = std::make_unique<PSK_Internal>(std::move(psks));
+   // TODO: This unneccesarily creates a copy of the master secret. Maybe we want
+   //       to provide something like Session::extract_master_secret()?
+   auto psk = session_to_resume.session.master_secret();
+
+   // TODO: Currently this does not provide actual millisecond resolution.
+   //       This might become a problem when "early data" is implemented and we
+   //       deal with servers that employ a strict "freshness" criteria on the
+   //       ticket's age.
+   const auto age =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+         callbacks.tls_current_timestamp() - session_to_resume.session.start_time());
+
+   std::vector<Client_PSK> cpsk;
+   cpsk.emplace_back(Client_PSK
+      {
+      .ticket = Ticket(session_to_resume.handle.opaque_handle(), age,
+                       session_to_resume.session.session_age_add()),
+      .binder = std::vector<uint8_t>(binder_length),
+      .cipher_state = Cipher_State::init_with_psk(Connection_Side::Client,
+                                                   Cipher_State::PSK_Type::Resumption,
+                                                   std::move(psk),
+                                                   cipher)
+      });
+
+   m_impl = std::make_unique<PSK_Internal>(std::move(cpsk));
    }
 
 
@@ -195,6 +215,9 @@ std::unique_ptr<Cipher_State> PSK::select_cipher_state(const PSK& server_psk, co
    auto cipher_state = std::exchange(ids[id].cipher_state, nullptr);
    BOTAN_ASSERT_NONNULL(cipher_state);
 
+   // destroy cipher states and PSKs that were not selected by the server
+   ids.clear();
+
    // RFC 8446 4.2.11
    //    Clients MUST verify that [...] the server selected a cipher suite
    //    indicating a Hash associated with the PSK [...].  If these values
@@ -204,9 +227,6 @@ std::unique_ptr<Cipher_State> PSK::select_cipher_state(const PSK& server_psk, co
       {
       throw TLS_Exception(Alert::IllegalParameter, "PSK and ciphersuite selected by server are not compatible");
       }
-
-   // destroy cipher states and PSKs that were not selected by the server
-   ids.clear();
 
    return cipher_state;
    }
@@ -218,7 +238,10 @@ void PSK::filter(const Ciphersuite& cipher)
    auto& psks = std::get<std::vector<Client_PSK>>(m_impl->psk);
 
    const auto r = std::remove_if(psks.begin(), psks.end(), [&](const auto& psk)
-      { return psk.hash_algorithm != cipher.prf_algo(); });
+      {
+      BOTAN_ASSERT_NONNULL(psk.cipher_state);
+      return !psk.cipher_state->is_compatible_with(cipher);
+      });
    psks.erase(r, psks.end());
    }
 
@@ -244,11 +267,13 @@ std::vector<uint8_t> PSK::serialize(Connection_Side side) const
          std::vector<uint8_t> binders;
          for(const auto& psk : psks)
             {
-            append_tls_length_value(identities, psk.identity, 2);
-            identities.push_back(get_byte<0>(psk.obfuscated_ticket_age));
-            identities.push_back(get_byte<1>(psk.obfuscated_ticket_age));
-            identities.push_back(get_byte<2>(psk.obfuscated_ticket_age));
-            identities.push_back(get_byte<3>(psk.obfuscated_ticket_age));
+            append_tls_length_value(identities, psk.ticket.identity().get(), 2);
+
+            const auto obfuscated_ticket_age = psk.ticket.obfuscated_age();
+            identities.push_back(get_byte<0>(obfuscated_ticket_age));
+            identities.push_back(get_byte<1>(obfuscated_ticket_age));
+            identities.push_back(get_byte<2>(obfuscated_ticket_age));
+            identities.push_back(get_byte<3>(obfuscated_ticket_age));
 
             append_tls_length_value(binders, psk.binder, 1);
             }
@@ -269,8 +294,8 @@ void PSK::calculate_binders(const Transcript_Hash_State& truncated_transcript_ha
    for(auto& psk : std::get<std::vector<Client_PSK>>(m_impl->psk))
       {
       auto tth = truncated_transcript_hash.clone();
-      tth.set_algorithm(psk.hash_algorithm);
       BOTAN_ASSERT_NONNULL(psk.cipher_state);
+      tth.set_algorithm(psk.cipher_state->hash_algorithm());
       psk.binder = psk.cipher_state->psk_binder_mac(tth.truncated());
       }
    }

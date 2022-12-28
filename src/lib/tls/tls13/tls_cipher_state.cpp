@@ -332,12 +332,18 @@ bool Cipher_State::can_decrypt_application_traffic() const
    return !m_read_key.empty() && !m_read_iv.empty();
    }
 
+std::string Cipher_State::hash_algorithm() const
+   {
+   BOTAN_ASSERT_NONNULL(m_hash);
+   return m_hash->name();
+   }
+
 bool Cipher_State::is_compatible_with(const Ciphersuite& cipher) const
    {
    if(!cipher.usable_in_version(Protocol_Version::TLS_V13))
       return false;
 
-   if(m_hash && m_hash->name() != cipher.prf_algo())
+   if(hash_algorithm() != cipher.prf_algo())
       return false;
 
    BOTAN_ASSERT_NOMSG((m_encrypt == nullptr) == (m_decrypt == nullptr));

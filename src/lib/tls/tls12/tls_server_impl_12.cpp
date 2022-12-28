@@ -485,6 +485,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
                        policy(),
                        pending_state.client_hello());
 
+
    m_next_protocol = "";
    if(pending_state.client_hello()->supports_alpn())
       {

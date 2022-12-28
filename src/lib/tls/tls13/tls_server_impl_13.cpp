@@ -116,20 +116,73 @@ void Server_Impl_13::downgrade()
    m_transitions.set_expected_next({});
    }
 
-void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_hello)
+void Server_Impl_13::maybe_handle_compatibility_mode()
+   {
+   BOTAN_ASSERT_NOMSG(m_handshake_state.has_client_hello());
+   BOTAN_ASSERT_NOMSG(m_handshake_state.has_hello_retry_request() || m_handshake_state.has_server_hello());
+
+   // RFC 8446 Appendix D.4  (Middlebox Compatibility Mode)
+   //    The server sends a dummy change_cipher_spec record immediately after
+   //    its first handshake message. This may either be after a ServerHello or
+   //    a HelloRetryRequest.
+   //
+   //    This "compatibility mode" is partially negotiated: the client can opt
+   //    to provide a session ID or not, and the server has to echo it. Either
+   //    side can send change_cipher_spec at any time during the handshake, as
+   //    they must be ignored by the peer, but if the client sends a non-empty
+   //    session ID, the server MUST send the change_cipher_spec as described
+   //    [above].
+   //
+   // Technically, the usage of compatibility mode is fully up to the client
+   // sending a non-empty session ID. Nevertheless, when the policy requests
+   // it we send a CCS regardless. Note that this is perfectly legal and also
+   // satisfies some BoGo tests that expect this behaviour.
+   //
+   // Send a CCS immediately after the _first_ handshake message. I.e. either
+   // after Hello Retry Request (exclusively) or after a Server Hello that was
+   // not preseded by a Hello Retry Request.
+   const bool just_after_first_handshake_message =
+      m_handshake_state.has_hello_retry_request() ^ m_handshake_state.has_server_hello();
+   const bool client_requested_compatibility_mode =
+      !m_handshake_state.client_hello().session_id().empty();
+
+   if(just_after_first_handshake_message &&
+         (policy().tls_13_middlebox_compatibility_mode() ||
+          client_requested_compatibility_mode))
+      {
+      send_dummy_change_cipher_spec();
+      }
+   }
+
+void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello)
    {
    const auto& client_hello = m_handshake_state.client_hello();
    const auto& exts = client_hello.extensions();
 
-   const auto cipher = Ciphersuite::by_id(server_hello.ciphersuite());
-   m_transcript_hash.set_algorithm(cipher->prf_algo());
+   const auto cipher_opt = Ciphersuite::by_id(server_hello.ciphersuite());
+   BOTAN_ASSERT_NOMSG(cipher_opt.has_value());
+   const auto& cipher = cipher_opt.value();
+   m_transcript_hash.set_algorithm(cipher.prf_algo());
 
-   const auto my_keyshare = server_hello.extensions().get<Key_Share>();
-   auto shared_secret = my_keyshare->exchange(*exts.get<Key_Share>(), policy(), callbacks(), rng());
-   my_keyshare->erase();
+   // This sends the server_hello to the peer.
+   // NOTE: the server_hello variable is moved into the handshake state. Later
+   //       references to the Server Hello will need to consult the handshake
+   //       state object!
+   send_handshake_message(m_handshake_state.sending(std::move(server_hello)));
+   maybe_handle_compatibility_mode();
 
-   m_cipher_state = Cipher_State::init_with_server_hello(m_side, std::move(shared_secret), cipher.value(),
-                    m_transcript_hash.current());
+   // Setup encryption for all the remaining handshake messages
+   m_cipher_state = [&]
+      {
+      // Currently, PSK without DHE is not implemented...
+      const auto my_keyshare = m_handshake_state.server_hello().extensions().get<Key_Share>();
+      BOTAN_ASSERT_NONNULL(my_keyshare);
+      auto shared_secret = my_keyshare->exchange(*exts.get<Key_Share>(), policy(), callbacks(), rng());
+      my_keyshare->erase();
+
+      return Cipher_State::init_with_server_hello(m_side, std::move(shared_secret), cipher,
+                                                  m_transcript_hash.current());
+      }();
 
    auto flight = aggregate_handshake_messages();
    flight
@@ -147,18 +200,6 @@ void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_
                                                                       policy()))
       {
       flight.add(m_handshake_state.sending(std::move(certificate_request.value())));
-
-      // RFC 8446 4.4.2
-      //    The client MUST send a Certificate message if and only if the server
-      //    has requested client authentication via a CertificateRequest message
-      //    [...]. If the server requests client authentication but no
-      //    suitable certificate is available, the client MUST send a Certificate
-      //    message containing no certificates [...].
-      m_transitions.set_expected_next(Handshake_Type::Certificate);
-      }
-   else
-      {
-      m_transitions.set_expected_next(Handshake_Type::Finished);
       }
 
    flight
@@ -201,12 +242,30 @@ void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_
    flight.send();
 
    m_cipher_state->advance_with_server_finished(m_transcript_hash.current());
+
+   if(m_handshake_state.has_certificate_request())
+      {
+      // RFC 8446 4.4.2
+      //    The client MUST send a Certificate message if and only if the server
+      //    has requested client authentication via a CertificateRequest message
+      //    [...]. If the server requests client authentication but no
+      //    suitable certificate is available, the client MUST send a Certificate
+      //    message containing no certificates [...].
+      m_transitions.set_expected_next(Handshake_Type::Certificate);
+      }
+   else
+      {
+      m_transitions.set_expected_next(Handshake_Type::Finished);
+      }
    }
 
-void Server_Impl_13::handle_reply_to_client_hello(const Hello_Retry_Request& hello_retry_request)
+void Server_Impl_13::handle_reply_to_client_hello(Hello_Retry_Request hello_retry_request)
    {
    auto cipher = Ciphersuite::by_id(hello_retry_request.ciphersuite());
    BOTAN_ASSERT_NOMSG(cipher.has_value());  // should work, since we chose that suite
+
+   send_handshake_message(m_handshake_state.sending(std::move(hello_retry_request)));
+   maybe_handle_compatibility_mode();
 
    m_transcript_hash = Transcript_Hash_State::recreate_after_hello_retry_request(cipher->prf_algo(), m_transcript_hash);
 
@@ -291,34 +350,13 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello)
       }
 
    callbacks().tls_examine_extensions(exts, Connection_Side::Client, client_hello.type());
-   const auto sh_or_hrr = m_handshake_state.sending(Server_Hello_13::create(
-      client_hello, is_initial_client_hello, rng(), policy(), callbacks()));
-   send_handshake_message(sh_or_hrr);
-
-   // RFC 8446 Appendix D.4  (Middlebox Compatibility Mode)
-   //    The server sends a dummy change_cipher_spec record immediately after
-   //    its first handshake message. This may either be after a ServerHello or
-   //    a HelloRetryRequest.
-   //
-   //    This "compatibility mode" is partially negotiated: the client can opt
-   //    to provide a session ID or not, and the server has to echo it. Either
-   //    side can send change_cipher_spec at any time during the handshake, as
-   //    they must be ignored by the peer, but if the client sends a non-empty
-   //    session ID, the server MUST send the change_cipher_spec as described
-   //    [above].
-   //
-   // Technically, the usage of compatibility mode is fully up to the client
-   // sending a non-empty session ID. Nevertheless, when the policy requests
-   // it we send a CCS regardless. Note that this is perfectly legal and also
-   // satisfies some BoGo tests that expect this behaviour.
-   if(is_initial_client_hello &&
-         (policy().tls_13_middlebox_compatibility_mode() ||
-          !client_hello.session_id().empty()))
-      {
-      send_dummy_change_cipher_spec();
-      }
-
-   std::visit([this](auto msg) { handle_reply_to_client_hello(msg); }, sh_or_hrr);
+   std::visit([this](auto msg) { handle_reply_to_client_hello(std::move(msg)); },
+              Server_Hello_13::create(
+                  client_hello,
+                  is_initial_client_hello,
+                  rng(),
+                  policy(),
+                  callbacks()));
    }
 
 void Server_Impl_13::handle(const Certificate_13& certificate_msg)

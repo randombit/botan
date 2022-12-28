@@ -214,6 +214,11 @@ class BOTAN_TEST_API Cipher_State
       bool can_decrypt_application_traffic() const;
 
       /**
+       * The name of the hash algorithm used for the KDF in this cipher suite
+       */
+      std::string hash_algorithm() const;
+
+      /**
        * @returns  true if the selected cipher primitives are compatible with
        *           the \p cipher suite.
        *

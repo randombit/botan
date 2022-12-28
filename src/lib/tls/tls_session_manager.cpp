@@ -1,7 +1,7 @@
 /**
- * TLS Session Manager
- * (C) 2011 Jack Lloyd
- *     2023 René Meusel - Rohde & Schwarz Cybersecurity
+ * TLS Session Manger base class implementations
+ * (C) 2011-2023 Jack Lloyd
+ *     2022-2023 René Meusel - Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */

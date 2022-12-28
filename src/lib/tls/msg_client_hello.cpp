@@ -654,6 +654,16 @@ Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data)
          throw TLS_Exception(Alert::MissingExtension,
                              "Client Hello offered a PSK without a psk_key_exchange_modes extension");
          }
+
+      // RFC 8446 4.2.11
+      //     The "pre_shared_key" extension MUST be the last extension in the
+      //     ClientHello [...]. Servers MUST check that it is the last extension
+      //     and otherwise fail the handshake with an "illegal_parameter" alert.
+      if(exts.all().back()->type() != Extension_Code::PresharedKey)
+         {
+         throw TLS_Exception(Alert::IllegalParameter,
+                             "PSK extension was not at the very end of the Client Hello");
+         }
       }
 
    // RFC 8446 9.2
@@ -826,20 +836,33 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
          m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
 
-   // TODO: Some extensions require a certain order or pose other assumptions.
-   //       We should check those after the user was allowed to make changes to
-   //       the extensions.
-   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
-
-   // RFC 8446 4.2.11
-   //    The "pre_shared_key" extension MUST be the last extension in the
-   //    ClientHello (this facilitates implementation [...]).
-   //
-   // The PSK extension takes the partial transcript hash into account. Passing
-   // into Callbacks::tls_modify_extensions() does not make sense therefore.
    if(session.has_value())
       {
-      m_data->extensions.add(new PSK(session.value(), cb));
+      // RFC 8446 4.6.1
+      //    Clients MUST only resume if the new SNI value is valid for the
+      //    server certificate presented in the original session and SHOULD only
+      //    resume if the SNI value matches the one used in the original session.
+      //
+      // If the provided session posesses a different host name we don't attempt
+      // a resumption. As a result, a normal handshake will be performed.
+      if(session->session.server_info().empty() || session->session.server_info().hostname() == hostname)
+         {
+         m_data->extensions.add(new PSK(session.value(), cb));
+         }
+      }
+
+   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
+
+   if(m_data->extensions.has<PSK>())
+      {
+      // RFC 8446 4.2.11
+      //    The "pre_shared_key" extension MUST be the last extension in the
+      //    ClientHello (this facilitates implementation [...]).
+      if(m_data->extensions.all().back()->type() != Extension_Code::PresharedKey)
+         {
+         throw TLS_Exception(Alert::InternalError,
+                             "Application modified extensions of Client Hello, PSK is not last anymore");
+         }
       calculate_psk_binders({});
       }
    }
@@ -954,7 +977,7 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch)
          // if(oldext == Padding::static_type())
          //    continue;
 
-         throw TLS_Exception(Alert::MissingExtension, "Extension removed in updated Client Hello");
+         throw TLS_Exception(Alert::IllegalParameter, "Extension removed in updated Client Hello");
          }
       }
 
