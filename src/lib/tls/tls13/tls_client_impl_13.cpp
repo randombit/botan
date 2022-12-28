@@ -504,7 +504,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    m_transitions.set_expected_next(Handshake_Type::Finished);
    }
 
-void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedMessages& flight)
+void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHandshakeMessages& flight)
    {
    BOTAN_ASSERT_NOMSG(m_handshake_state.has_certificate_request());
    const auto& cert_request = m_handshake_state.certificate_request();

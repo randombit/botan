@@ -235,32 +235,40 @@ void Channel_Impl_13::handle(const Key_Update& key_update)
    }
 
 
-Channel_Impl_13::AggregatedMessages::AggregatedMessages(Channel_Impl_13& channel,
-                                                        Handshake_Layer& handshake_layer,
-                                                        Transcript_Hash_State& transcript_hash)
+Channel_Impl_13::AggregatedMessages::AggregatedMessages(
+                     Channel_Impl_13& channel,
+                     Handshake_Layer& handshake_layer)
    : m_channel(channel)
-   , m_handshake_layer(handshake_layer)
-   , m_transcript_hash(transcript_hash)
-   {}
+   , m_handshake_layer(handshake_layer) {}
 
-Channel_Impl_13::AggregatedMessages&
-Channel_Impl_13::AggregatedMessages::add(const Handshake_Message_13_Ref message)
+Channel_Impl_13::AggregatedHandshakeMessages::AggregatedHandshakeMessages(
+                     Channel_Impl_13& channel,
+                     Handshake_Layer& handshake_layer,
+                     Transcript_Hash_State& transcript_hash)
+   : AggregatedMessages(channel, handshake_layer)
+   , m_transcript_hash(transcript_hash) {}
+
+Channel_Impl_13::AggregatedHandshakeMessages&
+Channel_Impl_13::AggregatedHandshakeMessages::add(const Handshake_Message_13_Ref message)
    {
    std::visit([&](const auto msg) { m_channel.callbacks().tls_inspect_handshake_msg(msg.get()); }, message);
    m_message_buffer += m_handshake_layer.prepare_message(message, m_transcript_hash);
    return *this;
    }
 
-std::vector<uint8_t> Channel_Impl_13::AggregatedMessages::send()
+Channel_Impl_13::AggregatedPostHandshakeMessages&
+Channel_Impl_13::AggregatedPostHandshakeMessages::add(Post_Handshake_Message_13 message)
    {
-   BOTAN_STATE_CHECK(!m_message_buffer.empty());
-   m_channel.send_record(Record_Type::Handshake, m_message_buffer);
-   return std::exchange(m_message_buffer, {});
+   std::visit([&](const auto& msg) { m_channel.callbacks().tls_inspect_handshake_msg(msg); }, message);
+   m_message_buffer += m_handshake_layer.prepare_post_handshake_message(message);
+   return *this;
    }
 
-void Channel_Impl_13::send_post_handshake_message(const Post_Handshake_Message_13 message)
+std::vector<uint8_t> Channel_Impl_13::AggregatedMessages::send()
    {
-   send_record(Record_Type::Handshake, m_handshake_layer.prepare_post_handshake_message(message));
+   BOTAN_STATE_CHECK(contains_messages());
+   m_channel.send_record(Record_Type::Handshake, m_message_buffer);
+   return std::exchange(m_message_buffer, {});
    }
 
 void Channel_Impl_13::send_dummy_change_cipher_spec()

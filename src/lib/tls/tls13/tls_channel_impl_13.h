@@ -33,8 +33,7 @@ class Channel_Impl_13 : public Channel_Impl
          {
          public:
             AggregatedMessages(Channel_Impl_13& channel,
-                               Handshake_Layer& handshake_layer,
-                               Transcript_Hash_State& transcript_hash);
+                               Handshake_Layer& handshake_layer);
 
             AggregatedMessages(const AggregatedMessages&) = delete;
             AggregatedMessages& operator=(const AggregatedMessages&) = delete;
@@ -44,13 +43,6 @@ class Channel_Impl_13 : public Channel_Impl
             ~AggregatedMessages() = default;
 
             /**
-             * Adds a single handshake message to the send buffer. Note that this
-             * updates the handshake transcript hash regardless of sending the
-             * message.
-             */
-            AggregatedMessages& add(const Handshake_Message_13_Ref message);
-
-            /**
              * Send the messages aggregated in the message buffer. The buffer
              * is returned if the sender needs to also handle it somehow.
              * Most notable use: book keeping for a potential protocol downgrade
@@ -58,12 +50,39 @@ class Channel_Impl_13 : public Channel_Impl
              */
             std::vector<uint8_t> send();
 
-         private:
+            bool contains_messages() const { return !m_message_buffer.empty(); }
+
+         protected:
             std::vector<uint8_t> m_message_buffer;
 
-            Channel_Impl_13&       m_channel;
-            Handshake_Layer&       m_handshake_layer;
+            Channel_Impl_13& m_channel;
+            Handshake_Layer& m_handshake_layer;
+         };
+
+      class AggregatedHandshakeMessages : public AggregatedMessages
+         {
+         public:
+            AggregatedHandshakeMessages(Channel_Impl_13& channel,
+                                        Handshake_Layer& handshake_layer,
+                                        Transcript_Hash_State& transcript_hash);
+
+            /**
+             * Adds a single handshake message to the send buffer. Note that this
+             * updates the handshake transcript hash regardless of sending the
+             * message.
+             */
+            AggregatedHandshakeMessages& add(const Handshake_Message_13_Ref message);
+
+         private:
             Transcript_Hash_State& m_transcript_hash;
+         };
+
+      class AggregatedPostHandshakeMessages : public AggregatedMessages
+         {
+         public:
+            using AggregatedMessages::AggregatedMessages;
+
+            AggregatedPostHandshakeMessages& add(Post_Handshake_Message_13 message);
          };
 
    public:
@@ -209,12 +228,23 @@ class Channel_Impl_13 : public Channel_Impl
          return send_handshake_message(generalize_to<Handshake_Message_13_Ref>(message));
          }
 
-      void send_post_handshake_message(const Post_Handshake_Message_13 message);
+      std::vector<uint8_t> send_post_handshake_message(Post_Handshake_Message_13 message)
+         {
+         return aggregate_post_handshake_messages()
+                   .add(std::move(message))
+                   .send();
+         }
+
       void send_dummy_change_cipher_spec();
 
-      AggregatedMessages aggregate_handshake_messages()
+      AggregatedHandshakeMessages aggregate_handshake_messages()
          {
-         return AggregatedMessages(*this, m_handshake_layer, m_transcript_hash);
+         return AggregatedHandshakeMessages(*this, m_handshake_layer, m_transcript_hash);
+         }
+
+      AggregatedPostHandshakeMessages aggregate_post_handshake_messages()
+         {
+         return AggregatedPostHandshakeMessages(*this, m_handshake_layer);
          }
 
       Callbacks& callbacks() const { return m_callbacks; }
