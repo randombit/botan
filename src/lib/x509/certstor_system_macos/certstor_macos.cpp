@@ -266,10 +266,16 @@ class Certificate_Store_MacOS_Impl
          m_system_chain(nullptr),
          m_keychains(nullptr)
          {
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED
+         // macOS 12.0 deprecates 'Custom keychain management', though the API still works.
+         // Ideas for a replacement can be found in the discussion of GH #3122:
+         //   https://github.com/randombit/botan/pull/3122
          check_success(SecKeychainOpen(system_roots, &m_system_roots.get()),
                        "open system root certificates");
          check_success(SecKeychainOpen(system_keychain, &m_system_chain.get()),
                        "open system keychain");
+BOTAN_DIAGNOSTIC_POP
          check_notnull(m_system_roots, "open system root certificate chain");
          check_notnull(m_system_chain, "open system certificate chain");
 
