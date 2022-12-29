@@ -53,7 +53,6 @@ enum class Handshake_Extension_Type : uint16_t {
    TLSEXT_SERVER_NAME_INDICATION    = 0,
    TLSEXT_CERT_STATUS_REQUEST       = 5,
 
-   TLSEXT_CERTIFICATE_TYPES         = 9,
    TLSEXT_SUPPORTED_GROUPS          = 10,
    TLSEXT_EC_POINT_FORMATS          = 11,
    TLSEXT_SIGNATURE_ALGORITHMS      = 13,
