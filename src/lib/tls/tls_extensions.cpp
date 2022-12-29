@@ -22,77 +22,77 @@ namespace Botan::TLS {
 namespace {
 
 std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
-                                          Handshake_Extension_Type code,
+                                          Extension_Code code,
                                           const uint16_t size,
                                           const Connection_Side from,
                                           const Handshake_Type message_type)
    {
    switch(code)
       {
-      case Handshake_Extension_Type::TLSEXT_SERVER_NAME_INDICATION:
+      case Extension_Code::TLSEXT_SERVER_NAME_INDICATION:
          return std::make_unique<Server_Name_Indicator>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_SUPPORTED_GROUPS:
+      case Extension_Code::TLSEXT_SUPPORTED_GROUPS:
          return std::make_unique<Supported_Groups>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_CERT_STATUS_REQUEST:
+      case Extension_Code::TLSEXT_CERT_STATUS_REQUEST:
          return std::make_unique<Certificate_Status_Request>(reader, size, message_type, from);
 
-      case Handshake_Extension_Type::TLSEXT_EC_POINT_FORMATS:
+      case Extension_Code::TLSEXT_EC_POINT_FORMATS:
          return std::make_unique<Supported_Point_Formats>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_SAFE_RENEGOTIATION:
+      case Extension_Code::TLSEXT_SAFE_RENEGOTIATION:
          return std::make_unique<Renegotiation_Extension>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS:
+      case Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS:
          return std::make_unique<Signature_Algorithms>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_USE_SRTP:
+      case Extension_Code::TLSEXT_USE_SRTP:
          return std::make_unique<SRTP_Protection_Profiles>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_ALPN:
+      case Extension_Code::TLSEXT_ALPN:
          return std::make_unique<Application_Layer_Protocol_Notification>(reader, size, from);
 
-      case Handshake_Extension_Type::TLSEXT_EXTENDED_MASTER_SECRET:
+      case Extension_Code::TLSEXT_EXTENDED_MASTER_SECRET:
          return std::make_unique<Extended_Master_Secret>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_RECORD_SIZE_LIMIT:
+      case Extension_Code::TLSEXT_RECORD_SIZE_LIMIT:
          return std::make_unique<Record_Size_Limit>(reader, size, from);
 
-      case Handshake_Extension_Type::TLSEXT_ENCRYPT_THEN_MAC:
+      case Extension_Code::TLSEXT_ENCRYPT_THEN_MAC:
          return std::make_unique<Encrypt_then_MAC>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_SESSION_TICKET:
+      case Extension_Code::TLSEXT_SESSION_TICKET:
          return std::make_unique<Session_Ticket>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_SUPPORTED_VERSIONS:
+      case Extension_Code::TLSEXT_SUPPORTED_VERSIONS:
          return std::make_unique<Supported_Versions>(reader, size, from);
 
 #if defined(BOTAN_HAS_TLS_13)
-      case Handshake_Extension_Type::TLSEXT_PSK:
+      case Extension_Code::TLSEXT_PSK:
          return std::make_unique<PSK>(reader, size, message_type);
 
-      case Handshake_Extension_Type::TLSEXT_EARLY_DATA:
+      case Extension_Code::TLSEXT_EARLY_DATA:
          return std::make_unique<EarlyDataIndication>(reader, size, message_type);
 
-      case Handshake_Extension_Type::TLSEXT_COOKIE:
+      case Extension_Code::TLSEXT_COOKIE:
          return std::make_unique<Cookie>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_PSK_KEY_EXCHANGE_MODES:
+      case Extension_Code::TLSEXT_PSK_KEY_EXCHANGE_MODES:
          return std::make_unique<PSK_Key_Exchange_Modes>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_CERTIFICATE_AUTHORITIES:
+      case Extension_Code::TLSEXT_CERTIFICATE_AUTHORITIES:
          return std::make_unique<Certificate_Authorities>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS_CERT:
+      case Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS_CERT:
          return std::make_unique<Signature_Algorithms_Cert>(reader, size);
 
-      case Handshake_Extension_Type::TLSEXT_KEY_SHARE:
+      case Extension_Code::TLSEXT_KEY_SHARE:
          return std::make_unique<Key_Share>(reader, size, message_type);
 #endif
       }
 
-   return std::make_unique<Unknown_Extension>(static_cast<Handshake_Extension_Type>(code),
+   return std::make_unique<Unknown_Extension>(static_cast<Extension_Code>(code),
                                               reader, size);
    }
 
@@ -125,7 +125,7 @@ void Extensions::deserialize(TLS_Data_Reader& reader,
          const uint16_t extension_code = reader.get_uint16_t();
          const uint16_t extension_size = reader.get_uint16_t();
 
-         const auto type = static_cast<Handshake_Extension_Type>(extension_code);
+         const auto type = static_cast<Extension_Code>(extension_code);
 
          if(has(type))
             throw TLS_Exception(TLS::Alert::DECODE_ERROR,
@@ -136,12 +136,12 @@ void Extensions::deserialize(TLS_Data_Reader& reader,
       }
    }
 
-bool Extensions::contains_other_than(const std::set<Handshake_Extension_Type>& allowed_extensions,
+bool Extensions::contains_other_than(const std::set<Extension_Code>& allowed_extensions,
                                      const bool allow_unknown_extensions) const
    {
    const auto found = extension_types();
 
-   std::vector<Handshake_Extension_Type> diff;
+   std::vector<Extension_Code> diff;
    std::set_difference(found.cbegin(), found.end(),
                        allowed_extensions.cbegin(), allowed_extensions.cend(),
                        std::back_inserter(diff));
@@ -164,7 +164,7 @@ bool Extensions::contains_other_than(const std::set<Handshake_Extension_Type>& a
    return !diff.empty();
    }
 
-std::unique_ptr<Extension> Extensions::take(Handshake_Extension_Type type)
+std::unique_ptr<Extension> Extensions::take(Extension_Code type)
    {
    const auto i = std::find_if(m_extensions.begin(), m_extensions.end(),
                                [type](const auto &ext) {
@@ -215,9 +215,9 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const
    return buf;
    }
 
-std::set<Handshake_Extension_Type> Extensions::extension_types() const
+std::set<Extension_Code> Extensions::extension_types() const
    {
-   std::set<Handshake_Extension_Type> offers;
+   std::set<Extension_Code> offers;
    std::transform(m_extensions.cbegin(), m_extensions.cend(),
                   std::inserter(offers, offers.begin()), [] (const auto &ext) {
                      return ext->type();
@@ -225,7 +225,7 @@ std::set<Handshake_Extension_Type> Extensions::extension_types() const
    return offers;
    }
 
-Unknown_Extension::Unknown_Extension(Handshake_Extension_Type type,
+Unknown_Extension::Unknown_Extension(Extension_Code type,
                                      TLS_Data_Reader& reader,
                                      uint16_t extension_size) :
    m_type(type),

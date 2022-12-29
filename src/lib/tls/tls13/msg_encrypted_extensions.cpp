@@ -95,21 +95,21 @@ Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf)
    //
    // Note that we cannot encounter any extensions that we don't recognize here,
    // since only extensions we previously offered are allowed in EE.
-   const auto allowed_exts = std::set<Handshake_Extension_Type>
+   const auto allowed_exts = std::set<Extension_Code>
       {
       // Allowed extensions listed in RFC 8446 and implemented in Botan
-      Handshake_Extension_Type::TLSEXT_SERVER_NAME_INDICATION,
+      Extension_Code::TLSEXT_SERVER_NAME_INDICATION,
       // MAX_FRAGMENT_LENGTH
-      Handshake_Extension_Type::TLSEXT_SUPPORTED_GROUPS,
-      Handshake_Extension_Type::TLSEXT_USE_SRTP,
+      Extension_Code::TLSEXT_SUPPORTED_GROUPS,
+      Extension_Code::TLSEXT_USE_SRTP,
       // HEARTBEAT
-      Handshake_Extension_Type::TLSEXT_ALPN,
+      Extension_Code::TLSEXT_ALPN,
       // CLIENT_CERTIFICATE_TYPE
       // SERVER_CERTIFICATE_TYPE
       // EARLY_DATA
 
       // Allowed extensions not listed in RFC 8446 but acceptable as Botan implements them
-      Handshake_Extension_Type::TLSEXT_RECORD_SIZE_LIMIT,
+      Extension_Code::TLSEXT_RECORD_SIZE_LIMIT,
       };
    if(m_extensions.contains_implemented_extensions_other_than(allowed_exts))
       {

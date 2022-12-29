@@ -49,7 +49,7 @@ enum class PSK_Key_Exchange_Mode : uint8_t {
 class Policy;
 class TLS_Data_Reader;
 
-enum class Handshake_Extension_Type : uint16_t {
+enum class Extension_Code : uint16_t {
    TLSEXT_SERVER_NAME_INDICATION    = 0,
    TLSEXT_CERT_STATUS_REQUEST       = 5,
 
@@ -94,7 +94,7 @@ class BOTAN_UNSTABLE_API Extension
       /**
       * @return code number of the extension
       */
-      virtual Handshake_Extension_Type type() const = 0;
+      virtual Extension_Code type() const = 0;
 
       /**
       * @return serialized binary for the extension
@@ -120,10 +120,10 @@ class BOTAN_UNSTABLE_API Extension
 class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_SERVER_NAME_INDICATION; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_SERVER_NAME_INDICATION; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       explicit Server_Name_Indicator(const std::string& host_name) :
          m_sni_host_name(host_name) {}
@@ -147,10 +147,10 @@ class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension
 class BOTAN_UNSTABLE_API Renegotiation_Extension final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_SAFE_RENEGOTIATION; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_SAFE_RENEGOTIATION; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       Renegotiation_Extension() = default;
 
@@ -176,9 +176,9 @@ class BOTAN_UNSTABLE_API Renegotiation_Extension final : public Extension
 class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type() { return Handshake_Extension_Type::TLSEXT_ALPN; }
+      static Extension_Code static_type() { return Extension_Code::TLSEXT_ALPN; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       const std::vector<std::string>& protocols() const { return m_protocols; }
 
@@ -213,10 +213,10 @@ class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public 
 class BOTAN_UNSTABLE_API Session_Ticket final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_SESSION_TICKET; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_SESSION_TICKET; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       /**
       * @return contents of the session ticket
@@ -253,10 +253,10 @@ class BOTAN_UNSTABLE_API Session_Ticket final : public Extension
 class BOTAN_UNSTABLE_API Supported_Groups final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_SUPPORTED_GROUPS; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_SUPPORTED_GROUPS; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       const std::vector<Group_Params>& groups() const;
       std::vector<Group_Params> ec_groups() const;
@@ -289,10 +289,10 @@ class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension
          ANSIX962_COMPRESSED_CHAR2 = 2, // don't support these curves
       };
 
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_EC_POINT_FORMATS; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_EC_POINT_FORMATS; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -316,10 +316,10 @@ class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension
 class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       const std::vector<Signature_Scheme>& supported_schemes() const { return m_schemes; }
 
@@ -351,10 +351,10 @@ class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
 class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS_CERT; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS_CERT; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       const std::vector<Signature_Scheme>& supported_schemes() const { return m_schemes; }
 
@@ -379,10 +379,10 @@ class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
 class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_USE_SRTP; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_USE_SRTP; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       const std::vector<uint16_t>& profiles() const { return m_pp; }
 
@@ -405,10 +405,10 @@ class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension
 class BOTAN_UNSTABLE_API Extended_Master_Secret final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_EXTENDED_MASTER_SECRET; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_EXTENDED_MASTER_SECRET; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -425,10 +425,10 @@ class BOTAN_UNSTABLE_API Extended_Master_Secret final : public Extension
 class BOTAN_UNSTABLE_API Encrypt_then_MAC final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_ENCRYPT_THEN_MAC; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_ENCRYPT_THEN_MAC; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -447,10 +447,10 @@ class Certificate_Status_Request_Internal;
 class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_CERT_STATUS_REQUEST; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_CERT_STATUS_REQUEST; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -487,10 +487,10 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
 class BOTAN_UNSTABLE_API Supported_Versions final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_SUPPORTED_VERSIONS; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_SUPPORTED_VERSIONS; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -524,10 +524,10 @@ using Named_Group = Group_Params;
 class BOTAN_UNSTABLE_API Record_Size_Limit final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_RECORD_SIZE_LIMIT; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_RECORD_SIZE_LIMIT; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       explicit Record_Size_Limit(const uint16_t limit);
 
@@ -552,10 +552,10 @@ using Named_Group = Group_Params;
 class BOTAN_UNSTABLE_API Cookie final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_COOKIE; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_COOKIE; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -578,10 +578,10 @@ class BOTAN_UNSTABLE_API Cookie final : public Extension
 class BOTAN_UNSTABLE_API PSK_Key_Exchange_Modes final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_PSK_KEY_EXCHANGE_MODES; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_PSK_KEY_EXCHANGE_MODES; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -605,10 +605,10 @@ class BOTAN_UNSTABLE_API PSK_Key_Exchange_Modes final : public Extension
 class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_CERTIFICATE_AUTHORITIES; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_CERTIFICATE_AUTHORITIES; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -630,8 +630,8 @@ class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension
 class BOTAN_UNSTABLE_API PSK final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type() { return Handshake_Extension_Type::TLSEXT_PSK; }
-      Handshake_Extension_Type type() const override { return static_type(); }
+      static Extension_Code static_type() { return Extension_Code::TLSEXT_PSK; }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side side) const override;
 
@@ -674,10 +674,10 @@ class BOTAN_UNSTABLE_API PSK final : public Extension
 class BOTAN_UNSTABLE_API Key_Share final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_KEY_SHARE; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_KEY_SHARE; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -738,10 +738,10 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension
 class BOTAN_UNSTABLE_API EarlyDataIndication final : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return Handshake_Extension_Type::TLSEXT_EARLY_DATA; }
+      static Extension_Code static_type()
+         { return Extension_Code::TLSEXT_EARLY_DATA; }
 
-      Handshake_Extension_Type type() const override { return static_type(); }
+      Extension_Code type() const override { return static_type(); }
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override;
@@ -773,7 +773,7 @@ class BOTAN_UNSTABLE_API EarlyDataIndication final : public Extension
 class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
    {
    public:
-      Unknown_Extension(Handshake_Extension_Type type,
+      Unknown_Extension(Extension_Code type,
                         TLS_Data_Reader& reader,
                         uint16_t extension_size);
 
@@ -783,12 +783,12 @@ class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
 
       bool empty() const override { return false; }
 
-      Handshake_Extension_Type type() const override { return m_type; }
+      Extension_Code type() const override { return m_type; }
 
       bool is_implemented() const override { return false; }
 
    private:
-      Handshake_Extension_Type m_type;
+      Extension_Code m_type;
       std::vector<uint8_t> m_value;
    };
 
@@ -798,7 +798,7 @@ class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
 class BOTAN_UNSTABLE_API Extensions final
    {
    public:
-      std::set<Handshake_Extension_Type> extension_types() const;
+      std::set<Extension_Code> extension_types() const;
 
       template<typename T>
       T* get() const
@@ -812,7 +812,7 @@ class BOTAN_UNSTABLE_API Extensions final
          return get<T>() != nullptr;
          }
 
-      bool has(Handshake_Extension_Type type) const
+      bool has(Extension_Code type) const
          {
          return get(type) != nullptr;
          }
@@ -829,7 +829,7 @@ class BOTAN_UNSTABLE_API Extensions final
          add(std::unique_ptr<Extension>(extn));
          }
 
-      Extension* get(Handshake_Extension_Type type) const
+      Extension* get(Extension_Code type) const
          {
          const auto i = std::find_if(m_extensions.cbegin(), m_extensions.cend(),
                                      [type](const auto &ext) {
@@ -850,7 +850,7 @@ class BOTAN_UNSTABLE_API Extensions final
        * @param allow_unknown_extensions  if true, ignores unrecognized extensions
        * @returns true if this contains any extensions that are not contained in @p allowed_extensions.
        */
-      bool contains_other_than(const std::set<Handshake_Extension_Type>& allowed_extensions,
+      bool contains_other_than(const std::set<Extension_Code>& allowed_extensions,
                                const bool allow_unknown_extensions = false) const;
 
       /**
@@ -858,7 +858,7 @@ class BOTAN_UNSTABLE_API Extensions final
        * @returns true if this contains any extensions implemented by Botan that
        *          are not contained in @p allowed_extensions.
        */
-      bool contains_implemented_extensions_other_than(const std::set<Handshake_Extension_Type>& allowed_extensions) const
+      bool contains_implemented_extensions_other_than(const std::set<Extension_Code>& allowed_extensions) const
          {
          return contains_other_than(allowed_extensions, true);
          }
@@ -886,7 +886,7 @@ class BOTAN_UNSTABLE_API Extensions final
        * Take the extension with the given type out of the extensions list.
        * Returns a nullptr if the extension didn't exist.
        */
-      std::unique_ptr<Extension> take(Handshake_Extension_Type type);
+      std::unique_ptr<Extension> take(Extension_Code type);
 
       /**
       * Remove an extension from this extensions object, if it exists.
@@ -895,7 +895,7 @@ class BOTAN_UNSTABLE_API Extensions final
       *
       * Note: not used internally, might be used in Callbacks::tls_modify_extensions()
       */
-      bool remove_extension(Handshake_Extension_Type type)
+      bool remove_extension(Extension_Code type)
          {
          return take(type) != nullptr;
          }

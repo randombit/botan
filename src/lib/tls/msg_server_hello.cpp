@@ -223,7 +223,7 @@ uint16_t Server_Hello::ciphersuite() const
    return m_data->ciphersuite;
    }
 
-std::set<Handshake_Extension_Type> Server_Hello::extension_types() const
+std::set<Extension_Code> Server_Hello::extension_types() const
    {
    return m_data->extensions.extension_types();
    }
@@ -273,7 +273,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
       m_data->extensions.add(new Encrypt_then_MAC);
       }
 
-   if(c && c->ecc_ciphersuite() && client_hello.extension_types().count(Handshake_Extension_Type::TLSEXT_EC_POINT_FORMATS))
+   if(c && c->ecc_ciphersuite() && client_hello.extension_types().count(Extension_Code::TLSEXT_EC_POINT_FORMATS))
       {
       m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
@@ -353,7 +353,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
          }
       }
 
-   if(resumed_session.ciphersuite().ecc_ciphersuite() && client_hello.extension_types().count(Handshake_Extension_Type::TLSEXT_EC_POINT_FORMATS))
+   if(resumed_session.ciphersuite().ecc_ciphersuite() && client_hello.extension_types().count(Extension_Code::TLSEXT_EC_POINT_FORMATS))
       {
       m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
@@ -628,12 +628,12 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    //
    // Note that further validation dependent on the client hello is done in the
    // TLS client implementation.
-   const std::set<Handshake_Extension_Type> allowed =
+   const std::set<Extension_Code> allowed =
       {
-      Handshake_Extension_Type::TLSEXT_KEY_SHARE,
-      Handshake_Extension_Type::TLSEXT_PSK_KEY_EXCHANGE_MODES,
-      Handshake_Extension_Type::TLSEXT_SUPPORTED_VERSIONS,
-      Handshake_Extension_Type::TLSEXT_PSK,
+      Extension_Code::TLSEXT_KEY_SHARE,
+      Extension_Code::TLSEXT_PSK_KEY_EXCHANGE_MODES,
+      Extension_Code::TLSEXT_SUPPORTED_VERSIONS,
+      Extension_Code::TLSEXT_PSK,
       };
 
    // As the ServerHello shall only contain essential extensions, we don't give
@@ -668,11 +668,11 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Se
    //     -  supported_versions (see Section 4.2.1)
    //     -  cookie (see Section 4.2.2)
    //     -  key_share (see Section 4.2.8)
-   const std::set<Handshake_Extension_Type> allowed =
+   const std::set<Extension_Code> allowed =
       {
-      Handshake_Extension_Type::TLSEXT_COOKIE,
-      Handshake_Extension_Type::TLSEXT_SUPPORTED_VERSIONS,
-      Handshake_Extension_Type::TLSEXT_KEY_SHARE,
+      Extension_Code::TLSEXT_COOKIE,
+      Extension_Code::TLSEXT_SUPPORTED_VERSIONS,
+      Extension_Code::TLSEXT_KEY_SHARE,
       };
 
    // As the Hello Retry Request shall only contain essential extensions, we
