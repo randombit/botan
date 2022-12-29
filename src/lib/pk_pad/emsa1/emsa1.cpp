@@ -113,9 +113,7 @@ AlgorithmIdentifier EMSA1::config_for_x509(const std::string& algo_name,
    const OID oid = OID::from_string(algo_name + "/" + name());
 
    // for DSA, ECDSA, GOST parameters "SHALL" be empty
-   std::vector<uint8_t> parameters;
-
-   return AlgorithmIdentifier(oid, parameters);
+   return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
 }
