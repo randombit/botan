@@ -200,17 +200,41 @@ class BigInt_Unit_Tests final : public Test
             result.test_eq("input '" + vec.first + "'", n, vec.second);
             }
 
-         BigInt n = 33;
+         auto check_bigint_formatting = [&](const Botan::BigInt& n,
+                                            const std::string& dec,
+                                            const std::string& hex,
+                                            const std::string& neg_dec,
+                                            const std::string& neg_hex)
+            {
+            std::ostringstream oss;
+            oss << n;
+            result.test_eq("output decimal", oss.str(), dec);
 
-         std::ostringstream oss;
-         oss << n;
-         result.test_eq("output 33 dec", oss.str(), "33");
+            oss.str("");
+            oss << (-n);
+            result.test_eq("output negative decimal", oss.str(), neg_dec);
 
-         oss.str("");
-         oss << std::hex << n;
-         result.test_eq("output 33 hex", oss.str(), "0x21");
+            oss.str("");
+            oss << std::hex << n;
+            result.test_eq("output hex", oss.str(), hex);
 
-         result.test_throws("octal output not supported", [&]() { oss << std::oct << n; });
+            oss.str("");
+            oss << std::hex << (-n);
+            result.test_eq("output negative hex", oss.str(), neg_hex);
+            };
+
+         check_bigint_formatting(Botan::BigInt(33), "33", "0x21", "-33", "-0x21");
+         check_bigint_formatting(Botan::BigInt::from_s32(-33), "-33", "-0x21", "33", "0x21");
+         check_bigint_formatting(Botan::BigInt(255), "255", "0xFF", "-255", "-0xFF");
+         check_bigint_formatting(Botan::BigInt(0), "0", "0x00", "0", "0x00");
+         check_bigint_formatting(Botan::BigInt(5), "5", "0x05", "-5", "-0x05");
+
+         result.test_throws("octal output not supported", [&]()
+            {
+            Botan::BigInt n(5);
+            std::ostringstream oss;
+            oss << std::oct << n;
+            });
 
          return result;
          }

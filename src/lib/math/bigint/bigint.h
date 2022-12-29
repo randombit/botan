@@ -500,11 +500,22 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      /**
      * Convert this value to a decimal string.
      * Warning: decimal conversions are relatively slow
+     *
+     * If the integer is zero then "0" is returned.
+     * If the integer is negative then "-" is prefixed.
      */
      std::string to_dec_string() const;
 
      /**
      * Convert this value to a hexadecimal string.
+     *
+     * If the integer is negative then "-" is prefixed.
+     * Then a prefix of "0x" is added.
+     * Follows is a sequence of hexadecimal characters in uppercase.
+     *
+     * The number of hexadecimal characters is always an even number,
+     * with a zero prefix being included if necessary.
+     * For example encoding the integer "5" results in "0x05"
      */
      std::string to_hex_string() const;
 
