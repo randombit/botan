@@ -1060,6 +1060,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   "tls_verify_cert_chain",
                   "tls_verify_message"
                   });
+               result.require("certificate exists", ctx->certs_verified().size() > 0);
                result.require("correct certificate", ctx->certs_verified().front() == server_certificate());
                result.require("client is active", ctx->client.is_active());
 
