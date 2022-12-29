@@ -472,10 +472,10 @@ class RFC8448_Text_Policy : public Botan::TLS::Text_Policy
             Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA384,
             Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA512,
             Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA1,   // not actually supported
-            Botan::TLS::Signature_Scheme::DSA_SHA256,       // not actually supported
-            Botan::TLS::Signature_Scheme::DSA_SHA384,       // not actually supported
-            Botan::TLS::Signature_Scheme::DSA_SHA512,       // not actually supported
-            Botan::TLS::Signature_Scheme::DSA_SHA1          // not actually supported
+            Botan::TLS::Signature_Scheme(0x0402),           // DSA_SHA256, not actually supported
+            Botan::TLS::Signature_Scheme(0x0502),           // DSA_SHA384, not actually supported
+            Botan::TLS::Signature_Scheme(0x0602),           // DSA_SHA512, not actually supported
+            Botan::TLS::Signature_Scheme(0x0202),           // DSA_SHA1, not actually supported
             };
          }
    };

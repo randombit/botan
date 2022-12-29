@@ -49,12 +49,6 @@ enum Code : uint16_t {
 
    EDDSA_25519 = 0x0807,
    EDDSA_448   = 0x0808,  // not implemented
-
-   // not implemented
-   DSA_SHA1   = 0x0202,
-   DSA_SHA256 = 0x0402,
-   DSA_SHA384 = 0x0502,
-   DSA_SHA512 = 0x0602
 };
 
 public:

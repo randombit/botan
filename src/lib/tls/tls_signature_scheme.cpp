@@ -102,15 +102,6 @@ std::string Signature_Scheme::to_string() const noexcept
       case EDDSA_448:
          return "EDDSA_448";
 
-      case DSA_SHA1:
-         return "DSA_SHA1";
-      case DSA_SHA256:
-         return "DSA_SHA256";
-      case DSA_SHA384:
-         return "DSA_SHA384";
-      case DSA_SHA512:
-         return "DSA_SHA512";
-
       default:
          return "Unknown signature scheme: " + std::to_string(m_code);
       }
@@ -122,25 +113,21 @@ std::string Signature_Scheme::hash_function_name() const noexcept
       {
       case RSA_PKCS1_SHA1:
       case ECDSA_SHA1:
-      case DSA_SHA1:
          return "SHA-1";
 
       case ECDSA_SHA256:
       case RSA_PKCS1_SHA256:
       case RSA_PSS_SHA256:
-      case DSA_SHA256:
          return "SHA-256";
 
       case ECDSA_SHA384:
       case RSA_PKCS1_SHA384:
       case RSA_PSS_SHA384:
-      case DSA_SHA384:
          return "SHA-384";
 
       case ECDSA_SHA512:
       case RSA_PKCS1_SHA512:
       case RSA_PSS_SHA512:
-      case DSA_SHA512:
          return "SHA-512";
 
       case EDDSA_25519:
@@ -216,12 +203,6 @@ std::string Signature_Scheme::algorithm_name() const noexcept
       case EDDSA_448:
          return "Ed448";
 
-      case DSA_SHA1:
-      case DSA_SHA256:
-      case DSA_SHA384:
-      case DSA_SHA512:
-         return "DSA";
-
       default:
          return "Unknown algorithm";
       }
@@ -275,10 +256,6 @@ std::optional<Signature_Format> Signature_Scheme::format() const noexcept
       case ECDSA_SHA512:
       case EDDSA_25519:
       case EDDSA_448:
-      case DSA_SHA1:
-      case DSA_SHA256:
-      case DSA_SHA384:
-      case DSA_SHA512:
          return Signature_Format::DerSequence;
 
       default:
