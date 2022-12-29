@@ -997,7 +997,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                // For some reason, presumably checking compatibility, the RFC 8448 Client
                // Hello includes a (TLS 1.2) Session_Ticket extension. We don't normally add
                // this obsoleted extension in a TLS 1.3 client.
-               exts.add(new Botan::TLS::Session_Ticket());
+               exts.add(new Botan::TLS::Session_Ticket_Extension());
 
                add_renegotiation_extension(exts);
                sort_client_extensions(exts, side);
