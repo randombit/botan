@@ -121,9 +121,7 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_sm2_enc(rng));
 #endif
 
-#if defined(BOTAN_HAS_MCELIECE)
          results.push_back(ffi_test_mceliece(rng));
-#endif
 
 #if defined(BOTAN_HAS_ELGAMAL) && defined(BOTAN_HAS_EME_RAW)
          results.push_back(ffi_test_elgamal(rng));
@@ -2446,30 +2444,8 @@ class FFI_Unit_Tests final : public Test
          Test::Result result("FFI McEliece");
 
          botan_privkey_t priv;
-#if defined(BOTAN_HAS_MCELIECE)
-         if(TEST_FFI_OK(botan_privkey_create_mceliece, (&priv, rng, 2048, 50)))
-            {
-            botan_pubkey_t pub;
-            TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
-
-            ffi_test_pubkey_export(result, pub, priv, rng);
-
-            char namebuf[32] = { 0 };
-            size_t name_len = sizeof(namebuf);
-            if(TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf, &name_len)))
-               {
-               result.test_eq("algo name", std::string(namebuf), "McEliece");
-               }
-
-            // TODO test KEM
-
-            TEST_FFI_OK(botan_pubkey_destroy, (pub));
-            TEST_FFI_OK(botan_privkey_destroy, (priv));
-            }
-#else
          // Not included, test that calling the FFI function work (and returns an error)
          TEST_FFI_RC(BOTAN_FFI_ERROR_NOT_IMPLEMENTED, botan_privkey_create_mceliece, (&priv, rng, 2048, 50));
-#endif
 
          return result;
          }

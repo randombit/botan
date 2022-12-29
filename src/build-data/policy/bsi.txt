@@ -148,7 +148,6 @@ ec_h2c
 ed25519
 elgamal
 gost_3410
-mce
 rfc6979
 sm2
 

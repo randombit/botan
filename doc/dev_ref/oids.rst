@@ -10,7 +10,7 @@ Values currently assigned are::
 
   publicKey   OBJECT IDENTIFIER ::= { randombit 1 }
 
-  mceliece    OBJECT IDENTIFIER ::= { publicKey 3 }
+  -- { publicKey 3 } previously used for McEliece
   -- { publicKey 4 } previously used as private X25519
   -- { publicKey 5 } previously used for XMSS draft 6
   gost-3410-with-sha256 OBJECT IDENTIFIER ::= { publicKey 6 1 }

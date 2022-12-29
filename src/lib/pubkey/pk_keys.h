@@ -53,8 +53,8 @@ class BOTAN_PUBLIC_API(2,0) Public_Key
       /**
       * Return an integer value best approximating the length of the
       * primary security parameter. For example for RSA this will be
-      * the size of the modulus, for ECDSA the size of the ECC group,
-      * and for McEliece the size of the code will be returned.
+      * the size of the modulus, while for ECDSA the size of the ECC
+      * group is returned.
       */
       virtual size_t key_length() const = 0;
 

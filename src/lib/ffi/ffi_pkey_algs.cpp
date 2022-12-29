@@ -54,10 +54,6 @@
   #include <botan/ed25519.h>
 #endif
 
-#if defined(BOTAN_HAS_MCELIECE)
-  #include <botan/mceliece.h>
-#endif
-
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
   #include <botan/dh.h>
 #endif
@@ -939,8 +935,8 @@ int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key,
 
 int botan_privkey_create_mceliece(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n, size_t t)
    {
-   const std::string mce_params = std::to_string(n) + "," + std::to_string(t);
-   return botan_privkey_create(key_obj, "McEliece", mce_params.c_str(), rng_obj);
+   BOTAN_UNUSED(key_obj, rng_obj, n, t);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
    }
 
 int botan_mceies_decrypt(botan_privkey_t mce_key_obj,

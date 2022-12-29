@@ -60,10 +60,6 @@
   #include <botan/curve25519.h>
 #endif
 
-#if defined(BOTAN_HAS_MCELIECE)
-  #include <botan/mceliece.h>
-#endif
-
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
   #include <botan/kyber.h>
 #endif
@@ -94,11 +90,6 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519")
       return std::make_unique<Curve25519_PublicKey>(alg_id, key_bits);
-#endif
-
-#if defined(BOTAN_HAS_MCELIECE)
-   if(alg_name == "McEliece")
-      return std::make_unique<McEliece_PublicKey>(key_bits);
 #endif
 
 #if 0 && (defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S))
@@ -203,11 +194,6 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 #if 0 && (defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S))
    if(alg_name == "Kyber")
       return std::make_unique<Kyber_PrivateKey>(key_bits);
-#endif
-
-#if defined(BOTAN_HAS_MCELIECE)
-   if(alg_name == "McEliece")
-      return std::make_unique<McEliece_PrivateKey>(key_bits);
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
@@ -329,22 +315,6 @@ create_private_key(const std::string& alg_name,
       {
       const size_t rsa_bits = (params.empty() ? 3072 : to_u32bit(params));
       return std::make_unique<RSA_PrivateKey>(rng, rsa_bits);
-      }
-#endif
-
-#if defined(BOTAN_HAS_MCELIECE)
-   if(alg_name == "McEliece")
-      {
-      std::vector<std::string> mce_param =
-         split_on(params.empty() ? "2960,57" : params, ',');
-
-      if(mce_param.size() != 2)
-         throw Invalid_Argument("create_private_key bad McEliece parameters " + params);
-
-      size_t mce_n = to_u32bit(mce_param[0]);
-      size_t mce_t = to_u32bit(mce_param[1]);
-
-      return std::make_unique<McEliece_PrivateKey>(rng, mce_n, mce_t);
       }
 #endif
 

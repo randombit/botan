@@ -153,7 +153,7 @@ choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
       * SIV or GCM. For others (RSA, ECDSA, ...) default to something widely
       * compatible.
       */
-      const bool nonstandard_pk = (key_algo == "McEliece" || key_algo == "XMSS");
+      const bool nonstandard_pk = (key_algo == "XMSS");
 
       if(nonstandard_pk)
          {

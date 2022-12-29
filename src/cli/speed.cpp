@@ -107,10 +107,6 @@
    #include <botan/dl_group.h>
 #endif
 
-#if defined(BOTAN_HAS_MCELIECE)
-   #include <botan/mceliece.h>
-#endif
-
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    #include <botan/kyber.h>
 #endif
@@ -405,7 +401,6 @@ class Speed final : public Command
             "ECDSA",
             "Ed25519",
             "Curve25519",
-            "McEliece",
             "Kyber",
             };
          }
@@ -625,12 +620,6 @@ class Speed final : public Command
             else if(algo == "Curve25519")
                {
                bench_curve25519(provider, msec);
-               }
-#endif
-#if defined(BOTAN_HAS_MCELIECE)
-            else if(algo == "McEliece")
-               {
-               bench_mceliece(provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
@@ -2122,49 +2111,6 @@ class Speed final : public Command
                             std::chrono::milliseconds msec)
          {
          bench_pk_ka("Curve25519", "Curve25519", "", provider, msec);
-         }
-#endif
-
-#if defined(BOTAN_HAS_MCELIECE)
-      void bench_mceliece(const std::string& provider,
-                          std::chrono::milliseconds msec)
-         {
-         /*
-         SL=80 n=1632 t=33 - 59 KB pubkey 140 KB privkey
-         SL=107 n=2480 t=45 - 128 KB pubkey 300 KB privkey
-         SL=128 n=2960 t=57 - 195 KB pubkey 459 KB privkey
-         SL=147 n=3408 t=67 - 265 KB pubkey 622 KB privkey
-         SL=191 n=4624 t=95 - 516 KB pubkey 1234 KB privkey
-         SL=256 n=6624 t=115 - 942 KB pubkey 2184 KB privkey
-         */
-
-         const std::vector<std::pair<size_t, size_t>> mce_params =
-            {
-               { 2480, 45 },
-               { 2960, 57 },
-               { 3408, 67 },
-               { 4624, 95 },
-               { 6624, 115 }
-            };
-
-         for(auto params : mce_params)
-            {
-            size_t n = params.first;
-            size_t t = params.second;
-
-            const std::string nm = "McEliece-" + std::to_string(n) + "," + std::to_string(t) +
-                                   " (WF=" + std::to_string(Botan::mceliece_work_factor(n, t)) + ")";
-
-            auto keygen_timer = make_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key = keygen_timer->run([&]
-               {
-               return std::make_unique<Botan::McEliece_PrivateKey>(rng(), n, t);
-               });
-
-            record_result(keygen_timer);
-            bench_pk_kem(*key, nm, provider, "KDF2(SHA-256)", msec);
-            }
          }
 #endif
 

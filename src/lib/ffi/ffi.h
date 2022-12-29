@@ -998,7 +998,7 @@ BOTAN_DEPRECATED("Use botan_privkey_create") BOTAN_PUBLIC_API(2,0)
 int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* params);
 BOTAN_DEPRECATED("Use botan_privkey_create") BOTAN_PUBLIC_API(2,0)
 int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params);
-BOTAN_DEPRECATED("Use botan_privkey_create") BOTAN_PUBLIC_API(2,0)
+BOTAN_DEPRECATED("No longer supported") BOTAN_PUBLIC_API(2,0)
 int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t);
 BOTAN_DEPRECATED("Use botan_privkey_create") BOTAN_PUBLIC_API(2,0)
 int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* param);

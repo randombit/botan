@@ -210,12 +210,6 @@ class BotanPythonTests(unittest.TestCase):
             self.assertEqual(decrypted, pt)
 
 
-    def test_mceliece(self):
-        rng = botan2.RandomNumberGenerator()
-        mce_priv = botan2.PrivateKey.create('McEliece', '2960,57', rng)
-        mce_pub = mce_priv.get_public_key()
-        self.assertEqual(mce_pub.estimated_strength(), 128)
-
     def test_rsa_load_store(self):
 
         rsa_priv_pem = """-----BEGIN PRIVATE KEY-----

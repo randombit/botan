@@ -26,8 +26,6 @@ class PK_Workfactor_Tests final : public Text_Based_Test
 
          size_t output = 0;
 
-         // TODO: test McEliece strength tests also
-
          if(type == "RSA_Strength")
             {
             output = Botan::if_work_factor(param_size);

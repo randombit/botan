@@ -50,10 +50,6 @@ in a future major release.
 
 - X9.42 KDF
 
-- The current McEliece implementation (in ``pubkey/mce``) will be
-  replaced by a more modern code-based KEM from the NIST
-  competition. (Probably the "Classic McEliece" submission.)
-
 - DLIES
 
 - GCM support for 64-bit tags

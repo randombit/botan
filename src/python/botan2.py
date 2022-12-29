@@ -269,7 +269,6 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_privkey_create_rsa, [c_void_p, c_void_p, c_size_t])
     ffi_api(dll.botan_privkey_create_ecdsa, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_create_ecdh, [c_void_p, c_void_p, c_char_p])
-    ffi_api(dll.botan_privkey_create_mceliece, [c_void_p, c_void_p, c_size_t, c_size_t])
     ffi_api(dll.botan_privkey_create_dh, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_create_dsa, [c_void_p, c_void_p, c_size_t, c_size_t])
     ffi_api(dll.botan_privkey_create_elgamal, [c_void_p, c_void_p, c_size_t, c_size_t])
@@ -365,11 +364,6 @@ def _set_prototypes(dll):
             [c_void_p, c_char_p, POINTER(c_size_t), c_char_p, c_size_t, c_char_p, c_size_t])
 
     ffi_api(dll.botan_pkcs_hash_id, [c_char_p, c_char_p, POINTER(c_size_t)])
-
-    ffi_api(dll.botan_mceies_encrypt,
-            [c_void_p, c_void_p, c_char_p, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_mceies_decrypt,
-            [c_void_p, c_char_p, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
 
     #  X509
     ffi_api(dll.botan_x509_cert_load, [c_void_p, c_char_p, c_size_t])
@@ -1068,9 +1062,6 @@ class PrivateKey:
                 params = ''
             else:
                 algo = 'ECDH'
-        elif algo in ['mce', 'mceliece']:
-            algo = 'McEliece'
-            params = "%d,%d" % (params[0], params[1])
 
         obj = c_void_p(0)
         _DLL.botan_privkey_create(byref(obj), _ctype_str(algo), _ctype_str(params), rng_obj.handle_())
