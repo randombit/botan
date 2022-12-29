@@ -35,7 +35,7 @@ class PSSR final : public EMSA
 
       std::string name() const override;
 
-      AlgorithmIdentifier config_for_x509(const Private_Key& key,
+      AlgorithmIdentifier config_for_x509(const std::string& algo_name,
                                           const std::string& cert_hash_name) const override;
 
       bool requires_message_recovery() const override { return true; }

@@ -189,17 +189,17 @@ std::string PSSR::name() const
    return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
    }
 
-AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
+AlgorithmIdentifier PSSR::config_for_x509(const std::string& algo_name,
                                           const std::string& cert_hash_name) const
    {
    if(cert_hash_name != m_hash->name())
       throw Invalid_Argument("Hash function from opts and hash_fn argument"
          " need to be identical");
    // check that the signature algorithm and the padding scheme fit
-   if(!sig_algo_and_pad_ok(key.algo_name(), "EMSA4"))
+   if(!sig_algo_and_pad_ok(algo_name, "EMSA4"))
       {
       throw Invalid_Argument("Encoding scheme with canonical name EMSA4"
-         " not supported for signature algorithm " + key.algo_name());
+         " not supported for signature algorithm " + algo_name);
       }
 
    const AlgorithmIdentifier hash_id(cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM);

@@ -368,22 +368,25 @@ std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
       padding = user_specified;
       }
 
-   if(padding != "Pure")
+   if(algo_name == "Ed25519" && padding == "Pure")
+      {
+      sig_algo = AlgorithmIdentifier(OID::from_string("Ed25519"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+      return "Pure";
+      }
+   else
       {
       // try to construct an EMSA object from the padding options or default
-      std::unique_ptr<EMSA> emsa;
-      try
-         {
-         emsa = EMSA::create_or_throw(padding);
-         }
+
       /*
-      * EMSA::create will throw if opts contains {"padding",<valid_padding>} but
+      * EMSA::create will return null if opts contains {"padding",<valid_padding>} but
       * <valid_padding> does not specify a hash function.
       * Omitting it is valid since it needs to be identical to hash_fn.
       * If it still throws, something happened that we cannot repair here,
       * e.g. the algorithm/padding combination is not supported.
       */
-      catch(...)
+      std::unique_ptr<EMSA> emsa = EMSA::create(padding);
+
+      if(!emsa)
          {
          emsa = EMSA::create(padding + "(" + hash_fn + ")");
          }
@@ -393,13 +396,8 @@ std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
          throw Invalid_Argument("Could not parse padding scheme " + padding);
          }
 
-      sig_algo = emsa->config_for_x509(key, hash_fn);
+      sig_algo = emsa->config_for_x509(key.algo_name(), hash_fn);
       return emsa->name();
-      }
-   else
-      {
-      sig_algo = AlgorithmIdentifier(OID::from_string("Ed25519"), AlgorithmIdentifier::USE_EMPTY_PARAM);
-      return "Pure";
       }
    }
 

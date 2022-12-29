@@ -97,37 +97,23 @@ bool EMSA1::verify(const secure_vector<uint8_t>& input,
    return constant_time_compare(input.data(), &our_coding[offset], input.size());
    }
 
-AlgorithmIdentifier EMSA1::config_for_x509(const Private_Key& key,
+AlgorithmIdentifier EMSA1::config_for_x509(const std::string& algo_name,
                                            const std::string& cert_hash_name) const
    {
    if(cert_hash_name != m_hash->name())
       throw Invalid_Argument("Hash function from opts and hash_fn argument"
          " need to be identical");
    // check that the signature algorithm and the padding scheme fit
-   if(!sig_algo_and_pad_ok(key.algo_name(), "EMSA1"))
+   if(!sig_algo_and_pad_ok(algo_name, "EMSA1"))
       {
       throw Invalid_Argument("Encoding scheme with canonical name EMSA1"
-         " not supported for signature algorithm " + key.algo_name());
+         " not supported for signature algorithm " + algo_name);
       }
 
-   const OID oid = OID::from_string(key.algo_name() + "/" + name());
+   const OID oid = OID::from_string(algo_name + "/" + name());
 
-   const std::string algo_name = key.algo_name();
+   // for DSA, ECDSA, GOST parameters "SHALL" be empty
    std::vector<uint8_t> parameters;
-   if(algo_name == "DSA" ||
-      algo_name == "ECDSA" ||
-      algo_name == "ECGDSA" ||
-      algo_name == "ECKCDSA" ||
-      algo_name == "GOST-34.10" ||
-      algo_name == "GOST-34.10-2012-256" ||
-      algo_name == "GOST-34.10-2012-512")
-      {
-      // for DSA, ECDSA, GOST parameters "SHALL" be empty
-      }
-   else
-      {
-      parameters = key.algorithm_identifier().get_parameters();
-      }
 
    return AlgorithmIdentifier(oid, parameters);
    }
