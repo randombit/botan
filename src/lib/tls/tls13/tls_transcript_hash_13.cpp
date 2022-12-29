@@ -120,7 +120,7 @@ size_t find_client_hello_truncation_mark(std::vector<uint8_t> client_hello)
       const auto ext_length = reader.get_uint16_t();
 
       // skip over all extensions, finding the PSK extension to be truncated
-      if(ext_type != Extension_Code::TLSEXT_PSK)
+      if(ext_type != Extension_Code::PresharedKey)
          {
          reader.discard_next(ext_length);
          continue;

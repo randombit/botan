@@ -290,8 +290,8 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
       //    certificate by sending an empty "status_request" extension in its
       //    CertificateRequest message.
       if(entry.extensions.contains_implemented_extensions_other_than({
-            Extension_Code::TLSEXT_CERT_STATUS_REQUEST,
-            // Extension_Code::TLSEXT_SIGNED_CERTIFICATE_TIMESTAMP
+            Extension_Code::CertificateStatusRequest,
+            // Extension_Code::SignedCertificateTimestamp
          }))
          {
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Certificate Entry contained an extension that is not allowed");

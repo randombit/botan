@@ -98,18 +98,18 @@ Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf)
    const auto allowed_exts = std::set<Extension_Code>
       {
       // Allowed extensions listed in RFC 8446 and implemented in Botan
-      Extension_Code::TLSEXT_SERVER_NAME_INDICATION,
+      Extension_Code::ServerNameIndication,
       // MAX_FRAGMENT_LENGTH
-      Extension_Code::TLSEXT_SUPPORTED_GROUPS,
-      Extension_Code::TLSEXT_USE_SRTP,
+      Extension_Code::SupportedGroups,
+      Extension_Code::UseSrtp,
       // HEARTBEAT
-      Extension_Code::TLSEXT_ALPN,
+      Extension_Code::ApplicationLayerProtocolNegotiation,
       // CLIENT_CERTIFICATE_TYPE
       // SERVER_CERTIFICATE_TYPE
       // EARLY_DATA
 
       // Allowed extensions not listed in RFC 8446 but acceptable as Botan implements them
-      Extension_Code::TLSEXT_RECORD_SIZE_LIMIT,
+      Extension_Code::RecordSizeLimit,
       };
    if(m_extensions.contains_implemented_extensions_other_than(allowed_exts))
       {

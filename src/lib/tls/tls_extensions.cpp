@@ -29,65 +29,65 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
    {
    switch(code)
       {
-      case Extension_Code::TLSEXT_SERVER_NAME_INDICATION:
+      case Extension_Code::ServerNameIndication:
          return std::make_unique<Server_Name_Indicator>(reader, size);
 
-      case Extension_Code::TLSEXT_SUPPORTED_GROUPS:
+      case Extension_Code::SupportedGroups:
          return std::make_unique<Supported_Groups>(reader, size);
 
-      case Extension_Code::TLSEXT_CERT_STATUS_REQUEST:
+      case Extension_Code::CertificateStatusRequest:
          return std::make_unique<Certificate_Status_Request>(reader, size, message_type, from);
 
-      case Extension_Code::TLSEXT_EC_POINT_FORMATS:
+      case Extension_Code::EcPointFormats:
          return std::make_unique<Supported_Point_Formats>(reader, size);
 
-      case Extension_Code::TLSEXT_SAFE_RENEGOTIATION:
+      case Extension_Code::SafeRenegotiation:
          return std::make_unique<Renegotiation_Extension>(reader, size);
 
-      case Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS:
+      case Extension_Code::SignatureAlgorithms:
          return std::make_unique<Signature_Algorithms>(reader, size);
 
-      case Extension_Code::TLSEXT_USE_SRTP:
+      case Extension_Code::UseSrtp:
          return std::make_unique<SRTP_Protection_Profiles>(reader, size);
 
-      case Extension_Code::TLSEXT_ALPN:
+      case Extension_Code::ApplicationLayerProtocolNegotiation:
          return std::make_unique<Application_Layer_Protocol_Notification>(reader, size, from);
 
-      case Extension_Code::TLSEXT_EXTENDED_MASTER_SECRET:
+      case Extension_Code::ExtendedMasterSecret:
          return std::make_unique<Extended_Master_Secret>(reader, size);
 
-      case Extension_Code::TLSEXT_RECORD_SIZE_LIMIT:
+      case Extension_Code::RecordSizeLimit:
          return std::make_unique<Record_Size_Limit>(reader, size, from);
 
-      case Extension_Code::TLSEXT_ENCRYPT_THEN_MAC:
+      case Extension_Code::EncryptThenMac:
          return std::make_unique<Encrypt_then_MAC>(reader, size);
 
-      case Extension_Code::TLSEXT_SESSION_TICKET:
+      case Extension_Code::SessionTicket:
          return std::make_unique<Session_Ticket>(reader, size);
 
-      case Extension_Code::TLSEXT_SUPPORTED_VERSIONS:
+      case Extension_Code::SupportedVersions:
          return std::make_unique<Supported_Versions>(reader, size, from);
 
 #if defined(BOTAN_HAS_TLS_13)
-      case Extension_Code::TLSEXT_PSK:
+      case Extension_Code::PresharedKey:
          return std::make_unique<PSK>(reader, size, message_type);
 
-      case Extension_Code::TLSEXT_EARLY_DATA:
+      case Extension_Code::EarlyData:
          return std::make_unique<EarlyDataIndication>(reader, size, message_type);
 
-      case Extension_Code::TLSEXT_COOKIE:
+      case Extension_Code::Cookie:
          return std::make_unique<Cookie>(reader, size);
 
-      case Extension_Code::TLSEXT_PSK_KEY_EXCHANGE_MODES:
+      case Extension_Code::PskKeyExchangeModes:
          return std::make_unique<PSK_Key_Exchange_Modes>(reader, size);
 
-      case Extension_Code::TLSEXT_CERTIFICATE_AUTHORITIES:
+      case Extension_Code::CertificateAuthorities:
          return std::make_unique<Certificate_Authorities>(reader, size);
 
-      case Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS_CERT:
+      case Extension_Code::CertSignatureAlgorithms:
          return std::make_unique<Signature_Algorithms_Cert>(reader, size);
 
-      case Extension_Code::TLSEXT_KEY_SHARE:
+      case Extension_Code::KeyShare:
          return std::make_unique<Key_Share>(reader, size, message_type);
 #endif
       }

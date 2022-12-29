@@ -55,12 +55,12 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
    //     "certificate_authorities", "oid_filters", "signature_algorithms_cert",
    std::set<Extension_Code> allowed_extensions =
       {
-      Extension_Code::TLSEXT_CERT_STATUS_REQUEST,
-      Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS,
-      // Extension_Code::TLSEXT_SIGNED_CERTIFICATE_TIMESTAMP,  // NYI
-      Extension_Code::TLSEXT_CERTIFICATE_AUTHORITIES,
-      // Extension_Code::TLSEXT_OID_FILTERS,                   // NYI
-      Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS_CERT,
+      Extension_Code::CertificateStatusRequest,
+      Extension_Code::SignatureAlgorithms,
+      // Extension_Code::SignedCertificateTimestamp,  // NYI
+      Extension_Code::CertificateAuthorities,
+      // Extension_Code::OidFilters,                   // NYI
+      Extension_Code::CertSignatureAlgorithms,
       };
 
    if(m_extensions.contains_implemented_extensions_other_than(allowed_extensions))

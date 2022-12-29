@@ -273,7 +273,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
       m_data->extensions.add(new Encrypt_then_MAC);
       }
 
-   if(c && c->ecc_ciphersuite() && client_hello.extension_types().count(Extension_Code::TLSEXT_EC_POINT_FORMATS))
+   if(c && c->ecc_ciphersuite() && client_hello.extension_types().count(Extension_Code::EcPointFormats))
       {
       m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
@@ -353,7 +353,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
          }
       }
 
-   if(resumed_session.ciphersuite().ecc_ciphersuite() && client_hello.extension_types().count(Extension_Code::TLSEXT_EC_POINT_FORMATS))
+   if(resumed_session.ciphersuite().ecc_ciphersuite() && client_hello.extension_types().count(Extension_Code::EcPointFormats))
       {
       m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
@@ -630,10 +630,10 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    // TLS client implementation.
    const std::set<Extension_Code> allowed =
       {
-      Extension_Code::TLSEXT_KEY_SHARE,
-      Extension_Code::TLSEXT_PSK_KEY_EXCHANGE_MODES,
-      Extension_Code::TLSEXT_SUPPORTED_VERSIONS,
-      Extension_Code::TLSEXT_PSK,
+      Extension_Code::KeyShare,
+      Extension_Code::PskKeyExchangeModes,
+      Extension_Code::SupportedVersions,
+      Extension_Code::PresharedKey,
       };
 
    // As the ServerHello shall only contain essential extensions, we don't give
@@ -670,9 +670,9 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Se
    //     -  key_share (see Section 4.2.8)
    const std::set<Extension_Code> allowed =
       {
-      Extension_Code::TLSEXT_COOKIE,
-      Extension_Code::TLSEXT_SUPPORTED_VERSIONS,
-      Extension_Code::TLSEXT_KEY_SHARE,
+      Extension_Code::Cookie,
+      Extension_Code::SupportedVersions,
+      Extension_Code::KeyShare,
       };
 
    // As the Hello Retry Request shall only contain essential extensions, we

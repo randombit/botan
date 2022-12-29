@@ -790,17 +790,17 @@ void sort_client_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection
       {
       const std::vector<Botan::TLS::Extension_Code> expected_order =
          {
-         Botan::TLS::Extension_Code::TLSEXT_SERVER_NAME_INDICATION,
-         Botan::TLS::Extension_Code::TLSEXT_SAFE_RENEGOTIATION,
-         Botan::TLS::Extension_Code::TLSEXT_SUPPORTED_GROUPS,
-         Botan::TLS::Extension_Code::TLSEXT_SESSION_TICKET,
-         Botan::TLS::Extension_Code::TLSEXT_KEY_SHARE,
-         Botan::TLS::Extension_Code::TLSEXT_EARLY_DATA,
-         Botan::TLS::Extension_Code::TLSEXT_SUPPORTED_VERSIONS,
-         Botan::TLS::Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS,
-         Botan::TLS::Extension_Code::TLSEXT_COOKIE,
-         Botan::TLS::Extension_Code::TLSEXT_PSK_KEY_EXCHANGE_MODES,
-         Botan::TLS::Extension_Code::TLSEXT_RECORD_SIZE_LIMIT,
+         Botan::TLS::Extension_Code::ServerNameIndication,
+         Botan::TLS::Extension_Code::SafeRenegotiation,
+         Botan::TLS::Extension_Code::SupportedGroups,
+         Botan::TLS::Extension_Code::SessionTicket,
+         Botan::TLS::Extension_Code::KeyShare,
+         Botan::TLS::Extension_Code::EarlyData,
+         Botan::TLS::Extension_Code::SupportedVersions,
+         Botan::TLS::Extension_Code::SignatureAlgorithms,
+         Botan::TLS::Extension_Code::Cookie,
+         Botan::TLS::Extension_Code::PskKeyExchangeModes,
+         Botan::TLS::Extension_Code::RecordSizeLimit,
          Padding::static_type()
          };
 
@@ -825,13 +825,13 @@ void sort_server_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection
       {
       const std::vector<Botan::TLS::Extension_Code> expected_order =
          {
-         Botan::TLS::Extension_Code::TLSEXT_SUPPORTED_GROUPS,
-         Botan::TLS::Extension_Code::TLSEXT_KEY_SHARE,
-         Botan::TLS::Extension_Code::TLSEXT_COOKIE,
-         Botan::TLS::Extension_Code::TLSEXT_SUPPORTED_VERSIONS,
-         Botan::TLS::Extension_Code::TLSEXT_SIGNATURE_ALGORITHMS,
-         Botan::TLS::Extension_Code::TLSEXT_RECORD_SIZE_LIMIT,
-         Botan::TLS::Extension_Code::TLSEXT_SERVER_NAME_INDICATION
+         Botan::TLS::Extension_Code::SupportedGroups,
+         Botan::TLS::Extension_Code::KeyShare,
+         Botan::TLS::Extension_Code::Cookie,
+         Botan::TLS::Extension_Code::SupportedVersions,
+         Botan::TLS::Extension_Code::SignatureAlgorithms,
+         Botan::TLS::Extension_Code::RecordSizeLimit,
+         Botan::TLS::Extension_Code::ServerNameIndication
          };
 
       for(const auto ext_type : expected_order)
