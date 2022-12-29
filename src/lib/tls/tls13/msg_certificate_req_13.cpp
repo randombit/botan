@@ -55,12 +55,12 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
    //     "certificate_authorities", "oid_filters", "signature_algorithms_cert",
    std::set<Handshake_Extension_Type> allowed_extensions =
       {
-      TLSEXT_CERT_STATUS_REQUEST,
-      TLSEXT_SIGNATURE_ALGORITHMS,
-      // TLSEXT_SIGNED_CERTIFICATE_TIMESTAMP,  // NYI
-      TLSEXT_CERTIFICATE_AUTHORITIES,
-      // TLSEXT_OID_FILTERS,                   // NYI
-      TLSEXT_SIGNATURE_ALGORITHMS_CERT,
+      Handshake_Extension_Type::TLSEXT_CERT_STATUS_REQUEST,
+      Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS,
+      // Handshake_Extension_Type::TLSEXT_SIGNED_CERTIFICATE_TIMESTAMP,  // NYI
+      Handshake_Extension_Type::TLSEXT_CERTIFICATE_AUTHORITIES,
+      // Handshake_Extension_Type::TLSEXT_OID_FILTERS,                   // NYI
+      Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS_CERT,
       };
 
    if(m_extensions.contains_implemented_extensions_other_than(allowed_extensions))

@@ -22,72 +22,72 @@ namespace Botan::TLS {
 namespace {
 
 std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
-                                          const uint16_t code,
+                                          Handshake_Extension_Type code,
                                           const uint16_t size,
                                           const Connection_Side from,
                                           const Handshake_Type message_type)
    {
    switch(code)
       {
-      case TLSEXT_SERVER_NAME_INDICATION:
+      case Handshake_Extension_Type::TLSEXT_SERVER_NAME_INDICATION:
          return std::make_unique<Server_Name_Indicator>(reader, size);
 
-      case TLSEXT_SUPPORTED_GROUPS:
+      case Handshake_Extension_Type::TLSEXT_SUPPORTED_GROUPS:
          return std::make_unique<Supported_Groups>(reader, size);
 
-      case TLSEXT_CERT_STATUS_REQUEST:
+      case Handshake_Extension_Type::TLSEXT_CERT_STATUS_REQUEST:
          return std::make_unique<Certificate_Status_Request>(reader, size, message_type, from);
 
-      case TLSEXT_EC_POINT_FORMATS:
+      case Handshake_Extension_Type::TLSEXT_EC_POINT_FORMATS:
          return std::make_unique<Supported_Point_Formats>(reader, size);
 
-      case TLSEXT_SAFE_RENEGOTIATION:
+      case Handshake_Extension_Type::TLSEXT_SAFE_RENEGOTIATION:
          return std::make_unique<Renegotiation_Extension>(reader, size);
 
-      case TLSEXT_SIGNATURE_ALGORITHMS:
+      case Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS:
          return std::make_unique<Signature_Algorithms>(reader, size);
 
-      case TLSEXT_USE_SRTP:
+      case Handshake_Extension_Type::TLSEXT_USE_SRTP:
          return std::make_unique<SRTP_Protection_Profiles>(reader, size);
 
-      case TLSEXT_ALPN:
+      case Handshake_Extension_Type::TLSEXT_ALPN:
          return std::make_unique<Application_Layer_Protocol_Notification>(reader, size, from);
 
-      case TLSEXT_EXTENDED_MASTER_SECRET:
+      case Handshake_Extension_Type::TLSEXT_EXTENDED_MASTER_SECRET:
          return std::make_unique<Extended_Master_Secret>(reader, size);
 
-      case TLSEXT_RECORD_SIZE_LIMIT:
+      case Handshake_Extension_Type::TLSEXT_RECORD_SIZE_LIMIT:
          return std::make_unique<Record_Size_Limit>(reader, size, from);
 
-      case TLSEXT_ENCRYPT_THEN_MAC:
+      case Handshake_Extension_Type::TLSEXT_ENCRYPT_THEN_MAC:
          return std::make_unique<Encrypt_then_MAC>(reader, size);
 
-      case TLSEXT_SESSION_TICKET:
+      case Handshake_Extension_Type::TLSEXT_SESSION_TICKET:
          return std::make_unique<Session_Ticket>(reader, size);
 
-      case TLSEXT_SUPPORTED_VERSIONS:
+      case Handshake_Extension_Type::TLSEXT_SUPPORTED_VERSIONS:
          return std::make_unique<Supported_Versions>(reader, size, from);
 
 #if defined(BOTAN_HAS_TLS_13)
-      case TLSEXT_PSK:
+      case Handshake_Extension_Type::TLSEXT_PSK:
          return std::make_unique<PSK>(reader, size, message_type);
 
-      case TLSEXT_EARLY_DATA:
+      case Handshake_Extension_Type::TLSEXT_EARLY_DATA:
          return std::make_unique<EarlyDataIndication>(reader, size, message_type);
 
-      case TLSEXT_COOKIE:
+      case Handshake_Extension_Type::TLSEXT_COOKIE:
          return std::make_unique<Cookie>(reader, size);
 
-      case TLSEXT_PSK_KEY_EXCHANGE_MODES:
+      case Handshake_Extension_Type::TLSEXT_PSK_KEY_EXCHANGE_MODES:
          return std::make_unique<PSK_Key_Exchange_Modes>(reader, size);
 
-      case TLSEXT_CERTIFICATE_AUTHORITIES:
+      case Handshake_Extension_Type::TLSEXT_CERTIFICATE_AUTHORITIES:
          return std::make_unique<Certificate_Authorities>(reader, size);
 
-      case TLSEXT_SIGNATURE_ALGORITHMS_CERT:
+      case Handshake_Extension_Type::TLSEXT_SIGNATURE_ALGORITHMS_CERT:
          return std::make_unique<Signature_Algorithms_Cert>(reader, size);
 
-      case TLSEXT_KEY_SHARE:
+      case Handshake_Extension_Type::TLSEXT_KEY_SHARE:
          return std::make_unique<Key_Share>(reader, size, message_type);
 #endif
       }
@@ -102,7 +102,8 @@ void Extensions::add(std::unique_ptr<Extension> extn)
    {
    if (has(extn->type()))
       {
-      throw Invalid_Argument("cannot add the same extension twice: " + std::to_string(extn->type()));
+      throw Invalid_Argument("cannot add the same extension twice: " +
+                             std::to_string(static_cast<uint16_t>(extn->type())));
       }
 
    m_extensions.emplace_back(extn.release());
@@ -130,7 +131,7 @@ void Extensions::deserialize(TLS_Data_Reader& reader,
             throw TLS_Exception(TLS::Alert::DECODE_ERROR,
                                 "Peer sent duplicated extensions");
 
-         this->add(make_extension(reader, extension_code, extension_size, from, message_type));
+         this->add(make_extension(reader, type, extension_size, from, message_type));
          }
       }
    }
