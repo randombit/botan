@@ -877,6 +877,9 @@ Certificate_Authorities::Certificate_Authorities(TLS_Data_Reader& reader, uint16
       }
    }
 
+Certificate_Authorities::Certificate_Authorities(std::vector<X509_DN> acceptable_DNs)
+   : m_distinguished_names(std::move(acceptable_DNs)) {}
+
 
 std::vector<uint8_t> EarlyDataIndication::serialize(Connection_Side) const
    {

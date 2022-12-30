@@ -17,6 +17,7 @@
 #include <botan/pk_keys.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_extensions.h>
+#include <botan/credentials_manager.h>
 
 namespace Botan::TLS {
 
@@ -150,21 +151,32 @@ Signature_Scheme choose_signature_scheme(
 * Create a new Certificate Verify message for TLS 1.3
 */
 Certificate_Verify_13::Certificate_Verify_13(
+      const Certificate_13& certificate_msg,
       const std::vector<Signature_Scheme>& peer_allowed_schemes,
-      Connection_Side whoami,
-      const Private_Key& key,
-      const Policy& policy,
+      const std::string& hostname,
       const Transcript_Hash& hash,
+      Connection_Side whoami,
+      Credentials_Manager& creds_mgr,
+      const Policy& policy,
       Callbacks& callbacks,
       RandomNumberGenerator& rng)
    : m_side(whoami)
    {
-   m_scheme = choose_signature_scheme(key, policy.allowed_signature_schemes(), peer_allowed_schemes);
+   BOTAN_ASSERT_NOMSG(!certificate_msg.empty());
+
+   const auto* private_key = creds_mgr.private_key_for(
+                                       certificate_msg.leaf(),
+                                       m_side == Connection_Side::CLIENT ? "tls-client" : "tls-server",
+                                       hostname);
+   if(!private_key)
+      { throw TLS_Exception(Alert::INTERNAL_ERROR, "Application did not provide a private key for its certificate"); }
+
+   m_scheme = choose_signature_scheme(*private_key, policy.allowed_signature_schemes(), peer_allowed_schemes);
    BOTAN_ASSERT_NOMSG(m_scheme.is_available());
    BOTAN_ASSERT_NOMSG(m_scheme.is_compatible_with(Protocol_Version::TLS_V13));
 
    m_signature =
-      callbacks.tls_sign_message(key,
+      callbacks.tls_sign_message(*private_key,
                                  rng,
                                  m_scheme.padding_string(),
                                  m_scheme.format().value(),

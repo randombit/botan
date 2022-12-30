@@ -131,6 +131,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Encoding error: Cannot encode PSS string, output length too small", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Expected TLS but got a record with DTLS version", ":WRONG_VERSION_NUMBER:" },
          { "Failed to agree on a signature algorithm", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
+         { "Failed to agree on any signature algorithm", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Failed to negotiate a common signature algorithm for client authentication", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Finished message didn't verify", ":DIGEST_CHECK_FAILED:" },
          { "Have data remaining in buffer after ClientHello", ":EXCESS_HANDSHAKE_DATA:" },
