@@ -53,14 +53,14 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
    // For Certificate Request said table states:
    //    "status_request", "signature_algorithms", "signed_certificate_timestamp",
    //     "certificate_authorities", "oid_filters", "signature_algorithms_cert",
-   std::set<Handshake_Extension_Type> allowed_extensions =
+   std::set<Extension_Code> allowed_extensions =
       {
-      TLSEXT_CERT_STATUS_REQUEST,
-      TLSEXT_SIGNATURE_ALGORITHMS,
-      // TLSEXT_SIGNED_CERTIFICATE_TIMESTAMP,  // NYI
-      TLSEXT_CERTIFICATE_AUTHORITIES,
-      // TLSEXT_OID_FILTERS,                   // NYI
-      TLSEXT_SIGNATURE_ALGORITHMS_CERT,
+      Extension_Code::CertificateStatusRequest,
+      Extension_Code::SignatureAlgorithms,
+      // Extension_Code::SignedCertificateTimestamp,  // NYI
+      Extension_Code::CertificateAuthorities,
+      // Extension_Code::OidFilters,                   // NYI
+      Extension_Code::CertSignatureAlgorithms,
       };
 
    if(m_extensions.contains_implemented_extensions_other_than(allowed_extensions))

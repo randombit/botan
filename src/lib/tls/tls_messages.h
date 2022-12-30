@@ -129,7 +129,7 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message
 
       std::vector<uint8_t> cookie_input_data() const;
 
-      std::set<Handshake_Extension_Type> extension_types() const;
+      std::set<Extension_Code> extension_types() const;
 
       const Extensions& extensions() const;
 
@@ -289,7 +289,7 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message
       explicit Server_Hello(std::unique_ptr<Server_Hello_Internal> data);
 
       // methods used internally and potentially exposed by one of the subclasses
-      std::set<Handshake_Extension_Type> extension_types() const;
+      std::set<Extension_Code> extension_types() const;
       const std::vector<uint8_t>& random() const;
       uint8_t compression_method() const;
       Protocol_Version legacy_version() const;
@@ -578,7 +578,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
       *
       * @param requested_extensions Extensions of Client_Hello or Certificate_Request messages
       */
-      void validate_extensions(const std::set<Handshake_Extension_Type>& requested_extensions, Callbacks& cb) const;
+      void validate_extensions(const std::set<Extension_Code>& requested_extensions, Callbacks& cb) const;
 
       /**
        * Verify the certificate chain

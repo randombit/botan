@@ -209,7 +209,7 @@ const std::vector<uint16_t>& Client_Hello::ciphersuites() const
    return m_data->suites;
    }
 
-std::set<Handshake_Extension_Type> Client_Hello::extension_types() const
+std::set<Extension_Code> Client_Hello::extension_types() const
    {
    return m_data->extensions.extension_types();
    }

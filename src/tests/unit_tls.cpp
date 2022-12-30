@@ -281,10 +281,10 @@ class TLS_Handshake_Test final
       class Test_Extension : public Botan::TLS::Extension
          {
          public:
-            static Botan::TLS::Handshake_Extension_Type static_type()
-               { return static_cast<Botan::TLS::Handshake_Extension_Type>(666); }
+            static Botan::TLS::Extension_Code static_type()
+               { return static_cast<Botan::TLS::Extension_Code>(666); }
 
-            Botan::TLS::Handshake_Extension_Type type() const override { return static_type(); }
+            Botan::TLS::Extension_Code type() const override { return static_type(); }
 
             std::vector<uint8_t> serialize(Botan::TLS::Connection_Side /*whoami*/) const override { return m_buf; }
 
@@ -351,7 +351,7 @@ class TLS_Handshake_Test final
 
             void tls_examine_extensions(const Botan::TLS::Extensions& extn, Botan::TLS::Connection_Side which_side, Botan::TLS::Handshake_Type /*unused*/) override
                {
-               Botan::TLS::Extension* test_extn = extn.get(static_cast<Botan::TLS::Handshake_Extension_Type>(666));
+               Botan::TLS::Extension* test_extn = extn.get(static_cast<Botan::TLS::Extension_Code>(666));
 
                if(test_extn == nullptr)
                   {

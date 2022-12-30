@@ -102,7 +102,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   Botan::TLS::Client_Hello_12 message(buffer);
                   result.test_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   std::vector<uint8_t> buf;
-                  for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
+                  for(Botan::TLS::Extension_Code const& type : message.extension_types())
                      {
                      uint16_t u16type = static_cast<uint16_t>(type);
                      buf.push_back(Botan::get_byte<0>(u16type));
@@ -131,7 +131,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   result.test_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   result.confirm("Ciphersuite", (message.ciphersuite() == cs.ciphersuite_code()));
                   std::vector<uint8_t> buf;
-                  for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
+                  for(Botan::TLS::Extension_Code const& type : message.extension_types())
                      {
                      uint16_t u16type = static_cast<uint16_t>(type);
                      buf.push_back(Botan::get_byte<0>(u16type));
@@ -478,7 +478,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test
 
                   const std::string extensions = vars.get_req_str("AdditionalData");
                   std::vector<uint8_t> exts_buffer;
-                  for(Botan::TLS::Handshake_Extension_Type const& type : ch.extensions().extension_types())
+                  for(Botan::TLS::Extension_Code const& type : ch.extensions().extension_types())
                      {
                      uint16_t u16type = static_cast<uint16_t>(type);
                      exts_buffer.push_back(Botan::get_byte<0>(u16type));
@@ -530,7 +530,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test
                   result.confirm("Ciphersuite", (msg.ciphersuite() == cs.ciphersuite_code()));
 
                   std::vector<uint8_t> buf;
-                  for(Botan::TLS::Handshake_Extension_Type const& type : msg.extensions().extension_types())
+                  for(Botan::TLS::Extension_Code const& type : msg.extensions().extension_types())
                      {
                      uint16_t u16type = static_cast<uint16_t>(type);
                      buf.push_back(Botan::get_byte<0>(u16type));

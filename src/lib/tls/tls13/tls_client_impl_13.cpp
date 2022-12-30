@@ -360,7 +360,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
    //    extensions that were not first offered by the client in its
    //    ClientHello, with the exception of optionally the "cookie".
    auto allowed_exts = ch.extensions().extension_types();
-   allowed_exts.insert(TLSEXT_COOKIE);
+   allowed_exts.insert(Extension_Code::Cookie);
    if(hrr.extensions().contains_other_than(allowed_exts))
       {
       throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION, "Unsupported extension found in Hello Retry Request");
