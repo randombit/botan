@@ -275,6 +275,18 @@ Server_Impl_12::Server_Impl_12(Callbacks& callbacks,
    {
    }
 
+Server_Impl_12::Server_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info) :
+   Channel_Impl_12(downgrade_info.callbacks,
+                   downgrade_info.session_manager,
+                   downgrade_info.rng,
+                   downgrade_info.policy,
+                   true /* is_server*/,
+                   false /* TLS 1.3 does not support DTLS yet */,
+                   downgrade_info.io_buffer_size),
+   m_creds(downgrade_info.creds)
+   {
+   }
+
 std::unique_ptr<Handshake_State> Server_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io)
    {
    std::unique_ptr<Handshake_State> state(new Server_Handshake_State(std::move(io), callbacks()));

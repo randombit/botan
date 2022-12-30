@@ -15,6 +15,7 @@
 #include <botan/tls_callbacks.h>
 #include <botan/rng.h>
 #include <botan/hash.h>
+#include <botan/credentials_manager.h>
 #include <botan/tls_version.h>
 
 #include <botan/internal/stl_util.h>
@@ -29,6 +30,7 @@
 #endif
 
 #include <chrono>
+#include <iterator>
 
 namespace Botan::TLS {
 
@@ -561,6 +563,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
 Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data)
    : Client_Hello(std::move(data))
    {
+   const auto& exts = m_data->extensions;
+
    // RFC 8446 4.1.2
    //    TLS 1.3 ClientHellos are identified as having a legacy_version of
    //    0x0303 and a "supported_versions" extension present with 0x0304 as the
@@ -568,12 +572,12 @@ Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data)
    //
    // Note that we already checked for "supported_versions" before entering this
    // c'tor in `Client_Hello_13::parse()`. This is just to be doubly sure.
-   BOTAN_ASSERT_NOMSG(m_data->extensions.has<Supported_Versions>());
+   BOTAN_ASSERT_NOMSG(exts.has<Supported_Versions>());
 
    // RFC 8446 4.2.1
    //    Servers MAY abort the handshake upon receiving a ClientHello with
    //    legacy_version 0x0304 or later.
-   if(m_data->legacy_version != Protocol_Version::TLS_V12)
+   if(m_data->legacy_version.is_tls_13_or_later())
       {
       throw TLS_Exception(Alert::DECODE_ERROR,
                           "TLS 1.3 Client Hello has invalid legacy_version");
@@ -587,8 +591,98 @@ Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data)
    if(m_data->comp_methods.size() != 1 || m_data->comp_methods.front() != 0)
       {
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
-                          "Client sent TLS 1.3 Client Hello with compression "
-                          "method != null");
+                          "Client did not offer NULL compression");
+      }
+
+   // RFC 8446 4.2.9
+   //    A client MUST provide a "psk_key_exchange_modes" extension if it
+   //    offers a "pre_shared_key" extension. If clients offer "pre_shared_key"
+   //    without a "psk_key_exchange_modes" extension, servers MUST abort
+   //    the handshake.
+   if(exts.has<PSK>())
+      {
+      if(!exts.has<PSK_Key_Exchange_Modes>())
+         {
+         throw TLS_Exception(Alert::MISSING_EXTENSION,
+                             "Client Hello offered a PSK without a psk_key_exchange_modes extension");
+         }
+      }
+
+   // RFC 8446 9.2
+   //    [A TLS 1.3 ClientHello] message MUST meet the following requirements:
+   //
+   //     -  If not containing a "pre_shared_key" extension, it MUST contain
+   //        both a "signature_algorithms" extension and a "supported_groups"
+   //        extension.
+   //
+   //     -  If containing a "supported_groups" extension, it MUST also contain
+   //        a "key_share" extension, and vice versa.  An empty
+   //        KeyShare.client_shares vector is permitted.
+   //
+   //    Servers receiving a ClientHello which does not conform to these
+   //    requirements MUST abort the handshake with a "missing_extension"
+   //    alert.
+   if(!exts.has<PSK>())
+      {
+      if(!exts.has<Supported_Groups>() || !exts.has<Signature_Algorithms>())
+         {
+         throw TLS_Exception(Alert::MISSING_EXTENSION,
+                             "Non-PSK Client Hello did not contain supported_groups and signature_algorithms extensions");
+         }
+
+      }
+   if(exts.has<Supported_Groups>() != exts.has<Key_Share>())
+      {
+      throw TLS_Exception(Alert::MISSING_EXTENSION,
+                          "Client Hello must either contain both key_share and supported_groups extensions or neither");
+      }
+
+   if(exts.has<Key_Share>())
+      {
+      const auto supported_ext = exts.get<Supported_Groups>();
+      BOTAN_ASSERT_NONNULL(supported_ext);
+      const auto supports = supported_ext->groups();
+      const auto offers = exts.get<Key_Share>()->offered_groups();
+
+      // RFC 8446 4.2.8
+      //    Each KeyShareEntry value MUST correspond to a group offered in the
+      //    "supported_groups" extension and MUST appear in the same order.
+      //    [...]
+      //    Clients MUST NOT offer any KeyShareEntry values for groups not
+      //    listed in the client's "supported_groups" extension.
+      //
+      // Note: We can assume that both `offers` and `supports` are unique lists
+      //       as this is ensured in the parsing code of the extensions.
+      auto found_in_supported_groups = [&supports,support_offset = -1](auto group) mutable
+         {
+         const auto i = std::find(supports.begin(), supports.end(), group);
+         if(i == supports.end())
+            {
+            return false;
+            }
+
+         const auto found_at = std::distance(supports.begin(), i);
+         if(found_at <= support_offset)
+            {
+            return false;  // The order that groups appear in "key_share" and
+                           // "supported_groups" must be the same
+            }
+
+         support_offset = static_cast<decltype(support_offset)>(found_at);
+         return true;
+         };
+
+      for(const auto offered : offers)
+         {
+         // RFC 8446 4.2.8
+         //    Servers MAY check for violations of these rules and abort the
+         //    handshake with an "illegal_parameter" alert if one is violated.
+         if(!found_in_supported_groups(offered))
+            {
+            throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                                "Offered key exchange groups do not align with claimed supported groups");
+            }
+         }
       }
 
    // TODO: Reject oid_filters extension if found (which is the only known extension that
@@ -762,6 +856,106 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
       }
    }
 
+void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch)
+   {
+   // RFC 8446 4.1.2
+   //    The client will also send a ClientHello when the server has responded
+   //    to its ClientHello with a HelloRetryRequest. In that case, the client
+   //    MUST send the same ClientHello without modification, except as follows:
+
+   if(m_data->session_id != new_ch.m_data->session_id ||
+      m_data->random != new_ch.m_data->random ||
+      m_data->suites != new_ch.m_data->suites ||
+      m_data->comp_methods != new_ch.m_data->comp_methods)
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Client Hello core values changed after Hello Retry Request");
+      }
+
+   const auto oldexts = extension_types();
+   const auto newexts = new_ch.extension_types();
+
+   // Check that extension omissions are justified
+   for(const auto oldext : oldexts)
+      {
+      if(!newexts.contains(oldext))
+         {
+         const auto ext = extensions().get(oldext);
+
+         // We don't make any assumptions about unimplemented extensions.
+         if(!ext->is_implemented())
+            continue;
+
+         // RFC 8446 4.1.2
+         //    Removing the "early_data" extension (Section 4.2.10) if one was
+         //    present.  Early data is not permitted after a HelloRetryRequest.
+         if(oldext == EarlyDataIndication::static_type())
+            continue;
+
+         // RFC 8446 4.1.2
+         //    Optionally adding, removing, or changing the length of the
+         //    "padding" extension.
+         //
+         // TODO: implement the Padding extension
+         // if(oldext == Padding::static_type())
+         //    continue;
+
+         throw TLS_Exception(Alert::MISSING_EXTENSION, "Extension removed in updated Client Hello");
+         }
+      }
+
+   // Check that extension additions are justified
+   for(const auto newext : newexts)
+      {
+      if(!oldexts.contains(newext))
+         {
+         const auto ext = new_ch.extensions().get(newext);
+
+         // We don't make any assumptions about unimplemented extensions.
+         if(!ext->is_implemented())
+            continue;
+
+         // RFC 8446 4.1.2
+         //    Including a "cookie" extension if one was provided in the
+         //    HelloRetryRequest.
+         if(newext == Cookie::static_type())
+            continue;
+
+         // RFC 8446 4.1.2
+         //    Optionally adding, removing, or changing the length of the
+         //    "padding" extension.
+         //
+         // TODO: implement the Padding extension
+         // if(newext == Padding::static_type())
+         //    continue;
+
+         throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION, "Added an extension in updated Client Hello");
+         }
+      }
+
+   // RFC 8446 4.1.2
+   //    Removing the "early_data" extension (Section 4.2.10) if one was
+   //    present.  Early data is not permitted after a HelloRetryRequest.
+   if(new_ch.extensions().has<EarlyDataIndication>())
+      {
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Updated Client Hello indicates early data");
+      }
+
+   // TODO: Contents of extensions are not checked for update compatibility, see:
+   //
+   // RFC 8446 4.1.2
+   //    If a "key_share" extension was supplied in the HelloRetryRequest,
+   //    replacing the list of shares with a list containing a single
+   //    KeyShareEntry from the indicated group.
+   //
+   //    Updating the "pre_shared_key" extension if present by recomputing
+   //    the "obfuscated_ticket_age" and binder values and (optionally)
+   //    removing any PSKs which are incompatible with the server's
+   //    indicated cipher suite.
+   //
+   //    Optionally adding, removing, or changing the length of the
+   //    "padding" extension.
+   }
+
 void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths)
    {
    auto psk = m_data->extensions.get<PSK>();
@@ -779,6 +973,109 @@ void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths)
    // re-marshalled with the correct binders and sent over the wire.
    Handshake_Layer::prepare_message(*this, ths);
    psk->calculate_binders(ths);
+   }
+
+std::vector<X509_Certificate> Client_Hello_13::find_certificate_chain(Credentials_Manager& creds) const
+   {
+   const auto& exts = extensions();
+
+   // RFC 8446 4.2.3
+   //    Clients which desire the server to authenticate itself via a
+   //    certificate MUST send the "signature_algorithms" extension.
+   //    [Otherwise] the server MUST abort the handshake with a
+   //    "missing_extension" alert.
+   if(!exts.has<Signature_Algorithms>())
+      {
+      throw TLS_Exception(Alert::MISSING_EXTENSION,
+                          "Missing certificate signature preferences, server cannot authenticate");
+      }
+
+   // RFC 8446 4.2.3
+   //    If no "signature_algorithms_cert" extension is present, then the
+   //    "signature_algorithms" extension also applies to signatures
+   //    appearing in certificates.
+   const auto& sig_algo_preference = (exts.has<Signature_Algorithms_Cert>())
+      ? exts.get<Signature_Algorithms_Cert>()->supported_schemes()
+      : exts.get<Signature_Algorithms>()->supported_schemes();
+
+   const std::string hostname = sni_hostname();
+
+   std::vector<Signature_Scheme> compatible_signature_schemes;
+   std::copy_if(sig_algo_preference.begin(), sig_algo_preference.end(),
+                std::back_inserter(compatible_signature_schemes),
+                [](const auto& scheme)
+                   {
+                   return scheme.is_available() &&
+                          scheme.is_compatible_with(Protocol_Version::TLS_V13);
+                   });
+
+   if(compatible_signature_schemes.empty())
+      {
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Failed to agree on a signature algorithm");
+      }
+
+   // RFC 8446 4.2.3
+   //    Each SignatureScheme value lists a single signature algorithm that
+   //    the client is willing to verify.  The values are indicated in
+   //    descending order of preference.
+   for (const auto& scheme : compatible_signature_schemes)
+      {
+      // TODO: To fully support "signature_algorithm_cert", this would need to
+      //       receive two algorithm names. One for the signature algorithm used
+      //       to sign the certificate and one for the public key contained in
+      //       the certificate. Both must be supported to comply with the
+      //       client's asymmetric key requirements.
+      // Note: This requires a change in the public API of CredentialsManager.
+      //
+      // see: https://github.com/randombit/botan/issues/2714#issuecomment-1057175631
+      // see: RFC 8446 4.4.2.2
+      auto chain = creds.cert_chain_single_type(scheme.algorithm_name(), "tls-server", hostname);
+      if(!chain.empty())
+         { return chain; }
+      }
+
+   // RFC 8446 4.4.2.2
+   //    If the server cannot produce a certificate chain that is signed only
+   //    via the indicated supported algorithms, then it SHOULD continue the
+   //    handshake by sending the client a certificate chain of its choice
+   //    that may include algorithms that are not known to be supported by the
+   //    client.
+   //
+   // We rely on the application to hand out a valid (but maybe incompatible)
+   // server certificate chain. Otherwise, we have to abort.
+   throw TLS_Exception(Alert::INTERNAL_ERROR,
+                       "Application did not a provide a server certificate chain");
+   }
+
+
+std::optional<Protocol_Version> Client_Hello_13::highest_supported_version(const Policy& policy) const
+   {
+   // RFC 8446 4.2.1
+   //    The "supported_versions" extension is used by the client to indicate
+   //    which versions of TLS it supports and by the server to indicate which
+   //    version it is using. The extension contains a list of supported
+   //    versions in preference order, with the most preferred version first.
+   const auto supvers = m_data->extensions.get<Supported_Versions>();
+   BOTAN_ASSERT_NONNULL(supvers);
+
+   std::optional<Protocol_Version> result;
+
+   for(const auto& v : supvers->versions())
+      {
+      // RFC 8446 4.2.1
+      //    Servers MUST only select a version of TLS present in that extension
+      //    and MUST ignore any unknown versions that are present in that
+      //    extension.
+      if(!v.known_version() || !policy.acceptable_protocol_version(v))
+         { continue; }
+
+      result = (result.has_value())
+         ? std::optional(std::max(result.value(), v))
+         : std::optional(v);
+      }
+
+   return result;
    }
 
 #endif // BOTAN_HAS_TLS_13

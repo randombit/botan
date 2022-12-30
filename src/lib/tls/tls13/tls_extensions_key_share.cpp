@@ -8,6 +8,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <functional>
+#include <iterator>
+
 #include <botan/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/tls_exceptn.h>
@@ -192,11 +195,16 @@ class Key_Share_Entry
       std::unique_ptr<Private_Key> m_private_key;
    };
 
+class Key_Share_ClientHello;
+
 class Key_Share_ServerHello
    {
    public:
       Key_Share_ServerHello(TLS_Data_Reader& reader, uint16_t)
          : m_server_share(reader) {}
+      Key_Share_ServerHello(Named_Group group, Callbacks& cb, RandomNumberGenerator& rng)
+         : m_server_share(group, cb, rng) {}
+
       ~Key_Share_ServerHello() = default;
 
       Key_Share_ServerHello(const Key_Share_ServerHello&) = delete;
@@ -220,6 +228,19 @@ class Key_Share_ServerHello
          return m_server_share;
          }
 
+      secure_vector<uint8_t> exchange(const Key_Share_ClientHello& client_shares, const Policy& policy, Callbacks& cb,
+                                      RandomNumberGenerator& rng) const;
+
+      std::vector<Named_Group> offered_groups() const
+         {
+         return {selected_group()};
+         }
+
+      Named_Group selected_group() const
+         {
+         return m_server_share.group();
+         }
+
       void erase()
          {
          m_server_share.erase();
@@ -234,12 +255,47 @@ class Key_Share_ClientHello
    public:
       Key_Share_ClientHello(TLS_Data_Reader& reader, uint16_t /* extension_size */)
          {
+         // This construction is a crutch to make working with the incoming
+         // TLS_Data_Reader bearable. Currently, this reader spans the entire
+         // Client_Hello message. Hence, if offset or length fields are skewed
+         // or maliciously fabricated, it is possible to read further than the
+         // bounds of the current extension.
+         // Note that this aplies to many locations in the code base.
+         //
+         // TODO: Overhaul the TLS_Data_Reader to allow for cheap "sub-readers"
+         //       that enforce read bounds of sub-structures while parsing.
          const auto client_key_share_length = reader.get_uint16_t();
          const auto read_bytes_so_far_begin = reader.read_so_far();
-
-         while(reader.has_remaining() && ((reader.read_so_far() - read_bytes_so_far_begin) < client_key_share_length))
+         auto remaining = [&]
             {
-            m_client_shares.emplace_back(reader);
+            const auto read_so_far = reader.read_so_far() - read_bytes_so_far_begin;
+            BOTAN_STATE_CHECK(read_so_far <= client_key_share_length);
+            return client_key_share_length - read_so_far;
+            };
+
+         while(reader.has_remaining() && remaining() > 0)
+            {
+            if(remaining() < 4)
+               {
+               throw TLS_Exception(Alert::DECODE_ERROR, "Not enough data to read another KeyShareEntry");
+               }
+
+            Key_Share_Entry new_entry(reader);
+
+            // RFC 8446 4.2.8
+            //    Clients MUST NOT offer multiple KeyShareEntry values for the same
+            //    group. [...]
+            //    Servers MAY check for violations of these rules and abort the
+            //    handshake with an "illegal_parameter" alert if one is violated.
+            if(std::find_if(m_client_shares.begin(), m_client_shares.end(),
+                            [&](const auto& entry) { return entry.group() == new_entry.group(); } )
+               != m_client_shares.end())
+               {
+               throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                                   "Received multiple key share entries for the same group");
+               }
+
+            m_client_shares.emplace_back(std::move(new_entry));
             }
 
          if((reader.read_so_far() - read_bytes_so_far_begin) != client_key_share_length)
@@ -297,6 +353,36 @@ class Key_Share_ClientHello
          m_client_shares.emplace_back(to_offer, cb, rng);
          }
 
+      std::vector<Named_Group> offered_groups() const
+         {
+         std::vector<Named_Group> offered_groups;
+         offered_groups.reserve(m_client_shares.size());
+         for(const auto& share : m_client_shares)
+            offered_groups.push_back(share.group());
+         return offered_groups;
+         }
+
+      Named_Group selected_group() const
+         {
+         throw Invalid_Argument("Client Hello Key Share does not select a group");
+         }
+
+      std::optional<std::reference_wrapper<const Key_Share_Entry>>
+            find_matching_keyshare(const Key_Share_Entry& server_share) const
+         {
+         auto match = std::find_if(m_client_shares.cbegin(), m_client_shares.cend(), [&](const auto& offered)
+            {
+            return offered.group() == server_share.group();
+            });
+
+         if(match == m_client_shares.end())
+            {
+            return std::nullopt;
+            }
+
+         return *match;
+         }
+
       std::vector<uint8_t> serialize() const
          {
          std::vector<uint8_t> shares;
@@ -326,10 +412,7 @@ class Key_Share_ClientHello
          const auto& server_selected = server_share.get_singleton_entry();
 
          // find the client offer that matches the server offer
-         auto match = std::find_if(m_client_shares.cbegin(), m_client_shares.cend(), [&server_selected](const auto& offered)
-            {
-            return offered.group() == server_selected.group();
-            });
+         auto match = find_matching_keyshare(server_selected);
 
          // RFC 8446 4.2.8:
          //   [The KeyShareEntry in the ServerHello] MUST be in the same group
@@ -337,13 +420,12 @@ class Key_Share_ClientHello
          //   has selected for the negotiated key exchange.  Servers MUST NOT
          //   send a KeyShareEntry for any group not indicated in the client's
          //   "supported_groups" extension [...]
-         if(!value_exists(policy.key_exchange_groups(), server_selected.group()) ||
-               match == m_client_shares.cend())
+         if(!value_exists(policy.key_exchange_groups(), server_selected.group()) || !match.has_value())
             {
             throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Server selected an unexpected key exchange group.");
             }
 
-         return match->exchange(server_selected, policy, cb, rng);
+         return match->get().exchange(server_selected, policy, cb, rng);
          }
 
       void erase()
@@ -355,6 +437,20 @@ class Key_Share_ClientHello
    private:
       std::vector<Key_Share_Entry> m_client_shares;
    };
+
+
+secure_vector<uint8_t> Key_Share_ServerHello::exchange(const Key_Share_ClientHello& client_shares, const Policy& policy,
+      Callbacks& cb,
+      RandomNumberGenerator& rng) const
+   {
+   const auto client_share = client_shares.find_matching_keyshare(m_server_share);
+
+   // The server hello was created based on the client hello's key share set.
+   BOTAN_ASSERT_NOMSG(client_share.has_value());
+
+   return m_server_share.exchange(client_share->get(), policy, cb, rng);
+   }
+
 
 class Key_Share_HelloRetryRequest
    {
@@ -372,6 +468,8 @@ class Key_Share_HelloRetryRequest
 
          m_selected_group = static_cast<Named_Group>(reader.get_uint16_t());
          }
+      Key_Share_HelloRetryRequest(Named_Group selected_group) :
+         m_selected_group(selected_group) {}
 
       ~Key_Share_HelloRetryRequest() = default;
 
@@ -387,9 +485,14 @@ class Key_Share_HelloRetryRequest
                   get_byte<1>(static_cast<uint16_t>(m_selected_group)) };
          }
 
-      Named_Group get_selected_group() const
+      Named_Group selected_group() const
          {
          return m_selected_group;
+         }
+
+      std::vector<Named_Group> offered_groups() const
+         {
+         throw Invalid_Argument("Hello Retry Request never offers any key exchange groups");
          }
 
       bool empty() const
@@ -442,6 +545,14 @@ Key_Share::Key_Share(TLS_Data_Reader& reader,
 Key_Share::Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng) :
    m_impl(std::make_unique<Key_Share_Impl>(Key_Share_ClientHello(policy, cb, rng))) {}
 
+// ServerHello
+Key_Share::Key_Share(Named_Group group, Callbacks& cb, RandomNumberGenerator& rng) :
+   m_impl(std::make_unique<Key_Share_Impl>(Key_Share_ServerHello(group, cb, rng))) {}
+
+// HelloRetryRequest
+Key_Share::Key_Share(Named_Group selected_group) :
+   m_impl(std::make_unique<Key_Share_Impl>(Key_Share_HelloRetryRequest(selected_group))) {}
+
 Key_Share::~Key_Share() = default;
 
 std::vector<uint8_t> Key_Share::serialize(Connection_Side /*whoami*/) const
@@ -467,13 +578,28 @@ secure_vector<uint8_t> Key_Share::exchange(const Key_Share& peer_keyshare,
          },
       [&](const Key_Share_ServerHello& sh, const Key_Share_ClientHello& ch)
          {
-         return ch.exchange(sh, policy, cb, rng);
+         return sh.exchange(ch, policy, cb, rng);
          },
       [](const auto&, const auto&) -> secure_vector<uint8_t>
          {
          throw Invalid_Argument("can only exchange with ServerHello and ClientHello Key_Share");
          }
       }, m_impl->key_share, peer_keyshare.m_impl->key_share);
+   }
+
+std::vector<Named_Group> Key_Share::offered_groups() const
+   {
+   return std::visit([](const auto& keyshare)
+         { return keyshare.offered_groups(); },
+         m_impl->key_share);
+   }
+
+
+Named_Group Key_Share::selected_group() const
+   {
+   return std::visit([](const auto& keyshare)
+         { return keyshare.selected_group(); },
+         m_impl->key_share);
    }
 
 void Key_Share::retry_offer(const Key_Share& retry_request_keyshare,
@@ -485,7 +611,7 @@ void Key_Share::retry_offer(const Key_Share& retry_request_keyshare,
       {
       [&](Key_Share_ClientHello& ch, const Key_Share_HelloRetryRequest& hrr)
          {
-         auto selected = hrr.get_selected_group();
+         auto selected = hrr.selected_group();
          // RFC 8446 4.2.8
          //    [T]he selected_group field [MUST correspond] to a group which was provided in
          //    the "supported_groups" extension in the original ClientHello

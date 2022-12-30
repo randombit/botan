@@ -15,6 +15,11 @@
 #include <botan/internal/tls_server_impl_12.h>
 #include <botan/tls_magic.h>
 
+#include <botan/internal/tls_server_impl_12.h>
+#if defined(BOTAN_HAS_TLS_13)
+  #include <botan/internal/tls_server_impl_13.h>
+#endif
+
 namespace Botan::TLS {
 
 /*
@@ -26,17 +31,45 @@ Server::Server(Callbacks& callbacks,
                const Policy& policy,
                RandomNumberGenerator& rng,
                bool is_datagram,
-               size_t io_buf_sz) :
-   m_impl(std::make_unique<Server_Impl_12>(callbacks, session_manager, creds, policy,
-                                           rng, is_datagram,io_buf_sz))
+               size_t io_buf_sz)
    {
+   const auto max_version = policy.latest_supported_version(is_datagram);
+
+   if(!max_version.is_pre_tls_13())
+      {
+#if defined(BOTAN_HAS_TLS_13)
+      m_impl = std::make_unique<Server_Impl_13>(
+         callbacks, session_manager, creds, policy, rng);
+
+      if(m_impl->expects_downgrade())
+         { m_impl->set_io_buffer_size(io_buf_sz); }
+#else
+      throw Not_Implemented("TLS 1.3 server is not available in this build");
+#endif
+      }
+   else
+      {
+      m_impl = std::make_unique<Server_Impl_12>(
+         callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
+      }
    }
 
 Server::~Server() = default;
 
 size_t Server::received_data(const uint8_t buf[], size_t buf_size)
    {
-   return m_impl->received_data(buf, buf_size);
+   auto read = m_impl->received_data(buf, buf_size);
+
+   if(m_impl->is_downgrading())
+      {
+      auto info = m_impl->extract_downgrade_info();
+      m_impl = std::make_unique<Server_Impl_12>(*info);
+
+      // replay peer data received so far
+      read = m_impl->received_data(info->peer_transcript.data(), info->peer_transcript.size());
+      }
+
+   return read;
    }
 
 bool Server::is_active() const

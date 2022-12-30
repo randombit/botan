@@ -51,7 +51,7 @@ Protocol = 0304
 AdditionalData = 0000000A000D001C0023002B002D0033FF01
 Ciphersuite = 130113031302
 Message_Type = client_hello_13
-Exception = Client sent TLS 1.3 Client Hello with compression method != null
+Exception = Client did not offer NULL compression
 
 # TLS 1.3 client hello with two compression methods '00' and '01'
 Buffer = 0303cb34ecb1e78163ba1c38c6dacb196a6dffa21a8d9912ec18a2ef6283024dece700000613011303130202000100910000000b0009000006736572766572ff01000100000a00140012001d0017001800190100010101020103010400230000003300260024001d002099381de560e4bd43d23d8e435a7dbafeb3c06e51c13cae4d5413691e529aaf2c002b0003020304000d0020001e040305030603020308040805080604010501060102010402050206020202002d00020101001c00024001
@@ -59,7 +59,7 @@ Protocol = 0304
 AdditionalData = 0000000A000D001C0023002B002D0033FF01
 Ciphersuite = 130113031302
 Message_Type = client_hello_13
-Exception = Client sent TLS 1.3 Client Hello with compression method != null
+Exception = Client did not offer NULL compression
 
 # empty
 Buffer =

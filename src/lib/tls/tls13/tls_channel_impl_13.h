@@ -14,6 +14,7 @@
 #include <botan/internal/tls_record_layer_13.h>
 #include <botan/internal/tls_handshake_layer_13.h>
 #include <botan/internal/tls_transcript_hash_13.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan::TLS {
 
@@ -192,12 +193,20 @@ class Channel_Impl_13 : public Channel_Impl
        */
       void opportunistically_update_traffic_keys() { m_opportunistic_key_update = true; }
 
-      std::vector<uint8_t> send_handshake_message(const Handshake_Message_13_Ref message)
+      template<typename... MsgTs>
+      std::vector<uint8_t> send_handshake_message(const std::variant<MsgTs...>& message)
          {
          return aggregate_handshake_messages()
-                   .add(message)
+                   .add(generalize_to<Handshake_Message_13_Ref>(message))
                    .send();
          }
+
+      template<typename MsgT>
+      std::vector<uint8_t> send_handshake_message(std::reference_wrapper<MsgT> message)
+         {
+         return send_handshake_message(generalize_to<Handshake_Message_13_Ref>(message));
+         }
+
       void send_post_handshake_message(const Post_Handshake_Message_13 message);
       void send_dummy_change_cipher_spec();
 
@@ -229,7 +238,9 @@ class Channel_Impl_13 : public Channel_Impl
       std::unique_ptr<Cipher_State> m_cipher_state;
 
       /**
-       * Indicate that this (Client_Impl_13) instance has to expect a downgrade to TLS 1.2.
+       * Indicate that we have to expect a downgrade to TLS 1.2. In which case the current
+       * implementation (i.e. Client_Impl_13 or Server_Impl_13) will need to be replaced
+       * by their respective counter parts.
        *
        * This will prepare an internal structure where any information required to downgrade
        * can be preserved.

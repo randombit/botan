@@ -15,6 +15,9 @@
 #include <botan/mac.h>
 #include <botan/rng.h>
 
+#include <botan/tls_messages.h>
+#include <botan/tls_callbacks.h>
+
 namespace Botan::TLS {
 
 Session::Session() :
@@ -64,6 +67,8 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
                    "Instantiated a TLS 1.2 session object with a TLS version newer than 1.2");
    }
 
+#if defined(BOTAN_HAS_TLS_13)
+
 Session::Session(const std::vector<uint8_t>& session_ticket,
                  const secure_vector<uint8_t>& session_psk,
                  const std::optional<uint32_t>& max_early_data_bytes,
@@ -110,6 +115,35 @@ Session::Session(const std::vector<uint8_t>& session_ticket,
    BOTAN_ARG_CHECK(!version.is_pre_tls_13(),
                    "Instantiated a TLS 1.3 session object with a TLS version older than 1.3");
    }
+
+Session::Session(secure_vector<uint8_t>&& session_psk,
+                 const std::optional<uint32_t>& max_early_data_bytes,
+                 std::chrono::seconds lifetime_hint,
+                 const std::vector<X509_Certificate>& peer_certs,
+                 const Client_Hello_13& client_hello,
+                 const Server_Hello_13& server_hello,
+                 Callbacks& callbacks,
+                 RandomNumberGenerator& rng) :
+   m_start_time(callbacks.tls_current_timestamp()),
+   m_master_secret(std::move(session_psk)),
+   m_version(server_hello.selected_version()),
+   m_ciphersuite(server_hello.ciphersuite()),
+   m_connection_side(Connection_Side::SERVER),
+   m_extended_master_secret(true),
+   m_encrypt_then_mac(true),
+   m_peer_certs(peer_certs),
+   m_server_info(client_hello.sni_hostname()),
+   m_early_data_allowed(max_early_data_bytes.has_value()),
+   m_max_early_data_bytes(max_early_data_bytes.value_or(0)),
+   m_ticket_age_add(load_be<uint32_t>(rng.random_vec(4).data(), 0))
+   {
+   const auto lifetime_ms = std::chrono::duration_cast<std::chrono::milliseconds>(lifetime_hint).count();
+   BOTAN_ARG_CHECK(lifetime_ms <= std::numeric_limits<uint32_t>::max(),
+                   "lifetime is too long");
+   m_lifetime_hint = static_cast<uint32_t>(lifetime_ms);
+   }
+
+#endif
 
 Session::Session(const std::string& pem)
    {

@@ -313,10 +313,8 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
                            boost::asio::placeholders::bytes_transferred)));
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session) override
+      void tls_session_activated() override
          {
-         m_hostname = session.server_info().hostname();
-
          auto onConnect = [this](boost::system::error_code ec, tcp::resolver::iterator /*endpoint*/)
             {
             if(ec)
@@ -328,6 +326,12 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
             proxy_write_to_server(nullptr, 0);
             };
          async_connect(m_server_socket, m_server_endpoints, onConnect);
+         }
+
+      bool tls_session_established(const Botan::TLS::Session& session) override
+         {
+         m_hostname = session.server_info().hostname();
+
          return true;
          }
 
