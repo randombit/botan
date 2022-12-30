@@ -27,14 +27,7 @@ class Server_Impl_13 : public Channel_Impl_13
                               const Policy& policy,
                               RandomNumberGenerator& rng);
 
-      /**
-       * @return network protocol as notified by the TLS client
-       */
       std::string application_protocol() const override;
-
-      /**
-      * @return certificate chain of the peer (may be empty)
-      */
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
    private:

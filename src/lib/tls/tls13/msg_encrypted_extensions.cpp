@@ -58,9 +58,17 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello, 
       m_extensions.add(new Server_Name_Indicator(""));
       }
 
+   if(auto alpn_ext = exts.get<Application_Layer_Protocol_Notification>())
+      {
+      const auto next_protocol = cb.tls_server_choose_app_protocol(alpn_ext->protocols());
+      if(!next_protocol.empty())
+         {
+         m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
+         }
+      }
+
    // TODO: Implement handling for (at least)
    //       * SRTP
-   //       * ALPN
 
    cb.tls_modify_extensions(m_extensions, SERVER, type());
    }
