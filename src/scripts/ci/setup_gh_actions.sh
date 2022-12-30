@@ -23,7 +23,7 @@ if type -p "apt-get"; then
     if [ "$TARGET" = "valgrind" ]; then
         sudo apt-get -qq install valgrind
 
-    elif [ "$TARGET" = "shared" ] ; then
+    elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] ; then
         sudo apt-get -qq install libboost-all-dev
 
     elif [ "$TARGET" = "clang" ]; then
@@ -57,6 +57,9 @@ if type -p "apt-get"; then
         echo 'extern "C" void __sync_synchronize() {}' >> "${SCRIPT_LOCATION}/../../tests/main.cpp"
         echo 'extern "C" void __sync_synchronize() {}' >> "${SCRIPT_LOCATION}/../../cli/main.cpp"
 
+    elif [ "$TARGET" = "emscripten" ]; then
+        sudo apt-get -qq install emscripten
+
     elif [ "$TARGET" = "lint" ]; then
         sudo apt-get -qq install pylint
 
@@ -76,9 +79,6 @@ if type -p "apt-get"; then
         softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
         echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
 
-    elif [ "$TARGET" = "examples" ]; then
-        sudo apt-get -qq install libboost-all-dev
-
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq install doxygen python-docutils python3-sphinx
     fi
@@ -86,10 +86,7 @@ else
     export HOMEBREW_NO_AUTO_UPDATE=1
     brew install ccache
 
-    if [ "$TARGET" = "emscripten" ]; then
-        brew install emscripten
-
-    elif [ "$TARGET" = "shared" ]; then
+    if [ "$TARGET" = "shared" ]; then
         brew install boost
     fi
 fi
