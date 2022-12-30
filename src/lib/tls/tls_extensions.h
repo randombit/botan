@@ -441,6 +441,8 @@ class BOTAN_UNSTABLE_API Encrypt_then_MAC final : public Extension
       Encrypt_then_MAC(TLS_Data_Reader& reader, uint16_t extension_size);
    };
 
+class Certificate_Status_Request_Internal;
+
 /**
 * Certificate Status Request (RFC 6066)
 */
@@ -456,37 +458,29 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
 
       bool empty() const override { return false; }
 
-      const std::vector<uint8_t>& get_responder_id_list() const
-         {
-         return m_ocsp_names;
-         }
+      const std::vector<uint8_t>& get_responder_id_list() const;
+      const std::vector<uint8_t>& get_request_extensions() const;
+      const std::vector<uint8_t>& get_ocsp_response() const;
 
-      const std::vector<uint8_t>& get_request_extensions() const
-         {
-         return m_extension_bytes;
-         }
+      // TLS 1.2 Server generated version: empty
+      Certificate_Status_Request();
 
-      const std::vector<uint8_t>& get_ocsp_response() const
-         {
-         return m_response;
-         }
+      // TLS 1.2 Client version, both lists can be empty
+      Certificate_Status_Request(std::vector<uint8_t> ocsp_responder_ids,
+                                 std::vector<std::vector<uint8_t>> ocsp_key_ids);
 
-      // Server generated version: empty
-      Certificate_Status_Request() {}
-
-      // Client version, both lists can be empty
-      Certificate_Status_Request(const std::vector<uint8_t>& ocsp_responder_ids,
-                                 const std::vector<std::vector<uint8_t>>& ocsp_key_ids);
+      // TLS 1.3 version
+      Certificate_Status_Request(std::vector<uint8_t> response);
 
       Certificate_Status_Request(TLS_Data_Reader& reader,
                                  uint16_t extension_size,
-                                 Connection_Side side,
-                                 Handshake_Type message_type);
+                                 Handshake_Type message_type,
+                                 Connection_Side from);
+
+      ~Certificate_Status_Request() override;
+
    private:
-      std::vector<uint8_t> m_ocsp_names;
-      std::vector<std::vector<uint8_t>> m_ocsp_keys; // is this field really needed
-      std::vector<uint8_t> m_extension_bytes;
-      std::vector<uint8_t> m_response;
+      std::unique_ptr<Certificate_Status_Request_Internal> m_impl;
    };
 
 /**

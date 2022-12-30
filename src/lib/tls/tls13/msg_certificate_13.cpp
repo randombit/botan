@@ -20,6 +20,8 @@
 #include <botan/internal/loadstor.h>
 #include <botan/data_src.h>
 
+#include <iterator>
+
 namespace Botan::TLS {
 
 namespace {
@@ -130,8 +132,23 @@ void Certificate_13::verify(Callbacks& callbacks,
    }
 
 void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
+                                   const Certificate_Status_Request* csr,
                                    Callbacks& callbacks)
    {
+   // RFC 8446 4.4.2.1
+   //    A server MAY request that a client present an OCSP response with its
+   //    certificate by sending an empty "status_request" extension in its
+   //    CertificateRequest message.
+   const auto ocsp_responses =
+      (csr != nullptr)
+         ? callbacks.tls_provide_cert_chain_status(cert_chain, *csr)
+         : std::vector<std::vector<uint8_t>>(cert_chain.size());
+
+   if(ocsp_responses.size() != cert_chain.size())
+      {
+      throw TLS_Exception(Alert::INTERNAL_ERROR, "Application didn't provide the correct number of OCSP responses");
+      }
+
    for(size_t i = 0; i < cert_chain.size(); ++i)
       {
       auto exts = Extensions();
@@ -145,6 +162,10 @@ void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
       callbacks.tls_modify_extensions(exts, m_side, type());
       auto& entry = m_entries.emplace_back();
       entry.certificate = cert_chain[i];
+      if(!ocsp_responses[i].empty())
+         {
+         entry.extensions.add(new Certificate_Status_Request(std::move(ocsp_responses[i])));
+         }
       }
    }
 
@@ -165,6 +186,7 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
                     cert_request.acceptable_CAs(),
                     "tls-client",
                     hostname),
+                 cert_request.extensions().get<Certificate_Status_Request>(),
                  callbacks);
    }
 
@@ -195,6 +217,7 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
    setup_entries(credentials_manager.find_cert_chain(
                     filter_signature_schemes(client_hello.signature_schemes()),
                     {}, "tls-server", client_hello.sni_hostname()),
+                 client_hello.extensions().get<Certificate_Status_Request>(),
                  callbacks);
    }
 
@@ -261,6 +284,11 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
       //    OCSP Status extension [RFC6066] and the SignedCertificateTimestamp
       //    extension [RFC6962]; future extensions may be defined for this
       //    message as well.
+      //
+      // RFC 8446 4.4.2.1
+      //    A server MAY request that a client present an OCSP response with its
+      //    certificate by sending an empty "status_request" extension in its
+      //    CertificateRequest message.
       if(entry.extensions.contains_implemented_extensions_other_than({
             TLSEXT_CERT_STATUS_REQUEST,
             // TLSEXT_SIGNED_CERTIFICATE_TIMESTAMP
@@ -315,7 +343,18 @@ std::vector<uint8_t> Certificate_13::serialize() const
    for(const auto& entry : m_entries)
       {
       append_tls_length_value(entries, entry.certificate.BER_encode(), 3);
-      append_tls_length_value(entries, entry.extensions.serialize(m_side), 2);
+
+      // Extensions are tacked at the end of certificate entries. Note that
+      // Extensions::serialize() usually emits the required length field,
+      // except when no extensions are added at all, then it  returns an
+      // empty buffer.
+      //
+      // TODO: look into this issue more generally when overhauling the
+      //       message marshalling.
+      auto extensions = entry.extensions.serialize(m_side);
+      entries += (!extensions.empty())
+                 ? extensions
+                 : std::vector<uint8_t>{0, 0};
       }
 
    append_tls_length_value(buf, entries, 3);

@@ -595,6 +595,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
 
    private:
       void setup_entries(std::vector<X509_Certificate> cert_chain,
+                         const Certificate_Status_Request* csr,
                          Callbacks& callbacks);
 
    private:
@@ -615,7 +616,7 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
 
       const std::vector<uint8_t>& response() const { return m_response; }
 
-      explicit Certificate_Status(const std::vector<uint8_t>& buf);
+      explicit Certificate_Status(const std::vector<uint8_t>& buf, const Connection_Side from);
 
       Certificate_Status(Handshake_IO& io,
                          Handshake_Hash& hash,
@@ -626,10 +627,13 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
        */
       Certificate_Status(Handshake_IO& io,
                          Handshake_Hash& hash,
-                         const std::vector<uint8_t>& raw_response_bytes);
+                         std::vector<uint8_t> raw_response_bytes);
+
+      Certificate_Status(std::vector<uint8_t> raw_response_bytes);
+
+      std::vector<uint8_t> serialize() const override;
 
    private:
-      std::vector<uint8_t> serialize() const override;
       std::vector<uint8_t> m_response;
    };
 

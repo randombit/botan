@@ -16,7 +16,7 @@
 
 namespace Botan::TLS {
 
-Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf)
+Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf, const Connection_Side)
    {
    if(buf.size() < 5)
       throw Decoding_Error("Invalid Certificate_Status message: too small");
@@ -43,11 +43,14 @@ Certificate_Status::Certificate_Status(Handshake_IO& io,
 
 Certificate_Status::Certificate_Status(Handshake_IO& io,
                                        Handshake_Hash& hash,
-                                       const std::vector<uint8_t>& raw_response_bytes) :
-   m_response(raw_response_bytes)
+                                       std::vector<uint8_t> raw_response_bytes) :
+   Certificate_Status(std::move(raw_response_bytes))
    {
    hash.update(io.send(*this));
    }
+
+Certificate_Status::Certificate_Status(std::vector<uint8_t> raw_response_bytes) :
+   m_response(std::move(raw_response_bytes)) {}
 
 std::vector<uint8_t> Certificate_Status::serialize() const
    {
