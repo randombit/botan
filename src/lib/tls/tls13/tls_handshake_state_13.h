@@ -108,7 +108,10 @@ class BOTAN_TEST_API Handshake_State_13_Base
  *
  * The handshake state machine as described in RFC 8446 Appendix A is NOT validated here.
  */
-template <Connection_Side whoami, typename Outbound_Message_T, typename Inbound_Message_T>
+template <Connection_Side whoami,
+          typename Outbound_Message_T,
+          typename Inbound_Message_T,
+          typename Inbound_Post_Handshake_Message_T>
 class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Base
    {
    public:
@@ -147,15 +150,30 @@ class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Ba
             throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "received an illegal handshake message");
             }, std::move(message));
          }
+
+      decltype(auto) received(Post_Handshake_Message_13 message)
+         {
+         return std::visit([](auto msg) -> Inbound_Post_Handshake_Message_T
+            {
+            if constexpr(std::is_constructible_v<Inbound_Post_Handshake_Message_T, decltype(msg)>)
+               {
+               return msg;
+               }
+
+            throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "received an unexpected post-handshake message");
+            }, std::move(message));
+         }
    };
 
 using Client_Handshake_State_13 = Handshake_State_13<Connection_Side::CLIENT,
       Client_Handshake_13_Message,
-      Server_Handshake_13_Message>;
+      Server_Handshake_13_Message,
+      Server_Post_Handshake_13_Message>;
 
 using Server_Handshake_State_13 = Handshake_State_13<Connection_Side::SERVER,
       Server_Handshake_13_Message,
-      Client_Handshake_13_Message>;
+      Client_Handshake_13_Message,
+      Client_Post_Handshake_13_Message>;
 }
 
 #endif

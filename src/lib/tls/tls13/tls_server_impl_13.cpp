@@ -69,9 +69,14 @@ void Server_Impl_13::process_handshake_msg(Handshake_Message_13 message)
       }, m_handshake_state.received(std::move(message)));
    }
 
-void Server_Impl_13::process_post_handshake_msg(Post_Handshake_Message_13 /*msg*/)
+void Server_Impl_13::process_post_handshake_msg(Post_Handshake_Message_13 message)
    {
-   throw Not_Implemented("NYI: process_post_handshake_msg");
+   BOTAN_STATE_CHECK(handshake_finished());
+
+   std::visit([&](auto msg)
+      {
+      handle(msg);
+      }, m_handshake_state.received(std::move(message)));
    }
 
 void Server_Impl_13::process_dummy_change_cipher_spec()

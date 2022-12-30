@@ -51,7 +51,6 @@
         "Resume-Client-NoResume-TLS12-TLS13-TLS": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
         "Resume-Client-Mismatch-TLS12-TLS13-TLS": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
 
-        "KeyUpdate-FromServer": "No TLS 1.3 server, yet",
         "DelegatedCredentials*": "No TLS 1.3 server, yet",
         "Resume-Server-OmitPSKsOnSecondClientHello": "No TLS 1.3 server, yet",
         "PartialClientFinishedWithSecondClientHello": "No TLS 1.3 server, yet",
@@ -72,8 +71,6 @@
         "HttpPUT": "TLS 1.3 server does not detect HTTP",
         "HttpHEAD": "TLS 1.3 server does not detect HTTP",
         "HttpCONNECT": "TLS 1.3 server does not detect HTTP",
-
-        "KeyUpdate-ToServer": "TLS 1.3 server key update NYI",
 
         "ExtraClientEncryptedExtension-TLS-TLS13": "TLS 1.3 server UNIMPLEMENTED",
         "TLS13-1RTT-Server-TLS-Sync": "TLS 1.3 server UNIMPLEMENTED",
