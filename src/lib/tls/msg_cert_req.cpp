@@ -30,8 +30,6 @@ std::string cert_type_code_to_name(uint8_t code)
       {
       case 1:
          return "RSA";
-      case 2:
-         return "DSA";
       case 64:
          return "ECDSA";
       default:
@@ -43,12 +41,10 @@ uint8_t cert_type_name_to_code(const std::string& name)
    {
    if(name == "RSA")
       return 1;
-   if(name == "DSA")
-      return 2;
    if(name == "ECDSA")
       return 64;
 
-   throw Invalid_Argument("Unknown cert type " + name);
+   throw Invalid_Argument("Unknown/unhandled TLS cert type " + name);
    }
 
 }
@@ -61,7 +57,7 @@ Certificate_Request_12::Certificate_Request_12(Handshake_IO& io,
                                  const Policy& policy,
                                  const std::vector<X509_DN>& ca_certs) :
    m_names(ca_certs),
-   m_cert_key_types({ "RSA", "ECDSA", "DSA" })
+   m_cert_key_types({ "RSA", "ECDSA" })
    {
    m_schemes = policy.acceptable_signature_schemes();
    hash.update(io.send(*this));
