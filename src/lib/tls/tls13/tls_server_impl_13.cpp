@@ -168,8 +168,32 @@ void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_
                                         policy(),
                                         callbacks(),
                                         rng())))
-      .add(m_handshake_state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash.current())))
-      .send();
+      .add(m_handshake_state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash.current())));
+
+   if(client_hello.extensions().has<Record_Size_Limit>() &&
+         m_handshake_state.encrypted_extensions().extensions().has<Record_Size_Limit>())
+      {
+      // RFC 8449 4.
+      //    When the "record_size_limit" extension is negotiated, an endpoint
+      //    MUST NOT generate a protected record with plaintext that is larger
+      //    than the RecordSizeLimit value it receives from its peer.
+      //    Unprotected messages are not subject to this limit.
+      //
+      // Hence, the limit is set just before we start sending encrypted records.
+      //
+      // RFC 8449 4.
+      //     The record size limit only applies to records sent toward the
+      //     endpoint that advertises the limit.  An endpoint can send records
+      //     that are larger than the limit it advertises as its own limit.
+      //
+      // Hence, the "outgoing" limit is what the client requested and the
+      // "incoming" limit is what we will request in the Encrypted Extensions.
+      const auto outgoing_limit = client_hello.extensions().get<Record_Size_Limit>();
+      const auto incoming_limit = m_handshake_state.encrypted_extensions().extensions().get<Record_Size_Limit>();
+      set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
+      }
+
+   flight.send();
 
    m_cipher_state->advance_with_server_finished(m_transcript_hash.current());
    }
