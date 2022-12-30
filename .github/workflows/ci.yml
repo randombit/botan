@@ -139,7 +139,7 @@ jobs:
             host_os: ubuntu-22.04
           - target: emscripten
             compiler: emcc
-            host_os: macos-12
+            host_os: ubuntu-22.04
           - target: minimized
             compiler: gcc
             host_os: ubuntu-22.04

@@ -2065,6 +2065,12 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         return ' '.join([(cc.add_lib_option % lib) for lib in libs.split(',') if lib != ''])
 
+    def test_exe_extra_ldflags():
+        if osinfo.matches_name("emscripten"):
+            return '--preload-file=%s@src/tests/data' % source_paths.test_data_dir
+
+        return ''
+
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -2196,7 +2202,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'cc_sysroot': sysroot_option(),
         'cc_compile_flags': options.cxxflags or cc.cc_compile_flags(options),
         'ldflags': options.ldflags or '',
-        'test_exe_extra_ldflags': '--preload-file=%s' % source_paths.test_data_dir if osinfo.matches_name("emscripten") else '',
+        'test_exe_extra_ldflags': test_exe_extra_ldflags(),
         'extra_libs': extra_libs(options.extra_libs, cc),
         'cc_warning_flags': cc.cc_warning_flags(options),
         'output_to_exe': cc.output_to_exe,
