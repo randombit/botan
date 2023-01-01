@@ -12,7 +12,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/secmem.h>
-#include <botan/point_gfp.h>
+#include <botan/ec_point.h>
 #include <botan/internal/workfactor.h>
 
 namespace Botan {
@@ -40,7 +40,7 @@ EC_Group_Encoding default_encoding_for(EC_Group& group)
 }
 
 EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
-                           const PointGFp& pub_point) :
+                           const EC_Point& pub_point) :
    m_domain_params(dom_par),
    m_public_key(pub_point),
    m_domain_encoding(default_encoding_for(m_domain_params))
@@ -77,11 +77,11 @@ std::vector<uint8_t> EC_PublicKey::public_key_bits() const
    return public_point().encode(point_encoding());
    }
 
-void EC_PublicKey::set_point_encoding(PointGFp::Compression_Type enc)
+void EC_PublicKey::set_point_encoding(EC_Point::Compression_Type enc)
    {
-   if(enc != PointGFp::COMPRESSED &&
-      enc != PointGFp::UNCOMPRESSED &&
-      enc != PointGFp::HYBRID)
+   if(enc != EC_Point::COMPRESSED &&
+      enc != EC_Point::UNCOMPRESSED &&
+      enc != EC_Point::HYBRID)
       throw Invalid_Argument("Invalid point encoding for EC_PublicKey");
 
    m_point_encoding = enc;
@@ -147,7 +147,7 @@ secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
          .encode(static_cast<size_t>(1))
          .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()), ASN1_Type::OctetString)
          .start_explicit_context_specific(1)
-            .encode(m_public_key.encode(PointGFp::Compression_Type::UNCOMPRESSED), ASN1_Type::BitString)
+            .encode(m_public_key.encode(EC_Point::Compression_Type::UNCOMPRESSED), ASN1_Type::BitString)
          .end_cons()
       .end_cons()
       .get_contents();

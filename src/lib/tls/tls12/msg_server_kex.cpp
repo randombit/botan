@@ -115,7 +115,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          // follow client's preference for point compression
          ecdh_public_val = ecdh->public_value(
             state.client_hello()->prefers_compressed_ec_points() ?
-            PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED);
+            EC_Point::COMPRESSED : EC_Point::UNCOMPRESSED);
 
          m_kex_key.reset(ecdh.release());
          }

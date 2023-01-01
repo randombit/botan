@@ -93,7 +93,7 @@ int pubkey_load_ec(std::unique_ptr<ECPublicKey_t>& key,
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
    Botan::EC_Group grp(curve_name);
-   Botan::PointGFp uncompressed_point = grp.point(public_x, public_y);
+   Botan::EC_Point uncompressed_point = grp.point(public_x, public_y);
    key.reset(new ECPublicKey_t(grp, uncompressed_point));
    return BOTAN_FFI_SUCCESS;
    }

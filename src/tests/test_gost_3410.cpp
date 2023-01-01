@@ -41,7 +41,7 @@ class GOST_3410_2001_Verification_Tests final : public PK_Signature_Verification
          const BigInt Px = vars.get_req_bn("Px");
          const BigInt Py = vars.get_req_bn("Py");
 
-         const Botan::PointGFp public_point = group.point(Px, Py);
+         const Botan::EC_Point public_point = group.point(Px, Py);
 
          return std::make_unique<Botan::GOST_3410_PublicKey>(group, public_point);
          }

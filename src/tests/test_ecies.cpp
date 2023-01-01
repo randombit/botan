@@ -20,19 +20,19 @@ namespace {
 
 using Flags = Botan::ECIES_Flags;
 
-Botan::PointGFp::Compression_Type get_compression_type(const std::string& format)
+Botan::EC_Point::Compression_Type get_compression_type(const std::string& format)
    {
    if(format == "uncompressed")
       {
-      return Botan::PointGFp::UNCOMPRESSED;
+      return Botan::EC_Point::UNCOMPRESSED;
       }
    else if(format == "compressed")
       {
-      return Botan::PointGFp::COMPRESSED;
+      return Botan::EC_Point::COMPRESSED;
       }
    else if(format == "hybrid")
       {
-      return Botan::PointGFp::HYBRID;
+      return Botan::EC_Point::HYBRID;
       }
    throw Botan::Invalid_Argument("invalid compression format");
    }
@@ -112,7 +112,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test
          Test::Result result("ECIES-ISO");
 
          // get test vectors defined by ISO 18033
-         const Botan::PointGFp::Compression_Type compression_type = get_compression_type(vars.get_req_str("format"));
+         const Botan::EC_Point::Compression_Type compression_type = get_compression_type(vars.get_req_str("format"));
          const Botan::BigInt p = vars.get_req_bn("p");
          const Botan::BigInt a = vars.get_req_bn("a");
          const Botan::BigInt b = vars.get_req_bn("b");
@@ -131,12 +131,12 @@ class ECIES_ISO_Tests final : public Text_Based_Test
 
          // keys of bob
          const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, x);
-         const Botan::PointGFp other_public_key_point = domain.point(hx, hy);
+         const Botan::EC_Point other_public_key_point = domain.point(hx, hy);
          const Botan::ECDH_PublicKey other_public_key(domain, other_public_key_point);
 
          // (ephemeral) keys of alice
          const Botan::ECDH_PrivateKey eph_private_key(Test::rng(), domain, r);
-         const Botan::PointGFp eph_public_key_point = eph_private_key.public_point();
+         const Botan::EC_Point eph_public_key_point = eph_private_key.public_point();
          const std::vector<uint8_t> eph_public_key_bin = eph_public_key_point.encode(compression_type);
          result.test_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
 
@@ -149,7 +149,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test
 
          // test encryption / decryption
 
-         for(auto comp_type : { Botan::PointGFp::UNCOMPRESSED, Botan::PointGFp::COMPRESSED, Botan::PointGFp::HYBRID })
+         for(auto comp_type : { Botan::EC_Point::UNCOMPRESSED, Botan::EC_Point::COMPRESSED, Botan::EC_Point::HYBRID })
             {
             for(bool cofactor_mode : { true, false })
                {
@@ -213,7 +213,7 @@ class ECIES_Tests final : public Text_Based_Test
          const std::vector<uint8_t> iv = vars.get_opt_bin("Iv");
          const std::string mac = vars.get_req_str("Mac");
          const size_t mac_key_len = vars.get_req_sz("MacKeyLen");
-         const Botan::PointGFp::Compression_Type compression_type = get_compression_type(vars.get_req_str("Format"));
+         const Botan::EC_Point::Compression_Type compression_type = get_compression_type(vars.get_req_str("Format"));
          const bool cofactor_mode = vars.get_req_sz("CofactorMode") != 0;
          const bool old_cofactor_mode = vars.get_req_sz("OldCofactorMode") != 0;
          const bool check_mode = vars.get_req_sz("CheckMode") != 0;
@@ -252,7 +252,7 @@ Test::Result test_other_key_not_set()
 
    const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
-         "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
+         "HMAC(SHA-512)", 20, Botan::EC_Point::Compression_Type::COMPRESSED,
          flags);
 
    Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
@@ -277,7 +277,7 @@ Test::Result test_kdf_not_found()
 
    const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF-XYZ(SHA-512)", "AES-256/CBC", 32,
-         "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
+         "HMAC(SHA-512)", 20, Botan::EC_Point::Compression_Type::COMPRESSED,
          flags);
 
    result.test_throws("kdf not found", [&]()
@@ -301,7 +301,7 @@ Test::Result test_mac_not_found()
 
    const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
-         "XYZMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
+         "XYZMAC(SHA-512)", 20, Botan::EC_Point::Compression_Type::COMPRESSED,
          flags);
 
    result.test_throws("mac not found", [&]()
@@ -325,7 +325,7 @@ Test::Result test_cipher_not_found()
 
    const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-XYZ-256/CBC", 32,
-         "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
+         "HMAC(SHA-512)", 20, Botan::EC_Point::Compression_Type::COMPRESSED,
          flags);
 
    result.test_throws("cipher not found", [&]()

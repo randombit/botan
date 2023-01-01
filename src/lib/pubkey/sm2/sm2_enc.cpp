@@ -25,7 +25,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
                                const std::string& kdf_hash) :
          m_group(key.domain()),
          m_kdf_hash(kdf_hash),
-         m_ws(PointGFp::WORKSPACE_SIZE),
+         m_ws(EC_Point::WORKSPACE_SIZE),
          m_mul_public_point(key.public_point(), rng, m_ws)
          {
          std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw(m_kdf_hash);
@@ -57,7 +57,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
 
          const BigInt k = m_group.random_scalar(rng);
 
-         const PointGFp C1 = m_group.blinded_base_point_multiply(k, rng, m_ws);
+         const EC_Point C1 = m_group.blinded_base_point_multiply(k, rng, m_ws);
          const BigInt x1 = C1.get_affine_x();
          const BigInt y1 = C1.get_affine_y();
          std::vector<uint8_t> x1_bytes(p_bytes);
@@ -65,7 +65,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
          BigInt::encode_1363(x1_bytes.data(), x1_bytes.size(), x1);
          BigInt::encode_1363(y1_bytes.data(), y1_bytes.size(), y1);
 
-         const PointGFp kPB = m_mul_public_point.mul(k, rng, m_group.get_order(), m_ws);
+         const EC_Point kPB = m_mul_public_point.mul(k, rng, m_group.get_order(), m_ws);
 
          const BigInt x2 = kPB.get_affine_x();
          const BigInt y2 = kPB.get_affine_y();
@@ -105,7 +105,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
       const std::string m_kdf_hash;
 
       std::vector<BigInt> m_ws;
-      PointGFp_Var_Point_Precompute m_mul_public_point;
+      EC_Point_Var_Point_Precompute m_mul_public_point;
       size_t m_hash_size;
    };
 
@@ -183,7 +183,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
          if(same_mem(recode_ctext.data(), ciphertext, ciphertext_len) == false)
             return secure_vector<uint8_t>();
 
-         PointGFp C1 = group.point(x1, y1);
+         EC_Point C1 = group.point(x1, y1);
          C1.randomize_repr(m_rng);
 
          // Here C1 is publically invalid, so no problem with early return:
@@ -195,7 +195,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
             return secure_vector<uint8_t>();
             }
 
-         const PointGFp dbC1 = group.blinded_var_point_multiply(
+         const EC_Point dbC1 = group.blinded_var_point_multiply(
             C1, m_key.private_value(), m_rng, m_ws);
 
          const BigInt x2 = dbC1.get_affine_x();

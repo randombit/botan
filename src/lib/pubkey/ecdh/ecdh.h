@@ -35,7 +35,7 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PublicKey : public virtual EC_PublicKey
       * @param public_point the public point defining this key
       */
       ECDH_PublicKey(const EC_Group& dom_par,
-                     const PointGFp& public_point) :
+                     const EC_Point& public_point) :
          EC_PublicKey(dom_par, public_point) {}
 
       /**
@@ -48,12 +48,12 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PublicKey : public virtual EC_PublicKey
       * @return public point value
       */
       std::vector<uint8_t> public_value() const
-         { return public_point().encode(PointGFp::UNCOMPRESSED); }
+         { return public_point().encode(EC_Point::UNCOMPRESSED); }
 
       /**
       * @return public point value
       */
-      std::vector<uint8_t> public_value(PointGFp::Compression_Type format) const
+      std::vector<uint8_t> public_value(EC_Point::Compression_Type format) const
          { return public_point().encode(format); }
 
    protected:
@@ -92,9 +92,9 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PrivateKey final : public ECDH_PublicKey,
       std::unique_ptr<Public_Key> public_key() const override;
 
       std::vector<uint8_t> public_value() const override
-         { return ECDH_PublicKey::public_value(PointGFp::UNCOMPRESSED); }
+         { return ECDH_PublicKey::public_value(EC_Point::UNCOMPRESSED); }
 
-      std::vector<uint8_t> public_value(PointGFp::Compression_Type type) const
+      std::vector<uint8_t> public_value(EC_Point::Compression_Type type) const
          { return ECDH_PublicKey::public_value(type); }
 
       std::unique_ptr<PK_Ops::Key_Agreement>

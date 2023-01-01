@@ -169,7 +169,7 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_EC_PrivateKey : public virtual Private_Key,
       * @param point the public point
       * @param point_encoding encoding of the point (default DER-encoded)
       */
-      void set_public_point(const PointGFp& point, PublicPointEncoding point_encoding = PublicPointEncoding::Der)
+      void set_public_point(const EC_Point& point, PublicPointEncoding point_encoding = PublicPointEncoding::Der)
          {
          m_public_key = point;
          m_point_encoding = point_encoding;
@@ -192,7 +192,7 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_EC_PrivateKey : public virtual Private_Key,
       * @return the public point of the private key
       * @throws Exception if the public point was not set using set_public_point()
       */
-      const PointGFp& public_point() const
+      const EC_Point& public_point() const
          {
          if(m_public_key.is_zero())
             {
@@ -221,7 +221,7 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_EC_PrivateKey : public virtual Private_Key,
 
    private:
       EC_Group m_domain_params;
-      PointGFp m_public_key;
+      EC_Point m_public_key;
       PublicPointEncoding m_point_encoding = PublicPointEncoding::Der;
    };
 }

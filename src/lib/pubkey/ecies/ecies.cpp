@@ -73,10 +73,10 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          {
          const EC_Group& group = m_key.domain();
 
-         PointGFp input_point = group.OS2ECP(w, w_len);
+         EC_Point input_point = group.OS2ECP(w, w_len);
          input_point.randomize_repr(m_rng);
 
-         const PointGFp S = group.blinded_var_point_multiply(
+         const EC_Point S = group.blinded_var_point_multiply(
             input_point, m_key.private_value(), m_rng, m_ws);
 
          if(S.on_the_curve() == false)
@@ -147,7 +147,7 @@ ECIES_KA_Operation::ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
 * ECIES secret derivation according to ISO 18033-2
 */
 SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
-      const PointGFp& other_public_key_point) const
+      const EC_Point& other_public_key_point) const
    {
    if(other_public_key_point.is_zero())
       {
@@ -156,7 +156,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
 
    std::unique_ptr<KDF> kdf = KDF::create_or_throw(m_params.kdf_spec());
 
-   PointGFp other_point = other_public_key_point;
+   EC_Point other_point = other_public_key_point;
 
    // ISO 18033: step b
    if(m_params.old_cofactor_mode())
@@ -185,7 +185,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
 
 
 ECIES_KA_Params::ECIES_KA_Params(const EC_Group& domain, const std::string& kdf_spec, size_t length,
-                                 PointGFp::Compression_Type compression_type, ECIES_Flags flags) :
+                                 EC_Point::Compression_Type compression_type, ECIES_Flags flags) :
    m_domain(domain),
    m_kdf_spec(kdf_spec),
    m_length(length),
@@ -197,7 +197,7 @@ ECIES_KA_Params::ECIES_KA_Params(const EC_Group& domain, const std::string& kdf_
 ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec,
                                          const std::string& dem_algo_spec, size_t dem_key_len,
                                          const std::string& mac_spec, size_t mac_key_len,
-                                         PointGFp::Compression_Type compression_type, ECIES_Flags flags) :
+                                         EC_Point::Compression_Type compression_type, ECIES_Flags flags) :
    ECIES_KA_Params(domain, kdf_spec, dem_key_len + mac_key_len, compression_type, flags),
    m_dem_spec(dem_algo_spec),
    m_dem_keylen(dem_key_len),
@@ -214,7 +214,7 @@ ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::stri
 ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec,
                                          const std::string& dem_algo_spec, size_t dem_key_len,
                                          const std::string& mac_spec, size_t mac_key_len) :
-   ECIES_System_Params(domain, kdf_spec, dem_algo_spec, dem_key_len, mac_spec, mac_key_len, PointGFp::UNCOMPRESSED,
+   ECIES_System_Params(domain, kdf_spec, dem_algo_spec, dem_key_len, mac_spec, mac_key_len, EC_Point::UNCOMPRESSED,
                          ECIES_Flags::NONE)
    {
    }
@@ -243,7 +243,7 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
    m_other_point(),
    m_label()
    {
-   if(ecies_params.compression_type() != PointGFp::UNCOMPRESSED)
+   if(ecies_params.compression_type() != EC_Point::UNCOMPRESSED)
       {
       // ISO 18033: step d
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
@@ -370,7 +370,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    const std::vector<uint8_t> mac_data(in + in_len - m_mac->output_length(), in + in_len);
 
    // ISO 18033: step a
-   PointGFp other_public_key = m_params.domain().OS2ECP(other_public_key_bin);
+   EC_Point other_public_key = m_params.domain().OS2ECP(other_public_key_bin);
 
    // ISO 18033: step b
    if(m_params.check_mode() && !other_public_key.on_the_curve())

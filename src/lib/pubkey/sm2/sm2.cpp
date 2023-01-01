@@ -57,7 +57,7 @@ SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng,
 std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
                                     const std::string& user_id,
                                     const EC_Group& domain,
-                                    const PointGFp& pubkey)
+                                    const EC_Point& pubkey)
    {
    if(user_id.size() >= 8192)
       throw Invalid_Argument("SM2 user id too long to represent");
@@ -204,7 +204,7 @@ class SM2_Verification_Operation final : public PK_Ops::Verification
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
-      const PointGFp_Multi_Point_Precompute m_gy_mul;
+      const EC_Point_Multi_Point_Precompute m_gy_mul;
       secure_vector<uint8_t> m_digest;
       std::vector<uint8_t> m_za;
       std::unique_ptr<HashFunction> m_hash;
@@ -239,7 +239,7 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
    if(t == 0)
       return false;
 
-   const PointGFp R = m_gy_mul.multi_exp(s, t);
+   const EC_Point R = m_gy_mul.multi_exp(s, t);
 
    // ???
    if(R.is_zero())

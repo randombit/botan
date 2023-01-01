@@ -39,10 +39,10 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
-         PointGFp input_point = m_group.get_cofactor() * m_group.OS2ECP(w, w_len);
+         EC_Point input_point = m_group.get_cofactor() * m_group.OS2ECP(w, w_len);
          input_point.randomize_repr(m_rng);
 
-         const PointGFp S = m_group.blinded_var_point_multiply(
+         const EC_Point S = m_group.blinded_var_point_multiply(
             input_point, m_l_times_priv, m_rng, m_ws);
 
          if(S.on_the_curve() == false)

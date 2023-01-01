@@ -154,17 +154,17 @@ ECC point decoding
 The API function OS2ECP, which is used to convert byte strings to ECC points,
 verifies that all points satisfy the ECC curve equation. Points that do not
 satisfy the equation are invalid, and can sometimes be used to break
-protocols ([InvalidCurve] [InvalidCurveTLS]). See point_gfp.cpp.
+protocols ([InvalidCurve] [InvalidCurveTLS]). See ec_point.cpp.
 
 ECC scalar multiply
 ----------------------
 
 There are several different implementations of ECC scalar multiplications which
-depend on the API invoked. This include ``PointGFp::operator*``,
+depend on the API invoked. This include ``EC_Point::operator*``,
 ``EC_Group::blinded_base_point_multiply`` and
 ``EC_Group::blinded_var_point_multiply``.
 
-The ``PointGFp::operator*`` implementation uses the Montgomery ladder, which is
+The ``EC_Point::operator*`` implementation uses the Montgomery ladder, which is
 fairly resistant to side channels. However it leaks the size of the scalar,
 because the loop iterations are bounded by the scalar size. It should not be
 used in cases when the scalar is a secret.
@@ -200,7 +200,7 @@ points. The table of precomputed multiples is accessed using a masked lookup
 which should not leak information about the secret scalar to an attacker who can
 mount a cache-based side channel attack.
 
-See point_gfp.cpp and point_mul.cpp
+See ec_point.cpp and point_mul.cpp in src/lib/pubkey/ec_group
 
 ECDH
 ----------------------

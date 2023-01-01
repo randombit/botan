@@ -202,7 +202,7 @@ class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_
                   const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
-      const PointGFp_Multi_Point_Precompute m_gy_mul;
+      const EC_Point_Multi_Point_Precompute m_gy_mul;
    };
 
 bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
@@ -229,7 +229,7 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_le
    const BigInt z1 = m_group.multiply_mod_order(s, v);
    const BigInt z2 = m_group.multiply_mod_order(-r, v);
 
-   const PointGFp R = m_gy_mul.multi_exp(z1, z2);
+   const EC_Point R = m_gy_mul.multi_exp(z1, z2);
 
    if(R.is_zero())
      return false;

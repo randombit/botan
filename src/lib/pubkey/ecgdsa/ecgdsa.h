@@ -25,7 +25,7 @@ class BOTAN_PUBLIC_API(2,0) ECGDSA_PublicKey : public virtual EC_PublicKey
       * @param public_point the public point defining this key
       */
       ECGDSA_PublicKey(const EC_Group& dom_par,
-                      const PointGFp& public_point) :
+                      const EC_Point& public_point) :
          EC_PublicKey(dom_par, public_point) {}
 
       /**

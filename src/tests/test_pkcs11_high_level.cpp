@@ -947,10 +947,10 @@ BOTAN_REGISTER_TEST("pkcs11", "pkcs11-rsa", PKCS11_RSA_Tests);
 /***************************** PKCS11 ECDSA *****************************/
 
 #if defined(BOTAN_HAS_ECC_GROUP) && (defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_ECDH))
-std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::PointGFp& point)
+std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::EC_Point& point)
    {
    std::vector<uint8_t> enc;
-   DER_Encoder(enc).encode(point.encode(PointGFp::UNCOMPRESSED), ASN1_Type::OctetString);
+   DER_Encoder(enc).encode(point.encode(EC_Point::UNCOMPRESSED), ASN1_Type::OctetString);
    return enc;
    }
 #endif
@@ -1422,8 +1422,8 @@ Test::Result test_ecdh_derive()
    Botan::PK_Key_Agreement ka(keypair.second, Test::rng(), "Raw");
    Botan::PK_Key_Agreement kb(keypair2.second, Test::rng(), "Raw");
 
-   Botan::SymmetricKey alice_key = ka.derive_key(32, keypair2.first.public_point().encode(PointGFp::UNCOMPRESSED));
-   Botan::SymmetricKey bob_key = kb.derive_key(32, keypair.first.public_point().encode(PointGFp::UNCOMPRESSED));
+   Botan::SymmetricKey alice_key = ka.derive_key(32, keypair2.first.public_point().encode(EC_Point::UNCOMPRESSED));
+   Botan::SymmetricKey bob_key = kb.derive_key(32, keypair.first.public_point().encode(EC_Point::UNCOMPRESSED));
 
    bool eq = alice_key == bob_key;
    result.test_eq("same secret key derived", eq, true);

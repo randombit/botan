@@ -253,7 +253,7 @@ Test::Result test_unusual_curve()
 
    Botan::EC_Group dom_params(p, a, b, Gx, Gy, order_g, cofactor);
 
-   Botan::PointGFp p_G = dom_params.point(Gx, Gy);
+   Botan::EC_Point p_G = dom_params.point(Gx, Gy);
 
    if(!result.confirm("G is on curve", p_G.on_the_curve()))
       {
@@ -279,14 +279,14 @@ Test::Result test_encoding_options()
    Botan::ECDSA_PrivateKey key(Test::rng(), group);
 
    result.confirm("Default encoding is uncompressed",
-                  key.point_encoding() == Botan::PointGFp::UNCOMPRESSED);
+                  key.point_encoding() == Botan::EC_Point::UNCOMPRESSED);
 
    const std::vector<uint8_t> enc_uncompressed = key.public_key_bits();
 
-   key.set_point_encoding(Botan::PointGFp::COMPRESSED);
+   key.set_point_encoding(Botan::EC_Point::COMPRESSED);
 
    result.confirm("set_point_encoding works",
-                  key.point_encoding() == Botan::PointGFp::COMPRESSED);
+                  key.point_encoding() == Botan::EC_Point::COMPRESSED);
 
    const std::vector<uint8_t> enc_compressed = key.public_key_bits();
 
@@ -298,10 +298,10 @@ Test::Result test_encoding_options()
    result.test_gte("Compressed points smaller by group size",
                    size_diff, 32);
 
-   key.set_point_encoding(Botan::PointGFp::HYBRID);
+   key.set_point_encoding(Botan::EC_Point::HYBRID);
 
    result.confirm("set_point_encoding works",
-                  key.point_encoding() == Botan::PointGFp::HYBRID);
+                  key.point_encoding() == Botan::EC_Point::HYBRID);
 
    const std::vector<uint8_t> enc_hybrid = key.public_key_bits();
 
@@ -309,7 +309,7 @@ Test::Result test_encoding_options()
                   enc_uncompressed.size(), enc_hybrid.size());
 
 #if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
-   auto invalid_format = static_cast<Botan::PointGFp::Compression_Type>(99);
+   auto invalid_format = static_cast<Botan::EC_Point::Compression_Type>(99);
 
    result.test_throws("Invalid point format throws",
                       "Invalid point encoding for EC_PublicKey",

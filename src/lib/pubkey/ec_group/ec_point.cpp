@@ -7,14 +7,14 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/point_gfp.h>
+#include <botan/ec_point.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
-PointGFp::PointGFp(const CurveGFp& curve) :
+EC_Point::EC_Point(const CurveGFp& curve) :
    m_curve(curve),
    m_coord_x(0),
    m_coord_y(curve.get_1_rep()),
@@ -23,29 +23,29 @@ PointGFp::PointGFp(const CurveGFp& curve) :
    // Assumes Montgomery rep of zero is zero
    }
 
-PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
+EC_Point::EC_Point(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    m_curve(curve),
    m_coord_x(x),
    m_coord_y(y),
    m_coord_z(m_curve.get_1_rep())
    {
    if(x < 0 || x >= curve.get_p())
-      throw Invalid_Argument("Invalid PointGFp affine x");
+      throw Invalid_Argument("Invalid EC_Point affine x");
    if(y < 0 || y >= curve.get_p())
-      throw Invalid_Argument("Invalid PointGFp affine y");
+      throw Invalid_Argument("Invalid EC_Point affine y");
 
    secure_vector<word> monty_ws(m_curve.get_ws_size());
    m_curve.to_rep(m_coord_x, monty_ws);
    m_curve.to_rep(m_coord_y, monty_ws);
    }
 
-void PointGFp::randomize_repr(RandomNumberGenerator& rng)
+void EC_Point::randomize_repr(RandomNumberGenerator& rng)
    {
    secure_vector<word> ws(m_curve.get_ws_size());
    randomize_repr(rng, ws);
    }
 
-void PointGFp::randomize_repr(RandomNumberGenerator& rng, secure_vector<word>& ws)
+void EC_Point::randomize_repr(RandomNumberGenerator& rng, secure_vector<word>& ws)
    {
    const BigInt mask = BigInt::random_integer(rng, 2, m_curve.get_p());
 
@@ -68,8 +68,8 @@ namespace {
 
 inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size)
    {
-   BOTAN_ASSERT(ws_bn.size() >= PointGFp::WORKSPACE_SIZE,
-                "Expected size for PointGFp workspace");
+   BOTAN_ASSERT(ws_bn.size() >= EC_Point::WORKSPACE_SIZE,
+                "Expected size for EC_Point workspace");
 
    for(auto& ws : ws_bn)
       if(ws.size() < cap_size)
@@ -86,7 +86,7 @@ inline word all_zeros(const word x[], size_t len)
 
 }
 
-void PointGFp::add_affine(const word x_words[], size_t x_size,
+void EC_Point::add_affine(const word x_words[], size_t x_size,
                           const word y_words[], size_t y_size,
                           std::vector<BigInt>& ws_bn)
    {
@@ -169,7 +169,7 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
    m_coord_z.swap(T0);
    }
 
-void PointGFp::add(const word x_words[], size_t x_size,
+void EC_Point::add(const word x_words[], size_t x_size,
                    const word y_words[], size_t y_size,
                    const word z_words[], size_t z_size,
                    std::vector<BigInt>& ws_bn)
@@ -255,14 +255,14 @@ void PointGFp::add(const word x_words[], size_t x_size,
    m_curve.mul(m_coord_z, T3, T4, ws);
    }
 
-void PointGFp::mult2i(size_t iterations, std::vector<BigInt>& ws_bn)
+void EC_Point::mult2i(size_t iterations, std::vector<BigInt>& ws_bn)
    {
    if(iterations == 0)
       return;
 
    if(m_coord_y.is_zero())
       {
-      *this = PointGFp(m_curve); // setting myself to zero
+      *this = EC_Point(m_curve); // setting myself to zero
       return;
       }
 
@@ -275,14 +275,14 @@ void PointGFp::mult2i(size_t iterations, std::vector<BigInt>& ws_bn)
    }
 
 // *this *= 2
-void PointGFp::mult2(std::vector<BigInt>& ws_bn)
+void EC_Point::mult2(std::vector<BigInt>& ws_bn)
    {
    if(is_zero())
       return;
 
    if(m_coord_y.is_zero())
       {
-      *this = PointGFp(m_curve); // setting myself to zero
+      *this = EC_Point(m_curve); // setting myself to zero
       return;
       }
 
@@ -365,16 +365,16 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    }
 
 // arithmetic operators
-PointGFp& PointGFp::operator+=(const PointGFp& rhs)
+EC_Point& EC_Point::operator+=(const EC_Point& rhs)
    {
-   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+   std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
    add(rhs, ws);
    return *this;
    }
 
-PointGFp& PointGFp::operator-=(const PointGFp& rhs)
+EC_Point& EC_Point::operator-=(const EC_Point& rhs)
    {
-   PointGFp minus_rhs = PointGFp(rhs).negate();
+   EC_Point minus_rhs = EC_Point(rhs).negate();
 
    if(is_zero())
       *this = minus_rhs;
@@ -384,21 +384,21 @@ PointGFp& PointGFp::operator-=(const PointGFp& rhs)
    return *this;
    }
 
-PointGFp& PointGFp::operator*=(const BigInt& scalar)
+EC_Point& EC_Point::operator*=(const BigInt& scalar)
    {
    *this = scalar * *this;
    return *this;
    }
 
-PointGFp operator*(const BigInt& scalar, const PointGFp& point)
+EC_Point operator*(const BigInt& scalar, const EC_Point& point)
    {
    BOTAN_DEBUG_ASSERT(point.on_the_curve());
 
    const size_t scalar_bits = scalar.bits();
 
-   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+   std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
 
-   PointGFp R[2] = { point.zero(), point };
+   EC_Point R[2] = { point.zero(), point };
 
    for(size_t i = scalar_bits; i > 0; i--)
       {
@@ -416,7 +416,7 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    }
 
 //static
-void PointGFp::force_all_affine(std::vector<PointGFp>& points,
+void EC_Point::force_all_affine(std::vector<EC_Point>& points,
                                 secure_vector<word>& ws)
    {
    if(points.size() <= 1)
@@ -461,7 +461,7 @@ void PointGFp::force_all_affine(std::vector<PointGFp>& points,
 
    for(size_t i = points.size() - 1; i != 0; i--)
       {
-      PointGFp& point = points[i];
+      EC_Point& point = points[i];
 
       curve.mul(z_inv, s_inv, c[i-1], ws);
 
@@ -481,7 +481,7 @@ void PointGFp::force_all_affine(std::vector<PointGFp>& points,
    points[0].m_coord_z = rep_1;
    }
 
-void PointGFp::force_affine()
+void EC_Point::force_affine()
    {
    if(is_zero())
       throw Invalid_State("Cannot convert zero ECC point to affine");
@@ -496,12 +496,12 @@ void PointGFp::force_affine()
    m_coord_z = m_curve.get_1_rep();
    }
 
-bool PointGFp::is_affine() const
+bool EC_Point::is_affine() const
    {
    return m_curve.is_one(m_coord_z);
    }
 
-BigInt PointGFp::get_affine_x() const
+BigInt EC_Point::get_affine_x() const
    {
    if(is_zero())
       throw Invalid_State("Cannot convert zero point to affine");
@@ -520,7 +520,7 @@ BigInt PointGFp::get_affine_x() const
    return r;
    }
 
-BigInt PointGFp::get_affine_y() const
+BigInt EC_Point::get_affine_y() const
    {
    if(is_zero())
       throw Invalid_State("Cannot convert zero point to affine");
@@ -540,7 +540,7 @@ BigInt PointGFp::get_affine_y() const
    return r;
    }
 
-bool PointGFp::on_the_curve() const
+bool EC_Point::on_the_curve() const
    {
    /*
    Is the point still on the curve?? (If everything is correct, the
@@ -575,7 +575,7 @@ bool PointGFp::on_the_curve() const
    }
 
 // swaps the states of *this and other, does not throw!
-void PointGFp::swap(PointGFp& other)
+void EC_Point::swap(EC_Point& other)
    {
    m_curve.swap(other.m_curve);
    m_coord_x.swap(other.m_coord_x);
@@ -583,7 +583,7 @@ void PointGFp::swap(PointGFp& other)
    m_coord_z.swap(other.m_coord_z);
    }
 
-bool PointGFp::operator==(const PointGFp& other) const
+bool EC_Point::operator==(const EC_Point& other) const
    {
    if(m_curve != other.m_curve)
       return false;
@@ -597,7 +597,7 @@ bool PointGFp::operator==(const PointGFp& other) const
    }
 
 // encoding and decoding
-std::vector<uint8_t> PointGFp::encode(PointGFp::Compression_Type format) const
+std::vector<uint8_t> EC_Point::encode(EC_Point::Compression_Type format) const
    {
    if(is_zero())
       return std::vector<uint8_t>(1); // single 0 byte
@@ -609,20 +609,20 @@ std::vector<uint8_t> PointGFp::encode(PointGFp::Compression_Type format) const
 
    std::vector<uint8_t> result;
 
-   if(format == PointGFp::UNCOMPRESSED)
+   if(format == EC_Point::UNCOMPRESSED)
       {
       result.resize(1 + 2*p_bytes);
       result[0] = 0x04;
       BigInt::encode_1363(&result[1], p_bytes, x);
       BigInt::encode_1363(&result[1+p_bytes], p_bytes, y);
       }
-   else if(format == PointGFp::COMPRESSED)
+   else if(format == EC_Point::COMPRESSED)
       {
       result.resize(1 + p_bytes);
       result[0] = 0x02 | static_cast<uint8_t>(y.get_bit(0));
       BigInt::encode_1363(&result[1], p_bytes, x);
       }
-   else if(format == PointGFp::HYBRID)
+   else if(format == EC_Point::HYBRID)
       {
       result.resize(1 + 2*p_bytes);
       result[0] = 0x06 | static_cast<uint8_t>(y.get_bit(0));
@@ -663,16 +663,16 @@ BigInt decompress_point(bool yMod2,
 
 }
 
-PointGFp OS2ECP(const uint8_t data[], size_t data_len,
+EC_Point OS2ECP(const uint8_t data[], size_t data_len,
                 const CurveGFp& curve)
    {
    // Should we really be doing this?
    if(data_len <= 1)
-      return PointGFp(curve); // return zero
+      return EC_Point(curve); // return zero
 
    std::pair<BigInt, BigInt> xy = OS2ECP(data, data_len, curve.get_p(), curve.get_a(), curve.get_b());
 
-   PointGFp point(curve, xy.first, xy.second);
+   EC_Point point(curve, xy.first, xy.second);
 
    if(!point.on_the_curve())
       throw Decoding_Error("OS2ECP: Decoded point was not on the curve");
