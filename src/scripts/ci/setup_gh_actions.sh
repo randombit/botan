@@ -47,10 +47,6 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-riscv64" ]; then
         sudo apt-get -qq install qemu-user g++-riscv64-linux-gnu
 
-    elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ]; then
-        wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux.zip
-        unzip -qq "$ANDROID_NDK"-linux.zip
-
     elif [ "$TARGET" = "cross-arm32-baremetal" ]; then
         sudo apt-get -qq install gcc-arm-none-eabi libstdc++-arm-none-eabi-newlib
 
