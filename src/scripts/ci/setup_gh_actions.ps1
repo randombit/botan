@@ -15,6 +15,8 @@ choco install -y jom
 #choco install -y sccache
 
 curl -O https://files.randombit.net/sccache.exe
+Get-Location
+Add-Content $env:GITHUB_PATH "."
 
 # find the sccache cache location and store it in the build job's environment
 $raw_cl = (sccache --stats-format json --show-stats | ConvertFrom-Json).cache_location
