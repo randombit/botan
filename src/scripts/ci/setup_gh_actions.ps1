@@ -14,7 +14,7 @@ param(
 choco install -y jom
 #choco install -y sccache
 
-curl https://github.com/mozilla/sccache/releases/download/v0.4.0-pre.4/sccache-v0.4.0-pre.4-x86_64-pc-windows-msvc.zip
+curl -O https://github.com/mozilla/sccache/releases/download/v0.4.0-pre.4/sccache-v0.4.0-pre.4-x86_64-pc-windows-msvc.zip
 unzip -j sccache-v0.4.0-pre.4-x86_64-pc-windows-msvc.zip
 
 # find the sccache cache location and store it in the build job's environment
