@@ -9,10 +9,6 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/os_utils.h>
 
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-  #include <botan/auto_rng.h>
-#endif
-
 namespace Botan {
 
 void RandomNumberGenerator::randomize_with_ts_input(uint8_t output[], size_t output_len)
