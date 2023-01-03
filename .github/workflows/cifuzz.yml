@@ -1,5 +1,10 @@
 name: CIFuzz
 on: [pull_request]
+
+# cancel running workflows when new commits are pushed
+concurrency:
+  cancel-in-progress: true
+
 jobs:
   Fuzzing:
     runs-on: ubuntu-22.04
