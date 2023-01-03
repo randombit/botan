@@ -32,16 +32,27 @@
 
    This is a rough map from the XCode Clang to the upstream Clang
    versions. It is not correct, but is sufficient for our purposes.
+
+   Wikipedia has a mapping table from Apple Clang version to underlying
+   LLVM version: https://en.wikipedia.org/wiki/Xcode
    */
 
-   #if __clang__major__ <= 10
-     CLANG 7 0
-   #elif __clang__major == 11
+   #if __clang_major__ == 11 && __clang_minor__ >= 4
      CLANG 9 0
-   #elif __clang__major == 12
-     CLANG 10 0
-   #elif __clang__major >= 13
-     CLANG 12 0
+   #elif __clang_major__ == 12
+      #if __clang_minor__ < 5
+         CLANG 10 0
+      #else
+         CLANG 11 0
+      #endif
+   #elif __clang_major__ == 13
+      #if __clang_minor__ < 3
+         CLANG 12 0
+      #else
+         CLANG 13 0
+      #endif
+   #elif __clang_major__ >= 14
+     CLANG 14 0
    #endif
 
 #elif defined(__clang__)
