@@ -13,11 +13,6 @@
 
 namespace Botan {
 
-namespace {
-
-const size_t KARATSUBA_MULTIPLY_THRESHOLD = 32;
-const size_t KARATSUBA_SQUARE_THRESHOLD = 32;
-
 /*
 * Simple O(N^2) Multiplication
 */
@@ -73,6 +68,11 @@ void basecase_sqr(word z[], size_t z_size,
       z[x_size+i] = carry;
       }
    }
+
+namespace {
+
+const size_t KARATSUBA_MULTIPLY_THRESHOLD = 32;
+const size_t KARATSUBA_SQUARE_THRESHOLD = 32;
 
 /*
 * Karatsuba Multiplication Operation

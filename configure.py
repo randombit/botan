@@ -2243,6 +2243,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'system_cert_bundle': options.system_cert_bundle,
 
         'fuzzer_mode': options.unsafe_fuzzer_mode,
+        'building_fuzzers': options.build_fuzzers,
         'fuzzer_type': options.build_fuzzers.upper() if options.build_fuzzers else '',
 
         'with_valgrind': options.with_valgrind,
