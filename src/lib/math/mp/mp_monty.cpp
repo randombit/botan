@@ -91,8 +91,8 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
 
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
 
-   CT::conditional_copy_mem(borrow, z, ws, ws + (p_size + 1), (p_size + 1));
-   clear_mem(z + p_size, z_size - p_size - 2);
+   CT::conditional_copy_mem(borrow, z, ws, ws + (p_size + 1), p_size);
+   clear_mem(z + p_size, z_size - p_size);
    }
 
 }

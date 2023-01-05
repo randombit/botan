@@ -789,8 +789,8 @@ void bigint_comba_sqr24(word out[48], const word in[24]);
 *
 * Each of these functions makes the following assumptions:
 *
-* z_size >= 2*(p_size + 1)
-* ws_size >= z_size
+* z_size == 2*p_size
+* ws_size >= 2*(p_size + 1)
 */
 void bigint_monty_redc_4(word z[], const word p[4], word p_dash, word ws[]);
 void bigint_monty_redc_6(word z[], const word p[6], word p_dash, word ws[]);
