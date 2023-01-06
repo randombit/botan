@@ -19,7 +19,7 @@ need to compile libFuzzer::
 Then build the fuzzers::
 
   $ ./configure.py --cc=clang --build-fuzzer=libfuzzer --unsafe-fuzzer-mode \
-        --enable-sanitizers=coverage,address,undefined
+        --with-debug-info --enable-sanitizers=coverage,address,undefined
   $ make fuzzers
 
 Enabling 'coverage' sanitizer flags is required for libFuzzer to work.

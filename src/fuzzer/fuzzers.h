@@ -50,11 +50,11 @@ inline Botan::RandomNumberGenerator& fuzzer_rng()
    }
 
 #define FUZZER_WRITE_AND_CRASH(expr) \
-   do { std::cerr << expr; abort(); } while(0)
+   do { std::cerr << expr << " @ Line " << __LINE__ << " in " << __FILE__ << "\n"; abort(); } while(0)
 
 #define FUZZER_ASSERT_EQUAL(x, y) do {                                  \
    if(x != y) {                                                         \
-      FUZZER_WRITE_AND_CRASH(#x << " = " << x << " !=\n"                \
+      FUZZER_WRITE_AND_CRASH(#x << " = " << x << " != "                \
                              << #y << " = " << y << "\n");              \
    } } while(0)
 

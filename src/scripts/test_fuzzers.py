@@ -156,7 +156,7 @@ def main(args=None):
         # Generate a random corpus for fuzzers without a corpus
         random_corpus_dir = tempfile.mkdtemp(prefix='fuzzer_corpus_')
 
-        for i in range(100):
+        for i in range(1000):
             random_input = os.urandom(i)
             fd = open(os.path.join(random_corpus_dir, 'input_%d' % (i)), 'wb')
             fd.write(random_input)

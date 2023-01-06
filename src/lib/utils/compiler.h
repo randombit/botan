@@ -50,6 +50,19 @@
 */
 #define BOTAN_TEST_API BOTAN_DLL
 
+/**
+* Used to annotate API exports which are exported but only for the
+* purposes of fuzzing. They should not be used by applications and
+* may be removed or changed without notice.
+*
+* They are only exported if the fuzzers are being built
+*/
+#if defined(BOTAN_FUZZERS_ARE_BEING_BUILT)
+  #define BOTAN_FUZZER_API BOTAN_DLL
+#else
+  #define BOTAN_FUZZER_API
+#endif
+
 /*
 * Define BOTAN_FUNC_ISA
 */

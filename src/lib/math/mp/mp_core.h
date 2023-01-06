@@ -275,7 +275,7 @@ inline word bigint_add3_nc(word z[],
 * @param x the first operand (and output)
 * @param x_size size of x
 * @param y the second operand
-* @param y_size size of y (must be >= x_size)
+* @param y_size size of y (must be <= x_size)
 */
 inline void bigint_add2(word x[], size_t x_size,
                         const word y[], size_t y_size)
@@ -338,6 +338,10 @@ inline void bigint_sub2_rev(word x[], const word y[], size_t y_size)
 
 /**
 * Three operand subtraction
+*
+* Expects that x_size >= y_size
+*
+* Writes to z[0:x_size] and returns borrow
 */
 inline word bigint_sub3(word z[],
                         const word x[], size_t x_size,
@@ -770,19 +774,19 @@ inline word bigint_modop(word n1, word n0, word d)
 /*
 * Comba Multiplication / Squaring
 */
-void bigint_comba_mul4(word z[8], const word x[4], const word y[4]);
-void bigint_comba_mul6(word z[12], const word x[6], const word y[6]);
-void bigint_comba_mul8(word z[16], const word x[8], const word y[8]);
-void bigint_comba_mul9(word z[18], const word x[9], const word y[9]);
-void bigint_comba_mul16(word z[32], const word x[16], const word y[16]);
-void bigint_comba_mul24(word z[48], const word x[24], const word y[24]);
+BOTAN_FUZZER_API void bigint_comba_mul4(word z[8], const word x[4], const word y[4]);
+BOTAN_FUZZER_API void bigint_comba_mul6(word z[12], const word x[6], const word y[6]);
+BOTAN_FUZZER_API void bigint_comba_mul8(word z[16], const word x[8], const word y[8]);
+BOTAN_FUZZER_API void bigint_comba_mul9(word z[18], const word x[9], const word y[9]);
+BOTAN_FUZZER_API void bigint_comba_mul16(word z[32], const word x[16], const word y[16]);
+BOTAN_FUZZER_API void bigint_comba_mul24(word z[48], const word x[24], const word y[24]);
 
-void bigint_comba_sqr4(word out[8], const word in[4]);
-void bigint_comba_sqr6(word out[12], const word in[6]);
-void bigint_comba_sqr8(word out[16], const word in[8]);
-void bigint_comba_sqr9(word out[18], const word in[9]);
-void bigint_comba_sqr16(word out[32], const word in[16]);
-void bigint_comba_sqr24(word out[48], const word in[24]);
+BOTAN_FUZZER_API void bigint_comba_sqr4(word out[8], const word in[4]);
+BOTAN_FUZZER_API void bigint_comba_sqr6(word out[12], const word in[6]);
+BOTAN_FUZZER_API void bigint_comba_sqr8(word out[16], const word in[8]);
+BOTAN_FUZZER_API void bigint_comba_sqr9(word out[18], const word in[9]);
+BOTAN_FUZZER_API void bigint_comba_sqr16(word out[32], const word in[16]);
+BOTAN_FUZZER_API void bigint_comba_sqr24(word out[48], const word in[24]);
 
 /*
 * Montgomery reduction
@@ -841,11 +845,25 @@ inline void bigint_monty_redc(word z[],
       bigint_monty_redc_generic(z, z_size, p, p_size, p_dash, ws);
    }
 
+/**
+* Basecase O(N^2) multiplication
+*/
+BOTAN_FUZZER_API
+void basecase_mul(word z[], size_t z_size,
+                  const word x[], size_t x_size,
+                  const word y[], size_t y_size);
+
+/**
+* Basecase O(N^2) squaring
+*/
+BOTAN_FUZZER_API
+void basecase_sqr(word z[], size_t z_size,
+                  const word x[], size_t x_size);
+
 
 /*
 * High Level Multiplication/Squaring Interfaces
 */
-
 void bigint_mul(word z[], size_t z_size,
                 const word x[], size_t x_size, size_t x_sw,
                 const word y[], size_t y_size, size_t y_sw,

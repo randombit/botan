@@ -54,13 +54,14 @@
 #define BOTAN_MP_WORD_BITS %{mp_bits}
 
 %{if fuzzer_mode}
-/** Disables certain validation checks to easy fuzzability of the library
+/** Disables certain validation checks to ease fuzzability of the library
  * @warning This causes the library build to be insecure, hence, it must not be
  *          used in a production environment!
  */
 #define BOTAN_UNSAFE_FUZZER_MODE
 %{endif}
 %{if fuzzer_type}
+#define BOTAN_FUZZERS_ARE_BEING_BUILT
 #define BOTAN_FUZZER_IS_%{fuzzer_type}
 %{endif}
 
