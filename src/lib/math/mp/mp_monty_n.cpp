@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-void bigint_monty_redc_4(word z[], const word p[4], word p_dash, word ws[])
+void bigint_monty_redc_4(word z[8], const word p[4], word p_dash, word ws[])
    {
    word w2 = 0, w1 = 0, w0 = 0;
    w0 = z[0];
@@ -53,12 +53,12 @@ void bigint_monty_redc_4(word z[], const word p[4], word p_dash, word ws[])
    word3_add(&w2, &w1, &w0, z[7]);
    ws[3] = w0;
    ws[4] = w1;
-   word borrow = bigint_sub3(ws + 4 + 1, ws, 4 + 1, p, 4);
-   CT::conditional_copy_mem(borrow, z, ws, ws + 5, 4);
+   word borrow = bigint_sub3(z, ws, 4 + 1, p, 4);
+   CT::conditional_assign_mem(borrow, z, ws, 4);
    clear_mem(z + 4, 4);
    }
 
-void bigint_monty_redc_6(word z[], const word p[6], word p_dash, word ws[])
+void bigint_monty_redc_6(word z[12], const word p[6], word p_dash, word ws[])
    {
    word w2 = 0, w1 = 0, w0 = 0;
    w0 = z[0];
@@ -133,12 +133,12 @@ void bigint_monty_redc_6(word z[], const word p[6], word p_dash, word ws[])
    word3_add(&w2, &w1, &w0, z[11]);
    ws[5] = w0;
    ws[6] = w1;
-   word borrow = bigint_sub3(ws + 6 + 1, ws, 6 + 1, p, 6);
-   CT::conditional_copy_mem(borrow, z, ws, ws + 7, 6);
+   word borrow = bigint_sub3(z, ws, 6 + 1, p, 6);
+   CT::conditional_assign_mem(borrow, z, ws, 6);
    clear_mem(z + 6, 6);
    }
 
-void bigint_monty_redc_8(word z[], const word p[8], word p_dash, word ws[])
+void bigint_monty_redc_8(word z[16], const word p[8], word p_dash, word ws[])
    {
    word w2 = 0, w1 = 0, w0 = 0;
    w0 = z[0];
@@ -253,12 +253,12 @@ void bigint_monty_redc_8(word z[], const word p[8], word p_dash, word ws[])
    word3_add(&w2, &w1, &w0, z[15]);
    ws[7] = w0;
    ws[8] = w1;
-   word borrow = bigint_sub3(ws + 8 + 1, ws, 8 + 1, p, 8);
-   CT::conditional_copy_mem(borrow, z, ws, ws + 9, 8);
+   word borrow = bigint_sub3(z, ws, 8 + 1, p, 8);
+   CT::conditional_assign_mem(borrow, z, ws, 8);
    clear_mem(z + 8, 8);
    }
 
-void bigint_monty_redc_16(word z[], const word p[16], word p_dash, word ws[])
+void bigint_monty_redc_16(word z[32], const word p[16], word p_dash, word ws[])
    {
    word w2 = 0, w1 = 0, w0 = 0;
    w0 = z[0];
@@ -613,12 +613,12 @@ void bigint_monty_redc_16(word z[], const word p[16], word p_dash, word ws[])
    word3_add(&w2, &w1, &w0, z[31]);
    ws[15] = w0;
    ws[16] = w1;
-   word borrow = bigint_sub3(ws + 16 + 1, ws, 16 + 1, p, 16);
-   CT::conditional_copy_mem(borrow, z, ws, ws + 17, 16);
+   word borrow = bigint_sub3(z, ws, 16 + 1, p, 16);
+   CT::conditional_assign_mem(borrow, z, ws, 16);
    clear_mem(z + 16, 16);
    }
 
-void bigint_monty_redc_24(word z[], const word p[24], word p_dash, word ws[])
+void bigint_monty_redc_24(word z[48], const word p[24], word p_dash, word ws[])
    {
    word w2 = 0, w1 = 0, w0 = 0;
    w0 = z[0];
@@ -1341,12 +1341,12 @@ void bigint_monty_redc_24(word z[], const word p[24], word p_dash, word ws[])
    word3_add(&w2, &w1, &w0, z[47]);
    ws[23] = w0;
    ws[24] = w1;
-   word borrow = bigint_sub3(ws + 24 + 1, ws, 24 + 1, p, 24);
-   CT::conditional_copy_mem(borrow, z, ws, ws + 25, 24);
+   word borrow = bigint_sub3(z, ws, 24 + 1, p, 24);
+   CT::conditional_assign_mem(borrow, z, ws, 24);
    clear_mem(z + 24, 24);
    }
 
-void bigint_monty_redc_32(word z[], const word p[32], word p_dash, word ws[])
+void bigint_monty_redc_32(word z[64], const word p[32], word p_dash, word ws[])
    {
    word w2 = 0, w1 = 0, w0 = 0;
    w0 = z[0];
@@ -2565,8 +2565,8 @@ void bigint_monty_redc_32(word z[], const word p[32], word p_dash, word ws[])
    word3_add(&w2, &w1, &w0, z[63]);
    ws[31] = w0;
    ws[32] = w1;
-   word borrow = bigint_sub3(ws + 32 + 1, ws, 32 + 1, p, 32);
-   CT::conditional_copy_mem(borrow, z, ws, ws + 33, 32);
+   word borrow = bigint_sub3(z, ws, 32 + 1, p, 32);
+   CT::conditional_assign_mem(borrow, z, ws, 32);
    clear_mem(z + 32, 32);
    }
 
