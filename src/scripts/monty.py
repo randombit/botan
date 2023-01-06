@@ -3,7 +3,7 @@
 import sys
 import datetime
 
-# (C) 2018 Jack Lloyd
+# (C) 2018,2023 Jack Lloyd
 # Botan is released under the Simplified BSD License (see license.txt)
 
 # Used to generate src/lib/math/mp/mp_monty_n.cpp
@@ -35,25 +35,15 @@ def monty_redc_code(n):
 
         lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (n+i))
         lines.append("ws[%d] = w0;" % (i))
-        lines.append("w0 = w1; w1 = w2; w2 = 0;")
+        if i != n - 1:
+            lines.append("w0 = w1; w1 = w2; w2 = 0;")
 
-    lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (2*(n+1) - 1))
+    lines.append("ws[%d] = w1;" % (n))
 
-    lines.append("ws[%d] = w0;" % (n))
-    lines.append("ws[%d] = w1;" % (n+1))
+    lines.append("word borrow = bigint_sub3(ws + %d + 1, ws, %d + 1, p, %d);" % (n, n, n))
 
-    sub3_bound = 0
-
-    if n >= sub3_bound:
-        lines.append("word borrow = 0;")
-        for i in range(n):
-            lines.append("ws[%d] = word_sub(ws[%d], p[%d], &borrow);" % (n + 1 + i, i, i))
-        lines.append("ws[%d] = word_sub(ws[%d], 0, &borrow);" % (2*n+1, n))
-    else:
-        lines.append("word borrow = bigint_sub3(ws + %d + 1, ws, %d + 1, p, %d);" % (n, n, n))
-
-    lines.append("CT::conditional_copy_mem(borrow, z, ws, ws + %d, %d);" % (n + 1, n + 1))
-    lines.append("clear_mem(z + %d, 2*(%d+1) - %d);" % (n, n, n))
+    lines.append("CT::conditional_copy_mem(borrow, z, ws, ws + %d, %d);" % (n + 1, n))
+    lines.append("clear_mem(z + %d, %d);" % (n, n))
 
     for line in lines:
         print("   %s" % (line))
