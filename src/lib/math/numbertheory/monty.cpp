@@ -85,13 +85,13 @@ BigInt Montgomery_Params::inv_mod_p(const BigInt& x) const
 
 BigInt Montgomery_Params::redc(const BigInt& x, secure_vector<word>& ws) const
    {
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = m_p_words + 1;
 
    if(ws.size() < output_size)
       ws.resize(output_size);
 
    BigInt z = x;
-   z.grow_to(output_size);
+   z.grow_to(2*m_p_words);
 
    bigint_monty_redc(z.mutable_data(),
                      m_p.data(), m_p_words, m_p_dash,
@@ -151,7 +151,7 @@ void Montgomery_Params::mul_by(BigInt& x,
                                const secure_vector<word>& y,
                                secure_vector<word>& ws) const
    {
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = 2*m_p_words;
 
    if(ws.size() < 2*output_size)
       ws.resize(2*output_size);
@@ -179,7 +179,7 @@ void Montgomery_Params::mul_by(BigInt& x,
                                const BigInt& y,
                                secure_vector<word>& ws) const
    {
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = 2*m_p_words;
 
    if(ws.size() < 2*output_size)
       ws.resize(2*output_size);
@@ -205,7 +205,7 @@ void Montgomery_Params::mul_by(BigInt& x,
 
 BigInt Montgomery_Params::sqr(const BigInt& x, secure_vector<word>& ws) const
    {
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = 2*m_p_words;
 
    if(ws.size() < output_size)
       ws.resize(output_size);
@@ -228,7 +228,7 @@ BigInt Montgomery_Params::sqr(const BigInt& x, secure_vector<word>& ws) const
 void Montgomery_Params::square_this(BigInt& x,
                                     secure_vector<word>& ws) const
    {
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = 2*m_p_words;
 
    if(ws.size() < 2*output_size)
       ws.resize(2*output_size);

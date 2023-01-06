@@ -794,15 +794,16 @@ BOTAN_FUZZER_API void bigint_comba_sqr24(word out[48], const word in[24]);
 * Each of these functions makes the following assumptions:
 *
 * z_size == 2*p_size
-* ws_size >= 2*(p_size + 1)
+* ws_size >= p_size + 1
 */
-void bigint_monty_redc_4(word z[], const word p[4], word p_dash, word ws[]);
-void bigint_monty_redc_6(word z[], const word p[6], word p_dash, word ws[]);
-void bigint_monty_redc_8(word z[], const word p[8], word p_dash, word ws[]);
-void bigint_monty_redc_16(word z[], const word p[16], word p_dash, word ws[]);
-void bigint_monty_redc_24(word z[], const word p[24], word p_dash, word ws[]);
-void bigint_monty_redc_32(word z[], const word p[32], word p_dash, word ws[]);
+BOTAN_FUZZER_API void bigint_monty_redc_4(word z[8], const word p[4], word p_dash, word ws[]);
+BOTAN_FUZZER_API void bigint_monty_redc_6(word z[12], const word p[6], word p_dash, word ws[]);
+BOTAN_FUZZER_API void bigint_monty_redc_8(word z[16], const word p[8], word p_dash, word ws[]);
+BOTAN_FUZZER_API void bigint_monty_redc_16(word z[32], const word p[16], word p_dash, word ws[]);
+BOTAN_FUZZER_API void bigint_monty_redc_24(word z[48], const word p[24], word p_dash, word ws[]);
+BOTAN_FUZZER_API void bigint_monty_redc_32(word z[64], const word p[32], word p_dash, word ws[]);
 
+BOTAN_FUZZER_API
 void bigint_monty_redc_generic(word z[], size_t z_size,
                                const word p[], size_t p_size, word p_dash,
                                word ws[]);
@@ -810,13 +811,13 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
 
 /**
 * Montgomery Reduction
-* @param z integer to reduce, of size exactly 2*(p_size+1).
+* @param z integer to reduce, of size exactly 2*p_size.
            Output is in the first p_size+1 words, higher
            words are set to zero.
 * @param p modulus
 * @param p_size size of p
 * @param p_dash Montgomery value
-* @param ws array of at least 2*(p_size+1) words
+* @param ws array of at least p_size+1 words
 * @param ws_size size of ws in words
 */
 inline void bigint_monty_redc(word z[],
@@ -825,9 +826,10 @@ inline void bigint_monty_redc(word z[],
                               word ws[],
                               size_t ws_size)
    {
-   const size_t z_size = 2*(p_size+1);
+   const size_t z_size = 2*p_size;
 
-   BOTAN_ARG_CHECK(ws_size >= z_size, "ws too small");
+   BOTAN_ARG_CHECK(ws_size >= p_size + 1,
+                   "Montgomery workspace too small");
 
    if(p_size == 4)
       bigint_monty_redc_4(z, p, p_dash, ws);

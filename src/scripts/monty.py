@@ -29,20 +29,22 @@ def monty_redc_code(n):
         lines.append("word3_muladd(&w2, &w1, &w0, ws[%d], p[0]);" % (i))
         lines.append("w0 = w1; w1 = w2; w2 = 0;")
 
-    for i in range(0, n):
+    for i in range(0, n - 1):
         for j in range(i + 1, n):
             lines.append("word3_muladd(&w2, &w1, &w0, ws[%d], p[%d]);" % (j, n + i-j))
 
         lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (n+i))
         lines.append("ws[%d] = w0;" % (i))
-        if i != n - 1:
-            lines.append("w0 = w1; w1 = w2; w2 = 0;")
+        lines.append("w0 = w1; w1 = w2; w2 = 0;")
 
+    lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (2*n-1));
+
+    lines.append("ws[%d] = w0;" % (n - 1))
     lines.append("ws[%d] = w1;" % (n))
 
-    lines.append("word borrow = bigint_sub3(ws + %d + 1, ws, %d + 1, p, %d);" % (n, n, n))
+    lines.append("word borrow = bigint_sub3(z, ws, %d + 1, p, %d);" % (n, n))
 
-    lines.append("CT::conditional_copy_mem(borrow, z, ws, ws + %d, %d);" % (n + 1, n))
+    lines.append("CT::conditional_assign_mem(borrow, z, ws, %d);" % (n))
     lines.append("clear_mem(z + %d, %d);" % (n, n))
 
     for line in lines:
@@ -71,7 +73,7 @@ namespace Botan {
 """ % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d")))
 
     for n in sizes:
-        print("void bigint_monty_redc_%d(word z[], const word p[%d], word p_dash, word ws[])" % (n, n))
+        print("void bigint_monty_redc_%d(word z[%d], const word p[%d], word p_dash, word ws[])" % (n, 2*n, n))
         print("   {")
 
         monty_redc_code(n)

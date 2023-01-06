@@ -11,9 +11,9 @@
 #include <botan/internal/mp_core.h>
 
 #if BOTAN_MP_WORD_BITS == 64
-#define WORD_FORMAT_STRING "%016lX"
+  #define WORD_FORMAT_STRING "%016lX"
 #else
-#define WORD_FORMAT_STRING "%08X"
+  #define WORD_FORMAT_STRING "%08X"
 #endif
 
 using Botan::word;

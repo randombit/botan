@@ -369,6 +369,17 @@ inline Mask<T> conditional_copy_mem(T cnd,
    }
 
 template<typename T>
+inline Mask<T> conditional_assign_mem(T cnd,
+                                      T* sink,
+                                      const T* src,
+                                      size_t elems)
+   {
+   const auto mask = CT::Mask<T>::expand(cnd);
+   mask.select_n(sink, src, sink, elems);
+   return mask;
+   }
+
+template<typename T>
 inline void conditional_swap(bool cnd, T& x, T& y)
    {
    const auto swap = CT::Mask<T>::expand(cnd);

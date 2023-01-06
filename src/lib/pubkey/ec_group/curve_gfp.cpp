@@ -58,7 +58,7 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
 
       size_t get_p_words() const override { return m_p_words; }
 
-      size_t get_ws_size() const override { return 2*m_p_words + 4; }
+      size_t get_ws_size() const override { return 2*m_p_words; }
 
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
 
@@ -111,7 +111,7 @@ void CurveGFp_Montgomery::from_curve_rep(BigInt& z, secure_vector<word>& ws) con
    if(ws.size() < get_ws_size())
       ws.resize(get_ws_size());
 
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = 2*m_p_words;
    if(z.size() < output_size)
       z.grow_to(output_size);
 
@@ -131,7 +131,7 @@ void CurveGFp_Montgomery::curve_mul_words(BigInt& z,
    if(ws.size() < get_ws_size())
       ws.resize(get_ws_size());
 
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = 2*m_p_words;
    if(z.size() < output_size)
       z.grow_to(output_size);
 
@@ -153,7 +153,7 @@ void CurveGFp_Montgomery::curve_sqr_words(BigInt& z,
    if(ws.size() < get_ws_size())
       ws.resize(get_ws_size());
 
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = 2*m_p_words;
    if(z.size() < output_size)
       z.grow_to(output_size);
 
@@ -186,7 +186,7 @@ class CurveGFp_NIST : public CurveGFp_Repr
 
       size_t get_p_words() const override { return m_p_words; }
 
-      size_t get_ws_size() const override { return 2*m_p_words + 4; }
+      size_t get_ws_size() const override { return 2*m_p_words; }
 
       const BigInt& get_a_rep() const override { return m_a; }
 
@@ -250,7 +250,7 @@ void CurveGFp_NIST::curve_mul_words(BigInt& z,
    if(ws.size() < get_ws_size())
       ws.resize(get_ws_size());
 
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = 2*m_p_words;
    if(z.size() < output_size)
       z.grow_to(output_size);
 
@@ -268,7 +268,7 @@ void CurveGFp_NIST::curve_sqr_words(BigInt& z, const word x[], size_t x_size,
    if(ws.size() < get_ws_size())
       ws.resize(get_ws_size());
 
-   const size_t output_size = 2*m_p_words + 2;
+   const size_t output_size = 2*m_p_words;
    if(z.size() < output_size)
       z.grow_to(output_size);
 
