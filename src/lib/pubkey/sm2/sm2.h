@@ -25,7 +25,7 @@ class BOTAN_PUBLIC_API(2,2) SM2_PublicKey : public virtual EC_PublicKey
       * @param public_point the public point defining this key
       */
       SM2_PublicKey(const EC_Group& dom_par,
-                    const PointGFp& public_point) :
+                    const EC_Point& public_point) :
          EC_PublicKey(dom_par, public_point) {}
 
       /**
@@ -112,7 +112,7 @@ std::vector<uint8_t>
 BOTAN_PUBLIC_API(2,5) sm2_compute_za(HashFunction& hash,
                                      const std::string& user_id,
                                      const EC_Group& domain,
-                                     const PointGFp& pubkey);
+                                     const EC_Point& pubkey);
 
 // For compat with versions 2.2 - 2.7
 typedef SM2_PublicKey SM2_Signature_PublicKey;

@@ -11,7 +11,7 @@
 #include <botan/ecdh.h>
 #include <botan/ec_group.h>
 #include <botan/cipher_mode.h>
-#include <botan/point_gfp.h>
+#include <botan/ec_point.h>
 #include <botan/pubkey.h>
 #include <botan/secmem.h>
 #include <botan/symkey.h>
@@ -65,7 +65,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_KA_Params
       * @param flags options, see documentation of ECIES_Flags
       */
       ECIES_KA_Params(const EC_Group& domain, const std::string& kdf_spec, size_t length,
-                      PointGFp::Compression_Type compression_type, ECIES_Flags flags);
+                      EC_Point::Compression_Type compression_type, ECIES_Flags flags);
 
       ECIES_KA_Params(const ECIES_KA_Params&) = default;
       ECIES_KA_Params& operator=(const ECIES_KA_Params&) = delete;
@@ -102,7 +102,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_KA_Params
          return (m_flags & ECIES_Flags::CHECK_MODE) == ECIES_Flags::CHECK_MODE;
          }
 
-      inline PointGFp::Compression_Type compression_type() const
+      inline EC_Point::Compression_Type compression_type() const
          {
          return m_compression_mode;
          }
@@ -116,7 +116,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_KA_Params
       const EC_Group m_domain;
       const std::string m_kdf_spec;
       const size_t m_length;
-      const PointGFp::Compression_Type m_compression_mode;
+      const EC_Point::Compression_Type m_compression_mode;
       const ECIES_Flags m_flags;
    };
 
@@ -147,7 +147,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_System_Params final : public ECIES_KA_Params
       */
       ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec, const std::string& dem_algo_spec,
                           size_t dem_key_len, const std::string& mac_spec, size_t mac_key_len,
-                          PointGFp::Compression_Type compression_type, ECIES_Flags flags);
+                          EC_Point::Compression_Type compression_type, ECIES_Flags flags);
 
       ECIES_System_Params(const ECIES_System_Params&) = default;
       ECIES_System_Params& operator=(const ECIES_System_Params&) = delete;
@@ -203,7 +203,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_KA_Operation
       * @param other_public_key_point public key point of the other party
       */
       SymmetricKey derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
-                                 const PointGFp& other_public_key_point) const;
+                                 const EC_Point& other_public_key_point) const;
 
    private:
       const PK_Key_Agreement m_ka;
@@ -234,7 +234,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_Encryptor final : public PK_Encryptor
       ECIES_Encryptor(RandomNumberGenerator& rng, const ECIES_System_Params& ecies_params);
 
       /// Set the public key of the other party
-      inline void set_other_key(const PointGFp& public_point)
+      inline void set_other_key(const EC_Point& public_point)
          {
          m_other_point = public_point;
          }
@@ -264,7 +264,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_Encryptor final : public PK_Encryptor
       std::unique_ptr<Cipher_Mode> m_cipher;
       std::vector<uint8_t> m_eph_public_key_bin;
       InitializationVector m_iv;
-      PointGFp m_other_point;
+      EC_Point m_other_point;
       std::vector<uint8_t> m_label;
    };
 

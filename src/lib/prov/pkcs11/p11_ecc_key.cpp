@@ -16,8 +16,8 @@
 
 namespace Botan::PKCS11 {
 namespace {
-/// Converts a DER-encoded ANSI X9.62 ECPoint to PointGFp
-PointGFp decode_public_point(const secure_vector<uint8_t>& ec_point_data, const EC_Group& group)
+/// Converts a DER-encoded ANSI X9.62 ECPoint to EC_Point
+EC_Point decode_public_point(const secure_vector<uint8_t>& ec_point_data, const EC_Group& group)
    {
    secure_vector<uint8_t> ec_point;
    BER_Decoder(ec_point_data).decode(ec_point, ASN1_Type::OctetString);
@@ -111,7 +111,7 @@ size_t PKCS11_EC_PrivateKey::key_length() const
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::public_key_bits() const
    {
-   return public_point().encode(PointGFp::COMPRESSED);
+   return public_point().encode(EC_Point::COMPRESSED);
    }
 
 size_t PKCS11_EC_PrivateKey::estimated_strength() const

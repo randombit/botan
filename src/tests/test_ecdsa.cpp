@@ -42,7 +42,7 @@ class ECDSA_Verification_Tests final : public PK_Signature_Verification_Test
          const BigInt py = vars.get_req_bn("Py");
          Botan::EC_Group group(Botan::OID::from_string(group_id));
 
-         const Botan::PointGFp public_point = group.point(px, py);
+         const Botan::EC_Point public_point = group.point(px, py);
 
          return std::make_unique<Botan::ECDSA_PublicKey>(group, public_point);
          }
@@ -81,7 +81,7 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
          const BigInt py = vars.get_req_bn("Py");
          Botan::EC_Group group(Botan::OID::from_string(group_id));
 
-         const Botan::PointGFp public_point = group.point(px, py);
+         const Botan::EC_Point public_point = group.point(px, py);
 
          return std::make_unique<Botan::ECDSA_PublicKey>(group, public_point);
          }
@@ -232,15 +232,15 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
          const Botan::BigInt x = vars.get_req_bn("InvalidKeyX");
          const Botan::BigInt y = vars.get_req_bn("InvalidKeyY");
 
-         std::unique_ptr<Botan::PointGFp> public_point;
+         std::unique_ptr<Botan::EC_Point> public_point;
 
          try
             {
-            public_point.reset(new Botan::PointGFp(group.point(x, y)));
+            public_point.reset(new Botan::EC_Point(group.point(x, y)));
             }
          catch(Botan::Invalid_Argument&)
             {
-            // PointGFp() performs a range check on x, y in [0, p−1],
+            // EC_Point() performs a range check on x, y in [0, p−1],
             // which is also part of the EC public key checks, e.g.,
             // in NIST SP800-56A rev2, sec. 5.6.2.3.2
             result.test_success("public key fails check");

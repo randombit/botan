@@ -10,7 +10,7 @@
 #ifndef BOTAN_ECC_DOMAIN_PARAMETERS_H_
 #define BOTAN_ECC_DOMAIN_PARAMETERS_H_
 
-#include <botan/point_gfp.h>
+#include <botan/ec_point.h>
 #include <botan/asn1_obj.h>
 #include <memory>
 #include <set>
@@ -174,7 +174,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * Return group base point
       * @result base point
       */
-      const PointGFp& get_base_point() const;
+      const EC_Point& get_base_point() const;
 
       /**
       * Return the x coordinate of the base point
@@ -237,7 +237,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * In particular, checks that it is a point on the curve, not infinity,
       * and that it has order matching the group.
       */
-      bool verify_public_element(const PointGFp& y) const;
+      bool verify_public_element(const EC_Point& y) const;
 
       /**
       * Return the OID of these domain parameters
@@ -248,13 +248,13 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       /**
       * Return a point on this curve with the affine values x, y
       */
-      PointGFp point(const BigInt& x, const BigInt& y) const;
+      EC_Point point(const BigInt& x, const BigInt& y) const;
 
       /**
       * Multi exponentiate. Not constant time.
       * @return base_point*x + pt*y
       */
-      PointGFp point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const;
+      EC_Point point_multiply(const BigInt& x, const EC_Point& pt, const BigInt& y) const;
 
       /**
       * Blinded point multiplication, attempts resistance to side channels
@@ -263,7 +263,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param ws a temp workspace
       * @return base_point*k
       */
-      PointGFp blinded_base_point_multiply(const BigInt& k,
+      EC_Point blinded_base_point_multiply(const BigInt& k,
                                            RandomNumberGenerator& rng,
                                            std::vector<BigInt>& ws) const;
 
@@ -288,7 +288,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param ws a temp workspace
       * @return point*k
       */
-      PointGFp blinded_var_point_multiply(const PointGFp& point,
+      EC_Point blinded_var_point_multiply(const EC_Point& point,
                                           const BigInt& k,
                                           RandomNumberGenerator& rng,
                                           std::vector<BigInt>& ws) const;
@@ -311,7 +311,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param random_oracle if the mapped point must be uniform (use
                "true" here unless you know what you are doing)
       */
-      PointGFp hash_to_curve(const std::string& hash_fn,
+      EC_Point hash_to_curve(const std::string& hash_fn,
                              const uint8_t input[],
                              size_t input_len,
                              const uint8_t domain_sep[],
@@ -330,7 +330,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param random_oracle if the mapped point must be uniform (use
                "true" here unless you know what you are doing)
       */
-      PointGFp hash_to_curve(const std::string& hash_fn,
+      EC_Point hash_to_curve(const std::string& hash_fn,
                              const uint8_t input[],
                              size_t input_len,
                              const std::string& domain_sep,
@@ -339,14 +339,14 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       /**
       * Return the zero (or infinite) point on this curve
       */
-      PointGFp zero_point() const;
+      EC_Point zero_point() const;
 
-      size_t point_size(PointGFp::Compression_Type format) const;
+      size_t point_size(EC_Point::Compression_Type format) const;
 
-      PointGFp OS2ECP(const uint8_t bits[], size_t len) const;
+      EC_Point OS2ECP(const uint8_t bits[], size_t len) const;
 
       template<typename Alloc>
-      PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& vec) const
+      EC_Point OS2ECP(const std::vector<uint8_t, Alloc>& vec) const
          {
          return this->OS2ECP(vec.data(), vec.size());
          }

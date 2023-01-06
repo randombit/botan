@@ -106,7 +106,7 @@ class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_EMS
                   const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
-      const PointGFp_Multi_Point_Precompute m_gy_mul;
+      const EC_Point_Multi_Point_Precompute m_gy_mul;
    };
 
 bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
@@ -127,7 +127,7 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    const BigInt u1 = m_group.multiply_mod_order(e, w);
    const BigInt u2 = m_group.multiply_mod_order(s, w);
-   const PointGFp R = m_gy_mul.multi_exp(u1, u2);
+   const EC_Point R = m_gy_mul.multi_exp(u1, u2);
 
    if(R.is_zero())
       return false;

@@ -97,7 +97,7 @@ class EC_Group_Data final
       size_t order_bytes() const { return (m_order_bits + 7) / 8; }
 
       const CurveGFp& curve() const { return m_curve; }
-      const PointGFp& base_point() const { return m_base_point; }
+      const EC_Point& base_point() const { return m_base_point; }
 
       bool a_is_minus_3() const { return m_a_is_minus_3; }
       bool a_is_zero() const { return m_a_is_zero; }
@@ -124,7 +124,7 @@ class EC_Group_Data final
          return inverse_mod(x, m_order);
          }
 
-      PointGFp blinded_base_point_multiply(const BigInt& k,
+      EC_Point blinded_base_point_multiply(const BigInt& k,
                                            RandomNumberGenerator& rng,
                                            std::vector<BigInt>& ws) const
          {
@@ -135,14 +135,14 @@ class EC_Group_Data final
 
    private:
       CurveGFp m_curve;
-      PointGFp m_base_point;
+      EC_Point m_base_point;
 
       BigInt m_g_x;
       BigInt m_g_y;
       BigInt m_order;
       BigInt m_cofactor;
       Modular_Reducer m_mod_order;
-      PointGFp_Base_Point_Precompute m_base_mult;
+      EC_Point_Base_Point_Precompute m_base_mult;
       OID m_oid;
       size_t m_p_bits;
       size_t m_order_bits;
@@ -541,7 +541,7 @@ const BigInt& EC_Group::get_b() const
    return data().b();
    }
 
-const PointGFp& EC_Group::get_base_point() const
+const EC_Point& EC_Group::get_base_point() const
    {
    return data().base_point();
    }
@@ -601,21 +601,21 @@ EC_Group_Source EC_Group::source() const
    return data().source();
    }
 
-size_t EC_Group::point_size(PointGFp::Compression_Type format) const
+size_t EC_Group::point_size(EC_Point::Compression_Type format) const
    {
    // Hybrid and standard format are (x,y), compressed is y, +1 format byte
-   if(format == PointGFp::COMPRESSED)
+   if(format == EC_Point::COMPRESSED)
       return (1 + get_p_bytes());
    else
       return (1 + 2*get_p_bytes());
    }
 
-PointGFp EC_Group::OS2ECP(const uint8_t bits[], size_t len) const
+EC_Point EC_Group::OS2ECP(const uint8_t bits[], size_t len) const
    {
    return Botan::OS2ECP(bits, len, data().curve());
    }
 
-PointGFp EC_Group::point(const BigInt& x, const BigInt& y) const
+EC_Point EC_Group::point(const BigInt& x, const BigInt& y) const
    {
    #if 0
    BigInt l = (x*x*x + x*get_a() + get_b()) % get_p();
@@ -627,16 +627,16 @@ PointGFp EC_Group::point(const BigInt& x, const BigInt& y) const
       }
 #endif
    // TODO: randomize the representation?
-   return PointGFp(data().curve(), x, y);
+   return EC_Point(data().curve(), x, y);
    }
 
-PointGFp EC_Group::point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const
+EC_Point EC_Group::point_multiply(const BigInt& x, const EC_Point& pt, const BigInt& y) const
    {
-   PointGFp_Multi_Point_Precompute xy_mul(get_base_point(), pt);
+   EC_Point_Multi_Point_Precompute xy_mul(get_base_point(), pt);
    return xy_mul.multi_exp(x, y);
    }
 
-PointGFp EC_Group::blinded_base_point_multiply(const BigInt& k,
+EC_Point EC_Group::blinded_base_point_multiply(const BigInt& k,
                                                RandomNumberGenerator& rng,
                                                std::vector<BigInt>& ws) const
    {
@@ -647,7 +647,7 @@ BigInt EC_Group::blinded_base_point_multiply_x(const BigInt& k,
                                                RandomNumberGenerator& rng,
                                                std::vector<BigInt>& ws) const
    {
-   const PointGFp pt = data().blinded_base_point_multiply(k, rng, ws);
+   const EC_Point pt = data().blinded_base_point_multiply(k, rng, ws);
 
    if(pt.is_zero())
       return BigInt::zero();
@@ -659,21 +659,21 @@ BigInt EC_Group::random_scalar(RandomNumberGenerator& rng) const
    return BigInt::random_integer(rng, BigInt::one(), get_order());
    }
 
-PointGFp EC_Group::blinded_var_point_multiply(const PointGFp& point,
+EC_Point EC_Group::blinded_var_point_multiply(const EC_Point& point,
                                               const BigInt& k,
                                               RandomNumberGenerator& rng,
                                               std::vector<BigInt>& ws) const
    {
-   PointGFp_Var_Point_Precompute mul(point, rng, ws);
+   EC_Point_Var_Point_Precompute mul(point, rng, ws);
    return mul.mul(k, rng, get_order(), ws);
    }
 
-PointGFp EC_Group::zero_point() const
+EC_Point EC_Group::zero_point() const
    {
-   return PointGFp(data().curve());
+   return EC_Point(data().curve());
    }
 
-PointGFp EC_Group::hash_to_curve(const std::string& hash_fn,
+EC_Point EC_Group::hash_to_curve(const std::string& hash_fn,
                                  const uint8_t input[],
                                  size_t input_len,
                                  const std::string& domain,
@@ -687,7 +687,7 @@ PointGFp EC_Group::hash_to_curve(const std::string& hash_fn,
                               random_oracle);
    }
 
-PointGFp EC_Group::hash_to_curve(const std::string& hash_fn,
+EC_Point EC_Group::hash_to_curve(const std::string& hash_fn,
                                  const uint8_t input[],
                                  size_t input_len,
                                  const uint8_t domain_sep[],
@@ -739,7 +739,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
                .encode(BigInt::encode_1363(get_b(), p_bytes),
                        ASN1_Type::OctetString)
             .end_cons()
-              .encode(get_base_point().encode(PointGFp::UNCOMPRESSED), ASN1_Type::OctetString)
+              .encode(get_base_point().encode(EC_Point::UNCOMPRESSED), ASN1_Type::OctetString)
             .encode(get_order())
             .encode(get_cofactor())
          .end_cons();
@@ -785,7 +785,7 @@ bool EC_Group::operator==(const EC_Group& other) const
            get_cofactor() == other.get_cofactor());
    }
 
-bool EC_Group::verify_public_element(const PointGFp& point) const
+bool EC_Group::verify_public_element(const EC_Point& point) const
    {
    //check that public point is not at infinity
    if(point.is_zero())
@@ -820,7 +820,7 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng,
    const BigInt& a = get_a();
    const BigInt& b = get_b();
    const BigInt& order = get_order();
-   const PointGFp& base_point = get_base_point();
+   const EC_Point& base_point = get_base_point();
 
    if(p <= 3 || order <= 0)
       return false;

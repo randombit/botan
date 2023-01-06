@@ -170,7 +170,7 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
                   const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
-      const PointGFp_Multi_Point_Precompute m_gy_mul;
+      const EC_Point_Multi_Point_Precompute m_gy_mul;
       secure_vector<uint8_t> m_prefix;
    };
 
@@ -203,7 +203,7 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t /*msg_le
    BigInt w(r_xor_e.data(), r_xor_e.size());
    w = m_group.mod_order(w);
 
-   const PointGFp q = m_gy_mul.multi_exp(w, s);
+   const EC_Point q = m_gy_mul.multi_exp(w, s);
    if(q.is_zero())
       {
       return false;

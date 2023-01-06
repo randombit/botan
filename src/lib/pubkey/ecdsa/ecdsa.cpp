@@ -23,7 +23,7 @@ namespace Botan {
 
 namespace {
 
-PointGFp recover_ecdsa_public_key(const EC_Group& group,
+EC_Point recover_ecdsa_public_key(const EC_Group& group,
                                   const std::vector<uint8_t>& msg,
                                   const BigInt& r,
                                   const BigInt& s,
@@ -58,13 +58,13 @@ PointGFp recover_ecdsa_public_key(const EC_Group& group,
       X[0] = 0x02 | y_odd;
       BigInt::encode_1363(&X[1], p_bytes, x);
 
-      const PointGFp R = group.OS2ECP(X);
+      const EC_Point R = group.OS2ECP(X);
 
       if((R*group_order).is_zero() == false)
          throw Decoding_Error("Unable to recover ECDSA public key");
 
       // Compute r_inv * (s*R - eG)
-      PointGFp_Multi_Point_Precompute RG_mul(R, group.get_base_point());
+      EC_Point_Multi_Point_Precompute RG_mul(R, group.get_base_point());
       const BigInt ne = group.mod_order(group_order - e);
       return r_inv * RG_mul.multi_exp(s, ne);
       }
@@ -94,7 +94,7 @@ uint8_t ECDSA_PublicKey::recovery_param(const std::vector<uint8_t>& msg,
       {
       try
          {
-         PointGFp R = recover_ecdsa_public_key(this->domain(), msg, r, s, v);
+         EC_Point R = recover_ecdsa_public_key(this->domain(), msg, r, s, v);
 
          if(R == this->public_point())
             {
@@ -228,7 +228,7 @@ class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
                   const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
-      const PointGFp_Multi_Point_Precompute m_gy_mul;
+      const EC_Point_Multi_Point_Precompute m_gy_mul;
    };
 
 bool ECDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
@@ -253,7 +253,7 @@ bool ECDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    const BigInt u1 = m_group.multiply_mod_order(m_group.mod_order(e), w);
    const BigInt u2 = m_group.multiply_mod_order(r, w);
-   const PointGFp R = m_gy_mul.multi_exp(u1, u2);
+   const EC_Point R = m_gy_mul.multi_exp(u1, u2);
 
    if(R.is_zero())
       return false;

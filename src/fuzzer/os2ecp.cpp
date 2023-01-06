@@ -5,7 +5,7 @@
 */
 #include "fuzzers.h"
 #include <botan/ec_group.h>
-#include <botan/point_gfp.h>
+#include <botan/ec_point.h>
 
 namespace {
 
@@ -13,7 +13,7 @@ void check_os2ecp(const Botan::EC_Group& group, const uint8_t in[], size_t len)
    {
    try
       {
-      Botan::PointGFp point = group.OS2ECP(in, len);
+      Botan::EC_Point point = group.OS2ECP(in, len);
       }
    catch(Botan::Exception& e) {}
    }

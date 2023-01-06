@@ -32,7 +32,7 @@ class BigInt;
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
-class PointGFp;
+class EC_Point;
 #endif
 
 }
@@ -469,8 +469,8 @@ class Test
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
             bool test_eq(const std::string& what,
-                         const Botan::PointGFp& a,
-                         const Botan::PointGFp& b);
+                         const Botan::EC_Point& a,
+                         const Botan::EC_Point& b);
 #endif
 
             bool test_eq(const char* producer, const std::string& what,

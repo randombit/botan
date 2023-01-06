@@ -7,8 +7,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_POINT_GFP_H_
-#define BOTAN_POINT_GFP_H_
+#ifndef BOTAN_EC_POINT_H_
+#define BOTAN_EC_POINT_H_
 
 #include <botan/curve_gfp.h>
 #include <botan/exceptn.h>
@@ -19,7 +19,7 @@ namespace Botan {
 /**
 * This class represents one point on a curve of GF(p)
 */
-class BOTAN_PUBLIC_API(2,0) PointGFp final
+class BOTAN_PUBLIC_API(2,0) EC_Point final
    {
    public:
       enum Compression_Type {
@@ -31,25 +31,25 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       enum { WORKSPACE_SIZE = 8 };
 
       /**
-      * Construct an uninitialized PointGFp
+      * Construct an uninitialized EC_Point
       */
-      PointGFp() = default;
+      EC_Point() = default;
 
       /**
       * Construct the zero point
       * @param curve The base curve
       */
-      explicit PointGFp(const CurveGFp& curve);
+      explicit EC_Point(const CurveGFp& curve);
 
       /**
       * Copy constructor
       */
-      PointGFp(const PointGFp&) = default;
+      EC_Point(const EC_Point&) = default;
 
       /**
       * Move Constructor
       */
-      PointGFp(PointGFp&& other)
+      EC_Point(EC_Point&& other)
          {
          this->swap(other);
          }
@@ -57,12 +57,12 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       /**
       * Standard Assignment
       */
-      PointGFp& operator=(const PointGFp&) = default;
+      EC_Point& operator=(const EC_Point&) = default;
 
       /**
       * Move Assignment
       */
-      PointGFp& operator=(PointGFp&& other)
+      EC_Point& operator=(EC_Point&& other)
          {
          if(this != &other)
             this->swap(other);
@@ -76,40 +76,40 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y);
+      EC_Point(const CurveGFp& curve, const BigInt& x, const BigInt& y);
 
       /**
       * EC2OSP - elliptic curve to octet string primitive
       * @param format which format to encode using
       */
-      std::vector<uint8_t> encode(PointGFp::Compression_Type format) const;
+      std::vector<uint8_t> encode(EC_Point::Compression_Type format) const;
 
       /**
       * += Operator
-      * @param rhs the PointGFp to add to the local value
-      * @result resulting PointGFp
+      * @param rhs the EC_Point to add to the local value
+      * @result resulting EC_Point
       */
-      PointGFp& operator+=(const PointGFp& rhs);
+      EC_Point& operator+=(const EC_Point& rhs);
 
       /**
       * -= Operator
-      * @param rhs the PointGFp to subtract from the local value
-      * @result resulting PointGFp
+      * @param rhs the EC_Point to subtract from the local value
+      * @result resulting EC_Point
       */
-      PointGFp& operator-=(const PointGFp& rhs);
+      EC_Point& operator-=(const EC_Point& rhs);
 
       /**
       * *= Operator
-      * @param scalar the PointGFp to multiply with *this
-      * @result resulting PointGFp
+      * @param scalar the EC_Point to multiply with *this
+      * @result resulting EC_Point
       */
-      PointGFp& operator*=(const BigInt& scalar);
+      EC_Point& operator*=(const BigInt& scalar);
 
       /**
       * Negate this point
       * @return *this
       */
-      PointGFp& negate()
+      EC_Point& negate()
          {
          if(!is_zero())
             m_coord_y = m_curve.get_p() - m_coord_y;
@@ -147,7 +147,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       /**
       * Force all points on the list to affine coordinates
       */
-      static void force_all_affine(std::vector<PointGFp>& points,
+      static void force_all_affine(std::vector<EC_Point>& points,
                                    secure_vector<word>& ws);
 
       bool is_affine() const;
@@ -169,7 +169,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * swaps the states of *this and other, does not throw!
       * @param other the object to swap values with
       */
-      void swap(PointGFp& other);
+      void swap(EC_Point& other);
 
       /**
       * Randomize the point representation
@@ -186,14 +186,14 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       /**
       * Equality operator
       */
-      bool operator==(const PointGFp& other) const;
+      bool operator==(const EC_Point& other) const;
 
       /**
       * Point addition
       * @param other the point to add to *this
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add(const PointGFp& other, std::vector<BigInt>& workspace)
+      void add(const EC_Point& other, std::vector<BigInt>& workspace)
          {
          BOTAN_ARG_CHECK(m_curve == other.m_curve, "cannot add points on different curves");
 
@@ -226,7 +226,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param other affine point to add - assumed to be affine!
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add_affine(const PointGFp& other, std::vector<BigInt>& workspace)
+      void add_affine(const EC_Point& other, std::vector<BigInt>& workspace)
          {
          BOTAN_ASSERT_NOMSG(m_curve == other.m_curve);
          BOTAN_DEBUG_ASSERT(other.is_affine());
@@ -269,9 +269,9 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       * @return other plus *this
       */
-      PointGFp plus(const PointGFp& other, std::vector<BigInt>& workspace) const
+      EC_Point plus(const EC_Point& other, std::vector<BigInt>& workspace) const
          {
-         PointGFp x = (*this);
+         EC_Point x = (*this);
          x.add(other, workspace);
          return x;
          }
@@ -281,9 +281,9 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       * @return *this doubled
       */
-      PointGFp double_of(std::vector<BigInt>& workspace) const
+      EC_Point double_of(std::vector<BigInt>& workspace) const
          {
-         PointGFp x = (*this);
+         EC_Point x = (*this);
          x.mult2(workspace);
          return x;
          }
@@ -291,7 +291,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       /**
       * Return the zero (aka infinite) point associated with this curve
       */
-      PointGFp zero() const { return PointGFp(m_curve); }
+      EC_Point zero() const { return EC_Point(m_curve); }
 
       /**
       * Return base curve of this point
@@ -312,7 +312,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
 * @param point the point value
 * @return scalar*point on the curve
 */
-BOTAN_PUBLIC_API(2,0) PointGFp operator*(const BigInt& scalar, const PointGFp& point);
+BOTAN_PUBLIC_API(2,0) EC_Point operator*(const BigInt& scalar, const EC_Point& point);
 
 /**
 * ECC point multiexponentiation - not constant time!
@@ -322,35 +322,35 @@ BOTAN_PUBLIC_API(2,0) PointGFp operator*(const BigInt& scalar, const PointGFp& p
 * @param z2 a scalar
 * @result (p1 * z1 + p2 * z2)
 */
-BOTAN_PUBLIC_API(2,0) PointGFp multi_exponentiate(
-   const PointGFp& p1, const BigInt& z1,
-   const PointGFp& p2, const BigInt& z2);
+BOTAN_PUBLIC_API(2,0) EC_Point multi_exponentiate(
+   const EC_Point& p1, const BigInt& z1,
+   const EC_Point& p2, const BigInt& z2);
 
 // relational operators
-inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs)
+inline bool operator!=(const EC_Point& lhs, const EC_Point& rhs)
    {
    return !(rhs == lhs);
    }
 
 // arithmetic operators
-inline PointGFp operator-(const PointGFp& lhs)
+inline EC_Point operator-(const EC_Point& lhs)
    {
-   return PointGFp(lhs).negate();
+   return EC_Point(lhs).negate();
    }
 
-inline PointGFp operator+(const PointGFp& lhs, const PointGFp& rhs)
+inline EC_Point operator+(const EC_Point& lhs, const EC_Point& rhs)
    {
-   PointGFp tmp(lhs);
+   EC_Point tmp(lhs);
    return tmp += rhs;
    }
 
-inline PointGFp operator-(const PointGFp& lhs, const PointGFp& rhs)
+inline EC_Point operator-(const EC_Point& lhs, const EC_Point& rhs)
    {
-   PointGFp tmp(lhs);
+   EC_Point tmp(lhs);
    return tmp -= rhs;
    }
 
-inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
+inline EC_Point operator*(const EC_Point& point, const BigInt& scalar)
    {
    return scalar * point;
    }
@@ -359,7 +359,7 @@ inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
 * Perform point decoding
 * Use EC_Group::OS2ECP instead
 */
-PointGFp BOTAN_PUBLIC_API(2,0) OS2ECP(const uint8_t data[], size_t data_len,
+EC_Point BOTAN_PUBLIC_API(2,0) OS2ECP(const uint8_t data[], size_t data_len,
                                       const CurveGFp& curve);
 
 /**
@@ -378,17 +378,20 @@ std::pair<BigInt, BigInt> BOTAN_UNSTABLE_API OS2ECP(const uint8_t data[], size_t
                                                     const BigInt& curve_b);
 
 template<typename Alloc>
-PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)
+EC_Point OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)
    { return OS2ECP(data.data(), data.size(), curve); }
 
-class PointGFp_Var_Point_Precompute;
+class EC_Point_Var_Point_Precompute;
+
+// The name used for this type in older versions
+typedef EC_Point PointGFp;
 
 }
 
 namespace std {
 
 template<>
-inline void swap<Botan::PointGFp>(Botan::PointGFp& x, Botan::PointGFp& y)
+inline void swap<Botan::EC_Point>(Botan::EC_Point& x, Botan::EC_Point& y)
    { x.swap(y); }
 
 }

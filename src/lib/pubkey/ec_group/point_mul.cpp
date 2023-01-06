@@ -21,20 +21,20 @@ size_t blinding_size(const BigInt& group_order)
 
 }
 
-PointGFp multi_exponentiate(const PointGFp& x, const BigInt& z1,
-                            const PointGFp& y, const BigInt& z2)
+EC_Point multi_exponentiate(const EC_Point& x, const BigInt& z1,
+                            const EC_Point& y, const BigInt& z2)
    {
-   PointGFp_Multi_Point_Precompute xy_mul(x, y);
+   EC_Point_Multi_Point_Precompute xy_mul(x, y);
    return xy_mul.multi_exp(z1, z2);
    }
 
-PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& base,
+EC_Point_Base_Point_Precompute::EC_Point_Base_Point_Precompute(const EC_Point& base,
                                                                const Modular_Reducer& mod_order) :
    m_base_point(base),
    m_mod_order(mod_order),
    m_p_words(base.get_curve().get_p().sig_words())
    {
-   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+   std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
 
    const size_t p_bits = base.get_curve().get_p().bits();
 
@@ -45,10 +45,10 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
    */
    const size_t T_bits = round_up(p_bits + blinding_size(mod_order.get_modulus()) + 1, WINDOW_BITS) / WINDOW_BITS;
 
-   std::vector<PointGFp> T(WINDOW_SIZE*T_bits);
+   std::vector<EC_Point> T(WINDOW_SIZE*T_bits);
 
-   PointGFp g = base;
-   PointGFp g2, g4;
+   EC_Point g = base;
+   EC_Point g2, g4;
 
    for(size_t i = 0; i != T_bits; i++)
       {
@@ -69,7 +69,7 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
       g.mult2(ws);
       }
 
-   PointGFp::force_all_affine(T, ws[0].get_word_vector());
+   EC_Point::force_all_affine(T, ws[0].get_word_vector());
 
    m_W.resize(T.size() * 2 * m_p_words);
 
@@ -83,13 +83,13 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
       }
    }
 
-PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
+EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
                                              RandomNumberGenerator& rng,
                                              const BigInt& group_order,
                                              std::vector<BigInt>& ws) const
    {
    if(k.is_negative())
-      throw Invalid_Argument("PointGFp_Base_Point_Precompute scalar must be positive");
+      throw Invalid_Argument("EC_Point_Base_Point_Precompute scalar must be positive");
 
    // Instead of reducing k mod group order should we alter the mask size??
    BigInt scalar = m_mod_order.reduce(k);
@@ -121,10 +121,10 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    BOTAN_ASSERT(windows <= m_W.size() / (3*elem_size),
                 "Precomputed sufficient values for scalar mult");
 
-   PointGFp R = m_base_point.zero();
+   EC_Point R = m_base_point.zero();
 
-   if(ws.size() < PointGFp::WORKSPACE_SIZE)
-      ws.resize(PointGFp::WORKSPACE_SIZE);
+   if(ws.size() < EC_Point::WORKSPACE_SIZE)
+      ws.resize(EC_Point::WORKSPACE_SIZE);
 
    // the precomputed multiples are not secret so use std::vector
    std::vector<word> Wt(elem_size);
@@ -176,17 +176,17 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    return R;
    }
 
-PointGFp_Var_Point_Precompute::PointGFp_Var_Point_Precompute(const PointGFp& point,
+EC_Point_Var_Point_Precompute::EC_Point_Var_Point_Precompute(const EC_Point& point,
                                                              RandomNumberGenerator& rng,
                                                              std::vector<BigInt>& ws) :
    m_curve(point.get_curve()),
    m_p_words(m_curve.get_p().sig_words()),
    m_window_bits(4)
    {
-   if(ws.size() < PointGFp::WORKSPACE_SIZE)
-      ws.resize(PointGFp::WORKSPACE_SIZE);
+   if(ws.size() < EC_Point::WORKSPACE_SIZE)
+      ws.resize(EC_Point::WORKSPACE_SIZE);
 
-   std::vector<PointGFp> U(static_cast<size_t>(1) << m_window_bits);
+   std::vector<EC_Point> U(static_cast<size_t>(1) << m_window_bits);
    U[0] = point.zero();
    U[1] = point;
 
@@ -241,15 +241,15 @@ PointGFp_Var_Point_Precompute::PointGFp_Var_Point_Precompute(const PointGFp& poi
       }
    }
 
-PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
+EC_Point EC_Point_Var_Point_Precompute::mul(const BigInt& k,
                                             RandomNumberGenerator& rng,
                                             const BigInt& group_order,
                                             std::vector<BigInt>& ws) const
    {
    if(k.is_negative())
-      throw Invalid_Argument("PointGFp_Var_Point_Precompute scalar must be positive");
-   if(ws.size() < PointGFp::WORKSPACE_SIZE)
-      ws.resize(PointGFp::WORKSPACE_SIZE);
+      throw Invalid_Argument("EC_Point_Var_Point_Precompute scalar must be positive");
+   if(ws.size() < EC_Point::WORKSPACE_SIZE)
+      ws.resize(EC_Point::WORKSPACE_SIZE);
 
    // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
    const BigInt mask(rng, blinding_size(group_order), false);
@@ -259,7 +259,7 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
    const size_t window_elems = static_cast<size_t>(1) << m_window_bits;
 
    size_t windows = round_up(scalar.bits(), m_window_bits) / m_window_bits;
-   PointGFp R(m_curve);
+   EC_Point R(m_curve);
    secure_vector<word> e(elem_size);
 
    if(windows > 0)
@@ -317,8 +317,8 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
    }
 
 
-PointGFp_Multi_Point_Precompute::PointGFp_Multi_Point_Precompute(const PointGFp& x,
-                                                                 const PointGFp& y)
+EC_Point_Multi_Point_Precompute::EC_Point_Multi_Point_Precompute(const EC_Point& x,
+                                                                 const EC_Point& y)
    {
    if(x.on_the_curve() == false || y.on_the_curve() == false)
       {
@@ -326,17 +326,17 @@ PointGFp_Multi_Point_Precompute::PointGFp_Multi_Point_Precompute(const PointGFp&
       return;
       }
 
-   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+   std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
 
-   PointGFp x2 = x;
+   EC_Point x2 = x;
    x2.mult2(ws);
 
-   const PointGFp x3(x2.plus(x, ws));
+   const EC_Point x3(x2.plus(x, ws));
 
-   PointGFp y2 = y;
+   EC_Point y2 = y;
    y2.mult2(ws);
 
-   const PointGFp y3(y2.plus(y, ws));
+   const EC_Point y3(y2.plus(y, ws));
 
    m_M.reserve(15);
 
@@ -368,23 +368,23 @@ PointGFp_Multi_Point_Precompute::PointGFp_Multi_Point_Precompute(const PointGFp&
 
    if(no_infinity)
       {
-      PointGFp::force_all_affine(m_M, ws[0].get_word_vector());
+      EC_Point::force_all_affine(m_M, ws[0].get_word_vector());
       }
 
    m_no_infinity = no_infinity;
    }
 
-PointGFp PointGFp_Multi_Point_Precompute::multi_exp(const BigInt& z1,
+EC_Point EC_Point_Multi_Point_Precompute::multi_exp(const BigInt& z1,
                                                     const BigInt& z2) const
    {
    if(m_M.size() == 1)
       return m_M[0];
 
-   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+   std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
 
    const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
 
-   PointGFp H = m_M[0].zero();
+   EC_Point H = m_M[0].zero();
 
    for(size_t i = 0; i != z_bits; i += 2)
       {

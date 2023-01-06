@@ -20,7 +20,7 @@
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
-   #include <botan/point_gfp.h>
+   #include <botan/ec_point.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
@@ -376,7 +376,7 @@ bool Test::Result::test_ne(const std::string& what, const BigInt& produced, cons
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
 bool Test::Result::test_eq(const std::string& what,
-                           const Botan::PointGFp& a, const Botan::PointGFp& b)
+                           const Botan::EC_Point& a, const Botan::EC_Point& b)
    {
    //return test_is_eq(what, a, b);
    if(a == b)

@@ -8,7 +8,7 @@
 #define BOTAN_ECC_HASH_TO_CURVE_H_
 
 #include <botan/types.h>
-#include <botan/point_gfp.h>
+#include <botan/ec_point.h>
 #include <string>
 
 namespace Botan {
@@ -34,7 +34,7 @@ void BOTAN_TEST_API expand_message_xmd(const std::string& hash_fn,
 * This method requires that the ECC group have (a*b) != 0
 * which excludes certain groups including secp256k1
 */
-PointGFp hash_to_curve_sswu(const EC_Group& group,
+EC_Point hash_to_curve_sswu(const EC_Group& group,
                             const std::string& hash_fn,
                             const uint8_t input[],
                             size_t input_len,

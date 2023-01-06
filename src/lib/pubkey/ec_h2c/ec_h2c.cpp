@@ -126,7 +126,7 @@ BigInt ct_choose(bool first, const BigInt& x, const BigInt& y)
    return z;
    }
 
-PointGFp map_to_curve_sswu(const EC_Group& group, const Modular_Reducer& mod_p, const BigInt& u)
+EC_Point map_to_curve_sswu(const EC_Group& group, const Modular_Reducer& mod_p, const BigInt& u)
    {
    const BigInt& p = group.get_p();
    const BigInt& A = group.get_a();
@@ -181,7 +181,7 @@ PointGFp map_to_curve_sswu(const EC_Group& group, const Modular_Reducer& mod_p, 
 
 }
 
-PointGFp hash_to_curve_sswu(const EC_Group& group,
+EC_Point hash_to_curve_sswu(const EC_Group& group,
                             const std::string& hash_fn,
                             const uint8_t input[],
                             size_t input_len,
@@ -197,7 +197,7 @@ PointGFp hash_to_curve_sswu(const EC_Group& group,
                                 input, input_len,
                                 domain_sep, domain_sep_len);
 
-   PointGFp pt = map_to_curve_sswu(group, mod_p, u[0]);
+   EC_Point pt = map_to_curve_sswu(group, mod_p, u[0]);
 
    for(size_t i = 1; i != u.size(); ++i)
       pt += map_to_curve_sswu(group, mod_p, u[i]);

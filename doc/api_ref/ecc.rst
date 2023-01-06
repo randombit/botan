@@ -88,7 +88,7 @@ during common operations.
 
          Return the ``b`` parameter of the elliptic curve equation.
 
-      .. cpp:function:: const PointGFp& get_base_point() const
+      .. cpp:function:: const EC_Point& get_base_point() const
 
          Return the groups base point element.
 
@@ -120,7 +120,7 @@ during common operations.
 
          Multiply ``x`` and ``y`` and reduce the result modulo the curve order.
 
-      .. cpp:function:: bool verify_public_element(const PointGFp& y) const
+      .. cpp:function:: bool verify_public_element(const EC_Point& y) const
 
          Return true if ``y`` seems to be a valid group element.
 
@@ -128,18 +128,18 @@ during common operations.
 
          Return the OID used to identify the curve. May be empty.
 
-      .. cpp:function:: PointGFp point(const BigInt& x, const BigInt& y) const
+      .. cpp:function:: EC_Point point(const BigInt& x, const BigInt& y) const
 
          Create and return a point with affine elements ``x`` and ``y``. Note
          this function *does not* verify that ``x`` and ``y`` satisfy the curve
          equation.
 
-      .. cpp:function:: PointGFp point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const
+      .. cpp:function:: EC_Point point_multiply(const BigInt& x, const EC_Point& pt, const BigInt& y) const
 
          Multi-exponentiation. Returns base_point*x + pt*y. Not constant time.
          (Ordinarily used for signature verification.)
 
-      .. cpp:function:: PointGFp blinded_base_point_multiply(const BigInt& k, \
+      .. cpp:function:: EC_Point blinded_base_point_multiply(const BigInt& k, \
                                             RandomNumberGenerator& rng, \
                                             std::vector<BigInt>& ws) const
 
@@ -151,7 +151,7 @@ during common operations.
 
          Like `blinded_base_point_multiply` but returns only the x coordinate.
 
-      .. cpp:function:: PointGFp blinded_var_point_multiply(const PointGFp& point, \
+      .. cpp:function:: EC_Point blinded_var_point_multiply(const EC_Point& point, \
                                           const BigInt& k, \
                                           RandomNumberGenerator& rng, \
                                           std::vector<BigInt>& ws) const
@@ -162,11 +162,11 @@ during common operations.
 
          Return a random scalar (ie an integer between 1 and the group order).
 
-      .. cpp:function:: PointGFp zero_point() const
+      .. cpp:function:: EC_Point zero_point() const
 
          Return the zero point (aka the point at infinity).
 
-      .. cpp:function:: PointGFp OS2ECP(const uint8_t bits[], size_t len) const
+      .. cpp:function:: EC_Point OS2ECP(const uint8_t bits[], size_t len) const
 
          Decode a point from the binary encoding. This function verifies that
          the decoded point is a valid element on the curve.
@@ -180,30 +180,30 @@ during common operations.
          Return a list of known groups, ie groups for which ``EC_Group(name)``
          will succeed.
 
-.. cpp:class:: PointGFp
+.. cpp:class:: EC_Point
 
    Stores elliptic curve points in Jacobian representation.
 
-   .. cpp:function:: std::vector<uint8_t> encode(PointGFp::Compression_Type format) const
+   .. cpp:function:: std::vector<uint8_t> encode(EC_Point::Compression_Type format) const
 
       Encode a point in a way that can later be decoded with `EC_Group::OS2ECP`.
 
-   .. cpp:function:: PointGFp& operator+=(const PointGFp& rhs)
+   .. cpp:function:: EC_Point& operator+=(const EC_Point& rhs)
 
       Point addition.
 
-   .. cpp:function:: PointGFp& operator-=(const PointGFp& rhs)
+   .. cpp:function:: EC_Point& operator-=(const EC_Point& rhs)
 
       Point subtraction.
 
-   .. cpp:function:: PointGFp& operator*=(const BigInt& scalar)
+   .. cpp:function:: EC_Point& operator*=(const BigInt& scalar)
 
       Point multiplication using Montgomery ladder.
 
       .. warning::
          Prefer the blinded functions in ``EC_Group``
 
-   .. cpp:function:: PointGFp& negate()
+   .. cpp:function:: EC_Point& negate()
 
       Negate this point.
 
@@ -220,7 +220,7 @@ during common operations.
       Convert the point to its equivalent affine coordinates. Throws
       if this is the point at infinity.
 
-   .. cpp:function:: static void force_all_affine(std::vector<PointGFp>& points, \
+   .. cpp:function:: static void force_all_affine(std::vector<EC_Point>& points, \
                                                   secure_vector<word>& ws)
 
       Force several points to be affine at once. Uses Montgomery's
@@ -243,15 +243,15 @@ during common operations.
 
       Randomize the point representation.
 
-   .. cpp:function:: bool operator==(const PointGFp& other) const
+   .. cpp:function:: bool operator==(const EC_Point& other) const
 
       Point equality. This compares the affine representations.
 
-   .. cpp:function:: void add(const PointGFp& other, std::vector<BigInt>& workspace)
+   .. cpp:function:: void add(const EC_Point& other, std::vector<BigInt>& workspace)
 
       Point addition, taking a workspace.
 
-   .. cpp:function:: void add_affine(const PointGFp& other, std::vector<BigInt>& workspace)
+   .. cpp:function:: void add_affine(const EC_Point& other, std::vector<BigInt>& workspace)
 
       Mixed (Jacobian+affine) addition, taking a workspace.
 
@@ -268,15 +268,15 @@ during common operations.
 
       Repeated point doubling.
 
-   .. cpp:function:: PointGFp plus(const PointGFp& other, std::vector<BigInt>& workspace) const
+   .. cpp:function:: EC_Point plus(const EC_Point& other, std::vector<BigInt>& workspace) const
 
       Point addition, returning the result.
 
-   .. cpp:function:: PointGFp double_of(std::vector<BigInt>& workspace) const
+   .. cpp:function:: EC_Point double_of(std::vector<BigInt>& workspace) const
 
       Point doubling, returning the result.
 
-   .. cpp:function:: PointGFp zero() const
+   .. cpp:function:: EC_Point zero() const
 
       Return the point at infinity
 

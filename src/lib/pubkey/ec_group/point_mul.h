@@ -7,24 +7,24 @@
 #ifndef BOTAN_POINT_MUL_H_
 #define BOTAN_POINT_MUL_H_
 
-#include <botan/point_gfp.h>
+#include <botan/ec_point.h>
 
 namespace Botan {
 
 class Modular_Reducer;
 
-class PointGFp_Base_Point_Precompute final
+class EC_Point_Base_Point_Precompute final
    {
    public:
-      PointGFp_Base_Point_Precompute(const PointGFp& base_point,
+      EC_Point_Base_Point_Precompute(const EC_Point& base_point,
                                      const Modular_Reducer& mod_order);
 
-      PointGFp mul(const BigInt& k,
+      EC_Point mul(const BigInt& k,
                    RandomNumberGenerator& rng,
                    const BigInt& group_order,
                    std::vector<BigInt>& ws) const;
    private:
-      const PointGFp& m_base_point;
+      const EC_Point& m_base_point;
       const Modular_Reducer& m_mod_order;
 
       enum { WINDOW_BITS = 3 };
@@ -38,14 +38,14 @@ class PointGFp_Base_Point_Precompute final
       std::vector<word> m_W;
    };
 
-class PointGFp_Var_Point_Precompute final
+class EC_Point_Var_Point_Precompute final
    {
    public:
-      PointGFp_Var_Point_Precompute(const PointGFp& point,
+      EC_Point_Var_Point_Precompute(const EC_Point& point,
                                     RandomNumberGenerator& rng,
                                     std::vector<BigInt>& ws);
 
-      PointGFp mul(const BigInt& k,
+      EC_Point mul(const BigInt& k,
                    RandomNumberGenerator& rng,
                    const BigInt& group_order,
                    std::vector<BigInt>& ws) const;
@@ -63,20 +63,20 @@ class PointGFp_Var_Point_Precompute final
       secure_vector<word> m_T;
    };
 
-class PointGFp_Multi_Point_Precompute final
+class EC_Point_Multi_Point_Precompute final
    {
    public:
-      PointGFp_Multi_Point_Precompute(const PointGFp& g1,
-                                      const PointGFp& g2);
+      EC_Point_Multi_Point_Precompute(const EC_Point& g1,
+                                      const EC_Point& g2);
 
       /*
       * Return (g1*k1 + g2*k2)
       * Not constant time, intended to use with public inputs
       */
-      PointGFp multi_exp(const BigInt& k1,
+      EC_Point multi_exp(const BigInt& k1,
                          const BigInt& k2) const;
    private:
-      std::vector<PointGFp> m_M;
+      std::vector<EC_Point> m_M;
       bool m_no_infinity;
    };
 

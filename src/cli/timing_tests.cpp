@@ -337,7 +337,7 @@ ticks ECC_Mul_Timing_Test::measure_critical_function(const std::vector<uint8_t>&
 
    ticks start = get_ticks();
 
-   const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, timing_test_rng(), m_ws);
+   const Botan::EC_Point k_times_P = m_group.blinded_base_point_multiply(k, timing_test_rng(), m_ws);
 
    ticks end = get_ticks();
 
