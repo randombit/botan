@@ -233,4 +233,9 @@ void GHASH::reset()
    m_text_len = m_ad_len = 0;
    }
 
+bool GHASH::initialized()
+   {
+   return !m_nonce.empty();
+   }
+
 }

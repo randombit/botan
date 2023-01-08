@@ -27,22 +27,26 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       * @param algo the algorithm to create
       * @param direction specify if this should be an encryption or decryption AEAD
       * @param provider optional specification for provider to use
+      * @param ffi_compat specify if cipher should run in ffi-compatability mode
       * @return an AEAD mode or a null pointer if not available
       */
       static std::unique_ptr<AEAD_Mode> create(const std::string& algo,
                                                Cipher_Dir direction,
-                                               const std::string& provider = "");
+                                               const std::string& provider = "",
+                                               const bool ffi_compat = true);
 
       /**
       * Create an AEAD mode, or throw
       * @param algo the algorithm to create
       * @param direction specify if this should be an encryption or decryption AEAD
       * @param provider optional specification for provider to use
+      * @param ffi_compat specify if cipher should run in ffi-compatability mode
       * @return an AEAD mode, or throw an exception
       */
       static std::unique_ptr<AEAD_Mode> create_or_throw(const std::string& algo,
                                                         Cipher_Dir direction,
-                                                        const std::string& provider = "");
+                                                        const std::string& provider = "",
+                                                        const bool ffi_compat = true);
 
       /**
       * Set associated data that is not included in the ciphertext but

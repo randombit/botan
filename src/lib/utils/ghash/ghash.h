@@ -45,6 +45,8 @@ class GHASH final : public SymmetricAlgorithm
 
       void reset();
 
+      bool initialized();
+
       std::string name() const override { return "GHASH"; }
 
       std::string provider() const;

@@ -27,13 +27,14 @@ class AEAD_Tests final : public Text_Based_Test
                                    const std::vector<uint8_t>& input,
                                    const std::vector<uint8_t>& expected,
                                    const std::vector<uint8_t>& ad,
-                                   const std::string& algo)
+                                   const std::string& algo,
+                                   const bool ffi_compat)
          {
          const bool is_siv = algo.find("/SIV") != std::string::npos;
 
          Test::Result result(algo);
 
-         std::unique_ptr<Botan::AEAD_Mode> enc(Botan::AEAD_Mode::create(algo, Botan::ENCRYPTION));
+         std::unique_ptr<Botan::AEAD_Mode> enc(Botan::AEAD_Mode::create(algo, Botan::ENCRYPTION, "", ffi_compat));
 
          result.test_eq("AEAD encrypt output_length is correct", enc->output_length(input.size()), expected.size());
 
@@ -194,13 +195,14 @@ class AEAD_Tests final : public Text_Based_Test
                                    const std::vector<uint8_t>& input,
                                    const std::vector<uint8_t>& expected,
                                    const std::vector<uint8_t>& ad,
-                                   const std::string& algo)
+                                   const std::string& algo,
+                                   const bool ffi_compat)
          {
          const bool is_siv = algo.find("/SIV") != std::string::npos;
 
          Test::Result result(algo);
 
-         std::unique_ptr<Botan::AEAD_Mode> dec(Botan::AEAD_Mode::create(algo, Botan::DECRYPTION));
+         std::unique_ptr<Botan::AEAD_Mode> dec(Botan::AEAD_Mode::create(algo, Botan::DECRYPTION, "", ffi_compat));
 
          result.test_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
 
@@ -456,10 +458,16 @@ class AEAD_Tests final : public Text_Based_Test
          result.test_gt("dec buffer sizes ok", dec->update_granularity(), dec->minimum_final_size());
 
          // test enc
-         result.merge(test_enc(key, nonce, input, expected, ad, algo));
+         // FFI compatability enabled (default)
+         result.merge(test_enc(key, nonce, input, expected, ad, algo, true));
+         // FFI compatability disabled (do not require that granularity > minimum_final_size)
+         result.merge(test_enc(key, nonce, input, expected, ad, algo, false));
 
          // test dec
-         result.merge(test_dec(key, nonce, expected, input, ad, algo));
+         // FFI compatability enabled (default)
+         result.merge(test_dec(key, nonce, expected, input, ad, algo, true));
+         // FFI compatability disabled (do not require that granularity > minimum_final_size)
+         result.merge(test_dec(key, nonce, expected, input, ad, algo, false));
 
          return result;
          }

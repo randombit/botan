@@ -49,9 +49,10 @@ void AEAD_Mode::set_associated_data_n(size_t i, const uint8_t ad[], size_t ad_le
 
 std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(const std::string& algo,
                                                       Cipher_Dir dir,
-                                                      const std::string& provider)
+                                                      const std::string& provider,
+                                                      const bool ffi_compat)
    {
-   if(auto aead = AEAD_Mode::create(algo, dir, provider))
+   if(auto aead = AEAD_Mode::create(algo, dir, provider, ffi_compat))
       return aead;
 
    throw Lookup_Error("AEAD", algo, provider);
@@ -59,7 +60,8 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(const std::string& algo,
 
 std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
                                              Cipher_Dir dir,
-                                             const std::string& provider)
+                                             const std::string& provider,
+                                             const bool ffi_compat)
    {
    BOTAN_UNUSED(provider);
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
@@ -91,7 +93,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
          mode_name << ',' << algo_parts[i];
       mode_name << ')';
 
-      return AEAD_Mode::create(mode_name.str(), dir);
+      return AEAD_Mode::create(mode_name.str(), dir, provider, ffi_compat);
       }
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
@@ -127,9 +129,9 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
       {
       size_t tag_len = req.arg_as_integer(1, 16);
       if(dir == ENCRYPTION)
-         return std::make_unique<GCM_Encryption>(std::move(bc), tag_len);
+         return std::make_unique<GCM_Encryption>(std::move(bc), tag_len, ffi_compat);
       else
-         return std::make_unique<GCM_Decryption>(std::move(bc), tag_len);
+         return std::make_unique<GCM_Decryption>(std::move(bc), tag_len, ffi_compat);
       }
 #endif
 

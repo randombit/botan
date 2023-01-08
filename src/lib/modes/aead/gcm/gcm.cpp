@@ -16,9 +16,10 @@ namespace Botan {
 /*
 * GCM_Mode Constructor
 */
-GCM_Mode::GCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
+GCM_Mode::GCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, bool ffi_compat) :
    m_tag_size(tag_size),
-   m_cipher_name(cipher->name())
+   m_cipher_name(cipher->name()),
+   m_ffi_compat(ffi_compat)
    {
    if(cipher->block_size() != GCM_BS)
       throw Invalid_Argument("Invalid block cipher for GCM");
@@ -58,7 +59,17 @@ std::string GCM_Mode::provider() const
 
 size_t GCM_Mode::update_granularity() const
    {
-   return GCM_BS * std::max<size_t>(2, BOTAN_BLOCK_CIPHER_PAR_MULT);
+   // By default, we want to scale the granularity to avoid issues with ffi.
+   // In `botan_cipher_update` (ffi_cipher.cpp), we assert that the granularity
+   // is greater than the minimum final size.
+   //
+   // However, when directly using the library, we may want to process a buffer
+   // where the size is a multiple of the block size, but not the scaled
+   // granularity value.
+   if (m_ffi_compat)
+      return GCM_BS * std::max<size_t>(2, BOTAN_BLOCK_CIPHER_PAR_MULT);
+   else
+      return GCM_BS;
    }
 
 bool GCM_Mode::valid_nonce_length(size_t len) const
@@ -120,6 +131,7 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 size_t GCM_Encryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(m_ghash->initialized());
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid buffer size");
    m_ctr->cipher(buf, buf, sz);
    m_ghash->update(buf, sz);
@@ -128,6 +140,7 @@ size_t GCM_Encryption::process(uint8_t buf[], size_t sz)
 
 void GCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(m_ghash->initialized());
    BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
@@ -142,6 +155,7 @@ void GCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 size_t GCM_Decryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(m_ghash->initialized());
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid buffer size");
    m_ghash->update(buf, sz);
    m_ctr->cipher(buf, buf, sz);
@@ -150,6 +164,7 @@ size_t GCM_Decryption::process(uint8_t buf[], size_t sz)
 
 void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(m_ghash->initialized());
    BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
