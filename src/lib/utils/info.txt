@@ -12,12 +12,14 @@ load_on always
 <header:public>
 assert.h
 compiler.h
+concepts.h
 data_src.h
 database.h
 exceptn.h
 mem_ops.h
 mutex.h
 types.h
+strong_type.h
 version.h
 </header:public>
 
