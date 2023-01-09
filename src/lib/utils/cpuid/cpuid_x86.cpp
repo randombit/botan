@@ -203,12 +203,14 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
          bought such a processor.
          */
          if((flags7 & AVX512_PROFILE_FLAGS) == AVX512_PROFILE_FLAGS)
+            {
             features_detected |= CPUID::CPUID_AVX512_BIT;
 
-         if(flags7 & x86_CPUID_7_bits::AVX512_VAES)
-            features_detected |= CPUID::CPUID_AVX512_AES_BIT;
-         if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL)
-            features_detected |= CPUID::CPUID_AVX512_CLMUL_BIT;
+            if(flags7 & x86_CPUID_7_bits::AVX512_VAES)
+               features_detected |= CPUID::CPUID_AVX512_AES_BIT;
+            if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL)
+               features_detected |= CPUID::CPUID_AVX512_CLMUL_BIT;
+            }
          }
       }
 

@@ -1,0 +1,22 @@
+<defines>
+SIMD_AVX512 -> 20230101
+</defines>
+
+<module_info>
+name -> "AVX512"
+brief -> "Helpers for working with AVX512 instructions"
+</module_info>
+
+<isa>
+avx512
+</isa>
+
+<header:internal>
+simd_avx512.h
+</header:internal>
+
+<cc>
+gcc
+clang
+msvc
+</cc>

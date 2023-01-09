@@ -1,6 +1,6 @@
 /*
 * ChaCha
-* (C) 2014,2018 Jack Lloyd
+* (C) 2014,2018,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -73,6 +73,11 @@ ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
 
 size_t ChaCha::parallelism()
    {
+#if defined(BOTAN_HAS_CHACHA_AVX512)
+   if(CPUID::has_avx512())
+      return 16;
+#endif
+
 #if defined(BOTAN_HAS_CHACHA_AVX2)
    if(CPUID::has_avx2())
       return 8;
@@ -83,6 +88,13 @@ size_t ChaCha::parallelism()
 
 std::string ChaCha::provider() const
    {
+#if defined(BOTAN_HAS_CHACHA_AVX512)
+   if(CPUID::has_avx512())
+      {
+      return "avx512";
+      }
+#endif
+
 #if defined(BOTAN_HAS_CHACHA_AVX2)
    if(CPUID::has_avx2())
       {
@@ -105,6 +117,18 @@ void ChaCha::chacha(uint8_t output[],
                     uint32_t state[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
+
+#if defined(BOTAN_HAS_CHACHA_AVX512)
+   if(CPUID::has_avx512())
+      {
+      while(output_blocks >= 16)
+         {
+         ChaCha::chacha_avx512_x16(output, state, rounds);
+         output += 16*64;
+         output_blocks -= 16;
+         }
+      }
+#endif
 
 #if defined(BOTAN_HAS_CHACHA_AVX2)
    if(CPUID::has_avx2())

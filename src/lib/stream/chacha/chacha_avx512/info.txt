@@ -1,0 +1,16 @@
+<defines>
+CHACHA_AVX512 -> 20230101
+</defines>
+
+<module_info>
+name -> "ChaCha20 AVX512"
+brief -> "ChaCha20 using AVX512 instructions"
+</module_info>
+
+<isa>
+avx512
+</isa>
+
+<requires>
+simd_avx512
+</requires>
