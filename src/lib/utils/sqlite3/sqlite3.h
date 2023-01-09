@@ -26,6 +26,8 @@ class BOTAN_PUBLIC_API(2,0) Sqlite3_Database final : public SQL_Database
 
       void create_table(const std::string& table_schema) override;
 
+      size_t rows_changed_by_last_statement() override;
+
       std::shared_ptr<Statement> new_statement(const std::string& sql) const override;
    private:
       class Sqlite3_Statement final : public Statement

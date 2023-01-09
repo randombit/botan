@@ -62,6 +62,15 @@ void Sqlite3_Database::create_table(const std::string& table_schema)
       }
    }
 
+size_t Sqlite3_Database::rows_changed_by_last_statement()
+   {
+   // TODO: Use sqlite3_changes64() introduced in SQLite 3.37
+   //       (released 27th Nov 2021)
+   const auto result = ::sqlite3_changes(m_db);
+   BOTAN_ASSERT_NOMSG(result >= 0);
+   return static_cast<size_t>(result);
+   }
+
 Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, const std::string& base_sql)
    {
    int rc = ::sqlite3_prepare_v2(db, base_sql.c_str(), -1, &m_stmt, nullptr);
@@ -108,7 +117,13 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, const uint8_t* p, siz
 
 std::pair<const uint8_t*, size_t> Sqlite3_Database::Sqlite3_Statement::get_blob(int column)
    {
-   BOTAN_ASSERT(::sqlite3_column_type(m_stmt, column) == SQLITE_BLOB,
+   const auto column_type = ::sqlite3_column_type(m_stmt, column);
+   if(column_type == SQLITE_NULL)
+      {
+      return {nullptr, 0};
+      }
+
+   BOTAN_ASSERT(column_type == SQLITE_BLOB,
                 "Return value is a blob");
 
    const void* session_blob = ::sqlite3_column_blob(m_stmt, column);

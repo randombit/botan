@@ -43,8 +43,7 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
                                        Callbacks& cb,
                                        const Policy& policy)
    {
-   std::vector<uint8_t> buf(32);
-   rng.randomize(buf.data(), buf.size());
+   auto buf = rng.random_vec<std::vector<uint8_t>>(32);
 
    if(policy.hash_hello_random())
       {
@@ -89,7 +88,7 @@ class Client_Hello_Internal
 
          legacy_version = Protocol_Version(major_version, minor_version);
          random = reader.get_fixed<uint8_t>(32);
-         session_id = reader.get_range<uint8_t>(1, 0, 32);
+         session_id = Session_ID(reader.get_range<uint8_t>(1, 0, 32));
 
          if(legacy_version.is_datagram_protocol())
             {
@@ -151,7 +150,7 @@ class Client_Hello_Internal
 
    public:
       Protocol_Version legacy_version;
-      std::vector<uint8_t> session_id;
+      Session_ID session_id;
       std::vector<uint8_t> random;
       std::vector<uint16_t> suites;
       std::vector<uint8_t> comp_methods;
@@ -194,7 +193,7 @@ const std::vector<uint8_t>& Client_Hello::random() const
    return m_data->random;
    }
 
-const std::vector<uint8_t>& Client_Hello::session_id() const
+const Session_ID& Client_Hello::session_id() const
    {
    return m_data->session_id;
    }
@@ -238,7 +237,7 @@ std::vector<uint8_t> Client_Hello::serialize() const
    buf.push_back(m_data->legacy_version.minor_version());
    buf += m_data->random;
 
-   append_tls_length_value(buf, m_data->session_id, 1);
+   append_tls_length_value(buf, m_data->session_id.get(), 1);
 
    if(m_data->legacy_version.is_datagram_protocol())
       { append_tls_length_value(buf, m_data->hello_cookie, 1); }
@@ -343,11 +342,25 @@ bool Client_Hello_12::supports_session_ticket() const
    return m_data->extensions.has<Session_Ticket_Extension>();
    }
 
-std::vector<uint8_t> Client_Hello_12::session_ticket() const
+Session_Ticket Client_Hello_12::session_ticket() const
    {
    if(auto* ticket = m_data->extensions.get<Session_Ticket_Extension>())
       { return ticket->contents(); }
    return {};
+   }
+
+std::optional<Session_Handle> Client_Hello_12::session_handle() const
+   {
+   // RFC 5077 3.4
+   //    If a ticket is presented by the client, the server MUST NOT attempt
+   //    to use the Session ID in the ClientHello for stateful session
+   //    resumption.
+   if(const auto& ticket = session_ticket(); !ticket.empty())
+      { return ticket; }
+   else if(const auto& id = session_id(); !id.empty())
+      { return id; }
+   else
+      { return std::nullopt; }
    }
 
 bool Client_Hello::supports_alpn() const
@@ -524,12 +537,20 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  Callbacks& cb,
                                  RandomNumberGenerator& rng,
                                  const std::vector<uint8_t>& reneg_info,
-                                 const Session& session,
+                                 const std::pair<Session, Session_Handle>& session_and_handle,
                                  const std::vector<std::string>& next_protocols)
    {
+   const auto& [session, session_handle] = session_and_handle;
+
    m_data->legacy_version = session.version();
    m_data->random = make_hello_random(rng, cb, policy);
-   m_data->session_id = session.session_id();
+
+   // RFC 5077 3.4
+   //    When presenting a ticket, the client MAY generate and include a
+   //    Session ID in the TLS ClientHello. [...] If a ticket is presented by
+   //    the client, the server MUST NOT attempt to use the Session ID in the
+   //    ClientHello for stateful session resumption.
+   m_data->session_id = session_handle.id().value_or(Session_ID(make_hello_random(rng, cb, policy)));
    m_data->suites = policy.ciphersuite_list(m_data->legacy_version);
 
    if(!policy.acceptable_protocol_version(session.version()))
@@ -550,7 +571,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(session.supports_encrypt_then_mac())
       { m_data->extensions.add(new Encrypt_then_MAC); }
 
-   m_data->extensions.add(new Session_Ticket_Extension(session.session_ticket()));
+   if(session_handle.is_ticket())
+      { m_data->extensions.add(new Session_Ticket_Extension(session_handle.ticket().value())); }
 
    m_data->extensions.add(new Renegotiation_Extension(reneg_info));
 
@@ -727,7 +749,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  RandomNumberGenerator& rng,
                                  const std::string& hostname,
                                  const std::vector<std::string>& next_protocols,
-                                 const std::optional<Session>& session)
+                                 const std::optional<std::pair<Session, Session_Handle>>& session_and_handle)
    {
    // RFC 8446 4.1.2
    //    In TLS 1.3, the client indicates its version preferences in the
@@ -750,7 +772,10 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       //    In compatibility mode (see Appendix D.4), this field MUST be non-empty,
       //    so a client not offering a pre-TLS 1.3 session MUST generate a new
       //    32-byte value.
-      rng.random_vec(m_data->session_id, 32);
+      //
+      // Note: we won't ever offer a TLS 1.2 session. In such a case we would
+      //       have instantiated a TLS 1.2 client in the first place.
+      m_data->session_id = Session_ID(make_hello_random(rng, cb, policy));
       }
 
    if(!hostname.empty())
@@ -814,9 +839,9 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    //
    // The PSK extension takes the partial transcript hash into account. Passing
    // into Callbacks::tls_modify_extensions() does not make sense therefore.
-   if(session.has_value())
+   if(session_and_handle.has_value())
       {
-      m_data->extensions.add(new PSK(session.value(), cb));
+      m_data->extensions.add(new PSK(session_and_handle.value(), cb));
       calculate_psk_binders({});
       }
    }

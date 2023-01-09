@@ -6,6 +6,7 @@
 
 #include "fuzzers.h"
 #include <botan/tls_server.h>
+#include <botan/tls_session_manager_noop.h>
 #include <botan/data_src.h>
 #include <botan/pkcs8.h>
 
@@ -153,7 +154,7 @@ class Fuzzer_TLS_Server_Callbacks : public Botan::TLS::Callbacks
          // ignore alert
          }
 
-      bool tls_session_established(const Botan::TLS::Session&) override
+      bool tls_session_established(const Botan::TLS::Session&, const Botan::TLS::Session_Handle&) override
          {
          return true; // cache it
          }

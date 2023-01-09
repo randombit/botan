@@ -18,6 +18,7 @@
 #include <botan/secmem.h>
 #include <botan/pkix_types.h>
 #include <botan/tls_signature_scheme.h>
+#include <botan/tls_session.h>
 
 #include <algorithm>
 #include <optional>
@@ -36,6 +37,7 @@ namespace TLS {
 #if defined(BOTAN_HAS_TLS_13)
 class Callbacks;
 class Session;
+class Session_Handle;
 class Cipher_State;
 class Ciphersuite;
 class Transcript_Hash_State;
@@ -222,7 +224,7 @@ class BOTAN_UNSTABLE_API Session_Ticket_Extension final : public Extension
       /**
       * @return contents of the session ticket
       */
-      const std::vector<uint8_t>& contents() const { return m_ticket; }
+      const Session_Ticket& contents() const { return m_ticket; }
 
       /**
       * Create empty extension, used by both client and server
@@ -232,19 +234,19 @@ class BOTAN_UNSTABLE_API Session_Ticket_Extension final : public Extension
       /**
       * Extension with ticket, used by client
       */
-      explicit Session_Ticket_Extension(const std::vector<uint8_t>& session_ticket) :
-         m_ticket(session_ticket) {}
+      explicit Session_Ticket_Extension(Session_Ticket session_ticket) :
+         m_ticket(std::move(session_ticket)) {}
 
       /**
       * Deserialize a session ticket
       */
       Session_Ticket_Extension(TLS_Data_Reader& reader, uint16_t extension_size);
 
-      std::vector<uint8_t> serialize(Connection_Side) const override { return m_ticket; }
+      std::vector<uint8_t> serialize(Connection_Side) const override { return m_ticket.get(); }
 
       bool empty() const override { return false; }
    private:
-      std::vector<uint8_t> m_ticket;
+      Session_Ticket m_ticket;
    };
 
 
@@ -654,7 +656,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension
 
       PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type);
 
-      PSK(const Session& session_to_resume, Callbacks& callbacks);
+      PSK(const std::pair<Session, Session_Handle>& session_to_resume, Callbacks& callbacks);
 
       ~PSK();
 

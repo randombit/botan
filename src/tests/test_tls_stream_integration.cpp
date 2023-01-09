@@ -21,6 +21,7 @@
 
 #include <botan/asio_stream.h>
 #include <botan/auto_rng.h>
+#include <botan/tls_session_manager_noop.h>
 
 #include <boost/asio.hpp>
 #include <boost/exception/exception.hpp>

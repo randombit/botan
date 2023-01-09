@@ -63,7 +63,7 @@ public:
    void tls_emit_data(const uint8_t[], size_t) override { m_result.test_failure("unsolicited call to tls_emit_data"); }
    void tls_record_received(uint64_t, const uint8_t[], size_t) override { m_result.test_failure("unsolicited call to tls_record_received"); }
    void tls_alert(Botan::TLS::Alert) override { m_result.test_failure("unsolicited call to tls_alert"); }
-   bool tls_session_established(const Botan::TLS::Session&) override { m_result.test_failure("unsolicited call to tls_session_established"); return false; }
+   bool tls_session_established(const Botan::TLS::Session&, const Botan::TLS::Session_Handle&) override { m_result.test_failure("unsolicited call to tls_session_established"); return false; }
 
 private:
    Test::Result &m_result;

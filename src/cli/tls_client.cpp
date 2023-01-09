@@ -13,6 +13,7 @@
 
 #include <botan/tls_client.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_session_manager_memory.h>
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
 #include <botan/hex.h>
@@ -325,19 +326,19 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          output() << "Handshake complete\n";
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session) override
+      bool tls_session_established(const Botan::TLS::Session& session, const Botan::TLS::Session_Handle& session_handle) override
          {
          output() << "Handshake complete, " << session.version().to_string()
                   << " using " << session.ciphersuite().to_string() << "\n";
 
-         if(!session.session_id().empty())
+         if(auto session_id = session_handle.id())
             {
-            output() << "Session ID " << Botan::hex_encode(session.session_id()) << "\n";
+            output() << "Session ID " << Botan::hex_encode(session_id->get()) << "\n";
             }
 
-         if(!session.session_ticket().empty())
+         if(auto session_ticket = session_handle.ticket())
             {
-            output() << "Session ticket " << Botan::hex_encode(session.session_ticket()) << "\n";
+            output() << "Session ticket " << Botan::hex_encode(session_ticket->get()) << "\n";
             }
 
          if(flag_set("print-certs"))

@@ -256,7 +256,7 @@ std::pair<Handshake_Type, std::vector<uint8_t>>
    return m_handshake_io->get_next_record(m_transitions.change_cipher_spec_expected());
    }
 
-std::vector<uint8_t> Handshake_State::session_ticket() const
+Session_Ticket Handshake_State::session_ticket() const
    {
    if(new_session_ticket() && !new_session_ticket()->ticket().empty())
       { return new_session_ticket()->ticket(); }

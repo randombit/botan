@@ -158,8 +158,8 @@ template<typename T> inline constexpr void typecast_copy(T& out, const uint8_t i
    typecast_copy(&out, in, 1);
    }
 
-template <class To, class From> inline constexpr To typecast_copy(const From *src) noexcept
-   requires std::is_trivially_copyable<From>::value && std::is_trivial<To>::value
+template <class To, class FromT> inline constexpr To typecast_copy(const FromT *src) noexcept
+   requires std::is_trivially_copyable<FromT>::value && std::is_trivial<To>::value
    {
    To dst;
    std::memcpy(&dst, src, sizeof(To));

@@ -188,10 +188,9 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          return false;
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session) override
+      bool tls_session_established(const Botan::TLS::Session&, const Botan::TLS::Session_Handle&) override
          {
          count_callback_invocation("tls_session_established");
-         BOTAN_UNUSED(session);
          // the session with the tls client was established
          // return false to prevent the session from being cached, true to
          // cache the session in the configured session manager
@@ -545,82 +544,89 @@ class RFC8448_Text_Policy : public Botan::TLS::Text_Policy
 class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
    {
    private:
-      template<typename K, typename M>
-      bool load(const K& key, const M& map, Session& session)
+      decltype(auto) find_by_handle(const Session_Handle& handle)
          {
-         const auto session_itr = map.find(key);
-         if(session_itr == map.end())
+         return [=](const std::pair<Session, Session_Handle> pair)
+            {
+            const auto& current_handle = pair.second;
+            if(current_handle.id().has_value() && handle.id().has_value() &&
+               current_handle.id().value() == handle.id().value())
+               { return true; }
+            if(current_handle.ticket().has_value() && handle.ticket().has_value() &&
+               current_handle.ticket().value() == handle.ticket().value())
+               { return true; }
             return false;
-
-         const auto& der = session_itr->second;
-         session = Session(der.data(), der.size());
-         return true;
+            };
          }
 
    public:
-      std::vector<std::vector<uint8_t>> all_sessions() const
+      RFC8448_Session_Manager()
+         : Session_Manager(m_null_rng) {}
+
+      const std::vector<std::pair<Session, Session_Handle>>& all_sessions() const
          {
-         std::vector<std::vector<uint8_t>> sessions;
-         std::transform(m_sessions_by_si.cbegin(), m_sessions_by_si.cend(), std::back_inserter(sessions),
-                        [](const auto& session) { return session.second; });
-         return sessions;
+         return m_sessions;
          }
 
-      bool load_from_session_id(const std::vector<uint8_t>& session_id,
-                                Session& session) override
+      void store(const Session& session, const Session_Handle& handle) override
          {
-         return load(id(session_id), m_sessions_by_sid, session);
+         m_sessions.push_back({session, handle});
          }
 
-      bool load_from_server_info(const Server_Information& info,
-                                 Session& session) override
+      std::optional<Session_Handle> establish(const Session& session, std::optional<Session_ID> id, bool) override
          {
-         return load(info, m_sessions_by_si, session);
+         m_sessions.emplace_back(session, id.value_or(Session_ID()));
+         return id;
          }
 
-      void remove_entry(const std::vector<uint8_t>& session_id) override
+      std::optional<Session> retrieve_one(const Session_Handle& handle) override
          {
-         Session s;
-         const auto session_found = load_from_session_id(session_id, s);
-         if(!session_found)
-            return;
+         auto itr = std::find_if(m_sessions.begin(), m_sessions.end(), find_by_handle(handle));
+         if(itr == m_sessions.end())
+            return std::nullopt;
+         else
+            return itr->first;
+         }
 
-         const auto sid = id(session_id);
-         m_sessions_by_sid.erase(sid);
-         m_sessions_by_si.erase(s.server_info());
+      std::vector<std::pair<Session, Session_Handle>> find_all(const Server_Information& info) override
+         {
+         std::vector<std::pair<Session, Session_Handle>> found_sessions;
+         for(const auto& [session, handle] : m_sessions)
+            {
+            if(session.server_info() == info)
+               { found_sessions.emplace_back(session, handle); }
+            }
+
+         return found_sessions;
+         }
+
+      size_t remove(const Session_Handle& handle) override
+         {
+         // TODO: C++20 allows to simply implement the entire method like:
+         //
+         //   return std::erase_if(m_sessions, find_by_handle(handle));
+         //
+         // Unfortunately, at the time of this writing Android NDK shipped with
+         // a std::erase_if that returns void.
+         auto rm_itr = std::remove_if(m_sessions.begin(),
+                                      m_sessions.end(),
+                                      find_by_handle(handle));
+
+         const auto elements_being_removed = std::distance(rm_itr, m_sessions.end());
+         m_sessions.erase(rm_itr);
+         return elements_being_removed;
          }
 
       size_t remove_all() override
          {
-         const auto sessions = m_sessions_by_sid.size();
-         m_sessions_by_sid.clear();
-         m_sessions_by_si.clear();
+         const auto sessions = m_sessions.size();
+         m_sessions.clear();
          return sessions;
          }
 
-      void save(const Session& session) override
-         {
-         const auto sid = id(session.session_id());
-         const auto der = unlock(session.DER_encode());
-         m_sessions_by_sid[sid] = der;
-         m_sessions_by_si[session.server_info()] = der;
-         }
-
-      std::chrono::seconds session_lifetime() const override
-         {
-         return std::chrono::seconds(42);
-         }
-
    private:
-      std::string id(const std::vector<uint8_t>& session_id) const
-         {
-         auto h = HashFunction::create_or_throw("SHA-256");
-         return Botan::hex_encode(h->process(session_id));
-         }
-
-   private:
-      std::map<std::string, std::vector<uint8_t>> m_sessions_by_sid;
-      std::map<Server_Information, std::vector<uint8_t>> m_sessions_by_si;
+      std::vector<std::pair<Session, Session_Handle>> m_sessions;
+      Botan::Null_RNG m_null_rng;
    };
 
 /**
@@ -637,16 +643,17 @@ class TLS_Context
                   Modify_Exts_Fn modify_exts_cb,
                   std::vector<MockSignature> mock_signatures,
                   uint64_t timestamp,
-                  std::optional<std::vector<uint8_t>> session,
+                  std::optional<std::pair<Session, Session_Ticket>> session_and_ticket,
                   bool use_alternative_server_certificate)
          : m_callbacks(std::move(modify_exts_cb), std::move(mock_signatures), timestamp)
          , m_creds(use_alternative_server_certificate)
          , m_rng(std::move(rng_in))
          , m_policy(std::move(policy))
          {
-         if(session.has_value())
+         if(session_and_ticket.has_value())
             {
-            m_session_mgr.save(Session(session->data(), session->size()));
+            m_session_mgr.store(std::get<Session>(session_and_ticket.value()),
+                                std::get<Session_Ticket>(session_and_ticket.value()));
             }
          }
 
@@ -696,7 +703,7 @@ class TLS_Context
          m_callbacks.reset_callback_invocation_counters();
          }
 
-      std::vector<std::vector<uint8_t>> stored_sessions() const
+      const std::vector<std::pair<Session, Session_Handle>>& stored_sessions() const
          {
          return m_session_mgr.all_sessions();
          }
@@ -732,9 +739,9 @@ class Client_Context : public TLS_Context
                      RFC8448_Text_Policy policy,
                      uint64_t timestamp,
                      Modify_Exts_Fn modify_exts_cb,
-                     std::optional<std::vector<uint8_t>> session = std::nullopt,
+                     std::optional<std::pair<Session, Session_Ticket>> session_and_ticket = std::nullopt,
                      std::vector<MockSignature> mock_signatures = {})
-         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), std::move(mock_signatures), timestamp, std::move(session), false)
+         : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), std::move(mock_signatures), timestamp, std::move(session_and_ticket), false)
          , client(m_callbacks, m_session_mgr, m_creds, m_policy, *m_rng,
                   Botan::TLS::Server_Information("server"),
                   Botan::TLS::Protocol_Version::TLS_V13)
@@ -945,6 +952,7 @@ class Test_TLS_RFC8448 : public Text_Based_Test
                            "Client_EarlyAppData,"
                            "Record_Client_EarlyAppData,"
                            "SessionTicket,"
+                           "Client_SessionData,"
                            "Server_MessageToSign,"
                            "Server_MessageSignature,"
                            "Client_MessageToSign,"
@@ -1075,7 +1083,9 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   });
                if(result.test_eq("session was stored", ctx->stored_sessions().size(), 1))
                   {
-                  result.test_eq("session was serialized as expected", ctx->stored_sessions().front(), vars.get_req_bin("SessionTicket"));
+                  const auto& [stored_session, stored_handle] = ctx->stored_sessions().front();
+                  result.require("session handle contains a ticket", stored_handle.ticket().has_value());
+                  result.test_is_eq("session was serialized as expected", Botan::unlock(stored_session.DER_encode()), vars.get_req_bin("Client_SessionData"));
                   }
                }),
 
@@ -1152,7 +1162,10 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                                                       read_tls_policy("rfc8448_1rtt"),
                                                       vars.get_req_u64("CurrentTimestamp"),
                                                       add_extensions_and_sort,
-                                                      vars.get_req_bin("SessionTicket"));
+                                                      std::pair{
+                                                      Session(vars.get_req_bin("Client_SessionData")),
+                                                      Session_Ticket(vars.get_req_bin("SessionTicket"))
+                                                      });
 
                result.confirm("client not closed", !ctx->client.is_closed());
                ctx->check_callback_invocations(result, "client hello prepared",

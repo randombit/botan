@@ -87,11 +87,13 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * the connection.
        *
        * @param session the session descriptor
+       * @param session_handle the handle (Session_ID or Session_Ticket) that
+       *                       identifies the @p session object
        *
        * @return return false to prevent the session from being cached,
        * return true to cache the session in the configured session manager
        */
-       virtual bool tls_session_established(const Session& session) = 0;
+       virtual bool tls_session_established(const Session& session, const Session_Handle& session_handle) = 0;
 
        /**
        * Optional callback: session activated

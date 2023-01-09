@@ -103,11 +103,9 @@ class Server_Impl_12 : public Channel_Impl_12
                                 const std::vector<uint8_t>& contents);
 
       void session_resume(Server_Handshake_State& pending_state,
-                          bool have_session_ticket_key,
-                          Session& session_info);
+                          const std::pair<Session, Session_Handle>& session_info);
 
-      void session_create(Server_Handshake_State& pending_state,
-                          bool have_session_ticket_key);
+      void session_create(Server_Handshake_State& pending_state);
 
       std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
 

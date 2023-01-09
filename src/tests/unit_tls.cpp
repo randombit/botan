@@ -17,6 +17,8 @@
    #include <botan/tls_server.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_extensions.h>
+   #include <botan/tls_session_manager_memory.h>
+   #include <botan/tls_session_manager_noop.h>
    #include <botan/internal/tls_reader.h>
 
    #include <botan/ec_group.h>
@@ -383,12 +385,12 @@ class TLS_Handshake_Test final
                   }
                }
 
-            bool tls_session_established(const Botan::TLS::Session& session) override
+            bool tls_session_established(const Botan::TLS::Session& session, const Botan::TLS::Session_Handle& handle) override
                {
                const std::string session_report =
                   "Session established " + session.version().to_string() + " " +
                   session.ciphersuite().to_string() + " " +
-                  Botan::hex_encode(session.session_id());
+                  Botan::hex_encode(handle.opaque_handle().get());
 
                m_results.test_note(session_report);
 
@@ -785,9 +787,9 @@ class TLS_Unit_Tests final : public Test
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
          client_ses.reset(
-            new Botan::TLS::Session_Manager_SQLite("client pass", rng, ":memory:", 5, std::chrono::seconds(2)));
+            new Botan::TLS::Session_Manager_SQLite("client pass", rng, ":memory:", 5));
          server_ses.reset(
-            new Botan::TLS::Session_Manager_SQLite("server pass", rng, ":memory:", 10, std::chrono::seconds(4)));
+            new Botan::TLS::Session_Manager_SQLite("server pass", rng, ":memory:", 10));
 
 #else
          client_ses = std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng);
@@ -954,7 +956,7 @@ class DTLS_Reconnection_Test : public Test
                   // ignore
                   }
 
-               bool tls_session_established(const Botan::TLS::Session& /*session*/) override
+               bool tls_session_established(const Botan::TLS::Session& /*session*/, const Botan::TLS::Session_Handle&) override
                   {
                   m_results.test_success("Established a session");
                   return true;

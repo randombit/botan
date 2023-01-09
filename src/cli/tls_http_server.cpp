@@ -24,6 +24,7 @@
 
 #include <botan/tls_server.h>
 #include <botan/tls_messages.h>
+#include <botan/tls_session_manager_memory.h>
 #include <botan/x509cert.h>
 #include <botan/pkcs8.h>
 #include <botan/version.h>
@@ -349,15 +350,15 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          m_connection_summary = strm.str();
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session) override
+      bool tls_session_established(const Botan::TLS::Session& session, const Botan::TLS::Session_Handle& session_handle) override
          {
          std::ostringstream strm;
 
          strm << "Version: " << session.version().to_string() << "\n";
          strm << "Ciphersuite: " << session.ciphersuite().to_string() << "\n";
-         if(session.session_id().empty() == false)
+         if(auto session_id = session_handle.id())
             {
-            strm << "SessionID: " << Botan::hex_encode(session.session_id()) << "\n";
+            strm << "SessionID: " << Botan::hex_encode(session_id->get()) << "\n";
             }
          if(session.server_info().hostname() != "")
             {

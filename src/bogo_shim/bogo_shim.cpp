@@ -15,6 +15,8 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_messages.h>
+#include <botan/tls_session_manager_memory.h>
+#include <botan/tls_session_manager_hybrid.h>
 #include <botan/data_src.h>
 #include <botan/pkcs8.h>
 #include <botan/internal/loadstor.h>
@@ -1273,8 +1275,7 @@ class Shim_Credentials final : public Botan::Credentials_Manager
          {
          if(type == "tls-server" && context == "session-ticket")
             {
-            if(!m_args.flag_set("no-ticket") && !m_args.flag_set("on-resume-no-ticket"))
-               return Botan::SymmetricKey("ABCDEF0123456789");
+            return Botan::SymmetricKey("ABCDEF0123456789");
             }
 
          if(type == "tls-server" && context == "dtls-cookie-secret")
@@ -1546,9 +1547,9 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             }
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session) override
+      bool tls_session_established(const Botan::TLS::Session& session, const Botan::TLS::Session_Handle& session_handle) override
          {
-         shim_log("Session established: " + Botan::hex_encode(session.session_id()) +
+         shim_log("Session established: " + Botan::hex_encode(session_handle.opaque_handle().get()) +
                   " version " + session.version().to_string() +
                   " cipher " + session.ciphersuite().to_string() +
                   " EMS " + std::to_string(session.supports_extended_master_secret()));
@@ -1560,13 +1561,12 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          if(m_args.flag_set("expect-no-session-id"))
             {
             // BoGo expects that ticket issuance implies no stateful session...
-            if(!m_args.flag_set("server") && session.session_id().size() > 0)
+            if(!m_args.flag_set("server") && session_handle.is_id())
                shim_exit_with_error("Unexpectedly got a session ID");
             }
-         else if(m_args.flag_set("expect-session-id"))
+         else if(m_args.flag_set("expect-session-id") && !session_handle.is_id())
             {
-            if(session.session_id().empty())
-               shim_exit_with_error("Unexpectedly got no session ID");
+            shim_exit_with_error("Unexpectedly got no session ID");
             }
 
          if(m_args.option_used("expect-version"))
@@ -1717,8 +1717,24 @@ int main(int /*argc*/, char* argv[])
       const size_t buf_size = args->get_int_opt_or_else("read-size", 18*1024);
 
       Botan::ChaCha_RNG rng(Botan::secure_vector<uint8_t>(64));
-      Botan::TLS::Session_Manager_In_Memory session_manager(rng, 1024);
       Shim_Credentials creds(*args);
+      auto session_manager = [&]() -> std::unique_ptr<Botan::TLS::Session_Manager>
+         {
+         if(args->flag_set("no-ticket") || args->flag_set("on-resume-no-ticket"))
+            {
+            // The in-memory session manager stores sessions in volatile memory and
+            // hands out Session_IDs (i.e. does not utilize session tickets)
+            return std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng, 1024);
+            }
+         else
+            {
+            // The hybrid session manager prefers stateless tickets (when used in
+            // servers) but can also fall back to stateful management when tickets
+            // are not an option.
+            return std::make_unique<Botan::TLS::Session_Manager_Hybrid>(
+               std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng, 1024), creds, rng);
+            }
+         }();
 
       if(args->flag_set("wait-for-debugger"))
          {
@@ -1746,7 +1762,7 @@ int main(int /*argc*/, char* argv[])
 
          if(is_server)
             {
-            chan.reset(new Botan::TLS::Server(callbacks, session_manager, creds, policy, rng, is_datagram));
+            chan.reset(new Botan::TLS::Server(callbacks, *session_manager, creds, policy, rng, is_datagram));
             }
          else
             {
@@ -1759,7 +1775,7 @@ int main(int /*argc*/, char* argv[])
 
             Botan::TLS::Server_Information server_info(host_name, port);
             const std::vector<std::string> next_protocols = args->get_alpn_string_vec_opt("advertise-alpn");
-            chan.reset(new Botan::TLS::Client(callbacks, session_manager, creds, policy, rng,
+            chan.reset(new Botan::TLS::Client(callbacks, *session_manager, creds, policy, rng,
                                               server_info, offer_version, next_protocols));
             }
 

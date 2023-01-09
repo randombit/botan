@@ -638,7 +638,7 @@ class Stream
                return std::chrono::milliseconds(1000);
                }
 
-            bool tls_session_established(const TLS::Session&) override
+            bool tls_session_established(const TLS::Session&, const TLS::Session_Handle&) override
                {
                // TODO: it should be possible to configure this in the using application (via callback?)
                return true;
