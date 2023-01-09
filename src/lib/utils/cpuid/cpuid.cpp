@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection
-* (C) 2009,2010,2013,2017 Jack Lloyd
+* (C) 2009,2010,2013,2017,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -35,17 +35,14 @@ std::string CPUID::to_string()
 #define CPUID_PRINT(flag) do { if(has_##flag()) { flags.push_back(#flag); } } while(0)
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   CPUID_PRINT(rdtsc);
+
    CPUID_PRINT(sse2);
    CPUID_PRINT(ssse3);
    CPUID_PRINT(sse41);
    CPUID_PRINT(sse42);
    CPUID_PRINT(avx2);
-   CPUID_PRINT(avx512f);
-   CPUID_PRINT(avx512dq);
-   CPUID_PRINT(avx512bw);
-   CPUID_PRINT(avx512_icelake);
 
-   CPUID_PRINT(rdtsc);
    CPUID_PRINT(bmi1);
    CPUID_PRINT(bmi2);
    CPUID_PRINT(adx);
@@ -55,6 +52,8 @@ std::string CPUID::to_string()
    CPUID_PRINT(rdrand);
    CPUID_PRINT(rdseed);
    CPUID_PRINT(intel_sha);
+
+   CPUID_PRINT(avx512);
    CPUID_PRINT(avx512_aes);
    CPUID_PRINT(avx512_clmul);
 #endif
@@ -166,10 +165,8 @@ CPUID::bit_from_string(const std::string& tok)
       return {CPUID::CPUID_CLMUL_BIT};
    if(tok == "avx2")
       return {CPUID::CPUID_AVX2_BIT};
-   if(tok == "avx512f")
-      return {CPUID::CPUID_AVX512F_BIT};
-   if(tok == "avx512_icelake")
-      return {CPUID::CPUID_AVX512_ICL_BIT};
+   if(tok == "avx512")
+      return {CPUID::CPUID_AVX512_BIT};
    // there were two if statements testing "sha" and "intel_sha" separately; combined
    if(tok == "sha" || tok == "intel_sha")
       return {CPUID::CPUID_SHA_BIT};
