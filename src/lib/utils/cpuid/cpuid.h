@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection
-* (C) 2009,2010,2013,2017 Jack Lloyd
+* (C) 2009,2010,2013,2017,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -41,6 +41,10 @@ class BOTAN_TEST_API CPUID final
       */
       static void initialize();
 
+      /**
+      * Return true if a 4x32 SIMD instruction set is available
+      * (SSE2, NEON, or Altivec/VMX)
+      */
       static bool has_simd_32();
 
       /**
@@ -93,13 +97,10 @@ class BOTAN_TEST_API CPUID final
          CPUID_SSE41_BIT      = (1ULL << 2),
          CPUID_SSE42_BIT      = (1ULL << 3),
          CPUID_AVX2_BIT       = (1ULL << 4),
-         CPUID_AVX512F_BIT    = (1ULL << 5),
 
-         CPUID_AVX512DQ_BIT   = (1ULL << 6),
-         CPUID_AVX512BW_BIT   = (1ULL << 7),
-
-         // Ice Lake profile: AVX-512 F, DQ, BW, VL, IFMA, VBMI, VBMI2, BITALG
-         CPUID_AVX512_ICL_BIT = (1ULL << 11),
+         // AVX-512 baseline profile:
+         // AVX-512 F, DQ, BW, VL, IFMA, VBMI, VBMI2, BITALG
+         CPUID_AVX512_BIT     = (1ULL << 11),
 
          // Crypto-specific ISAs
          CPUID_AESNI_BIT        = (1ULL << 16),
@@ -263,28 +264,12 @@ class BOTAN_TEST_API CPUID final
          { return has_cpuid_bit(CPUID_AVX2_BIT); }
 
       /**
-      * Check if the processor supports AVX-512F
+      * Check if the processor supports our AVX-512 minimum profile
+      *
+      * Namely AVX-512 F, DQ, BW, VL, IFMA, VBMI, VBMI2, BITALG
       */
-      static bool has_avx512f()
-         { return has_cpuid_bit(CPUID_AVX512F_BIT); }
-
-      /**
-      * Check if the processor supports AVX-512DQ
-      */
-      static bool has_avx512dq()
-         { return has_cpuid_bit(CPUID_AVX512DQ_BIT); }
-
-      /**
-      * Check if the processor supports AVX-512BW
-      */
-      static bool has_avx512bw()
-         { return has_cpuid_bit(CPUID_AVX512BW_BIT); }
-
-      /**
-      * Check if the processor supports AVX-512 Ice Lake profile
-      */
-      static bool has_avx512_icelake()
-         { return has_cpuid_bit(CPUID_AVX512_ICL_BIT); }
+      static bool has_avx512()
+         { return has_cpuid_bit(CPUID_AVX512_BIT); }
 
       /**
       * Check if the processor supports AVX-512 AES (VAES)

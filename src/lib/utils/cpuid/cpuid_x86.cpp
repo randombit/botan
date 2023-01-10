@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection for x86
-* (C) 2009,2010,2013,2017 Jack Lloyd
+* (C) 2009,2010,2013,2017,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,6 +10,8 @@
 #include <botan/internal/loadstor.h>
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+
+#include <immintrin.h>
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
   #include <intrin.h>
@@ -46,6 +48,12 @@ void invoke_cpuid(uint32_t type, uint32_t out[4])
 #endif
    }
 
+BOTAN_FUNC_ISA("xsave")
+uint64_t xgetbv()
+   {
+   return _xgetbv(0);
+   }
+
 void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4])
    {
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
@@ -71,7 +79,8 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    {
    uint64_t features_detected = 0;
    uint32_t cpuid[4] = { 0 };
-   bool has_avx = false;
+   bool has_os_ymm_support = false;
+   bool has_os_zmm_support = false;
 
    // CPUID 0: vendor identification, max sublevel
    invoke_cpuid(0, cpuid);
@@ -118,9 +127,17 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          features_detected |= CPUID::CPUID_AESNI_BIT;
       if(flags0 & x86_CPUID_1_bits::RDRAND)
          features_detected |= CPUID::CPUID_RDRAND_BIT;
+
       if((flags0 & x86_CPUID_1_bits::AVX) &&
          (flags0 & x86_CPUID_1_bits::OSXSAVE))
-         has_avx = true;
+         {
+         const uint64_t xcr_flags = xgetbv();
+         if((xcr_flags & 0x6) == 0x6)
+            {
+            has_os_ymm_support = true;
+            has_os_zmm_support = (xcr_flags & 0xE0) == 0xE0;
+            }
+         }
       }
 
    if(is_intel)
@@ -161,8 +178,15 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
 
       const uint64_t flags7 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
 
-      if((flags7 & x86_CPUID_7_bits::AVX2) && has_avx)
+      if((flags7 & x86_CPUID_7_bits::AVX2) && has_os_ymm_support)
          features_detected |= CPUID::CPUID_AVX2_BIT;
+      if(flags7 & x86_CPUID_7_bits::RDSEED)
+         features_detected |= CPUID::CPUID_RDSEED_BIT;
+      if(flags7 & x86_CPUID_7_bits::ADX)
+         features_detected |= CPUID::CPUID_ADX_BIT;
+      if(flags7 & x86_CPUID_7_bits::SHA)
+         features_detected |= CPUID::CPUID_SHA_BIT;
+
       if(flags7 & x86_CPUID_7_bits::BMI1)
          {
          features_detected |= CPUID::CPUID_BMI1_BIT;
@@ -188,16 +212,9 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
             }
          }
 
-      if((flags7 & x86_CPUID_7_bits::AVX512_F) && has_avx)
+      if((flags7 & x86_CPUID_7_bits::AVX512_F) && has_os_zmm_support)
          {
-         features_detected |= CPUID::CPUID_AVX512F_BIT;
-
-         if(flags7 & x86_CPUID_7_bits::AVX512_DQ)
-            features_detected |= CPUID::CPUID_AVX512DQ_BIT;
-         if(flags7 & x86_CPUID_7_bits::AVX512_BW)
-            features_detected |= CPUID::CPUID_AVX512BW_BIT;
-
-         const uint64_t ICELAKE_FLAGS =
+         const uint64_t AVX512_PROFILE_FLAGS =
             x86_CPUID_7_bits::AVX512_F |
             x86_CPUID_7_bits::AVX512_DQ |
             x86_CPUID_7_bits::AVX512_IFMA |
@@ -207,21 +224,30 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
             x86_CPUID_7_bits::AVX512_VBMI2 |
             x86_CPUID_7_bits::AVX512_VBITALG;
 
-         if((flags7 & ICELAKE_FLAGS) == ICELAKE_FLAGS)
-            features_detected |= CPUID::CPUID_AVX512_ICL_BIT;
+         /*
+         We only enable AVX512 support if all of the above flags are available
+
+         This is more than we strictly need for most uses, however it also has
+         the effect of preventing execution of AVX512 codepaths on cores that
+         have serious downclocking problems when AVX512 code executes,
+         especially Intel Skylake.
+
+         VBMI2/VBITALG are the key flags here as they restrict us to Intel Ice
+         Lake/Rocket Lake, or AMD Zen4, all of which do not have penalties for
+         executing AVX512.
+
+         There is nothing stopping some future processor from supporting the
+         above flags and having AVX512 penalties, but maybe you should not have
+         bought such a processor.
+         */
+         if((flags7 & AVX512_PROFILE_FLAGS) == AVX512_PROFILE_FLAGS)
+            features_detected |= CPUID::CPUID_AVX512_BIT;
 
          if(flags7 & x86_CPUID_7_bits::AVX512_VAES)
             features_detected |= CPUID::CPUID_AVX512_AES_BIT;
          if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL)
             features_detected |= CPUID::CPUID_AVX512_CLMUL_BIT;
          }
-
-      if(flags7 & x86_CPUID_7_bits::RDSEED)
-         features_detected |= CPUID::CPUID_RDSEED_BIT;
-      if(flags7 & x86_CPUID_7_bits::ADX)
-         features_detected |= CPUID::CPUID_ADX_BIT;
-      if(flags7 & x86_CPUID_7_bits::SHA)
-         features_detected |= CPUID::CPUID_SHA_BIT;
       }
 
    /*
