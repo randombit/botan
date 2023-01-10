@@ -83,6 +83,12 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          return std::make_unique<SHAKE_128_Cipher>();
       }
+
+   if(req.algo_name() == "SHAKE-256" || req.algo_name() == "SHAKE-256-XOF")
+      {
+      if(provider.empty() || provider == "base")
+         return std::make_unique<SHAKE_256_Cipher>();
+      }
 #endif
 
 #if defined(BOTAN_HAS_OFB)
