@@ -24,6 +24,8 @@ class CFB_Mode : public Cipher_Mode
 
       size_t update_granularity() const override final;
 
+      size_t ideal_granularity() const override final;
+
       size_t minimum_final_size() const override final;
 
       Key_Length_Specification key_spec() const override final;

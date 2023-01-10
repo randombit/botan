@@ -56,12 +56,12 @@ bool SIV_Mode::valid_nonce_length(size_t /*nonce_len*/) const
 
 size_t SIV_Mode::update_granularity() const
    {
-   /*
-   This value does not particularly matter as regardless SIV_Mode::update
-   buffers all input, so in theory this could be 1. However as for instance
-   Transform_Filter creates update_granularity() uint8_t buffers, use a
-   somewhat large size to avoid bouncing on a tiny buffer.
-   */
+   return 1;
+   }
+
+size_t SIV_Mode::ideal_granularity() const
+   {
+   // Completely arbitrary value:
    return 128;
    }
 

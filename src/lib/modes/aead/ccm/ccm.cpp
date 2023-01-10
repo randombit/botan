@@ -62,12 +62,12 @@ size_t CCM_Mode::default_nonce_length() const
 
 size_t CCM_Mode::update_granularity() const
    {
-   /*
-   This value does not particularly matter as regardless CCM_Mode::update
-   buffers all input, so in theory this could be 1. However as for instance
-   Transform_Filter creates update_granularity() uint8_t buffers, use a
-   somewhat large size to avoid bouncing on a tiny buffer.
-   */
+   return 1;
+   }
+
+size_t CCM_Mode::ideal_granularity() const
+   {
+   // Completely arbitrary
    return m_cipher->parallel_bytes();
    }
 

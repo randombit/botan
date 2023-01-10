@@ -201,6 +201,8 @@ void GHASH::add_final_block(secure_vector<uint8_t>& hash,
 void GHASH::final(uint8_t mac[], size_t mac_len)
    {
    BOTAN_ARG_CHECK(mac_len > 0 && mac_len <= 16, "GHASH output length");
+
+   verify_key_set(m_ghash.size() == GCM_BS);
    add_final_block(m_ghash, m_ad_len, m_text_len);
 
    for(size_t i = 0; i != mac_len; ++i)

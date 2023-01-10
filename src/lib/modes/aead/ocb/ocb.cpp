@@ -217,6 +217,11 @@ std::string OCB_Mode::name() const
 
 size_t OCB_Mode::update_granularity() const
    {
+   return block_size();
+   }
+
+size_t OCB_Mode::ideal_granularity() const
+   {
    return (m_par_blocks * block_size());
    }
 

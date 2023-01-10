@@ -24,6 +24,16 @@ bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const
    return (n == 8 || n == 12 || n == 24);
    }
 
+size_t ChaCha20Poly1305_Mode::update_granularity() const
+   {
+   return 1;
+   }
+
+size_t ChaCha20Poly1305_Mode::ideal_granularity() const
+   {
+   return 128;
+   }
+
 void ChaCha20Poly1305_Mode::clear()
    {
    m_chacha->clear();

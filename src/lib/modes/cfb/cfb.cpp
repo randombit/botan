@@ -51,6 +51,12 @@ size_t CFB_Mode::update_granularity() const
    return feedback();
    }
 
+size_t CFB_Mode::ideal_granularity() const
+   {
+   // Multiplier here is arbitrary
+   return 16*feedback();
+   }
+
 size_t CFB_Mode::minimum_final_size() const
    {
    return 0;

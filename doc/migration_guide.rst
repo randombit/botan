@@ -125,3 +125,19 @@ Now, ``ASN1_Class::Private`` refers to the correct class, but would lead to a
 different encoding vs 2.x's ``ASN1_Tag::PRIVATE``. The correct value to use in
 3.0 to match ``ASN1_Tag::PRIVATE`` is ``ASN1_Class::ExplicitContextSpecific``.
 
+Cipher Mode Granularity
+-------------------------
+
+Previously Cipher_Mode::update_granularity specified the minimum buffer size
+that must be provided during processing. However the value returned was often
+much larger than what was strictly required. In particular some modes can easily
+accept inputs as small as 1 byte, but their update_granularity was much larger
+to encourage best performance.
+
+Now update_granularity returns the true minimum value, and the new
+Cipher_Mode::ideal_granularity returns a value which is a multiple of
+update_granularity sized for good performance.
+
+If you are sizing buffers on the basis of update_granularity consider
+using ideal_granularity instead. Otherwise you may encounter performance
+regressions due to creating and processing very small buffers.

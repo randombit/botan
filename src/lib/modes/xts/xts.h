@@ -22,7 +22,9 @@ class XTS_Mode : public Cipher_Mode
    public:
       std::string name() const override;
 
-      size_t update_granularity() const override { return m_cipher_parallelism; }
+      size_t update_granularity() const override;
+
+      size_t ideal_granularity() const override;
 
       size_t minimum_final_size() const override;
 
@@ -43,6 +45,8 @@ class XTS_Mode : public Cipher_Mode
 
       bool tweak_set() const { return m_tweak.empty() == false; }
 
+      size_t tweak_blocks() const { return m_tweak_blocks; }
+
       const BlockCipher& cipher() const { return *m_cipher; }
 
       void update_tweak(size_t last_used);
@@ -58,6 +62,7 @@ class XTS_Mode : public Cipher_Mode
       secure_vector<uint8_t> m_tweak;
       const size_t m_cipher_block_size;
       const size_t m_cipher_parallelism;
+      const size_t m_tweak_blocks;
    };
 
 /**

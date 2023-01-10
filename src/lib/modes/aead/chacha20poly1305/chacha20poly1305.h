@@ -31,7 +31,9 @@ class ChaCha20Poly1305_Mode : public AEAD_Mode
 
       std::string name() const override { return "ChaCha20Poly1305"; }
 
-      size_t update_granularity() const override { return 64; }
+      size_t update_granularity() const override;
+
+      size_t ideal_granularity() const override;
 
       Key_Length_Specification key_spec() const override
          { return Key_Length_Specification(32); }

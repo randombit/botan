@@ -46,6 +46,11 @@ std::string CBC_Mode::name() const
 
 size_t CBC_Mode::update_granularity() const
    {
+   return cipher().block_size();
+   }
+
+size_t CBC_Mode::ideal_granularity() const
+   {
    return cipher().parallel_bytes();
    }
 

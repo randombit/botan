@@ -25,11 +25,11 @@ size_t choose_update_size(size_t update_granularity)
 }
 
 Cipher_Mode_Filter::Cipher_Mode_Filter(Cipher_Mode* mode) :
-   Buffered_Filter(choose_update_size(mode->update_granularity()),
+   Buffered_Filter(choose_update_size(mode->ideal_granularity()),
                    mode->minimum_final_size()),
    m_mode(mode),
    m_nonce(mode->default_nonce_length()),
-   m_buffer(m_mode->update_granularity())
+   m_buffer(m_mode->ideal_granularity())
    {
    }
 
@@ -81,7 +81,7 @@ void Cipher_Mode_Filter::buffered_block(const uint8_t input[], size_t input_leng
    {
    while(input_length)
       {
-      const size_t take = std::min(m_mode->update_granularity(), input_length);
+      const size_t take = std::min(m_mode->ideal_granularity(), input_length);
 
       m_buffer.assign(input, input + take);
       m_mode->update(m_buffer);

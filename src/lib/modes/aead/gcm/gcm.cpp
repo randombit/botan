@@ -58,6 +58,11 @@ std::string GCM_Mode::provider() const
 
 size_t GCM_Mode::update_granularity() const
    {
+   return GCM_BS;
+   }
+
+size_t GCM_Mode::ideal_granularity() const
+   {
    return GCM_BS * std::max<size_t>(2, BOTAN_BLOCK_CIPHER_PAR_MULT);
    }
 
