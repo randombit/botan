@@ -465,7 +465,7 @@ class AEAD_Tests final : public Text_Based_Test
                         enc->ideal_granularity(), enc->update_granularity());
 
          result.confirm("ideal granularity is a multiple of update granularity",
-                        enc->ideal_granularity() % enc->ideal_granularity() == 0);
+                        enc->ideal_granularity() % enc->update_granularity() == 0);
 
          // test enc
          result.merge(test_enc(key, nonce, input, expected, ad, algo));
