@@ -166,7 +166,7 @@ secure_vector<uint8_t> CCM_Mode::format_c0()
 
 void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
@@ -219,14 +219,14 @@ void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
+   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
 
    const secure_vector<uint8_t>& ad = ad_buf();
    BOTAN_ARG_CHECK(ad.size() % CCM_BS == 0, "AD is block size multiple");

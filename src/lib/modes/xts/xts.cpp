@@ -118,7 +118,7 @@ size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
    BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher_block_size();
 
-   BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
+   BOTAN_ARG_CHECK(sz % BS == 0, "Input is not full blocks");
    size_t blocks = sz / BS;
 
    const size_t blocks_in_tweak = tweak_blocks();
@@ -140,11 +140,12 @@ size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
 
 void XTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input in XTS encrypt");
+   BOTAN_ARG_CHECK(sz >= minimum_final_size(),
+                   "missing sufficient final input in XTS encrypt");
 
    const size_t BS = cipher_block_size();
 
@@ -192,7 +193,7 @@ size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
    BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher_block_size();
 
-   BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
+   BOTAN_ARG_CHECK(sz % BS == 0, "Input is not full blocks");
    size_t blocks = sz / BS;
 
    const size_t blocks_in_tweak = tweak_blocks();
@@ -214,11 +215,12 @@ size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
 
 void XTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input in XTS decrypt");
+   BOTAN_ARG_CHECK(sz >= minimum_final_size(),
+                   "missing sufficient final input in XTS decrypt");
 
    const size_t BS = cipher_block_size();
 

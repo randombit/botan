@@ -110,7 +110,7 @@ size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
    BOTAN_STATE_CHECK(state().empty() == false);
    const size_t BS = block_size();
 
-   BOTAN_ASSERT(sz % BS == 0, "CBC input is full blocks");
+   BOTAN_ARG_CHECK(sz % BS == 0, "CBC input is not full blocks");
    const size_t blocks = sz / BS;
 
    if(blocks > 0)
@@ -133,7 +133,7 @@ size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
 void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
    const size_t BS = block_size();
 
@@ -164,7 +164,7 @@ size_t CTS_Encryption::output_length(size_t input_length) const
 void CTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    uint8_t* buf = buffer.data() + offset;
    const size_t sz = buffer.size() - offset;
 
@@ -222,7 +222,7 @@ size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
 
    const size_t BS = block_size();
 
-   BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
+   BOTAN_ARG_CHECK(sz % BS == 0, "Input is not full blocks");
    size_t blocks = sz / BS;
 
    while(blocks)
@@ -247,7 +247,7 @@ size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
 void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
 
    const size_t BS = block_size();
@@ -284,7 +284,7 @@ size_t CTS_Decryption::minimum_final_size() const
 void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 

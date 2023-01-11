@@ -159,8 +159,7 @@ void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   if(sz < tag_size())
-      throw Decoding_Error("Insufficient input for GCM decryption, tag missing");
+   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
 
    const size_t remaining = sz - tag_size();
 

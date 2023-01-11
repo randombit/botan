@@ -118,7 +118,7 @@ class CCM_Decryption final : public CCM_Mode
 
       size_t output_length(size_t input_length) const override
          {
-         BOTAN_ASSERT(input_length >= tag_size(), "Sufficient input");
+         BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
          return input_length - tag_size();
          }
 

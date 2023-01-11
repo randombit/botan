@@ -138,11 +138,11 @@ size_t ChaCha20Poly1305_Decryption::process(uint8_t buf[], size_t sz)
 
 void ChaCha20Poly1305_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= tag_size(), "Have the tag as part of final input");
+   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
 
    const size_t remaining = sz - tag_size();
 
