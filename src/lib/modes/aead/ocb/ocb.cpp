@@ -380,6 +380,7 @@ size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
 void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    verify_key_set(m_L != nullptr);
+   BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
 
@@ -470,6 +471,7 @@ size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
 void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    verify_key_set(m_L != nullptr);
+   BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
 
