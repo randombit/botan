@@ -94,6 +94,12 @@ All cipher mode implementations are are derived from the base class
 
     Returns a multiple of update_granularity sized for ideal performance.
 
+    In fact this is not truly the "ideal" buffer size but just reflects the
+    smallest possible buffer that can reasonably take advantage of available
+    parallelism (due to SIMD execution, etc). If you are concerned about
+    performance, it may be advisable to take this return value and scale it to
+    approximately 4 KB, and use buffers of that size.
+
   .. cpp:function:: virtual size_t process(uint8_t* msg, size_t msg_len)
 
     Process msg in place and returns the number of bytes written. *msg* must

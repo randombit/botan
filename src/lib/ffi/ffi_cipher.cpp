@@ -30,17 +30,29 @@ namespace {
 size_t ffi_choose_update_size(Botan::Cipher_Mode& mode)
    {
    const size_t update_granularity = mode.update_granularity();
-   const size_t ideal_granularity = mode.ideal_granularity();
    const size_t minimum_final_size = mode.minimum_final_size();
 
-   if(minimum_final_size == 0)
+   /*
+   * Return the minimum possible granularity given the FFI API constraints that
+   * we require the returned size be > minimum final size.
+   *
+   * If the minimum final size is zero, or the update_granularity is
+   * already greater, just use that.
+   *
+   * Otherwise scale the update_granularity to a sufficient size
+   * to be greater than the minimum.
+   */
+   if(minimum_final_size == 0 || update_granularity > minimum_final_size)
       {
       BOTAN_ASSERT_NOMSG(update_granularity > 0);
       return update_granularity;
       }
 
-   BOTAN_ASSERT_NOMSG(ideal_granularity > minimum_final_size);
-   return ideal_granularity;
+   size_t buf_size = std::max(update_granularity, minimum_final_size + 1);
+   if(buf_size % update_granularity != 0)
+      buf_size += update_granularity - (buf_size % update_granularity);
+
+   return buf_size;
    }
 
 }
@@ -244,7 +256,7 @@ int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl)
 
 int botan_cipher_get_update_granularity(botan_cipher_t cipher, size_t* ug)
    {
-   return BOTAN_FFI_VISIT(cipher, [=](const auto& c) { *ug = c.ideal_granularity(); });
+   return BOTAN_FFI_VISIT(cipher, [=](const auto& /*c*/) { *ug = cipher->m_update_size; });
    }
 
 int botan_cipher_get_ideal_update_granularity(botan_cipher_t cipher, size_t* ug)
