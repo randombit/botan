@@ -12,6 +12,8 @@
 
 namespace Botan {
 
+#define BOTAN_AVX2_FN BOTAN_FUNC_ISA("avx2")
+
 class SIMD_8x32 final
    {
    public:
@@ -22,57 +24,57 @@ class SIMD_8x32 final
       SIMD_8x32& operator=(SIMD_8x32&& other) = default;
       SIMD_8x32(SIMD_8x32&& other) = default;
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       BOTAN_FORCE_INLINE SIMD_8x32()
          {
          m_avx2 = _mm256_setzero_si256();
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       explicit SIMD_8x32(const uint32_t B[8])
          {
          m_avx2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(B));
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       explicit SIMD_8x32(uint32_t B0, uint32_t B1, uint32_t B2, uint32_t B3,
                          uint32_t B4, uint32_t B5, uint32_t B6, uint32_t B7)
          {
          m_avx2 = _mm256_set_epi32(B7, B6, B5, B4, B3, B2, B1, B0);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static SIMD_8x32 splat(uint32_t B)
          {
          return SIMD_8x32(_mm256_set1_epi32(B));
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static SIMD_8x32 load_le(const uint8_t* in)
          {
          return SIMD_8x32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(in)));
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static SIMD_8x32 load_be(const uint8_t* in)
          {
          return load_le(in).bswap();
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       void store_le(uint8_t out[]) const
          {
          _mm256_storeu_si256(reinterpret_cast<__m256i*>(out), m_avx2);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       void store_be(uint8_t out[]) const
          {
          bswap().store_le(out);
          }
 
       template<size_t ROT>
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 rotl() const
          {
          static_assert(ROT > 0 && ROT < 32, "Invalid rotation constant");
@@ -103,13 +105,13 @@ class SIMD_8x32 final
          }
 
       template<size_t ROT>
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 rotr() const
          {
          return this->rotl<32-ROT>();
          }
 
-      SIMD_8x32 BOTAN_FUNC_ISA("avx2") sigma0() const
+      SIMD_8x32 BOTAN_AVX2_FN sigma0() const
          {
          const SIMD_8x32 rot1 = this->rotr<2>();
          const SIMD_8x32 rot2 = this->rotr<13>();
@@ -117,7 +119,7 @@ class SIMD_8x32 final
          return rot1 ^ rot2 ^ rot3;
          }
 
-      SIMD_8x32 BOTAN_FUNC_ISA("avx2") sigma1() const
+      SIMD_8x32 BOTAN_AVX2_FN sigma1() const
          {
          const SIMD_8x32 rot1 = this->rotr<6>();
          const SIMD_8x32 rot2 = this->rotr<11>();
@@ -125,7 +127,7 @@ class SIMD_8x32 final
          return rot1 ^ rot2 ^ rot3;
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 operator+(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -133,7 +135,7 @@ class SIMD_8x32 final
          return retval;
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 operator-(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -141,7 +143,7 @@ class SIMD_8x32 final
          return retval;
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 operator^(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -149,7 +151,7 @@ class SIMD_8x32 final
          return retval;
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 operator|(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -157,7 +159,7 @@ class SIMD_8x32 final
          return retval;
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 operator&(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -165,66 +167,66 @@ class SIMD_8x32 final
          return retval;
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       void operator+=(const SIMD_8x32& other)
          {
          m_avx2 = _mm256_add_epi32(m_avx2, other.m_avx2);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       void operator-=(const SIMD_8x32& other)
          {
          m_avx2 = _mm256_sub_epi32(m_avx2, other.m_avx2);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       void operator^=(const SIMD_8x32& other)
          {
          m_avx2 = _mm256_xor_si256(m_avx2, other.m_avx2);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       void operator^=(uint32_t other)
          {
          *this ^= SIMD_8x32::splat(other);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       void operator|=(const SIMD_8x32& other)
          {
          m_avx2 = _mm256_or_si256(m_avx2, other.m_avx2);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       void operator&=(const SIMD_8x32& other)
          {
          m_avx2 = _mm256_and_si256(m_avx2, other.m_avx2);
          }
 
-      template<int SHIFT> BOTAN_FUNC_ISA("avx2") SIMD_8x32 shl() const
+      template<int SHIFT> BOTAN_AVX2_FN SIMD_8x32 shl() const
          {
          return SIMD_8x32(_mm256_slli_epi32(m_avx2, SHIFT));
          }
 
-      template<int SHIFT> BOTAN_FUNC_ISA("avx2") SIMD_8x32 shr() const
+      template<int SHIFT> BOTAN_AVX2_FN SIMD_8x32 shr() const
          {
          return SIMD_8x32(_mm256_srli_epi32(m_avx2, SHIFT));
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 operator~() const
          {
          return SIMD_8x32(_mm256_xor_si256(m_avx2, _mm256_set1_epi32(0xFFFFFFFF)));
          }
 
       // (~reg) & other
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 andc(const SIMD_8x32& other) const
          {
          return SIMD_8x32(_mm256_andnot_si256(m_avx2, other.m_avx2));
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32 bswap() const
          {
          const uint8_t BSWAP_MASK[32] = { 3, 2, 1, 0,
@@ -243,7 +245,7 @@ class SIMD_8x32 final
          return SIMD_8x32(output);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static void transpose(SIMD_8x32& B0, SIMD_8x32& B1,
                             SIMD_8x32& B2, SIMD_8x32& B3)
          {
@@ -258,7 +260,7 @@ class SIMD_8x32 final
          B3.m_avx2 = _mm256_unpackhi_epi64(T2, T3);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static void transpose(SIMD_8x32& B0, SIMD_8x32& B1,
                             SIMD_8x32& B2, SIMD_8x32& B3,
                             SIMD_8x32& B4, SIMD_8x32& B5,
@@ -273,7 +275,7 @@ class SIMD_8x32 final
          swap_tops(B3, B7);
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static SIMD_8x32 choose(const SIMD_8x32& mask, const SIMD_8x32& a, const SIMD_8x32& b)
          {
 #if defined(__AVX512VL__)
@@ -283,7 +285,7 @@ class SIMD_8x32 final
 #endif
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static SIMD_8x32 majority(const SIMD_8x32& x, const SIMD_8x32& y, const SIMD_8x32& z)
          {
 #if defined(__AVX512VL__)
@@ -293,26 +295,26 @@ class SIMD_8x32 final
 #endif
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static void reset_registers()
          {
          _mm256_zeroupper();
          }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static void zero_registers()
          {
          _mm256_zeroall();
          }
 
-      __m256i BOTAN_FUNC_ISA("avx2") handle() const { return m_avx2; }
+      __m256i BOTAN_AVX2_FN handle() const { return m_avx2; }
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       SIMD_8x32(__m256i x) : m_avx2(x) {}
 
    private:
 
-      BOTAN_FUNC_ISA("avx2")
+      BOTAN_AVX2_FN
       static void swap_tops(SIMD_8x32& A, SIMD_8x32& B)
          {
          SIMD_8x32 T0 = _mm256_permute2x128_si256(A.handle(), B.handle(), 0 + (2 << 4));
