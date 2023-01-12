@@ -16,7 +16,9 @@ namespace Botan {
 SHAKE_Cipher::SHAKE_Cipher(size_t shake_rate) :
    m_shake_rate(shake_rate),
    m_buf_pos(0)
-   {}
+   {
+   BOTAN_ASSERT_NOMSG(shake_rate >= 72 && shake_rate <= 168);
+   }
 
 void SHAKE_Cipher::clear()
    {
@@ -78,6 +80,6 @@ Key_Length_Specification SHAKE_Cipher::key_spec() const
    }
 
 SHAKE_128_Cipher::SHAKE_128_Cipher() : SHAKE_Cipher((1600-256)/8) {}
-SHAKE_256_Cipher::SHAKE_256_Cipher() : SHAKE_Cipher(136) {}
+SHAKE_256_Cipher::SHAKE_256_Cipher() : SHAKE_Cipher((1600-512)/8) {}
 
 }
