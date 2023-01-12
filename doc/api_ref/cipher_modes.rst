@@ -87,7 +87,18 @@ All cipher mode implementations are are derived from the base class
   .. cpp:function:: virtual size_t update_granularity() const
 
     The :cpp:class:`Cipher_Mode` interface requires message processing in multiples of the block size.
-    Returns size of required blocks to update and 1, if the mode can process messages of any length.
+    Returns size of required blocks to update. Will return 1 if the mode implementation
+    does not require buffering.
+
+  .. cpp:function:: virtual size_t ideal_granularity() const
+
+    Returns a multiple of update_granularity sized for ideal performance.
+
+    In fact this is not truly the "ideal" buffer size but just reflects the
+    smallest possible buffer that can reasonably take advantage of available
+    parallelism (due to SIMD execution, etc). If you are concerned about
+    performance, it may be advisable to take this return value and scale it to
+    approximately 4 KB, and use buffers of that size.
 
   .. cpp:function:: virtual size_t process(uint8_t* msg, size_t msg_len)
 
@@ -102,7 +113,11 @@ All cipher mode implementations are are derived from the base class
 
   .. cpp:function:: size_t minimum_final_size() const
 
-    Returns the minimum size needed for :cpp:func:`finish`.
+    Returns the minimum size needed for :cpp:func:`finish`. This is used for
+    example when processing an AEAD message, to ensure the tag is available. In
+    that case, the encryption side will return 0 (since the tag is generated,
+    rather than being provided) while the decryption mode will return the size
+    of the tag.
 
   .. cpp:function:: void finish(secure_vector<uint8_t>& final_block, size_t offset = 0)
 

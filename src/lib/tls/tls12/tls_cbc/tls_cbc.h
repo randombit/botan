@@ -33,6 +33,8 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
 
       size_t update_granularity() const override final;
 
+      size_t ideal_granularity() const override final;
+
       Key_Length_Specification key_spec() const override final;
 
       bool valid_nonce_length(size_t nl) const override final;

@@ -31,7 +31,9 @@ class ChaCha20Poly1305_Mode : public AEAD_Mode
 
       std::string name() const override { return "ChaCha20Poly1305"; }
 
-      size_t update_granularity() const override { return 64; }
+      size_t update_granularity() const override;
+
+      size_t ideal_granularity() const override;
 
       Key_Length_Specification key_spec() const override
          { return Key_Length_Specification(32); }
@@ -86,7 +88,7 @@ class ChaCha20Poly1305_Decryption final : public ChaCha20Poly1305_Mode
    public:
       size_t output_length(size_t input_length) const override
          {
-         BOTAN_ASSERT(input_length >= tag_size(), "Sufficient input");
+         BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
          return input_length - tag_size();
          }
 

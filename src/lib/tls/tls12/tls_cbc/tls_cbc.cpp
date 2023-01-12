@@ -75,6 +75,11 @@ size_t TLS_CBC_HMAC_AEAD_Mode::update_granularity() const
    return 1; // just buffers anyway
    }
 
+size_t TLS_CBC_HMAC_AEAD_Mode::ideal_granularity() const
+   {
+   return 1; // just buffers anyway
+   }
+
 bool TLS_CBC_HMAC_AEAD_Mode::valid_nonce_length(size_t nl) const
    {
    if(m_cbc_state.empty())

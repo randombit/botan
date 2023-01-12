@@ -40,6 +40,10 @@ class Stream_Cipher_Mode final : public Cipher_Mode
 
       size_t update_granularity() const override { return 1; }
 
+      // Return value is arbitrary as there is currently no way to
+      // query a StreamCipher as to its internal block size
+      size_t ideal_granularity() const override { return 64; }
+
       size_t minimum_final_size() const override { return 0; }
 
       size_t default_nonce_length() const override { return 0; }

@@ -108,28 +108,28 @@ The following code encrypts a provided plaintext using ChaCha20.
 Available Stream Ciphers
 ----------------------------
 
-Botan provides the following stream ciphers. If in doubt use ChaCha20 or CTR(AES-256).
+Botan provides the following stream ciphers. If in doubt, pick ChaCha20 or CTR(AES-256).
 
 CTR-BE
 ~~~~~~~
 
-A cipher mode that converts a block cipher into a stream cipher. It offers
+Counter mode converts a block cipher into a stream cipher. It offers
 parallel execution and can seek within the output stream, both useful
 properties.
 
-CTR mode requires an IV which can be any length up to the block size of the
+CTR mode requires a nonce, which can be any length up to the block size of the
 underlying cipher. If it is shorter than the block size, sufficient zero bytes
 are appended.
 
 It is possible to choose the width of the counter portion, which can improve
 performance somewhat, but limits the maximum number of bytes that can safely be
 encrypted. Different protocols have different conventions for the width of the
-counter portion. This is done by specifying with width (which must be at least 4
-bytes, allowing to encrypt 2\ :sup:`32` blocks of data) for example
-"CTR(AES-256,8)" to select a 64-bit counter.
+counter portion. This is done by specifying the width (which must be at least 4
+bytes, allowing to encrypt 2\ :sup:`32` blocks of data) for example using
+"CTR(AES-256,8)" will select a 64-bit (8 byte) counter.
 
 (The ``-BE`` suffix refers to big-endian convention for the counter.
-This is the most common case.)
+Little-endian counter mode is rarely used and not currently implemented.)
 
 OFB
 ~~~~~
@@ -176,11 +176,12 @@ RC4
 ~~~~
 
 An old and very widely deployed stream cipher notable for its simplicity. It
-does not support IVs or seeking within the cipher stream.
+does not support IVs or seeking within the cipher stream. Compared to modern
+algorithms like ChaCha20, it is also quite slow.
 
 .. warning::
 
-   RC4 is now badly broken. **Avoid in new code** and use only if required for
-   compatibility with existing systems.
+   RC4 is prone to numerous attacks. **Avoid in new code** and use only if
+   required for compatibility with existing systems.
 
 Available if ``BOTAN_HAS_RC4`` is defined.

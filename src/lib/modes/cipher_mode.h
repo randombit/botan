@@ -62,7 +62,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       virtual void start_msg(const uint8_t nonce[], size_t nonce_len) = 0;
 
       /**
-      * Begin processing a message.
+      * Begin processing a message with a fresh nonce.
       * @param nonce the per message nonce
       */
       template<typename Alloc>
@@ -72,7 +72,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
          }
 
       /**
-      * Begin processing a message.
+      * Begin processing a message with a fresh nonce.
       * @param nonce the per message nonce
       * @param nonce_len length of nonce
       */
@@ -83,6 +83,13 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
 
       /**
       * Begin processing a message.
+      *
+      * The exact semantics of this depend on the mode. For many modes, the call
+      * will fail since a nonce must be provided.
+      *
+      * For certain modes such as CBC this will instead cause the last
+      * ciphertext block to be used as the nonce of the new message; doing this
+      * isn't a good idea, but some (mostly older) protocols do this.
       */
       void start()
          {
@@ -131,8 +138,8 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       /**
       * Returns the size of the output if this transform is used to process a
       * message with input_length bytes. In most cases the answer is precise.
-      * If it is not possible to precise (namely for CBC decryption) instead a
-      * lower bound is returned.
+      * If it is not possible to precise (namely for CBC decryption) instead an
+      * upper bound is returned.
       */
       virtual size_t output_length(size_t input_length) const = 0;
 
@@ -140,6 +147,14 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * @return size of required blocks to update
       */
       virtual size_t update_granularity() const = 0;
+
+      /**
+      * Return an ideal granularity. This will be a multiple of the result of
+      * update_granularity but may be larger. If so it indicates that better
+      * performance may be achieved by providing buffers that are at least that
+      * size.
+      */
+      virtual size_t ideal_granularity() const = 0;
 
       /**
       * @return required minimium size to finalize() - may be any
@@ -186,6 +201,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
 * @param direction ENCRYPTION or DECRYPTION
 * @param provider provider implementation to choose
 */
+BOTAN_DEPRECATED("Use Cipher_Mode::create")
 inline Cipher_Mode* get_cipher_mode(const std::string& algo_spec,
                                     Cipher_Dir direction,
                                     const std::string& provider = "")

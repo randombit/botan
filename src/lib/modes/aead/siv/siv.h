@@ -44,6 +44,8 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
 
       size_t update_granularity() const override;
 
+      size_t ideal_granularity() const override;
+
       Key_Length_Specification key_spec() const override;
 
       bool valid_nonce_length(size_t) const override;

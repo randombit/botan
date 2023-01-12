@@ -33,6 +33,7 @@ class CommonCrypto_Cipher_Mode final : public Cipher_Mode
       void finish(secure_vector<uint8_t>& final_block, size_t offset0) override;
       size_t output_length(size_t input_length) const override;
       size_t update_granularity() const override;
+      size_t ideal_granularity() const override;
       size_t minimum_final_size() const override;
       size_t default_nonce_length() const override;
       bool valid_nonce_length(size_t nonce_len) const override;
@@ -147,6 +148,11 @@ void CommonCrypto_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
    }
 
 size_t CommonCrypto_Cipher_Mode::update_granularity() const
+   {
+   return m_opts.block_size;
+   }
+
+size_t CommonCrypto_Cipher_Mode::ideal_granularity() const
    {
    return m_opts.block_size * BOTAN_BLOCK_CIPHER_PAR_MULT;
    }

@@ -28,6 +28,8 @@ class EAX_Mode : public AEAD_Mode
 
       size_t update_granularity() const override;
 
+      size_t ideal_granularity() const override;
+
       Key_Length_Specification key_spec() const override;
 
       // EAX supports arbitrary nonce lengths
@@ -101,7 +103,7 @@ class EAX_Decryption final : public EAX_Mode
 
       size_t output_length(size_t input_length) const override
          {
-         BOTAN_ASSERT(input_length >= tag_size(), "Sufficient input");
+         BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
          return input_length - tag_size();
          }
 

@@ -14,10 +14,48 @@ using namespace Botan_FFI;
 
 struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C>
    {
-   explicit botan_cipher_struct(std::unique_ptr<Botan::Cipher_Mode> x) :
-      botan_struct(std::move(x)) {}
+   explicit botan_cipher_struct(std::unique_ptr<Botan::Cipher_Mode> x, size_t update_size) :
+      botan_struct(std::move(x)),
+      m_update_size(update_size)
+         {
+         m_buf.reserve(m_update_size);
+         }
+
    Botan::secure_vector<uint8_t> m_buf;
+   size_t m_update_size;
    };
+
+namespace {
+
+size_t ffi_choose_update_size(Botan::Cipher_Mode& mode)
+   {
+   const size_t update_granularity = mode.update_granularity();
+   const size_t minimum_final_size = mode.minimum_final_size();
+
+   /*
+   * Return the minimum possible granularity given the FFI API constraints that
+   * we require the returned size be > minimum final size.
+   *
+   * If the minimum final size is zero, or the update_granularity is
+   * already greater, just use that.
+   *
+   * Otherwise scale the update_granularity to a sufficient size
+   * to be greater than the minimum.
+   */
+   if(minimum_final_size == 0 || update_granularity > minimum_final_size)
+      {
+      BOTAN_ASSERT_NOMSG(update_granularity > 0);
+      return update_granularity;
+      }
+
+   size_t buf_size = std::max(update_granularity, minimum_final_size + 1);
+   if(buf_size % update_granularity != 0)
+      buf_size += update_granularity - (buf_size % update_granularity);
+
+   return buf_size;
+   }
+
+}
 
 int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t flags)
    {
@@ -27,7 +65,10 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
       std::unique_ptr<Botan::Cipher_Mode> mode(Botan::Cipher_Mode::create(cipher_name, dir));
       if(!mode)
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-      *cipher = new botan_cipher_struct(std::move(mode));
+
+      const size_t update_size = ffi_choose_update_size(*mode);
+
+      *cipher = new botan_cipher_struct(std::move(mode), update_size);
       return BOTAN_FFI_SUCCESS;
       });
    }
@@ -92,7 +133,6 @@ int botan_cipher_start(botan_cipher_t cipher_obj,
    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Cipher_Mode& cipher = safe_get(cipher_obj);
       cipher.start(nonce, nonce_len);
-      cipher_obj->m_buf.reserve(cipher.update_granularity());
       return BOTAN_FFI_SUCCESS;
       });
    }
@@ -160,8 +200,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
          return -1;
          }
 
-      const size_t ud = cipher.update_granularity();
-      BOTAN_ASSERT(cipher.update_granularity() > cipher.minimum_final_size(), "logic error");
+      const size_t ud = cipher_obj->m_update_size;
 
       mbuf.resize(ud);
       size_t taken = 0, written = 0;
@@ -217,7 +256,12 @@ int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl)
 
 int botan_cipher_get_update_granularity(botan_cipher_t cipher, size_t* ug)
    {
-   return BOTAN_FFI_VISIT(cipher, [=](const auto& c) { *ug = c.update_granularity(); });
+   return BOTAN_FFI_VISIT(cipher, [=](const auto& /*c*/) { *ug = cipher->m_update_size; });
+   }
+
+int botan_cipher_get_ideal_update_granularity(botan_cipher_t cipher, size_t* ug)
+   {
+   return BOTAN_FFI_VISIT(cipher, [=](const auto& c) { *ug = c.ideal_granularity(); });
    }
 
 int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tl)

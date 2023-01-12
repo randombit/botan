@@ -58,6 +58,11 @@ std::string GCM_Mode::provider() const
 
 size_t GCM_Mode::update_granularity() const
    {
+   return GCM_BS;
+   }
+
+size_t GCM_Mode::ideal_granularity() const
+   {
    return GCM_BS * std::max<size_t>(2, BOTAN_BLOCK_CIPHER_PAR_MULT);
    }
 
@@ -154,8 +159,7 @@ void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   if(sz < tag_size())
-      throw Decoding_Error("Insufficient input for GCM decryption, tag missing");
+   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
 
    const size_t remaining = sz - tag_size();
 

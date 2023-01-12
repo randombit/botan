@@ -14,7 +14,8 @@ namespace Botan {
 XTS_Mode::XTS_Mode(std::unique_ptr<BlockCipher> cipher) :
    m_cipher(std::move(cipher)),
    m_cipher_block_size(m_cipher->block_size()),
-   m_cipher_parallelism(m_cipher->parallel_bytes())
+   m_cipher_parallelism(m_cipher->parallel_bytes()),
+   m_tweak_blocks(m_cipher_parallelism / m_cipher_block_size)
    {
    if(poly_double_supported_size(m_cipher_block_size) == false)
       {
@@ -29,6 +30,16 @@ void XTS_Mode::clear()
    m_cipher->clear();
    m_tweak_cipher->clear();
    reset();
+   }
+
+size_t XTS_Mode::update_granularity() const
+   {
+   return m_cipher_block_size;
+   }
+
+size_t XTS_Mode::ideal_granularity() const
+   {
+   return m_cipher_parallelism;
    }
 
 void XTS_Mode::reset()
@@ -77,7 +88,7 @@ void XTS_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   m_tweak.resize(update_granularity());
+   m_tweak.resize(m_cipher_parallelism);
    copy_mem(m_tweak.data(), nonce, nonce_len);
    m_tweak_cipher->encrypt(m_tweak.data());
 
@@ -91,7 +102,7 @@ void XTS_Mode::update_tweak(size_t which)
    if(which > 0)
       poly_double_n_le(m_tweak.data(), &m_tweak[(which-1)*BS], BS);
 
-   const size_t blocks_in_tweak = update_granularity() / BS;
+   const size_t blocks_in_tweak = tweak_blocks();
 
    for(size_t i = 1; i < blocks_in_tweak; ++i)
       poly_double_n_le(&m_tweak[i*BS], &m_tweak[(i-1)*BS], BS);
@@ -107,10 +118,10 @@ size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
    BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher_block_size();
 
-   BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
+   BOTAN_ARG_CHECK(sz % BS == 0, "Input is not full blocks");
    size_t blocks = sz / BS;
 
-   const size_t blocks_in_tweak = update_granularity() / BS;
+   const size_t blocks_in_tweak = tweak_blocks();
 
    while(blocks)
       {
@@ -129,11 +140,12 @@ size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
 
 void XTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input in XTS encrypt");
+   BOTAN_ARG_CHECK(sz >= minimum_final_size(),
+                   "missing sufficient final input in XTS encrypt");
 
    const size_t BS = cipher_block_size();
 
@@ -181,10 +193,10 @@ size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
    BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher_block_size();
 
-   BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
+   BOTAN_ARG_CHECK(sz % BS == 0, "Input is not full blocks");
    size_t blocks = sz / BS;
 
-   const size_t blocks_in_tweak = update_granularity() / BS;
+   const size_t blocks_in_tweak = tweak_blocks();
 
    while(blocks)
       {
@@ -203,11 +215,12 @@ size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
 
 void XTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input in XTS decrypt");
+   BOTAN_ARG_CHECK(sz >= minimum_final_size(),
+                   "missing sufficient final input in XTS decrypt");
 
    const size_t BS = cipher_block_size();
 

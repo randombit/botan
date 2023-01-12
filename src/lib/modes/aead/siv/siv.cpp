@@ -56,12 +56,12 @@ bool SIV_Mode::valid_nonce_length(size_t /*nonce_len*/) const
 
 size_t SIV_Mode::update_granularity() const
    {
-   /*
-   This value does not particularly matter as regardless SIV_Mode::update
-   buffers all input, so in theory this could be 1. However as for instance
-   Transform_Filter creates update_granularity() uint8_t buffers, use a
-   somewhat large size to avoid bouncing on a tiny buffer.
-   */
+   return 1;
+   }
+
+size_t SIV_Mode::ideal_granularity() const
+   {
+   // Completely arbitrary value:
    return 128;
    }
 
@@ -158,7 +158,7 @@ void SIV_Mode::set_ctr_iv(secure_vector<uint8_t> V)
 
 void SIV_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
    msg_buf().clear();
@@ -176,7 +176,7 @@ void SIV_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
    if(!msg_buf().empty())
       {
@@ -186,7 +186,7 @@ void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    const size_t sz = buffer.size() - offset;
 
-   BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
+   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
 
    secure_vector<uint8_t> V(buffer.data() + offset,
                             buffer.data() + offset + block_size());

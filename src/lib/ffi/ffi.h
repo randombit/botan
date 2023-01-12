@@ -487,6 +487,12 @@ BOTAN_PUBLIC_API(2,0) int botan_cipher_get_default_nonce_length(botan_cipher_t c
 BOTAN_PUBLIC_API(2,0) int botan_cipher_get_update_granularity(botan_cipher_t cipher, size_t* ug);
 
 /**
+* Return the ideal update granularity of the cipher. This is some multiple of the
+* update granularity, reflecting possibilities for optimization.
+*/
+BOTAN_PUBLIC_API(3,0) int botan_cipher_get_ideal_update_granularity(botan_cipher_t cipher, size_t* ug);
+
+/**
 * Get information about the key lengths. Prefer botan_cipher_get_keyspec
 */
 BOTAN_PUBLIC_API(2,0) int botan_cipher_query_keylen(botan_cipher_t,

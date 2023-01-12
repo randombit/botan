@@ -62,12 +62,12 @@ size_t CCM_Mode::default_nonce_length() const
 
 size_t CCM_Mode::update_granularity() const
    {
-   /*
-   This value does not particularly matter as regardless CCM_Mode::update
-   buffers all input, so in theory this could be 1. However as for instance
-   Transform_Filter creates update_granularity() uint8_t buffers, use a
-   somewhat large size to avoid bouncing on a tiny buffer.
-   */
+   return 1;
+   }
+
+size_t CCM_Mode::ideal_granularity() const
+   {
+   // Completely arbitrary
    return m_cipher->parallel_bytes();
    }
 
@@ -166,7 +166,7 @@ secure_vector<uint8_t> CCM_Mode::format_c0()
 
 void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
@@ -219,14 +219,14 @@ void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
+   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
 
    const secure_vector<uint8_t>& ad = ad_buf();
    BOTAN_ARG_CHECK(ad.size() % CCM_BS == 0, "AD is block size multiple");

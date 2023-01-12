@@ -217,6 +217,11 @@ std::string OCB_Mode::name() const
 
 size_t OCB_Mode::update_granularity() const
    {
+   return block_size();
+   }
+
+size_t OCB_Mode::ideal_granularity() const
+   {
    return (m_par_blocks * block_size());
    }
 
@@ -367,7 +372,7 @@ void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
 
 size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(sz % update_granularity() == 0, "Invalid OCB input size");
+   BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid OCB input size");
    encrypt(buf, sz / block_size());
    return sz;
    }
@@ -375,10 +380,11 @@ size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
 void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    verify_key_set(m_L != nullptr);
+   BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
 
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
@@ -457,7 +463,7 @@ void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks)
 
 size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(sz % update_granularity() == 0, "Invalid OCB input size");
+   BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid OCB input size");
    decrypt(buf, sz / block_size());
    return sz;
    }
@@ -465,14 +471,15 @@ size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
 void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    verify_key_set(m_L != nullptr);
+   BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
 
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
+   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
 
    const size_t remaining = sz - tag_size();
 

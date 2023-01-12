@@ -64,6 +64,18 @@ class Cipher_Mode_Tests final : public Text_Based_Test
             result.test_eq("enc and dec granularity is the same",
                            enc->update_granularity(), dec->update_granularity());
 
+            result.test_gt("update granularity is non-zero",
+                           enc->update_granularity(), 0);
+
+            result.test_eq("enc and dec ideal granularity is the same",
+                           enc->ideal_granularity(), dec->ideal_granularity());
+
+            result.test_gt("ideal granularity is at least update granularity",
+                           enc->ideal_granularity(), enc->update_granularity());
+
+            result.confirm("ideal granularity is a multiple of update granularity",
+                           enc->ideal_granularity() % enc->update_granularity() == 0);
+
             try
                {
                test_mode(result, algo, provider_ask, "encryption", *enc, key, nonce, input, expected);
@@ -115,7 +127,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
          const size_t min_final_bytes = mode.minimum_final_size();
 
          // FFI currently requires this, so assure it is true for all modes
-         result.test_gt("buffer sizes ok", update_granularity, min_final_bytes);
+         result.test_gt("buffer sizes ok", mode.ideal_granularity(), min_final_bytes);
 
          result.test_throws("Unkeyed object throws", [&]() {
             Botan::secure_vector<uint8_t> bad(update_granularity);
