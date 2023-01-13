@@ -159,6 +159,10 @@ class AEAD_Tests final : public Text_Based_Test
 
                const size_t bytes_written = enc->process(buf.data(), bytes_to_process);
 
+               result.confirm("Process returns data unless requires_entire_message",
+                              enc->requires_entire_message(),
+                              bytes_written == 0);
+
                if(bytes_written == 0)
                   {
                   // SIV case
@@ -314,6 +318,10 @@ class AEAD_Tests final : public Text_Based_Test
                const size_t bytes_to_process = max_blocks_to_process * update_granularity;
 
                const size_t bytes_written = dec->process(buf.data(), bytes_to_process);
+
+               result.confirm("Process returns data unless requires_entire_message",
+                              dec->requires_entire_message(),
+                              bytes_written == 0);
 
                if(bytes_written == 0)
                   {

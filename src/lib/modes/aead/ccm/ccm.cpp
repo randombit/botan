@@ -71,6 +71,11 @@ size_t CCM_Mode::ideal_granularity() const
    return m_cipher->parallel_bytes();
    }
 
+bool CCM_Mode::requires_entire_message() const
+   {
+   return true;
+   }
+
 Key_Length_Specification CCM_Mode::key_spec() const
    {
    return m_cipher->key_spec();

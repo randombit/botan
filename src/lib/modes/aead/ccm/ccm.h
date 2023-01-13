@@ -33,6 +33,8 @@ class CCM_Mode : public AEAD_Mode
 
       size_t ideal_granularity() const override;
 
+      bool requires_entire_message() const override;
+
       Key_Length_Specification key_spec() const override;
 
       bool valid_nonce_length(size_t) const override;

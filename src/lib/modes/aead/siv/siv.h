@@ -50,6 +50,8 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
 
       bool valid_nonce_length(size_t) const override;
 
+      bool requires_entire_message() const override;
+
       void clear() override;
 
       void reset() override;

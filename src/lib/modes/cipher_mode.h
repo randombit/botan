@@ -157,6 +157,17 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       virtual size_t ideal_granularity() const = 0;
 
       /**
+      * Certain modes require the entire message be available before
+      * any processing can occur. For such modes, input will be consumed
+      * but not returned, until `finish` is called, which returns the
+      * entire message.
+      *
+      * This function returns true if this mode has this style of
+      * operation.
+      */
+      virtual bool requires_entire_message() const { return false; }
+
+      /**
       * @return required minimium size to finalize() - may be any
       *         length larger than this.
       */

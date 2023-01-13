@@ -65,6 +65,11 @@ size_t SIV_Mode::ideal_granularity() const
    return 128;
    }
 
+bool SIV_Mode::requires_entire_message() const
+   {
+   return true;
+   }
+
 Key_Length_Specification SIV_Mode::key_spec() const
    {
    return m_mac->key_spec().multiple(2);
