@@ -657,6 +657,7 @@ class Test
       static bool test_needs_serialization(const std::string& test_name);
 
       static std::string data_file(const std::string& what);
+      static std::string data_file_as_temporary_copy(const std::string &what);
 
       static std::string format_time(uint64_t nanoseconds);
       static std::string format_time(const std::chrono::nanoseconds nanoseconds)
@@ -704,6 +705,7 @@ class Test
       static const std::string& pkcs11_lib() { return options().pkcs11_lib(); }
 
       static std::string temp_file_name(const std::string& basename);
+      static bool copy_file(const std::string& from, const std::string& to);
 
       static std::vector<std::string> provider_filter(const std::vector<std::string>& providers);
 

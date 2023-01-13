@@ -28,6 +28,13 @@
    #include <unistd.h>
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+  #include <version>
+  #if defined(__cpp_lib_filesystem)
+    #include <filesystem>
+  #endif
+#endif
+
 namespace Botan_Tests {
 
 void Test::Result::merge(const Result& other, bool ignore_test_name)
@@ -696,6 +703,19 @@ std::string Test::temp_file_name(const std::string& basename)
 #endif
    }
 
+bool Test::copy_file(const std::string& from, const std::string& to)
+   {
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && defined(__cpp_lib_filesystem)
+   std::error_code ec; // don't throw, just return false on error
+   return std::filesystem::copy_file(from, to, std::filesystem::copy_options::overwrite_existing, ec);
+#else
+   // TODO: implement fallbacks to POSIX or WIN32
+   // ... but then again: it's 2023 and we're using C++20 :o)
+   BOTAN_UNUSED(from, to);
+   throw Botan::No_Filesystem_Access();
+#endif
+   }
+
 std::string Test::read_data_file(const std::string& path)
    {
    const std::string fsname = Test::data_file(path);
@@ -758,6 +778,19 @@ void Test::set_test_rng(std::unique_ptr<Botan::RandomNumberGenerator> rng)
 std::string Test::data_file(const std::string& what)
    {
    return Test::data_dir() + "/" + what;
+   }
+
+//static
+std::string Test::data_file_as_temporary_copy(const std::string &what)
+   {
+   auto tmp_basename = what;
+   std::replace(tmp_basename.begin(), tmp_basename.end(), '/', '_');
+   const auto temp_file = temp_file_name("tmp-" + tmp_basename);
+   if(temp_file.empty())
+      { return ""; }
+   if(!Test::copy_file(data_file(what), temp_file))
+      { return ""; }
+   return temp_file;
    }
 
 //static
