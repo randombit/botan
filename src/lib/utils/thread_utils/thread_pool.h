@@ -22,7 +22,7 @@
 
 namespace Botan {
 
-class BOTAN_TEST_API Thread_Pool
+class BOTAN_TEST_API Thread_Pool final
    {
    public:
       /**

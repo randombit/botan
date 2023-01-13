@@ -486,7 +486,7 @@ BOTAN_FORCE_INLINE void i_transform(T& B0, T& B1, T& B2, T& B3)
    B0  = rotr<13>(B0);
    }
 
-class Key_Inserter
+class Key_Inserter final
    {
    public:
       Key_Inserter(const uint32_t* RK) : m_RK(RK) {}
