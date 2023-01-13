@@ -138,7 +138,7 @@ constexpr uint8_t ceil_log2(T x)
 // Potentially variable time ctz used for OCB
 inline constexpr size_t var_ctz32(uint32_t n)
    {
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_ctz)
    if(n == 0)
       return 32;
    return __builtin_ctz(n);
