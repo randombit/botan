@@ -197,7 +197,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          */
          if(flags7 & x86_CPUID_7_bits::BMI2)
             {
-            features_detected |= CPUID::CPUID_BMI2_BIT;
+            features_detected |= CPUID::CPUID_BMI_BIT;
 
             /*
             Up until Zen3, AMD CPUs with BMI2 support had microcoded

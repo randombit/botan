@@ -286,7 +286,7 @@ class BOTAN_TEST_API CPUID final
       * Check if the processor supports BMI2 (and BMI1)
       */
       static bool has_bmi2()
-         { return has_cpuid_bit(CPUID_BMI2_BIT); }
+         { return has_cpuid_bit(CPUID_BMI_BIT); }
 
       /**
       * Check if the processor supports fast PDEP/PEXT from BMI2

@@ -172,7 +172,7 @@ CPUID::bit_from_string(const std::string& tok)
    if(tok == "rdtsc")
       return {CPUID::CPUID_RDTSC_BIT};
    if(tok == "bmi2")
-      return {CPUID::CPUID_BMI2_BIT};
+      return {CPUID::CPUID_BMI_BIT};
    if(tok == "adx")
       return {CPUID::CPUID_ADX_BIT};
    if(tok == "rdrand")
