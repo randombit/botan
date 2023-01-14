@@ -122,10 +122,24 @@ class Ed25519_Curdle_Format_Tests final : public Test
          }
    };
 
+class Ed25519_Keygen_Tests final : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override
+         {
+         return { "" };
+         }
+      std::string algo_name() const override
+         {
+         return "Ed25519";
+         }
+   };
+
 BOTAN_REGISTER_TEST("pubkey", "ed25519_key_valid", Ed25519_Key_Validity_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_verify", Ed25519_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_sign", Ed25519_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_curdle", Ed25519_Curdle_Format_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ed25519_keygen", Ed25519_Keygen_Tests);
 
 #endif
 
