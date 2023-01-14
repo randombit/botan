@@ -253,13 +253,6 @@ inline word word_add(word x, word y, word* carry)
       : "cc");
    return x;
 
-#elif defined(BOTAN_HAS_MP_DWORD)
-
-   dword s = x;
-   s += y;
-   s += *carry;
-   *carry = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
-   return static_cast<word>(s);
 #else
    word z = x + y;
    word c1 = (z < x);
