@@ -73,6 +73,15 @@
 #endif
 
 /*
+* Define BOTAN_COMPILER_HAS_BUILTIN
+*/
+#if defined(__has_builtin)
+  #define BOTAN_COMPILER_HAS_BUILTIN(x) __has_builtin(x)
+#else
+  #define BOTAN_COMPILER_HAS_BUILTIN(x) 0
+#endif
+
+/*
 * Define BOTAN_MALLOC_FN
 */
 #if defined(__ibmxl__)

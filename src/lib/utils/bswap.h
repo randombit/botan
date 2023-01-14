@@ -18,7 +18,7 @@ namespace Botan {
 */
 inline constexpr uint16_t reverse_bytes(uint16_t x)
    {
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XLC)
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_bswap16)
    return __builtin_bswap16(x);
 #else
    return static_cast<uint16_t>((x << 8) | (x >> 8));
@@ -33,7 +33,7 @@ inline constexpr uint16_t reverse_bytes(uint16_t x)
 */
 inline constexpr uint32_t reverse_bytes(uint32_t x)
    {
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XLC)
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_bswap32)
    return __builtin_bswap32(x);
 #else
    // MSVC at least recognizes this as a bswap
@@ -52,7 +52,7 @@ inline constexpr uint32_t reverse_bytes(uint32_t x)
 */
 inline constexpr uint64_t reverse_bytes(uint64_t x)
    {
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XLC)
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_bswap64)
    return __builtin_bswap64(x);
 #else
    uint32_t hi = static_cast<uint32_t>(x >> 32);

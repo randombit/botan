@@ -265,7 +265,7 @@ class SIMD_4x32 final
       */
       SIMD_4x32 sigma0() const
          {
-#if defined(__GNUC__) && defined(_ARCH_PWR8)
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_crypto_vshasigmaw) && defined(_ARCH_PWR8)
          return SIMD_4x32(__builtin_crypto_vshasigmaw(raw(), 1, 0));
 #else
          const SIMD_4x32 rot1 = this->rotr<2>();
@@ -280,7 +280,7 @@ class SIMD_4x32 final
       */
       SIMD_4x32 sigma1() const
          {
-#if defined(__GNUC__) && defined(_ARCH_PWR8)
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_crypto_vshasigmaw) && defined(_ARCH_PWR8)
          return SIMD_4x32(__builtin_crypto_vshasigmaw(raw(), 1, 0xF));
 #else
          const SIMD_4x32 rot1 = this->rotr<6>();
