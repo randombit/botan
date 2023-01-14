@@ -207,8 +207,15 @@ class PK_Sign final : public Command
          const std::string sig_padding =
             choose_sig_padding(key->algo_name(), get_arg("emsa"), get_arg("hash"));
 
-         const Botan::Signature_Format format =
-            flag_set("der-format") ? Botan::Signature_Format::DerSequence : Botan::Signature_Format::Standard;
+         auto format = Botan::Signature_Format::Standard;
+
+         if(flag_set("der-format"))
+            {
+            if(key->message_parts() == 1)
+               throw CLI_Usage_Error("Key type " + key->algo_name() +
+                                     " does not support DER formatting for signatures");
+            format = Botan::Signature_Format::DerSequence;
+            }
 
          const std::string provider = get_arg("provider");
 
@@ -263,8 +270,14 @@ class PK_Verify final : public Command
          const std::string sig_padding =
             choose_sig_padding(key->algo_name(), get_arg("emsa"), get_arg("hash"));
 
-         const Botan::Signature_Format format =
-            flag_set("der-format") ? Botan::Signature_Format::DerSequence : Botan::Signature_Format::Standard;
+         auto format = Botan::Signature_Format::Standard;
+         if(flag_set("der-format"))
+            {
+            if(key->message_parts() == 1)
+               throw CLI_Usage_Error("Key type " + key->algo_name() +
+                                     " does not support DER formatting for signatures");
+            format = Botan::Signature_Format::DerSequence;
+            }
 
          Botan::PK_Verifier verifier(*key, sig_padding, format);
          auto onData = [&verifier](const uint8_t b[], size_t l)

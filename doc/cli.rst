@@ -110,7 +110,7 @@ Public Key Cryptography
 
   For ECDSA and DSA, the option ``--der-format`` outputs the signature as an
   ASN.1 encoded blob. Some other tools (including ``openssl``) default to this
-  format.
+  format. This option does not make sense for other algorithms such as RSA.
 
   The signature is formatted for your screen using base64.
 
