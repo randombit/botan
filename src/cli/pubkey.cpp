@@ -176,6 +176,36 @@ class PK_Fingerprint final : public Command
 
 BOTAN_REGISTER_COMMAND("fingerprint", PK_Fingerprint);
 
+namespace {
+
+std::unique_ptr<Botan::Private_Key>
+load_private_key(const std::string& key_filename,
+                 const std::string& passphrase)
+   {
+   std::string err_string;
+
+   try
+      {
+      Botan::DataSource_Stream input(key_filename);
+      return Botan::PKCS8::load_key(input, passphrase);
+      }
+   catch(Botan::Exception& e) { err_string = e.what(); }
+
+   if(passphrase == "")
+      {
+      try
+         {
+         Botan::DataSource_Stream input(key_filename);
+         return Botan::PKCS8::load_key(input);
+         }
+      catch(Botan::Exception& e) { err_string = e.what(); }
+      }
+
+   throw CLI_Error("Loading private key failed (" + err_string + ")");
+   }
+
+}
+
 class PK_Sign final : public Command
    {
    public:
@@ -196,13 +226,7 @@ class PK_Sign final : public Command
          const std::string key_file = get_arg("key");
          const std::string passphrase = get_passphrase_arg("Passphrase for " + key_file, "passphrase");
 
-         Botan::DataSource_Stream input(key_file);
-         std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(input, passphrase);
-
-         if(!key)
-            {
-            throw CLI_Error("Unable to load private key");
-            }
+         auto key = load_private_key(key_file, passphrase);
 
          const std::string sig_padding =
             choose_sig_padding(key->algo_name(), get_arg("emsa"), get_arg("hash"));
