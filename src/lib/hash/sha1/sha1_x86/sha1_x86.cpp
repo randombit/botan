@@ -17,7 +17,6 @@
 
 namespace Botan {
 
-#if defined(BOTAN_HAS_SHA1_X86_SHA_NI)
 BOTAN_FUNC_ISA("sha,ssse3,sse4.1")
 void SHA_160::sha1_compress_x86(secure_vector<uint32_t>& digest,
                                 const uint8_t input[],
@@ -211,6 +210,5 @@ void SHA_160::sha1_compress_x86(secure_vector<uint32_t>& digest,
    _mm_storeu_si128(reinterpret_cast<__m128i*>(state), ABCD);
    state[4] = _mm_extract_epi32(E0, 3);
    }
-#endif
 
 }
