@@ -38,7 +38,7 @@ BOTAN_PUBLIC_API(2,3) void deallocate_memory(void* p, size_t elems, size_t elem_
 */
 void BOTAN_UNSTABLE_API initialize_allocator();
 
-class Allocator_Initializer
+class Allocator_Initializer final
    {
    public:
       Allocator_Initializer() { initialize_allocator(); }

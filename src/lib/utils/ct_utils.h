@@ -83,7 +83,7 @@ inline void unpoison(T& p)
 */
 template<typename T>
 requires std::is_unsigned<T>::value
-class Mask
+class Mask final
    {
    public:
 

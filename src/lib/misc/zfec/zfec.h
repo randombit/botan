@@ -27,7 +27,7 @@ namespace Botan {
 * should be kept secret. (If nothing else, because the first K shares
 * are simply the original input!)
 */
-class BOTAN_PUBLIC_API(3,0) ZFEC
+class BOTAN_PUBLIC_API(3,0) ZFEC final
    {
    public:
       typedef std::function<void (size_t, const uint8_t[], size_t)> output_cb_t;

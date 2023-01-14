@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-class Montgomery_Exponentation_State
+class Montgomery_Exponentation_State final
    {
    public:
       Montgomery_Exponentation_State(const std::shared_ptr<const Montgomery_Params>& params,
