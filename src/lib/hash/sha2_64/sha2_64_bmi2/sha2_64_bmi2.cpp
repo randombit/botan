@@ -19,10 +19,10 @@ namespace Botan {
 */
 #define SHA2_64_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic)         \
    do {                                                                  \
-      const uint64_t E_rho = rotr<14>(E) ^ rotr<18>(E) ^ rotr<41>(E);    \
-      const uint64_t A_rho = rotr<28>(A) ^ rotr<34>(A) ^ rotr<39>(A);    \
-      const uint64_t M2_sigma = rotr<19>(M2) ^ rotr<61>(M2) ^ (M2 >> 6); \
-      const uint64_t M4_sigma = rotr<1>(M4) ^ rotr<8>(M4) ^ (M4 >> 7);   \
+      const uint64_t E_rho = rho<14, 18, 41>(E);                         \
+      const uint64_t A_rho = rho<28, 34, 39>(A);                         \
+      const uint64_t M2_sigma = sigma<19, 61, 6>(M2);                    \
+      const uint64_t M4_sigma = sigma<1, 8, 7>(M4);                      \
       H += magic + E_rho + choose(E, F, G) + M1;                         \
       D += H;                                                            \
       H += A_rho + majority(A, B, C);                                    \

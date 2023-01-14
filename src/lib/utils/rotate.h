@@ -37,6 +37,24 @@ inline constexpr T rotr(T input)
    }
 
 /**
+* SHA-2 Sigma style function
+*/
+template<size_t R1, size_t R2, size_t S, typename T>
+inline constexpr T sigma(T x)
+   {
+   return rotr<R1>(x) ^ rotr<R2>(x) ^ (x >> S);
+   }
+
+/**
+* SHA-2 Sigma style function
+*/
+template<size_t R1, size_t R2, size_t R3, typename T>
+inline constexpr T rho(T x)
+   {
+   return rotr<R1>(x) ^ rotr<R2>(x) ^ rotr<R3>(x);
+   }
+
+/**
 * Bit rotation left, variable rotation amount
 * @param input the input word
 * @param rot the number of bits to rotate, must be between 0 and sizeof(T)*8-1
