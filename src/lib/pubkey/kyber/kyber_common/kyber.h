@@ -74,6 +74,9 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
                       KyberMode mode,
                       KyberKeyEncoding encoding);
 
+      Kyber_PublicKey(const AlgorithmIdentifier& alg_id,
+                      const std::vector<uint8_t>& key_bits);
+
       Kyber_PublicKey(const Kyber_PublicKey& other);
 
       Kyber_PublicKey& operator=(const Kyber_PublicKey& other) = default;
@@ -108,9 +111,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
          }
 
    protected:
-      Kyber_PublicKey() : m_key_encoding(KyberKeyEncoding::Full)
-         {
-         }
+      Kyber_PublicKey() {}
 
       void initialize_from_encoding(const std::vector<uint8_t>& pub_key,
                                     KyberMode m,
@@ -124,7 +125,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
       friend class Kyber_KEM_Decryptor;
 
       std::shared_ptr<Kyber_PublicKeyInternal> m_public;
-      KyberKeyEncoding m_key_encoding;
+      KyberKeyEncoding m_key_encoding = KyberKeyEncoding::Full;
    };
 
 class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_PublicKey, public virtual Private_Key
@@ -135,6 +136,9 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
       Kyber_PrivateKey(const secure_vector<uint8_t>& sk,
                        KyberMode mode,
                        KyberKeyEncoding encoding);
+
+      Kyber_PrivateKey(const AlgorithmIdentifier& alg_id,
+                       const secure_vector<uint8_t>& key_bits);
 
       std::unique_ptr<Public_Key> public_key() const override;
 
