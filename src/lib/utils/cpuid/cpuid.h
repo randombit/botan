@@ -114,8 +114,7 @@ class BOTAN_TEST_API CPUID final
          // Misc useful instructions
          CPUID_RDTSC_BIT      = (1ULL << 48),
          CPUID_ADX_BIT        = (1ULL << 49),
-         CPUID_BMI1_BIT       = (1ULL << 50),
-         CPUID_BMI2_BIT       = (1ULL << 51),
+         CPUID_BMI_BIT        = (1ULL << 51),
          CPUID_FAST_PDEP_BIT  = (1ULL << 52),
 #endif
 
@@ -284,13 +283,7 @@ class BOTAN_TEST_API CPUID final
          { return has_cpuid_bit(CPUID_AVX512_CLMUL_BIT); }
 
       /**
-      * Check if the processor supports BMI1
-      */
-      static bool has_bmi1()
-         { return has_cpuid_bit(CPUID_BMI1_BIT); }
-
-      /**
-      * Check if the processor supports BMI2
+      * Check if the processor supports BMI2 (and BMI1)
       */
       static bool has_bmi2()
          { return has_cpuid_bit(CPUID_BMI2_BIT); }

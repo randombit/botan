@@ -43,7 +43,6 @@ std::string CPUID::to_string()
    CPUID_PRINT(sse42);
    CPUID_PRINT(avx2);
 
-   CPUID_PRINT(bmi1);
    CPUID_PRINT(bmi2);
    CPUID_PRINT(adx);
 
@@ -172,8 +171,6 @@ CPUID::bit_from_string(const std::string& tok)
       return {CPUID::CPUID_SHA_BIT};
    if(tok == "rdtsc")
       return {CPUID::CPUID_RDTSC_BIT};
-   if(tok == "bmi1")
-      return {CPUID::CPUID_BMI1_BIT};
    if(tok == "bmi2")
       return {CPUID::CPUID_BMI2_BIT};
    if(tok == "adx")

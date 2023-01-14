@@ -203,7 +203,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
             Up until Zen3, AMD CPUs with BMI2 support had microcoded
             pdep/pext, which works but is very slow.
 
-            TODO: check for Zen3 here
+            TODO: check for Zen3/Zen4 here
             */
             if(is_intel)
                {
