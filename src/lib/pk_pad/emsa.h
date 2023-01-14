@@ -14,7 +14,6 @@
 
 namespace Botan {
 
-class Private_Key;
 class RandomNumberGenerator;
 
 /**
@@ -86,12 +85,13 @@ class BOTAN_TEST_API EMSA
       /**
       * Prepare sig_algo for use in choose_sig_format for x509 certs
       *
-      * @param key used for checking compatibility with the encoding scheme
+      * @param algo_name used for checking compatibility with the encoding scheme
+      *        this should match the canonical algorithm name eg "RSA", "ECDSA"
       * @param cert_hash_name is checked to equal the hash for the encoding
       * @return algorithm identifier to signatures created using this key,
       *         padding method and hash.
       */
-      virtual AlgorithmIdentifier config_for_x509(const Private_Key& key,
+      virtual AlgorithmIdentifier config_for_x509(const std::string& algo_name,
                                                   const std::string& cert_hash_name) const;
 
       /**

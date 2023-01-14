@@ -83,22 +83,22 @@ bool EMSA_PKCS1v15::verify(const secure_vector<uint8_t>& coded,
       }
    }
 
-AlgorithmIdentifier EMSA_PKCS1v15::config_for_x509(const Private_Key& key,
-                                    const std::string& cert_hash_name) const
+AlgorithmIdentifier EMSA_PKCS1v15::config_for_x509(const std::string& algo_name,
+                                                   const std::string& cert_hash_name) const
    {
    if(cert_hash_name != m_hash->name())
       throw Invalid_Argument("Hash function from opts and hash_fn argument"
          " need to be identical");
    // check that the signature algorithm and the padding scheme fit
-   if(!sig_algo_and_pad_ok(key.algo_name(), "EMSA3"))
+   if(!sig_algo_and_pad_ok(algo_name, "EMSA3"))
       {
       throw Invalid_Argument("Encoding scheme with canonical name EMSA3"
-         " not supported for signature algorithm " + key.algo_name());
+         " not supported for signature algorithm " + algo_name);
       }
 
    // for RSA PKCSv1.5 parameters "SHALL" be NULL
 
-   const OID oid = OID::from_string(key.algo_name() + "/" + name());
+   const OID oid = OID::from_string(algo_name + "/" + name());
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
