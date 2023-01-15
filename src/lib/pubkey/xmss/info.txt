@@ -17,7 +17,6 @@ xmss_parameters.h
 atomic.h
 xmss_address.h
 xmss_common_ops.h
-xmss_common_ops.h
 xmss_index_registry.h
 xmss_signature.h
 xmss_signature_operation.h
