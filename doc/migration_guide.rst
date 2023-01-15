@@ -352,3 +352,23 @@ desired hash is not compatible with the algorithm.
 In previous versions, various APIs required that the application specify the
 hash function to be used. In most cases this can now be omitted (passing an
 empty string) and a suitable default will be chosen.
+
+Discrete Logarithm Key Changes
+--------------------------------
+
+Keys based on the discrete logarithm problem no longer derive from the
+DL_Scheme_PrivateKey and DL_Scheme_PublicKey classes; these classes
+have been removed.
+
+Functions to access DL algorithm interal fields (such as the integer value of
+the private key using ``get_x``) have been removed. If you need access to this
+information you can use the new ``get_int_field`` function.
+
+The constructors of the DL scheme private keys have changed. Previously, loading
+and creating a key used the same constructor, namely one taking arguments
+``(DL_Group, RandomNumberGenerator&, BigInt x = 0)`` and then the behavior of
+the constructor depend on if ``x`` was zero (in which case a new key was
+created) or otherwise if ``x`` was non-zero then it was taken as the private
+key. Now there are two constructors, one taking a random number generator and a
+group, which generates a new key, and a second taking a group and an integer,
+which loads an existing key.

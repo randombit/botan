@@ -161,6 +161,14 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       bool verify_public_element(const BigInt& y) const;
 
       /**
+      * Verify a private element
+      *
+      * Specifically this checks that x is > 1 and < p, and additionally if
+      * q is set then x must be < q
+      */
+      bool verify_private_element(const BigInt& x) const;
+
+      /**
       * Verify a pair of elements y = g^x
       *
       * This verifies that 1 < x,y < p and that y=g^x mod p
@@ -263,6 +271,15 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       BigInt power_b_p(const BigInt& b, const BigInt& x, size_t max_x_bits) const;
 
       /**
+      * Modular exponentiation
+      * @param b the base
+      * @param x the exponent
+      *
+      * @return (b^x) % p
+      */
+      BigInt power_b_p(const BigInt& b, const BigInt& x) const;
+
+      /**
       * Multi-exponentiate
       * Return (g^x * y^z) % p
       */
@@ -298,6 +315,11 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * Throws if q is unset
       */
       size_t q_bytes() const;
+
+      /**
+      * Return if the q value is set
+      */
+      bool has_q() const;
 
       /**
       * Return size in bits of a secret exponent

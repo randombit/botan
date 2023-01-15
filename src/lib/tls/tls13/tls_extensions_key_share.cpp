@@ -25,6 +25,7 @@
 
 #include <botan/dh.h>
 #include <botan/ecdh.h>
+#include <botan/dl_group.h>
 
 namespace Botan::TLS {
 

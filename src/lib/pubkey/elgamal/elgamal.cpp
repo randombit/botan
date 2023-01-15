@@ -1,11 +1,12 @@
 /*
 * ElGamal
-* (C) 1999-2007,2018,2019 Jack Lloyd
+* (C) 1999-2007,2018,2019,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/elgamal.h>
+#include <botan/internal/dl_scheme.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/keypair.h>
@@ -13,59 +14,90 @@
 
 namespace Botan {
 
-/*
-* ElGamal_PublicKey Constructor
-*/
-ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& group, const BigInt& y) :
-   DL_Scheme_PublicKey(group, y)
+ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& group, const BigInt& y)
    {
+   m_public_key = std::make_shared<DL_PublicKey>(group, y);
    }
 
-/*
-* ElGamal_PrivateKey Constructor
-*/
+ElGamal_PublicKey::ElGamal_PublicKey(const AlgorithmIdentifier& alg_id,
+                                     const std::vector<uint8_t>& key_bits)
+   {
+   m_public_key = std::make_shared<DL_PublicKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_42);
+   }
+
+size_t ElGamal_PublicKey::estimated_strength() const
+   {
+   return m_public_key->estimated_strength();
+   }
+
+size_t ElGamal_PublicKey::key_length() const
+   {
+   return m_public_key->p_bits();
+   }
+
+AlgorithmIdentifier ElGamal_PublicKey::algorithm_identifier() const
+   {
+   return AlgorithmIdentifier(
+      object_identifier(),
+      m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_42));
+   }
+
+std::vector<uint8_t> ElGamal_PublicKey::public_key_bits() const
+   {
+   return m_public_key->DER_encode();
+   }
+
+const BigInt& ElGamal_PublicKey::get_int_field(const std::string& field) const
+   {
+   return m_public_key->get_int_field(algo_name(), field);
+   }
+
+bool ElGamal_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const
+   {
+   return m_public_key->check_key(rng, strong);
+   }
+
 ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
-                                       const DL_Group& group,
+                                       const DL_Group& group)
+   {
+   m_private_key = std::make_shared<DL_PrivateKey>(group, rng);
+   m_public_key = m_private_key->public_key();
+   }
+
+ElGamal_PrivateKey::ElGamal_PrivateKey(const DL_Group& group,
                                        const BigInt& x)
    {
-   m_x = x;
-   m_group = group;
-
-   if(m_x.is_zero())
-      {
-      const size_t exp_bits = m_group.exponent_bits();
-      m_x.randomize(rng, exp_bits);
-      m_y = m_group.power_g_p(m_x, exp_bits);
-      }
-   else
-      {
-      m_y = m_group.power_g_p(m_x, m_group.p_bits());
-      }
+   m_private_key = std::make_shared<DL_PrivateKey>(group, x);
+   m_public_key = m_private_key->public_key();
    }
 
 ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
-                                       const secure_vector<uint8_t>& key_bits) :
-   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group_Format::ANSI_X9_42)
+                                       const secure_vector<uint8_t>& key_bits)
    {
-   m_y = m_group.power_g_p(m_x, m_group.p_bits());
+   m_private_key = std::make_shared<DL_PrivateKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_42);
+   m_public_key = m_private_key->public_key();
    }
 
 std::unique_ptr<Public_Key> ElGamal_PrivateKey::public_key() const
    {
-   return std::make_unique<ElGamal_PublicKey>(get_group(), get_y());
+   return std::unique_ptr<Public_Key>(new ElGamal_PublicKey(m_public_key));
    }
 
-/*
-* Check Private ElGamal Parameters
-*/
+const BigInt& ElGamal_PrivateKey::get_int_field(const std::string& field) const
+   {
+   return m_private_key->get_int_field(algo_name(), field);
+   }
+
+secure_vector<uint8_t> ElGamal_PrivateKey::private_key_bits() const
+   {
+   return m_private_key->DER_encode();
+   }
+
 bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng,
                                    bool strong) const
    {
-   if(!DL_Scheme_PrivateKey::check_key(rng, strong))
+   if(!m_private_key->check_key(rng, strong))
       return false;
-
-   if(!strong)
-      return true;
 
    return KeyPair::encryption_consistency_check(rng, *this, "OAEP(SHA-256)");
    }
@@ -79,30 +111,34 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME
    {
    public:
 
-      size_t ciphertext_length(size_t /*ptext_len*/) const override { return 2*m_group.p_bytes(); }
+      ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey> key,
+                                   const std::string& eme) :
+         PK_Ops::Encryption_with_EME(eme),
+         m_key(key)
+         {
+         const size_t powm_window = 4;
+         m_monty_y_p = monty_precompute(m_key->group().monty_params_p(),
+                                        m_key->public_key(),
+                                        powm_window);
+         }
 
-      size_t max_ptext_input_bits() const override { return m_group.p_bits() - 1; }
+      size_t ciphertext_length(size_t /*ptext_len*/) const override
+         {
+         return 2*m_key->group().p_bytes();
+         }
 
-      ElGamal_Encryption_Operation(const ElGamal_PublicKey& key, const std::string& eme);
+      size_t max_ptext_input_bits() const override
+         {
+         return m_key->group().p_bits() - 1;
+         }
 
       secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t msg_len,
                                       RandomNumberGenerator& rng) override;
 
    private:
-      const DL_Group m_group;
+      std::shared_ptr<const DL_PublicKey> m_key;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty_y_p;
    };
-
-ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicKey& key,
-                                                           const std::string& eme) :
-   PK_Ops::Encryption_with_EME(eme),
-   m_group(key.get_group())
-   {
-   const size_t powm_window = 4;
-   m_monty_y_p = monty_precompute(key.get_group().monty_params_p(),
-                                  key.get_y(),
-                                  powm_window);
-   }
 
 secure_vector<uint8_t>
 ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
@@ -110,7 +146,9 @@ ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
    {
    BigInt m(msg, msg_len);
 
-   if(m >= m_group.get_p())
+   const auto& group = m_key->group();
+
+   if(m >= group.get_p())
       throw Invalid_Argument("ElGamal encryption: Input is too large");
 
    /*
@@ -121,13 +159,13 @@ ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
 
    See https://eprint.iacr.org/2021/923
    */
-   const size_t k_bits = m_group.p_bits() - 1;
+   const size_t k_bits = group.p_bits() - 1;
    const BigInt k(rng, k_bits, false);
 
-   const BigInt a = m_group.power_g_p(k, k_bits);
-   const BigInt b = m_group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits));
+   const BigInt a = group.power_g_p(k, k_bits);
+   const BigInt b = group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits));
 
-   return BigInt::encode_fixed_length_int_pair(a, b, m_group.p_bytes());
+   return BigInt::encode_fixed_length_int_pair(a, b, group.p_bytes());
    }
 
 /**
@@ -137,47 +175,39 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME
    {
    public:
 
-      ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
+      ElGamal_Decryption_Operation(const std::shared_ptr<const DL_PrivateKey> key,
                                    const std::string& eme,
-                                   RandomNumberGenerator& rng);
+                                   RandomNumberGenerator& rng) :
+         PK_Ops::Decryption_with_EME(eme),
+         m_key(key),
+         m_blinder(m_key->group().get_p(),
+                   rng,
+                   [](const BigInt& k) { return k; },
+                   [this](const BigInt& k) { return powermod_x_p(k); })
+         {}
 
-      size_t plaintext_length(size_t /*ctext_len*/) const override { return m_group.p_bytes(); }
+      size_t plaintext_length(size_t /*ctext_len*/) const override
+         {
+         return m_key->group().p_bytes();
+         }
 
       secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t msg_len) override;
    private:
       BigInt powermod_x_p(const BigInt& v) const
          {
-         const size_t powm_window = 4;
-         auto powm_v_p = monty_precompute(m_monty_p, v, powm_window);
-         return monty_execute(*powm_v_p, m_x, m_x_bits);
+         return m_key->group().power_b_p(v, m_key->private_key());
          }
 
-      const DL_Group m_group;
-      const BigInt& m_x;
-      const size_t m_x_bits;
-      std::shared_ptr<const Montgomery_Params> m_monty_p;
+      std::shared_ptr<const DL_PrivateKey> m_key;
       Blinder m_blinder;
    };
-
-ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
-                                                           const std::string& eme,
-                                                           RandomNumberGenerator& rng) :
-   PK_Ops::Decryption_with_EME(eme),
-   m_group(key.get_group()),
-   m_x(key.get_x()),
-   m_x_bits(m_x.bits()),
-   m_monty_p(key.get_group().monty_params_p()),
-   m_blinder(m_group.get_p(),
-             rng,
-             [](const BigInt& k) { return k; },
-             [this](const BigInt& k) { return powermod_x_p(k); })
-   {
-   }
 
 secure_vector<uint8_t>
 ElGamal_Decryption_Operation::raw_decrypt(const uint8_t msg[], size_t msg_len)
    {
-   const size_t p_bytes = m_group.p_bytes();
+   const auto& group = m_key->group();
+
+   const size_t p_bytes = group.p_bytes();
 
    if(msg_len != 2 * p_bytes)
       throw Invalid_Argument("ElGamal decryption: Invalid message");
@@ -185,12 +215,12 @@ ElGamal_Decryption_Operation::raw_decrypt(const uint8_t msg[], size_t msg_len)
    BigInt a(msg, p_bytes);
    const BigInt b(msg + p_bytes, p_bytes);
 
-   if(a >= m_group.get_p() || b >= m_group.get_p())
+   if(a >= group.get_p() || b >= group.get_p())
       throw Invalid_Argument("ElGamal decryption: Invalid message");
 
    a = m_blinder.blind(a);
 
-   const BigInt r = m_group.multiply_mod_p(m_group.inverse_mod_p(powermod_x_p(a)), b);
+   const BigInt r = group.multiply_mod_p(group.inverse_mod_p(powermod_x_p(a)), b);
 
    return BigInt::encode_1363(m_blinder.unblind(r), p_bytes);
    }
@@ -203,7 +233,7 @@ ElGamal_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
                                         const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::make_unique<ElGamal_Encryption_Operation>(*this, params);
+      return std::make_unique<ElGamal_Encryption_Operation>(this->m_public_key, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -213,7 +243,7 @@ ElGamal_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
                                          const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::make_unique<ElGamal_Decryption_Operation>(*this, params, rng);
+      return std::make_unique<ElGamal_Decryption_Operation>(this->m_private_key, params, rng);
    throw Provider_Not_Found(algo_name(), provider);
    }
 

@@ -11,6 +11,7 @@
    #include "test_pubkey.h"
    #include <botan/dlies.h>
    #include <botan/dh.h>
+   #include <botan/dl_group.h>
 #endif
 
 namespace Botan_Tests {
@@ -78,8 +79,8 @@ class DLIES_KAT_Tests final : public Text_Based_Test
 
          Botan::DL_Group domain(group_name);
 
-         Botan::DH_PrivateKey from(Test::rng(), domain, x1);
-         Botan::DH_PrivateKey to(Test::rng(), domain, x2);
+         Botan::DH_PrivateKey from(domain, x1);
+         Botan::DH_PrivateKey to(domain, x2);
 
          Botan::DLIES_Encryptor encryptor(from, Test::rng(),
                                           kdf->new_object(),

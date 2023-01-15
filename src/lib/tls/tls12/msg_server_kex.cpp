@@ -14,7 +14,9 @@
 #include <botan/credentials_manager.h>
 #include <botan/internal/loadstor.h>
 #include <botan/pubkey.h>
+#include <botan/pubkey.h>
 
+#include <botan/dl_group.h>
 #include <botan/dh.h>
 #include <botan/ecdh.h>
 
@@ -74,8 +76,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       const std::string group_name = state.callbacks().tls_decode_group_param(shared_group);
       auto dh = std::make_unique<DH_PrivateKey>(rng, DL_Group(group_name));
 
-      append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
-      append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
+      append_tls_length_value(m_params, BigInt::encode(dh->get_int_field("p")), 2);
+      append_tls_length_value(m_params, BigInt::encode(dh->get_int_field("g")), 2);
       append_tls_length_value(m_params, dh->public_value(), 2);
       m_kex_key.reset(dh.release());
       }
