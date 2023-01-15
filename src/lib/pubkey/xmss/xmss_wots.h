@@ -13,7 +13,7 @@
 #include <botan/pk_keys.h>
 #include <botan/rng.h>
 #include <botan/secmem.h>
-#include <botan/xmss_hash.h>
+#include <botan/internal/xmss_hash.h>
 #include <map>
 #include <memory>
 #include <string>

@@ -8,7 +8,6 @@ name -> "XMSS"
 
 <header:public>
 xmss.h
-xmss_hash.h
 xmss_wots.h
 xmss_parameters.h
 </header:public>
@@ -18,6 +17,7 @@ atomic.h
 xmss_address.h
 xmss_common_ops.h
 xmss_common_ops.h
+xmss_hash.h
 xmss_index_registry.h
 xmss_signature.h
 xmss_signature_operation.h

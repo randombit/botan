@@ -83,8 +83,7 @@ Deprecated Headers
   ``curve_gfp.h``,
   ``reducer.h``,
   ``tls_algos.h``,
-  ``tls_magic.h``,
-  ``xmss_hash.h``,
+  ``tls_magic.h``
 
   Utility headers, nominally useful in applications but not a core part of
   the library API and most are just sufficient for what the library needs
