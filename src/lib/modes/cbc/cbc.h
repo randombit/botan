@@ -124,7 +124,7 @@ class CBC_Decryption : public CBC_Mode
       CBC_Decryption(std::unique_ptr<BlockCipher> cipher,
                      std::unique_ptr<BlockCipherModePaddingMethod> padding) :
          CBC_Mode(std::move(cipher), std::move(padding)),
-         m_tempbuf(update_granularity())
+         m_tempbuf(ideal_granularity())
          {}
 
       size_t process(uint8_t buf[], size_t size) override;
