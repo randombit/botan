@@ -567,6 +567,7 @@ def main(args=None):
             'src/python/botan2.py',
             'src/scripts/ci_build.py',
             'src/scripts/install.py',
+            'src/scripts/ci_check_headers.py',
             'src/scripts/ci_check_install.py',
             'src/scripts/dist.py',
             'src/scripts/cleanup.py',
@@ -674,6 +675,7 @@ def main(args=None):
             cmds.append(make_cmd + ['install'])
             build_config = os.path.join(build_dir, 'build', 'build_config.json')
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), build_config])
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_headers.py'), build_config])
 
         if target in ['examples']:
             cmds.append(make_cmd + ['install'])
