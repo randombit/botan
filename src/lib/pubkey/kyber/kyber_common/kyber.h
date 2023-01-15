@@ -19,8 +19,6 @@
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 
-#include <botan/internal/pk_ops_impl.h>
-
 #if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER)
    static_assert(false, "botan module 'kyber_common' is useful only when enabling modules 'kyber', 'kyber_90s' or both");
 #endif
