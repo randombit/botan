@@ -44,7 +44,7 @@ in a future major release.
 
 - Using RSA signatures with EMSA1 padding
 
-- Block cipher GOST 28147, Noekeon
+- Block cipher GOST 28147, Noekeon, Lion
 
 - Hash function GOST 34.11-94, MD4
 
