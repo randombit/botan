@@ -128,7 +128,7 @@ make_commoncrypto_hash(const std::string& name)
 
 #if defined(BOTAN_HAS_SHA1)
    if(name == "SHA-160" || name == "SHA-1" || name == "SHA1")
-      return MAKE_COMMONCRYPTO_HASH_2(name, SHA1);
+      return MAKE_COMMONCRYPTO_HASH_2("SHA-160", SHA1);
 #endif
 
    return nullptr;
