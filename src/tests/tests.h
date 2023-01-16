@@ -716,6 +716,8 @@ class Test
       static std::string random_password();
       static uint64_t timestamp(); // nanoseconds arbitrary epoch
 
+      static std::vector<Test::Result> flatten_result_lists(std::vector<std::vector<Test::Result>> result_lists);
+
    private:
       static Test_Options m_opts;
       static std::unique_ptr<Botan::RandomNumberGenerator> m_test_rng;

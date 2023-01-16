@@ -645,6 +645,20 @@ uint64_t Test::timestamp()
    }
 
 //static
+std::vector<Test::Result> Test::flatten_result_lists(std::vector<std::vector<Test::Result>> result_lists)
+   {
+   std::vector<Test::Result> results;
+   for(auto& result_list : result_lists)
+      {
+      for(auto& result : result_list)
+         {
+         results.emplace_back(std::move(result));
+         }
+      }
+   return results;
+   }
+
+//static
 std::set<std::string> Test::registered_tests()
    {
    return Test_Registry::instance().registered_tests();
