@@ -10,56 +10,15 @@
 #include <botan/types.h>
 #include <botan/internal/rotate.h>
 
-/*
-A bug in Clang 12 and XCode 13 cause a miscompilation of SHA3_round
-with optimization levels -O2 and higher.
-
-For details
- https://github.com/randombit/botan/issues/2802 and
- https://bugs.llvm.org/show_bug.cgi?id=51957
-*/
-
-#if    defined(__clang__) && \
-    (( defined(__apple_build_version__) && __clang_major__ == 13) || \
-     (!defined(__apple_build_version__) && __clang_major__ == 12))
-  #define BOTAN_HAS_BROKEN_CLANG_SHA3
-#endif
-
-#if defined(BOTAN_HAS_BROKEN_CLANG_SHA3)
-  #include <tuple>
-#endif
-
 namespace Botan {
-
-#if defined(BOTAN_HAS_BROKEN_CLANG_SHA3)
-
-namespace {
-
-__attribute__((noinline)) decltype(auto) xor_CNs(const uint64_t A[25])
-   {
-   return std::tuple<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>(
-      A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20],
-      A[1] ^ A[6] ^ A[11] ^ A[16] ^ A[21],
-      A[2] ^ A[7] ^ A[12] ^ A[17] ^ A[22],
-      A[3] ^ A[8] ^ A[13] ^ A[18] ^ A[23],
-      A[4] ^ A[9] ^ A[14] ^ A[19] ^ A[24]);
-   }
-
-}
-
-#endif
 
 inline void SHA3_round(uint64_t T[25], const uint64_t A[25], uint64_t RC)
    {
-#if defined(BOTAN_HAS_BROKEN_CLANG_SHA3)
-   const auto [C0,C1,C2,C3,C4] = xor_CNs(A);
-#else
    const uint64_t C0 = A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20];
    const uint64_t C1 = A[1] ^ A[6] ^ A[11] ^ A[16] ^ A[21];
    const uint64_t C2 = A[2] ^ A[7] ^ A[12] ^ A[17] ^ A[22];
    const uint64_t C3 = A[3] ^ A[8] ^ A[13] ^ A[18] ^ A[23];
    const uint64_t C4 = A[4] ^ A[9] ^ A[14] ^ A[19] ^ A[24];
-#endif
 
    const uint64_t D0 = rotl<1>(C0) ^ C3;
    const uint64_t D1 = rotl<1>(C1) ^ C4;
