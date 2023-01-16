@@ -72,7 +72,7 @@ KyberMode::KyberMode(Mode mode)
    : m_mode(mode) {}
 
 KyberMode::KyberMode(const OID& oid)
-   : m_mode(mode_from_string(oid.to_string())) {}
+   : m_mode(mode_from_string(oid.to_formatted_string())) {}
 
 KyberMode::KyberMode(const std::string& str)
    : m_mode(mode_from_string(str)) {}
@@ -1346,6 +1346,13 @@ void Kyber_PublicKey::initialize_from_encoding(const std::vector<uint8_t>& pub_k
    m_public = std::make_shared<Kyber_PublicKeyInternal>(std::move(mode), std::move(poly_vec), std::move(seed));
    }
 
+Kyber_PublicKey::Kyber_PublicKey(const AlgorithmIdentifier& alg_id,
+                                 const std::vector<uint8_t>& key_bits) :
+   Kyber_PublicKey(key_bits,
+                   KyberMode(alg_id.get_oid()),
+                   KyberKeyEncoding::Full)
+   {}
+
 Kyber_PublicKey::Kyber_PublicKey(const std::vector<uint8_t>& pub_key,
                                  KyberMode m,
                                  KyberKeyEncoding encoding)
@@ -1428,6 +1435,13 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m)
    m_private = std::make_shared<Kyber_PrivateKeyInternal>(std::move(mode), std::move(skpv),
                rng.random_vec(KyberConstants::kZLength));
    }
+
+Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id,
+                                   const secure_vector<uint8_t>& key_bits) :
+   Kyber_PrivateKey(key_bits,
+                    KyberMode(alg_id.get_oid()),
+                    KyberKeyEncoding::Full)
+   {}
 
 Kyber_PrivateKey::Kyber_PrivateKey(const secure_vector<uint8_t>& sk,
                                    KyberMode m,

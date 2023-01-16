@@ -101,8 +101,8 @@ load_public_key(const AlgorithmIdentifier& alg_id,
       return std::make_unique<McEliece_PublicKey>(key_bits);
 #endif
 
-#if 0 && (defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S))
-   if(alg_name == "Kyber")
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-"))
       return std::make_unique<Kyber_PublicKey>(alg_id, key_bits);
 #endif
 
@@ -200,9 +200,9 @@ load_private_key(const AlgorithmIdentifier& alg_id,
       return std::make_unique<DSA_PrivateKey>(alg_id, key_bits);
 #endif
 
-#if 0 && (defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S))
-   if(alg_name == "Kyber")
-      return std::make_unique<Kyber_PrivateKey>(key_bits);
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-"))
+      return std::make_unique<Kyber_PrivateKey>(alg_id, key_bits);
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)

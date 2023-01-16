@@ -23,6 +23,7 @@
    #include <botan/oids.h>
    #include <botan/rng.h>
    #include <botan/pubkey.h>
+   #include "test_pubkey.h"
 #endif
 
 namespace Botan_Tests {
@@ -354,6 +355,32 @@ class Kyber_Encoding_Test : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("kyber", "kyber_encodings", Kyber_Encoding_Test);
 
+class Kyber_Keygen_Tests final : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override
+         {
+         return
+            {
+#if defined(BOTAN_HAS_KYBER_90S)
+            "Kyber-512-90s-r3",
+            "Kyber-768-90s-r3",
+            "Kyber-1024-90s-r3",
+#endif
+#if defined(BOTAN_HAS_KYBER)
+            "Kyber-512-r3",
+            "Kyber-768-r3",
+            "Kyber-1024-r3",
+#endif
+            };
+         }
+      std::string algo_name() const override
+         {
+         return "Kyber";
+         }
+   };
+
+BOTAN_REGISTER_TEST("kyber", "kyber_keygen", Kyber_Keygen_Tests);
 #endif
 
 } // namespace Botan_Tests
