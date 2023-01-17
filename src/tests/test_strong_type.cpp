@@ -127,6 +127,7 @@ std::vector<Test::Result> test_container_strong_type()
             });
 
          // TODO: C++20 - std::ranges::sort
+	 // not available yet on clang
          std::sort(hashes.begin(), hashes.end());
 
          result.test_eq("1", hashes.get().at(0).get(), size_t(1));

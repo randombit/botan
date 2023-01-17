@@ -15,15 +15,6 @@
 
 namespace Botan::concepts {
 
-// TODO: C++20 use std::convertible_to<> that was not available in Android NDK
-//       as of this writing. Tested with API Level up to 33.
-template <class FromT, class ToT>
-concept convertible_to =
-  std::is_convertible_v<FromT, ToT> &&
-  requires {
-    static_cast<ToT>(std::declval<FromT>());
-  };
-
 // TODO: C++20 provides concepts like std::equality_comparable or
 //       std::three_way_comparable, but at the time of this writing, some
 //       target platforms did not ship with those (Xcode 14, Android NDK r25,
@@ -32,14 +23,14 @@ concept convertible_to =
 template<typename T>
 concept equality_comparable = requires(const std::remove_reference_t<T>& a, const std::remove_reference_t<T> b)
    {
-   { a == b } -> convertible_to<bool>;
+   { a == b } -> std::convertible_to<bool>;
    };
 
 template<typename T>
 concept three_way_comparison_result =
-   convertible_to<T, std::weak_ordering> ||
-   convertible_to<T, std::partial_ordering> ||
-   convertible_to<T, std::strong_ordering>;
+   std::convertible_to<T, std::weak_ordering> ||
+   std::convertible_to<T, std::partial_ordering> ||
+   std::convertible_to<T, std::strong_ordering>;
 
 template<typename T>
 concept three_way_comparable = requires(const std::remove_reference_t<T>& a, const std::remove_reference_t<T> b)
