@@ -21,6 +21,8 @@ class CTR_BE final : public StreamCipher
    public:
       void cipher(const uint8_t in[], uint8_t out[], size_t length) override;
 
+      void write_keystream(uint8_t out[], size_t length) override;
+
       void set_iv(const uint8_t iv[], size_t iv_len) override;
 
       size_t default_iv_length() const override;

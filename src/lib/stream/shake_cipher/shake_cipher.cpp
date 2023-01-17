@@ -62,6 +62,25 @@ void SHAKE_Cipher::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_buf_pos += length;
    }
 
+void SHAKE_Cipher::write_keystream(uint8_t out[], size_t length)
+   {
+   verify_key_set(m_state.empty() == false);
+
+   while(length >= m_shake_rate - m_buf_pos)
+      {
+      copy_mem(out, &m_buffer[m_buf_pos], m_shake_rate - m_buf_pos);
+      length -= (m_shake_rate - m_buf_pos);
+      out += (m_shake_rate - m_buf_pos);
+
+      SHA_3::permute(m_state.data());
+      copy_out_le(m_buffer.data(), m_shake_rate, m_state.data());
+
+      m_buf_pos = 0;
+      }
+   copy_mem(out, &m_buffer[m_buf_pos], length);
+   m_buf_pos += length;
+   }
+
 void SHAKE_Cipher::key_schedule(const uint8_t key[], size_t length)
    {
    const size_t SHAKE_BITRATE = m_shake_rate*8;
@@ -72,6 +91,7 @@ void SHAKE_Cipher::key_schedule(const uint8_t key[], size_t length)
    const size_t S_pos = SHA_3::absorb(SHAKE_BITRATE, m_state, 0, key, length);
    SHA_3::finish(SHAKE_BITRATE, m_state, S_pos, 0x1F, 0x80);
    copy_out_le(m_buffer.data(), m_buffer.size(), m_state.data());
+   m_buf_pos = 0;
    }
 
 Key_Length_Specification SHAKE_Cipher::key_spec() const

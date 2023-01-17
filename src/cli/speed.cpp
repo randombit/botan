@@ -963,6 +963,7 @@ class Speed final : public Command
             while(encrypt_timer->under(runtime))
                {
                encrypt_timer->run([&]() { cipher.encipher(buffer); });
+               //encrypt_timer->run([&]() { cipher.write_keystream(buffer.data(), buffer.size()); });
                }
 
             record_result(encrypt_timer);

@@ -28,6 +28,8 @@ class SHAKE_Cipher : public StreamCipher
       */
       void cipher(const uint8_t in[], uint8_t out[], size_t length) override final;
 
+      void write_keystream(uint8_t out[], size_t length) override;
+
       /**
       * Seeking is not supported, this function will throw
       */
