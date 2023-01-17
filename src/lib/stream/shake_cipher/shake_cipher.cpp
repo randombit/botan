@@ -66,18 +66,37 @@ void SHAKE_Cipher::write_keystream(uint8_t out[], size_t length)
    {
    verify_key_set(m_state.empty() == false);
 
-   while(length >= m_shake_rate - m_buf_pos)
+   if(m_buf_pos > 0)
       {
-      copy_mem(out, &m_buffer[m_buf_pos], m_shake_rate - m_buf_pos);
-      length -= (m_shake_rate - m_buf_pos);
-      out += (m_shake_rate - m_buf_pos);
+      const size_t take = std::min(length, m_shake_rate - m_buf_pos);
+      copy_mem(out, &m_buffer[m_buf_pos], take);
+      out += take;
+      length -= take;
+      m_buf_pos += take;
 
-      SHA_3::permute(m_state.data());
-      copy_out_le(m_buffer.data(), m_shake_rate, m_state.data());
-
-      m_buf_pos = 0;
+      if(m_buf_pos == m_shake_rate)
+         {
+         SHA_3::permute(m_state.data());
+         m_buf_pos = 0;
+         }
       }
-   copy_mem(out, &m_buffer[m_buf_pos], length);
+
+   if(length == 0)
+      return;
+
+   BOTAN_ASSERT_NOMSG(m_buf_pos == 0);
+
+   while(length >= m_shake_rate)
+      {
+      copy_out_le(out, m_shake_rate, m_state.data());
+      SHA_3::permute(m_state.data());
+      length -= m_shake_rate;
+      out += m_shake_rate;
+      }
+
+   copy_out_le(m_buffer.data(), m_shake_rate, m_state.data());
+
+   copy_mem(out, &m_buffer[0], length);
    m_buf_pos += length;
    }
 
