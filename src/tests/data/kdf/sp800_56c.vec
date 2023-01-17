@@ -2,7 +2,7 @@
 # it implements the very similar HKDF from RFC 5869,
 # which was slightly modified to be equivalent to SP800-56C
 
-[SP800-56C(HMAC(SHA-160))]
+[SP800-56C(HMAC(SHA-1))]
 Salt = 97ca00eac481e8b3556a
 Secret = 52f4676023946c7307b5e8148d97f312623a6e88
 Label = ae8cf2e46773a68098ea53b3

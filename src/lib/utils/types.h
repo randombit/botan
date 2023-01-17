@@ -39,7 +39,7 @@ namespace Botan {
 *        ChaCha, @ref CTR_BE "CTR", OFB, RC4, Salsa20
 * <dt>Hash Functions<dd>
 *        BLAKE2b, @ref GOST_34_11 "GOST 34.11", @ref Keccak_1600 "Keccak", MD4, MD5, @ref RIPEMD_160 "RIPEMD-160",
-*        @ref SHA_160 "SHA-1", @ref SHA_224 "SHA-224", @ref SHA_256 "SHA-256", @ref SHA_384 "SHA-384",
+*        @ref SHA_1 "SHA-1", @ref SHA_224 "SHA-224", @ref SHA_256 "SHA-256", @ref SHA_384 "SHA-384",
 *        @ref SHA_512 "SHA-512", @ref Skein_512 "Skein-512", SM3, Streebog, Whirlpool
 * <dt>Non-Cryptographic Checksums<dd>
 *        Adler32, CRC24, CRC32

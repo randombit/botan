@@ -20,7 +20,7 @@ const uint8_t RIPEMD_160_PKCS_ID[] = {
 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x24, 0x03, 0x02,
 0x01, 0x05, 0x00, 0x04, 0x14 };
 
-const uint8_t SHA_160_PKCS_ID[] = {
+const uint8_t SHA_1_PKCS_ID[] = {
 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 0x03, 0x02,
 0x1A, 0x05, 0x00, 0x04, 0x14 };
 
@@ -73,7 +73,7 @@ const uint8_t SM3_PKCS_ID[] = {
 std::vector<uint8_t> pkcs_hash_id(const std::string& name)
    {
    // Special case for SSL/TLS RSA signatures
-   if(name == "Parallel(MD5,SHA-160)")
+   if(name == "Parallel(MD5,SHA-1)")
       return std::vector<uint8_t>();
 
    // If you add a value to this function, also update test_hash_id.cpp
@@ -86,9 +86,9 @@ std::vector<uint8_t> pkcs_hash_id(const std::string& name)
       return std::vector<uint8_t>(RIPEMD_160_PKCS_ID,
                                RIPEMD_160_PKCS_ID + sizeof(RIPEMD_160_PKCS_ID));
 
-   if(name == "SHA-160" || name == "SHA-1" || name == "SHA1")
-      return std::vector<uint8_t>(SHA_160_PKCS_ID,
-                               SHA_160_PKCS_ID + sizeof(SHA_160_PKCS_ID));
+   if(name == "SHA-1")
+      return std::vector<uint8_t>(SHA_1_PKCS_ID,
+                                  SHA_1_PKCS_ID + sizeof(SHA_1_PKCS_ID));
 
    if(name == "SHA-224")
       return std::vector<uint8_t>(SHA_224_PKCS_ID,
@@ -137,8 +137,7 @@ std::vector<uint8_t> pkcs_hash_id(const std::string& name)
 */
 uint8_t ieee1363_hash_id(const std::string& name)
    {
-   if(name == "SHA-160" || name == "SHA-1" || name == "SHA1")
-      return 0x33;
+   if(name == "SHA-1")      return 0x33;
 
    if(name == "SHA-224")    return 0x38;
    if(name == "SHA-256")    return 0x34;

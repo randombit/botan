@@ -12,13 +12,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/sha160.h>
+#include <botan/internal/sha1.h>
 #include <immintrin.h>
 
 namespace Botan {
 
 BOTAN_FUNC_ISA("sha,ssse3,sse4.1")
-void SHA_160::sha1_compress_x86(secure_vector<uint32_t>& digest,
+void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest,
                                 const uint8_t input[],
                                 size_t blocks)
    {

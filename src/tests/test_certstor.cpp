@@ -70,7 +70,7 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
          const auto priv = store.find_key(cert);
          if(!priv && (certsandkeys[1] != certandkey && certsandkeys[0] != certandkey))
             {
-            result.test_failure("Can't retrieve private key for " + cert.fingerprint("SHA1"));
+            result.test_failure("Can't retrieve private key for " + cert.fingerprint("SHA-1"));
             return result;
             }
 
@@ -309,7 +309,7 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
          const auto found = store.find_cert_by_raw_subject_dn_sha256(hash);
          if(!found)
             {
-            result.test_failure("Can't retrieve certificate " + cert.fingerprint("SHA1"));
+            result.test_failure("Can't retrieve certificate " + cert.fingerprint("SHA-1"));
             return result;
             }
 

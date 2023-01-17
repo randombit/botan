@@ -42,7 +42,7 @@
 #endif
 
 #if defined(BOTAN_HAS_SHA1)
-  #include <botan/internal/sha160.h>
+  #include <botan/internal/sha1.h>
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32)
@@ -114,11 +114,9 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       return nullptr; // unknown provider
 
 #if defined(BOTAN_HAS_SHA1)
-   if(algo_spec == "SHA-160" ||
-      algo_spec == "SHA-1" ||
-      algo_spec == "SHA1")
+   if(algo_spec == "SHA-1")
       {
-      return std::make_unique<SHA_160>();
+      return std::make_unique<SHA_1>();
       }
 #endif
 

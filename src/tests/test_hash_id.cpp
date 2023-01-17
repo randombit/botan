@@ -24,7 +24,7 @@ class PKCS_HashID_Test final : public Test
          const std::vector<std::pair<std::string,size_t>> hash_id_fns = {
             {"MD5", 16},
             {"RIPEMD-160", 20},
-            {"SHA-160", 20},
+            {"SHA-1", 20},
             {"SHA-224", 28},
             {"SHA-256", 32},
             {"SHA-384", 48},

@@ -1,11 +1,11 @@
 /*
-* SHA-160
+* SHA-1
 * (C) 1999-2008,2011 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/sha160.h>
+#include <botan/internal/sha1.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/bit_ops.h>
@@ -13,9 +13,9 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> SHA_160::copy_state() const
+std::unique_ptr<HashFunction> SHA_1::copy_state() const
    {
-   return std::make_unique<SHA_160>(*this);
+   return std::make_unique<SHA_1>(*this);
    }
 
 namespace SHA1_F {
@@ -23,7 +23,7 @@ namespace SHA1_F {
 namespace {
 
 /*
-* SHA-160 F1 Function
+* SHA-1 F1 Function
 */
 inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
@@ -32,7 +32,7 @@ inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
    }
 
 /*
-* SHA-160 F2 Function
+* SHA-1 F2 Function
 */
 inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
@@ -41,7 +41,7 @@ inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
    }
 
 /*
-* SHA-160 F3 Function
+* SHA-1 F3 Function
 */
 inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
@@ -50,7 +50,7 @@ inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
    }
 
 /*
-* SHA-160 F4 Function
+* SHA-1 F4 Function
 */
 inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
@@ -63,9 +63,9 @@ inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 }
 
 /*
-* SHA-160 Compression Function
+* SHA-1 Compression Function
 */
-void SHA_160::compress_n(const uint8_t input[], size_t blocks)
+void SHA_1::compress_n(const uint8_t input[], size_t blocks)
    {
    using namespace SHA1_F;
 
@@ -169,7 +169,7 @@ void SHA_160::compress_n(const uint8_t input[], size_t blocks)
 /*
 * Copy out the digest
 */
-void SHA_160::copy_out(uint8_t output[])
+void SHA_1::copy_out(uint8_t output[])
    {
    copy_out_vec_be(output, output_length(), m_digest);
    }
@@ -177,7 +177,7 @@ void SHA_160::copy_out(uint8_t output[])
 /*
 * Clear memory of sensitive data
 */
-void SHA_160::clear()
+void SHA_1::clear()
    {
    MDx_HashFunction::clear();
    zeroise(m_W);

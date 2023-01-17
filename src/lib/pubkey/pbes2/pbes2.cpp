@@ -41,7 +41,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
          .decode(iterations)
          .decode_optional(key_length, ASN1_Type::Integer, ASN1_Class::Universal)
          .decode_optional(prf_algo, ASN1_Type::Sequence, ASN1_Class::Constructed,
-                          AlgorithmIdentifier("HMAC(SHA-160)",
+                          AlgorithmIdentifier("HMAC(SHA-1)",
                                               AlgorithmIdentifier::USE_NULL_PARAM))
          .end_cons();
 
@@ -184,7 +184,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
             .encode(salt, ASN1_Type::OctetString)
             .encode(iterations)
             .encode(key_length)
-            .encode_if(prf != "HMAC(SHA-160)",
+            .encode_if(prf != "HMAC(SHA-1)",
                        AlgorithmIdentifier(prf, AlgorithmIdentifier::USE_NULL_PARAM))
          .end_cons();
 

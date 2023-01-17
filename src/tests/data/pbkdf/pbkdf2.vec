@@ -1,4 +1,4 @@
-[PBKDF2(HMAC(SHA-160))]
+[PBKDF2(HMAC(SHA-1))]
 Salt = 0001020304050607
 Iterations = 10000
 Passphrase = 

@@ -28,7 +28,7 @@ struct Pss_params
 
 Pss_params decode_pss_params(const std::vector<uint8_t>& encoded_pss_params)
    {
-   const AlgorithmIdentifier default_hash("SHA-160", AlgorithmIdentifier::USE_NULL_PARAM);
+   const AlgorithmIdentifier default_hash("SHA-1", AlgorithmIdentifier::USE_NULL_PARAM);
    const AlgorithmIdentifier default_mgf("MGF1", default_hash.BER_encode());
 
    Pss_params pss_parameter;
@@ -212,7 +212,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
 
       // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
       const std::string hash_algo = pss_parameter.hash_algo.get_oid().to_formatted_string();
-      if(hash_algo != "SHA-160" &&
+      if(hash_algo != "SHA-1" &&
          hash_algo != "SHA-224" &&
          hash_algo != "SHA-256" &&
          hash_algo != "SHA-384" &&

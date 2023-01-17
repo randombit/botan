@@ -16,7 +16,7 @@ size_t hmac_drbg_security_level(size_t mac_output_length)
    {
    // security strength of the hash function
    // for pre-image resistance (see NIST SP 800-57)
-   // SHA-160: 128 bits
+   // SHA-1: 128 bits
    // SHA-224, SHA-512/224: 192 bits,
    // SHA-256, SHA-512/256, SHA-384, SHA-512: >= 256 bits
    // NIST SP 800-90A only supports up to 256 bits though

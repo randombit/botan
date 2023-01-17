@@ -32,6 +32,15 @@ bool fips186_3_valid_size(size_t pbits, size_t qbits)
    return false;
    }
 
+// qbits assumed to be a valid size for FIPS param gen
+std::string hash_function_for(size_t qbits)
+   {
+   if(qbits == 160)
+      return "SHA-1";
+
+   return "SHA-" + std::to_string(qbits);
+   }
+
 }
 
 /*
@@ -53,7 +62,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          "Generating a DSA parameter set with a " + std::to_string(qbits) +
          " bit long q requires a seed at least as many bits long");
 
-   const std::string hash_name = "SHA-" + std::to_string(qbits);
+   const std::string hash_name = hash_function_for(qbits);
    std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_name));
 
    const size_t HASH_SIZE = hash->output_length();

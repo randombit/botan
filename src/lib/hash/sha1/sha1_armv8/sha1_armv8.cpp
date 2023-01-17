@@ -7,7 +7,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/sha160.h>
+#include <botan/internal/sha1.h>
 #include <arm_neon.h>
 
 namespace Botan {
@@ -17,7 +17,7 @@ namespace Botan {
 */
 //static
 BOTAN_FUNC_ISA("+crypto")
-void SHA_160::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t input8[], size_t blocks)
+void SHA_1::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t input8[], size_t blocks)
    {
    uint32x4_t ABCD;
    uint32_t E0;

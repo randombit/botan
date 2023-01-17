@@ -141,3 +141,10 @@ update_granularity sized for good performance.
 If you are sizing buffers on the basis of update_granularity consider
 using ideal_granularity instead. Otherwise you may encounter performance
 regressions due to creating and processing very small buffers.
+
+"SHA-160" and "SHA1"
+---------------------
+
+Previously the library accepted "SHA-160" and "SHA1" alternative names
+for "SHA-1". This is no longer the case, you must use "SHA-1". Botan
+2.x also recognizes "SHA-1".

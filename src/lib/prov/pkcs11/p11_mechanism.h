@@ -45,14 +45,14 @@ class MechanismWrapper final
       /**
       * Creates the CK_MECHANISM data for ECDSA signature/verification
       * @param hash the hash algorithm used to hash the data to sign.
-      * supported hash functions are Raw and SHA-160 to SHA-512
+      * supported hash functions are Raw and SHA-1 to SHA-512
       */
       static MechanismWrapper create_ecdsa_mechanism(const std::string& hash);
 
       /**
       * Creates the CK_MECHANISM data for ECDH key derivation (CKM_ECDH1_DERIVE or CKM_ECDH1_COFACTOR_DERIVE)
       * @param params specifies the key derivation function to use.
-      * Supported KDFs are Raw and SHA-160 to SHA-512.
+      * Supported KDFs are Raw and SHA-1 to SHA-512.
       * Params can also include the string "Cofactor" if the cofactor
       * key derivation mechanism should be used, for example "SHA-512,Cofactor"
       */

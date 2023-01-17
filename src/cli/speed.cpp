@@ -384,7 +384,7 @@ class Speed final : public Command
             "ChaCha20",
 
             /* Hashes */
-            "SHA-160",
+            "SHA-1",
             "SHA-256",
             "SHA-512",
             "SHA-3(256)",
