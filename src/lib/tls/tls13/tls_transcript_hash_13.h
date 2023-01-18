@@ -50,7 +50,7 @@ class BOTAN_TEST_API Transcript_Hash_State
       Transcript_Hash_State(Transcript_Hash_State&&) = default;
       Transcript_Hash_State& operator=(Transcript_Hash_State&&) = default;
 
-      void update(const std::span<const uint8_t> serialized_message_s);
+      void update(std::span<const uint8_t> serialized_message_s);
 
       /**
        * returns the latest transcript hash
