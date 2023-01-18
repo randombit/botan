@@ -146,6 +146,8 @@ void CTR_BE::write_keystream(uint8_t out[], size_t length)
          }
       }
 
+   // TODO rewrite this to encrypt directly to out instead of
+   // encrypting into m_pad and then copying.
    while(length >= pad_size)
       {
       copy_mem(out, pad_bits, pad_size);

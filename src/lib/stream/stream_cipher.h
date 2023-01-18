@@ -61,7 +61,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       /**
       * Write keystream bytes to a buffer
       *
-      * The contents of out are ignored/overwritten
+      * The contents of @p out are ignored/overwritten
       *
       * @param out the byte array to hold the keystream
       * @param len the length of out in bytes
