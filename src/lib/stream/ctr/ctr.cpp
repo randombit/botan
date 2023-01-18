@@ -126,40 +126,32 @@ void CTR_BE::write_keystream(uint8_t out[], size_t length)
    {
    verify_key_set(m_iv.empty() == false);
 
-   const uint8_t* pad_bits = &m_pad[0];
-   const size_t pad_size = m_pad.size();
+   const size_t avail = m_pad.size() - m_pad_pos;
+   const size_t take = std::min(length, avail);
+   copy_mem(out, &m_pad[m_pad_pos], take);
+   length -= take;
+   out += take;
+   m_pad_pos += take;
 
-   if(m_pad_pos > 0)
+   while(length >= m_pad.size())
       {
-      const size_t avail = pad_size - m_pad_pos;
-      const size_t take = std::min(length, avail);
-      copy_mem(out, pad_bits + m_pad_pos, take);
-      length -= take;
-      out += take;
-      m_pad_pos += take;
+      add_counter(m_ctr_blocks);
+      m_cipher->encrypt_n(m_counter.data(), out, m_ctr_blocks);
 
-      if(take == avail)
-         {
-         add_counter(m_ctr_blocks);
-         m_cipher->encrypt_n(m_counter.data(), m_pad.data(), m_ctr_blocks);
-         m_pad_pos = 0;
-         }
+      length -= m_pad.size();
+      out += m_pad.size();
       }
 
-   // TODO rewrite this to encrypt directly to out instead of
-   // encrypting into m_pad and then copying.
-   while(length >= pad_size)
+   if(m_pad_pos == m_pad.size())
       {
-      copy_mem(out, pad_bits, pad_size);
-      length -= pad_size;
-      out += pad_size;
-
       add_counter(m_ctr_blocks);
       m_cipher->encrypt_n(m_counter.data(), m_pad.data(), m_ctr_blocks);
+      m_pad_pos = 0;
       }
 
-   copy_mem(out, pad_bits, length);
+   copy_mem(out, &m_pad[0], length);
    m_pad_pos += length;
+   BOTAN_ASSERT_NOMSG(m_pad_pos < m_pad.size());
    }
 
 void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
