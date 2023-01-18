@@ -9,8 +9,6 @@
 #include <botan/internal/ffi_util.h>
 
 extern "C" {
-  int botan_zfec_encode(size_t K, size_t N, const uint8_t input[], size_t size, uint8_t ***output, size_t **outputSizes);
-
   int botan_zfec_encode(size_t K, size_t N, const uint8_t input[], size_t size, uint8_t ***output, size_t **outputSizes) {
     /* Caller owns *output and everything in it and *outputSizes and everything in it
      */
