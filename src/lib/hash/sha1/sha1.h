@@ -1,31 +1,31 @@
 /*
-* SHA-160
+* SHA-1
 * (C) 1999-2007,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SHA_160_H_
-#define BOTAN_SHA_160_H_
+#ifndef BOTAN_SHA1_H_
+#define BOTAN_SHA1_H_
 
 #include <botan/internal/mdx_hash.h>
 
 namespace Botan {
 
 /**
-* NIST's SHA-160
+* NIST's SHA-1
 */
-class SHA_160 final : public MDx_HashFunction
+class SHA_1 final : public MDx_HashFunction
    {
    public:
-      std::string name() const override { return "SHA-160"; }
+      std::string name() const override { return "SHA-1"; }
       size_t output_length() const override { return 20; }
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_160>(); }
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_1>(); }
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 
-      SHA_160() : MDx_HashFunction(64, true, true), m_digest(5)
+      SHA_1() : MDx_HashFunction(64, true, true), m_digest(5)
          {
          clear();
          }
@@ -65,8 +65,6 @@ class SHA_160 final : public MDx_HashFunction
       */
       secure_vector<uint32_t> m_W;
    };
-
-typedef SHA_160 SHA_1;
 
 }
 

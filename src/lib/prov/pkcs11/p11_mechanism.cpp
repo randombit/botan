@@ -151,7 +151,7 @@ const std::map<std::string, RSA_CryptMechanism> CryptMechanisms =
 const std::map<std::string, MechanismType> EcdsaHash =
    {
       { "Raw", MechanismType::Ecdsa },
-      { "SHA-160", MechanismType::EcdsaSha1 },
+      { "SHA-1", MechanismType::EcdsaSha1 },
       { "SHA-224", MechanismType::EcdsaSha224 },
       { "SHA-256", MechanismType::EcdsaSha256 },
       { "SHA-384", MechanismType::EcdsaSha384 },
@@ -162,7 +162,7 @@ const std::map<std::string, MechanismType> EcdsaHash =
 const std::map<std::string, KeyDerivation> EcdhHash =
    {
       { "Raw", KeyDerivation::Null },
-      { "SHA-160", KeyDerivation::Sha1Kdf },
+      { "SHA-1", KeyDerivation::Sha1Kdf },
       { "SHA-224", KeyDerivation::Sha224Kdf },
       { "SHA-256", KeyDerivation::Sha256Kdf },
       { "SHA-384", KeyDerivation::Sha384Kdf },

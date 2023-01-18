@@ -1,4 +1,4 @@
-[OpenPGP-S2K(SHA-160)]
+[OpenPGP-S2K(SHA-1)]
 # Generated using Golang x/crypto/openpgp/s2k
 
 Salt =

@@ -63,7 +63,7 @@ Test::Result test_hash_larger_than_n()
    Botan::PK_Signer pk_signer_160(priv_key, Test::rng(), "EMSA1(SHA-1)");
    Botan::PK_Verifier pk_verifier_160(priv_key, "EMSA1(SHA-1)");
 
-   // Verify we can sign and verify with SHA-160
+   // Verify we can sign and verify with SHA-1
    std::vector<uint8_t> signature_160 = pk_signer_160.sign_message(message, Test::rng());
    result.test_eq("message verifies", pk_verifier_160.verify_message(message, signature_160), true);
 

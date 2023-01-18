@@ -1055,7 +1055,7 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
    m_trusted_ocsp_responders(std::move(trusted_ocsp_responders))
    {
    if(key_strength <= 80)
-      { m_trusted_hashes.insert("SHA-160"); }
+      { m_trusted_hashes.insert("SHA-1"); }
 
    m_trusted_hashes.insert("SHA-224");
    m_trusted_hashes.insert("SHA-256");

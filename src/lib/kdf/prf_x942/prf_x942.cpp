@@ -43,7 +43,7 @@ void X942_PRF::kdf(uint8_t key[], size_t key_len,
    if(blocks_required >= 0xFFFFFFFE)
       throw Invalid_Argument("X942_PRF maximum output length exceeeded");
 
-   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-1"));
 
    secure_vector<uint8_t> h;
    secure_vector<uint8_t> in;

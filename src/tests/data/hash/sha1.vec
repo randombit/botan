@@ -1,6 +1,6 @@
 #test cpuid intel_sha armv8sha1 sse2
 
-[SHA-160]
+[SHA-1]
 In = 
 Out = DA39A3EE5E6B4B0D3255BFEF95601890AFD80709
 

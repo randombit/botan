@@ -7,7 +7,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/sha160.h>
+#include <botan/internal/sha1.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/bit_ops.h>
 #include <emmintrin.h>
@@ -111,7 +111,7 @@ W0 = W[t]..W[t+3]
    } while(0)
 
 /*
-* SHA-160 F1 Function
+* SHA-1 F1 Function
 */
 inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
@@ -120,7 +120,7 @@ inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
    }
 
 /*
-* SHA-160 F2 Function
+* SHA-1 F2 Function
 */
 inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
@@ -129,7 +129,7 @@ inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
    }
 
 /*
-* SHA-160 F3 Function
+* SHA-1 F3 Function
 */
 inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
@@ -138,7 +138,7 @@ inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
    }
 
 /*
-* SHA-160 F4 Function
+* SHA-1 F4 Function
 */
 inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
@@ -151,11 +151,11 @@ inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 }
 
 /*
-* SHA-160 Compression Function using SSE for message expansion
+* SHA-1 Compression Function using SSE for message expansion
 */
 //static
 BOTAN_FUNC_ISA("sse2")
-void SHA_160::sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
+void SHA_1::sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
    {
    using namespace SHA1_SSE2_F;
 

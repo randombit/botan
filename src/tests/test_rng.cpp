@@ -520,7 +520,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests
          {
          Test::Result result("HMAC_DRBG Security Level");
 
-         std::vector<std::string> approved_hash_fns { "SHA-160", "SHA-224", "SHA-256", "SHA-512/256", "SHA-384", "SHA-512" };
+         std::vector<std::string> approved_hash_fns { "SHA-1", "SHA-224", "SHA-256", "SHA-512/256", "SHA-384", "SHA-512" };
          std::vector<uint32_t> security_strengths { 128, 192, 256, 256, 256, 256 };
 
          for(size_t i = 0; i < approved_hash_fns.size(); ++i)
