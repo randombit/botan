@@ -489,9 +489,24 @@ Test::Result test_attribute_container()
    attributes.add_binary(AttributeType::Value, bin);
 
    attributes.add_bool(AttributeType::Sensitive, true);
-   attributes.add_numeric(AttributeType::ObjectId, 12);
+   attributes.add_numeric(AttributeType::ObjectId, 10);
+   attributes.add_numeric(AttributeType::Id, 20);
+   attributes.add_numeric(AttributeType::PixelX, 30);
+   // Test that overwriting the existing Id attribute works. The numeric attributes above should not be affected by this.
+   attributes.add_numeric(AttributeType::Id, 21);
+   attributes.add_numeric(AttributeType::PixelY, 40);
 
-   result.test_eq("Five elements in attribute container", attributes.count(), 5);
+   result.test_eq("8 elements in attribute container", attributes.count(), 8);
+
+   const std::vector<Botan::PKCS11::Attribute>& storedAttributes = attributes.attributes();
+   result.test_int_eq("ObjectId type", storedAttributes.at(4).type, AttributeType::ObjectId);
+   result.test_int_eq("ObjectId value", *reinterpret_cast< uint64_t* >(storedAttributes.at(4).pValue), 10);
+   result.test_int_eq("Id type", storedAttributes.at(5).type, AttributeType::Id);
+   result.test_int_eq("Id value", *reinterpret_cast< uint64_t* >(storedAttributes.at(5).pValue), 21);
+   result.test_int_eq("PixelX type", storedAttributes.at(6).type, AttributeType::PixelX);
+   result.test_int_eq("PixelX value", *reinterpret_cast< uint64_t* >(storedAttributes.at(6).pValue), 30);
+   result.test_int_eq("PixelY type", storedAttributes.at(7).type, AttributeType::PixelY);
+   result.test_int_eq("PixelY value", *reinterpret_cast< uint64_t* >(storedAttributes.at(7).pValue), 40);
 
    return result;
    }
