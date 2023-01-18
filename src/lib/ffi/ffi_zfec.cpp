@@ -16,17 +16,14 @@ extern "C" {
       uint8_t **blocks = new uint8_t*[N];
       size_t *sizes = new size_t[N];
 
+      *output = blocks;
+      *outputSizes = sizes;
+
       Botan::ZFEC(K, N).encode(input, size, [=](size_t index, const uint8_t block[], size_t blockSize) -> void {
 	  blocks[index] = new uint8_t[blockSize];
 	  std::copy(block, block + blockSize, blocks[index]);
 	  sizes[index] = blockSize;
 	});
-
-      // XXX do something
-      *output = blocks;
-      *outputSizes = sizes;
-
-      return BOTAN_FFI_SUCCESS;
     });
   }
 }
