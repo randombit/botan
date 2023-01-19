@@ -1,5 +1,5 @@
 /*
-* (C) 2015,2017,2018 Jack Lloyd
+* (C) 2023 Least Authority TFA GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
