@@ -128,8 +128,25 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       */
       BigInt get_affine_y() const;
 
+      /**
+      * Return the internal x coordinate
+      *
+      * Note this may be in Montgomery form
+      */
       const BigInt& get_x() const { return m_coord_x; }
+
+      /**
+      * Return the internal y coordinate
+      *
+      * Note this may be in Montgomery form
+      */
       const BigInt& get_y() const { return m_coord_y; }
+
+      /**
+      * Return the internal z coordinate
+      *
+      * Note this may be in Montgomery form
+      */
       const BigInt& get_z() const { return m_coord_z; }
 
       void swap_coords(BigInt& new_x, BigInt& new_y, BigInt& new_z)

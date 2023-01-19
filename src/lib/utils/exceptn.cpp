@@ -101,6 +101,12 @@ Internal_Error::Internal_Error(const std::string& err) :
    Exception("Internal error: " + err)
    {}
 
+Unknown_PK_Field_Name::Unknown_PK_Field_Name(const std::string& algo_name,
+                                             const std::string& field_name) :
+   Invalid_Argument("Unknown field '" + field_name +
+                    "' for algorithm " + algo_name)
+   {}
+
 Invalid_Key_Length::Invalid_Key_Length(const std::string& name, size_t length) :
    Invalid_Argument(name + " cannot accept a key of length " +
                     std::to_string(length))

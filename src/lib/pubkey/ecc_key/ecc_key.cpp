@@ -193,4 +193,42 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
       }
    }
 
+const BigInt& EC_PublicKey::get_int_field(const std::string& field) const
+   {
+   if(field == "public_x")
+      {
+      BOTAN_ASSERT_NOMSG(this->public_point().is_affine());
+      return this->public_point().get_x();
+      }
+   else if(field == "public_y")
+      {
+      BOTAN_ASSERT_NOMSG(this->public_point().is_affine());
+      return this->public_point().get_y();
+      }
+   else if(field == "base_x")
+      return this->domain().get_g_x();
+   else if(field == "base_y")
+      return this->domain().get_g_y();
+   else if(field == "p")
+      return this->domain().get_p();
+   else if(field == "a")
+      return this->domain().get_a();
+   else if(field == "b")
+      return this->domain().get_b();
+   else if(field == "cofactor")
+      return this->domain().get_cofactor();
+   else if(field == "order")
+      return this->domain().get_order();
+   else
+      return Public_Key::get_int_field(field);
+   }
+
+const BigInt& EC_PrivateKey::get_int_field(const std::string& field) const
+   {
+   if(field == "x")
+      return this->private_value();
+   else
+      return EC_PublicKey::get_int_field(field);
+   }
+
 }

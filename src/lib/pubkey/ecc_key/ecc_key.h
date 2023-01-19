@@ -91,6 +91,8 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
       size_t key_length() const override;
       size_t estimated_strength() const override;
 
+      const BigInt& get_int_field(const std::string& field) const override;
+
    protected:
       /**
       * Create a public key.
@@ -135,6 +137,8 @@ class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
       EC_PrivateKey(const EC_PrivateKey& other) = default;
       EC_PrivateKey& operator=(const EC_PrivateKey& other) = default;
       ~EC_PrivateKey() = default;
+
+      const BigInt& get_int_field(const std::string& field) const override;
 
    protected:
       /*

@@ -101,6 +101,16 @@ std::shared_ptr<const RSA_Public_Data> RSA_PublicKey::public_data() const
    return m_public;
    }
 
+const BigInt& RSA_PublicKey::get_int_field(const std::string& field) const
+   {
+   if(field == "n")
+      return m_public->get_n();
+   else if(field == "e")
+      return m_public->get_e();
+   else
+      return Public_Key::get_int_field(field);
+   }
+
 const BigInt& RSA_PublicKey::get_n() const { return m_public->get_n(); }
 const BigInt& RSA_PublicKey::get_e() const { return m_public->get_e(); }
 
@@ -318,6 +328,24 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
 
    RSA_PrivateKey::init(std::move(d), std::move(p), std::move(q),
                         std::move(d1), std::move(d2), std::move(c));
+   }
+
+const BigInt& RSA_PrivateKey::get_int_field(const std::string& field) const
+   {
+   if(field == "p")
+      return m_private->get_p();
+   else if(field == "q")
+      return m_private->get_q();
+   else if(field == "d")
+      return m_private->get_d();
+   else if(field == "c")
+      return m_private->get_c();
+   else if(field == "d1")
+      return m_private->get_d1();
+   else if(field == "d2")
+      return m_private->get_d2();
+   else
+      return RSA_PublicKey::get_int_field(field);
    }
 
 std::unique_ptr<Public_Key> RSA_PrivateKey::public_key() const

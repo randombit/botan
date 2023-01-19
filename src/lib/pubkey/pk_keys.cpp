@@ -47,6 +47,11 @@ std::vector<uint8_t> Public_Key::subject_public_key() const
    return output;
    }
 
+const BigInt& Public_Key::get_int_field(const std::string& field) const
+   {
+   throw Unknown_PK_Field_Name(algo_name(), field);
+   }
+
 /*
 * Default OID access
 */
