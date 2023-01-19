@@ -25,9 +25,14 @@ class Integer_Overflow_Detected final : public Exception
 
 inline size_t checked_add(size_t x, size_t y, const char* file, int line)
    {
-   // TODO: use __builtin_x_overflow on GCC and Clang
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_add_overflow)
+   size_t z;
+   if(__builtin_add_overflow(x, y, &z)) [[unlikely]]
+#else
+   // (Possible) TODO Windows supports SizeTAdd (intsafe.h) but unsure it is really a win.
    size_t z = x + y;
    if(z < x) [[unlikely]]
+#endif
       {
       throw Integer_Overflow_Detected(file, line);
       }
