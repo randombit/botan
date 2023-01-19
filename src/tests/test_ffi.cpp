@@ -360,7 +360,7 @@ class FFI_Unit_Tests final : public Test
        for (size_t k = 0; k < K; ++k) {
 	 delete[] decoded[k];
        }
-       delete decodedSizes;
+       delete[] decodedSizes;
 
        /* exercise a couple basic failure cases, such as you encounter if the
 	* caller supplies invalid parameters.
