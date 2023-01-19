@@ -1919,6 +1919,10 @@ int botan_zfec_encode(size_t K, size_t N, const uint8_t *input, size_t size, uin
  *
  * @param K the number of shares needed for recovery
  * @param N the total number of shares
+ *
+ * @param indexes The index into the encoder's outputs for the corresponding
+ *                element of the inputs array.
+ *
  * @param inputs K previously encoded shares to decode
  * @param size the length in bytes of each input
  *
@@ -1938,7 +1942,7 @@ int botan_zfec_encode(size_t K, size_t N, const uint8_t *input, size_t size, uin
  * @return 0 on success, negative on failure
  */
 BOTAN_PUBLIC_API(3, 0)
-int botan_zfec_decode(size_t K, size_t N, uint8_t *const*const inputs, size_t size, uint8_t **outputs, size_t *sizes);
+int botan_zfec_decode(size_t K, size_t N, const size_t *indexes, uint8_t *const*const inputs, size_t size, uint8_t **outputs, size_t *sizes);
 
 #ifdef __cplusplus
 }
