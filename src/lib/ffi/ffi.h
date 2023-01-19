@@ -15,7 +15,7 @@ extern "C" {
 
 /*
 This header exports some of botan's functionality via a C89 interface. This API
-is uesd by the Python, OCaml, Rust and Ruby bindings via those languages
+is uesd by the Python, OCaml, Rust, Ruby, and Haskell bindings via those languages
 respective ctypes/FFI libraries.
 
 The API is intended to be as easy as possible to call from other
