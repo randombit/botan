@@ -1637,14 +1637,14 @@ BOTAN_PUBLIC_API(2,13) int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const 
 BOTAN_PUBLIC_API(2,13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
 
 /**
- * Given a CRL and a certificate, 
+ * Given a CRL and a certificate,
  * check if the certificate is revoked on that particular CRL
  */
 BOTAN_PUBLIC_API(2,13) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert);
 
 /**
  * Different flavor of `botan_x509_cert_verify`, supports revocation lists.
- * CRLs are passed as an array, same as intermediates and trusted CAs 
+ * CRLs are passed as an array, same as intermediates and trusted CAs
  */
 BOTAN_PUBLIC_API(2,13) int botan_x509_cert_verify_with_crl(
    int* validation_result,
@@ -1890,9 +1890,29 @@ int botan_srp6_client_agree(const char *username, const char *password,
 
 /**
  * Encode some bytes with certain ZFEC parameters.
+ *
+ * @param K the number of shares needed for recovery
+ * @param N the number of shares generated
+ * @param input the data to FEC
+ * @param size the length in bytes of input
+ *
+ * @param outputs An out parameter representing an array of uint8_t* where
+ *                pointers to FEC encoded data can be stored.  The caller must
+ *                allocate enough memory for N uint8_t*.  Freeing this memory
+ *                is the responsibility of the caller.  Each uint8_t* written
+ *                to the array points to one FEC output.  The length of these
+ *                arrays is given by corresponding elements in the sizes out
+ *                parameter.  Freeing the memory for these arrays is the
+ *                responsibility of the caller.
+ *
+ * @param sizes An out parameter for the sizes of the FEC encoded data.  The
+ *              caller must allocate enough memory for N size_t.  Freeing the
+ *              memory for this array is the responsibility of the caller.
+ *
+ * @return 0 on success, negative on failure
  */
 BOTAN_PUBLIC_API(3, 0)
-int botan_zfec_encode(size_t K, size_t N, const uint8_t input[], size_t size, uint8_t ***output, size_t **outputSizes);
+int botan_zfec_encode(size_t K, size_t N, const uint8_t input[], size_t size, uint8_t **outputs, size_t *sizes);
 
 #ifdef __cplusplus
 }

@@ -9,21 +9,14 @@
 #include <botan/internal/ffi_util.h>
 
 extern "C" {
-  int botan_zfec_encode(size_t K, size_t N, const uint8_t input[], size_t size, uint8_t ***output, size_t **outputSizes) {
-    /* Caller owns *output and everything in it and *outputSizes and everything in it
-     */
+  int botan_zfec_encode(size_t K, size_t N, const uint8_t input[], size_t size, uint8_t **outputs, size_t *sizes) {
     return Botan_FFI::ffi_guard_thunk(__func__, [=]() -> int {
-      uint8_t **blocks = new uint8_t*[N];
-      size_t *sizes = new size_t[N];
-
-      *output = blocks;
-      *outputSizes = sizes;
-
       Botan::ZFEC(K, N).encode(input, size, [=](size_t index, const uint8_t block[], size_t blockSize) -> void {
-	  blocks[index] = new uint8_t[blockSize];
-	  std::copy(block, block + blockSize, blocks[index]);
+	  outputs[index] = new uint8_t[blockSize];
+	  std::copy(block, block + blockSize, outputs[index]);
 	  sizes[index] = blockSize;
 	});
+      return BOTAN_FFI_SUCCESS;
     });
   }
 }

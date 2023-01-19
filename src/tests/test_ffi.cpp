@@ -63,6 +63,10 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_cert_validation());
          results.push_back(ffi_test_crl());
 
+#if defined(BOTAN_HAS_ZFEC)
+	 results.push_back(ffi_test_zfec());
+#endif
+
 #if defined(BOTAN_HAS_AES)
          results.push_back(ffi_test_block_ciphers());
          results.push_back(ffi_test_ciphers_cbc());
@@ -325,6 +329,27 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
+
+     static Test::Result ffi_test_zfec()
+     {
+       Test::Result result("FFI ZFEC");
+       size_t K = 1;
+       size_t N = 3;
+       uint8_t input[] = "Does this work?";
+       size_t size = 15;
+       uint8_t **outputs = new uint8_t*[N];
+       size_t *sizes = new size_t[N];
+
+       REQUIRE_FFI_OK(botan_zfec_encode, (K, N, input, size, outputs, sizes));
+
+       for (size_t n = 0; n < N; ++N) {
+	 delete[] outputs[n];
+       }
+       delete[] outputs;
+       delete[] sizes;
+
+       return result;
+     }
 
       static Test::Result ffi_test_crl()
          {
