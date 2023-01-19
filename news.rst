@@ -1,6 +1,18 @@
 Release Notes
 ========================================
 
+Version 2.19.4, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a bug in SHAKE_Cipher which could cause incorrect output
+  if set_key was called multiple times. (GH #3192)
+
+* Fix a bug in PKCS11 AttributeContainer where adding an attribute
+  that already existed could cause incorrect references to the
+  existing attributes. (GH #3185)
+
+* Fix a build time problem affecting VCpkg (GH #3071)
+
 Version 2.19.3, 2022-11-16
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
