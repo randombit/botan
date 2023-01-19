@@ -13,6 +13,7 @@
 #include <botan/internal/loadstor.h>
 #include <string>
 #include <vector>
+#include <span>
 
 namespace Botan {
 
@@ -24,7 +25,7 @@ namespace TLS {
 class TLS_Data_Reader final
    {
    public:
-      TLS_Data_Reader(const char* type, const std::vector<uint8_t>& buf_in) :
+      TLS_Data_Reader(const char* type, std::span<const uint8_t> buf_in) :
          m_typename(type), m_buf(buf_in), m_offset(0) {}
 
       void assert_done() const
@@ -201,7 +202,7 @@ class TLS_Data_Reader final
          }
 
       const char* m_typename;
-      const std::vector<uint8_t>& m_buf;
+      std::span<const uint8_t> m_buf;
       size_t m_offset;
    };
 
