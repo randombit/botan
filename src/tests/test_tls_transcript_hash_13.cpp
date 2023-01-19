@@ -73,7 +73,7 @@ std::vector<Test::Result> transcript_hash()
       Botan_Tests::CHECK("update without an algorithm", [](Test::Result& result)
          {
          Transcript_Hash_State h;
-         result.test_no_throw("update is successful", [&] { h.update({0xba, 0xad, 0xbe, 0xef}); });
+         result.test_no_throw("update is successful", [&] { h.update(Botan::hex_decode("baadbeef")); });
          result.test_throws<Botan::Invalid_State>("previous throws invalid state exception",
                [&] { h.previous(); });
          result.test_throws<Botan::Invalid_State>("current throws invalid state exception",
@@ -98,12 +98,12 @@ std::vector<Test::Result> transcript_hash()
          {
          Transcript_Hash_State h("SHA-256");
 
-         h.update({0xba, 0xad, 0xbe, 0xef});
+         h.update(Botan::hex_decode("baadbeef"));
          result.test_throws<Botan::Invalid_State>("previous throws invalid state exception",
                [&] { h.previous(); });
          result.test_eq("c = SHA-256(baadbeef)", h.current(), sha256("baadbeef"));
 
-         h.update({0x60, 0x0d, 0xf0, 0x0d});
+         h.update(Botan::hex_decode("600df00d"));
          result.test_eq("p = SHA-256(baadbeef)", h.previous(), sha256("baadbeef"));
          result.test_eq("c = SHA-256(deadbeef | goodfood)", h.current(), sha256("baadbeef600df00d"));
          }),
@@ -112,7 +112,7 @@ std::vector<Test::Result> transcript_hash()
          {
          Transcript_Hash_State h;
 
-         h.update({0xba, 0xad, 0xbe, 0xef});
+         h.update(Botan::hex_decode("baadbeef"));
          h.set_algorithm("SHA-256");
 
          result.test_throws<Botan::Invalid_State>("previous throws invalid state exception",
@@ -124,8 +124,8 @@ std::vector<Test::Result> transcript_hash()
          {
          Transcript_Hash_State h;
 
-         h.update({0xba, 0xad, 0xbe, 0xef});
-         h.update({0x60, 0x0d, 0xf0, 0x0d});
+	 h.update(Botan::hex_decode("baadbeef"));
+	 h.update(Botan::hex_decode("600df00d"));
          h.set_algorithm("SHA-256");
 
          result.test_eq("c = SHA-256(baadbeef | goodfood)", h.current(), sha256("baadbeef600df00d"));
@@ -136,14 +136,14 @@ std::vector<Test::Result> transcript_hash()
          Transcript_Hash_State h;
 
          std::array<uint8_t, 2> baad{0xba, 0xad};
-         h.update(baad.data(), baad.size());
-         h.update({0xbe, 0xef});
+         h.update(baad);
+         h.update(std::array<uint8_t, 2>{0xbe, 0xef});
 
          h.set_algorithm("SHA-256");
 
          std::array<uint8_t, 2> food{0xf0, 0x0d};
-         h.update({0x60, 0x0d});
-         h.update(food.data(), food.size());
+         h.update(std::array<uint8_t, 2>{0x60, 0x0d});
+         h.update(food);
 
          result.test_eq("c = SHA-256(baadbeef | goodfood)", h.current(), sha256("baadbeef600df00d"));
          }),
@@ -152,14 +152,14 @@ std::vector<Test::Result> transcript_hash()
          {
          Transcript_Hash_State h1("SHA-256");
 
-         h1.update({0xba, 0xad, 0xbe, 0xef});
-         h1.update({0x60, 0x0d, 0xf0, 0x0d});
+         h1.update(std::array<uint8_t, 4>{0xba, 0xad, 0xbe, 0xef});
+         h1.update(std::array<uint8_t, 4>{0x60, 0x0d, 0xf0, 0x0d});
 
          auto h2 = h1.clone();
          result.test_eq("c1 = SHA-256(baadbeef | goodfood)", h1.current(), sha256("baadbeef600df00d"));
          result.test_eq("c2 = SHA-256(baadbeef | goodfood)", h2.current(), sha256("baadbeef600df00d"));
 
-         h1.update({0xca, 0xfe, 0xd0, 0x0d});
+         h1.update(std::array<uint8_t, 4>{0xca, 0xfe, 0xd0, 0x0d});
          result.test_eq("c1 = SHA-256(baadbeef | goodfood | cafedude)", h1.current(), sha256("baadbeef600df00dcafed00d"));
          result.test_eq("c2 = SHA-256(baadbeef | goodfood)", h2.current(), sha256("baadbeef600df00d"));
          }),
@@ -168,8 +168,8 @@ std::vector<Test::Result> transcript_hash()
          {
          Transcript_Hash_State h1;
 
-         h1.update({0xc0, 0xca, 0xc0, 0x1a} /* client hello 1 */);
-         h1.update({0xc0, 0x01, 0xf0, 0x0d} /* hello retry request */);
+         h1.update(std::array<uint8_t, 4>{0xc0, 0xca, 0xc0, 0x1a} /* client hello 1 */);
+         h1.update(std::array<uint8_t, 4>{0xc0, 0x01, 0xf0, 0x0d} /* hello retry request */);
 
          auto h2 = Transcript_Hash_State::recreate_after_hello_retry_request("SHA-256", h1);
 
@@ -194,7 +194,7 @@ std::vector<Test::Result> transcript_hash()
          result.test_eq("current hash", h1.current(), sha256_full_ch);
 
          // truncated hash is cleared as soon as new messages are read
-         h1.update({0xc0, 0xca, 0xc0, 0x1a} /* server hello */);
+         h1.update(std::array<uint8_t, 4>{0xc0, 0xca, 0xc0, 0x1a} /* server hello */);
          result.test_throws("truncated hash is cleared", [&] { h1.truncated(); });
          }),
       };

@@ -156,8 +156,10 @@ std::vector<uint8_t> read_hash_state(std::unique_ptr<HashFunction>& hash)
 
 }  // namespace
 
-void Transcript_Hash_State::update(const uint8_t* serialized_message, const size_t serialized_message_length)
+void Transcript_Hash_State::update(std::span<const uint8_t> serialized_message_s)
    {
+   auto serialized_message = serialized_message_s.data();
+   auto serialized_message_length = serialized_message_s.end() - serialized_message_s.begin();
    if(m_hash != nullptr)
       {
       auto truncation_mark = serialized_message_length;
