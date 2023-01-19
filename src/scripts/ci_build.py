@@ -323,10 +323,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        add_boost_support = target in ['coverage', 'sanitizer', 'shared'] \
-            and not (target_os == 'osx' and target_cc == 'gcc')
+        def add_boost_support(target, target_os):
+            if target in ['coverage', 'shared']:
+                return True
 
-        if add_boost_support:
+            if target == 'sanitizer' and target_os == 'linux':
+                return True
+
+            return False
+
+        if add_boost_support(target, target_os):
             flags += ['--with-boost']
             if target_cc == 'clang':
                 # make sure clang ignores warnings in boost headers
