@@ -69,7 +69,10 @@ DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
 bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
                                     bool strong) const
    {
-   return m_group.verify_group(rng, strong) && m_group.verify_public_element(m_y);
+   if(!m_group.verify_public_element(m_y))
+      return false;
+
+   return m_group.verify_group(rng, strong);
    }
 
 /*

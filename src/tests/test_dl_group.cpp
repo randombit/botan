@@ -99,19 +99,20 @@ class DL_Generate_Group_Tests final : public Test
          result.test_eq("DH p size", dh1050.get_p().bits(), 1050);
          result.test_eq("DH q size", dh1050.get_q().bits(), 175);
          result.test_lte("DH g size", dh1050.get_g().bits(), 1050);
-         result.test_eq("DH group verifies", dh1050.verify_group(rng, true), true);
+         result.test_eq("DH group verifies", dh1050.verify_group(rng, false), true);
 
          Botan::DL_Group dh_implicit_q(rng, Botan::DL_Group::Prime_Subgroup, 1040);
          result.test_eq("DH p size", dh_implicit_q.get_p().bits(), 1040);
          result.test_eq("DH q size", dh_implicit_q.get_q().bits(), Botan::dl_exponent_size(1040));
-         result.test_eq("DH group verifies", dh_implicit_q.verify_group(rng, true), true);
+         result.test_lte("DH g size", dh_implicit_q.get_g().bits(), 1040);
+         result.test_eq("DH group verifies", dh_implicit_q.verify_group(rng, false), true);
 
          if(Test::run_long_tests())
             {
             Botan::DL_Group dh_strong(rng, Botan::DL_Group::Strong, 1025);
             result.test_eq("DH p size", dh_strong.get_p().bits(), 1025);
             result.test_eq("DH q size", dh_strong.get_q().bits(), 1024);
-            result.test_eq("DH group verifies", dh_strong.verify_group(rng, true), true);
+            result.test_eq("DH group verifies", dh_strong.verify_group(rng, false), true);
             }
 
 #if defined(BOTAN_HAS_SHA1)
@@ -119,7 +120,7 @@ class DL_Generate_Group_Tests final : public Test
          result.test_eq("DSA p size", dsa1024.get_p().bits(), 1024);
          result.test_eq("DSA q size", dsa1024.get_q().bits(), 160);
          result.test_lte("DSA g size", dsa1024.get_g().bits(), 1024);
-         result.test_eq("DSA group verifies", dsa1024.verify_group(rng, true), true);
+         result.test_eq("DSA group verifies", dsa1024.verify_group(rng, false), true);
 
          const std::vector<uint8_t> short_seed(16);
          const std::vector<uint8_t> invalid_seed(20);
@@ -148,7 +149,7 @@ class DL_Generate_Group_Tests final : public Test
          // Modulo just to avoid embedding entire 1024-bit P in src file
          result.test_eq("DSA p from seed", static_cast<size_t>(dsa_from_seed.get_p() % 4294967291), size_t(2513712339));
 
-         result.test_eq("DSA group from seed verifies", dsa_from_seed.verify_group(rng, true), true);
+         result.test_eq("DSA group from seed verifies", dsa_from_seed.verify_group(rng, false), true);
 #endif
 
          result.end_timer();
@@ -222,7 +223,7 @@ class DL_Named_Group_Tests final : public Test
 
             if(group.p_bits() <= 1536 || Test::run_long_tests())
                {
-               result.test_eq(name + " strong verifies", group.verify_group(Test::rng(), true), true);
+               result.test_eq(name + " verifies", group.verify_group(Test::rng()), true);
                }
 
             }
