@@ -1912,7 +1912,33 @@ int botan_srp6_client_agree(const char *username, const char *password,
  * @return 0 on success, negative on failure
  */
 BOTAN_PUBLIC_API(3, 0)
-int botan_zfec_encode(size_t K, size_t N, const uint8_t input[], size_t size, uint8_t **outputs, size_t *sizes);
+int botan_zfec_encode(size_t K, size_t N, const uint8_t *input, size_t size, uint8_t **outputs, size_t *sizes);
+
+/**
+ * Decode some previously encoded shares using certain ZFEC parameters.
+ *
+ * @param K the number of shares needed for recovery
+ * @param N the total number of shares
+ * @param inputs K previously encoded shares to decode
+ * @param size the length in bytes of each input
+ *
+ * @param outputs An out parameter representing an array of uint8_t* where
+ *                pointers to FEC decoded data can be stored.  The caller must
+ *                allocate enough memory for K uint8_t*.  Freeing this memory
+ *                is the responsibility of the caller.  Each uint8_t* written
+ *                to the array points to one FEC decoding output.  The length
+ *                of these arrays is given by corresponding elements in the
+ *                sizes out parameter.  Freeing the memory for these arrays is
+ *                the responsibility of the caller.
+ *
+ * @param sizes An out parameter for the sizes of the FEC decoded data.  The
+ *              caller must allocate enough memory for K size_t.  Freeing the
+ *              memory for this array is the responsibility of the caller.
+ *
+ * @return 0 on success, negative on failure
+ */
+BOTAN_PUBLIC_API(3, 0)
+int botan_zfec_decode(size_t K, size_t N, uint8_t *const*const inputs, size_t size, uint8_t **outputs, size_t *sizes);
 
 #ifdef __cplusplus
 }

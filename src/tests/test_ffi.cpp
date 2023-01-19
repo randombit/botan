@@ -329,29 +329,57 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-
      static Test::Result ffi_test_zfec()
      {
        Test::Result result("FFI ZFEC");
+
+#if defined(BOTAN_HAS_ZFEC)
+       /* exercise a simple success case
+	*/
        size_t K = 1;
        size_t N = 3;
        uint8_t input[] = "Does this work?";
        size_t size = 15;
-       uint8_t **outputs = new uint8_t*[N];
-       size_t *sizes = new size_t[N];
+       uint8_t **encoded = new uint8_t*[N];
+       size_t *encodedSizes = new size_t[N];
 
-       REQUIRE_FFI_OK(botan_zfec_encode, (K, N, input, size, outputs, sizes));
+       uint8_t **decoded = new uint8_t*[K];
+       size_t *decodedSizes = new size_t[K];
 
-       for (size_t n = 0; n < N; ++N) {
-	 delete[] outputs[n];
+       REQUIRE_FFI_OK(botan_zfec_encode, (K, N, input, size, encoded, encodedSizes));
+       REQUIRE_FFI_OK(botan_zfec_decode, (K, N, encoded, size, decoded, decodedSizes));
+
+       for (size_t k = 0, pos = 0; k < K; ++k) {
+	 TEST_FFI_RC(0, botan_same_mem, (input + pos, decoded[k], size));
+	 pos += size;
        }
-       delete[] outputs;
-       delete[] sizes;
+
+       for (size_t n = 0; n < N; ++n) {
+	 delete[] encoded[n];
+       }
+       delete[] encoded;
+       delete[] encodedSizes;
+
+       for (size_t k = 0; k < K; ++k) {
+	 delete[] decoded[k];
+       }
+       delete decodedSizes;
+
+       /* exercise a couple basic failure cases, such as you encounter if the
+	* caller supplies invalid parameters.
+	*/
+       TEST_FFI_FAIL("encode with out-of-bounds encoding parameters should have failed",
+		     botan_zfec_encode,
+		     (0, 0, NULL, 0, NULL, NULL));
+       TEST_FFI_FAIL("decode with out-of-bounds encoding parameters should have failed",
+		     botan_zfec_decode,
+		     (0, 0, NULL, 0, NULL, NULL));
+#endif
 
        return result;
      }
 
-      static Test::Result ffi_test_crl()
+     static Test::Result ffi_test_crl()
          {
          Test::Result result("FFI CRL");
 
