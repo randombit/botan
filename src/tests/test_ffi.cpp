@@ -343,7 +343,7 @@ class FFI_Unit_Tests final : public Test
        // The decoder needs to know the indexes of the blocks being passed in
        // to it.  This array must equal [0..N) for the logic in the decoding
        // loop below to hold.
-       const size_t indexes[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+       const std::vector<size_t> indexes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
        // This will be the size of each encoded (or decoded) block.  This is
        // an arbitrary value but it must match up with the length of the test
@@ -360,15 +360,15 @@ class FFI_Unit_Tests final : public Test
        const uint8_t input[totalSize + 1] = "Does this work?AAAAAAAAAAAAAAAzzzzzzzzzzzzzzz";
 
        // Allocate memory for the encoding and decoding output parameters.
-       uint8_t **encoded = new uint8_t*[N];
-       size_t *encodedSizes = new size_t[N];
-       uint8_t **decoded = new uint8_t*[K];
-       size_t *decodedSizes = new size_t[K];
+       std::vector<uint8_t*> encoded(N);
+       std::vector<size_t> encodedSizes(N);
+       std::vector<uint8_t*> decoded(K);
+       std::vector<size_t> decodedSizes(K);
 
        // First encode the complete input string into N blocks where K are
        // required for reconstruction.  The N encoded blocks and their sizes
        // will end up in `encoded` and `encodedSizes` respectively.
-       REQUIRE_FFI_OK(botan_zfec_encode, (K, N, input, totalSize, encoded, encodedSizes));
+       REQUIRE_FFI_OK(botan_zfec_encode, (K, N, input, totalSize, encoded.data(), encodedSizes.data()));
 
        // The data is spread across N blocks.  Each block is the same size -
        // the blockSize.  Check them.
@@ -385,7 +385,7 @@ class FFI_Unit_Tests final : public Test
 	 // Pass in the K shares starting from `offset` (and their indexes) so
 	 // that we can try decoding a certain group of blocks here.  Any K
 	 // shares *should* work.
-	 REQUIRE_FFI_OK(botan_zfec_decode, (K, N, indexes + offset, encoded + offset, blockSize, decoded, decodedSizes));
+	 REQUIRE_FFI_OK(botan_zfec_decode, (K, N, indexes.data() + offset, encoded.data() + offset, blockSize, decoded.data(), decodedSizes.data()));
 
 	 // Check that the original input bytes (and correct sizes) have been
 	 // written to the output parameter.
@@ -402,12 +402,6 @@ class FFI_Unit_Tests final : public Test
        for (size_t n = 0; n < N; ++n) {
 	 delete[] encoded[n];
        }
-
-       // Clean up the memory we allocated for the output parameters.
-       delete[] encoded;
-       delete[] encodedSizes;
-       delete[] decoded;
-       delete[] decodedSizes;
 
        /* Exercise a couple basic failure cases, such as you encounter if the
 	* caller supplies invalid parameters.  We don't try to exhaustively
