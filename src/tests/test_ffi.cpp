@@ -62,10 +62,7 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_pkcs_hash_id());
          results.push_back(ffi_test_cert_validation());
          results.push_back(ffi_test_crl());
-
-#if defined(BOTAN_HAS_ZFEC)
 	 results.push_back(ffi_test_zfec());
-#endif
 
 #if defined(BOTAN_HAS_AES)
          results.push_back(ffi_test_block_ciphers());
