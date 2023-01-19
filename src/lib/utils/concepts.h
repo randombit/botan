@@ -12,6 +12,7 @@
 #include <compare>
 #include <concepts>
 #include <type_traits>
+#include <ostream>
 
 namespace Botan::concepts {
 
@@ -70,6 +71,7 @@ concept container = requires(T a)
    { a.cbegin() } -> container_iterator<T>;
    { a.cend() } -> container_iterator<T>;
    { a.size() } -> std::same_as<typename T::size_type>;
+   typename T::value_type;
    };
 
 template<typename T>
