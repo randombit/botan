@@ -95,6 +95,27 @@ std::vector<Test::Result> test_container_strong_type()
             { result.confirm("iteration", c > 0); }
          }),
 
+      Botan_Tests::CHECK("container concepts are satisfied", [](auto& result)
+         {
+         using Test_Map = Botan::Strong<std::map<int, std::string>, struct Test_Map_>;
+         using Test_Array = Botan::Strong<std::array<uint64_t, 32>, struct Test_Array_>;
+
+         result.confirm("Test_Nonce is container", Botan::concepts::container<Test_Nonce>);
+         result.confirm("Test_Array is container", Botan::concepts::container<Test_Array>);
+         result.confirm("Test_Map is container", Botan::concepts::container<Test_Map>);
+         result.confirm("Test_Size is not container", !Botan::concepts::container<Test_Size>);
+
+         result.confirm("Test_Nonce is contiguous_container", Botan::concepts::contiguous_container<Test_Nonce>);
+         result.confirm("Test_Array is contiguous_container", Botan::concepts::contiguous_container<Test_Array>);
+         result.confirm("Test_Map is not contiguous_container", !Botan::concepts::contiguous_container<Test_Map>);
+         result.confirm("Test_Size is not contiguous_container", !Botan::concepts::contiguous_container<Test_Size>);
+
+         result.confirm("Test_Nonce is resizable_container", Botan::concepts::resizable_container<Test_Nonce>);
+         result.confirm("Test_Array is not resizable_container", !Botan::concepts::resizable_container<Test_Array>);
+         result.confirm("Test_Map is not resizable_container", !Botan::concepts::resizable_container<Test_Map>);
+         result.confirm("Test_Size is not resizable_container", !Botan::concepts::resizable_container<Test_Size>);
+         }),
+
       Botan_Tests::CHECK("binds to a std::span<>", [](auto& result)
          {
          auto get_size = [](std::span<const uint8_t> data)

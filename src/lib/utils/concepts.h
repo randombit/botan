@@ -48,6 +48,19 @@ concept three_way_comparable = requires(const std::remove_reference_t<T>& a, con
    { a <=> b } -> three_way_comparison_result;
    };
 
+template<class T>
+concept destructible = std::is_nothrow_destructible_v<T>;
+
+template<class T, class... Args>
+concept constructible_from =
+   destructible<T> && std::is_constructible_v<T, Args...>;
+
+template<class T>
+concept default_initializable =
+    constructible_from<T> &&
+    requires { T{}; } &&
+    requires { ::new (static_cast<void*>(nullptr)) T; };
+
 // TODO: C++20 provides concepts like std::ranges::range or ::sized_range
 //       but at the time of this writing clang had not caught up on all
 //       platforms. E.g. clang 14 on Xcode does not support ranges properly.
