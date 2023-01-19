@@ -126,7 +126,7 @@ jobs:
       matrix:
         include:
           - target: coverage
-            compiler: gcc
+            compiler: clang
             host_os: ubuntu-22.04
           - target: valgrind
             compiler: gcc
