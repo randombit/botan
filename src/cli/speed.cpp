@@ -966,6 +966,17 @@ class Speed final : public Command
                }
 
             record_result(encrypt_timer);
+
+            if(verbose())
+               {
+               auto ks_timer = make_timer(cipher.name(), buffer.size(), "write_keystream", provider, buf_size);
+
+               while(ks_timer->under(runtime))
+                  {
+                  ks_timer->run([&]() { cipher.write_keystream(buffer.data(), buffer.size()); });
+                  }
+               record_result(ks_timer);
+               }
             }
          }
 #endif

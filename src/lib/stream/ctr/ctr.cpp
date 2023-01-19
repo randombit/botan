@@ -122,6 +122,38 @@ void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_pad_pos += length;
    }
 
+void CTR_BE::write_keystream(uint8_t out[], size_t length)
+   {
+   verify_key_set(m_iv.empty() == false);
+
+   const size_t avail = m_pad.size() - m_pad_pos;
+   const size_t take = std::min(length, avail);
+   copy_mem(out, &m_pad[m_pad_pos], take);
+   length -= take;
+   out += take;
+   m_pad_pos += take;
+
+   while(length >= m_pad.size())
+      {
+      add_counter(m_ctr_blocks);
+      m_cipher->encrypt_n(m_counter.data(), out, m_ctr_blocks);
+
+      length -= m_pad.size();
+      out += m_pad.size();
+      }
+
+   if(m_pad_pos == m_pad.size())
+      {
+      add_counter(m_ctr_blocks);
+      m_cipher->encrypt_n(m_counter.data(), m_pad.data(), m_ctr_blocks);
+      m_pad_pos = 0;
+      }
+
+   copy_mem(out, &m_pad[0], length);
+   m_pad_pos += length;
+   BOTAN_ASSERT_NOMSG(m_pad_pos < m_pad.size());
+   }
+
 void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
    {
    if(!valid_iv_length(iv_len))
