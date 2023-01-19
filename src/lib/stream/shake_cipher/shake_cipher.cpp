@@ -44,6 +44,7 @@ void SHAKE_128_Cipher::key_schedule(const uint8_t key[], size_t length)
    m_state.resize(25);
    m_buffer.resize(SHAKE_128_BITRATE/8);
    zeroise(m_state);
+   m_buf_pos = 0;
 
    const size_t S_pos = SHA_3::absorb(SHAKE_128_BITRATE, m_state, 0, key, length);
    SHA_3::finish(SHAKE_128_BITRATE, m_state, S_pos, 0x1F, 0x80);
