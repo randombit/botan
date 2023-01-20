@@ -69,6 +69,16 @@ ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
                    "ChaCha only supports 8, 12 or 20 rounds");
    }
 
+size_t ChaCha::parallelism()
+   {
+#if defined(BOTAN_HAS_CHACHA_AVX2)
+   if(CPUID::has_avx2())
+      return 8;
+#endif
+
+   return 4;
+   }
+
 std::string ChaCha::provider() const
    {
 #if defined(BOTAN_HAS_CHACHA_AVX2)
@@ -88,34 +98,43 @@ std::string ChaCha::provider() const
    return "base";
    }
 
-//static
-void ChaCha::chacha_x8(uint8_t output[64*8], uint32_t input[16], size_t rounds)
+void ChaCha::chacha(uint8_t output[],
+                    size_t output_blocks,
+                    uint32_t state[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
 
 #if defined(BOTAN_HAS_CHACHA_AVX2)
    if(CPUID::has_avx2())
       {
-      return ChaCha::chacha_avx2_x8(output, input, rounds);
+      while(output_blocks >= 8)
+         {
+         ChaCha::chacha_avx2_x8(output, state, rounds);
+         output += 8*64;
+         output_blocks -= 8;
+         }
       }
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_SIMD32)
    if(CPUID::has_simd_32())
       {
-      ChaCha::chacha_simd32_x4(output, input, rounds);
-      ChaCha::chacha_simd32_x4(output + 4*64, input, rounds);
-      return;
+      while(output_blocks >= 4)
+         {
+         ChaCha::chacha_simd32_x4(output, state, rounds);
+         output += 4*64;
+         output_blocks -= 4;
+         }
       }
 #endif
 
    // TODO interleave rounds
-   for(size_t i = 0; i != 8; ++i)
+   for(size_t i = 0; i != output_blocks; ++i)
       {
-      uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
-               x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
-               x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
-               x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
+      uint32_t x00 = state[ 0], x01 = state[ 1], x02 = state[ 2], x03 = state[ 3],
+               x04 = state[ 4], x05 = state[ 5], x06 = state[ 6], x07 = state[ 7],
+               x08 = state[ 8], x09 = state[ 9], x10 = state[10], x11 = state[11],
+               x12 = state[12], x13 = state[13], x14 = state[14], x15 = state[15];
 
       for(size_t r = 0; r != rounds / 2; ++r)
          {
@@ -130,22 +149,22 @@ void ChaCha::chacha_x8(uint8_t output[64*8], uint32_t input[16], size_t rounds)
          chacha_quarter_round(x03, x04, x09, x14);
          }
 
-      x00 += input[0];
-      x01 += input[1];
-      x02 += input[2];
-      x03 += input[3];
-      x04 += input[4];
-      x05 += input[5];
-      x06 += input[6];
-      x07 += input[7];
-      x08 += input[8];
-      x09 += input[9];
-      x10 += input[10];
-      x11 += input[11];
-      x12 += input[12];
-      x13 += input[13];
-      x14 += input[14];
-      x15 += input[15];
+      x00 += state[0];
+      x01 += state[1];
+      x02 += state[2];
+      x03 += state[3];
+      x04 += state[4];
+      x05 += state[5];
+      x06 += state[6];
+      x07 += state[7];
+      x08 += state[8];
+      x09 += state[9];
+      x10 += state[10];
+      x11 += state[11];
+      x12 += state[12];
+      x13 += state[13];
+      x14 += state[14];
+      x15 += state[15];
 
       store_le(x00, output + 64 * i + 4 *  0);
       store_le(x01, output + 64 * i + 4 *  1);
@@ -164,8 +183,8 @@ void ChaCha::chacha_x8(uint8_t output[64*8], uint32_t input[16], size_t rounds)
       store_le(x14, output + 64 * i + 4 * 14);
       store_le(x15, output + 64 * i + 4 * 15);
 
-      input[12]++;
-      input[13] += (input[12] == 0);
+      state[12]++;
+      state[13] += (state[12] == 0);
       }
    }
 
@@ -181,7 +200,8 @@ void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
       const size_t available = m_buffer.size() - m_position;
 
       xor_buf(out, in, &m_buffer[m_position], available);
-      chacha_x8(m_buffer.data(), m_state.data(), m_rounds);
+      chacha(m_buffer.data(), m_buffer.size() / 64,
+             m_state.data(), m_rounds);
 
       length -= available;
       in += available;
@@ -202,8 +222,11 @@ void ChaCha::write_keystream(uint8_t out[], size_t length)
       {
       const size_t available = m_buffer.size() - m_position;
 
+      // TODO: this could write directly to the output buffer
+      // instead of bouncing it through m_buffer first
       copy_mem(out, &m_buffer[m_position], available);
-      chacha_x8(m_buffer.data(), m_state.data(), m_rounds);
+      chacha(m_buffer.data(), m_buffer.size() / 64,
+             m_state.data(), m_rounds);
 
       length -= available;
       out += available;
@@ -271,9 +294,8 @@ void ChaCha::key_schedule(const uint8_t key[], size_t length)
 
    m_state.resize(16);
 
-   const size_t chacha_parallelism = 8; // chacha_x8
    const size_t chacha_block = 64;
-   m_buffer.resize(chacha_parallelism * chacha_block);
+   m_buffer.resize(parallelism() * chacha_block);
 
    set_iv(nullptr, 0);
    }
@@ -348,7 +370,8 @@ void ChaCha::set_iv(const uint8_t iv[], size_t length)
       m_state[15] = load_le<uint32_t>(iv, 5);
       }
 
-   chacha_x8(m_buffer.data(), m_state.data(), m_rounds);
+   chacha(m_buffer.data(), m_buffer.size() / 64,
+          m_state.data(), m_rounds);
    m_position = 0;
    }
 
@@ -379,7 +402,7 @@ void ChaCha::seek(uint64_t offset)
    m_state[12] = load_le<uint32_t>(out, 0);
    m_state[13] += load_le<uint32_t>(out, 1);
 
-   chacha_x8(m_buffer.data(), m_state.data(), m_rounds);
+   chacha(m_buffer.data(), m_buffer.size() / 64, m_state.data(), m_rounds);
    m_position = offset % 64;
    }
 }

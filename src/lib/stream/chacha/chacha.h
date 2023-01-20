@@ -58,7 +58,12 @@ class ChaCha final : public StreamCipher
 
       void initialize_state();
 
-      static void chacha_x8(uint8_t output[64*8], uint32_t state[16], size_t rounds);
+      static size_t parallelism();
+
+      static void chacha(uint8_t output[],
+                         size_t output_blocks,
+                         uint32_t state[16],
+                         size_t rounds);
 
 #if defined(BOTAN_HAS_CHACHA_SIMD32)
       static void chacha_simd32_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds);
