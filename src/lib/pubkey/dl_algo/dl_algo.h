@@ -69,6 +69,8 @@ class BOTAN_PUBLIC_API(2,0) DL_Scheme_PublicKey : public virtual Public_Key
       size_t key_length() const override;
       size_t estimated_strength() const override;
 
+      const BigInt& get_int_field(const std::string& field) const override;
+
       DL_Scheme_PublicKey& operator=(const DL_Scheme_PublicKey& other) = default;
 
    protected:
@@ -115,6 +117,8 @@ class BOTAN_PUBLIC_API(2,0) DL_Scheme_PrivateKey : public virtual DL_Scheme_Publ
       secure_vector<uint8_t> private_key_bits() const override;
 
       DL_Scheme_PrivateKey& operator=(const DL_Scheme_PrivateKey& other) = default;
+
+      const BigInt& get_int_field(const std::string& field) const override;
 
    protected:
       /**

@@ -142,6 +142,15 @@ class BOTAN_PUBLIC_API(2,0) Invalid_Argument : public Exception
    };
 
 /**
+* An invalid/unknown field name was passed to Public_Key::get_int_field
+*/
+class BOTAN_PUBLIC_API(3,0) Unknown_PK_Field_Name final : public Invalid_Argument
+   {
+   public:
+      Unknown_PK_Field_Name(const std::string& algo_name, const std::string& field_name);
+   };
+
+/**
 * An invalid key length was used
 */
 class BOTAN_PUBLIC_API(2,0) Invalid_Key_Length final : public Invalid_Argument

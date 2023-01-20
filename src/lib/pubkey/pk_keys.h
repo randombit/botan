@@ -15,6 +15,7 @@
 
 namespace Botan {
 
+class BigInt;
 class RandomNumberGenerator;
 
 /**
@@ -94,6 +95,21 @@ class BOTAN_PUBLIC_API(2,0) Public_Key
        * @return Hash of the subject public key
        */
       std::string fingerprint_public(const std::string& alg = "SHA-256") const;
+
+      /**
+      * Access an algorithm specific field
+      *
+      * If the field is not known for this algorithm, an Invalid_Argument is
+      * thrown. The interpretation of the result requires knowledge of which
+      * algorithm is involved. For instance for RSA "p" represents one of the
+      * secret primes, while for DSA "p" is the public prime.
+      *
+      * Some algorithms may not implement this method at all.
+      *
+      * This is primarily used to implement the FFI botan_pubkey_get_field
+      * and botan_privkey_get_field functions.
+      */
+      virtual const BigInt& get_int_field(const std::string& field) const;
 
       // Internal or non-public declarations follow
 
