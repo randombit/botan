@@ -134,7 +134,7 @@ void fuzz(const uint8_t in[], size_t in_len)
                }
 
             // verify it becomes zeroed later
-            std::memset(p, idx, plen);
+            std::memset(p, static_cast<int>(idx), plen);
 
             auto insert = ptrs.insert(std::make_pair(p, plen));
             if(insert.second == false)
