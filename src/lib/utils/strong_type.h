@@ -51,6 +51,11 @@ class Strong_Adapter<T> : public Strong_Base<T>
    {
    public:
       using value_type = typename T::value_type;
+      using size_type = typename T::size_type;
+      using iterator = typename T::iterator;
+      using const_iterator = typename T::const_iterator;
+      using pointer = typename T::pointer;
+      using const_pointer = typename T::const_pointer;
 
    public:
       using Strong_Base<T>::Strong_Base;
@@ -79,7 +84,19 @@ class Strong_Adapter<T> : public Strong_Base<T>
       decltype(auto) end() const noexcept(noexcept(this->get().end()))
          { return this->get().end(); }
 
-      auto size() const noexcept(noexcept(this->get().size()))
+      decltype(auto) cbegin() noexcept(noexcept(this->get().cbegin()))
+         { return this->get().cbegin(); }
+
+      decltype(auto) cbegin() const noexcept(noexcept(this->get().cbegin()))
+         { return this->get().cbegin(); }
+
+      decltype(auto) cend() noexcept(noexcept(this->get().cend()))
+         { return this->get().cend(); }
+
+      decltype(auto) cend() const noexcept(noexcept(this->get().cend()))
+         { return this->get().cend(); }
+
+      size_type size() const noexcept(noexcept(this->get().size()))
          { return this->get().size(); }
 
       decltype(auto) data() noexcept(noexcept(this->get().data()))
@@ -94,7 +111,7 @@ class Strong_Adapter<T> : public Strong_Base<T>
       requires(concepts::has_empty<T>)
          { return this->get().empty(); }
 
-      void resize(size_t size) noexcept(noexcept(this->get().resize(size)))
+      void resize(size_type size) noexcept(noexcept(this->get().resize(size)))
       requires(concepts::resizable_container<T>)
          { this->get().resize(size); }
    };
