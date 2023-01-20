@@ -48,7 +48,7 @@ namespace Botan {
 
 namespace {
 
-KyberMode::Mode mode_from_string(const std::string& str)
+KyberMode::Mode kyber_mode_from_string(const std::string& str)
    {
    if(str == "Kyber-512-90s-r3")
       return KyberMode::Kyber512_90s;
@@ -72,10 +72,10 @@ KyberMode::KyberMode(Mode mode)
    : m_mode(mode) {}
 
 KyberMode::KyberMode(const OID& oid)
-   : m_mode(mode_from_string(oid.to_formatted_string())) {}
+   : m_mode(kyber_mode_from_string(oid.to_formatted_string())) {}
 
 KyberMode::KyberMode(const std::string& str)
-   : m_mode(mode_from_string(str)) {}
+   : m_mode(kyber_mode_from_string(str)) {}
 
 OID KyberMode::get_oid() const
    {

@@ -1,0 +1,17 @@
+<defines>
+DILITHIUM_AES -> 20221018
+</defines>
+
+<module_info>
+name -> "Dilithium (AES)"
+</module_info>
+
+<requires>
+dilithium_common
+aes
+ctr
+</requires>
+
+<header:internal>
+dilithium_aes.h
+</header:internal>

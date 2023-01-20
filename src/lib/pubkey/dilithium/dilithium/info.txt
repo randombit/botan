@@ -1,0 +1,16 @@
+<defines>
+DILITHIUM -> 20221018
+</defines>
+
+<module_info>
+name -> "Dilithium"
+</module_info>
+
+<requires>
+dilithium_common
+shake_cipher
+</requires>
+
+<header:internal>
+dilithium_modern.h
+</header:internal>

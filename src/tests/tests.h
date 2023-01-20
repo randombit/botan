@@ -371,7 +371,7 @@ class Test
                }
 
             template<typename T>
-            bool test_not_null(const std::string& what, T* ptr)
+            bool test_not_null(const std::string& what, const T& ptr)
                {
                if(ptr == nullptr)
                   return test_failure(what + " was null");

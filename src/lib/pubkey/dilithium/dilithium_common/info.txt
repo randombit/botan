@@ -1,0 +1,22 @@
+<defines>
+DILITHIUM_COMMON -> 20221018
+</defines>
+
+<module_info>
+name -> "Dilithium (common)"
+brief -> "Base implementation of CRYSTALS-Dilithium"
+type -> "Internal"
+</module_info>
+
+<header:public>
+dilithium.h
+</header:public>
+
+<header:internal>
+dilithium_polynomials.h
+dilithium_symmetric_primitives.h
+</header:internal>
+
+<requires>
+shake
+</requires>

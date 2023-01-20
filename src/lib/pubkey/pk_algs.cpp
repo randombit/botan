@@ -76,6 +76,10 @@
   #include <botan/sm2.h>
 #endif
 
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+  #include <botan/dilithium.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<Public_Key>
@@ -161,6 +165,11 @@ load_public_key(const AlgorithmIdentifier& alg_id,
       return std::make_unique<XMSS_PublicKey>(key_bits);
 #endif
 
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-"))
+      return std::make_unique<Dilithium_PublicKey>(alg_id, key_bits);
+#endif
+
    throw Decoding_Error("Unknown or unavailable public key algorithm " + alg_name);
    }
 
@@ -168,7 +177,9 @@ std::unique_ptr<Private_Key>
 load_private_key(const AlgorithmIdentifier& alg_id,
                  const secure_vector<uint8_t>& key_bits)
    {
-   const std::string alg_name = alg_id.get_oid().to_formatted_string();
+   const std::string oid_str = alg_id.get_oid().to_formatted_string();
+   const std::vector<std::string> alg_info = split_on(oid_str, '/');
+   const std::string alg_name = alg_info[0];
 
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA")
@@ -243,6 +254,11 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS")
       return std::make_unique<XMSS_PrivateKey>(key_bits);
+#endif
+
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-"))
+      return std::make_unique<Dilithium_PrivateKey>(alg_id, key_bits);
 #endif
 
    throw Decoding_Error("Unknown or unavailable public key algorithm " + alg_name);
@@ -353,6 +369,14 @@ create_private_key(const std::string& alg_name,
       {
       const KyberMode mode(params.empty() ? "Kyber-1024-r3" : params);
       return std::make_unique<Kyber_PrivateKey>(rng, mode);
+      }
+#endif
+
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+   if(alg_name == "Dilithium" || alg_name == "Dilithium-")
+      {
+      const DilithiumMode mode(params.empty() ? "Dilithium-r3/6x5" : params);
+      return std::make_unique<Dilithium_PrivateKey>(rng, mode);
       }
 #endif
 
