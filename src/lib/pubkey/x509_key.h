@@ -62,7 +62,18 @@ inline std::unique_ptr<Public_Key> load_key(const std::string& filename)
 * @param enc the memory region containing the DER or PEM encoded key
 * @return new public key object
 */
-inline std::unique_ptr<Public_Key> load_key(const std::vector<uint8_t>& enc)
+inline std::unique_ptr<Public_Key> load_key(std::vector<uint8_t> enc)
+   {
+   DataSource_Memory source(std::move(enc));
+   return X509::load_key(source);
+   }
+
+/**
+* Create a public key from a memory region.
+* @param enc the memory region containing the DER or PEM encoded key
+* @return new public key object
+*/
+inline std::unique_ptr<Public_Key> load_key(std::span<const uint8_t> enc)
    {
    DataSource_Memory source(enc);
    return X509::load_key(source);

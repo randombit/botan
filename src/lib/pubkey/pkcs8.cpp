@@ -358,6 +358,26 @@ std::unique_ptr<Private_Key> load_key(DataSource& source,
    return load_key(source, get_pass, true);
    }
 
+std::unique_ptr<Private_Key> load_key(std::span<const uint8_t> source,
+                                      const std::function<std::string ()>& get_passphrase)
+   {
+   Botan::DataSource_Memory ds(source);
+   return load_key(ds, get_passphrase);
+   }
+
+std::unique_ptr<Private_Key> load_key(std::span<const uint8_t> source,
+                                      const std::string& pass)
+   {
+   Botan::DataSource_Memory ds(source);
+   return load_key(ds, pass);
+   }
+
+std::unique_ptr<Private_Key> load_key(std::span<const uint8_t> source)
+   {
+   Botan::DataSource_Memory ds(source);
+   return load_key(ds);
+   }
+
 /*
 * Extract an encrypted private key and return it
 */
