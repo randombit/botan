@@ -361,20 +361,12 @@ class FFI_Unit_Tests final : public Test
 
        // Allocate memory for the encoding and decoding output parameters.
        std::vector<uint8_t*> encoded(N);
-       std::vector<size_t> encodedSizes(N);
        std::vector<uint8_t*> decoded(K);
-       std::vector<size_t> decodedSizes(K);
 
        // First encode the complete input string into N blocks where K are
-       // required for reconstruction.  The N encoded blocks and their sizes
-       // will end up in `encoded` and `encodedSizes` respectively.
-       REQUIRE_FFI_OK(botan_zfec_encode, (K, N, input, totalSize, encoded.data(), encodedSizes.data()));
-
-       // The data is spread across N blocks.  Each block is the same size -
-       // the blockSize.  Check them.
-       for (size_t n = 0; n < N; ++n) {
-	 result.test_eq("size of encoded data", encodedSizes[n], blockSize);
-       }
+       // required for reconstruction.  The N encoded blocks will end up in
+       // `encoded`.
+       REQUIRE_FFI_OK(botan_zfec_encode, (K, N, input, totalSize, encoded.data()));
 
        // Any K blocks can be decoded to reproduce the original input (split
        // across an array of K strings of blockSize bytes each).  This loop
@@ -385,15 +377,14 @@ class FFI_Unit_Tests final : public Test
 	 // Pass in the K shares starting from `offset` (and their indexes) so
 	 // that we can try decoding a certain group of blocks here.  Any K
 	 // shares *should* work.
-	 REQUIRE_FFI_OK(botan_zfec_decode, (K, N, indexes.data() + offset, encoded.data() + offset, blockSize, decoded.data(), decodedSizes.data()));
+	 REQUIRE_FFI_OK(botan_zfec_decode, (K, N, indexes.data() + offset, encoded.data() + offset, blockSize, decoded.data()));
 
-	 // Check that the original input bytes (and correct sizes) have been
-	 // written to the output parameter.
+	 // Check that the original input bytes have been written to the
+	 // output parameter.
 	 for (size_t k = 0, pos = 0; k < K; ++k, pos += blockSize) {
 	   TEST_FFI_RC(0, botan_same_mem, (input + pos, decoded[k], blockSize));
 	   // Clean up the memory botan_zfec_decode allocated for this block.
 	   delete[] decoded[k];
-	   result.test_eq("size of decoded data", decodedSizes[k], blockSize);
 	 }
        }
 
@@ -412,10 +403,10 @@ class FFI_Unit_Tests final : public Test
 	*/
        TEST_FFI_FAIL("encode with out-of-bounds encoding parameters should have failed",
 		     botan_zfec_encode,
-		     (0, 0, NULL, 0, NULL, NULL));
+		     (0, 0, NULL, 0, NULL));
        TEST_FFI_FAIL("decode with out-of-bounds encoding parameters should have failed",
 		     botan_zfec_decode,
-		     (0, 0, NULL, NULL, 0, NULL, NULL));
+		     (0, 0, NULL, NULL, 0, NULL));
 #endif
 
        return result;
