@@ -112,7 +112,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     make_prefix = []
     test_prefix = []
-    test_cmd = [os.path.join(build_dir, 'botan-test'), '--data-dir=%s' % os.path.join(root_dir, 'src', 'tests', 'data'), '--run-memory-intensive-tests']
+    test_cmd = [os.path.join(build_dir, 'botan-test'),
+                '--data-dir=%s' % os.path.join(root_dir, 'src', 'tests', 'data'),
+                '--run-memory-intensive-tests']
 
     # generate JUnit test report
     if test_results_dir:
@@ -321,10 +323,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        add_boost_support = target in ['coverage', 'sanitizer', 'shared'] \
-            and not (target_os == 'osx' and target_cc == 'gcc')
+        def add_boost_support(target, target_os):
+            if target in ['coverage', 'shared']:
+                return True
 
-        if add_boost_support:
+            if target == 'sanitizer' and target_os == 'linux':
+                return True
+
+            return False
+
+        if add_boost_support(target, target_os):
             flags += ['--with-boost']
             if target_cc == 'clang':
                 # make sure clang ignores warnings in boost headers
@@ -350,14 +358,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
 
     if target in ['coverage', 'sanitizer']:
+        test_cmd += ['--run-long-tests']
+
         if target_os == 'windows' and target == 'sanitizer':
             # GitHub Actions worker intermittently ran out of memory when
             # asked to allocate multi-gigabyte buffers under MSVC's ASan.
-            try:
-                test_cmd.remove('--run-memory-intensive-tests')
-            except ValueError:
-                pass
-        test_cmd += ['--run-long-tests']
+            test_cmd.remove('--run-memory-intensive-tests')
+
+            # MSVC sanitizer produces very slow code causing some of the
+            # slower tests to take as long as 5 minutes
+            test_cmd.remove('--run-long-tests')
 
     flags += ['--cc-bin=%s' % (cc_bin)]
 
