@@ -6,12 +6,18 @@
  */
 
 #include "tests.h"
+#include "test_rng.h"
 
 #include <botan/strong_type.h>
 #include <botan/hex.h>
+#include <botan/rng.h>
+#include <botan/secmem.h>
 
 #include <sstream>
 #include <algorithm>
+#include <array>
+#include <vector>
+#include <string>
 
 namespace Botan_Tests {
 
@@ -154,6 +160,30 @@ std::vector<Test::Result> test_container_strong_type()
          result.test_eq("2", hashes.get().at(1).get(), size_t(2));
          result.test_eq("3", hashes.get().at(2).get(), size_t(3));
          result.test_eq("4", hashes.get().at(3).get(), size_t(4));
+         }),
+
+      Botan_Tests::CHECK("byte-container strong types can be randomly generated", [](auto& result)
+         {
+         using Test_Buffer = Botan::Strong<std::vector<uint8_t>, struct Test_Buffer_>;
+         using Test_Secure_Buffer = Botan::Strong<Botan::secure_vector<uint8_t>, struct Test_Secure_Buffer_>;
+         using Test_Fixed_Array = Botan::Strong<std::array<uint8_t, 4>, struct Test_Fixed_Array_>;
+
+         Botan_Tests::Fixed_Output_RNG rng;
+         const auto e1 = Botan::hex_decode("deadbeef");
+         const auto e2 = Botan::hex_decode("baadcafe");
+         const auto e3 = Botan::hex_decode("baadf00d");
+         rng.add_entropy(e1.data(), e1.size());
+         rng.add_entropy(e2.data(), e2.size());
+         rng.add_entropy(e3.data(), e3.size());
+
+         auto tb = rng.random_vec<Test_Buffer>(4);
+         auto tsb = rng.random_vec<Test_Secure_Buffer>(4);
+         Test_Fixed_Array tfa;
+         rng.random_vec(tfa);
+
+         result.test_eq("generated expected output", tb.get(), Botan::hex_decode("deadbeef"));
+         result.test_eq("generated expected secure output", tsb.get(), Botan::hex_decode_locked("baadcafe"));
+         result.test_eq("generated expected fixed output", std::vector(tfa.begin(), tfa.end()), Botan::hex_decode("baadf00d"));
          }),
       };
    }

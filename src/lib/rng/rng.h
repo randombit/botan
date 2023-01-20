@@ -1,6 +1,7 @@
 /*
 * Random Number Generator base classes
 * (C) 1999-2009,2015,2016 Jack Lloyd
+*     2023                René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,12 +9,16 @@
 #ifndef BOTAN_RANDOM_NUMBER_GENERATOR_H_
 #define BOTAN_RANDOM_NUMBER_GENERATOR_H_
 
+#include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/exceptn.h>
 #include <botan/mutex.h>
+
 #include <type_traits>
 #include <chrono>
 #include <string>
+#include <span>
+#include <concepts>
 
 namespace Botan {
 
@@ -158,24 +163,52 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       // Some utility functions built on the interface above:
 
       /**
-      * Return a random vector
-      * @param bytes number of bytes in the result
-      * @return randomized vector of length bytes
-      * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
-      * @throws Exception if the RNG fails
+      * Fill a given byte container with @p bytes random bytes
+      *
+      * @param  v     the container to be filled with @p bytes random bytes
+      * @throws Exception if RNG fails
       */
-      secure_vector<uint8_t> random_vec(size_t bytes)
+      void random_vec(std::span<uint8_t> v)
          {
-         secure_vector<uint8_t> output;
-         random_vec(output, bytes);
-         return output;
+         this->randomize(v.data(), v.size());
          }
 
-      template<typename Alloc>
-         void random_vec(std::vector<uint8_t, Alloc>& v, size_t bytes)
+      /**
+      * Resize a given byte container to @p bytes and fill it with random bytes
+      *
+      * @tparam T     the desired byte container type (e.g std::vector<uint8_t>)
+      * @param  v     the container to be filled with @p bytes random bytes
+      * @param  bytes number of random bytes to initialize the container with
+      * @throws Exception if RNG or memory allocation fails
+      */
+      template<typename T>
+      requires(concepts::contiguous_container<T> &&
+               concepts::resizable_container<T> &&
+               std::same_as<typename T::value_type, uint8_t>)
+      void random_vec(T& v, size_t bytes)
          {
          v.resize(bytes);
-         this->randomize(v.data(), v.size());
+         random_vec(v);
+         }
+
+      /**
+      * Create some byte container type and fill it with some random @p bytes.
+      *
+      * @tparam T     the desired byte container type (e.g std::vector<uint8_t>)
+      * @param  bytes number of random bytes to initialize the container with
+      * @return       a container of type T with @p bytes random bytes
+      * @throws Exception if RNG or memory allocation fails
+      */
+      template<typename T = secure_vector<uint8_t>>
+      requires(concepts::contiguous_container<T> &&
+               concepts::resizable_container<T> &&
+               concepts::default_initializable<T> &&
+               std::same_as<typename T::value_type, uint8_t>)
+      T random_vec(size_t bytes)
+         {
+         T result;
+         random_vec(result, bytes);
+         return result;
          }
 
       /**
