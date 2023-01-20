@@ -12,7 +12,6 @@ extern "C" {
   int botan_zfec_encode(size_t K, size_t N, const uint8_t *input, size_t size, uint8_t **outputs) {
     return Botan_FFI::ffi_guard_thunk(__func__, [=]() -> int {
       Botan::ZFEC(K, N).encode(input, size, [=](size_t index, const uint8_t block[], size_t blockSize) -> void {
-	  outputs[index] = new uint8_t[blockSize];
 	  std::copy(block, block + blockSize, outputs[index]);
 	});
       return BOTAN_FFI_SUCCESS;
@@ -26,7 +25,6 @@ extern "C" {
 	shares.insert(std::pair<size_t, const uint8_t*>(indexes[k], inputs[k]));
       }
       Botan::ZFEC(K, N).decode_shares(shares, shareSize, [=](size_t index, const uint8_t block[], size_t blockSize) -> void {
-	  outputs[index] = new uint8_t[blockSize];
 	  std::copy(block, block + blockSize, outputs[index]);
 	});
       return BOTAN_FFI_SUCCESS;

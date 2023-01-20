@@ -362,6 +362,12 @@ class FFI_Unit_Tests final : public Test
        // Allocate memory for the encoding and decoding output parameters.
        std::vector<uint8_t*> encoded(N);
        std::vector<uint8_t*> decoded(K);
+       for (size_t n = 0; n < N; ++n) {
+	 encoded[n] = new uint8_t[blockSize];
+       };
+       for (size_t k = 0; k < K; ++k) {
+	 decoded[k] = new uint8_t[blockSize];
+       };
 
        // First encode the complete input string into N blocks where K are
        // required for reconstruction.  The N encoded blocks will end up in
@@ -383,15 +389,15 @@ class FFI_Unit_Tests final : public Test
 	 // output parameter.
 	 for (size_t k = 0, pos = 0; k < K; ++k, pos += blockSize) {
 	   TEST_FFI_RC(0, botan_same_mem, (input + pos, decoded[k], blockSize));
-	   // Clean up the memory botan_zfec_decode allocated for this block.
-	   delete[] decoded[k];
 	 }
        }
 
-       // Clean up the memory botan_zfec_encode allocated for the encoded
-       // blocks.
+       // Clean up the memory we allocated at the top.
        for (size_t n = 0; n < N; ++n) {
 	 delete[] encoded[n];
+       }
+       for (size_t k = 0; k < K; ++k) {
+	 delete[] decoded[k];
        }
 
        /* Exercise a couple basic failure cases, such as you encounter if the

@@ -1896,15 +1896,9 @@ int botan_srp6_client_agree(const char *username, const char *password,
  * @param input the data to FEC
  * @param size the length in bytes of input
  *
- * @param outputs An out parameter representing an array of uint8_t* where
- *                pointers to FEC encoded data can be stored.  The caller must
- *                allocate enough memory for N uint8_t*.  Freeing this memory
- *                is the responsibility of the caller.  Each uint8_t* written
- *                to the array points to one FEC output.  The length of these
- *                arrays is given by corresponding elements in the sizes out
- *                parameter.  Freeing the memory for these arrays is the
- *                responsibility of the caller.
- *
+ * @param outputs An out parameter pointing to a fully allocated array of size
+ *                [N][size / K].  For all n in range, an encoded block will be
+ *                written to the memory starting at outputs[n][0].
  *
  * @return 0 on success, negative on failure
  */
@@ -1921,16 +1915,11 @@ int botan_zfec_encode(size_t K, size_t N, const uint8_t *input, size_t size, uin
  *                element of the inputs array.
  *
  * @param inputs K previously encoded shares to decode
- * @param outputs An out parameter representing an array of uint8_t* where
- *                pointers to FEC decoded data can be stored.  The caller must
- *                allocate enough memory for K uint8_t*.  Freeing this memory
- *                is the responsibility of the caller.  Each uint8_t* written
- *                to the array points to one FEC decoding output.  The length
- *                of these arrays is given by corresponding elements in the
- *                sizes out parameter.  Freeing the memory for these arrays is
- *                the responsibility of the caller.
  * @param shareSize the length in bytes of each input
  *
+ * @param outputs An out parameter pointing to a fully allocated array of size
+ *                [K][shareSize].  For all k in range, a decoded block will
+ *                written to the memory starting at outputs[k][0].
  *
  * @return 0 on success, negative on failure
  */
