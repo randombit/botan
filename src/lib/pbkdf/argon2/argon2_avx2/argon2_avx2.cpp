@@ -163,7 +163,7 @@ class SIMD_4x64 final
          D = SIMD_4x64::permute_4x64<0b00'11'10'01>(D);
          }
 
-      explicit SIMD_4x64(__m256i x) : m_simd(x) {}
+      explicit BOTAN_FUNC_ISA("avx2") SIMD_4x64(__m256i x) : m_simd(x) {}
    private:
       __m256i m_simd;
    };
