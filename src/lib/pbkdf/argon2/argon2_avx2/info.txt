@@ -1,0 +1,12 @@
+<defines>
+ARGON2_AVX2 -> 20221216
+</defines>
+
+<module_info>
+name -> "Argon2 AVX2"
+brief -> "Argon2 using AVX2 instructions"
+</module_info>
+
+<isa>
+avx2
+</isa>

@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/argon2_ssse3.h>
+#include <botan/argon2.h>
 #include <tmmintrin.h>
 
 namespace Botan {
@@ -228,32 +228,57 @@ BOTAN_FORCE_INLINE void blamka_R(
 
 }
 
-void blamka_ssse3(uint64_t T[128])
+void Argon2::blamka_ssse3(uint64_t N[128], uint64_t T[128])
    {
    for(size_t i = 0; i != 8; ++i)
       {
       SIMD_2x64 Tv[8];
-      for(size_t j = 0; j != 8; ++j)
-         Tv[j] = SIMD_2x64::load_le(&T[2*(8*i+j)]);
+      for(size_t j = 0; j != 4; ++j)
+         {
+         Tv[2*j] = SIMD_2x64::load_le(&N[16*i+4*j]);
+         Tv[2*j+1] = SIMD_2x64::load_le(&N[16*i+4*j+2]);
+         }
 
       blamka_R(Tv[0], Tv[1], Tv[2], Tv[3],
                Tv[4], Tv[5], Tv[6], Tv[7]);
 
-      for(size_t j = 0; j != 8; ++j)
-         Tv[j].store_le(&T[2*(8*i+j)]);
+      for(size_t j = 0; j != 4; ++j)
+         {
+         Tv[2*j].store_le(&T[16*i + 4*j]);
+         Tv[2*j+1].store_le(&T[16*i + 4*j + 2]);
+         }
       }
 
    for(size_t i = 0; i != 8; ++i)
       {
       SIMD_2x64 Tv[8];
-      for(size_t j = 0; j != 8; ++j)
-         Tv[j] = SIMD_2x64::load_le(&T[2*(i+8*j)]);
+      for(size_t j = 0; j != 4; ++j)
+         {
+         Tv[2*j] = SIMD_2x64::load_le(&T[2*i + 32*j]);
+         Tv[2*j+1] = SIMD_2x64::load_le(&T[2*i + 32*j + 16]);
+         }
 
       blamka_R(Tv[0], Tv[1], Tv[2], Tv[3],
                Tv[4], Tv[5], Tv[6], Tv[7]);
 
-      for(size_t j = 0; j != 8; ++j)
-         Tv[j].store_le(&T[2*(i+8*j)]);
+      for(size_t j = 0; j != 4; ++j)
+         {
+         Tv[2*j].store_le(&T[2*i + 32*j]);
+         Tv[2*j+1].store_le(&T[2*i + 32*j + 16]);
+         }
+      }
+
+   for(size_t i = 0; i != 128 / 4; ++i)
+      {
+      SIMD_2x64 n0 = SIMD_2x64::load_le(&N[4*i]);
+      SIMD_2x64 n1 = SIMD_2x64::load_le(&N[4*i+2]);
+      SIMD_2x64 t0 = SIMD_2x64::load_le(&T[4*i]);
+      SIMD_2x64 t1 = SIMD_2x64::load_le(&T[4*i+2]);
+
+      n0 ^= t0;
+      n1 ^= t1;
+      n0.store_le(&N[4*i]);
+      n1.store_le(&N[4*i+2]);
       }
    }
 
