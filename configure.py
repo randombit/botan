@@ -2654,7 +2654,7 @@ class AmalgamationHelper:
     def write_banner(fd):
         fd.write("""/*
 * Botan %s Amalgamation
-* (C) 1999-2020 The Botan Authors
+* (C) 1999-2023 The Botan Authors
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
