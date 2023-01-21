@@ -66,7 +66,7 @@ Find Enclosed
 Transport Layer Security (TLS) Protocol
 ----------------------------------------
 
-* TLS v1.2 and DTLS v1.2
+* TLS v1.2/v1.3, and DTLS v1.2
 * Supported extensions include session tickets, SNI, ALPN, OCSP stapling,
   encrypt-then-mac CBC, and extended master secret.
 * Supports authentication using certificates or preshared keys (PSK)
@@ -90,7 +90,7 @@ Public Key Cryptography
 * RSA signatures and encryption
 * DH and ECDH key agreement
 * Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, GOST 34.10
-* Post-quantum signature scheme XMSS
+* Post-quantum signature schemes Dilithium and XMSS
 * Post-quantum key agreement schemes McEliece and Kyber
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
@@ -105,6 +105,7 @@ Ciphers, hashes, MACs, and checksums
 * Stream ciphers (X)ChaCha20, (X)Salsa20, SHAKE-128, RC4
 * Hash functions SHA-1, SHA-2, SHA-3, MD5, RIPEMD-160, BLAKE2b,
   Skein-512, SM3, Streebog, Whirlpool
+* Password hashing schemes PBKDF2, Argon2, Scrypt, bcrypt
 * Authentication codes HMAC, CMAC, Poly1305, SipHash, GMAC, X9.19 DES-MAC
 * Non-cryptographic checksums Adler32, CRC24, CRC32
 
@@ -116,7 +117,6 @@ Other Useful Things
 * Simple compression API wrapping zlib, bzip2, and lzma libraries
 * RNG wrappers for system RNG and hardware RNGs
 * HMAC_DRBG and entropy collection system for userspace RNGs
-* Password hashing schemes PBKDF2, Argon2, Scrypt, bcrypt
 * SRP-6a password authenticated key exchange
 * Key derivation functions including HKDF, KDF2, SP 800-108, SP 800-56A, SP 800-56C
 * HOTP and TOTP algorithms
