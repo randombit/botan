@@ -9,6 +9,7 @@ name -> "Thread Utilities"
 <header:internal>
 rwlock.h
 barrier.h
+semaphore.h
 thread_pool.h
 </header:internal>
 

@@ -10,20 +10,19 @@
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
 
+#include <botan/internal/semaphore.h>
 #include <botan/internal/barrier.h>
 #include <functional>
-#include <semaphore>
 
 namespace Botan {
 
 struct Threaded_Fork_Data
    {
-   static constexpr size_t max_filters = 1024;
    /*
    * Semaphore for indicating that there is work to be done (or to
    * quit)
    */
-   std::counting_semaphore<max_filters> m_input_ready_semaphore{0};
+   Semaphore m_input_ready_semaphore;
 
    /*
    * Synchronises all threads to complete processing data in lock-step.
@@ -61,10 +60,6 @@ Threaded_Fork::Threaded_Fork(Filter* filters[], size_t count) :
    Fork(nullptr, static_cast<size_t>(0)),
    m_thread_data(new Threaded_Fork_Data)
    {
-   if (count > Threaded_Fork_Data::max_filters)
-      {
-      throw Invalid_Argument("count exceeds the max filters supported");
-      }
    set_next(filters, count);
    }
 
