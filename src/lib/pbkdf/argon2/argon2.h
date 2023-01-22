@@ -58,7 +58,18 @@ class BOTAN_PUBLIC_API(2,11) Argon2 final : public PasswordHash
 
       size_t total_memory_usage() const override { return M() * 1024; }
 
+      /**
+      * Argon2's BLAMKA function
+      */
+      static void blamka(uint64_t N[128], uint64_t T[128]);
    private:
+#if defined(BOTAN_HAS_ARGON2_AVX2)
+      static void blamka_avx2(uint64_t N[128], uint64_t T[128]);
+#endif
+
+#if defined(BOTAN_HAS_ARGON2_SSSE3)
+      static void blamka_ssse3(uint64_t N[128], uint64_t T[128]);
+#endif
 
       void argon2(uint8_t output[], size_t output_len,
                   const char* password, size_t password_len,

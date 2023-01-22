@@ -15,8 +15,7 @@
    #include <botan/internal/thread_pool.h>
 #endif
 
-#if defined(BOTAN_HAS_ARGON2_SSSE3)
-   #include <botan/internal/argon2_ssse3.h>
+#if defined(BOTAN_HAS_ARGON2_AVX2) || defined(BOTAN_HAS_ARGON2_SSSE3)
    #include <botan/internal/cpuid.h>
 #endif
 
@@ -174,12 +173,21 @@ BOTAN_FORCE_INLINE void blamka_G(uint64_t& A, uint64_t& B, uint64_t& C, uint64_t
    B = rotr<63>(B ^ C);
    }
 
-void blamka(uint64_t T[128])
+}
+
+void Argon2::blamka(uint64_t N[128], uint64_t T[128])
    {
+#if defined(BOTAN_HAS_ARGON2_AVX2)
+   if(CPUID::has_avx2())
+      return Argon2::blamka_avx2(N, T);
+#endif
+
 #if defined(BOTAN_HAS_ARGON2_SSSE3)
    if(CPUID::has_ssse3())
-      return blamka_ssse3(T);
+      return Argon2::blamka_ssse3(N, T);
 #endif
+
+   copy_mem(T, N, 128);
 
    for(size_t i = 0; i != 128; i += 16)
       {
@@ -206,7 +214,12 @@ void blamka(uint64_t T[128])
       blamka_G(T[i+ 16], T[i+ 49], T[i+ 64], T[i+ 97]);
       blamka_G(T[i+ 17], T[i+ 32], T[i+ 65], T[i+112]);
       }
+
+   for(size_t i = 0; i != 128; ++i)
+      N[i] ^= T[i];
    }
+
+namespace {
 
 void gen_2i_addresses(uint64_t T[128], uint64_t B[128],
                       size_t n, size_t lane, size_t slice, size_t memory,
@@ -224,12 +237,7 @@ void gen_2i_addresses(uint64_t T[128], uint64_t B[128],
 
    for(size_t r = 0; r != 2; ++r)
       {
-      copy_mem(T, B, 128);
-
-      blamka(T);
-
-      for(size_t i = 0; i != 128; ++i)
-         B[i] ^= T[i];
+      Argon2::blamka(B, T);
       }
    }
 
@@ -308,13 +316,14 @@ void process_block(secure_vector<uint64_t>& B,
       const uint64_t random = use_2i ? addresses[index % 128] : B.at(128*prev);
       const size_t new_offset = index_alpha(random, lanes, segments, threads, n, slice, lane, index);
 
+      uint64_t N[128];
       for(size_t i = 0; i != 128; ++i)
-         T[i] = B[128*prev+i] ^ B[128*new_offset+i];
+         N[i] = B[128*prev+i] ^ B[128*new_offset+i];
 
-      blamka(T);
+      Argon2::blamka(N, T);
 
       for(size_t i = 0; i != 128; ++i)
-         B[128*offset + i] ^= T[i] ^ B[128*prev+i] ^ B[128*new_offset+i];
+         B[128*offset + i] ^= N[i];
 
       index += 1;
       }

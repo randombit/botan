@@ -271,6 +271,8 @@ bool needs_serialization(const std::string& test_name)
       return true;
    if(test_name == "block" || test_name == "hash" || test_name == "mac" || test_name == "stream" || test_name == "aead")
       return true;
+   if(test_name == "argon2")
+      return true;
    if(test_name == "ecc_unit")
       return false;
    return false;

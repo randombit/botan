@@ -2547,6 +2547,12 @@ class ModulesChooser:
                 self._to_load.remove('compression')
                 self._not_using_because['no enabled compression schemes'].add('compression')
 
+        # The AVX2 implementation of Argon2 fails when compiled by GCC in
+        # amalgamation mode.
+        if 'argon2_avx2' in self._to_load and self._options.amalgamation and self._options.compiler == 'gcc':
+            self._to_load.remove('argon2_avx2')
+            self._not_using_because['disabled due to compiler bug'].add('argon2_avx2')
+
         self._resolve_dependencies_for_all_modules()
 
         for not_a_dep in self._maybe_dep:
