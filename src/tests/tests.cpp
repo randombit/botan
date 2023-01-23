@@ -500,24 +500,60 @@ std::string Test::Result::result_string() const
    return report.str();
    }
 
+namespace {
+
+class Test_Registry
+   {
+   public:
+      static Test_Registry& instance()
+         {
+         static Test_Registry registry;
+         return registry;
+         }
+
+      void register_test(std::string category,
+                        std::string name,
+                        std::function<std::unique_ptr<Test>()> maker_fn)
+         {
+         BOTAN_UNUSED(category);
+         if(m_tests.count(name) != 0)
+            throw Test_Error("Duplicate registration of test '" + name + "'");
+
+         m_tests.emplace(std::move(name), std::move(maker_fn));
+         }
+
+      std::unique_ptr<Test> get_test(const std::string& test_name) const
+         {
+         auto i = m_tests.find(test_name);
+         if(i != m_tests.end())
+            {
+            return i->second();
+            }
+         return nullptr;
+         }
+
+      std::set<std::string> registered_tests() const
+         {
+         return Botan::map_keys_as_set(m_tests);
+         }
+
+   private:
+      Test_Registry() = default;
+
+   private:
+      std::map<std::string, std::function<std::unique_ptr<Test> ()>> m_tests;
+   };
+
+}
+
 // static Test:: functions
-//static
-std::map<std::string, std::function<std::unique_ptr<Test> ()>>& Test::global_registry()
-   {
-   static std::map<std::string, std::function<std::unique_ptr<Test> ()>> g_test_registry;
-   return g_test_registry;
-   }
 
 //static
-void Test::register_test(const std::string& category,
-                         const std::string& name,
-                         const std::function<std::unique_ptr<Test> ()>& maker_fn)
+void Test::register_test(std::string category,
+                         std::string name,
+                         std::function<std::unique_ptr<Test> ()> maker_fn)
    {
-   BOTAN_UNUSED(category);
-   if(Test::global_registry().count(name) != 0)
-      throw Test_Error("Duplicate registration of test '" + name + "'");
-
-   Test::global_registry().insert(std::make_pair(name, maker_fn));
+   Test_Registry::instance().register_test(std::move(category), std::move(name), std::move(maker_fn));
    }
 
 //static
@@ -530,18 +566,13 @@ uint64_t Test::timestamp()
 //static
 std::set<std::string> Test::registered_tests()
    {
-   return Botan::map_keys_as_set(Test::global_registry());
+   return Test_Registry::instance().registered_tests();
    }
 
 //static
 std::unique_ptr<Test> Test::get_test(const std::string& test_name)
    {
-   auto i = Test::global_registry().find(test_name);
-   if(i != Test::global_registry().end())
-      {
-      return std::unique_ptr<Test>(i->second());
-      }
-   return nullptr;
+   return Test_Registry::instance().get_test(test_name);
    }
 
 //static

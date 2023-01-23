@@ -641,11 +641,9 @@ class Test
       void set_registration_location(CodeLocation location) { m_registration_location = std::move(location); }
       const std::optional<CodeLocation>& registration_location() const { return m_registration_location; }
 
-      static void register_test(const std::string& category,
-                                const std::string& name,
-                                const std::function<std::unique_ptr<Test> ()>& maker_fn);
-
-      static std::map<std::string, std::function<std::unique_ptr<Test> ()>>& global_registry();
+      static void register_test(std::string category,
+                                std::string name,
+                                std::function<std::unique_ptr<Test> ()> maker_fn);
 
       static std::set<std::string> registered_tests();
 
@@ -725,13 +723,12 @@ class TestClassRegistration
    public:
       TestClassRegistration(std::string category, std::string name, CodeLocation registration_location)
          {
-         auto test_maker = [=]() -> std::unique_ptr<Test>
+         Test::register_test(std::move(category), std::move(name), [=]
             {
             auto test = std::make_unique<Test_Class>();
-            test->set_registration_location(std::move(registration_location));
+            test->set_registration_location(registration_location);
             return test;
-            };
-         Test::register_test(category, name, test_maker);
+            });
          }
    };
 
@@ -803,13 +800,12 @@ class TestFnRegistration
       template <typename... TestFns>
       TestFnRegistration(std::string category, std::string name, CodeLocation registration_location, TestFns... fn)
          {
-         auto test_maker = [=]() -> std::unique_ptr<Test>
+         Test::register_test(std::move(category), std::move(name), [=]
             {
             auto test = std::make_unique<FnTest>(fn...);
             test->set_registration_location(std::move(registration_location));
             return test;
-            };
-         Test::register_test(category, name, test_maker);
+            });
          }
    };
 
