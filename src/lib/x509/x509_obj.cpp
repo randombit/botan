@@ -193,7 +193,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
    std::string padding;
    if(sig_info.size() == 2)
       padding = sig_info[1];
-   else if(pub_key_algo == "Ed25519" || pub_key_algo == "XMSS")
+   else if(pub_key_algo == "Ed25519" || pub_key_algo == "XMSS" || pub_key_algo.starts_with("Dilithium-"))
       padding = "Pure";
    else
       return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -357,6 +357,11 @@ std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
       padding = user_specified;
       sig_algo = AlgorithmIdentifier(OID::from_string("XMSS"), AlgorithmIdentifier::USE_EMPTY_PARAM);
       return padding;
+      }
+   else if(algo_name.starts_with("Dilithium-"))
+      {
+      sig_algo = key.algorithm_identifier();
+      return "Randomized";
       }
    else
       {

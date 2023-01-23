@@ -1252,6 +1252,38 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key,
          verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
          });
       }
+   else if(pk_algo == "Kyber")
+      {
+      // Kyber can encrypt and agree
+      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
+         });
+      result.test_throws("cert sign not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
+         });
+      result.test_throws("signature not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
+         });
+      result.test_throws("non repudiation not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
+         });
+      result.test_throws("crl sign not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
+         });
+      result.test_throws("sign, cert sign, crl sign not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
+         });
+
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
+      }
    else if(pk_algo == "RSA")
       {
       // RSA can do everything except key agreement
@@ -1319,7 +1351,7 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key,
          });
       }
    else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" ||
-           pk_algo == "GOST-34.10")
+           pk_algo == "GOST-34.10" || pk_algo == "Dilithium")
       {
       // these are signature algorithms only
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
@@ -1630,7 +1662,7 @@ class X509_Cert_Unit_Tests final : public Test
          {
          std::vector<Test::Result> results;
 
-         const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10", "Ed25519" };
+         const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10", "Ed25519", "Dilithium" };
 
          for(const std::string& algo : sig_algos)
             {
@@ -1726,7 +1758,7 @@ class X509_Cert_Unit_Tests final : public Test
          /*
          These are algos which cannot sign but can be included in certs
          */
-         const std::vector<std::string> enc_algos = { "DH", "ECDH", "ElGamal" };
+         const std::vector<std::string> enc_algos = { "DH", "ECDH", "ElGamal", "Kyber" };
 
          for(const std::string& algo : enc_algos)
             {

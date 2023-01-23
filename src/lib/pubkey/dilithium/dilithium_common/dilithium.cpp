@@ -652,7 +652,7 @@ bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(const std::string& params,
       const std::string& provider) const
    {
-   BOTAN_ARG_CHECK(params.empty(), "Unexpected parameters for verifying with Dilithium");
+   BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
    if(provider.empty() || provider == "base")
       return std::make_unique<Dilithium_Verification_Operation>(*this);
    throw Provider_Not_Found(algo_name(), provider);
