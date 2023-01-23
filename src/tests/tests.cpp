@@ -556,6 +556,51 @@ class Test_Registry
          return Botan::map_keys_as_set(m_categories);
          }
 
+      std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested, const std::set<std::string>& to_be_skipped)
+         {
+         std::vector<std::string> result;
+
+         // TODO: this is O(n^2), but we have a relatively small number of tests.
+         auto insert_if_not_exists_and_not_skipped = [&](const std::string test_name)
+            {
+            if(!Botan::value_exists(result, test_name) && to_be_skipped.find(test_name) == to_be_skipped.end())
+               result.push_back(test_name);
+            };
+
+         if(requested.empty())
+            {
+            /*
+            If nothing was requested on the command line, run everything. First
+            run the "essentials" to smoke test, then everything else in
+            alphabetical order.
+            */
+            result = m_smoke_tests;
+            for(const auto& [test_name, _] : m_tests)
+               { insert_if_not_exists_and_not_skipped(test_name); }
+            }
+         else
+            {
+            for(const auto& r : requested)
+               {
+               if(m_tests.find(r) != m_tests.end())
+                  { insert_if_not_exists_and_not_skipped(r); }
+               else if(auto elems = m_categories.equal_range(r); elems.first != m_categories.end())
+                  {
+                  for(;elems.first != elems.second; ++elems.first)
+                     {
+                     insert_if_not_exists_and_not_skipped(elems.first->second);
+                     }
+                  }
+               else
+                  {
+                  throw Botan_Tests::Test_Error("Unknown test suite or category: " + r);
+                  }
+               }
+            }
+
+         return result;
+         }
+
       bool needs_serialization(const std::string& test_name) const
          {
          return Botan::value_exists(m_mutexed_tests, test_name);
@@ -615,6 +660,13 @@ std::unique_ptr<Test> Test::get_test(const std::string& test_name)
 bool Test::test_needs_serialization(const std::string& test_name)
    {
    return Test_Registry::instance().needs_serialization(test_name);
+   }
+
+//static
+std::vector<std::string> Test::filter_registered_tests(const std::vector<std::string>& requested,
+                                                       const std::set<std::string>& to_be_skipped)
+   {
+   return Test_Registry::instance().filter_registered_tests(requested, to_be_skipped);
    }
 
 //static

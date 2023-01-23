@@ -650,6 +650,8 @@ class Test
 
       static std::set<std::string> registered_tests();
       static std::set<std::string> registered_test_categories();
+      static std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested,
+                                                              const std::set<std::string>& to_be_skipped);
 
       static std::unique_ptr<Test> get_test(const std::string& test_name);
       static bool test_needs_serialization(const std::string& test_name);

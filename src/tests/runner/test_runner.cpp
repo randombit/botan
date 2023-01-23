@@ -87,9 +87,6 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 
 bool Test_Runner::run(const Test_Options& opts)
    {
-   std::vector<std::string> req = opts.requested_tests();
-   const std::set<std::string>& to_skip = opts.skip_tests();
-
    m_reporters.emplace_back(std::make_unique<StdoutReporter>(opts, output()));
    if(!opts.xml_results_dir().empty())
       {
@@ -100,72 +97,27 @@ bool Test_Runner::run(const Test_Options& opts)
 #endif
       }
 
+   auto req = Botan_Tests::Test::filter_registered_tests(opts.requested_tests(), opts.skip_tests());
+
+   // TODO: Test runner should not be aware of certain test's environmental requirements.
+   if(opts.pkcs11_lib().empty())
+      {
+      // do not run pkcs11 tests by default unless pkcs11-lib set
+      for(auto iter = req.begin(); iter != req.end();)
+         {
+         if((*iter).find("pkcs11") != std::string::npos)
+            {
+            iter = req.erase(iter);
+            }
+         else
+            {
+            ++iter;
+            }
+         }
+      }
+
    if(req.empty())
-      {
-      /*
-      If nothing was requested on the command line, run everything. First
-      run the "essentials" to smoke test, then everything else in
-      alphabetical order.
-      */
-
-      std::vector<std::string> default_first = {
-         "block", "stream", "hash", "mac", "aead",
-         "modes", "kdf", "pbkdf", "hmac_drbg", "util"
-      };
-
-      for(const auto& s : default_first)
-         {
-         if(to_skip.count(s) == 0)
-            req.push_back(s);
-         }
-
-      std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
-
-      if(opts.pkcs11_lib().empty())
-         {
-         // do not run pkcs11 tests by default unless pkcs11-lib set
-         for(std::set<std::string>::iterator iter = all_others.begin(); iter != all_others.end();)
-            {
-            if((*iter).find("pkcs11") != std::string::npos)
-               {
-               iter = all_others.erase(iter);
-               }
-            else
-               {
-               ++iter;
-               }
-            }
-         }
-
-      for(const auto& f : req)
-         {
-         all_others.erase(f);
-         }
-
-      for(const std::string& f : to_skip)
-         {
-         all_others.erase(f);
-         }
-
-      req.insert(req.end(), all_others.begin(), all_others.end());
-      }
-   else if(req.size() == 1 && req.at(0) == "pkcs11")
-      {
-      req = {"pkcs11-manage", "pkcs11-module", "pkcs11-slot", "pkcs11-session", "pkcs11-object", "pkcs11-rsa",
-             "pkcs11-ecdsa", "pkcs11-ecdh", "pkcs11-rng", "pkcs11-x509"
-      };
-      }
-   else
-      {
-      std::set<std::string> all = Botan_Tests::Test::registered_tests();
-      for(auto const& r : req)
-         {
-         if(all.find(r) == all.end())
-            {
-            throw Botan_Tests::Test_Error("Unknown test suite: " + r);
-            }
-         }
-      }
+      { throw Test_Error("No tests to run"); }
 
    std::vector<uint8_t> seed = Botan::hex_decode(opts.drbg_seed());
    if(seed.empty())
