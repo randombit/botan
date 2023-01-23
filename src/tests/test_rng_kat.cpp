@@ -65,7 +65,7 @@ class HMAC_DRBG_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("rng", "hmac_drbg", HMAC_DRBG_Tests);
+BOTAN_REGISTER_SMOKE_TEST("rng", "hmac_drbg", HMAC_DRBG_Tests);
 
 #endif
 

@@ -641,8 +641,10 @@ class Test
       void set_registration_location(CodeLocation location) { m_registration_location = std::move(location); }
       const std::optional<CodeLocation>& registration_location() const { return m_registration_location; }
 
+      /// @p smoke_test are run first in an unfiltered test run
       static void register_test(std::string category,
                                 std::string name,
+                                bool smoke_test,
                                 std::function<std::unique_ptr<Test> ()> maker_fn);
 
       static std::set<std::string> registered_tests();
@@ -721,9 +723,9 @@ template<typename Test_Class>
 class TestClassRegistration
    {
    public:
-      TestClassRegistration(std::string category, std::string name, CodeLocation registration_location)
+      TestClassRegistration(std::string category, std::string name, bool smoke_test, CodeLocation registration_location)
          {
-         Test::register_test(std::move(category), std::move(name), [=]
+         Test::register_test(std::move(category), std::move(name), smoke_test, [=]
             {
             auto test = std::make_unique<Test_Class>();
             test->set_registration_location(registration_location);
@@ -733,7 +735,9 @@ class TestClassRegistration
    };
 
 #define BOTAN_REGISTER_TEST(category, name, Test_Class)                 \
-   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, {__FILE__, __LINE__})
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, false, {__FILE__, __LINE__})
+#define BOTAN_REGISTER_SMOKE_TEST(category, name, Test_Class)           \
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, true, {__FILE__, __LINE__})
 
 typedef Test::Result(*test_fn)();
 typedef std::vector<Test::Result> (*test_fn_vec)();
@@ -798,9 +802,9 @@ class TestFnRegistration
    {
    public:
       template <typename... TestFns>
-      TestFnRegistration(std::string category, std::string name, CodeLocation registration_location, TestFns... fn)
+      TestFnRegistration(std::string category, std::string name, bool smoke_test, CodeLocation registration_location, TestFns... fn)
          {
-         Test::register_test(std::move(category), std::move(name), [=]
+         Test::register_test(std::move(category), std::move(name), smoke_test, [=]
             {
             auto test = std::make_unique<FnTest>(fn...);
             test->set_registration_location(std::move(registration_location));
@@ -810,7 +814,9 @@ class TestFnRegistration
    };
 
 #define BOTAN_REGISTER_TEST_FN(category, name, ...) \
-   static const TestFnRegistration reg_ ## fn_name(category, name, {__FILE__, __LINE__}, __VA_ARGS__)
+   static const TestFnRegistration reg_ ## fn_name(category, name, false, {__FILE__, __LINE__}, __VA_ARGS__)
+#define BOTAN_REGISTER_SMOKE_TEST_FN(category, name, ...) \
+   static const TestFnRegistration reg_ ## fn_name(category, name, true, {__FILE__, __LINE__}, __VA_ARGS__)
 
 class VarMap
    {

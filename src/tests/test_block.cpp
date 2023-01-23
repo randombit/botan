@@ -196,7 +196,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("block", "block", Block_Cipher_Tests);
+BOTAN_REGISTER_SMOKE_TEST("block", "block", Block_Cipher_Tests);
 
 }
 

@@ -512,14 +512,18 @@ class Test_Registry
          }
 
       void register_test(std::string category,
-                        std::string name,
-                        std::function<std::unique_ptr<Test>()> maker_fn)
+                         std::string name,
+                         bool smoke_test,
+                         std::function<std::unique_ptr<Test>()> maker_fn)
          {
          BOTAN_UNUSED(category);
          if(m_tests.count(name) != 0)
             throw Test_Error("Duplicate registration of test '" + name + "'");
 
-         m_tests.emplace(std::move(name), std::move(maker_fn));
+         if(smoke_test)
+            m_smoke_tests.push_back(name);
+
+         m_tests.emplace(name, std::move(maker_fn));
          }
 
       std::unique_ptr<Test> get_test(const std::string& test_name) const
@@ -542,6 +546,7 @@ class Test_Registry
 
    private:
       std::map<std::string, std::function<std::unique_ptr<Test> ()>> m_tests;
+      std::vector<std::string> m_smoke_tests;
    };
 
 }
@@ -551,9 +556,10 @@ class Test_Registry
 //static
 void Test::register_test(std::string category,
                          std::string name,
+                         bool smoke_test,
                          std::function<std::unique_ptr<Test> ()> maker_fn)
    {
-   Test_Registry::instance().register_test(std::move(category), std::move(name), std::move(maker_fn));
+   Test_Registry::instance().register_test(std::move(category), std::move(name), smoke_test, std::move(maker_fn));
    }
 
 //static
