@@ -81,9 +81,11 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
 
       virtual ~Kyber_PublicKey() = default;
 
-      std::string algo_name() const override { return "Kyber-r3"; }
+      std::string algo_name() const override;
 
       AlgorithmIdentifier algorithm_identifier() const override;
+
+      OID get_oid() const override;
 
       size_t key_length() const override;
 

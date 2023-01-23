@@ -375,7 +375,7 @@ create_private_key(const std::string& alg_name,
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
    if(alg_name == "Dilithium" || alg_name == "Dilithium-")
       {
-      const DilithiumMode mode(params.empty() ? "Dilithium-r3/6x5" : params);
+      const DilithiumMode mode(params.empty() ? "Dilithium-6x5-r3" : params);
       return std::make_unique<Dilithium_PrivateKey>(rng, mode);
       }
 #endif
