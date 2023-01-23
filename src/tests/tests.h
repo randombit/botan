@@ -649,6 +649,7 @@ class Test
                                 std::function<std::unique_ptr<Test> ()> maker_fn);
 
       static std::set<std::string> registered_tests();
+      static std::set<std::string> registered_test_categories();
 
       static std::unique_ptr<Test> get_test(const std::string& test_name);
       static bool test_needs_serialization(const std::string& test_name);

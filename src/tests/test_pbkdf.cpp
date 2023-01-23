@@ -71,7 +71,7 @@ class PBKDF_KAT_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_SMOKE_TEST("pbkdf", "pbkdf", PBKDF_KAT_Tests);
+BOTAN_REGISTER_SMOKE_TEST("pbkdf", "pbkdf_kat", PBKDF_KAT_Tests);
 
 class Pwdhash_Tests : public Test
    {

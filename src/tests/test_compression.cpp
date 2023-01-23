@@ -175,7 +175,7 @@ class Compression_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("compression", "compression", Compression_Tests);
+BOTAN_REGISTER_TEST("compression", "compression_tests", Compression_Tests);
 
 class CompressionCreate_Tests final : public Test
    {

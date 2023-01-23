@@ -517,9 +517,14 @@ class Test_Registry
                          bool needs_serialization,
                          std::function<std::unique_ptr<Test>()> maker_fn)
          {
-         BOTAN_UNUSED(category);
          if(m_tests.count(name) != 0)
             throw Test_Error("Duplicate registration of test '" + name + "'");
+
+         if(m_tests.count(category))
+            throw Test_Error("'" + category + "' cannot be used as category, test exists");
+
+         if(m_categories.count(name))
+            throw Test_Error("'" + name + "' cannot be used as test name, category exists");
 
          if(smoke_test)
             m_smoke_tests.push_back(name);
@@ -528,6 +533,7 @@ class Test_Registry
             m_mutexed_tests.push_back(name);
 
          m_tests.emplace(name, std::move(maker_fn));
+         m_categories.emplace(std::move(category), std::move(name));
          }
 
       std::unique_ptr<Test> get_test(const std::string& test_name) const
@@ -545,6 +551,11 @@ class Test_Registry
          return Botan::map_keys_as_set(m_tests);
          }
 
+      std::set<std::string> registered_test_categories() const
+         {
+         return Botan::map_keys_as_set(m_categories);
+         }
+
       bool needs_serialization(const std::string& test_name) const
          {
          return Botan::value_exists(m_mutexed_tests, test_name);
@@ -555,6 +566,7 @@ class Test_Registry
 
    private:
       std::map<std::string, std::function<std::unique_ptr<Test> ()>> m_tests;
+      std::multimap<std::string, std::string> m_categories;
       std::vector<std::string> m_smoke_tests;
       std::vector<std::string> m_mutexed_tests;
    };
@@ -584,6 +596,13 @@ uint64_t Test::timestamp()
 std::set<std::string> Test::registered_tests()
    {
    return Test_Registry::instance().registered_tests();
+   }
+
+
+//static
+std::set<std::string> Test::registered_test_categories()
+   {
+   return Test_Registry::instance().registered_test_categories();
    }
 
 //static

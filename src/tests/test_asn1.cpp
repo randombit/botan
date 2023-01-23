@@ -313,7 +313,7 @@ class ASN1_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("asn1", "asn1", ASN1_Tests);
+BOTAN_REGISTER_TEST("asn1", "asn1_encoding", ASN1_Tests);
 
 class ASN1_Time_Parsing_Tests final : public Text_Based_Test
    {

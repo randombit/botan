@@ -918,7 +918,7 @@ class TLS_Unit_Tests final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("tls", "tls", TLS_Unit_Tests);
+BOTAN_REGISTER_TEST("tls", "unit_tls", TLS_Unit_Tests);
 
 class DTLS_Reconnection_Test : public Test
    {

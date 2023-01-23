@@ -162,7 +162,7 @@ class Message_Auth_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("mac", "mac", Message_Auth_Tests);
+BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("mac", "mac_algos", Message_Auth_Tests);
 
 #endif
 

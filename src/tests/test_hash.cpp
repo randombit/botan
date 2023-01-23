@@ -179,7 +179,7 @@ class Hash_Function_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("hash", "hash", Hash_Function_Tests);
+BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("hash", "hash_algos", Hash_Function_Tests);
 
 class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test
    {

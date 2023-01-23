@@ -44,6 +44,20 @@ std::set<K> map_keys_as_set(const std::map<K, V>& kv)
    return s;
    }
 
+/**
+* Return the keys of a multimap as a std::set
+*/
+template<typename K, typename V>
+std::set<K> map_keys_as_set(const std::multimap<K, V>& kv)
+   {
+   std::set<K> s;
+   for(auto&& i : kv)
+      {
+      s.insert(i.first);
+      }
+   return s;
+   }
+
 /*
 * Searching through a std::map
 * @param mapping the map to search
