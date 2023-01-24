@@ -38,15 +38,15 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
    {
    public:
       /**
-      * Return a newly allocated copy of the public key associated
-      * with the subject of this certificate. This object is owned
-      * by the caller.
+      * Create a public key object associated with the public key bits in this
+      * certificate. If the public key bits was valid for X.509 encoding
+      * purposes but invalid algorithmically (for example, RSA with an even
+      * modulus) that will be detected at this point, and an exception will be
+      * thrown.
       *
-      * Prefer load_subject_public_key in new code
-      *
-      * @return public key
+      * @return subject public key of this certificate
       */
-      Public_Key* subject_public_key() const;
+      std::unique_ptr<Public_Key> subject_public_key() const;
 
       /**
       * Create a public key object associated with the public key bits in this

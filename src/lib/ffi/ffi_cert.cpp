@@ -89,7 +89,7 @@ int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      std::unique_ptr<Botan::Public_Key> public_key = safe_get(cert).load_subject_public_key();
+      std::unique_ptr<Botan::Public_Key> public_key = safe_get(cert).subject_public_key();
       *key = new botan_pubkey_struct(std::move(public_key));
       return BOTAN_FFI_SUCCESS;
       });

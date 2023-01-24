@@ -185,7 +185,8 @@ void PKCS10_Request::force_decode()
 
    m_data.reset(data.release());
 
-   if(!this->check_signature(subject_public_key()))
+   auto key = this->subject_public_key();
+   if(!this->check_signature(*key))
       throw Decoding_Error("PKCS #10 request: Bad signature detected");
    }
 
@@ -223,7 +224,7 @@ const std::vector<uint8_t>& PKCS10_Request::raw_public_key() const
 /*
 * Return the public key of the requestor
 */
-Public_Key* PKCS10_Request::subject_public_key() const
+std::unique_ptr<Public_Key> PKCS10_Request::subject_public_key() const
    {
    DataSource_Memory source(raw_public_key());
    return X509::load_key(source);

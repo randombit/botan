@@ -663,7 +663,7 @@ X509_Certificate::issuer_info(const std::string& req) const
 /*
 * Return the public key in this certificate
 */
-std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
+std::unique_ptr<Public_Key> X509_Certificate::subject_public_key() const
    {
    try
       {
@@ -671,13 +671,13 @@ std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
       }
    catch(std::exception& e)
       {
-      throw Decoding_Error("X509_Certificate::load_subject_public_key", e);
+      throw Decoding_Error("X509_Certificate::subject_public_key", e);
       }
    }
 
-Public_Key* X509_Certificate::subject_public_key() const
+std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
    {
-   return load_subject_public_key().release();
+   return this->subject_public_key();
    }
 
 std::vector<uint8_t> X509_Certificate::raw_issuer_dn_sha256() const

@@ -318,7 +318,7 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
    else
       {
       /* validation of provided certificate public key */
-      auto key = m_entries.front().certificate.load_subject_public_key();
+      auto key = m_entries.front().certificate.subject_public_key();
 
       policy.check_peer_key_acceptable(*key);
 

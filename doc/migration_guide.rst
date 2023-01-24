@@ -148,3 +148,14 @@ regressions due to creating and processing very small buffers.
 Previously the library accepted "SHA-160" and "SHA1" alternative names
 for "SHA-1". This is no longer the case, you must use "SHA-1". Botan
 2.x also recognizes "SHA-1".
+
+X509::load_key
+-------------------
+
+Previously these functions returned a raw pointer. They now return
+a std::unique_ptr
+
+PKCS11_Request::subject_public_key and X509_Certificate::subject_public_key
+-----------------------------------------------------------------------------
+
+These functions now return a unique_ptr

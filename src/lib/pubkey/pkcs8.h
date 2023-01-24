@@ -1,6 +1,6 @@
 /*
 * PKCS #8
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -215,117 +215,6 @@ inline std::unique_ptr<Private_Key> copy_key(const Private_Key& key)
    {
    DataSource_Memory source(key.private_key_info());
    return PKCS8::load_key(source);
-   }
-
-// Deprecated functions follow
-
-/**
-* Load an encrypted key from a data source.
-* @param source the data source providing the encoded key
-* @param rng ignored for compatibility
-* @param get_passphrase a function that returns passphrases
-* @return loaded private key object
-*/
-BOTAN_DEPRECATED("Use version that doesn't take an RNG")
-inline Private_Key* load_key(DataSource& source,
-                             RandomNumberGenerator& rng,
-                             std::function<std::string ()> get_passphrase)
-   {
-   BOTAN_UNUSED(rng);
-   return PKCS8::load_key(source, get_passphrase).release();
-   }
-
-/** Load an encrypted key from a data source.
-* @param source the data source providing the encoded key
-* @param rng ignored for compatibility
-* @param pass the passphrase to decrypt the key
-* @return loaded private key object
-*/
-BOTAN_DEPRECATED("Use version that doesn't take an RNG")
-inline Private_Key* load_key(DataSource& source,
-                             RandomNumberGenerator& rng,
-                             const std::string& pass)
-   {
-   BOTAN_UNUSED(rng);
-   return PKCS8::load_key(source, pass).release();
-   }
-
-/** Load an unencrypted key from a data source.
-* @param source the data source providing the encoded key
-* @param rng ignored for compatibility
-* @return loaded private key object
-*/
-BOTAN_DEPRECATED("Use version that doesn't take an RNG")
-inline Private_Key* load_key(DataSource& source,
-                             RandomNumberGenerator& rng)
-   {
-   BOTAN_UNUSED(rng);
-   return PKCS8::load_key(source).release();
-   }
-
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-/**
-* Load an encrypted key from a file.
-* @param filename the path to the file containing the encoded key
-* @param rng ignored for compatibility
-* @param get_passphrase a function that returns passphrases
-* @return loaded private key object
-*/
-BOTAN_DEPRECATED("Use DataSource_Stream and another load_key variant")
-inline Private_Key* load_key(const std::string& filename,
-                             RandomNumberGenerator& rng,
-                             std::function<std::string ()> get_passphrase)
-   {
-   BOTAN_UNUSED(rng);
-   DataSource_Stream in(filename);
-   return PKCS8::load_key(in, get_passphrase).release();
-   }
-
-/** Load an encrypted key from a file.
-* @param filename the path to the file containing the encoded key
-* @param rng ignored for compatibility
-* @param pass the passphrase to decrypt the key
-* @return loaded private key object
-*/
-BOTAN_DEPRECATED("Use DataSource_Stream and another load_key variant")
-inline Private_Key* load_key(const std::string& filename,
-                             RandomNumberGenerator& rng,
-                             const std::string& pass)
-   {
-   BOTAN_UNUSED(rng);
-   DataSource_Stream in(filename);
-   // We need to use bind rather than a lambda capturing `pass` here in order to avoid a Clang 8 bug.
-   // See https://github.com/randombit/botan/issues/2255.
-   return PKCS8::load_key(in, std::bind([](const std::string p) { return p; }, pass)).release();
-   }
-
-/** Load an unencrypted key from a file.
-* @param filename the path to the file containing the encoded key
-* @param rng ignored for compatibility
-* @return loaded private key object
-*/
-BOTAN_DEPRECATED("Use DataSource_Stream and another load_key variant")
-inline Private_Key* load_key(const std::string& filename,
-                             RandomNumberGenerator& rng)
-   {
-   BOTAN_UNUSED(rng);
-   DataSource_Stream in(filename);
-   return PKCS8::load_key(in).release();
-   }
-#endif
-
-/**
-* Copy an existing encoded key object.
-* @param key the key to copy
-* @param rng ignored for compatibility
-* @return new copy of the key
-*/
-BOTAN_DEPRECATED("Use version that doesn't take an RNG")
-inline Private_Key* copy_key(const Private_Key& key,
-                             RandomNumberGenerator& rng)
-   {
-   BOTAN_UNUSED(rng);
-   return PKCS8::copy_key(key).release();
    }
 
 }
