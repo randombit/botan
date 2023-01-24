@@ -514,6 +514,7 @@ class Test_Registry
       void register_test(std::string category,
                          std::string name,
                          bool smoke_test,
+                         bool needs_serialization,
                          std::function<std::unique_ptr<Test>()> maker_fn)
          {
          BOTAN_UNUSED(category);
@@ -522,6 +523,9 @@ class Test_Registry
 
          if(smoke_test)
             m_smoke_tests.push_back(name);
+
+         if(needs_serialization)
+            m_mutexed_tests.push_back(name);
 
          m_tests.emplace(name, std::move(maker_fn));
          }
@@ -541,12 +545,18 @@ class Test_Registry
          return Botan::map_keys_as_set(m_tests);
          }
 
+      bool needs_serialization(const std::string& test_name) const
+         {
+         return Botan::value_exists(m_mutexed_tests, test_name);
+         }
+
    private:
       Test_Registry() = default;
 
    private:
       std::map<std::string, std::function<std::unique_ptr<Test> ()>> m_tests;
       std::vector<std::string> m_smoke_tests;
+      std::vector<std::string> m_mutexed_tests;
    };
 
 }
@@ -557,9 +567,10 @@ class Test_Registry
 void Test::register_test(std::string category,
                          std::string name,
                          bool smoke_test,
+                         bool needs_serialization,
                          std::function<std::unique_ptr<Test> ()> maker_fn)
    {
-   Test_Registry::instance().register_test(std::move(category), std::move(name), smoke_test, std::move(maker_fn));
+   Test_Registry::instance().register_test(std::move(category), std::move(name), smoke_test, needs_serialization, std::move(maker_fn));
    }
 
 //static
@@ -579,6 +590,12 @@ std::set<std::string> Test::registered_tests()
 std::unique_ptr<Test> Test::get_test(const std::string& test_name)
    {
    return Test_Registry::instance().get_test(test_name);
+   }
+
+//static
+bool Test::test_needs_serialization(const std::string& test_name)
+   {
+   return Test_Registry::instance().needs_serialization(test_name);
    }
 
 //static

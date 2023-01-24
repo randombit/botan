@@ -834,7 +834,7 @@ class LowLevelTests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("pkcs11", "pkcs11-lowlevel", LowLevelTests);
+BOTAN_REGISTER_SERIALIZED_TEST("pkcs11", "pkcs11-lowlevel", LowLevelTests);
 
 #endif
 #endif

@@ -286,7 +286,7 @@ class Argon2_KAT_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("pbkdf", "argon2", Argon2_KAT_Tests);
+BOTAN_REGISTER_SERIALIZED_TEST("pbkdf", "argon2", Argon2_KAT_Tests);
 
 #endif
 

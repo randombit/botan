@@ -645,11 +645,13 @@ class Test
       static void register_test(std::string category,
                                 std::string name,
                                 bool smoke_test,
+                                bool needs_serialization,
                                 std::function<std::unique_ptr<Test> ()> maker_fn);
 
       static std::set<std::string> registered_tests();
 
       static std::unique_ptr<Test> get_test(const std::string& test_name);
+      static bool test_needs_serialization(const std::string& test_name);
 
       static std::string data_file(const std::string& what);
 
@@ -723,9 +725,9 @@ template<typename Test_Class>
 class TestClassRegistration
    {
    public:
-      TestClassRegistration(std::string category, std::string name, bool smoke_test, CodeLocation registration_location)
+      TestClassRegistration(std::string category, std::string name, bool smoke_test, bool needs_serialization, CodeLocation registration_location)
          {
-         Test::register_test(std::move(category), std::move(name), smoke_test, [=]
+         Test::register_test(std::move(category), std::move(name), smoke_test, needs_serialization, [=]
             {
             auto test = std::make_unique<Test_Class>();
             test->set_registration_location(registration_location);
@@ -735,9 +737,13 @@ class TestClassRegistration
    };
 
 #define BOTAN_REGISTER_TEST(category, name, Test_Class)                 \
-   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, false, {__FILE__, __LINE__})
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, false, false, {__FILE__, __LINE__})
+#define BOTAN_REGISTER_SERIALIZED_TEST(category, name, Test_Class)                 \
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, false, true, {__FILE__, __LINE__})
 #define BOTAN_REGISTER_SMOKE_TEST(category, name, Test_Class)           \
-   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, true, {__FILE__, __LINE__})
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, true, false, {__FILE__, __LINE__})
+#define BOTAN_REGISTER_SERIALIZED_SMOKE_TEST(category, name, Test_Class)           \
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, true, true, {__FILE__, __LINE__})
 
 typedef Test::Result(*test_fn)();
 typedef std::vector<Test::Result> (*test_fn_vec)();
@@ -802,9 +808,9 @@ class TestFnRegistration
    {
    public:
       template <typename... TestFns>
-      TestFnRegistration(std::string category, std::string name, bool smoke_test, CodeLocation registration_location, TestFns... fn)
+      TestFnRegistration(std::string category, std::string name, bool smoke_test, bool needs_serialization, CodeLocation registration_location, TestFns... fn)
          {
-         Test::register_test(std::move(category), std::move(name), smoke_test, [=]
+         Test::register_test(std::move(category), std::move(name), smoke_test, needs_serialization, [=]
             {
             auto test = std::make_unique<FnTest>(fn...);
             test->set_registration_location(std::move(registration_location));
@@ -814,9 +820,13 @@ class TestFnRegistration
    };
 
 #define BOTAN_REGISTER_TEST_FN(category, name, ...) \
-   static const TestFnRegistration reg_ ## fn_name(category, name, false, {__FILE__, __LINE__}, __VA_ARGS__)
+   static const TestFnRegistration reg_ ## fn_name(category, name, false, false, {__FILE__, __LINE__}, __VA_ARGS__)
 #define BOTAN_REGISTER_SMOKE_TEST_FN(category, name, ...) \
-   static const TestFnRegistration reg_ ## fn_name(category, name, true, {__FILE__, __LINE__}, __VA_ARGS__)
+   static const TestFnRegistration reg_ ## fn_name(category, name, true, false, {__FILE__, __LINE__}, __VA_ARGS__)
+#define BOTAN_REGISTER_SERIALIZED_TEST_FN(category, name, ...) \
+   static const TestFnRegistration reg_ ## fn_name(category, name, false, true {__FILE__, __LINE__}, __VA_ARGS__)
+#define BOTAN_REGISTER_SERIALIZED_SMOKE_TEST_FN(category, name, ...) \
+   static const TestFnRegistration reg_ ## fn_name(category, name, true, true {__FILE__, __LINE__}, __VA_ARGS__)
 
 class VarMap
    {

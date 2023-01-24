@@ -224,7 +224,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_SMOKE_TEST("stream", "stream", Stream_Cipher_Tests);
+BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("stream", "stream", Stream_Cipher_Tests);
 
 #endif
 

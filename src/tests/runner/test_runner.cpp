@@ -263,23 +263,6 @@ std::vector<Test::Result> run_a_test(const std::string& test_name)
    return results;
    }
 
-#if defined(BOTAN_HAS_THREAD_UTILS)
-
-bool needs_serialization(const std::string& test_name)
-   {
-   if(test_name.substr(0, 6) == "pkcs11")
-      return true;
-   if(test_name == "block" || test_name == "hash" || test_name == "mac" || test_name == "stream" || test_name == "aead")
-      return true;
-   if(test_name == "argon2")
-      return true;
-   if(test_name == "ecc_unit")
-      return false;
-   return false;
-   }
-
-#endif
-
 bool all_passed(const std::vector<Test::Result>& results)
    {
    return std::all_of(results.begin(), results.end(),
@@ -316,7 +299,7 @@ bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_
 
    for(auto const& test_name : tests_to_run)
       {
-      if(needs_serialization(test_name))
+      if(Test::test_needs_serialization(test_name))
          {
          m_fut_results.push_back(pool.run(run_test_exclusive, test_name));
          }
