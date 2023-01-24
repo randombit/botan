@@ -57,6 +57,10 @@ struct botan_struct
       explicit NAME(std::unique_ptr<TYPE> x) : botan_struct(std::move(x)) {} \
    }
 
+#define BOTAN_FFI_DECLARE_DUMMY_STRUCT(NAME, MAGIC)                          \
+   struct NAME final : public Botan_FFI::botan_struct<int, MAGIC> {          \
+   }
+
 // Declared in ffi.cpp
 int ffi_error_exception_thrown(const char* func_name, const char* exn,
                                int rc = BOTAN_FFI_ERROR_EXCEPTION_THROWN);
