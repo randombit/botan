@@ -14,7 +14,17 @@ Values currently assigned are::
   -- { publicKey 4 } previously used as private X25519
   -- { publicKey 5 } previously used for XMSS draft 6
   gost-3410-with-sha256 OBJECT IDENTIFIER ::= { publicKey 6 1 }
+
   kyber       OBJECT IDENTIFIER ::= { publicKey 7 }
+  kyber-90s   OBJECT IDENTIFIER ::= { publicKey 11 }
+
+  kyber-512      OBJECT IDENTIFIER ::= { kyber 1 }
+  kyber-768      OBJECT IDENTIFIER ::= { kyber 2 }
+  kyber-1024     OBJECT IDENTIFIER ::= { kyber 3 }
+  kyber-512-90s  OBJECT IDENTIFIER ::= { kyber-90s 1 }
+  kyber-768-90s  OBJECT IDENTIFIER ::= { kyber-90s 2 }
+  kyber-1024-90s OBJECT IDENTIFIER ::= { kyber-90s 3 }
+
   xmss        OBJECT IDENTIFIER ::= { publicKey 8 }
 
   -- The current dilithium implementation is compatible with the reference
