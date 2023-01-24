@@ -74,13 +74,14 @@ void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
 
    size_t permitted = 0;
 
-   const bool can_agree = (name == "DH" || name == "ECDH");
-   const bool can_encrypt = (name == "RSA" || name == "ElGamal");
+   const bool can_agree = (name == "DH" || name == "ECDH" || name.starts_with("Kyber-"));
+   const bool can_encrypt = (name == "RSA" || name == "ElGamal" || name.starts_with("Kyber-"));
 
    const bool can_sign =
       (name == "RSA" || name == "DSA" ||
        name == "ECDSA" || name == "ECGDSA" || name == "ECKCDSA" || name == "Ed25519" ||
-       name == "GOST-34.10" || name == "GOST-34.10-2012-256" || name == "GOST-34.10-2012-512");
+       name == "GOST-34.10" || name == "GOST-34.10-2012-256" || name == "GOST-34.10-2012-512" ||
+       name.starts_with("Dilithium-"));
 
    if(can_agree)
       {

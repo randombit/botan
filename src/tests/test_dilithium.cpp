@@ -371,14 +371,14 @@ class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test
          return
             {
 #if defined(BOTAN_HAS_DILITHIUM_AES)
-            "Dilithium-AES-r3/4x4",
-            "Dilithium-AES-r3/6x5",
-            "Dilithium-AES-r3/8x7",
+            "Dilithium-4x4-AES-r3",
+            "Dilithium-6x5-AES-r3",
+            "Dilithium-8x7-AES-r3",
 #endif
 #if defined(BOTAN_HAS_DILITHIUM)
-            "Dilithium-r3/4x4",
-            "Dilithium-r3/6x5",
-            "Dilithium-r3/8x7",
+            "Dilithium-4x4-r3",
+            "Dilithium-6x5-r3",
+            "Dilithium-8x7-r3",
 #endif
             };
          }

@@ -209,7 +209,7 @@ Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::Ky
    result.test_eq("Key A Output", key_alice, ss_in);
 
    // Algorithm identifiers
-   result.test_eq("algo name", priv_key.algo_name(), "Kyber-r3");
+   result.test_eq("algo name", priv_key.algo_name(), algo_name);
    result.confirm("algo mode", priv_key.mode() == mode);
    result.test_eq("algo id", Botan::OIDS::oid2str_or_throw(priv_key.algorithm_identifier().oid()), algo_name);
 

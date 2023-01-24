@@ -1296,9 +1296,19 @@ KyberMode Kyber_PublicKey::mode() const
    return m_public->mode().mode();
    }
 
+std::string Kyber_PublicKey::algo_name() const
+   {
+   return get_oid().to_formatted_string();
+   }
+
 AlgorithmIdentifier Kyber_PublicKey::algorithm_identifier() const
    {
    return AlgorithmIdentifier(mode().get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
+   }
+
+OID Kyber_PublicKey::get_oid() const
+   {
+   return mode().get_oid();
    }
 
 size_t Kyber_PublicKey::estimated_strength() const

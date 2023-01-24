@@ -103,17 +103,17 @@ calculate_t0_and_t1(const DilithiumModeConstants& mode,
 
 DilithiumMode::Mode dilithium_mode_from_string(const std::string& str)
    {
-   if(str == "Dilithium-r3/4x4")
+   if(str == "Dilithium-4x4-r3")
       { return DilithiumMode::Dilithium4x4; }
-   if(str == "Dilithium-AES-r3/4x4")
+   if(str == "Dilithium-4x4-AES-r3")
       { return DilithiumMode::Dilithium4x4_AES; }
-   if(str == "Dilithium-r3/6x5")
+   if(str == "Dilithium-6x5-r3")
       { return DilithiumMode::Dilithium6x5; }
-   if(str == "Dilithium-AES-r3/6x5")
+   if(str == "Dilithium-6x5-AES-r3")
       { return DilithiumMode::Dilithium6x5_AES; }
-   if(str == "Dilithium-r3/8x7")
+   if(str == "Dilithium-8x7-r3")
       { return DilithiumMode::Dilithium8x7; }
-   if(str == "Dilithium-AES-r3/8x7")
+   if(str == "Dilithium-8x7-AES-r3")
       { return DilithiumMode::Dilithium8x7_AES; }
 
    throw Invalid_Argument(str + " is not a valid Dilithium mode name");
@@ -134,17 +134,17 @@ std::string DilithiumMode::to_string() const
    switch(m_mode)
       {
       case DilithiumMode::Dilithium4x4:
-         return "Dilithium-r3/4x4";
+         return "Dilithium-4x4-r3";
       case DilithiumMode::Dilithium4x4_AES:
-         return "Dilithium-AES-r3/4x4";
+         return "Dilithium-4x4-AES-r3";
       case DilithiumMode::Dilithium6x5:
-         return "Dilithium-r3/6x5";
+         return "Dilithium-6x5-r3";
       case DilithiumMode::Dilithium6x5_AES:
-         return "Dilithium-AES-r3/6x5";
+         return "Dilithium-6x5-AES-r3";
       case DilithiumMode::Dilithium8x7:
-         return "Dilithium-r3/8x7";
+         return "Dilithium-8x7-r3";
       case DilithiumMode::Dilithium8x7_AES:
-         return "Dilithium-AES-r3/8x7";
+         return "Dilithium-8x7-AES-r3";
       }
 
    unreachable();
@@ -652,7 +652,7 @@ bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(const std::string& params,
       const std::string& provider) const
    {
-   BOTAN_ARG_CHECK(params.empty(), "Unexpected parameters for verifying with Dilithium");
+   BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
    if(provider.empty() || provider == "base")
       return std::make_unique<Dilithium_Verification_Operation>(*this);
    throw Provider_Not_Found(algo_name(), provider);
