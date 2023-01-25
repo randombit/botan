@@ -32,7 +32,7 @@ class BOTAN_PUBLIC_API(2,0) PKCS10_Request final : public X509_Object
       * Get the subject public key.
       * @return subject public key
       */
-      Public_Key* subject_public_key() const;
+      std::unique_ptr<Public_Key> subject_public_key() const;
 
       /**
       * Get the raw DER encoded public key.

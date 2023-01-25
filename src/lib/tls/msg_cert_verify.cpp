@@ -211,7 +211,7 @@ bool Certificate_Verify_13::verify(const X509_Certificate& cert,
    if(m_scheme.algorithm_identifier() != cert.subject_public_key_algo())
       { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Signature algorithm does not match certificate's public key"); }
 
-   const auto key = cert.load_subject_public_key();
+   const auto key = cert.subject_public_key();
    const bool signature_valid =
       callbacks.tls_verify_message(*key,
                                    m_scheme.padding_string(),

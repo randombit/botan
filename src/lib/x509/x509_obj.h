@@ -81,15 +81,6 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       bool check_signature(const Public_Key& key) const;
 
       /**
-      * Check the signature on this data
-      * @param key the public key purportedly used to sign this data
-      *        the object will be deleted after use (this should have
-      *        been a std::unique_ptr<Public_Key>)
-      * @return true if the signature is valid, otherwise false
-      */
-      bool check_signature(const Public_Key* key) const;
-
-      /**
       * DER encode an X509_Object
       * See @ref ASN1_Object::encode_into()
       */

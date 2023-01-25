@@ -26,7 +26,7 @@ std::string PEM_encode(const Public_Key& key)
 /*
 * Extract a public key and return it
 */
-Public_Key* load_key(DataSource& source)
+std::unique_ptr<Public_Key> load_key(DataSource& source)
    {
    try {
       AlgorithmIdentifier alg_id;
@@ -56,7 +56,7 @@ Public_Key* load_key(DataSource& source)
       if(key_bits.empty())
          throw Decoding_Error("X.509 public key decoding");
 
-      return load_public_key(alg_id, key_bits).release();
+      return load_public_key(alg_id, key_bits);
       }
    catch(Decoding_Error& e)
       {
