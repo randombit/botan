@@ -483,7 +483,7 @@ Test::Result test_rsa_oaep()
 #if defined(BOTAN_HAS_RSA)
    Botan::X509_Certificate cert(Test::data_file("x509/misc/rsa_oaep.pem"));
 
-   auto public_key = cert.load_subject_public_key();
+   auto public_key = cert.subject_public_key();
    result.test_not_null("Decoding RSA-OAEP worked", public_key.get());
    const auto& pk_info = cert.subject_public_key_algo();
 

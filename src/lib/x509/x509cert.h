@@ -57,6 +57,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       *
       * @return subject public key of this certificate
       */
+      BOTAN_DEPRECATED("Use subject_public_key")
       std::unique_ptr<Public_Key> load_subject_public_key() const;
 
       /**
