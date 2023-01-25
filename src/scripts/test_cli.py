@@ -796,7 +796,7 @@ def cli_cert_issuance_tests(tmp_dir):
     test_cli("gen_pkcs10", "%s Leaf --output=%s" % (leaf_key, leaf_csr))
     test_cli("sign_cert", "%s %s %s --output=%s" % (int_crt, int_key, leaf_csr, leaf_crt))
 
-    test_cli("cert_verify" "%s %s %s" % (leaf_crt, int_crt, root_crt), "Certificate passes validation checks")
+    test_cli("cert_verify", "%s %s %s" % (leaf_crt, int_crt, root_crt), "Certificate passes validation checks")
 
 def cli_timing_test_tests(_tmp_dir):
 
