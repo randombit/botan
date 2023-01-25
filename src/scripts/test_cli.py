@@ -773,7 +773,7 @@ def cli_cc_enc_tests(_tmp_dir):
     test_cli("cc_encrypt", ["8028028028028029", "pass"], "4308989841607208")
     test_cli("cc_decrypt", ["4308989841607208", "pass"], "8028028028028027")
 
-def cli_cert_issuance_tests(tmp_dir):
+def cli_cert_issuance_tests(tmp_dir, algos=None):
     root_key = os.path.join(tmp_dir, 'root.key')
     root_crt = os.path.join(tmp_dir, 'root.crt')
     int_key = os.path.join(tmp_dir, 'int.key')
@@ -783,9 +783,12 @@ def cli_cert_issuance_tests(tmp_dir):
     leaf_crt = os.path.join(tmp_dir, 'leaf.crt')
     leaf_csr = os.path.join(tmp_dir, 'leaf.csr')
 
-    test_cli("keygen", ["--params=2048", "--output=" + root_key], "")
-    test_cli("keygen", ["--params=2048", "--output=" + int_key], "")
-    test_cli("keygen", ["--params=2048", "--output=" + leaf_key], "")
+    if algos is None:
+        algos = [("RSA", "2048"),("RSA", "2048"),("RSA", "2048")]
+
+    test_cli("keygen", ["--algo=%s" % algos[0][0], "--params=%s" % algos[0][1], "--output=" + root_key], "")
+    test_cli("keygen", ["--algo=%s" % algos[1][0], "--params=%s" % algos[1][1], "--output=" + int_key], "")
+    test_cli("keygen", ["--algo=%s" % algos[2][0], "--params=%s" % algos[2][1], "--output=" + leaf_key], "")
 
     test_cli("gen_self_signed",
              [root_key, "Root", "--ca", "--path-limit=2", "--output="+root_crt], "")
@@ -797,6 +800,14 @@ def cli_cert_issuance_tests(tmp_dir):
     test_cli("sign_cert", "%s %s %s --output=%s" % (int_crt, int_key, leaf_csr, leaf_crt))
 
     test_cli("cert_verify" "%s %s %s" % (leaf_crt, int_crt, root_crt), "Certificate passes validation checks")
+
+def cli_cert_issuance_alternative_algos_tests(tmp_dir):
+    for i, algo in enumerate([[("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3")],
+                              [("ECDSA",     "secp256r1"),            ("ECDSA",     "secp256r1"),            ("ECDSA",     "secp256r1")],
+                              [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("RSA",       "2048")]]):
+        sub_tmp_dir = os.path.join(tmp_dir, str(i))
+        os.mkdir(sub_tmp_dir)
+        cli_cert_issuance_tests(sub_tmp_dir, algo)
 
 def cli_timing_test_tests(_tmp_dir):
 
@@ -1423,6 +1434,7 @@ def main(args=None):
         cli_cc_enc_tests,
         cli_cycle_counter,
         cli_cert_issuance_tests,
+        cli_cert_issuance_alternative_algos_tests,
         cli_compress_tests,
         cli_config_tests,
         cli_cpuid_tests,
