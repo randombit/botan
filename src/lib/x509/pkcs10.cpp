@@ -256,7 +256,7 @@ Key_Constraints PKCS10_Request::constraints() const
       return dynamic_cast<Cert_Extension::Key_Usage&>(*ext).get_constraints();
       }
 
-   return Key_Constraints::NO_CONSTRAINTS;
+   return Key_Constraints::None;
    }
 
 /*

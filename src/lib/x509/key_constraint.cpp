@@ -13,36 +13,36 @@ namespace Botan {
 
 std::string Key_Constraints::to_string() const
    {
-   if(this->m_value == Key_Constraints::NO_CONSTRAINTS)
+   if(this->m_value == Key_Constraints::None)
       return "no_constraints";
 
    std::vector<std::string> str;
 
-   if(this->m_value & Key_Constraints::DIGITAL_SIGNATURE)
+   if(this->m_value & Key_Constraints::DigitalSignature)
       str.push_back("digital_signature");
 
-   if(this->m_value & Key_Constraints::NON_REPUDIATION)
+   if(this->m_value & Key_Constraints::NonRepudiation)
       str.push_back("non_repudiation");
 
-   if(this->m_value & Key_Constraints::KEY_ENCIPHERMENT)
+   if(this->m_value & Key_Constraints::KeyEncipherment)
       str.push_back("key_encipherment");
 
-   if(this->m_value & Key_Constraints::DATA_ENCIPHERMENT)
+   if(this->m_value & Key_Constraints::DataEncipherment)
       str.push_back("data_encipherment");
 
-   if(this->m_value & Key_Constraints::KEY_AGREEMENT)
+   if(this->m_value & Key_Constraints::KeyAgreement)
       str.push_back("key_agreement");
 
-   if(this->m_value & Key_Constraints::KEY_CERT_SIGN)
+   if(this->m_value & Key_Constraints::KeyCertSign)
       str.push_back("key_cert_sign");
 
-   if(this->m_value & Key_Constraints::CRL_SIGN)
+   if(this->m_value & Key_Constraints::CrlSign)
       str.push_back("crl_sign");
 
-   if(this->m_value & Key_Constraints::ENCIPHER_ONLY)
+   if(this->m_value & Key_Constraints::EncipherOnly)
       str.push_back("encipher_only");
 
-   if(this->m_value & Key_Constraints::DECIPHER_ONLY)
+   if(this->m_value & Key_Constraints::DecipherOnly)
       str.push_back("decipher_only");
 
    // Not 0 (checked at start) but nothing matched above!
@@ -83,23 +83,23 @@ bool Key_Constraints::compatible_with(const Public_Key& pub_key) const
 
    if(can_agree)
       {
-      permitted |= Key_Constraints::KEY_AGREEMENT |
-         Key_Constraints::ENCIPHER_ONLY |
-         Key_Constraints::DECIPHER_ONLY;
+      permitted |= Key_Constraints::KeyAgreement |
+         Key_Constraints::EncipherOnly |
+         Key_Constraints::DecipherOnly;
       }
 
    if(can_encrypt)
       {
-      permitted |= Key_Constraints::KEY_ENCIPHERMENT |
-         Key_Constraints::DATA_ENCIPHERMENT;
+      permitted |= Key_Constraints::KeyEncipherment |
+         Key_Constraints::DataEncipherment;
       }
 
    if(can_sign)
       {
-      permitted |= Key_Constraints::DIGITAL_SIGNATURE |
-         Key_Constraints::NON_REPUDIATION |
-         Key_Constraints::KEY_CERT_SIGN |
-         Key_Constraints::CRL_SIGN;
+      permitted |= Key_Constraints::DigitalSignature |
+         Key_Constraints::NonRepudiation |
+         Key_Constraints::KeyCertSign |
+         Key_Constraints::CrlSign;
       }
 
    if((m_value & permitted) != m_value)

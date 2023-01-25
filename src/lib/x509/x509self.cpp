@@ -70,8 +70,8 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    Key_Constraints constraints;
    if(opts.is_CA)
       {
-      constraints |= Key_Constraints::KEY_CERT_SIGN;
-      constraints |= Key_Constraints::CRL_SIGN;
+      constraints |= Key_Constraints::KeyCertSign;
+      constraints |= Key_Constraints::CrlSign;
       }
    else
       {
@@ -122,8 +122,8 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    Key_Constraints constraints;
    if(opts.is_CA)
       {
-      constraints |= Key_Constraints::KEY_CERT_SIGN;
-      constraints |= Key_Constraints::CRL_SIGN;
+      constraints |= Key_Constraints::KeyCertSign;
+      constraints |= Key_Constraints::CrlSign;
       }
    else
       {

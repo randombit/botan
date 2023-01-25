@@ -67,11 +67,11 @@ Botan::X509_Cert_Options req_opts1(const std::string& algo, const std::string& s
 
    if(algo == "RSA")
       {
-      opts.constraints = Botan::Key_Constraints::KEY_ENCIPHERMENT;
+      opts.constraints = Botan::Key_Constraints::KeyEncipherment;
       }
    else if(algo == "DSA" || algo == "ECDSA" || algo == "ECGDSA" || algo == "ECKCDSA")
       {
-      opts.constraints = Botan::Key_Constraints::DIGITAL_SIGNATURE;
+      opts.constraints = Botan::Key_Constraints::DigitalSignature;
       }
 
    return opts;
@@ -813,9 +813,9 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
       {
       result.confirm("ca key usage cert",
-                     ca_cert.constraints().includes(Botan::Key_Constraints::KEY_CERT_SIGN));
+                     ca_cert.constraints().includes(Botan::Key_Constraints::KeyCertSign));
       result.confirm("ca key usage crl",
-                     ca_cert.constraints().includes(Botan::Key_Constraints::CRL_SIGN));
+                     ca_cert.constraints().includes(Botan::Key_Constraints::CrlSign));
       }
 
    /* Create user #1's key and cert request */
@@ -1015,7 +1015,7 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
-   opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+   opts.constraints = Key_Constraints::DigitalSignature;
 
    const Botan::PKCS10_Request user1_req = Botan::X509::create_cert_req(
          opts,
@@ -1032,14 +1032,14 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    // cert only allows digitalSignature, but we check for both digitalSignature and cRLSign
    result.test_eq("key usage cRLSign not allowed",
                   user1_cert.allowed_usage(
-                     Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)), false);
+                     Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign)), false);
    result.test_eq("encryption is not allowed",
                   user1_cert.allowed_usage(Usage_Type::ENCRYPTION), false);
 
    // cert only allows digitalSignature, so checking for only that should be ok
-   result.confirm("key usage digitalSignature allowed", user1_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
+   result.confirm("key usage digitalSignature allowed", user1_cert.allowed_usage(Key_Constraints::DigitalSignature));
 
-   opts.constraints = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN);
+   opts.constraints = Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign);
 
    const Botan::PKCS10_Request mult_usage_req = Botan::X509::create_cert_req(
             opts,
@@ -1055,10 +1055,10 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
 
    // cert allows multiple usages, so each one of them as well as both together should be allowed
    result.confirm("key usage multiple digitalSignature allowed",
-                  mult_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
-   result.confirm("key usage multiple cRLSign allowed", mult_usage_cert.allowed_usage(Key_Constraints::CRL_SIGN));
+                  mult_usage_cert.allowed_usage(Key_Constraints::DigitalSignature));
+   result.confirm("key usage multiple cRLSign allowed", mult_usage_cert.allowed_usage(Key_Constraints::CrlSign));
    result.confirm("key usage multiple digitalSignature and cRLSign allowed", mult_usage_cert.allowed_usage(
-                     Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)));
+                     Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign)));
    result.test_eq("encryption is not allowed",
                   mult_usage_cert.allowed_usage(Usage_Type::ENCRYPTION), false);
 
@@ -1073,14 +1073,14 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
                       from_date(2, 01, 01));
 
    // cert allows every usage
-   result.confirm("key usage digitalSignature allowed", no_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
-   result.confirm("key usage cRLSign allowed", no_usage_cert.allowed_usage(Key_Constraints::CRL_SIGN));
+   result.confirm("key usage digitalSignature allowed", no_usage_cert.allowed_usage(Key_Constraints::DigitalSignature));
+   result.confirm("key usage cRLSign allowed", no_usage_cert.allowed_usage(Key_Constraints::CrlSign));
    result.confirm("key usage encryption allowed", no_usage_cert.allowed_usage(Usage_Type::ENCRYPTION));
 
    if (sig_algo == "RSA")
       {
       // cert allows data encryption
-       opts.constraints = Key_Constraints(Key_Constraints::KEY_ENCIPHERMENT | Key_Constraints::DATA_ENCIPHERMENT);
+       opts.constraints = Key_Constraints(Key_Constraints::KeyEncipherment | Key_Constraints::DataEncipherment);
 
       const Botan::PKCS10_Request enc_req = Botan::X509::create_cert_req(
                opts,
@@ -1122,7 +1122,7 @@ Test::Result test_self_issued(const Botan::Private_Key& ca_key,
    // create a self-issued certificate, that is, a certificate with subject dn == issuer dn,
    // but signed by a CA, not signed by it's own private key
    Botan::X509_Cert_Options opts = ca_opts();
-   opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+   opts.constraints = Key_Constraints::DigitalSignature;
    opts.set_padding_scheme(sig_padding);
 
    const Botan::PKCS10_Request self_issued_req = Botan::X509::create_cert_req(opts, *user_key, hash_fn, Test::rng());
@@ -1175,35 +1175,35 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key,
    // Taken from RFC 5280, sec. 4.2.1.3
    // ALL constraints are not typical at all, but we use them for a negative test
    const auto all = Key_Constraints(
-      Key_Constraints::DIGITAL_SIGNATURE |
-      Key_Constraints::NON_REPUDIATION |
-      Key_Constraints::KEY_ENCIPHERMENT |
-      Key_Constraints::DATA_ENCIPHERMENT |
-      Key_Constraints::KEY_AGREEMENT |
-      Key_Constraints::KEY_CERT_SIGN |
-      Key_Constraints::CRL_SIGN |
-      Key_Constraints::ENCIPHER_ONLY |
-      Key_Constraints::DECIPHER_ONLY);
+      Key_Constraints::DigitalSignature |
+      Key_Constraints::NonRepudiation |
+      Key_Constraints::KeyEncipherment |
+      Key_Constraints::DataEncipherment |
+      Key_Constraints::KeyAgreement |
+      Key_Constraints::KeyCertSign |
+      Key_Constraints::CrlSign |
+      Key_Constraints::EncipherOnly |
+      Key_Constraints::DecipherOnly);
 
-   const auto ca = Key_Constraints(Key_Constraints::KEY_CERT_SIGN);
-   const auto sign_data = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE);
+   const auto ca = Key_Constraints(Key_Constraints::KeyCertSign);
+   const auto sign_data = Key_Constraints(Key_Constraints::DigitalSignature);
    const auto non_repudiation = Key_Constraints(
-      Key_Constraints::NON_REPUDIATION |
-      Key_Constraints::DIGITAL_SIGNATURE);
-   const auto key_encipherment = Key_Constraints(Key_Constraints::KEY_ENCIPHERMENT);
-   const auto data_encipherment = Key_Constraints(Key_Constraints::DATA_ENCIPHERMENT);
-   const auto key_agreement = Key_Constraints(Key_Constraints::KEY_AGREEMENT);
+      Key_Constraints::NonRepudiation |
+      Key_Constraints::DigitalSignature);
+   const auto key_encipherment = Key_Constraints(Key_Constraints::KeyEncipherment);
+   const auto data_encipherment = Key_Constraints(Key_Constraints::DataEncipherment);
+   const auto key_agreement = Key_Constraints(Key_Constraints::KeyAgreement);
    const auto key_agreement_encipher_only = Key_Constraints(
-      Key_Constraints::KEY_AGREEMENT |
-      Key_Constraints::ENCIPHER_ONLY);
+      Key_Constraints::KeyAgreement |
+      Key_Constraints::EncipherOnly);
    const auto key_agreement_decipher_only = Key_Constraints(
-      Key_Constraints::KEY_AGREEMENT |
-      Key_Constraints::DECIPHER_ONLY);
-   const auto crl_sign = Key_Constraints(Key_Constraints::CRL_SIGN);
+      Key_Constraints::KeyAgreement |
+      Key_Constraints::DecipherOnly);
+   const auto crl_sign = Key_Constraints(Key_Constraints::CrlSign);
    const auto sign_everything = Key_Constraints(
-      Key_Constraints::DIGITAL_SIGNATURE |
-      Key_Constraints::KEY_CERT_SIGN |
-      Key_Constraints::CRL_SIGN);
+      Key_Constraints::DigitalSignature |
+      Key_Constraints::KeyCertSign |
+      Key_Constraints::CrlSign);
 
    if(pk_algo == "DH" || pk_algo == "ECDH")
       {
@@ -1421,7 +1421,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
-   opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+   opts.constraints = Key_Constraints::DigitalSignature;
 
    // include a custom extension in the request
    Botan::Extensions req_extensions;
@@ -1469,7 +1469,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
       {
       auto constraints = dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints();
       result.confirm("Key_Usage extension value matches in user certificate",
-                     constraints == Botan::Key_Constraints::DIGITAL_SIGNATURE);
+                     constraints == Botan::Key_Constraints::DigitalSignature);
       }
 
    // check if custom extension is present in CA-signed cert

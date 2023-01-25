@@ -55,7 +55,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
       cert_status[0].insert(Certificate_Status_Code::INVALID_USAGE);
       }
 
-   if(cert_path[0].has_constraints(Key_Constraints::KEY_CERT_SIGN) &&
+   if(cert_path[0].has_constraints(Key_Constraints::KeyCertSign) &&
       cert_path[0].is_CA_cert() == false)
       {
       /*
@@ -358,7 +358,7 @@ PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
          const X509_Certificate& subject = cert_path.at(i);
          const X509_Certificate& ca = cert_path.at(i+1);
 
-         if(!ca.allowed_usage(Key_Constraints::CRL_SIGN))
+         if(!ca.allowed_usage(Key_Constraints::CrlSign))
             status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER);
 
          if(validation_time < crls[i]->this_update())

@@ -249,7 +249,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
          * validation failure for it.
          */
          if(data->m_key_constraints.empty() ||
-            data->m_key_constraints.includes(Key_Constraints::KEY_CERT_SIGN))
+            data->m_key_constraints.includes(Key_Constraints::KeyCertSign))
             {
             data->m_is_ca_certificate = true;
             data->m_path_len_constraint = ext->get_path_limit();
@@ -554,27 +554,27 @@ bool X509_Certificate::allowed_usage(Usage_Type usage) const
          return true;
 
       case Usage_Type::TLS_SERVER_AUTH:
-         return (allowed_usage(Key_Constraints::KEY_AGREEMENT) ||
-                 allowed_usage(Key_Constraints::KEY_ENCIPHERMENT) ||
-                 allowed_usage(Key_Constraints::DIGITAL_SIGNATURE)) &&
+         return (allowed_usage(Key_Constraints::KeyAgreement) ||
+                 allowed_usage(Key_Constraints::KeyEncipherment) ||
+                 allowed_usage(Key_Constraints::DigitalSignature)) &&
             allowed_extended_usage("PKIX.ServerAuth");
 
       case Usage_Type::TLS_CLIENT_AUTH:
-         return (allowed_usage(Key_Constraints::DIGITAL_SIGNATURE) ||
-                 allowed_usage(Key_Constraints::KEY_AGREEMENT)) &&
+         return (allowed_usage(Key_Constraints::DigitalSignature) ||
+                 allowed_usage(Key_Constraints::KeyAgreement)) &&
             allowed_extended_usage("PKIX.ClientAuth");
 
       case Usage_Type::OCSP_RESPONDER:
-         return (allowed_usage(Key_Constraints::DIGITAL_SIGNATURE) ||
-                 allowed_usage(Key_Constraints::NON_REPUDIATION)) &&
+         return (allowed_usage(Key_Constraints::DigitalSignature) ||
+                 allowed_usage(Key_Constraints::NonRepudiation)) &&
             has_ex_constraint("PKIX.OCSPSigning");
 
       case Usage_Type::CERTIFICATE_AUTHORITY:
          return is_CA_cert();
 
       case Usage_Type::ENCRYPTION:
-         return (allowed_usage(Key_Constraints::KEY_ENCIPHERMENT) ||
-                 allowed_usage(Key_Constraints::DATA_ENCIPHERMENT));
+         return (allowed_usage(Key_Constraints::KeyEncipherment) ||
+                 allowed_usage(Key_Constraints::DataEncipherment));
       }
 
    return false;
@@ -779,23 +779,23 @@ std::string X509_Certificate::to_string() const
       out << " None\n";
    else
       {
-      if(constraints.includes(Key_Constraints::DIGITAL_SIGNATURE))
+      if(constraints.includes(Key_Constraints::DigitalSignature))
          out << "   Digital Signature\n";
-      if(constraints.includes(Key_Constraints::NON_REPUDIATION))
+      if(constraints.includes(Key_Constraints::NonRepudiation))
          out << "   Non-Repudiation\n";
-      if(constraints.includes(Key_Constraints::KEY_ENCIPHERMENT))
+      if(constraints.includes(Key_Constraints::KeyEncipherment))
          out << "   Key Encipherment\n";
-      if(constraints.includes(Key_Constraints::DATA_ENCIPHERMENT))
+      if(constraints.includes(Key_Constraints::DataEncipherment))
          out << "   Data Encipherment\n";
-      if(constraints.includes(Key_Constraints::KEY_AGREEMENT))
+      if(constraints.includes(Key_Constraints::KeyAgreement))
          out << "   Key Agreement\n";
-      if(constraints.includes(Key_Constraints::KEY_CERT_SIGN))
+      if(constraints.includes(Key_Constraints::KeyCertSign))
          out << "   Cert Sign\n";
-      if(constraints.includes(Key_Constraints::CRL_SIGN))
+      if(constraints.includes(Key_Constraints::CrlSign))
          out << "   CRL Sign\n";
-      if(constraints.includes(Key_Constraints::ENCIPHER_ONLY))
+      if(constraints.includes(Key_Constraints::EncipherOnly))
          out << "   Encipher Only\n";
-      if(constraints.includes(Key_Constraints::DECIPHER_ONLY))
+      if(constraints.includes(Key_Constraints::DecipherOnly))
          out << "   Decipher Only\n";
       }
 

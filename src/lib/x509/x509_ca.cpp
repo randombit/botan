@@ -81,8 +81,8 @@ Extensions choose_extensions(const PKCS10_Request& req,
    Key_Constraints constraints;
    if(req.is_CA())
       {
-      constraints |= Key_Constraints::KEY_CERT_SIGN;
-      constraints |= Key_Constraints::CRL_SIGN;
+      constraints |= Key_Constraints::KeyCertSign;
+      constraints |= Key_Constraints::CrlSign;
       }
    else
       {

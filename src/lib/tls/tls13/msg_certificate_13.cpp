@@ -29,11 +29,11 @@ namespace {
 bool certificate_allows_signing(const X509_Certificate& cert)
    {
    const auto constraints = cert.constraints();
-   if(constraints == Key_Constraints::NO_CONSTRAINTS)
+   if(constraints == Key_Constraints::None)
       { return true; }
 
-   return constraints.includes(Key_Constraints::DIGITAL_SIGNATURE) ||
-      constraints.includes(Key_Constraints::NON_REPUDIATION);
+   return constraints.includes(Key_Constraints::DigitalSignature) ||
+      constraints.includes(Key_Constraints::NonRepudiation);
    }
 
 std::vector<std::string>

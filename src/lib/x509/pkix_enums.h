@@ -106,16 +106,29 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
    {
    public:
       enum Key_Constraints_Bits : uint32_t {
-         NO_CONSTRAINTS     = 0,
-         DIGITAL_SIGNATURE  = 1 << 15,
-         NON_REPUDIATION    = 1 << 14,
-         KEY_ENCIPHERMENT   = 1 << 13,
-         DATA_ENCIPHERMENT  = 1 << 12,
-         KEY_AGREEMENT      = 1 << 11,
-         KEY_CERT_SIGN      = 1 << 10,
-         CRL_SIGN           = 1 << 9,
-         ENCIPHER_ONLY      = 1 << 8,
-         DECIPHER_ONLY      = 1 << 7
+         None              = 0,
+         DigitalSignature  = 1 << 15,
+         NonRepudiation    = 1 << 14,
+         KeyEncipherment   = 1 << 13,
+         DataEncipherment  = 1 << 12,
+         KeyAgreement      = 1 << 11,
+         KeyCertSign       = 1 << 10,
+         CrlSign           = 1 << 9,
+         EncipherOnly      = 1 << 8,
+         DecipherOnly      = 1 << 7,
+
+         // Deprecated SHOUTING_CASE names for Key_Constraints
+         // will be removed in a future major release
+         NO_CONSTRAINTS    = None,
+         DIGITAL_SIGNATURE = DigitalSignature,
+         NON_REPUDIATION   = NonRepudiation,
+         KEY_ENCIPHERMENT  = KeyEncipherment,
+         DATA_ENCIPHERMENT = DataEncipherment,
+         KEY_AGREEMENT     = KeyAgreement,
+         KEY_CERT_SIGN     = KeyCertSign,
+         CRL_SIGN          = CrlSign,
+         ENCIPHER_ONLY     = EncipherOnly,
+         DECIPHER_ONLY     = DecipherOnly,
       };
 
       Key_Constraints(const Key_Constraints& other) = default;
