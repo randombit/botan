@@ -86,10 +86,11 @@ Extensions choose_extensions(const PKCS10_Request& req,
       }
    else
       {
-      std::unique_ptr<Public_Key> key(req.subject_public_key());
-      verify_cert_constraints_valid_for_key_type(*key, req.constraints());
       constraints = req.constraints();
       }
+
+   std::unique_ptr<Public_Key> key(req.subject_public_key());
+   constraints.acceptable_for_key(*key);
 
    Extensions extensions = req.extensions();
 

@@ -1208,7 +1208,7 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key,
    Test::Result result("X509 Valid Constraints");
 
    // should not throw on empty constraints
-   verify_cert_constraints_valid_for_key_type(key, Key_Constraints(Key_Constraints::NO_CONSTRAINTS));
+   Key_Constraints().acceptable_for_key(key);
 
    // now check some typical usage scenarios for the given key type
    typical_usage_constraints typical_usage;
@@ -1218,40 +1218,40 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key,
       // DH and ECDH only for key agreement
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
+         typical_usage.all.acceptable_for_key(key);
          });
       result.test_throws("cert sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
+         typical_usage.ca.acceptable_for_key(key);
          });
       result.test_throws("signature not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
+         typical_usage.sign_data.acceptable_for_key(key);
          });
       result.test_throws("non repudiation not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
+         typical_usage.non_repudiation.acceptable_for_key(key);
          });
       result.test_throws("key encipherment not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
+         typical_usage.key_encipherment.acceptable_for_key(key);
          });
       result.test_throws("data encipherment not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
+         typical_usage.data_encipherment.acceptable_for_key(key);
          });
 
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
+      typical_usage.key_agreement.acceptable_for_key(key);
+      typical_usage.key_agreement_encipher_only.acceptable_for_key(key);
+      typical_usage.key_agreement_decipher_only.acceptable_for_key(key);
 
       result.test_throws("crl sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
+         typical_usage.crl_sign.acceptable_for_key(key);
          });
       result.test_throws("sign, cert sign, crl sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
+         typical_usage.sign_everything.acceptable_for_key(key);
          });
       }
    else if(pk_algo == "Kyber")
@@ -1259,97 +1259,97 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key,
       // Kyber can encrypt and agree
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
+         typical_usage.all.acceptable_for_key(key);
          });
       result.test_throws("cert sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
+         typical_usage.ca.acceptable_for_key(key);
          });
       result.test_throws("signature not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
+         typical_usage.sign_data.acceptable_for_key(key);
          });
       result.test_throws("non repudiation not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
+         typical_usage.non_repudiation.acceptable_for_key(key);
          });
       result.test_throws("crl sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
+         typical_usage.crl_sign.acceptable_for_key(key);
          });
       result.test_throws("sign, cert sign, crl sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
+         typical_usage.sign_everything.acceptable_for_key(key);
          });
 
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
+      typical_usage.key_agreement.acceptable_for_key(key);
+      typical_usage.data_encipherment.acceptable_for_key(key);
+      typical_usage.key_encipherment.acceptable_for_key(key);
       }
    else if(pk_algo == "RSA")
       {
       // RSA can do everything except key agreement
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
+         typical_usage.all.acceptable_for_key(key);
          });
 
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
+      typical_usage.ca.acceptable_for_key(key);
+      typical_usage.sign_data.acceptable_for_key(key);
+      typical_usage.non_repudiation.acceptable_for_key(key);
+      typical_usage.key_encipherment.acceptable_for_key(key);
+      typical_usage.data_encipherment.acceptable_for_key(key);
 
       result.test_throws("key agreement not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
+         typical_usage.key_agreement.acceptable_for_key(key);
          });
       result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
+         typical_usage.key_agreement_encipher_only.acceptable_for_key(key);
          });
       result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
+         typical_usage.key_agreement_decipher_only.acceptable_for_key(key);
          });
 
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
+      typical_usage.crl_sign.acceptable_for_key(key);
+      typical_usage.sign_everything.acceptable_for_key(key);
       }
    else if(pk_algo == "ElGamal")
       {
       // only ElGamal encryption is currently implemented
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
+         typical_usage.all.acceptable_for_key(key);
          });
       result.test_throws("cert sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
+         typical_usage.ca.acceptable_for_key(key);
          });
 
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
+      typical_usage.data_encipherment.acceptable_for_key(key);
+      typical_usage.key_encipherment.acceptable_for_key(key);
 
       result.test_throws("key agreement not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
+         typical_usage.key_agreement.acceptable_for_key(key);
          });
       result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
+         typical_usage.key_agreement_encipher_only.acceptable_for_key(key);
          });
       result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
+         typical_usage.key_agreement_decipher_only.acceptable_for_key(key);
          });
       result.test_throws("crl sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
+         typical_usage.crl_sign.acceptable_for_key(key);
          });
       result.test_throws("sign, cert sign, crl sign not permitted not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
+         typical_usage.sign_everything.acceptable_for_key(key);
          });
       }
    else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" ||
@@ -1358,36 +1358,36 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key,
       // these are signature algorithms only
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
+         typical_usage.all.acceptable_for_key(key);
          });
 
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
+      typical_usage.ca.acceptable_for_key(key);
+      typical_usage.sign_data.acceptable_for_key(key);
+      typical_usage.non_repudiation.acceptable_for_key(key);
 
       result.test_throws("key encipherment not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
+         typical_usage.key_encipherment.acceptable_for_key(key);
          });
       result.test_throws("data encipherment not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
+         typical_usage.data_encipherment.acceptable_for_key(key);
          });
       result.test_throws("key agreement not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
+         typical_usage.key_agreement.acceptable_for_key(key);
          });
       result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
+         typical_usage.key_agreement_encipher_only.acceptable_for_key(key);
          });
       result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
+         typical_usage.key_agreement_decipher_only.acceptable_for_key(key);
          });
 
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
+      typical_usage.crl_sign.acceptable_for_key(key);
+      typical_usage.sign_everything.acceptable_for_key(key);
       }
 
    return result;

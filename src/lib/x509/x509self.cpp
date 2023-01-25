@@ -75,9 +75,10 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       }
    else
       {
-      verify_cert_constraints_valid_for_key_type(key, opts.constraints);
       constraints = opts.constraints;
       }
+
+   constraints.acceptable_for_key(key);
 
    extensions.add_new(
       std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit),
@@ -125,9 +126,10 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       }
    else
       {
-      verify_cert_constraints_valid_for_key_type(key, opts.constraints);
       constraints = opts.constraints;
       }
+
+   constraints.acceptable_for_key(key);
 
    Extensions extensions = opts.extensions;
 
