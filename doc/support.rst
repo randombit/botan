@@ -6,11 +6,11 @@ Supported Platforms
 
 For Botan 3, the tier-1 supported platforms are
 
-* Linux x86-64, GCC 11 or higher
-* Linux x86-64, Clang 14 or higher
-* Linux aarch64, GCC 11 or higher
-* Linux ppc64le, GCC 11 or higher
-* Windows x86-64, Visual C++ 2019 or higher
+* Linux x86-64, GCC 11 or later
+* Linux x86-64, Clang 14 or later
+* Linux aarch64, GCC 11 or later
+* Linux ppc64le, GCC 11 or later
+* Windows x86-64, Visual C++ 2022 or later
 
 These platforms are all tested by continuous integration, and the developers
 have access to hardware in order to test patches. Problems affecting these
@@ -22,9 +22,9 @@ For Botan 3, the tier-2 supported platforms are
 * iOS aarch64, latest XCode Clang
 * Windows x86-64, latest MinGW GCC
 * Android aarch64, latest NDK Clang
-* Linux arm32, GCC 11 or higher
-* Linux x86-32, GCC 11 or higher
-* FreeBSD x86-64, Clang 14 or higher
+* Linux arm32, GCC 11 or later
+* Linux x86-32, GCC 11 or later
+* FreeBSD x86-64, Clang 14 or later
 
 Some (but not all) of the tier-2 platforms are tested by CI. Everything should
 work, and if problems are encountered, the developers will probably be able to

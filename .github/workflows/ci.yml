@@ -42,9 +42,6 @@ jobs:
           - target: shared
             arch: x86
             host_os: windows-2022
-          - target: shared
-            arch: x86_64
-            host_os: windows-2019
 
     runs-on: ${{ matrix.host_os }}
 
