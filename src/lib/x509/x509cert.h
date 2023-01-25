@@ -235,10 +235,11 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       bool allowed_usage(Usage_Type usage) const;
 
       /**
-      * Returns true if the specified @param constraints are included in the key
-      * usage extension.
+      * Returns true if and only if the specified @param constraints are
+      * included in the key usage extension.
+      *
+      * Typically for applications you want allowed_usage instead.
       */
-      BOTAN_DEPRECATED("Use X509_Certificate::allowed_usage")
       bool has_constraints(Key_Constraints constraints) const;
 
       /**

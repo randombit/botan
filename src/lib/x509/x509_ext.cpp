@@ -338,7 +338,7 @@ void Basic_Constraints::decode_inner(const std::vector<uint8_t>& in)
 std::vector<uint8_t> Key_Usage::encode_inner() const
    {
    if(m_constraints.empty())
-      throw Encoding_Error("Cannot encode zero usage constraints");
+      throw Encoding_Error("Cannot encode empty PKIX key constraints");
 
    const size_t constraint_bits = m_constraints.value();
    const size_t unused_bits = ctz(static_cast<uint32_t>(constraint_bits));

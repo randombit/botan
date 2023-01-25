@@ -66,7 +66,7 @@ std::string Key_Constraints::to_string() const
 /*
 * Make sure the given key constraints are permitted for the given key type
 */
-void Key_Constraints::acceptable_for_key(const Public_Key& pub_key) const
+bool Key_Constraints::compatible_with(const Public_Key& pub_key) const
    {
    const std::string name = pub_key.algo_name();
 
@@ -104,8 +104,10 @@ void Key_Constraints::acceptable_for_key(const Public_Key& pub_key) const
 
    if((m_value & permitted) != m_value)
       {
-      throw Invalid_Argument("Invalid " + name + " constraints " + this->to_string());
+      return false;
       }
+
+   return true;
    }
 
 }

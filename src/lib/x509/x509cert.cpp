@@ -514,6 +514,12 @@ const Extensions& X509_Certificate::v3_extensions() const
    return data().m_v3_extensions;
    }
 
+bool X509_Certificate::has_constraints(Key_Constraints usage) const
+   {
+   // Unlike allowed_usage, returns false if constraints was not set
+   return constraints().includes(usage);
+   }
+
 bool X509_Certificate::allowed_usage(Key_Constraints usage) const
    {
    if(constraints().empty())
@@ -572,14 +578,6 @@ bool X509_Certificate::allowed_usage(Usage_Type usage) const
       }
 
    return false;
-   }
-
-bool X509_Certificate::has_constraints(Key_Constraints constraints) const
-   {
-   if(this->constraints().empty())
-      return false;
-
-   return ((this->constraints().value() & constraints.value()) != 0);
    }
 
 bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const

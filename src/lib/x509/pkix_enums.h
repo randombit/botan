@@ -118,6 +118,11 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
          DECIPHER_ONLY      = 1 << 7
       };
 
+      Key_Constraints(const Key_Constraints& other) = default;
+      Key_Constraints(Key_Constraints&& other) = default;
+      Key_Constraints& operator=(const Key_Constraints& other) = default;
+      Key_Constraints& operator=(Key_Constraints&& other) = default;
+
       Key_Constraints(Key_Constraints_Bits bits) : m_value(bits) {}
 
       explicit Key_Constraints(uint32_t bits) : m_value(bits) {}
@@ -128,7 +133,7 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
       bool operator!=(const Key_Constraints& other) const { return m_value != other.m_value; }
 
       bool operator==(Key_Constraints_Bits other) const { return m_value == other; }
-      bool operator!=(Key_Constraints_Bits other) const { return m_value == other; }
+      bool operator!=(Key_Constraints_Bits other) const { return m_value != other; }
 
       void operator|=(Key_Constraints_Bits other)
          {
@@ -137,7 +142,7 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
 
       // Return true if all bits in mask are set
       bool includes(Key_Constraints_Bits other) const { return (m_value & other) == other; }
-      bool includes(Key_Constraints other) const { return (m_value & other.m_value) == m_value; }
+      bool includes(Key_Constraints other) const { return (m_value & other.m_value) == other.m_value; }
 
       bool empty() const { return m_value == 0; }
 
@@ -148,9 +153,9 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
       /**
       * Check that key constraints are permitted for a specific public key.
       * @param pub_key the public key on which the constraints shall be enforced on
-      * @throw Invalid_Argument if the given constraints are not permitted for this key
+      * @return false if the constraints are not permitted for this key
       */
-      void acceptable_for_key(const Public_Key& key) const;
+      bool compatible_with(const Public_Key& key) const;
    private:
       uint32_t m_value;
    };

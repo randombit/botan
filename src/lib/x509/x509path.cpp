@@ -55,8 +55,8 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
       cert_status[0].insert(Certificate_Status_Code::INVALID_USAGE);
       }
 
-   if(cert_path[0].is_CA_cert() == false &&
-      cert_path[0].allowed_usage(Key_Constraints::KEY_CERT_SIGN))
+   if(cert_path[0].has_constraints(Key_Constraints::KEY_CERT_SIGN) &&
+      cert_path[0].is_CA_cert() == false)
       {
       /*
       "If the keyCertSign bit is asserted, then the cA bit in the

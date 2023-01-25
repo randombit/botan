@@ -78,7 +78,8 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       constraints = opts.constraints;
       }
 
-   constraints.acceptable_for_key(key);
+   if(!constraints.compatible_with(key))
+      throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
 
    extensions.add_new(
       std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit),
@@ -129,7 +130,8 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       constraints = opts.constraints;
       }
 
-   constraints.acceptable_for_key(key);
+   if(!constraints.compatible_with(key))
+      throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
 
    Extensions extensions = opts.extensions;
 
@@ -139,6 +141,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       {
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints));
       }
+
    extensions.add_new(std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
    extensions.add_new(std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt));
 

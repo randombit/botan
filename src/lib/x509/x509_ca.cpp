@@ -90,7 +90,8 @@ Extensions choose_extensions(const PKCS10_Request& req,
       }
 
    std::unique_ptr<Public_Key> key(req.subject_public_key());
-   constraints.acceptable_for_key(*key);
+   if(!constraints.compatible_with(*key))
+      throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
 
    Extensions extensions = req.extensions();
 
