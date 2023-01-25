@@ -10,6 +10,9 @@
 
 #include <botan/exceptn.h>
 #include <string>
+#if defined(_MSC_VER)
+#include <intsafe.h>
+#endif
 
 namespace Botan {
 
@@ -28,8 +31,10 @@ inline size_t checked_add(size_t x, size_t y, const char* file, int line)
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_add_overflow)
    size_t z;
    if(__builtin_add_overflow(x, y, &z)) [[unlikely]]
+#elif defined(_MSC_VER)
+   size_t z;
+   if(SizeTAdd(x, y, &z) != S_OK) [[unlikely]]
 #else
-   // (Possible) TODO Windows supports SizeTAdd (intsafe.h) but unsure it is really a win.
    size_t z = x + y;
    if(z < x) [[unlikely]]
 #endif
