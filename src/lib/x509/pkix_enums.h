@@ -11,6 +11,8 @@
 
 namespace Botan {
 
+class Public_Key;
+
 /**
 * Certificate validation status code
 */
@@ -100,18 +102,58 @@ BOTAN_PUBLIC_API(2,0) const char* to_string(Certificate_Status_Code code);
 * X.509v3 Key Constraints.
 * If updating update copy in ffi.h
 */
-enum Key_Constraints {
-   NO_CONSTRAINTS     = 0,
-   DIGITAL_SIGNATURE  = 1 << 15,
-   NON_REPUDIATION    = 1 << 14,
-   KEY_ENCIPHERMENT   = 1 << 13,
-   DATA_ENCIPHERMENT  = 1 << 12,
-   KEY_AGREEMENT      = 1 << 11,
-   KEY_CERT_SIGN      = 1 << 10,
-   CRL_SIGN           = 1 << 9,
-   ENCIPHER_ONLY      = 1 << 8,
-   DECIPHER_ONLY      = 1 << 7
-};
+class BOTAN_PUBLIC_API(3,0) Key_Constraints
+   {
+   public:
+      enum Key_Constraints_Bits : uint32_t {
+         NO_CONSTRAINTS     = 0,
+         DIGITAL_SIGNATURE  = 1 << 15,
+         NON_REPUDIATION    = 1 << 14,
+         KEY_ENCIPHERMENT   = 1 << 13,
+         DATA_ENCIPHERMENT  = 1 << 12,
+         KEY_AGREEMENT      = 1 << 11,
+         KEY_CERT_SIGN      = 1 << 10,
+         CRL_SIGN           = 1 << 9,
+         ENCIPHER_ONLY      = 1 << 8,
+         DECIPHER_ONLY      = 1 << 7
+      };
+
+      Key_Constraints(Key_Constraints_Bits bits) : m_value(bits) {}
+
+      explicit Key_Constraints(uint32_t bits) : m_value(bits) {}
+
+      Key_Constraints() : m_value(0) {}
+
+      bool operator==(const Key_Constraints& other) const { return m_value == other.m_value; }
+      bool operator!=(const Key_Constraints& other) const { return m_value != other.m_value; }
+
+      bool operator==(Key_Constraints_Bits other) const { return m_value == other; }
+      bool operator!=(Key_Constraints_Bits other) const { return m_value == other; }
+
+      void operator|=(Key_Constraints_Bits other)
+         {
+         m_value |= other;
+         }
+
+      // Return true if all bits in mask are set
+      bool includes(Key_Constraints_Bits other) const { return (m_value & other) == other; }
+      bool includes(Key_Constraints other) const { return (m_value & other.m_value) == m_value; }
+
+      bool empty() const { return m_value == 0; }
+
+      uint32_t value() const { return m_value; }
+
+      std::string to_string() const;
+
+      /**
+      * Check that key constraints are permitted for a specific public key.
+      * @param pub_key the public key on which the constraints shall be enforced on
+      * @throw Invalid_Argument if the given constraints are not permitted for this key
+      */
+      void acceptable_for_key(const Public_Key& key) const;
+   private:
+      uint32_t m_value;
+   };
 
 /**
 * X.509v2 CRL Reason Code.

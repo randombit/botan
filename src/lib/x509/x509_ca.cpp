@@ -81,7 +81,8 @@ Extensions choose_extensions(const PKCS10_Request& req,
    Key_Constraints constraints;
    if(req.is_CA())
       {
-      constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
+      constraints |= Key_Constraints::KEY_CERT_SIGN;
+      constraints |= Key_Constraints::CRL_SIGN;
       }
    else
       {
@@ -96,7 +97,7 @@ Extensions choose_extensions(const PKCS10_Request& req,
       std::make_unique<Cert_Extension::Basic_Constraints>(req.is_CA(), req.path_limit()),
       true);
 
-   if(constraints != NO_CONSTRAINTS)
+   if(!constraints.empty())
       {
       extensions.replace(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
       }

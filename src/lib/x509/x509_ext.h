@@ -59,7 +59,9 @@ class BOTAN_PUBLIC_API(2,0) Key_Usage final : public Certificate_Extension
          return std::make_unique<Key_Usage>(m_constraints);
          }
 
-      explicit Key_Usage(Key_Constraints c = NO_CONSTRAINTS) : m_constraints(c) {}
+      explicit Key_Usage(Key_Constraints c) : m_constraints(c) {}
+
+      explicit Key_Usage() : m_constraints(Key_Constraints::NO_CONSTRAINTS) {}
 
       Key_Constraints get_constraints() const { return m_constraints; }
 
@@ -70,7 +72,7 @@ class BOTAN_PUBLIC_API(2,0) Key_Usage final : public Certificate_Extension
       std::string oid_name() const override { return "X509v3.KeyUsage"; }
 
       bool should_encode() const override
-         { return (m_constraints != NO_CONSTRAINTS); }
+         { return (m_constraints != Key_Constraints::NO_CONSTRAINTS); }
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
 

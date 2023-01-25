@@ -67,11 +67,11 @@ Botan::X509_Cert_Options req_opts1(const std::string& algo, const std::string& s
 
    if(algo == "RSA")
       {
-      opts.constraints = Botan::Key_Constraints(Botan::KEY_ENCIPHERMENT);
+      opts.constraints = Botan::Key_Constraints::KEY_ENCIPHERMENT;
       }
    else if(algo == "DSA" || algo == "ECDSA" || algo == "ECGDSA" || algo == "ECKCDSA")
       {
-      opts.constraints = Botan::Key_Constraints(Botan::DIGITAL_SIGNATURE);
+      opts.constraints = Botan::Key_Constraints::DIGITAL_SIGNATURE;
       }
 
    return opts;
@@ -812,8 +812,10 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, Test::rng());
 
       {
-      const auto constraints = Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN);
-      result.test_eq("ca key usage", (ca_cert.constraints() & constraints) == constraints, true);
+      result.confirm("ca key usage cert",
+                     ca_cert.constraints().includes(Botan::Key_Constraints::KEY_CERT_SIGN));
+      result.confirm("ca key usage crl",
+                     ca_cert.constraints().includes(Botan::Key_Constraints::CRL_SIGN));
       }
 
    /* Create user #1's key and cert request */
@@ -875,8 +877,8 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
       Botan::X509::create_self_signed_cert(req_opts1(sig_algo, sig_padding), *user1_key, hash_fn, Test::rng());
 
       {
-      auto constrains = req_opts1(sig_algo).constraints;
-      result.test_eq("user1 key usage", (user1_cert.constraints() & constrains) == constrains, true);
+      auto constraints = req_opts1(sig_algo).constraints;
+      result.confirm("user1 key usage", user1_cert.constraints().includes(constraints));
       }
 
    /* Copy, assign and compare */
@@ -1061,7 +1063,7 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
                   mult_usage_cert.allowed_usage(Usage_Type::ENCRYPTION), false);
 
 
-   opts.constraints = Key_Constraints::NO_CONSTRAINTS;
+   opts.constraints = Key_Constraints();
 
    const Botan::PKCS10_Request no_usage_req = Botan::X509::create_cert_req(opts, *user1_key, hash_fn, Test::rng());
 
@@ -1575,8 +1577,9 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    key_usage_ext = ca_signed_cert.v3_extensions().get(ku_oid);
    if(result.confirm("Key_Usage extension present in CA-signed certificate", key_usage_ext != nullptr))
       {
+      auto constraints = dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints();
       result.confirm("Key_Usage extension value matches in user certificate",
-                     dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == Botan::DIGITAL_SIGNATURE);
+                     constraints == Botan::Key_Constraints::DIGITAL_SIGNATURE);
       }
 
    // check if custom extension is present in CA-signed cert

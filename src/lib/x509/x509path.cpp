@@ -56,7 +56,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
       }
 
    if(cert_path[0].is_CA_cert() == false &&
-      cert_path[0].has_constraints(KEY_CERT_SIGN))
+      cert_path[0].allowed_usage(Key_Constraints::KEY_CERT_SIGN))
       {
       /*
       "If the keyCertSign bit is asserted, then the cA bit in the
@@ -358,7 +358,7 @@ PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
          const X509_Certificate& subject = cert_path.at(i);
          const X509_Certificate& ca = cert_path.at(i+1);
 
-         if(!ca.allowed_usage(CRL_SIGN))
+         if(!ca.allowed_usage(Key_Constraints::CRL_SIGN))
             status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER);
 
          if(validation_time < crls[i]->this_update())

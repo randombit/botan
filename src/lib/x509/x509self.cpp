@@ -70,7 +70,8 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    Key_Constraints constraints;
    if(opts.is_CA)
       {
-      constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
+      constraints |= Key_Constraints::KEY_CERT_SIGN;
+      constraints |= Key_Constraints::CRL_SIGN;
       }
    else
       {
@@ -82,7 +83,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit),
       true);
 
-   if(constraints != NO_CONSTRAINTS)
+   if(!constraints.empty())
       {
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
       }
@@ -119,7 +120,8 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    Key_Constraints constraints;
    if(opts.is_CA)
       {
-      constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
+      constraints |= Key_Constraints::KEY_CERT_SIGN;
+      constraints |= Key_Constraints::CRL_SIGN;
       }
    else
       {
@@ -131,7 +133,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    extensions.add_new(std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit));
 
-   if(constraints != NO_CONSTRAINTS)
+   if(!constraints.empty())
       {
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints));
       }

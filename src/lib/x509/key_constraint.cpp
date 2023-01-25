@@ -1,49 +1,48 @@
 /*
-* KeyUsage
 * (C) 1999-2007,2016 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/pkix_types.h>
+#include <botan/pkix_enums.h>
 #include <botan/pk_keys.h>
 #include <vector>
 
 namespace Botan {
 
-std::string key_constraints_to_string(Key_Constraints constraints)
+std::string Key_Constraints::to_string() const
    {
-   std::vector<std::string> str;
-
-   if(constraints == NO_CONSTRAINTS)
+   if(this->m_value == Key_Constraints::NO_CONSTRAINTS)
       return "no_constraints";
 
-   if(constraints & DIGITAL_SIGNATURE)
+   std::vector<std::string> str;
+
+   if(this->m_value & Key_Constraints::DIGITAL_SIGNATURE)
       str.push_back("digital_signature");
 
-   if(constraints & NON_REPUDIATION)
+   if(this->m_value & Key_Constraints::NON_REPUDIATION)
       str.push_back("non_repudiation");
 
-   if(constraints & KEY_ENCIPHERMENT)
+   if(this->m_value & Key_Constraints::KEY_ENCIPHERMENT)
       str.push_back("key_encipherment");
 
-   if(constraints & DATA_ENCIPHERMENT)
+   if(this->m_value & Key_Constraints::DATA_ENCIPHERMENT)
       str.push_back("data_encipherment");
 
-   if(constraints & KEY_AGREEMENT)
+   if(this->m_value & Key_Constraints::KEY_AGREEMENT)
       str.push_back("key_agreement");
 
-   if(constraints & KEY_CERT_SIGN)
+   if(this->m_value & Key_Constraints::KEY_CERT_SIGN)
       str.push_back("key_cert_sign");
 
-   if(constraints & CRL_SIGN)
+   if(this->m_value & Key_Constraints::CRL_SIGN)
       str.push_back("crl_sign");
 
-   if(constraints & ENCIPHER_ONLY)
+   if(this->m_value & Key_Constraints::ENCIPHER_ONLY)
       str.push_back("encipher_only");
 
-   if(constraints & DECIPHER_ONLY)
+   if(this->m_value & Key_Constraints::DECIPHER_ONLY)
       str.push_back("decipher_only");
 
    // Not 0 (checked at start) but nothing matched above!
@@ -67,12 +66,9 @@ std::string key_constraints_to_string(Key_Constraints constraints)
 /*
 * Make sure the given key constraints are permitted for the given key type
 */
-void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
-                                                Key_Constraints constraints)
+void Key_Constraints::acceptable_for_key(const Public_Key& pub_key) const
    {
    const std::string name = pub_key.algo_name();
-
-   size_t permitted = 0;
 
    const bool can_agree = (name == "DH" || name == "ECDH" || name.starts_with("Kyber-"));
    const bool can_encrypt = (name == "RSA" || name == "ElGamal" || name.starts_with("Kyber-"));
@@ -83,24 +79,32 @@ void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
        name == "GOST-34.10" || name == "GOST-34.10-2012-256" || name == "GOST-34.10-2012-512" ||
        name.starts_with("Dilithium-"));
 
+   uint32_t permitted = 0;
+
    if(can_agree)
       {
-      permitted |= KEY_AGREEMENT | ENCIPHER_ONLY | DECIPHER_ONLY;
+      permitted |= Key_Constraints::KEY_AGREEMENT |
+         Key_Constraints::ENCIPHER_ONLY |
+         Key_Constraints::DECIPHER_ONLY;
       }
 
    if(can_encrypt)
       {
-      permitted |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT;
+      permitted |= Key_Constraints::KEY_ENCIPHERMENT |
+         Key_Constraints::DATA_ENCIPHERMENT;
       }
 
    if(can_sign)
       {
-      permitted |= DIGITAL_SIGNATURE | NON_REPUDIATION | KEY_CERT_SIGN | CRL_SIGN;
+      permitted |= Key_Constraints::DIGITAL_SIGNATURE |
+         Key_Constraints::NON_REPUDIATION |
+         Key_Constraints::KEY_CERT_SIGN |
+         Key_Constraints::CRL_SIGN;
       }
 
-   if(Key_Constraints(constraints & permitted) != constraints)
+   if((m_value & permitted) != m_value)
       {
-      throw Invalid_Argument("Invalid " + name + " constraints " + key_constraints_to_string(constraints));
+      throw Invalid_Argument("Invalid " + name + " constraints " + this->to_string());
       }
    }
 

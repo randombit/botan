@@ -197,16 +197,18 @@ namespace {
 bool key_usage_matches_ciphersuite(Key_Constraints usage,
                                    const Ciphersuite& suite)
    {
-   if(usage == NO_CONSTRAINTS)
+   if(usage == Key_Constraints::NO_CONSTRAINTS)
       return true; // anything goes ...
 
    if(suite.kex_method() == Kex_Algo::STATIC_RSA)
       {
-      return (usage & KEY_ENCIPHERMENT) | (usage & DATA_ENCIPHERMENT);
+      return usage.includes(Key_Constraints::KEY_ENCIPHERMENT) ||
+         usage.includes(Key_Constraints::DATA_ENCIPHERMENT);
       }
    else
       {
-      return (usage & DIGITAL_SIGNATURE) | (usage & NON_REPUDIATION);
+      return usage.includes(Key_Constraints::DIGITAL_SIGNATURE) ||
+         usage.includes(Key_Constraints::NON_REPUDIATION);
       }
    }
 

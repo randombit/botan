@@ -30,10 +30,19 @@ class Public_Key;
 * @param constraints the constraints that shall be enforced on the key
 * @throw Invalid_Argument if the given constraints are not permitted for this key
 */
-BOTAN_PUBLIC_API(2,0) void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
-                                                                      Key_Constraints constraints);
 
-std::string BOTAN_PUBLIC_API(2,0) key_constraints_to_string(Key_Constraints);
+BOTAN_DEPRECATED("Use Key_Constraints::acceptable_for_key")
+inline void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
+                                                       Key_Constraints constraints)
+   {
+   constraints.acceptable_for_key(pub_key);
+   }
+
+BOTAN_DEPRECATED("Use Key_Constraints::to_string")
+inline std::string key_constraints_to_string(Key_Constraints c)
+   {
+   return c.to_string();
+   }
 
 /**
 * Distinguished Name

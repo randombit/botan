@@ -337,18 +337,19 @@ void Basic_Constraints::decode_inner(const std::vector<uint8_t>& in)
 */
 std::vector<uint8_t> Key_Usage::encode_inner() const
    {
-   if(m_constraints == NO_CONSTRAINTS)
+   if(m_constraints.empty())
       throw Encoding_Error("Cannot encode zero usage constraints");
 
-   const size_t unused_bits = ctz(static_cast<uint32_t>(m_constraints));
+   const size_t constraint_bits = m_constraints.value();
+   const size_t unused_bits = ctz(static_cast<uint32_t>(constraint_bits));
 
    std::vector<uint8_t> der;
    der.push_back(static_cast<uint8_t>(ASN1_Type::BitString));
    der.push_back(2 + ((unused_bits < 8) ? 1 : 0));
    der.push_back(unused_bits % 8);
-   der.push_back((m_constraints >> 8) & 0xFF);
-   if(m_constraints & 0xFF)
-      der.push_back(m_constraints & 0xFF);
+   der.push_back((constraint_bits >> 8) & 0xFF);
+   if(constraint_bits & 0xFF)
+      der.push_back(constraint_bits & 0xFF);
 
    return der;
    }
