@@ -140,8 +140,13 @@ std::string X509_Object::hash_used_for_signature() const
    const OID& oid = m_sig_algo.get_oid();
    const std::vector<std::string> sig_info = split_on(oid.to_formatted_string(), '/');
 
-   if(sig_info.size() == 1 && sig_info[0] == "Ed25519")
-      return "SHA-512";
+   if(sig_info.size() == 1)
+      {
+      if(sig_info[0] == "Ed25519")
+         return "SHA-512";
+      else if(sig_info[0].starts_with("Dilithium-"))
+         return "SHAKE-256(512)";
+      }
    else if(sig_info.size() != 2)
       throw Internal_Error("Invalid name format found for " + oid.to_string());
 
