@@ -72,9 +72,7 @@ void HKDF_Expand::kdf(uint8_t key[], size_t key_len,
    if(key_len == 0)
       return;
 
-   const size_t blocks_required = key_len / m_prf->output_length();
-
-   if(blocks_required >= 0xFF)
+   if(key_len > m_prf->output_length() * 255)
       throw Invalid_Argument("HKDF-Expand maximum output length exceeeded");
 
    m_prf->set_key(secret, secret_len);
