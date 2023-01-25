@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 
    if(!cmd)
       {
-      std::cout << "Unknown command " << cmd_name << " (try --help)\n";
+      std::cerr << "Unknown command " << cmd_name << " (try --help)\n";
       return 1;
       }
 
