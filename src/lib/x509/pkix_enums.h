@@ -165,7 +165,7 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
 
       /**
       * Check that key constraints are permitted for a specific public key.
-      * @param pub_key the public key on which the constraints shall be enforced on
+      * @param key the public key on which the constraints shall be enforced on
       * @return false if the constraints are not permitted for this key
       */
       bool compatible_with(const Public_Key& key) const;
