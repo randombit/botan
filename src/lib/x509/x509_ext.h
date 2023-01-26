@@ -72,7 +72,7 @@ class BOTAN_PUBLIC_API(2,0) Key_Usage final : public Certificate_Extension
       std::string oid_name() const override { return "X509v3.KeyUsage"; }
 
       bool should_encode() const override
-         { return (m_constraints != Key_Constraints::None); }
+         { return !m_constraints.empty(); }
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
 

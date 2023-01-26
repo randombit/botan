@@ -8,7 +8,7 @@
 #define BOTAN_X509_PKIX_ENUMS_H_
 
 #include <botan/types.h>
-
+#include <string>
 namespace Botan {
 
 class Public_Key;
@@ -142,11 +142,7 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
 
       Key_Constraints() : m_value(0) {}
 
-      bool operator==(const Key_Constraints& other) const { return m_value == other.m_value; }
-      bool operator!=(const Key_Constraints& other) const { return m_value != other.m_value; }
-
-      bool operator==(Key_Constraints_Bits other) const { return m_value == other; }
-      bool operator!=(Key_Constraints_Bits other) const { return m_value != other; }
+      bool operator==(const Key_Constraints&) const = default;
 
       void operator|=(Key_Constraints_Bits other)
          {
