@@ -1,5 +1,5 @@
 /*
-* (C) 2013 Jack Lloyd
+* (C) 2013,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -105,7 +105,7 @@ BOTAN_PUBLIC_API(2,0) const char* to_string(Certificate_Status_Code code);
 class BOTAN_PUBLIC_API(3,0) Key_Constraints
    {
    public:
-      enum Key_Constraints_Bits : uint32_t {
+      enum Bits : uint32_t {
          None              = 0,
          DigitalSignature  = 1 << 15,
          NonRepudiation    = 1 << 14,
@@ -119,16 +119,16 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
 
          // Deprecated SHOUTING_CASE names for Key_Constraints
          // will be removed in a future major release
-         NO_CONSTRAINTS    = None,
-         DIGITAL_SIGNATURE = DigitalSignature,
-         NON_REPUDIATION   = NonRepudiation,
-         KEY_ENCIPHERMENT  = KeyEncipherment,
-         DATA_ENCIPHERMENT = DataEncipherment,
-         KEY_AGREEMENT     = KeyAgreement,
-         KEY_CERT_SIGN     = KeyCertSign,
-         CRL_SIGN          = CrlSign,
-         ENCIPHER_ONLY     = EncipherOnly,
-         DECIPHER_ONLY     = DecipherOnly,
+         NO_CONSTRAINTS    BOTAN_DEPRECATED("Use None")             = None,
+         DIGITAL_SIGNATURE BOTAN_DEPRECATED("Use DigitalSignature") = DigitalSignature,
+         NON_REPUDIATION   BOTAN_DEPRECATED("Use NonRepudiation")   = NonRepudiation,
+         KEY_ENCIPHERMENT  BOTAN_DEPRECATED("Use KeyEncipherment")  = KeyEncipherment,
+         DATA_ENCIPHERMENT BOTAN_DEPRECATED("Use DataEncipherment") = DataEncipherment,
+         KEY_AGREEMENT     BOTAN_DEPRECATED("Use KeyAgreement")     = KeyAgreement,
+         KEY_CERT_SIGN     BOTAN_DEPRECATED("Use KeyCertSign")      = KeyCertSign,
+         CRL_SIGN          BOTAN_DEPRECATED("Use CrlSign")          = CrlSign,
+         ENCIPHER_ONLY     BOTAN_DEPRECATED("Use EncipherOnly")     = EncipherOnly,
+         DECIPHER_ONLY     BOTAN_DEPRECATED("Use DecipherOnly")     = DecipherOnly,
       };
 
       Key_Constraints(const Key_Constraints& other) = default;
@@ -136,22 +136,42 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
       Key_Constraints& operator=(const Key_Constraints& other) = default;
       Key_Constraints& operator=(Key_Constraints&& other) = default;
 
-      Key_Constraints(Key_Constraints_Bits bits) : m_value(bits) {}
+      Key_Constraints(Key_Constraints::Bits bits) : m_value(bits) {}
 
       explicit Key_Constraints(uint32_t bits) : m_value(bits) {}
 
       Key_Constraints() : m_value(0) {}
 
+      /**
+      * Return typical constraints for a CA certificate, namely
+      * KeyCertSign and CrlSign
+      */
+      static Key_Constraints ca_constraints()
+         {
+         return Key_Constraints(Key_Constraints::KeyCertSign | Key_Constraints::CrlSign);
+         }
+
       bool operator==(const Key_Constraints&) const = default;
 
-      void operator|=(Key_Constraints_Bits other)
+      void operator|=(Key_Constraints::Bits other)
          {
          m_value |= other;
          }
 
       // Return true if all bits in mask are set
-      bool includes(Key_Constraints_Bits other) const { return (m_value & other) == other; }
+      bool includes(Key_Constraints::Bits other) const { return (m_value & other) == other; }
       bool includes(Key_Constraints other) const { return (m_value & other.m_value) == other.m_value; }
+
+      // Return true if any of the bits provided are set
+      bool includes_any(auto&& ...bits) const
+         {
+         for(auto bit: std::initializer_list<Key_Constraints::Bits>{ bits... })
+            {
+            if(this->includes(bit))
+               return true;
+            }
+         return false;
+         }
 
       bool empty() const { return m_value == 0; }
 

@@ -78,16 +78,8 @@ Extensions choose_extensions(const PKCS10_Request& req,
                              const X509_Certificate& ca_cert,
                              const std::string& hash_fn)
    {
-   Key_Constraints constraints;
-   if(req.is_CA())
-      {
-      constraints |= Key_Constraints::KeyCertSign;
-      constraints |= Key_Constraints::CrlSign;
-      }
-   else
-      {
-      constraints = req.constraints();
-      }
+   const auto constraints =
+      req.is_CA() ? Key_Constraints::ca_constraints() : req.constraints();
 
    std::unique_ptr<Public_Key> key(req.subject_public_key());
    if(!constraints.compatible_with(*key))

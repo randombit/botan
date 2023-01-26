@@ -67,16 +67,8 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 
    Extensions extensions = opts.extensions;
 
-   Key_Constraints constraints;
-   if(opts.is_CA)
-      {
-      constraints |= Key_Constraints::KeyCertSign;
-      constraints |= Key_Constraints::CrlSign;
-      }
-   else
-      {
-      constraints = opts.constraints;
-      }
+   const auto constraints =
+      opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
    if(!constraints.compatible_with(key))
       throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
@@ -119,16 +111,8 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    AlternativeName subject_alt;
    load_info(opts, subject_dn, subject_alt);
 
-   Key_Constraints constraints;
-   if(opts.is_CA)
-      {
-      constraints |= Key_Constraints::KeyCertSign;
-      constraints |= Key_Constraints::CrlSign;
-      }
-   else
-      {
-      constraints = opts.constraints;
-      }
+   const auto constraints =
+      opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
    if(!constraints.compatible_with(key))
       throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");

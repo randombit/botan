@@ -202,13 +202,13 @@ bool key_usage_matches_ciphersuite(Key_Constraints usage,
 
    if(suite.kex_method() == Kex_Algo::STATIC_RSA)
       {
-      return usage.includes(Key_Constraints::KeyEncipherment) ||
-         usage.includes(Key_Constraints::DataEncipherment);
+      return usage.includes_any(Key_Constraints::KeyEncipherment,
+                                Key_Constraints::DataEncipherment);
       }
    else
       {
-      return usage.includes(Key_Constraints::DigitalSignature) ||
-         usage.includes(Key_Constraints::NonRepudiation);
+      return usage.includes_any(Key_Constraints::DigitalSignature,
+                                Key_Constraints::NonRepudiation);
       }
    }
 
