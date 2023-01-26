@@ -222,6 +222,8 @@ std::vector<CPUID::CPUID_bits> CPUID::bit_from_string(std::string_view tok) {
       return {CPUID::CPUID_ARM_SM3_BIT};
    if(tok == "armv8sm4" || tok == "arm_sm4")
       return {CPUID::CPUID_ARM_SM4_BIT};
+   if(tok == "rng")
+      return {CPUID::CPUID_ARM_RND_BIT};
 
 #else
    BOTAN_UNUSED(tok);
