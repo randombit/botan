@@ -105,6 +105,7 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message
       bool offered_suite(uint16_t ciphersuite) const;
 
       std::vector<Signature_Scheme> signature_schemes() const;
+      std::vector<Signature_Scheme> certificate_signature_schemes() const;
 
       std::vector<Group_Params> supported_ecc_curves() const;
 
@@ -684,6 +685,8 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
 
       std::vector<X509_DN> acceptable_CAs() const;
       const std::vector<Signature_Scheme>& signature_schemes() const;
+      const std::vector<Signature_Scheme>& certificate_signature_schemes() const;
+
       const Extensions& extensions() const { return m_extensions; }
 
       std::vector<uint8_t> serialize() const override;
@@ -691,8 +694,8 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
       const std::vector<uint8_t> context() const { return m_context; }
 
    private:
-      Certificate_Request_13(std::vector<Signature_Scheme> signature_schemes,
-                             std::vector<X509_DN> acceptable_CAs,
+      Certificate_Request_13(std::vector<X509_DN> acceptable_CAs,
+                             const Policy& policy,
                              Callbacks& callbacks);
 
    private:

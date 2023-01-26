@@ -208,7 +208,7 @@ bool Certificate_Verify_13::verify(const X509_Certificate& cert,
    // RFC 8446 4.2.3
    //    The keys found in certificates MUST [...] be of appropriate type for
    //    the signature algorithms they are used with.
-   if(m_scheme.algorithm_identifier() != cert.subject_public_key_algo())
+   if(m_scheme.key_algorithm_identifier() != cert.subject_public_key_algo())
       { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Signature algorithm does not match certificate's public key"); }
 
    const auto key = cert.subject_public_key();

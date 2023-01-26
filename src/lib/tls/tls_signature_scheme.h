@@ -82,6 +82,7 @@ public:
    std::string hash_function_name() const noexcept;
    std::string padding_string() const noexcept;
    std::string algorithm_name() const noexcept;
+   AlgorithmIdentifier key_algorithm_identifier() const noexcept;
    AlgorithmIdentifier algorithm_identifier() const noexcept;
    std::optional<Signature_Format> format() const noexcept;
 
@@ -94,6 +95,8 @@ public:
 private:
    Signature_Scheme::Code m_code;
 };
+
+std::vector<AlgorithmIdentifier> to_algorithm_identifiers(const std::vector<Signature_Scheme>& schemes);
 
 }  // namespace Botan::TLS
 

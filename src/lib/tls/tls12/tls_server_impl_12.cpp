@@ -242,6 +242,7 @@ uint16_t choose_ciphersuite(
 
 std::map<std::string, std::vector<X509_Certificate>>
 get_server_certs(const std::string& hostname,
+                 const std::vector<Signature_Scheme>& cert_sig_schemes,
                  Credentials_Manager& creds)
    {
    const char* cert_types[] = { "RSA", "ECDSA", "DSA", nullptr };
@@ -251,7 +252,7 @@ get_server_certs(const std::string& hostname,
    for(size_t i = 0; cert_types[i]; ++i)
       {
       const std::vector<X509_Certificate> certs =
-         creds.cert_chain_single_type(cert_types[i], "tls-server", hostname);
+         creds.cert_chain_single_type(cert_types[i], to_algorithm_identifiers(cert_sig_schemes), "tls-server", hostname);
 
       if(!certs.empty())
          cert_chains[cert_types[i]] = certs;
@@ -812,11 +813,18 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
 
    const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
 
-   cert_chains = get_server_certs(sni_hostname, m_creds);
+   // RFC 8446 1.3
+   //    The "signature_algorithms_cert" extension allows a client to indicate
+   //    which signature algorithms it can validate in X.509 certificates.
+   //
+   // RFC 8446 4.2.3
+   //     TLS 1.2 implementations SHOULD also process this extension.
+   const auto cert_signature_schemes = pending_state.client_hello()->certificate_signature_schemes();
+   cert_chains = get_server_certs(sni_hostname, cert_signature_schemes, m_creds);
 
    if(!sni_hostname.empty() && cert_chains.empty())
       {
-      cert_chains = get_server_certs("", m_creds);
+      cert_chains = get_server_certs("", cert_signature_schemes, m_creds);
 
       /*
       * Only send the unrecognized_name alert if we couldn't

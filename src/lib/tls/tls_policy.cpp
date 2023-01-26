@@ -42,6 +42,12 @@ std::vector<Signature_Scheme> Policy::acceptable_signature_schemes() const
    return this->allowed_signature_schemes();
    }
 
+std::optional<std::vector<Signature_Scheme>> Policy::acceptable_certificate_signature_schemes() const
+   {
+   // the restrictions of ::acceptable_signature_schemes() shall apply
+   return std::nullopt;
+   }
+
 std::vector<std::string> Policy::allowed_ciphers() const
    {
    return {

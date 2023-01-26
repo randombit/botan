@@ -32,15 +32,17 @@ SymmetricKey Credentials_Manager::psk(const std::string& /*unused*/,
 
 std::vector<X509_Certificate> Credentials_Manager::find_cert_chain(
    const std::vector<std::string>& key_types,
+   const std::vector<AlgorithmIdentifier>& cert_signature_schemes,
    const std::vector<X509_DN>& /*unused*/,
    const std::string& type,
    const std::string& context)
    {
-   return cert_chain(key_types, type, context);
+   return cert_chain(key_types, cert_signature_schemes, type, context);
    }
 
 std::vector<X509_Certificate> Credentials_Manager::cert_chain(
    const std::vector<std::string>& /*unused*/,
+   const std::vector<AlgorithmIdentifier>& /*unused*/,
    const std::string& /*unused*/,
    const std::string& /*unused*/)
    {
@@ -49,12 +51,11 @@ std::vector<X509_Certificate> Credentials_Manager::cert_chain(
 
 std::vector<X509_Certificate> Credentials_Manager::cert_chain_single_type(
    const std::string& cert_key_type,
+   const std::vector<AlgorithmIdentifier>& cert_signature_schemes,
    const std::string& type,
    const std::string& context)
    {
-   std::vector<std::string> cert_types;
-   cert_types.push_back(cert_key_type);
-   return find_cert_chain(cert_types, std::vector<X509_DN>(), type, context);
+   return find_cert_chain({cert_key_type}, cert_signature_schemes, std::vector<X509_DN>(), type, context);
    }
 
 Private_Key* Credentials_Manager::private_key_for(const X509_Certificate& /*unused*/,

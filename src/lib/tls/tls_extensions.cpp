@@ -49,6 +49,9 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
       case Extension_Code::SignatureAlgorithms:
          return std::make_unique<Signature_Algorithms>(reader, size);
 
+      case Extension_Code::CertSignatureAlgorithms:
+         return std::make_unique<Signature_Algorithms_Cert>(reader, size);
+
       case Extension_Code::UseSrtp:
          return std::make_unique<SRTP_Protection_Profiles>(reader, size);
 
@@ -85,9 +88,6 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 
       case Extension_Code::CertificateAuthorities:
          return std::make_unique<Certificate_Authorities>(reader, size);
-
-      case Extension_Code::CertSignatureAlgorithms:
-         return std::make_unique<Signature_Algorithms_Cert>(reader, size);
 
       case Extension_Code::KeyShare:
          return std::make_unique<Key_Share>(reader, size, message_type);
@@ -561,8 +561,6 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
    : m_schemes(parse_signature_algorithms(reader, extension_size))
    {}
 
-#if defined(BOTAN_HAS_TLS_13)
-
 std::vector<uint8_t> Signature_Algorithms_Cert::serialize(Connection_Side /*whoami*/) const
    {
    return serialize_signature_algorithms(m_schemes);
@@ -572,8 +570,6 @@ Signature_Algorithms_Cert::Signature_Algorithms_Cert(TLS_Data_Reader& reader,
                                                      uint16_t extension_size)
    : m_schemes(parse_signature_algorithms(reader, extension_size))
    {}
-
-#endif
 
 Session_Ticket::Session_Ticket(TLS_Data_Reader& reader,
                                uint16_t extension_size) : m_ticket(reader.get_elem<uint8_t, std::vector<uint8_t>>(extension_size))

@@ -39,7 +39,7 @@ std::vector<Test::Result> test_signature_scheme()
 
             result.confirm("format handles all cases", s.format().has_value());
             result.confirm("algorithm_identifier handles all cases",
-               Botan::AlgorithmIdentifier() != s.algorithm_identifier());
+               Botan::AlgorithmIdentifier() != s.key_algorithm_identifier());
             })
       );
       }
@@ -57,7 +57,7 @@ std::vector<Test::Result> test_signature_scheme()
 
       result.confirm("format deals with bogus schemes", !bogus.format().has_value());
       result.confirm("algorithm_identifier deals with bogus schemes",
-         Botan::AlgorithmIdentifier() == bogus.algorithm_identifier());
+         Botan::AlgorithmIdentifier() == bogus.key_algorithm_identifier());
       })
    );
 

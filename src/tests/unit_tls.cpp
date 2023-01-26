@@ -92,6 +92,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
 
       std::vector<Botan::X509_Certificate> find_cert_chain(
          const std::vector<std::string>& cert_key_types,
+         const std::vector<Botan::AlgorithmIdentifier>& /*unused*/,
          const std::vector<Botan::X509_DN>& acceptable_CAs,
          const std::string& type,
          const std::string& context) override
