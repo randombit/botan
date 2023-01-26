@@ -718,6 +718,53 @@ ofvkP1EDmpx50fHLawIDAQAB
         key_s = server.step2(a)
         self.assertEqual(key_c, key_s)
 
+
+class BotanPythonZfecTests(unittest.TestCase):
+    """
+    Tests relating to the ZFEC bindings
+    """
+
+    def test_encode(self):
+        """
+        Simple encoder test.
+
+        Could benefit from more variations
+        """
+        n = 3
+        k = 2
+        input_bytes = b"abcdefgh" + b"ijklmnop"
+        output_shares = botan2.zfec_encode(k, n, input_bytes)
+        self.assertEqual(
+            output_shares,
+            [b'abcdefgh', b'ijklmnop', b'qrstuvwX']
+        )
+
+    def test_encode_decode(self):
+        """
+        Simple round-trip test.
+        Could really benefit from more variations
+        """
+        k = 2
+        n = 3
+        input_bytes = b"abcdefgh" + b"ijklmnop"
+        output_shares = botan2.zfec_encode(k, n, input_bytes)
+        # first two shares
+        inputs = [
+            bytearray(o)
+            for o in output_shares[:2]
+        ]
+        decoded = botan2.zfec_decode(k, n, [0, 1], output_shares[:2])
+        self.assertEqual(
+            b"".join(decoded),
+            input_bytes
+        )
+        decoded = botan2.zfec_decode(k, n, [1, 2], output_shares[1:])
+        self.assertEqual(
+            b"".join(decoded),
+            input_bytes
+        )
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test-data-dir', default='.')
