@@ -32,10 +32,10 @@ std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
-            return std::make_unique<PKCS5_PBKDF2>(mac.release());
+            return std::make_unique<PKCS5_PBKDF2>(std::move(mac));
 
          if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
-            return std::make_unique<PKCS5_PBKDF2>(mac.release());
+            return std::make_unique<PKCS5_PBKDF2>(std::move(mac));
          }
 
       return nullptr;
@@ -46,7 +46,7 @@ std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
    if(req.algo_name() == "OpenPGP-S2K" && req.arg_count() == 1)
       {
       if(auto hash = HashFunction::create(req.arg(0)))
-         return std::make_unique<OpenPGP_S2K>(hash.release());
+         return std::make_unique<OpenPGP_S2K>(std::move(hash));
       }
 #endif
 

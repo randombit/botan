@@ -87,8 +87,9 @@ AlgorithmIdentifier EMSA_PKCS1v15::config_for_x509(const std::string& algo_name,
                                                    const std::string& cert_hash_name) const
    {
    if(cert_hash_name != m_hash->name())
-      throw Invalid_Argument("Hash function from opts and hash_fn argument"
-         " need to be identical");
+      throw Invalid_Argument("PKCS1v15: Cert hash " + cert_hash_name +
+                             " incompatible with specified hash " + m_hash->name());
+
    // check that the signature algorithm and the padding scheme fit
    if(!sig_algo_and_pad_ok(algo_name, "EMSA3"))
       {

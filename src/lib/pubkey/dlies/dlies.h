@@ -36,8 +36,8 @@ class BOTAN_PUBLIC_API(2,0) DLIES_Encryptor final : public PK_Encryptor
       */
       DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
                       RandomNumberGenerator& rng,
-                      KDF* kdf,
-                      MessageAuthenticationCode* mac,
+                      std::unique_ptr<KDF> kdf,
+                      std::unique_ptr<MessageAuthenticationCode> mac,
                       size_t mac_key_len = 20);
 
       /**
@@ -55,10 +55,10 @@ class BOTAN_PUBLIC_API(2,0) DLIES_Encryptor final : public PK_Encryptor
       */
       DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
                       RandomNumberGenerator& rng,
-                      KDF* kdf,
-                      Cipher_Mode* cipher,
+                      std::unique_ptr<KDF> kdf,
+                      std::unique_ptr<Cipher_Mode> cipher,
                       size_t cipher_key_len,
-                      MessageAuthenticationCode* mac,
+                      std::unique_ptr<MessageAuthenticationCode> mac,
                       size_t mac_key_len = 20);
 
       // Set the other parties public key
@@ -111,8 +111,8 @@ class BOTAN_PUBLIC_API(2,0) DLIES_Decryptor final : public PK_Decryptor
       */
       DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
                       RandomNumberGenerator& rng,
-                      KDF* kdf,
-                      MessageAuthenticationCode* mac,
+                      std::unique_ptr<KDF> kdf,
+                      std::unique_ptr<MessageAuthenticationCode> mac,
                       size_t mac_key_len = 20);
 
       /**
@@ -130,10 +130,10 @@ class BOTAN_PUBLIC_API(2,0) DLIES_Decryptor final : public PK_Decryptor
       */
       DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
                       RandomNumberGenerator& rng,
-                      KDF* kdf,
-                      Cipher_Mode* cipher,
+                      std::unique_ptr<KDF> kdf,
+                      std::unique_ptr<Cipher_Mode> cipher,
                       size_t cipher_key_len,
-                      MessageAuthenticationCode* mac,
+                      std::unique_ptr<MessageAuthenticationCode> mac,
                       size_t mac_key_len = 20);
 
       /// Set the initialization vector for the data decryption method

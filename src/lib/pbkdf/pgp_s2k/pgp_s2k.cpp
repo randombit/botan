@@ -81,7 +81,7 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
 
    if(iterations == 0)
       {
-      RFC4880_S2K_Family s2k_params(m_hash->clone());
+      RFC4880_S2K_Family s2k_params(m_hash->new_object());
       iterations = s2k_params.tune(output_len, msec, 0)->iterations();
       }
 
@@ -119,26 +119,26 @@ std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len, std::c
    const double bytes_to_be_hashed = (hash_bytes_per_second * (desired_nsec / 1000000000.0)) / blocks_required;
    const size_t iterations = RFC4880_round_iterations(static_cast<size_t>(bytes_to_be_hashed));
 
-   return std::make_unique<RFC4880_S2K>(m_hash->clone(), iterations);
+   return std::make_unique<RFC4880_S2K>(m_hash->new_object(), iterations);
    }
 
 std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_params(size_t iter, size_t /*i2*/, size_t /*i3*/) const
    {
-   return std::make_unique<RFC4880_S2K>(m_hash->clone(), iter);
+   return std::make_unique<RFC4880_S2K>(m_hash->new_object(), iter);
    }
 
 std::unique_ptr<PasswordHash> RFC4880_S2K_Family::default_params() const
    {
-   return std::make_unique<RFC4880_S2K>(m_hash->clone(), 50331648);
+   return std::make_unique<RFC4880_S2K>(m_hash->new_object(), 50331648);
    }
 
 std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_iterations(size_t iter) const
    {
-   return std::make_unique<RFC4880_S2K>(m_hash->clone(), iter);
+   return std::make_unique<RFC4880_S2K>(m_hash->new_object(), iter);
    }
 
-RFC4880_S2K::RFC4880_S2K(HashFunction* hash, size_t iterations) :
-   m_hash(hash),
+RFC4880_S2K::RFC4880_S2K(std::unique_ptr<HashFunction> hash, size_t iterations) :
+   m_hash(std::move(hash)),
    m_iterations(iterations)
    {
    }

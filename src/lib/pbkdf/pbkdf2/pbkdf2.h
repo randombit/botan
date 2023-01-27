@@ -64,7 +64,8 @@ class BOTAN_PUBLIC_API(2,8) PBKDF2 final : public PasswordHash
 class BOTAN_PUBLIC_API(2,8) PBKDF2_Family final : public PasswordHashFamily
    {
    public:
-      PBKDF2_Family(MessageAuthenticationCode* prf) : m_prf(prf) {}
+      PBKDF2_Family(std::unique_ptr<MessageAuthenticationCode> prf) :
+         m_prf(std::move(prf)) {}
 
       std::string name() const override;
 
@@ -107,7 +108,15 @@ class BOTAN_PUBLIC_API(2,0) PKCS5_PBKDF2 final : public PBKDF
       * Create a PKCS #5 instance using the specified message auth code
       * @param mac_fn the MAC object to use as PRF
       */
+      BOTAN_DEPRECATED("Use version taking unique_ptr")
       explicit PKCS5_PBKDF2(MessageAuthenticationCode* mac_fn) : m_mac(mac_fn) {}
+
+      /**
+      * Create a PKCS #5 instance using the specified message auth code
+      * @param mac_fn the MAC object to use as PRF
+      */
+      explicit PKCS5_PBKDF2(std::unique_ptr<MessageAuthenticationCode> mac_fn) :
+         m_mac(std::move(mac_fn)) {}
    private:
       std::unique_ptr<MessageAuthenticationCode> m_mac;
    };

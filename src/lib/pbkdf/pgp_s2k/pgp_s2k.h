@@ -41,7 +41,7 @@ class BOTAN_PUBLIC_API(2,2) OpenPGP_S2K final : public PBKDF
       /**
       * @param hash the hash function to use
       */
-      explicit OpenPGP_S2K(HashFunction* hash) : m_hash(hash) {}
+      explicit OpenPGP_S2K(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
 
       std::string name() const override
          {
@@ -50,7 +50,7 @@ class BOTAN_PUBLIC_API(2,2) OpenPGP_S2K final : public PBKDF
 
       std::unique_ptr<PBKDF> new_object() const override
          {
-         return std::make_unique<OpenPGP_S2K>(m_hash->clone());
+         return std::make_unique<OpenPGP_S2K>(m_hash->new_object());
          }
 
       size_t pbkdf(uint8_t output_buf[], size_t output_len,
@@ -94,7 +94,7 @@ class BOTAN_PUBLIC_API(2,8) RFC4880_S2K final : public PasswordHash
       * @param hash the hash function to use
       * @param iterations is rounded due to PGP formatting
       */
-      RFC4880_S2K(HashFunction* hash, size_t iterations);
+      RFC4880_S2K(std::unique_ptr<HashFunction> hash, size_t iterations);
 
       std::string to_string() const override;
 
@@ -112,7 +112,7 @@ class BOTAN_PUBLIC_API(2,8) RFC4880_S2K final : public PasswordHash
 class BOTAN_PUBLIC_API(2,8) RFC4880_S2K_Family final : public PasswordHashFamily
    {
    public:
-      RFC4880_S2K_Family(HashFunction* hash) : m_hash(hash) {}
+      RFC4880_S2K_Family(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
 
       std::string name() const override;
 

@@ -57,11 +57,8 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    X509_DN subject_dn;
    AlternativeName subject_alt;
 
-   // for now, only the padding option is used
-   std::map<std::string,std::string> sig_opts = { {"padding",opts.padding_scheme} };
-
    const std::vector<uint8_t> pub_key = X509::BER_encode(key);
-   std::unique_ptr<PK_Signer> signer(choose_sig_format(key, sig_opts, rng, hash_fn, sig_algo));
+   auto signer = X509_Object::choose_sig_format(sig_algo, key, rng, hash_fn, opts.padding_scheme);
    BOTAN_ASSERT_NOMSG(sig_algo.get_oid().has_value());
    load_info(opts, subject_dn, subject_alt);
 

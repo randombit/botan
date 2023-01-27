@@ -726,14 +726,14 @@ Test::Result test_verify_gost2012_cert()
    // Create X509 CA object: will fail as the chosen hash functions differ
    try
       {
-      Botan::X509_CA ca_fail(ca_cert_exp, (*sk), {{"padding","EMSA4(SHA-256)"}},"SHA-512", Test::rng());
+      Botan::X509_CA ca_fail(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-256)", Test::rng());
       test_result.test_failure("Configured conflicting hash functions for CA");
       }
    catch(const Botan::Invalid_Argument& e)
       {
       test_result.test_eq("Configured conflicting hash functions for CA",
-            e.what(),
-            "Hash function from opts and hash_fn argument need to be identical");
+                          e.what(),
+                          "PSSR: Cert hash SHA-512 incompatible with specified hash SHA-256");
       }
 
    // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. EMSA3
@@ -742,12 +742,12 @@ Test::Result test_verify_gost2012_cert()
    test_result.test_eq("End certificate signature algorithm", Botan::OIDS::oid2str_or_throw(end_cert_emsa3.signature_algorithm().get_oid()), "RSA/EMSA3(SHA-512)");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is different from the CA certificate's scheme
-   Botan::X509_CA ca_diff(ca_cert_def, (*sk), {{"padding","EMSA-PSS"}}, "SHA-512", Test::rng());
+   Botan::X509_CA ca_diff(ca_cert_def, (*sk), "SHA-512", "EMSA-PSS", Test::rng());
    Botan::X509_Certificate end_cert_diff_emsa4 = ca_diff.sign_request(end_req, Test::rng(), not_before, not_after);
    test_result.test_eq("End certificate signature algorithm", Botan::OIDS::oid2str_or_throw(end_cert_diff_emsa4.signature_algorithm().get_oid()), "RSA/EMSA4");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is identical to the CA certificate's scheme
-   Botan::X509_CA ca_exp(ca_cert_exp, (*sk), {{"padding","EMSA4(SHA-512,MGF1,64)"}},"SHA-512", Test::rng());
+   Botan::X509_CA ca_exp(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-512,MGF1,64)", Test::rng());
    Botan::X509_Certificate end_cert_emsa4= ca_exp.sign_request(end_req, Test::rng(), not_before, not_after);
    test_result.test_eq("End certificate signature algorithm", Botan::OIDS::oid2str_or_throw(end_cert_emsa4.signature_algorithm().get_oid()), "RSA/EMSA4");
 
@@ -849,7 +849,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
                                    Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
+   Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, Test::rng());
 
    const BigInt user1_serial = 99;
 
@@ -1115,7 +1115,7 @@ Test::Result test_self_issued(const Botan::Private_Key& ca_key,
          ca_opts(sig_padding), ca_key, hash_fn, Test::rng());
 
    /* Create the CA object */
-   const Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
+   const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
@@ -1347,7 +1347,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
       Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
+   Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
@@ -1416,7 +1416,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
       Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
+   Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
