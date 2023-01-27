@@ -75,8 +75,7 @@ class FE_25519
          for(size_t i = 0; i != 32; ++i)
             { sum |= s[i]; }
 
-         // TODO avoid ternary here
-         return (sum == 0) ? 1 : 0;
+         return (sum == 0);
          }
 
       /*

@@ -50,12 +50,12 @@ class binary_matrix final
 
       size_t columns() const { return m_coln; }
 
+      std::vector<uint32_t> elem() const { return m_elem; }
+
    private:
       size_t m_rown;  // number of rows.
       size_t m_coln; // number of columns.
       size_t m_rwdcnt; // number of words in a row
-   public:
-      // TODO this should be private
       std::vector<uint32_t> m_elem;
    };
 
@@ -286,10 +286,10 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator & rng, size_t ex
       {
       Linv[L[i]] = static_cast<gf2m>(i);
       }
-   std::vector<uint8_t> pubmat(R->m_elem.size() * 4);
-   for(size_t i = 0; i < R->m_elem.size(); i++)
+   std::vector<uint8_t> pubmat(R->elem().size() * 4);
+   for(size_t i = 0; i < R->elem().size(); i++)
       {
-      store_le(R->m_elem[i], &pubmat[i*4]);
+      store_le(R->elem()[i], &pubmat[i*4]);
       }
 
    return McEliece_PrivateKey(g, H, sqrtmod, Linv, pubmat);
