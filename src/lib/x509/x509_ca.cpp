@@ -78,17 +78,12 @@ Extensions choose_extensions(const PKCS10_Request& req,
                              const X509_Certificate& ca_cert,
                              const std::string& hash_fn)
    {
-   Key_Constraints constraints;
-   if(req.is_CA())
-      {
-      constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
-      }
-   else
-      {
-      std::unique_ptr<Public_Key> key(req.subject_public_key());
-      verify_cert_constraints_valid_for_key_type(*key, req.constraints());
-      constraints = req.constraints();
-      }
+   const auto constraints =
+      req.is_CA() ? Key_Constraints::ca_constraints() : req.constraints();
+
+   std::unique_ptr<Public_Key> key(req.subject_public_key());
+   if(!constraints.compatible_with(*key))
+      throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
 
    Extensions extensions = req.extensions();
 
@@ -96,7 +91,7 @@ Extensions choose_extensions(const PKCS10_Request& req,
       std::make_unique<Cert_Extension::Basic_Constraints>(req.is_CA(), req.path_limit()),
       true);
 
-   if(constraints != NO_CONSTRAINTS)
+   if(!constraints.empty())
       {
       extensions.replace(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
       }

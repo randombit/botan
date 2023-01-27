@@ -62,7 +62,7 @@ struct X509_Certificate_Data
 
    size_t m_version = 0;
    size_t m_path_len_constraint = 0;
-   Key_Constraints m_key_constraints = NO_CONSTRAINTS;
+   Key_Constraints m_key_constraints;
    bool m_self_signed = false;
    bool m_is_ca_certificate = false;
    bool m_serial_negative = false;
@@ -216,14 +216,10 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       RFC 5280: When the keyUsage extension appears in a certificate,
       at least one of the bits MUST be set to 1.
       */
-      if(data->m_key_constraints == NO_CONSTRAINTS)
+      if(data->m_key_constraints.empty())
          {
          throw Decoding_Error("Certificate has invalid encoding for KeyUsage");
          }
-      }
-   else
-      {
-      data->m_key_constraints = NO_CONSTRAINTS;
       }
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Subject_Key_ID>())
@@ -252,8 +248,8 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
          * removing this entirely, or alternately adding a warning level
          * validation failure for it.
          */
-         if(data->m_key_constraints == NO_CONSTRAINTS ||
-            (data->m_key_constraints & KEY_CERT_SIGN))
+         if(data->m_key_constraints.empty() ||
+            data->m_key_constraints.includes(Key_Constraints::KeyCertSign))
             {
             data->m_is_ca_certificate = true;
             data->m_path_len_constraint = ext->get_path_limit();
@@ -518,11 +514,17 @@ const Extensions& X509_Certificate::v3_extensions() const
    return data().m_v3_extensions;
    }
 
+bool X509_Certificate::has_constraints(Key_Constraints usage) const
+   {
+   // Unlike allowed_usage, returns false if constraints was not set
+   return constraints().includes(usage);
+   }
+
 bool X509_Certificate::allowed_usage(Key_Constraints usage) const
    {
-   if(constraints() == NO_CONSTRAINTS)
+   if(constraints().empty())
       return true;
-   return ((constraints() & usage) == usage);
+   return constraints().includes(usage);
    }
 
 bool X509_Certificate::allowed_extended_usage(const std::string& usage) const
@@ -552,32 +554,30 @@ bool X509_Certificate::allowed_usage(Usage_Type usage) const
          return true;
 
       case Usage_Type::TLS_SERVER_AUTH:
-         return (allowed_usage(KEY_AGREEMENT) || allowed_usage(KEY_ENCIPHERMENT) || allowed_usage(DIGITAL_SIGNATURE)) && allowed_extended_usage("PKIX.ServerAuth");
+         return (allowed_usage(Key_Constraints::KeyAgreement) ||
+                 allowed_usage(Key_Constraints::KeyEncipherment) ||
+                 allowed_usage(Key_Constraints::DigitalSignature)) &&
+            allowed_extended_usage("PKIX.ServerAuth");
 
       case Usage_Type::TLS_CLIENT_AUTH:
-         return (allowed_usage(DIGITAL_SIGNATURE) || allowed_usage(KEY_AGREEMENT)) && allowed_extended_usage("PKIX.ClientAuth");
+         return (allowed_usage(Key_Constraints::DigitalSignature) ||
+                 allowed_usage(Key_Constraints::KeyAgreement)) &&
+            allowed_extended_usage("PKIX.ClientAuth");
 
       case Usage_Type::OCSP_RESPONDER:
-         return (allowed_usage(DIGITAL_SIGNATURE) || allowed_usage(NON_REPUDIATION)) && has_ex_constraint("PKIX.OCSPSigning");
+         return (allowed_usage(Key_Constraints::DigitalSignature) ||
+                 allowed_usage(Key_Constraints::NonRepudiation)) &&
+            has_ex_constraint("PKIX.OCSPSigning");
 
       case Usage_Type::CERTIFICATE_AUTHORITY:
          return is_CA_cert();
 
       case Usage_Type::ENCRYPTION:
-         return (allowed_usage(KEY_ENCIPHERMENT) || allowed_usage(DATA_ENCIPHERMENT));
+         return (allowed_usage(Key_Constraints::KeyEncipherment) ||
+                 allowed_usage(Key_Constraints::DataEncipherment));
       }
 
    return false;
-   }
-
-bool X509_Certificate::has_constraints(Key_Constraints constraints) const
-   {
-   if(this->constraints() == NO_CONSTRAINTS)
-      {
-      return false;
-      }
-
-   return ((this->constraints() & constraints) != 0);
    }
 
 bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const
@@ -775,27 +775,27 @@ std::string X509_Certificate::to_string() const
 
    out << "Constraints:\n";
    Key_Constraints constraints = this->constraints();
-   if(constraints == NO_CONSTRAINTS)
+   if(constraints.empty())
       out << " None\n";
    else
       {
-      if(constraints & DIGITAL_SIGNATURE)
+      if(constraints.includes(Key_Constraints::DigitalSignature))
          out << "   Digital Signature\n";
-      if(constraints & NON_REPUDIATION)
+      if(constraints.includes(Key_Constraints::NonRepudiation))
          out << "   Non-Repudiation\n";
-      if(constraints & KEY_ENCIPHERMENT)
+      if(constraints.includes(Key_Constraints::KeyEncipherment))
          out << "   Key Encipherment\n";
-      if(constraints & DATA_ENCIPHERMENT)
+      if(constraints.includes(Key_Constraints::DataEncipherment))
          out << "   Data Encipherment\n";
-      if(constraints & KEY_AGREEMENT)
+      if(constraints.includes(Key_Constraints::KeyAgreement))
          out << "   Key Agreement\n";
-      if(constraints & KEY_CERT_SIGN)
+      if(constraints.includes(Key_Constraints::KeyCertSign))
          out << "   Cert Sign\n";
-      if(constraints & CRL_SIGN)
+      if(constraints.includes(Key_Constraints::CrlSign))
          out << "   CRL Sign\n";
-      if(constraints & ENCIPHER_ONLY)
+      if(constraints.includes(Key_Constraints::EncipherOnly))
          out << "   Encipher Only\n";
-      if(constraints & DECIPHER_ONLY)
+      if(constraints.includes(Key_Constraints::DecipherOnly))
          out << "   Decipher Only\n";
       }
 

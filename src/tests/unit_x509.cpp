@@ -67,11 +67,11 @@ Botan::X509_Cert_Options req_opts1(const std::string& algo, const std::string& s
 
    if(algo == "RSA")
       {
-      opts.constraints = Botan::Key_Constraints(Botan::KEY_ENCIPHERMENT);
+      opts.constraints = Botan::Key_Constraints::KeyEncipherment;
       }
    else if(algo == "DSA" || algo == "ECDSA" || algo == "ECGDSA" || algo == "ECKCDSA")
       {
-      opts.constraints = Botan::Key_Constraints(Botan::DIGITAL_SIGNATURE);
+      opts.constraints = Botan::Key_Constraints::DigitalSignature;
       }
 
    return opts;
@@ -812,8 +812,10 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, Test::rng());
 
       {
-      const auto constraints = Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN);
-      result.test_eq("ca key usage", (ca_cert.constraints() & constraints) == constraints, true);
+      result.confirm("ca key usage cert",
+                     ca_cert.constraints().includes(Botan::Key_Constraints::KeyCertSign));
+      result.confirm("ca key usage crl",
+                     ca_cert.constraints().includes(Botan::Key_Constraints::CrlSign));
       }
 
    /* Create user #1's key and cert request */
@@ -875,8 +877,8 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
       Botan::X509::create_self_signed_cert(req_opts1(sig_algo, sig_padding), *user1_key, hash_fn, Test::rng());
 
       {
-      auto constrains = req_opts1(sig_algo).constraints;
-      result.test_eq("user1 key usage", (user1_cert.constraints() & constrains) == constrains, true);
+      auto constraints = req_opts1(sig_algo).constraints;
+      result.confirm("user1 key usage", user1_cert.constraints().includes(constraints));
       }
 
    /* Copy, assign and compare */
@@ -1013,7 +1015,7 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
-   opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+   opts.constraints = Key_Constraints::DigitalSignature;
 
    const Botan::PKCS10_Request user1_req = Botan::X509::create_cert_req(
          opts,
@@ -1030,14 +1032,14 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    // cert only allows digitalSignature, but we check for both digitalSignature and cRLSign
    result.test_eq("key usage cRLSign not allowed",
                   user1_cert.allowed_usage(
-                     Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)), false);
+                     Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign)), false);
    result.test_eq("encryption is not allowed",
                   user1_cert.allowed_usage(Usage_Type::ENCRYPTION), false);
 
    // cert only allows digitalSignature, so checking for only that should be ok
-   result.confirm("key usage digitalSignature allowed", user1_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
+   result.confirm("key usage digitalSignature allowed", user1_cert.allowed_usage(Key_Constraints::DigitalSignature));
 
-   opts.constraints = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN);
+   opts.constraints = Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign);
 
    const Botan::PKCS10_Request mult_usage_req = Botan::X509::create_cert_req(
             opts,
@@ -1053,15 +1055,15 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
 
    // cert allows multiple usages, so each one of them as well as both together should be allowed
    result.confirm("key usage multiple digitalSignature allowed",
-                  mult_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
-   result.confirm("key usage multiple cRLSign allowed", mult_usage_cert.allowed_usage(Key_Constraints::CRL_SIGN));
+                  mult_usage_cert.allowed_usage(Key_Constraints::DigitalSignature));
+   result.confirm("key usage multiple cRLSign allowed", mult_usage_cert.allowed_usage(Key_Constraints::CrlSign));
    result.confirm("key usage multiple digitalSignature and cRLSign allowed", mult_usage_cert.allowed_usage(
-                     Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)));
+                     Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign)));
    result.test_eq("encryption is not allowed",
                   mult_usage_cert.allowed_usage(Usage_Type::ENCRYPTION), false);
 
 
-   opts.constraints = Key_Constraints::NO_CONSTRAINTS;
+   opts.constraints = Key_Constraints();
 
    const Botan::PKCS10_Request no_usage_req = Botan::X509::create_cert_req(opts, *user1_key, hash_fn, Test::rng());
 
@@ -1071,14 +1073,14 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
                       from_date(2, 01, 01));
 
    // cert allows every usage
-   result.confirm("key usage digitalSignature allowed", no_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
-   result.confirm("key usage cRLSign allowed", no_usage_cert.allowed_usage(Key_Constraints::CRL_SIGN));
+   result.confirm("key usage digitalSignature allowed", no_usage_cert.allowed_usage(Key_Constraints::DigitalSignature));
+   result.confirm("key usage cRLSign allowed", no_usage_cert.allowed_usage(Key_Constraints::CrlSign));
    result.confirm("key usage encryption allowed", no_usage_cert.allowed_usage(Usage_Type::ENCRYPTION));
 
    if (sig_algo == "RSA")
       {
       // cert allows data encryption
-       opts.constraints = Key_Constraints(Key_Constraints::KEY_ENCIPHERMENT | Key_Constraints::DATA_ENCIPHERMENT);
+       opts.constraints = Key_Constraints(Key_Constraints::KeyEncipherment | Key_Constraints::DataEncipherment);
 
       const Botan::PKCS10_Request enc_req = Botan::X509::create_cert_req(
                opts,
@@ -1120,7 +1122,7 @@ Test::Result test_self_issued(const Botan::Private_Key& ca_key,
    // create a self-issued certificate, that is, a certificate with subject dn == issuer dn,
    // but signed by a CA, not signed by it's own private key
    Botan::X509_Cert_Options opts = ca_opts();
-   opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+   opts.constraints = Key_Constraints::DigitalSignature;
    opts.set_padding_scheme(sig_padding);
 
    const Botan::PKCS10_Request self_issued_req = Botan::X509::create_cert_req(opts, *user_key, hash_fn, Test::rng());
@@ -1159,233 +1161,123 @@ Test::Result test_x509_uninit()
    }
 
 
-using Botan::Key_Constraints;
-
-/**
-* @brief Some typical key usage scenarios (taken from RFC 5280, sec. 4.2.1.3)
-*/
-struct typical_usage_constraints
-   {
-   // ALL constraints are not typical at all, but we use them for a negative test
-   Key_Constraints all = Key_Constraints(
-                            Key_Constraints::DIGITAL_SIGNATURE |
-                            Key_Constraints::NON_REPUDIATION |
-                            Key_Constraints::KEY_ENCIPHERMENT |
-                            Key_Constraints::DATA_ENCIPHERMENT |
-                            Key_Constraints::KEY_AGREEMENT |
-                            Key_Constraints::KEY_CERT_SIGN |
-                            Key_Constraints::CRL_SIGN |
-                            Key_Constraints::ENCIPHER_ONLY |
-                            Key_Constraints::DECIPHER_ONLY);
-
-   Key_Constraints ca = Key_Constraints(Key_Constraints::KEY_CERT_SIGN);
-   Key_Constraints sign_data = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE);
-   Key_Constraints non_repudiation = Key_Constraints(
-                                        Key_Constraints::NON_REPUDIATION |
-                                        Key_Constraints::DIGITAL_SIGNATURE);
-   Key_Constraints key_encipherment = Key_Constraints(Key_Constraints::KEY_ENCIPHERMENT);
-   Key_Constraints data_encipherment = Key_Constraints(Key_Constraints::DATA_ENCIPHERMENT);
-   Key_Constraints key_agreement = Key_Constraints(Key_Constraints::KEY_AGREEMENT);
-   Key_Constraints key_agreement_encipher_only = Key_Constraints(
-            Key_Constraints::KEY_AGREEMENT |
-            Key_Constraints::ENCIPHER_ONLY);
-   Key_Constraints key_agreement_decipher_only = Key_Constraints(
-            Key_Constraints::KEY_AGREEMENT |
-            Key_Constraints::DECIPHER_ONLY);
-   Key_Constraints crl_sign = Key_Constraints::CRL_SIGN;
-   Key_Constraints sign_everything = Key_Constraints(
-                                        Key_Constraints::DIGITAL_SIGNATURE |
-                                        Key_Constraints::KEY_CERT_SIGN |
-                                        Key_Constraints::CRL_SIGN);
-   };
-
-
 Test::Result test_valid_constraints(const Botan::Private_Key& key,
                                     const std::string& pk_algo)
    {
-   Test::Result result("X509 Valid Constraints");
+   using Botan::Key_Constraints;
 
-   // should not throw on empty constraints
-   verify_cert_constraints_valid_for_key_type(key, Key_Constraints(Key_Constraints::NO_CONSTRAINTS));
+   Test::Result result("X509 Valid Constraints " + pk_algo);
 
-   // now check some typical usage scenarios for the given key type
-   typical_usage_constraints typical_usage;
+   result.confirm("empty constraints always acceptable",
+                  Key_Constraints().compatible_with(key));
+
+   // Now check some typical usage scenarios for the given key type
+   // Taken from RFC 5280, sec. 4.2.1.3
+   // ALL constraints are not typical at all, but we use them for a negative test
+   const auto all = Key_Constraints(
+      Key_Constraints::DigitalSignature |
+      Key_Constraints::NonRepudiation |
+      Key_Constraints::KeyEncipherment |
+      Key_Constraints::DataEncipherment |
+      Key_Constraints::KeyAgreement |
+      Key_Constraints::KeyCertSign |
+      Key_Constraints::CrlSign |
+      Key_Constraints::EncipherOnly |
+      Key_Constraints::DecipherOnly);
+
+   const auto ca = Key_Constraints(Key_Constraints::KeyCertSign);
+   const auto sign_data = Key_Constraints(Key_Constraints::DigitalSignature);
+   const auto non_repudiation = Key_Constraints(
+      Key_Constraints::NonRepudiation |
+      Key_Constraints::DigitalSignature);
+   const auto key_encipherment = Key_Constraints(Key_Constraints::KeyEncipherment);
+   const auto data_encipherment = Key_Constraints(Key_Constraints::DataEncipherment);
+   const auto key_agreement = Key_Constraints(Key_Constraints::KeyAgreement);
+   const auto key_agreement_encipher_only = Key_Constraints(
+      Key_Constraints::KeyAgreement |
+      Key_Constraints::EncipherOnly);
+   const auto key_agreement_decipher_only = Key_Constraints(
+      Key_Constraints::KeyAgreement |
+      Key_Constraints::DecipherOnly);
+   const auto crl_sign = Key_Constraints(Key_Constraints::CrlSign);
+   const auto sign_everything = Key_Constraints(
+      Key_Constraints::DigitalSignature |
+      Key_Constraints::KeyCertSign |
+      Key_Constraints::CrlSign);
 
    if(pk_algo == "DH" || pk_algo == "ECDH")
       {
       // DH and ECDH only for key agreement
-      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
-         });
-      result.test_throws("cert sign not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
-         });
-      result.test_throws("signature not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
-         });
-      result.test_throws("non repudiation not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
-         });
-      result.test_throws("key encipherment not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
-         });
-      result.test_throws("data encipherment not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
-         });
-
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
-
-      result.test_throws("crl sign not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
-         });
-      result.test_throws("sign, cert sign, crl sign not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
-         });
+      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
+      result.test_eq("cert sign not permitted", ca.compatible_with(key), false);
+      result.test_eq("signature not permitted", sign_data.compatible_with(key), false);
+      result.test_eq("non repudiation not permitted", non_repudiation.compatible_with(key), false);
+      result.test_eq("key encipherment not permitted", key_encipherment.compatible_with(key), false);
+      result.test_eq("data encipherment not permitted", data_encipherment.compatible_with(key), false);
+      result.test_eq("usage acceptable", key_agreement.compatible_with(key), true);
+      result.test_eq("usage acceptable", key_agreement_encipher_only.compatible_with(key), true);
+      result.test_eq("usage acceptable", key_agreement_decipher_only.compatible_with(key), true);
+      result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
+      result.test_eq("sign", sign_everything.compatible_with(key), false);
       }
    else if(pk_algo == "Kyber")
       {
       // Kyber can encrypt and agree
-      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
-         });
-      result.test_throws("cert sign not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
-         });
-      result.test_throws("signature not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
-         });
-      result.test_throws("non repudiation not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
-         });
-      result.test_throws("crl sign not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
-         });
-      result.test_throws("sign, cert sign, crl sign not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
-         });
-
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
+      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
+      result.test_eq("cert sign not permitted", ca.compatible_with(key), false);
+      result.test_eq("signature not permitted", sign_data.compatible_with(key), false);
+      result.test_eq("non repudiation not permitted", non_repudiation.compatible_with(key), false);
+      result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
+      result.test_eq("sign", sign_everything.compatible_with(key), false);
+      result.test_eq("usage acceptable", key_agreement.compatible_with(key), true);
+      result.test_eq("usage acceptable", data_encipherment.compatible_with(key), true);
+      result.test_eq("usage acceptable", key_encipherment.compatible_with(key), true);
       }
    else if(pk_algo == "RSA")
       {
       // RSA can do everything except key agreement
-      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
-         });
+      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
 
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
-
-      result.test_throws("key agreement not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
-         });
-      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
-         });
-      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
-         });
-
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
+      result.test_eq("usage acceptable", ca.compatible_with(key), true);
+      result.test_eq("usage acceptable", sign_data.compatible_with(key), true);
+      result.test_eq("usage acceptable", non_repudiation.compatible_with(key), true);
+      result.test_eq("usage acceptable", key_encipherment.compatible_with(key), true);
+      result.test_eq("usage acceptable", data_encipherment.compatible_with(key), true);
+      result.test_eq("key agreement not permitted", key_agreement.compatible_with(key), false);
+      result.test_eq("key agreement", key_agreement_encipher_only.compatible_with(key), false);
+      result.test_eq("key agreement", key_agreement_decipher_only.compatible_with(key), false);
+      result.test_eq("usage acceptable", crl_sign.compatible_with(key), true);
+      result.test_eq("usage acceptable", sign_everything.compatible_with(key), true);
       }
    else if(pk_algo == "ElGamal")
       {
       // only ElGamal encryption is currently implemented
-      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
-         });
-      result.test_throws("cert sign not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
-         });
-
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
-
-      result.test_throws("key agreement not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
-         });
-      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
-         });
-      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
-         });
-      result.test_throws("crl sign not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
-         });
-      result.test_throws("sign, cert sign, crl sign not permitted not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
-         });
+      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
+      result.test_eq("cert sign not permitted", ca.compatible_with(key), false);
+      result.test_eq("data encipherment permitted", data_encipherment.compatible_with(key), true);
+      result.test_eq("key encipherment permitted", key_encipherment.compatible_with(key), true);
+      result.test_eq("key agreement not permitted", key_agreement.compatible_with(key), false);
+      result.test_eq("key agreement", key_agreement_encipher_only.compatible_with(key), false);
+      result.test_eq("key agreement", key_agreement_decipher_only.compatible_with(key), false);
+      result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
+      result.test_eq("sign", sign_everything.compatible_with(key), false);
       }
    else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" ||
            pk_algo == "GOST-34.10" || pk_algo == "Dilithium")
       {
       // these are signature algorithms only
-      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
-         });
+      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
 
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
-
-      result.test_throws("key encipherment not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
-         });
-      result.test_throws("data encipherment not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
-         });
-      result.test_throws("key agreement not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
-         });
-      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
-         });
-      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
-         {
-         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
-         });
-
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
-      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
+      result.test_eq("ca allowed", ca.compatible_with(key), true);
+      result.test_eq("sign allowed", sign_data.compatible_with(key), true);
+      result.test_eq("non-repudiation allowed", non_repudiation.compatible_with(key), true);
+      result.test_eq("key encipherment not permitted", key_encipherment.compatible_with(key), false);
+      result.test_eq("data encipherment not permitted", data_encipherment.compatible_with(key), false);
+      result.test_eq("key agreement not permitted", key_agreement.compatible_with(key), false);
+      result.test_eq("key agreement", key_agreement_encipher_only.compatible_with(key), false);
+      result.test_eq("key agreement", key_agreement_decipher_only.compatible_with(key), false);
+      result.test_eq("crl sign allowed", crl_sign.compatible_with(key), true);
+      result.test_eq("sign allowed", sign_everything.compatible_with(key), true);
       }
 
    return result;
@@ -1529,7 +1421,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
-   opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+   opts.constraints = Key_Constraints::DigitalSignature;
 
    // include a custom extension in the request
    Botan::Extensions req_extensions;
@@ -1575,8 +1467,9 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    key_usage_ext = ca_signed_cert.v3_extensions().get(ku_oid);
    if(result.confirm("Key_Usage extension present in CA-signed certificate", key_usage_ext != nullptr))
       {
+      auto constraints = dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints();
       result.confirm("Key_Usage extension value matches in user certificate",
-                     dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == Botan::DIGITAL_SIGNATURE);
+                     constraints == Botan::Key_Constraints::DigitalSignature);
       }
 
    // check if custom extension is present in CA-signed cert

@@ -577,7 +577,7 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
    if(client_certs.empty())
       throw TLS_Exception(Alert::DECODE_ERROR, "No client certificate sent");
 
-   if(!client_certs[0].allowed_usage(DIGITAL_SIGNATURE))
+   if(!client_certs[0].allowed_usage(Key_Constraints::DigitalSignature))
       throw TLS_Exception(Alert::BAD_CERTIFICATE, "Client certificate does not support signing");
 
    const bool sig_valid =

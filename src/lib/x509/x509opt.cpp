@@ -73,7 +73,6 @@ X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
    {
    is_CA = false;
    path_limit = 0;
-   constraints = NO_CONSTRAINTS;
    // use default for chosen algorithm
    padding_scheme = "";
 

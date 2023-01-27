@@ -128,11 +128,17 @@ The major certificate format in use today is X.509v3, used for instance in the
 
   .. cpp:function:: Key_Constraints constraints() const
 
-      Returns either an enumeration listing key constraints (what the
-      associated key can be used for) or ``NO_CONSTRAINTS`` if the
-      relevant extension was not included. Example values are
-      ``DIGITAL_SIGNATURE`` and ``KEY_CERT_SIGN``. More than one value
-      might be specified.
+      Returns a basic list of constraints which govern usage of the
+      key embedded in this certificate.
+
+      The Key_Constraints is a class that behaves somewhat like an
+      ``enum``. The easiest way to use it is with its ``includes``
+      method. For example::
+
+        constraints().includes(Key_Constraints::DigitalSignature)
+
+      checks if the certificate key is valid for generating digital
+      signatures.
 
   .. cpp:function:: bool matches_dns_name(const std::string& name) const
 
@@ -776,13 +782,13 @@ Other constraints can be set by calling the member functions
 ``Key_Constraints`` value, and replaces any previously set value. If
 no value is set, then the certificate key is marked as being valid for
 any usage.  You can set it to any of the following (for more than one
-usage, OR them together): ``DIGITAL_SIGNATURE``, ``NON_REPUDIATION``,
-``KEY_ENCIPHERMENT``, ``DATA_ENCIPHERMENT``, ``KEY_AGREEMENT``,
-``KEY_CERT_SIGN``, ``CRL_SIGN``, ``ENCIPHER_ONLY``,
-``DECIPHER_ONLY``. Many of these have quite special semantics, so you
-should either consult the appropriate standards document (such as RFC
-5280), or just not call ``add_constraints``, in which case the
-appropriate values will be chosen for you.
+usage, OR them together): ``DigitalSignature``, ``NonRepudiation``,
+``KeyEncipherment``, ``DataEncipherment``, ``KeyAgreement``,
+``KeyCertSign``, ``CrlSign``, ``EncipherOnly``, or ``DecipherOnly``.
+Many of these have quite special semantics, so you should either
+consult the appropriate standards document (such as RFC 5280), or just
+not call ``add_constraints``, in which case the appropriate values
+will be chosen for you based on the key type.
 
 The second function, ``add_ex_constraints``, allows you to specify an
 OID that has some meaning with regards to restricting the key to

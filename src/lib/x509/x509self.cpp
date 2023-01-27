@@ -67,22 +67,17 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 
    Extensions extensions = opts.extensions;
 
-   Key_Constraints constraints;
-   if(opts.is_CA)
-      {
-      constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
-      }
-   else
-      {
-      verify_cert_constraints_valid_for_key_type(key, opts.constraints);
-      constraints = opts.constraints;
-      }
+   const auto constraints =
+      opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
+
+   if(!constraints.compatible_with(key))
+      throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
 
    extensions.add_new(
       std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit),
       true);
 
-   if(constraints != NO_CONSTRAINTS)
+   if(!constraints.empty())
       {
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
       }
@@ -116,25 +111,21 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    AlternativeName subject_alt;
    load_info(opts, subject_dn, subject_alt);
 
-   Key_Constraints constraints;
-   if(opts.is_CA)
-      {
-      constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
-      }
-   else
-      {
-      verify_cert_constraints_valid_for_key_type(key, opts.constraints);
-      constraints = opts.constraints;
-      }
+   const auto constraints =
+      opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
+
+   if(!constraints.compatible_with(key))
+      throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
 
    Extensions extensions = opts.extensions;
 
    extensions.add_new(std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit));
 
-   if(constraints != NO_CONSTRAINTS)
+   if(!constraints.empty())
       {
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints));
       }
+
    extensions.add_new(std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
    extensions.add_new(std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt));
 
