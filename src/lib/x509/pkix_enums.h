@@ -165,12 +165,7 @@ class BOTAN_PUBLIC_API(3,0) Key_Constraints
       // Return true if any of the bits provided are set
       bool includes_any(auto&& ...bits) const
          {
-         for(auto bit: std::initializer_list<Key_Constraints::Bits>{ bits... })
-            {
-            if(this->includes(bit))
-               return true;
-            }
-         return false;
+         return (m_value & (bits | ...)) > 0;
          }
 
       bool empty() const { return m_value == 0; }
