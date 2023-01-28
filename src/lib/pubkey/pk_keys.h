@@ -21,7 +21,13 @@ class RandomNumberGenerator;
 /**
 * The two types of signature format supported by Botan.
 */
-enum class Signature_Format { Standard, DerSequence };
+enum class Signature_Format {
+   Standard,
+   DerSequence,
+
+   IEEE_1363 BOTAN_DEPRECATED("Use Standard") = Standard,
+   DER_SEQUENCE BOTAN_DEPRECATED("Use DerSequence") = DerSequence,
+};
 
 /**
 * Public Key Base Class.
