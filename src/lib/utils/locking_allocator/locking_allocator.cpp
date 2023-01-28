@@ -8,6 +8,7 @@
 #include <botan/internal/locking_allocator.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/mem_pool.h>
+#include <botan/internal/safeint.h>
 
 namespace Botan {
 
@@ -16,11 +17,11 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    if(!m_pool)
       return nullptr;
 
-   const size_t n = num_elems * elem_size;
-   if(n / elem_size != num_elems)
+   const auto n = BOTAN_CHECKED_MUL(num_elems, elem_size);
+   if(n == std::nullopt)
       return nullptr; // overflow!
 
-   return m_pool->allocate(n);
+   return m_pool->allocate(n.value());
    }
 
 bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) noexcept
@@ -28,16 +29,15 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) no
    if(!m_pool)
       return false;
 
-   size_t n = num_elems * elem_size;
-
    /*
    We return nullptr in allocate if there was an overflow, so if an
    overflow occurs here we know the pointer was not allocated by this pool.
    */
-   if(n / elem_size != num_elems)
+   const auto n = BOTAN_CHECKED_MUL(num_elems, elem_size);
+   if(n == std::nullopt)
       return false;
 
-   return m_pool->deallocate(p, n);
+   return m_pool->deallocate(p, n.value());
    }
 
 mlock_allocator::mlock_allocator()

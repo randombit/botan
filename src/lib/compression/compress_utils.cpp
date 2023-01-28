@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/compress_utils.h>
+#include <botan/internal/safeint.h>
 #include <botan/exceptn.h>
 #include <cstdlib>
 
@@ -13,7 +14,11 @@ namespace Botan {
 
 void* Compression_Alloc_Info::do_malloc(size_t n, size_t size)
    {
-   // TODO maximum length check here?
+   if(!BOTAN_CHECKED_MUL(n, size).has_value()) [[unlikely]]
+      {
+      return nullptr;
+      }
+
    void* ptr = std::calloc(n, size);
 
    /*

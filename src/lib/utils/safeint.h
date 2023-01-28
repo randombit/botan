@@ -9,6 +9,7 @@
 #define BOTAN_UTILS_SAFE_INT_H_
 
 #include <botan/exceptn.h>
+#include <optional>
 #include <string>
 #if defined(_MSC_VER)
 #include <intsafe.h>
@@ -44,6 +45,24 @@ inline size_t checked_add(size_t x, size_t y, const char* file, int line)
    return z;
    }
 
+inline std::optional<size_t> checked_mul(size_t x, size_t y)
+   {
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_add_overflow)
+   size_t z;
+   if(__builtin_mul_overflow(x, y, &z)) [[unlikely]]
+#elif defined(_MSC_VER)
+   size_t z;
+   if(SizeTMult(x, y, &z) != S_OK) [[unlikely]]
+#else
+   size_t z = x * y;
+   if(y && z / y != x) [[unlikely]]
+#endif
+      {
+      return std::nullopt;
+      }
+   return z;
+   }
+
 template<typename RT, typename AT>
 RT checked_cast_to(AT i)
    {
@@ -54,6 +73,7 @@ RT checked_cast_to(AT i)
    }
 
 #define BOTAN_CHECKED_ADD(x,y) checked_add(x,y,__FILE__,__LINE__)
+#define BOTAN_CHECKED_MUL(x,y) checked_mul(x,y)
 
 }
 
