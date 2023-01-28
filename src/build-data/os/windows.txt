@@ -12,10 +12,6 @@ default_compiler msvc
 
 uses_pkg_config no
 
-# For historical reasons? the library does not have the major number on Windows
-# This should probably be fixed in a future major release.
-library_name 'botan{suffix}'
-
 soname_pattern_base "{libname}.dll"
 
 install_root c:\\Botan
