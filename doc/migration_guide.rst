@@ -109,7 +109,10 @@ Use of ``enum class``
 --------------------------------
 
 Several enumerations where modified to become ``enum class``, including
-``DL_Group::Format``, ``CRL_Code``, ``EC_Group_Encoding``,
+``DL_Group::Format``, ``CRL_Code``, ``EC_Group_Encoding``, ``Signature_Format``.
+
+The value of ``Signature_Format`` formerly known as ``IEEE_1363`` is now
+called ``Standard``.
 
 ASN.1 enums
 ---------------
@@ -148,6 +151,11 @@ regressions due to creating and processing very small buffers.
 Previously the library accepted "SHA-160" and "SHA1" alternative names
 for "SHA-1". This is no longer the case, you must use "SHA-1". Botan
 2.x also recognizes "SHA-1".
+
+PointGFp
+------------
+
+This type is now named ``EC_Point``
 
 X509::load_key
 -------------------

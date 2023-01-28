@@ -5,107 +5,17 @@ Version 3.0.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Botan is now a C++20 codebase; compiler requirements have been
-  increased to GCC 11, Clang 14, or MSVC 2019. (GH #2455 #3086)
+  increased to GCC 11, Clang 14, or MSVC 2022. (GH #2455 #3086)
 
-* Add support for Kyber post-quantum KEM (GH #2872 #2500)
-
-* Support for TLS 1.0, TLS 1.1, and DTLS 1.0 have been removed (GH #2631)
+Breaking Changes
+----------------------------------------
 
 * Remove many deprecated headers (GH #2456)
 
-* Many headers which were previously marked as becoming internal in 2.x have
-  now been made internal (GH #2456)
+* Removed most functions previously marked as deprecated.
 
 * Remove several deprecated algorithms including CAST-256, MISTY1, Kasumi,
   DESX, XTEA, PBKDF1, MCEIES, CBC-MAC, Tiger, NEWHOPE, and CECPQ1 (GH #2434 #3094)
-
-* Remove several deprecated features in TLS including DSA ciphersuites (GH #2505),
-  anonymous ciphersuites (GH #2497), SHA-1 signatures in TLS 1.2 (GH #2537),
-  SRP ciphersuites (GH #2506), SEED ciphersuites (GH #2509),
-  Camellia CBC ciphersuites (GH #2509), AES-128 OCB ciphersuites (GH #2511),
-  DHE_PSK suites (GH #2512), CECPQ1 ciphersuites (GH #3094)
-
-* Resolve an issue in the modular square root function which could cause
-  a near-infinite loop if used with a composite modulus of a certain form
-  where finding a quadratic non-residue is hard. (GH #2478 #2476)
-
-* Remove use of ``shared_ptr`` from certificate store API as since
-  2.4.0 ``X509_Certificate`` is internally a ``shared_ptr``. (GH #2484)
-
-* Add new interface ``T::new_object`` which supplants ``T::clone``. The
-  difference is that ``new_object`` returns a ``unique_ptr<T>`` instead of a raw
-  pointer ``T*``. ``T::clone`` is retained but simply releases the result of
-  ``new_object``. (GH #2689 #2704)
-
-* Use smaller tables in the implementations of Camellia, ARIA, SEED, DES,
-  and Whirlpool (GH #2534 #2558)
-
-* Modify DES/3DES to use a new implementation which avoids most
-  cache-based side channels. (GH #2565 #2678)
-
-* CVE-2021-24115 Convert base64, base58, base32 and hex encoding/decoding to be
-  constant time (GH #2543)
-
-* Add support for hashing onto an elliptic curve using the SSWU
-  technique of draft-irtf-cfrg-hash-to-curve (GH #2726)
-
-* DNS names in name constraints were compared with case sensitivity, which
-  could cause valid certificates to be rejected. (GH #2738 #2735)
-
-* X.509 name constraint extensions were rejected if non-critical. RFC 5280
-  requires conforming CAs issue such extensions as critical, but not all
-  certificates are compliant, and all other known implementations do not
-  require this. (GH #2738 #2736)
-
-* X.509 name constraints were incorrectly applied to the certificate which
-  included the constraint. (GH #2738 #2737)
-
-* Use constant-time code instead of table lookups when computing parity bits
-  (GH #2560), choosing ASN.1 string type (GH #2559) and when converting to/from
-  the bcrypt variant of base64 (GH #2561)
-
-* Change how DL exponents are sized; now exponents are slightly larger and
-  are always chosen to be 8-bit aligned. (GH #2545)
-
-* Add an API to ``PasswordHash`` accepting an AD and/or secret key, allowing
-  those facilities to be used without using an algorithm specific API (GH #2707)
-
-* Add new ``X509_DN::DER_encode`` function. (GH #2472)
-
-* Add support for ``zfec`` compatible forward error correction (GH #2866 #2871)
-
-* Add support for keyed BLAKE2b (GH #2524)
-
-* Optimizations for SHACAL2, especially improving ARMv8 and POWER (GH #2556 #2557)
-
-* Several enums including ``DL_Group::Format``, ``EC_Group_Formatting``,
-  ``CRL_Code``, ``ASN1_Tag``, and ``Signature_Format`` are now ``enum class``.
-  (GH #2551 #2552 #3084)
-
-* ``ASN1_Tag`` enum has been split into ``ASN1_Type`` and ``ASN1_Class``.
-  (GH #2584)
-
-* Re-enable support for CLMUL instruction on Visual C++, which was accidentally
-  disabled starting in 2.12.0
-
-* Avoid using or returning raw pointers whenever possible. (GH #2683 #2684
-  #2685 #2687 #2688 #2690 #2691 #2693 #2694 #2695 #2696 #2697 #2700 #2703 #2708)
-
-* Changes to ``TLS::Stream`` to make it compatible with generic completion tokens.
-  (GH #2667 #2648)
-
-* When creating an ``EC_Group`` from parameters, cause the OID to be set if it
-  is a known group. (GH #2654 #2649)
-
-* Fix a bug in BigInt::operator< where if two negative numbers were compared,
-  an incorrect result was computed. (GH #2639 #2638)
-
-* Fix a bug in BigInt::operator>> where if the shift size exceeded the size
-  of the integer by at least 32 bits, it was possible an exception would
-  be thrown instead of computing the correct result. (GH #2672)
-
-* Fix bugs in GMAC and SipHash where they would require a fresh key be
-  provided for each message. (GH #2908)
 
 * Remove the entropy source which walked ``/proc`` as it is no longer
   required on modern systems. (GH #2692)
@@ -114,35 +24,109 @@ Version 3.0.0, Not Yet Released
   supplanted by the extant source one which reads from the system RNG.
   (GH #2636)
 
-* Add a fast path for inversion modulo ``2*o`` with ``o`` odd, and modify RSA
-  key generation so that ``phi(n)`` is always of this form. (GH #2634)
+* Remove use of ``shared_ptr`` from certificate store API, as since
+  2.4.0 ``X509_Certificate`` is internally a ``shared_ptr``. (GH #2484)
+
+* Several enums including ``DL_Group::Format``, ``EC_Group_Formatting``,
+  ``CRL_Code``, ``ASN1_Tag``, ``Key_Constraints`` and ``Signature_Format`` are
+  now ``enum class``.  The ``ASN1_Tag`` enum has been split into ``ASN1_Type``
+  and ``ASN1_Class``.  (GH #2551 #2552 #3084 #2584 #3225)
+
+* Avoid using or returning raw pointers whenever possible. (GH #2683 #2684
+  #2685 #2687 #2688 #2690 #2691 #2693 #2694 #2695 #2696 #2697 #2700 #2703 #2708
+  #3220)
+
+* Remove support for HP and Pathscale compilers, and Google NaCL (GH #2455)
 
 * Remove deprecated ``Data_Store`` class (GH #2461)
 
 * Remove deprecated public member variables of ``OID``, ``Attribute``,
   ``BER_Object``, and ``AlgorithmIdentifier``. (GH #2462)
 
-* Remove support for HP and Pathscale compilers (GH #2455)
+* "SHA-160" and "SHA1" are no longer recognized as names for "SHA-1"
+  (GH #3186)
 
-* Remove support for Google NaCl (GH #2455)
+TLS Changes
+----------------------------------------
 
-* Add a flag to enable VSX instructions, resolving a build issue on big-endian PPC64
-  (GH #2516 #2515)
+* Added support for TLS v1.3
 
-* Add more tests of the Jacobi symbol calculation (#2477)
+* Support for TLS 1.0, TLS 1.1, and DTLS 1.0 have been removed (GH #2631)
 
-* Improve DragonflyBSD platform support (GH #2457)
+* Remove several deprecated features in TLS including DSA ciphersuites (GH #2505),
+  anonymous ciphersuites (GH #2497), SHA-1 signatures in TLS 1.2 (GH #2537),
+  SRP ciphersuites (GH #2506), SEED ciphersuites (GH #2509),
+  Camellia CBC ciphersuites (GH #2509), AES-128 OCB ciphersuites (GH #2511),
+  DHE_PSK suites (GH #2512), CECPQ1 ciphersuites (GH #3094)
 
-* Move the main CI build to Github Actions (GH #2504 #2503 #2501)
+New Cryptographic Algorithms
+----------------------------------------
 
-* Correct a linking bug when using `--with-external-libdir`` (GH #2496)
+* Add support for Kyber post-quantum KEM (GH #2872 #2500)
 
-* Further adoption of ``constexpr`` (GH #2490)
+* Add support for Dilithium lattice based signatures (GH #2973 #3212)
 
-* Remove support for MD4 and MD5 from CommonCrypto as support is deprecated
-  there.
+* Add support for hashing onto an elliptic curve using the SSWU
+  technique of draft-irtf-cfrg-hash-to-curve (GH #2726)
 
-* Generate a ``compile_commands.json`` for use with Clang tooling.
+* Add support for keyed BLAKE2b (GH #2524)
+
+New APIs
+----------------------------------------
+
+* Add new interface ``T::new_object`` which supplants ``T::clone``. The
+  difference is that ``new_object`` returns a ``unique_ptr<T>`` instead of a raw
+  pointer ``T*``. ``T::clone`` is retained but simply releases the result of
+  ``new_object``. (GH #2689 #2704)
+
+* Add an API to ``PasswordHash`` accepting an AD and/or secret key, allowing
+  those facilities to be used without using an algorithm specific API (GH #2707)
+
+* Add new ``X509_DN::DER_encode`` function. (GH #2472)
+
+* New API ``Public_Key::get_int_field`` for getting the integer fields of a public
+  (or private) key by name (GH #3200)
+
+* New ``Cipher_Mode`` APIs ``ideal_granularity`` and ``requires_entire_message``
+  (GH #3172 #3168)
+
+* New ``Private_Key::public_key`` returns a new object containing the public
+  key associated with that private key. (GH #2520)
+
+Implementation Improvements
+----------------------------------------
+
+* Add AVX2 implementation of Argon2 (GH #3205)
+
+* Use smaller tables in the implementations of Camellia, ARIA, SEED, DES,
+  and Whirlpool (GH #2534 #2558)
+
+* Modify DES/3DES to use a new implementation which avoids most
+  cache-based side channels. (GH #2565 #2678)
+
+* Optimizations for SHACAL2, especially improving ARMv8 and POWER (GH #2556 #2557)
+
+* Add a fast path for inversion modulo ``2*o`` with ``o`` odd, and modify RSA
+  key generation so that ``phi(n)`` is always of this form. (GH #2634)
+
+* Use constant-time code instead of table lookups when computing parity bits
+  (GH #2560), choosing ASN.1 string type (GH #2559) and when converting to/from
+  the bcrypt variant of base64 (GH #2561)
+
+* Change how DL exponents are sized; now exponents are slightly larger and
+  are always chosen to be 8-bit aligned. (GH #2545)
+
+Other Improvements
+----------------------------------------
+
+* Changes to ``TLS::Stream`` to make it compatible with generic completion tokens.
+  (GH #2667 #2648)
+
+* When creating an ``EC_Group`` from parameters, cause the OID to be set if it
+  is a known group. (GH #2654 #2649)
+
+* Fix bugs in GMAC and SipHash where they would require a fresh key be
+  provided for each message. (GH #2908)
 
 Version 2.19.3, 2022-11-16
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
