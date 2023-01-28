@@ -124,11 +124,7 @@ class Sign_Cert final : public Command
             throw CLI_Error("Failed to load key from " + key_file);
             }
 
-         std::map<std::string, std::string> options;
-         if(emsa.empty() == false)
-            options["padding"] = emsa;
-
-         Botan::X509_CA ca(ca_cert, *key, options, hash, rng());
+         Botan::X509_CA ca(ca_cert, *key, hash, emsa, rng());
 
          Botan::PKCS10_Request req(get_arg("pkcs10_req"));
 

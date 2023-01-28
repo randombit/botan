@@ -1,67 +1,35 @@
 /*
 * X.509 Certificate Authority
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/x509_ca.h>
 #include <botan/x509_key.h>
-#include <botan/x509self.h>
+#include <botan/pkcs10.h>
 #include <botan/x509_ext.h>
-#include <botan/pkix_types.h>
 #include <botan/pubkey.h>
 #include <botan/der_enc.h>
 #include <botan/bigint.h>
-#include <botan/internal/parsing.h>
-#include <botan/oids.h>
-#include <botan/hash.h>
-#include <botan/internal/emsa.h>
-#include <botan/internal/scan_name.h>
-#include <algorithm>
-#include <iterator>
 
 namespace Botan {
 
 /*
 * Load the certificate and private key
 */
-X509_CA::X509_CA(const X509_Certificate& c,
+X509_CA::X509_CA(const X509_Certificate& cert,
                  const Private_Key& key,
                  const std::string& hash_fn,
+                 const std::string& padding_method,
                  RandomNumberGenerator& rng) :
-   m_ca_cert(c),
+   m_ca_cert(cert),
    m_hash_fn(hash_fn)
    {
    if(!m_ca_cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
-   std::map<std::string,std::string> opts;
-   // constructor without additional options: use the padding used in the CA certificate
-   // sig_oid_str = <sig_alg>/<padding>, so padding with all its options will look
-   // like a cipher mode to the scanner
-   std::string sig_oid_str = OIDS::oid2str_or_throw(c.signature_algorithm().get_oid());
-   SCAN_Name scanner(sig_oid_str);
-   std::string pad = scanner.cipher_mode();
-   if(!pad.empty())
-      opts.insert({"padding",pad});
-
-   m_signer.reset(choose_sig_format(key, opts, rng, hash_fn, m_ca_sig_algo));
-   }
-
-/*
-* Load the certificate and private key, and additional options
-*/
-X509_CA::X509_CA(const X509_Certificate& ca_certificate,
-        const Private_Key& key,
-        const std::map<std::string,std::string>& opts,
-        const std::string& hash_fn,
-        RandomNumberGenerator& rng) : m_ca_cert(ca_certificate), m_hash_fn(hash_fn)
-   {
-   if(!m_ca_cert.is_CA_cert())
-      throw Invalid_Argument("X509_CA: This certificate is not for a CA");
-
-   m_signer.reset(choose_sig_format(key, opts, rng, hash_fn, m_ca_sig_algo));
+   m_signer = X509_Object::choose_sig_format(m_ca_sig_algo, key, rng, hash_fn, padding_method);
    }
 
 /*
@@ -304,30 +272,6 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
 X509_Certificate X509_CA::ca_certificate() const
    {
    return m_ca_cert;
-   }
-
-/*
-* Choose a signing format for the key
-*/
-
-PK_Signer* choose_sig_format(const Private_Key& key,
-                             RandomNumberGenerator& rng,
-                             const std::string& hash_fn,
-                             AlgorithmIdentifier& sig_algo)
-   {
-   return X509_Object::choose_sig_format(sig_algo, key, rng, hash_fn, "").release();
-   }
-
-PK_Signer* choose_sig_format(const Private_Key& key,
-                             const std::map<std::string,std::string>& opts,
-                             RandomNumberGenerator& rng,
-                             const std::string& hash_fn,
-                             AlgorithmIdentifier& sig_algo)
-   {
-   std::string padding;
-   if(opts.count("padding"))
-      padding = opts.at("padding");
-   return X509_Object::choose_sig_format(sig_algo, key, rng, hash_fn, padding).release();
    }
 
 }

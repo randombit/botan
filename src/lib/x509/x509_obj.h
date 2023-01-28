@@ -107,6 +107,16 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
 
       virtual ~X509_Object() = default;
 
+      /**
+      * Choose the default signature format for a certain public key signature
+      * scheme.
+      * @param sig_algo will be set to the chosen algorithm
+      * @param key will be the key to choose a padding scheme for
+      * @param rng the random generator to use
+      * @param hash_fn is the desired hash function
+      * @param padding_algo specifies the padding method
+      * @return a PK_Signer object for generating signatures
+      */
       static std::unique_ptr<PK_Signer>
          choose_sig_format(AlgorithmIdentifier& sig_algo,
                            const Private_Key& key,

@@ -176,7 +176,7 @@ std::string PKCS5_PBKDF2::name() const
 
 std::unique_ptr<PBKDF> PKCS5_PBKDF2::new_object() const
    {
-   return std::make_unique<PKCS5_PBKDF2>(m_mac->clone());
+   return std::make_unique<PKCS5_PBKDF2>(m_mac->new_object());
    }
 
 // PasswordHash interface

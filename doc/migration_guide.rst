@@ -3,6 +3,10 @@ Botan 2.x to 3.x Migration
 
 This is a guide on migrating applications from Botan 2.x to 3.0.
 
+This guide attempts to be, but is not, complete. If you run into a problem while
+converting code that does not seem to be described here, please open an issue on
+Github.
+
 Headers
 --------
 
@@ -167,3 +171,15 @@ PKCS11_Request::subject_public_key and X509_Certificate::subject_public_key
 -----------------------------------------------------------------------------
 
 These functions now return a unique_ptr
+
+choose_sig_format removed
+---------------------------
+
+The freestanding functions choose_sig_format have been removed.
+Use X509_Object::choose_sig_format
+
+DLIES Constructors
+--------------------
+
+Previously the constructors to the DLIES classes took raw pointers,
+and retained ownership of them. They now consume std::unique_ptrs

@@ -13,32 +13,32 @@ namespace Botan {
 
 DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
                                  RandomNumberGenerator& rng,
-                                 KDF* kdf,
-                                 MessageAuthenticationCode* mac,
+                                 std::unique_ptr<KDF> kdf,
+                                 std::unique_ptr<MessageAuthenticationCode> mac,
                                  size_t mac_key_length) :
-   DLIES_Encryptor(own_priv_key, rng, kdf, nullptr, 0, mac, mac_key_length)
+   DLIES_Encryptor(own_priv_key, rng, std::move(kdf), nullptr, 0, std::move(mac), mac_key_length)
    {
    }
 
 DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
                                  RandomNumberGenerator& rng,
-                                 KDF* kdf,
-                                 Cipher_Mode* cipher,
+                                 std::unique_ptr<KDF> kdf,
+                                 std::unique_ptr<Cipher_Mode> cipher,
                                  size_t cipher_key_len,
-                                 MessageAuthenticationCode* mac,
+                                 std::unique_ptr<MessageAuthenticationCode> mac,
                                  size_t mac_key_length) :
    m_other_pub_key(),
    m_own_pub_key(own_priv_key.public_value()),
    m_ka(own_priv_key, rng, "Raw"),
-   m_kdf(kdf),
-   m_cipher(cipher),
+   m_kdf(std::move(kdf)),
+   m_cipher(std::move(cipher)),
    m_cipher_key_len(cipher_key_len),
-   m_mac(mac),
+   m_mac(std::move(mac)),
    m_mac_keylen(mac_key_length),
    m_iv()
    {
-   BOTAN_ASSERT_NONNULL(kdf);
-   BOTAN_ASSERT_NONNULL(mac);
+   BOTAN_ASSERT_NONNULL(m_kdf);
+   BOTAN_ASSERT_NONNULL(m_mac);
    }
 
 std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length,
@@ -109,30 +109,30 @@ size_t DLIES_Encryptor::ciphertext_length(size_t ptext_len) const
 
 DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
                                  RandomNumberGenerator& rng,
-                                 KDF* kdf,
-                                 Cipher_Mode* cipher,
+                                 std::unique_ptr<KDF> kdf,
+                                 std::unique_ptr<Cipher_Mode> cipher,
                                  size_t cipher_key_len,
-                                 MessageAuthenticationCode* mac,
+                                 std::unique_ptr<MessageAuthenticationCode> mac,
                                  size_t mac_key_length) :
    m_pub_key_size(own_priv_key.public_value().size()),
    m_ka(own_priv_key, rng, "Raw"),
-   m_kdf(kdf),
-   m_cipher(cipher),
-   m_cipher_key_len(cipher_key_len),
-   m_mac(mac),
+   m_kdf(std::move(kdf)),
+   m_cipher(std::move(cipher)),
+   m_cipher_key_len(std::move(cipher_key_len)),
+   m_mac(std::move(mac)),
    m_mac_keylen(mac_key_length),
    m_iv()
    {
-   BOTAN_ASSERT_NONNULL(kdf);
-   BOTAN_ASSERT_NONNULL(mac);
+   BOTAN_ASSERT_NONNULL(m_kdf);
+   BOTAN_ASSERT_NONNULL(m_mac);
    }
 
 DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
                                  RandomNumberGenerator& rng,
-                                 KDF* kdf,
-                                 MessageAuthenticationCode* mac,
+                                 std::unique_ptr<KDF> kdf,
+                                 std::unique_ptr<MessageAuthenticationCode> mac,
                                  size_t mac_key_length) :
-   DLIES_Decryptor(own_priv_key, rng, kdf, nullptr, 0, mac, mac_key_length)
+   DLIES_Decryptor(own_priv_key, rng, std::move(kdf), nullptr, 0, std::move(mac), mac_key_length)
    {}
 
 size_t DLIES_Decryptor::plaintext_length(size_t ctext_len) const

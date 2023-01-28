@@ -81,10 +81,14 @@ class DLIES_KAT_Tests final : public Text_Based_Test
          Botan::DH_PrivateKey from(Test::rng(), domain, x1);
          Botan::DH_PrivateKey to(Test::rng(), domain, x2);
 
-         Botan::DLIES_Encryptor encryptor(from, Test::rng(), kdf->clone(), enc.release(), cipher_key_len, mac->clone(),
-                                          mac_key_len);
-         Botan::DLIES_Decryptor decryptor(to, Test::rng(), kdf.release(), dec.release(), cipher_key_len, mac.release(),
-                                          mac_key_len);
+         Botan::DLIES_Encryptor encryptor(from, Test::rng(),
+                                          kdf->new_object(),
+                                          std::move(enc), cipher_key_len,
+                                          mac->new_object(), mac_key_len);
+         Botan::DLIES_Decryptor decryptor(to, Test::rng(),
+                                          std::move(kdf),
+                                          std::move(dec), cipher_key_len,
+                                          std::move(mac), mac_key_len);
 
          if(!iv.empty())
             {
@@ -140,7 +144,7 @@ Test::Result test_xor()
             continue;
             }
 
-         Botan::DLIES_Encryptor encryptor(alice, Test::rng(), kdf->clone(), mac->clone(), mac_key_len);
+         Botan::DLIES_Encryptor encryptor(alice, Test::rng(), kdf->new_object(), mac->new_object(), mac_key_len);
 
          // negative test: other pub key not set
          Botan::secure_vector<uint8_t> plaintext = Test::rng().random_vec(32);
@@ -153,7 +157,7 @@ Test::Result test_xor()
          encryptor.set_other_key(bob.public_value());
          std::vector<uint8_t> ciphertext = encryptor.encrypt(plaintext, Test::rng());
 
-         Botan::DLIES_Decryptor decryptor(bob, Test::rng(), kdf->clone(), mac->clone(), mac_key_len);
+         Botan::DLIES_Decryptor decryptor(bob, Test::rng(), kdf->new_object(), mac->new_object(), mac_key_len);
 
          // negative test: ciphertext too short
          result.test_throws("ciphertext too short", [ &decryptor ]()

@@ -55,7 +55,7 @@ std::string generate_passhash9(const std::string& pass,
                              std::to_string(alg_id) +
                              " is not defined");
 
-   PKCS5_PBKDF2 kdf(prf.release()); // takes ownership of pointer
+   PKCS5_PBKDF2 kdf(std::move(prf));
 
    secure_vector<uint8_t> salt(SALT_BYTES);
    rng.randomize(salt.data(), salt.size());
@@ -117,7 +117,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
    if(!pbkdf_prf)
       return false; // unknown algorithm, reject
 
-   PKCS5_PBKDF2 kdf(pbkdf_prf.release()); // takes ownership of pointer
+   PKCS5_PBKDF2 kdf(std::move(pbkdf_prf));
 
    secure_vector<uint8_t> cmp = kdf.derive_key(
       PASSHASH9_PBKDF_OUTPUT_LEN,

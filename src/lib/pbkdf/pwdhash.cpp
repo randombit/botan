@@ -57,10 +57,10 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
       if(provider.empty() || provider == "base")
          {
          if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
-            return std::make_unique<PBKDF2_Family>(mac.release());
+            return std::make_unique<PBKDF2_Family>(std::move(mac));
 
          if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
-            return std::make_unique<PBKDF2_Family>(mac.release());
+            return std::make_unique<PBKDF2_Family>(std::move(mac));
          }
 
       return nullptr;
@@ -101,7 +101,7 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
       {
       if(auto hash = HashFunction::create(req.arg(0)))
          {
-         return std::make_unique<RFC4880_S2K_Family>(hash.release());
+         return std::make_unique<RFC4880_S2K_Family>(std::move(hash));
          }
       }
 #endif

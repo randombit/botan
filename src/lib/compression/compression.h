@@ -131,11 +131,13 @@ class BOTAN_PUBLIC_API(2,0) Decompression_Algorithm
       virtual ~Decompression_Algorithm() = default;
    };
 
+BOTAN_DEPRECATED("Use Compression_Algorithm::create")
 inline Compression_Algorithm* make_compressor(const std::string& type)
    {
    return Compression_Algorithm::create(type).release();
    }
 
+BOTAN_DEPRECATED("Use Decompression_Algorithm::create")
 inline Decompression_Algorithm* make_decompressor(const std::string& type)
    {
    return Decompression_Algorithm::create(type).release();
