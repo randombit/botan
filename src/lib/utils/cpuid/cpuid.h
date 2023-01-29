@@ -450,7 +450,11 @@ class BOTAN_TEST_API CPUID final
 
       static CPUID_Data& state()
          {
+#if defined(BOTAN_TARGET_OS_HAS_THREAD_LOCAL)
+         static thread_local CPUID::CPUID_Data g_cpuid;
+#else
          static CPUID::CPUID_Data g_cpuid;
+#endif
          return g_cpuid;
          }
    };
