@@ -340,7 +340,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
                                                             m_transcript_hash.current());
       }
 
-   callbacks().tls_examine_extensions(sh.extensions(), SERVER, Handshake_Type::SERVER_HELLO);
+   callbacks().tls_examine_extensions(sh.extensions(), Connection_Side::Server, Handshake_Type::SERVER_HELLO);
 
    m_transitions.set_expected_next(ENCRYPTED_EXTENSIONS);
    }
@@ -374,7 +374,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
 
    ch.retry(hrr, m_transcript_hash, callbacks(), rng());
 
-   callbacks().tls_examine_extensions(hrr.extensions(), SERVER, Handshake_Type::HELLO_RETRY_REQUEST);
+   callbacks().tls_examine_extensions(hrr.extensions(), Connection_Side::Server, Handshake_Type::HELLO_RETRY_REQUEST);
 
    send_handshake_message(std::reference_wrapper(ch));
 
@@ -416,7 +416,7 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
       }
 
-   callbacks().tls_examine_extensions(exts, SERVER, Handshake_Type::ENCRYPTED_EXTENSIONS);
+   callbacks().tls_examine_extensions(exts, Connection_Side::Server, Handshake_Type::ENCRYPTED_EXTENSIONS);
 
    if(m_handshake_state.server_hello().extensions().has<PSK>())
       {
@@ -441,7 +441,7 @@ void Client_Impl_13::handle(const Certificate_Request_13& certificate_request_ms
       throw TLS_Exception(Alert::DECODE_ERROR, "Certificate_Request context must be empty in the main handshake");
       }
 
-   callbacks().tls_examine_extensions(certificate_request_msg.extensions(), SERVER, Handshake_Type::CERTIFICATE_REQUEST);
+   callbacks().tls_examine_extensions(certificate_request_msg.extensions(), Connection_Side::Server, Handshake_Type::CERTIFICATE_REQUEST);
    m_transitions.set_expected_next(CERTIFICATE);
    }
 
@@ -528,7 +528,7 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedMessa
          cert_request.signature_schemes(),
          m_info.hostname(),
          m_transcript_hash.current(),
-         Connection_Side::CLIENT,
+         Connection_Side::Client,
          credentials_manager(),
          policy(),
          callbacks(),
@@ -587,12 +587,12 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
                    new_session_ticket.lifetime_hint(),
                    m_handshake_state.server_hello().selected_version(),
                    m_handshake_state.server_hello().ciphersuite(),
-                   Connection_Side::CLIENT,
+                   Connection_Side::Client,
                    peer_cert_chain(),
                    m_info,
                    callbacks().tls_current_timestamp());
 
-   callbacks().tls_examine_extensions(new_session_ticket.extensions(), SERVER, Handshake_Type::NEW_SESSION_TICKET);
+   callbacks().tls_examine_extensions(new_session_ticket.extensions(), Connection_Side::Server, Handshake_Type::NEW_SESSION_TICKET);
    if(callbacks().tls_session_ticket_received(session))
       {
       session_manager().save(session);

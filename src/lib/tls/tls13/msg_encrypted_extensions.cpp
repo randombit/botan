@@ -70,7 +70,7 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello, 
    // TODO: Implement handling for (at least)
    //       * SRTP
 
-   cb.tls_modify_extensions(m_extensions, SERVER, type());
+   cb.tls_modify_extensions(m_extensions, Connection_Side::Server, type());
    }
 
 Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf)
@@ -86,7 +86,7 @@ Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf)
                           "Server sent an empty Encrypted Extensions message");
       }
 
-   m_extensions.deserialize(reader, Connection_Side::SERVER, type());
+   m_extensions.deserialize(reader, Connection_Side::Server, type());
 
    // RFC 8446 4.2
    //    If an implementation receives an extension which it recognizes and
@@ -121,7 +121,7 @@ Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf)
 
 std::vector<uint8_t> Encrypted_Extensions::serialize() const
    {
-   return m_extensions.serialize(Connection_Side::SERVER);
+   return m_extensions.serialize(Connection_Side::Server);
    }
 
 }

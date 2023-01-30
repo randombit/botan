@@ -44,7 +44,7 @@ Channel_Impl_13::Channel_Impl_13(Callbacks& callbacks,
                                  RandomNumberGenerator& rng,
                                  const Policy& policy,
                                  bool is_server) :
-   m_side(is_server ? Connection_Side::SERVER : Connection_Side::CLIENT),
+   m_side(is_server ? Connection_Side::Server : Connection_Side::Client),
    m_callbacks(callbacks),
    m_session_manager(session_manager),
    m_credentials_manager(credentials_manager),

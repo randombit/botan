@@ -231,7 +231,7 @@ class Stream
          {
          setup_native_handle(side, ec);
 
-         if(side == CLIENT)
+         if(side == Connection_Side::Client)
             {
             // send client hello, which was written to the send buffer on client instantiation
             send_pending_encrypted_data(ec);
@@ -714,7 +714,7 @@ class Stream
             {
             try_with_error_code([&]
                {
-               if(side == CLIENT)
+               if(side == Connection_Side::Client)
                   {
                   m_native_handle = std::unique_ptr<Client>(
                      new Client(m_core,

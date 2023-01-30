@@ -135,7 +135,7 @@ PSK::PSK(const Session& session_to_resume, Callbacks& callbacks)
 
    auto psk = session_to_resume.master_secret();
    cpsk.hash_algorithm = session_to_resume.ciphersuite().prf_algo();
-   cpsk.cipher_state = Cipher_State::init_with_psk(CLIENT,
+   cpsk.cipher_state = Cipher_State::init_with_psk(Connection_Side::Client,
                                                   Cipher_State::PSK_Type::RESUMPTION,
                                                   std::move(psk),
                                                   session_to_resume.ciphersuite());
@@ -230,14 +230,14 @@ std::vector<uint8_t> PSK::serialize(Connection_Side side) const
       {
       [&](const Server_PSK& psk)
          {
-         BOTAN_STATE_CHECK(side == SERVER);
+         BOTAN_STATE_CHECK(side == Connection_Side::Server);
          result.reserve(2);
          result.push_back(get_byte<0>(psk.selected_identity));
          result.push_back(get_byte<1>(psk.selected_identity));
          },
       [&](const std::vector<Client_PSK>& psks)
          {
-         BOTAN_STATE_CHECK(side == CLIENT);
+         BOTAN_STATE_CHECK(side == Connection_Side::Client);
 
          std::vector<uint8_t> identities;
          std::vector<uint8_t> binders;

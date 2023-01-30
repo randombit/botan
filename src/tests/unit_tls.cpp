@@ -299,7 +299,7 @@ class TLS_Handshake_Test final
                const uint8_t server_extn[6] = { 's', 'e', 'r', 'v', 'e', 'r' };
 
                Botan::TLS::append_tls_length_value(m_buf,
-                                                   (side == Botan::TLS::CLIENT) ? client_extn : server_extn,
+                                                   (side == Botan::TLS::Connection_Side::Client) ? client_extn : server_extn,
                                                    6, 1);
                }
          private:
@@ -368,7 +368,7 @@ class TLS_Handshake_Test final
 
                      if(m_results.test_eq("Expected size for test extn", val.size(), 7))
                         {
-                        if(which_side == Botan::TLS::CLIENT)
+                        if(which_side == Botan::TLS::Connection_Side::Client)
                            m_results.test_eq("Expected extension value", val, "06636C69656E74");
                         else
                            m_results.test_eq("Expected extension value", val, "06736572766572");

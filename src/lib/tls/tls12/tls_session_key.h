@@ -50,12 +50,12 @@ class Session_Keys final
 
       const secure_vector<uint8_t>& aead_key(Connection_Side side) const
          {
-         return (side == Connection_Side::CLIENT) ? client_aead_key() : server_aead_key();
+         return (side == Connection_Side::Client) ? client_aead_key() : server_aead_key();
          }
 
       const std::vector<uint8_t>& nonce(Connection_Side side) const
          {
-         return (side == Connection_Side::CLIENT) ? client_nonce() : server_nonce();
+         return (side == Connection_Side::Client) ? client_nonce() : server_nonce();
          }
 
       Session_Keys() = default;

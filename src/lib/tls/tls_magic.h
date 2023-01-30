@@ -42,8 +42,13 @@ enum Size_Limits : size_t {
    MAX_CIPHERTEXT_SIZE_TLS13 = MAX_PLAINTEXT_SIZE + MAX_AEAD_EXPANSION_SIZE_TLS13 + 1
 };
 
-// This will become an enum class in a future major release
-enum Connection_Side { CLIENT = 1, SERVER = 2 };
+enum class Connection_Side {
+   Client = 1,
+   Server = 2,
+
+   CLIENT BOTAN_DEPRECATED("Use Connection_Side::Client") = Client,
+   SERVER BOTAN_DEPRECATED("Use Connection_Side::Server") = Server,
+};
 
 // This will become an enum class in a future major release
 enum Record_Type {

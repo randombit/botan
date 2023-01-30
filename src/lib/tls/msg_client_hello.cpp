@@ -105,7 +105,7 @@ class Client_Hello_Internal
          suites = reader.get_range_vector<uint16_t>(2, 1, 32767);
          comp_methods = reader.get_range_vector<uint8_t>(1, 1, 255);
 
-         extensions.deserialize(reader, Connection_Side::CLIENT, Handshake_Type::CLIENT_HELLO);
+         extensions.deserialize(reader, Connection_Side::Client, Handshake_Type::CLIENT_HELLO);
          }
 
       /**
@@ -252,7 +252,7 @@ std::vector<uint8_t> Client_Hello::serialize() const
    * renegotiating with a modern server)
    */
 
-   buf += m_data->extensions.serialize(Connection_Side::CLIENT);
+   buf += m_data->extensions.serialize(Connection_Side::Client);
 
    return buf;
    }
@@ -510,7 +510,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(m_data->legacy_version.is_datagram_protocol())
       { m_data->extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles())); }
 
-   cb.tls_modify_extensions(m_data->extensions, CLIENT, type());
+   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
 
    hash.update(io.send(*this));
    }
@@ -581,7 +581,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(reneg_info.empty() && !next_protocols.empty())
       { m_data->extensions.add(new Application_Layer_Protocol_Notification(next_protocols)); }
 
-   cb.tls_modify_extensions(m_data->extensions, CLIENT, type());
+   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
 
    hash.update(io.send(*this));
    }
@@ -806,7 +806,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    // TODO: Some extensions require a certain order or pose other assumptions.
    //       We should check those after the user was allowed to make changes to
    //       the extensions.
-   cb.tls_modify_extensions(m_data->extensions, CLIENT, type());
+   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
 
    // RFC 8446 4.2.11
    //    The "pre_shared_key" extension MUST be the last extension in the
@@ -866,7 +866,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    //       invocations to this callback due to the first Client_Hello or the
    //       retried Client_Hello after receiving a Hello_Retry_Request. We assume
    //       that the user keeps and detects this state themselves.
-   cb.tls_modify_extensions(m_data->extensions, CLIENT, type());
+   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
 
    auto psk = m_data->extensions.get<PSK>();
    if(psk)

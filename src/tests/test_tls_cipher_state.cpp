@@ -40,8 +40,8 @@ decltype(auto) make_CHECK_both(Cipher_State* cs_client, Cipher_State* cs_server)
       {
       return
          {
-         Botan_Tests::CHECK(std::string(name + " (client)").c_str(), std::bind(lambda, cs_client, Connection_Side::CLIENT, _1)),
-         Botan_Tests::CHECK(std::string(name + " (server)").c_str(), std::bind(lambda, cs_server, Connection_Side::SERVER, _1))
+         Botan_Tests::CHECK(std::string(name + " (client)").c_str(), std::bind(lambda, cs_client, Connection_Side::Client, _1)),
+         Botan_Tests::CHECK(std::string(name + " (server)").c_str(), std::bind(lambda, cs_server, Connection_Side::Server, _1))
          };
       };
    }
@@ -143,7 +143,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
    const auto encrypted_extensions = RFC8448_TestData
       (
       "encrypted_extensions",
-      Connection_Side::SERVER,
+      Connection_Side::Server,
       Botan::hex_decode("17 03 03 02 a2"),
       Botan::hex_decode_locked("d1 ff 33 4a 56 f5 bf"
                                "f6 59 4a 07 cc 87 b5 80 23 3f 50 0f 45 e4 89 e7 f3 3a f3 5e df"
@@ -218,7 +218,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
    const auto encrypted_client_finished_message = RFC8448_TestData
       (
       "encrypted_client_finished_message",
-      Connection_Side::CLIENT,
+      Connection_Side::Client,
       Botan::hex_decode("17 03 03 00 35"),
       Botan::hex_decode_locked("75 ec 4d c2 38 cc e6"
          "0b 29 80 44 a7 1e 21 9c 56 cc 77 b0 51 7f e9 b9 3c 7a 4b fc 44"
@@ -233,7 +233,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
    const auto encrypted_new_session_ticket = RFC8448_TestData
       (
       "encrypted_new_session_ticket",
-      Connection_Side::SERVER,
+      Connection_Side::Server,
       Botan::hex_decode("17 03 03 00 de"),
       Botan::hex_decode_locked(
          "3a 6b 8f 90 41 4a 97"
@@ -267,7 +267,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
    const auto encrypted_application_data_client = RFC8448_TestData
       (
       "encrypted_application_data_client",
-      Connection_Side::CLIENT,
+      Connection_Side::Client,
       Botan::hex_decode("17 03 03 00 43"),
       Botan::hex_decode_locked("a2 3f 70 54 b6 2c 94"
                                "d0 af fa fe 82 28 ba 55 cb ef ac ea 42 f9 14 aa 66 bc ab 3f 2b"
@@ -284,7 +284,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
    const auto encrypted_application_data_server = RFC8448_TestData
       (
       "encrypted_application_data_server",
-      Connection_Side::SERVER,
+      Connection_Side::Server,
       Botan::hex_decode("17 03 03 00 43"),
       Botan::hex_decode_locked("2e 93 7e 11 ef 4a c7"
          "40 e5 38 ad 36 00 5f c4 a4 69 32 fc 32 25 d0 5f 82 aa 1b 36 e3"
@@ -300,9 +300,9 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
    // initialize Cipher_State with client_hello...server_hello
-   auto cs_client = Cipher_State::init_with_server_hello(Connection_Side::CLIENT, secure_vector<uint8_t>(shared_secret), cipher,
+   auto cs_client = Cipher_State::init_with_server_hello(Connection_Side::Client, secure_vector<uint8_t>(shared_secret), cipher,
          th_server_hello);
-   auto cs_server = Cipher_State::init_with_server_hello(Connection_Side::SERVER, secure_vector<uint8_t>(shared_secret), cipher,
+   auto cs_server = Cipher_State::init_with_server_hello(Connection_Side::Server, secure_vector<uint8_t>(shared_secret), cipher,
          th_server_hello);
 
    auto CHECK_both = make_CHECK_both(cs_client.get(), cs_server.get());
@@ -316,7 +316,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
                         !cs->is_compatible_with(Ciphersuite::from_name("CHACHA20_POLY1305_SHA256").value()) &&
                         !cs->is_compatible_with(Ciphersuite::from_name("AES_128_CCM_SHA256").value()) &&
                         !cs->is_compatible_with(Ciphersuite::from_name("PSK_WITH_AES_128_GCM_SHA256").value()));
-         if(side == Connection_Side::CLIENT)
+         if(side == Connection_Side::Client)
             {
             result.confirm("Clients don't expect unprotected alerts after server hello",
                            !cs->must_expect_unprotected_alert_traffic());
@@ -339,7 +339,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
          // validate the MAC we receive in server Finished message
          const auto expected_server_mac = Botan::hex_decode("9b 9b 14 1d 90 63 37 fb d2 cb dc e7 1d f4"
                                                             "de da 4a b4 2c 30 95 72 cb 7f ff ee 54 54 b7 8f 07 18");
-         if(side == Connection_Side::CLIENT)
+         if(side == Connection_Side::Client)
             {
             result.confirm("expecting the correct MAC for server finished", cs->verify_peer_finished_mac(th_pre_server_finished,
                            expected_server_mac));
@@ -356,7 +356,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
                cs->advance_with_server_finished(th_server_finished);
                });
 
-         if(side == Connection_Side::CLIENT)
+         if(side == Connection_Side::Client)
             {
             result.confirm("can read application data", cs->can_decrypt_application_traffic());
             result.confirm("can not yet write application data", !cs->can_encrypt_application_traffic());
@@ -374,7 +374,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
          // generate the MAC for the client Finished message
          const auto expected_client_mac = Botan::hex_decode("a8 ec 43 6d 67 76 34 ae 52 5a c1 fc eb e1 1a 03"
                                                             "9e c1 76 94 fa c6 e9 85 27 b6 42 f2 ed d5 ce 61");
-         if(side == Connection_Side::CLIENT)
+         if(side == Connection_Side::Client)
             {
             result.test_eq("generating the correct MAC for client finished", cs->finished_mac(th_server_finished), expected_client_mac);
             }
@@ -509,7 +509,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
    const auto encrypted_extensions = RFC8448_TestData
       (
       "encrypted_extensions",
-      Connection_Side::SERVER,
+      Connection_Side::Server,
       Botan::hex_decode("17 03 03 00 61"),
       Botan::hex_decode_locked(
          "dc 48 23 7b 4b 87 9f"
@@ -531,7 +531,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
    const auto encrypted_client_finished_message = RFC8448_TestData
       (
       "encrypted_client_finished_message",
-      Connection_Side::CLIENT,
+      Connection_Side::Client,
       Botan::hex_decode("17 03 03 00 35"),
       Botan::hex_decode_locked("00 f8 b4 67 d1 4c f2"
          "2a 4b 3f 0b 6a e0 d8 e6 cc 8d 08 e0 db 35 15 ef 5c 2b df 19 22"
@@ -546,7 +546,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
    const auto encrypted_application_data_client = RFC8448_TestData
       (
       "encrypted_application_data_client",
-      Connection_Side::CLIENT,
+      Connection_Side::Client,
       Botan::hex_decode("17 03 03 00 43"),
       Botan::hex_decode_locked("b1 ce bc e2 42 aa 20"
          "1b e9 ae 5e 1c b2 a9 aa 4b 33 d4 e8 66 af 1e db 06 89 19 23 77"
@@ -563,7 +563,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
    const auto encrypted_application_data_server = RFC8448_TestData
       (
       "encrypted_application_data_server",
-      Connection_Side::SERVER,
+      Connection_Side::Server,
       Botan::hex_decode("17 03 03 00 43"),
       Botan::hex_decode_locked("27 5e 9f 20 ac ff 57"
          "bc 00 06 57 d3 86 7d f0 39 cc cf 79 04 78 84 cf 75 77 17 46 f7"
@@ -578,11 +578,11 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
 
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
-   auto cs_client = Cipher_State::init_with_psk(Connection_Side::CLIENT,
+   auto cs_client = Cipher_State::init_with_psk(Connection_Side::Client,
                                          Cipher_State::PSK_Type::RESUMPTION,
                                          secure_vector<uint8_t>(psk.begin(), psk.end()),
                                          cipher);
-   auto cs_server = Cipher_State::init_with_psk(Connection_Side::SERVER,
+   auto cs_server = Cipher_State::init_with_psk(Connection_Side::Server,
                                          Cipher_State::PSK_Type::RESUMPTION,
                                          secure_vector<uint8_t>(psk.begin(), psk.end()),
                                          cipher);
@@ -616,7 +616,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
          result.require("early key export is possible", cs->can_export_keys());
          result.test_eq("early key export produces expected result", cs->export_key(early_export_label, early_export_context, 16), early_expected_key_export);
 
-         if(side == Connection_Side::CLIENT)
+         if(side == Connection_Side::Client)
             {
             result.confirm("Clients must expect servers to respond with an unprotected alert",
                            cs->must_expect_unprotected_alert_traffic());
@@ -645,7 +645,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
          // validate the MAC we receive in server Finished message
          const auto expected_server_mac = Botan::hex_decode("48 d3 e0 e1 b3 d9 07 c6 ac ff 14 5e 16 09 03 88"
                                                             "c7 7b 05 c0 50 b6 34 ab 1a 88 bb d0 dd 1a 34 b2");
-         if(side == Connection_Side::CLIENT)
+         if(side == Connection_Side::Client)
             {
             result.confirm("expecting the correct MAC for server finished", cs->verify_peer_finished_mac(th_pre_server_finished,
                            expected_server_mac));
@@ -670,7 +670,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
                cs->advance_with_server_finished(th_server_finished);
                });
 
-         if(side == Connection_Side::CLIENT)
+         if(side == Connection_Side::Client)
             {
             result.confirm("can read application data", cs->can_decrypt_application_traffic());
             result.confirm("cannot write application data", !cs->can_encrypt_application_traffic());
@@ -688,7 +688,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
          // generate the MAC for the client Finished message
          const auto expected_client_mac = Botan::hex_decode("72 30 a9 c9 52 c2 5c d6 13 8f c5 e6 62 83 08 c4"
                                                             "1c 53 35 dd 81 b9 f9 6b ce a5 0f d3 2b da 41 6d");
-         if(side == Connection_Side::CLIENT)
+         if(side == Connection_Side::Client)
             {
             result.test_eq("generating the correct MAC for client finished", cs->finished_mac(th_end_of_early_data), expected_client_mac);
             }

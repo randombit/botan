@@ -28,7 +28,7 @@ using Records = std::vector<TLS::Record>;
 
 TLS::Record_Layer record_layer_client(const bool skip_client_hello=false)
    {
-   auto rl = TLS::Record_Layer(TLS::Connection_Side::CLIENT);
+   auto rl = TLS::Record_Layer(TLS::Connection_Side::Client);
 
    // this is relevant for tests that rely on the legacy version in the record
    if(skip_client_hello)
@@ -39,7 +39,7 @@ TLS::Record_Layer record_layer_client(const bool skip_client_hello=false)
 
 TLS::Record_Layer record_layer_server(const bool skip_client_hello=false)
    {
-   auto rl = TLS::Record_Layer(TLS::Connection_Side::SERVER);
+   auto rl = TLS::Record_Layer(TLS::Connection_Side::Server);
 
    // this is relevant for tests that rely on the legacy version in the record
    if(skip_client_hello)
@@ -48,7 +48,7 @@ TLS::Record_Layer record_layer_server(const bool skip_client_hello=false)
    return rl;
    }
 
-std::unique_ptr<TLS::Cipher_State> rfc8448_rtt1_handshake_traffic(Botan::TLS::Connection_Side side = Botan::TLS::Connection_Side::CLIENT)
+std::unique_ptr<TLS::Cipher_State> rfc8448_rtt1_handshake_traffic(Botan::TLS::Connection_Side side = Botan::TLS::Connection_Side::Client)
    {
    const auto transcript_hash = Botan::hex_decode(
                                    "86 0c 06 ed c0 78 58 ee 8e 78 f0 e7 42 8c 58 ed"
@@ -167,7 +167,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
    {
    auto parse_records = [side](const std::vector<uint8_t>& data, TLS::Cipher_State* cs=nullptr)
       {
-      auto rl = ((side == TLS::Connection_Side::CLIENT) ? record_layer_client(true) : record_layer_server());
+      auto rl = ((side == TLS::Connection_Side::Client) ? record_layer_client(true) : record_layer_server());
       rl.copy_data(data);
       return rl.next_record(cs);
       };
@@ -312,12 +312,12 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
 
 std::vector<Test::Result> basic_sanitization_parse_records_client()
    {
-   return basic_sanitization_parse_records(TLS::Connection_Side::CLIENT);
+   return basic_sanitization_parse_records(TLS::Connection_Side::Client);
    }
 
 std::vector<Test::Result> basic_sanitization_parse_records_server()
    {
-   return basic_sanitization_parse_records(TLS::Connection_Side::SERVER);
+   return basic_sanitization_parse_records(TLS::Connection_Side::Server);
    }
 
 std::vector<Test::Result> read_fragmented_records()
@@ -619,7 +619,7 @@ read_encrypted_records()
 
          result.test_no_throw("Server allows unprotected alerts after its first flight", [&]
             {
-            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::SERVER);
+            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::Server);
             auto rl = parse_records(alert);
             rl.next_record(cs.get());
             });
@@ -627,7 +627,7 @@ read_encrypted_records()
          result.test_throws<Botan::TLS::TLS_Exception>("Unprotected handshake messages are not allowed for servers",
                "unprotected record received where protected traffic was expected", [&]
             {
-            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::SERVER);
+            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::Server);
             auto rl = parse_records(hsmsg);
             rl.next_record(cs.get());
             });
@@ -635,7 +635,7 @@ read_encrypted_records()
          result.test_throws<Botan::TLS::TLS_Exception>("Clients don't allow unprotected alerts after Server Hello",
                "unprotected record received where protected traffic was expected", [&]
             {
-            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::CLIENT);
+            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::Client);
             auto rl = parse_records(alert);
             rl.next_record(cs.get());
             });
@@ -643,7 +643,7 @@ read_encrypted_records()
          result.test_throws<Botan::TLS::TLS_Exception>("Unprotected handshake messages are not allowed for clients",
                "unprotected record received where protected traffic was expected", [&]
             {
-            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::CLIENT);
+            auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::Client);
             auto rl = parse_records(hsmsg);
             rl.next_record(cs.get());
             });
@@ -938,7 +938,7 @@ std::vector<Test::Result> record_size_limits()
       {
       Botan_Tests::CHECK("no specified limits means protocol defaults", [&](Test::Result& result)
          {
-         auto csc = rfc8448_rtt1_handshake_traffic(Botan::TLS::CLIENT);
+         auto csc = rfc8448_rtt1_handshake_traffic(Botan::TLS::Connection_Side::Client);
          auto rlc = record_layer_client(true);
 
          const auto r1 = rlc.prepare_records(TLS::Record_Type::APPLICATION_DATA, std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE), csc.get());
@@ -947,7 +947,7 @@ std::vector<Test::Result> record_size_limits()
          const auto r2 = rlc.prepare_records(TLS::Record_Type::APPLICATION_DATA, std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE + 1), csc.get());
          result.test_eq("two records generated", count_records(r2), 2);
 
-         auto css = rfc8448_rtt1_handshake_traffic(Botan::TLS::SERVER);
+         auto css = rfc8448_rtt1_handshake_traffic(Botan::TLS::Connection_Side::Server);
          auto rls = record_layer_server(true);
          rls.copy_data(r1);
 
@@ -1013,7 +1013,7 @@ std::vector<Test::Result> record_size_limits()
 
       Botan_Tests::CHECK("incoming limit is checked on protected records", [&](Test::Result& result)
          {
-         auto css = rfc8448_rtt1_handshake_traffic(Botan::TLS::SERVER);
+         auto css = rfc8448_rtt1_handshake_traffic(Botan::TLS::Connection_Side::Server);
          auto rls = record_layer_server(true);
 
          rls.set_record_size_limits(Botan::TLS::MAX_PLAINTEXT_SIZE + 1, 127 + 1);

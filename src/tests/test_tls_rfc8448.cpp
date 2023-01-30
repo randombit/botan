@@ -787,7 +787,7 @@ class Server_Context : public TLS_Context
  */
 void sort_client_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side)
    {
-   if(side == Botan::TLS::Connection_Side::CLIENT)
+   if(side == Botan::TLS::Connection_Side::Client)
       {
       const std::vector<Botan::TLS::Extension_Code> expected_order =
          {
@@ -822,7 +822,7 @@ void sort_client_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection
  */
 void sort_server_extensions(Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type /*type*/)
    {
-   if(side == Botan::TLS::Connection_Side::SERVER)
+   if(side == Botan::TLS::Connection_Side::Server)
       {
       const std::vector<Botan::TLS::Extension_Code> expected_order =
          {

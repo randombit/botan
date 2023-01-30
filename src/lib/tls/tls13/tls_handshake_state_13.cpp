@@ -62,7 +62,7 @@ Certificate_Request_13& Handshake_State_13_Base::store(Certificate_Request_13 ce
 
 Certificate_13& Handshake_State_13_Base::store(Certificate_13 certificate, const bool from_peer)
    {
-   auto& target = ((m_side == CLIENT) == from_peer)
+   auto& target = ((m_side == Connection_Side::Client) == from_peer)
                   ? m_server_certificate
                   : m_client_certificate;
    target = std::move(certificate);
@@ -71,7 +71,7 @@ Certificate_13& Handshake_State_13_Base::store(Certificate_13 certificate, const
 
 Certificate_Verify_13& Handshake_State_13_Base::store(Certificate_Verify_13 certificate_verify, const bool from_peer)
    {
-   auto& target = ((m_side == CLIENT) == from_peer)
+   auto& target = ((m_side == Connection_Side::Client) == from_peer)
                   ? m_server_certificate_verify
                   : m_client_certificate_verify;
    target = std::move(certificate_verify);
@@ -80,7 +80,7 @@ Certificate_Verify_13& Handshake_State_13_Base::store(Certificate_Verify_13 cert
 
 Finished_13& Handshake_State_13_Base::store(Finished_13 finished, const bool from_peer)
    {
-   auto& target = ((m_side == CLIENT) == from_peer)
+   auto& target = ((m_side == Connection_Side::Client) == from_peer)
                   ? m_server_finished
                   : m_client_finished;
    target = std::move(finished);

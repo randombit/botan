@@ -141,7 +141,7 @@ std::vector<uint8_t> Certificate_Request_12::serialize() const
    append_tls_length_value(buf, cert_types, 1);
 
    if(!m_schemes.empty())
-      buf += Signature_Algorithms(m_schemes).serialize(Connection_Side::SERVER);
+      buf += Signature_Algorithms(m_schemes).serialize(Connection_Side::Server);
 
    std::vector<uint8_t> encoded_names;
 

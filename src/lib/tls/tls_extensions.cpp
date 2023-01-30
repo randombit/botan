@@ -285,7 +285,7 @@ std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side whoami) co
    //    [...] the server SHALL include an extension of type "server_name" in
    //    the (extended) server hello. The "extension_data" field of this
    //    extension SHALL be empty.
-   if(whoami == Connection_Side::SERVER)
+   if(whoami == Connection_Side::Server)
       {
       return {};
       }
@@ -355,7 +355,7 @@ Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification
    //    The "extension_data" field of the [...] extension is structured the
    //    same as described above for the client "extension_data", except that
    //    the "ProtocolNameList" MUST contain exactly one "ProtocolName".
-   if(from == Connection_Side::SERVER && m_protocols.size() != 1)
+   if(from == Connection_Side::Server && m_protocols.size() != 1)
       {
       throw TLS_Exception(Alert::DECODE_ERROR,
                           "Server sent " + std::to_string(m_protocols.size()) +
@@ -634,7 +634,7 @@ std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
    {
    std::vector<uint8_t> buf;
 
-   if(whoami == Connection_Side::SERVER)
+   if(whoami == Connection_Side::Server)
       {
       BOTAN_ASSERT_NOMSG(m_versions.size() == 1);
       buf.push_back(m_versions[0].major_version());
@@ -684,7 +684,7 @@ Supported_Versions::Supported_Versions(TLS_Data_Reader& reader,
                                        uint16_t extension_size,
                                        Connection_Side from)
    {
-   if(from == Connection_Side::SERVER)
+   if(from == Connection_Side::Server)
       {
       if(extension_size != 2)
          throw Decoding_Error("Server sent invalid supported_versions extension");
@@ -744,7 +744,7 @@ Record_Size_Limit::Record_Size_Limit(TLS_Data_Reader& reader,
    // Note: We are currently supporting this extension in TLS 1.3 only, hence
    //       we check for the TLS 1.3 limit. The TLS 1.2 limit would not include
    //       the "content type byte" and hence be one byte less!
-   if(m_limit > MAX_PLAINTEXT_SIZE + 1 /* encrypted content type byte */ && from == SERVER)
+   if(m_limit > MAX_PLAINTEXT_SIZE + 1 /* encrypted content type byte */ && from == Connection_Side::Server)
       {
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                           "Server requested a record size limit larger than the protocol's maximum");

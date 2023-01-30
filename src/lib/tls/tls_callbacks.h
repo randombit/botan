@@ -361,7 +361,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * Default implementation does nothing.
        *
        * @param extn the extensions
-       * @param which_side will be CLIENT or SERVER which is the current
+       * @param which_side will be Connection_Side::Client or Connection_Side::Server which is the current
        *                   applications role in the exchange.
        * @param which_message will state the handshake message type containing the extensions
        */
@@ -379,8 +379,8 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * Default implementation does nothing.
        *
        * @param extn the extensions
-       * @param which_side will be CLIENT if these are are the clients extensions (ie we are
-       *        the server) or SERVER if these are the server extensions (we are the client).
+       * @param which_side will be Connection_Side::Client if these are are the clients extensions (ie we are
+       *        the server) or Connection_Side::Server if these are the server extensions (we are the client).
        * @param which_message will state the handshake message type containing the extensions
        */
        virtual void tls_examine_extensions(const Extensions& extn, Connection_Side which_side, Handshake_Type which_message);

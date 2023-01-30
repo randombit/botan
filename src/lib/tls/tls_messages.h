@@ -566,7 +566,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
       * Deserialize a Certificate message
       * @param buf the serialized message
       * @param policy the TLS policy
-      * @param side is this a SERVER or CLIENT certificate message
+      * @param side is this a Connection_Side::Server or Connection_Side::Client certificate message
       */
       Certificate_13(const std::vector<uint8_t>& buf,
                      const Policy& policy,
@@ -758,7 +758,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
       /**
       * Deserialize a Certificate message
       * @param buf the serialized message
-      * @param side is this a SERVER or CLIENT certificate message
+      * @param side is this a Connection_Side::Server or Connection_Side::Client certificate message
       */
       Certificate_Verify_13(const std::vector<uint8_t>& buf,
                             const Connection_Side side);

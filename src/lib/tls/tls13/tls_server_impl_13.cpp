@@ -168,7 +168,7 @@ void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_
                                         client_hello.signature_schemes(),
                                         client_hello.sni_hostname(),
                                         m_transcript_hash.current(),
-                                        Connection_Side::SERVER,
+                                        Connection_Side::Server,
                                         credentials_manager(),
                                         policy(),
                                         callbacks(),
@@ -290,7 +290,7 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello)
          }
       }
 
-   callbacks().tls_examine_extensions(exts, CLIENT, client_hello.type());
+   callbacks().tls_examine_extensions(exts, Connection_Side::Client, client_hello.type());
    const auto sh_or_hrr = m_handshake_state.sending(Server_Hello_13::create(
       client_hello, is_initial_client_hello, rng(), policy(), callbacks()));
    send_handshake_message(sh_or_hrr);
