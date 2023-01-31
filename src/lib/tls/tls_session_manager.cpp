@@ -145,6 +145,10 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager::find(const Serv
             }), sessions_and_handles.end());
       }
 
+   const auto session_limit = policy.maximum_session_tickets_per_client_hello();
+   while(session_limit > 0 && sessions_and_handles.size() > session_limit)
+      { sessions_and_handles.pop_back(); }
+
    // RFC 8446 Appendix C.4
    //    Clients SHOULD NOT reuse a ticket for multiple connections. Reuse of
    //    a ticket allows passive observers to correlate different connections.

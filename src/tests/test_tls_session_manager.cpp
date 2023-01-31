@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <thread>
+#include <array>
 
 #if defined(BOTAN_HAS_TLS)
 
@@ -82,8 +83,10 @@ class Session_Manager_Policy : public Botan::TLS::Policy
    public:
       std::chrono::seconds session_ticket_lifetime() const override { return std::chrono::minutes(30); }
       bool reuse_session_tickets() const override { return allow_session_reuse; }
+      size_t maximum_session_tickets_per_client_hello() const override { return session_limit; }
 
    public:
+      size_t session_limit = 0; /// no limit
       bool allow_session_reuse = true;
    };
 
@@ -969,6 +972,32 @@ std::vector<Test::Result> tls_session_manager_expiry()
          result.confirm("found session is the Session_ID", std::get<Botan::TLS::Session_Handle>(sessions_and_handles2.front()).is_id());
          result.test_is_eq("found session is the Session_ID", std::get<Botan::TLS::Session_Handle>(sessions_and_handles2.front()).id().value(), handle_1);
          result.confirm("found session is TLS 1.2", std::get<Botan::TLS::Session>(sessions_and_handles2.front()).version().is_pre_tls_13());
+         }),
+
+      CHECK_all("number of found tickets is capped", [&](std::string type, auto factory, auto& result)
+         {
+         if(type == "Stateless")
+            return;  // this manager can neither store nor find anything
+
+         auto mgr = factory();
+
+         std::array<Botan::TLS::Session_Ticket, 5> tickets;
+         for(auto& ticket : tickets)
+            {
+            ticket = random_ticket();
+            mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), ticket);
+            }
+
+         plcy.allow_session_reuse = true;
+
+         plcy.session_limit = 1;
+         result.test_is_eq("find one", mgr->find(server_info, cbs, plcy).size(), size_t(plcy.session_limit));
+
+         plcy.session_limit = 3;
+         result.test_is_eq("find three", mgr->find(server_info, cbs, plcy).size(), size_t(plcy.session_limit));
+
+         plcy.session_limit = 0;
+         result.test_is_eq("unlimitted", mgr->find(server_info, cbs, plcy).size(), size_t(5));
          }),
 
 #if defined(BOTAN_HAS_TLS_13)

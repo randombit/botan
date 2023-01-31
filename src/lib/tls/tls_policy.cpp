@@ -275,6 +275,11 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
                            std::to_string(expected_keylength));
    }
 
+size_t Policy::maximum_session_tickets_per_client_hello() const
+   {
+   return 1;
+   }
+
 std::chrono::seconds Policy::session_ticket_lifetime() const
    {
    return std::chrono::days(1);
@@ -591,6 +596,7 @@ void Policy::print(std::ostream& o) const
    if (record_size_limit().has_value()) {
       o << "record_size_limit = " << record_size_limit().value() << '\n';
    }
+   o << "maximum_session_tickets_per_client_hello = " << maximum_session_tickets_per_client_hello() << '\n';
    o << "session_ticket_lifetime = " << session_ticket_lifetime().count() << '\n';
    o << "reuse_session_tickets = " << reuse_session_tickets() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
