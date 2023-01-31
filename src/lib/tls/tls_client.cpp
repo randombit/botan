@@ -36,21 +36,12 @@ Client::Client(Callbacks& callbacks,
                const std::vector<std::string>& next_protocols,
                size_t io_buf_sz)
    {
-   Protocol_Version effective_version = offer_version;
    BOTAN_ARG_CHECK(policy.acceptable_protocol_version(offer_version),
                    "Policy does not allow to offer requested protocol version");
 
 #if defined(BOTAN_HAS_TLS_13)
-   // downgrade to TLS 1.2 directly if we have a legacy session to resume
-   if(effective_version == Protocol_Version::TLS_V13)
-      {
-      Session session;
-      const bool found = session_manager.load_from_server_info(info, session);
-      if(found && session.version().is_pre_tls_13())
-         effective_version = session.version();
-      }
 
-   if(effective_version == Protocol_Version::TLS_V13)
+   if(offer_version == Protocol_Version::TLS_V13)
       {
       m_impl = std::make_unique<Client_Impl_13>(
                   callbacks, session_manager, creds, policy,
@@ -58,16 +49,43 @@ Client::Client(Callbacks& callbacks,
 
       if(m_impl->expects_downgrade())
          { m_impl->set_io_buffer_size(io_buf_sz); }
+
+      if(m_impl->is_downgrading())
+         {
+         // TLS 1.3 implementation found a resumable TLS 1.2 session and
+         // requested a downgrade right away.
+         downgrade();
+         }
       }
    else
 #endif
       m_impl = std::make_unique<Client_Impl_12>(
                   callbacks, session_manager, creds, policy,
-                  rng, info, effective_version.is_datagram_protocol(),
+                  rng, info, offer_version.is_datagram_protocol(),
                   next_protocols, io_buf_sz);
    }
 
 Client::~Client() = default;
+
+size_t Client::downgrade()
+   {
+   BOTAN_ASSERT_NOMSG(m_impl->is_downgrading());
+
+   auto info = m_impl->extract_downgrade_info();
+   m_impl = std::make_unique<Client_Impl_12>(*info);
+
+   if(!info->peer_transcript.empty())
+      {
+      // replay peer data received so far
+      return m_impl->received_data(info->peer_transcript.data(), info->peer_transcript.size());
+      }
+   else
+      {
+      // the downgrade happened due to a resumable TLS 1.2 session
+      // before any data was transferred
+      return 0;
+      }
+   }
 
 size_t Client::received_data(const uint8_t buf[], size_t buf_size)
    {
@@ -75,11 +93,7 @@ size_t Client::received_data(const uint8_t buf[], size_t buf_size)
 
    if(m_impl->is_downgrading())
       {
-      auto info = m_impl->extract_downgrade_info();
-      m_impl = std::make_unique<Client_Impl_12>(*info);
-
-      // replay peer data received so far
-      read = m_impl->received_data(info->peer_transcript.data(), info->peer_transcript.size());
+      read = downgrade();
       }
 
    return read;

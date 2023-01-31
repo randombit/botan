@@ -25,7 +25,7 @@ Server_Impl_13::Server_Impl_13(Callbacks& callbacks,
    {
 #if defined(BOTAN_HAS_TLS_12)
    if(policy.allow_tls12())
-      { expect_downgrade({}); }
+      { expect_downgrade({}, {}); }
 #endif
 
    m_transitions.set_expected_next(Handshake_Type::ClientHello);
