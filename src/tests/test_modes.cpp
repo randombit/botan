@@ -264,7 +264,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("modes", "modes", Cipher_Mode_Tests);
+BOTAN_REGISTER_SMOKE_TEST("modes", "cipher_modes", Cipher_Mode_Tests);
 
 class Cipher_Mode_IV_Carry_Tests final : public Test
    {

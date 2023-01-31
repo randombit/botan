@@ -256,7 +256,7 @@ class Roughtime final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("roughtime", "roughtime", Roughtime);
+BOTAN_REGISTER_TEST("roughtime", "roughtime_tests", Roughtime);
 
 #endif
 

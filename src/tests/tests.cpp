@@ -500,24 +500,134 @@ std::string Test::Result::result_string() const
    return report.str();
    }
 
+namespace {
+
+class Test_Registry
+   {
+   public:
+      static Test_Registry& instance()
+         {
+         static Test_Registry registry;
+         return registry;
+         }
+
+      void register_test(std::string category,
+                         std::string name,
+                         bool smoke_test,
+                         bool needs_serialization,
+                         std::function<std::unique_ptr<Test>()> maker_fn)
+         {
+         if(m_tests.count(name) != 0)
+            throw Test_Error("Duplicate registration of test '" + name + "'");
+
+         if(m_tests.count(category))
+            throw Test_Error("'" + category + "' cannot be used as category, test exists");
+
+         if(m_categories.count(name))
+            throw Test_Error("'" + name + "' cannot be used as test name, category exists");
+
+         if(smoke_test)
+            m_smoke_tests.push_back(name);
+
+         if(needs_serialization)
+            m_mutexed_tests.push_back(name);
+
+         m_tests.emplace(name, std::move(maker_fn));
+         m_categories.emplace(std::move(category), std::move(name));
+         }
+
+      std::unique_ptr<Test> get_test(const std::string& test_name) const
+         {
+         auto i = m_tests.find(test_name);
+         if(i != m_tests.end())
+            {
+            return i->second();
+            }
+         return nullptr;
+         }
+
+      std::set<std::string> registered_tests() const
+         {
+         return Botan::map_keys_as_set(m_tests);
+         }
+
+      std::set<std::string> registered_test_categories() const
+         {
+         return Botan::map_keys_as_set(m_categories);
+         }
+
+      std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested, const std::set<std::string>& to_be_skipped)
+         {
+         std::vector<std::string> result;
+
+         // TODO: this is O(n^2), but we have a relatively small number of tests.
+         auto insert_if_not_exists_and_not_skipped = [&](const std::string test_name)
+            {
+            if(!Botan::value_exists(result, test_name) && to_be_skipped.find(test_name) == to_be_skipped.end())
+               result.push_back(test_name);
+            };
+
+         if(requested.empty())
+            {
+            /*
+            If nothing was requested on the command line, run everything. First
+            run the "essentials" to smoke test, then everything else in
+            alphabetical order.
+            */
+            result = m_smoke_tests;
+            for(const auto& [test_name, _] : m_tests)
+               { insert_if_not_exists_and_not_skipped(test_name); }
+            }
+         else
+            {
+            for(const auto& r : requested)
+               {
+               if(m_tests.find(r) != m_tests.end())
+                  { insert_if_not_exists_and_not_skipped(r); }
+               else if(auto elems = m_categories.equal_range(r); elems.first != m_categories.end())
+                  {
+                  for(;elems.first != elems.second; ++elems.first)
+                     {
+                     insert_if_not_exists_and_not_skipped(elems.first->second);
+                     }
+                  }
+               else
+                  {
+                  throw Botan_Tests::Test_Error("Unknown test suite or category: " + r);
+                  }
+               }
+            }
+
+         return result;
+         }
+
+      bool needs_serialization(const std::string& test_name) const
+         {
+         return Botan::value_exists(m_mutexed_tests, test_name);
+         }
+
+   private:
+      Test_Registry() = default;
+
+   private:
+      std::map<std::string, std::function<std::unique_ptr<Test> ()>> m_tests;
+      std::multimap<std::string, std::string> m_categories;
+      std::vector<std::string> m_smoke_tests;
+      std::vector<std::string> m_mutexed_tests;
+   };
+
+}
+
 // static Test:: functions
-//static
-std::map<std::string, std::function<std::unique_ptr<Test> ()>>& Test::global_registry()
-   {
-   static std::map<std::string, std::function<std::unique_ptr<Test> ()>> g_test_registry;
-   return g_test_registry;
-   }
 
 //static
-void Test::register_test(const std::string& category,
-                         const std::string& name,
-                         const std::function<std::unique_ptr<Test> ()>& maker_fn)
+void Test::register_test(std::string category,
+                         std::string name,
+                         bool smoke_test,
+                         bool needs_serialization,
+                         std::function<std::unique_ptr<Test> ()> maker_fn)
    {
-   BOTAN_UNUSED(category);
-   if(Test::global_registry().count(name) != 0)
-      throw Test_Error("Duplicate registration of test '" + name + "'");
-
-   Test::global_registry().insert(std::make_pair(name, maker_fn));
+   Test_Registry::instance().register_test(std::move(category), std::move(name), smoke_test, needs_serialization, std::move(maker_fn));
    }
 
 //static
@@ -530,18 +640,33 @@ uint64_t Test::timestamp()
 //static
 std::set<std::string> Test::registered_tests()
    {
-   return Botan::map_keys_as_set(Test::global_registry());
+   return Test_Registry::instance().registered_tests();
+   }
+
+
+//static
+std::set<std::string> Test::registered_test_categories()
+   {
+   return Test_Registry::instance().registered_test_categories();
    }
 
 //static
 std::unique_ptr<Test> Test::get_test(const std::string& test_name)
    {
-   auto i = Test::global_registry().find(test_name);
-   if(i != Test::global_registry().end())
-      {
-      return std::unique_ptr<Test>(i->second());
-      }
-   return nullptr;
+   return Test_Registry::instance().get_test(test_name);
+   }
+
+//static
+bool Test::test_needs_serialization(const std::string& test_name)
+   {
+   return Test_Registry::instance().needs_serialization(test_name);
+   }
+
+//static
+std::vector<std::string> Test::filter_registered_tests(const std::vector<std::string>& requested,
+                                                       const std::set<std::string>& to_be_skipped)
+   {
+   return Test_Registry::instance().filter_registered_tests(requested, to_be_skipped);
    }
 
 //static

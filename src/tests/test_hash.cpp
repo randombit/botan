@@ -35,7 +35,7 @@ class Invalid_Hash_Name_Tests final : public Test
    private:
       static void test_invalid_name(Result& result,
                              const std::string& name,
-                             const std::string& expected_msg = "") 
+                             const std::string& expected_msg = "")
          {
          try
             {
@@ -179,7 +179,7 @@ class Hash_Function_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("hash", "hash", Hash_Function_Tests);
+BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("hash", "hash_algos", Hash_Function_Tests);
 
 class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test
    {

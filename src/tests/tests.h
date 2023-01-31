@@ -641,15 +641,20 @@ class Test
       void set_registration_location(CodeLocation location) { m_registration_location = std::move(location); }
       const std::optional<CodeLocation>& registration_location() const { return m_registration_location; }
 
-      static void register_test(const std::string& category,
-                                const std::string& name,
-                                const std::function<std::unique_ptr<Test> ()>& maker_fn);
-
-      static std::map<std::string, std::function<std::unique_ptr<Test> ()>>& global_registry();
+      /// @p smoke_test are run first in an unfiltered test run
+      static void register_test(std::string category,
+                                std::string name,
+                                bool smoke_test,
+                                bool needs_serialization,
+                                std::function<std::unique_ptr<Test> ()> maker_fn);
 
       static std::set<std::string> registered_tests();
+      static std::set<std::string> registered_test_categories();
+      static std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested,
+                                                              const std::set<std::string>& to_be_skipped);
 
       static std::unique_ptr<Test> get_test(const std::string& test_name);
+      static bool test_needs_serialization(const std::string& test_name);
 
       static std::string data_file(const std::string& what);
 
@@ -723,20 +728,25 @@ template<typename Test_Class>
 class TestClassRegistration
    {
    public:
-      TestClassRegistration(std::string category, std::string name, CodeLocation registration_location)
+      TestClassRegistration(std::string category, std::string name, bool smoke_test, bool needs_serialization, CodeLocation registration_location)
          {
-         auto test_maker = [=]() -> std::unique_ptr<Test>
+         Test::register_test(std::move(category), std::move(name), smoke_test, needs_serialization, [=]
             {
             auto test = std::make_unique<Test_Class>();
-            test->set_registration_location(std::move(registration_location));
+            test->set_registration_location(registration_location);
             return test;
-            };
-         Test::register_test(category, name, test_maker);
+            });
          }
    };
 
 #define BOTAN_REGISTER_TEST(category, name, Test_Class)                 \
-   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, {__FILE__, __LINE__})
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, false, false, {__FILE__, __LINE__})
+#define BOTAN_REGISTER_SERIALIZED_TEST(category, name, Test_Class)                 \
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, false, true, {__FILE__, __LINE__})
+#define BOTAN_REGISTER_SMOKE_TEST(category, name, Test_Class)           \
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, true, false, {__FILE__, __LINE__})
+#define BOTAN_REGISTER_SERIALIZED_SMOKE_TEST(category, name, Test_Class)           \
+   const TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name, true, true, {__FILE__, __LINE__})
 
 typedef Test::Result(*test_fn)();
 typedef std::vector<Test::Result> (*test_fn_vec)();
@@ -801,20 +811,25 @@ class TestFnRegistration
    {
    public:
       template <typename... TestFns>
-      TestFnRegistration(std::string category, std::string name, CodeLocation registration_location, TestFns... fn)
+      TestFnRegistration(std::string category, std::string name, bool smoke_test, bool needs_serialization, CodeLocation registration_location, TestFns... fn)
          {
-         auto test_maker = [=]() -> std::unique_ptr<Test>
+         Test::register_test(std::move(category), std::move(name), smoke_test, needs_serialization, [=]
             {
             auto test = std::make_unique<FnTest>(fn...);
             test->set_registration_location(std::move(registration_location));
             return test;
-            };
-         Test::register_test(category, name, test_maker);
+            });
          }
    };
 
 #define BOTAN_REGISTER_TEST_FN(category, name, ...) \
-   static const TestFnRegistration reg_ ## fn_name(category, name, {__FILE__, __LINE__}, __VA_ARGS__)
+   static const TestFnRegistration reg_ ## fn_name(category, name, false, false, {__FILE__, __LINE__}, __VA_ARGS__)
+#define BOTAN_REGISTER_SMOKE_TEST_FN(category, name, ...) \
+   static const TestFnRegistration reg_ ## fn_name(category, name, true, false, {__FILE__, __LINE__}, __VA_ARGS__)
+#define BOTAN_REGISTER_SERIALIZED_TEST_FN(category, name, ...) \
+   static const TestFnRegistration reg_ ## fn_name(category, name, false, true {__FILE__, __LINE__}, __VA_ARGS__)
+#define BOTAN_REGISTER_SERIALIZED_SMOKE_TEST_FN(category, name, ...) \
+   static const TestFnRegistration reg_ ## fn_name(category, name, true, true {__FILE__, __LINE__}, __VA_ARGS__)
 
 class VarMap
    {

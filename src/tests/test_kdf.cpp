@@ -55,7 +55,7 @@ class KDF_KAT_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("kdf", "kdf", KDF_KAT_Tests);
+BOTAN_REGISTER_SMOKE_TEST("kdf", "kdf_kat", KDF_KAT_Tests);
 
 #endif
 

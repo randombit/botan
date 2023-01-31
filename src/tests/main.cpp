@@ -16,6 +16,28 @@
 
 namespace {
 
+void print_item_list(std::ostringstream& err, std::set<std::string> list)
+   {
+   size_t line_len = 0;
+
+   for(auto const& item : list)
+         {
+         err << item << " ";
+         line_len += item.size() + 1;
+
+         if(line_len > 64)
+            {
+            err << "\n";
+            line_len = 0;
+            }
+         }
+
+      if(line_len > 0)
+         {
+         err << "\n";
+         }
+   }
+
 std::string help_text(const std::string& spec)
    {
    std::ostringstream err;
@@ -24,24 +46,13 @@ std::string help_text(const std::string& spec)
        << "Available test suites\n"
        << "----------------\n";
 
-   size_t line_len = 0;
+   print_item_list(err, Botan_Tests::Test::registered_tests());
 
-   for(auto const& test : Botan_Tests::Test::registered_tests())
-      {
-      err << test << " ";
-      line_len += test.size() + 1;
+   err << '\n'
+       << "Available test categories\n"
+       << "----------------\n";
 
-      if(line_len > 64)
-         {
-         err << "\n";
-         line_len = 0;
-         }
-      }
-
-   if(line_len > 0)
-      {
-      err << "\n";
-      }
+   print_item_list(err, Botan_Tests::Test::registered_test_categories());
 
    return err.str();
    }

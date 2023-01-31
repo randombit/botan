@@ -183,7 +183,7 @@ class Utility_Function_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("utils", "util", Utility_Function_Tests);
+BOTAN_REGISTER_SMOKE_TEST("utils", "util", Utility_Function_Tests);
 
 class CT_Mask_Tests final : public Test
    {

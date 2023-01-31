@@ -485,7 +485,7 @@ class AEAD_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("modes", "aead", AEAD_Tests);
+BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("modes", "aead", AEAD_Tests);
 
 #endif
 
