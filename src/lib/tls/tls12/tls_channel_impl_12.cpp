@@ -527,14 +527,14 @@ void Channel_Impl_12::write_record(Connection_Cipher_State* cipher_state, uint16
    if(cipher_state == nullptr)
       {
       TLS::write_unencrypted_record(m_writebuf,
-                                    static_cast<uint8_t>(record_type),
+                                    record_type,
                                     record_version, next_seq,
                                     input, length);
       }
    else
       {
       TLS::write_record(m_writebuf,
-                        static_cast<uint8_t>(record_type),
+                        record_type,
                         record_version, next_seq,
                         input, length, *cipher_state, m_rng);
       }

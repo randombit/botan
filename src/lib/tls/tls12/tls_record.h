@@ -53,9 +53,10 @@ class Connection_Cipher_State final
 
       std::vector<uint8_t> aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq);
 
-      std::vector<uint8_t> format_ad(uint64_t seq, uint8_t type,
-                                  Protocol_Version version,
-                                  uint16_t ptext_length);
+      std::vector<uint8_t> format_ad(uint64_t seq,
+                                     Record_Type type,
+                                     Protocol_Version version,
+                                     uint16_t ptext_length);
 
       size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
       size_t nonce_bytes_from_record() const { return m_nonce_bytes_from_record; }
@@ -133,7 +134,7 @@ class Record_Header final
 * @param message_len is size of message
 */
 void write_unencrypted_record(secure_vector<uint8_t>& write_buffer,
-                              uint8_t record_type,
+                              Record_Type record_type,
                               Protocol_Version record_version,
                               uint64_t record_sequence,
                               const uint8_t* message,
@@ -151,7 +152,7 @@ void write_unencrypted_record(secure_vector<uint8_t>& write_buffer,
 * @param rng is a random number generator
 */
 void write_record(secure_vector<uint8_t>& write_buffer,
-                  uint8_t record_type,
+                  Record_Type record_type,
                   Protocol_Version record_version,
                   uint64_t record_sequence,
                   const uint8_t* message,
