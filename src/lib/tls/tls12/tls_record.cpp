@@ -212,7 +212,7 @@ void write_unencrypted_record(secure_vector<uint8_t>& output,
                               const uint8_t* message,
                               size_t message_len)
    {
-   if(record_type == static_cast<uint8_t>(Record_Type::APPLICATION_DATA))
+   if(record_type == static_cast<uint8_t>(Record_Type::ApplicationData))
       throw Internal_Error("Writing an unencrypted TLS application data record");
    write_record_header(output, record_type, version, record_sequence);
    append_u16_len(output, message_len);

@@ -88,7 +88,7 @@ class Record_Header final
          m_needed(needed),
          m_sequence(0),
          m_version(Protocol_Version()),
-         m_type(Record_Type::NO_RECORD)
+         m_type(Record_Type::Invalid)
          {}
 
       size_t needed() const { return m_needed; }

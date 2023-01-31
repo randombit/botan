@@ -315,7 +315,7 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
             return needed; // need more data to complete record
 
          // Ignore invalid records in DTLS
-         if(m_is_datagram && record.type() == Record_Type::NO_RECORD)
+         if(m_is_datagram && record.type() == Record_Type::Invalid)
             {
             return 0;
             }
@@ -330,7 +330,7 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
 
          const bool initial_record = epoch0_restart || (!pending_state() && !active_state());
 
-         if(record.type() != Record_Type::ALERT)
+         if(record.type() != Record_Type::Alert)
             {
             if(initial_record)
                {
@@ -360,13 +360,13 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
                }
             }
 
-         if(record.type() == Record_Type::HANDSHAKE || record.type() == Record_Type::CHANGE_CIPHER_SPEC)
+         if(record.type() == Record_Type::Handshake || record.type() == Record_Type::ChangeCipherSpec)
             {
             if(m_has_been_closed)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received handshake data after connection closure");
             process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
             }
-         else if(record.type() == Record_Type::APPLICATION_DATA)
+         else if(record.type() == Record_Type::ApplicationData)
             {
             if(m_has_been_closed)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received application data after connection closure");
@@ -374,11 +374,11 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Can't interleave application and handshake data");
             process_application_data(record.sequence(), m_record_buf);
             }
-         else if(record.type() == Record_Type::ALERT)
+         else if(record.type() == Record_Type::Alert)
             {
             process_alert(m_record_buf);
             }
-         else if(record.type() != Record_Type::NO_RECORD)
+         else if(record.type() != Record_Type::Invalid)
             throw Unexpected_Message("Unexpected record type " +
                                      std::to_string(static_cast<size_t>(record.type())) +
                                      " from counterparty");
@@ -578,7 +578,7 @@ void Channel_Impl_12::send(const uint8_t buf[], size_t buf_size)
       throw Invalid_State("Data cannot be sent on inactive TLS connection");
 
    send_record_array(sequence_numbers().current_write_epoch(),
-                     Record_Type::APPLICATION_DATA, buf, buf_size);
+                     Record_Type::ApplicationData, buf, buf_size);
    }
 
 void Channel_Impl_12::send_alert(const Alert& alert)
@@ -588,7 +588,7 @@ void Channel_Impl_12::send_alert(const Alert& alert)
       {
       try
          {
-         send_record(Record_Type::ALERT, alert.serialize());
+         send_record(Record_Type::Alert, alert.serialize());
          }
       catch(...) { /* swallow it */ }
       }
