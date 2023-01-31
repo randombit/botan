@@ -145,6 +145,23 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager::find(const Serv
             }), sessions_and_handles.end());
       }
 
+   // RFC 8446 Appendix C.4
+   //    Clients SHOULD NOT reuse a ticket for multiple connections. Reuse of
+   //    a ticket allows passive observers to correlate different connections.
+   //
+   // When reuse of session tickets is not allowed, remove all tickets to be
+   // returned from the implementation's internal storage.
+   if(!policy.reuse_session_tickets())
+      {
+      for(const auto& [session, handle] : sessions_and_handles)
+         {
+         if(!session.version().is_pre_tls_13() || !handle.is_id())
+            {
+            remove(handle);
+            }
+         }
+      }
+
    return sessions_and_handles;
    }
 

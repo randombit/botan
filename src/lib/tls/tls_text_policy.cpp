@@ -201,6 +201,11 @@ std::chrono::seconds Text_Policy::session_ticket_lifetime() const
    return get_duration("session_ticket_lifetime", Policy::session_ticket_lifetime());
    }
 
+bool Text_Policy::reuse_session_tickets() const
+   {
+   return get_bool("reuse_session_tickets", Policy::reuse_session_tickets());
+   }
+
 std::vector<uint16_t> Text_Policy::srtp_profiles() const
    {
    std::vector<uint16_t> r;

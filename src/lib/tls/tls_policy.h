@@ -256,6 +256,15 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual std::chrono::seconds session_ticket_lifetime() const;
 
       /**
+       * Decides whether stored session tickets should be used multiple
+       * times (until their lifetime runs out). This might allow passive
+       * observers to correlate connections (RFC 8446 Appendix C.4). This
+       * has no effect on TLS 1.2 resumptions based on session IDs as those
+       * are negotiated in the clear anyway.
+       */
+      virtual bool reuse_session_tickets() const;
+
+      /**
       * If this returns a non-empty vector, and DTLS is negotiated,
       * then we will also attempt to negotiate the SRTP extension from
       * RFC 5764 using the returned values as the profile ids.
@@ -631,6 +640,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool hide_unknown_users() const override;
 
       std::chrono::seconds session_ticket_lifetime() const override;
+
+      bool reuse_session_tickets() const override;
 
       bool tls_13_middlebox_compatibility_mode() const override;
 

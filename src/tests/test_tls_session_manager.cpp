@@ -81,6 +81,10 @@ class Session_Manager_Policy : public Botan::TLS::Policy
    {
    public:
       std::chrono::seconds session_ticket_lifetime() const override { return std::chrono::minutes(30); }
+      bool reuse_session_tickets() const override { return allow_session_reuse; }
+
+   public:
+      bool allow_session_reuse = true;
    };
 
 namespace {
@@ -102,16 +106,36 @@ decltype(auto) random_opaque_handle()
 
 const Botan::TLS::Server_Information server_info("botan.randombit.net");
 
-decltype(auto) default_session(Botan::TLS::Connection_Side side, Botan::TLS::Callbacks& cbs)
+decltype(auto) default_session(Botan::TLS::Connection_Side side,
+                               Botan::TLS::Callbacks& cbs,
+                               Botan::TLS::Protocol_Version version = Botan::TLS::Protocol_Version::TLS_V12)
    {
-   return Botan::TLS::Session(
-         {},
-         Botan::TLS::Protocol_Version::TLS_V12,
-         0x009C, side,
-         true, true, {},
-         server_info, 0,
-         cbs.tls_current_timestamp()
-      );
+   if(version.is_pre_tls_13())
+      {
+      return Botan::TLS::Session(
+            {},
+            version,
+            0x009C, side,
+            true, true, {},
+            server_info, 0,
+            cbs.tls_current_timestamp()
+         );
+      }
+   else
+      {
+#if defined(BOTAN_HAS_TLS_13)
+      return Botan::TLS::Session(
+            {}, std::nullopt, 0, std::chrono::seconds(1024),
+            Botan::TLS::Protocol_Version::TLS_V13,
+            Botan::TLS::Ciphersuite::from_name("AES_128_GCM_SHA256")->ciphersuite_code(),
+            side,
+            {}, server_info,
+            cbs.tls_current_timestamp()
+         );
+#else
+  throw Botan_Tests::Test_Error("TLS 1.3 is not available in this build");
+#endif
+      }
    }
 
 using namespace std::literals;
@@ -914,6 +938,37 @@ std::vector<Test::Result> tls_session_manager_expiry()
          result.test_is_eq("the new session is found", sessions_and_handles.front().second.id().value(), handle_new);
 
          result.test_is_eq("old session was deleted when it expired", mgr->remove_all(), size_t(1));
+         }),
+
+      CHECK_all("session tickets are not reused", [&](std::string type, auto factory, auto& result)
+         {
+         if(type == "Stateless")
+            return; // this manager can neither store nor find anything
+
+         auto mgr = factory();
+
+         auto handle_1 = random_id();
+         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Protocol_Version::TLS_V12), handle_1);
+         auto handle_2 = random_ticket();
+         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Protocol_Version::TLS_V12), handle_2);
+
+#if defined(BOTAN_HAS_TLS_13)
+         auto handle_3 = random_id();
+         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Protocol_Version::TLS_V13), handle_3);
+         auto handle_4 = random_ticket();
+         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Protocol_Version::TLS_V13), handle_4);
+#endif
+
+         plcy.allow_session_reuse = false;
+
+         auto sessions_and_handles1 = mgr->find(server_info, cbs, plcy);
+         result.require("all sessions are found", sessions_and_handles1.size() > 1);
+
+         auto sessions_and_handles2 = mgr->find(server_info, cbs, plcy);
+         result.test_is_eq("only one session is found", sessions_and_handles2.size(), size_t(1));
+         result.confirm("found session is the Session_ID", std::get<Botan::TLS::Session_Handle>(sessions_and_handles2.front()).is_id());
+         result.test_is_eq("found session is the Session_ID", std::get<Botan::TLS::Session_Handle>(sessions_and_handles2.front()).id().value(), handle_1);
+         result.confirm("found session is TLS 1.2", std::get<Botan::TLS::Session>(sessions_and_handles2.front()).version().is_pre_tls_13());
          }),
 
 #if defined(BOTAN_HAS_TLS_13)

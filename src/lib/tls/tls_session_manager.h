@@ -158,6 +158,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        * filter the result against a policy. Most notably an expiry check.
        * Expired sessions will be removed via Session_Manager::remove().
        *
+       * The TLS client implementations will query the session manager exactly
+       * once per handshake attempt. If no reuse is desired, the session manager
+       * may remove the sessions internally when handing them out to the client.
+       * The default implementation adheres to Policy::reuse_session_tickets().
+       *
        * For TLS 1.2 the client implementation will attempt a resumption with
        * the first session in the returned list. For TLS 1.3, it will offer all
        * found sessions to the server.
