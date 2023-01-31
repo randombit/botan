@@ -905,7 +905,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message
    public:
       Handshake_Type type() const override { return Handshake_Type::NewSessionTicket; }
 
-      uint32_t ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
+      std::chrono::seconds ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
       const std::vector<uint8_t>& ticket() const { return m_ticket; }
 
       New_Session_Ticket_12(Handshake_IO& io,
@@ -921,7 +921,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message
       std::vector<uint8_t> serialize() const override;
 
    private:
-      uint32_t m_ticket_lifetime_hint = 0;
+      std::chrono::seconds m_ticket_lifetime_hint;
       std::vector<uint8_t> m_ticket;
    };
 
@@ -942,7 +942,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
       const std::vector<uint8_t>& ticket() const { return m_ticket; }
       const std::vector<uint8_t>& nonce() const { return m_ticket_nonce; }
       uint32_t ticket_age_add() const { return m_ticket_age_add; }
-      uint32_t lifetime_hint() const { return m_ticket_lifetime_hint; }
+      std::chrono::seconds lifetime_hint() const { return m_ticket_lifetime_hint; }
 
       /**
        * @return  the number of bytes allowed for early data or std::nullopt
@@ -958,7 +958,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
       //    of time than what is stated in the ticket_lifetime.
       //
       // ... hence we call it 'lifetime hint'.
-      uint32_t m_ticket_lifetime_hint;
+      std::chrono::seconds m_ticket_lifetime_hint;
       uint32_t m_ticket_age_add;
       std::vector<uint8_t> m_ticket_nonce;
       std::vector<uint8_t> m_ticket;

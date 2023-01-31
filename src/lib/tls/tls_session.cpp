@@ -73,7 +73,7 @@ Session::Session(const std::vector<uint8_t>& session_ticket,
                  const secure_vector<uint8_t>& session_psk,
                  const std::optional<uint32_t>& max_early_data_bytes,
                  uint32_t ticket_age_add,
-                 uint32_t lifetime_hint,
+                 std::chrono::seconds lifetime_hint,
                  Protocol_Version version,
                  uint16_t ciphersuite,
                  Connection_Side side,
@@ -135,13 +135,9 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
    m_server_info(client_hello.sni_hostname()),
    m_early_data_allowed(max_early_data_bytes.has_value()),
    m_max_early_data_bytes(max_early_data_bytes.value_or(0)),
-   m_ticket_age_add(load_be<uint32_t>(rng.random_vec(4).data(), 0))
-   {
-   const auto lifetime_ms = std::chrono::duration_cast<std::chrono::milliseconds>(lifetime_hint).count();
-   BOTAN_ARG_CHECK(lifetime_ms <= std::numeric_limits<uint32_t>::max(),
-                   "lifetime is too long");
-   m_lifetime_hint = static_cast<uint32_t>(lifetime_ms);
-   }
+   m_ticket_age_add(load_be<uint32_t>(rng.random_vec(4).data(), 0)),
+   m_lifetime_hint(lifetime_hint)
+   {}
 
 #endif
 
@@ -170,6 +166,7 @@ Session::Session(const uint8_t ber[], size_t ber_len)
    size_t fragment_size = 0;
    size_t compression_method = 0;
    uint16_t ciphersuite_code = 0;
+   uint64_t lifetime_hint = 0;
 
    BER_Decoder(ber, ber_len)
       .start_sequence()
@@ -196,7 +193,7 @@ Session::Session(const uint8_t ber[], size_t ber_len)
         .decode(m_early_data_allowed)
         .decode_integer_type(m_max_early_data_bytes)
         .decode_integer_type(m_ticket_age_add)
-        .decode_integer_type(m_lifetime_hint)
+        .decode_integer_type(lifetime_hint)
       .end_cons()
       .verify_end();
 
@@ -241,6 +238,8 @@ Session::Session(const uint8_t ber[], size_t ber_len)
       while(!certs.end_of_data())
          m_peer_certs.push_back(X509_Certificate(certs));
       }
+
+   m_lifetime_hint = std::chrono::seconds(lifetime_hint);
    }
 
 secure_vector<uint8_t> Session::DER_encode() const
@@ -279,7 +278,7 @@ secure_vector<uint8_t> Session::DER_encode() const
          .encode(m_early_data_allowed)
          .encode(static_cast<size_t>(m_max_early_data_bytes))
          .encode(static_cast<size_t>(m_ticket_age_add))
-         .encode(static_cast<size_t>(m_lifetime_hint))
+         .encode(static_cast<size_t>(m_lifetime_hint.count()))
       .end_cons()
    .get_contents();
    }
