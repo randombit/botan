@@ -992,7 +992,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
 
          auto add_extensions_and_sort = [](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message)
             {
-            if(which_message == Handshake_Type::CLIENT_HELLO)
+            if(which_message == Handshake_Type::ClientHello)
                {
                // For some reason, presumably checking compatibility, the RFC 8448 Client
                // Hello includes a (TLS 1.2) Session_Ticket extension. We don't normally add
@@ -1136,7 +1136,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
 
          auto add_extensions_and_sort = [](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message)
             {
-            if(which_message == Handshake_Type::CLIENT_HELLO)
+            if(which_message == Handshake_Type::ClientHello)
                {
                exts.add(new Padding(87));
 
@@ -1184,7 +1184,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
          {
          auto add_extensions_and_sort = [flights = 0](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message) mutable
             {
-            if(which_message == Handshake_Type::CLIENT_HELLO)
+            if(which_message == Handshake_Type::ClientHello)
                {
                ++flights;
 
@@ -1309,7 +1309,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
 
          auto add_extensions_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message)
             {
-            if(which_message == Handshake_Type::CLIENT_HELLO)
+            if(which_message == Handshake_Type::ClientHello)
                {
                add_renegotiation_extension(exts);
                sort_client_extensions(exts, side);
@@ -1400,7 +1400,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
 
          auto add_extensions_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type which_message)
             {
-            if(which_message == Handshake_Type::CLIENT_HELLO)
+            if(which_message == Handshake_Type::ClientHello)
                {
                add_renegotiation_extension(exts);
                sort_client_extensions(exts, side);
@@ -1564,7 +1564,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
                {
                auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts, Botan::TLS::Connection_Side side, Botan::TLS::Handshake_Type type)
                   {
-                  if(type == Handshake_Type::HELLO_RETRY_REQUEST)
+                  if(type == Handshake_Type::HelloRetryRequest)
                      {
                      // This cookie needs to be mocked into the HRR since RFC 8448 contains it.
                      exts.add(new Cookie(vars.get_opt_bin("HelloRetryRequest_Cookie")));

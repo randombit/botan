@@ -465,7 +465,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
          {
          auto msg = pending->get_next_handshake_msg();
 
-         if(msg.first == Handshake_Type::HANDSHAKE_NONE) // no full handshake yet
+         if(msg.first == Handshake_Type::None) // no full handshake yet
             break;
 
          process_handshake_msg(active_state(), *pending,

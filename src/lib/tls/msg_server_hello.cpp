@@ -116,8 +116,8 @@ class Server_Hello_Internal
          // whether we're dealing with TLS 1.3 or older.
          extensions.deserialize(reader, Connection_Side::Server,
                                 is_hello_retry_request
-                                ? Handshake_Type::HELLO_RETRY_REQUEST
-                                : Handshake_Type::SERVER_HELLO);
+                                ? Handshake_Type::HelloRetryRequest
+                                : Handshake_Type::ServerHello);
          }
 
       Server_Hello_Internal(Protocol_Version lv,
@@ -195,7 +195,7 @@ std::vector<uint8_t> Server_Hello::serialize() const
 
 Handshake_Type Server_Hello::type() const
    {
-   return Handshake_Type::SERVER_HELLO;
+   return Handshake_Type::ServerHello;
    }
 
 Protocol_Version Server_Hello::legacy_version() const

@@ -119,7 +119,7 @@ Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
    //    In order to indicate their desire to receive certificate status
    //    information, clients MAY include an extension of type "status_request"
    //    in the (extended) client hello.
-   if(message_type == Handshake_Type::CLIENT_HELLO)
+   if(message_type == Handshake_Type::ClientHello)
       {
       m_impl = std::make_unique<Certificate_Status_Request_Internal>(
                   RFC6066_Certificate_Status_Request(reader, extension_size));
@@ -134,8 +134,8 @@ Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
    //    A server MAY request that a client present an OCSP response with its
    //    certificate by sending an empty "status_request" extension in its
    //    CertificateRequest message.
-   else if(message_type == Handshake_Type::SERVER_HELLO ||
-           message_type == Handshake_Type::CERTIFICATE_REQUEST)
+   else if(message_type == Handshake_Type::ServerHello ||
+           message_type == Handshake_Type::CertificateRequest)
       {
       m_impl = std::make_unique<Certificate_Status_Request_Internal>(
                   RFC6066_Empty_Certificate_Status_Request(extension_size));
@@ -152,7 +152,7 @@ Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
    //    If the client opts to send an OCSP response, the body of its
    //    "status_request" extension MUST be a CertificateStatus structure as
    //    defined in [RFC6066].
-   else if(message_type == Handshake_Type::CERTIFICATE)
+   else if(message_type == Handshake_Type::Certificate)
       {
       m_impl = std::make_unique<Certificate_Status_Request_Internal>(
                   Certificate_Status(reader.get_fixed<uint8_t>(extension_size), from));

@@ -105,7 +105,7 @@ class Client_Hello_Internal
          suites = reader.get_range_vector<uint16_t>(2, 1, 32767);
          comp_methods = reader.get_range_vector<uint8_t>(1, 1, 255);
 
-         extensions.deserialize(reader, Connection_Side::Client, Handshake_Type::CLIENT_HELLO);
+         extensions.deserialize(reader, Connection_Side::Client, Handshake_Type::ClientHello);
          }
 
       /**
@@ -181,7 +181,7 @@ Client_Hello::Client_Hello(std::unique_ptr<Client_Hello_Internal> data)
 
 Handshake_Type Client_Hello::type() const
    {
-   return Handshake_Type::CLIENT_HELLO;
+   return Handshake_Type::ClientHello;
    }
 
 Protocol_Version Client_Hello::legacy_version() const

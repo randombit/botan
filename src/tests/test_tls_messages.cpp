@@ -386,7 +386,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test
                else if (extension == "key_share_HRR")
                   {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("HelloRetryRequest", buffer);
-                  Botan::TLS::Key_Share key_share(tls_data_reader, static_cast<uint16_t>(buffer.size()), Botan::TLS::Handshake_Type::HELLO_RETRY_REQUEST);
+                  Botan::TLS::Key_Share key_share(tls_data_reader, static_cast<uint16_t>(buffer.size()), Botan::TLS::Handshake_Type::HelloRetryRequest);
 
                   const auto serialized_buffer = key_share.serialize(Botan::TLS::Connection_Side::Client);
                   const auto expected_key_share = vars.get_req_bin("Expected_Content");
@@ -396,7 +396,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test
                else if (extension == "key_share_SH")
                   {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("ServerHello", buffer);
-                  Botan::TLS::Key_Share key_share(tls_data_reader, static_cast<uint16_t>(buffer.size()), Botan::TLS::Handshake_Type::SERVER_HELLO);
+                  Botan::TLS::Key_Share key_share(tls_data_reader, static_cast<uint16_t>(buffer.size()), Botan::TLS::Handshake_Type::ServerHello);
 
                   const auto serialized_buffer = key_share.serialize(Botan::TLS::Connection_Side::Client);
                   const auto expected_key_share = vars.get_req_bin("Expected_Content");
@@ -406,7 +406,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test
                else if (extension == "key_share_CH")
                   {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
-                  Botan::TLS::Key_Share key_share(tls_data_reader, static_cast<uint16_t>(buffer.size()), Botan::TLS::Handshake_Type::CLIENT_HELLO);
+                  Botan::TLS::Key_Share key_share(tls_data_reader, static_cast<uint16_t>(buffer.size()), Botan::TLS::Handshake_Type::ClientHello);
 
                   const auto serialized_buffer = key_share.serialize(Botan::TLS::Connection_Side::Server);
                   const auto expected_key_share = vars.get_req_bin("Expected_Content");

@@ -60,8 +60,8 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
       m_should_send_ccs = true;
 
    m_transitions.set_expected_next({
-         Handshake_Type::SERVER_HELLO,
-         Handshake_Type::HELLO_RETRY_REQUEST});
+         Handshake_Type::ServerHello,
+         Handshake_Type::HelloRetryRequest});
    }
 
 void Client_Impl_13::process_handshake_msg(Handshake_Message_13 message)
@@ -342,9 +342,9 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
                                                             m_transcript_hash.current());
       }
 
-   callbacks().tls_examine_extensions(sh.extensions(), Connection_Side::Server, Handshake_Type::SERVER_HELLO);
+   callbacks().tls_examine_extensions(sh.extensions(), Connection_Side::Server, Handshake_Type::ServerHello);
 
-   m_transitions.set_expected_next(Handshake_Type::ENCRYPTED_EXTENSIONS);
+   m_transitions.set_expected_next(Handshake_Type::EncryptedExtensions);
    }
 
 void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
@@ -376,14 +376,14 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
 
    ch.retry(hrr, m_transcript_hash, callbacks(), rng());
 
-   callbacks().tls_examine_extensions(hrr.extensions(), Connection_Side::Server, Handshake_Type::HELLO_RETRY_REQUEST);
+   callbacks().tls_examine_extensions(hrr.extensions(), Connection_Side::Server, Handshake_Type::HelloRetryRequest);
 
    send_handshake_message(std::reference_wrapper(ch));
 
    // RFC 8446 4.1.4
    //    If a client receives a second HelloRetryRequest in the same connection [...],
    //    it MUST abort the handshake with an "unexpected_message" alert.
-   m_transitions.set_expected_next(Handshake_Type::SERVER_HELLO);
+   m_transitions.set_expected_next(Handshake_Type::ServerHello);
    }
 
 void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg)
@@ -418,20 +418,20 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
       }
 
-   callbacks().tls_examine_extensions(exts, Connection_Side::Server, Handshake_Type::ENCRYPTED_EXTENSIONS);
+   callbacks().tls_examine_extensions(exts, Connection_Side::Server, Handshake_Type::EncryptedExtensions);
 
    if(m_handshake_state.server_hello().extensions().has<PSK>())
       {
       // RFC 8446 2.2
       //    As the server is authenticating via a PSK, it does not send a
       //    Certificate or a CertificateVerify message.
-      m_transitions.set_expected_next(Handshake_Type::FINISHED);
+      m_transitions.set_expected_next(Handshake_Type::Finished);
       }
    else
       {
       m_transitions.set_expected_next({
-            Handshake_Type::CERTIFICATE,
-            Handshake_Type::CERTIFICATE_REQUEST
+            Handshake_Type::Certificate,
+            Handshake_Type::CertificateRequest
          });
       }
    }
@@ -446,8 +446,8 @@ void Client_Impl_13::handle(const Certificate_Request_13& certificate_request_ms
       throw TLS_Exception(Alert::DECODE_ERROR, "Certificate_Request context must be empty in the main handshake");
       }
 
-   callbacks().tls_examine_extensions(certificate_request_msg.extensions(), Connection_Side::Server, Handshake_Type::CERTIFICATE_REQUEST);
-   m_transitions.set_expected_next(Handshake_Type::CERTIFICATE);
+   callbacks().tls_examine_extensions(certificate_request_msg.extensions(), Connection_Side::Server, Handshake_Type::CertificateRequest);
+   m_transitions.set_expected_next(Handshake_Type::Certificate);
    }
 
 void Client_Impl_13::handle(const Certificate_13& certificate_msg)
@@ -470,7 +470,7 @@ void Client_Impl_13::handle(const Certificate_13& certificate_msg)
                           m_info.hostname(),
                           m_handshake_state.client_hello().extensions().has<Certificate_Status_Request>());
 
-   m_transitions.set_expected_next(Handshake_Type::CERTIFICATE_VERIFY);
+   m_transitions.set_expected_next(Handshake_Type::CertificateVerify);
    }
 
 void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
@@ -500,7 +500,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    if(!sig_valid)
       { throw TLS_Exception(Alert::DECRYPT_ERROR, "Server certificate verification failed"); }
 
-   m_transitions.set_expected_next(Handshake_Type::FINISHED);
+   m_transitions.set_expected_next(Handshake_Type::Finished);
    }
 
 void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedMessages& flight)
@@ -597,7 +597,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
                    m_info,
                    callbacks().tls_current_timestamp());
 
-   callbacks().tls_examine_extensions(new_session_ticket.extensions(), Connection_Side::Server, Handshake_Type::NEW_SESSION_TICKET);
+   callbacks().tls_examine_extensions(new_session_ticket.extensions(), Connection_Side::Server, Handshake_Type::NewSessionTicket);
    if(callbacks().tls_session_ticket_received(session))
       {
       session_manager().save(session);

@@ -62,31 +62,31 @@ enum class Record_Type: uint8_t {
 };
 
 enum class Handshake_Type {
-   HELLO_REQUEST        = 0,
-   CLIENT_HELLO         = 1,
-   SERVER_HELLO         = 2,
-   HELLO_VERIFY_REQUEST = 3,
-   NEW_SESSION_TICKET   = 4, // RFC 5077
+   HelloRequest         = 0,
+   ClientHello          = 1,
+   ServerHello          = 2,
+   HelloVerifyRequest   = 3,
+   NewSessionTicket     = 4, // RFC 5077
 
-   END_OF_EARLY_DATA    = 5, // RFC 8446 (TLS 1.3)
-   ENCRYPTED_EXTENSIONS = 8, // RFC 8446 (TLS 1.3)
+   EndOfEarlyData       = 5, // RFC 8446 (TLS 1.3)
+   EncryptedExtensions  = 8, // RFC 8446 (TLS 1.3)
 
-   CERTIFICATE          = 11,
-   SERVER_KEX           = 12,
-   CERTIFICATE_REQUEST  = 13,
-   SERVER_HELLO_DONE    = 14,
-   CERTIFICATE_VERIFY   = 15,
-   CLIENT_KEX           = 16,
-   FINISHED             = 20,
+   Certificate          = 11,
+   ServerKeyExchange    = 12,
+   CertificateRequest   = 13,
+   ServerHelloDone      = 14,
+   CertificateVerify    = 15,
+   ClientKeyExchange    = 16,
+   Finished             = 20,
 
-   CERTIFICATE_URL      = 21,
-   CERTIFICATE_STATUS   = 22,
+   CertificateUrl       = 21,
+   CertificateStatus    = 22,
 
-   KEY_UPDATE           = 24,  // RFC 8446 (TLS 1.3)
+   KeyUpdate            = 24,  // RFC 8446 (TLS 1.3)
 
-   HELLO_RETRY_REQUEST  = 253, // Not a wire value (HRR appears as an ordinary Server Hello)
-   HANDSHAKE_CCS        = 254, // Not a wire value (TLS 1.3 uses this value for 'message_hash' -- RFC 8446 4.4.1)
-   HANDSHAKE_NONE       = 255  // Null value
+   HelloRetryRequest    = 253, // Not a wire value (HRR appears as an ordinary Server Hello)
+   HandshakeCCS         = 254, // Not a wire value (TLS 1.3 uses this value for 'message_hash' -- RFC 8446 4.4.1)
+   None                 = 255  // Null value
 };
 
 BOTAN_TEST_API const char* handshake_type_to_string(Handshake_Type t);

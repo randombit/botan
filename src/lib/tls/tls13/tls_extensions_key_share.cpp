@@ -522,15 +522,15 @@ Key_Share::Key_Share(TLS_Data_Reader& reader,
                      uint16_t extension_size,
                      Handshake_Type message_type)
    {
-   if(message_type == Handshake_Type::CLIENT_HELLO)
+   if(message_type == Handshake_Type::ClientHello)
       {
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_ClientHello(reader, extension_size));
       }
-   else if(message_type == Handshake_Type::HELLO_RETRY_REQUEST)  // Connection_Side::Server
+   else if(message_type == Handshake_Type::HelloRetryRequest)  // Connection_Side::Server
       {
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_HelloRetryRequest(reader, extension_size));
       }
-   else if(message_type == Handshake_Type::SERVER_HELLO)  // Connection_Side::Server
+   else if(message_type == Handshake_Type::ServerHello)  // Connection_Side::Server
       {
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_ServerHello(reader, extension_size));
       }

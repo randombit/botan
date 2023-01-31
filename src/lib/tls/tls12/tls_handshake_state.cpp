@@ -24,64 +24,64 @@ const char* handshake_type_to_string(Handshake_Type type)
    {
    switch(type)
       {
-      case Handshake_Type::HELLO_VERIFY_REQUEST:
+      case Handshake_Type::HelloVerifyRequest:
          return "hello_verify_request";
 
-      case Handshake_Type::HELLO_REQUEST:
+      case Handshake_Type::HelloRequest:
          return "hello_request";
 
-      case Handshake_Type::CLIENT_HELLO:
+      case Handshake_Type::ClientHello:
          return "client_hello";
 
-      case Handshake_Type::SERVER_HELLO:
+      case Handshake_Type::ServerHello:
          return "server_hello";
 
-      case Handshake_Type::HELLO_RETRY_REQUEST:
+      case Handshake_Type::HelloRetryRequest:
          return "hello_retry_request";
 
-      case Handshake_Type::CERTIFICATE:
+      case Handshake_Type::Certificate:
          return "certificate";
 
-      case Handshake_Type::CERTIFICATE_URL:
+      case Handshake_Type::CertificateUrl:
          return "certificate_url";
 
-      case Handshake_Type::CERTIFICATE_STATUS:
+      case Handshake_Type::CertificateStatus:
          return "certificate_status";
 
-      case Handshake_Type::SERVER_KEX:
+      case Handshake_Type::ServerKeyExchange:
          return "server_key_exchange";
 
-      case Handshake_Type::CERTIFICATE_REQUEST:
+      case Handshake_Type::CertificateRequest:
          return "certificate_request";
 
-      case Handshake_Type::SERVER_HELLO_DONE:
+      case Handshake_Type::ServerHelloDone:
          return "server_hello_done";
 
-      case Handshake_Type::CERTIFICATE_VERIFY:
+      case Handshake_Type::CertificateVerify:
          return "certificate_verify";
 
-      case Handshake_Type::CLIENT_KEX:
+      case Handshake_Type::ClientKeyExchange:
          return "client_key_exchange";
 
-      case Handshake_Type::NEW_SESSION_TICKET:
+      case Handshake_Type::NewSessionTicket:
          return "new_session_ticket";
 
-      case Handshake_Type::HANDSHAKE_CCS:
+      case Handshake_Type::HandshakeCCS:
          return "change_cipher_spec";
 
-      case Handshake_Type::FINISHED:
+      case Handshake_Type::Finished:
          return "finished";
 
-      case Handshake_Type::END_OF_EARLY_DATA:
+      case Handshake_Type::EndOfEarlyData:
          return "end_of_early_data";
 
-      case Handshake_Type::ENCRYPTED_EXTENSIONS:
+      case Handshake_Type::EncryptedExtensions:
          return "encrypted_extensions";
 
-      case Handshake_Type::KEY_UPDATE:
+      case Handshake_Type::KeyUpdate:
          return "key_update";
 
-      case Handshake_Type::HANDSHAKE_NONE:
+      case Handshake_Type::None:
          return "invalid";
       }
 

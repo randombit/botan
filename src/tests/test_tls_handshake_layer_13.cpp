@@ -138,13 +138,13 @@ const auto hrr_hello_retry_request_msg = Botan::hex_decode_locked(
 
 const std::vector<Botan::secure_vector<uint8_t>> tls_12_only_messages
    {
-      {static_cast<uint8_t>(Handshake_Type::HELLO_REQUEST), 0x00, 0x00, 0x02, 0x42, 0x42},
-      {static_cast<uint8_t>(Handshake_Type::HELLO_VERIFY_REQUEST), 0x00, 0x00, 0x02, 0x42, 0x42},
-      {static_cast<uint8_t>(Handshake_Type::SERVER_KEX), 0x00, 0x00, 0x02, 0x42, 0x42},
-      {static_cast<uint8_t>(Handshake_Type::SERVER_HELLO_DONE), 0x00, 0x00, 0x02, 0x42, 0x42},
-      {static_cast<uint8_t>(Handshake_Type::CLIENT_KEX), 0x00, 0x00, 0x02, 0x42, 0x42},
-      {static_cast<uint8_t>(Handshake_Type::CERTIFICATE_URL), 0x00, 0x00, 0x02, 0x42, 0x42},
-      {static_cast<uint8_t>(Handshake_Type::CERTIFICATE_STATUS), 0x00, 0x00, 0x02, 0x42, 0x42}
+      {static_cast<uint8_t>(Handshake_Type::HelloRequest), 0x00, 0x00, 0x02, 0x42, 0x42},
+      {static_cast<uint8_t>(Handshake_Type::HelloVerifyRequest), 0x00, 0x00, 0x02, 0x42, 0x42},
+      {static_cast<uint8_t>(Handshake_Type::ServerKeyExchange), 0x00, 0x00, 0x02, 0x42, 0x42},
+      {static_cast<uint8_t>(Handshake_Type::ServerHelloDone), 0x00, 0x00, 0x02, 0x42, 0x42},
+      {static_cast<uint8_t>(Handshake_Type::ClientKeyExchange), 0x00, 0x00, 0x02, 0x42, 0x42},
+      {static_cast<uint8_t>(Handshake_Type::CertificateUrl), 0x00, 0x00, 0x02, 0x42, 0x42},
+      {static_cast<uint8_t>(Handshake_Type::CertificateStatus), 0x00, 0x00, 0x02, 0x42, 0x42}
    };
 
 void check_transcript_hash_empty(Test::Result& result, const Transcript_Hash_State& transcript_hash)
