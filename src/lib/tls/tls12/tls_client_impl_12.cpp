@@ -756,7 +756,13 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          session_ticket,
          m_info,
          state.server_hello()->srtp_profile(),
-         callbacks().tls_current_timestamp()
+         callbacks().tls_current_timestamp(),
+
+         // Session Tickets (as defined in RFC 5077) contain a lifetime_hint,
+         // sessions identified via a Session_ID do not.
+         ((state.new_session_ticket())
+            ? state.new_session_ticket()->ticket_lifetime_hint()
+            : std::chrono::seconds::max())
          );
 
       const bool should_save = save_session(session_info);

@@ -51,7 +51,8 @@ class BOTAN_PUBLIC_API(2,0) Session final
               const std::vector<uint8_t>& session_ticket,
               const Server_Information& server_info,
               uint16_t srtp_profile,
-              std::chrono::system_clock::time_point current_timestamp);
+              std::chrono::system_clock::time_point current_timestamp,
+              std::chrono::seconds lifetime_hint = std::chrono::seconds::max());
 
 #if defined(BOTAN_HAS_TLS_13)
 

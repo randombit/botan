@@ -45,7 +45,8 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
                  const std::vector<uint8_t>& ticket,
                  const Server_Information& server_info,
                  uint16_t srtp_profile,
-                 std::chrono::system_clock::time_point current_timestamp) :
+                 std::chrono::system_clock::time_point current_timestamp,
+                 std::chrono::seconds lifetime_hint) :
    m_start_time(current_timestamp),
    m_identifier(session_identifier),
    m_session_ticket(ticket),
@@ -61,7 +62,7 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
    m_early_data_allowed(false),
    m_max_early_data_bytes(0),
    m_ticket_age_add(0),
-   m_lifetime_hint(0)
+   m_lifetime_hint(lifetime_hint)
    {
    BOTAN_ARG_CHECK(version.is_pre_tls_13(),
                    "Instantiated a TLS 1.2 session object with a TLS version newer than 1.2");
