@@ -155,7 +155,7 @@ Record_Layer::Record_Layer(Connection_Side side)
    // Once TLS 1.3 is negotiateed, the implementations will disable these
    // compatibility modes accordingly or a protocol downgrade will transfer
    // the marshalling responsibility to our TLS 1.2 implementation.
-   , m_sending_compat_mode(m_side == Connection_Side::CLIENT)
+   , m_sending_compat_mode(m_side == Connection_Side::Client)
    , m_receiving_compat_mode(true) {}
 
 

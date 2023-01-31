@@ -253,8 +253,8 @@ class BOTAN_TEST_API Cipher_State
 
    private:
       /**
+       * @param whoami         whether we play the Server or Client
        * @param hash_function  the negotiated hash function to be used
-       * @param whoami         whether we play the SERVER or CLIENT
        */
       Cipher_State(Connection_Side whoami, const std::string& hash_function);
 

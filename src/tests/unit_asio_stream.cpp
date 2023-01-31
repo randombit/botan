@@ -166,7 +166,7 @@ class Asio_Stream_Tests final : public Test
          auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
 
-         ssl.handshake(Botan::TLS::CLIENT);
+         ssl.handshake(Botan::TLS::Connection_Side::Client);
 
          Test::Result result("sync TLS handshake");
          result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
@@ -188,7 +188,7 @@ class Asio_Stream_Tests final : public Test
          ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
 
          error_code ec;
-         ssl.handshake(Botan::TLS::CLIENT, ec);
+         ssl.handshake(Botan::TLS::Connection_Side::Client, ec);
 
          Test::Result result("sync TLS handshake error");
          result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
@@ -206,7 +206,7 @@ class Asio_Stream_Tests final : public Test
          ssl.next_layer().connect(remote);
 
          error_code ec;
-         ssl.handshake(Botan::TLS::CLIENT, ec);
+         ssl.handshake(Botan::TLS::Connection_Side::Client, ec);
 
          Test::Result result("sync TLS handshake error");
          result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
@@ -235,7 +235,7 @@ class Asio_Stream_Tests final : public Test
             result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
             };
 
-         ssl.async_handshake(Botan::TLS::CLIENT, handler);
+         ssl.async_handshake(Botan::TLS::Connection_Side::Client, handler);
 
          ssl.next_layer().close_remote();
          ioc.run();
@@ -264,7 +264,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("propagates error code", ec == net::error::no_recovery);
             };
 
-         ssl.async_handshake(Botan::TLS::CLIENT, handler);
+         ssl.async_handshake(Botan::TLS::Connection_Side::Client, handler);
 
          ioc.run();
          results.push_back(result);
@@ -287,7 +287,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("propagates error code", ec == ThrowingMockChannel::expected_ec());
             };
 
-         ssl.async_handshake(Botan::TLS::CLIENT, handler);
+         ssl.async_handshake(Botan::TLS::Connection_Side::Client, handler);
 
          ioc.run();
          results.push_back(result);

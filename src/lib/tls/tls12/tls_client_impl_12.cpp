@@ -355,7 +355,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
                                 "Server replied with DTLS-SRTP alg we did not send");
          }
 
-      callbacks().tls_examine_extensions(state.server_hello()->extensions(), SERVER, Handshake_Type::SERVER_HELLO);
+      callbacks().tls_examine_extensions(state.server_hello()->extensions(), Connection_Side::Server, Handshake_Type::SERVER_HELLO);
 
       state.set_version(state.server_hello()->legacy_version());
       m_application_protocol = state.server_hello()->next_protocol();
@@ -563,7 +563,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == CERTIFICATE_STATUS)
       {
-      state.server_cert_status(new Certificate_Status(contents, Connection_Side::SERVER));
+      state.server_cert_status(new Certificate_Status(contents, Connection_Side::Server));
 
       if(state.ciphersuite().kex_method() != Kex_Algo::STATIC_RSA)
          {
@@ -690,9 +690,9 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
       state.handshake_io().send(Change_Cipher_Spec());
 
-      change_cipher_spec_writer(CLIENT);
+      change_cipher_spec_writer(Connection_Side::Client);
 
-      state.client_finished(new Finished_12(state.handshake_io(), state, CLIENT));
+      state.client_finished(new Finished_12(state.handshake_io(), state, Connection_Side::Client));
 
       if(state.server_hello()->supports_session_ticket())
          state.set_expected_next(NEW_SESSION_TICKET);
@@ -709,7 +709,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       {
       state.set_expected_next(FINISHED);
 
-      change_cipher_spec_reader(CLIENT);
+      change_cipher_spec_reader(Connection_Side::Client);
       }
    else if(type == FINISHED)
       {
@@ -719,7 +719,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
       state.server_finished(new Finished_12(contents));
 
-      if(!state.server_finished()->verify(state, SERVER))
+      if(!state.server_finished()->verify(state, Connection_Side::Server))
          throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
@@ -729,8 +729,8 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          {
          // session resume case
          state.handshake_io().send(Change_Cipher_Spec());
-         change_cipher_spec_writer(CLIENT);
-         state.client_finished(new Finished_12(state.handshake_io(), state, CLIENT));
+         change_cipher_spec_writer(Connection_Side::Client);
+         state.client_finished(new Finished_12(state.handshake_io(), state, Connection_Side::Client));
          }
 
       std::vector<uint8_t> session_id = state.server_hello()->session_id();
@@ -745,7 +745,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          state.session_keys().master_secret(),
          state.server_hello()->legacy_version(),
          state.server_hello()->ciphersuite(),
-         CLIENT,
+         Connection_Side::Client,
          state.server_hello()->supports_extended_master_secret(),
          state.server_hello()->supports_encrypt_then_mac(),
          get_peer_cert_chain(state),

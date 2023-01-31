@@ -15,7 +15,7 @@ namespace {
 
 Botan::TLS::Handshake_Layer prepare(const Botan::secure_vector<uint8_t>& data)
    {
-   Botan::TLS::Handshake_Layer hl(Botan::TLS::Connection_Side::CLIENT);
+   Botan::TLS::Handshake_Layer hl(Botan::TLS::Connection_Side::Client);
    hl.copy_data(data);
    return hl;
    }

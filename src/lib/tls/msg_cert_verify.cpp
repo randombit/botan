@@ -116,7 +116,7 @@ std::vector<uint8_t> message(Connection_Side side, const Transcript_Hash& hash)
    std::vector<uint8_t> msg(64, 0x20);
    msg.reserve(64 + 33 + 1 + hash.size());
 
-   const std::string context_string = (side == TLS::Connection_Side::SERVER)
+   const std::string context_string = (side == TLS::Connection_Side::Server)
                                       ? "TLS 1.3, server CertificateVerify"
                                       : "TLS 1.3, client CertificateVerify";
 
@@ -166,7 +166,7 @@ Certificate_Verify_13::Certificate_Verify_13(
 
    const auto* private_key = creds_mgr.private_key_for(
                                        certificate_msg.leaf(),
-                                       m_side == Connection_Side::CLIENT ? "tls-client" : "tls-server",
+                                       m_side == Connection_Side::Client ? "tls-client" : "tls-server",
                                        hostname);
    if(!private_key)
       { throw TLS_Exception(Alert::INTERNAL_ERROR, "Application did not provide a private key for its certificate"); }

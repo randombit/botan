@@ -385,7 +385,7 @@ Protocol_Version select_version(const TLS::Policy& policy,
 }
 
 /*
-* Process a CLIENT HELLO Message
+* Process a Client Hello Message
 */
 void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_state,
       Server_Handshake_State& pending_state,
@@ -495,7 +495,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
 
    secure_renegotiation_check(pending_state.client_hello());
 
-   callbacks().tls_examine_extensions(pending_state.client_hello()->extensions(), CLIENT, Handshake_Type::CLIENT_HELLO);
+   callbacks().tls_examine_extensions(pending_state.client_hello()->extensions(), Connection_Side::Client, Handshake_Type::CLIENT_HELLO);
 
    Session session_info;
    const bool resuming =
@@ -562,7 +562,7 @@ void Server_Impl_12::process_client_key_exchange_msg(Server_Handshake_State& pen
 void Server_Impl_12::process_change_cipher_spec_msg(Server_Handshake_State& pending_state)
    {
    pending_state.set_expected_next(FINISHED);
-   change_cipher_spec_reader(SERVER);
+   change_cipher_spec_reader(Connection_Side::Server);
    }
 
 void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pending_state,
@@ -625,7 +625,7 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
 
    pending_state.client_finished(new Finished_12(contents));
 
-   if(!pending_state.client_finished()->verify(pending_state, CLIENT))
+   if(!pending_state.client_finished()->verify(pending_state, Connection_Side::Client))
       throw TLS_Exception(Alert::DECRYPT_ERROR,
                           "Finished message didn't verify");
 
@@ -640,7 +640,7 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
          pending_state.session_keys().master_secret(),
          pending_state.server_hello()->legacy_version(),
          pending_state.server_hello()->ciphersuite(),
-         SERVER,
+         Connection_Side::Server,
          pending_state.server_hello()->supports_extended_master_secret(),
          pending_state.server_hello()->supports_encrypt_then_mac(),
          get_peer_cert_chain(pending_state),
@@ -678,9 +678,9 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
 
       pending_state.handshake_io().send(Change_Cipher_Spec());
 
-      change_cipher_spec_writer(SERVER);
+      change_cipher_spec_writer(Connection_Side::Server);
 
-      pending_state.server_finished(new Finished_12(pending_state.handshake_io(), pending_state, SERVER));
+      pending_state.server_finished(new Finished_12(pending_state.handshake_io(), pending_state, Connection_Side::Server));
       }
 
    activate_session();
@@ -800,9 +800,9 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
 
    pending_state.handshake_io().send(Change_Cipher_Spec());
 
-   change_cipher_spec_writer(SERVER);
+   change_cipher_spec_writer(Connection_Side::Server);
 
-   pending_state.server_finished(new Finished_12(pending_state.handshake_io(), pending_state, SERVER));
+   pending_state.server_finished(new Finished_12(pending_state.handshake_io(), pending_state, Connection_Side::Server));
    pending_state.set_expected_next(HANDSHAKE_CCS);
    }
 

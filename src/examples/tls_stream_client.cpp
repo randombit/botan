@@ -43,7 +43,7 @@ public:
       std::cout << "Connect failed: " << error.message() << "\n";
       return;
     }
-    m_stream.async_handshake(Botan::TLS::Connection_Side::CLIENT,
+    m_stream.async_handshake(Botan::TLS::Connection_Side::Client,
                              boost::bind(&client::handle_handshake, this, _::error));
   }
 

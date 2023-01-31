@@ -26,7 +26,7 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
    // RFC 8446 4.3.2
    //    A server which is authenticating with a certificate MAY optionally
    //    request a certificate from the client.
-   if(side != Connection_Side::SERVER)
+   if(side != Connection_Side::Server)
       {
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received a Certificate_Request message from a client");
       }
@@ -109,7 +109,7 @@ Certificate_Request_13::Certificate_Request_13(std::vector<X509_DN> acceptable_C
 
    // TODO: give the application a chance to modifying extensions
    //       (after GH #2988 is merged)
-   // callbacks.tls_modify_extensions(m_extensions, Connection_Side::SERVER);
+   // callbacks.tls_modify_extensions(m_extensions, Connection_Side::Server);
    }
 
 std::optional<Certificate_Request_13>
@@ -169,7 +169,7 @@ std::vector<uint8_t> Certificate_Request_13::serialize() const
    {
    std::vector<uint8_t> buf;
    append_tls_length_value(buf, m_context, 1);
-   buf += m_extensions.serialize(Connection_Side::SERVER);
+   buf += m_extensions.serialize(Connection_Side::Server);
    return buf;
    }
 

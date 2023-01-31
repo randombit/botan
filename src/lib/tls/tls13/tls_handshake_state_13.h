@@ -165,12 +165,12 @@ class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Ba
          }
    };
 
-using Client_Handshake_State_13 = Handshake_State_13<Connection_Side::CLIENT,
+using Client_Handshake_State_13 = Handshake_State_13<Connection_Side::Client,
       Client_Handshake_13_Message,
       Server_Handshake_13_Message,
       Server_Post_Handshake_13_Message>;
 
-using Server_Handshake_State_13 = Handshake_State_13<Connection_Side::SERVER,
+using Server_Handshake_State_13 = Handshake_State_13<Connection_Side::Server,
       Server_Handshake_13_Message,
       Client_Handshake_13_Message,
       Client_Post_Handshake_13_Message>;

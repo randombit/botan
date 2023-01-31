@@ -114,7 +114,7 @@ class Server_Hello_Internal
          // Extension parsing will however not be affected by the associated flag.
          // Only after parsing the extensions will the upstream code be able to decide
          // whether we're dealing with TLS 1.3 or older.
-         extensions.deserialize(reader, Connection_Side::SERVER,
+         extensions.deserialize(reader, Connection_Side::Server,
                                 is_hello_retry_request
                                 ? Handshake_Type::HELLO_RETRY_REQUEST
                                 : Handshake_Type::SERVER_HELLO);
@@ -187,7 +187,7 @@ std::vector<uint8_t> Server_Hello::serialize() const
 
    buf.push_back(m_data->comp_method);
 
-   buf += m_data->extensions.serialize(Connection_Side::SERVER);
+   buf += m_data->extensions.serialize(Connection_Side::Server);
 
    return buf;
    }
@@ -311,7 +311,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
          }
       }
 
-   cb.tls_modify_extensions(m_data->extensions, SERVER, type());
+   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Server, type());
 
    hash.update(io.send(*this));
    }
@@ -368,7 +368,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
       m_data->extensions.add(new Session_Ticket());
       }
 
-   cb.tls_modify_extensions(m_data->extensions, SERVER, type());
+   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Server, type());
 
    hash.update(io.send(*this));
    }
@@ -750,7 +750,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
    if(key_exchange_group.has_value())
       { m_data->extensions.add(new Key_Share(key_exchange_group.value(), cb, rng)); }
 
-   cb.tls_modify_extensions(m_data->extensions, SERVER, type());
+   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Server, type());
    }
 
 std::optional<Protocol_Version> Server_Hello_13::random_signals_downgrade() const
@@ -811,7 +811,7 @@ Hello_Retry_Request::Hello_Retry_Request(const Client_Hello_13& ch, Named_Group 
 
    m_data->extensions.add(new Key_Share(selected_group));
 
-   cb.tls_modify_extensions(m_data->extensions, SERVER, type());
+   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Server, type());
    }
 
 #endif // BOTAN_HAS_TLS_13

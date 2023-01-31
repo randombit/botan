@@ -125,10 +125,10 @@ void Certificate_13::verify(Callbacks& callbacks,
       }
 
    const auto trusted_CAs = creds.trusted_certificate_authorities(
-                                     m_side == Connection_Side::CLIENT ? "tls-client" : "tls-server",
+                                     m_side == Connection_Side::Client ? "tls-client" : "tls-server",
                                      hostname);
 
-   const auto usage = (m_side == CLIENT) ? Usage_Type::TLS_CLIENT_AUTH : Usage_Type::TLS_SERVER_AUTH;
+   const auto usage = (m_side == Connection_Side::Client) ? Usage_Type::TLS_CLIENT_AUTH : Usage_Type::TLS_SERVER_AUTH;
    callbacks.tls_verify_cert_chain(certs, ocsp_responses, trusted_CAs, usage, hostname, policy);
    }
 
@@ -178,7 +178,7 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
                                Credentials_Manager& credentials_manager,
                                Callbacks& callbacks) :
    m_request_context(cert_request.context()),
-   m_side(Connection_Side::CLIENT)
+   m_side(Connection_Side::Client)
    {
    setup_entries(credentials_manager.find_cert_chain(
                     filter_signature_schemes(cert_request.signature_schemes()),
@@ -200,7 +200,7 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
    //    [In the case of server authentication], this field
    //    SHALL be zero length
    m_request_context(),
-   m_side(Connection_Side::SERVER)
+   m_side(Connection_Side::Server)
    {
    BOTAN_ASSERT_NOMSG(client_hello.extensions().has<Signature_Algorithms>());
 
@@ -226,7 +226,7 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
 
    // RFC 8446 4.4.2
    //    [...] in the case of server authentication, this field SHALL be zero length.
-   if(m_side == Connection_Side::SERVER && !m_request_context.empty())
+   if(m_side == Connection_Side::Server && !m_request_context.empty())
       {
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                           "Server Certificate message must not contain a request context");
@@ -301,7 +301,7 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
       // RFC 8446 4.4.2.4
       //    If the server supplies an empty Certificate message, the client MUST
       //    abort the handshake with a "decode_error" alert.
-      if(m_side == SERVER)
+      if(m_side == Connection_Side::Server)
          {
          throw TLS_Exception(Alert::DECODE_ERROR, "No certificates sent by server");
          }

@@ -268,7 +268,7 @@ class Server : public Peer, public std::enable_shared_from_this<Server>
             }
 
          reset_timeout("handshake");
-         m_stream->async_handshake(Botan::TLS::Connection_Side::SERVER,
+         m_stream->async_handshake(Botan::TLS::Connection_Side::Server,
                                    std::bind(&Server::handle_handshake, shared_from_this(), _1));
          }
 
@@ -499,7 +499,7 @@ class Test_Conversation : public TestBase, public net::coroutine, public std::en
             m_result.expect_success("connect", ec);
 
             m_client->reset_timeout("handshake");
-            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::CLIENT,
+            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::Client,
                   std::bind(test_case, shared_from_this(), _1));
             m_result.expect_success("handshake", ec);
 
@@ -547,7 +547,7 @@ class Test_Conversation_Sync : public Synchronous_Test
          net::connect(m_client->stream().lowest_layer(), k_endpoints, ec);
          m_result.expect_success("connect", ec);
 
-         m_client->stream().handshake(Botan::TLS::Connection_Side::CLIENT, ec);
+         m_client->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
          m_result.expect_success("handshake", ec);
 
          net::write(m_client->stream(),
@@ -595,7 +595,7 @@ class Test_Eager_Close : public TestBase, public net::coroutine, public std::ena
             m_result.expect_success("connect", ec);
 
             m_client->reset_timeout("handshake");
-            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::CLIENT,
+            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::Client,
                   std::bind(test_case, shared_from_this(), _1));
             m_result.expect_success("handshake", ec);
 
@@ -625,7 +625,7 @@ class Test_Eager_Close_Sync : public Synchronous_Test
          net::connect(m_client->stream().lowest_layer(), k_endpoints, ec);
          m_result.expect_success("connect", ec);
 
-         m_client->stream().handshake(Botan::TLS::Connection_Side::CLIENT, ec);
+         m_client->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
          m_result.expect_success("handshake", ec);
 
          m_client->stream().shutdown(ec);
@@ -662,7 +662,7 @@ class Test_Close_Without_Shutdown
             m_result.expect_success("connect", ec);
 
             m_client->reset_timeout("handshake");
-            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::CLIENT,
+            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::Client,
                   std::bind(test_case, shared_from_this(), _1));
             m_result.expect_success("handshake", ec);
 
@@ -703,7 +703,7 @@ class Test_Close_Without_Shutdown_Sync : public Synchronous_Test
          net::connect(m_client->stream().lowest_layer(), k_endpoints, ec);
          m_result.expect_success("connect", ec);
 
-         m_client->stream().handshake(Botan::TLS::Connection_Side::CLIENT, ec);
+         m_client->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
          m_result.expect_success("handshake", ec);
 
          m_server->expect_short_read();
@@ -738,7 +738,7 @@ class Test_No_Shutdown_Response : public TestBase, public net::coroutine,
             m_result.expect_success("connect", ec);
 
             m_client->reset_timeout("handshake");
-            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::CLIENT,
+            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::Client,
                   std::bind(test_case, shared_from_this(), _1));
             m_result.expect_success("handshake", ec);
 
@@ -778,7 +778,7 @@ class Test_No_Shutdown_Response_Sync : public Synchronous_Test
          net::connect(m_client->stream().lowest_layer(), k_endpoints, ec);
          m_result.expect_success("connect", ec);
 
-         m_client->stream().handshake(Botan::TLS::Connection_Side::CLIENT, ec);
+         m_client->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
          m_result.expect_success("handshake", ec);
 
          net::write(m_client->stream(),

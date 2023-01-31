@@ -121,7 +121,7 @@ void Session_Manager_In_Memory::save(const Session& session)
 
    m_sessions[session_id_str] = session.encrypt(m_session_key, m_rng);
 
-   if(session.side() == CLIENT && !session.server_info().empty())
+   if(session.side() == Connection_Side::Client && !session.server_info().empty())
       m_info_sessions[session.server_info()] = session_id_str;
    }
 

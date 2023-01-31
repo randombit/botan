@@ -46,7 +46,7 @@ class TLS_Session_Tests final : public Test
                                      Botan::secure_vector<uint8_t>{0xCC, 0xDD},
                                      Botan::TLS::Protocol_Version::TLS_V12,
                                      0xC02F,
-                                     Botan::TLS::CLIENT,
+                                     Botan::TLS::Connection_Side::Client,
                                      true,
                                      false,
                                      std::vector<Botan::X509_Certificate>(),
@@ -91,7 +91,7 @@ class TLS_Session_Tests final : public Test
                                      Botan::secure_vector<uint8_t>{0xCC, 0xEE},
                                      Botan::TLS::Protocol_Version::TLS_V12,
                                      0xBAAD, // cipher suite does not exist
-                                     Botan::TLS::CLIENT,
+                                     Botan::TLS::Connection_Side::Client,
                                      true,
                                      false,
                                      std::vector<Botan::X509_Certificate>(),

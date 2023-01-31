@@ -206,7 +206,7 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side)
    // flip side as we are reading
    std::shared_ptr<Connection_Cipher_State> read_state(
       new Connection_Cipher_State(pending->version(),
-                                  (side == CLIENT) ? SERVER : CLIENT,
+                                  (side == Connection_Side::Client) ? Connection_Side::Server : Connection_Side::Client,
                                   false,
                                   pending->ciphersuite(),
                                   pending->session_keys(),

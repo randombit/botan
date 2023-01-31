@@ -42,7 +42,7 @@ std::vector<uint8_t> finished_compute_verify_12(const Handshake_State& state,
 
    std::vector<uint8_t> input;
    std::vector<uint8_t> label;
-   label += (side == CLIENT)
+   label += (side == Connection_Side::Client)
             ? std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL))
             : std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
 

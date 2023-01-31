@@ -28,7 +28,7 @@ class Transcript_Hash_State;
 class BOTAN_TEST_API Handshake_Layer
    {
    public:
-      Handshake_Layer(Connection_Side whoami) : m_peer(whoami == SERVER ? CLIENT : SERVER) {}
+      Handshake_Layer(Connection_Side whoami) : m_peer(whoami == Connection_Side::Server ? Connection_Side::Client : Connection_Side::Server) {}
 
       /**
        * Reads data that was received in handshake records and stores it internally for further

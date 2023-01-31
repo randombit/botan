@@ -526,11 +526,11 @@ Key_Share::Key_Share(TLS_Data_Reader& reader,
       {
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_ClientHello(reader, extension_size));
       }
-   else if(message_type == HELLO_RETRY_REQUEST)  // Connection_Side::SERVER
+   else if(message_type == HELLO_RETRY_REQUEST)  // Connection_Side::Server
       {
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_HelloRetryRequest(reader, extension_size));
       }
-   else if(message_type == SERVER_HELLO)  // Connection_Side::SERVER
+   else if(message_type == SERVER_HELLO)  // Connection_Side::Server
       {
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_ServerHello(reader, extension_size));
       }
