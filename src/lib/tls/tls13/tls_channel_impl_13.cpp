@@ -96,10 +96,10 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
 
          // RFC 8446 5.1
          //   Handshake messages MUST NOT be interleaved with other record types.
-         if(record.type != HANDSHAKE && m_handshake_layer.has_pending_data())
+         if(record.type != Record_Type::HANDSHAKE && m_handshake_layer.has_pending_data())
             { throw Unexpected_Message("Expected remainder of a handshake message"); }
 
-         if(record.type == HANDSHAKE)
+         if(record.type == Record_Type::HANDSHAKE)
             {
             m_handshake_layer.copy_data(record.fragment);
 
@@ -163,21 +163,24 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
                   }
                }
             }
-         else if(record.type == CHANGE_CIPHER_SPEC)
+         else if(record.type == Record_Type::CHANGE_CIPHER_SPEC)
             {
             process_dummy_change_cipher_spec();
             }
-         else if(record.type == APPLICATION_DATA)
+         else if(record.type == Record_Type::APPLICATION_DATA)
             {
             BOTAN_ASSERT(record.seq_no.has_value(), "decrypted application traffic had a sequence number");
             callbacks().tls_record_received(record.seq_no.value(), record.fragment.data(), record.fragment.size());
             }
-         else if(record.type == ALERT)
+         else if(record.type == Record_Type::ALERT)
             {
             process_alert(record.fragment);
             }
          else
-            { throw Unexpected_Message("Unexpected record type " + std::to_string(record.type) + " from counterparty"); }
+            {
+            throw Unexpected_Message("Unexpected record type " +
+                                     std::to_string(static_cast<size_t>(record.type)) +
+                                     " from counterparty"); }
          }
       }
    catch(TLS_Exception& e)
@@ -345,7 +348,7 @@ void Channel_Impl_13::update_traffic_keys(bool request_peer_update)
    m_cipher_state->update_write_keys();
    }
 
-void Channel_Impl_13::send_record(uint8_t record_type, const std::vector<uint8_t>& record)
+void Channel_Impl_13::send_record(Record_Type record_type, const std::vector<uint8_t>& record)
    {
    BOTAN_STATE_CHECK(!is_downgrading());
    BOTAN_STATE_CHECK(m_can_write);

@@ -37,10 +37,10 @@ Record_Type read_record_type(const uint8_t type_byte)
    // RFC 8446 5.
    //    If a TLS implementation receives an unexpected record type,
    //    it MUST terminate the connection with an "unexpected_message" alert.
-   if(type_byte != Record_Type::APPLICATION_DATA
-         && type_byte != Record_Type::HANDSHAKE
-         && type_byte != Record_Type::ALERT
-         && type_byte != Record_Type::CHANGE_CIPHER_SPEC)
+   if(type_byte != static_cast<uint8_t>(Record_Type::APPLICATION_DATA) &&
+      type_byte != static_cast<uint8_t>(Record_Type::HANDSHAKE) &&
+      type_byte != static_cast<uint8_t>(Record_Type::ALERT) &&
+      type_byte != static_cast<uint8_t>(Record_Type::CHANGE_CIPHER_SPEC))
       {
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "TLS record type had unexpected value");
       }
@@ -310,9 +310,9 @@ Record_Layer::ReadResult<Record> Record_Layer::next_record(Cipher_State* cipher_
    // RFC 8446 5.
    //    An implementation may receive an unencrypted [CCS] at any time
    if(cipher_state != nullptr
-         && plaintext_header.type != APPLICATION_DATA
-         && plaintext_header.type != CHANGE_CIPHER_SPEC
-         && (!cipher_state->must_expect_unprotected_alert_traffic() || plaintext_header.type != ALERT))
+      && plaintext_header.type != Record_Type::APPLICATION_DATA
+      && plaintext_header.type != Record_Type::CHANGE_CIPHER_SPEC
+      && (!cipher_state->must_expect_unprotected_alert_traffic() || plaintext_header.type != Record_Type::ALERT))
       {
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
             "unprotected record received where protected traffic was expected");

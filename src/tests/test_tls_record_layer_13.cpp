@@ -392,7 +392,7 @@ std::vector<Test::Result> write_records()
       {
       Botan_Tests::CHECK("prepare an zero-length application data fragment", [&](auto& result)
          {
-         auto record = record_layer_client().prepare_records(Botan::TLS::APPLICATION_DATA, {}, cs.get());
+         auto record = record_layer_client().prepare_records(Botan::TLS::Record_Type::APPLICATION_DATA, {}, cs.get());
 
          result.require("record header was added", record.size() > Botan::TLS::TLS_HEADER_SIZE + 1 /* encrypted content type */);
          }),
@@ -409,7 +409,7 @@ std::vector<Test::Result> write_records()
                                           "54 13 69 1e 52 9a af 2c 00 2b 00 03 02 03 04 00 0d 00 20 00 1e"
                                           "04 03 05 03 06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02"
                                           "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01");
-         auto record = record_layer_client().prepare_records(Botan::TLS::HANDSHAKE, client_hello_msg);
+         auto record = record_layer_client().prepare_records(Botan::TLS::Record_Type::HANDSHAKE, client_hello_msg);
 
          result.require("record header was added", record.size() == client_hello_msg.size() + Botan::TLS::TLS_HEADER_SIZE);
 
@@ -434,7 +434,7 @@ std::vector<Test::Result> write_records()
       Botan_Tests::CHECK("large messages are sharded", [&](auto& result)
          {
          const std::vector<uint8_t> large_client_hello(Botan::TLS::MAX_PLAINTEXT_SIZE + 4096);
-         auto record = record_layer_client().prepare_records(Botan::TLS::HANDSHAKE, large_client_hello);
+         auto record = record_layer_client().prepare_records(Botan::TLS::Record_Type::HANDSHAKE, large_client_hello);
 
          result.test_gte("produces at least two record headers", record.size(),
                          large_client_hello.size() + 2 * Botan::TLS::TLS_HEADER_SIZE);
@@ -711,12 +711,12 @@ read_encrypted_records()
 
          const auto srv_hello = client.next_record(nullptr);
          result.confirm("read a record", std::holds_alternative<TLS::Record>(srv_hello));
-         result.confirm("is handshake record", std::get<TLS::Record>(srv_hello).type == TLS::HANDSHAKE);
+         result.confirm("is handshake record", std::get<TLS::Record>(srv_hello).type == TLS::Record_Type::HANDSHAKE);
 
          auto cs = rfc8448_rtt1_handshake_traffic();
          const auto enc_exts = client.next_record(cs.get());
          result.confirm("read a record", std::holds_alternative<TLS::Record>(enc_exts));
-         result.confirm("is handshake record", std::get<TLS::Record>(enc_exts).type == TLS::HANDSHAKE);
+         result.confirm("is handshake record", std::get<TLS::Record>(enc_exts).type == TLS::Record_Type::HANDSHAKE);
          }),
 
       Botan_Tests::CHECK("read a padded record", [&](Test::Result& result)

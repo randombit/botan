@@ -315,7 +315,7 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
             return needed; // need more data to complete record
 
          // Ignore invalid records in DTLS
-         if(m_is_datagram && record.type() == NO_RECORD)
+         if(m_is_datagram && record.type() == Record_Type::NO_RECORD)
             {
             return 0;
             }
@@ -330,7 +330,7 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
 
          const bool initial_record = epoch0_restart || (!pending_state() && !active_state());
 
-         if(record.type() != ALERT)
+         if(record.type() != Record_Type::ALERT)
             {
             if(initial_record)
                {
@@ -360,13 +360,13 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
                }
             }
 
-         if(record.type() == HANDSHAKE || record.type() == CHANGE_CIPHER_SPEC)
+         if(record.type() == Record_Type::HANDSHAKE || record.type() == Record_Type::CHANGE_CIPHER_SPEC)
             {
             if(m_has_been_closed)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received handshake data after connection closure");
             process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
             }
-         else if(record.type() == APPLICATION_DATA)
+         else if(record.type() == Record_Type::APPLICATION_DATA)
             {
             if(m_has_been_closed)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received application data after connection closure");
@@ -374,13 +374,13 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Can't interleave application and handshake data");
             process_application_data(record.sequence(), m_record_buf);
             }
-         else if(record.type() == ALERT)
+         else if(record.type() == Record_Type::ALERT)
             {
             process_alert(m_record_buf);
             }
-         else if(record.type() != NO_RECORD)
+         else if(record.type() != Record_Type::NO_RECORD)
             throw Unexpected_Message("Unexpected record type " +
-                                     std::to_string(record.type()) +
+                                     std::to_string(static_cast<size_t>(record.type())) +
                                      " from counterparty");
          }
 
@@ -515,7 +515,7 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record)
     }
 
 void Channel_Impl_12::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch,
-                                   uint8_t record_type, const uint8_t input[], size_t length)
+                                   Record_Type record_type, const uint8_t input[], size_t length)
    {
    BOTAN_ASSERT(m_pending_state || m_active_state, "Some connection state exists");
 
@@ -526,19 +526,24 @@ void Channel_Impl_12::write_record(Connection_Cipher_State* cipher_state, uint16
 
    if(cipher_state == nullptr)
       {
-      TLS::write_unencrypted_record(m_writebuf, record_type, record_version, next_seq,
+      TLS::write_unencrypted_record(m_writebuf,
+                                    static_cast<uint8_t>(record_type),
+                                    record_version, next_seq,
                                     input, length);
       }
    else
       {
-      TLS::write_record(m_writebuf, record_type, record_version, next_seq,
+      TLS::write_record(m_writebuf,
+                        static_cast<uint8_t>(record_type),
+                        record_version, next_seq,
                         input, length, *cipher_state, m_rng);
       }
 
    callbacks().tls_emit_data(m_writebuf.data(), m_writebuf.size());
    }
 
-void Channel_Impl_12::send_record_array(uint16_t epoch, uint8_t type, const uint8_t input[], size_t length)
+void Channel_Impl_12::send_record_array(uint16_t epoch, Record_Type type,
+                                        const uint8_t input[], size_t length)
    {
    if(length == 0)
       return;
@@ -555,13 +560,13 @@ void Channel_Impl_12::send_record_array(uint16_t epoch, uint8_t type, const uint
       }
    }
 
-void Channel_Impl_12::send_record(uint8_t record_type, const std::vector<uint8_t>& record)
+void Channel_Impl_12::send_record(Record_Type record_type, const std::vector<uint8_t>& record)
    {
    send_record_array(sequence_numbers().current_write_epoch(),
                      record_type, record.data(), record.size());
    }
 
-void Channel_Impl_12::send_record_under_epoch(uint16_t epoch, uint8_t record_type,
+void Channel_Impl_12::send_record_under_epoch(uint16_t epoch, Record_Type record_type,
       const std::vector<uint8_t>& record)
    {
    send_record_array(epoch, record_type, record.data(), record.size());
@@ -573,7 +578,7 @@ void Channel_Impl_12::send(const uint8_t buf[], size_t buf_size)
       throw Invalid_State("Data cannot be sent on inactive TLS connection");
 
    send_record_array(sequence_numbers().current_write_epoch(),
-                     APPLICATION_DATA, buf, buf_size);
+                     Record_Type::APPLICATION_DATA, buf, buf_size);
    }
 
 void Channel_Impl_12::send_alert(const Alert& alert)
@@ -583,7 +588,7 @@ void Channel_Impl_12::send_alert(const Alert& alert)
       {
       try
          {
-         send_record(ALERT, alert.serialize());
+         send_record(Record_Type::ALERT, alert.serialize());
          }
       catch(...) { /* swallow it */ }
       }
