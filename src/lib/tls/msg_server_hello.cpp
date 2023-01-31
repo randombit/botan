@@ -195,7 +195,7 @@ std::vector<uint8_t> Server_Hello::serialize() const
 
 Handshake_Type Server_Hello::type() const
    {
-   return SERVER_HELLO;
+   return Handshake_Type::SERVER_HELLO;
    }
 
 Protocol_Version Server_Hello::legacy_version() const

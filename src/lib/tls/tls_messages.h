@@ -53,7 +53,7 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message
    {
    public:
       std::vector<uint8_t> serialize() const override;
-      Handshake_Type type() const override { return HELLO_VERIFY_REQUEST; }
+      Handshake_Type type() const override { return Handshake_Type::HELLO_VERIFY_REQUEST; }
 
       const std::vector<uint8_t>& cookie() const { return m_cookie; }
 
@@ -438,8 +438,8 @@ class BOTAN_UNSTABLE_API Hello_Retry_Request final : public Server_Hello_13
       Hello_Retry_Request(const Client_Hello_13& ch, Named_Group selected_group, const Policy& policy, Callbacks& cb);
 
    public:
-      Handshake_Type type() const override { return HELLO_RETRY_REQUEST; }
-      Handshake_Type wire_type() const override { return SERVER_HELLO; }
+      Handshake_Type type() const override { return Handshake_Type::HELLO_RETRY_REQUEST; }
+      Handshake_Type wire_type() const override { return Handshake_Type::SERVER_HELLO; }
    };
 
 #endif // BOTAN_HAS_TLS_13
@@ -466,7 +466,7 @@ class BOTAN_UNSTABLE_API Encrypted_Extensions final : public Handshake_Message
 class BOTAN_UNSTABLE_API Client_Key_Exchange final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return CLIENT_KEX; }
+      Handshake_Type type() const override { return Handshake_Type::CLIENT_KEX; }
 
       const secure_vector<uint8_t>& pre_master_secret() const
          { return m_pre_master; }
@@ -500,7 +500,7 @@ class BOTAN_UNSTABLE_API Client_Key_Exchange final : public Handshake_Message
 class BOTAN_UNSTABLE_API Certificate_12 final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return CERTIFICATE; }
+      Handshake_Type type() const override { return Handshake_Type::CERTIFICATE; }
       const std::vector<X509_Certificate>& cert_chain() const { return m_certs; }
 
       size_t count() const { return m_certs.size(); }
@@ -536,7 +536,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
          };
 
    public:
-      Handshake_Type type() const override { return CERTIFICATE; }
+      Handshake_Type type() const override { return Handshake_Type::CERTIFICATE; }
       std::vector<X509_Certificate> cert_chain() const;
 
       size_t count() const { return m_entries.size(); }
@@ -611,7 +611,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
 class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return CERTIFICATE_STATUS; }
+      Handshake_Type type() const override { return Handshake_Type::CERTIFICATE_STATUS; }
 
       //std::shared_ptr<const OCSP::Response> response() const { return m_response; }
 
@@ -708,7 +708,7 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
 class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return CERTIFICATE_VERIFY; }
+      Handshake_Type type() const override { return Handshake_Type::CERTIFICATE_VERIFY; }
 
       Signature_Scheme signature_scheme() const { return m_scheme; }
 
@@ -792,7 +792,7 @@ class BOTAN_UNSTABLE_API Finished : public Handshake_Message
    public:
       explicit Finished(const std::vector<uint8_t>& buf);
 
-      Handshake_Type type() const override { return FINISHED; }
+      Handshake_Type type() const override { return Handshake_Type::FINISHED; }
 
       std::vector<uint8_t> verify_data() const;
 
@@ -833,7 +833,7 @@ class BOTAN_UNSTABLE_API Finished_13 final : public Finished
 class BOTAN_UNSTABLE_API Hello_Request final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return HELLO_REQUEST; }
+      Handshake_Type type() const override { return Handshake_Type::HELLO_REQUEST; }
 
       explicit Hello_Request(Handshake_IO& io);
       explicit Hello_Request(const std::vector<uint8_t>& buf);
@@ -848,7 +848,7 @@ class BOTAN_UNSTABLE_API Hello_Request final : public Handshake_Message
 class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return SERVER_KEX; }
+      Handshake_Type type() const override { return Handshake_Type::SERVER_KEX; }
 
       const std::vector<uint8_t>& params() const { return m_params; }
 
@@ -888,7 +888,7 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
 class BOTAN_UNSTABLE_API Server_Hello_Done final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return SERVER_HELLO_DONE; }
+      Handshake_Type type() const override { return Handshake_Type::SERVER_HELLO_DONE; }
 
       explicit Server_Hello_Done(Handshake_IO& io, Handshake_Hash& hash);
       explicit Server_Hello_Done(const std::vector<uint8_t>& buf);
@@ -903,7 +903,7 @@ class BOTAN_UNSTABLE_API Server_Hello_Done final : public Handshake_Message
 class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return NEW_SESSION_TICKET; }
+      Handshake_Type type() const override { return Handshake_Type::NEW_SESSION_TICKET; }
 
       uint32_t ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
       const std::vector<uint8_t>& ticket() const { return m_ticket; }
@@ -930,7 +930,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message
 class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return NEW_SESSION_TICKET; }
+      Handshake_Type type() const override { return Handshake_Type::NEW_SESSION_TICKET; }
 
       New_Session_Ticket_13(const std::vector<uint8_t>& buf,
                             Connection_Side from);
@@ -973,7 +973,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
 class BOTAN_UNSTABLE_API Change_Cipher_Spec final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return HANDSHAKE_CCS; }
+      Handshake_Type type() const override { return Handshake_Type::HANDSHAKE_CCS; }
 
       std::vector<uint8_t> serialize() const override
          { return std::vector<uint8_t>(1, 1); }
@@ -982,7 +982,7 @@ class BOTAN_UNSTABLE_API Change_Cipher_Spec final : public Handshake_Message
 class BOTAN_UNSTABLE_API Key_Update final : public Handshake_Message
    {
    public:
-      Handshake_Type type() const override { return  KEY_UPDATE; }
+      Handshake_Type type() const override { return Handshake_Type::KEY_UPDATE; }
 
       explicit Key_Update(const bool request_peer_update);
       explicit Key_Update(const std::vector<uint8_t>& buf);

@@ -905,7 +905,7 @@ EarlyDataIndication::EarlyDataIndication(TLS_Data_Reader& reader,
                                          uint16_t extension_size,
                                          Handshake_Type message_type)
    {
-   if(message_type == NEW_SESSION_TICKET)
+   if(message_type == Handshake_Type::NEW_SESSION_TICKET)
       {
       if(extension_size != 4)
          {

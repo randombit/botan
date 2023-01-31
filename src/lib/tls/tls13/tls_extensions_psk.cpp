@@ -66,14 +66,14 @@ PSK::PSK(TLS_Data_Reader& reader,
          uint16_t extension_size,
          Handshake_Type message_type)
    {
-   if(message_type == SERVER_HELLO)
+   if(message_type == Handshake_Type::SERVER_HELLO)
       {
       if(extension_size != 2)
          throw TLS_Exception(Alert::DECODE_ERROR, "Server provided a malformed PSK extension");
 
       m_impl = std::make_unique<PSK_Internal>(Server_PSK{reader.get_uint16_t()});
       }
-   else if(message_type == CLIENT_HELLO)
+   else if(message_type == Handshake_Type::CLIENT_HELLO)
       {
       std::vector<Client_PSK> psks;
 

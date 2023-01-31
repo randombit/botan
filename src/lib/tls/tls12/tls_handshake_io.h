@@ -183,7 +183,7 @@ class Datagram_Handshake_IO final : public Handshake_IO
                               size_t fragment_length,
                               size_t fragment_offset,
                               uint16_t epoch,
-                              uint8_t msg_type,
+                              Handshake_Type msg_type,
                               size_t msg_length);
 
             bool complete() const;
@@ -192,7 +192,7 @@ class Datagram_Handshake_IO final : public Handshake_IO
 
             std::pair<Handshake_Type, std::vector<uint8_t>> message() const;
          private:
-            uint8_t m_msg_type = HANDSHAKE_NONE;
+            Handshake_Type m_msg_type = Handshake_Type::HANDSHAKE_NONE;
             size_t m_msg_length = 0;
             uint16_t m_epoch = 0;
 
@@ -207,7 +207,7 @@ class Datagram_Handshake_IO final : public Handshake_IO
          Message_Info(uint16_t e, Handshake_Type mt, const std::vector<uint8_t>& msg) :
             epoch(e), msg_type(mt), msg_bits(msg) {}
 
-         Message_Info() : epoch(0xFFFF), msg_type(HANDSHAKE_NONE) {}
+         Message_Info() : epoch(0xFFFF), msg_type(Handshake_Type::HANDSHAKE_NONE) {}
 
          uint16_t epoch;
          Handshake_Type msg_type;

@@ -83,7 +83,8 @@ size_t find_client_hello_truncation_mark(std::span<const uint8_t> client_hello)
    TLS_Data_Reader reader("Client Hello Truncation", client_hello);
 
    // handshake message type
-   BOTAN_ASSERT_NOMSG(reader.get_byte() == CLIENT_HELLO);
+   BOTAN_ASSERT_NOMSG(reader.get_byte() ==
+                      static_cast<uint8_t>(Handshake_Type::CLIENT_HELLO));
 
    // message length
    reader.discard_next(3);
@@ -164,7 +165,8 @@ void Transcript_Hash_State::update(std::span<const uint8_t> serialized_message_s
 
       // Check whether we should generate a truncated hash for supporting PSK
       // binder calculation or verification. See RFC 8446 4.2.11.2.
-      if(serialized_message_length > 0 && *serialized_message == CLIENT_HELLO)
+      if(serialized_message_length > 0 &&
+         *serialized_message == static_cast<uint8_t>(Handshake_Type::CLIENT_HELLO))
          {
          truncation_mark =
             find_client_hello_truncation_mark(serialized_message_s);

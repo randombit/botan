@@ -291,7 +291,7 @@ Server_Impl_12::Server_Impl_12(const Channel_Impl::Downgrade_Information& downgr
 std::unique_ptr<Handshake_State> Server_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io)
    {
    std::unique_ptr<Handshake_State> state(new Server_Handshake_State(std::move(io), callbacks()));
-   state->set_expected_next(CLIENT_HELLO);
+   state->set_expected_next(Handshake_Type::CLIENT_HELLO);
    return state;
    }
 
@@ -477,7 +477,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
                pending_state.handshake_io().send(verify);
 
             pending_state.client_hello(static_cast<Client_Hello_12*>(nullptr));
-            pending_state.set_expected_next(CLIENT_HELLO);
+            pending_state.set_expected_next(Handshake_Type::CLIENT_HELLO);
             return;
             }
          }
@@ -541,16 +541,16 @@ void Server_Impl_12::process_certificate_msg(Server_Handshake_State& pending_sta
    if(pending_state.client_certs()->empty() && policy().require_client_certificate_authentication())
       throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Policy requires client send a certificate, but it did not");
 
-   pending_state.set_expected_next(CLIENT_KEX);
+   pending_state.set_expected_next(Handshake_Type::CLIENT_KEX);
    }
 
 void Server_Impl_12::process_client_key_exchange_msg(Server_Handshake_State& pending_state,
       const std::vector<uint8_t>& contents)
    {
-   if(pending_state.received_handshake_msg(CERTIFICATE) && !pending_state.client_certs()->empty())
-      pending_state.set_expected_next(CERTIFICATE_VERIFY);
+   if(pending_state.received_handshake_msg(Handshake_Type::CERTIFICATE) && !pending_state.client_certs()->empty())
+      pending_state.set_expected_next(Handshake_Type::CERTIFICATE_VERIFY);
    else
-      pending_state.set_expected_next(HANDSHAKE_CCS);
+      pending_state.set_expected_next(Handshake_Type::HANDSHAKE_CCS);
 
    pending_state.client_kex(new Client_Key_Exchange(contents, pending_state,
                                                     pending_state.server_rsa_kex_key(),
@@ -561,7 +561,7 @@ void Server_Impl_12::process_client_key_exchange_msg(Server_Handshake_State& pen
 
 void Server_Impl_12::process_change_cipher_spec_msg(Server_Handshake_State& pending_state)
    {
-   pending_state.set_expected_next(FINISHED);
+   pending_state.set_expected_next(Handshake_Type::FINISHED);
    change_cipher_spec_reader(Connection_Side::Server);
    }
 
@@ -610,14 +610,14 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
       throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
       }
 
-   pending_state.set_expected_next(HANDSHAKE_CCS);
+   pending_state.set_expected_next(Handshake_Type::HANDSHAKE_CCS);
    }
 
 void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
       Handshake_Type type,
       const std::vector<uint8_t>& contents)
    {
-   pending_state.set_expected_next(HANDSHAKE_NONE);
+   pending_state.set_expected_next(Handshake_Type::HANDSHAKE_NONE);
 
    if(pending_state.handshake_io().have_more_data())
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
@@ -705,29 +705,31 @@ void Server_Impl_12::process_handshake_msg(const Handshake_State* active_state,
    * state of the hash *before* this message so we delay adding them
    * to the hash computation until we've processed them below.
    */
-   if(type != HANDSHAKE_CCS && type != FINISHED && type != CERTIFICATE_VERIFY)
+   if(type != Handshake_Type::HANDSHAKE_CCS &&
+      type != Handshake_Type::FINISHED &&
+      type != Handshake_Type::CERTIFICATE_VERIFY)
       {
       state.hash().update(state.handshake_io().format(contents, type));
       }
 
    switch(type)
       {
-      case CLIENT_HELLO:
+      case Handshake_Type::CLIENT_HELLO:
          return this->process_client_hello_msg(active_state, state, contents, epoch0_restart);
 
-      case CERTIFICATE:
+      case Handshake_Type::CERTIFICATE:
          return this->process_certificate_msg(state, contents);
 
-      case CLIENT_KEX:
+      case Handshake_Type::CLIENT_KEX:
          return this->process_client_key_exchange_msg(state, contents);
 
-      case CERTIFICATE_VERIFY:
+      case Handshake_Type::CERTIFICATE_VERIFY:
          return this->process_certificate_verify_msg(state, type, contents);
 
-      case HANDSHAKE_CCS:
+      case Handshake_Type::HANDSHAKE_CCS:
          return this->process_change_cipher_spec_msg(state);
 
-      case FINISHED:
+      case Handshake_Type::FINISHED:
          return this->process_finished_msg(state, type, contents);
 
       default:
@@ -803,7 +805,7 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
    change_cipher_spec_writer(Connection_Side::Server);
 
    pending_state.server_finished(new Finished_12(pending_state.handshake_io(), pending_state, Connection_Side::Server));
-   pending_state.set_expected_next(HANDSHAKE_CCS);
+   pending_state.set_expected_next(Handshake_Type::HANDSHAKE_CCS);
    }
 
 void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
@@ -939,11 +941,11 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
       if they wanted. In TLS v1.0 and later clients must send a
       (possibly empty) Certificate message
       */
-      pending_state.set_expected_next(CERTIFICATE);
+      pending_state.set_expected_next(Handshake_Type::CERTIFICATE);
       }
    else
       {
-      pending_state.set_expected_next(CLIENT_KEX);
+      pending_state.set_expected_next(Handshake_Type::CLIENT_KEX);
       }
 
    pending_state.server_hello_done(new Server_Hello_Done(pending_state.handshake_io(), pending_state.hash()));

@@ -61,8 +61,7 @@ enum class Record_Type: uint8_t {
    Heartbeat          = 24, // RFC 6520 (TLS 1.3)
 };
 
-// This will become an enum class in a future major release
-enum Handshake_Type {
+enum class Handshake_Type {
    HELLO_REQUEST        = 0,
    CLIENT_HELLO         = 1,
    SERVER_HELLO         = 2,

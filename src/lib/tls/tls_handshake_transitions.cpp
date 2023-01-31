@@ -20,94 +20,94 @@ uint32_t bitmask_for_handshake_type(Handshake_Type type)
    {
    switch(type)
       {
-      case HELLO_VERIFY_REQUEST:
+      case Handshake_Type::HELLO_VERIFY_REQUEST:
          return (1 << 0);
 
-      case HELLO_REQUEST:
+      case Handshake_Type::HELLO_REQUEST:
          return (1 << 1);
 
-      case CLIENT_HELLO:
+      case Handshake_Type::CLIENT_HELLO:
          return (1 << 2);
 
-      case SERVER_HELLO:
+      case Handshake_Type::SERVER_HELLO:
          return (1 << 3);
 
-      case CERTIFICATE:
+      case Handshake_Type::CERTIFICATE:
          return (1 << 4);
 
-      case CERTIFICATE_URL:
+      case Handshake_Type::CERTIFICATE_URL:
          return (1 << 5);
 
-      case CERTIFICATE_STATUS:
+      case Handshake_Type::CERTIFICATE_STATUS:
          return (1 << 6);
 
-      case SERVER_KEX:
+      case Handshake_Type::SERVER_KEX:
          return (1 << 7);
 
-      case CERTIFICATE_REQUEST:
+      case Handshake_Type::CERTIFICATE_REQUEST:
          return (1 << 8);
 
-      case SERVER_HELLO_DONE:
+      case Handshake_Type::SERVER_HELLO_DONE:
          return (1 << 9);
 
-      case CERTIFICATE_VERIFY:
+      case Handshake_Type::CERTIFICATE_VERIFY:
          return (1 << 10);
 
-      case CLIENT_KEX:
+      case Handshake_Type::CLIENT_KEX:
          return (1 << 11);
 
-      case NEW_SESSION_TICKET:
+      case Handshake_Type::NEW_SESSION_TICKET:
          return (1 << 12);
 
-      case HANDSHAKE_CCS:
+      case Handshake_Type::HANDSHAKE_CCS:
          return (1 << 13);
 
-      case FINISHED:
+      case Handshake_Type::FINISHED:
          return (1 << 14);
 
-      case END_OF_EARLY_DATA:     // RFC 8446
+      case Handshake_Type::END_OF_EARLY_DATA:     // RFC 8446
          return (1 << 15);
 
-      case ENCRYPTED_EXTENSIONS:  // RFC 8446
+      case Handshake_Type::ENCRYPTED_EXTENSIONS:  // RFC 8446
          return (1 << 16);
 
-      case KEY_UPDATE:            // RFC 8446
+      case Handshake_Type::KEY_UPDATE:            // RFC 8446
          return (1 << 17);
 
-      case HELLO_RETRY_REQUEST:   // RFC 8446
+      case Handshake_Type::HELLO_RETRY_REQUEST:   // RFC 8446
          return (1 << 18);
 
       // allow explicitly disabling new handshakes
-      case HANDSHAKE_NONE:
+      case Handshake_Type::HANDSHAKE_NONE:
          return 0;
       }
 
    throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
-                       "Unknown TLS handshake message type " + std::to_string(type));
+                       "Unknown TLS handshake message type " +
+                       std::to_string(static_cast<size_t>(type)));
    }
 
 std::string handshake_mask_to_string(uint32_t mask, char combiner)
    {
-   const Handshake_Type types[] =
-      {
-      HELLO_VERIFY_REQUEST,
-      HELLO_REQUEST,
-      CLIENT_HELLO,
-      SERVER_HELLO,
-      CERTIFICATE,
-      CERTIFICATE_URL,
-      CERTIFICATE_STATUS,
-      SERVER_KEX,
-      CERTIFICATE_REQUEST,
-      SERVER_HELLO_DONE,
-      CERTIFICATE_VERIFY,
-      CLIENT_KEX,
-      NEW_SESSION_TICKET,
-      HANDSHAKE_CCS,
-      FINISHED,
-      END_OF_EARLY_DATA,
-      ENCRYPTED_EXTENSIONS,
-      KEY_UPDATE
+   const Handshake_Type types[] = {
+      Handshake_Type::HELLO_VERIFY_REQUEST,
+      Handshake_Type::HELLO_REQUEST,
+      Handshake_Type::CLIENT_HELLO,
+      Handshake_Type::SERVER_HELLO,
+      Handshake_Type::CERTIFICATE,
+      Handshake_Type::CERTIFICATE_URL,
+      Handshake_Type::CERTIFICATE_STATUS,
+      Handshake_Type::SERVER_KEX,
+      Handshake_Type::CERTIFICATE_REQUEST,
+      Handshake_Type::SERVER_HELLO_DONE,
+      Handshake_Type::CERTIFICATE_VERIFY,
+      Handshake_Type::CLIENT_KEX,
+      Handshake_Type::NEW_SESSION_TICKET,
+      Handshake_Type::HANDSHAKE_CCS,
+      Handshake_Type::FINISHED,
+      Handshake_Type::END_OF_EARLY_DATA,
+      Handshake_Type::ENCRYPTED_EXTENSIONS,
+      Handshake_Type::KEY_UPDATE
       };
 
    std::ostringstream o;
@@ -185,7 +185,7 @@ void Handshake_Transitions::set_expected_next(const std::vector<Handshake_Type>&
 
 bool Handshake_Transitions::change_cipher_spec_expected() const
    {
-   return (bitmask_for_handshake_type(HANDSHAKE_CCS) & m_hand_expecting_mask) != 0;
+   return (bitmask_for_handshake_type(Handshake_Type::HANDSHAKE_CCS) & m_hand_expecting_mask) != 0;
    }
 
 }

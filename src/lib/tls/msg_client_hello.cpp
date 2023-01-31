@@ -181,7 +181,7 @@ Client_Hello::Client_Hello(std::unique_ptr<Client_Hello_Internal> data)
 
 Handshake_Type Client_Hello::type() const
    {
-   return CLIENT_HELLO;
+   return Handshake_Type::CLIENT_HELLO;
    }
 
 Protocol_Version Client_Hello::legacy_version() const
