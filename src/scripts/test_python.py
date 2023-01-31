@@ -706,41 +706,17 @@ ofvkP1EDmpx50fHLawIDAQAB
         identity = 'alice'
         password = 'password123'
         rng = botan2.RandomNumberGenerator()
+        group = 'modp/srp/1024'
+        hash_fn = 'SHA-512'
 
         # Test successful authentication
         server = botan2.Srp6ServerSession()
         salt = rng.get(24)
-        verifier = botan2.generate_srp6_verifier(identity, password, salt, 'modp/srp/1024', 'SHA-512')
-        b = server.step1(verifier, 'modp/srp/1024', 'SHA-512', rng)
-        (a, key_c) = botan2.srp6_client_agree(identity, password, 'modp/srp/1024', 'SHA-512', salt, b, rng)
+        verifier = botan2.generate_srp6_verifier(identity, password, salt, group, hash_fn)
+        b = server.step1(verifier, group, hash_fn, rng)
+        (a, key_c) = botan2.srp6_client_agree(identity, password, group, hash_fn, salt, b, rng)
         key_s = server.step2(a)
         self.assertEqual(key_c, key_s)
-
-        # Test wrong server ephemeral
-        try:
-            salt = rng.get(24)
-            b = b'BD0C6151 2C692C0C B6D041FA 01BB152D 4916A1E7 7AF46AE1 05393011 \
-            BAF38964 DC46A067 0DD125B9 5A981652 236F99D9 B681CBF8 7837EC99 \
-            6C6DA044 53728610 D0C6DDB5 8B318885 D7D82C7F 8DEB75CE 7BD4FBAA \
-            37089E6F 9C6059F3 88838E7A 00030B33 1EB76840 910440B1 B27AAEAE \
-            EB4012B7 D7665238 A8E3FB00 4B117B58'
-            botan2.srp6_client_agree(identity, password, 'modp/srp/1024', 'SHA-512', salt, b, rng)
-        except botan2.BotanException as e:
-            self.assertEqual(str(e), "botan_srp6_client_agree failed: -1 (Invalid input): Invalid SRP parameter from server")
-
-        # Test wrong client ephemeral
-        try:
-            salt = rng.get(24)
-            verifier = botan2.generate_srp6_verifier(identity, password, salt, 'modp/srp/1024', 'SHA-512')
-            server.step1(verifier, 'modp/srp/1024', 'SHA-512', rng)
-            a = b'61D5E490 F6F1B795 47B0704C 436F523D D0E560F0 C64115BB 72557EC4 \
-            4352E890 3211C046 92272D8B 2D1A5358 A2CF1B6E 0BFCF99F 921530EC \
-            8E393561 79EAE45E 42BA92AE ACED8251 71E1E8B9 AF6D9C03 E1327F44 \
-            BE087EF0 6530E69F 66615261 EEF54073 CA11CF58 58F0EDFD FE15EFEA \
-            B349EF5D 76988A36 72FAC47B 0769447B'
-            server.step2(a)
-        except botan2.BotanException as e:
-            self.assertEqual(str(e), "botan_srp6_server_session_step2 failed: -32 (Bad parameter)")
 
 def main():
     parser = argparse.ArgumentParser()

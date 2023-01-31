@@ -94,6 +94,8 @@ srp6_client_agree(const std::string& identifier,
                   const size_t a_bits,
                   RandomNumberGenerator& rng)
    {
+   BOTAN_ARG_CHECK(a_bits <= group.p_bits(), "Invalid a_bits");
+
    const BigInt& g = group.get_g();
    const BigInt& p = group.get_p();
 
@@ -103,6 +105,9 @@ srp6_client_agree(const std::string& identifier,
       throw Decoding_Error("Invalid SRP parameter from server");
 
    std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_id));
+   if(8*hash_fn->output_length() >= group.p_bits())
+      throw Invalid_Argument("Hash function " + hash_id +
+                             " too large for SRP6 with this group");
 
    const BigInt k = hash_seq(*hash_fn, p_bytes, p, g);
 
@@ -116,10 +121,16 @@ srp6_client_agree(const std::string& identifier,
 
    const BigInt g_x_p = group.power_g_p(x, hash_fn->output_length()*8);
 
-   const BigInt B_k_g_x_p = group.mod_p(B - (k * g_x_p));
-   const BigInt a_ux = group.mod_p(a + (u * x));
+   const BigInt B_k_g_x_p = group.mod_p(B - group.multiply_mod_p(k, g_x_p));
 
-   const BigInt S = group.power_b_p(B_k_g_x_p, a_ux, group.p_bits());
+   const BigInt a_ux = a + u*x;
+
+   const size_t max_aux_bits =
+      std::max<size_t>(a_bits + 1,
+                       2*8*hash_fn->output_length());
+   BOTAN_ASSERT_NOMSG(max_aux_bits >= a_ux.bits());
+
+   const BigInt S = group.power_b_p(B_k_g_x_p, a_ux, max_aux_bits);
 
    const SymmetricKey Sk(BigInt::encode_1363(S, p_bytes));
 
@@ -143,6 +154,10 @@ BigInt generate_srp6_verifier(const std::string& identifier,
                               const std::string& hash_id)
    {
    std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_id));
+   if(8*hash_fn->output_length() >= group.p_bits())
+      throw Invalid_Argument("Hash function " + hash_id +
+                             " too large for SRP6 with this group");
+
    const BigInt x = compute_x(*hash_fn, identifier, password, salt);
    return group.power_g_p(x, hash_fn->output_length() * 8);
    }
@@ -163,19 +178,23 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
                                   size_t b_bits,
                                   RandomNumberGenerator& rng)
    {
+   BOTAN_ARG_CHECK(b_bits <= group.p_bits(), "Invalid b_bits");
+
+   m_group = group;
+
    const BigInt& g = group.get_g();
    const BigInt& p = group.get_p();
 
-   m_p_bytes = p.bytes();
    m_v = v;
    m_b = BigInt(rng, b_bits);
-   m_p = p;
    m_hash_id = hash_id;
 
    std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_id));
+   if(8*hash_fn->output_length() >= m_group.p_bits())
+      throw Invalid_Argument("Hash function " + hash_id +
+                             " too large for SRP6 with this group");
 
-   const BigInt k = hash_seq(*hash_fn, m_p_bytes, p, g);
-
+   const BigInt k = hash_seq(*hash_fn, m_group.p_bytes(), p, g);
    m_B = group.mod_p(v*k + group.power_g_p(m_b, b_bits));
 
    return m_B;
@@ -183,15 +202,20 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 
 SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
    {
-   if(A <= 0 || A >= m_p)
+   if(A <= 0 || A >= m_group.get_p())
       throw Decoding_Error("Invalid SRP parameter from client");
 
    std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(m_hash_id));
-   const BigInt u = hash_seq(*hash_fn, m_p_bytes, A, m_B);
+   if(8*hash_fn->output_length() >= m_group.p_bits())
+      throw Invalid_Argument("Hash function " + m_hash_id +
+                             " too large for SRP6 with this group");
 
-   const BigInt S = power_mod(A * power_mod(m_v, u, m_p), m_b, m_p);
+   const BigInt u = hash_seq(*hash_fn, m_group.p_bytes(), A, m_B);
 
-   return BigInt::encode_1363(S, m_p_bytes);
+   const BigInt vup = m_group.power_b_p(m_v, u, m_group.p_bits());
+   const BigInt S = m_group.power_b_p(m_group.multiply_mod_p(A, vup), m_b, m_group.p_bits());
+
+   return BigInt::encode_1363(S, m_group.p_bytes());
    }
 
 }

@@ -28,8 +28,6 @@ class SRP6_KAT_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
          {
-         Test::Result result("SRP6a");
-
          const std::string hash = vars.get_req_str("Hash");
          const std::string username = vars.get_req_str("I");
          const std::string password = vars.get_req_str("P");
@@ -43,21 +41,23 @@ class SRP6_KAT_Tests final : public Text_Based_Test
          const BigInt exp_B = vars.get_req_bn("B");
          const std::vector<uint8_t> exp_S = vars.get_req_bin("S");
 
+         const std::string group_id = Botan::srp6_group_identifier(N, g);
+         if(group_id == "")
+            throw Test_Error("Unknown SRP group used in test data");
+
+         Test::Result result("SRP6a " + group_id);
+
          if(Botan::HashFunction::create(hash) == nullptr)
             {
             result.test_note("Skipping test as hash function not available");
             return result;
             }
 
-         if(Test::run_long_tests() == false && N.bits() >= 4096)
+         if(N.bits() >= 4096 && !Test::run_long_tests())
             {
             result.test_note("Skipping test with long SRP modulus");
             return result;
             }
-
-         const std::string group_id = Botan::srp6_group_identifier(N, g);
-
-         result.test_ne("Known SRP group", group_id, "");
 
          Botan::DL_Group group(group_id);
 
@@ -78,9 +78,8 @@ class SRP6_KAT_Tests final : public Text_Based_Test
 
          const auto S = server.step2(srp_resp.first);
 
-         result.test_eq("SRP client and server agree", srp_resp.second, S);
-
-         result.test_eq("SRP S", srp_resp.second.bits_of(), exp_S);
+         result.test_eq("SRP client S", srp_resp.second.bits_of(), exp_S);
+         result.test_eq("SRP server S", S, exp_S);
 
          return result;
          }
@@ -96,34 +95,52 @@ class SRP6_RT_Tests final : public Test
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
-         Test::Result result("SRP6");
 
          const std::string username = "user";
          const std::string password = "Awellchosen1_to_be_sure_";
-         const std::string group_id = "modp/srp/1024";
          const std::string hash_id = "SHA-256";
 
-         std::vector<uint8_t> salt;
-         Test::rng().random_vec(salt, 16);
+         for(size_t b : { 1024, 1536, 2048, 3072, 4096, 6144, 8192 })
+            {
+            if(b >= 4096 && !Test::run_long_tests())
+               {
+               continue;
+               }
 
-         const Botan::BigInt verifier = Botan::generate_srp6_verifier(username, password, salt, group_id, hash_id);
+            const std::string group_id = "modp/srp/" + std::to_string(b);
+            Test::Result result("SRP6 " + group_id);
 
-         Botan::SRP6_Server_Session server;
+            result.start_timer();
 
-         const Botan::BigInt B = server.step1(verifier, group_id, hash_id, Test::rng());
+            const size_t trials = 8192 / b;
 
-         auto client = srp6_client_agree(username, password, group_id, hash_id, salt, B, Test::rng());
+            for(size_t t = 0; t != trials; ++t)
+               {
+               std::vector<uint8_t> salt;
+               Test::rng().random_vec(salt, 16);
 
-         const Botan::SymmetricKey server_K = server.step2(client.first);
+               const Botan::BigInt verifier =
+                  Botan::generate_srp6_verifier(username, password, salt, group_id, hash_id);
 
-         result.test_eq("computed same keys", client.second.bits_of(), server_K.bits_of());
-         results.push_back(result);
+               Botan::SRP6_Server_Session server;
+
+               const Botan::BigInt B = server.step1(verifier, group_id, hash_id, Test::rng());
+
+               auto client = srp6_client_agree(username, password, group_id, hash_id, salt, B, Test::rng());
+
+               const Botan::SymmetricKey server_K = server.step2(client.first);
+
+               result.test_eq("computed same keys", client.second.bits_of(), server_K.bits_of());
+               }
+            result.end_timer();
+            results.push_back(result);
+            }
 
          return results;
          }
    };
 
-BOTAN_REGISTER_TEST("pake", "srp6", SRP6_RT_Tests);
+BOTAN_REGISTER_TEST("pake", "srp6_rt", SRP6_RT_Tests);
 
 #endif
 
