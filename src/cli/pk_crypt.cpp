@@ -54,7 +54,7 @@ class PK_Encrypt final : public Command
          const std::string aead_algo = get_arg("aead");
 
          std::unique_ptr<Botan::AEAD_Mode> aead =
-            Botan::AEAD_Mode::create(aead_algo, Botan::ENCRYPTION);
+            Botan::AEAD_Mode::create(aead_algo, Botan::Cipher_Dir::Encryption);
 
          if(!aead)
             throw CLI_Usage_Error("The AEAD '" + aead_algo + "' is not available");
@@ -190,7 +190,7 @@ class PK_Decrypt final : public Command
             }
 
          std::unique_ptr<Botan::AEAD_Mode> aead =
-            Botan::AEAD_Mode::create_or_throw(aead_algo, Botan::DECRYPTION);
+            Botan::AEAD_Mode::create_or_throw(aead_algo, Botan::Cipher_Dir::Decryption);
 
          const size_t expected_keylen = aead->key_spec().maximum_keylength();
 

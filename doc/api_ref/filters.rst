@@ -69,7 +69,7 @@ Here's code that uses one of them to encrypt a string with AES::
   InitializationVector iv(rng, 16); // a random 128-bit IV
 
   // The algorithm we want is specified by a string
-  Pipe pipe(get_cipher("AES-128/CBC", key, iv, ENCRYPTION));
+  Pipe pipe(get_cipher("AES-128/CBC", key, iv, Cipher_Dir::Encryption));
 
   pipe.process_msg("secrets");
   pipe.process_msg("more secrets");
@@ -134,7 +134,7 @@ Here's an example using two computational filters::
    SymmetricKey key(rng, 32);
    InitializationVector iv(rng, 16);
 
-   Pipe encryptor(get_cipher("AES/CBC/PKCS7", key, iv, ENCRYPTION),
+   Pipe encryptor(get_cipher("AES/CBC/PKCS7", key, iv, Cipher_Dir::Encryption),
                   new Base64_Encoder);
 
    encryptor.start_msg();
@@ -219,7 +219,7 @@ a case where that is useful::
    // have std::string ciphertext, auth_code, key, iv, mac_key;
 
    Pipe pipe(new Base64_Decoder,
-             get_cipher("AES-128", key, iv, DECRYPTION),
+             get_cipher("AES-128", key, iv, Cipher_Dir::Decryption),
              new Fork(
                 0, // this message gets plaintext
                 new MAC_Filter("HMAC(SHA-1)", mac_key)
@@ -579,7 +579,7 @@ The version that doesn't take an IV is useful for things that don't
 use them, like block ciphers in ECB mode, or most stream ciphers. If
 you specify a cipher spec that does want a IV, and you use the version
 that doesn't take one, an exception will be thrown. The ``dir``
-argument can be either ``ENCRYPTION`` or ``DECRYPTION``.
+argument can be either ``Cipher_Dir::Encryption`` or ``Cipher_Dir::Decryption``.
 
 The cipher_spec is a string that specifies what cipher is to be
 used. The general syntax for "cipher_spec" is "STREAM_CIPHER",

@@ -12,8 +12,7 @@ int main() {
                               "luck. Unfortunately, Dane's luck wasn't as good as his old man's.");
   const std::vector<uint8_t> key = Botan::hex_decode("2B7E151628AED2A6ABF7158809CF4F3C");
 
-  std::unique_ptr<Botan::Cipher_Mode> enc =
-      Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::ENCRYPTION);
+  auto enc = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::Cipher_Dir::Encryption);
   enc->set_key(key);
 
   // generate fresh nonce (IV)

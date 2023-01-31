@@ -474,8 +474,8 @@ void Cipher_State::advance_with_server_hello(const Ciphersuite& cipher,
    BOTAN_ASSERT_NOMSG(!m_decrypt);
    BOTAN_STATE_CHECK(is_compatible_with(cipher));
 
-   m_encrypt = AEAD_Mode::create_or_throw(cipher.cipher_algo(), ENCRYPTION);
-   m_decrypt = AEAD_Mode::create_or_throw(cipher.cipher_algo(), DECRYPTION);
+   m_encrypt = AEAD_Mode::create_or_throw(cipher.cipher_algo(), Cipher_Dir::Encryption);
+   m_decrypt = AEAD_Mode::create_or_throw(cipher.cipher_algo(), Cipher_Dir::Decryption);
 
    const auto handshake_secret = hkdf_extract(std::move(shared_secret));
 

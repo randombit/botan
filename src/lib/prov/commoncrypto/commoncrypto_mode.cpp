@@ -159,7 +159,7 @@ size_t CommonCrypto_Cipher_Mode::ideal_granularity() const
 
 size_t CommonCrypto_Cipher_Mode::minimum_final_size() const
    {
-   if(m_direction == ENCRYPTION)
+   if(m_direction == Cipher_Dir::Encryption)
       return 0;
    else
       return m_opts.block_size;
@@ -223,7 +223,7 @@ Key_Length_Specification CommonCrypto_Cipher_Mode::key_spec() const
 void CommonCrypto_Cipher_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    CCCryptorStatus status;
-   CCOperation op = m_direction == ENCRYPTION ? kCCEncrypt : kCCDecrypt;
+   CCOperation op = m_direction == Cipher_Dir::Encryption ? kCCEncrypt : kCCDecrypt;
    status = CCCryptorCreateWithMode(op, m_opts.mode, m_opts.algo, m_opts.padding,
                                     nullptr, key, length, nullptr, 0, 0, 0, &m_cipher);
    if(status != kCCSuccess)

@@ -216,7 +216,7 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    if(cipher_oid.empty())
       throw Encoding_Error("PBE-PKCS5 v2.0: No OID assigned for " + cipher);
 
-   std::unique_ptr<Cipher_Mode> enc = Cipher_Mode::create(cipher, ENCRYPTION);
+   std::unique_ptr<Cipher_Mode> enc = Cipher_Mode::create(cipher, Cipher_Dir::Encryption);
 
    if(!enc)
       throw Decoding_Error("PBE-PKCS5 cannot encrypt no cipher " + cipher);
@@ -320,7 +320,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
    secure_vector<uint8_t> iv;
    BER_Decoder(enc_algo.get_parameters()).decode(iv, ASN1_Type::OctetString).verify_end();
 
-   std::unique_ptr<Cipher_Mode> dec = Cipher_Mode::create(cipher, DECRYPTION);
+   std::unique_ptr<Cipher_Mode> dec = Cipher_Mode::create(cipher, Cipher_Dir::Decryption);
    if(!dec)
       throw Decoding_Error("PBE-PKCS5 cannot decrypt no cipher " + cipher);
 

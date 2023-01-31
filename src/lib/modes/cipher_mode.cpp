@@ -122,7 +122,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
 
       if(padding == "CTS")
          {
-         if(direction == ENCRYPTION)
+         if(direction == Cipher_Dir::Encryption)
             return std::make_unique<CTS_Encryption>(std::move(bc));
          else
             return std::make_unique<CTS_Decryption>(std::move(bc));
@@ -133,7 +133,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
 
          if(pad)
             {
-            if(direction == ENCRYPTION)
+            if(direction == Cipher_Dir::Encryption)
                return std::make_unique<CBC_Encryption>(std::move(bc), std::move(pad));
             else
                return std::make_unique<CBC_Decryption>(std::move(bc), std::move(pad));
@@ -145,7 +145,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
 #if defined(BOTAN_HAS_MODE_XTS)
    if(spec.algo_name() == "XTS")
       {
-      if(direction == ENCRYPTION)
+      if(direction == Cipher_Dir::Encryption)
          return std::make_unique<XTS_Encryption>(std::move(bc));
       else
          return std::make_unique<XTS_Decryption>(std::move(bc));
@@ -156,7 +156,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
    if(spec.algo_name() == "CFB")
       {
       const size_t feedback_bits = spec.arg_as_integer(1, 8*bc->block_size());
-      if(direction == ENCRYPTION)
+      if(direction == Cipher_Dir::Encryption)
          return std::make_unique<CFB_Encryption>(std::move(bc), feedback_bits);
       else
          return std::make_unique<CFB_Decryption>(std::move(bc), feedback_bits);
@@ -175,7 +175,7 @@ std::vector<std::string> Cipher_Mode::providers(const std::string& algo_spec)
    std::vector<std::string> providers;
    for(auto&& prov : possible)
       {
-      std::unique_ptr<Cipher_Mode> mode = Cipher_Mode::create(algo_spec, ENCRYPTION, prov);
+      std::unique_ptr<Cipher_Mode> mode = Cipher_Mode::create(algo_spec, Cipher_Dir::Encryption, prov);
       if(mode)
          {
          providers.push_back(prov); // available

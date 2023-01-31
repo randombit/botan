@@ -383,10 +383,10 @@ class Filter_Tests final : public Test
             "7195FFE735B0A95065BA244C77A11F",
          };
 
-         Botan::Keyed_Filter* cfb_enc = Botan::get_cipher("Blowfish/CFB", key, iv, Botan::ENCRYPTION);
+         Botan::Keyed_Filter* cfb_enc = Botan::get_cipher("Blowfish/CFB", key, iv, Botan::Cipher_Dir::Encryption);
          Botan::Pipe enc_pipe(cfb_enc, new Botan::Hex_Encoder);
 
-         Botan::Keyed_Filter* cfb_dec = Botan::get_cipher("Blowfish/CFB", key, Botan::DECRYPTION);
+         Botan::Keyed_Filter* cfb_dec = Botan::get_cipher("Blowfish/CFB", key, Botan::Cipher_Dir::Decryption);
          cfb_dec->set_iv(iv);
          Botan::Pipe dec_pipe(new Botan::Hex_Decoder, cfb_dec, new Botan::Hex_Encoder);
 
@@ -423,7 +423,7 @@ class Filter_Tests final : public Test
 
 #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_MODE_CBC) && defined(BOTAN_HAS_CIPHER_MODE_PADDING)
          Botan::Cipher_Mode_Filter* cipher =
-            new Botan::Cipher_Mode_Filter(Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::ENCRYPTION));
+            new Botan::Cipher_Mode_Filter(Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::Cipher_Dir::Encryption));
 
          result.test_eq("Cipher filter name", cipher->name(), "AES-128/CBC/PKCS7");
 
@@ -458,7 +458,7 @@ class Filter_Tests final : public Test
          result.test_eq("Ciphertext3", ciphertext3, "1241B9976F73051BCF809525D6E86C25");
 
          Botan::Cipher_Mode_Filter* dec_cipher =
-            new Botan::Cipher_Mode_Filter(Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::DECRYPTION));
+            new Botan::Cipher_Mode_Filter(Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::Cipher_Dir::Decryption));
          pipe.append(dec_cipher);
          dec_cipher->set_key(Botan::SymmetricKey("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
          dec_cipher->set_iv(Botan::InitializationVector("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB"));

@@ -47,7 +47,7 @@ class Cipher final : public Command
          const Botan::InitializationVector nonce(nonce_hex);
          const std::vector<uint8_t> ad = Botan::hex_decode(ad_hex);
 
-         auto direction = flag_set("decrypt") ? Botan::Cipher_Dir::DECRYPTION : Botan::Cipher_Dir::ENCRYPTION;
+         auto direction = flag_set("decrypt") ? Botan::Cipher_Dir::Decryption : Botan::Cipher_Dir::Encryption;
 
          auto cipher = Botan::Cipher_Mode::create(cipher_algo, direction);
          if(!cipher)

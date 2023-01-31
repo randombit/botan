@@ -21,7 +21,7 @@ int sodium_aead_chacha20poly1305_encrypt(uint8_t ctext[],
                                          size_t nonce_len,
                                          const uint8_t key[])
    {
-   auto chacha20poly1305 = AEAD_Mode::create_or_throw("ChaCha20Poly1305", ENCRYPTION);
+   auto chacha20poly1305 = AEAD_Mode::create_or_throw("ChaCha20Poly1305", Cipher_Dir::Encryption);
 
    chacha20poly1305->set_key(key, 32);
    chacha20poly1305->set_associated_data(ad, ad_len);
@@ -55,7 +55,7 @@ int sodium_aead_chacha20poly1305_decrypt(uint8_t ptext[],
 
    *ptext_len = 0;
 
-   auto chacha20poly1305 = AEAD_Mode::create_or_throw("ChaCha20Poly1305", DECRYPTION);
+   auto chacha20poly1305 = AEAD_Mode::create_or_throw("ChaCha20Poly1305", Cipher_Dir::Decryption);
 
    chacha20poly1305->set_key(key, 32);
    chacha20poly1305->set_associated_data(ad, ad_len);
@@ -90,7 +90,7 @@ int sodium_aead_chacha20poly1305_encrypt_detached(uint8_t ctext[],
                                                   size_t nonce_len,
                                                   const uint8_t key[])
    {
-   auto chacha20poly1305 = AEAD_Mode::create_or_throw("ChaCha20Poly1305", ENCRYPTION);
+   auto chacha20poly1305 = AEAD_Mode::create_or_throw("ChaCha20Poly1305", Cipher_Dir::Encryption);
 
    chacha20poly1305->set_key(key, 32);
    chacha20poly1305->set_associated_data(ad, ad_len);
@@ -118,7 +118,7 @@ int sodium_aead_chacha20poly1305_decrypt_detached(uint8_t ptext[],
                                                   size_t nonce_len,
                                                   const uint8_t key[])
    {
-   auto chacha20poly1305 = AEAD_Mode::create_or_throw("ChaCha20Poly1305", DECRYPTION);
+   auto chacha20poly1305 = AEAD_Mode::create_or_throw("ChaCha20Poly1305", Cipher_Dir::Decryption);
 
    chacha20poly1305->set_key(key, 32);
    chacha20poly1305->set_associated_data(ad, ad_len);

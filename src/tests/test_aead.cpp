@@ -33,7 +33,7 @@ class AEAD_Tests final : public Text_Based_Test
 
          Test::Result result(algo);
 
-         std::unique_ptr<Botan::AEAD_Mode> enc(Botan::AEAD_Mode::create(algo, Botan::ENCRYPTION));
+         std::unique_ptr<Botan::AEAD_Mode> enc(Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Encryption));
 
          result.test_eq("AEAD encrypt output_length is correct", enc->output_length(input.size()), expected.size());
 
@@ -204,7 +204,7 @@ class AEAD_Tests final : public Text_Based_Test
 
          Test::Result result(algo);
 
-         std::unique_ptr<Botan::AEAD_Mode> dec(Botan::AEAD_Mode::create(algo, Botan::DECRYPTION));
+         std::unique_ptr<Botan::AEAD_Mode> dec(Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Decryption));
 
          result.test_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
 
@@ -439,8 +439,8 @@ class AEAD_Tests final : public Text_Based_Test
 
          Test::Result result(algo);
 
-         std::unique_ptr<Botan::AEAD_Mode> enc(Botan::AEAD_Mode::create(algo, Botan::ENCRYPTION));
-         std::unique_ptr<Botan::AEAD_Mode> dec(Botan::AEAD_Mode::create(algo, Botan::DECRYPTION));
+         std::unique_ptr<Botan::AEAD_Mode> enc(Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Encryption));
+         std::unique_ptr<Botan::AEAD_Mode> dec(Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Decryption));
 
          if(!enc || !dec)
             {

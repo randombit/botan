@@ -19,7 +19,7 @@ namespace Botan {
 class Cipher_Mode;
 class BlockCipher;
 class HashFunction;
-enum Cipher_Dir : int;
+enum class Cipher_Dir : int;
 typedef int32_t CCCryptorStatus;
 
 class BOTAN_PUBLIC_API(2, 0) CommonCrypto_Error final : public Exception

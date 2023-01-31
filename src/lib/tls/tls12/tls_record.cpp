@@ -75,7 +75,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       }
    else
       {
-      m_aead = AEAD_Mode::create_or_throw(suite.cipher_algo(), our_side ? ENCRYPTION : DECRYPTION);
+      m_aead = AEAD_Mode::create_or_throw(suite.cipher_algo(), our_side ? Cipher_Dir::Encryption : Cipher_Dir::Decryption);
       }
 
    m_aead->set_key(aead_key);

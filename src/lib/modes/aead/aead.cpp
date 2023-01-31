@@ -65,7 +65,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
    if(algo == "ChaCha20Poly1305")
       {
-      if(dir == ENCRYPTION)
+      if(dir == Cipher_Dir::Encryption)
          return std::make_unique<ChaCha20Poly1305_Encryption>();
       else
          return std::make_unique<ChaCha20Poly1305_Decryption>();
@@ -115,7 +115,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
       {
       size_t tag_len = req.arg_as_integer(1, 16);
       size_t L_len = req.arg_as_integer(2, 3);
-      if(dir == ENCRYPTION)
+      if(dir == Cipher_Dir::Encryption)
          return std::make_unique<CCM_Encryption>(std::move(bc), tag_len, L_len);
       else
          return std::make_unique<CCM_Decryption>(std::move(bc), tag_len, L_len);
@@ -126,7 +126,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
    if(req.algo_name() == "GCM")
       {
       size_t tag_len = req.arg_as_integer(1, 16);
-      if(dir == ENCRYPTION)
+      if(dir == Cipher_Dir::Encryption)
          return std::make_unique<GCM_Encryption>(std::move(bc), tag_len);
       else
          return std::make_unique<GCM_Decryption>(std::move(bc), tag_len);
@@ -137,7 +137,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
    if(req.algo_name() == "OCB")
       {
       size_t tag_len = req.arg_as_integer(1, 16);
-      if(dir == ENCRYPTION)
+      if(dir == Cipher_Dir::Encryption)
          return std::make_unique<OCB_Encryption>(std::move(bc), tag_len);
       else
          return std::make_unique<OCB_Decryption>(std::move(bc), tag_len);
@@ -148,7 +148,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
    if(req.algo_name() == "EAX")
       {
       size_t tag_len = req.arg_as_integer(1, bc->block_size());
-      if(dir == ENCRYPTION)
+      if(dir == Cipher_Dir::Encryption)
          return std::make_unique<EAX_Encryption>(std::move(bc), tag_len);
       else
          return std::make_unique<EAX_Decryption>(std::move(bc), tag_len);
@@ -158,7 +158,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
 #if defined(BOTAN_HAS_AEAD_SIV)
    if(req.algo_name() == "SIV")
       {
-      if(dir == ENCRYPTION)
+      if(dir == Cipher_Dir::Encryption)
          return std::make_unique<SIV_Encryption>(std::move(bc));
       else
          return std::make_unique<SIV_Decryption>(std::move(bc));

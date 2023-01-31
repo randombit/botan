@@ -20,7 +20,13 @@ namespace Botan {
 * The two possible directions for cipher filters, determining whether they
 * actually perform encryption or decryption.
 */
-enum Cipher_Dir : int { ENCRYPTION, DECRYPTION };
+enum class Cipher_Dir : int {
+   Encryption,
+   Decryption,
+
+   ENCRYPTION BOTAN_DEPRECATED("Use Cipher_Dir::Encryption") = Encryption,
+   DECRYPTION BOTAN_DEPRECATED("Use Cipher_Dir::Decryption") = Decryption,
+};
 
 /**
 * Interface for cipher modes
@@ -209,7 +215,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
 /**
 * Get a cipher mode by name (eg "AES-128/CBC" or "Serpent/XTS")
 * @param algo_spec cipher name
-* @param direction ENCRYPTION or DECRYPTION
+* @param direction Cipher_Dir::Encryption or Cipher_Dir::Decryption
 * @param provider provider implementation to choose
 */
 BOTAN_DEPRECATED("Use Cipher_Mode::create")
