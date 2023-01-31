@@ -50,7 +50,7 @@ class binary_matrix final
 
       size_t columns() const { return m_coln; }
 
-      std::vector<uint32_t> elem() const { return m_elem; }
+      const std::vector<uint32_t>& elem() const { return m_elem; }
 
    private:
       size_t m_rown;  // number of rows.
