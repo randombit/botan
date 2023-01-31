@@ -49,11 +49,11 @@ void Stream_Handshake_IO::add_record(const uint8_t record[],
                                      size_t record_len,
                                      Record_Type record_type, uint64_t /*sequence_number*/)
    {
-   if(record_type == HANDSHAKE)
+   if(record_type == Record_Type::Handshake)
       {
       m_queue.insert(m_queue.end(), record, record + record_len);
       }
-   else if(record_type == CHANGE_CIPHER_SPEC)
+   else if(record_type == Record_Type::ChangeCipherSpec)
       {
       if(record_len != 1 || record[0] != 1)
          throw Decoding_Error("Invalid ChangeCipherSpec");
@@ -63,7 +63,9 @@ void Stream_Handshake_IO::add_record(const uint8_t record[],
       m_queue.insert(m_queue.end(), ccs_hs, ccs_hs + sizeof(ccs_hs));
       }
    else
-      throw Decoding_Error("Unknown message type " + std::to_string(record_type) + " in handshake processing");
+      throw Decoding_Error("Unknown message type " +
+                           std::to_string(static_cast<size_t>(record_type)) +
+                           " in handshake processing");
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
@@ -123,12 +125,12 @@ std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg)
 
    if(msg.type() == HANDSHAKE_CCS)
       {
-      m_send_hs(CHANGE_CIPHER_SPEC, msg_bits);
+      m_send_hs(Record_Type::ChangeCipherSpec, msg_bits);
       return std::vector<uint8_t>(); // not included in handshake hashes
       }
 
    auto buf = format(msg_bits, msg.wire_type());
-   m_send_hs(HANDSHAKE, buf);
+   m_send_hs(Record_Type::Handshake, buf);
    return buf;
    }
 
@@ -159,7 +161,7 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx)
          {
          // Epoch gap: insert the CCS
          std::vector<uint8_t> ccs(1, 1);
-         m_send_hs(epoch, CHANGE_CIPHER_SPEC, ccs);
+         m_send_hs(epoch, Record_Type::ChangeCipherSpec, ccs);
          }
 
       send_message(msg_seq, msg.epoch, msg.msg_type, msg.msg_bits);
@@ -201,7 +203,7 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
    {
    const uint16_t epoch = static_cast<uint16_t>(record_sequence >> 48);
 
-   if(record_type == CHANGE_CIPHER_SPEC)
+   if(record_type == Record_Type::ChangeCipherSpec)
       {
       if(record_len != 1 || record[0] != 1)
          throw Decoding_Error("Invalid ChangeCipherSpec");
@@ -403,7 +405,7 @@ Datagram_Handshake_IO::send_under_epoch(const Handshake_Message& msg, uint16_t e
 
    if(msg_type == HANDSHAKE_CCS)
       {
-      m_send_hs(epoch, CHANGE_CIPHER_SPEC, msg_bits);
+      m_send_hs(epoch, Record_Type::ChangeCipherSpec, msg_bits);
       return std::vector<uint8_t>(); // not included in handshake hashes
       }
    else if(msg_type == HELLO_VERIFY_REQUEST)
@@ -436,7 +438,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
       {
-      m_send_hs(epoch, HANDSHAKE, no_fragment);
+      m_send_hs(epoch, Record_Type::Handshake, no_fragment);
       }
    else
       {
@@ -469,7 +471,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
                             msg_type,
                             msg_seq);
 
-         m_send_hs(epoch, HANDSHAKE, frag);
+         m_send_hs(epoch, Record_Type::Handshake, frag);
 
          frag_offset += frag_len;
          }

@@ -50,18 +50,15 @@ enum class Connection_Side {
    SERVER BOTAN_DEPRECATED("Use Connection_Side::Server") = Server,
 };
 
-// This will become an enum class in a future major release
-enum Record_Type {
-   INVALID            = 0,  // RFC 8446 (TLS 1.3)
+enum class Record_Type: uint8_t {
+   Invalid            = 0,  // RFC 8446 (TLS 1.3)
 
-   CHANGE_CIPHER_SPEC = 20,
-   ALERT              = 21,
-   HANDSHAKE          = 22,
-   APPLICATION_DATA   = 23,
+   ChangeCipherSpec   = 20,
+   Alert              = 21,
+   Handshake          = 22,
+   ApplicationData    = 23,
 
-   HEARTBEAT          = 24, // RFC 6520 (TLS 1.3)
-
-   NO_RECORD          = 256
+   Heartbeat          = 24, // RFC 6520 (TLS 1.3)
 };
 
 // This will become an enum class in a future major release

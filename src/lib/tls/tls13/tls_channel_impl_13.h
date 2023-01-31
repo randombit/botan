@@ -224,7 +224,7 @@ class Channel_Impl_13 : public Channel_Impl
       const Policy& policy() const { return m_policy; }
 
    private:
-      void send_record(uint8_t record_type, const std::vector<uint8_t>& record);
+      void send_record(Record_Type record_type, const std::vector<uint8_t>& record);
 
       void process_alert(const secure_vector<uint8_t>& record);
 

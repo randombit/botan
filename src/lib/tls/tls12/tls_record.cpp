@@ -159,14 +159,14 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
 
 std::vector<uint8_t>
 Connection_Cipher_State::format_ad(uint64_t msg_sequence,
-                                   uint8_t msg_type,
+                                   Record_Type msg_type,
                                    Protocol_Version version,
                                    uint16_t msg_length)
    {
    std::vector<uint8_t> ad(13);
 
    store_be(msg_sequence, &ad[0]);
-   ad[8] = msg_type;
+   ad[8] = static_cast<uint8_t>(msg_type);
    ad[9] = version.major_version();
    ad[10] = version.minor_version();
    ad[11] = get_byte<0>(msg_length);
@@ -186,13 +186,13 @@ inline void append_u16_len(secure_vector<uint8_t>& output, size_t len_field)
    }
 
 void write_record_header(secure_vector<uint8_t>& output,
-                         uint8_t record_type,
+                         Record_Type record_type,
                          Protocol_Version version,
                          uint64_t record_sequence)
    {
    output.clear();
 
-   output.push_back(record_type);
+   output.push_back(static_cast<uint8_t>(record_type));
    output.push_back(version.major_version());
    output.push_back(version.minor_version());
 
@@ -206,13 +206,13 @@ void write_record_header(secure_vector<uint8_t>& output,
 }
 
 void write_unencrypted_record(secure_vector<uint8_t>& output,
-                              uint8_t record_type,
+                              Record_Type record_type,
                               Protocol_Version version,
                               uint64_t record_sequence,
                               const uint8_t* message,
                               size_t message_len)
    {
-   if(record_type == APPLICATION_DATA)
+   if(record_type == Record_Type::ApplicationData)
       throw Internal_Error("Writing an unencrypted TLS application data record");
    write_record_header(output, record_type, version, record_sequence);
    append_u16_len(output, message_len);
@@ -220,7 +220,7 @@ void write_unencrypted_record(secure_vector<uint8_t>& output,
    }
 
 void write_record(secure_vector<uint8_t>& output,
-                  uint8_t record_type,
+                  Record_Type record_type,
                   Protocol_Version version,
                   uint64_t record_sequence,
                   const uint8_t* message,
@@ -309,7 +309,7 @@ void decrypt_record(secure_vector<uint8_t>& output,
 
    aead.set_associated_data_vec(
       cs.format_ad(record_sequence,
-                   static_cast<uint8_t>(record_type),
+                   record_type,
                    record_version,
                    static_cast<uint16_t>(ptext_size))
       );

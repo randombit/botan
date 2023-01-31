@@ -96,10 +96,10 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
 
          // RFC 8446 5.1
          //   Handshake messages MUST NOT be interleaved with other record types.
-         if(record.type != HANDSHAKE && m_handshake_layer.has_pending_data())
+         if(record.type != Record_Type::Handshake && m_handshake_layer.has_pending_data())
             { throw Unexpected_Message("Expected remainder of a handshake message"); }
 
-         if(record.type == HANDSHAKE)
+         if(record.type == Record_Type::Handshake)
             {
             m_handshake_layer.copy_data(record.fragment);
 
@@ -163,21 +163,24 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
                   }
                }
             }
-         else if(record.type == CHANGE_CIPHER_SPEC)
+         else if(record.type == Record_Type::ChangeCipherSpec)
             {
             process_dummy_change_cipher_spec();
             }
-         else if(record.type == APPLICATION_DATA)
+         else if(record.type == Record_Type::ApplicationData)
             {
             BOTAN_ASSERT(record.seq_no.has_value(), "decrypted application traffic had a sequence number");
             callbacks().tls_record_received(record.seq_no.value(), record.fragment.data(), record.fragment.size());
             }
-         else if(record.type == ALERT)
+         else if(record.type == Record_Type::Alert)
             {
             process_alert(record.fragment);
             }
          else
-            { throw Unexpected_Message("Unexpected record type " + std::to_string(record.type) + " from counterparty"); }
+            {
+            throw Unexpected_Message("Unexpected record type " +
+                                     std::to_string(static_cast<size_t>(record.type)) +
+                                     " from counterparty"); }
          }
       }
    catch(TLS_Exception& e)
@@ -251,13 +254,13 @@ Channel_Impl_13::AggregatedMessages::add(const Handshake_Message_13_Ref message)
 std::vector<uint8_t> Channel_Impl_13::AggregatedMessages::send()
    {
    BOTAN_STATE_CHECK(!m_message_buffer.empty());
-   m_channel.send_record(Record_Type::HANDSHAKE, m_message_buffer);
+   m_channel.send_record(Record_Type::Handshake, m_message_buffer);
    return std::exchange(m_message_buffer, {});
    }
 
 void Channel_Impl_13::send_post_handshake_message(const Post_Handshake_Message_13 message)
    {
-   send_record(Record_Type::HANDSHAKE, m_handshake_layer.prepare_post_handshake_message(message));
+   send_record(Record_Type::Handshake, m_handshake_layer.prepare_post_handshake_message(message));
    }
 
 void Channel_Impl_13::send_dummy_change_cipher_spec()
@@ -268,7 +271,7 @@ void Channel_Impl_13::send_dummy_change_cipher_spec()
    //
    // The only allowed CCS message content is 0x01, all other CCS records MUST
    // be rejected by TLS 1.3 implementations.
-   send_record(Record_Type::CHANGE_CIPHER_SPEC, {0x01});
+   send_record(Record_Type::ChangeCipherSpec, {0x01});
    }
 
 void Channel_Impl_13::send(const uint8_t buf[], size_t buf_size)
@@ -290,7 +293,7 @@ void Channel_Impl_13::send(const uint8_t buf[], size_t buf_size)
       m_opportunistic_key_update = false;
       }
 
-   send_record(Record_Type::APPLICATION_DATA, {buf, buf+buf_size});
+   send_record(Record_Type::ApplicationData, {buf, buf+buf_size});
    }
 
 void Channel_Impl_13::send_alert(const Alert& alert)
@@ -299,7 +302,7 @@ void Channel_Impl_13::send_alert(const Alert& alert)
       {
       try
          {
-         send_record(Record_Type::ALERT, alert.serialize());
+         send_record(Record_Type::Alert, alert.serialize());
          }
       catch(...) { /* swallow it */ }
       }
@@ -345,7 +348,7 @@ void Channel_Impl_13::update_traffic_keys(bool request_peer_update)
    m_cipher_state->update_write_keys();
    }
 
-void Channel_Impl_13::send_record(uint8_t record_type, const std::vector<uint8_t>& record)
+void Channel_Impl_13::send_record(Record_Type record_type, const std::vector<uint8_t>& record)
    {
    BOTAN_STATE_CHECK(!is_downgrading());
    BOTAN_STATE_CHECK(m_can_write);
@@ -357,7 +360,7 @@ void Channel_Impl_13::send_record(uint8_t record_type, const std::vector<uint8_t
    // adhere to a more strict record specification. Note that for the
    // server case this is a NOOP.
    // See (RFC 8446 5.1. regarding "legacy_record_version")
-   if(!m_first_message_sent && type == Record_Type::HANDSHAKE)
+   if(!m_first_message_sent && type == Record_Type::Handshake)
       {
       m_record_layer.disable_sending_compat_mode();
       m_first_message_sent = true;
@@ -365,9 +368,9 @@ void Channel_Impl_13::send_record(uint8_t record_type, const std::vector<uint8_t
 
    // The dummy CCS must not be prepended if the following record is
    // an unprotected Alert record.
-   if(prepend_ccs() && (m_cipher_state || record_type != Record_Type::ALERT))
+   if(prepend_ccs() && (m_cipher_state || record_type != Record_Type::Alert))
       {
-      const auto ccs = m_record_layer.prepare_records(Record_Type::CHANGE_CIPHER_SPEC, {0x01}, m_cipher_state.get());
+      const auto ccs = m_record_layer.prepare_records(Record_Type::ChangeCipherSpec, {0x01}, m_cipher_state.get());
       to_write = concat(ccs, to_write);
       }
 

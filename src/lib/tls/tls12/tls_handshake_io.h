@@ -85,7 +85,7 @@ class Handshake_IO
 class Stream_Handshake_IO final : public Handshake_IO
    {
    public:
-      typedef std::function<void (uint8_t, const std::vector<uint8_t>&)> writer_fn;
+      typedef std::function<void (Record_Type, const std::vector<uint8_t>&)> writer_fn;
 
       explicit Stream_Handshake_IO(writer_fn writer) : m_send_hs(writer) {}
 
@@ -121,7 +121,7 @@ class Stream_Handshake_IO final : public Handshake_IO
 class Datagram_Handshake_IO final : public Handshake_IO
    {
    public:
-      typedef std::function<void (uint16_t, uint8_t, const std::vector<uint8_t>&)> writer_fn;
+      typedef std::function<void (uint16_t, Record_Type, const std::vector<uint8_t>&)> writer_fn;
 
       Datagram_Handshake_IO(writer_fn writer,
                             class Connection_Sequence_Numbers& seq,

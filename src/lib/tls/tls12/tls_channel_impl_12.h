@@ -190,16 +190,17 @@ class Channel_Impl_12 : public Channel_Impl
       virtual std::vector<X509_Certificate> get_peer_cert_chain(const Handshake_State& state) const = 0;
 
    private:
-      void send_record(uint8_t record_type, const std::vector<uint8_t>& record);
+      void send_record(Record_Type record_type, const std::vector<uint8_t>& record);
 
-      void send_record_under_epoch(uint16_t epoch, uint8_t record_type,
+      void send_record_under_epoch(uint16_t epoch, Record_Type record_type,
                                    const std::vector<uint8_t>& record);
 
-      void send_record_array(uint16_t epoch, uint8_t record_type,
+      void send_record_array(uint16_t epoch, Record_Type record_type,
                              const uint8_t input[], size_t length);
 
       void write_record(Connection_Cipher_State* cipher_state,
-                        uint16_t epoch, uint8_t type, const uint8_t input[], size_t length);
+                        uint16_t epoch, Record_Type type,
+                        const uint8_t input[], size_t length);
 
       void reset_state();
 
