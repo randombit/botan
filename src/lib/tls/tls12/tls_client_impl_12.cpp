@@ -33,7 +33,7 @@ class Client_Handshake_State_12 final : public Handshake_State
          return *server_public_key.get();
          }
 
-      bool is_a_resumption() const { return (resumed_session != nullptr); }
+      bool is_a_resumption() const { return (resumed_session.has_value()); }
 
       bool is_a_renegotiation() const { return m_is_reneg; }
 
@@ -51,7 +51,7 @@ class Client_Handshake_State_12 final : public Handshake_State
 
       std::unique_ptr<Public_Key> server_public_key;
       // Used during session resumption
-      std::unique_ptr<Session> resumed_session;
+      std::optional<Session> resumed_session;
       bool m_is_reneg = false;
    };
 }
@@ -191,7 +191,7 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
                                    *session_info,
                                    next_protocols));
 
-            state.resumed_session = std::make_unique<Session>(std::move(session_info.value()));
+            state.resumed_session = std::move(session_info);
             }
          }
       }
@@ -394,7 +394,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       if(server_returned_same_session_id)
          {
          // successful resumption
-         BOTAN_ASSERT_NOMSG(state.resumed_session);
+         BOTAN_ASSERT_NOMSG(state.resumed_session.has_value());
 
          /*
          * In this case, we offered the version used in the original
