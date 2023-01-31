@@ -10,11 +10,11 @@
 
 #include <botan/bigint.h>
 #include <botan/symkey.h>
+#include <botan/dl_group.h>
 #include <string>
 
 namespace Botan {
 
-class DL_Group;
 class RandomNumberGenerator;
 
 /**
@@ -145,9 +145,9 @@ class BOTAN_PUBLIC_API(2,0) SRP6_Server_Session final
       SymmetricKey step2(const BigInt& A);
 
    private:
+      DL_Group m_group;
       std::string m_hash_id;
-      BigInt m_B, m_b, m_v, m_S, m_p;
-      size_t m_p_bytes = 0;
+      BigInt m_B, m_b, m_v, m_S;
    };
 
 }
