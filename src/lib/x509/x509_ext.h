@@ -356,7 +356,7 @@ class BOTAN_PUBLIC_API(2,0) CRL_ReasonCode final : public Certificate_Extension
       std::unique_ptr<Certificate_Extension> copy() const override
          { return std::make_unique<CRL_ReasonCode>(m_reason); }
 
-      explicit CRL_ReasonCode(CRL_Code r = CRL_Code::UNSPECIFIED) : m_reason(r) {}
+      explicit CRL_ReasonCode(CRL_Code r = CRL_Code::Unspecified) : m_reason(r) {}
 
       CRL_Code get_reason() const { return m_reason; }
 
@@ -366,7 +366,7 @@ class BOTAN_PUBLIC_API(2,0) CRL_ReasonCode final : public Certificate_Extension
    private:
       std::string oid_name() const override { return "X509v3.ReasonCode"; }
 
-      bool should_encode() const override { return (m_reason != CRL_Code::UNSPECIFIED); }
+      bool should_encode() const override { return (m_reason != CRL_Code::Unspecified); }
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
 

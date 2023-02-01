@@ -100,7 +100,7 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const
       {
       if(cert_serial == entry.serial_number())
          {
-         if(entry.reason_code() == CRL_Code::REMOVE_FROM_CRL)
+         if(entry.reason_code() == CRL_Code::RemoveFromCrl)
             is_revoked = false;
          else
             is_revoked = true;
