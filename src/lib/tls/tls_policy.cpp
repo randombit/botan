@@ -584,7 +584,7 @@ void Policy::print(std::ostream& o) const
    print_bool(o, "tls_13_middlebox_compatibility_mode", tls_13_middlebox_compatibility_mode());
    print_bool(o, "hash_hello_random", hash_hello_random());
    if (record_size_limit().has_value()) {
-      o << "record_size_limit = " << record_size_limit().has_value() << '\n';
+      o << "record_size_limit = " << record_size_limit().value() << '\n';
    }
    o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
