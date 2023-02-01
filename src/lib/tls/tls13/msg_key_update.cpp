@@ -18,7 +18,7 @@ Key_Update::Key_Update(const std::vector<uint8_t>& buf)
    {
    if(buf.size() != 1)
       {
-      throw TLS_Exception(Alert::DECODE_ERROR, "malformed key_update");
+      throw TLS_Exception(Alert::DecodeError, "malformed key_update");
       }
 
    // RFC 8446 4.6.3
@@ -27,7 +27,7 @@ Key_Update::Key_Update(const std::vector<uint8_t>& buf)
    const uint8_t update_requested = buf.at(0);
    if(update_requested > 1)
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "unexpected key_update parameter");
+      throw TLS_Exception(Alert::IllegalParameter, "unexpected key_update parameter");
       }
 
    m_update_requested = update_requested == 1;

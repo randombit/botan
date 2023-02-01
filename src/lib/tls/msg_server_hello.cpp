@@ -383,7 +383,7 @@ Server_Hello_12::Server_Hello_12(std::unique_ptr<Server_Hello_Internal> data)
    {
    if(!m_data->version().is_pre_tls_13())
       {
-      throw TLS_Exception(Alert::PROTOCOL_VERSION, "Expected server hello of (D)TLS 1.2 or lower");
+      throw TLS_Exception(Alert::ProtocolVersion, "Expected server hello of (D)TLS 1.2 or lower");
       }
    }
 
@@ -514,7 +514,7 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
    //    handshake with a "handshake_failure" or an "insufficient_security" alert.
    if(selected_group == Named_Group::NONE)
       {
-      throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Client did not offer any acceptable group");
+      throw TLS_Exception(Alert::HandshakeFailure, "Client did not offer any acceptable group");
       }
 
    if(!value_exists(offered_by_client, selected_group))
@@ -552,7 +552,7 @@ Server_Hello_13::parse(const std::vector<uint8_t>& buf)
       return Server_Hello_13(std::move(data));
       }
 
-   throw TLS_Exception(Alert::PROTOCOL_VERSION,
+   throw TLS_Exception(Alert::ProtocolVersion,
                        "unexpected server hello version: " + version.to_string());
    }
 
@@ -581,7 +581,7 @@ void Server_Hello_13::basic_validation() const
    //    In TLS 1.3, [...] the legacy_version field MUST be set to 0x0303
    if(legacy_version() != Protocol_Version::TLS_V12)
       {
-      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+      throw TLS_Exception(Alert::ProtocolVersion,
                           "legacy_version '" + legacy_version().to_string() + "' is not allowed");
       }
 
@@ -589,14 +589,14 @@ void Server_Hello_13::basic_validation() const
    //    legacy_compression_method:  A single byte which MUST have the value 0.
    if(compression_method() != 0x00)
       {
-      throw TLS_Exception(Alert::DECODE_ERROR, "compression is not supported in TLS 1.3");
+      throw TLS_Exception(Alert::DecodeError, "compression is not supported in TLS 1.3");
       }
 
    // RFC 8446 4.1.3
    //    All TLS 1.3 ServerHello messages MUST contain the "supported_versions" extension.
    if(!extensions().has<Supported_Versions>())
       {
-      throw TLS_Exception(Alert::MISSING_EXTENSION,
+      throw TLS_Exception(Alert::MissingExtension,
                           "server hello did not contain 'supported version' extension");
       }
 
@@ -606,7 +606,7 @@ void Server_Hello_13::basic_validation() const
    //    value (0x0304).
    if(selected_version() != Protocol_Version::TLS_V13)
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "TLS 1.3 Server Hello selected a different version");
+      throw TLS_Exception(Alert::IllegalParameter, "TLS 1.3 Server Hello selected a different version");
       }
    }
 
@@ -640,7 +640,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    // any slack for extensions not implemented by Botan here.
    if(exts.contains_other_than(allowed))
       {
-      throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION,
+      throw TLS_Exception(Alert::UnsupportedExtension,
                           "Server Hello contained an extension that is not allowed");
       }
 
@@ -650,7 +650,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    //    extension, or both [...].
    if(!exts.has<Key_Share>() && !exts.has<PSK_Key_Exchange_Modes>())
       {
-      throw TLS_Exception(Alert::MISSING_EXTENSION,
+      throw TLS_Exception(Alert::MissingExtension,
                           "server hello must contain key exchange information");
       }
    }
@@ -679,7 +679,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Se
    // don't give any slack for extensions not implemented by Botan here.
    if(exts.contains_other_than(allowed))
       {
-      throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION,
+      throw TLS_Exception(Alert::UnsupportedExtension,
                           "Hello Retry Request contained an extension that is not allowed");
       }
 
@@ -688,7 +688,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Se
    //    the HelloRetryRequest would not result in any change in the ClientHello.
    if(!exts.has<Key_Share>() && !exts.has<Cookie>())
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+      throw TLS_Exception(Alert::IllegalParameter,
                           "Hello Retry Request does not request any changes to Client Hello");
       }
    }
@@ -719,7 +719,7 @@ uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy)
    //     If the server is unable to negotiate a supported set of parameters
    //     [...], it MUST abort the handshake with either a "handshake_failure"
    //     or "insufficient_security" fatal alert [...].
-   throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+   throw TLS_Exception(Alert::HandshakeFailure,
                        "Can't agree on a ciphersuite with client");
    }
 }

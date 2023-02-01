@@ -110,12 +110,12 @@ class Channel_Impl_13 : public Channel_Impl
       * @return true iff the connection is active for sending application data
       *
       * Note that the connection is active until the application has called
-      * `close()`, even if a CLOSE_NOTIFY has been received from the peer.
+      * `close()`, even if a CloseNotify has been received from the peer.
       */
       bool is_active() const override;
 
       /**
-      * @return true iff the connection has been closed, i.e. CLOSE_NOTIFY
+      * @return true iff the connection has been closed, i.e. CloseNotify
       * has been received from the peer.
       */
       bool is_closed() const override { return is_closed_for_reading() && is_closed_for_writing(); }

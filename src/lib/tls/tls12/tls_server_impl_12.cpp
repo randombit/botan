@@ -125,7 +125,7 @@ bool check_for_resume(Session& session_info,
          Client previously negotiated session with extended master secret,
          but has now attempted to resume without the extension: abort
          */
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HandshakeFailure,
                              "Client resumed extended ms session without sending extension");
          }
       }
@@ -137,7 +137,7 @@ bool check_for_resume(Session& session_info,
       Client previously negotiated session with Encrypt-then-MAC,
       but has now attempted to resume without the extension: abort
       */
-      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+      throw TLS_Exception(Alert::HandshakeFailure,
                              "Client resumed Encrypt-then-MAC session without sending extension");
       }
 
@@ -158,7 +158,7 @@ uint16_t choose_ciphersuite(
    const std::vector<uint16_t> server_suites = policy.ciphersuite_list(version);
 
    if(server_suites.empty())
-      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+      throw TLS_Exception(Alert::HandshakeFailure,
                           "Policy forbids us from negotiating any ciphersuite");
 
    const bool have_shared_ecc_curve =
@@ -228,7 +228,7 @@ uint16_t choose_ciphersuite(
 
          if(we_support_some_hash_by_client == false)
             {
-            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HandshakeFailure,
                                 "Policy does not accept any hash function supported by client");
             }
          }
@@ -236,7 +236,7 @@ uint16_t choose_ciphersuite(
       return suite_id;
       }
 
-   throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+   throw TLS_Exception(Alert::HandshakeFailure,
                        "Can't agree on a ciphersuite with client");
    }
 
@@ -335,13 +335,13 @@ Protocol_Version select_version(const TLS::Policy& policy,
          {
          if(policy.allow_dtls12() && value_exists(supported_versions, Protocol_Version(Protocol_Version::DTLS_V12)))
             return Protocol_Version::DTLS_V12;
-         throw TLS_Exception(Alert::PROTOCOL_VERSION, "No shared DTLS version");
+         throw TLS_Exception(Alert::ProtocolVersion, "No shared DTLS version");
          }
       else
          {
          if(policy.allow_tls12() && value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V12)))
             return Protocol_Version::TLS_V12;
-         throw TLS_Exception(Alert::PROTOCOL_VERSION, "No shared TLS version");
+         throw TLS_Exception(Alert::ProtocolVersion, "No shared TLS version");
          }
       }
 
@@ -356,7 +356,7 @@ Protocol_Version select_version(const TLS::Policy& policy,
       */
       if(active_version > client_offer)
          {
-         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+         throw TLS_Exception(Alert::ProtocolVersion,
                               "Client negotiated " +
                               active_version.to_string() +
                               " then renegotiated with " +
@@ -379,7 +379,7 @@ Protocol_Version select_version(const TLS::Policy& policy,
          return Protocol_Version::TLS_V12;
       }
 
-   throw TLS_Exception(Alert::PROTOCOL_VERSION,
+   throw TLS_Exception(Alert::ProtocolVersion,
          "Client version " + client_offer.to_string() + " is unacceptable by policy");
    }
 }
@@ -399,21 +399,21 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
    if(initial_handshake == false && policy().allow_client_initiated_renegotiation() == false)
       {
       if(policy().abort_connection_on_undesired_renegotiation())
-         throw TLS_Exception(Alert::NO_RENEGOTIATION, "Server policy prohibits renegotiation");
+         throw TLS_Exception(Alert::NoRenegotiation, "Server policy prohibits renegotiation");
       else
-         send_warning_alert(Alert::NO_RENEGOTIATION);
+         send_warning_alert(Alert::NoRenegotiation);
       return;
       }
 
    if(!policy().allow_insecure_renegotiation() &&
       !(initial_handshake || secure_renegotiation_supported()))
       {
-      send_warning_alert(Alert::NO_RENEGOTIATION);
+      send_warning_alert(Alert::NoRenegotiation);
       return;
       }
 
    if(pending_state.handshake_io().have_more_data())
-      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+      throw TLS_Exception(Alert::UnexpectedMessage,
                           "Have data remaining in buffer after ClientHello");
 
    pending_state.client_hello(new Client_Hello_12(contents));
@@ -423,14 +423,14 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
    if(datagram)
       {
       if(client_offer.major_version() == 0xFF)
-         throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered DTLS version with major version 0xFF");
+         throw TLS_Exception(Alert::ProtocolVersion, "Client offered DTLS version with major version 0xFF");
       }
    else
       {
       if(client_offer.major_version() < 3)
-         throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered TLS version with major version under 3");
+         throw TLS_Exception(Alert::ProtocolVersion, "Client offered TLS version with major version under 3");
       if(client_offer.major_version() == 3 && client_offer.minor_version() == 0)
-         throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered SSLv3 which is not supported");
+         throw TLS_Exception(Alert::ProtocolVersion, "Client offered SSLv3 which is not supported");
       }
 
    /*
@@ -452,7 +452,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
 
    const auto compression_methods = pending_state.client_hello()->compression_methods();
    if(!value_exists(compression_methods, uint8_t(0)))
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Client did not offer NULL compression");
+      throw TLS_Exception(Alert::IllegalParameter, "Client did not offer NULL compression");
 
    if(initial_handshake && datagram)
       {
@@ -483,7 +483,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
          }
       else if(epoch0_restart)
          {
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Reuse of DTLS association requires DTLS cookie secret be set");
+         throw TLS_Exception(Alert::HandshakeFailure, "Reuse of DTLS association requires DTLS cookie secret be set");
          }
       }
 
@@ -539,7 +539,7 @@ void Server_Impl_12::process_certificate_msg(Server_Handshake_State& pending_sta
 
    // CERTIFICATE_REQUIRED would make more sense but BoGo expects handshake failure alert
    if(pending_state.client_certs()->empty() && policy().require_client_certificate_authentication())
-      throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Policy requires client send a certificate, but it did not");
+      throw TLS_Exception(Alert::HandshakeFailure, "Policy requires client send a certificate, but it did not");
 
    pending_state.set_expected_next(Handshake_Type::ClientKeyExchange);
    }
@@ -575,10 +575,10 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
       pending_state.client_certs()->cert_chain();
 
    if(client_certs.empty())
-      throw TLS_Exception(Alert::DECODE_ERROR, "No client certificate sent");
+      throw TLS_Exception(Alert::DecodeError, "No client certificate sent");
 
    if(!client_certs[0].allowed_usage(Key_Constraints::DigitalSignature))
-      throw TLS_Exception(Alert::BAD_CERTIFICATE, "Client certificate does not support signing");
+      throw TLS_Exception(Alert::BadCertificate, "Client certificate does not support signing");
 
    const bool sig_valid =
       pending_state.client_verify()->verify(client_certs[0], pending_state, policy());
@@ -591,7 +591,7 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
    * unable to correctly verify a signature, ..."
    */
    if(!sig_valid)
-      throw TLS_Exception(Alert::DECRYPT_ERROR, "Client cert verify failed");
+      throw TLS_Exception(Alert::DecryptError, "Client cert verify failed");
 
    try
       {
@@ -607,7 +607,7 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
       }
    catch(std::exception& e)
       {
-      throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
+      throw TLS_Exception(Alert::BadCertificate, e.what());
       }
 
    pending_state.set_expected_next(Handshake_Type::HandshakeCCS);
@@ -620,13 +620,13 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
    pending_state.set_expected_next(Handshake_Type::None);
 
    if(pending_state.handshake_io().have_more_data())
-      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+      throw TLS_Exception(Alert::UnexpectedMessage,
                           "Have data remaining in buffer after Finished");
 
    pending_state.client_finished(new Finished_12(contents));
 
    if(!pending_state.client_finished()->verify(pending_state, Connection_Side::Client))
-      throw TLS_Exception(Alert::DECRYPT_ERROR,
+      throw TLS_Exception(Alert::DecryptError,
                           "Finished message didn't verify");
 
    if(!pending_state.server_finished())
@@ -836,7 +836,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
       * anonymous/PSK operation.
       */
       if(!cert_chains.empty())
-         send_warning_alert(Alert::UNRECOGNIZED_NAME);
+         send_warning_alert(Alert::UnrecognizedName);
       }
 
    const uint16_t ciphersuite = choose_ciphersuite(policy(), pending_state.version(),

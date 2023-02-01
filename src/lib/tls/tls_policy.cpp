@@ -268,7 +268,7 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
    // else some other algo, so leave expected_keylength as zero and the check is a no-op
 
    if(keylength < expected_keylength)
-      throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+      throw TLS_Exception(Alert::InsufficientSecurity,
                           "Peer sent " +
                            std::to_string(keylength) + " bit " + algo_name + " key"
                            ", policy requires at least " +
