@@ -47,9 +47,9 @@ class Cipher_Mode_Tests final : public Text_Based_Test
          for(auto&& provider_ask : providers)
             {
             std::unique_ptr<Botan::Cipher_Mode> enc(Botan::Cipher_Mode::create(
-                  algo, Botan::ENCRYPTION, provider_ask));
+                  algo, Botan::Cipher_Dir::Encryption, provider_ask));
             std::unique_ptr<Botan::Cipher_Mode> dec(Botan::Cipher_Mode::create(
-                  algo, Botan::DECRYPTION, provider_ask));
+                  algo, Botan::Cipher_Dir::Decryption, provider_ask));
 
             if(!enc || !dec)
                {
@@ -285,9 +285,9 @@ class Cipher_Mode_IV_Carry_Tests final : public Test
 
 #if defined(BOTAN_HAS_MODE_CBC) && defined(BOTAN_HAS_AES)
          std::unique_ptr<Botan::Cipher_Mode> enc(
-            Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::ENCRYPTION));
+            Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::Cipher_Dir::Encryption));
          std::unique_ptr<Botan::Cipher_Mode> dec(
-            Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::DECRYPTION));
+            Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::Cipher_Dir::Decryption));
 
          const std::vector<uint8_t> key(16, 0xAA);
          const std::vector<uint8_t> iv(16, 0xAA);
@@ -338,9 +338,9 @@ class Cipher_Mode_IV_Carry_Tests final : public Test
          Test::Result result("CFB IV carry");
 #if defined(BOTAN_HAS_MODE_CFB) && defined(BOTAN_HAS_AES)
          std::unique_ptr<Botan::Cipher_Mode> enc(
-            Botan::Cipher_Mode::create("AES-128/CFB(8)", Botan::ENCRYPTION));
+            Botan::Cipher_Mode::create("AES-128/CFB(8)", Botan::Cipher_Dir::Encryption));
          std::unique_ptr<Botan::Cipher_Mode> dec(
-            Botan::Cipher_Mode::create("AES-128/CFB(8)", Botan::DECRYPTION));
+            Botan::Cipher_Mode::create("AES-128/CFB(8)", Botan::Cipher_Dir::Decryption));
 
          const std::vector<uint8_t> key(16, 0xAA);
          const std::vector<uint8_t> iv(16, 0xAB);
@@ -387,9 +387,9 @@ class Cipher_Mode_IV_Carry_Tests final : public Test
 #if defined(BOTAN_HAS_CTR_BE) && defined(BOTAN_HAS_AES)
 
          std::unique_ptr<Botan::Cipher_Mode> enc(
-            Botan::Cipher_Mode::create("AES-128/CTR-BE", Botan::ENCRYPTION));
+            Botan::Cipher_Mode::create("AES-128/CTR-BE", Botan::Cipher_Dir::Encryption));
          std::unique_ptr<Botan::Cipher_Mode> dec(
-            Botan::Cipher_Mode::create("AES-128/CTR-BE", Botan::DECRYPTION));
+            Botan::Cipher_Mode::create("AES-128/CTR-BE", Botan::Cipher_Dir::Decryption));
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("2B7E151628AED2A6ABF7158809CF4F3C");

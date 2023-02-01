@@ -370,7 +370,7 @@ Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const
    buf += key_seed;
    buf += aead_nonce;
 
-   std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, ENCRYPTION);
+   std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, Cipher_Dir::Encryption);
    BOTAN_ASSERT_NOMSG(aead->valid_nonce_length(TLS_SESSION_CRYPT_AEAD_NONCE_LEN));
    BOTAN_ASSERT_NOMSG(aead->tag_size() == TLS_SESSION_CRYPT_AEAD_TAG_SIZE);
    aead->set_key(aead_key);
@@ -415,7 +415,7 @@ Session Session::decrypt(const uint8_t in[], size_t in_len, const SymmetricKey& 
       hmac->update(key_seed, TLS_SESSION_CRYPT_AEAD_KEY_SEED_LEN);
       const secure_vector<uint8_t> aead_key = hmac->final();
 
-      auto aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, DECRYPTION);
+      auto aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, Cipher_Dir::Decryption);
       aead->set_key(aead_key);
       aead->set_associated_data(in, TLS_SESSION_CRYPT_HDR_LEN);
       aead->start(aead_nonce, TLS_SESSION_CRYPT_AEAD_NONCE_LEN);

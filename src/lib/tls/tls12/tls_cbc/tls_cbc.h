@@ -117,7 +117,7 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Encryption final : public TLS_CBC_HMAC_AE
                              const size_t mac_keylen,
                              const Protocol_Version version,
                              bool use_encrypt_then_mac) :
-         TLS_CBC_HMAC_AEAD_Mode(ENCRYPTION,
+         TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir::Encryption,
                                 std::move(cipher),
                                 std::move(mac),
                                 cipher_keylen,
@@ -152,7 +152,7 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AE
                                    const size_t mac_keylen,
                                    const Protocol_Version version,
                                    bool use_encrypt_then_mac) :
-         TLS_CBC_HMAC_AEAD_Mode(DECRYPTION,
+         TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir::Decryption,
                                 std::move(cipher),
                                 std::move(mac),
                                 cipher_keylen,

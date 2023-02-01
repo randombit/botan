@@ -133,7 +133,7 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
 /**
 * Get an AEAD mode by name (eg "AES-128/GCM" or "Serpent/EAX")
 * @param name AEAD name
-* @param direction ENCRYPTION or DECRYPTION
+* @param direction Cipher_Dir::Encryption or Cipher_Dir::Decryption
 */
 inline AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction)
    {

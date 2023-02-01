@@ -35,7 +35,7 @@ class SIV_Tests final : public Text_Based_Test
 
          Test::Result result(siv_name);
 
-         auto siv = Botan::AEAD_Mode::create(siv_name, Botan::ENCRYPTION);
+         auto siv = Botan::AEAD_Mode::create(siv_name, Botan::Cipher_Dir::Encryption);
 
          if(!siv)
             {

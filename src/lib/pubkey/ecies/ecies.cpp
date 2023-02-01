@@ -250,7 +250,7 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
       m_eph_public_key_bin = m_params.domain().OS2ECP(m_eph_public_key_bin).encode(ecies_params.compression_type());
       }
    m_mac = m_params.create_mac();
-   m_cipher = m_params.create_cipher(ENCRYPTION);
+   m_cipher = m_params.create_cipher(Cipher_Dir::Encryption);
    }
 
 /*
@@ -338,7 +338,7 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
       }
 
    m_mac = m_params.create_mac();
-   m_cipher = m_params.create_cipher(DECRYPTION);
+   m_cipher = m_params.create_cipher(Cipher_Dir::Decryption);
    }
 
 size_t ECIES_Decryptor::plaintext_length(size_t ctext_len) const
