@@ -113,10 +113,14 @@ Use of ``enum class``
 --------------------------------
 
 Several enumerations where modified to become ``enum class``, including
-``DL_Group::Format``, ``CRL_Code``, ``EC_Group_Encoding``, ``Signature_Format``.
+``DL_Group::Format``, ``CRL_Code``, ``EC_Group_Encoding``, ``Signature_Format``,
+``Cipher_Dir``, ``TLS::Extension_Code``, ``TLS::Connection_Side``,
+``TLS::Record_Type``, and ``TLS::Handshake_Type``
 
-The value of ``Signature_Format`` formerly known as ``IEEE_1363`` is now
-called ``Standard``.
+In many cases the enumeration values were renamed from ``SHOUTING_CASE`` to
+``CamelCase``. In cases where the enumeration was commonly used by applications
+(for example ``Signature_Format`` and ``Cipher_Dir``) the old enumeration names
+are retained as deprecated variants.
 
 ASN.1 enums
 ---------------
