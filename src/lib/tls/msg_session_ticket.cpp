@@ -16,9 +16,9 @@
 namespace Botan::TLS {
 
 New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io,
-                                       Handshake_Hash& hash,
-                                       const std::vector<uint8_t>& ticket,
-                                       uint32_t lifetime) :
+                                             Handshake_Hash& hash,
+                                             const std::vector<uint8_t>& ticket,
+                                             std::chrono::seconds lifetime) :
    m_ticket_lifetime_hint(lifetime),
    m_ticket(ticket)
    {

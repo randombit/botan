@@ -1068,7 +1068,7 @@ class Shim_Policy final : public Botan::TLS::Policy
 
       //bool hide_unknown_users() const override;
 
-      //uint32_t session_ticket_lifetime() const override;
+      //std::chrono::seconds session_ticket_lifetime() const override;
 
       std::vector<uint16_t> srtp_profiles() const override
          {

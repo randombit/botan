@@ -15,6 +15,7 @@
 #include <memory>
 #include <optional>
 #include <variant>
+#include <chrono>
 
 #include <botan/tls_extensions.h>
 #include <botan/tls_handshake_msg.h>
@@ -911,7 +912,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message
       New_Session_Ticket_12(Handshake_IO& io,
                             Handshake_Hash& hash,
                             const std::vector<uint8_t>& ticket,
-                            uint32_t lifetime);
+                            std::chrono::seconds lifetime);
 
       New_Session_Ticket_12(Handshake_IO& io,
                             Handshake_Hash& hash);
