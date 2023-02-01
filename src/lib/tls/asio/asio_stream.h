@@ -625,7 +625,7 @@ class Stream
 
             void tls_alert(TLS::Alert alert) override
                {
-               if(alert.type() == TLS::Alert::CLOSE_NOTIFY)
+               if(alert.type() == TLS::AlertType::CloseNotify)
                   {
                   shutdown_received = true;
                   // Channel::process_alert will automatically write the corresponding close_notify response to the

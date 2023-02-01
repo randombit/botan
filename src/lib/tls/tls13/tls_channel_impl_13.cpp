@@ -20,12 +20,12 @@
 namespace {
 bool is_user_canceled_alert(const Botan::TLS::Alert& alert)
    {
-   return alert.type() == Botan::TLS::Alert::USER_CANCELED;
+   return alert.type() == Botan::TLS::Alert::UserCanceled;
    }
 
 bool is_close_notify_alert(const Botan::TLS::Alert& alert)
    {
-   return alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY;
+   return alert.type() == Botan::TLS::Alert::CloseNotify;
    }
 
 bool is_error_alert(const Botan::TLS::Alert& alert)
@@ -193,17 +193,17 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
       // RFC 8446 5.2
       //    If the decryption fails, the receiver MUST terminate the connection
       //    with a "bad_record_mac" alert.
-      send_fatal_alert(Alert::BAD_RECORD_MAC);
+      send_fatal_alert(Alert::BadRecordMac);
       throw;
       }
    catch(Decoding_Error&)
       {
-      send_fatal_alert(Alert::DECODE_ERROR);
+      send_fatal_alert(Alert::DecodeError);
       throw;
       }
    catch(...)
       {
-      send_fatal_alert(Alert::INTERNAL_ERROR);
+      send_fatal_alert(Alert::InternalError);
       throw;
       }
    }
@@ -307,7 +307,7 @@ void Channel_Impl_13::send_alert(const Alert& alert)
       catch(...) { /* swallow it */ }
       }
 
-   // Note: In TLS 1.3 sending a CLOSE_NOTIFY must not immediately lead to closing the reading end.
+   // Note: In TLS 1.3 sending a CloseNotify must not immediately lead to closing the reading end.
    // RFC 8446 6.1
    //    Each party MUST send a "close_notify" alert before closing its write
    //    side of the connection, unless it has already sent some error alert.
@@ -408,7 +408,7 @@ void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record)
          }
       else
          {
-         throw TLS_Exception(Alert::DECODE_ERROR, "Error alert not marked fatal");  // will shutdown in send_alert
+         throw TLS_Exception(Alert::DecodeError, "Error alert not marked fatal");  // will shutdown in send_alert
          }
       }
 

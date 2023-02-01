@@ -19,7 +19,7 @@ Alert::Alert(const secure_vector<uint8_t>& buf)
    if(buf[0] == 1)      m_fatal = false;
    else if(buf[0] == 2) m_fatal = true;
    else
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Bad code for TLS alert level");
+      throw TLS_Exception(Alert::IllegalParameter, "Bad code for TLS alert level");
 
    const uint8_t dc = buf[1];
 
@@ -34,90 +34,96 @@ std::vector<uint8_t> Alert::serialize() const
       });
    }
 
-std::string Alert::type_string() const
+namespace {
+
+const char* alert_type_to_string(AlertType type)
    {
-   switch(type())
+   switch(type)
       {
-      case CLOSE_NOTIFY:
+      case AlertType::CloseNotify:
          return "close_notify";
-      case UNEXPECTED_MESSAGE:
+      case AlertType::UnexpectedMessage:
          return "unexpected_message";
-      case BAD_RECORD_MAC:
+      case AlertType::BadRecordMac:
          return "bad_record_mac";
-      case DECRYPTION_FAILED:
+      case AlertType::DecryptionFailed:
          return "decryption_failed";
-      case RECORD_OVERFLOW:
+      case AlertType::RecordOverflow:
          return "record_overflow";
-      case DECOMPRESSION_FAILURE:
+      case AlertType::DecompressionFailure:
          return "decompression_failure";
-      case HANDSHAKE_FAILURE:
+      case AlertType::HandshakeFailure:
          return "handshake_failure";
-      case NO_CERTIFICATE:
+      case AlertType::NoCertificate:
          return "no_certificate";
-      case BAD_CERTIFICATE:
+      case AlertType::BadCertificate:
          return "bad_certificate";
-      case UNSUPPORTED_CERTIFICATE:
+      case AlertType::UnsupportedCertificate:
          return "unsupported_certificate";
-      case CERTIFICATE_REVOKED:
+      case AlertType::CertificateRevoked:
          return "certificate_revoked";
-      case CERTIFICATE_EXPIRED:
+      case AlertType::CertificateExpired:
          return "certificate_expired";
-      case CERTIFICATE_UNKNOWN:
+      case AlertType::CertificateUnknown:
          return "certificate_unknown";
-      case ILLEGAL_PARAMETER:
+      case AlertType::IllegalParameter:
          return "illegal_parameter";
-      case UNKNOWN_CA:
+      case AlertType::UnknownCA:
          return "unknown_ca";
-      case ACCESS_DENIED:
+      case AlertType::AccessDenied:
          return "access_denied";
-      case DECODE_ERROR:
+      case AlertType::DecodeError:
          return "decode_error";
-      case DECRYPT_ERROR:
+      case AlertType::DecryptError:
          return "decrypt_error";
-      case EXPORT_RESTRICTION:
+      case AlertType::ExportRestriction:
          return "export_restriction";
-      case PROTOCOL_VERSION:
+      case AlertType::ProtocolVersion:
          return "protocol_version";
-      case INSUFFICIENT_SECURITY:
+      case AlertType::InsufficientSecurity:
          return "insufficient_security";
-      case INTERNAL_ERROR:
+      case AlertType::InternalError:
          return "internal_error";
-      case INAPPROPRIATE_FALLBACK:
+      case AlertType::InappropriateFallback:
          return "inappropriate_fallback";
-      case USER_CANCELED:
+      case AlertType::UserCanceled:
          return "user_canceled";
-      case NO_RENEGOTIATION:
+      case AlertType::NoRenegotiation:
          return "no_renegotiation";
-      case MISSING_EXTENSION:
+      case AlertType::MissingExtension:
          return "missing_extension";
-      case UNSUPPORTED_EXTENSION:
+      case AlertType::UnsupportedExtension:
          return "unsupported_extension";
-      case CERTIFICATE_UNOBTAINABLE:
+      case AlertType::CertificateUnobtainable:
          return "certificate_unobtainable";
-      case UNRECOGNIZED_NAME:
+      case AlertType::UnrecognizedName:
          return "unrecognized_name";
-      case BAD_CERTIFICATE_STATUS_RESPONSE:
+      case AlertType::BadCertificateStatusResponse:
          return "bad_certificate_status_response";
-      case BAD_CERTIFICATE_HASH_VALUE:
+      case AlertType::BadCertificateHashValue:
          return "bad_certificate_hash_value";
-      case UNKNOWN_PSK_IDENTITY:
+      case AlertType::UnknownPSKIdentity:
          return "unknown_psk_identity";
-      case CERTIFICATE_REQUIRED:
+      case AlertType::CertificateRequired:
          return "certificate_required";
-      case NO_APPLICATION_PROTOCOL:
+      case AlertType::NoApplicationProtocol:
          return "no_application_protocol";
 
-      case NULL_ALERT:
+      case AlertType::None:
          return "none";
       }
 
-   /*
-   * This is effectively the default case for the switch above, but we
-   * leave it out so that when an alert type is added to the enum the
-   * compiler can warn us that it is not included in the switch
-   * statement.
-   */
-   return "unrecognized_alert_" + std::to_string(type());
+   return nullptr;
+   }
+
+}
+
+std::string Alert::type_string() const
+   {
+   if(const char* known_alert = alert_type_to_string(type()))
+      return std::string(known_alert);
+
+   return "unrecognized_alert_" + std::to_string(static_cast<size_t>(type()));
    }
 
 }

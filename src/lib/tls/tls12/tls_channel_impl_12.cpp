@@ -116,7 +116,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
 
       if(active_version.is_datagram_protocol() != version.is_datagram_protocol())
          {
-         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+         throw TLS_Exception(Alert::ProtocolVersion,
                              "Active state using version " + active_version.to_string() +
                              " cannot change to " + version.to_string() + " in pending");
          }
@@ -321,7 +321,7 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
             }
 
          if(m_record_buf.size() > MAX_PLAINTEXT_SIZE)
-            throw TLS_Exception(Alert::RECORD_OVERFLOW,
+            throw TLS_Exception(Alert::RecordOverflow,
                                 "TLS plaintext record is larger than allowed maximum");
 
 
@@ -338,7 +338,7 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
                if(record.version().major_version() != 3 &&
                   record.version().major_version() != 0xFE)
                   {
-                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                  throw TLS_Exception(Alert::ProtocolVersion,
                                       "Received unexpected record version in initial record");
                   }
                }
@@ -346,7 +346,7 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
                {
                if(pending->server_hello() != nullptr && record.version() != pending->version())
                   {
-                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                  throw TLS_Exception(Alert::ProtocolVersion,
                                          "Received unexpected record version");
                   }
                }
@@ -354,7 +354,7 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
                {
                if(record.version() != active->version())
                   {
-                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                  throw TLS_Exception(Alert::ProtocolVersion,
                                       "Received unexpected record version");
                   }
                }
@@ -363,15 +363,15 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
          if(record.type() == Record_Type::Handshake || record.type() == Record_Type::ChangeCipherSpec)
             {
             if(m_has_been_closed)
-               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received handshake data after connection closure");
+               throw TLS_Exception(Alert::UnexpectedMessage, "Received handshake data after connection closure");
             process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
             }
          else if(record.type() == Record_Type::ApplicationData)
             {
             if(m_has_been_closed)
-               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received application data after connection closure");
+               throw TLS_Exception(Alert::UnexpectedMessage, "Received application data after connection closure");
             if(pending_state() != nullptr)
-               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Can't interleave application and handshake data");
+               throw TLS_Exception(Alert::UnexpectedMessage, "Can't interleave application and handshake data");
             process_application_data(record.sequence(), m_record_buf);
             }
          else if(record.type() == Record_Type::Alert)
@@ -393,17 +393,17 @@ size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
       }
    catch(Invalid_Authentication_Tag&)
       {
-      send_fatal_alert(Alert::BAD_RECORD_MAC);
+      send_fatal_alert(Alert::BadRecordMac);
       throw;
       }
    catch(Decoding_Error&)
       {
-      send_fatal_alert(Alert::DECODE_ERROR);
+      send_fatal_alert(Alert::DecodeError);
       throw;
       }
    catch(...)
       {
-      send_fatal_alert(Alert::INTERNAL_ERROR);
+      send_fatal_alert(Alert::InternalError);
       throw;
       }
    }
@@ -489,7 +489,7 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record)
     {
     Alert alert_msg(record);
 
-    if(alert_msg.type() == Alert::NO_RENEGOTIATION)
+    if(alert_msg.type() == Alert::NoRenegotiation)
        m_pending_state.reset();
 
     callbacks().tls_alert(alert_msg);
@@ -500,15 +500,15 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record)
           m_session_manager.remove_entry(active->server_hello()->session_id());
        }
 
-    if(alert_msg.type() == Alert::CLOSE_NOTIFY)
+    if(alert_msg.type() == Alert::CloseNotify)
        {
        // TLS 1.2 requires us to immediately react with our "close_notify",
        // the return value of the application's callback has no effect on that.
        callbacks().tls_peer_closed_connection();
-       send_warning_alert(Alert::CLOSE_NOTIFY); // reply in kind
+       send_warning_alert(Alert::CloseNotify); // reply in kind
        }
 
-    if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
+    if(alert_msg.type() == Alert::CloseNotify || alert_msg.is_fatal())
        {
        m_has_been_closed = true;
        }
@@ -593,7 +593,7 @@ void Channel_Impl_12::send_alert(const Alert& alert)
       catch(...) { /* swallow it */ }
       }
 
-   if(alert.type() == Alert::NO_RENEGOTIATION)
+   if(alert.type() == Alert::NoRenegotiation)
       m_pending_state.reset();
 
    if(alert.is_fatal())
@@ -605,7 +605,7 @@ void Channel_Impl_12::send_alert(const Alert& alert)
       reset_state();
    }
 
-   if(alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal())
+   if(alert.type() == Alert::CloseNotify || alert.is_fatal())
       {
       m_has_been_closed = true;
       }
@@ -620,7 +620,7 @@ void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_h
       const bool active_sr = active->client_hello()->secure_renegotiation();
 
       if(active_sr != secure_renegotiation)
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HandshakeFailure,
                              "Client changed its mind about secure renegotiation");
       }
 
@@ -629,7 +629,7 @@ void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_h
       const std::vector<uint8_t>& data = client_hello->renegotiation_info();
 
       if(data != secure_renegotiation_data_for_client_hello())
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HandshakeFailure,
                              "Client sent bad values for secure renegotiation");
       }
    }
@@ -643,7 +643,7 @@ void Channel_Impl_12::secure_renegotiation_check(const Server_Hello_12* server_h
       const bool active_sr = active->server_hello()->secure_renegotiation();
 
       if(active_sr != secure_renegotiation)
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HandshakeFailure,
                              "Server changed its mind about secure renegotiation");
       }
 
@@ -652,7 +652,7 @@ void Channel_Impl_12::secure_renegotiation_check(const Server_Hello_12* server_h
       const std::vector<uint8_t>& data = server_hello->renegotiation_info();
 
       if(data != secure_renegotiation_data_for_server_hello())
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HandshakeFailure,
                              "Server sent bad values for secure renegotiation");
       }
    }

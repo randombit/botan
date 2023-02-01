@@ -66,7 +66,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          }
 
       if(shared_group == Group_Params::NONE)
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HandshakeFailure,
                "Could not agree on a DH group with the client");
 
       BOTAN_ASSERT(group_param_is_dh(shared_group), "DH groups for the DH ciphersuites god");
@@ -89,7 +89,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       Group_Params shared_group = policy.choose_key_exchange_group(ec_groups, {});
 
       if(shared_group == Group_Params::NONE)
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "No shared ECC group with client");
+         throw TLS_Exception(Alert::HandshakeFailure, "No shared ECC group with client");
 
       std::vector<uint8_t> ecdh_public_val;
 

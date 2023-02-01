@@ -65,7 +65,7 @@ New_Session_Ticket_13::New_Session_Ticket_13(const std::vector<uint8_t>& buf,
    //    seconds (7 days).
    if(m_ticket_lifetime_hint > std::chrono::days(7))
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+      throw TLS_Exception(Alert::IllegalParameter,
                           "Received a session ticket with lifetime longer than one week.");
       }
 

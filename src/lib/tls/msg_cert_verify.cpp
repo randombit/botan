@@ -142,7 +142,7 @@ Signature_Scheme choose_signature_scheme(
          }
       }
 
-   throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Failed to agree on a signature algorithm");
+   throw TLS_Exception(Alert::HandshakeFailure, "Failed to agree on a signature algorithm");
    }
 
 }
@@ -169,7 +169,7 @@ Certificate_Verify_13::Certificate_Verify_13(
                                        m_side == Connection_Side::Client ? "tls-client" : "tls-server",
                                        hostname);
    if(!private_key)
-      { throw TLS_Exception(Alert::INTERNAL_ERROR, "Application did not provide a private key for its certificate"); }
+      { throw TLS_Exception(Alert::InternalError, "Application did not provide a private key for its certificate"); }
 
    m_scheme = choose_signature_scheme(*private_key, policy.allowed_signature_schemes(), peer_allowed_schemes);
    BOTAN_ASSERT_NOMSG(m_scheme.is_available());
@@ -190,10 +190,10 @@ Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf,
    , m_side(side)
    {
    if(!m_scheme.is_available())
-      { throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Peer sent unknown signature scheme"); }
+      { throw TLS_Exception(Alert::HandshakeFailure, "Peer sent unknown signature scheme"); }
 
    if(!m_scheme.is_compatible_with(Protocol_Version::TLS_V13))
-      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Peer sent signature algorithm that is not suitable for TLS 1.3"); }
+      { throw TLS_Exception(Alert::IllegalParameter, "Peer sent signature algorithm that is not suitable for TLS 1.3"); }
    }
 
 /*
@@ -209,7 +209,7 @@ bool Certificate_Verify_13::verify(const X509_Certificate& cert,
    //    The keys found in certificates MUST [...] be of appropriate type for
    //    the signature algorithms they are used with.
    if(m_scheme.key_algorithm_identifier() != cert.subject_public_key_algo())
-      { throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Signature algorithm does not match certificate's public key"); }
+      { throw TLS_Exception(Alert::IllegalParameter, "Signature algorithm does not match certificate's public key"); }
 
    const auto key = cert.subject_public_key();
    const bool signature_valid =

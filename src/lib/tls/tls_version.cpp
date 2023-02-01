@@ -51,7 +51,7 @@ bool Protocol_Version::is_tls_13_or_later() const
 bool Protocol_Version::operator>(const Protocol_Version& other) const
    {
    if(this->is_datagram_protocol() != other.is_datagram_protocol())
-      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+      throw TLS_Exception(Alert::ProtocolVersion,
                           "Version comparing " + to_string() +
                           " with " + other.to_string());
 

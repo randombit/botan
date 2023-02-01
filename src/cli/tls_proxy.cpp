@@ -337,7 +337,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
       void tls_alert(Botan::TLS::Alert alert) override
          {
-         if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
+         if(alert.type() == Botan::TLS::Alert::CloseNotify)
             {
             m_tls.close();
             return;

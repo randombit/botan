@@ -384,7 +384,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
    if(record_len < tag_size() ||
       (record_len - (use_encrypt_then_mac() ? tag_size() : 0)) % block_size() != 0)
       {
-      throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
+      throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
       }
 
    if(use_encrypt_then_mac())
@@ -410,7 +410,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
 
       if(!mac_ok)
          {
-         throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
+         throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
          }
 
       cbc_decrypt_record(record_contents, enc_size);
@@ -421,7 +421,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       // No oracle here, whoever sent us this had the key since MAC check passed
       if(pad_size == 0)
          {
-         throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
+         throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
          }
 
       const uint8_t* plaintext_block = &record_contents[0];
@@ -493,7 +493,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
          */
          if(is_datagram_protocol())
             mac().final(mac_buf);
-         throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
+         throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
          }
       }
    }
