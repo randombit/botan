@@ -59,7 +59,9 @@ void Stream_Handshake_IO::add_record(const uint8_t record[],
          throw Decoding_Error("Invalid ChangeCipherSpec");
 
       // Pretend it's a regular handshake message of zero length
-      const uint8_t ccs_hs[] = { HANDSHAKE_CCS, 0, 0, 0 };
+      const uint8_t ccs_hs[] = {
+         static_cast<uint8_t>(Handshake_Type::HandshakeCCS), 0, 0, 0
+      };
       m_queue.insert(m_queue.end(), ccs_hs, ccs_hs + sizeof(ccs_hs));
       }
    else
@@ -79,7 +81,7 @@ Stream_Handshake_IO::get_next_record(bool /*expecting_ccs*/)
          {
          Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
 
-         if(type == HANDSHAKE_NONE)
+         if(type == Handshake_Type::None)
             throw Decoding_Error("Invalid handshake message type");
 
          std::vector<uint8_t> contents(m_queue.begin() + 4,
@@ -91,7 +93,7 @@ Stream_Handshake_IO::get_next_record(bool /*expecting_ccs*/)
          }
       }
 
-   return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
+   return std::make_pair(Handshake_Type::None, std::vector<uint8_t>());
    }
 
 std::vector<uint8_t>
@@ -123,7 +125,7 @@ std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg)
    {
    const std::vector<uint8_t> msg_bits = msg.serialize();
 
-   if(msg.type() == HANDSHAKE_CCS)
+   if(msg.type() == Handshake_Type::HandshakeCCS)
       {
       m_send_hs(Record_Type::ChangeCipherSpec, msg_bits);
       return std::vector<uint8_t>(); // not included in handshake hashes
@@ -220,7 +222,7 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
       if(record_len < DTLS_HANDSHAKE_HEADER_LEN)
          return; // completely bogus? at least degenerate/weird
 
-      const uint8_t msg_type = record[0];
+      const Handshake_Type msg_type = static_cast<Handshake_Type>(record[0]);
       const size_t msg_len = load_be24(&record[1]);
       const uint16_t message_seq = load_be<uint16_t>(&record[4], 0);
       const size_t fragment_offset = load_be24(&record[6]);
@@ -264,16 +266,16 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
          const uint16_t current_epoch = m_messages.begin()->second.epoch();
 
          if(m_ccs_epochs.count(current_epoch))
-            return std::make_pair(HANDSHAKE_CCS, std::vector<uint8_t>());
+            return std::make_pair(Handshake_Type::HandshakeCCS, std::vector<uint8_t>());
          }
-      return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
+      return std::make_pair(Handshake_Type::None, std::vector<uint8_t>());
       }
 
    auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete())
       {
-      return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
+      return std::make_pair(Handshake_Type::None, std::vector<uint8_t>());
       }
 
    m_in_message_seq += 1;
@@ -286,13 +288,13 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
    size_t fragment_length,
    size_t fragment_offset,
    uint16_t epoch,
-   uint8_t msg_type,
+   Handshake_Type msg_type,
    size_t msg_length)
    {
    if(complete())
       return; // already have entire message, ignore this
 
-   if(m_msg_type == HANDSHAKE_NONE)
+   if(m_msg_type == Handshake_Type::None)
       {
       m_epoch = epoch;
       m_msg_type = msg_type;
@@ -338,7 +340,8 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
 
 bool Datagram_Handshake_IO::Handshake_Reassembly::complete() const
    {
-   return (m_msg_type != HANDSHAKE_NONE && m_message.size() == m_msg_length);
+   return (m_msg_type != Handshake_Type::None &&
+           m_message.size() == m_msg_length);
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
@@ -347,7 +350,7 @@ Datagram_Handshake_IO::Handshake_Reassembly::message() const
    if(!complete())
       throw Internal_Error("Datagram_Handshake_IO - message not complete");
 
-   return std::make_pair(static_cast<Handshake_Type>(m_msg_type), m_message);
+   return std::make_pair(m_msg_type, m_message);
    }
 
 std::vector<uint8_t>
@@ -403,12 +406,12 @@ Datagram_Handshake_IO::send_under_epoch(const Handshake_Message& msg, uint16_t e
    const std::vector<uint8_t> msg_bits = msg.serialize();
    const Handshake_Type msg_type = msg.type();
 
-   if(msg_type == HANDSHAKE_CCS)
+   if(msg_type == Handshake_Type::HandshakeCCS)
       {
       m_send_hs(epoch, Record_Type::ChangeCipherSpec, msg_bits);
       return std::vector<uint8_t>(); // not included in handshake hashes
       }
-   else if(msg_type == HELLO_VERIFY_REQUEST)
+   else if(msg_type == Handshake_Type::HelloVerifyRequest)
       {
       // This message is not included in the handshake hashes
       send_message(m_out_message_seq, epoch, msg_type, msg_bits);

@@ -28,7 +28,7 @@ Server_Impl_13::Server_Impl_13(Callbacks& callbacks,
       { expect_downgrade({}); }
 #endif
 
-   m_transitions.set_expected_next(CLIENT_HELLO);
+   m_transitions.set_expected_next(Handshake_Type::ClientHello);
    }
 
 std::string Server_Impl_13::application_protocol() const
@@ -154,11 +154,11 @@ void Server_Impl_13::handle_reply_to_client_hello(const Server_Hello_13& server_
       //    [...]. If the server requests client authentication but no
       //    suitable certificate is available, the client MUST send a Certificate
       //    message containing no certificates [...].
-      m_transitions.set_expected_next(CERTIFICATE);
+      m_transitions.set_expected_next(Handshake_Type::Certificate);
       }
    else
       {
-      m_transitions.set_expected_next(FINISHED);
+      m_transitions.set_expected_next(Handshake_Type::Finished);
       }
 
    flight
@@ -210,7 +210,7 @@ void Server_Impl_13::handle_reply_to_client_hello(const Hello_Retry_Request& hel
 
    m_transcript_hash = Transcript_Hash_State::recreate_after_hello_retry_request(cipher->prf_algo(), m_transcript_hash);
 
-   m_transitions.set_expected_next(CLIENT_HELLO);
+   m_transitions.set_expected_next(Handshake_Type::ClientHello);
    }
 
 void Server_Impl_13::handle(const Client_Hello_12& ch)
@@ -351,7 +351,7 @@ void Server_Impl_13::handle(const Certificate_13& certificate_msg)
       // RFC 8446 4.4.2
       //    A Finished message MUST be sent regardless of whether the
       //    Certificate message is empty.
-      m_transitions.set_expected_next(FINISHED);
+      m_transitions.set_expected_next(Handshake_Type::Finished);
       }
    else
       {
@@ -375,7 +375,7 @@ void Server_Impl_13::handle(const Certificate_13& certificate_msg)
       //    certificate (i.e., when the Certificate message
       //    is non-empty). When sent, this message MUST appear immediately after
       //    the Certificate message [...].
-      m_transitions.set_expected_next(CERTIFICATE_VERIFY);
+      m_transitions.set_expected_next(Handshake_Type::CertificateVerify);
       }
    }
 
@@ -408,7 +408,7 @@ void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    if(!sig_valid)
       { throw TLS_Exception(Alert::DECRYPT_ERROR, "Client certificate verification failed"); }
 
-   m_transitions.set_expected_next(FINISHED);
+   m_transitions.set_expected_next(Handshake_Type::Finished);
    }
 
 void Server_Impl_13::handle(const Finished_13& finished_msg)

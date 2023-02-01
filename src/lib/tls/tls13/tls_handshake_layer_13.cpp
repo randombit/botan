@@ -26,34 +26,38 @@ namespace {
 constexpr size_t HEADER_LENGTH = 4;
 
 template<typename Msg_Type>
-Handshake_Type handshake_type_from_byte(uint8_t type)
+Handshake_Type handshake_type_from_byte(uint8_t byte_value)
    {
+   const auto type = static_cast<Handshake_Type>(byte_value);
+
    if constexpr(std::is_same_v<Msg_Type, Handshake_Message_13>)
       {
       switch(type)
          {
-         case CLIENT_HELLO:
-         case SERVER_HELLO:
-         // case END_OF_EARLY_DATA:  // NYI: needs PSK/resumption support -- won't be offered in Client Hello for now
-         case ENCRYPTED_EXTENSIONS:
-         case CERTIFICATE:
-         case CERTIFICATE_REQUEST:
-         case CERTIFICATE_VERIFY:
-         case FINISHED:
-            return Handshake_Type(type);
+         case Handshake_Type::ClientHello:
+         case Handshake_Type::ServerHello:
+         // case Handshake_Type::EndOfEarlyData:  // NYI: needs PSK/resumption support -- won't be offered in Client Hello for now
+         case Handshake_Type::EncryptedExtensions:
+         case Handshake_Type::Certificate:
+         case Handshake_Type::CertificateRequest:
+         case Handshake_Type::CertificateVerify:
+         case Handshake_Type::Finished:
+            return type;
+         default:
+            throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Unknown handshake message received");
          }
-      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Unknown handshake message received");
       }
    else
       {
       switch(type)
          {
-         case NEW_SESSION_TICKET:
-         case KEY_UPDATE:
-         // case CERTIFICATE_REQUEST:  // NYI: post-handshake client auth (RFC 8446 4.6.2) -- won't be offered in Client Hello for now
-            return Handshake_Type(type);
+         case Handshake_Type::NewSessionTicket:
+         case Handshake_Type::KeyUpdate:
+         // case Handshake_Type::CertificateRequest:  // NYI: post-handshake client auth (RFC 8446 4.6.2) -- won't be offered in Client Hello for now
+            return type;
+         default:
+            throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Unknown post-handshake message received");
          }
-      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Unknown post-handshake message received");
       }
    }
 
@@ -78,26 +82,26 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader, const Policy
       {
       switch(type)
          {
-         // CLIENT_HELLO and SERVER_HELLO messages are ambiguous. Both may come
+         // Client Hello and Server Hello messages are ambiguous. Both may come
          // from non-TLS 1.3 peers. Hence, their parsing is somewhat different.
-         case CLIENT_HELLO:
+         case Handshake_Type::ClientHello:
             // ... might be TLS 1.2 Client Hello or TLS 1.3 Client Hello
             return generalize_to<Handshake_Message_13>(Client_Hello_13::parse(msg));
-         case SERVER_HELLO:
+         case Handshake_Type::ServerHello:
             // ... might be TLS 1.2 Server Hello or TLS 1.3 Server Hello or
             // a TLS 1.3 Hello Retry Request disguising as a Server Hello
             return generalize_to<Handshake_Message_13>(Server_Hello_13::parse(msg));
-         // case END_OF_EARLY_DATA:
+         // case Handshake_Type::EndOfEarlyData:
          //    return End_Of_Early_Data(msg);
-         case ENCRYPTED_EXTENSIONS:
+         case Handshake_Type::EncryptedExtensions:
             return Encrypted_Extensions(msg);
-         case CERTIFICATE:
+         case Handshake_Type::Certificate:
             return Certificate_13(msg, policy, peer_side);
-         case CERTIFICATE_REQUEST:
+         case Handshake_Type::CertificateRequest:
             return Certificate_Request_13(msg, peer_side);
-         case CERTIFICATE_VERIFY:
+         case Handshake_Type::CertificateVerify:
             return Certificate_Verify_13(msg, peer_side);
-         case FINISHED:
+         case Handshake_Type::Finished:
             return Finished_13(msg);
          default:
             BOTAN_ASSERT(false, "cannot be reached"); // make sure to update handshake_type_from_byte
@@ -109,9 +113,9 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader, const Policy
 
       switch(type)
          {
-         case NEW_SESSION_TICKET:
+         case Handshake_Type::NewSessionTicket:
             return New_Session_Ticket_13(msg, peer_side);
-         case KEY_UPDATE:
+         case Handshake_Type::KeyUpdate:
             return Key_Update(msg);
          default:
             BOTAN_ASSERT(false, "cannot be reached"); // make sure to update handshake_type_from_byte

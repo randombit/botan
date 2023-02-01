@@ -97,7 +97,7 @@ Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgr
    state.hash().update(downgrade_info.client_hello_message);
 
    secure_renegotiation_check(state.client_hello());
-   state.set_expected_next(SERVER_HELLO);
+   state.set_expected_next(Handshake_Type::ServerHello);
    }
 
 std::unique_ptr<Handshake_State> Client_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io)
@@ -139,8 +139,8 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
    Client_Handshake_State_12& state = dynamic_cast<Client_Handshake_State_12&>(state_base);
 
    if(state.version().is_datagram_protocol())
-      state.set_expected_next(HELLO_VERIFY_REQUEST); // optional
-   state.set_expected_next(SERVER_HELLO);
+      state.set_expected_next(Handshake_Type::HelloVerifyRequest); // optional
+   state.set_expected_next(Handshake_Type::ServerHello);
 
    if(!force_full_renegotiation && !m_info.empty())
       {
@@ -227,7 +227,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
    Client_Handshake_State_12& state = dynamic_cast<Client_Handshake_State_12&>(state_base);
 
-   if(type == HELLO_REQUEST && active_state)
+   if(type == Handshake_Type::HelloRequest && active_state)
       {
       Hello_Request hello_request(contents);
 
@@ -266,18 +266,22 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
    state.confirm_transition_to(type);
 
-   if(type != HANDSHAKE_CCS && type != FINISHED && type != HELLO_VERIFY_REQUEST)
-      state.hash().update(state.handshake_io().format(contents, type));
-
-   if(type == HELLO_VERIFY_REQUEST)
+   if(type != Handshake_Type::HandshakeCCS &&
+      type != Handshake_Type::Finished &&
+      type != Handshake_Type::HelloVerifyRequest)
       {
-      state.set_expected_next(SERVER_HELLO);
-      state.set_expected_next(HELLO_VERIFY_REQUEST); // might get it again
+      state.hash().update(state.handshake_io().format(contents, type));
+      }
+
+   if(type == Handshake_Type::HelloVerifyRequest)
+      {
+      state.set_expected_next(Handshake_Type::ServerHello);
+      state.set_expected_next(Handshake_Type::HelloVerifyRequest); // might get it again
 
       Hello_Verify_Request hello_verify_request(contents);
       state.hello_verify_request(hello_verify_request);
       }
-   else if(type == SERVER_HELLO)
+   else if(type == Handshake_Type::ServerHello)
       {
       state.server_hello(new Server_Hello_12(contents));
 
@@ -355,7 +359,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
                                 "Server replied with DTLS-SRTP alg we did not send");
          }
 
-      callbacks().tls_examine_extensions(state.server_hello()->extensions(), Connection_Side::Server, Handshake_Type::SERVER_HELLO);
+      callbacks().tls_examine_extensions(state.server_hello()->extensions(), Connection_Side::Server, Handshake_Type::ServerHello);
 
       state.set_version(state.server_hello()->legacy_version());
       m_application_protocol = state.server_hello()->next_protocol();
@@ -397,11 +401,11 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
          if(state.server_hello()->supports_session_ticket())
             {
-            state.set_expected_next(NEW_SESSION_TICKET);
+            state.set_expected_next(Handshake_Type::NewSessionTicket);
             }
          else
             {
-            state.set_expected_next(HANDSHAKE_CCS);
+            state.set_expected_next(Handshake_Type::HandshakeCCS);
             }
          }
       else
@@ -456,7 +460,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
          if(state.ciphersuite().signature_used() || state.ciphersuite().kex_method() == Kex_Algo::STATIC_RSA)
             {
-            state.set_expected_next(CERTIFICATE);
+            state.set_expected_next(Handshake_Type::Certificate);
             }
          else if(state.ciphersuite().kex_method() == Kex_Algo::PSK)
             {
@@ -468,21 +472,21 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
                DH exchange portion, and is covered by block below
             */
 
-            state.set_expected_next(SERVER_KEX);
-            state.set_expected_next(SERVER_HELLO_DONE);
+            state.set_expected_next(Handshake_Type::ServerKeyExchange);
+            state.set_expected_next(Handshake_Type::ServerHelloDone);
             }
          else if(state.ciphersuite().kex_method() != Kex_Algo::STATIC_RSA)
             {
-            state.set_expected_next(SERVER_KEX);
+            state.set_expected_next(Handshake_Type::ServerKeyExchange);
             }
          else
             {
-            state.set_expected_next(CERTIFICATE_REQUEST); // optional
-            state.set_expected_next(SERVER_HELLO_DONE);
+            state.set_expected_next(Handshake_Type::CertificateRequest); // optional
+            state.set_expected_next(Handshake_Type::ServerHelloDone);
             }
          }
       }
-   else if(type == CERTIFICATE)
+   else if(type == Handshake_Type::Certificate)
       {
       state.server_certs(new Certificate_12(contents, policy()));
 
@@ -526,17 +530,17 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
       if(state.ciphersuite().kex_method() != Kex_Algo::STATIC_RSA)
          {
-         state.set_expected_next(SERVER_KEX);
+         state.set_expected_next(Handshake_Type::ServerKeyExchange);
          }
       else
          {
-         state.set_expected_next(CERTIFICATE_REQUEST); // optional
-         state.set_expected_next(SERVER_HELLO_DONE);
+         state.set_expected_next(Handshake_Type::CertificateRequest); // optional
+         state.set_expected_next(Handshake_Type::ServerHelloDone);
          }
 
       if(state.server_hello()->supports_certificate_status_message())
          {
-         state.set_expected_next(CERTIFICATE_STATUS); // optional
+         state.set_expected_next(Handshake_Type::CertificateStatus); // optional
          }
       else
          {
@@ -561,25 +565,25 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
             }
          }
       }
-   else if(type == CERTIFICATE_STATUS)
+   else if(type == Handshake_Type::CertificateStatus)
       {
       state.server_cert_status(new Certificate_Status(contents, Connection_Side::Server));
 
       if(state.ciphersuite().kex_method() != Kex_Algo::STATIC_RSA)
          {
-         state.set_expected_next(SERVER_KEX);
+         state.set_expected_next(Handshake_Type::ServerKeyExchange);
          }
       else
          {
-         state.set_expected_next(CERTIFICATE_REQUEST); // optional
-         state.set_expected_next(SERVER_HELLO_DONE);
+         state.set_expected_next(Handshake_Type::CertificateRequest); // optional
+         state.set_expected_next(Handshake_Type::ServerHelloDone);
          }
       }
-   else if(type == SERVER_KEX)
+   else if(type == Handshake_Type::ServerKeyExchange)
       {
       if(state.ciphersuite().psk_ciphersuite() == false)
-         state.set_expected_next(CERTIFICATE_REQUEST); // optional
-      state.set_expected_next(SERVER_HELLO_DONE);
+         state.set_expected_next(Handshake_Type::CertificateRequest); // optional
+      state.set_expected_next(Handshake_Type::ServerHelloDone);
 
       state.server_kex(
          new Server_Key_Exchange(contents,
@@ -599,12 +603,12 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
             }
          }
       }
-   else if(type == CERTIFICATE_REQUEST)
+   else if(type == Handshake_Type::CertificateRequest)
       {
-      state.set_expected_next(SERVER_HELLO_DONE);
+      state.set_expected_next(Handshake_Type::ServerHelloDone);
       state.cert_req(new Certificate_Request_12(contents));
       }
-   else if(type == SERVER_HELLO_DONE)
+   else if(type == Handshake_Type::ServerHelloDone)
       {
       state.server_hello_done(new Server_Hello_Done(contents));
 
@@ -643,7 +647,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
             }
          }
 
-      if(state.received_handshake_msg(CERTIFICATE_REQUEST))
+      if(state.received_handshake_msg(Handshake_Type::CertificateRequest))
          {
          const auto& types = state.cert_req()->acceptable_cert_types();
 
@@ -671,7 +675,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
       state.compute_session_keys();
 
-      if(state.received_handshake_msg(CERTIFICATE_REQUEST) &&
+      if(state.received_handshake_msg(Handshake_Type::CertificateRequest) &&
          !state.client_certs()->empty())
          {
          Private_Key* private_key =
@@ -695,23 +699,23 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       state.client_finished(new Finished_12(state.handshake_io(), state, Connection_Side::Client));
 
       if(state.server_hello()->supports_session_ticket())
-         state.set_expected_next(NEW_SESSION_TICKET);
+         state.set_expected_next(Handshake_Type::NewSessionTicket);
       else
-         state.set_expected_next(HANDSHAKE_CCS);
+         state.set_expected_next(Handshake_Type::HandshakeCCS);
       }
-   else if(type == NEW_SESSION_TICKET)
+   else if(type == Handshake_Type::NewSessionTicket)
       {
       state.new_session_ticket(new New_Session_Ticket_12(contents));
 
-      state.set_expected_next(HANDSHAKE_CCS);
+      state.set_expected_next(Handshake_Type::HandshakeCCS);
       }
-   else if(type == HANDSHAKE_CCS)
+   else if(type == Handshake_Type::HandshakeCCS)
       {
-      state.set_expected_next(FINISHED);
+      state.set_expected_next(Handshake_Type::Finished);
 
       change_cipher_spec_reader(Connection_Side::Client);
       }
-   else if(type == FINISHED)
+   else if(type == Handshake_Type::Finished)
       {
       if(state.handshake_io().have_more_data())
          throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,

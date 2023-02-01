@@ -19,7 +19,7 @@ namespace Botan::TLS {
 
 Handshake_Type Certificate_Request_12::type() const
    {
-   return CERTIFICATE_REQUEST;
+   return Handshake_Type::CertificateRequest;
    }
 
 namespace {

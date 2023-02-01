@@ -1676,7 +1676,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
       void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& msg) override
          {
-         if(msg.type() == Botan::TLS::Handshake_Type::HELLO_RETRY_REQUEST)
+         if(msg.type() == Botan::TLS::Handshake_Type::HelloRetryRequest)
             {
             m_hello_retry_request = true;
             }

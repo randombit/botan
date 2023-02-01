@@ -24,69 +24,70 @@ const char* handshake_type_to_string(Handshake_Type type)
    {
    switch(type)
       {
-      case HELLO_VERIFY_REQUEST:
+      case Handshake_Type::HelloVerifyRequest:
          return "hello_verify_request";
 
-      case HELLO_REQUEST:
+      case Handshake_Type::HelloRequest:
          return "hello_request";
 
-      case CLIENT_HELLO:
+      case Handshake_Type::ClientHello:
          return "client_hello";
 
-      case SERVER_HELLO:
+      case Handshake_Type::ServerHello:
          return "server_hello";
 
-      case HELLO_RETRY_REQUEST:
+      case Handshake_Type::HelloRetryRequest:
          return "hello_retry_request";
 
-      case CERTIFICATE:
+      case Handshake_Type::Certificate:
          return "certificate";
 
-      case CERTIFICATE_URL:
+      case Handshake_Type::CertificateUrl:
          return "certificate_url";
 
-      case CERTIFICATE_STATUS:
+      case Handshake_Type::CertificateStatus:
          return "certificate_status";
 
-      case SERVER_KEX:
+      case Handshake_Type::ServerKeyExchange:
          return "server_key_exchange";
 
-      case CERTIFICATE_REQUEST:
+      case Handshake_Type::CertificateRequest:
          return "certificate_request";
 
-      case SERVER_HELLO_DONE:
+      case Handshake_Type::ServerHelloDone:
          return "server_hello_done";
 
-      case CERTIFICATE_VERIFY:
+      case Handshake_Type::CertificateVerify:
          return "certificate_verify";
 
-      case CLIENT_KEX:
+      case Handshake_Type::ClientKeyExchange:
          return "client_key_exchange";
 
-      case NEW_SESSION_TICKET:
+      case Handshake_Type::NewSessionTicket:
          return "new_session_ticket";
 
-      case HANDSHAKE_CCS:
+      case Handshake_Type::HandshakeCCS:
          return "change_cipher_spec";
 
-      case FINISHED:
+      case Handshake_Type::Finished:
          return "finished";
 
-      case END_OF_EARLY_DATA:
+      case Handshake_Type::EndOfEarlyData:
          return "end_of_early_data";
 
-      case ENCRYPTED_EXTENSIONS:
+      case Handshake_Type::EncryptedExtensions:
          return "encrypted_extensions";
 
-      case KEY_UPDATE:
+      case Handshake_Type::KeyUpdate:
          return "key_update";
 
-      case HANDSHAKE_NONE:
+      case Handshake_Type::None:
          return "invalid";
       }
 
    throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
-                       "Unknown TLS handshake message type " + std::to_string(type));
+                       "Unknown TLS handshake message type " +
+                       std::to_string(static_cast<size_t>(type)));
    }
 
 
