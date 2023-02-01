@@ -82,7 +82,7 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader, const Policy
       {
       switch(type)
          {
-         // CLIENT_HELLO and SERVER_HELLO messages are ambiguous. Both may come
+         // Client Hello and Server Hello messages are ambiguous. Both may come
          // from non-TLS 1.3 peers. Hence, their parsing is somewhat different.
          case Handshake_Type::ClientHello:
             // ... might be TLS 1.2 Client Hello or TLS 1.3 Client Hello

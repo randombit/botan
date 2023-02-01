@@ -370,7 +370,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
       void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message) override
          {
-         if(message.type() == Botan::TLS::CLIENT_HELLO)
+         if(message.type() == Botan::TLS::Handshake_Type::ClientHello)
             {
             const Botan::TLS::Client_Hello& client_hello = dynamic_cast<const Botan::TLS::Client_Hello&>(message);
 
