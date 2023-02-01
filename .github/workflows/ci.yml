@@ -71,7 +71,6 @@ jobs:
             target: amalgamation
           - compiler: gcc
             target: static
-
           - compiler: clang
             target: shared
 
@@ -115,32 +114,14 @@ jobs:
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
-  specials:
-    name: "Metrics and Specials"
+  analysis:
+    name: "Analysis"
     strategy:
       fail-fast: false
 
       matrix:
         include:
           - target: coverage
-            compiler: gcc
-            host_os: ubuntu-22.04
-          - target: valgrind
-            compiler: gcc
-            host_os: ubuntu-22.04
-          - target: fuzzers
-            compiler: gcc
-            host_os: ubuntu-22.04
-          - target: examples
-            compiler: gcc
-            host_os: ubuntu-22.04
-          - target: emscripten
-            compiler: emcc
-            host_os: ubuntu-22.04
-          - target: minimized
-            compiler: gcc
-            host_os: ubuntu-22.04
-          - target: bsi
             compiler: gcc
             host_os: ubuntu-22.04
           - target: sanitizer
@@ -153,13 +134,15 @@ jobs:
           - target: sanitizer
             compiler: gcc
             host_os: ubuntu-22.04
+          - target: valgrind
+            compiler: gcc
+            host_os: ubuntu-22.04
+          - target: fuzzers
+            compiler: gcc
+            host_os: ubuntu-22.04
           - target: lint
             compiler: gcc
             host_os: ubuntu-22.04
-          - target: static
-            compiler: gcc
-            host_os: windows-2022
-            make_tool: mingw32-make
 
     runs-on: ${{ matrix.host_os }}
 
@@ -185,8 +168,41 @@ jobs:
       - name: Build and Test Botan
         run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
+  specials:
+    name: "Special"
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - target: examples
+            compiler: gcc
+            host_os: ubuntu-22.04
+          - target: minimized
+            compiler: gcc
+            host_os: ubuntu-22.04
+          - target: bsi
+            compiler: gcc
+            host_os: ubuntu-22.04
+
+    runs-on: ${{ matrix.host_os }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: ./source
+
+      - name: Setup Build Agent
+        uses: ./source/.github/actions/setup-build-agent
+        with:
+          target: ${{ matrix.target }}
+          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+
+      - name: Build and Test Botan
+        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+
   x-compile:
-    name: "Cross-Compilation"
+    name: "Cross"
     strategy:
       fail-fast: false
 
@@ -222,6 +238,13 @@ jobs:
           - target: cross-ios-arm64
             compiler: clang
             host_os: macos-12
+          - target: static
+            compiler: gcc
+            host_os: windows-2022
+            make_tool: mingw32-make
+          - target: emscripten
+            compiler: emcc
+            host_os: ubuntu-22.04
 
     runs-on: ${{ matrix.host_os }}
 
