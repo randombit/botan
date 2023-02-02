@@ -670,7 +670,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension
 
       PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type);
 
-      PSK(const Session_with_Handle& session_to_resume, Callbacks& callbacks);
+      PSK(Session_with_Handle& session_to_resume, Callbacks& callbacks);
 
       ~PSK();
 

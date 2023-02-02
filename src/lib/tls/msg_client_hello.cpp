@@ -757,7 +757,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  RandomNumberGenerator& rng,
                                  const std::string& hostname,
                                  const std::vector<std::string>& next_protocols,
-                                 const std::optional<Session_with_Handle>& session)
+                                 std::optional<Session_with_Handle>& session)
    {
    // RFC 8446 4.1.2
    //    In TLS 1.3, the client indicates its version preferences in the

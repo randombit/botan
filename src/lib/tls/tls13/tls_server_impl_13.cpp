@@ -226,9 +226,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello)
       auto psk = server_hello.extensions().get<PSK>();
       m_resumed_session.emplace(psk->take_session_to_resume());
 
-      // TODO: avoid copying the master secret unnecessarily
-      auto master_secret = m_resumed_session->master_secret();
-      psk_cipher_state = Cipher_State::init_with_psk(Connection_Side::Server, Cipher_State::PSK_Type::Resumption, std::move(master_secret), cipher);
+      psk_cipher_state = Cipher_State::init_with_psk(Connection_Side::Server, Cipher_State::PSK_Type::Resumption, m_resumed_session->extract_master_secret(), cipher);
 
       // RFC 8446 4.2.11
       //    Prior to accepting PSK key establishment, the server MUST validate

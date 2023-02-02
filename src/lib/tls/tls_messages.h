@@ -220,12 +220,17 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello
 class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
    {
    public:
+      /**
+       * Creates a client hello which might optionally use the passed-in
+       * @p session for resumption. In that case, this will "extract" the
+       * master secret from the passed-in @p session.
+       */
       Client_Hello_13(const Policy& policy,
                       Callbacks& cb,
                       RandomNumberGenerator& rng,
                       const std::string& hostname,
                       const std::vector<std::string>& next_protocols,
-                      const std::optional<Session_with_Handle>& session = std::nullopt);
+                      std::optional<Session_with_Handle>& session);
 
       static std::variant<Client_Hello_13, Client_Hello_12>
       parse(const std::vector<uint8_t>& buf);

@@ -269,9 +269,14 @@ class BOTAN_PUBLIC_API(2,0) Session final
       Connection_Side side() const { return m_connection_side; }
 
       /**
-      * Get the saved master secret
+      * Get a reference to the contained master secret
       */
       const secure_vector<uint8_t>& master_secret() const { return m_master_secret; }
+
+      /**
+      * Get the contained master secret as a moved-out object
+      */
+      secure_vector<uint8_t> extract_master_secret();
 
       /**
       * Get the negotiated DTLS-SRTP algorithm (RFC 5764)

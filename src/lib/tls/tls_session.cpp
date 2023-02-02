@@ -337,6 +337,12 @@ Ciphersuite Session::ciphersuite() const
    return suite.value();
    }
 
+secure_vector<uint8_t> Session::extract_master_secret()
+   {
+   BOTAN_STATE_CHECK(!m_master_secret.empty());
+   return std::exchange(m_master_secret, {});
+   }
+
 namespace {
 
 // The output length of the HMAC must be a valid keylength for the AEAD
