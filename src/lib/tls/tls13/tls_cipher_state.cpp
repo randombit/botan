@@ -397,14 +397,14 @@ bool Cipher_State::verify_peer_finished_mac(const Transcript_Hash& transcript_ha
    return hmac.verify_mac(peer_mac);
    }
 
-secure_vector<uint8_t> Cipher_State::psk(const std::vector<uint8_t>& nonce) const
+secure_vector<uint8_t> Cipher_State::psk(const Ticket_Nonce& nonce) const
    {
    BOTAN_ASSERT_NOMSG(m_state == State::Completed);
 
-   return derive_secret(m_resumption_master_secret, "resumption", nonce);
+   return derive_secret(m_resumption_master_secret, "resumption", nonce.get());
    }
 
-std::vector<uint8_t> Cipher_State::next_ticket_nonce()
+Ticket_Nonce Cipher_State::next_ticket_nonce()
    {
    BOTAN_STATE_CHECK(m_state == State::Completed);
    if(m_ticket_nonce == std::numeric_limits<decltype(m_ticket_nonce)>::max())
@@ -412,7 +412,7 @@ std::vector<uint8_t> Cipher_State::next_ticket_nonce()
       throw Botan::Invalid_State("ticket nonce pool exhausted");
       }
 
-   std::vector<uint8_t> retval(sizeof(m_ticket_nonce));
+   Ticket_Nonce retval(std::vector<uint8_t>(sizeof(m_ticket_nonce)));
    store_be(m_ticket_nonce++, retval.data());
 
    return retval;

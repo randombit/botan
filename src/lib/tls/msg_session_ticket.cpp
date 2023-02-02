@@ -71,7 +71,7 @@ std::vector<uint8_t> New_Session_Ticket_12::serialize() const
 
 #if defined (BOTAN_HAS_TLS_13)
 
-New_Session_Ticket_13::New_Session_Ticket_13(std::vector<uint8_t> nonce,
+New_Session_Ticket_13::New_Session_Ticket_13(Ticket_Nonce nonce,
                                              const Session& session,
                                              const Session_Handle& handle,
                                              Callbacks& callbacks)
@@ -100,7 +100,7 @@ New_Session_Ticket_13::New_Session_Ticket_13(const std::vector<uint8_t>& buf,
       }
 
    m_ticket_age_add = reader.get_uint32_t();
-   m_ticket_nonce = reader.get_tls_length_value(1);
+   m_ticket_nonce = Ticket_Nonce(reader.get_tls_length_value(1));
    m_handle = Opaque_Session_Handle(reader.get_tls_length_value(2));
 
    m_extensions.deserialize(reader, from, type());
@@ -134,7 +134,7 @@ std::vector<uint8_t> New_Session_Ticket_13::serialize() const
 
    store_lifetime(std::span(result.data(), 4), m_ticket_lifetime_hint);
    store_be(m_ticket_age_add, result.data() + 4);
-   append_tls_length_value(result, m_ticket_nonce, 1);
+   append_tls_length_value(result, m_ticket_nonce.get(), 1);
    append_tls_length_value(result, m_handle.get(), 2);
 
    // TODO: re-evaluate this construction when reworking message marshalling

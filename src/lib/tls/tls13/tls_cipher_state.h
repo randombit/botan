@@ -11,6 +11,7 @@
 
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
+#include <botan/tls_messages.h>
 
 #include <botan/internal/tls_transcript_hash_13.h>
 
@@ -165,14 +166,14 @@ class BOTAN_TEST_API Cipher_State
       /**
        * Calculate the PSK for the given nonce (RFC 8446 4.6.1)
        */
-      secure_vector<uint8_t> psk(const std::vector<uint8_t>& nonce) const;
+      secure_vector<uint8_t> psk(const Ticket_Nonce& nonce) const;
 
       /**
        * Generates a nonce value that is unique for any given Cipher_State object.
        * Note that the number of nonces is limited to 2^16 and this method will
        * throw if more nonces are requested.
        */
-      std::vector<uint8_t> next_ticket_nonce();
+      Ticket_Nonce next_ticket_nonce();
 
       /**
        * Derive key material to export (RFC 8446 7.5 and RFC 5705)

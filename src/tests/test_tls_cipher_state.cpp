@@ -412,9 +412,9 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
 
       CHECK_both("ticket nonce counter counts", [&](Cipher_State* cs, Connection_Side, Test::Result& result)
          {
-         result.test_eq("nonce is 0x00, 0x00", cs->next_ticket_nonce(), std::vector<uint8_t>{0x00, 0x00});
-         result.test_eq("nonce is 0x00, 0x01", cs->next_ticket_nonce(), std::vector<uint8_t>{0x00, 0x01});
-         result.test_eq("nonce is 0x00, 0x02", cs->next_ticket_nonce(), std::vector<uint8_t>{0x00, 0x02});
+         result.test_is_eq("nonce is 0x00, 0x00", cs->next_ticket_nonce(), Botan::TLS::Ticket_Nonce(std::vector<uint8_t>{0x00, 0x00}));
+         result.test_is_eq("nonce is 0x00, 0x01", cs->next_ticket_nonce(), Botan::TLS::Ticket_Nonce(std::vector<uint8_t>{0x00, 0x01}));
+         result.test_is_eq("nonce is 0x00, 0x02", cs->next_ticket_nonce(), Botan::TLS::Ticket_Nonce(std::vector<uint8_t>{0x00, 0x02}));
 
          for(uint32_t i = 3; i < std::numeric_limits<uint16_t>::max(); ++i)
             {
@@ -430,7 +430,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
 
       CHECK_both("PSK", [&](Cipher_State* cs, Connection_Side, Test::Result &result) {
          // derive PSK for resumption
-         const auto psk = cs->psk({0x00, 0x00} /* ticket_nonce as defined in RFC 8448 */);
+         const auto psk = cs->psk(Botan::TLS::Ticket_Nonce(std::vector<uint8_t>{0x00, 0x00}) /* ticket_nonce as defined in RFC 8448 */);
          result.test_eq("PSK matches", psk, expected_psk);
       }),
 

@@ -931,12 +931,17 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message
 
 #if defined(BOTAN_HAS_TLS_13)
 
+#include <botan/strong_type.h>
+
+/// @brief Used to derive the ticket's PSK from the resumption_master_secret
+using Ticket_Nonce = Strong<std::vector<uint8_t>, struct Ticket_Nonce_>;
+
 class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return Handshake_Type::NewSessionTicket; }
 
-      New_Session_Ticket_13(std::vector<uint8_t> nonce,
+      New_Session_Ticket_13(Ticket_Nonce nonce,
                             const Session& session,
                             const Session_Handle& handle,
                             Callbacks& callbacks);
@@ -949,7 +954,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
       const Extensions& extensions() const { return m_extensions; }
 
       const Opaque_Session_Handle& handle() const { return m_handle; }
-      const std::vector<uint8_t>& nonce() const { return m_ticket_nonce; }
+      const Ticket_Nonce& nonce() const { return m_ticket_nonce; }
       uint32_t ticket_age_add() const { return m_ticket_age_add; }
       std::chrono::seconds lifetime_hint() const { return m_ticket_lifetime_hint; }
 
@@ -969,7 +974,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message
       // ... hence we call it 'lifetime hint'.
       std::chrono::seconds m_ticket_lifetime_hint;
       uint32_t m_ticket_age_add;
-      std::vector<uint8_t> m_ticket_nonce;
+      Ticket_Nonce m_ticket_nonce;
       Opaque_Session_Handle m_handle;
       Extensions m_extensions;
    };
