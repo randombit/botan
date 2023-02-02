@@ -1969,16 +1969,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         logging.debug('Using MP bits %d', mp_bits)
         return mp_bits
 
-    def innosetup_arch(os_name, arch):
-        if os_name == 'windows':
-            inno_arch = {'x86_32': '',
-                         'x86_64': 'x64',
-                         'ia64': 'ia64'}
-            if arch not in inno_arch:
-                logging.warning('Unknown arch %s in innosetup_arch', arch)
-            return inno_arch.get(arch)
-        return None
-
     def configure_command_line():
         # Cut absolute path from main executable (e.g. configure.py or python interpreter)
         # to get the same result when configuring the same thing on different machines
@@ -2170,8 +2160,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'cpu_family': arch.family,
         'endian': options.with_endian,
         'cpu_is_64bit': arch.wordsize == 64,
-
-        'innosetup_arch': innosetup_arch(options.os, options.arch),
 
         'mp_bits': choose_mp_bits(),
 
@@ -3300,9 +3288,6 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
 
     if 'botan_pkgconfig' in template_vars:
         write_template(template_vars['botan_pkgconfig'], in_build_data('botan.pc.in'))
-
-    if options.os == 'windows':
-        write_template(in_build_dir('botan.iss'), in_build_data('innosetup.in'))
 
     link_method = choose_link_method(options)
 

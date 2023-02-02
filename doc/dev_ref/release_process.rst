@@ -89,25 +89,6 @@ Don't forget to also push tags::
 
   $ git push origin --tags release-2 master
 
-Build The Windows Installer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. note::
-   We haven't distributed Windows binaries for some time.
-
-On Windows, run ``configure.py`` to setup a build::
-
- $ python3 ./configure.py --cc=msvc --cpu=$ARCH --distribution-info=unmodified
-
-After completing the build (and running the tests), use `InnoSetup
-<http://www.jrsoftware.org/isinfo.php>`_ to create the installer.  A
-InnoSetup script is created from ``src/build-data/innosetup.in`` and
-placed in ``build/botan.iss`` by ``configure.py``. Create the
-installer either via the InnoSetup GUI by opening the ``iss`` file and
-selecting the 'Compile' option, or using the ``iscc`` command line
-tool. If all goes well it will produce an executable with a name like
-``botan-2.6.13-x86_64.exe``. Sign the installers with GPG.
-
 Update The Website
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
