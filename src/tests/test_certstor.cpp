@@ -135,9 +135,9 @@ Test::Result test_certstor_sqlite3_crl_test(const std::vector<CertificateAndKey>
          store.insert_cert(a.certificate);
          }
 
-      store.revoke_cert(certsandkeys[0].certificate, Botan::CRL_Code::CA_COMPROMISE);
-      store.revoke_cert(certsandkeys[3].certificate, Botan::CRL_Code::CA_COMPROMISE);
-      store.revoke_cert(certsandkeys[3].certificate, Botan::CRL_Code::CA_COMPROMISE);
+      store.revoke_cert(certsandkeys[0].certificate, Botan::CRL_Code::CaCompromise);
+      store.revoke_cert(certsandkeys[3].certificate, Botan::CRL_Code::CaCompromise);
+      store.revoke_cert(certsandkeys[3].certificate, Botan::CRL_Code::CaCompromise);
 
          {
          const auto crls = store.generate_crls();

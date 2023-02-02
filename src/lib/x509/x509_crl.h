@@ -65,7 +65,7 @@ class BOTAN_PUBLIC_API(2,0) CRL_Entry final : public ASN1_Object
       * @param reason the reason code to set in the entry
       */
       CRL_Entry(const X509_Certificate& cert,
-                CRL_Code reason = CRL_Code::UNSPECIFIED);
+                CRL_Code reason = CRL_Code::Unspecified);
 
    private:
       friend class X509_CRL;
