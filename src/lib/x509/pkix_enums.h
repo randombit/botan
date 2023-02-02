@@ -196,7 +196,6 @@ enum class CRL_Code : uint32_t {
    CessationOfOperation  = 5,
    CertificateHold       = 6,
    RemoveFromCrl         = 8,
-   PrivledgeWithdrawn    = 9,
    PrivilegeWithdrawn    = 9,
    AaCompromise          = 10,
 };
