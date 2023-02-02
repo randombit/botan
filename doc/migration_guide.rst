@@ -39,6 +39,7 @@ Functionality removed from the TLS implementation includes
 * Camellia CBC ciphersuites
 * AES-128 OCB ciphersuites
 * DHE_PSK ciphersuites
+* CECPQ1 ciphersuites
 
 TLS 1.3 API adaptions
 ---------------------
@@ -54,25 +55,19 @@ This ticket might be longer than a typical ID (up to 64kB). If your application
 depends on a short ID for each session, it is safe to just hash the returned
 buffer.
 
-
 Algorithms Removed
 -------------------
 
-The algorithms CAST-256, MISTY1, Kasumi, DESX, XTEA, PBKDF1, MCEIES, CBC-MAC and
-Tiger have been removed. The expectation is that literally nobody was using any
-of these algorithms for anything. All are obscure, and many are broken.
+The algorithms CAST-256, MISTY1, Kasumi, DESX, XTEA, PBKDF1, MCEIES, CBC-MAC,
+Tiger, CECPQ1, and NewHope have been removed.
 
 Certificate API shared_ptr
 ----------------------------
 
-Previously the certificate store returned ``shared_ptr<X509_Certificate>`` to
-avoid copies. However starting in 2.4.0, ``X509_Certificate`` itself is a pimpl
+Previously the certificate store used ``shared_ptr<X509_Certificate>`` in
+various APIs. However starting in 2.4.0, ``X509_Certificate`` itself is a pimpl
 to a ``shared_ptr``, making the outer shared pointer pointless. In 3.0 the
-certificate store interface has been changed to just consume and return
-``X509_Certificate``.
-
-This change similarly affects some of the functions involved in certificate
-path building.
+certificate interfaces have changed to just consume and return ``X509_Certificate``.
 
 All Or Nothing Package Transform
 ----------------------------------
@@ -118,9 +113,9 @@ Several enumerations where modified to become ``enum class``, including
 ``TLS::Record_Type``, and ``TLS::Handshake_Type``
 
 In many cases the enumeration values were renamed from ``SHOUTING_CASE`` to
-``CamelCase``. In cases where the enumeration was commonly used by applications
-(for example ``Signature_Format`` and ``Cipher_Dir``) the old enumeration names
-are retained as deprecated variants.
+``CamelCase``. In some cases where the enumeration was commonly used by
+applications (for example ``Signature_Format`` and ``Cipher_Dir``) the old
+enumeration names are retained as deprecated variants.
 
 ASN.1 enums
 ---------------
