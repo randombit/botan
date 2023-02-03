@@ -1,6 +1,6 @@
 /*
 * Word Rotation Operations
-* (C) 1999-2008,2017 Jack Lloyd
+* (C) 1999-2008,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -19,8 +19,8 @@ namespace Botan {
 */
 template<size_t ROT, typename T>
 inline constexpr T rotl(T input)
+   requires (ROT > 0 && ROT < 8*sizeof(T))
    {
-   static_assert(ROT > 0 && ROT < 8*sizeof(T), "Invalid rotation constant");
    return static_cast<T>((input << ROT) | (input >> (8*sizeof(T) - ROT)));
    }
 
@@ -31,8 +31,8 @@ inline constexpr T rotl(T input)
 */
 template<size_t ROT, typename T>
 inline constexpr T rotr(T input)
+   requires (ROT > 0 && ROT < 8*sizeof(T))
    {
-   static_assert(ROT > 0 && ROT < 8*sizeof(T), "Invalid rotation constant");
    return static_cast<T>((input >> ROT) | (input << (8*sizeof(T) - ROT)));
    }
 
