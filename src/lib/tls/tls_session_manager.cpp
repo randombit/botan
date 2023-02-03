@@ -26,6 +26,11 @@ std::optional<Session_Handle> Session_Manager::establish(const Session& session,
    BOTAN_ASSERT(session.side() == Connection_Side::Server,
                 "Client tried to establish a session");
 
+   // TODO: C++20 allows CTAD for template aliases (read: lock_guard_type), so
+   //       technically we should be able to omit the explicit mutex type.
+   //       Unfortuately clang does not agree, yet.
+   lock_guard_type<recursive_mutex_type> lk(mutex());
+
    Session_Handle handle(id.value_or(m_rng.random_vec<Session_ID>(32)));
    store(session, handle);
    return handle;
@@ -35,7 +40,8 @@ std::optional<Session> Session_Manager::retrieve(const Session_Handle& handle,
                                                  Callbacks& callbacks,
                                                  const Policy& policy)
    {
-   BOTAN_UNUSED(callbacks, policy);
+   lock_guard_type<recursive_mutex_type> lk(mutex());
+
    auto session = retrieve_one(handle);
    if(!session.has_value())
       return std::nullopt;
@@ -84,6 +90,8 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager::find(const Serv
                                                                       Callbacks& callbacks,
                                                                       const Policy& policy)
    {
+   lock_guard_type<recursive_mutex_type> lk(mutex());
+
    auto sessions_and_handles = find_all(info);
 
    // A value of '0' means: No policy restrictions. Session ticket lifetimes as
@@ -177,6 +185,8 @@ std::optional<std::pair<Session, uint16_t>>
                                                    Callbacks& callbacks,
                                                    const Policy& policy)
    {
+   lock_guard_type<recursive_mutex_type> lk(mutex());
+
    for(uint16_t i = 0; const auto& ticket : tickets)
       {
       auto session = retrieve(ticket.identity(), callbacks, policy);

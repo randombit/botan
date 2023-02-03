@@ -11,6 +11,7 @@
 
 #include <botan/build.h>
 #include <botan/tls_session.h>
+#include <botan/mutex.h>
 
 #if defined(BOTAN_HAS_TLS_13)
    #include <botan/tls_ticket_13.h>
@@ -36,7 +37,9 @@ class Policy;
 * Saving sessions is done on a best-effort basis; an implementation is
 * allowed to drop sessions due to space constraints or other issues.
 *
-* Implementations should strive to be thread safe
+* Implementations should strive to be thread safe. This base class provides a
+* recursive mutex (via Session_Manager::mutex()). Derived classes may simply
+* reuse this for their own locking.
 */
 class BOTAN_PUBLIC_API(3, 0) Session_Manager
    {
@@ -250,8 +253,16 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
       virtual std::vector<std::pair<Session, Session_Handle>>
             find_all(const Server_Information& info) = 0;
 
+      /**
+       * Returns the base class' recursive mutex for reuse in derived classes
+       */
+      recursive_mutex_type& mutex() { return m_mutex; }
+
    protected:
       RandomNumberGenerator& m_rng;
+
+   private:
+      recursive_mutex_type m_mutex;
    };
 
 }

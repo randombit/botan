@@ -65,8 +65,6 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory : public Session_Manager
       size_t remove_internal(const Session_Handle& handle);
 
    private:
-      mutex_type m_mutex;
-
       size_t m_max_sessions;
 
       std::map<Session_ID, std::pair<Session, Session_Handle>> m_sessions;

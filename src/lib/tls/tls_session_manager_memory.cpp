@@ -25,7 +25,10 @@ Session_Manager_In_Memory::Session_Manager_In_Memory(RandomNumberGenerator& rng,
 
 void Session_Manager_In_Memory::store(const Session& session, const Session_Handle& handle)
    {
-   lock_guard_type<mutex_type> lock(m_mutex);
+   // TODO: C++20 allows CTAD for template aliases (read: lock_guard_type), so
+   //       technically we should be able to omit the explicit mutex type.
+   //       Unfortuately clang does not agree, yet.
+   lock_guard_type<recursive_mutex_type> lk(mutex());
 
    if(m_fifo.has_value())
       {
@@ -52,7 +55,7 @@ void Session_Manager_In_Memory::store(const Session& session, const Session_Hand
 
 std::optional<Session> Session_Manager_In_Memory::retrieve_one(const Session_Handle& handle)
    {
-   lock_guard_type<mutex_type> lock(m_mutex);
+   lock_guard_type<recursive_mutex_type> lk(mutex());
 
    if(auto id = handle.id())
       {
@@ -66,7 +69,7 @@ std::optional<Session> Session_Manager_In_Memory::retrieve_one(const Session_Han
 
 std::vector<std::pair<Session, Session_Handle>> Session_Manager_In_Memory::find_all(const Server_Information& info)
    {
-   lock_guard_type<mutex_type> lock(m_mutex);
+   lock_guard_type<recursive_mutex_type> lk(mutex());
 
    std::vector<std::pair<Session, Session_Handle>> found_sessions;
    for(const auto& [_, session_and_handle] : m_sessions)
@@ -80,7 +83,7 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager_In_Memory::find_
 
 size_t Session_Manager_In_Memory::remove(const Session_Handle& handle)
    {
-   lock_guard_type<mutex_type> lock(m_mutex);
+   lock_guard_type<recursive_mutex_type> lk(mutex());
    return remove_internal(handle);
    }
 
@@ -134,7 +137,7 @@ size_t Session_Manager_In_Memory::remove_internal(const Session_Handle& handle)
 
 size_t Session_Manager_In_Memory::remove_all()
    {
-   lock_guard_type<mutex_type> lock(m_mutex);
+   lock_guard_type<recursive_mutex_type> lk(mutex());
 
    const auto sessions = m_sessions.size();
    m_sessions.clear();
