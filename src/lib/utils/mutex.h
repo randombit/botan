@@ -16,8 +16,8 @@
 namespace Botan {
 
 template<typename T> using lock_guard_type = std::lock_guard<T>;
-typedef std::mutex mutex_type;
-typedef std::recursive_mutex recursive_mutex_type;
+using mutex_type = std::mutex;
+using recursive_mutex_type = std::recursive_mutex;
 
 }
 

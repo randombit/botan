@@ -52,11 +52,11 @@
 namespace Botan {
 
 #if defined(BOTAN_SIMD_USE_SSE2)
-   typedef __m128i native_simd_type;
+   using native_simd_type = __m128i;
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-   typedef __vector unsigned int native_simd_type;
+   using native_simd_type = __vector unsigned int;
 #elif defined(BOTAN_SIMD_USE_NEON)
-   typedef uint32x4_t native_simd_type;
+   using native_simd_type = uint32x4_t;
 #endif
 
 /**
