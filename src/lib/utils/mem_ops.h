@@ -166,6 +166,18 @@ template <class To, class From> inline constexpr To typecast_copy(const From *sr
    return dst;
    }
 
+template< bool B, class T = void >
+using enable_if_t = typename std::enable_if<B,T>::type;
+template <class To, class From>
+enable_if_t<sizeof(To) == sizeof(From) && std::is_trivially_copyable_v<From> && std::is_trivially_copyable_v<To>, To>
+inline safecast_copy(const From &src) noexcept
+   requires std::is_trivially_constructible_v<To>
+   {
+   To dst;
+   std::memcpy(&dst, &src, sizeof(To));
+   return dst;
+   }
+
 /**
 * Set memory to a fixed value
 * @param ptr a pointer to an array of bytes
@@ -182,22 +194,22 @@ inline constexpr void set_mem(uint8_t* ptr, size_t n, uint8_t val)
 
 inline const uint8_t* cast_char_ptr_to_uint8(const char* s)
    {
-   return std::bit_cast<const uint8_t*>(s);
+   return safecast_copy<const uint8_t*>(s);
    }
 
 inline const char* cast_uint8_ptr_to_char(const uint8_t* b)
    {
-   return std::bit_cast<const char*>(b);
+   return safecast_copy<const char*>(b);
    }
 
 inline uint8_t* cast_char_ptr_to_uint8(char* s)
    {
-   return std::bit_cast<uint8_t*>(s);
+   return safecast_copy<uint8_t*>(s);
    }
 
 inline char* cast_uint8_ptr_to_char(uint8_t* b)
    {
-   return std::bit_cast<char*>(b);
+   return safecast_copy<char*>(b);
    }
 
 /**
