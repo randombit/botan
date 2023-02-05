@@ -68,7 +68,7 @@ class BOTAN_TEST_API Thread_Pool final
       template<class F, class... Args>
       auto run(F&& f, Args&&... args) -> std::future<typename std::invoke_result<F, Args...>::type>
          {
-         typedef typename std::invoke_result<F, Args...>::type return_type;
+         using return_type = typename std::invoke_result<F, Args...>::type;
 
          auto future_work = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
          auto task = std::make_shared<std::packaged_task<return_type ()>>(future_work);

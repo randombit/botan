@@ -182,10 +182,10 @@ class BitMap final
 
   private:
 #if defined(BOTAN_ENABLE_DEBUG_ASSERTS)
-      typedef uint8_t bitmask_type;
+      using bitmask_type = uint8_t;
       enum { BITMASK_BITS = 8 };
 #else
-      typedef word bitmask_type;
+      using bitmask_type = word;
       enum { BITMASK_BITS = BOTAN_MP_WORD_BITS };
 #endif
 

@@ -21,6 +21,7 @@ namespace Botan {
 */
 template<typename T>
 inline constexpr T expand_top_bit(T a)
+   requires (std::is_integral<T>::value)
    {
    return static_cast<T>(0) - (a >> (sizeof(T)*8-1));
    }
@@ -30,6 +31,7 @@ inline constexpr T expand_top_bit(T a)
 */
 template<typename T>
 inline constexpr T ct_is_zero(T x)
+   requires (std::is_integral<T>::value)
    {
    return expand_top_bit<T>(~x & (x - 1));
    }
@@ -41,6 +43,7 @@ inline constexpr T ct_is_zero(T x)
 */
 template<typename T>
 inline constexpr bool is_power_of_2(T arg)
+   requires (std::is_unsigned<T>::value)
    {
    return (arg != 0) && (arg != 1) && ((arg & static_cast<T>(arg-1)) == 0);
    }
@@ -53,6 +56,7 @@ inline constexpr bool is_power_of_2(T arg)
 */
 template<typename T>
 inline constexpr size_t high_bit(T n)
+   requires (std::is_unsigned<T>::value)
    {
    size_t hb = 0;
 
@@ -75,6 +79,7 @@ inline constexpr size_t high_bit(T n)
 */
 template<typename T>
 inline constexpr size_t significant_bytes(T n)
+   requires (std::is_integral<T>::value)
    {
    size_t b = 0;
 
@@ -97,6 +102,7 @@ inline constexpr size_t significant_bytes(T n)
 */
 template<typename T>
 inline constexpr size_t ctz(T n)
+   requires (std::is_integral<T>::value)
    {
    /*
    * If n == 0 then this function will compute 8*sizeof(T)-1, so
@@ -117,9 +123,8 @@ inline constexpr size_t ctz(T n)
 
 template<typename T>
 constexpr uint8_t ceil_log2(T x)
+   requires (std::is_integral<T>::value && sizeof(T) < 32)
    {
-   static_assert(sizeof(T) < 32, "Abnormally large scalar");
-
    if(x >> (sizeof(T)*8-1))
       return sizeof(T)*8;
 
