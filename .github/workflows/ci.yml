@@ -229,9 +229,10 @@ jobs:
           - target: cross-android-arm64
             compiler: clang
             host_os: ubuntu-22.04
-          - target: cross-win64
+          - target: static
             compiler: gcc
-            host_os: ubuntu-22.04
+            host_os: windows-2022
+            make_tool: mingw32-make
           - target: cross-ios-arm64
             compiler: clang
             host_os: macos-12
