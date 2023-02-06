@@ -340,12 +340,12 @@ std::vector<Protocol_Version> Client_Hello::supported_versions() const
 
 bool Client_Hello_12::supports_session_ticket() const
    {
-   return m_data->extensions.has<Session_Ticket>();
+   return m_data->extensions.has<Session_Ticket_Extension>();
    }
 
 std::vector<uint8_t> Client_Hello_12::session_ticket() const
    {
-   if(Session_Ticket* ticket = m_data->extensions.get<Session_Ticket>())
+   if(auto* ticket = m_data->extensions.get<Session_Ticket_Extension>())
       { return ticket->contents(); }
    return {};
    }
@@ -475,7 +475,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(policy.negotiate_encrypt_then_mac())
       { m_data->extensions.add(new Encrypt_then_MAC); }
 
-   m_data->extensions.add(new Session_Ticket());
+   m_data->extensions.add(new Session_Ticket_Extension());
 
    m_data->extensions.add(new Renegotiation_Extension(reneg_info));
 
@@ -550,7 +550,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(session.supports_encrypt_then_mac())
       { m_data->extensions.add(new Encrypt_then_MAC); }
 
-   m_data->extensions.add(new Session_Ticket(session.session_ticket()));
+   m_data->extensions.add(new Session_Ticket_Extension(session.session_ticket()));
 
    m_data->extensions.add(new Renegotiation_Extension(reneg_info));
 
@@ -791,7 +791,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    if(policy.allow_tls12())
       {
       m_data->extensions.add(new Renegotiation_Extension());
-      m_data->extensions.add(new Session_Ticket());
+      m_data->extensions.add(new Session_Ticket_Extension());
 
       // EMS must always be used with TLS 1.2, regardless of the policy
       m_data->extensions.add(new Extended_Master_Secret);

@@ -33,7 +33,7 @@ class Client_Handshake_State_12 final : public Handshake_State
          return *server_public_key.get();
          }
 
-      bool is_a_resumption() const { return (resumed_session != nullptr); }
+      bool is_a_resumption() const { return (resumed_session.has_value()); }
 
       bool is_a_renegotiation() const { return m_is_reneg; }
 
@@ -51,7 +51,7 @@ class Client_Handshake_State_12 final : public Handshake_State
 
       std::unique_ptr<Public_Key> server_public_key;
       // Used during session resumption
-      std::unique_ptr<Session> resumed_session;
+      std::optional<Session> resumed_session;
       bool m_is_reneg = false;
    };
 }
@@ -74,7 +74,7 @@ Client_Impl_12::Client_Impl_12(Callbacks& callbacks,
    {
    const auto version = datagram ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
    Handshake_State& state = create_handshake_state(version);
-   send_client_hello(state, false, version, next_protocols);
+   send_client_hello(state, false, version, std::nullopt /* no a-priori session to resume */, next_protocols);
    }
 
 Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info) :
@@ -90,14 +90,27 @@ Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgr
    {
    Handshake_State& state = create_handshake_state(Protocol_Version::TLS_V12);
 
-   std::vector<uint8_t> client_hello_msg(downgrade_info.client_hello_message.begin() + 4 /* handshake header length */,
-                                         downgrade_info.client_hello_message.end());
+   if(!downgrade_info.client_hello_message.empty())
+      {
+      // Downgrade detected after receiving a TLS 1.2 server hello. We need to
+      // recreate the state as if this implementation issued the client hello.
+      std::vector<uint8_t> client_hello_msg(downgrade_info.client_hello_message.begin() + 4 /* handshake header length */,
+                                            downgrade_info.client_hello_message.end());
 
-   state.client_hello(new Client_Hello_12(client_hello_msg));
-   state.hash().update(downgrade_info.client_hello_message);
+      state.client_hello(new Client_Hello_12(client_hello_msg));
+      state.hash().update(downgrade_info.client_hello_message);
 
-   secure_renegotiation_check(state.client_hello());
-   state.set_expected_next(Handshake_Type::ServerHello);
+      secure_renegotiation_check(state.client_hello());
+      state.set_expected_next(Handshake_Type::ServerHello);
+      }
+   else
+      {
+      // Downgrade initiated after a TLS 1.2 session was found. No communication
+      // has happened yet but the found session should be used for resumption.
+      BOTAN_ASSERT_NOMSG(downgrade_info.tls12_session.has_value() &&
+                         downgrade_info.tls12_session->version().is_pre_tls_13());
+      send_client_hello(state, false, downgrade_info.tls12_session->version(), downgrade_info.tls12_session, downgrade_info.next_protocols);
+      }
    }
 
 std::unique_ptr<Handshake_State> Client_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io)
@@ -134,6 +147,7 @@ void Client_Impl_12::initiate_handshake(Handshake_State& state,
 void Client_Impl_12::send_client_hello(Handshake_State& state_base,
                                        bool force_full_renegotiation,
                                        Protocol_Version version,
+                                       std::optional<Session> session_info,
                                        const std::vector<std::string>& next_protocols)
    {
    Client_Handshake_State_12& state = dynamic_cast<Client_Handshake_State_12&>(state_base);
@@ -142,10 +156,17 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
       state.set_expected_next(Handshake_Type::HelloVerifyRequest); // optional
    state.set_expected_next(Handshake_Type::ServerHello);
 
-   if(!force_full_renegotiation && !m_info.empty())
+   if(!force_full_renegotiation)
       {
-      auto session_info = std::make_unique<Session>();
-      if(session_manager().load_from_server_info(m_info, *session_info))
+      // if no session is provided, we need to try and find one opportunistically
+      if(!session_info.has_value() && !m_info.empty())
+         {
+         session_info = Session();
+         if(!session_manager().load_from_server_info(m_info, session_info.value()))
+            { session_info.reset(); }
+         }
+
+      if(session_info.has_value())
          {
          /*
          Ensure that the session protocol cipher and version are acceptable
@@ -373,7 +394,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       if(server_returned_same_session_id)
          {
          // successful resumption
-         BOTAN_ASSERT_NOMSG(state.resumed_session);
+         BOTAN_ASSERT_NOMSG(state.resumed_session.has_value());
 
          /*
          * In this case, we offered the version used in the original
@@ -756,7 +777,13 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          session_ticket,
          m_info,
          state.server_hello()->srtp_profile(),
-         callbacks().tls_current_timestamp()
+         callbacks().tls_current_timestamp(),
+
+         // Session Tickets (as defined in RFC 5077) contain a lifetime_hint,
+         // sessions identified via a Session_ID do not.
+         ((state.new_session_ticket())
+            ? state.new_session_ticket()->ticket_lifetime_hint()
+            : std::chrono::seconds::max())
          );
 
       const bool should_save = save_session(session_info);

@@ -160,7 +160,12 @@ class Channel_Impl
          /// The full data transcript received from the peer. This will contain the server hello message that forced us to downgrade.
          std::vector<uint8_t> peer_transcript;
 
+         /// The TLS 1.2 session information found by a TLS 1.3 client that
+         /// caused it to initiate a downgrade before even sending a client hello.
+         std::optional<Session> tls12_session;
+
          Server_Information server_info;
+         std::vector<std::string> next_protocols;
          size_t io_buffer_size;
 
          Callbacks& callbacks;
@@ -208,6 +213,16 @@ class Channel_Impl
          {
          BOTAN_STATE_CHECK(m_downgrade_info && !m_downgrade_info->will_downgrade);
          m_downgrade_info->will_downgrade = true;
+         }
+
+      void request_downgrade_for_resumption(Session session)
+         {
+         BOTAN_STATE_CHECK(m_downgrade_info &&
+                           m_downgrade_info->client_hello_message.empty() &&
+                           m_downgrade_info->peer_transcript.empty() &&
+                           !m_downgrade_info->tls12_session.has_value());
+         m_downgrade_info->tls12_session = std::move(session);
+         request_downgrade();
          }
 
    public:

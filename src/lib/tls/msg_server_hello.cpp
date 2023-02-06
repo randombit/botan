@@ -285,7 +285,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
 
    if(client_hello.supports_session_ticket() && server_settings.offer_session_ticket())
       {
-      m_data->extensions.add(new Session_Ticket());
+      m_data->extensions.add(new Session_Ticket_Extension());
       }
 
    if(m_data->legacy_version.is_datagram_protocol())
@@ -365,7 +365,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
 
    if(client_hello.supports_session_ticket() && offer_session_ticket)
       {
-      m_data->extensions.add(new Session_Ticket());
+      m_data->extensions.add(new Session_Ticket_Extension());
       }
 
    cb.tls_modify_extensions(m_data->extensions, Connection_Side::Server, type());
@@ -421,7 +421,7 @@ bool Server_Hello_12::supports_certificate_status_message() const
 
 bool Server_Hello_12::supports_session_ticket() const
    {
-   return m_data->extensions.has<Session_Ticket>();
+   return m_data->extensions.has<Session_Ticket_Extension>();
    }
 
 uint16_t Server_Hello_12::srtp_profile() const

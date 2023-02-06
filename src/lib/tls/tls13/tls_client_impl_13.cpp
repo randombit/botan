@@ -31,13 +31,27 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
                                const std::vector<std::string>& next_protocols) :
    Channel_Impl_13(callbacks, session_manager, creds, rng, policy, false /* is_server */),
    m_info(info),
-   m_should_send_ccs(false),
-   m_resumed_session(find_session_for_resumption())
+   m_should_send_ccs(false)
    {
 #if defined(BOTAN_HAS_TLS_12)
    if(policy.allow_tls12())
-      { expect_downgrade(info); }
+      { expect_downgrade(info, next_protocols); }
 #endif
+
+   if(auto session_to_resume = find_session_for_resumption())
+      {
+      if(!session_to_resume->version().is_pre_tls_13())
+         {
+         m_resumed_session = std::move(session_to_resume);
+         }
+      else if(expects_downgrade())
+         {
+         // If we found a session that was created with TLS 1.2, we downgrade
+         // the implementation right away, before even issuing a Client Hello.
+         request_downgrade_for_resumption(std::move(session_to_resume.value()));
+         return;
+         }
+      }
 
    auto msg = send_handshake_message(m_handshake_state.sending(Client_Hello_13(
                              policy,
@@ -120,14 +134,14 @@ std::optional<Session> Client_Impl_13::find_session_for_resumption()
    if(!session_manager().load_from_server_info(m_info, session))
       return std::nullopt;
 
-   // Ignore sessions that were not negotiated as TLS 1.3
-   if(session.version().is_pre_tls_13())
-      return std::nullopt;
 
    // RFC 8446 4.2.11.1
    //    Clients MUST NOT attempt to use tickets which have ages greater than
    //    the "ticket_lifetime" value which was provided with the ticket.
-   const auto session_age = callbacks().tls_current_timestamp() - session.start_time();
+   const auto session_age =
+      std::chrono::duration_cast<std::chrono::seconds>(
+         callbacks().tls_current_timestamp() - session.start_time());
+
    if(session_age > session.lifetime_hint())
       {
       session_manager().remove_entry(session.session_id());

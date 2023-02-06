@@ -68,7 +68,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
          return std::make_unique<Encrypt_then_MAC>(reader, size);
 
       case Extension_Code::SessionTicket:
-         return std::make_unique<Session_Ticket>(reader, size);
+         return std::make_unique<Session_Ticket_Extension>(reader, size);
 
       case Extension_Code::SupportedVersions:
          return std::make_unique<Supported_Versions>(reader, size, from);
@@ -571,8 +571,9 @@ Signature_Algorithms_Cert::Signature_Algorithms_Cert(TLS_Data_Reader& reader,
    : m_schemes(parse_signature_algorithms(reader, extension_size))
    {}
 
-Session_Ticket::Session_Ticket(TLS_Data_Reader& reader,
-                               uint16_t extension_size) : m_ticket(reader.get_elem<uint8_t, std::vector<uint8_t>>(extension_size))
+Session_Ticket_Extension::Session_Ticket_Extension(TLS_Data_Reader& reader,
+                                                   uint16_t extension_size)
+   : m_ticket(reader.get_elem<uint8_t, std::vector<uint8_t>>(extension_size))
    {}
 
 SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,

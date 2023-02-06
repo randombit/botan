@@ -20,19 +20,6 @@ using Test = Botan_Tests::Test;
 using namespace Botan;
 using namespace Botan::TLS;
 
-std::vector<Test::Result> flatten(std::vector<std::vector<Test::Result>> result_lists)
-   {
-   std::vector<Test::Result> results;
-   for(auto& result_list : result_lists)
-      {
-      for(auto& result : result_list)
-         {
-         results.emplace_back(std::move(result));
-         }
-      }
-   return results;
-   }
-
 decltype(auto) make_CHECK_both(Cipher_State* cs_client, Cipher_State* cs_server)
    {
    using namespace std::placeholders;
@@ -307,7 +294,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1()
 
    auto CHECK_both = make_CHECK_both(cs_client.get(), cs_server.get());
 
-   return flatten(
+   return Test::flatten_result_lists(
       {
       CHECK_both("ciphersuite compatibility", [&](Cipher_State* cs, Connection_Side side, Test::Result& result)
          {
@@ -589,7 +576,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
 
    auto CHECK_both = make_CHECK_both(cs_client.get(), cs_server.get());
 
-   return flatten(
+   return Test::flatten_result_lists(
       {
       CHECK_both("calculating PSK binder", [&] (Cipher_State* cs, Connection_Side, Test::Result& result)
          {

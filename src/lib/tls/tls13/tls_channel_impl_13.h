@@ -248,7 +248,7 @@ class Channel_Impl_13 : public Channel_Impl
        * can be preserved.
        * @sa `Channel_Impl::Downgrade_Information`
        */
-      void expect_downgrade(const Server_Information& server_info);
+      void expect_downgrade(const Server_Information& server_info, const std::vector<std::string>& next_protocols);
 
       /**
        * Set the record size limits as negotiated by the "record_size_limit"

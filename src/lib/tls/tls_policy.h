@@ -253,7 +253,7 @@ class BOTAN_PUBLIC_API(2,0) Policy
       * tickets do not expire until the session ticket key rolls over.
       * Expired session tickets cannot be used to resume a session.
       */
-      virtual uint32_t session_ticket_lifetime() const;
+      virtual std::chrono::seconds session_ticket_lifetime() const;
 
       /**
       * If this returns a non-empty vector, and DTLS is negotiated,
@@ -630,7 +630,7 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       bool hide_unknown_users() const override;
 
-      uint32_t session_ticket_lifetime() const override;
+      std::chrono::seconds session_ticket_lifetime() const override;
 
       bool tls_13_middlebox_compatibility_mode() const override;
 
@@ -652,6 +652,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       std::vector<Group_Params> read_group_list(const std::string &group_str) const;
 
       size_t get_len(const std::string& key, size_t def) const;
+
+      std::chrono::seconds get_duration(const std::string& key, std::chrono::seconds def) const;
 
       bool get_bool(const std::string& key, bool def) const;
 

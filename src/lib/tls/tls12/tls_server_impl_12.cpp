@@ -505,7 +505,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
                        m_creds,
                        callbacks(),
                        pending_state.client_hello(),
-                       std::chrono::seconds(policy().session_ticket_lifetime()));
+                       policy().session_ticket_lifetime());
 
    bool have_session_ticket_key = false;
 

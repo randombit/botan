@@ -51,7 +51,8 @@ class BOTAN_PUBLIC_API(2,0) Session final
               const std::vector<uint8_t>& session_ticket,
               const Server_Information& server_info,
               uint16_t srtp_profile,
-              std::chrono::system_clock::time_point current_timestamp);
+              std::chrono::system_clock::time_point current_timestamp,
+              std::chrono::seconds lifetime_hint = std::chrono::seconds::max());
 
 #if defined(BOTAN_HAS_TLS_13)
 
@@ -62,7 +63,7 @@ class BOTAN_PUBLIC_API(2,0) Session final
               const secure_vector<uint8_t>& session_psk,
               const std::optional<uint32_t>& max_early_data_bytes,
               uint32_t ticket_age_add,
-              uint32_t lifetime_hint,
+              std::chrono::seconds lifetime_hint,
               Protocol_Version version,
               uint16_t ciphersuite,
               Connection_Side side,
@@ -218,7 +219,7 @@ class BOTAN_PUBLIC_API(2,0) Session final
       /**
       * @return the lifetime of the ticket as defined by the TLS server
       */
-      std::chrono::seconds lifetime_hint() const { return std::chrono::seconds(m_lifetime_hint); }
+      std::chrono::seconds lifetime_hint() const { return m_lifetime_hint; }
 
    private:
       // Struct Version history
@@ -254,7 +255,7 @@ class BOTAN_PUBLIC_API(2,0) Session final
       bool m_early_data_allowed;
       uint32_t m_max_early_data_bytes;
       uint32_t m_ticket_age_add;
-      uint32_t m_lifetime_hint; // in milliseconds
+      std::chrono::seconds m_lifetime_hint;
    };
 
 }

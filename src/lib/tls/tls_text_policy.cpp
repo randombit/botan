@@ -196,9 +196,9 @@ bool Text_Policy::hide_unknown_users() const
    return get_bool("hide_unknown_users", Policy::hide_unknown_users());
    }
 
-uint32_t Text_Policy::session_ticket_lifetime() const
+std::chrono::seconds Text_Policy::session_ticket_lifetime() const
    {
-   return static_cast<uint32_t>(get_len("session_ticket_lifetime", Policy::session_ticket_lifetime()));
+   return get_duration("session_ticket_lifetime", Policy::session_ticket_lifetime());
    }
 
 std::vector<uint16_t> Text_Policy::srtp_profiles() const
@@ -301,6 +301,26 @@ size_t Text_Policy::get_len(const std::string& key, size_t def) const
       }
 
    return to_u32bit(v);
+   }
+
+std::chrono::seconds Text_Policy::get_duration(const std::string& key, std::chrono::seconds def) const
+   {
+   using rep_t = std::chrono::seconds::rep;
+   constexpr rep_t max_seconds = std::chrono::seconds::max().count();
+   constexpr auto max_sizet = std::numeric_limits<size_t>::max();
+   using ull = unsigned long long;
+
+   // The concrete type of `rep` is not specified exactly. Let's play it extra safe...
+   // e.g. on 32-bit platforms size_t is 32 bits but rep_t is "at least 35 bits"
+
+   // at least zero and certainly fitting into rep_t
+   const rep_t positive_default = std::max(def.count(), rep_t(0));
+   // at least zero but capped to whatever size_t can handle
+   const size_t positive_capped_default = static_cast<size_t>(std::min<ull>(positive_default, max_sizet));
+   // at least zero but capped to whatever rep_t can handle
+   const rep_t result = static_cast<rep_t>(std::min<ull>(get_len(key, positive_capped_default), max_seconds));
+
+   return std::chrono::seconds(result);
    }
 
 bool Text_Policy::get_bool(const std::string& key, bool def) const

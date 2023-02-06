@@ -211,7 +211,7 @@ class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public 
 /**
 * Session Ticket Extension (RFC 5077)
 */
-class BOTAN_UNSTABLE_API Session_Ticket final : public Extension
+class BOTAN_UNSTABLE_API Session_Ticket_Extension final : public Extension
    {
    public:
       static Extension_Code static_type()
@@ -227,18 +227,18 @@ class BOTAN_UNSTABLE_API Session_Ticket final : public Extension
       /**
       * Create empty extension, used by both client and server
       */
-      Session_Ticket() = default;
+      Session_Ticket_Extension() = default;
 
       /**
       * Extension with ticket, used by client
       */
-      explicit Session_Ticket(const std::vector<uint8_t>& session_ticket) :
+      explicit Session_Ticket_Extension(const std::vector<uint8_t>& session_ticket) :
          m_ticket(session_ticket) {}
 
       /**
       * Deserialize a session ticket
       */
-      Session_Ticket(TLS_Data_Reader& reader, uint16_t extension_size);
+      Session_Ticket_Extension(TLS_Data_Reader& reader, uint16_t extension_size);
 
       std::vector<uint8_t> serialize(Connection_Side) const override { return m_ticket; }
 

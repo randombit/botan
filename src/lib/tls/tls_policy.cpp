@@ -275,9 +275,9 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
                            std::to_string(expected_keylength));
    }
 
-uint32_t Policy::session_ticket_lifetime() const
+std::chrono::seconds Policy::session_ticket_lifetime() const
    {
-   return 86400; // ~1 day
+   return std::chrono::days(1);
    }
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
@@ -586,7 +586,7 @@ void Policy::print(std::ostream& o) const
    if (record_size_limit().has_value()) {
       o << "record_size_limit = " << record_size_limit().value() << '\n';
    }
-   o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
+   o << "session_ticket_lifetime = " << session_ticket_lifetime().count() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
    o << "minimum_ecdh_group_size = " << minimum_ecdh_group_size() << '\n';
    o << "minimum_rsa_bits = " << minimum_rsa_bits() << '\n';

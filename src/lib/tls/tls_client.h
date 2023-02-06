@@ -112,6 +112,9 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
       bool timeout_check() override;
 
    private:
+      size_t downgrade();
+
+   private:
       std::unique_ptr<Channel_Impl> m_impl;
    };
 }

@@ -432,13 +432,16 @@ void Channel_Impl_13::shutdown()
    m_cipher_state.reset();
    }
 
-void Channel_Impl_13::expect_downgrade(const Server_Information& server_info)
+void Channel_Impl_13::expect_downgrade(const Server_Information&       server_info,
+                                       const std::vector<std::string>& next_protocols)
    {
    Downgrade_Information di
       {
          {},
          {},
+         {},
       server_info,
+      next_protocols,
       Botan::TLS::Channel::IO_BUF_DEFAULT_SIZE,
       callbacks(),
       session_manager(),

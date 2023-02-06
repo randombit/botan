@@ -78,6 +78,7 @@ class Client_Impl_12 : public Channel_Impl_12
       void send_client_hello(Handshake_State& state,
                              bool force_full_renegotiation,
                              Protocol_Version version,
+                             std::optional<Session> session = std::nullopt,
                              const std::vector<std::string>& next_protocols = {});
 
       void process_handshake_msg(const Handshake_State* active_state,
