@@ -131,8 +131,7 @@ decltype(auto) concat(Ts&& ...buffers)
    {
    static_assert(sizeof...(buffers) > 0, "concat requires at least one buffer");
 
-   // TODO: C++20: use std::remove_cvref_t
-   using result_t = std::remove_cv_t<std::remove_reference_t<std::tuple_element_t<0, std::tuple<Ts...>>>>;
+   using result_t = std::remove_cvref_t<std::tuple_element_t<0, std::tuple<Ts...>>>;
    result_t result;
    result.reserve((buffers.size() + ...));
    (result.insert(result.end(), buffers.begin(), buffers.end()), ...);
