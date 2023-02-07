@@ -6,6 +6,7 @@
 
 #include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/safeint.h>
 #include <cstdlib>
 #include <new>
 
@@ -21,9 +22,8 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size)
       return nullptr;
 
    // Some calloc implementations do not check for overflow (?!?)
-   const size_t total_size = elems * elem_size;
 
-   if(total_size < elems || total_size < elem_size)
+   if(!BOTAN_CHECKED_MUL(elems, elem_size).has_value())
       throw std::bad_alloc();
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
@@ -36,7 +36,7 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size)
 #else
    void* ptr = std::calloc(elems, elem_size);
 #endif
-   if(!ptr)
+   if(!ptr) [[unlikely]]
       throw std::bad_alloc();
    return ptr;
    }
