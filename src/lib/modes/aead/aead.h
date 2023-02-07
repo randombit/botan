@@ -69,12 +69,13 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       *
       * Some AEADs (namely SIV) support multiple AD inputs. For
       * all other modes only nominal AD input 0 is supported; all
-      * other values of i will cause an exception.
+      * other values of idx will cause an exception.
       *
+      * @param idx which associated data to set
       * @param ad the associated data
       * @param ad_len length of add in bytes
       */
-      virtual void set_associated_data_n(size_t i, const uint8_t ad[], size_t ad_len);
+      virtual void set_associated_data_n(size_t idx, const uint8_t ad[], size_t ad_len);
 
       /**
       * Returns the maximum supported number of associated data inputs which
