@@ -75,8 +75,9 @@ public:
     return {};
   }
 
-  Botan::Private_Key *private_key_for(const Botan::X509_Certificate &cert, const std::string &type,
-                                      const std::string &context) override {
+  std::shared_ptr<Botan::Private_Key>
+  private_key_for(const Botan::X509_Certificate &cert, const std::string &type,
+                  const std::string &context) override {
     // when returning a chain in cert_chain(), return the private key
     // associated with the leaf certificate here
     return nullptr;

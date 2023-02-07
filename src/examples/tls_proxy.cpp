@@ -52,7 +52,7 @@ class Server_Credentials : public Botan::Credentials_Manager {
 public:
   Server_Credentials() {
     Botan::DataSource_Stream in("botan.randombit.net.key");
-    m_key = Botan::PKCS8::load_key(in);
+    m_key.reset(Botan::PKCS8::load_key(in).release());
   }
 
   std::vector<Botan::Certificate_Store *>
@@ -72,15 +72,16 @@ public:
     return {Botan::X509_Certificate("botan.randombit.net.crt")};
   }
 
-  Botan::Private_Key *private_key_for(const Botan::X509_Certificate &cert, const std::string &type,
-                                      const std::string &context) override {
+  std::shared_ptr<Botan::Private_Key>
+  private_key_for(const Botan::X509_Certificate &cert, const std::string &type,
+                  const std::string &context) override {
     // return the private key associated with the leaf certificate,
     // in this case the one associated with "botan.randombit.net.crt"
-    return m_key.get();
+    return m_key;
   }
 
 private:
-  std::unique_ptr<Botan::Private_Key> m_key;
+  std::shared_ptr<Botan::Private_Key> m_key;
 };
 
 int main() {
