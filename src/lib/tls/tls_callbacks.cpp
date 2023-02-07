@@ -91,7 +91,7 @@ void TLS::Callbacks::tls_verify_cert_chain(
 
    if(!result.successful_validation())
       {
-      throw TLS_Exception(Alert::BAD_CERTIFICATE,
+      throw TLS_Exception(Alert::BadCertificate,
                           "Certificate validation failure: " + result.result_string());
       }
    }
@@ -164,13 +164,13 @@ std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> TLS::Callbacks::tls_dh_a
     * advantage to bogus keys anyway.
     */
    if(Y <= 1 || Y >= p - 1)
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+      throw TLS_Exception(Alert::IllegalParameter,
                           "Server sent bad DH key for DHE exchange");
 
    DL_Group group(p, g);
 
    if(!group.verify_group(rng, false))
-      throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+      throw TLS_Exception(Alert::InsufficientSecurity,
                           "DH group validation failed");
 
    DH_PublicKey peer_key(group, Y);
@@ -200,7 +200,7 @@ std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> TLS::Callbacks::tls_ecdh
 #if defined(BOTAN_HAS_CURVE_25519)
       if(peer_public_value.size() != 32)
          {
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid X25519 key size");
+         throw TLS_Exception(Alert::HandshakeFailure, "Invalid X25519 key size");
          }
 
       Curve25519_PublicKey peer_key(peer_public_value);

@@ -108,7 +108,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          if(policy.choose_key_exchange_group({curve_id}, {}) != curve_id)
             {
-            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HandshakeFailure,
                                 "Server sent ECC curve prohibited by policy");
             }
 
@@ -166,7 +166,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          append_tls_length_value(m_key_material, encrypted_key, 2);
          }
       else
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HandshakeFailure,
                              "Expected a RSA key in server cert but got " +
                              server_public_key->algo_name());
       }
@@ -245,7 +245,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             if(policy.hide_unknown_users())
                psk = SymmetricKey(rng, 16);
             else
-               throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
+               throw TLS_Exception(Alert::UnknownPSKIdentity,
                                    "No PSK for identifier " + psk_identity);
             }
          }
@@ -299,7 +299,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             }
          catch(Invalid_Argument& e)
             {
-            throw TLS_Exception(Alert::ILLEGAL_PARAMETER, e.what());
+            throw TLS_Exception(Alert::IllegalParameter, e.what());
             }
          catch(std::exception&)
             {

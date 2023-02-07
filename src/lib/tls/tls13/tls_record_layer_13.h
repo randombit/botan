@@ -80,7 +80,7 @@ class BOTAN_TEST_API Record_Layer
 
       /**
        * Clears any data currently stored in the read buffer. This is typically
-       * used for memory cleanup when the peer sent a CLOSE_NOTIFY alert.
+       * used for memory cleanup when the peer sent a CloseNotify alert.
        */
       void clear_read_buffer() { zap(m_read_buffer); }
 

@@ -507,7 +507,7 @@ void TLS_Handshake_Test::go()
             client->send(&client_msg[sent_so_far], sending);
             sent_so_far += sending;
             }
-         client->send_warning_alert(Botan::TLS::Alert::NO_RENEGOTIATION);
+         client->send_warning_alert(Botan::TLS::Alert::NoRenegotiation);
          client_has_written = true;
          }
 
@@ -526,7 +526,7 @@ void TLS_Handshake_Test::go()
             sent_so_far += sending;
             }
 
-         m_server->send_warning_alert(Botan::TLS::Alert::NO_RENEGOTIATION);
+         m_server->send_warning_alert(Botan::TLS::Alert::NoRenegotiation);
          server_has_written = true;
          }
 

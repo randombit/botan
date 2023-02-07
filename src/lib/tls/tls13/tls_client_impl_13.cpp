@@ -111,7 +111,7 @@ void Client_Impl_13::process_dummy_change_cipher_spec()
    //    treated as an unexpected record type [("unexpected_message" alert)].
    if(!m_handshake_state.has_client_hello() || m_handshake_state.has_server_finished())
       {
-      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received an unexpected dummy Change Cipher Spec");
+      throw TLS_Exception(Alert::UnexpectedMessage, "Received an unexpected dummy Change Cipher Spec");
       }
 
    // RFC 8446 5.
@@ -155,7 +155,7 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
    {
    if(m_handshake_state.has_hello_retry_request())
       {
-      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Version downgrade received after Hello Retry");
+      throw TLS_Exception(Alert::UnexpectedMessage, "Version downgrade received after Hello Retry");
       }
 
    // RFC 8446 Appendix D.1
@@ -164,7 +164,7 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
    //    "protocol_version" alert.
    if(!expects_downgrade())
       {
-      throw TLS_Exception(Alert::PROTOCOL_VERSION, "Received an unexpected legacy Server Hello");
+      throw TLS_Exception(Alert::ProtocolVersion, "Received an unexpected legacy Server Hello");
       }
 
    // RFC 8446 4.1.3
@@ -179,7 +179,7 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
    //    "illegal_parameter" alert.
    if(server_hello_msg.random_signals_downgrade().has_value())
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Downgrade attack detected");
+      throw TLS_Exception(Alert::IllegalParameter, "Downgrade attack detected");
       }
 
    // RFC 8446 4.2.1
@@ -190,7 +190,7 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
    // code decides to create a Server_Hello_12 based on the absense of this extension.
    if(server_hello_msg.extensions().has<Supported_Versions>())
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Unexpected extension received");
+      throw TLS_Exception(Alert::IllegalParameter, "Unexpected extension received");
       }
 
    // RFC 8446 Appendix D.1
@@ -201,7 +201,7 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
    BOTAN_ASSERT_NOMSG(client_hello_exts.has<Supported_Versions>());
    if(!client_hello_exts.get<Supported_Versions>()->supports(server_hello_msg.selected_version()))
       {
-      throw TLS_Exception(Alert::PROTOCOL_VERSION, "Protocol version was not offered");
+      throw TLS_Exception(Alert::ProtocolVersion, "Protocol version was not offered");
       }
 
    if(policy().tls_13_middlebox_compatibility_mode() &&
@@ -211,7 +211,7 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
       // However, a TLS 1.2 server that wants to downgrade cannot have found the random session ID
       // we sent. Therefore, we have to consider this as an attack.
       // (Thanks BoGo test EchoTLS13CompatibilitySessionID!)
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Unexpected session ID during downgrade");
+      throw TLS_Exception(Alert::IllegalParameter, "Unexpected session ID during downgrade");
       }
 
    request_downgrade();
@@ -230,7 +230,7 @@ void validate_server_hello_ish(const Client_Hello_13& ch, const Server_Hello_13&
    //    it sent in the ClientHello MUST abort the handshake with an "illegal_parameter" alert.
    if(ch.session_id() != sh.session_id())
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "echoed session id did not match");
+      throw TLS_Exception(Alert::IllegalParameter, "echoed session id did not match");
       }
 
    // RFC 8446 4.1.3
@@ -238,7 +238,7 @@ void validate_server_hello_ish(const Client_Hello_13& ch, const Server_Hello_13&
    //    with an "illegal_parameter" alert.
    if(!ch.offered_suite(sh.ciphersuite()))
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Server replied with ciphersuite we didn't send");
+      throw TLS_Exception(Alert::IllegalParameter, "Server replied with ciphersuite we didn't send");
       }
 
    // RFC 8446 4.2.1
@@ -250,7 +250,7 @@ void validate_server_hello_ish(const Client_Hello_13& ch, const Server_Hello_13&
    BOTAN_ASSERT_NOMSG(ch.extensions().has<Supported_Versions>());
    if(!ch.extensions().get<Supported_Versions>()->supports(sh.selected_version()))
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Protocol version was not offered");
+      throw TLS_Exception(Alert::IllegalParameter, "Protocol version was not offered");
       }
    }
 }
@@ -271,7 +271,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
    //    with an "unsupported_extension" alert.
    if(sh.extensions().contains_other_than(ch.extensions().extension_types()))
       {
-      throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION, "Unsupported extension found in Server Hello");
+      throw TLS_Exception(Alert::UnsupportedExtension, "Unsupported extension found in Server Hello");
       }
 
    if(m_handshake_state.has_hello_retry_request())
@@ -284,7 +284,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
       //    and otherwise abort the handshake with an "illegal_parameter" alert.
       if(hrr.ciphersuite() != sh.ciphersuite())
          {
-         throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "server changed its chosen ciphersuite");
+         throw TLS_Exception(Alert::IllegalParameter, "server changed its chosen ciphersuite");
          }
 
       // RFC 8446 4.1.4
@@ -293,7 +293,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
       //    handshake with an "illegal_parameter" alert if the value changes.
       if(hrr.selected_version() != sh.selected_version())
          {
-         throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "server changed its chosen protocol version");
+         throw TLS_Exception(Alert::IllegalParameter, "server changed its chosen protocol version");
          }
       }
 
@@ -306,7 +306,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
    //    TLS 1.3.
    if(!cipher->usable_in_version(Protocol_Version::TLS_V13))
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Server replied using a ciphersuite not allowed in version it offered");
+      throw TLS_Exception(Alert::IllegalParameter, "Server replied using a ciphersuite not allowed in version it offered");
       }
 
    // RFC 8446 4.2.11
@@ -321,7 +321,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh)
    // TODO: Implement PSK-only mode.
    if(!sh.extensions().has<Key_Share>())
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Server Hello did not contain a key share extension");
+      throw TLS_Exception(Alert::IllegalParameter, "Server Hello did not contain a key share extension");
       }
 
    auto my_keyshare = ch.extensions().get<Key_Share>();
@@ -379,7 +379,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr)
    allowed_exts.insert(Extension_Code::Cookie);
    if(hrr.extensions().contains_other_than(allowed_exts))
       {
-      throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION, "Unsupported extension found in Hello Retry Request");
+      throw TLS_Exception(Alert::UnsupportedExtension, "Unsupported extension found in Hello Retry Request");
       }
 
    auto cipher = Ciphersuite::by_id(hrr.ciphersuite());
@@ -411,7 +411,7 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
    //    with an "unsupported_extension" alert.
    const auto& requested_exts = m_handshake_state.client_hello().extensions().extension_types();
    if(exts.contains_other_than(requested_exts))
-      { throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION,
+      { throw TLS_Exception(Alert::UnsupportedExtension,
             "Encrypted Extensions contained an extension that was not offered"); }
 
    // Note: As per RFC 6066 3. we can check for an empty SNI extensions to
@@ -457,7 +457,7 @@ void Client_Impl_13::handle(const Certificate_Request_13& certificate_request_ms
    //    post-handshake authentication exchanges described in Section 4.6.2.
    if(!m_handshake_state.handshake_finished() && !certificate_request_msg.context().empty())
       {
-      throw TLS_Exception(Alert::DECODE_ERROR, "Certificate_Request context must be empty in the main handshake");
+      throw TLS_Exception(Alert::DecodeError, "Certificate_Request context must be empty in the main handshake");
       }
 
    callbacks().tls_examine_extensions(certificate_request_msg.extensions(), Connection_Side::Server, Handshake_Type::CertificateRequest);
@@ -471,7 +471,7 @@ void Client_Impl_13::handle(const Certificate_13& certificate_msg)
    //    this field SHALL be zero length.
    if(!certificate_msg.request_context().empty())
       {
-      throw TLS_Exception(Alert::DECODE_ERROR, "Received a server certificate message with non-empty request context");
+      throw TLS_Exception(Alert::DecodeError, "Received a server certificate message with non-empty request context");
       }
 
    // RFC 8446 4.4.2
@@ -500,7 +500,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    const auto offered = m_handshake_state.client_hello().signature_schemes();
    if(!value_exists(offered, certificate_verify_msg.signature_scheme()))
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+      throw TLS_Exception(Alert::IllegalParameter,
                           "We did not offer the usage of " +
                           certificate_verify_msg.signature_scheme().to_string() +
                           " as a signature scheme");
@@ -512,7 +512,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
                        m_transcript_hash.previous());
 
    if(!sig_valid)
-      { throw TLS_Exception(Alert::DECRYPT_ERROR, "Server certificate verification failed"); }
+      { throw TLS_Exception(Alert::DecryptError, "Server certificate verification failed"); }
 
    m_transitions.set_expected_next(Handshake_Type::Finished);
    }
@@ -564,7 +564,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
    //    "decrypt_error" alert.
    if(!finished_msg.verify(m_cipher_state.get(),
                            m_transcript_hash.previous()))
-      { throw TLS_Exception(Alert::DECRYPT_ERROR, "Finished message didn't verify"); }
+      { throw TLS_Exception(Alert::DecryptError, "Finished message didn't verify"); }
 
    // Derives the secrets for receiving application data but defers
    // the derivation of sending application data.

@@ -147,7 +147,7 @@ class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Ba
                return std::reference_wrapper<decltype(msg)>(store(std::move(msg), true));
                }
 
-            throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "received an illegal handshake message");
+            throw TLS_Exception(AlertType::UnexpectedMessage, "received an illegal handshake message");
             }, std::move(message));
          }
 
@@ -160,7 +160,7 @@ class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Ba
                return msg;
                }
 
-            throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "received an unexpected post-handshake message");
+            throw TLS_Exception(AlertType::UnexpectedMessage, "received an unexpected post-handshake message");
             }, std::move(message));
          }
    };

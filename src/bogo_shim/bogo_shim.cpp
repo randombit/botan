@@ -1453,15 +1453,15 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             m_args.flag_set("use-ocsp-callback") &&
             m_args.flag_set("fail-ocsp-callback"))
             {
-            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::BAD_CERTIFICATE_STATUS_RESPONSE,
+            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::BadCertificateStatusResponse,
                                             "Simulated OCSP callback failure");
             }
 
          if(m_args.flag_set("verify-fail"))
             {
-            auto alert = Botan::TLS::Alert::HANDSHAKE_FAILURE;
+            auto alert = Botan::TLS::Alert::HandshakeFailure;
             if(m_args.flag_set("use-custom-verify-callback"))
-               alert = Botan::TLS::Alert::CERTIFICATE_UNKNOWN;
+               alert = Botan::TLS::Alert::CertificateUnknown;
 
             throw Botan::TLS::TLS_Exception(alert, "Test requires rejecting cert");
             }
@@ -1486,7 +1486,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             return ""; // shouldn't happen?
 
          if(m_args.flag_set("reject-alpn"))
-            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::NO_APPLICATION_PROTOCOL,
+            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::NoApplicationProtocol,
                                             "Rejecting ALPN request with alert");
 
          if(m_args.flag_set("decline-alpn"))
@@ -1513,12 +1513,12 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          else
             shim_log("Got a warning alert " + alert.type_string());
 
-         if(alert.type() == Botan::TLS::Alert::RECORD_OVERFLOW)
+         if(alert.type() == Botan::TLS::Alert::RecordOverflow)
             {
             shim_exit_with_error(":TLSV1_ALERT_RECORD_OVERFLOW:");
             }
 
-         if(alert.type() == Botan::TLS::Alert::DECOMPRESSION_FAILURE)
+         if(alert.type() == Botan::TLS::Alert::DecompressionFailure)
             {
             shim_exit_with_error(":SSLV3_ALERT_DECOMPRESSION_FAILURE:");
             }
@@ -1530,7 +1530,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
                shim_exit_with_error(":TOO_MANY_WARNING_ALERTS:");
             }
 
-         if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
+         if(alert.type() == Botan::TLS::Alert::CloseNotify)
             {
             if(m_got_close == false && !m_args.flag_set("shim-shuts-down"))
                {
@@ -1598,7 +1598,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          {
          if(m_args.flag_set("send-alert"))
             {
-            m_channel->send_fatal_alert(Botan::TLS::Alert::DECOMPRESSION_FAILURE);
+            m_channel->send_fatal_alert(Botan::TLS::Alert::DecompressionFailure);
             return;
             }
 
@@ -1621,7 +1621,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
          if(alpn == "baz" && !m_args.flag_set("allow-unknown-alpn-protos"))
             {
-            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::ILLEGAL_PARAMETER,
+            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::IllegalParameter,
                                             "Unexpected ALPN protocol");
             }
 

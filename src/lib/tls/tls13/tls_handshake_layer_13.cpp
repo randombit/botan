@@ -44,7 +44,7 @@ Handshake_Type handshake_type_from_byte(uint8_t byte_value)
          case Handshake_Type::Finished:
             return type;
          default:
-            throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Unknown handshake message received");
+            throw TLS_Exception(AlertType::UnexpectedMessage, "Unknown handshake message received");
          }
       }
    else
@@ -56,7 +56,7 @@ Handshake_Type handshake_type_from_byte(uint8_t byte_value)
          // case Handshake_Type::CertificateRequest:  // NYI: post-handshake client auth (RFC 8446 4.6.2) -- won't be offered in Client Hello for now
             return type;
          default:
-            throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Unknown post-handshake message received");
+            throw TLS_Exception(AlertType::UnexpectedMessage, "Unknown post-handshake message received");
          }
       }
    }

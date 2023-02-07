@@ -69,7 +69,7 @@ PSK::PSK(TLS_Data_Reader& reader,
    if(message_type == Handshake_Type::ServerHello)
       {
       if(extension_size != 2)
-         throw TLS_Exception(Alert::DECODE_ERROR, "Server provided a malformed PSK extension");
+         throw TLS_Exception(Alert::DecodeError, "Server provided a malformed PSK extension");
 
       m_impl = std::make_unique<PSK_Internal>(Server_PSK{reader.get_uint16_t()});
       }
@@ -89,7 +89,7 @@ PSK::PSK(TLS_Data_Reader& reader,
 
       if(reader.read_so_far() - identities_offset != identities_length)
          {
-         throw TLS_Exception(Alert::DECODE_ERROR, "Inconsistent PSK identity list");
+         throw TLS_Exception(Alert::DecodeError, "Inconsistent PSK identity list");
          }
 
       const auto binders_length = reader.get_uint16_t();
@@ -99,7 +99,7 @@ PSK::PSK(TLS_Data_Reader& reader,
          {
          if(!reader.has_remaining() || reader.read_so_far() - binders_offset >= binders_length)
             {
-            throw TLS_Exception(Alert::DECODE_ERROR, "Not enough PSK binders");
+            throw TLS_Exception(Alert::DecodeError, "Not enough PSK binders");
             }
 
          psk.binder = reader.get_tls_length_value(1);
@@ -107,14 +107,14 @@ PSK::PSK(TLS_Data_Reader& reader,
 
       if(reader.read_so_far() - binders_offset != binders_length)
          {
-         throw TLS_Exception(Alert::DECODE_ERROR, "Inconsistent PSK binders list");
+         throw TLS_Exception(Alert::DecodeError, "Inconsistent PSK binders list");
          }
 
       m_impl = std::make_unique<PSK_Internal>(std::move(psks));
       }
    else
       {
-      throw TLS_Exception(Alert::DECODE_ERROR, "Found a PSK extension in an unexpected handshake message");
+      throw TLS_Exception(Alert::DecodeError, "Found a PSK extension in an unexpected handshake message");
       }
    }
 
@@ -188,7 +188,7 @@ std::unique_ptr<Cipher_State> PSK::select_cipher_state(const PSK& server_psk, co
    //    "illegal_parameter" alert.
    if(id >= ids.size())
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "PSK identity selected by server is out of bounds");
+      throw TLS_Exception(Alert::IllegalParameter, "PSK identity selected by server is out of bounds");
       }
 
    auto cipher_state = std::exchange(ids[id].cipher_state, nullptr);
@@ -201,7 +201,7 @@ std::unique_ptr<Cipher_State> PSK::select_cipher_state(const PSK& server_psk, co
    //   "illegal_parameter" alert.
    if(!cipher_state->is_compatible_with(cipher))
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "PSK and ciphersuite selected by server are not compatible");
+      throw TLS_Exception(Alert::IllegalParameter, "PSK and ciphersuite selected by server are not compatible");
       }
 
    // destroy cipher states and PSKs that were not selected by the server

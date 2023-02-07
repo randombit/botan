@@ -131,7 +131,7 @@ void Extensions::deserialize(TLS_Data_Reader& reader,
 
          if(this->has(type))
             {
-            throw TLS_Exception(TLS::Alert::DECODE_ERROR,
+            throw TLS_Exception(TLS::Alert::DecodeError,
                                 "Peer sent duplicated extensions");
             }
 
@@ -357,7 +357,7 @@ Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification
    //    the "ProtocolNameList" MUST contain exactly one "ProtocolName".
    if(from == Connection_Side::Server && m_protocols.size() != 1)
       {
-      throw TLS_Exception(Alert::DECODE_ERROR,
+      throw TLS_Exception(Alert::DecodeError,
                           "Server sent " + std::to_string(m_protocols.size()) +
                           " protocols in ALPN extension response");
       }
@@ -376,7 +376,7 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
    for(auto&& p: m_protocols)
       {
       if(p.length() >= 256)
-         throw TLS_Exception(Alert::INTERNAL_ERROR, "ALPN name too long");
+         throw TLS_Exception(Alert::InternalError, "ALPN name too long");
       if(!p.empty())
          append_tls_length_value(buf,
                                  cast_char_ptr_to_uint8(p.data()),
@@ -727,7 +727,7 @@ Record_Size_Limit::Record_Size_Limit(TLS_Data_Reader& reader,
    {
    if(extension_size != 2)
       {
-      throw TLS_Exception(Alert::DECODE_ERROR, "invalid record_size_limit extension");
+      throw TLS_Exception(Alert::DecodeError, "invalid record_size_limit extension");
       }
 
    m_limit = reader.get_uint16_t();
@@ -747,7 +747,7 @@ Record_Size_Limit::Record_Size_Limit(TLS_Data_Reader& reader,
    //       the "content type byte" and hence be one byte less!
    if(m_limit > MAX_PLAINTEXT_SIZE + 1 /* encrypted content type byte */ && from == Connection_Side::Server)
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+      throw TLS_Exception(Alert::IllegalParameter,
                           "Server requested a record size limit larger than the protocol's maximum");
       }
 
@@ -757,7 +757,7 @@ Record_Size_Limit::Record_Size_Limit(TLS_Data_Reader& reader,
    //    as a fatal error and generate an "illegal_parameter" alert.
    if(m_limit < 64)
       {
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+      throw TLS_Exception(Alert::IllegalParameter,
                           "Received a record size limit smaller than 64 bytes");
       }
    }
@@ -910,7 +910,7 @@ EarlyDataIndication::EarlyDataIndication(TLS_Data_Reader& reader,
       {
       if(extension_size != 4)
          {
-         throw TLS_Exception(Alert::DECODE_ERROR,
+         throw TLS_Exception(Alert::DecodeError,
                              "Received an early_data extension in a NewSessionTicket message "
                              "without maximum early data size indication");
          }
@@ -919,7 +919,7 @@ EarlyDataIndication::EarlyDataIndication(TLS_Data_Reader& reader,
       }
    else if(extension_size != 0)
       {
-      throw TLS_Exception(Alert::DECODE_ERROR,
+      throw TLS_Exception(Alert::DecodeError,
                           "Received an early_data extension containing an unexpected data "
                           "size indication");
       }

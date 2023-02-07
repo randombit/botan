@@ -336,7 +336,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * protocol to use. RFC 7301 requires that if the server does not support
        * any protocols offered by the client, then it should close the connection
        * with an alert of no_application_protocol. Within this callback this would
-       * be done by throwing a TLS_Exception(Alert::NO_APPLICATION_PROTOCOL)
+       * be done by throwing a TLS_Exception(Alert::NoApplicationProtocol)
        *
        * @param client_protos the vector of protocols the client is willing to negotiate
        *
