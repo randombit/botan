@@ -83,10 +83,6 @@ total memory consumption of the algorithm in kilobytes. Increasing ``p``
 increases the available parallelism of the computation. The ``t`` parameter
 gives the number of passes which are made over the data.
 
-.. note::
-   Currently Botan does not make use of ``p`` > 1, so it is best to set it to 1
-   to minimize any advantage to highly parallel cracking attempts.
-
 There are three variants of Argon2, namely Argon2d, Argon2i and Argon2id.
 Argon2d uses data dependent table lookups with may leak information about the
 password via side channel attacks, and is **not recommended** for password
