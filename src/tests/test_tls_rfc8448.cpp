@@ -63,23 +63,6 @@ void add_entropy(Botan_Tests::Fixed_Output_RNG& rng, const std::vector<uint8_t>&
    rng.add_entropy(bin.data(), bin.size());
    }
 
-Botan::Private_Key* server_private_key()
-   {
-   static Botan::DataSource_Memory in(Test::read_data_file("tls_13_rfc8448/server_key.pem"));
-   static auto key = Botan::PKCS8::load_key(in);
-   return key.get();
-   }
-
-Botan::Private_Key* bogus_alternative_server_private_key()
-   {
-   // RFC 8448 does not actually provide that key. Hence we generate one on the
-   // fly as a stand-in. Instead of actually using it, the signatures generated
-   // by this private key must be hard-coded in `Callbacks::sign_message()`; see
-   // `MockSignature_Fn` for more details.
-   static auto key = Botan::ECDSA_PrivateKey(Test::rng(), Botan::EC_Group("secp256r1"));
-   return &key;
-   }
-
 Botan::X509_Certificate server_certificate()
    {
    // self-signed certificate with an RSA1024 public key valid until:
@@ -97,16 +80,6 @@ Botan::X509_Certificate alternative_server_certificate()
    // test case. Why the certificate differs in that case remains unclear.
    Botan::DataSource_Memory in(Test::read_data_file("tls_13_rfc8448/server_certificate_client_auth.pem"));
    return Botan::X509_Certificate(in);
-   }
-
-Botan::Private_Key* client_private_key()
-   {
-   // RFC 8448 does not actually provide that key. Hence we generate one on the
-   // fly as a stand-in. Instead of actually using it, the signatures generated
-   // by this private key must be hard-coded in `Callbacks::sign_message()`; see
-   // `MockSignature_Fn` for more details.
-   static auto key = create_private_key("RSA", Test::rng(), "1024");
-   return key.get();
    }
 
 Botan::X509_Certificate client_certificate()
@@ -456,7 +429,20 @@ class Test_Credentials : public Botan::Credentials_Manager
    {
    public:
       explicit Test_Credentials(bool use_alternative_server_certificate)
-         : m_alternative_server_certificate(use_alternative_server_certificate) {}
+         : m_alternative_server_certificate(use_alternative_server_certificate)
+         {
+         Botan::DataSource_Memory in(Test::read_data_file("tls_13_rfc8448/server_key.pem"));
+         m_server_private_key.reset(Botan::PKCS8::load_key(in).release());
+
+         // RFC 8448 does not actually provide these keys. Hence we generate one on the
+         // fly as a stand-in. Instead of actually using it, the signatures generated
+         // by this private key must be hard-coded in `Callbacks::sign_message()`; see
+         // `MockSignature_Fn` for more details.
+         m_bogus_alternative_server_private_key.reset(
+            create_private_key("ECDSA", Test::rng(), "secp256r1").release());
+
+         m_client_private_key.reset(create_private_key("RSA", Test::rng(), "1024").release());
+         }
 
       std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& cert_key_types,
@@ -475,21 +461,27 @@ class Test_Credentials : public Botan::Credentials_Manager
             };
          }
 
-      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
-                                          const std::string& type,
-                                          const std::string& context) override
+      std::shared_ptr<Botan::Private_Key>
+      private_key_for(const Botan::X509_Certificate& cert,
+                      const std::string& type,
+                      const std::string& context) override
          {
          BOTAN_UNUSED(cert, context);
 
-         return (type == "tls-client")
-            ? client_private_key()
-            : ((m_alternative_server_certificate)
-               ? bogus_alternative_server_private_key()
-               : server_private_key());
+         if(type == "tls-client")
+            return m_client_private_key;
+
+         if(m_alternative_server_certificate)
+            return m_bogus_alternative_server_private_key;
+
+         return m_server_private_key;
          }
 
    private:
       bool m_alternative_server_certificate;
+      std::shared_ptr<Private_Key> m_client_private_key;
+      std::shared_ptr<Private_Key> m_bogus_alternative_server_private_key;
+      std::shared_ptr<Private_Key> m_server_private_key;
    };
 
 class RFC8448_Text_Policy : public Botan::TLS::Text_Policy
@@ -1322,7 +1314,12 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
 
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort, std::nullopt, make_mock_signatures(vars));
+               ctx = std::make_unique<Client_Context>(std::move(rng),
+                                                      read_tls_policy("rfc8448_1rtt"),
+                                                      vars.get_req_u64("CurrentTimestamp"),
+                                                      add_extensions_and_sort,
+                                                      std::nullopt,
+                                                      make_mock_signatures(vars));
 
                ctx->check_callback_invocations(result, "initial callbacks", {
                   "tls_emit_data",
@@ -1588,12 +1585,14 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify generated Hello Retry Request message", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                result.test_eq("Server's Hello Retry Request record", ctx->pull_send_buffer(), vars.get_req_bin("Record_HelloRetryRequest"));
                result.confirm("TLS handshake not yet finished", !ctx->server.is_active());
                }),
 
             Botan_Tests::CHECK("Receive updated Client Hello message", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                ctx->server.received_data(vars.get_req_bin("Record_ClientHello_2"));
 
                ctx->check_callback_invocations(result, "updated client hello received", {
@@ -1615,6 +1614,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify generated messages in server's second flight", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                const auto& msgs = ctx->observed_handshake_messages();
 
                result.test_eq("Server Hello", msgs.at("server_hello")[0], strip_message_header(vars.get_opt_bin("Message_ServerHello")));
@@ -1630,6 +1630,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client Finished", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1642,6 +1643,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client close_notify", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1655,6 +1657,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Expect Server close_notify", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                ctx->server.close();
 
                result.confirm("connection is now inactive", !ctx->server.is_active());
@@ -1703,6 +1706,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify server's generated handshake messages", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                const auto& msgs = ctx->observed_handshake_messages();
 
                result.test_eq("Server Hello", msgs.at("server_hello")[0], strip_message_header(vars.get_opt_bin("Message_ServerHello")));
@@ -1721,6 +1725,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client's second flight", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                // This encrypted message contains the following messages:
                // * client's Certificate message
                // * client's Certificate_Verify message
@@ -1745,6 +1750,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client close_notify", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1758,6 +1764,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Expect Server close_notify", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                ctx->server.close();
 
                result.confirm("connection is now inactive", !ctx->server.is_active());
@@ -1805,6 +1812,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify server's generated handshake messages", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                const auto& msgs = ctx->observed_handshake_messages();
 
                result.test_eq("Server Hello", msgs.at("server_hello")[0], strip_message_header(vars.get_opt_bin("Message_ServerHello")));
@@ -1822,6 +1830,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client Finished", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1834,6 +1843,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client close_notify", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1847,6 +1857,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Expect Server close_notify", [&](Test::Result& result)
                {
+               BOTAN_ASSERT_NONNULL(ctx);
                ctx->server.close();
 
                result.confirm("connection is now inactive", !ctx->server.is_active());

@@ -127,12 +127,13 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       /**
       * @return private key associated with this certificate if we should
       *         use it with this context. cert was returned by cert_chain
-      * @note this object should retain ownership of the returned key;
-      *       it should not be deleted by the caller.
+      * This function should either return null or throw an exception if
+      * the key is unavailable.
       */
-      virtual Private_Key* private_key_for(const X509_Certificate& cert,
-                                           const std::string& type,
-                                           const std::string& context);
+      virtual std::shared_ptr<Private_Key>
+         private_key_for(const X509_Certificate& cert,
+                         const std::string& type,
+                         const std::string& context);
 
       /**
       * @param type specifies the type of operation occurring

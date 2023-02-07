@@ -182,3 +182,12 @@ DLIES Constructors
 
 Previously the constructors to the DLIES classes took raw pointers,
 and retained ownership of them. They now consume std::unique_ptrs
+
+Credentials_Manager::private_key_for
+-------------------------------------
+
+Previously this function returned a raw pointer, which the Credentials_Manager
+implementation had to keep alive "forever", since there was no way for it to
+know when or if the TLS layer had completed using the returned key.
+
+Now this function returns std::shared_ptr<Private_Key>

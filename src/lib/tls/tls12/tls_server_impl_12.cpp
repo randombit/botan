@@ -24,8 +24,8 @@ class Server_Handshake_State final : public Handshake_State
       Server_Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb)
          : Handshake_State(std::move(io), cb) {}
 
-      Private_Key* server_rsa_kex_key() { return m_server_rsa_kex_key; }
-      void set_server_rsa_kex_key(Private_Key* key)
+      Private_Key* server_rsa_kex_key() { return m_server_rsa_kex_key.get(); }
+      void set_server_rsa_kex_key(std::shared_ptr<Private_Key> key)
          { m_server_rsa_kex_key = key; }
 
       bool allow_session_resumption() const
@@ -44,8 +44,8 @@ class Server_Handshake_State final : public Handshake_State
       bool is_a_resumption() const { return m_is_a_resumption; }
 
    private:
-      // Used by the server only, in case of RSA key exchange. Not owned
-      Private_Key* m_server_rsa_kex_key = nullptr;
+      // Used by the server only, in case of RSA key exchange.
+      std::shared_ptr<Private_Key> m_server_rsa_kex_key;
 
       /*
       * Used by the server to know if resumption should be allowed on
@@ -864,7 +864,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
 
    const Ciphersuite& pending_suite = pending_state.ciphersuite();
 
-   Private_Key* private_key = nullptr;
+   std::shared_ptr<Private_Key> private_key;
 
    if(pending_suite.signature_used() || pending_suite.kex_method() == Kex_Algo::STATIC_RSA)
       {
@@ -911,7 +911,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
       {
       pending_state.server_kex(new Server_Key_Exchange(pending_state.handshake_io(),
                                                        pending_state, policy(),
-                                                       m_creds, rng(), private_key));
+                                                       m_creds, rng(), private_key.get()));
       }
 
    auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-server", sni_hostname);

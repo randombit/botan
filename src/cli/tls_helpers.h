@@ -156,15 +156,16 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
          return {};
          }
 
-      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
-                                          const std::string& /*type*/,
-                                          const std::string& /*context*/) override
+      std::shared_ptr<Botan::Private_Key>
+      private_key_for(const Botan::X509_Certificate& cert,
+                      const std::string& /*type*/,
+                      const std::string& /*context*/) override
          {
          for(auto const& i : m_creds)
             {
             if(cert == i.certs[0])
                {
-               return i.key.get();
+               return i.key;
                }
             }
 

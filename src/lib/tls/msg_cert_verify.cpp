@@ -164,10 +164,11 @@ Certificate_Verify_13::Certificate_Verify_13(
    {
    BOTAN_ASSERT_NOMSG(!certificate_msg.empty());
 
-   const auto* private_key = creds_mgr.private_key_for(
-                                       certificate_msg.leaf(),
-                                       m_side == Connection_Side::Client ? "tls-client" : "tls-server",
-                                       hostname);
+   const auto private_key = creds_mgr.private_key_for(
+      certificate_msg.leaf(),
+      m_side == Connection_Side::Client ? "tls-client" : "tls-server",
+      hostname);
+
    if(!private_key)
       { throw TLS_Exception(Alert::InternalError, "Application did not provide a private key for its certificate"); }
 
