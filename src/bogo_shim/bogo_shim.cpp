@@ -1239,7 +1239,7 @@ class Shim_Credentials final : public Botan::Credentials_Manager
          if(m_args.option_used("key-file") && m_args.option_used("cert-file"))
             {
             Botan::DataSource_Stream key_stream(m_args.get_string_opt("key-file"));
-            m_key = Botan::PKCS8::load_key(key_stream);
+            m_key.reset(Botan::PKCS8::load_key(key_stream).release());
 
             Botan::DataSource_Stream cert_stream(m_args.get_string_opt("cert-file"));
 
@@ -1308,19 +1308,20 @@ class Shim_Credentials final : public Botan::Credentials_Manager
          return {};
          }
 
-      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& /*cert*/,
-                                          const std::string& /*type*/,
-                                          const std::string& /*context*/) override
+      std::shared_ptr<Botan::Private_Key>
+      private_key_for(const Botan::X509_Certificate& /*cert*/,
+                      const std::string& /*type*/,
+                      const std::string& /*context*/) override
          {
          // assumes cert == m_cert
-         return m_key.get();
+         return m_key;
          }
 
    private:
       const Shim_Arguments& m_args;
       Botan::SymmetricKey m_psk;
       std::string m_psk_identity;
-      std::unique_ptr<Botan::Private_Key> m_key;
+      std::shared_ptr<Botan::Private_Key> m_key;
       std::vector<Botan::X509_Certificate> m_cert_chain;
    };
 
