@@ -1812,6 +1812,7 @@ int botan_srp6_server_session_destroy(botan_srp6_server_session_t srp6);
 * SRP-6 Server side step 1
 * @param srp6 SRP-6 server session object
 * @param verifier the verification value saved from client registration
+* @param verifier_len SRP-6 verifier value length
 * @param group_id the SRP group id
 * @param hash_id the SRP hash in use
 * @param rng_obj a random number generator object
@@ -1845,6 +1846,7 @@ int botan_srp6_server_session_step2(botan_srp6_server_session_t srp6,
 * @param identifier a username or other client identifier
 * @param password the secret used to authenticate user
 * @param salt a randomly chosen value, at least 128 bits long
+* @param salt_len the length of salt
 * @param group_id specifies the shared SRP group
 * @param hash_id specifies a secure hash function
 * @param verifier out buffer to store the SRP-6 verifier value
@@ -1864,6 +1866,7 @@ int botan_generate_srp6_verifier(const char *identifier, const char *password,
 * @param group_id specifies the shared SRP group
 * @param hash_id specifies a secure hash function
 * @param salt is the salt value sent by the server
+* @param salt_len the length of salt
 * @param B is the server's public value
 * @param B_len is the server's public value length
 * @param rng_obj is a random number generator object
