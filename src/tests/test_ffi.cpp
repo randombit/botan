@@ -62,7 +62,7 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_pkcs_hash_id());
          results.push_back(ffi_test_cert_validation());
          results.push_back(ffi_test_crl());
-	 results.push_back(ffi_test_zfec());
+         results.push_back(ffi_test_zfec());
 
 #if defined(BOTAN_HAS_AES)
          results.push_back(ffi_test_block_ciphers());
@@ -326,99 +326,99 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-     static Test::Result ffi_test_zfec()
-     {
-       Test::Result result("FFI ZFEC");
+      static Test::Result ffi_test_zfec()
+         {
+         Test::Result result("FFI ZFEC");
 
 #if defined(BOTAN_HAS_ZFEC)
-       /* exercise a simple success case
-	*/
+         /* exercise a simple success case
+          */
 
-       // Select some arbitrary, valid encoding parameters.  There is nothing
-       // special about them but some relationships between these values and
-       // other inputs must hold.
-       const size_t K = 3;
-       const size_t N = 11;
+         // Select some arbitrary, valid encoding parameters.  There is
+         // nothing special about them but some relationships between these
+         // values and other inputs must hold.
+         const size_t K = 3;
+         const size_t N = 11;
 
-       // The decoder needs to know the indexes of the blocks being passed in
-       // to it.  This array must equal [0..N) for the logic in the decoding
-       // loop below to hold.
-       const std::vector<size_t> indexes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+         // The decoder needs to know the indexes of the blocks being passed
+         // in to it.  This array must equal [0..N) for the logic in the
+         // decoding loop below to hold.
+         const std::vector<size_t> indexes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-       // This will be the size of each encoded (or decoded) block.  This is
-       // an arbitrary value but it must match up with the length of the test
-       // data given in `input`.
-       const size_t blockSize = 15;
+         // This will be the size of each encoded (or decoded) block.  This is
+         // an arbitrary value but it must match up with the length of the
+         // test data given in `input`.
+         const size_t blockSize = 15;
 
-       // K of the blocks are required so the total information represented
-       // can be this multiple.  totalSize must be a multiple of K and it
-       // always will be using this construction.
-       const size_t totalSize = blockSize * K;
+         // K of the blocks are required so the total information represented
+         // can be this multiple.  totalSize must be a multiple of K and it
+         // always will be using this construction.
+         const size_t totalSize = blockSize * K;
 
-       // Here's the complete original input (plus a trailing NUL that we
-       // won't pass through ZFEC).  These are arbitrary bytes.
-       const uint8_t input[totalSize + 1] = "Does this work?AAAAAAAAAAAAAAAzzzzzzzzzzzzzzz";
+         // Here's the complete original input (plus a trailing NUL that we
+         // won't pass through ZFEC).  These are arbitrary bytes.
+         const uint8_t input[totalSize + 1] = "Does this work?AAAAAAAAAAAAAAAzzzzzzzzzzzzzzz";
 
-       // Allocate memory for the encoding and decoding output parameters.
-       std::vector<uint8_t*> encoded(N);
-       std::vector<uint8_t*> decoded(K);
-       for (size_t n = 0; n < N; ++n) {
-	 encoded[n] = new uint8_t[blockSize];
-       };
-       for (size_t k = 0; k < K; ++k) {
-	 decoded[k] = new uint8_t[blockSize];
-       };
+         // Allocate memory for the encoding and decoding output parameters.
+         std::vector<uint8_t*> encoded(N);
+         std::vector<uint8_t*> decoded(K);
+         for (size_t n = 0; n < N; ++n) {
+            encoded[n] = new uint8_t[blockSize];
+         };
+         for (size_t k = 0; k < K; ++k) {
+            decoded[k] = new uint8_t[blockSize];
+         };
 
-       // First encode the complete input string into N blocks where K are
-       // required for reconstruction.  The N encoded blocks will end up in
-       // `encoded`.
-       REQUIRE_FFI_OK(botan_zfec_encode, (K, N, input, totalSize, encoded.data()));
+         // First encode the complete input string into N blocks where K are
+         // required for reconstruction.  The N encoded blocks will end up in
+         // `encoded`.
+         REQUIRE_FFI_OK(botan_zfec_encode, (K, N, input, totalSize, encoded.data()));
 
-       // Any K blocks can be decoded to reproduce the original input (split
-       // across an array of K strings of blockSize bytes each).  This loop
-       // only exercises decoding with consecutive blocks because it's harder
-       // to pick non-consecutive blocks out for a test.
-       for (size_t offset = 0; offset < N - K; ++offset) {
-	 result.test_note("About to decode with offset " + std::to_string(offset));
-	 // Pass in the K shares starting from `offset` (and their indexes) so
-	 // that we can try decoding a certain group of blocks here.  Any K
-	 // shares *should* work.
-	 REQUIRE_FFI_OK(botan_zfec_decode, (K, N, indexes.data() + offset, encoded.data() + offset, blockSize, decoded.data()));
+         // Any K blocks can be decoded to reproduce the original input (split
+         // across an array of K strings of blockSize bytes each).  This loop
+         // only exercises decoding with consecutive blocks because it's
+         // harder to pick non-consecutive blocks out for a test.
+         for (size_t offset = 0; offset < N - K; ++offset) {
+            result.test_note("About to decode with offset " + std::to_string(offset));
+            // Pass in the K shares starting from `offset` (and their indexes)
+            // so that we can try decoding a certain group of blocks here.  Any
+            // K shares *should* work.
+            REQUIRE_FFI_OK(botan_zfec_decode, (K, N, indexes.data() + offset, encoded.data() + offset, blockSize, decoded.data()));
 
-	 // Check that the original input bytes have been written to the
-	 // output parameter.
-	 for (size_t k = 0, pos = 0; k < K; ++k, pos += blockSize) {
-	   TEST_FFI_RC(0, botan_same_mem, (input + pos, decoded[k], blockSize));
-	 }
-       }
+            // Check that the original input bytes have been written to the
+            // output parameter.
+            for (size_t k = 0, pos = 0; k < K; ++k, pos += blockSize) {
+               TEST_FFI_RC(0, botan_same_mem, (input + pos, decoded[k], blockSize));
+            }
+         }
 
-       // Clean up the memory we allocated at the top.
-       for (size_t n = 0; n < N; ++n) {
-	 delete[] encoded[n];
-       }
-       for (size_t k = 0; k < K; ++k) {
-	 delete[] decoded[k];
-       }
+         // Clean up the memory we allocated at the top.
+         for (size_t n = 0; n < N; ++n) {
+            delete[] encoded[n];
+         }
+         for (size_t k = 0; k < K; ++k) {
+            delete[] decoded[k];
+         }
 
-       /* Exercise a couple basic failure cases, such as you encounter if the
-	* caller supplies invalid parameters.  We don't try to exhaustively
-	* prove invalid parameters are handled through this interface since
-	* the implementation only passes them through to ZFEC::{encode,decode}
-	* where the real checking is.  We just want to see that errors can
-	* propagate.
-	*/
-       TEST_FFI_FAIL("encode with out-of-bounds encoding parameters should have failed",
-		     botan_zfec_encode,
-		     (0, 0, NULL, 0, NULL));
-       TEST_FFI_FAIL("decode with out-of-bounds encoding parameters should have failed",
-		     botan_zfec_decode,
-		     (0, 0, NULL, NULL, 0, NULL));
+         /* Exercise a couple basic failure cases, such as you encounter if
+          * the caller supplies invalid parameters.  We don't try to
+          * exhaustively prove invalid parameters are handled through this
+          * interface since the implementation only passes them through to
+          * ZFEC::{encode,decode} where the real checking is.  We just want to
+          * see that errors can propagate.
+          */
+         TEST_FFI_FAIL("encode with out-of-bounds encoding parameters should have failed",
+                       botan_zfec_encode,
+                       (0, 0, NULL, 0, NULL));
+         TEST_FFI_FAIL("decode with out-of-bounds encoding parameters should have failed",
+                       botan_zfec_decode,
+                       (0, 0, NULL, NULL, 0, NULL));
 #endif
 
-       return result;
-     }
+         return result;
+         }
 
-     static Test::Result ffi_test_crl()
+      static Test::Result ffi_test_crl()
          {
          Test::Result result("FFI CRL");
 
