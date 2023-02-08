@@ -14,6 +14,19 @@
 
 namespace Botan {
 
+const BigInt& Asymmetric_Key::get_int_field(const std::string& field) const
+   {
+   throw Unknown_PK_Field_Name(algo_name(), field);
+   }
+
+OID Asymmetric_Key::object_identifier() const
+   {
+   OID o = OIDS::str2oid_or_empty(algo_name());
+   if(o.empty())
+      throw Lookup_Error("PK algo " + algo_name() + " has no defined OIDs");
+   return o;
+   }
+
 std::string create_hex_fingerprint(const uint8_t bits[],
                                    size_t bits_len,
                                    const std::string& hash_name)
@@ -45,22 +58,6 @@ std::vector<uint8_t> Public_Key::subject_public_key() const
       .end_cons();
 
    return output;
-   }
-
-const BigInt& Public_Key::get_int_field(const std::string& field) const
-   {
-   throw Unknown_PK_Field_Name(algo_name(), field);
-   }
-
-/*
-* Default OID access
-*/
-OID Public_Key::object_identifier() const
-   {
-   OID o = OIDS::str2oid_or_empty(algo_name());
-   if(o.empty())
-      throw Lookup_Error("PK algo " + algo_name() + " has no defined OIDs");
-   return o;
    }
 
 secure_vector<uint8_t> Private_Key::private_key_info() const
