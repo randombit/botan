@@ -64,7 +64,7 @@ bool AlgorithmIdentifier::parameters_are_null() const
 
 bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
    {
-   if(a1.get_oid() != a2.get_oid())
+   if(a1.oid() != a2.oid())
       return false;
 
    /*

@@ -82,7 +82,7 @@ Test::Result test_decode_ecdsa_X509()
    Test::Result result("ECDSA Unit");
    Botan::X509_Certificate cert(Test::data_file("x509/ecc/CSCA.CSCA.csca-germany.1.crt"));
 
-   result.test_eq("correct signature oid", cert.signature_algorithm().get_oid().to_formatted_string(), "ECDSA/EMSA1(SHA-224)");
+   result.test_eq("correct signature oid", cert.signature_algorithm().oid().to_formatted_string(), "ECDSA/EMSA1(SHA-224)");
 
    result.test_eq("serial number", cert.serial_number(), Botan::hex_decode("01"));
    result.test_eq("authority key id", cert.authority_key_id(), cert.subject_key_id());

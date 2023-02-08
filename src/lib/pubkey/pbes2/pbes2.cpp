@@ -29,13 +29,13 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
                                   const AlgorithmIdentifier& kdf_algo,
                                   size_t default_key_size)
    {
-   if(kdf_algo.get_oid() == OID::from_string("PKCS5.PBKDF2"))
+   if(kdf_algo.oid() == OID::from_string("PKCS5.PBKDF2"))
       {
       secure_vector<uint8_t> salt;
       size_t iterations = 0, key_length = 0;
 
       AlgorithmIdentifier prf_algo;
-      BER_Decoder(kdf_algo.get_parameters())
+      BER_Decoder(kdf_algo.parameters())
          .start_sequence()
          .decode(salt, ASN1_Type::OctetString)
          .decode(iterations)
@@ -51,7 +51,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
       if(key_length == 0)
          key_length = default_key_size;
 
-      const std::string prf = OIDS::oid2str_or_throw(prf_algo.get_oid());
+      const std::string prf = OIDS::oid2str_or_throw(prf_algo.oid());
       auto pbkdf_fam = PasswordHashFamily::create_or_throw("PBKDF2(" + prf + ")");
       auto pbkdf = pbkdf_fam->from_params(iterations);
 
@@ -61,14 +61,14 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
                         salt.data(), salt.size());
       return derived_key;
       }
-   else if(kdf_algo.get_oid() == OID::from_string("Scrypt"))
+   else if(kdf_algo.oid() == OID::from_string("Scrypt"))
       {
       secure_vector<uint8_t> salt;
       size_t N = 0, r = 0, p = 0;
       size_t key_length = 0;
 
       AlgorithmIdentifier prf_algo;
-      BER_Decoder(kdf_algo.get_parameters())
+      BER_Decoder(kdf_algo.parameters())
          .start_sequence()
          .decode(salt, ASN1_Type::OctetString)
          .decode(N)
@@ -92,7 +92,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
       }
    else
       throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
-                           kdf_algo.get_oid().to_string());
+                           kdf_algo.oid().to_string());
    }
 
 secure_vector<uint8_t> derive_key(const std::string& passphrase,
@@ -310,7 +310,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
          .decode(enc_algo)
       .end_cons();
 
-   const std::string cipher = OIDS::oid2str_or_throw(enc_algo.get_oid());
+   const std::string cipher = OIDS::oid2str_or_throw(enc_algo.oid());
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
       throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
@@ -318,7 +318,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
    secure_vector<uint8_t> iv;
-   BER_Decoder(enc_algo.get_parameters()).decode(iv, ASN1_Type::OctetString).verify_end();
+   BER_Decoder(enc_algo.parameters()).decode(iv, ASN1_Type::OctetString).verify_end();
 
    std::unique_ptr<Cipher_Mode> dec = Cipher_Mode::create(cipher, Cipher_Dir::Decryption);
    if(!dec)

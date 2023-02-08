@@ -68,7 +68,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    OID ecc_param_id;
 
    // The parameters also includes hash and cipher OIDs
-   BER_Decoder(alg_id.get_parameters()).start_sequence().decode(ecc_param_id);
+   BER_Decoder(alg_id.parameters()).start_sequence().decode(ecc_param_id);
 
    m_domain_params = EC_Group(ecc_param_id);
 

@@ -1359,7 +1359,7 @@ void Kyber_PublicKey::initialize_from_encoding(const std::vector<uint8_t>& pub_k
 Kyber_PublicKey::Kyber_PublicKey(const AlgorithmIdentifier& alg_id,
                                  const std::vector<uint8_t>& key_bits) :
    Kyber_PublicKey(key_bits,
-                   KyberMode(alg_id.get_oid()),
+                   KyberMode(alg_id.oid()),
                    KyberKeyEncoding::Full)
    {}
 
@@ -1449,7 +1449,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m)
 Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id,
                                    const secure_vector<uint8_t>& key_bits) :
    Kyber_PrivateKey(key_bits,
-                    KyberMode(alg_id.get_oid()),
+                    KyberMode(alg_id.oid()),
                     KyberKeyEncoding::Full)
    {}
 
