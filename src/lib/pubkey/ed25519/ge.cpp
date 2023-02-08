@@ -23,32 +23,32 @@ Representations:
 */
 struct ge_p2
    {
-   fe X;
-   fe Y;
-   fe Z;
+   FE_25519 X;
+   FE_25519 Y;
+   FE_25519 Z;
    };
 
 struct ge_p1p1
    {
-   fe X;
-   fe Y;
-   fe Z;
-   fe T;
+   FE_25519 X;
+   FE_25519 Y;
+   FE_25519 Z;
+   FE_25519 T;
    };
 
 struct ge_precomp
    {
-   fe yplusx;
-   fe yminusx;
-   fe xy2d;
+   FE_25519 yplusx;
+   FE_25519 yminusx;
+   FE_25519 xy2d;
    };
 
 struct ge_cached
    {
-   fe YplusX;
-   fe YminusX;
-   fe Z;
-   fe T2d;
+   FE_25519 YplusX;
+   FE_25519 YminusX;
+   FE_25519 Z;
+   FE_25519 T2d;
    };
 
 /*
@@ -57,7 +57,7 @@ r = p + q
 
 void ge_add(ge_p1p1* r, const ge_p3* p, const ge_cached* q)
    {
-   fe t0;
+   FE_25519 t0;
    /* qhasm: YpX1 = Y1+X1 */
    /* asm 1: fe_add(>YpX1=fe#1,<Y1=fe#12,<X1=fe#11); */
    /* asm 2: fe_add(>YpX1=r->X,<Y1=p->Y,<X1=p->X); */
@@ -120,7 +120,7 @@ r = p + q
 
 void ge_madd(ge_p1p1* r, const ge_p3* p, const ge_precomp* q)
    {
-   fe t0;
+   FE_25519 t0;
    /* qhasm: YpX1 = Y1+X1 */
    fe_add(r->X, p->Y, p->X);
 
@@ -158,7 +158,7 @@ r = p - q
 
 void ge_msub(ge_p1p1* r, const ge_p3* p, const ge_precomp* q)
    {
-   fe t0;
+   FE_25519 t0;
 
    /* qhasm: YpX1 = Y1+X1 */
    /* asm 1: fe_add(>YpX1=fe#1,<Y1=fe#12,<X1=fe#11); */
@@ -241,7 +241,7 @@ r = 2 * p
 
 void ge_p2_dbl(ge_p1p1* r, const ge_p2* p)
    {
-   fe t0;
+   FE_25519 t0;
    /* qhasm: XX=X1^2 */
    /* asm 1: fe_sq(>XX=fe#1,<X1=fe#11); */
    /* asm 2: fe_sq(>XX=r->X,<X1=p->X); */
@@ -317,7 +317,7 @@ r = p
 
 void ge_p3_to_cached(ge_cached* r, const ge_p3* p)
    {
-   static const fe d2 =
+   static const FE_25519 d2 =
       {
       -21827239, -5839606, -30745221, 13898782, 229458, 15978800, -12551817, -6495438, 29715968, 9444199
       } ;
@@ -333,7 +333,7 @@ r = p - q
 
 void ge_sub(ge_p1p1* r, const ge_p3* p, const ge_cached* q)
    {
-   fe t0;
+   FE_25519 t0;
    /* qhasm: YpX1 = Y1+X1 */
    /* asm 1: fe_add(>YpX1=fe#1,<Y1=fe#12,<X1=fe#11); */
    /* asm 2: fe_add(>YpX1=r->X,<Y1=p->Y,<X1=p->X); */
@@ -434,9 +434,9 @@ void slide(int8_t* r, const uint8_t* a)
 
 void ge_tobytes(uint8_t* s, const ge_p2* h)
    {
-   fe recip;
-   fe x;
-   fe y;
+   FE_25519 recip;
+   FE_25519 x;
+   FE_25519 y;
 
    fe_invert(recip, h->Z);
    fe_mul(x, h->X, recip);
@@ -456,20 +456,20 @@ void ge_p2_0(ge_p2* h)
 
 int ge_frombytes_negate_vartime(ge_p3* h, const uint8_t* s)
    {
-   static const fe d =
+   static const FE_25519 d =
       {
       -10913610, 13857413, -15372611, 6949391, 114729, -8787816, -6275908, -3247719, -18696448, -12055116
       } ;
-   static const fe sqrtm1 =
+   static const FE_25519 sqrtm1 =
       {
       -32595792, -7943725, 9377950, 3500415, 12389472, -272473, -25146209, -2005654, 326686, 11406482
       } ;
 
-   fe u;
-   fe v;
-   fe v3;
-   fe vxx;
-   fe check;
+   FE_25519 u;
+   FE_25519 v;
+   FE_25519 v3;
+   FE_25519 vxx;
+   FE_25519 check;
 
    fe_frombytes(h->Y, s);
    fe_1(h->Z);
@@ -2075,7 +2075,7 @@ inline void select(ge_precomp* t,
                    ((t->xy2d[i] ^ base[7].xy2d[i]) & mask8);
       }
 
-   fe minus_xy2d;
+   FE_25519 minus_xy2d;
    fe_neg(minus_xy2d, t->xy2d);
 
    // If negative have to swap yminusx and yplusx
@@ -2092,9 +2092,9 @@ inline void select(ge_precomp* t,
 
 void ge_p3_tobytes(uint8_t* s, const ge_p3* h)
    {
-   fe recip;
-   fe x;
-   fe y;
+   FE_25519 recip;
+   FE_25519 x;
+   FE_25519 y;
 
    fe_invert(recip, h->Z);
    fe_mul(x, h->X, recip);

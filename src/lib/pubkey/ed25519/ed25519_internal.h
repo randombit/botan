@@ -92,10 +92,10 @@ Representations:
 
 struct ge_p3
    {
-   fe X;
-   fe Y;
-   fe Z;
-   fe T;
+   FE_25519 X;
+   FE_25519 Y;
+   FE_25519 Z;
+   FE_25519 T;
    };
 
 int ge_frombytes_negate_vartime(ge_p3* v, const uint8_t*);
