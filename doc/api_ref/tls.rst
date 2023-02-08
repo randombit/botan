@@ -1556,9 +1556,18 @@ Server Code Example
              const std::string& type,
              const std::string& context) override
              {
-             // return the certificate chain being sent to the tls client
+             Botan::X509_Certificate server_cert("botan.randombit.net.crt");
+
+             // make sure that the server asked for your certificate's key type
+             // before handing it out to the implementation
+             const auto key_type = server_cert.subject_public_key_algo().get_oid().to_formatted_string();
+             const auto itr = std::find(cert_key_types.begin(), cert_key_types.end(), key_type);
+             if (itr == cert_key_types.end())
+                { return {}; }
+
+             // return the certificate chain being sent to the tls server
              // e.g., the certificate file "botan.randombit.net.crt"
-             return { Botan::X509_Certificate("botan.randombit.net.crt") };
+             return {server_cert};
              }
 
           Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
