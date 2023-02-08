@@ -25,7 +25,7 @@ namespace Botan {
 namespace {
 
 // fall back to raw decoding for previous versions, which did not encode an OCTET STRING
-std::vector<uint8_t> extract_raw_key(std::span<const uint8_t> key_bits)
+std::vector<uint8_t> extract_raw_public_key(std::span<const uint8_t> key_bits)
    {
    std::vector<uint8_t> raw_key;
    try
@@ -50,7 +50,7 @@ XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
    {}
 
 XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits)
-   : m_raw_key(extract_raw_key(key_bits)),
+   : m_raw_key(extract_raw_public_key(key_bits)),
      m_xmss_params(XMSS_PublicKey::deserialize_xmss_oid(m_raw_key)),
      m_wots_params(m_xmss_params.ots_oid())
    {

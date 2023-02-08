@@ -34,7 +34,7 @@ namespace Botan {
 namespace {
 
 // fall back to raw decoding for previous versions, which did not encode an OCTET STRING
-secure_vector<uint8_t> extract_raw_key(std::span<const uint8_t> key_bits)
+secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits)
    {
    secure_vector<uint8_t> raw_key;
    try
@@ -86,7 +86,7 @@ class XMSS_PrivateKey_Internal
          */
          static_assert(sizeof(size_t) >= 4, "size_t is big enough to support leaf index");
 
-         const secure_vector<uint8_t> raw_key = extract_raw_key(key_bits);
+         const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
 
          if(raw_key.size() != m_xmss_params.raw_private_key_size())
             {
