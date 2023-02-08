@@ -25,16 +25,17 @@ namespace Botan {
 namespace {
 
 // fall back to raw decoding for previous versions, which did not encode an OCTET STRING
-std::vector<uint8_t> extract_raw_key(const std::vector<uint8_t>& key_bits)
+std::vector<uint8_t> extract_raw_key(std::span<const uint8_t> key_bits)
    {
    std::vector<uint8_t> raw_key;
    try
       {
-      BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString);
+      DataSource_Memory src(key_bits);
+      BER_Decoder(src).decode(raw_key, ASN1_Type::OctetString);
       }
    catch(Decoding_Error&)
       {
-      raw_key = key_bits;
+      raw_key.assign(key_bits.begin(), key_bits.end());
       }
    return raw_key;
    }
@@ -48,7 +49,7 @@ XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
      m_public_seed(rng.random_vec(m_xmss_params.element_size()))
    {}
 
-XMSS_PublicKey::XMSS_PublicKey(const std::vector<uint8_t>& key_bits)
+XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits)
    : m_raw_key(extract_raw_key(key_bits)),
      m_xmss_params(XMSS_PublicKey::deserialize_xmss_oid(m_raw_key)),
      m_wots_params(m_xmss_params.ots_oid())

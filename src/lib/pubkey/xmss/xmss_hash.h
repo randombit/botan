@@ -10,15 +10,13 @@
 
 #include <botan/hash.h>
 
-//BOTAN_FUTURE_INTERNAL_HEADER(xmss_hash.h)
-
 namespace Botan {
 
 /**
  * A collection of pseudorandom hash functions required for XMSS and WOTS
  * computations.
  **/
-class BOTAN_PUBLIC_API(2,0) XMSS_Hash final
+class XMSS_Hash final
    {
    public:
       XMSS_Hash(const std::string& h_func_name);

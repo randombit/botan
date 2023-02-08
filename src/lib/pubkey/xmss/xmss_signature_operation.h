@@ -12,7 +12,7 @@
 #include <botan/xmss.h>
 #include <botan/internal/xmss_address.h>
 #include <botan/internal/xmss_signature.h>
-#include <botan/xmss_wots.h>
+#include <botan/internal/xmss_wots.h>
 
 namespace Botan {
 
