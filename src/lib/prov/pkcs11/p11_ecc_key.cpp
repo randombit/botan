@@ -126,7 +126,7 @@ bool PKCS11_EC_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*stro
 
 AlgorithmIdentifier PKCS11_EC_PrivateKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), domain().DER_encode(EC_Group_Encoding::Explicit));
+   return AlgorithmIdentifier(object_identifier(), domain().DER_encode(EC_Group_Encoding::Explicit));
    }
 }
 

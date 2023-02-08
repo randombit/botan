@@ -206,7 +206,7 @@ class BOTAN_PUBLIC_API(2,0) Extended_Key_Usage final : public Certificate_Extens
       Extended_Key_Usage() = default;
       explicit Extended_Key_Usage(const std::vector<OID>& o) : m_oids(o) {}
 
-      const std::vector<OID>& get_oids() const { return m_oids; }
+      const std::vector<OID>& object_identifiers() const { return m_oids; }
 
       static OID static_oid() { return OID("2.5.29.37"); }
       OID oid_of() const override { return static_oid(); }

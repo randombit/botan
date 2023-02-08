@@ -77,7 +77,7 @@ KyberMode::KyberMode(const OID& oid)
 KyberMode::KyberMode(const std::string& str)
    : m_mode(kyber_mode_from_string(str)) {}
 
-OID KyberMode::get_oid() const
+OID KyberMode::object_identifier() const
    {
    return OID::from_string(to_string());
    }
@@ -1298,17 +1298,17 @@ KyberMode Kyber_PublicKey::mode() const
 
 std::string Kyber_PublicKey::algo_name() const
    {
-   return get_oid().to_formatted_string();
+   return object_identifier().to_formatted_string();
    }
 
 AlgorithmIdentifier Kyber_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(mode().get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
+   return AlgorithmIdentifier(mode().object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
-OID Kyber_PublicKey::get_oid() const
+OID Kyber_PublicKey::object_identifier() const
    {
-   return mode().get_oid();
+   return mode().object_identifier();
    }
 
 size_t Kyber_PublicKey::estimated_strength() const

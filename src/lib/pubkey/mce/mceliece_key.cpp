@@ -80,7 +80,7 @@ secure_vector<uint8_t> McEliece_PublicKey::random_plaintext_element(RandomNumber
 
 AlgorithmIdentifier McEliece_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
+   return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
 std::vector<uint8_t> McEliece_PublicKey::public_key_bits() const

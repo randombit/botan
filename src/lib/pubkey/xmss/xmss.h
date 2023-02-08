@@ -166,7 +166,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override
          {
-         return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
+         return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
          }
 
       bool check_key(RandomNumberGenerator&, bool) const override

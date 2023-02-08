@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(3,0) DilithiumMode
       explicit DilithiumMode(const OID& oid);
       explicit DilithiumMode(const std::string& str);
 
-      OID get_oid() const;
+      OID object_identifier() const;
       std::string to_string() const;
 
       bool is_aes() const { return m_mode == Dilithium4x4_AES || m_mode == Dilithium6x5_AES || m_mode == Dilithium8x7_AES; }
@@ -75,7 +75,7 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      OID get_oid() const override;
+      OID object_identifier() const override;
 
       size_t key_length() const override;
 

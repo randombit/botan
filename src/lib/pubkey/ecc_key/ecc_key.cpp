@@ -69,7 +69,7 @@ bool EC_PublicKey::check_key(RandomNumberGenerator& rng,
 
 AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), DER_domain());
+   return AlgorithmIdentifier(object_identifier(), DER_domain());
    }
 
 std::vector<uint8_t> EC_PublicKey::public_key_bits() const

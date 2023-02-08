@@ -39,7 +39,7 @@ secure_vector<uint8_t> curve25519(const secure_vector<uint8_t>& secret,
 
 AlgorithmIdentifier Curve25519_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
+   return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
 bool Curve25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const

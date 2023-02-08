@@ -127,7 +127,7 @@ DilithiumMode::DilithiumMode(const OID& oid)
 DilithiumMode::DilithiumMode(const std::string& str)
    : m_mode(dilithium_mode_from_string(str)) {}
 
-OID DilithiumMode::get_oid() const { return OID::from_string(to_string()); }
+OID DilithiumMode::object_identifier() const { return OID::from_string(to_string()); }
 
 std::string DilithiumMode::to_string() const
    {
@@ -606,15 +606,15 @@ Dilithium_PublicKey::Dilithium_PublicKey(const std::vector<uint8_t>& pk, Dilithi
 
 std::string Dilithium_PublicKey::algo_name() const
    {
-   return get_oid().to_formatted_string();
+   return object_identifier().to_formatted_string();
    }
 
 AlgorithmIdentifier Dilithium_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
+   return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
-OID Dilithium_PublicKey::get_oid() const
+OID Dilithium_PublicKey::object_identifier() const
    {
    return m_public->mode().oid();
    }
