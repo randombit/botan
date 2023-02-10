@@ -180,31 +180,30 @@ Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::Ky
    Test::Result result(test_name);
 
    // read input from test file
-   const auto random_in = vars.get_req_bin("Random");
    const auto pk_in = vars.get_req_bin("PK");
    const auto sk_in = vars.get_req_bin("SK");
    const auto ct_in = vars.get_req_bin("CT");
    const auto ss_in = vars.get_req_bin("SS");
 
    // Kyber test RNG
-   Fixed_Output_RNG kyber_test_rng(random_in);
+   CTR_DRBG_AES256 ctr_drbg(vars.get_req_bin("Seed"));
 
    // Alice
-   Botan::Kyber_PrivateKey priv_key(kyber_test_rng, mode);
+   Botan::Kyber_PrivateKey priv_key(ctr_drbg, mode);
    priv_key.set_binary_encoding(Botan::KyberKeyEncoding::Raw);
    const auto pub_key = priv_key.public_key();
    result.test_eq("Public Key Output", priv_key.public_key_bits(), pk_in);
    result.test_eq("Secret Key Output", priv_key.private_key_bits(), sk_in);
 
    // Bob
-   auto enc = Botan::PK_KEM_Encryptor(*pub_key, kyber_test_rng, "Raw", "base");
+   auto enc = Botan::PK_KEM_Encryptor(*pub_key, ctr_drbg, "Raw", "base");
    Botan::secure_vector<uint8_t> cipher_text, key_bob;
-   enc.encrypt(cipher_text, key_bob, 0 /* no KDF */, kyber_test_rng);
+   enc.encrypt(cipher_text, key_bob, 0 /* no KDF */, ctr_drbg);
    result.test_eq("Cipher-Text Output", cipher_text, ct_in);
    result.test_eq("Key B Output", key_bob, ss_in);
 
    // Alice
-   auto dec = Botan::PK_KEM_Decryptor(priv_key, kyber_test_rng, "Raw", "base");
+   auto dec = Botan::PK_KEM_Decryptor(priv_key, ctr_drbg, "Raw", "base");
    const auto key_alice = dec.decrypt(cipher_text, 0 /* no KDF */, std::vector<uint8_t>());
    result.test_eq("Key A Output", key_alice, ss_in);
 
@@ -218,19 +217,19 @@ Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::Ky
 
 } // namespace
 
-#define REGISTER_KYBER_KAT_TEST(mode)                                                                                  \
-    class KYBER_KAT_##mode final : public Text_Based_Test                                                              \
-    {                                                                                                                  \
-      public:                                                                                                          \
-        KYBER_KAT_##mode() : Text_Based_Test("pubkey/kyber_" #mode ".vec", "Count,Seed,Random,PK,SK,CT,SS")            \
-        {                                                                                                              \
-        }                                                                                                              \
-                                                                                                                       \
-        Test::Result run_one_test(const std::string &name, const VarMap &vars) override                                \
-        {                                                                                                              \
-            return run_kyber_test("Kyber_" #mode, vars, Botan::KyberMode::Kyber##mode, name);                          \
-        }                                                                                                              \
-    };                                                                                                                 \
+#define REGISTER_KYBER_KAT_TEST(mode)                                                                  \
+   class KYBER_KAT_##mode final : public Text_Based_Test                                               \
+      {                                                                                                \
+      public:                                                                                          \
+         KYBER_KAT_##mode() : Text_Based_Test("pubkey/kyber_" #mode ".vec", "Count,Seed,PK,SK,CT,SS")  \
+            {                                                                                          \
+            }                                                                                          \
+                                                                                                       \
+         Test::Result run_one_test(const std::string &name, const VarMap &vars) override               \
+            {                                                                                          \
+            return run_kyber_test("Kyber_" #mode, vars, Botan::KyberMode::Kyber##mode, name);          \
+            }                                                                                          \
+    };                                                                                                 \
     BOTAN_REGISTER_TEST("kyber", "kyber_kat_" #mode, KYBER_KAT_##mode)
 
 #if defined(BOTAN_HAS_KYBER_90S)
