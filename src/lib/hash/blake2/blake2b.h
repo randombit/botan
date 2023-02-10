@@ -65,8 +65,6 @@ class BLAKE2b final : public HashFunction, public SymmetricAlgorithm
       secure_vector<uint8_t> m_padded_key_buffer;
    };
 
-typedef BLAKE2b Blake2b;
-
 }
 
 #endif

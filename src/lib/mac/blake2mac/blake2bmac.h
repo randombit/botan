@@ -57,8 +57,6 @@ class BLAKE2bMAC final : public MessageAuthenticationCode
       BLAKE2b m_blake;
    };
 
-typedef BLAKE2bMAC Blake2bMac;
-
 }
 
 #endif

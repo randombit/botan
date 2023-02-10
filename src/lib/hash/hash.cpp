@@ -217,7 +217,7 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
 #if defined(BOTAN_HAS_BLAKE2B)
    if(req.algo_name() == "Blake2b" || req.algo_name() == "BLAKE2b")
       {
-      return std::make_unique<Blake2b>(req.arg_as_integer(0, 512));
+      return std::make_unique<BLAKE2b>(req.arg_as_integer(0, 512));
    }
 #endif
 

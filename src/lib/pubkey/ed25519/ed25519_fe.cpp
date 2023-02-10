@@ -16,10 +16,10 @@ namespace Botan {
 //static
 FE_25519 FE_25519::invert(const FE_25519& z)
    {
-   fe t0;
-   fe t1;
-   fe t2;
-   fe t3;
+   FE_25519 t0;
+   FE_25519 t1;
+   FE_25519 t2;
+   FE_25519 t3;
 
    fe_sq(t0, z);
    fe_sq_iter(t1, t0, 2);
@@ -49,9 +49,9 @@ FE_25519 FE_25519::invert(const FE_25519& z)
 
 FE_25519 FE_25519::pow_22523(const fe& z)
    {
-   fe t0;
-   fe t1;
-   fe t2;
+   FE_25519 t0;
+   FE_25519 t1;
+   FE_25519 t2;
 
    fe_sq(t0, z);
    fe_sq_iter(t1, t0, 2);
