@@ -171,7 +171,7 @@ class BOTAN_PUBLIC_API(2,0) Attribute final : public ASN1_Object
       const OID& oid() const { return m_oid; }
       const std::vector<uint8_t>& parameters() const { return m_parameters; }
 
-      const OID& get_oid() const { return m_oid; }
+      const OID& object_identifier() const { return m_oid; }
       const std::vector<uint8_t>& get_parameters() const { return m_parameters; }
 
    private:

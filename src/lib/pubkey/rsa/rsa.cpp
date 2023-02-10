@@ -153,7 +153,7 @@ size_t RSA_PublicKey::estimated_strength() const
 
 AlgorithmIdentifier RSA_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_NULL_PARAM);
+   return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
 std::vector<uint8_t> RSA_PublicKey::public_key_bits() const

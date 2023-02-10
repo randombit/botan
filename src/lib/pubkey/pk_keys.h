@@ -66,10 +66,17 @@ class BOTAN_PUBLIC_API(2,0) Public_Key
       virtual size_t key_length() const = 0;
 
       /**
-      * Get the OID of the underlying public key scheme.
-      * @return OID of the public key scheme
+      * @return object identifier of the underlying public key scheme
       */
-      virtual OID get_oid() const;
+      virtual OID object_identifier() const;
+
+      /**
+      * Deprecated version of object_identifier
+      */
+      BOTAN_DEPRECATED("Use object_identifier") OID get_oid() const
+         {
+         return this->object_identifier();
+         }
 
       /**
       * Test the key values for consistency.

@@ -135,7 +135,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
          Attribute attr;
          attributes.decode(attr);
 
-         const OID& oid = attr.get_oid();
+         const OID& oid = attr.object_identifier();
          BER_Decoder value(attr.get_parameters());
 
          if(oid == OID::from_string("PKCS9.EmailAddress"))
@@ -266,7 +266,7 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
    {
    if(auto ext = extensions().get(OID::from_string("X509v3.ExtendedKeyUsage")))
       {
-      return dynamic_cast<Cert_Extension::Extended_Key_Usage&>(*ext).get_oids();
+      return dynamic_cast<Cert_Extension::Extended_Key_Usage&>(*ext).object_identifiers();
       }
 
    return {};

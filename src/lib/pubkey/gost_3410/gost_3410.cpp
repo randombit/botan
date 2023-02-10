@@ -54,7 +54,7 @@ AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    {
    std::vector<uint8_t> params;
 
-   const OID gost_oid = get_oid();
+   const OID gost_oid = object_identifier();
    const OID domain_oid = domain().get_curve_oid();
 
    DER_Encoder(params).start_sequence().encode(domain_oid).end_cons();

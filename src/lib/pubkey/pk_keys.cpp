@@ -55,7 +55,7 @@ const BigInt& Public_Key::get_int_field(const std::string& field) const
 /*
 * Default OID access
 */
-OID Public_Key::get_oid() const
+OID Public_Key::object_identifier() const
    {
    OID o = OIDS::str2oid_or_empty(algo_name());
    if(o.empty())

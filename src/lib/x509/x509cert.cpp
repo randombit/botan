@@ -269,7 +269,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Extended_Key_Usage>())
       {
-      data->m_extended_key_usage = ext->get_oids();
+      data->m_extended_key_usage = ext->object_identifiers();
       }
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Certificate_Policies>())

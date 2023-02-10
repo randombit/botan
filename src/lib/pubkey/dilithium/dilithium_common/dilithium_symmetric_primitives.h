@@ -212,7 +212,7 @@ class DilithiumModeConstants
          }
       OID oid() const
          {
-         return m_mode.get_oid();
+         return m_mode.object_identifier();
          }
       size_t private_key_bytes() const
          {

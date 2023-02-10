@@ -20,7 +20,7 @@ namespace Botan {
 
 AlgorithmIdentifier Ed25519_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
+   return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
 bool Ed25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const

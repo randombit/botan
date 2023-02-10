@@ -355,7 +355,7 @@ size_t TPM_PrivateKey::key_length() const
 
 AlgorithmIdentifier TPM_PrivateKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(),
+   return AlgorithmIdentifier(object_identifier(),
                               AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
