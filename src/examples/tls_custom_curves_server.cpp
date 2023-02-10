@@ -86,7 +86,7 @@ public:
 
     // make sure that the server asked for your certificate's key type
     // before handing it out to the implementation
-    const auto key_type = server_cert.subject_public_key_algo().get_oid().to_formatted_string();
+    const auto key_type = server_cert.subject_public_key_algo().oid().to_formatted_string();
     const auto itr = std::find(cert_key_types.begin(), cert_key_types.end(), key_type);
     if (itr == cert_key_types.end()) {
       return {};
