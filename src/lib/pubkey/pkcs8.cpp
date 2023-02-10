@@ -102,10 +102,10 @@ secure_vector<uint8_t> PKCS8_decode(
       {
       if(is_encrypted)
          {
-         if(OIDS::oid2str_or_throw(pbe_alg_id.get_oid()) != "PBE-PKCS5v20")
-            throw PKCS8_Exception("Unknown PBE type " + pbe_alg_id.get_oid().to_string());
+         if(OIDS::oid2str_or_throw(pbe_alg_id.oid()) != "PBE-PKCS5v20")
+            throw PKCS8_Exception("Unknown PBE type " + pbe_alg_id.oid().to_string());
 #if defined(BOTAN_HAS_PKCS5_PBES2)
-         key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.get_parameters());
+         key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.parameters());
 #else
          BOTAN_UNUSED(get_passphrase);
          throw Decoding_Error("Private key is encrypted but PBES2 was disabled in build");
@@ -339,10 +339,10 @@ load_key(DataSource& source,
    AlgorithmIdentifier alg_id;
    secure_vector<uint8_t> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
 
-   const std::string alg_name = OIDS::oid2str_or_empty(alg_id.get_oid());
+   const std::string alg_name = OIDS::oid2str_or_empty(alg_id.oid());
    if(alg_name.empty())
       throw PKCS8_Exception("Unknown algorithm OID: " +
-                            alg_id.get_oid().to_string());
+                            alg_id.oid().to_string());
 
    return load_private_key(alg_id, pkcs8_key);
    }

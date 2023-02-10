@@ -53,7 +53,7 @@ EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
                            const std::vector<uint8_t>& key_bits) :
-   m_domain_params{EC_Group(alg_id.get_parameters())},
+   m_domain_params{EC_Group(alg_id.parameters())},
    m_public_key{domain().OS2ECP(key_bits)},
    m_domain_encoding(default_encoding_for(m_domain_params))
    {
@@ -157,7 +157,7 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                              const secure_vector<uint8_t>& key_bits,
                              bool with_modular_inverse)
    {
-   m_domain_params = EC_Group(alg_id.get_parameters());
+   m_domain_params = EC_Group(alg_id.parameters());
    m_domain_encoding = default_encoding_for(m_domain_params);
 
    OID key_parameters;

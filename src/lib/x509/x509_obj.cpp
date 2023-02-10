@@ -40,7 +40,7 @@ Pss_params decode_pss_params(const std::vector<uint8_t>& encoded_pss_params)
          .decode_optional(pss_parameter.trailer_field, ASN1_Type(3), ASN1_Class::ExplicitContextSpecific, size_t(1))
       .end_cons();
 
-   BER_Decoder(pss_parameter.mask_gen_algo.get_parameters()).decode(pss_parameter.mask_gen_hash);
+   BER_Decoder(pss_parameter.mask_gen_algo.parameters()).decode(pss_parameter.mask_gen_hash);
 
    return pss_parameter;
    }
@@ -137,7 +137,7 @@ std::vector<uint8_t> X509_Object::tbs_data() const
 */
 std::string X509_Object::hash_used_for_signature() const
    {
-   const OID& oid = m_sig_algo.get_oid();
+   const OID& oid = m_sig_algo.oid();
    const std::vector<std::string> sig_info = split_on(oid.to_formatted_string(), '/');
 
    if(sig_info.size() == 1)
@@ -152,7 +152,7 @@ std::string X509_Object::hash_used_for_signature() const
 
    if(sig_info[1] == "EMSA4")
       {
-      const OID hash_oid = decode_pss_params(signature_algorithm().get_parameters()).hash_algo.get_oid();
+      const OID hash_oid = decode_pss_params(signature_algorithm().parameters()).hash_algo.oid();
       return hash_oid.to_formatted_string();
       }
    else
@@ -181,7 +181,7 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
 Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key) const
    {
    const std::vector<std::string> sig_info =
-      split_on(m_sig_algo.get_oid().to_formatted_string(), '/');
+      split_on(m_sig_algo.oid().to_formatted_string(), '/');
 
    if(sig_info.empty() || sig_info.size() > 2 || sig_info[0] != pub_key.algo_name())
       return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -200,15 +200,15 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
    if(padding == "EMSA4")
       {
       // "MUST contain RSASSA-PSS-params"
-      if(signature_algorithm().get_parameters().empty())
+      if(signature_algorithm().parameters().empty())
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      Pss_params pss_parameter = decode_pss_params(signature_algorithm().get_parameters());
+      Pss_params pss_parameter = decode_pss_params(signature_algorithm().parameters());
 
       // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-      const std::string hash_algo = pss_parameter.hash_algo.get_oid().to_formatted_string();
+      const std::string hash_algo = pss_parameter.hash_algo.oid().to_formatted_string();
       if(hash_algo != "SHA-1" &&
          hash_algo != "SHA-224" &&
          hash_algo != "SHA-256" &&
@@ -218,7 +218,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          return Certificate_Status_Code::UNTRUSTED_HASH;
          }
 
-      const std::string mgf_algo = pss_parameter.mask_gen_algo.get_oid().to_formatted_string();
+      const std::string mgf_algo = pss_parameter.mask_gen_algo.oid().to_formatted_string();
       if(mgf_algo != "MGF1")
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -226,7 +226,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
 
       // For MGF1, it is strongly RECOMMENDED that the underlying hash function be the same as the one identified by hashAlgorithm
       // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-      if(pss_parameter.mask_gen_hash.get_oid() != pss_parameter.hash_algo.get_oid())
+      if(pss_parameter.mask_gen_hash.oid() != pss_parameter.hash_algo.oid())
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }

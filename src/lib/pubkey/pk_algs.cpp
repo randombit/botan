@@ -86,7 +86,7 @@ std::unique_ptr<Public_Key>
 load_public_key(const AlgorithmIdentifier& alg_id,
                 const std::vector<uint8_t>& key_bits)
    {
-   const std::string oid_str = alg_id.get_oid().to_formatted_string();
+   const std::string oid_str = alg_id.oid().to_formatted_string();
    const std::vector<std::string> alg_info = split_on(oid_str, '/');
    const std::string alg_name = alg_info[0];
 
@@ -177,7 +177,7 @@ std::unique_ptr<Private_Key>
 load_private_key(const AlgorithmIdentifier& alg_id,
                  const secure_vector<uint8_t>& key_bits)
    {
-   const std::string oid_str = alg_id.get_oid().to_formatted_string();
+   const std::string oid_str = alg_id.oid().to_formatted_string();
    const std::vector<std::string> alg_info = split_on(oid_str, '/');
    const std::string alg_name = alg_info[0];
 

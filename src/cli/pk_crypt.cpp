@@ -166,24 +166,24 @@ class PK_Decrypt final : public Command
             return set_return_code(1);
             }
 
-         if(pk_alg_id.get_oid() != Botan::OID::from_string("RSA/OAEP"))
+         if(pk_alg_id.oid() != Botan::OID::from_string("RSA/OAEP"))
             {
             error_output() << "Ciphertext was encrypted with something other than RSA/OAEP";
             return set_return_code(1);
             }
 
          Botan::AlgorithmIdentifier oaep_hash_id;
-         Botan::BER_Decoder(pk_alg_id.get_parameters()).decode(oaep_hash_id);
+         Botan::BER_Decoder(pk_alg_id.parameters()).decode(oaep_hash_id);
 
-         const std::string oaep_hash = Botan::OIDS::oid2str_or_empty(oaep_hash_id.get_oid());
+         const std::string oaep_hash = Botan::OIDS::oid2str_or_empty(oaep_hash_id.oid());
 
          if(oaep_hash.empty())
             {
-            error_output() << "Unknown hash function used with OAEP, OID " << oaep_hash_id.get_oid().to_string() << "\n";
+            error_output() << "Unknown hash function used with OAEP, OID " << oaep_hash_id.oid().to_string() << "\n";
             return set_return_code(1);
             }
 
-         if(oaep_hash_id.get_parameters().empty() == false)
+         if(oaep_hash_id.parameters().empty() == false)
             {
             error_output() << "Unknown OAEP parameters used\n";
             return set_return_code(1);
