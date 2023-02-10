@@ -285,12 +285,11 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    if(exp < 3 || exp % 2 == 0)
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
-   BigInt n, e, d, p, q, d1, d2, c;
-
-   e = exp;
-
    const size_t p_bits = (bits + 1) / 2;
    const size_t q_bits = bits - p_bits;
+
+   BigInt p, q, n;
+   BigInt e = BigInt::from_u64(exp);
 
    for(size_t attempt = 0; ; ++attempt)
       {
@@ -319,10 +318,11 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    const BigInt phi_n = lcm(p_minus_1, q_minus_1);
    // This is guaranteed because p,q == 3 mod 4
    BOTAN_DEBUG_ASSERT(low_zero_bits(phi_n) == 1);
-   d = inverse_mod(e, phi_n);
-   d1 = ct_modulo(d, p_minus_1);
-   d2 = ct_modulo(d, q_minus_1);
-   c = inverse_mod(q, p);
+
+   BigInt d = inverse_mod(e, phi_n);
+   BigInt d1 = ct_modulo(d, p_minus_1);
+   BigInt d2 = ct_modulo(d, q_minus_1);
+   BigInt c = inverse_mod(q, p);
 
    RSA_PublicKey::init(std::move(n), std::move(e));
 
