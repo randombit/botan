@@ -61,8 +61,8 @@ Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file, 
          {
          m_all_subjects.push_back(cert->subject_dn());
          m_dn_to_cert[cert->subject_dn()].push_back(cert);
-         m_pubkey_sha1_to_cert.emplace(cert->subject_public_key_bitstring_sha1(), cert);
-         m_subject_dn_sha256_to_cert.emplace(cert->raw_subject_dn_sha256(), cert);
+         m_pubkey_sha1_to_cert[cert->subject_public_key_bitstring_sha1()] = cert;
+         m_subject_dn_sha256_to_cert[cert->raw_subject_dn_sha256()] = cert;
          }
       else if(!ignore_non_ca)
          {

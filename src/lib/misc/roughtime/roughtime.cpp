@@ -79,7 +79,9 @@ std::map<std::string, std::vector<uint8_t>> unpack_roughtime_packet(T bytes)
          { throw Roughtime::Roughtime_Error("Tag offset must be more than previous tag offset"); }
       const char* label_ptr = cast_uint8_ptr_to_char(buf) + (num_tags+i)*4;
       const char label[] = {label_ptr[0], label_ptr[1], label_ptr[2], label_ptr[3], 0};
-      auto ret = tags.emplace(label, std::vector<uint8_t>(buf+start, buf+end));
+
+      std::vector<uint8_t> val(buf + start, buf + end);
+      auto ret = tags.insert(std::make_pair(std::string(label), val));
       if(!ret.second)
          { throw Roughtime::Roughtime_Error(std::string("Map has duplicated tag: ") + label); }
       start = static_cast<uint32_t>(end);

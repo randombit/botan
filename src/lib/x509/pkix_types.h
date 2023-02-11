@@ -573,6 +573,8 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
       class Extensions_Info
          {
          public:
+            Extensions_Info() {}
+
             Extensions_Info(bool critical,
                             Certificate_Extension* ext) :
                m_obj(ext),

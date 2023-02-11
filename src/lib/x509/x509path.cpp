@@ -740,7 +740,7 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const 
 
          // push the latest certificate onto the path_so_far
          path_so_far.push_back(last);
-         certs_seen.emplace(fprint);
+         certs_seen.insert(fprint);
 
          // push a deletion marker on the stack for backtracing later
          stack.push_back({std::shared_ptr<const X509_Certificate>(nullptr),false});
