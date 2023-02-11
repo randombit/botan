@@ -65,7 +65,7 @@ class Context
          m_server_info(server_info)
          {}
 
-      virtual ~Context() = default;
+      virtual ~Context() {}
 
       Context(Context&&)                 = default;
       Context(const Context&)            = delete;

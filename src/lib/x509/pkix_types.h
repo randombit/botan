@@ -398,7 +398,7 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Extension
             std::vector<std::set<Certificate_Status_Code>>& cert_status,
             size_t pos);
 
-      virtual ~Certificate_Extension() = default;
+      virtual ~Certificate_Extension() {}
    protected:
       friend class Extensions;
       virtual bool should_encode() const { return true; }

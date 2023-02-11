@@ -17,7 +17,7 @@ class File_Descriptor_Source
    {
    public:
       virtual int next_fd() = 0;
-      virtual ~File_Descriptor_Source() = default;
+      virtual ~File_Descriptor_Source() {}
    };
 
 /**
