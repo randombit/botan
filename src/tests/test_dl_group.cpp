@@ -43,7 +43,7 @@ class DL_Group_Tests final : public Test
 #if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
          result.test_throws("Bad generator param",
                             "DL_Group unknown PrimeType",
-                            []() {
+                            [this]() {
                             auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(9);
                             Botan::DL_Group dl(Test::rng(), invalid_type, 1024);
              });
