@@ -4,13 +4,13 @@ binary_name g++
 
 lang_flags "-std=c++11 -D_REENTRANT"
 
-# This should only contain flags which are included in GCC 4.8
-warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor"
+# This should only contain flags which are included in GCC 4.7
+warning_flags "-Wall -Wextra -Wstrict-aliasing -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor"
 
 # Boost headers have 0 as nullptr and non-virtual-dtor issues so we can't werror on them
 werror_flags "-Werror -Wno-error=strict-overflow -Wno-error=zero-as-null-pointer-constant -Wno-error=non-virtual-dtor"
 
-maintainer_warning_flags "-Wstrict-overflow=5 -Wold-style-cast -Wsuggest-override -Wshadow -Wextra-semi"
+maintainer_warning_flags "-Wpedantic -Wstrict-overflow=5 -Wold-style-cast -Wsuggest-override -Wshadow -Wextra-semi"
 
 optimization_flags "-O3"
 sanitizer_optimization_flags "-O1 -fno-optimize-sibling-calls -fno-omit-frame-pointer"
