@@ -217,9 +217,9 @@ XMSS_PrivateKey::XMSS_PrivateKey(
       rng.random_vec(m_xmss_params.element_size())))
    {
    XMSS_Address adrs;
-   set_root(tree_hash(0,
+   m_root = tree_hash(0,
                       XMSS_PublicKey::m_xmss_params.tree_height(),
-                      adrs));
+                      adrs);
    }
 
 XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
@@ -466,7 +466,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
 std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const
    {
    return std::unique_ptr<Public_Key>(
-      new XMSS_PublicKey(xmss_oid(), root(), public_seed()));
+      new XMSS_PublicKey(xmss_parameters().oid(), root(), public_seed()));
    }
 
 std::unique_ptr<PK_Ops::Signature>
