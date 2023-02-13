@@ -174,7 +174,7 @@ class XMSS_PrivateKey_Internal
          {
          size_t idx = (static_cast<std::atomic<size_t>&>(
                         *recover_global_leaf_index())).fetch_add(1);
-         if(idx >= (1ull << m_xmss_params.tree_height()))
+         if(idx >= m_xmss_params.total_number_of_signatures())
             {
             throw Decoding_Error("XMSS private key, one time signatures exhaused");
             }
@@ -184,6 +184,11 @@ class XMSS_PrivateKey_Internal
       size_t unused_leaf_index() const
          {
          return *recover_global_leaf_index();
+         }
+
+      size_t remaining_signatures() const
+         {
+         return m_xmss_params.total_number_of_signatures() - *recover_global_leaf_index();
          }
 
    private:
@@ -436,6 +441,11 @@ size_t XMSS_PrivateKey::reserve_unused_leaf_index()
 size_t XMSS_PrivateKey::unused_leaf_index() const
    {
    return m_private->unused_leaf_index();
+   }
+
+size_t XMSS_PrivateKey::remaining_signatures() const
+   {
+   return m_private->remaining_signatures();
    }
 
 XMSS_WOTS_PrivateKey& XMSS_PrivateKey::wots_private_key()
