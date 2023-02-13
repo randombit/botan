@@ -21,8 +21,7 @@ namespace Botan {
 XMSS_Signature_Operation::XMSS_Signature_Operation(
    const XMSS_PrivateKey& private_key) :
    m_priv_key(private_key),
-   m_xmss_params(private_key.xmss_oid()),
-   m_hash(private_key.xmss_hash_function()),
+   m_hash(private_key.xmss_parameters().hash_function_name()),
    m_randomness(0),
    m_leaf_idx(0),
    m_is_initialized(false)
@@ -55,20 +54,22 @@ XMSS_Signature_Operation::sign(const secure_vector<uint8_t>& msg_hash,
 
 size_t XMSS_Signature_Operation::signature_length() const
    {
+   const auto& params = m_priv_key.xmss_parameters();
    return sizeof(uint64_t) + // size of leaf index
-          m_xmss_params.element_size() +
-          m_xmss_params.len() * m_xmss_params.element_size() +
-          m_xmss_params.tree_height() * m_xmss_params.element_size();
+          params.element_size() +
+          params.len() * params.element_size() +
+          params.tree_height() * params.element_size();
    }
 
 wots_keysig_t
 XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_key,
       XMSS_Address& adrs)
    {
-   wots_keysig_t auth_path(m_xmss_params.tree_height());
+   const auto& params = m_priv_key.xmss_parameters();
+   wots_keysig_t auth_path(params.tree_height());
    adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
 
-   for(size_t j = 0; j < m_xmss_params.tree_height(); j++)
+   for(size_t j = 0; j < params.tree_height(); j++)
       {
       size_t k = (m_leaf_idx / (static_cast<size_t>(1) << j)) ^ 0x01;
       auth_path[j] = priv_key.tree_hash(k * (static_cast<size_t>(1) << j), j, adrs);
@@ -106,7 +107,7 @@ void XMSS_Signature_Operation::initialize()
 
    // write prefix for message hashing into buffer.
    XMSS_Tools::concat(index_bytes, m_leaf_idx, 32);
-   m_randomness = m_hash.prf(m_priv_key.prf(), index_bytes);
+   m_randomness = m_hash.prf(m_priv_key.prf_value(), index_bytes);
    index_bytes.clear();
    XMSS_Tools::concat(index_bytes, m_leaf_idx,
                       m_priv_key.xmss_parameters().element_size());

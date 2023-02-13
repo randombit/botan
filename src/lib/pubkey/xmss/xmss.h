@@ -307,50 +307,12 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        **/
       size_t unused_leaf_index() const;
 
-      /**
-       * Sets the last unused leaf index of the private key. The leaf index
-       * will be updated automatically during every signing operation, and
-       * should not be set manually.
-       *
-       * @param idx Index of the last unused leaf.
-       **/
-      void set_unused_leaf_index(size_t idx);
-
-      size_t reserve_unused_leaf_index();
-
-      /**
-       * Winternitz One Time Signature Scheme key utilized for signing
-       * operations.
-       *
-       * @return WOTS+ private key.
-       **/
-      const XMSS_WOTS_PrivateKey& wots_private_key() const;
-
-      /**
-       * Winternitz One Time Signature Scheme key utilized for signing
-       * operations.
-       *
-       * @return WOTS+ private key.
-       **/
-      XMSS_WOTS_PrivateKey& wots_private_key();
-
-      const secure_vector<uint8_t>& prf() const;
-      secure_vector<uint8_t>& prf();
-
-      void set_public_seed(secure_vector<uint8_t> public_seed) override;
-      const secure_vector<uint8_t>& public_seed() const override;
-
       std::unique_ptr<PK_Ops::Signature>
       create_signature_op(RandomNumberGenerator&,
                           const std::string&,
                           const std::string& provider) const override;
 
       secure_vector<uint8_t> private_key_bits() const override;
-
-      size_t size() const override
-         {
-         return XMSS_PublicKey::m_xmss_params.raw_private_key_size();
-         }
 
       /**
        * Generates a non standartized byte sequence representing the XMSS
@@ -361,6 +323,14 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        *         8-byte unused leaf index, n-byte prf seed, n-byte private seed.
        **/
       secure_vector<uint8_t> raw_private_key() const;
+
+   private:
+      friend class XMSS_Signature_Operation;
+
+      size_t reserve_unused_leaf_index();
+
+      XMSS_WOTS_PrivateKey& wots_private_key();
+      const secure_vector<uint8_t>& prf_value() const;
 
       /**
        * Algorithm 9: "treeHash"
@@ -379,7 +349,6 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
          size_t target_node_height,
          XMSS_Address& adrs);
 
-   private:
       void tree_hash_subtree(secure_vector<uint8_t>& result,
                              size_t start_idx,
                              size_t target_node_height,

@@ -428,11 +428,6 @@ secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const
    return DER_Encoder().encode(raw_private_key(), ASN1_Type::OctetString).get_contents();
    }
 
-void XMSS_PrivateKey::set_unused_leaf_index(size_t idx)
-   {
-   return m_private->set_unused_leaf_index(idx);
-   }
-
 size_t XMSS_PrivateKey::reserve_unused_leaf_index()
    {
    return m_private->reserve_unused_leaf_index();
@@ -443,36 +438,14 @@ size_t XMSS_PrivateKey::unused_leaf_index() const
    return m_private->unused_leaf_index();
    }
 
-const XMSS_WOTS_PrivateKey& XMSS_PrivateKey::wots_private_key() const
-   {
-   return m_private->wots_private_key();
-   }
-
 XMSS_WOTS_PrivateKey& XMSS_PrivateKey::wots_private_key()
    {
    return m_private->wots_private_key();
    }
 
-const secure_vector<uint8_t>& XMSS_PrivateKey::prf() const
+const secure_vector<uint8_t>& XMSS_PrivateKey::prf_value() const
    {
    return m_private->prf_value();
-   }
-
-secure_vector<uint8_t>& XMSS_PrivateKey::prf()
-   {
-   // TODO: do we even need this?
-   return m_private->prf_value();
-   }
-
-void XMSS_PrivateKey::set_public_seed(secure_vector<uint8_t> public_seed)
-   {
-   m_public_seed = std::move(public_seed);
-   m_private->wots_private_key().set_public_seed(m_public_seed);
-   }
-
-const secure_vector<uint8_t>& XMSS_PrivateKey::public_seed() const
-   {
-   return m_public_seed;
    }
 
 secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
