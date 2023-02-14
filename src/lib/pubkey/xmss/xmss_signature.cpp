@@ -12,7 +12,7 @@ namespace Botan {
 
 XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
                                const secure_vector<uint8_t>& raw_sig)
-   : m_leaf_idx(0), m_randomness(0, 0x00), m_tree_sig()
+   : m_leaf_idx(0), m_randomness(0, 0x00)
    {
    XMSS_Parameters xmss_params(oid);
 
@@ -38,24 +38,24 @@ XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
       {
       begin = end;
       end = begin + xmss_params.element_size();
-      m_tree_sig.ots_signature().push_back(secure_vector<uint8_t>(0));
-      m_tree_sig.ots_signature().back().reserve(
+      m_tree_sig.ots_signature.push_back(secure_vector<uint8_t>(0));
+      m_tree_sig.ots_signature.back().reserve(
          xmss_params.element_size());
       std::copy(begin,
                 end,
-                std::back_inserter(m_tree_sig.ots_signature().back()));
+                std::back_inserter(m_tree_sig.ots_signature.back()));
       }
 
    for(size_t i = 0; i < xmss_params.tree_height(); i++)
       {
       begin = end;
       end = begin + xmss_params.element_size();
-      m_tree_sig.authentication_path().push_back(secure_vector<uint8_t>(0));
-      m_tree_sig.authentication_path().back().reserve(
+      m_tree_sig.authentication_path.push_back(secure_vector<uint8_t>(0));
+      m_tree_sig.authentication_path.back().reserve(
          xmss_params.element_size());
       std::copy(begin,
                 end,
-                std::back_inserter(m_tree_sig.authentication_path().back()));
+                std::back_inserter(m_tree_sig.authentication_path.back()));
       }
    }
 
@@ -73,14 +73,14 @@ secure_vector<uint8_t> XMSS_Signature::bytes() const
              m_randomness.end(),
              std::back_inserter(result));
 
-   for(const auto& sig : tree().ots_signature())
+   for(const auto& sig : tree().ots_signature)
       {
       std::copy(sig.begin(),
                 sig.end(),
                 std::back_inserter(result));
       }
 
-   for(const auto& auth : tree().authentication_path())
+   for(const auto& auth : tree().authentication_path)
       {
       std::copy(auth.begin(),
                 auth.end(),

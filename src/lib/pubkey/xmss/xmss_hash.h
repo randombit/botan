@@ -10,6 +10,8 @@
 
 #include <botan/hash.h>
 
+#include <span>
+
 namespace Botan {
 
 /**
@@ -31,13 +33,13 @@ class XMSS_Hash final
        * @param[in] data A 32-byte XMSS_Address data value
        **/
       inline void prf(secure_vector<uint8_t>& result,
-                      const secure_vector<uint8_t>& key,
-                      const secure_vector<uint8_t>& data)
+                      std::span<const uint8_t> key,
+                      std::span<const uint8_t> data)
          {
          m_hash->update(m_zero_padding);
          m_hash->update(m_id_prf);
-         m_hash->update(key);
-         m_hash->update(data);
+         m_hash->update(key.data(), key.size());
+         m_hash->update(data.data(), data.size());
          m_hash->final(result);
          }
 
@@ -49,13 +51,13 @@ class XMSS_Hash final
        * @param[in] data A 32-byte XMSS_Address data value
        * @return result The hash calculated using key and data.
        **/
-      inline secure_vector<uint8_t> prf(const secure_vector<uint8_t>& key,
-                                        const secure_vector<uint8_t>& data)
+      inline secure_vector<uint8_t> prf(std::span<const uint8_t> key,
+                                        std::span<const uint8_t> data)
          {
          m_hash->update(m_zero_padding);
          m_hash->update(m_id_prf);
-         m_hash->update(key);
-         m_hash->update(data);
+         m_hash->update(key.data(), key.size());
+         m_hash->update(data.data(), data.size());
          return m_hash->final();
          }
 
@@ -67,13 +69,13 @@ class XMSS_Hash final
        * @param[in] data string of arbitrary length.
        **/
       void f(secure_vector<uint8_t>& result,
-             const secure_vector<uint8_t>& key,
-             const secure_vector<uint8_t>& data)
+             std::span<const uint8_t> key,
+             std::span<const uint8_t> data)
          {
          m_hash->update(m_zero_padding);
          m_hash->update(m_id_f);
-         m_hash->update(key);
-         m_hash->update(data);
+         m_hash->update(key.data(), key.size());
+         m_hash->update(data.data(), data.size());
          m_hash->final(result);
          }
 

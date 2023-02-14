@@ -23,6 +23,7 @@ class XMSS_Address;
 class XMSS_Hash;
 class XMSS_PrivateKey_Internal;
 class XMSS_Verification_Operation;
+class XMSS_WOTS_PublicKey;
 class XMSS_WOTS_PrivateKey;
 
 /**
@@ -249,8 +250,10 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
 
       size_t reserve_unused_leaf_index();
 
-      XMSS_WOTS_PrivateKey& wots_private_key();
       const secure_vector<uint8_t>& prf_value() const;
+
+      XMSS_WOTS_PublicKey wots_public_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const;
+      XMSS_WOTS_PrivateKey wots_private_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const;
 
       /**
        * Algorithm 9: "treeHash"

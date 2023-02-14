@@ -23,6 +23,14 @@ namespace Botan {
 class XMSS_Signature final
    {
    public:
+      struct TreeSignature final
+         {
+         public:
+            wots_keysig_t ots_signature;
+            wots_keysig_t authentication_path;
+         };
+
+   public:
       /**
        * Creates a signature from an XMSS signature method and a uint8_t sequence
        * representing a raw signature.
@@ -44,7 +52,7 @@ class XMSS_Signature final
        **/
       XMSS_Signature(size_t leaf_idx,
                      secure_vector<uint8_t> randomness,
-                     XMSS_WOTS_PublicKey::TreeSignature tree_sig)
+                     XMSS_Signature::TreeSignature tree_sig)
          : m_leaf_idx(leaf_idx), m_randomness(std::move(randomness)),
            m_tree_sig(std::move(tree_sig)) {}
 
@@ -66,17 +74,17 @@ class XMSS_Signature final
          m_randomness = std::move(randomness);
          }
 
-      const XMSS_WOTS_PublicKey::TreeSignature& tree() const
+      const XMSS_Signature::TreeSignature& tree() const
          {
          return m_tree_sig;
          }
 
-      XMSS_WOTS_PublicKey::TreeSignature& tree()
+      XMSS_Signature::TreeSignature& tree()
          {
          return m_tree_sig;
          }
 
-      void set_tree(XMSS_WOTS_PublicKey::TreeSignature tree_sig)
+      void set_tree(XMSS_Signature::TreeSignature tree_sig)
          {
          m_tree_sig = std::move(tree_sig);
          }
@@ -98,7 +106,7 @@ class XMSS_Signature final
    private:
       size_t m_leaf_idx;
       secure_vector<uint8_t> m_randomness;
-      XMSS_WOTS_PublicKey::TreeSignature m_tree_sig;
+      XMSS_Signature::TreeSignature m_tree_sig;
    };
 
 }

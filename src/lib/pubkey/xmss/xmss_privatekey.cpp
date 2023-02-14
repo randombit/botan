@@ -11,6 +11,7 @@
  *
  * (C) 2016,2017,2018 Matthias Gierlings
  * (C) 2019 Jack Lloyd
+ * (C) 2023 René Meusel - Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -56,23 +57,20 @@ class XMSS_PrivateKey_Internal
    public:
       XMSS_PrivateKey_Internal(const XMSS_Parameters& xmss_params,
                                const XMSS_WOTS_Parameters& wots_params,
-                               secure_vector<uint8_t> public_seed,
                                secure_vector<uint8_t> private_seed,
                                secure_vector<uint8_t> prf)
          : m_xmss_params(xmss_params)
          , m_wots_params(wots_params)
-         , m_wots_priv_key(wots_params.oid(), std::move(public_seed), std::move(private_seed))
          , m_hash(m_xmss_params.hash_function_name())
          , m_prf(std::move(prf))
+         , m_private_seed(std::move(private_seed))
          , m_index_reg(XMSS_Index_Registry::get_instance()) {}
 
       XMSS_PrivateKey_Internal(const XMSS_Parameters& xmss_params,
                                const XMSS_WOTS_Parameters& wots_params,
-                               secure_vector<uint8_t> public_seed,
                                std::span<const uint8_t> key_bits)
          : m_xmss_params(xmss_params)
          , m_wots_params(wots_params)
-         , m_wots_priv_key(wots_params.oid(), std::move(public_seed))
          , m_hash(m_xmss_params.hash_function_name())
          , m_index_reg(XMSS_Index_Registry::get_instance())
          {
@@ -116,7 +114,7 @@ class XMSS_PrivateKey_Internal
 
          begin = end;
          end = begin + m_wots_params.element_size();
-         m_wots_priv_key.set_private_seed(secure_vector<uint8_t>(begin, end));
+         m_private_seed.assign(begin, end);
          set_unused_leaf_index(static_cast<size_t>(unused_leaf));
          }
 
@@ -128,24 +126,22 @@ class XMSS_PrivateKey_Internal
             raw_public_key,
             unused_index,
             m_prf,
-            m_wots_priv_key.private_seed());
+            m_private_seed);
       }
 
       XMSS_Hash& hash() { return m_hash; }
       const secure_vector<uint8_t>& prf_value() const { return m_prf; }
-      secure_vector<uint8_t>& prf_value() { return m_prf; }
-      const XMSS_WOTS_PrivateKey& wots_private_key() const { return m_wots_priv_key; }
-      XMSS_WOTS_PrivateKey& wots_private_key() { return m_wots_priv_key; }
+      const secure_vector<uint8_t>& private_seed() { return m_private_seed; }
+      const XMSS_WOTS_Parameters& wots_parameters() { return m_wots_params; }
       XMSS_Index_Registry& index_registry() { return m_index_reg; }
 
       std::shared_ptr<Atomic<size_t>>
       recover_global_leaf_index() const
          {
-         BOTAN_ASSERT(m_wots_priv_key.private_seed().size() ==
-                     m_xmss_params.element_size() &&
-                     m_prf.size() == m_xmss_params.element_size(),
-                     "Trying to retrieve index for partially initialized key");
-         return m_index_reg.get(m_wots_priv_key.private_seed(), m_prf);
+         BOTAN_ASSERT(m_private_seed.size() == m_xmss_params.element_size() &&
+                      m_prf.size() == m_xmss_params.element_size(),
+                      "Trying to retrieve index for partially initialized key");
+         return m_index_reg.get(m_private_seed, m_prf);
          }
 
       void set_unused_leaf_index(size_t idx)
@@ -195,9 +191,9 @@ class XMSS_PrivateKey_Internal
       const XMSS_Parameters& m_xmss_params;
       const XMSS_WOTS_Parameters& m_wots_params;
 
-      XMSS_WOTS_PrivateKey m_wots_priv_key;
       XMSS_Hash m_hash;
       secure_vector<uint8_t> m_prf;
+      secure_vector<uint8_t> m_private_seed;
       XMSS_Index_Registry& m_index_reg;
    };
 
@@ -205,14 +201,14 @@ class XMSS_PrivateKey_Internal
 XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits)
    : XMSS_PublicKey(key_bits)
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
-         m_xmss_params, m_wots_params, m_public_seed, key_bits)) {}
+         m_xmss_params, m_wots_params, key_bits)) {}
 
 XMSS_PrivateKey::XMSS_PrivateKey(
    XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
    RandomNumberGenerator& rng)
    : XMSS_PublicKey(xmss_algo_id, rng)
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
-      m_xmss_params, m_wots_params, m_public_seed,
+      m_xmss_params, m_wots_params,
       rng.random_vec(m_xmss_params.element_size()),
       rng.random_vec(m_xmss_params.element_size())))
    {
@@ -230,7 +226,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                  secure_vector<uint8_t> public_seed)
    : XMSS_PublicKey(xmss_algo_id, std::move(root), std::move(public_seed))
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
-      m_xmss_params, m_wots_params, m_public_seed,
+      m_xmss_params, m_wots_params,
       std::move(wots_priv_seed), std::move(prf)))
    {
    m_private->set_unused_leaf_index(idx_leaf);
@@ -385,23 +381,18 @@ XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
    std::vector<uint8_t> node_levels(target_node_height + 1);
 
    uint8_t level = 0; // current level on the node stack.
-   XMSS_WOTS_PublicKey pk(m_private->wots_private_key().wots_parameters().oid(), seed);
    const size_t last_idx = (static_cast<size_t>(1) << target_node_height) + start_idx;
 
    for(size_t i = start_idx; i < last_idx; i++)
       {
       adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
       adrs.set_ots_address(static_cast<uint32_t>(i));
-      this->wots_private_key().generate_public_key(
-         pk,
-         // getWOTS_SK(SK, s + i), reference implementation uses adrs
-         // instead of zero padded index s + i.
-         this->wots_private_key().at(adrs, hash),
-         adrs,
-         hash);
+
+      XMSS_WOTS_PublicKey pk = this->wots_public_key_for(adrs, hash);
+
       adrs.set_type(XMSS_Address::Type::LTree_Address);
       adrs.set_ltree_address(static_cast<uint32_t>(i));
-      XMSS_Common_Ops::create_l_tree(nodes[level], pk, adrs, seed, hash, m_xmss_params);
+      XMSS_Common_Ops::create_l_tree(nodes[level], pk.key_data(), adrs, seed, hash, m_xmss_params);
       node_levels[level] = 0;
 
       adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
@@ -428,6 +419,17 @@ XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
    result = nodes[level - 1];
    }
 
+XMSS_WOTS_PublicKey XMSS_PrivateKey::wots_public_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const
+   {
+   const auto private_key = wots_private_key_for(adrs, hash);
+   return XMSS_WOTS_PublicKey(m_private->wots_parameters(), m_public_seed, private_key, adrs, hash);
+   }
+
+XMSS_WOTS_PrivateKey XMSS_PrivateKey::wots_private_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const
+   {
+   return XMSS_WOTS_PrivateKey(m_private->wots_parameters(), m_private->private_seed(), adrs, hash);
+   }
+
 secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const
    {
    return DER_Encoder().encode(raw_private_key(), ASN1_Type::OctetString).get_contents();
@@ -446,11 +448,6 @@ size_t XMSS_PrivateKey::unused_leaf_index() const
 size_t XMSS_PrivateKey::remaining_signatures() const
    {
    return m_private->remaining_signatures();
-   }
-
-XMSS_WOTS_PrivateKey& XMSS_PrivateKey::wots_private_key()
-   {
-   return m_private->wots_private_key();
    }
 
 const secure_vector<uint8_t>& XMSS_PrivateKey::prf_value() const
