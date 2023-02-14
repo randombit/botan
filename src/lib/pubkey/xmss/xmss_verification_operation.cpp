@@ -18,7 +18,7 @@ namespace Botan {
 XMSS_Verification_Operation::XMSS_Verification_Operation(
    const XMSS_PublicKey& public_key) :
    m_pub_key(public_key),
-   m_hash(public_key.xmss_hash_function()),
+   m_hash(public_key.xmss_parameters().hash_function_name()),
    m_msg_buf(0)
    {
    }
@@ -35,7 +35,7 @@ XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
    adrs.set_ots_address(next_index);
 
-   XMSS_WOTS_PublicKey pub_key_ots(m_pub_key.wots_parameters().oid(),
+   XMSS_WOTS_PublicKey pub_key_ots(m_pub_key.xmss_parameters().ots_oid(),
                                    msg,
                                    sig.tree().ots_signature(),
                                    adrs,

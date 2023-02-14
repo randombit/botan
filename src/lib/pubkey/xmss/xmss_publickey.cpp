@@ -54,7 +54,7 @@ XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits)
      m_xmss_params(XMSS_PublicKey::deserialize_xmss_oid(m_raw_key)),
      m_wots_params(m_xmss_params.ots_oid())
    {
-   if(m_raw_key.size() < XMSS_PublicKey::size())
+   if(m_raw_key.size() < m_xmss_params.raw_public_key_size())
       {
       throw Decoding_Error("Invalid XMSS public key size detected");
       }

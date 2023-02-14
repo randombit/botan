@@ -174,7 +174,7 @@ class XMSS_PrivateKey_Internal
          {
          size_t idx = (static_cast<std::atomic<size_t>&>(
                         *recover_global_leaf_index())).fetch_add(1);
-         if(idx >= (1ull << m_xmss_params.tree_height()))
+         if(idx >= m_xmss_params.total_number_of_signatures())
             {
             throw Decoding_Error("XMSS private key, one time signatures exhaused");
             }
@@ -184,6 +184,11 @@ class XMSS_PrivateKey_Internal
       size_t unused_leaf_index() const
          {
          return *recover_global_leaf_index();
+         }
+
+      size_t remaining_signatures() const
+         {
+         return m_xmss_params.total_number_of_signatures() - *recover_global_leaf_index();
          }
 
    private:
@@ -212,9 +217,9 @@ XMSS_PrivateKey::XMSS_PrivateKey(
       rng.random_vec(m_xmss_params.element_size())))
    {
    XMSS_Address adrs;
-   set_root(tree_hash(0,
+   m_root = tree_hash(0,
                       XMSS_PublicKey::m_xmss_params.tree_height(),
-                      adrs));
+                      adrs);
    }
 
 XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
@@ -428,11 +433,6 @@ secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const
    return DER_Encoder().encode(raw_private_key(), ASN1_Type::OctetString).get_contents();
    }
 
-void XMSS_PrivateKey::set_unused_leaf_index(size_t idx)
-   {
-   return m_private->set_unused_leaf_index(idx);
-   }
-
 size_t XMSS_PrivateKey::reserve_unused_leaf_index()
    {
    return m_private->reserve_unused_leaf_index();
@@ -443,9 +443,9 @@ size_t XMSS_PrivateKey::unused_leaf_index() const
    return m_private->unused_leaf_index();
    }
 
-const XMSS_WOTS_PrivateKey& XMSS_PrivateKey::wots_private_key() const
+size_t XMSS_PrivateKey::remaining_signatures() const
    {
-   return m_private->wots_private_key();
+   return m_private->remaining_signatures();
    }
 
 XMSS_WOTS_PrivateKey& XMSS_PrivateKey::wots_private_key()
@@ -453,26 +453,9 @@ XMSS_WOTS_PrivateKey& XMSS_PrivateKey::wots_private_key()
    return m_private->wots_private_key();
    }
 
-const secure_vector<uint8_t>& XMSS_PrivateKey::prf() const
+const secure_vector<uint8_t>& XMSS_PrivateKey::prf_value() const
    {
    return m_private->prf_value();
-   }
-
-secure_vector<uint8_t>& XMSS_PrivateKey::prf()
-   {
-   // TODO: do we even need this?
-   return m_private->prf_value();
-   }
-
-void XMSS_PrivateKey::set_public_seed(secure_vector<uint8_t> public_seed)
-   {
-   m_public_seed = std::move(public_seed);
-   m_private->wots_private_key().set_public_seed(m_public_seed);
-   }
-
-const secure_vector<uint8_t>& XMSS_PrivateKey::public_seed() const
-   {
-   return m_public_seed;
    }
 
 secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
@@ -483,7 +466,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
 std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const
    {
    return std::unique_ptr<Public_Key>(
-      new XMSS_PublicKey(xmss_oid(), root(), public_seed()));
+      new XMSS_PublicKey(xmss_parameters().oid(), root(), public_seed()));
    }
 
 std::unique_ptr<PK_Ops::Signature>

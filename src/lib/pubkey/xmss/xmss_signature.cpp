@@ -25,7 +25,7 @@ XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
    for(size_t i = 0; i < 4; i++)
       { m_leaf_idx = ((m_leaf_idx << 8) | raw_sig[i]); }
 
-   if(m_leaf_idx >= (1ull << xmss_params.tree_height()))
+   if(m_leaf_idx >= xmss_params.total_number_of_signatures())
       {
       throw Decoding_Error("XMSS signature leaf index out of bounds.");
       }

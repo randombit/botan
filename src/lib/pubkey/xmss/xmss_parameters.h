@@ -177,6 +177,11 @@ class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
       size_t tree_height() const { return m_tree_height; }
 
       /**
+       * @returns total number of signatures allowed for this XMSS instance
+       */
+      size_t total_number_of_signatures() const { return size_t(1) << tree_height(); }
+
+      /**
        * The Winternitz parameter.
        *
        * @return numeric base used for internal representation of
