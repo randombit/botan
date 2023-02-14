@@ -1,12 +1,12 @@
 /*
-* (C) 2009 Jack Lloyd
+* (C) 2009,2023 Jack Lloyd
 * (C) 2016 René Korthaus, Sirrix AG
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TESTS_FIXED_RNG_H_
-#define BOTAN_TESTS_FIXED_RNG_H_
+#ifndef BOTAN_TESTS_RNGS_FOR_TESTING_H_
+#define BOTAN_TESTS_RNGS_FOR_TESTING_H_
 
 #include "tests.h"
 #include <deque>
@@ -14,6 +14,10 @@
 #include <botan/rng.h>
 #include <botan/hex.h>
 #include <botan/exceptn.h>
+
+#if defined(BOTAN_HAS_AES)
+  #include <botan/block_cipher.h>
+#endif
 
 namespace Botan_Tests {
 
@@ -249,6 +253,42 @@ class Request_Counting_RNG final : public Botan::RandomNumberGenerator
    private:
       size_t m_randomize_count;
    };
+
+#if defined(BOTAN_HAS_AES)
+
+// A number of PQC algorithms use CTR_DRBG with AES-256 as a source
+// of randomness for their test vectors. This is not a complete
+// CTR_DRBG implementation, but is sufficient for running such tests
+class CTR_DRBG_AES256 final : public Botan::RandomNumberGenerator
+   {
+   public:
+      std::string name() const override { return "CTR_DRBG(AES-256)"; }
+
+      void clear() override;
+
+      bool accepts_input() const override { return true; }
+
+      void add_entropy(const uint8_t seed_material[], size_t len) override;
+
+      bool is_seeded() const override
+         {
+         return true;
+         }
+
+      void randomize(uint8_t out[], size_t len) override;
+
+      CTR_DRBG_AES256(const std::vector<uint8_t>& seed);
+
+   private:
+      void incr_V_into(uint8_t output[16]);
+
+      void update(const uint8_t provided_data[]);
+
+      uint64_t m_V0, m_V1;
+      std::unique_ptr<Botan::BlockCipher> m_cipher;
+   };
+
+#endif
 
 }
 

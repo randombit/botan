@@ -3,14 +3,14 @@
  * - KAT tests using the KAT vectors from
  *   https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
  *
- * (C) 2022 Jack Lloyd
+ * (C) 2022,2023 Jack Lloyd
  * (C) 2022 Manuel Glaser, Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-#include "test_rng.h"
 #include "tests.h"
+#include "test_rng.h"
 
 #if defined(BOTAN_HAS_DILITHIUM_COMMON)
    #include <botan/block_cipher.h>
@@ -25,193 +25,60 @@
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_DILITHIUM_COMMON)
-
-namespace
-{
-   // Test Dilithium RNG class is used to get the correct randomness source for KAT tests
-   class Dilithium_Test_RNG final : public Botan::RandomNumberGenerator
-   {
-   public:
-      std::string name() const override { return "Dilithium_Test_RNG"; }
-   //    key - 256-bit AES key
-   //    ctr - a 128-bit plaintext value
-   //    buffer - a 128-bit ciphertext value
-   void AES256_ECB(unsigned char* key, unsigned char* ctr, unsigned char* buffer)
-   {
-      auto cipher(Botan::BlockCipher::create_or_throw("AES-256"));
-
-      std::vector<uint8_t> keyAes(key, key + cipher->maximum_keylength());
-      std::vector<uint8_t> block(ctr, ctr + cipher->block_size());
-
-
-      cipher->set_key(keyAes);
-      cipher->encrypt(block);
-
-      std::copy(block.begin(), block.end(), buffer);
-   }
-
-   void AES256_CTR_DRBG_Update(unsigned char* provided_data, unsigned char* Key, unsigned char* V)
-   {
-      unsigned char   temp[48];
-
-      for (int i = 0; i < 3; i++) {
-         //increment V
-         for (int j = 15; j >= 0; j--) {
-            if (V[j] == 0xff)
-               V[j] = 0x00;
-            else {
-               V[j]++;
-               break;
-            }
-         }
-
-         AES256_ECB(Key, V, temp + 16 * i);
-      }
-      if (provided_data != NULL)
-         for (int i = 0; i < 48; i++)
-            temp[i] ^= provided_data[i];
-      memcpy(Key, temp, 32);
-      memcpy(V, temp + 32, 16);
-   }
-
-      void clear() override
-      {
-         // reset struct
-         memset(DRBG_ctx.Key, 0x00, 32);
-         memset(DRBG_ctx.V, 0x00, 16);
-         DRBG_ctx.reseed_counter = 0;
-      }
-
-      bool accepts_input() const override { return true; }
-
-      void add_entropy(const uint8_t data[], size_t len) override
-      {
-         BOTAN_UNUSED(len);
-         randombytes_init(data, nullptr, 256);
-      }
-
-      bool is_seeded() const override
-      {
-         return true;
-      }
-
-      void randomize(uint8_t out[], size_t len) override
-      {
-         randombytes(out, len);
-      }
-
-      Dilithium_Test_RNG(const std::vector<uint8_t>& seed)
-      {
-         clear();
-         add_entropy(seed.data(), seed.size());
-      }
-
-   private:
-      void randombytes_init(const unsigned char* entropy_input, unsigned char* personalization_string, int security_strength)
-      {
-         BOTAN_UNUSED(security_strength);
-         unsigned char   seed_material[48];
-
-         memcpy(seed_material, entropy_input, 48);
-         if (personalization_string)
-            for (int i = 0; i < 48; i++)
-               seed_material[i] ^= personalization_string[i];
-         memset(DRBG_ctx.Key, 0x00, 32);
-         memset(DRBG_ctx.V, 0x00, 16);
-         AES256_CTR_DRBG_Update(seed_material, DRBG_ctx.Key, DRBG_ctx.V);
-         DRBG_ctx.reseed_counter = 1;
-      }
-
-      int randombytes(unsigned char* x, size_t xlen)
-      {
-         unsigned char   block[16];
-         int             i = 0;
-
-         while (xlen > 0) {
-            //increment V
-            for (int j = 15; j >= 0; j--) {
-               if (DRBG_ctx.V[j] == 0xff)
-                  DRBG_ctx.V[j] = 0x00;
-               else {
-                  DRBG_ctx.V[j]++;
-                  break;
-               }
-            }
-            AES256_ECB(DRBG_ctx.Key, DRBG_ctx.V, block);
-            if (xlen > 15) {
-               memcpy(x + i, block, 16);
-               i += 16;
-               xlen -= 16;
-            }
-            else {
-               memcpy(x + i, block, xlen);
-               xlen = 0;
-            }
-         }
-         AES256_CTR_DRBG_Update(NULL, DRBG_ctx.Key, DRBG_ctx.V);
-         DRBG_ctx.reseed_counter++;
-
-         return 0;
-      }
-
-      typedef struct {
-         unsigned char   Key[32];
-         unsigned char   V[16];
-         int             reseed_counter;
-      } AES256_CTR_DRBG_struct;
-      AES256_CTR_DRBG_struct  DRBG_ctx;
-   };
-
-}
+#if defined(BOTAN_HAS_DILITHIUM_COMMON) && defined(BOTAN_HAS_AES)
 
 template<typename DerivedT>
 class Dilithium_KAT_Tests : public Text_Based_Test
    {
    public:
       Dilithium_KAT_Tests()
-         : Text_Based_Test(DerivedT::test_vector, "count,seed,msg,pk_sha3_256,sk_sha3_256,sm") {}
+         : Text_Based_Test(DerivedT::test_vector, "Seed,Msg,HashPk,HashSk,HashSig", "Sig") {}
 
       Test::Result run_one_test(const std::string &name, const VarMap &vars) override
          {
          Test::Result result(name);
 
          // read input from test file
-         const auto ref_seed = vars.get_req_bin("seed");
-         const auto ref_msg = vars.get_req_bin("msg");
-         const auto ref_pk_hash = vars.get_req_bin("pk_sha3_256");
-         const auto ref_sk_hash = vars.get_req_bin("sk_sha3_256");
-         const auto ref_sm = vars.get_req_bin("sm");
+         const auto ref_seed = vars.get_req_bin("Seed");
+         const auto ref_msg = vars.get_req_bin("Msg");
+         const auto ref_pk_hash = vars.get_req_bin("HashPk");
+         const auto ref_sk_hash = vars.get_req_bin("HashSk");
+         const auto ref_sig_hash = vars.get_req_bin("HashSig");
+         const auto ref_sig = vars.get_opt_bin("Sig");
 
-         auto sha3_hasher = Botan::HashFunction::create_or_throw("SHA-3(256)");
-         // Dilithium test RNG
-         std::unique_ptr<Botan::RandomNumberGenerator>dilithium_test_rng;
-         dilithium_test_rng.reset(new Dilithium_Test_RNG(ref_seed));
+         auto sha3_256 = Botan::HashFunction::create_or_throw("SHA-3(256)");
+
+         auto dilithium_test_rng = std::make_unique<CTR_DRBG_AES256>(ref_seed);
 
          Botan::Dilithium_PrivateKey priv_key(*dilithium_test_rng, DerivedT::mode);
-         auto sk_hash = sha3_hasher->process(priv_key.private_key_bits());
-         auto pk_hash = sha3_hasher->process(priv_key.public_key_bits());
 
-         result.test_eq("Private key generation Botan style equal with reference: ",
-            sk_hash, ref_sk_hash);
-         result.test_eq("Public key generation Botan style equal with reference: ",
-            pk_hash, ref_pk_hash);
+         result.test_eq("generated expected private key hash",
+                        sha3_256->process(priv_key.private_key_bits()),
+                        ref_sk_hash);
+
+         result.test_eq("generated expected public key hash",
+                        sha3_256->process(priv_key.public_key_bits()),
+                        ref_pk_hash);
 
          auto signer = Botan::PK_Signer(priv_key, *dilithium_test_rng, DerivedT::sign_param);
          auto signature = signer.sign_message(ref_msg.data(), ref_msg.size(), *dilithium_test_rng);
-         result.test_eq("Signed Message Botan style equal with reference: ", signature,
-            ref_sm);
-         result.test_eq("Signed Message Length botan style equal with reference: ",
-            signature.size(), ref_sm.size());
+
+         result.test_eq("generated expected signature hash",
+                        sha3_256->process(signature), ref_sig_hash);
+         if(!ref_sig.empty())
+            result.test_eq("generated expected signature", signature, ref_sig);
+
 
          Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode, Botan::DilithiumKeyEncoding::Raw);
          auto verificator = Botan::PK_Verifier(pub_key,"");
          verificator.update(ref_msg.data(), ref_msg.size());
-         result.confirm("Signature Verification", verificator.check_signature(signature.data(), signature.size()));
+         result.confirm("signature verifies",
+                        verificator.check_signature(signature.data(), signature.size()));
 
-         // wrong signagture
+         // test validating incorrect wrong signagture
          auto mutated_signature = Test::mutate_vec(signature);
-         result.confirm("Wrong Signature Verification", !verificator.check_signature(mutated_signature.data(), mutated_signature.size()));
+         result.confirm("invalid signature rejected",
+                        !verificator.check_signature(mutated_signature.data(), mutated_signature.size()));
 
          return result;
          }
