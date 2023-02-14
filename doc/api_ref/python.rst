@@ -6,15 +6,14 @@ Python Binding
 
 .. highlight:: python
 
-.. py:module:: botan
+.. py:module:: botan3
 
 The Python binding is based on the `ffi` module of botan and the
 `ctypes` module of the Python standard library.
 
-Starting in 2.8, the class names were renamed to match Python standard
-conventions. However aliases are defined which allow older code to
-continue to work; the older names are mentioned as "previously X".
-These aliases will be removed in a future major release.
+The versioning of the Python module follows the major versioning of
+the C++ library. So for Botan 2, the module is named ``botan2`` while
+for Botan 3 it is ``botan3``.
 
 Versioning
 ----------------------------------------
@@ -507,11 +506,11 @@ Format Preserving Encryption (FE1 scheme)
 
    .. py:method:: encrypt(msg, tweak)
 
-      The msg should be a botan2.MPI or an object which can be converted to one
+      The msg should be a botan3.MPI or an object which can be converted to one
 
    .. py:method:: decrypt(msg, tweak)
 
-      The msg should be a botan2.MPI or an object which can be converted to one
+      The msg should be a botan3.MPI or an object which can be converted to one
 
 HOTP
 -----------------------------------------

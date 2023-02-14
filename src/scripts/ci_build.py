@@ -574,7 +574,7 @@ def main(args=None):
 
         py_scripts = [
             'configure.py',
-            'src/python/botan2.py',
+            'src/python/botan3.py',
             'src/scripts/ci_build.py',
             'src/scripts/install.py',
             'src/scripts/ci_check_headers.py',
