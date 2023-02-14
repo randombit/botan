@@ -30,15 +30,14 @@ enum class Signature_Format {
 };
 
 /**
-* Public Key Base Class.
+* An interface for objects that are keys in public key algorithms
+*
+* This is derived for both public and private keys
 */
-class BOTAN_PUBLIC_API(2,0) Public_Key
+class BOTAN_PUBLIC_API(3,0) Asymmetric_Key
    {
    public:
-      Public_Key() = default;
-      Public_Key(const Public_Key& other) = default;
-      Public_Key& operator=(const Public_Key& other) = default;
-      virtual ~Public_Key() = default;
+      virtual ~Asymmetric_Key() = default;
 
       /**
       * Get the name of the underlying public key scheme.
@@ -58,17 +57,40 @@ class BOTAN_PUBLIC_API(2,0) Public_Key
       virtual size_t estimated_strength() const = 0;
 
       /**
+      * Get the OID of the underlying public key scheme.
+      * @return OID of the public key scheme
+      */
+      virtual OID object_identifier() const;
+
+      /**
+      * Access an algorithm specific field
+      *
+      * If the field is not known for this algorithm, an Invalid_Argument is
+      * thrown. The interpretation of the result requires knowledge of which
+      * algorithm is involved. For instance for RSA "p" represents one of the
+      * secret primes, while for DSA "p" is the public prime.
+      *
+      * Some algorithms may not implement this method at all.
+      *
+      * This is primarily used to implement the FFI botan_pubkey_get_field
+      * and botan_privkey_get_field functions.
+      */
+      virtual const BigInt& get_int_field(const std::string& field) const;
+   };
+
+/*
+* Public Key Base Class.
+*/
+class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
+   {
+   public:
+      /**
       * Return an integer value best approximating the length of the
       * primary security parameter. For example for RSA this will be
       * the size of the modulus, for ECDSA the size of the ECC group,
       * and for McEliece the size of the code will be returned.
       */
       virtual size_t key_length() const = 0;
-
-      /**
-      * @return object identifier of the underlying public key scheme
-      */
-      virtual OID object_identifier() const;
 
       /**
       * Deprecated version of object_identifier
@@ -78,7 +100,7 @@ class BOTAN_PUBLIC_API(2,0) Public_Key
          return this->object_identifier();
          }
 
-      /**
+      /*
       * Test the key values for consistency.
       * @param rng rng to use
       * @param strong whether to perform strong and lengthy version
@@ -87,7 +109,6 @@ class BOTAN_PUBLIC_API(2,0) Public_Key
       */
       virtual bool check_key(RandomNumberGenerator& rng,
                              bool strong) const = 0;
-
 
       /**
       * @return X.509 AlgorithmIdentifier for this key
@@ -108,21 +129,6 @@ class BOTAN_PUBLIC_API(2,0) Public_Key
        * @return Hash of the subject public key
        */
       std::string fingerprint_public(const std::string& alg = "SHA-256") const;
-
-      /**
-      * Access an algorithm specific field
-      *
-      * If the field is not known for this algorithm, an Invalid_Argument is
-      * thrown. The interpretation of the result requires knowledge of which
-      * algorithm is involved. For instance for RSA "p" represents one of the
-      * secret primes, while for DSA "p" is the public prime.
-      *
-      * Some algorithms may not implement this method at all.
-      *
-      * This is primarily used to implement the FFI botan_pubkey_get_field
-      * and botan_privkey_get_field functions.
-      */
-      virtual const BigInt& get_int_field(const std::string& field) const;
 
       // Internal or non-public declarations follow
 
@@ -209,13 +215,6 @@ class BOTAN_PUBLIC_API(2,0) Public_Key
 class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
    {
    public:
-      Private_Key() = default;
-      Private_Key(const Private_Key& other) = default;
-      Private_Key& operator=(const Private_Key& other) = default;
-      virtual ~Private_Key() = default;
-
-      virtual bool stateful_operation() const { return false; }
-
       /**
       * @return BER encoded private key bits
       */
@@ -240,6 +239,12 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       */
       virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const
          { return algorithm_identifier(); }
+
+      /**
+      * Indicates if this key is stateful, ie that performing a private
+      * key operation requires updating the key storage.
+      */
+      virtual bool stateful_operation() const { return false; }
 
       // Internal or non-public declarations follow
 
@@ -328,20 +333,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement_Key : public virtual Private_Key
       * @return public component of this key
       */
       virtual std::vector<uint8_t> public_value() const = 0;
-
-      PK_Key_Agreement_Key() = default;
-      PK_Key_Agreement_Key(const PK_Key_Agreement_Key&) = default;
-      PK_Key_Agreement_Key& operator=(const PK_Key_Agreement_Key&) = default;
-      virtual ~PK_Key_Agreement_Key() = default;
    };
-
-/*
-* Old compat typedefs
-* TODO: remove these?
-*/
-typedef PK_Key_Agreement_Key PK_KA_Key;
-typedef Public_Key X509_PublicKey;
-typedef Private_Key PKCS8_PrivateKey;
 
 std::string BOTAN_PUBLIC_API(2,4)
    create_hex_fingerprint(const uint8_t bits[], size_t len,
