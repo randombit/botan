@@ -25,7 +25,7 @@ class XMSS_Hash final
       XMSS_Hash(const XMSS_Hash& hash);
 
       /**
-       * Pseudoranom function creating a hash out of a key and data using
+       * Pseudorandom function creating a hash out of a key and data using
        * a cryptographic hash function.
        *
        * @param[out] result The hash calculated using key and data.
@@ -44,7 +44,7 @@ class XMSS_Hash final
          }
 
       /**
-       * Pseudoranom function creating a hash out of a key and data using
+       * Pseudorandom function creating a hash out of a key and data using
        * a cryptographic hash function.
        *
        * @param[in] key An n-byte key value.
@@ -59,6 +59,50 @@ class XMSS_Hash final
          m_hash->update(key.data(), key.size());
          m_hash->update(data.data(), data.size());
          return m_hash->final();
+         }
+
+      /**
+       * Pseudoranom function creating a hash out of a key and data using
+       * a cryptographic hash function for key derivation.
+       *
+       * This function is described in NIST SP.800-208 Section 6.2 as a
+       * separate PRF to avoid a multi-target attack vector.
+       *
+       * @param[in] key An n-byte key value.
+       * @param[in] data A 32-byte XMSS_Address data value
+       * @return result The hash calculated using key and data.
+       **/
+      inline secure_vector<uint8_t> prf_keygen(std::span<const uint8_t> key,
+                                               std::span<const uint8_t> data)
+         {
+         secure_vector<uint8_t> result;
+         m_hash->update(m_zero_padding);
+         m_hash->update(m_id_prf_keygen);
+         m_hash->update(key.data(), key.size());
+         m_hash->update(data.data(), data.size());
+         return m_hash->final();
+         }
+
+      /**
+       * Pseudoranom function creating a hash out of a key and data using
+       * a cryptographic hash function for key derivation.
+       *
+       * This function is described in NIST SP.800-208 Section 5 as a
+       * separate PRF to avoid a multi-target attack vector.
+       *
+       * @param[out] result The hash calculated using key and data.
+       * @param[in] key An n-byte key value.
+       * @param[in] data A 32-byte XMSS_Address data value
+       **/
+      inline void prf_keygen(secure_vector<uint8_t>& result,
+                             std::span<const uint8_t> key,
+                             std::span<const uint8_t> data)
+         {
+         m_hash->update(m_zero_padding);
+         m_hash->update(m_id_prf_keygen);
+         m_hash->update(key.data(), key.size());
+         m_hash->update(data.data(), data.size());
+         m_hash->final(result);
          }
 
       /**
@@ -141,6 +185,7 @@ class XMSS_Hash final
       static const uint8_t m_id_h = 0x01;
       static const uint8_t m_id_hmsg = 0x02;
       static const uint8_t m_id_prf = 0x03;
+      static const uint8_t m_id_prf_keygen = 0x04;
 
       std::unique_ptr<HashFunction> m_hash;
       std::unique_ptr<HashFunction> m_msg_hash;

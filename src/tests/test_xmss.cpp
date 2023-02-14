@@ -11,6 +11,7 @@
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    #include <botan/xmss.h>
+   #include "test_rng.h"
    #include "test_pubkey.h"
 #endif
 
@@ -116,6 +117,54 @@ class XMSS_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
+/**
+ * Tests that the key generation is compatible with the reference implementation
+ *   based on: https://github.com/XMSS/xmss-reference/tree/171ccbd
+ */
+class XMSS_Keygen_Reference_Test final : public Text_Based_Test
+   {
+   public:
+      XMSS_Keygen_Reference_Test()
+         : Text_Based_Test("pubkey/xmss_keygen_reference.vec", "Params,SecretSeed,PublicSeed,SecretPrf,PublicKey,PrivateKey")
+      {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override final
+         {
+         Test::Result result(vars.get_req_str("Params"));
+
+         Fixed_Output_RNG fixed_rng;
+         auto add_entropy = [&](auto v)
+            { fixed_rng.add_entropy(v.data(), v.size()); };
+
+         // The order of the RNG values is dependent on the order they are pulled
+         // from the RNG in the production implementation.
+         add_entropy(vars.get_req_bin("PublicSeed")); // XMSS_PublicKey constructor's initializer list
+         add_entropy(vars.get_req_bin("SecretPrf"));  // XMSS_PrivateKey constructor's call to ..._Internal constructor
+         add_entropy(vars.get_req_bin("SecretSeed")); // XMSS_PrivateKey constructor's call to ..._Internal constructor
+
+         const auto xmss_algo = Botan::XMSS_Parameters::xmss_id_from_string(vars.get_req_str("Params"));
+         Botan::XMSS_PrivateKey keypair(xmss_algo, fixed_rng);
+
+         result.test_eq("Generated private key matches", keypair.raw_private_key(), vars.get_req_bin("PrivateKey"));
+         result.test_eq("Generated public key matches", keypair.raw_public_key(), vars.get_req_bin("PublicKey"));
+
+         return result;
+         }
+
+      bool skip_this_test(const std::string& /*header*/,
+                          const VarMap& vars) override
+         {
+         if(Test::run_long_tests())
+            { return false; }
+
+         else if(vars.get_req_str("Params") == "XMSS-SHA2_10_256")
+            { return false; }
+
+         else
+            { return true; }
+         }
+   };
+
 std::vector<Test::Result> xmss_statefulness()
    {
    auto sign_something = [](auto& sk)
@@ -162,6 +211,7 @@ BOTAN_REGISTER_TEST("pubkey", "xmss_sign", XMSS_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify", XMSS_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify_invalid", XMSS_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen", XMSS_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "xmss_keygen_reference", XMSS_Keygen_Reference_Test);
 BOTAN_REGISTER_TEST_FN("pubkey", "xmss_statefulness", xmss_statefulness);
 
 #endif
