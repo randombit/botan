@@ -19,6 +19,8 @@
 #include <botan/internal/xmss_signature_operation.h>
 #include <botan/internal/xmss_index_registry.h>
 #include <botan/internal/xmss_common_ops.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <iterator>
@@ -32,82 +34,182 @@ namespace Botan {
 namespace {
 
 // fall back to raw decoding for previous versions, which did not encode an OCTET STRING
-secure_vector<uint8_t> extract_raw_key(const secure_vector<uint8_t>& key_bits)
+secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits)
    {
    secure_vector<uint8_t> raw_key;
    try
       {
-      BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString);
+      DataSource_Memory src(key_bits);
+      BER_Decoder(src).decode(raw_key, ASN1_Type::OctetString);
       }
    catch(Decoding_Error&)
       {
-      raw_key = key_bits;
+      raw_key.assign(key_bits.begin(), key_bits.end());
       }
    return raw_key;
    }
 
 }
 
-XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& key_bits)
-   : XMSS_PublicKey(unlock(key_bits)),
-     m_wots_priv_key(m_wots_params.oid(), m_public_seed),
-     m_hash(xmss_hash_function()),
-     m_index_reg(XMSS_Index_Registry::get_instance())
+class XMSS_PrivateKey_Internal
    {
-   /*
-   The code requires sizeof(size_t) >= ceil(tree_height / 8)
+   public:
+      XMSS_PrivateKey_Internal(const XMSS_Parameters& xmss_params,
+                               const XMSS_WOTS_Parameters& wots_params,
+                               secure_vector<uint8_t> public_seed,
+                               secure_vector<uint8_t> private_seed,
+                               secure_vector<uint8_t> prf)
+         : m_xmss_params(xmss_params)
+         , m_wots_params(wots_params)
+         , m_wots_priv_key(wots_params.oid(), std::move(public_seed), std::move(private_seed))
+         , m_hash(m_xmss_params.hash_function_name())
+         , m_prf(std::move(prf))
+         , m_index_reg(XMSS_Index_Registry::get_instance()) {}
 
-   Maximum supported tree height is 20, ceil(20/8) == 3, so 4 byte
-   size_t is sufficient for all defined parameters, or even a
-   (hypothetical) tree height 32, which would be extremely slow to
-   compute.
-   */
-   static_assert(sizeof(size_t) >= 4, "size_t is big enough to support leaf index");
+      XMSS_PrivateKey_Internal(const XMSS_Parameters& xmss_params,
+                               const XMSS_WOTS_Parameters& wots_params,
+                               secure_vector<uint8_t> public_seed,
+                               std::span<const uint8_t> key_bits)
+         : m_xmss_params(xmss_params)
+         , m_wots_params(wots_params)
+         , m_wots_priv_key(wots_params.oid(), std::move(public_seed))
+         , m_hash(m_xmss_params.hash_function_name())
+         , m_index_reg(XMSS_Index_Registry::get_instance())
+         {
+         /*
+         The code requires sizeof(size_t) >= ceil(tree_height / 8)
 
-   secure_vector<uint8_t> raw_key = extract_raw_key(key_bits);
+         Maximum supported tree height is 20, ceil(20/8) == 3, so 4 byte
+         size_t is sufficient for all defined parameters, or even a
+         (hypothetical) tree height 32, which would be extremely slow to
+         compute.
+         */
+         static_assert(sizeof(size_t) >= 4, "size_t is big enough to support leaf index");
 
-   if(raw_key.size() != XMSS_PrivateKey::size())
-      {
-      throw Decoding_Error("Invalid XMSS private key size");
+         const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
+
+         if(raw_key.size() != m_xmss_params.raw_private_key_size())
+            {
+            throw Decoding_Error("Invalid XMSS private key size");
+            }
+
+         // extract & copy unused leaf index from raw_key
+         uint64_t unused_leaf = 0;
+         auto begin = (raw_key.begin() + m_xmss_params.raw_public_key_size());
+         auto end = raw_key.begin() + m_xmss_params.raw_public_key_size() + sizeof(uint32_t);
+
+         for(auto& i = begin; i != end; i++)
+            {
+            unused_leaf = ((unused_leaf << 8) | *i);
+            }
+
+         if(unused_leaf >= (1ull << m_xmss_params.tree_height()))
+            {
+            throw Decoding_Error("XMSS private key leaf index out of bounds");
+            }
+
+         begin = end;
+         end = begin + m_xmss_params.element_size();
+         m_prf.clear();
+         m_prf.reserve(m_xmss_params.element_size());
+         std::copy(begin, end, std::back_inserter(m_prf));
+
+         begin = end;
+         end = begin + m_wots_params.element_size();
+         m_wots_priv_key.set_private_seed(secure_vector<uint8_t>(begin, end));
+         set_unused_leaf_index(static_cast<size_t>(unused_leaf));
+         }
+
+      secure_vector<uint8_t> serialize(std::vector<uint8_t> raw_public_key) const {
+         std::vector<uint8_t> unused_index(4);
+         store_be(static_cast<uint32_t>(unused_leaf_index()), unused_index.data());
+
+         return concat_as<secure_vector<uint8_t>>(
+            raw_public_key,
+            unused_index,
+            m_prf,
+            m_wots_priv_key.private_seed());
       }
 
-   // extract & copy unused leaf index from raw_key
-   uint64_t unused_leaf = 0;
-   auto begin = (raw_key.begin() + XMSS_PublicKey::size());
-   auto end = raw_key.begin() + XMSS_PublicKey::size() + sizeof(uint32_t);
+      XMSS_Hash& hash() { return m_hash; }
+      const secure_vector<uint8_t>& prf_value() const { return m_prf; }
+      secure_vector<uint8_t>& prf_value() { return m_prf; }
+      const XMSS_WOTS_PrivateKey& wots_private_key() const { return m_wots_priv_key; }
+      XMSS_WOTS_PrivateKey& wots_private_key() { return m_wots_priv_key; }
+      XMSS_Index_Registry& index_registry() { return m_index_reg; }
 
-   for(auto& i = begin; i != end; i++)
-      {
-      unused_leaf = ((unused_leaf << 8) | *i);
-      }
+      std::shared_ptr<Atomic<size_t>>
+      recover_global_leaf_index() const
+         {
+         BOTAN_ASSERT(m_wots_priv_key.private_seed().size() ==
+                     m_xmss_params.element_size() &&
+                     m_prf.size() == m_xmss_params.element_size(),
+                     "Trying to retrieve index for partially initialized key");
+         return m_index_reg.get(m_wots_priv_key.private_seed(), m_prf);
+         }
 
-   if(unused_leaf >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
-      {
-      throw Decoding_Error("XMSS private key leaf index out of bounds");
-      }
+      void set_unused_leaf_index(size_t idx)
+         {
+         if(idx >= (1ull << m_xmss_params.tree_height()))
+            {
+            throw Decoding_Error("XMSS private key leaf index out of bounds");
+            }
+         else
+            {
+            std::atomic<size_t>& index =
+               static_cast<std::atomic<size_t>&>(*recover_global_leaf_index());
+            size_t current = 0;
 
-   begin = end;
-   end = begin + XMSS_PublicKey::m_xmss_params.element_size();
-   m_prf.clear();
-   m_prf.reserve(XMSS_PublicKey::m_xmss_params.element_size());
-   std::copy(begin, end, std::back_inserter(m_prf));
+            do
+               {
+               current = index.load();
+               if(current > idx)
+                  { return; }
+               }
+            while(!index.compare_exchange_strong(current, idx));
+            }
+         }
 
-   begin = end;
-   end = begin + m_wots_params.element_size();
-   m_wots_priv_key.set_private_seed(secure_vector<uint8_t>(begin, end));
-   set_unused_leaf_index(static_cast<size_t>(unused_leaf));
-   }
+      size_t reserve_unused_leaf_index()
+         {
+         size_t idx = (static_cast<std::atomic<size_t>&>(
+                        *recover_global_leaf_index())).fetch_add(1);
+         if(idx >= (1ull << m_xmss_params.tree_height()))
+            {
+            throw Decoding_Error("XMSS private key, one time signatures exhaused");
+            }
+         return idx;
+         }
+
+      size_t unused_leaf_index() const
+         {
+         return *recover_global_leaf_index();
+         }
+
+   private:
+      const XMSS_Parameters& m_xmss_params;
+      const XMSS_WOTS_Parameters& m_wots_params;
+
+      XMSS_WOTS_PrivateKey m_wots_priv_key;
+      XMSS_Hash m_hash;
+      secure_vector<uint8_t> m_prf;
+      XMSS_Index_Registry& m_index_reg;
+   };
+
+
+XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits)
+   : XMSS_PublicKey(key_bits)
+   , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
+         m_xmss_params, m_wots_params, m_public_seed, key_bits)) {}
 
 XMSS_PrivateKey::XMSS_PrivateKey(
    XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
    RandomNumberGenerator& rng)
-   : XMSS_PublicKey(xmss_algo_id, rng),
-     m_wots_priv_key(XMSS_PublicKey::m_xmss_params.ots_oid(),
-                     public_seed(),
-                     rng),
-     m_hash(xmss_hash_function()),
-     m_prf(rng.random_vec(XMSS_PublicKey::m_xmss_params.element_size())),
-     m_index_reg(XMSS_Index_Registry::get_instance())
+   : XMSS_PublicKey(xmss_algo_id, rng)
+   , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
+      m_xmss_params, m_wots_params, m_public_seed,
+      rng.random_vec(m_xmss_params.element_size()),
+      rng.random_vec(m_xmss_params.element_size())))
    {
    XMSS_Address adrs;
    set_root(tree_hash(0,
@@ -115,22 +217,18 @@ XMSS_PrivateKey::XMSS_PrivateKey(
                       adrs));
    }
 
-
 XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                  size_t idx_leaf,
                                  secure_vector<uint8_t> wots_priv_seed,
                                  secure_vector<uint8_t> prf,
                                  secure_vector<uint8_t> root,
                                  secure_vector<uint8_t> public_seed)
-   : XMSS_PublicKey(xmss_algo_id, std::move(root), public_seed /* copied on purpose */),
-     m_wots_priv_key(XMSS_PublicKey::m_xmss_params.ots_oid(),
-                     std::move(public_seed),
-                     std::move(wots_priv_seed)),
-     m_hash(XMSS_PublicKey::m_xmss_params.hash_function_name()),
-     m_prf(std::move(prf)),
-     m_index_reg(XMSS_Index_Registry::get_instance())
+   : XMSS_PublicKey(xmss_algo_id, std::move(root), std::move(public_seed))
+   , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
+      m_xmss_params, m_wots_params, m_public_seed,
+      std::move(wots_priv_seed), std::move(prf)))
    {
-   set_unused_leaf_index(idx_leaf);
+   m_private->set_unused_leaf_index(idx_leaf);
    }
 
 secure_vector<uint8_t>
@@ -171,7 +269,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
        subtrees,
        secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
    std::vector<XMSS_Address> node_addresses(subtrees, adrs);
-   std::vector<XMSS_Hash> xmss_hash(subtrees, m_hash);
+   std::vector<XMSS_Hash> xmss_hash(subtrees, m_private->hash());
    std::vector<std::future<void>> work;
 
    // Calculate multiple subtrees in parallel.
@@ -243,14 +341,23 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
                                         nodes[1],
                                         node_addresses[0],
                                         this->public_seed(),
-                                        m_hash,
+                                        m_private->hash(),
                                         m_xmss_params);
    return nodes[0];
 #else
    secure_vector<uint8_t> result;
-   tree_hash_subtree(result, start_idx, target_node_height, adrs, m_hash);
+   tree_hash_subtree(result, start_idx, target_node_height, adrs, m_private->hash());
    return result;
 #endif
+   }
+
+
+void XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
+                                        size_t start_idx,
+                                        size_t target_node_height,
+                                        XMSS_Address& adrs)
+   {
+   return tree_hash_subtree(result, start_idx, target_node_height, adrs, m_private->hash());
    }
 
 void
@@ -273,7 +380,7 @@ XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
    std::vector<uint8_t> node_levels(target_node_height + 1);
 
    uint8_t level = 0; // current level on the node stack.
-   XMSS_WOTS_PublicKey pk(m_wots_priv_key.wots_parameters().oid(), seed);
+   XMSS_WOTS_PublicKey pk(m_private->wots_private_key().wots_parameters().oid(), seed);
    const size_t last_idx = (static_cast<size_t>(1) << target_node_height) + start_idx;
 
    for(size_t i = start_idx; i < last_idx; i++)
@@ -321,73 +428,56 @@ secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const
    return DER_Encoder().encode(raw_private_key(), ASN1_Type::OctetString).get_contents();
    }
 
-std::shared_ptr<Atomic<size_t>>
-XMSS_PrivateKey::recover_global_leaf_index() const
-   {
-   BOTAN_ASSERT(m_wots_priv_key.private_seed().size() ==
-                XMSS_PublicKey::m_xmss_params.element_size() &&
-                m_prf.size() == XMSS_PublicKey::m_xmss_params.element_size(),
-                "Trying to retrieve index for partially initialized key");
-   return m_index_reg.get(m_wots_priv_key.private_seed(), m_prf);
-   }
-
 void XMSS_PrivateKey::set_unused_leaf_index(size_t idx)
    {
-   if(idx >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
-      {
-      throw Decoding_Error("XMSS private key leaf index out of bounds");
-      }
-   else
-      {
-      std::atomic<size_t>& index =
-         static_cast<std::atomic<size_t>&>(*recover_global_leaf_index());
-      size_t current = 0;
-
-      do
-         {
-         current = index.load();
-         if(current > idx)
-            { return; }
-         }
-      while(!index.compare_exchange_strong(current, idx));
-      }
+   return m_private->set_unused_leaf_index(idx);
    }
 
 size_t XMSS_PrivateKey::reserve_unused_leaf_index()
    {
-   size_t idx = (static_cast<std::atomic<size_t>&>(
-                    *recover_global_leaf_index())).fetch_add(1);
-   if(idx >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
-      {
-      throw Decoding_Error("XMSS private key, one time signatures exhaused");
-      }
-   return idx;
+   return m_private->reserve_unused_leaf_index();
    }
 
 size_t XMSS_PrivateKey::unused_leaf_index() const
    {
-   return *recover_global_leaf_index();
+   return m_private->unused_leaf_index();
+   }
+
+const XMSS_WOTS_PrivateKey& XMSS_PrivateKey::wots_private_key() const
+   {
+   return m_private->wots_private_key();
+   }
+
+XMSS_WOTS_PrivateKey& XMSS_PrivateKey::wots_private_key()
+   {
+   return m_private->wots_private_key();
+   }
+
+const secure_vector<uint8_t>& XMSS_PrivateKey::prf() const
+   {
+   return m_private->prf_value();
+   }
+
+secure_vector<uint8_t>& XMSS_PrivateKey::prf()
+   {
+   // TODO: do we even need this?
+   return m_private->prf_value();
+   }
+
+void XMSS_PrivateKey::set_public_seed(secure_vector<uint8_t> public_seed)
+   {
+   m_public_seed = std::move(public_seed);
+   m_private->wots_private_key().set_public_seed(m_public_seed);
+   }
+
+const secure_vector<uint8_t>& XMSS_PrivateKey::public_seed() const
+   {
+   return m_public_seed;
    }
 
 secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
    {
-   std::vector<uint8_t> pk { raw_public_key() };
-   secure_vector<uint8_t> result(pk.begin(), pk.end());
-   result.reserve(size());
-
-   for(int i = 3; i >= 0; i--)
-      {
-      result.push_back(
-         static_cast<uint8_t>(
-            static_cast<uint64_t>(unused_leaf_index()) >> 8 * i));
-      }
-
-   std::copy(m_prf.begin(), m_prf.end(), std::back_inserter(result));
-   std::copy(m_wots_priv_key.private_seed().begin(),
-             m_wots_priv_key.private_seed().end(),
-             std::back_inserter(result));
-
-   return result;
+   return m_private->serialize(raw_public_key());
    }
 
 std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const

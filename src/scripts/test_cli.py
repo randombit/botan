@@ -405,27 +405,27 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("hash", ["--no-fsname", msg], "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")
 
     test_cli("keygen", ["--algo=XMSS", "--output=%s" % (priv_key)], "")
-    test_cli("hash", ["--no-fsname", priv_key], "5B38F737BA41BE7F40433DB30EAEF7C41ABB0F7D9E7A09DEB5FDCE7B6811693F")
+    test_cli("hash", ["--no-fsname", priv_key], "8E239EC9CB28F58174F0C443D9884F921575B46A870FB277197758D120DA1FA1")
 
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
     test_cli("fingerprint", ['--no-fsname', pub_key],
-             "B0:F4:98:6E:D8:4E:05:63:A1:D8:4B:37:61:5A:A0:41:78:7E:DE:0E:72:46:E0:A8:D6:CF:09:54:08:DA:A4:22")
+             "1E:10:69:84:37:63:4F:66:84:34:E2:4B:2B:A1:7A:3C:92:0F:B3:BA:D1:5F:CA:A8:66:47:89:90:7E:91:D1:6A")
 
     # verify the key is updated after each signature:
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig1)], "")
     test_cli("verify", [pub_key, msg, sig1], "Signature is valid")
-    test_cli("hash", ["--no-fsname", sig1], "04AF45451C7A9AF2D828E1AD6EC262E012436F4087C5DA6F32C689D781E597D0")
-    test_cli("hash", ["--no-fsname", priv_key], "67929FAEC636E43DE828C1CD7E2D11CE7C3388CE90DD0A0F687C6627FFA850CD")
+    test_cli("hash", ["--no-fsname", sig1], "1506DD8AB43C714CD8EA20AA599B77D916A2FB554AD5B19A68DFCF00847F6001")
+    test_cli("hash", ["--no-fsname", priv_key], "B76BCED7BD52D0B314373589E7AA638B331740CD24F686ACEBAD0BA7D5384048")
 
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig2)], "")
     test_cli("verify", [pub_key, msg, sig2], "Signature is valid")
-    test_cli("hash", ["--no-fsname", sig2], "0785A6AD54CC7D01F2BE2BC6463A3EAA1159792E52210ED754992C5068E8F24F")
-    test_cli("hash", ["--no-fsname", priv_key], "1940945D68B1CF54D79E05DD7913A4D0B4959183F1E12B81A4E43EF4E63FBD20")
+    test_cli("hash", ["--no-fsname", sig2], "E3FCB5D2AB12159A99E7619C933A97808077C67CCEC8A2504EFC8720465A68E7")
+    test_cli("hash", ["--no-fsname", priv_key], "E2EFFE9164ED6F0CBF39C30CC3996BC0B596B9C987C0FE01113FB7DC15F1E5ED")
 
     # private key updates, public key is unchanged:
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key2, priv_key), "")
     test_cli("fingerprint", ['--no-fsname', pub_key2],
-             "B0:F4:98:6E:D8:4E:05:63:A1:D8:4B:37:61:5A:A0:41:78:7E:DE:0E:72:46:E0:A8:D6:CF:09:54:08:DA:A4:22")
+             "1E:10:69:84:37:63:4F:66:84:34:E2:4B:2B:A1:7A:3C:92:0F:B3:BA:D1:5F:CA:A8:66:47:89:90:7E:91:D1:6A")
 
 def cli_pbkdf_tune_tests(_tmp_dir):
     if not check_for_command("pbkdf_tune"):
