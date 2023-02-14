@@ -64,7 +64,6 @@ class Connection_Cipher_State final
       Nonce_Format nonce_format() const { return m_nonce_format; }
 
    private:
-      std::chrono::system_clock::time_point m_start_time;
       std::unique_ptr<AEAD_Mode> m_aead;
 
       std::vector<uint8_t> m_nonce;
