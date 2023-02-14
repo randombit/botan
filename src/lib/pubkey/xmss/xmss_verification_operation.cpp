@@ -29,23 +29,24 @@ XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
       XMSS_Address& adrs,
       const secure_vector<uint8_t>& seed)
    {
-   const auto params = m_pub_key.xmss_parameters();
+   const auto& params = m_pub_key.xmss_parameters();
 
    const uint32_t next_index = static_cast<uint32_t>(sig.unused_leaf_index());
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
    adrs.set_ots_address(next_index);
 
-   XMSS_WOTS_PublicKey pub_key_ots(m_pub_key.xmss_parameters().ots_oid(),
+   XMSS_WOTS_PublicKey pub_key_ots(params.ots_oid(),
+                                   seed,
+                                   sig.tree().ots_signature,
                                    msg,
-                                   sig.tree().ots_signature(),
                                    adrs,
-                                   seed);
+                                   m_hash);
 
    adrs.set_type(XMSS_Address::Type::LTree_Address);
    adrs.set_ltree_address(next_index);
 
    std::array<secure_vector<uint8_t>, 2> node;
-   XMSS_Common_Ops::create_l_tree(node[0], pub_key_ots, adrs, seed, m_hash, params);
+   XMSS_Common_Ops::create_l_tree(node[0], pub_key_ots.key_data(), adrs, seed, m_hash, params);
 
    adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
    adrs.set_tree_index(next_index);
@@ -58,7 +59,7 @@ XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
          adrs.set_tree_index(adrs.get_tree_index() >> 1);
          XMSS_Common_Ops::randomize_tree_hash(node[1],
                                               node[0],
-                                              sig.tree().authentication_path()[k],
+                                              sig.tree().authentication_path[k],
                                               adrs,
                                               seed,
                                               m_hash,
@@ -68,7 +69,7 @@ XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
          {
          adrs.set_tree_index((adrs.get_tree_index() - 1) >> 1);
          XMSS_Common_Ops::randomize_tree_hash(node[1],
-                                              sig.tree().authentication_path()[k],
+                                              sig.tree().authentication_path[k],
                                               node[0],
                                               adrs,
                                               seed,

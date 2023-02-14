@@ -27,18 +27,22 @@ XMSS_Signature_Operation::XMSS_Signature_Operation(
    m_is_initialized(false)
    {}
 
-XMSS_WOTS_PublicKey::TreeSignature
+XMSS_Signature::TreeSignature
 XMSS_Signature_Operation::generate_tree_signature(const secure_vector<uint8_t>& msg,
       XMSS_PrivateKey& xmss_priv_key,
       XMSS_Address& adrs)
    {
+   XMSS_Signature::TreeSignature result;
 
-   wots_keysig_t auth_path = build_auth_path(xmss_priv_key, adrs);
+   result.authentication_path = build_auth_path(xmss_priv_key, adrs);
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
    adrs.set_ots_address(m_leaf_idx);
 
-   wots_keysig_t sig_ots = xmss_priv_key.wots_private_key().sign(msg, adrs);
-   return XMSS_WOTS_PublicKey::TreeSignature(sig_ots, auth_path);
+   result.ots_signature = xmss_priv_key
+         .wots_private_key_for(adrs, m_hash)
+         .sign(msg, xmss_priv_key.public_seed(), adrs, m_hash);
+
+   return result;
    }
 
 XMSS_Signature
