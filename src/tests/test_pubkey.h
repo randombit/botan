@@ -225,6 +225,20 @@ class PK_Key_Generation_Test : public Test
       std::vector<std::string> possible_providers(const std::string& params) override;
    };
 
+class PK_Key_Generation_Stability_Test : public PK_Test
+   {
+   public:
+      PK_Key_Generation_Stability_Test(const std::string& algo,
+                                       const std::string& test_src);
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
+
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
+   };
+
 class PK_Key_Validity_Test : public PK_Test
    {
    protected:

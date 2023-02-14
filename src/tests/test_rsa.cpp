@@ -216,6 +216,13 @@ class RSA_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
+class RSA_Keygen_Stability_Tests final : public PK_Key_Generation_Stability_Test
+   {
+   public:
+      RSA_Keygen_Stability_Tests() :
+         PK_Key_Generation_Stability_Test("RSA", "pubkey/rsa_keygen.vec") {}
+   };
+
 class RSA_Keygen_Bad_RNG_Test final : public Test
    {
    public:
@@ -356,6 +363,7 @@ BOTAN_REGISTER_TEST("pubkey", "rsa_verify", RSA_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_verify_invalid", RSA_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_kem", RSA_KEM_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_keygen", RSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_keygen_stability", RSA_Keygen_Stability_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_keygen_badrng", RSA_Keygen_Bad_RNG_Test);
 BOTAN_REGISTER_TEST("pubkey", "rsa_blinding", RSA_Blinding_Tests);
 

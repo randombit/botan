@@ -18,6 +18,10 @@
 #include <botan/hex.h>
 #include <botan/data_src.h>
 
+#if defined(BOTAN_HAS_HMAC_DRBG)
+  #include <botan/hmac_drbg.h>
+#endif
+
 namespace Botan_Tests {
 
 void check_invalid_signatures(Test::Result& result,
@@ -800,6 +804,70 @@ PK_Key_Validity_Test::run_one_test(const std::string& header, const VarMap& vars
    const bool tested_valid = pubkey->check_key(rng(), true);
 
    result.test_eq("Expected validation result", expected_valid, tested_valid);
+
+   return result;
+   }
+
+PK_Key_Generation_Stability_Test::PK_Key_Generation_Stability_Test(const std::string& algo,
+                                                                   const std::string& test_src) :
+   PK_Test(algo, test_src, "Rng,RngSeed,Key", "KeyParams,RngParams") {}
+
+Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, const VarMap& vars)
+   {
+   const std::string key_param = vars.get_opt_str("KeyParams", "");
+   const std::string rng_algo = vars.get_req_str("Rng");
+   const std::string rng_params = vars.get_opt_str("RngParams", "");
+   const std::vector<uint8_t> rng_seed = vars.get_req_bin("RngSeed");
+   const std::vector<uint8_t> expected_key = vars.get_req_bin("Key");
+
+   std::ostringstream report_name;
+
+   report_name << algo_name();
+   if(!key_param.empty())
+      report_name << " " << key_param;
+   report_name << " keygen stability";
+
+   Test::Result result(report_name.str());
+
+   result.start_timer();
+
+   std::unique_ptr<Botan::RandomNumberGenerator> rng;
+
+#if defined(BOTAN_HAS_HMAC_DRBG)
+   if(rng_algo == "HMAC_DRBG")
+      {
+      rng.reset(new Botan::HMAC_DRBG(rng_params));
+      }
+#endif
+
+   if(rng_algo == "Fixed")
+      {
+      if(rng_params != "")
+         throw Test_Error("Expected empty RngParams for Fixed RNG");
+      rng.reset(new Fixed_Output_RNG());
+      }
+
+   if(rng)
+      {
+      rng->add_entropy(rng_seed.data(), rng_seed.size());
+
+      try
+         {
+         auto key = Botan::create_private_key(algo_name(), *rng, key_param);
+         const auto key_bits = key->private_key_info();
+         result.test_eq("Generated key matched expected value", key_bits, expected_key);
+         }
+      catch(Botan::Exception& e)
+         {
+         result.test_note("failed to create key", e.what());
+         }
+      }
+   else
+      {
+      result.test_note("Skipping test due to unavailable RNG");
+      }
+
+   result.end_timer();
 
    return result;
    }

@@ -162,6 +162,13 @@ class ECDSA_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
+class ECDSA_Keygen_Stability_Tests final : public PK_Key_Generation_Stability_Test
+   {
+   public:
+      ECDSA_Keygen_Stability_Tests() :
+         PK_Key_Generation_Stability_Test("ECDSA", "pubkey/ecdsa_keygen.vec") {}
+   };
+
 #if defined(BOTAN_HAS_EMSA_RAW)
 
 class ECDSA_Key_Recovery_Tests final : public Text_Based_Test
@@ -258,6 +265,7 @@ BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify_wycheproof", ECDSA_Wycheproof_Verifi
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign", ECDSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign_verify_der", ECDSA_Sign_Verify_DER_Test);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen", ECDSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen_stability", ECDSA_Keygen_Stability_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_invalid", ECDSA_Invalid_Key_Tests);
 
 #endif
