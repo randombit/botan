@@ -81,13 +81,13 @@ stores credentials. The main user is the :doc:`tls` implementation.
          the connection with an alert. This can be done by throwing an exception
          from the implementation of this function.
 
-   .. cpp:function:: Private_Key* private_key_for(const X509_Certificate& cert, \
+   .. cpp:function:: std::shared_ptr<Private_Key> private_key_for(const X509_Certificate& cert, \
                                                   const std::string& type, \
                                                   const std::string& context)
 
-      Return the private key for this certificate. The *cert* will be
-      the leaf cert of a chain returned previously by ``cert_chain``
-      or ``cert_chain_single_type``.
+      Return a shared pointer to the private key for this certificate. The
+      *cert* will be the leaf cert of a chain returned previously by
+      ``cert_chain`` or ``cert_chain_single_type``.
 
 In versions before 1.11.34, there was an additional function on `Credentials_Manager`
 

@@ -699,17 +699,20 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       if(state.received_handshake_msg(Handshake_Type::CertificateRequest) &&
          !state.client_certs()->empty())
          {
-         Private_Key* private_key =
+         auto private_key =
             m_creds.private_key_for(state.client_certs()->cert_chain()[0],
                                     "tls-client",
                                     m_info.hostname());
+
+         if(!private_key)
+            throw TLS_Exception(Alert::InternalError, "Failed to get private key for signing");
 
          state.client_verify(
             new Certificate_Verify_12(state.handshake_io(),
                                       state,
                                       policy(),
                                       rng(),
-                                      private_key)
+                                      private_key.get())
             );
          }
 

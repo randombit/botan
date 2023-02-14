@@ -58,11 +58,12 @@ std::vector<X509_Certificate> Credentials_Manager::cert_chain_single_type(
    return find_cert_chain({cert_key_type}, cert_signature_schemes, std::vector<X509_DN>(), type, context);
    }
 
-Private_Key* Credentials_Manager::private_key_for(const X509_Certificate& /*unused*/,
-                                                  const std::string& /*unused*/,
-                                                  const std::string& /*unused*/)
+std::shared_ptr<Private_Key>
+Credentials_Manager::private_key_for(const X509_Certificate& /*unused*/,
+                                     const std::string& /*unused*/,
+                                     const std::string& /*unused*/)
    {
-   return nullptr;
+   return std::shared_ptr<Private_Key>();
    }
 
 std::vector<Certificate_Store*>

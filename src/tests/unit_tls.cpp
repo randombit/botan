@@ -125,17 +125,18 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
          return chain;
          }
 
-      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& crt,
-                                          const std::string& /*type*/,
-                                          const std::string& /*context*/) override
+      std::shared_ptr<Botan::Private_Key>
+      private_key_for(const Botan::X509_Certificate& crt,
+                      const std::string& /*type*/,
+                      const std::string& /*context*/) override
          {
          if(crt == m_rsa_cert)
             {
-            return m_rsa_key.get();
+            return m_rsa_key;
             }
          if(crt == m_ecdsa_cert)
             {
-            return m_ecdsa_key.get();
+            return m_ecdsa_key;
             }
          return nullptr;
          }
@@ -171,10 +172,10 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
 
    private:
       Botan::X509_Certificate m_rsa_cert, m_rsa_ca;
-      std::unique_ptr<Botan::Private_Key> m_rsa_key;
+      std::shared_ptr<Botan::Private_Key> m_rsa_key;
 
       Botan::X509_Certificate m_ecdsa_cert, m_ecdsa_ca;
-      std::unique_ptr<Botan::Private_Key> m_ecdsa_key;
+      std::shared_ptr<Botan::Private_Key> m_ecdsa_key;
 
       std::vector<std::unique_ptr<Botan::Certificate_Store>> m_stores;
       bool m_provides_client_certs;

@@ -7,6 +7,7 @@
 #include "fuzzers.h"
 #include <botan/tls_server.h>
 #include <botan/data_src.h>
+#include <botan/pkcs8.h>
 
 const char* fixed_rsa_key =
    "-----BEGIN PRIVATE KEY-----\n"
@@ -66,10 +67,10 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager
       Fuzzer_TLS_Server_Creds()
          {
          Botan::DataSource_Memory cert_in(fixed_rsa_cert);
-         Botan::DataSource_Memory key_in(fixed_rsa_key);
-
          m_rsa_cert.reset(new Botan::X509_Certificate(cert_in));
-         //m_rsa_key.reset(Botan::PKCS8::load_key(key_in, fuzzer_rng());
+
+         Botan::DataSource_Memory key_in(fixed_rsa_key);
+         m_rsa_key.reset(Botan::PKCS8::load_key(key_in).release());
          }
 
       std::vector<Botan::X509_Certificate> cert_chain(
@@ -92,11 +93,14 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager
          return v;
          }
 
-      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& /*cert*/,
-                                          const std::string& /*type*/,
-                                          const std::string& /*context*/) override
+      std::shared_ptr<Botan::Private_Key>
+      private_key_for(const Botan::X509_Certificate& /*cert*/,
+                      const std::string& type,
+                      const std::string& /*context*/) override
          {
-         return m_rsa_key.get();
+         if(type == "RSA")
+            return m_rsa_key;
+         return nullptr;
          }
 
       std::string psk_identity_hint(const std::string&, const std::string&) override { return "psk_hint"; }
@@ -107,7 +111,7 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager
          }
    private:
       std::unique_ptr<Botan::X509_Certificate> m_rsa_cert;
-      std::unique_ptr<Botan::Private_Key> m_rsa_key;
+      std::shared_ptr<Botan::Private_Key> m_rsa_key;
    };
 
 class Fuzzer_TLS_Policy : public Botan::TLS::Policy
