@@ -29,7 +29,7 @@ aes_128_key_expansion(__m128i key, __m128i key_getting_rcon)
 
 BOTAN_FUNC_ISA("ssse3")
 void aes_192_key_expansion(__m128i* K1, __m128i* K2, __m128i key2_with_rcon,
-                           uint32_t out[], bool last)
+                           secure_vector<uint32_t>& out, size_t offset)
    {
    __m128i key1 = *K1;
    __m128i key2 = *K2;
@@ -41,17 +41,17 @@ void aes_192_key_expansion(__m128i* K1, __m128i* K2, __m128i key2_with_rcon,
    key1 = _mm_xor_si128(key1, key2_with_rcon);
 
    *K1 = key1;
-   _mm_storeu_si128(reinterpret_cast<__m128i*>(out), key1);
+   _mm_storeu_si128(reinterpret_cast<__m128i*>(&out[offset]), key1);
 
-   if(last)
+   if(offset == 48) // last key
       return;
 
    key2 = _mm_xor_si128(key2, _mm_slli_si128(key2, 4));
    key2 = _mm_xor_si128(key2, _mm_shuffle_epi32(key1, _MM_SHUFFLE(3,3,3,3)));
 
    *K2 = key2;
-   out[4] = _mm_cvtsi128_si32(key2);
-   out[5] = _mm_cvtsi128_si32(_mm_srli_si128(key2, 4));
+   out[offset + 4] = _mm_cvtsi128_si32(key2);
+   out[offset + 5] = _mm_cvtsi128_si32(_mm_srli_si128(key2, 4));
    }
 
 /*
@@ -491,21 +491,14 @@ void AES_192::aesni_key_schedule(const uint8_t key[], size_t /*length*/)
 
    load_le(m_EK.data(), key, 6);
 
-   #define AES_192_key_exp(RCON, EK_OFF)                         \
-     aes_192_key_expansion(&K0, &K1,                             \
-                           _mm_aeskeygenassist_si128(K1, RCON),  \
-                           &m_EK[EK_OFF], EK_OFF == 48)
-
-   AES_192_key_exp(0x01, 6);
-   AES_192_key_exp(0x02, 12);
-   AES_192_key_exp(0x04, 18);
-   AES_192_key_exp(0x08, 24);
-   AES_192_key_exp(0x10, 30);
-   AES_192_key_exp(0x20, 36);
-   AES_192_key_exp(0x40, 42);
-   AES_192_key_exp(0x80, 48);
-
-   #undef AES_192_key_exp
+   aes_192_key_expansion(&K0, &K1, _mm_aeskeygenassist_si128(K1, 0x01), m_EK, 6);
+   aes_192_key_expansion(&K0, &K1, _mm_aeskeygenassist_si128(K1, 0x02), m_EK, 12);
+   aes_192_key_expansion(&K0, &K1, _mm_aeskeygenassist_si128(K1, 0x04), m_EK, 18);
+   aes_192_key_expansion(&K0, &K1, _mm_aeskeygenassist_si128(K1, 0x08), m_EK, 24);
+   aes_192_key_expansion(&K0, &K1, _mm_aeskeygenassist_si128(K1, 0x10), m_EK, 30);
+   aes_192_key_expansion(&K0, &K1, _mm_aeskeygenassist_si128(K1, 0x20), m_EK, 36);
+   aes_192_key_expansion(&K0, &K1, _mm_aeskeygenassist_si128(K1, 0x40), m_EK, 42);
+   aes_192_key_expansion(&K0, &K1, _mm_aeskeygenassist_si128(K1, 0x80), m_EK, 48);
 
    // Now generate decryption keys
    const __m128i* EK_mm = reinterpret_cast<const __m128i*>(m_EK.data());
