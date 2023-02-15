@@ -154,7 +154,7 @@ class EC_Group_Data final
 class EC_Group_Data_Map final
    {
    public:
-      EC_Group_Data_Map() {}
+      EC_Group_Data_Map() = default;
 
       size_t clear()
          {

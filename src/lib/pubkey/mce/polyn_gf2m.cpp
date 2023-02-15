@@ -88,11 +88,7 @@ gf2m random_code_element(uint16_t code_length, RandomNumberGenerator& rng)
    return result;
    }
 
-polyn_gf2m::polyn_gf2m(polyn_gf2m const& other)
-   :m_deg(other.m_deg),
-    m_coeff(other.m_coeff),
-    m_sp_field(other.m_sp_field)
-   { }
+polyn_gf2m::polyn_gf2m(const polyn_gf2m& other) = default;
 
 polyn_gf2m::polyn_gf2m(int d, const std::shared_ptr<GF2m_Field>& sp_field)
    :m_deg(-1),

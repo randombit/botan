@@ -188,7 +188,7 @@ class JSON_Output final
 class Summary final
    {
    public:
-      Summary() {}
+      Summary() = default;
 
       void add(const Timer& t)
          {

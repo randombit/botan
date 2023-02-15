@@ -23,13 +23,14 @@ enabled_checks = [
     'readability-container-size-empty',
     'readability-static-definition-in-anonymous-namespace',
     'readability-convert-member-functions-to-static',
+    'readability-redundant-smartptr-get',
 
     'hicpp-special-member-functions',
 
-#    'cppcoreguidelines-*',
-#    'hicpp-*',
-#    'modernize-*',
-#    'readability-*',
+    'cppcoreguidelines-*',
+    'hicpp-*',
+    'modernize-*',
+    'readability-*',
 ]
 
 # these might be worth being clean for
@@ -83,7 +84,7 @@ disabled_not_interested = [
     '*-no-array-decay',
     '*-use-auto', # not universally a good idea
     '*-use-emplace', # often less clear
-    '-*deprecated-headers', # wrong for system headers like stdlib.h
+    '*-deprecated-headers', # wrong for system headers like stdlib.h
     'bugprone-argument-comment',
     'bugprone-branch-clone', # doesn't interact well with feature macros
     'cert-err58-cpp',

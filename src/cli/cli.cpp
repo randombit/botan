@@ -31,7 +31,7 @@ Command::Command(const std::string& cmd_spec) : m_spec(cmd_spec)
    //m_args.reset(new Argument_Parser(m_spec));
    }
 
-Command::~Command() { /* for unique_ptr */ }
+Command::~Command() = default;
 
 std::string Command::cmd_name() const
    {
