@@ -64,8 +64,8 @@ class XMSS_Index_Registry final
        *
        * @return unique integral identifier for an XMSS private key.
        **/
-      uint64_t make_key_id(const secure_vector<uint8_t>& private_seed,
-                           const secure_vector<uint8_t>& prf) const;
+      static uint64_t make_key_id(const secure_vector<uint8_t>& private_seed,
+                                  const secure_vector<uint8_t>& prf);
 
       /**
        * Retrieves the index position of a key within the registry or

@@ -191,7 +191,7 @@ load_private_key(const std::string& key_filename,
       }
    catch(Botan::Exception& e) { err_string = e.what(); }
 
-   if(passphrase == "")
+   if(passphrase.empty())
       {
       try
          {
@@ -249,7 +249,7 @@ class PK_Sign final : public Command
             {
             signer.update(b, l);
             };
-         this->read_file(get_arg("file"), onData);
+         Command::read_file(get_arg("file"), onData);
 
          std::vector<uint8_t> sig { signer.signature(rng()) };
 
@@ -308,7 +308,7 @@ class PK_Verify final : public Command
             {
             verifier.update(b, l);
             };
-         this->read_file(get_arg("file"), onData);
+         Command::read_file(get_arg("file"), onData);
 
          const Botan::secure_vector<uint8_t> signature =
             Botan::base64_decode(this->slurp_file_as_str(get_arg("signature")));

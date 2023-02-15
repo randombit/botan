@@ -218,7 +218,7 @@ class Test
              * This 'consolidation constructor' creates a single test result from
              * a vector of downstream test result objects.
              */
-            Result(std::string who, std::vector<Result> downstream_results);
+            Result(std::string who, const std::vector<Result>& downstream_results);
 
             size_t tests_passed() const
                {

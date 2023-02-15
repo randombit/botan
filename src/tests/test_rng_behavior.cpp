@@ -364,7 +364,7 @@ class Stateful_RNG_Tests : public Test
                }
             catch(std::exception& e)
                {
-               fprintf(stderr, "%s", e.what());
+               static_cast<void>(fprintf(stderr, "%s", e.what()));
                }
             written = ::write(fd[1], &child_bytes[0], child_bytes.size());
             BOTAN_UNUSED(written);

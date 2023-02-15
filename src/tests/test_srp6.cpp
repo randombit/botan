@@ -42,7 +42,7 @@ class SRP6_KAT_Tests final : public Text_Based_Test
          const std::vector<uint8_t> exp_S = vars.get_req_bin("S");
 
          const std::string group_id = Botan::srp6_group_identifier(N, g);
-         if(group_id == "")
+         if(group_id.empty())
             throw Test_Error("Unknown SRP group used in test data");
 
          Test::Result result("SRP6a " + group_id);

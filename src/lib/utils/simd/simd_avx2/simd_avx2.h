@@ -24,6 +24,8 @@ class SIMD_8x32 final
       SIMD_8x32& operator=(SIMD_8x32&& other) = default;
       SIMD_8x32(SIMD_8x32&& other) = default;
 
+      ~SIMD_8x32() = default;
+
       BOTAN_AVX2_FN
       BOTAN_FORCE_INLINE SIMD_8x32()
          {

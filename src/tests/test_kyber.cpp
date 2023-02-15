@@ -57,7 +57,7 @@ class KYBER_Tests final : public Test
          auto pk_full = sk->public_key();
          auto pk_codec_full = std::make_unique<Botan::Kyber_PublicKey>(pk_full->public_key_bits(), mode, Botan::KyberKeyEncoding::Full);
 
-         auto roundtrip = [&] (const auto& pkey, const auto& skey, const std::string context, const std::string kdf)
+         auto roundtrip = [&] (const auto& pkey, const auto& skey, const std::string& context, const std::string& kdf)
             {
             auto e = Botan::PK_KEM_Encryptor(*pkey, Test::rng(), kdf, "base");
             Botan::secure_vector<uint8_t> ct, shared_key;

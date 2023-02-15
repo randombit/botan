@@ -206,9 +206,6 @@ DataSource_Stream::DataSource_Stream(std::istream& in,
    {
    }
 
-DataSource_Stream::~DataSource_Stream()
-   {
-   // for ~unique_ptr
-   }
+DataSource_Stream::~DataSource_Stream() = default;
 
 }

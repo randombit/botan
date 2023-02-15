@@ -78,8 +78,8 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message
    public:
       Client_Hello(const Client_Hello&) = delete;
       Client_Hello& operator=(const Client_Hello&) = delete;
-      Client_Hello(Client_Hello&&);
-      Client_Hello& operator=(Client_Hello&&);
+      Client_Hello(Client_Hello&&) noexcept;
+      Client_Hello& operator=(Client_Hello&&) noexcept;
 
       ~Client_Hello();
 
@@ -271,8 +271,8 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message
    public:
       Server_Hello(const Server_Hello&) = delete;
       Server_Hello& operator=(const Server_Hello&) = delete;
-      Server_Hello(Server_Hello&&);
-      Server_Hello& operator=(Server_Hello&&);
+      Server_Hello(Server_Hello&&) noexcept;
+      Server_Hello& operator=(Server_Hello&&) noexcept;
 
       ~Server_Hello();
 
@@ -428,7 +428,7 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello
       /**
        * @returns the selected version as indicated by the supported_versions extension
        */
-      Protocol_Version selected_version() const override;
+      Protocol_Version selected_version() const override final;
    };
 
 class BOTAN_UNSTABLE_API Hello_Retry_Request final : public Server_Hello_13

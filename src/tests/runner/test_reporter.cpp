@@ -106,7 +106,7 @@ void Reporter::record(const std::string& testsuite_name,
    std::map<std::string, Botan_Tests::Test::Result> combined;
    for(auto const& result : results)
       {
-      const std::string who = result.who();
+      const auto& who = result.who();
       auto i = combined.find(who);
       if(i == combined.end())
          {

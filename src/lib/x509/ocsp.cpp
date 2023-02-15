@@ -212,15 +212,18 @@ Response::find_signing_certificate(const X509_Certificate& issuer_certificate,
    // Last resort: check the additionally provides trusted OCSP responders
    if(trusted_ocsp_responders)
       {
-      std::optional<X509_Certificate> signing_cert;
-      if(!m_key_hash.empty() && (signing_cert = trusted_ocsp_responders->find_cert_by_pubkey_sha1(m_key_hash)))
+      if(!m_key_hash.empty())
          {
-         return signing_cert;
+         auto signing_cert = trusted_ocsp_responders->find_cert_by_pubkey_sha1(m_key_hash);
+         if(signing_cert)
+            return signing_cert;
          }
 
-      if(!m_signer_name.empty() && (signing_cert = trusted_ocsp_responders->find_cert(m_signer_name, {})))
+      if(!m_signer_name.empty())
          {
-         return signing_cert;
+         auto signing_cert = trusted_ocsp_responders->find_cert(m_signer_name, {});
+         if(signing_cert)
+            return signing_cert;
          }
       }
 

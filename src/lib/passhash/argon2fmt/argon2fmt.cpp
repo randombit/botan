@@ -106,7 +106,7 @@ bool argon2_check_pwhash(const char* password, size_t password_len,
       if(param.size() != 2)
          return false;
 
-      const std::string key = param[0];
+      const std::string& key = param[0];
       const size_t val = to_u32bit(param[1]);
       if(key == "m")
          M = val;

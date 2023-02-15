@@ -199,7 +199,7 @@ Response Response::from_bits(const std::vector<uint8_t>& response,
 
    if(size % 64)
       { throw Roughtime_Error("Merkle tree path size must be multiple of 64 bytes"); }
-   if(indx >= (1u << levels))
+   if(indx >= (1U << levels))
       { throw Roughtime_Error("Merkle tree path is too short"); }
 
    auto hash = hashLeaf(nonce.get_nonce());

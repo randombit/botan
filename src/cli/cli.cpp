@@ -189,7 +189,7 @@ std::vector<uint8_t> Command::slurp_file(const std::string& input_file,
       {
       buf.insert(buf.end(), b, b + l);
       };
-   this->read_file(input_file, insert_fn, buf_size);
+   Command::read_file(input_file, insert_fn, buf_size);
    return buf;
    }
 
@@ -201,7 +201,7 @@ std::string Command::slurp_file_as_str(const std::string& input_file,
       {
       str.append(reinterpret_cast<const char*>(b), l);
       };
-   this->read_file(input_file, insert_fn, buf_size);
+   Command::read_file(input_file, insert_fn, buf_size);
    return str;
    }
 
@@ -322,7 +322,7 @@ Command::Registration::Registration(const std::string& name, const Command::cmd_
    {
    std::map<std::string, Command::cmd_maker_fn>& reg = Command::global_registry();
 
-   if(reg.count(name) > 0)
+   if(reg.contains(name))
       {
       throw CLI_Error("Duplicated registration of command " + name);
       }

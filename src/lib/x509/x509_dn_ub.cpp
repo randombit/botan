@@ -23,7 +23,7 @@ namespace {
  * Maps OID string representations instead of human readable strings in order
  * to avoid an additional lookup.
  */
-static const std::map<OID, size_t> DN_UB =
+const std::map<OID, size_t> DN_UB =
    {
    { OID({2,5,4,10}), 64 },      // X520.Organization
    { OID({2,5,4,11}), 64 },      // X520.OrganizationalUnit

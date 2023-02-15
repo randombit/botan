@@ -64,12 +64,6 @@ DataSink_Stream::DataSink_Stream(const std::string& path,
    }
 #endif
 
-/*
-* DataSink_Stream Destructor
-*/
-DataSink_Stream::~DataSink_Stream()
-   {
-   // for ~unique_ptr
-   }
+DataSink_Stream::~DataSink_Stream() = default;
 
 }

@@ -117,7 +117,7 @@ class polyn_gf2m
       */
       int calc_degree_secure() const;
 
-      size_t degppf(const polyn_gf2m& g);
+      static size_t degppf(const polyn_gf2m& g);
 
       static std::vector<polyn_gf2m> sqmod_init(const polyn_gf2m & g);
 

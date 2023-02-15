@@ -269,10 +269,6 @@ class KyberConstants
       uint8_t m_eta1;
    };
 
-// declarations required pre-C++17 (at least with GCC)
-constexpr int16_t KyberConstants::zetas[128];
-constexpr int16_t KyberConstants::zetas_inv[128];
-
 class Polynomial
    {
    public:
@@ -1077,7 +1073,9 @@ class Ciphertext
 class Kyber_PublicKeyInternal
    {
    public:
-      Kyber_PublicKeyInternal(KyberConstants mode, std::vector<uint8_t> polynomials, std::vector<uint8_t> seed)
+      Kyber_PublicKeyInternal(KyberConstants mode,
+                              const std::vector<uint8_t>& polynomials,
+                              std::vector<uint8_t> seed)
          : m_mode(std::move(mode)),
            m_polynomials(PolynomialVector::from_bytes(polynomials, m_mode)),
            m_seed(std::move(seed))
@@ -1153,7 +1151,7 @@ class Kyber_KEM_Cryptor
 
       secure_vector<uint8_t> indcpa_enc(const secure_vector<uint8_t>& m,
                                         const secure_vector<uint8_t>& coins,
-                                        const std::shared_ptr<Kyber_PublicKeyInternal> pk)
+                                        const std::shared_ptr<Kyber_PublicKeyInternal>& pk)
          {
          auto sp = PolynomialVector::getnoise_eta1(coins, 0, m_mode);
          auto ep = PolynomialVector::getnoise_eta2(coins, m_mode.k(), m_mode);

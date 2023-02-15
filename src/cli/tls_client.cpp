@@ -313,7 +313,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             {
             auto status = result.all_statuses();
 
-            if(!status.empty() && status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD))
+            if(!status.empty() && status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD))
                {
                output() << "Valid OCSP response for this server\n";
                }

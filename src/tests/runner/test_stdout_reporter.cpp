@@ -91,7 +91,7 @@ void StdoutReporter::render_summary() const
       m_out << m_tests_failed << " tests failed (in ";
 
       bool first = true;
-      for(auto& test : m_tests_failed_names)
+      for(const auto& test : m_tests_failed_names)
          {
          if(!first)
             m_out << " ";

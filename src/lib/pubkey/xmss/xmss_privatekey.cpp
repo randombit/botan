@@ -101,7 +101,7 @@ class XMSS_PrivateKey_Internal
             unused_leaf = ((unused_leaf << 8) | *i);
             }
 
-         if(unused_leaf >= (1ull << m_xmss_params.tree_height()))
+         if(unused_leaf >= (1ULL << m_xmss_params.tree_height()))
             {
             throw Decoding_Error("XMSS private key leaf index out of bounds");
             }
@@ -146,7 +146,7 @@ class XMSS_PrivateKey_Internal
 
       void set_unused_leaf_index(size_t idx)
          {
-         if(idx >= (1ull << m_xmss_params.tree_height()))
+         if(idx >= (1ULL << m_xmss_params.tree_height()))
             {
             throw Decoding_Error("XMSS private key leaf index out of bounds");
             }

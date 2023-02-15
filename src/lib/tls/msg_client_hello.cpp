@@ -162,8 +162,8 @@ class Client_Hello_Internal
    };
 
 
-Client_Hello::Client_Hello(Client_Hello&&) = default;
-Client_Hello& Client_Hello::operator=(Client_Hello&&) = default;
+Client_Hello::Client_Hello(Client_Hello&&) noexcept = default;
+Client_Hello& Client_Hello::operator=(Client_Hello&&) noexcept = default;
 
 Client_Hello::~Client_Hello() = default;
 

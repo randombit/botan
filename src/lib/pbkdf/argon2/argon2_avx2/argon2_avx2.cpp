@@ -20,6 +20,8 @@ class SIMD_4x64 final
       SIMD_4x64& operator=(SIMD_4x64&& other) = default;
       SIMD_4x64(SIMD_4x64&& other) = default;
 
+      ~SIMD_4x64() = default;
+
       BOTAN_FUNC_ISA("avx2")
       SIMD_4x64() // zero initialized
          {

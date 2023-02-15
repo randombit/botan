@@ -24,9 +24,9 @@
 namespace Botan {
 
 McEliece_PrivateKey::McEliece_PrivateKey(const McEliece_PrivateKey&) = default;
-McEliece_PrivateKey::McEliece_PrivateKey(McEliece_PrivateKey&&) = default;
+McEliece_PrivateKey::McEliece_PrivateKey(McEliece_PrivateKey&&) noexcept = default;
 McEliece_PrivateKey& McEliece_PrivateKey::operator=(const McEliece_PrivateKey&) = default;
-McEliece_PrivateKey& McEliece_PrivateKey::operator=(McEliece_PrivateKey&&) = default;
+McEliece_PrivateKey& McEliece_PrivateKey::operator=(McEliece_PrivateKey&&) noexcept = default;
 McEliece_PrivateKey::~McEliece_PrivateKey() = default;
 
 McEliece_PrivateKey::McEliece_PrivateKey(polyn_gf2m const& goppa_polyn,

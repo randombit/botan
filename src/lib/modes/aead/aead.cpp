@@ -76,7 +76,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
    if(algo.find('/') != std::string::npos)
       {
       const std::vector<std::string> algo_parts = split_on(algo, '/');
-      const std::string cipher_name = algo_parts[0];
+      const std::string& cipher_name = algo_parts[0];
       const std::vector<std::string> mode_info = parse_algorithm_name(algo_parts[1]);
 
       if(mode_info.empty())

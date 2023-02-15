@@ -31,7 +31,7 @@ const std::map<const std::string, std::vector<std::string>> allowed_signature_pa
 
 std::vector<std::string> get_sig_paddings(const std::string& algo)
    {
-   if(allowed_signature_paddings.count(algo) > 0)
+   if(allowed_signature_paddings.contains(algo))
       return allowed_signature_paddings.at(algo);
    return {};
    }

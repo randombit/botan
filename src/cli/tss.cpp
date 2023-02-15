@@ -83,7 +83,7 @@ class TSS_Split final : public Command
             {
             buf.insert(buf.end(), b, b + l);
             };
-         this->read_file(input_file, insert_fn, 4096);
+         Command::read_file(input_file, insert_fn, 4096);
          return buf;
          }
    };

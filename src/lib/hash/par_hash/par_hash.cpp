@@ -39,6 +39,7 @@ size_t Parallel::output_length() const
 std::string Parallel::name() const
    {
    std::vector<std::string> names;
+   names.reserve(m_hashes.size());
 
    for(auto&& hash : m_hashes)
       names.push_back(hash->name());
@@ -49,6 +50,7 @@ std::string Parallel::name() const
 std::unique_ptr<HashFunction> Parallel::new_object() const
    {
    std::vector<std::unique_ptr<HashFunction>> hash_copies;
+   hash_copies.reserve(m_hashes.size());
 
    for(auto&& hash : m_hashes)
       hash_copies.push_back(std::unique_ptr<HashFunction>(hash->new_object()));
@@ -59,6 +61,7 @@ std::unique_ptr<HashFunction> Parallel::new_object() const
 std::unique_ptr<HashFunction> Parallel::copy_state() const
    {
    std::vector<std::unique_ptr<HashFunction>> hash_new_objects;
+   hash_new_objects.reserve(m_hashes.size());
 
    for(const auto& hash : m_hashes)
       {
@@ -76,6 +79,7 @@ void Parallel::clear()
 
 Parallel::Parallel(std::vector<std::unique_ptr<HashFunction>>& hashes)
    {
+   m_hashes.reserve(hashes.size());
    for(auto&& hash: hashes)
       {
       m_hashes.push_back(std::move(hash));

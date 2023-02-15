@@ -2011,7 +2011,8 @@ inline int32_t equal32(int8_t b, int8_t c)
 
 inline uint8_t negative(int8_t b)
    {
-   uint64_t x = b; /* 18446744073709551361..18446744073709551615: yes; 0..255: no */
+   /* 18446744073709551361..18446744073709551615: yes; 0..255: no */
+   uint64_t x = b; // NOLINT(bugprone-signed-char-misuse,cert-str34-c)
    x >>= 63; /* 1: yes; 0: no */
    return static_cast<uint8_t>(x);
    }

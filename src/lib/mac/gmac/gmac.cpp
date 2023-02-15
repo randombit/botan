@@ -33,7 +33,7 @@ void GMAC::clear()
    m_initialized = false;
    }
 
-GMAC::~GMAC() { /* for unique_ptr */ }
+GMAC::~GMAC() = default;
 
 Key_Length_Specification GMAC::key_spec() const
    {

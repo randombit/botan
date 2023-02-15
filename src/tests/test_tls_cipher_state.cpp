@@ -23,7 +23,7 @@ using namespace Botan::TLS;
 decltype(auto) make_CHECK_both(Cipher_State* cs_client, Cipher_State* cs_server)
    {
    using namespace std::placeholders;
-   return [=](std::string name, auto lambda) -> std::vector<Test::Result>
+   return [=](const std::string& name, auto lambda) -> std::vector<Test::Result>
       {
       return
          {

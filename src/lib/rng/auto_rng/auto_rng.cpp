@@ -18,10 +18,7 @@
 
 namespace Botan {
 
-AutoSeeded_RNG::~AutoSeeded_RNG()
-   {
-   // for unique_ptr
-   }
+AutoSeeded_RNG::~AutoSeeded_RNG() = default;
 
 AutoSeeded_RNG::AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                                size_t reseed_interval)

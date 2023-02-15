@@ -188,6 +188,8 @@ class Dilithium_PublicKeyInternal : public ASN1_Object
       Dilithium_PublicKeyInternal& operator=(const Dilithium_PublicKeyInternal& other) = delete;
       Dilithium_PublicKeyInternal& operator=(Dilithium_PublicKeyInternal&& other) = delete;
 
+      ~Dilithium_PublicKeyInternal() = default;
+
       void encode_into(DER_Encoder& to) const override
          {
          // This encoding is based on draft-uni-qsckeys-dilithium-00 Section 3.6

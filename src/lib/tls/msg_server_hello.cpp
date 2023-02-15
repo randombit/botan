@@ -163,8 +163,8 @@ class Server_Hello_Internal
 Server_Hello::Server_Hello(std::unique_ptr<Server_Hello_Internal> data)
    : m_data(std::move(data)) {}
 
-Server_Hello::Server_Hello(Server_Hello&&) = default;
-Server_Hello& Server_Hello::operator=(Server_Hello&&) = default;
+Server_Hello::Server_Hello(Server_Hello&&) noexcept = default;
+Server_Hello& Server_Hello::operator=(Server_Hello&&) noexcept = default;
 
 Server_Hello::~Server_Hello() = default;
 

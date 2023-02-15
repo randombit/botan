@@ -337,7 +337,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test
 
                      result.confirm("supported_groups extension - size check", (named_groupes.size() * 2) == expected_content.size());
 
-                     for(auto i = 0u; i < expected_content.size(); i+=2) {
+                     for(size_t i = 0; i < expected_content.size(); i += 2) {
 
                         const auto expected_named_group = Botan::make_uint16(expected_content.at(i), expected_content.at(i+1));
 
@@ -360,9 +360,8 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test
                      result.confirm("signature_algorithms_cert extension - size check",
                         sig_algo_cert.supported_schemes().size() * 2 == expected_content.size());
 
-                     auto offset = 0u;
-                     for (const auto& sig_scheme : sig_algo_cert.supported_schemes()) {
-
+                     size_t offset = 0;
+                     for(const auto& sig_scheme : sig_algo_cert.supported_schemes()) {
                         const auto expected_sig_scheme = Botan::make_uint16(expected_content.at(offset), expected_content.at(offset+1));
 
                         result.confirm("signature_algorithms_cert extension - sig scheme check",
