@@ -339,7 +339,7 @@ Test::Result hash_truncation_negative_tests()
    auto unobtainable = Botan::HashFunction::create("Truncated(NonExistentHash-256,128)");
    result.confirm("non-existent hashes are not created", unobtainable == nullptr);
    return result;
-   };
+   }
 
 BOTAN_REGISTER_TEST_FN("hash", "hash_truncation", hash_truncation_negative_tests);
 
