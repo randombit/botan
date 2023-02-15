@@ -57,6 +57,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
       {
       case XMSS_SHA2_10_256:
          m_element_size = 32;
+         m_hash_id_size = 32;
          m_w = 16;
          m_len = 67;
          m_tree_height = 10;
@@ -67,6 +68,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHA2_16_256:
          m_element_size = 32;
+         m_hash_id_size = 32;
          m_w = 16;
          m_len = 67;
          m_tree_height = 16;
@@ -77,6 +79,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHA2_20_256:
          m_element_size = 32;
+         m_hash_id_size = 32;
          m_w = 16;
          m_len = 67;
          m_tree_height = 20;
@@ -87,6 +90,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHA2_10_512:
          m_element_size = 64;
+         m_hash_id_size = 64;
          m_w = 16;
          m_len = 131;
          m_tree_height = 10;
@@ -97,6 +101,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHA2_16_512:
          m_element_size = 64;
+         m_hash_id_size = 64;
          m_w = 16;
          m_len = 131;
          m_tree_height = 16;
@@ -107,6 +112,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHA2_20_512:
          m_element_size = 64;
+         m_hash_id_size = 64;
          m_w = 16;
          m_len = 131;
          m_tree_height = 20;
@@ -117,6 +123,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHAKE_10_256:
          m_element_size = 32;
+         m_hash_id_size = 32;
          m_w = 16;
          m_len = 67;
          m_tree_height = 10;
@@ -127,6 +134,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHAKE_16_256:
          m_element_size = 32;
+         m_hash_id_size = 32;
          m_w = 16;
          m_len = 67;
          m_tree_height = 16;
@@ -137,6 +145,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHAKE_20_256:
          m_element_size = 32;
+         m_hash_id_size = 32;
          m_w = 16;
          m_len = 67;
          m_tree_height = 20;
@@ -147,6 +156,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHAKE_10_512:
          m_element_size = 64;
+         m_hash_id_size = 64;
          m_w = 16;
          m_len = 131;
          m_tree_height = 10;
@@ -157,6 +167,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHAKE_16_512:
          m_element_size = 64;
+         m_hash_id_size = 64;
          m_w = 16;
          m_len = 131;
          m_tree_height = 16;
@@ -167,6 +178,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          break;
       case XMSS_SHAKE_20_512:
          m_element_size = 64;
+         m_hash_id_size = 64;
          m_w = 16;
          m_len = 131;
          m_tree_height = 20;

@@ -21,7 +21,7 @@ namespace Botan {
 XMSS_Signature_Operation::XMSS_Signature_Operation(
    const XMSS_PrivateKey& private_key) :
    m_priv_key(private_key),
-   m_hash(private_key.xmss_parameters().hash_function_name()),
+   m_hash(private_key.xmss_parameters()),
    m_randomness(0),
    m_leaf_idx(0),
    m_is_initialized(false)
@@ -85,7 +85,7 @@ XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_key,
 void XMSS_Signature_Operation::update(const uint8_t msg[], size_t msg_len)
    {
    initialize();
-   m_hash.h_msg_update(msg, msg_len);
+   m_hash.h_msg_update({msg, msg_len});
    }
 
 secure_vector<uint8_t>
@@ -111,7 +111,7 @@ void XMSS_Signature_Operation::initialize()
 
    // write prefix for message hashing into buffer.
    XMSS_Tools::concat(index_bytes, m_leaf_idx, 32);
-   m_randomness = m_hash.prf(m_priv_key.prf_value(), index_bytes);
+   m_hash.prf(m_randomness, m_priv_key.prf_value(), index_bytes);
    index_bytes.clear();
    XMSS_Tools::concat(index_bytes, m_leaf_idx,
                       m_priv_key.xmss_parameters().element_size());
