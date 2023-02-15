@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cctype>
 #include <limits>
+#include <sstream>
 
 namespace Botan {
 
@@ -138,16 +139,16 @@ std::vector<std::string> split_on(const std::string& str, char delim)
 */
 std::string string_join(const std::vector<std::string>& strs, char delim)
    {
-   std::string out = "";
+   std::ostringstream out;
 
    for(size_t i = 0; i != strs.size(); ++i)
       {
       if(i != 0)
-         out += delim;
-      out += strs[i];
+         out << delim;
+      out << strs[i];
       }
 
-   return out;
+   return out.str();
    }
 
 /*

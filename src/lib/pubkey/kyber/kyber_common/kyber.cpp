@@ -823,8 +823,8 @@ class Ciphertext
 
    public:
       Ciphertext() = delete;
-      Ciphertext(PolynomialVector b_, Polynomial v_, KyberConstants mode)
-         : m_mode(std::move(mode)), b(std::move(b_)), v(std::move(v_))
+      Ciphertext(PolynomialVector b_, const Polynomial& v_, KyberConstants mode)
+         : m_mode(mode), b(std::move(b_)), v(v_)
          {
          }
 

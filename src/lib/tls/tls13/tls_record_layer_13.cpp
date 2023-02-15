@@ -171,7 +171,7 @@ void Record_Layer::copy_data(const std::vector<uint8_t>& data_from_peer)
 
 std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
       const std::vector<uint8_t>& data,
-      Cipher_State* cipher_state)
+      Cipher_State* cipher_state) const
    {
    // RFC 8446 5.
    //    Note that [change_cipher_spec records] may appear at a point at the

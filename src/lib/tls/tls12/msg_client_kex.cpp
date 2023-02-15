@@ -36,7 +36,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
    if(kex_algo == Kex_Algo::PSK)
       {
-      std::string identity_hint = "";
+      std::string identity_hint;
 
       if(state.server_kex())
          {

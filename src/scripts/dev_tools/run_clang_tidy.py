@@ -27,15 +27,16 @@ enabled_checks = [
 
     'hicpp-special-member-functions',
 
-#    'cppcoreguidelines-*',
-#    'hicpp-*',
-#    'modernize-*',
-#    'readability-*',
+    'cppcoreguidelines-*',
+    'hicpp-*',
+    'modernize-*',
+    'readability-*',
 ]
 
 # these might be worth being clean for
 disabled_needs_work = [
     '*-braces-around-statements', # should fix (need clang-format)
+    '*-named-parameter',
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
     'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
@@ -68,6 +69,7 @@ disabled_needs_work = [
     'readability-isolate-declaration',
     'readability-simplify-boolean-expr', # sometimes ok
     'readability-qualified-auto',
+    'readability-static-accessed-through-instance',
     'readability-redundant-member-init',
     'readability-redundant-string-cstr',
     'readability-redundant-access-specifiers',
@@ -123,6 +125,18 @@ def load_compile_commands(build_dir):
     compile_commands = open(compile_commands_file).read()
     return (compile_commands_file, json.loads(compile_commands))
 
+def run_command(cmdline):
+    proc = subprocess.Popen(cmdline,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+
+    (stdout, stderr) = proc.communicate()
+
+    stdout = stdout.decode('utf8')
+    # stderr discarded
+
+    return stdout
+
 def run_clang_tidy(compile_commands_file,
                    check_config,
                    source_file,
@@ -138,14 +152,7 @@ def run_clang_tidy(compile_commands_file,
 
     cmdline.append(source_file)
 
-    clang_tidy = subprocess.Popen(cmdline,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE)
-
-    (stdout, stderr) = clang_tidy.communicate()
-
-    stdout = stdout.decode('utf8')
-    # stderr discarded
+    stdout = run_command(cmdline)
 
     if options.verbose:
         print(source_file)
@@ -172,6 +179,7 @@ def main(args = None):
     parser.add_option('--verbose', action='store_true', default=False)
     parser.add_option('--fixit', action='store_true', default=False)
     parser.add_option('--build-dir', default='build')
+    parser.add_option('--list-checks', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
 
@@ -191,6 +199,10 @@ def main(args = None):
     compile_commands = [x for x in compile_commands if not remove_bad(x)]
 
     check_config = create_check_option(enabled_checks, disabled_checks)
+
+    if options.list_checks:
+        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config]))
+        return 0
 
     pool = ThreadPool(jobs)
 
