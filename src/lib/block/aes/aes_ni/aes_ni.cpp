@@ -14,9 +14,12 @@ namespace Botan {
 
 namespace {
 
+template<uint8_t RC>
 BOTAN_FUNC_ISA("ssse3")
-__m128i aes_128_key_expansion(__m128i key, __m128i key_with_rcon)
+inline __m128i
+aes_128_key_expansion(__m128i key, __m128i key_getting_rcon)
    {
+   __m128i key_with_rcon = _mm_aeskeygenassist_si128(key_getting_rcon, RC);
    key_with_rcon = _mm_shuffle_epi32(key_with_rcon, _MM_SHUFFLE(3,3,3,3));
    key = _mm_xor_si128(key, _mm_slli_si128(key, 4));
    key = _mm_xor_si128(key, _mm_slli_si128(key, 4));
@@ -284,20 +287,17 @@ void AES_128::aesni_key_schedule(const uint8_t key[], size_t /*length*/)
    m_EK.resize(44);
    m_DK.resize(44);
 
-   #define AES_128_key_exp(K, RCON) \
-      aes_128_key_expansion(K, _mm_aeskeygenassist_si128(K, RCON))
-
    const __m128i K0  = _mm_loadu_si128(reinterpret_cast<const __m128i*>(key));
-   const __m128i K1  = AES_128_key_exp(K0, 0x01);
-   const __m128i K2  = AES_128_key_exp(K1, 0x02);
-   const __m128i K3  = AES_128_key_exp(K2, 0x04);
-   const __m128i K4  = AES_128_key_exp(K3, 0x08);
-   const __m128i K5  = AES_128_key_exp(K4, 0x10);
-   const __m128i K6  = AES_128_key_exp(K5, 0x20);
-   const __m128i K7  = AES_128_key_exp(K6, 0x40);
-   const __m128i K8  = AES_128_key_exp(K7, 0x80);
-   const __m128i K9  = AES_128_key_exp(K8, 0x1B);
-   const __m128i K10 = AES_128_key_exp(K9, 0x36);
+   const __m128i K1  = aes_128_key_expansion<0x01>(K0, K0);
+   const __m128i K2  = aes_128_key_expansion<0x02>(K1, K1);
+   const __m128i K3  = aes_128_key_expansion<0x04>(K2, K2);
+   const __m128i K4  = aes_128_key_expansion<0x08>(K3, K3);
+   const __m128i K5  = aes_128_key_expansion<0x10>(K4, K4);
+   const __m128i K6  = aes_128_key_expansion<0x20>(K5, K5);
+   const __m128i K7  = aes_128_key_expansion<0x40>(K6, K6);
+   const __m128i K8  = aes_128_key_expansion<0x80>(K7, K7);
+   const __m128i K9  = aes_128_key_expansion<0x1B>(K8, K8);
+   const __m128i K10 = aes_128_key_expansion<0x36>(K9, K9);
 
    __m128i* EK_mm = reinterpret_cast<__m128i*>(m_EK.data());
    _mm_storeu_si128(EK_mm     , K0);
@@ -698,25 +698,25 @@ void AES_256::aesni_key_schedule(const uint8_t key[], size_t /*length*/)
    const __m128i K0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(key));
    const __m128i K1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(key + 16));
 
-   const __m128i K2 = aes_128_key_expansion(K0, _mm_aeskeygenassist_si128(K1, 0x01));
+   const __m128i K2 = aes_128_key_expansion<0x01>(K0, K1);
    const __m128i K3 = aes_256_key_expansion(K1, K2);
 
-   const __m128i K4 = aes_128_key_expansion(K2, _mm_aeskeygenassist_si128(K3, 0x02));
+   const __m128i K4 = aes_128_key_expansion<0x02>(K2, K3);
    const __m128i K5 = aes_256_key_expansion(K3, K4);
 
-   const __m128i K6 = aes_128_key_expansion(K4, _mm_aeskeygenassist_si128(K5, 0x04));
+   const __m128i K6 = aes_128_key_expansion<0x04>(K4, K5);
    const __m128i K7 = aes_256_key_expansion(K5, K6);
 
-   const __m128i K8 = aes_128_key_expansion(K6, _mm_aeskeygenassist_si128(K7, 0x08));
+   const __m128i K8 = aes_128_key_expansion<0x08>(K6, K7);
    const __m128i K9 = aes_256_key_expansion(K7, K8);
 
-   const __m128i K10 = aes_128_key_expansion(K8, _mm_aeskeygenassist_si128(K9, 0x10));
+   const __m128i K10 = aes_128_key_expansion<0x10>(K8, K9);
    const __m128i K11 = aes_256_key_expansion(K9, K10);
 
-   const __m128i K12 = aes_128_key_expansion(K10, _mm_aeskeygenassist_si128(K11, 0x20));
+   const __m128i K12 = aes_128_key_expansion<0x20>(K10, K11);
    const __m128i K13 = aes_256_key_expansion(K11, K12);
 
-   const __m128i K14 = aes_128_key_expansion(K12, _mm_aeskeygenassist_si128(K13, 0x40));
+   const __m128i K14 = aes_128_key_expansion<0x40>(K12, K13);
 
    __m128i* EK_mm = reinterpret_cast<__m128i*>(m_EK.data());
    _mm_storeu_si128(EK_mm     , K0);
