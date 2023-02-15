@@ -197,6 +197,11 @@ class SIMD_4x32 final
          this->store_le(reinterpret_cast<uint8_t*>(out));
          }
 
+      void store_be(uint32_t out[4]) const
+         {
+         this->store_be(reinterpret_cast<uint8_t*>(out));
+         }
+
       void store_le(uint64_t out[2]) const
          {
          this->store_le(reinterpret_cast<uint8_t*>(out));

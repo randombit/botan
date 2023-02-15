@@ -188,4 +188,30 @@ void SHA_1::clear()
    m_digest[4] = 0xC3D2E1F0;
    }
 
+std::string SHA_1::provider() const
+   {
+#if defined(BOTAN_HAS_SHA1_X86_SHA_NI)
+   if(CPUID::has_intel_sha())
+      {
+      return "intel_sha";
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHA1_ARMV8)
+   if(CPUID::has_arm_sha1())
+      {
+      return "armv8_sha";
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHA1_SSE2)
+   if(CPUID::has_sse2())
+      {
+      return "sse2";
+      }
+#endif
+
+   return "base";
+
+   }
 }

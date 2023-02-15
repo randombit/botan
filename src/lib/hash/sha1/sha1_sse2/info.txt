@@ -10,3 +10,7 @@ brief -> "SHA-1 using SSE2 instructions"
 <isa>
 sse2
 </isa>
+
+<requires>
+simd
+</requires>
