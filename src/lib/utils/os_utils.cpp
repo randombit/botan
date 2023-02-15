@@ -541,26 +541,28 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
 
-#if !defined(MAP_ANONYMOUS)
-   #define MAP_ANONYMOUS MAP_ANON
+      int mmap_flags = MAP_PRIVATE;
+
+#if defined(MAP_ANONYMOUS)
+      mmap_flags |= MAP_ANONYMOUS;
+#elif defined(MAP_ANON)
+      mmap_flags |= MAP_ANON;
 #endif
 
-#if !defined(MAP_NOCORE)
 #if defined(MAP_CONCEAL)
-   #define MAP_NOCORE MAP_CONCEAL
-#else
-   #define MAP_NOCORE 0
-#endif
+      mmap_flags |= MAP_CONCEAL;
+#elif defined(MAP_NOCORE)
+      mmap_flags |= MAP_NOCORE;
 #endif
 
-#if !defined(PROT_MAX)
-   #define PROT_MAX(p) 0
+      int mmap_prot = PROT_READ | PROT_WRITE;
+
+#if defined(PROT_MAX)
+      mmap_prot |= PROT_MAX(mmap_prot);
 #endif
-      const int pflags = PROT_READ | PROT_WRITE;
 
       ptr = ::mmap(nullptr, 3*page_size,
-                   pflags | PROT_MAX(pflags),
-                   MAP_ANONYMOUS | MAP_PRIVATE | MAP_NOCORE,
+                   mmap_prot, mmap_flags,
                    /*fd=*/locked_fd, /*offset=*/0);
 
       if(ptr == MAP_FAILED)
