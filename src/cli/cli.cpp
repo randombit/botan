@@ -65,7 +65,7 @@ int Command::run(const std::vector<std::string>& params)
 
          if(!output_file.empty())
             {
-            m_output_stream.reset(new std::ofstream(output_file, std::ios::binary));
+            m_output_stream = std::make_unique<std::ofstream>(output_file, std::ios::binary);
             if(!m_output_stream->good())
                throw CLI_IO_Error("opening", output_file);
             }
@@ -77,7 +77,7 @@ int Command::run(const std::vector<std::string>& params)
 
          if(!output_file.empty())
             {
-            m_error_output_stream.reset(new std::ofstream(output_file, std::ios::binary));
+            m_error_output_stream = std::make_unique<std::ofstream>(output_file, std::ios::binary);
             if(!m_error_output_stream->good())
                throw CLI_IO_Error("opening", output_file);
             }

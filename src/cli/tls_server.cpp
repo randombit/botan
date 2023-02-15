@@ -34,6 +34,7 @@
 
 #include <list>
 #include <fstream>
+#include <memory>
 
 #include "tls_helpers.h"
 #include "socket_utils.h"
@@ -163,7 +164,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                uint64_t timestamp = Botan::OS::get_high_resolution_clock();
                const std::string dump_file =
                   dump_traces_to + "/tls_" + std::to_string(timestamp) + ".bin";
-               dump_stream.reset(new std::ofstream(dump_file.c_str()));
+               dump_stream = std::make_unique<std::ofstream>(dump_file.c_str());
                }
 
             try

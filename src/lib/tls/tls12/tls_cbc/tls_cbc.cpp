@@ -46,9 +46,9 @@ TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir dir,
 
    auto null_padding = std::make_unique<Null_Padding>();
    if(dir == Cipher_Dir::Encryption)
-      m_cbc.reset(new CBC_Encryption(std::move(cipher), std::move(null_padding)));
+      m_cbc = std::make_unique<CBC_Encryption>(std::move(cipher), std::move(null_padding));
    else
-      m_cbc.reset(new CBC_Decryption(std::move(cipher), std::move(null_padding)));
+      m_cbc = std::make_unique<CBC_Decryption>(std::move(cipher), std::move(null_padding));
    }
 
 void TLS_CBC_HMAC_AEAD_Mode::clear()

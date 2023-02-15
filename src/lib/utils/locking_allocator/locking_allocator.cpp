@@ -51,7 +51,7 @@ mlock_allocator::mlock_allocator()
 
       if(!m_locked_pages.empty())
          {
-         m_pool.reset(new Memory_Pool(m_locked_pages, page_size));
+         m_pool = std::make_unique<Memory_Pool>(m_locked_pages, page_size);
          }
       }
    }

@@ -243,7 +243,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
 
          try
             {
-            public_point.reset(new Botan::EC_Point(group.point(x, y)));
+            public_point = std::make_unique<Botan::EC_Point>(group.point(x, y));
             }
          catch(Botan::Invalid_Argument&)
             {

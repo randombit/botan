@@ -1108,7 +1108,7 @@ std::string Text_Based_Test::get_next_line()
                }
             }
 
-         m_cur.reset(new std::ifstream(m_srcs[0]));
+         m_cur = std::make_unique<std::ifstream>(m_srcs[0]);
          m_cur_src_name = m_srcs[0];
 
          // Reinit cpuid on new file if needed

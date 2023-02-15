@@ -14,6 +14,7 @@ enabled_checks = [
     'cert-*',
     'clang-analyzer-*',
     'modernize-concat-nested-namespaces',
+    'modernize-make-unique',
     'performance-*',
     'portability-*',
     'readability-container-size-empty',
@@ -48,7 +49,6 @@ disabled_needs_work = [
     'hicpp-explicit-conversions',
     'modernize-pass-by-value',
     'modernize-use-nodiscard',
-    'modernize-make-unique',
     'modernize-make-shared',
     'modernize-avoid-bind', # used a lot in pkcs11
     'modernize-use-trailing-return-type',

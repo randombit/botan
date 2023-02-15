@@ -22,8 +22,8 @@
    #include <botan/tls_session_manager_sqlite.h>
 #endif
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "socket_utils.h"
 #include "tls_helpers.h"
@@ -87,7 +87,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          if(!session_mgr)
             {
-            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
+            session_mgr = std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng());
             }
 
          auto policy = load_tls_policy(get_arg("policy"));
@@ -101,7 +101,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          if(!policy)
             {
-            policy.reset(new Botan::TLS::Policy);
+            policy = std::make_unique<Botan::TLS::Policy>();
             }
 
          const bool use_tcp = (transport == "tcp");

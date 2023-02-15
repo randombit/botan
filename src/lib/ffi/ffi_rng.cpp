@@ -12,6 +12,7 @@
 #include <botan/auto_rng.h>
 
 #include <functional>
+#include <memory>
 
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
 #include <botan/processor_rng.h>
@@ -33,20 +34,20 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
 
    if(rng_type_s == "system")
       {
-      rng.reset(new Botan::System_RNG);
+      rng = std::make_unique<Botan::System_RNG>();
       }
    else if(rng_type_s == "user" || rng_type_s == "user-threadsafe")
       {
-      rng.reset(new Botan::AutoSeeded_RNG);
+      rng = std::make_unique<Botan::AutoSeeded_RNG>();
       }
    else if(rng_type_s == "null")
       {
-      rng.reset(new Botan::Null_RNG);
+      rng = std::make_unique<Botan::Null_RNG>();
       }
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
    else if((rng_type_s == "rdrand" || rng_type_s == "hwrng") && Botan::Processor_RNG::available())
       {
-      rng.reset(new Botan::Processor_RNG);
+      rng = std::make_unique<Botan::Processor_RNG>();
       }
 #endif
 

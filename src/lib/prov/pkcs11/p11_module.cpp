@@ -40,9 +40,9 @@ void Module::reload(C_InitializeArgs init_args)
       m_low_level->C_Finalize(nullptr);
       }
 
-   m_library.reset(new Dynamically_Loaded_Library(m_file_path));
+   m_library = std::make_unique<Dynamically_Loaded_Library>(m_file_path);
    LowLevel::C_GetFunctionList(*m_library, &m_func_list);
-   m_low_level.reset(new LowLevel(m_func_list));
+   m_low_level = std::make_unique<LowLevel>(m_func_list);
 
    m_low_level->C_Initialize(&init_args);
    }

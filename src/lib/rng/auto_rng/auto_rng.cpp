@@ -23,18 +23,18 @@ AutoSeeded_RNG::~AutoSeeded_RNG() = default;
 AutoSeeded_RNG::AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                                size_t reseed_interval)
    {
-   m_rng.reset(new HMAC_DRBG(MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
+   m_rng = std::make_unique<HMAC_DRBG>(MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
                              underlying_rng,
-                             reseed_interval));
+                             reseed_interval);
    force_reseed();
    }
 
 AutoSeeded_RNG::AutoSeeded_RNG(Entropy_Sources& entropy_sources,
                                size_t reseed_interval)
    {
-   m_rng.reset(new HMAC_DRBG(MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
+   m_rng = std::make_unique<HMAC_DRBG>(MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
                              entropy_sources,
-                             reseed_interval));
+                             reseed_interval);
    force_reseed();
    }
 
@@ -42,9 +42,9 @@ AutoSeeded_RNG::AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                                Entropy_Sources& entropy_sources,
                                size_t reseed_interval)
    {
-   m_rng.reset(new HMAC_DRBG(
+   m_rng = std::make_unique<HMAC_DRBG>(
                   MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
-                  underlying_rng, entropy_sources, reseed_interval));
+                  underlying_rng, entropy_sources, reseed_interval);
    force_reseed();
    }
 

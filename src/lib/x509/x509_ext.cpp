@@ -96,7 +96,7 @@ Extensions::create_extn_obj(const OID& oid,
       }
    catch(Decoding_Error&)
       {
-      extn.reset(new Cert_Extension::Unknown_Extension(oid, critical));
+      extn = std::make_unique<Cert_Extension::Unknown_Extension>(oid, critical);
       extn->decode_inner(body);
       }
    return extn;

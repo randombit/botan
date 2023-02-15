@@ -49,23 +49,23 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
       if(our_side)
          {
-         m_aead.reset(new TLS_CBC_HMAC_AEAD_Encryption(
+         m_aead = std::make_unique<TLS_CBC_HMAC_AEAD_Encryption>(
                          std::move(cipher),
                          std::move(mac),
                          suite.cipher_keylen(),
                          suite.mac_keylen(),
                          version,
-                         uses_encrypt_then_mac));
+                         uses_encrypt_then_mac);
          }
       else
          {
-         m_aead.reset(new TLS_CBC_HMAC_AEAD_Decryption(
+         m_aead = std::make_unique<TLS_CBC_HMAC_AEAD_Decryption>(
                          std::move(cipher),
                          std::move(mac),
                          suite.cipher_keylen(),
                          suite.mac_keylen(),
                          version,
-                         uses_encrypt_then_mac));
+                         uses_encrypt_then_mac);
          }
 
 #else

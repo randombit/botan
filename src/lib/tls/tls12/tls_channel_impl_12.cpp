@@ -125,9 +125,9 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    if(!m_sequence_numbers)
       {
       if(version.is_datagram_protocol())
-         m_sequence_numbers.reset(new Datagram_Sequence_Numbers);
+         m_sequence_numbers = std::make_unique<Datagram_Sequence_Numbers>();
       else
-         m_sequence_numbers.reset(new Stream_Sequence_Numbers);
+         m_sequence_numbers = std::make_unique<Stream_Sequence_Numbers>();
       }
 
    using namespace std::placeholders;
@@ -135,16 +135,16 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    std::unique_ptr<Handshake_IO> io;
    if(version.is_datagram_protocol())
       {
-      io.reset(new Datagram_Handshake_IO(
+      io = std::make_unique<Datagram_Handshake_IO>(
                   std::bind(&Channel_Impl_12::send_record_under_epoch, this, _1, _2, _3),
                   sequence_numbers(),
                   static_cast<uint16_t>(m_policy.dtls_default_mtu()),
                   m_policy.dtls_initial_timeout(),
-                  m_policy.dtls_maximum_timeout()));
+                  m_policy.dtls_maximum_timeout());
       }
    else
       {
-      io.reset(new Stream_Handshake_IO(std::bind(&Channel_Impl_12::send_record, this, _1, _2)));
+      io = std::make_unique<Stream_Handshake_IO>(std::bind(&Channel_Impl_12::send_record, this, _1, _2));
       }
 
    m_pending_state = new_handshake_state(std::move(io));

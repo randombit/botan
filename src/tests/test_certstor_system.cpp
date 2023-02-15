@@ -14,6 +14,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/hex.h>
+#include <memory>
 
 namespace Botan_Tests {
 
@@ -331,7 +332,7 @@ class Certstor_System_Tests final : public Test
          try
             {
             open_result.start_timer();
-            system.reset(new Botan::System_Certificate_Store);
+            system = std::make_unique<Botan::System_Certificate_Store>();
             open_result.end_timer();
             }
          catch(Botan::Not_Implemented& e)

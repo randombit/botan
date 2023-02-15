@@ -9,6 +9,7 @@
 #include <botan/bigint.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/safeint.h>
+#include <memory>
 
 namespace Botan {
 
@@ -311,7 +312,7 @@ BER_Decoder& BER_Decoder::end_cons()
 
 BER_Decoder::BER_Decoder(BER_Object&& obj, BER_Decoder* parent)
    {
-   m_data_src.reset(new DataSource_BERObject(std::move(obj)));
+   m_data_src = std::make_unique<DataSource_BERObject>(std::move(obj));
    m_source = m_data_src.get();
    m_parent = parent;
    }
@@ -329,7 +330,7 @@ BER_Decoder::BER_Decoder(DataSource& src)
  */
 BER_Decoder::BER_Decoder(const uint8_t data[], size_t length)
    {
-   m_data_src.reset(new DataSource_Memory(data, length));
+   m_data_src = std::make_unique<DataSource_Memory>(data, length);
    m_source = m_data_src.get();
    }
 
@@ -338,7 +339,7 @@ BER_Decoder::BER_Decoder(const uint8_t data[], size_t length)
 */
 BER_Decoder::BER_Decoder(const secure_vector<uint8_t>& data)
    {
-   m_data_src.reset(new DataSource_Memory(data));
+   m_data_src = std::make_unique<DataSource_Memory>(data);
    m_source = m_data_src.get();
    }
 
@@ -347,7 +348,7 @@ BER_Decoder::BER_Decoder(const secure_vector<uint8_t>& data)
 */
 BER_Decoder::BER_Decoder(const std::vector<uint8_t>& data)
    {
-   m_data_src.reset(new DataSource_Memory(data.data(), data.size()));
+   m_data_src = std::make_unique<DataSource_Memory>(data.data(), data.size());
    m_source = m_data_src.get();
    }
 
