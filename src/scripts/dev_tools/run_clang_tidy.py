@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+(C) 2022,2023 Jack Lloyd
+
+Botan is released under the Simplified BSD License (see license.txt)
+"""
+
 import subprocess
 import sys
 import json
@@ -7,6 +13,7 @@ import optparse
 import os
 import multiprocessing
 import re
+import time
 from multiprocessing.pool import ThreadPool
 
 enabled_checks = [
@@ -25,6 +32,7 @@ enabled_checks = [
 disabled_needs_work = [
     '*-braces-around-statements', # should fix (need clang-format)
     '*-named-parameter',
+    '*-member-init', # seems bad
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
     'bugprone-lambda-function-name', # should be an easy fix
@@ -41,6 +49,7 @@ disabled_needs_work = [
     'cppcoreguidelines-slicing', # private->public key slicing
     'hicpp-explicit-conversions',
     'hicpp-signed-bitwise', # djb shit
+    'hicpp-move-const-arg',
     'modernize-avoid-bind', # used a lot in pkcs11
     'modernize-pass-by-value',
     'modernize-use-nodiscard',
@@ -194,6 +203,9 @@ def main(args = None):
 
     pool = ThreadPool(jobs)
 
+    start_time = time.time()
+    files_checked = 0
+
     results = []
     for info in compile_commands:
         file = info['file']
@@ -201,6 +213,7 @@ def main(args = None):
         if not file_matches(file, args[1:]):
             continue
 
+        files_checked += 1
         results.append(pool.apply_async(
             run_clang_tidy,
             (compile_commands_file,
@@ -210,6 +223,10 @@ def main(args = None):
 
     for result in results:
         result.get()
+
+    time_consumed = time.time() - start_time
+
+    print("Checked %d files in %d seconds" % (files_checked, time_consumed))
 
     return 0
 

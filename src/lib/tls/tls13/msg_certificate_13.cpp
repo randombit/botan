@@ -165,7 +165,7 @@ void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
       entry.certificate = cert_chain[i];
       if(!ocsp_responses[i].empty())
          {
-         entry.extensions.add(new Certificate_Status_Request(std::move(ocsp_responses[i])));
+         entry.extensions.add(new Certificate_Status_Request(ocsp_responses[i]));
          }
       }
    }

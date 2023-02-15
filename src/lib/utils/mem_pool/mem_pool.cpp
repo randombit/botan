@@ -318,7 +318,7 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) :
    m_max_page_ptr += page_size;
    }
 
-Memory_Pool::~Memory_Pool()
+Memory_Pool::~Memory_Pool() // NOLINT(*-use-equals-default)
    {
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
    for(size_t i = 0; i != m_free_pages.size(); ++i)

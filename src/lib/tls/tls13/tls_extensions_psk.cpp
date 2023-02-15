@@ -55,7 +55,7 @@ uint32_t obfuscate_ticket_age(std::chrono::milliseconds ticket_age, uint32_t tic
 class PSK::PSK_Internal
    {
    public:
-      PSK_Internal(Server_PSK srv_psk) : psk(std::move(srv_psk)) {}
+      PSK_Internal(Server_PSK srv_psk) : psk(srv_psk) {}
       PSK_Internal(std::vector<Client_PSK> clt_psks) : psk(std::move(clt_psks)) {}
 
       std::variant<std::vector<Client_PSK>, Server_PSK> psk;
