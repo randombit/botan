@@ -188,7 +188,7 @@ class Dilithium_PublicKeyInternal : public ASN1_Object
       Dilithium_PublicKeyInternal& operator=(const Dilithium_PublicKeyInternal& other) = delete;
       Dilithium_PublicKeyInternal& operator=(Dilithium_PublicKeyInternal&& other) = delete;
 
-      ~Dilithium_PublicKeyInternal() = default;
+      ~Dilithium_PublicKeyInternal() override = default;
 
       void encode_into(DER_Encoder& to) const override
          {
@@ -694,7 +694,7 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, Dilithium
    m_public = std::make_shared<Dilithium_PublicKeyInternal>(mode, rho, std::move(t1));
 
    /* Compute H(rho, t1) == H(pk) and write secret key */
-   const auto tr = mode.H(m_public->raw_pk(), DilithiumModeConstants::SEEDBYTES);
+   auto tr = mode.H(m_public->raw_pk(), DilithiumModeConstants::SEEDBYTES);
 
    m_private = std::make_shared<Dilithium_PrivateKeyInternal>(std::move(mode), std::move(rho), std::move(tr), std::move(key),
                                                               std::move(s1), std::move(s2), std::move(t0));

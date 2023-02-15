@@ -91,7 +91,7 @@ bool Certificate_Verify_12::verify(const X509_Certificate& cert,
    policy.check_peer_key_acceptable(*key);
 
    std::pair<std::string, Signature_Format> format =
-      state.parse_sig_format(*key.get(), m_scheme, state.client_hello()->signature_schemes(), true, policy);
+      state.parse_sig_format(*key, m_scheme, state.client_hello()->signature_schemes(), true, policy);
 
    const bool signature_valid =
       state.callbacks().tls_verify_message(*key, format.first, format.second,

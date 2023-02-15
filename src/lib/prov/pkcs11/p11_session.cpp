@@ -81,11 +81,13 @@ SessionInfo Session::get_info() const
    return info;
    }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void Session::set_pin(const secure_string& old_pin, const secure_string& new_pin)
    {
    module()->C_SetPIN(m_handle, old_pin, new_pin);
    }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void Session::init_pin(const secure_string& new_pin)
    {
    module()->C_InitPIN(m_handle, new_pin);

@@ -154,7 +154,7 @@ class EC_Group_Data final
 class EC_Group_Data_Map final
    {
    public:
-      EC_Group_Data_Map() {}
+      EC_Group_Data_Map() = default;
 
       size_t clear()
          {
@@ -419,9 +419,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
       }
    }
 
-EC_Group::EC_Group()
-   {
-   }
+EC_Group::EC_Group() = default;
 
 EC_Group::~EC_Group() = default;
 

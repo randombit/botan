@@ -53,12 +53,12 @@ class RAII_LowLevel
                {
                if(m_is_logged_in)
                   {
-                  m_low_level.get()->C_Logout(m_session_handle, nullptr);
+                  m_low_level->C_Logout(m_session_handle, nullptr);
                   }
 
-               m_low_level.get()->C_CloseSession(m_session_handle, nullptr);
+               m_low_level->C_CloseSession(m_session_handle, nullptr);
                }
-            m_low_level.get()->C_Finalize(nullptr, nullptr);
+            m_low_level->C_Finalize(nullptr, nullptr);
             }
          catch(...)
             {
@@ -74,7 +74,7 @@ class RAII_LowLevel
       std::vector<SlotId> get_slots(bool token_present) const
          {
          std::vector<SlotId> slots;
-         m_low_level.get()->C_GetSlotList(token_present, slots);
+         m_low_level->C_GetSlotList(token_present, slots);
 
          if(slots.empty())
             {
@@ -87,7 +87,7 @@ class RAII_LowLevel
       inline SessionHandle open_session(Flags session_flags)
          {
          std::vector<SlotId> slots = get_slots(true);
-         m_low_level.get()->C_OpenSession(slots.at(0), session_flags, nullptr, nullptr, &m_session_handle);
+         m_low_level->C_OpenSession(slots.at(0), session_flags, nullptr, nullptr, &m_session_handle);
          m_is_session_open = true;
          return m_session_handle;
          }
@@ -116,7 +116,7 @@ class RAII_LowLevel
             throw Test_Error("no open session");
             }
 
-         m_low_level.get()->C_CloseSession(m_session_handle);
+         m_low_level->C_CloseSession(m_session_handle);
          m_is_session_open = false;
          }
 
@@ -132,7 +132,7 @@ class RAII_LowLevel
             throw Test_Error("Already logged in");
             }
 
-         m_low_level.get()->C_Login(m_session_handle, user_type, pin);
+         m_low_level->C_Login(m_session_handle, user_type, pin);
          m_is_logged_in = true;
          }
 
@@ -143,7 +143,7 @@ class RAII_LowLevel
             throw Test_Error("Not logged in");
             }
 
-         m_low_level.get()->C_Logout(m_session_handle);
+         m_low_level->C_Logout(m_session_handle);
          m_is_logged_in = false;
          }
 

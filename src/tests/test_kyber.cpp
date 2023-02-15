@@ -273,7 +273,7 @@ class Kyber_Encoding_Test : public Text_Based_Test
          }
 
    public:
-      bool skip_this_test(const std::string &algo_name, const VarMap &) override
+      bool skip_this_test(const std::string &algo_name, const VarMap& /*vars*/) override
          {
          const auto mode = name_to_mode(algo_name);
 #if defined(BOTAN_HAS_KYBER)

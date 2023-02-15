@@ -223,7 +223,7 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
                              const std::string& provider) const override;
 
    private:
-      bool m_use_software_padding;
+      bool m_use_software_padding = false;
    };
 
 using PKCS11_RSA_KeyPair = std::pair<PKCS11_RSA_PublicKey, PKCS11_RSA_PrivateKey>;

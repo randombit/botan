@@ -119,7 +119,7 @@ bool verify_signature(const std::array<uint8_t, 32>& pk, const std::vector<uint8
 
 std::array<uint8_t, 64> hashLeaf(const std::array<uint8_t, 64>& leaf)
    {
-   std::array<uint8_t, 64> ret;
+   std::array<uint8_t, 64> ret{};
    std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw("SHA-512"));
    hash->update(0);
    hash->update(leaf.data(), leaf.size());
@@ -194,8 +194,8 @@ Response Response::from_bits(const std::vector<uint8_t>& response,
    const auto indx = get<uint32_t>(response_v, "INDX");
    const auto path = get_v(response_v, "PATH");
    const auto srep_root = get<std::array<uint8_t, 64>>(srep_v, "ROOT");
-   const auto size = path.size();
-   const auto levels = size/64;
+   const size_t size = path.size();
+   const size_t levels = size / 64;
 
    if(size % 64)
       { throw Roughtime_Error("Merkle tree path size must be multiple of 64 bytes"); }
@@ -204,7 +204,7 @@ Response Response::from_bits(const std::vector<uint8_t>& response,
 
    auto hash = hashLeaf(nonce.get_nonce());
    auto index = indx;
-   auto level = 0u;
+   size_t level = 0;
    while(level < levels)
       {
       hashNode(hash, typecast_copy<std::array<uint8_t, 64>>(path.data() + level*64), index&1);
@@ -238,7 +238,7 @@ bool Response::validate(const Ed25519_PublicKey& pk) const
 Nonce nonce_from_blind(const std::vector<uint8_t>& previous_response,
                        const Nonce& blind)
    {
-   std::array<uint8_t, 64> ret;
+   std::array<uint8_t, 64> ret{};
    const auto blind_arr = blind.get_nonce();
    std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw("SHA-512"));
    hash->update(previous_response);

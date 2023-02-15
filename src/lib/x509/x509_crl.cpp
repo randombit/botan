@@ -201,7 +201,7 @@ const CRL_Data& X509_CRL::data() const
       {
       throw Invalid_State("X509_CRL uninitialized");
       }
-   return *m_data.get();
+   return *m_data;
    }
 
 const Extensions& X509_CRL::extensions() const

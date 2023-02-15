@@ -32,13 +32,7 @@ X509_CA::X509_CA(const X509_Certificate& cert,
    m_signer = X509_Object::choose_sig_format(m_ca_sig_algo, key, rng, hash_fn, padding_method);
    }
 
-/*
-* X509_CA Destructor
-*/
-X509_CA::~X509_CA()
-   {
-   /* for unique_ptr */
-   }
+X509_CA::~X509_CA() = default;
 
 namespace {
 

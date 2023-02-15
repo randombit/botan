@@ -76,7 +76,7 @@ class BOTAN_TEST_API Record_Layer
 
       std::vector<uint8_t> prepare_records(const Record_Type type,
                                            const std::vector<uint8_t>& data,
-                                           Cipher_State* cipher_state=nullptr);
+                                           Cipher_State* cipher_state=nullptr) const;
 
       /**
        * Clears any data currently stored in the read buffer. This is typically

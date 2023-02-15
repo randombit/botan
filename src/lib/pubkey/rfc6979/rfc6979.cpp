@@ -24,10 +24,7 @@ RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(const std::string& hash,
    BigInt::encode_1363(m_rng_in.data(), m_rlen, x);
    }
 
-RFC6979_Nonce_Generator::~RFC6979_Nonce_Generator()
-   {
-   // for ~unique_ptr
-   }
+RFC6979_Nonce_Generator::~RFC6979_Nonce_Generator() = default;
 
 const BigInt& RFC6979_Nonce_Generator::nonce_for(const BigInt& m)
    {

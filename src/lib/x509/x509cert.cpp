@@ -371,7 +371,7 @@ const X509_Certificate_Data& X509_Certificate::data() const
       {
       throw Invalid_State("X509_Certificate uninitialized");
       }
-   return *m_data.get();
+   return *m_data;
    }
 
 uint32_t X509_Certificate::x509_version() const

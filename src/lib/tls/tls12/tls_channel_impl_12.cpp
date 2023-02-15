@@ -66,10 +66,7 @@ void Channel_Impl_12::reset_active_association_state()
       m_sequence_numbers->reset();
    }
 
-Channel_Impl_12::~Channel_Impl_12()
-   {
-   // So unique_ptr destructors run correctly
-   }
+Channel_Impl_12::~Channel_Impl_12() = default;
 
 Connection_Sequence_Numbers& Channel_Impl_12::sequence_numbers() const
    {
@@ -152,7 +149,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    if(auto active = active_state())
       m_pending_state->set_version(active->version());
 
-   return *m_pending_state.get();
+   return *m_pending_state;
    }
 
 bool Channel_Impl_12::timeout_check()

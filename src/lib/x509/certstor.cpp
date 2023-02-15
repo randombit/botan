@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-Certificate_Store::~Certificate_Store() {}
+Certificate_Store::~Certificate_Store() = default;
 
 std::optional<X509_Certificate>
 Certificate_Store::find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const

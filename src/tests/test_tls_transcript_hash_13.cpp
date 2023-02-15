@@ -183,7 +183,7 @@ std::vector<Test::Result> transcript_hash()
          {
          Transcript_Hash_State h1;
 
-         const auto truncation_mark = 477u;
+         const size_t truncation_mark = 477;
          auto truncated_ch = psk_client_hello;
          truncated_ch.resize(truncation_mark);
 

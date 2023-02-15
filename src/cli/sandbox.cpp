@@ -124,7 +124,6 @@ bool Sandbox::init()
 #endif
    }
 
-Sandbox::~Sandbox()
-   {
-   }
+Sandbox::~Sandbox() = default;
+
 }

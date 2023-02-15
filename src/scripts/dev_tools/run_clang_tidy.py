@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+(C) 2022,2023 Jack Lloyd
+
+Botan is released under the Simplified BSD License (see license.txt)
+"""
+
 import subprocess
 import sys
 import json
@@ -7,70 +13,64 @@ import optparse
 import os
 import multiprocessing
 import re
+import time
 from multiprocessing.pool import ThreadPool
 
 enabled_checks = [
     'bugprone-*',
     'cert-*',
     'clang-analyzer-*',
+    'cppcoreguidelines-*',
+    'hicpp-*',
+    'modernize-*',
     'performance-*',
     'portability-*',
-
-    'modernize-concat-nested-namespaces',
-    'modernize-make-unique',
-    'modernize-make-shared',
-
-    'readability-container-size-empty',
-    'readability-static-definition-in-anonymous-namespace',
-    'readability-convert-member-functions-to-static',
-
-    'hicpp-special-member-functions',
-
-#    'cppcoreguidelines-*',
-#    'hicpp-*',
-#    'modernize-*',
-#    'readability-*',
+    'readability-*',
 ]
 
 # these might be worth being clean for
 disabled_needs_work = [
     '*-braces-around-statements', # should fix (need clang-format)
+    '*-named-parameter',
+    '*-member-init', # seems bad
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
+    'bugprone-lambda-function-name', # should be an easy fix
     'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
     'bugprone-narrowing-conversions', # should be fixed
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
-    'bugprone-lambda-function-name', # should be an easy fix
     'cppcoreguidelines-init-variables',
-    'cppcoreguidelines-narrowing-conversions', # lot of these
     'cppcoreguidelines-macro-usage',
+    'cppcoreguidelines-narrowing-conversions', # lot of these
     'cppcoreguidelines-owning-memory',
     'cppcoreguidelines-prefer-member-initializer',
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-pro-type-union-access', # only in sha1_sse2
     'cppcoreguidelines-slicing', # private->public key slicing
-    'hicpp-signed-bitwise', # djb shit
     'hicpp-explicit-conversions',
+    'hicpp-signed-bitwise', # djb shit
+    'hicpp-move-const-arg',
+    'modernize-avoid-bind', # used a lot in pkcs11
     'modernize-pass-by-value',
     'modernize-use-nodiscard',
-    'modernize-avoid-bind', # used a lot in pkcs11
     'modernize-use-trailing-return-type',
     'performance-inefficient-string-concatenation',
     'performance-inefficient-vector-operation',
-    'performance-no-int-to-ptr',
-    'performance-unnecessary-copy-initialization',
     'performance-move-const-arg',
     'performance-no-automatic-move',
+    'performance-no-int-to-ptr',
+    'performance-unnecessary-copy-initialization',
+    'readability-container-contains',
     'readability-convert-member-functions-to-static',
     'readability-implicit-bool-conversion', # maybe fix this
     'readability-inconsistent-declaration-parameter-name', # should fix this
     'readability-isolate-declaration',
-    'readability-simplify-boolean-expr', # sometimes ok
     'readability-qualified-auto',
+    'readability-redundant-access-specifiers',
     'readability-redundant-member-init',
     'readability-redundant-string-cstr',
-    'readability-redundant-access-specifiers',
-    'readability-container-contains',
+    'readability-simplify-boolean-expr', # sometimes ok
+    'readability-static-accessed-through-instance',
 ]
 
 # these we are not interested in ever being clang-tidy clean for
@@ -83,17 +83,17 @@ disabled_not_interested = [
     '*-no-array-decay',
     '*-use-auto', # not universally a good idea
     '*-use-emplace', # often less clear
-    '-*deprecated-headers', # wrong for system headers like stdlib.h
+    '*-deprecated-headers', # wrong for system headers like stdlib.h
     'bugprone-argument-comment',
     'bugprone-branch-clone', # doesn't interact well with feature macros
     'cert-err58-cpp',
-    'cppcoreguidelines-no-malloc',
-    'cppcoreguidelines-pro-bounds-constant-array-index',
     'cppcoreguidelines-avoid-non-const-global-variables',
+    'cppcoreguidelines-no-malloc',
     'cppcoreguidelines-non-private-member-variables-in-classes', # pk split keys
+    'cppcoreguidelines-pro-bounds-constant-array-index',
+    'cppcoreguidelines-pro-type-const-cast', # see above
     'cppcoreguidelines-pro-type-cstyle-cast', # system headers
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
-    'cppcoreguidelines-pro-type-const-cast', # see above
     'cppcoreguidelines-pro-type-vararg', # idiocy
     'hicpp-no-assembler',
     'hicpp-no-malloc',
@@ -101,15 +101,15 @@ disabled_not_interested = [
     'modernize-loop-convert', # sometimes very ugly
     'modernize-raw-string-literal',
     'modernize-return-braced-init-list', # thanks I hate it
-    'modernize-use-using', # fine not great
     'modernize-use-default-member-init',
+    'modernize-use-using', # fine not great
     'portability-simd-intrinsics',
-    'readability-function-cognitive-complexity',
-    'readability-use-anyofallof', # not more readable
-    'readability-identifier-length', # lol, lmao
     'readability-container-data-pointer',
-    'readability-suspicious-call-argument',
+    'readability-function-cognitive-complexity',
+    'readability-identifier-length', # lol, lmao
     'readability-non-const-parameter',
+    'readability-suspicious-call-argument',
+    'readability-use-anyofallof', # not more readable
 ]
 
 disabled_checks = disabled_needs_work + disabled_not_interested
@@ -121,6 +121,18 @@ def load_compile_commands(build_dir):
     compile_commands_file = os.path.join(build_dir, 'compile_commands.json')
     compile_commands = open(compile_commands_file).read()
     return (compile_commands_file, json.loads(compile_commands))
+
+def run_command(cmdline):
+    proc = subprocess.Popen(cmdline,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+
+    (stdout, stderr) = proc.communicate()
+
+    stdout = stdout.decode('utf8')
+    # stderr discarded
+
+    return stdout
 
 def run_clang_tidy(compile_commands_file,
                    check_config,
@@ -137,14 +149,7 @@ def run_clang_tidy(compile_commands_file,
 
     cmdline.append(source_file)
 
-    clang_tidy = subprocess.Popen(cmdline,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE)
-
-    (stdout, stderr) = clang_tidy.communicate()
-
-    stdout = stdout.decode('utf8')
-    # stderr discarded
+    stdout = run_command(cmdline)
 
     if options.verbose:
         print(source_file)
@@ -171,6 +176,7 @@ def main(args = None):
     parser.add_option('--verbose', action='store_true', default=False)
     parser.add_option('--fixit', action='store_true', default=False)
     parser.add_option('--build-dir', default='build')
+    parser.add_option('--list-checks', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
 
@@ -191,7 +197,14 @@ def main(args = None):
 
     check_config = create_check_option(enabled_checks, disabled_checks)
 
+    if options.list_checks:
+        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config]))
+        return 0
+
     pool = ThreadPool(jobs)
+
+    start_time = time.time()
+    files_checked = 0
 
     results = []
     for info in compile_commands:
@@ -200,6 +213,7 @@ def main(args = None):
         if not file_matches(file, args[1:]):
             continue
 
+        files_checked += 1
         results.append(pool.apply_async(
             run_clang_tidy,
             (compile_commands_file,
@@ -209,6 +223,10 @@ def main(args = None):
 
     for result in results:
         result.get()
+
+    time_consumed = time.time() - start_time
+
+    print("Checked %d files in %d seconds" % (files_checked, time_consumed))
 
     return 0
 
