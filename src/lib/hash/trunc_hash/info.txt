@@ -1,0 +1,8 @@
+<defines>
+TRUNCATED_HASH -> 20230215
+</defines>
+
+<module_info>
+name -> "Truncated Hashes"
+brief -> "Wrapper class to truncate the output of an underlying hash function"
+</module_info>

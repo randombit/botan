@@ -1,0 +1,28 @@
+[Truncated(SHA-256,1)]
+In = 726f666c
+Out = 80
+
+[Truncated(SHA-256,9)]
+In = 726f666c
+Out = db80
+
+[Truncated(SHA-256,11)]
+In = 726f666c
+Out = dbc0
+
+[Truncated(SHA-256,15)]
+In = 726f666c
+Out = dbde
+
+[Truncated(SHA-256,16)]
+In = 726f666c
+Out = dbdf
+
+# no truncation
+[Truncated(SHA-256,256)]
+In = 726f666c
+Out = dbdf39aaaab62e93bef24d096b86342ddf851fe683b9dd9d8100c771b50b5909
+
+[Truncated(SHAKE-128(256),42)]
+In = 726f666c
+Out = A6C8033275C0

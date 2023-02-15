@@ -326,6 +326,25 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("hash", "hash_rep", Hash_LongRepeat_Tests);
 
+#if defined(BOTAN_HAS_TRUNCATED_HASH) && defined(BOTAN_HAS_SHA2_32)
+
+/// negative tests for Truncated_Hash, positive tests are implemented in hash/truncated.vec
+Test::Result hash_truncation_negative_tests()
+   {
+   Test::Result result("hash truncation parameter validation");
+   result.test_throws<Botan::Invalid_Argument>("truncation to zero",
+                                               [] { Botan::HashFunction::create("Truncated(SHA-256,0)"); });
+   result.test_throws<Botan::Invalid_Argument>("cannot output more bits than the underlying hash",
+                                               [] { Botan::HashFunction::create("Truncated(SHA-256,257)"); });
+   auto unobtainable = Botan::HashFunction::create("Truncated(NonExistentHash-256,128)");
+   result.confirm("non-existent hashes are not created", unobtainable == nullptr);
+   return result;
+   };
+
+BOTAN_REGISTER_TEST_FN("hash", "hash_truncation", hash_truncation_negative_tests);
+
+#endif
+
 }
 
 #endif
