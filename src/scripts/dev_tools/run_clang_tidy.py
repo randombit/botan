@@ -47,7 +47,6 @@ disabled_needs_work = [
     'cppcoreguidelines-owning-memory',
     'cppcoreguidelines-prefer-member-initializer',
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
-    'cppcoreguidelines-pro-type-union-access', # only in sha1_sse2
     'cppcoreguidelines-slicing', # private->public key slicing
     'hicpp-signed-bitwise', # djb shit
     'hicpp-explicit-conversions',
