@@ -23,6 +23,8 @@ class SHA_1 final : public MDx_HashFunction
       std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_1>(); }
       std::unique_ptr<HashFunction> copy_state() const override;
 
+      std::string provider() const override;
+
       void clear() override;
 
       SHA_1() : MDx_HashFunction(64, true, true), m_digest(5)
