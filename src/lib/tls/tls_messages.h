@@ -428,7 +428,7 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello
       /**
        * @returns the selected version as indicated by the supported_versions extension
        */
-      Protocol_Version selected_version() const override;
+      Protocol_Version selected_version() const override final;
    };
 
 class BOTAN_UNSTABLE_API Hello_Retry_Request final : public Server_Hello_13
