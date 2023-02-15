@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-#if defined(__GNUG__)
+#if defined(__GNUG__) && !defined(__clang__)
 
 // These macros are redundant with the versions in serpent_sbox.h
 // but unfortunately removing them seems to trigger a bug in GCC
