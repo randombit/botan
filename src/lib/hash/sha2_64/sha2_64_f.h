@@ -4,6 +4,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#ifndef BOTAN_SHA2_64_F_H_
+#define BOTAN_SHA2_64_F_H_
+
 #include <botan/types.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/bit_ops.h>
@@ -30,3 +33,5 @@ SHA2_64_F(uint64_t A, uint64_t B, uint64_t C, uint64_t& D,
    }
 
 }
+
+#endif
