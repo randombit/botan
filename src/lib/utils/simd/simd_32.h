@@ -79,6 +79,8 @@ class SIMD_4x32 final
       SIMD_4x32& operator=(SIMD_4x32&& other) = default;
       SIMD_4x32(SIMD_4x32&& other) = default;
 
+      ~SIMD_4x32() = default;
+
       /**
       * Zero initialize SIMD register with 4 32-bit elements
       */

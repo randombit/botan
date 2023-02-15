@@ -32,7 +32,7 @@ GCM_Mode::GCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
    }
 
-GCM_Mode::~GCM_Mode() { /* for unique_ptr */ }
+GCM_Mode::~GCM_Mode() = default;
 
 void GCM_Mode::clear()
    {

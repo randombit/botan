@@ -244,7 +244,7 @@ void Scrypt::derive_key(uint8_t output[], size_t output_len,
       throw Invalid_Argument("Scrypt cannot accept passphrases of the provided length");
       }
 
-   pbkdf2(*hmac_sha256.get(),
+   pbkdf2(*hmac_sha256,
           B.data(), B.size(),
           salt, salt_len,
           1);
@@ -255,7 +255,7 @@ void Scrypt::derive_key(uint8_t output[], size_t output_len,
       scryptROMmix(r, N, &B[128*r*i], V);
       }
 
-   pbkdf2(*hmac_sha256.get(),
+   pbkdf2(*hmac_sha256,
           output, output_len,
           B.data(), B.size(),
           1);

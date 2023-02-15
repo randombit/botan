@@ -26,7 +26,7 @@ class Server_Handshake_State final : public Handshake_State
 
       Private_Key* server_rsa_kex_key() { return m_server_rsa_kex_key.get(); }
       void set_server_rsa_kex_key(std::shared_ptr<Private_Key> key)
-         { m_server_rsa_kex_key = key; }
+         { m_server_rsa_kex_key = std::move(key); }
 
       bool allow_session_resumption() const
          { return m_allow_session_resumption; }
@@ -196,7 +196,7 @@ uint16_t choose_ciphersuite(
          const std::string sig_algo = suite->sig_algo();
 
          // Do we have any certificates for this sig?
-         if(cert_chains.count(sig_algo) == 0)
+         if(!cert_chains.contains(sig_algo))
             {
             continue;
             }
@@ -880,7 +880,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
 
       if(pending_state.client_hello()->supports_cert_status_message() && pending_state.is_a_resumption() == false)
          {
-         auto csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
+         auto* csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
          // csr is non-null if client_hello()->supports_cert_status_message()
          BOTAN_ASSERT_NOMSG(csr != nullptr);
          const auto resp_bytes = callbacks().tls_provide_cert_status(cert_chains[algo_used], *csr);
@@ -918,7 +918,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
 
    std::vector<X509_DN> client_auth_CAs;
 
-   for(auto store : trusted_CAs)
+   for(auto* store : trusted_CAs)
       {
       auto subjects = store->all_subjects();
       client_auth_CAs.insert(client_auth_CAs.end(), subjects.begin(), subjects.end());

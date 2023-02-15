@@ -34,21 +34,40 @@ disabled_needs_work = [
     'bugprone-implicit-widening-of-multiplication-result',
     'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
     'bugprone-narrowing-conversions', # should be fixed
+    'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
+    'bugprone-lambda-function-name', # should be an easy fix
     'cppcoreguidelines-init-variables',
     'cppcoreguidelines-narrowing-conversions', # lot of these
+    'cppcoreguidelines-macro-usage',
     'cppcoreguidelines-owning-memory',
+    'cppcoreguidelines-prefer-member-initializer',
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-pro-type-union-access', # only in sha1_sse2
+    'cppcoreguidelines-slicing', # private->public key slicing
     'hicpp-signed-bitwise', # djb shit
+    'hicpp-explicit-conversions',
     'modernize-pass-by-value',
     'modernize-use-nodiscard',
+    'modernize-make-unique',
+    'modernize-make-shared',
+    'modernize-avoid-bind', # used a lot in pkcs11
     'modernize-use-trailing-return-type',
     'performance-inefficient-string-concatenation',
+    'performance-inefficient-vector-operation',
     'performance-no-int-to-ptr',
+    'performance-unnecessary-copy-initialization',
+    'performance-move-const-arg',
+    'performance-no-automatic-move',
+    'readability-convert-member-functions-to-static',
     'readability-implicit-bool-conversion', # maybe fix this
     'readability-inconsistent-declaration-parameter-name', # should fix this
     'readability-isolate-declaration',
     'readability-simplify-boolean-expr', # sometimes ok
+    'readability-qualified-auto',
+    'readability-redundant-member-init',
+    'readability-redundant-string-cstr',
+    'readability-redundant-access-specifiers',
+    'readability-container-contains',
 ]
 
 # these we are not interested in ever being clang-tidy clean for
@@ -67,8 +86,11 @@ disabled_not_interested = [
     'cert-err58-cpp',
     'cppcoreguidelines-no-malloc',
     'cppcoreguidelines-pro-bounds-constant-array-index',
+    'cppcoreguidelines-avoid-non-const-global-variables',
+    'cppcoreguidelines-non-private-member-variables-in-classes', # pk split keys
     'cppcoreguidelines-pro-type-cstyle-cast', # system headers
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
+    'cppcoreguidelines-pro-type-const-cast', # see above
     'cppcoreguidelines-pro-type-vararg', # idiocy
     'hicpp-no-assembler',
     'hicpp-no-malloc',
@@ -77,9 +99,14 @@ disabled_not_interested = [
     'modernize-raw-string-literal',
     'modernize-return-braced-init-list', # thanks I hate it
     'modernize-use-using', # fine not great
+    'modernize-use-default-member-init',
     'portability-simd-intrinsics',
     'readability-function-cognitive-complexity',
     'readability-use-anyofallof', # not more readable
+    'readability-identifier-length', # lol, lmao
+    'readability-container-data-pointer',
+    'readability-suspicious-call-argument',
+    'readability-non-const-parameter',
 ]
 
 disabled_checks = disabled_needs_work + disabled_not_interested
@@ -89,10 +116,7 @@ def create_check_option(enabled, disabled):
 
 def load_compile_commands(build_dir):
     compile_commands_file = os.path.join(build_dir, 'compile_commands.json')
-
     compile_commands = open(compile_commands_file).read()
-    # hack for configure.py generating invalid JSON
-    compile_commands = re.sub(r',\n+]', '\n]', compile_commands)
     return (compile_commands_file, json.loads(compile_commands))
 
 def run_clang_tidy(compile_commands_file,
@@ -152,6 +176,15 @@ def main(args = None):
         jobs = multiprocessing.cpu_count()
 
     (compile_commands_file, compile_commands) = load_compile_commands(options.build_dir)
+
+    # For some reason clang-tidy takes an enourmous amount of time
+    # on this file; skip it for now
+    def remove_bad(cc):
+        if cc['file'].find('tls_client_impl_12.cpp') > 0:
+            return True
+        return False
+
+    compile_commands = [x for x in compile_commands if not remove_bad(x)]
 
     check_config = create_check_option(enabled_checks, disabled_checks)
 

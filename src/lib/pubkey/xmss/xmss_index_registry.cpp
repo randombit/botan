@@ -15,9 +15,10 @@ namespace Botan {
 
 const std::string XMSS_Index_Registry::m_index_hash_function = "SHA-256";
 
+//static
 uint64_t XMSS_Index_Registry::make_key_id(
    const secure_vector<uint8_t>& private_seed,
-   const secure_vector<uint8_t>& prf) const
+   const secure_vector<uint8_t>& prf)
    {
    std::unique_ptr<HashFunction> hash =
       HashFunction::create(m_index_hash_function);

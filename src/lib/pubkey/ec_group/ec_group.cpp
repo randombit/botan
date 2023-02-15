@@ -423,10 +423,7 @@ EC_Group::EC_Group()
    {
    }
 
-EC_Group::~EC_Group()
-   {
-   // shared_ptr possibly freed here
-   }
+EC_Group::~EC_Group() = default;
 
 EC_Group::EC_Group(const OID& domain_oid)
    {

@@ -439,7 +439,7 @@ std::string Test::format_time(uint64_t ns)
    return o.str();
    }
 
-Test::Result::Result(std::string who, std::vector<Result> downstream_results)
+Test::Result::Result(std::string who, const std::vector<Result>& downstream_results)
    : Result(std::move(who))
    {
    for(const auto& result : downstream_results)
@@ -568,7 +568,7 @@ class Test_Registry
          std::vector<std::string> result;
 
          // TODO: this is O(n^2), but we have a relatively small number of tests.
-         auto insert_if_not_exists_and_not_skipped = [&](const std::string test_name)
+         auto insert_if_not_exists_and_not_skipped = [&](const std::string& test_name)
             {
             if(!Botan::value_exists(result, test_name) && to_be_skipped.find(test_name) == to_be_skipped.end())
                result.push_back(test_name);
@@ -799,7 +799,7 @@ std::string Test::data_file_as_temporary_copy(const std::string &what)
    {
    auto tmp_basename = what;
    std::replace(tmp_basename.begin(), tmp_basename.end(), '/', '_');
-   const auto temp_file = temp_file_name("tmp-" + tmp_basename);
+   auto temp_file = temp_file_name("tmp-" + tmp_basename);
    if(temp_file.empty())
       { return ""; }
    if(!Test::copy_file(data_file(what), temp_file))

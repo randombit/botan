@@ -78,8 +78,8 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message
    public:
       Client_Hello(const Client_Hello&) = delete;
       Client_Hello& operator=(const Client_Hello&) = delete;
-      Client_Hello(Client_Hello&&);
-      Client_Hello& operator=(Client_Hello&&);
+      Client_Hello(Client_Hello&&) noexcept;
+      Client_Hello& operator=(Client_Hello&&) noexcept;
 
       ~Client_Hello();
 
@@ -271,8 +271,8 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message
    public:
       Server_Hello(const Server_Hello&) = delete;
       Server_Hello& operator=(const Server_Hello&) = delete;
-      Server_Hello(Server_Hello&&);
-      Server_Hello& operator=(Server_Hello&&);
+      Server_Hello(Server_Hello&&) noexcept;
+      Server_Hello& operator=(Server_Hello&&) noexcept;
 
       ~Server_Hello();
 

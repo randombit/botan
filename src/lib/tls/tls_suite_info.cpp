@@ -2,8 +2,8 @@
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* (tls-parameters.txt sha256 d5d17a3099e352466f701d0fa37aaa2c2fd3a36d5f078e5d81a67b49e7fe3a3c)
-* by ./src/scripts/tls_suite_info.py on 2022-12-02
+* (tls-parameters.txt sha256 55cda81cb5281d1c16ffc5fa1c6746c1fd6bc08bed20ca5e15a9d029750026b5)
+* by ./src/scripts/dev_tools/gen_tls_suite_info.py on 2023-02-14
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

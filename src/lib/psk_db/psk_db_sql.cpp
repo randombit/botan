@@ -21,10 +21,7 @@ Encrypted_PSK_Database_SQL::Encrypted_PSK_Database_SQL(const secure_vector<uint8
       "(psk_name TEXT PRIMARY KEY, psk_value TEXT)");
    }
 
-Encrypted_PSK_Database_SQL::~Encrypted_PSK_Database_SQL()
-   {
-   /* for ~unique_ptr */
-   }
+Encrypted_PSK_Database_SQL::~Encrypted_PSK_Database_SQL() = default;
 
 void Encrypted_PSK_Database_SQL::kv_del(const std::string& name)
    {

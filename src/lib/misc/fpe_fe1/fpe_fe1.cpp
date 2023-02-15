@@ -88,10 +88,7 @@ FPE_FE1::FPE_FE1(const BigInt& n,
    mod_a.reset(new Modular_Reducer(m_a));
    }
 
-FPE_FE1::~FPE_FE1()
-   {
-   // for ~unique_ptr
-   }
+FPE_FE1::~FPE_FE1() = default;
 
 void FPE_FE1::clear()
    {

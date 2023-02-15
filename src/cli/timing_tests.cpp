@@ -52,7 +52,6 @@
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-   #include <botan/pubkey.h>
    #include <botan/ecdsa.h>
 #endif
 

@@ -179,7 +179,7 @@ void SHA_1::sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t input
          __m128i u128;
          };
 
-      v4si P0, P1, P2, P3;
+      v4si P0{}, P1{}, P2{}, P3{};
 
       __m128i W0 = _mm_loadu_si128(&input_mm[0]);
       prep00_15(P0, W0);

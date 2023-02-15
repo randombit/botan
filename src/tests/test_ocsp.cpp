@@ -76,7 +76,7 @@ class OCSP_Tests final : public Test
             const auto &certs1 = resp1.certificates();
             if(result.test_eq("Expected count of certificates", certs1.size(), 1))
                {
-               const auto cert = certs1.front();
+               const auto& cert = certs1.front();
                const Botan::X509_DN expected_dn({std::make_pair(
                   "X520.CommonName",
                   "Symantec Class 3 EV SSL CA - G3 OCSP Responder")});

@@ -25,7 +25,7 @@ int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc)
    std::string val;
    if(Botan::OS::read_env_variable(val, "BOTAN_FFI_PRINT_EXCEPTIONS") == true && !val.empty())
       {
-      std::fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc);
+      static_cast<void>(std::fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc));
       }
    return rc;
    }
@@ -195,9 +195,10 @@ const char* botan_error_description(int err)
 
       case BOTAN_FFI_ERROR_UNKNOWN_ERROR:
          return "Unknown error";
-      }
 
-   return "Unknown error";
+      default:
+         return "Unknown error";
+      }
    }
 
 /*

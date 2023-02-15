@@ -190,6 +190,6 @@ std::vector<Test::Result> test_container_strong_type()
 
 }
 
-BOTAN_REGISTER_TEST_FN("stream", "strong_type", test_strong_type, test_container_strong_type);
+BOTAN_REGISTER_TEST_FN("utils", "strong_type", test_strong_type, test_container_strong_type);
 
 }

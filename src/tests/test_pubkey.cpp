@@ -842,7 +842,7 @@ Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, 
 
    if(rng_algo == "Fixed")
       {
-      if(rng_params != "")
+      if(!rng_params.empty())
          throw Test_Error("Expected empty RngParams for Fixed RNG");
       rng.reset(new Fixed_Output_RNG());
       }

@@ -20,6 +20,8 @@ class SIMD_2x64 final
       SIMD_2x64& operator=(SIMD_2x64&& other) = default;
       SIMD_2x64(SIMD_2x64&& other) = default;
 
+      ~SIMD_2x64() = default;
+
       SIMD_2x64() // zero initialized
          {
          m_simd = _mm_setzero_si128();

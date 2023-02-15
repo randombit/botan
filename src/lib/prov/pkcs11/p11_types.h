@@ -35,7 +35,7 @@ class BOTAN_PUBLIC_API(2,0) Module final
       */
       Module(const std::string& file_path, C_InitializeArgs init_args = { nullptr, nullptr, nullptr, nullptr, static_cast< CK_FLAGS >(Flag::OsLockingOk), nullptr });
 
-      Module(Module&& other);
+      Module(Module&& other) noexcept;
       Module& operator=(Module&& other) = delete;
 
       // Dtor calls C_Finalize(). A copy could be deleted while the origin still exists

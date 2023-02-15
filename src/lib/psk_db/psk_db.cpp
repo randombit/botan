@@ -23,10 +23,7 @@ Encrypted_PSK_Database::Encrypted_PSK_Database(const secure_vector<uint8_t>& mas
    m_hmac->set_key(m_hmac->process("hmac"));
    }
 
-Encrypted_PSK_Database::~Encrypted_PSK_Database()
-   {
-   // for ~unique_ptr
-   }
+Encrypted_PSK_Database::~Encrypted_PSK_Database() = default;
 
 std::set<std::string> Encrypted_PSK_Database::list_names() const
    {

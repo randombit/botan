@@ -159,7 +159,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             }
 
             {
-            if(nonce.size() == 0)
+            if(nonce.empty())
                cipher->set_key(key);
             else
                cipher->set_iv(nonce.data(), nonce.size());

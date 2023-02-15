@@ -118,7 +118,7 @@ DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
    m_ka(own_priv_key, rng, "Raw"),
    m_kdf(std::move(kdf)),
    m_cipher(std::move(cipher)),
-   m_cipher_key_len(std::move(cipher_key_len)),
+   m_cipher_key_len(cipher_key_len),
    m_mac(std::move(mac)),
    m_mac_keylen(mac_key_length),
    m_iv()

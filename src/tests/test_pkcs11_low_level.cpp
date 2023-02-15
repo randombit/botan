@@ -321,7 +321,7 @@ Test::Result test_c_get_slot_list()
 
    // assumes at least one smartcard reader with connected smartcard is attached
    slot_vec.clear();
-   token_present = true;
+   token_present = true; // updates ref in binder
    result.merge(test_function("C_GetSlotList", binder));
    result.test_ne("C_GetSlotList number of slots with attached token > 0", slot_vec.size(), 0);
 

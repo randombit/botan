@@ -68,7 +68,7 @@ class PK_Encrypt final : public Command
             {
             data.insert(data.end(), b, b + l);
             };
-         this->read_file(get_arg("datafile"), insert_fn);
+         Command::read_file(get_arg("datafile"), insert_fn);
 
          const Botan::AlgorithmIdentifier hash_id(OAEP_HASH, Botan::AlgorithmIdentifier::USE_EMPTY_PARAM);
          const Botan::AlgorithmIdentifier pk_alg_id("RSA/OAEP", hash_id.BER_encode());

@@ -1242,12 +1242,15 @@ class FFI_Unit_Tests final : public Test
             const char* err = botan_error_description(i);
             result.confirm("Never a null pointer", err != nullptr);
 
-            std::string s(err);
-
-            if(s != "Unknown error")
+            if(err)
                {
-               result.confirm("No duplicate messages", errors.count(s) == 0);
-               errors.insert(s);
+               std::string s(err);
+
+               if(s != "Unknown error")
+                  {
+                  result.confirm("No duplicate messages", errors.count(s) == 0);
+                  errors.insert(s);
+                  }
                }
             }
 

@@ -182,7 +182,7 @@ OCB_Mode::OCB_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
                    "Invalid OCB tag length");
    }
 
-OCB_Mode::~OCB_Mode() { /* for unique_ptr destructor */ }
+OCB_Mode::~OCB_Mode() = default;
 
 void OCB_Mode::clear()
    {

@@ -201,7 +201,7 @@ Response http_sync(const http_exch_fn& http_transact,
          }
       }
 
-   if(status_code == 301 && headers.count("Location"))
+   if(status_code == 301 && headers.contains("Location"))
       {
       if(allowable_redirects == 0)
          throw HTTP_Error("HTTP redirection count exceeded");

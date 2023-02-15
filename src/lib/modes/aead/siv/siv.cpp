@@ -25,10 +25,7 @@ SIV_Mode::SIV_Mode(std::unique_ptr<BlockCipher> cipher) :
       throw Invalid_Argument("SIV requires a 128 bit block cipher");
    }
 
-SIV_Mode::~SIV_Mode()
-   {
-   // for ~unique_ptr
-   }
+SIV_Mode::~SIV_Mode() = default;
 
 void SIV_Mode::clear()
    {

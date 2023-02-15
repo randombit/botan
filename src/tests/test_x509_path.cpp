@@ -431,9 +431,11 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run()
       Botan::Certificate_Store_In_Memory store;
       std::optional<Botan::PKCS10_Request> csr;
 
-      auto validation_time = Botan::calendar_point(
-         std::atoi((validation_times_iter++)->second.c_str()),
-         0, 0, 0, 0, 0).to_std_timepoint();
+      const auto validation_year =
+         Botan::to_u32bit((validation_times_iter++)->second);
+
+      const auto validation_time = Botan::calendar_point(
+         validation_year, 0, 0, 0, 0, 0).to_std_timepoint();
 
       for(auto const& file : all_files)
          {

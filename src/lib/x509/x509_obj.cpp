@@ -186,7 +186,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
    if(sig_info.empty() || sig_info.size() > 2 || sig_info[0] != pub_key.algo_name())
       return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
 
-   const std::string pub_key_algo = sig_info[0];
+   const auto& pub_key_algo = sig_info[0];
    std::string padding;
    if(sig_info.size() == 2)
       padding = sig_info[1];

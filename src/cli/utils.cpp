@@ -76,7 +76,7 @@ class Print_Help final : public Command
             }
 
          oss << Botan::search_map(groups_description, desc, desc) << ":\n";
-         for(auto& cmd : commands.second)
+         for(const auto& cmd : commands.second)
             {
             oss << "   " << std::setw(16) << std::left << cmd->cmd_name() << "   " << cmd->description() << "\n";
             }
