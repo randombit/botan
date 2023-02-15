@@ -13,12 +13,17 @@ enabled_checks = [
     'bugprone-*',
     'cert-*',
     'clang-analyzer-*',
-    'modernize-concat-nested-namespaces',
     'performance-*',
     'portability-*',
+
+    'modernize-concat-nested-namespaces',
+    'modernize-make-unique',
+    'modernize-make-shared',
+
     'readability-container-size-empty',
     'readability-static-definition-in-anonymous-namespace',
     'readability-convert-member-functions-to-static',
+
     'hicpp-special-member-functions',
 
 #    'cppcoreguidelines-*',
@@ -48,8 +53,6 @@ disabled_needs_work = [
     'hicpp-explicit-conversions',
     'modernize-pass-by-value',
     'modernize-use-nodiscard',
-    'modernize-make-unique',
-    'modernize-make-shared',
     'modernize-avoid-bind', # used a lot in pkcs11
     'modernize-use-trailing-return-type',
     'performance-inefficient-string-concatenation',

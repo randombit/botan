@@ -233,7 +233,7 @@ Key_Length_Specification OCB_Mode::key_spec() const
 void OCB_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
-   m_L.reset(new L_computer(*m_cipher));
+   m_L = std::make_unique<L_computer>(*m_cipher);
    }
 
 void OCB_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)

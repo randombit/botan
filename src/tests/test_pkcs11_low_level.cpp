@@ -38,7 +38,7 @@ class RAII_LowLevel
          m_is_session_open(false), m_is_logged_in(false)
          {
          LowLevel::C_GetFunctionList(m_module, &m_func_list);
-         m_low_level.reset(new LowLevel(m_func_list));
+         m_low_level = std::make_unique<LowLevel>(m_func_list);
 
          C_InitializeArgs init_args = { nullptr, nullptr, nullptr, nullptr, static_cast<CK_FLAGS>(Flag::OsLockingOk), nullptr };
 

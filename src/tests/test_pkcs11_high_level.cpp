@@ -10,6 +10,7 @@
 #include "tests.h"
 #include "test_pkcs11.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <memory>
@@ -103,8 +104,8 @@ class TestSession
          m_module(new Module(Test::pkcs11_lib()))
          {
          std::vector<SlotId> slot_vec = Slot::get_available_slots(*m_module, true);
-         m_slot.reset(new Slot(*m_module, slot_vec.at(0)));
-         m_session.reset(new Session(*m_slot, false));
+         m_slot = std::make_unique<Slot>(*m_module, slot_vec.at(0));
+         m_session = std::make_unique<Session>(*m_slot, false);
          if(login)
             {
             m_session->login(UserType::User, PIN());

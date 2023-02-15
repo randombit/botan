@@ -362,27 +362,27 @@ class Test_TLS_Policy_Text : public Test
          std::unique_ptr<Botan::TLS::Policy> policy;
          if(policy_str == "default")
             {
-            policy.reset(new Botan::TLS::Policy);
+            policy = std::make_unique<Botan::TLS::Policy>();
             }
          else if(policy_str == "suiteb_128")
             {
-            policy.reset(new Botan::TLS::NSA_Suite_B_128);
+            policy = std::make_unique<Botan::TLS::NSA_Suite_B_128>();
             }
          else if(policy_str == "suiteb_192")
             {
-            policy.reset(new Botan::TLS::NSA_Suite_B_192);
+            policy = std::make_unique<Botan::TLS::NSA_Suite_B_192>();
             }
          else if(policy_str == "bsi")
             {
-            policy.reset(new Botan::TLS::BSI_TR_02102_2);
+            policy = std::make_unique<Botan::TLS::BSI_TR_02102_2>();
             }
          else if(policy_str == "strict")
             {
-            policy.reset(new Botan::TLS::Strict_Policy);
+            policy = std::make_unique<Botan::TLS::Strict_Policy>();
             }
          else if(policy_str == "datagram")
             {
-            policy.reset(new Botan::TLS::Datagram_Policy);
+            policy = std::make_unique<Botan::TLS::Datagram_Policy>();
             }
          else
             {

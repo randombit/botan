@@ -8,6 +8,7 @@
 #include <botan/pipe.h>
 #include <botan/internal/out_buf.h>
 #include <botan/internal/secqueue.h>
+#include <memory>
 
 namespace Botan {
 
@@ -40,7 +41,7 @@ Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4) :
 */
 Pipe::Pipe(std::initializer_list<Filter*> args)
    {
-   m_outputs.reset(new Output_Buffers);
+   m_outputs = std::make_unique<Output_Buffers>();
    m_pipe = nullptr;
    m_default_read = 0;
    m_inside_msg = false;

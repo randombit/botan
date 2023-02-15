@@ -85,7 +85,7 @@ FPE_FE1::FPE_FE1(const BigInt& n,
          std::swap(m_a, m_b);
       }
 
-   mod_a.reset(new Modular_Reducer(m_a));
+   mod_a = std::make_unique<Modular_Reducer>(m_a);
    }
 
 FPE_FE1::~FPE_FE1() = default;

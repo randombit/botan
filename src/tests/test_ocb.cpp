@@ -188,7 +188,7 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
                bs = 64;
             else
                throw Test_Error("Unknown cipher for OCB wide block long test");
-            cipher.reset(new OCB_Wide_Test_Block_Cipher(bs));
+            cipher = std::make_unique<OCB_Wide_Test_Block_Cipher>(bs);
             }
 
          Botan::OCB_Encryption enc(std::move(cipher), std::min<size_t>(bs, 32));

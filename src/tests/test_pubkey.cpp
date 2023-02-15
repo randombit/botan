@@ -136,7 +136,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
 
       try
          {
-         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider));
+         verifier = std::make_unique<Botan::PK_Verifier>(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider);
          }
       catch(Botan::Lookup_Error&)
          {
@@ -158,7 +158,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
 
       try
          {
-         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::Signature_Format::Standard, sign_provider));
+         signer = std::make_unique<Botan::PK_Signer>(*privkey, Test::rng(), padding, Botan::Signature_Format::Standard, sign_provider);
 
          if(vars.has_key("Nonce"))
             {
@@ -224,7 +224,7 @@ PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const V
 
       try
          {
-         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, sig_format(), verify_provider));
+         verifier = std::make_unique<Botan::PK_Verifier>(*pubkey, padding, sig_format(), verify_provider);
          }
       catch(Botan::Lookup_Error&)
          {
@@ -278,7 +278,7 @@ PK_Signature_NonVerification_Test::run_one_test(const std::string& pad_hdr, cons
 
       try
          {
-         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider));
+         verifier = std::make_unique<Botan::PK_Verifier>(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider);
          result.test_eq("incorrect signature rejected", verifier->verify_message(message, invalid_signature), false);
          }
       catch(Botan::Lookup_Error&)
@@ -307,8 +307,8 @@ PK_Sign_Verify_DER_Test::run()
 
       try
          {
-         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::Signature_Format::DerSequence, provider));
-         verifier.reset(new Botan::PK_Verifier(*privkey, padding, Botan::Signature_Format::DerSequence, provider));
+         signer = std::make_unique<Botan::PK_Signer>(*privkey, Test::rng(), padding, Botan::Signature_Format::DerSequence, provider);
+         verifier = std::make_unique<Botan::PK_Verifier>(*privkey, padding, Botan::Signature_Format::DerSequence, provider);
          }
       catch(Botan::Lookup_Error& e)
          {
@@ -370,7 +370,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
 
       try
          {
-         decryptor.reset(new Botan::PK_Decryptor_EME(*privkey, Test::rng(), padding, dec_provider));
+         decryptor = std::make_unique<Botan::PK_Decryptor_EME>(*privkey, Test::rng(), padding, dec_provider);
          }
       catch(Botan::Lookup_Error&)
          {
@@ -402,7 +402,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
 
       try
          {
-         encryptor.reset(new Botan::PK_Encryptor_EME(*pubkey, Test::rng(), padding, enc_provider));
+         encryptor = std::make_unique<Botan::PK_Encryptor_EME>(*pubkey, Test::rng(), padding, enc_provider);
          }
       catch(Botan::Lookup_Error&)
          {
@@ -473,7 +473,7 @@ PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
 
       try
          {
-         decryptor.reset(new Botan::PK_Decryptor_EME(*privkey, Test::rng(), padding, dec_provider));
+         decryptor = std::make_unique<Botan::PK_Decryptor_EME>(*privkey, Test::rng(), padding, dec_provider);
          }
       catch(Botan::Lookup_Error&)
          {
@@ -515,7 +515,7 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
    std::unique_ptr<Botan::PK_KEM_Encryptor> enc;
    try
       {
-      enc.reset(new Botan::PK_KEM_Encryptor(pubkey, Test::rng(), kdf));
+      enc = std::make_unique<Botan::PK_KEM_Encryptor>(pubkey, Test::rng(), kdf);
       }
    catch(Botan::Lookup_Error&)
       {
@@ -538,7 +538,7 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
    std::unique_ptr<Botan::PK_KEM_Decryptor> dec;
    try
       {
-      dec.reset(new Botan::PK_KEM_Decryptor(*privkey, Test::rng(), kdf));
+      dec = std::make_unique<Botan::PK_KEM_Decryptor>(*privkey, Test::rng(), kdf);
       }
    catch(Botan::Lookup_Error& e)
       {
@@ -577,7 +577,7 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
 
       try
          {
-         kas.reset(new Botan::PK_Key_Agreement(*privkey, Test::rng(), kdf, provider));
+         kas = std::make_unique<Botan::PK_Key_Agreement>(*privkey, Test::rng(), kdf, provider);
 
          auto derived_key = kas->derive_key(key_len, pubkey).bits_of();
          result.test_eq(provider, "agreement", derived_key, shared);
@@ -836,7 +836,7 @@ Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, 
 #if defined(BOTAN_HAS_HMAC_DRBG)
    if(rng_algo == "HMAC_DRBG")
       {
-      rng.reset(new Botan::HMAC_DRBG(rng_params));
+      rng = std::make_unique<Botan::HMAC_DRBG>(rng_params);
       }
 #endif
 
@@ -844,7 +844,7 @@ Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, 
       {
       if(!rng_params.empty())
          throw Test_Error("Expected empty RngParams for Fixed RNG");
-      rng.reset(new Fixed_Output_RNG());
+      rng = std::make_unique<Fixed_Output_RNG>();
       }
 
    if(rng)

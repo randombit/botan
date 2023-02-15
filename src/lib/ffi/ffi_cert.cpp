@@ -7,6 +7,7 @@
 #include <botan/ffi.h>
 #include <botan/internal/ffi_util.h>
 #include <botan/internal/ffi_pkey.h>
+#include <memory>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/x509cert.h>
@@ -298,13 +299,13 @@ int botan_x509_cert_verify(int* result_code,
 
       if(trusted_path && *trusted_path)
          {
-         trusted_from_path.reset(new Botan::Certificate_Store_In_Memory(trusted_path));
+         trusted_from_path = std::make_unique<Botan::Certificate_Store_In_Memory>(trusted_path);
          trusted_roots.push_back(trusted_from_path.get());
          }
 
       if(trusted_len > 0)
          {
-         trusted_extra.reset(new Botan::Certificate_Store_In_Memory);
+         trusted_extra = std::make_unique<Botan::Certificate_Store_In_Memory>();
          for(size_t i = 0; i != trusted_len; ++i)
             {
             trusted_extra->add_certificate(safe_get(trusted[i]));
@@ -452,13 +453,13 @@ int botan_x509_cert_verify_with_crl(
 
       if(trusted_path && *trusted_path)
          {
-         trusted_from_path.reset(new Botan::Certificate_Store_In_Memory(trusted_path));
+         trusted_from_path = std::make_unique<Botan::Certificate_Store_In_Memory>(trusted_path);
          trusted_roots.push_back(trusted_from_path.get());
          }
 
       if(trusted_len > 0)
          {
-         trusted_extra.reset(new Botan::Certificate_Store_In_Memory);
+         trusted_extra = std::make_unique<Botan::Certificate_Store_In_Memory>();
          for(size_t i = 0; i != trusted_len; ++i)
             {
             trusted_extra->add_certificate(safe_get(trusted[i]));
@@ -468,7 +469,7 @@ int botan_x509_cert_verify_with_crl(
 
       if(crls_len > 0)
          {
-         trusted_crls.reset(new Botan::Certificate_Store_In_Memory);
+         trusted_crls = std::make_unique<Botan::Certificate_Store_In_Memory>();
          for(size_t i = 0; i != crls_len; ++i)
             {
             trusted_crls->add_crl(safe_get(crls[i]));

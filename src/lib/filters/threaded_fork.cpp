@@ -92,9 +92,8 @@ void Threaded_Fork::set_next(Filter* f[], size_t n)
       for(size_t i = m_threads.size(); i != n; ++i)
          {
          m_threads.push_back(
-            std::shared_ptr<std::thread>(
-               new std::thread(
-                  std::bind(&Threaded_Fork::thread_entry, this, m_next[i]))));
+            std::make_shared<std::thread>(
+               std::bind(&Threaded_Fork::thread_entry, this, m_next[i])));
          }
       }
    }

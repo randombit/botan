@@ -53,9 +53,12 @@ int Command::run(const std::vector<std::string>& params)
    {
    try
       {
-      m_args.reset(new Argument_Parser(m_spec,
-                                       {"verbose", "help"},
-                                       {"output", "error-output", "rng-type", "drbg-seed"}));
+      const std::vector<std::string> extra_flags = {"verbose", "help"};
+      const std::vector<std::string> extra_opts =
+         {"output", "error-output", "rng-type", "drbg-seed"};
+
+      m_args = std::make_unique<Argument_Parser>(
+         m_spec, extra_flags, extra_opts);
 
       m_args->parse_args(params);
 
@@ -65,7 +68,7 @@ int Command::run(const std::vector<std::string>& params)
 
          if(!output_file.empty())
             {
-            m_output_stream.reset(new std::ofstream(output_file, std::ios::binary));
+            m_output_stream = std::make_unique<std::ofstream>(output_file, std::ios::binary);
             if(!m_output_stream->good())
                throw CLI_IO_Error("opening", output_file);
             }
@@ -77,7 +80,7 @@ int Command::run(const std::vector<std::string>& params)
 
          if(!output_file.empty())
             {
-            m_error_output_stream.reset(new std::ofstream(output_file, std::ios::binary));
+            m_error_output_stream = std::make_unique<std::ofstream>(output_file, std::ios::binary);
             if(!m_error_output_stream->good())
                throw CLI_IO_Error("opening", output_file);
             }

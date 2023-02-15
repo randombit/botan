@@ -149,7 +149,8 @@ class BitMap final
       explicit BitMap(size_t bits) : m_len(bits)
          {
          m_bits.resize((bits + BITMASK_BITS - 1) / BITMASK_BITS);
-         m_main_mask = static_cast<bitmask_type>(~0);
+         // MSVC warns if the cast isn't there, clang-tidy warns that the cast is pointless
+         m_main_mask = static_cast<bitmask_type>(~0); // NOLINT(bugprone-misplaced-widening-cast)
          m_last_mask = m_main_mask;
 
          if(bits % BITMASK_BITS != 0)
