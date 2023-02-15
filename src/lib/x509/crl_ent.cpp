@@ -113,7 +113,7 @@ const CRL_Entry_Data& CRL_Entry::data() const
       throw Invalid_State("CRL_Entry_Data uninitialized");
       }
 
-   return *m_data.get();
+   return *m_data;
    }
 
 const std::vector<uint8_t>& CRL_Entry::serial_number() const

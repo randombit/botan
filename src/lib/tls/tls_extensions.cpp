@@ -800,7 +800,7 @@ Cookie::Cookie(TLS_Data_Reader& reader,
       throw Decoding_Error("Not enough bytes in the buffer to decode Cookie");
       }
 
-   for (auto i = 0u; i < len; ++i)
+   for(size_t i = 0; i < len; ++i)
       {
       m_cookie.push_back(reader.get_byte());
       }

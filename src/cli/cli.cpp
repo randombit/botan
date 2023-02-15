@@ -168,7 +168,7 @@ std::vector<std::string> Command::get_arg_list(const std::string& what) const
 
 std::ostream& Command::output()
    {
-   if(m_output_stream.get())
+   if(m_output_stream)
       {
       return *m_output_stream;
       }
@@ -177,7 +177,7 @@ std::ostream& Command::output()
 
 std::ostream& Command::error_output()
    {
-   if(m_error_output_stream.get())
+   if(m_error_output_stream)
       {
       return *m_error_output_stream;
       }
@@ -250,7 +250,7 @@ Botan::RandomNumberGenerator& Command::rng()
       m_rng = cli_make_rng(get_arg("rng-type"), get_arg("drbg-seed"));
       }
 
-   return *m_rng.get();
+   return *m_rng;
    }
 
 std::string Command::get_passphrase_arg(const std::string& prompt, const std::string& opt_name)

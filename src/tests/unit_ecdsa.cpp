@@ -266,7 +266,7 @@ Test::Result test_unusual_curve()
    Botan::DataSource_Memory key_data_src(key_odd_curve_str);
    std::unique_ptr<Botan::Private_Key> loaded_key = Botan::PKCS8::load_key(key_data_src);
 
-   result.confirm("reloaded key", loaded_key.get() != nullptr);
+   result.confirm("reloaded key", loaded_key != nullptr);
 
    return result;
    }
@@ -373,7 +373,7 @@ Test::Result test_ecc_key_with_rfc5915_extensions()
       Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_ext.pem"));
       std::unique_ptr<Botan::Private_Key> pkcs8 = Botan::PKCS8::load_key(key_stream);
 
-      result.confirm("loaded RFC 5915 key", pkcs8.get() != nullptr);
+      result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
       result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
       result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
       }
@@ -394,7 +394,7 @@ Test::Result test_ecc_key_with_rfc5915_parameters()
       Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_parameters.pem"));
       auto pkcs8 = Botan::PKCS8::load_key(key_stream);
 
-      result.confirm("loaded RFC 5915 key", pkcs8.get() != nullptr);
+      result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
       result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
       result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
       }

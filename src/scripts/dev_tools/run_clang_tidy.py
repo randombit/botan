@@ -27,10 +27,10 @@ enabled_checks = [
 
     'hicpp-special-member-functions',
 
-    'cppcoreguidelines-*',
-    'hicpp-*',
-    'modernize-*',
-    'readability-*',
+#    'cppcoreguidelines-*',
+#    'hicpp-*',
+#    'modernize-*',
+#    'readability-*',
 ]
 
 # these might be worth being clean for

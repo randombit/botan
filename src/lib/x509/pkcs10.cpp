@@ -194,7 +194,7 @@ const PKCS10_Data& PKCS10_Request::data() const
    {
    if(m_data == nullptr)
       throw Decoding_Error("PKCS10_Request decoding failed");
-   return *m_data.get();
+   return *m_data;
    }
 
 /*
