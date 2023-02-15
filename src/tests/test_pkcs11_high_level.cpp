@@ -10,7 +10,6 @@
 #include "tests.h"
 #include "test_pkcs11.h"
 
-#include <memory>
 #include <string>
 #include <vector>
 #include <memory>
