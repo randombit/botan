@@ -145,8 +145,9 @@ XMSS_WOTS_PrivateKey::XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
                                            std::span<const uint8_t> private_seed,
                                            const XMSS_Address& adrs,
                                            XMSS_Hash& hash)
-   : XMSS_WOTS_Base(std::move(params), wots_keysig_t(params.len()))
+   : XMSS_WOTS_Base(std::move(params))
    {
+   m_key_data.resize(m_params.len());
    const auto r = hash.prf(private_seed, adrs.bytes());
 
    for(size_t i = 0; i < m_params.len(); ++i)
