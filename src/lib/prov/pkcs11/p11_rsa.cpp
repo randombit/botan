@@ -63,14 +63,13 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, ObjectHandle hand
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, const RSA_PrivateKeyImportProperties& priv_key_props)
    : Object(session, priv_key_props),
      RSA_PublicKey(priv_key_props.modulus(),
-                   BigInt::decode(get_attribute_value(AttributeType::PublicExponent))),
-     m_use_software_padding(false)
+                   BigInt::decode(get_attribute_value(AttributeType::PublicExponent)))
    {
    }
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, uint32_t bits,
                                              const RSA_PrivateKeyGenerationProperties& priv_key_props)
-   : Object(session), RSA_PublicKey(), m_use_software_padding(false)
+   : Object(session), RSA_PublicKey()
    {
    RSA_PublicKeyGenerationProperties pub_key_props(bits);
    pub_key_props.set_encrypt(true);
