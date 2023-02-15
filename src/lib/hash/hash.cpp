@@ -81,6 +81,10 @@
   #include <botan/internal/par_hash.h>
 #endif
 
+#if defined(BOTAN_HAS_TRUNCATED_HASH)
+  #include <botan/internal/trunc_hash.h>
+#endif
+
 #if defined(BOTAN_HAS_COMB4P)
   #include <botan/internal/comb4p.h>
 #endif
@@ -287,6 +291,19 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
          }
 
       return std::make_unique<Parallel>(hashes);
+      }
+#endif
+
+#if defined(BOTAN_HAS_TRUNCATED_HASH)
+   if(req.algo_name() == "Truncated" && req.arg_count() == 2)
+      {
+      auto hash = HashFunction::create(req.arg(0));
+      if(!hash)
+         {
+         return nullptr;
+         }
+
+      return std::make_unique<Truncated_Hash>(std::move(hash), req.arg_as_integer(1));
       }
 #endif
 
