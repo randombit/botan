@@ -307,22 +307,30 @@ Test::Result test_c_get_slot_list()
 
    std::vector<SlotId> slot_vec;
 
-   // assumes at least one smartcard reader is attached
-   bool token_present = false;
+   // assumes smartcard reader is attached without card
 
-   auto binder = std::bind(static_cast< bool (LowLevel::*)(bool, std::vector<SlotId>&, ReturnValue*) const>(&LowLevel::C_GetSlotList),
-                           *p11_low_level.get(),
-                           std::ref(token_present),
-                           std::ref(slot_vec),
-                           std::placeholders::_1);
+   auto slots_no_card =
+      std::bind(static_cast< bool (LowLevel::*)(bool, std::vector<SlotId>&, ReturnValue*) const>(&LowLevel::C_GetSlotList),
+                *p11_low_level.get(),
+                false, // no card present
+                std::ref(slot_vec),
+                std::placeholders::_1);
 
-   Test::Result result = test_function("C_GetSlotList", binder);
+   Test::Result result = test_function("C_GetSlotList", slots_no_card);
    result.test_ne("C_GetSlotList number of slots without attached token > 0", slot_vec.size(), 0);
 
-   // assumes at least one smartcard reader with connected smartcard is attached
+   // assumes smartcard reader is attached with a card
+
+   auto slots_with_card =
+      std::bind(static_cast< bool (LowLevel::*)(bool, std::vector<SlotId>&, ReturnValue*) const>(&LowLevel::C_GetSlotList),
+                *p11_low_level.get(),
+                true, // card present
+                std::ref(slot_vec),
+                std::placeholders::_1);
+
+
    slot_vec.clear();
-   token_present = true; // updates ref in binder
-   result.merge(test_function("C_GetSlotList", binder));
+   result.merge(test_function("C_GetSlotList", slots_with_card));
    result.test_ne("C_GetSlotList number of slots with attached token > 0", slot_vec.size(), 0);
 
    return result;
@@ -419,20 +427,26 @@ Test::Result test_open_close_session()
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(true);
 
    // public read only session
-   Flags flags = PKCS11::flags(Flag::SerialSession);
+   const Flags ro_flags = PKCS11::flags(Flag::SerialSession);
    SessionHandle session_handle = 0;
 
-   auto open_session_bind = std::bind(&LowLevel::C_OpenSession, *p11_low_level.get(),
-                                      slot_vec.at(0), std::ref(flags), nullptr, nullptr, &session_handle, std::placeholders::_1);
+   auto open_session_ro =
+      std::bind(&LowLevel::C_OpenSession, *p11_low_level.get(),
+                slot_vec.at(0), ro_flags, nullptr, nullptr, &session_handle, std::placeholders::_1);
 
-   auto close_session_bind = std::bind(&LowLevel::C_CloseSession, *p11_low_level.get(),
-                                       std::ref(session_handle), std::placeholders::_1);
+   auto close_session = std::bind(&LowLevel::C_CloseSession, *p11_low_level.get(),
+                                  std::ref(session_handle), std::placeholders::_1);
 
-   Test::Result result = test_function("C_OpenSession", open_session_bind, "C_CloseSession", close_session_bind);
+   Test::Result result = test_function("C_OpenSession", open_session_ro, "C_CloseSession", close_session);
 
    // public read write session
-   flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
-   result.merge(test_function("C_OpenSession", open_session_bind, "C_CloseSession", close_session_bind));
+   const Flags rw_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
+
+   auto open_session_rw =
+      std::bind(&LowLevel::C_OpenSession, *p11_low_level.get(),
+                slot_vec.at(0), rw_flags, nullptr, nullptr, &session_handle, std::placeholders::_1);
+
+   result.merge(test_function("C_OpenSession", open_session_rw, "C_CloseSession", close_session));
 
    return result;
    }
