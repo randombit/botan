@@ -5,29 +5,12 @@
 */
 
 #include <botan/internal/sha2_64.h>
+#include <botan/internal/sha2_64_f.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/bit_ops.h>
 
 namespace Botan {
-
-/*
-* SHA-512 F1 Function
-*
-* Use a macro as many compilers won't inline a function this big,
-* even though it is much faster if inlined.
-*/
-#define SHA2_64_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic)         \
-   do {                                                                  \
-      const uint64_t E_rho = rho<14, 18, 41>(E);                         \
-      const uint64_t A_rho = rho<28, 34, 39>(A);                         \
-      const uint64_t M2_sigma = sigma<19, 61, 6>(M2);                    \
-      const uint64_t M4_sigma = sigma<1, 8, 7>(M4);                      \
-      H += magic + E_rho + choose(E, F, G) + M1;                         \
-      D += H;                                                            \
-      H += A_rho + majority(A, B, C);                                    \
-      M1 += M2_sigma + M3 + M4_sigma;                                    \
-   } while(0);
 
 void SHA_512::compress_digest_bmi2(secure_vector<uint64_t>& digest,
                                    const uint8_t input[], size_t blocks)

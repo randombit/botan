@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/sha2_32.h>
+#include <botan/internal/sha2_32_f.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/bit_ops.h>
@@ -53,23 +54,6 @@ std::unique_ptr<HashFunction> SHA_256::copy_state() const
    {
    return std::make_unique<SHA_256>(*this);
    }
-
-/*
-* SHA-256 F1 Function
-*
-* Use a macro as many compilers won't inline a function this big,
-* even though it is much faster if inlined.
-*/
-#define SHA2_32_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic) do {   \
-   uint32_t A_rho = rho<2, 13, 22>(A);                                  \
-   uint32_t E_rho = rho<6, 11, 25>(E);                                  \
-   uint32_t M2_sigma = sigma<17, 19, 10>(M2);                           \
-   uint32_t M4_sigma = sigma<7, 18, 3>(M4);                             \
-   H += magic + E_rho + choose(E, F, G) + M1;                           \
-   D += H;                                                              \
-   H += A_rho + majority(A, B, C);                                      \
-   M1 += M2_sigma + M3 + M4_sigma;                                      \
-   } while(0);
 
 /*
 * SHA-224 / SHA-256 compression function

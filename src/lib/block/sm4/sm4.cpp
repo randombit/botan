@@ -118,41 +118,59 @@ inline uint32_t SM4_Tp(uint32_t b)
    return t ^ rotl<13>(t) ^ rotl<23>(t);
    }
 
-#define SM4_E_RNDS(R, F) do {                      \
-   B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[4*R+0]);            \
-   B1 ^= F(B2 ^ B3 ^ B0 ^ m_RK[4*R+1]);            \
-   B2 ^= F(B3 ^ B0 ^ B1 ^ m_RK[4*R+2]);            \
-   B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[4*R+3]);            \
-   } while(0)
+template<size_t R, typename F>
+BOTAN_FORCE_INLINE
+void SM4_E(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3,
+           const secure_vector<uint32_t>& RK, F& f)
+   {
+   B0 ^= f(B1 ^ B2 ^ B3 ^ RK[4*R+0]);
+   B1 ^= f(B2 ^ B3 ^ B0 ^ RK[4*R+1]);
+   B2 ^= f(B3 ^ B0 ^ B1 ^ RK[4*R+2]);
+   B3 ^= f(B0 ^ B1 ^ B2 ^ RK[4*R+3]);
+   }
 
-#define SM4_Ex2_RNDS(R, F) do {                    \
-   B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[4*R+0]);            \
-   C0 ^= F(C1 ^ C2 ^ C3 ^ m_RK[4*R+0]);            \
-   B1 ^= F(B2 ^ B3 ^ B0 ^ m_RK[4*R+1]);            \
-   C1 ^= F(C2 ^ C3 ^ C0 ^ m_RK[4*R+1]);            \
-   B2 ^= F(B3 ^ B0 ^ B1 ^ m_RK[4*R+2]);            \
-   C2 ^= F(C3 ^ C0 ^ C1 ^ m_RK[4*R+2]);            \
-   B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[4*R+3]);            \
-   C3 ^= F(C0 ^ C1 ^ C2 ^ m_RK[4*R+3]);            \
-} while(0)
+template<size_t R, typename F>
+BOTAN_FORCE_INLINE
+void SM4_E(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3,
+           uint32_t& C0, uint32_t& C1, uint32_t& C2, uint32_t& C3,
+           const secure_vector<uint32_t>& RK, F& f)
+   {
+   B0 ^= f(B1 ^ B2 ^ B3 ^ RK[4*R+0]);
+   C0 ^= f(C1 ^ C2 ^ C3 ^ RK[4*R+0]);
+   B1 ^= f(B2 ^ B3 ^ B0 ^ RK[4*R+1]);
+   C1 ^= f(C2 ^ C3 ^ C0 ^ RK[4*R+1]);
+   B2 ^= f(B3 ^ B0 ^ B1 ^ RK[4*R+2]);
+   C2 ^= f(C3 ^ C0 ^ C1 ^ RK[4*R+2]);
+   B3 ^= f(B0 ^ B1 ^ B2 ^ RK[4*R+3]);
+   C3 ^= f(C0 ^ C1 ^ C2 ^ RK[4*R+3]);
+   }
 
-#define SM4_D_RNDS(R, F) do {                      \
-   B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[4*R+3]);            \
-   B1 ^= F(B2 ^ B3 ^ B0 ^ m_RK[4*R+2]);            \
-   B2 ^= F(B3 ^ B0 ^ B1 ^ m_RK[4*R+1]);            \
-   B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[4*R+0]);            \
-   } while(0)
+template<size_t R, typename F>
+BOTAN_FORCE_INLINE
+void SM4_D(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3,
+           const secure_vector<uint32_t>& RK, F& f)
+   {
+   B0 ^= f(B1 ^ B2 ^ B3 ^ RK[4*R+3]);
+   B1 ^= f(B2 ^ B3 ^ B0 ^ RK[4*R+2]);
+   B2 ^= f(B3 ^ B0 ^ B1 ^ RK[4*R+1]);
+   B3 ^= f(B0 ^ B1 ^ B2 ^ RK[4*R+0]);
+   }
 
-#define SM4_Dx2_RNDS(R, F) do {                    \
-   B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[4*R+3]);            \
-   C0 ^= F(C1 ^ C2 ^ C3 ^ m_RK[4*R+3]);            \
-   B1 ^= F(B2 ^ B3 ^ B0 ^ m_RK[4*R+2]);            \
-   C1 ^= F(C2 ^ C3 ^ C0 ^ m_RK[4*R+2]);            \
-   B2 ^= F(B3 ^ B0 ^ B1 ^ m_RK[4*R+1]);            \
-   C2 ^= F(C3 ^ C0 ^ C1 ^ m_RK[4*R+1]);            \
-   B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[4*R+0]);            \
-   C3 ^= F(C0 ^ C1 ^ C2 ^ m_RK[4*R+0]);            \
-} while(0)
+template<size_t R, typename F>
+BOTAN_FORCE_INLINE
+void SM4_D(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3,
+           uint32_t& C0, uint32_t& C1, uint32_t& C2, uint32_t& C3,
+           const secure_vector<uint32_t>& RK, F& f)
+   {
+   B0 ^= f(B1 ^ B2 ^ B3 ^ RK[4*R+3]);
+   C0 ^= f(C1 ^ C2 ^ C3 ^ RK[4*R+3]);
+   B1 ^= f(B2 ^ B3 ^ B0 ^ RK[4*R+2]);
+   C1 ^= f(C2 ^ C3 ^ C0 ^ RK[4*R+2]);
+   B2 ^= f(B3 ^ B0 ^ B1 ^ RK[4*R+1]);
+   C2 ^= f(C3 ^ C0 ^ C1 ^ RK[4*R+1]);
+   B3 ^= f(B0 ^ B1 ^ B2 ^ RK[4*R+0]);
+   C3 ^= f(C0 ^ C1 ^ C2 ^ RK[4*R+0]);
+   }
 
 }
 
@@ -180,14 +198,14 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t C2 = load_be<uint32_t>(in, 6);
       uint32_t C3 = load_be<uint32_t>(in, 7);
 
-      SM4_Ex2_RNDS(0, SM4_T_slow);
-      SM4_Ex2_RNDS(1, SM4_T);
-      SM4_Ex2_RNDS(2, SM4_T);
-      SM4_Ex2_RNDS(3, SM4_T);
-      SM4_Ex2_RNDS(4, SM4_T);
-      SM4_Ex2_RNDS(5, SM4_T);
-      SM4_Ex2_RNDS(6, SM4_T);
-      SM4_Ex2_RNDS(7, SM4_T_slow);
+      SM4_E<0>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
+      SM4_E<1>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_E<2>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_E<3>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_E<4>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_E<5>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_E<6>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_E<7>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
 
@@ -203,14 +221,14 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t B2 = load_be<uint32_t>(in, 2);
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
-      SM4_E_RNDS(0, SM4_T_slow);
-      SM4_E_RNDS(1, SM4_T);
-      SM4_E_RNDS(2, SM4_T);
-      SM4_E_RNDS(3, SM4_T);
-      SM4_E_RNDS(4, SM4_T);
-      SM4_E_RNDS(5, SM4_T);
-      SM4_E_RNDS(6, SM4_T);
-      SM4_E_RNDS(7, SM4_T_slow);
+      SM4_E<0>(B0, B1, B2, B3, m_RK, SM4_T_slow);
+      SM4_E<1>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_E<2>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_E<3>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_E<4>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_E<5>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_E<6>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_E<7>(B0, B1, B2, B3, m_RK, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0);
 
@@ -243,14 +261,14 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t C2 = load_be<uint32_t>(in, 6);
       uint32_t C3 = load_be<uint32_t>(in, 7);
 
-      SM4_Dx2_RNDS(7, SM4_T_slow);
-      SM4_Dx2_RNDS(6, SM4_T);
-      SM4_Dx2_RNDS(5, SM4_T);
-      SM4_Dx2_RNDS(4, SM4_T);
-      SM4_Dx2_RNDS(3, SM4_T);
-      SM4_Dx2_RNDS(2, SM4_T);
-      SM4_Dx2_RNDS(1, SM4_T);
-      SM4_Dx2_RNDS(0, SM4_T_slow);
+      SM4_D<7>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
+      SM4_D<6>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_D<5>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_D<4>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_D<3>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_D<2>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_D<1>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
+      SM4_D<0>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
 
@@ -266,14 +284,14 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t B2 = load_be<uint32_t>(in, 2);
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
-      SM4_D_RNDS(7, SM4_T_slow);
-      SM4_D_RNDS(6, SM4_T);
-      SM4_D_RNDS(5, SM4_T);
-      SM4_D_RNDS(4, SM4_T);
-      SM4_D_RNDS(3, SM4_T);
-      SM4_D_RNDS(2, SM4_T);
-      SM4_D_RNDS(1, SM4_T);
-      SM4_D_RNDS(0, SM4_T_slow);
+      SM4_D<7>(B0, B1, B2, B3, m_RK, SM4_T_slow);
+      SM4_D<6>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_D<5>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_D<4>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_D<3>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_D<2>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_D<1>(B0, B1, B2, B3, m_RK, SM4_T);
+      SM4_D<0>(B0, B1, B2, B3, m_RK, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0);
 
@@ -281,9 +299,6 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       out += BLOCK_SIZE;
       }
    }
-
-#undef SM4_E_RNDS
-#undef SM4_D_RNDS
 
 /*
 * SM4 Key Schedule

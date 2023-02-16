@@ -16,7 +16,9 @@ namespace Botan {
   version they are running against.
 */
 
+// NOLINTNEXTLINE(*-macro-usage)
 #define QUOTE(name) #name
+// NOLINTNEXTLINE(*-macro-usage)
 #define STR(macro) QUOTE(macro)
 
 const char* short_version_cstr()
