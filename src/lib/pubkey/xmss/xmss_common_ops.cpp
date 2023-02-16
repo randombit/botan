@@ -21,13 +21,16 @@ XMSS_Common_Ops::randomize_tree_hash(secure_vector<uint8_t>& result,
                                      const XMSS_Parameters& params)
    {
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Key_Mode);
-   secure_vector<uint8_t> key { hash.prf(seed, adrs.bytes()) };
+   secure_vector<uint8_t> key;
+   hash.prf(key, seed, adrs.bytes());
 
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Mask_MSB_Mode);
-   secure_vector<uint8_t> bitmask_l { hash.prf(seed, adrs.bytes()) };
+   secure_vector<uint8_t> bitmask_l;
+   hash.prf(bitmask_l, seed, adrs.bytes());
 
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Mask_LSB_Mode);
-   secure_vector<uint8_t> bitmask_r { hash.prf(seed, adrs.bytes()) };
+   secure_vector<uint8_t> bitmask_r;
+   hash.prf(bitmask_r, seed, adrs.bytes());
 
    BOTAN_ASSERT(bitmask_l.size() == left.size() &&
                 bitmask_r.size() == right.size(),

@@ -60,7 +60,7 @@ class XMSS_PrivateKey_Internal
                                RandomNumberGenerator& rng)
          : m_xmss_params(xmss_params)
          , m_wots_params(wots_params)
-         , m_hash(xmss_params.hash_function_name())
+         , m_hash(xmss_params)
          , m_prf(rng.random_vec(xmss_params.element_size()))
          , m_private_seed(rng.random_vec(xmss_params.element_size()))
          , m_index_reg(XMSS_Index_Registry::get_instance()) {}
@@ -71,7 +71,7 @@ class XMSS_PrivateKey_Internal
                                secure_vector<uint8_t> prf)
          : m_xmss_params(xmss_params)
          , m_wots_params(wots_params)
-         , m_hash(m_xmss_params.hash_function_name())
+         , m_hash(m_xmss_params)
          , m_prf(std::move(prf))
          , m_private_seed(std::move(private_seed))
          , m_index_reg(XMSS_Index_Registry::get_instance()) {}
@@ -81,7 +81,7 @@ class XMSS_PrivateKey_Internal
                                std::span<const uint8_t> key_bits)
          : m_xmss_params(xmss_params)
          , m_wots_params(wots_params)
-         , m_hash(m_xmss_params.hash_function_name())
+         , m_hash(m_xmss_params)
          , m_index_reg(XMSS_Index_Registry::get_instance())
          {
          /*
