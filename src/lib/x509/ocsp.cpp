@@ -173,7 +173,7 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
       if(sig_info.size() != 2 || sig_info[0] != pub_key->algo_name())
          return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
 
-      std::string padding = sig_info[1];
+      const std::string& padding = sig_info[1];
       const Signature_Format format = pub_key->default_x509_signature_format();
 
       PK_Verifier verifier(*pub_key, padding, format);

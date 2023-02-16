@@ -162,7 +162,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
             }
          }
 
-      Extensions extensions = subject.v3_extensions();
+      const Extensions& extensions = subject.v3_extensions();
       const auto& extensions_vec = extensions.extensions();
       if(subject.x509_version() < 3 && !extensions_vec.empty())
          {
@@ -172,7 +172,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
          {
          extension.first->validate(subject, issuer, cert_path, cert_status, i);
          }
-      if(extensions.extensions().size() != extensions.get_extension_oids().size())
+      if(extensions_vec.size() != extensions.get_extension_oids().size())
          {
          status.insert(Certificate_Status_Code::DUPLICATE_CERT_EXTENSION);
          }

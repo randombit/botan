@@ -50,7 +50,6 @@ disabled_needs_work = [
     'hicpp-explicit-conversions',
     'modernize-avoid-bind', # used a lot in pkcs11
     'modernize-pass-by-value',
-    'performance-unnecessary-copy-initialization',
     'readability-convert-member-functions-to-static',
     'readability-implicit-bool-conversion', # maybe fix this
     'readability-inconsistent-declaration-parameter-name', # should fix this
