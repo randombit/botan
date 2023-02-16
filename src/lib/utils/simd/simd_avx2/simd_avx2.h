@@ -27,57 +27,57 @@ class SIMD_8x32 final
       ~SIMD_8x32() = default;
 
       BOTAN_AVX2_FN
-      BOTAN_FORCE_INLINE SIMD_8x32()
+      BOTAN_FORCE_INLINE SIMD_8x32() noexcept
          {
          m_avx2 = _mm256_setzero_si256();
          }
 
       BOTAN_AVX2_FN
-      explicit SIMD_8x32(const uint32_t B[8])
+      explicit SIMD_8x32(const uint32_t B[8]) noexcept
          {
          m_avx2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(B));
          }
 
       BOTAN_AVX2_FN
       explicit SIMD_8x32(uint32_t B0, uint32_t B1, uint32_t B2, uint32_t B3,
-                         uint32_t B4, uint32_t B5, uint32_t B6, uint32_t B7)
+                         uint32_t B4, uint32_t B5, uint32_t B6, uint32_t B7) noexcept
          {
          m_avx2 = _mm256_set_epi32(B7, B6, B5, B4, B3, B2, B1, B0);
          }
 
       BOTAN_AVX2_FN
-      static SIMD_8x32 splat(uint32_t B)
+      static SIMD_8x32 splat(uint32_t B) noexcept
          {
          return SIMD_8x32(_mm256_set1_epi32(B));
          }
 
       BOTAN_AVX2_FN
-      static SIMD_8x32 load_le(const uint8_t* in)
+      static SIMD_8x32 load_le(const uint8_t* in) noexcept
          {
          return SIMD_8x32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(in)));
          }
 
       BOTAN_AVX2_FN
-      static SIMD_8x32 load_be(const uint8_t* in)
+      static SIMD_8x32 load_be(const uint8_t* in) noexcept
          {
          return load_le(in).bswap();
          }
 
       BOTAN_AVX2_FN
-      void store_le(uint8_t out[]) const
+      void store_le(uint8_t out[]) const noexcept
          {
          _mm256_storeu_si256(reinterpret_cast<__m256i*>(out), m_avx2);
          }
 
       BOTAN_AVX2_FN
-      void store_be(uint8_t out[]) const
+      void store_be(uint8_t out[]) const noexcept
          {
          bswap().store_le(out);
          }
 
       template<size_t ROT>
       BOTAN_AVX2_FN
-      SIMD_8x32 rotl() const
+      SIMD_8x32 rotl() const noexcept
          {
          static_assert(ROT > 0 && ROT < 32, "Invalid rotation constant");
 
@@ -108,12 +108,12 @@ class SIMD_8x32 final
 
       template<size_t ROT>
       BOTAN_AVX2_FN
-      SIMD_8x32 rotr() const
+      SIMD_8x32 rotr() const noexcept
          {
          return this->rotl<32-ROT>();
          }
 
-      SIMD_8x32 BOTAN_AVX2_FN sigma0() const
+      SIMD_8x32 BOTAN_AVX2_FN sigma0() const noexcept
          {
          const SIMD_8x32 rot1 = this->rotr<2>();
          const SIMD_8x32 rot2 = this->rotr<13>();
@@ -121,7 +121,7 @@ class SIMD_8x32 final
          return rot1 ^ rot2 ^ rot3;
          }
 
-      SIMD_8x32 BOTAN_AVX2_FN sigma1() const
+      SIMD_8x32 BOTAN_AVX2_FN sigma1() const noexcept
          {
          const SIMD_8x32 rot1 = this->rotr<6>();
          const SIMD_8x32 rot2 = this->rotr<11>();
@@ -130,7 +130,7 @@ class SIMD_8x32 final
          }
 
       BOTAN_AVX2_FN
-      SIMD_8x32 operator+(const SIMD_8x32& other) const
+      SIMD_8x32 operator+(const SIMD_8x32& other) const noexcept
          {
          SIMD_8x32 retval(*this);
          retval += other;
@@ -138,7 +138,7 @@ class SIMD_8x32 final
          }
 
       BOTAN_AVX2_FN
-      SIMD_8x32 operator-(const SIMD_8x32& other) const
+      SIMD_8x32 operator-(const SIMD_8x32& other) const noexcept
          {
          SIMD_8x32 retval(*this);
          retval -= other;
@@ -146,7 +146,7 @@ class SIMD_8x32 final
          }
 
       BOTAN_AVX2_FN
-      SIMD_8x32 operator^(const SIMD_8x32& other) const
+      SIMD_8x32 operator^(const SIMD_8x32& other) const noexcept
          {
          SIMD_8x32 retval(*this);
          retval ^= other;
@@ -154,7 +154,7 @@ class SIMD_8x32 final
          }
 
       BOTAN_AVX2_FN
-      SIMD_8x32 operator|(const SIMD_8x32& other) const
+      SIMD_8x32 operator|(const SIMD_8x32& other) const noexcept
          {
          SIMD_8x32 retval(*this);
          retval |= other;
@@ -162,7 +162,7 @@ class SIMD_8x32 final
          }
 
       BOTAN_AVX2_FN
-      SIMD_8x32 operator&(const SIMD_8x32& other) const
+      SIMD_8x32 operator&(const SIMD_8x32& other) const noexcept
          {
          SIMD_8x32 retval(*this);
          retval &= other;
@@ -205,31 +205,31 @@ class SIMD_8x32 final
          m_avx2 = _mm256_and_si256(m_avx2, other.m_avx2);
          }
 
-      template<int SHIFT> BOTAN_AVX2_FN SIMD_8x32 shl() const
+      template<int SHIFT> BOTAN_AVX2_FN SIMD_8x32 shl() const noexcept
          {
          return SIMD_8x32(_mm256_slli_epi32(m_avx2, SHIFT));
          }
 
-      template<int SHIFT> BOTAN_AVX2_FN SIMD_8x32 shr() const
+      template<int SHIFT> BOTAN_AVX2_FN SIMD_8x32 shr() const noexcept
          {
          return SIMD_8x32(_mm256_srli_epi32(m_avx2, SHIFT));
          }
 
       BOTAN_AVX2_FN
-      SIMD_8x32 operator~() const
+      SIMD_8x32 operator~() const noexcept
          {
          return SIMD_8x32(_mm256_xor_si256(m_avx2, _mm256_set1_epi32(0xFFFFFFFF)));
          }
 
       // (~reg) & other
       BOTAN_AVX2_FN
-      SIMD_8x32 andc(const SIMD_8x32& other) const
+      SIMD_8x32 andc(const SIMD_8x32& other) const noexcept
          {
          return SIMD_8x32(_mm256_andnot_si256(m_avx2, other.m_avx2));
          }
 
       BOTAN_AVX2_FN
-      SIMD_8x32 bswap() const
+      SIMD_8x32 bswap() const noexcept
          {
          const uint8_t BSWAP_MASK[32] = { 3, 2, 1, 0,
                                           7, 6, 5, 4,
@@ -249,7 +249,7 @@ class SIMD_8x32 final
 
       BOTAN_AVX2_FN
       static void transpose(SIMD_8x32& B0, SIMD_8x32& B1,
-                            SIMD_8x32& B2, SIMD_8x32& B3)
+                            SIMD_8x32& B2, SIMD_8x32& B3) noexcept
          {
          const __m256i T0 = _mm256_unpacklo_epi32(B0.m_avx2, B1.m_avx2);
          const __m256i T1 = _mm256_unpacklo_epi32(B2.m_avx2, B3.m_avx2);
@@ -266,7 +266,7 @@ class SIMD_8x32 final
       static void transpose(SIMD_8x32& B0, SIMD_8x32& B1,
                             SIMD_8x32& B2, SIMD_8x32& B3,
                             SIMD_8x32& B4, SIMD_8x32& B5,
-                            SIMD_8x32& B6, SIMD_8x32& B7)
+                            SIMD_8x32& B6, SIMD_8x32& B7) noexcept
          {
          transpose(B0, B1, B2, B3);
          transpose(B4, B5, B6, B7);
@@ -278,7 +278,7 @@ class SIMD_8x32 final
          }
 
       BOTAN_AVX2_FN
-      static SIMD_8x32 choose(const SIMD_8x32& mask, const SIMD_8x32& a, const SIMD_8x32& b)
+      static SIMD_8x32 choose(const SIMD_8x32& mask, const SIMD_8x32& a, const SIMD_8x32& b) noexcept
          {
 #if defined(__AVX512VL__)
          return _mm256_ternarylogic_epi32(mask.handle(), a.handle(), b.handle(), 0xca);
@@ -288,7 +288,7 @@ class SIMD_8x32 final
          }
 
       BOTAN_AVX2_FN
-      static SIMD_8x32 majority(const SIMD_8x32& x, const SIMD_8x32& y, const SIMD_8x32& z)
+      static SIMD_8x32 majority(const SIMD_8x32& x, const SIMD_8x32& y, const SIMD_8x32& z) noexcept
          {
 #if defined(__AVX512VL__)
          return _mm256_ternarylogic_epi32(x.handle(), y.handle(), z.handle(), 0xe8);
@@ -298,21 +298,21 @@ class SIMD_8x32 final
          }
 
       BOTAN_AVX2_FN
-      static void reset_registers()
+      static void reset_registers() noexcept
          {
          _mm256_zeroupper();
          }
 
       BOTAN_AVX2_FN
-      static void zero_registers()
+      static void zero_registers() noexcept
          {
          _mm256_zeroall();
          }
 
-      __m256i BOTAN_AVX2_FN handle() const { return m_avx2; }
+      __m256i BOTAN_AVX2_FN handle() const noexcept { return m_avx2; }
 
       BOTAN_AVX2_FN
-      SIMD_8x32(__m256i x) : m_avx2(x) {}
+      SIMD_8x32(__m256i x) noexcept : m_avx2(x) {}
 
    private:
 
