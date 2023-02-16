@@ -80,7 +80,9 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * final result as a container of your choice.
       * @return a contiguous container holding the result
       */
-      template<concepts::contiguous_container T>
+      template<typename T>
+         requires(concepts::contiguous_container<T> &&
+                  concepts::resizable_container<T>)
          T final()
          {
          T output(output_length());
@@ -151,6 +153,21 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
          {
          update(in);
          return final();
+         }
+
+      /**
+      * Update and finalize computation. Does the same as calling update()
+      * and final() consecutively.
+      * @param in the input to process as a contiguous container or string-like
+      * @result the result of the call to final()
+      */
+      template<typename OutT, typename T>
+         requires(concepts::convertible_to<T, std::string_view> ||
+                  concepts::convertible_to<T, std::span<const uint8_t>>)
+      OutT process(T in)
+         {
+         update(in);
+         return final<OutT>();
          }
 
       virtual ~Buffered_Computation() = default;
