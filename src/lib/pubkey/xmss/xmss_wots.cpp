@@ -13,6 +13,8 @@
 #include <botan/internal/xmss_wots.h>
 #include <botan/internal/xmss_address.h>
 #include <botan/internal/xmss_tools.h>
+#include <botan/internal/stl_util.h>
+
 namespace Botan {
 
 namespace {
@@ -142,18 +144,18 @@ wots_keysig_t XMSS_WOTS_PrivateKey::sign(const secure_vector<uint8_t>& msg,
    }
 
 XMSS_WOTS_PrivateKey::XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
+                                           std::span<const uint8_t> public_seed,
                                            std::span<const uint8_t> private_seed,
-                                           const XMSS_Address& adrs,
+                                           XMSS_Address adrs,
                                            XMSS_Hash& hash)
    : XMSS_WOTS_Base(std::move(params))
    {
    m_key_data.resize(m_params.len());
-   const auto r = hash.prf(private_seed, adrs.bytes());
-
    for(size_t i = 0; i < m_params.len(); ++i)
       {
-      XMSS_Tools::concat<size_t>(m_key_data[i], i, 32);
-      hash.prf(m_key_data[i], r, m_key_data[i]);
+      adrs.set_chain_address(static_cast<uint32_t>(i));
+      const auto data = concat_as<std::vector<uint8_t>>(public_seed, adrs.bytes());
+      hash.prf_keygen(m_key_data[i], private_seed, data);
       }
    }
 

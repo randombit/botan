@@ -57,6 +57,16 @@ class XMSS_PrivateKey_Internal
    public:
       XMSS_PrivateKey_Internal(const XMSS_Parameters& xmss_params,
                                const XMSS_WOTS_Parameters& wots_params,
+                               RandomNumberGenerator& rng)
+         : m_xmss_params(xmss_params)
+         , m_wots_params(wots_params)
+         , m_hash(xmss_params.hash_function_name())
+         , m_prf(rng.random_vec(xmss_params.element_size()))
+         , m_private_seed(rng.random_vec(xmss_params.element_size()))
+         , m_index_reg(XMSS_Index_Registry::get_instance()) {}
+
+      XMSS_PrivateKey_Internal(const XMSS_Parameters& xmss_params,
+                               const XMSS_WOTS_Parameters& wots_params,
                                secure_vector<uint8_t> private_seed,
                                secure_vector<uint8_t> prf)
          : m_xmss_params(xmss_params)
@@ -207,10 +217,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(
    XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
    RandomNumberGenerator& rng)
    : XMSS_PublicKey(xmss_algo_id, rng)
-   , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
-      m_xmss_params, m_wots_params,
-      rng.random_vec(m_xmss_params.element_size()),
-      rng.random_vec(m_xmss_params.element_size())))
+   , m_private(std::make_shared<XMSS_PrivateKey_Internal>(m_xmss_params, m_wots_params, rng))
    {
    XMSS_Address adrs;
    m_root = tree_hash(0,
@@ -427,7 +434,7 @@ XMSS_WOTS_PublicKey XMSS_PrivateKey::wots_public_key_for(XMSS_Address& adrs, XMS
 
 XMSS_WOTS_PrivateKey XMSS_PrivateKey::wots_private_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const
    {
-   return XMSS_WOTS_PrivateKey(m_private->wots_parameters(), m_private->private_seed(), adrs, hash);
+   return XMSS_WOTS_PrivateKey(m_private->wots_parameters(), m_public_seed, m_private->private_seed(), adrs, hash);
    }
 
 secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const

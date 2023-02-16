@@ -105,18 +105,26 @@ class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base
        * Algorithm 3: "Generating a WOTS+ Private Key".
        * Generates a private key.
        *
+       * Note that this is implemented according to the recommendations
+       * in NIST SP.800-208 Section 6.2 to avoid a multi-target attack
+       * vulnerability. This _does not_ influence the sign/verify
+       * interoperability with implementations that do not implement this
+       * recommendation.
+       *
        * This overload is used in multithreaded scenarios, where it is
        * required to provide seperate instances of XMSS_Hash to each thread.
        *
        * @param params       The WOTS parameters to use
+       * @param public_seed  The public seed for the private key generation
        * @param private_seed The private seed for the private key generation
        * @param adrs         The address of the key to retrieve.
        * @param hash         Instance of XMSS_Hash, that may only be used by the
        *                     thread executing at.
        **/
       XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
+                           std::span<const uint8_t> public_seed,
                            std::span<const uint8_t> private_seed,
-                           const XMSS_Address& adrs,
+                           XMSS_Address adrs,
                            XMSS_Hash& hash);
 
       /**
