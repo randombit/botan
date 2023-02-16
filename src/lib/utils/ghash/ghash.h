@@ -41,6 +41,8 @@ class GHASH final : public SymmetricAlgorithm
       Key_Length_Specification key_spec() const override
          { return Key_Length_Specification(16); }
 
+      bool has_keying_material() const override;
+
       void clear() override;
 
       void reset();

@@ -38,6 +38,7 @@ class Lion final : public BlockCipher
       void clear() override;
       std::string name() const override;
       std::unique_ptr<BlockCipher> new_object() const override;
+      bool has_keying_material() const override;
 
       /**
       * @param hash the hash to use internally

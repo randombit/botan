@@ -79,6 +79,11 @@ void GMAC::add_data(const uint8_t input[], size_t size)
       }
    }
 
+bool GMAC::has_keying_material() const
+   {
+   return m_cipher->has_keying_material();
+   }
+
 void GMAC::key_schedule(const uint8_t key[], size_t size)
    {
    clear();

@@ -32,9 +32,11 @@ class CommonCrypto_BlockCipher final : public BlockCipher
 
       Key_Length_Specification key_spec() const override { return m_opts.key_spec; }
 
+      bool has_keying_material() const override { return m_key_set; }
+
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
          {
-         verify_key_set(m_key_set);
+         assert_key_material_set();
          size_t total_len = blocks * m_opts.block_size;
          size_t out_len = 0;
 
@@ -48,7 +50,7 @@ class CommonCrypto_BlockCipher final : public BlockCipher
 
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
          {
-         verify_key_set(m_key_set);
+         assert_key_material_set();
          size_t total_len = blocks * m_opts.block_size;
          size_t out_len = 0;
 

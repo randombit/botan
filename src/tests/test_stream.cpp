@@ -119,7 +119,9 @@ class Stream_Cipher_Tests final : public Text_Based_Test
                continue;
                }
 
+            result.test_eq("key not set", cipher->has_keying_material(), false);
             cipher->set_key(key);
+            result.test_eq("key set", cipher->has_keying_material(), true);
 
             /*
             Test invalid nonce sizes. this assumes no implemented cipher supports a nonce of 65000
@@ -206,7 +208,9 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             result.test_eq(provider, "write_keystream", buf, expected);
             }
 
+            result.test_eq("key set", cipher->has_keying_material(), true);
             cipher->clear();
+            result.test_eq("key not set", cipher->has_keying_material(), false);
 
             try
                {

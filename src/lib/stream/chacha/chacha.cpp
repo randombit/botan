@@ -193,7 +193,7 @@ void ChaCha::chacha(uint8_t output[],
 */
 void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    while(length >= m_buffer.size() - m_position)
       {
@@ -216,7 +216,7 @@ void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
 
 void ChaCha::write_keystream(uint8_t out[], size_t length)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    while(length >= m_buffer.size() - m_position)
       {
@@ -284,6 +284,11 @@ void ChaCha::initialize_state()
    m_position = 0;
    }
 
+bool ChaCha::has_keying_material() const
+   {
+   return m_state.size() > 0;
+   }
+
 /*
 * ChaCha Key Schedule
 */
@@ -322,7 +327,7 @@ bool ChaCha::valid_iv_length(size_t iv_len) const
 
 void ChaCha::set_iv(const uint8_t iv[], size_t length)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
@@ -390,7 +395,7 @@ std::string ChaCha::name() const
 
 void ChaCha::seek(uint64_t offset)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    // Find the block offset
    const uint64_t counter = offset / 64;

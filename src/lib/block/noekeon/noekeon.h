@@ -26,6 +26,7 @@ class Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
       std::string name() const override { return "Noekeon"; }
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Noekeon>(); }
       size_t parallelism() const override;
+      bool has_keying_material() const override;
 
    private:
 #if defined(BOTAN_HAS_NOEKEON_SIMD)

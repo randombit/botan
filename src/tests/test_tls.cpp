@@ -155,6 +155,8 @@ class TLS_CBC_Tests final : public Text_Based_Test
                   out[i] = 0;
                }
 
+            bool has_keying_material() const override { return true; }
+
             Botan::Key_Length_Specification key_spec() const override
                {
                return Botan::Key_Length_Specification(0, 0, 1);
@@ -189,6 +191,8 @@ class TLS_CBC_Tests final : public Text_Based_Test
             size_t block_size() const override { return m_bs; }
             void clear() override { }
             std::string name() const override { return "noop"; }
+
+            bool has_keying_material() const override { return true; }
 
             Botan::Key_Length_Specification key_spec() const override
                {

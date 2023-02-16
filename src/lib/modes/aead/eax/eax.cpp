@@ -85,6 +85,12 @@ Key_Length_Specification EAX_Mode::key_spec() const
    return m_cipher->key_spec();
    }
 
+bool EAX_Mode::has_keying_material() const
+   {
+   return m_cipher->has_keying_material() &&
+      m_cmac->has_keying_material();
+   }
+
 /*
 * Set the EAX key
 */

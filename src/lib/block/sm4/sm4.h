@@ -27,6 +27,7 @@ class SM4 final : public Block_Cipher_Fixed_Params<16, 16>
 
       std::string provider() const override;
       size_t parallelism() const override;
+      bool has_keying_material() const override;
    private:
       void key_schedule(const uint8_t[], size_t) override;
 

@@ -47,7 +47,8 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
 
       void reset() override final;
 
- protected:
+      bool has_keying_material() const override final;
+   protected:
       TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir direction,
                              std::unique_ptr<BlockCipher> cipher,
                              std::unique_ptr<MessageAuthenticationCode> mac,

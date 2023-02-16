@@ -27,6 +27,7 @@ class IDEA final : public Block_Cipher_Fixed_Params<8, 16>
       std::string name() const override { return "IDEA"; }
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<IDEA>(); }
       size_t parallelism() const override;
+      bool has_keying_material() const override;
 
    private:
 #if defined(BOTAN_HAS_IDEA_SSE2)

@@ -105,7 +105,8 @@ class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
       virtual ~SymmetricAlgorithm() = default;
 
       /**
-      * Reset the state.
+      * Reset the internal state. This includes not just the key, but
+      * any partial message that may have been in process.
       */
       virtual void clear() = 0;
 
@@ -167,10 +168,15 @@ class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
       */
       virtual std::string name() const = 0;
 
+      /**
+      * @return true if a key has been set on this object
+      */
+      virtual bool has_keying_material() const = 0;
+
    protected:
-      void verify_key_set(bool cond) const
+      void assert_key_material_set() const
          {
-         if(cond == false)
+         if(!has_keying_material())
             throw_key_not_set_error();
          }
 

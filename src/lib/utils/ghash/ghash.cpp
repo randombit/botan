@@ -88,7 +88,7 @@ void GHASH::ghash_multiply(secure_vector<uint8_t>& x,
 void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
                          const uint8_t input[], size_t length)
    {
-   verify_key_set(!m_HM.empty());
+   assert_key_material_set();
 
    /*
    This assumes if less than block size input then we're just on the
@@ -110,6 +110,11 @@ void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
       ghash_multiply(ghash, last_block, 1);
       secure_scrub_memory(last_block, final_bytes);
       }
+   }
+
+bool GHASH::has_keying_material() const
+   {
+   return m_H.size() > 0;
    }
 
 void GHASH::key_schedule(const uint8_t key[], size_t length)
@@ -174,14 +179,14 @@ void GHASH::set_associated_data(const uint8_t input[], size_t length)
 
 void GHASH::update_associated_data(const uint8_t ad[], size_t length)
    {
-   verify_key_set(m_ghash.size() == GCM_BS);
+   assert_key_material_set();
    m_ad_len += length;
    ghash_update(m_ghash, ad, length);
    }
 
 void GHASH::update(const uint8_t input[], size_t length)
    {
-   verify_key_set(m_ghash.size() == GCM_BS);
+   assert_key_material_set();
    m_text_len += length;
    ghash_update(m_ghash, input, length);
    }
@@ -202,7 +207,7 @@ void GHASH::final(uint8_t mac[], size_t mac_len)
    {
    BOTAN_ARG_CHECK(mac_len > 0 && mac_len <= 16, "GHASH output length");
 
-   verify_key_set(m_ghash.size() == GCM_BS);
+   assert_key_material_set();
    add_final_block(m_ghash, m_ad_len, m_text_len);
 
    for(size_t i = 0; i != mac_len; ++i)

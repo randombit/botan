@@ -15,7 +15,7 @@ namespace Botan {
 */
 void Lion::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_key1.empty() == false);
+   assert_key_material_set();
 
    const size_t LEFT_SIZE = left_size();
    const size_t RIGHT_SIZE = right_size();
@@ -47,7 +47,7 @@ void Lion::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void Lion::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_key1.empty() == false);
+   assert_key_material_set();
 
    const size_t LEFT_SIZE = left_size();
    const size_t RIGHT_SIZE = right_size();
@@ -72,6 +72,11 @@ void Lion::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       in += m_block_size;
       out += m_block_size;
       }
+   }
+
+bool Lion::has_keying_material() const
+   {
+   return m_key1.size() > 0 && m_key2.size() > 0;
    }
 
 /*

@@ -34,6 +34,8 @@ class Poly1305 final : public MessageAuthenticationCode
          }
 
       bool fresh_key_required_per_message() const override { return true; }
+
+      bool has_keying_material() const override;
    private:
       void add_data(const uint8_t[], size_t) override;
       void final_result(uint8_t[]) override;

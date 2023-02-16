@@ -69,6 +69,11 @@ bool CBC_Mode::valid_nonce_length(size_t n) const
    return (n == 0 || n == block_size());
    }
 
+bool CBC_Mode::has_keying_material() const
+   {
+   return m_cipher->has_keying_material();
+   }
+
 void CBC_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);

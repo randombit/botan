@@ -31,6 +31,8 @@ class BLAKE2bMAC final : public MessageAuthenticationCode
 
       void clear() override;
 
+      bool has_keying_material() const override { return m_blake.has_keying_material(); }
+
       Key_Length_Specification key_spec() const override
          {
          return m_blake.key_spec();
@@ -44,13 +46,13 @@ class BLAKE2bMAC final : public MessageAuthenticationCode
 
       void add_data(const uint8_t input[], size_t length) override
          {
-         verify_key_set(m_blake.key_size() > 0);
+         assert_key_material_set();
          m_blake.update(input, length);
          }
 
       void final_result(uint8_t out[]) override
          {
-         verify_key_set(m_blake.key_size() > 0);
+         assert_key_material_set();
          m_blake.final(out);
          }
 

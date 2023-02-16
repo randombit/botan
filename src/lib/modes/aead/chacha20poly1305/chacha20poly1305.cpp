@@ -48,6 +48,11 @@ void ChaCha20Poly1305_Mode::reset()
    m_nonce_len = 0;
    }
 
+bool ChaCha20Poly1305_Mode::has_keying_material() const
+   {
+   return m_chacha->has_keying_material();
+   }
+
 void ChaCha20Poly1305_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_chacha->set_key(key, length);

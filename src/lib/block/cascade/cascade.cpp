@@ -48,6 +48,12 @@ std::string Cascade_Cipher::name() const
    return "Cascade(" + m_cipher1->name() + "," + m_cipher2->name() + ")";
    }
 
+bool Cascade_Cipher::has_keying_material() const
+   {
+   return m_cipher1->has_keying_material() &&
+      m_cipher2->has_keying_material();
+   }
+
 std::unique_ptr<BlockCipher> Cascade_Cipher::new_object() const
    {
    return std::make_unique<Cascade_Cipher>(m_cipher1->new_object(),

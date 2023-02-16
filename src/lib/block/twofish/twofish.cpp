@@ -61,7 +61,7 @@ inline void TF_D(uint32_t A, uint32_t B, uint32_t& C, uint32_t& D,
 */
 void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_SB.empty() == false);
+   assert_key_material_set();
 
    while(blocks >= 2)
       {
@@ -133,7 +133,7 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_SB.empty() == false);
+   assert_key_material_set();
 
    while(blocks >= 2)
       {
@@ -198,6 +198,11 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
       store_le(out, C, D, A, B);
       }
+   }
+
+bool Twofish::has_keying_material() const
+   {
+   return !m_SB.empty();
    }
 
 /*

@@ -21,32 +21,33 @@ namespace Botan {
 class CCM_Mode : public AEAD_Mode
    {
    public:
-      size_t process(uint8_t buf[], size_t sz) override;
+      size_t process(uint8_t buf[], size_t sz) override final;
 
-      void set_associated_data(const uint8_t ad[], size_t ad_len) override;
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override final;
 
-      bool associated_data_requires_key() const override { return false; }
+      bool associated_data_requires_key() const override final { return false; }
 
-      std::string name() const override;
+      std::string name() const override final;
 
-      size_t update_granularity() const override;
+      size_t update_granularity() const override final;
 
-      size_t ideal_granularity() const override;
+      size_t ideal_granularity() const override final;
 
-      bool requires_entire_message() const override;
+      bool requires_entire_message() const override final;
 
-      Key_Length_Specification key_spec() const override;
+      Key_Length_Specification key_spec() const override final;
 
-      bool valid_nonce_length(size_t) const override;
+      bool valid_nonce_length(size_t) const override final;
 
-      size_t default_nonce_length() const override;
+      size_t default_nonce_length() const override final;
 
-      void clear() override;
+      void clear() override final;
 
-      void reset() override;
+      void reset() override final;
 
-      size_t tag_size() const override { return m_tag_size; }
+      size_t tag_size() const override final { return m_tag_size; }
 
+      bool has_keying_material() const override final;
    protected:
       CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t L);
 
@@ -65,9 +66,9 @@ class CCM_Mode : public AEAD_Mode
       secure_vector<uint8_t> format_b0(size_t msg_size);
       secure_vector<uint8_t> format_c0();
    private:
-      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
 
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(const uint8_t key[], size_t length) override final;
 
       const size_t m_tag_size;
       const size_t m_L;

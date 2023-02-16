@@ -81,6 +81,11 @@ Key_Length_Specification CCM_Mode::key_spec() const
    return m_cipher->key_spec();
    }
 
+bool CCM_Mode::has_keying_material() const
+   {
+   return m_cipher->has_keying_material();
+   }
+
 void CCM_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);

@@ -76,7 +76,7 @@ inline uint32_t SEED_G(uint32_t X)
 */
 void SEED::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_K.empty() == false);
+   assert_key_material_set();
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -116,7 +116,7 @@ void SEED::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_K.empty() == false);
+   assert_key_material_set();
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -149,6 +149,11 @@ void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
       }
+   }
+
+bool SEED::has_keying_material() const
+   {
+   return !m_K.empty();
    }
 
 /*

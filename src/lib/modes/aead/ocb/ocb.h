@@ -31,23 +31,25 @@ class L_computer;
 class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
    {
    public:
-      void set_associated_data(const uint8_t ad[], size_t ad_len) override;
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override final;
 
-      std::string name() const override;
+      std::string name() const override final;
 
-      size_t update_granularity() const override;
+      size_t update_granularity() const override final;
 
-      size_t ideal_granularity() const override;
+      size_t ideal_granularity() const override final;
 
-      Key_Length_Specification key_spec() const override;
+      Key_Length_Specification key_spec() const override final;
 
-      bool valid_nonce_length(size_t) const override;
+      bool valid_nonce_length(size_t) const override final;
 
-      size_t tag_size() const override { return m_tag_size; }
+      size_t tag_size() const override final { return m_tag_size; }
 
-      void clear() override;
+      void clear() override final;
 
-      void reset() override;
+      void reset() override final;
+
+      bool has_keying_material() const override final;
 
       ~OCB_Mode();
    protected:
@@ -70,9 +72,9 @@ class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
       secure_vector<uint8_t> m_checksum;
       secure_vector<uint8_t> m_ad_hash;
    private:
-      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
 
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(const uint8_t key[], size_t length) override final;
 
       const secure_vector<uint8_t>& update_nonce(const uint8_t nonce[], size_t nonce_len);
 

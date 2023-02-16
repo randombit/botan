@@ -30,6 +30,8 @@ class ANSI_X919_MAC final : public MessageAuthenticationCode
          return Key_Length_Specification(8, 16, 8);
          }
 
+      bool has_keying_material() const override;
+
       ANSI_X919_MAC();
 
       ANSI_X919_MAC(const ANSI_X919_MAC&) = delete;

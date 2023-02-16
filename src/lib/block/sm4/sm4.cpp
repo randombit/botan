@@ -179,7 +179,7 @@ void SM4_D(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3,
 */
 void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_RK.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
    if(CPUID::has_arm_sm4())
@@ -242,7 +242,7 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_RK.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
    if(CPUID::has_arm_sm4())
@@ -298,6 +298,11 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
       }
+   }
+
+bool SM4::has_keying_material() const
+   {
+   return !m_RK.empty();
    }
 
 /*

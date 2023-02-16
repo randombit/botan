@@ -290,7 +290,7 @@ inline void des_FP(uint32_t& L, uint32_t& R)
 */
 void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_round_key.empty() == false);
+   assert_key_material_set();
 
    while(blocks >= 2)
       {
@@ -334,7 +334,7 @@ void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_round_key.empty() == false);
+   assert_key_material_set();
 
    while(blocks >= 2)
       {
@@ -373,6 +373,11 @@ void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
    }
 
+bool DES::has_keying_material() const
+   {
+   return !m_round_key.empty();
+   }
+
 /*
 * DES Key Schedule
 */
@@ -392,7 +397,7 @@ void DES::clear()
 */
 void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_round_key.empty() == false);
+   assert_key_material_set();
 
    while(blocks >= 2)
       {
@@ -442,7 +447,7 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
 */
 void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_round_key.empty() == false);
+   assert_key_material_set();
 
    while(blocks >= 2)
       {
@@ -485,6 +490,11 @@ void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
       out += BLOCK_SIZE;
       blocks -= 1;
       }
+   }
+
+bool TripleDES::has_keying_material() const
+   {
+   return !m_round_key.empty();
    }
 
 /*

@@ -23,7 +23,7 @@ class MessageAuthenticationCode;
 class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
    {
    public:
-      size_t process(uint8_t buf[], size_t size) override;
+      size_t process(uint8_t buf[], size_t size) override final;
 
       /**
       * Sets the nth element of the vector of associated data
@@ -31,32 +31,34 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
       * @param ad associated data
       * @param ad_len length of associated data in bytes
       */
-      void set_associated_data_n(size_t n, const uint8_t ad[], size_t ad_len) override;
+      void set_associated_data_n(size_t n, const uint8_t ad[], size_t ad_len) override final;
 
-      size_t maximum_associated_data_inputs() const override;
+      size_t maximum_associated_data_inputs() const override final;
 
-      void set_associated_data(const uint8_t ad[], size_t ad_len) override
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override final
          {
          set_associated_data_n(0, ad, ad_len);
          }
 
-      std::string name() const override;
+      std::string name() const override final;
 
-      size_t update_granularity() const override;
+      size_t update_granularity() const override final;
 
-      size_t ideal_granularity() const override;
+      size_t ideal_granularity() const override final;
 
-      Key_Length_Specification key_spec() const override;
+      Key_Length_Specification key_spec() const override final;
 
-      bool valid_nonce_length(size_t) const override;
+      bool valid_nonce_length(size_t) const override final;
 
-      bool requires_entire_message() const override;
+      bool requires_entire_message() const override final;
 
-      void clear() override;
+      void clear() override final;
 
-      void reset() override;
+      void reset() override final;
 
-      size_t tag_size() const override { return 16; }
+      size_t tag_size() const override final { return 16; }
+
+      bool has_keying_material() const override final;
 
       ~SIV_Mode();
 
@@ -73,9 +75,9 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
 
       secure_vector<uint8_t> S2V(const uint8_t text[], size_t text_len);
    private:
-      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
 
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(const uint8_t key[], size_t length) override final;
 
       const std::string m_name;
       const size_t m_bs;

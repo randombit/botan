@@ -92,6 +92,11 @@ Key_Length_Specification TLS_CBC_HMAC_AEAD_Mode::key_spec() const
    return Key_Length_Specification(m_cipher_keylen + m_mac_keylen);
    }
 
+bool TLS_CBC_HMAC_AEAD_Mode::has_keying_material() const
+   {
+   return mac().has_keying_material() && cbc().has_keying_material();
+   }
+
 void TLS_CBC_HMAC_AEAD_Mode::key_schedule(const uint8_t key[], size_t keylen)
    {
    // Both keys are of fixed length specified by the ciphersuite

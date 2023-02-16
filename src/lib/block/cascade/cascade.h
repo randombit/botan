@@ -33,6 +33,8 @@ class Cascade_Cipher final : public BlockCipher
       std::string name() const override;
       std::unique_ptr<BlockCipher> new_object() const override;
 
+      bool has_keying_material() const override;
+
       /**
       * Create a cascade of two block ciphers
       * @param cipher1 the first cipher

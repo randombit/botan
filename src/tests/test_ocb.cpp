@@ -35,6 +35,11 @@ class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher
          return std::make_unique<OCB_Wide_Test_Block_Cipher>(m_bs);
          }
 
+      bool has_keying_material() const override
+         {
+         return m_key.size() > 0;
+         }
+
       void key_schedule(const uint8_t key[], size_t length) override
          {
          m_key.assign(key, key + length);

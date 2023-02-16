@@ -32,6 +32,8 @@ class GMAC final : public MessageAuthenticationCode
 
       Key_Length_Specification key_spec() const override;
 
+      bool has_keying_material() const override;
+
       /**
       * Creates a new GMAC instance.
       *

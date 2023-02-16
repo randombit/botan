@@ -110,7 +110,7 @@ void Salsa20::salsa_core(uint8_t output[64], const uint32_t input[16], size_t ro
 */
 void Salsa20::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    while(length >= m_buffer.size() - m_position)
       {
@@ -178,6 +178,11 @@ void Salsa20::initialize_state()
    m_position = 0;
    }
 
+bool Salsa20::has_keying_material() const
+   {
+   return m_state.size() > 0;
+   }
+
 /*
 * Salsa20 Key Schedule
 */
@@ -197,7 +202,7 @@ void Salsa20::key_schedule(const uint8_t key[], size_t length)
 */
 void Salsa20::set_iv(const uint8_t iv[], size_t length)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
@@ -287,7 +292,7 @@ void Salsa20::clear()
 
 void Salsa20::seek(uint64_t offset)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    // Find the block offset
    const uint64_t counter = offset / 64;

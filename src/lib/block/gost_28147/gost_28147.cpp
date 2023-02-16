@@ -108,7 +108,7 @@ void GOST_ROUND2(uint32_t& N1, uint32_t& N2,
 */
 void GOST_28147_89::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_EK.empty() == false);
+   assert_key_material_set();
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -140,7 +140,7 @@ void GOST_28147_89::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 */
 void GOST_28147_89::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_EK.empty() == false);
+   assert_key_material_set();
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -164,6 +164,11 @@ void GOST_28147_89::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
       }
+   }
+
+bool GOST_28147_89::has_keying_material() const
+   {
+   return !m_EK.empty();
    }
 
 /*
