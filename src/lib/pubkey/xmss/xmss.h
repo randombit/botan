@@ -143,10 +143,6 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
       XMSS_WOTS_Parameters m_wots_params;
       secure_vector<uint8_t> m_root;
       secure_vector<uint8_t> m_public_seed;
-
-   private:
-      XMSS_Parameters::xmss_algorithm_t deserialize_xmss_oid(
-         const std::vector<uint8_t>& raw_key);
    };
 
 template<typename> class Atomic;

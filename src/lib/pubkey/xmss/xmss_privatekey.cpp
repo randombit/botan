@@ -35,18 +35,21 @@ namespace Botan {
 namespace {
 
 // fall back to raw decoding for previous versions, which did not encode an OCTET STRING
-secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits)
+secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits,
+                                               const XMSS_Parameters& xmss_params)
    {
    secure_vector<uint8_t> raw_key;
-   try
+
+   // The public part of the input key bits was already parsed, so we can
+   // decide depending on the buffer length whether this must be BER decoded.
+   if(key_bits.size() == xmss_params.raw_private_key_size())
+      { raw_key.assign(key_bits.begin(), key_bits.end()); }
+   else
       {
       DataSource_Memory src(key_bits);
-      BER_Decoder(src).decode(raw_key, ASN1_Type::OctetString);
+      BER_Decoder(src).decode(raw_key, ASN1_Type::OctetString).verify_end();
       }
-   catch(Decoding_Error&)
-      {
-      raw_key.assign(key_bits.begin(), key_bits.end());
-      }
+
    return raw_key;
    }
 
@@ -94,7 +97,7 @@ class XMSS_PrivateKey_Internal
          */
          static_assert(sizeof(size_t) >= 4, "size_t is big enough to support leaf index");
 
-         const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
+         const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits, xmss_params);
 
          if(raw_key.size() != m_xmss_params.raw_private_key_size())
             {
