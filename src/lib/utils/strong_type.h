@@ -64,6 +64,10 @@ class Strong_Adapter<T> : public Strong_Base<T>
       requires(concepts::contiguous_container<T>)
          : Strong_Adapter(T(span.begin(), span.end())) {}
 
+      explicit Strong_Adapter(size_t size)
+      requires(concepts::resizable_container<T>)
+         : Strong_Adapter(T(size)) {}
+
       // Disambiguates the usage of string literals, otherwise:
       // Strong_Adapter(std::span<>) and Strong_Adapter(const char*)
       // would be ambiguous.
