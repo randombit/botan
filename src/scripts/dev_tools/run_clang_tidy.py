@@ -66,7 +66,6 @@ disabled_needs_work = [
     'readability-qualified-auto',
     'readability-redundant-access-specifiers',
     'readability-redundant-member-init',
-    'readability-redundant-string-cstr',
     'readability-simplify-boolean-expr', # sometimes ok
     'readability-static-accessed-through-instance',
 ]
