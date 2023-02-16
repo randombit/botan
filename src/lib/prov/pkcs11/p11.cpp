@@ -16,6 +16,7 @@
 
 namespace Botan::PKCS11 {
 
+// NOLINTNEXTLINE(*-no-int-to-ptr)
 ReturnValue* ThrowException = reinterpret_cast< ReturnValue* >(-1);
 
 /// @param function_result Return value of the PKCS11 module function

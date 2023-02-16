@@ -57,7 +57,6 @@ disabled_needs_work = [
     'performance-inefficient-vector-operation',
     'performance-move-const-arg',
     'performance-no-automatic-move',
-    'performance-no-int-to-ptr',
     'performance-unnecessary-copy-initialization',
     'readability-container-contains',
     'readability-convert-member-functions-to-static',
