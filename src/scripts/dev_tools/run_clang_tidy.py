@@ -33,6 +33,7 @@ disabled_checks_non_lib = [
     'cppcoreguidelines-macro-usage',
     'performance-inefficient-string-concatenation',
     'performance-no-automatic-move',
+    'cert-err58-cpp',
 ]
 
 # these might be worth being clean for
@@ -43,6 +44,7 @@ disabled_needs_work = [
     'bugprone-lambda-function-name', # should be an easy fix
     'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
+    'cert-err58-cpp', # many false positives eg __m128i
     'cppcoreguidelines-init-variables',
     'cppcoreguidelines-owning-memory',
     'cppcoreguidelines-prefer-member-initializer',
@@ -75,23 +77,19 @@ disabled_not_interested = [
     'bugprone-branch-clone', # doesn't interact well with feature macros
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
-    'cert-err58-cpp',
     'cppcoreguidelines-avoid-non-const-global-variables',
-    'cppcoreguidelines-no-malloc',
     'cppcoreguidelines-non-private-member-variables-in-classes', # pk split keys
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-pro-bounds-constant-array-index',
     'cppcoreguidelines-pro-type-const-cast', # see above
-    'cppcoreguidelines-pro-type-cstyle-cast', # system headers
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
     'cppcoreguidelines-pro-type-vararg', # idiocy
     'hicpp-no-assembler',
-    'hicpp-no-malloc',
     'hicpp-vararg', # idiocy
     'hicpp-signed-bitwise', # impossible to avoid in C/C++, int promotion rules :/
     'modernize-loop-convert', # sometimes very ugly
-    'modernize-raw-string-literal',
-    'modernize-use-trailing-return-type', # fine but we're not using it everywhere
+    'modernize-raw-string-literal', # usually less readable
+    'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
     'modernize-return-braced-init-list', # thanks I hate it
     'modernize-use-default-member-init',
     'modernize-use-nodiscard',
