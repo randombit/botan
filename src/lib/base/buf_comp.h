@@ -8,8 +8,10 @@
 #ifndef BOTAN_BUFFERED_COMPUTATION_H_
 #define BOTAN_BUFFERED_COMPUTATION_H_
 
+#include <botan/concepts.h>
 #include <botan/secmem.h>
-#include <string>
+#include <string_view>
+#include <span>
 
 namespace Botan {
 
@@ -34,18 +36,9 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
 
       /**
       * Add new input to process.
-      * @param in the input to process as a secure_vector
+      * @param in the input to process as a contiguous data range
       */
-      void update(const secure_vector<uint8_t>& in)
-         {
-         add_data(in.data(), in.size());
-         }
-
-      /**
-      * Add new input to process.
-      * @param in the input to process as a std::vector
-      */
-      void update(const std::vector<uint8_t>& in)
+      void update(std::span<const uint8_t> in)
          {
          add_data(in.data(), in.size());
          }
@@ -60,10 +53,10 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
 
       /**
       * Add new input to process.
-      * @param str the input to process as a std::string. Will be interpreted
+      * @param str the input to process as a std::string_view. Will be interpreted
       * as a byte array based on the strings encoding.
       */
-      void update(const std::string& str)
+      void update(std::string_view str)
          {
          add_data(cast_char_ptr_to_uint8(str.data()), str.size());
          }
@@ -84,21 +77,36 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
 
       /**
       * Complete the computation and retrieve the
+      * final result as a container of your choice.
+      * @return a contiguous container holding the result
+      */
+      template<concepts::contiguous_container T>
+         T final()
+         {
+         T output(output_length());
+         final_result(output.data());
+         return output;
+         }
+
+      /**
+      * Complete the computation and retrieve the
       * final result.
       * @return secure_vector holding the result
       */
       secure_vector<uint8_t> final()
          {
-         secure_vector<uint8_t> output(output_length());
-         final_result(output.data());
-         return output;
+         return final<secure_vector<uint8_t>>();
          }
 
       std::vector<uint8_t> final_stdvec()
          {
-         std::vector<uint8_t> output(output_length());
-         final_result(output.data());
-         return output;
+         return final<std::vector<uint8_t>>();
+         }
+
+      void final(std::span<uint8_t> out)
+         {
+         BOTAN_ASSERT_NOMSG(out.size() >= output_length());
+         final_result(out.data());
          }
 
       template<typename Alloc>
@@ -127,19 +135,7 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * @param in the input to process
       * @result the result of the call to final()
       */
-      secure_vector<uint8_t> process(const secure_vector<uint8_t>& in)
-         {
-         add_data(in.data(), in.size());
-         return final();
-         }
-
-      /**
-      * Update and finalize computation. Does the same as calling update()
-      * and final() consecutively.
-      * @param in the input to process
-      * @result the result of the call to final()
-      */
-      secure_vector<uint8_t> process(const std::vector<uint8_t>& in)
+      secure_vector<uint8_t> process(std::span<const uint8_t> in)
          {
          add_data(in.data(), in.size());
          return final();
@@ -151,7 +147,7 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * @param in the input to process as a string
       * @result the result of the call to final()
       */
-      secure_vector<uint8_t> process(const std::string& in)
+      secure_vector<uint8_t> process(std::string_view in)
          {
          update(in);
          return final();
