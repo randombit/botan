@@ -15,7 +15,7 @@ namespace Botan {
 namespace {
 
 template<uint8_t RC>
-BOTAN_FUNC_ISA("ssse3")
+BOTAN_FUNC_ISA("ssse3,aes")
 inline __m128i
 aes_128_key_expansion(__m128i key, __m128i key_getting_rcon)
    {
