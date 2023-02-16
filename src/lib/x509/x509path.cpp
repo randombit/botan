@@ -146,7 +146,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
          const auto& trusted_hashes = restrictions.trusted_hashes();
          if(!trusted_hashes.empty() && !at_self_signed_root)
             {
-            if(trusted_hashes.count(subject.hash_used_for_signature()) == 0)
+            if(!trusted_hashes.contains(subject.hash_used_for_signature()))
                status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
             }
          }
@@ -583,7 +583,7 @@ PKIX::check_crl_online(const std::vector<X509_Certificate>& cert_path,
       {
       for(size_t i = 0; i != crl_status.size(); ++i)
          {
-         if(crl_status[i].count(Certificate_Status_Code::VALID_CRL_CHECKED))
+         if(crl_status[i].contains(Certificate_Status_Code::VALID_CRL_CHECKED))
             {
             // better be non-null, we supposedly validated it
             BOTAN_ASSERT_NOMSG(crls[i].has_value());
@@ -654,7 +654,7 @@ PKIX::build_certificate_path(std::vector<X509_Certificate>& cert_path,
 
       const std::string fprint = issuer->fingerprint("SHA-256");
 
-      if(certs_seen.count(fprint) > 0) // already seen?
+      if(certs_seen.contains(fprint)) // already seen?
          {
          return Certificate_Status_Code::CERT_CHAIN_LOOP;
          }

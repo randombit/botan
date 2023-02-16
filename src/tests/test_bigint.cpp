@@ -773,7 +773,7 @@ class Lucas_Primality_Test final : public Test
             if(is_lucas_pp)
                result.confirm("Lucas pseudoprime is in list", lucas_pp.count(i) == 1);
             else
-               result.confirm("Lucas non-pseudoprime is not in list", lucas_pp.count(i) == 0);
+               result.confirm("Lucas non-pseudoprime is not in list", !lucas_pp.contains(i));
             }
 
          return {result};

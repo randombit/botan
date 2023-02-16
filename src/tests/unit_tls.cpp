@@ -83,6 +83,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
                                       const std::string& /*context*/) override
          {
          std::vector<Botan::Certificate_Store*> v;
+         v.reserve(m_stores.size());
          for(auto const& store : m_stores)
             {
             v.push_back(store.get());

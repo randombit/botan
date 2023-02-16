@@ -135,6 +135,7 @@ std::vector<uint8_t> Certificate_Request_12::serialize() const
 
    std::vector<uint8_t> cert_types;
 
+   cert_types.reserve(m_cert_key_types.size());
    for(const auto& cert_key_type : m_cert_key_types)
       cert_types.push_back(cert_type_name_to_code(cert_key_type));
 

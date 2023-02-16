@@ -122,7 +122,7 @@ class DilithiumRoundtripTests final : public Test
 
          auto sign = [randomized](const auto& private_key, const auto& msg)
             {
-            const auto param = (randomized) ? "Randomized" : "Deterministic";
+            const std::string param = (randomized) ? "Randomized" : "Deterministic";
             auto signer = Botan::PK_Signer(private_key, Test::rng(), param);
             return signer.sign_message(msg, Test::rng());
             };

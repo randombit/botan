@@ -265,7 +265,7 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
          {
          const uint16_t current_epoch = m_messages.begin()->second.epoch();
 
-         if(m_ccs_epochs.count(current_epoch))
+         if(m_ccs_epochs.contains(current_epoch))
             return std::make_pair(Handshake_Type::HandshakeCCS, std::vector<uint8_t>());
          }
       return std::make_pair(Handshake_Type::None, std::vector<uint8_t>());

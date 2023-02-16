@@ -47,6 +47,7 @@ void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert)
 std::vector<X509_DN> Certificate_Store_In_Memory::all_subjects() const
    {
    std::vector<X509_DN> subjects;
+   subjects.reserve(m_certs.size());
    for(const auto& cert : m_certs)
       subjects.push_back(cert.subject_dn());
    return subjects;

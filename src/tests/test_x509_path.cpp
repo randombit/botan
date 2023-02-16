@@ -772,7 +772,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
    const std::map<std::string, std::string> expected = read_results(
          Test::data_file("/x509/bsi/expected.txt"), '$');
 
-   for(auto& i : expected)
+   for(const auto& i : expected)
       {
       const std::string test_name = i.first;
       std::string expected_result = i.second;
@@ -1170,7 +1170,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
                               path_result.result(), expected);
             if(also_expected)
                {
-               result.confirm("Secondary error is also present", flatten(path_result.all_statuses()).count(also_expected.value()) > 0);
+               result.confirm("Secondary error is also present", flatten(path_result.all_statuses()).contains(also_expected.value()));
                }
             };
 
@@ -1218,7 +1218,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
                result.test_is_eq("Path validation with forged OCSP response should fail with",
                                  path_result.result(), expected);
-               result.confirm("Secondary error is also present", flatten(path_result.all_statuses()).count(also_expected) > 0);
+               result.confirm("Secondary error is also present", flatten(path_result.all_statuses()).contains(also_expected));
                result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
             };
 
