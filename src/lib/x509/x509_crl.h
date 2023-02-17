@@ -12,6 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pkix_enums.h>
 #include <vector>
+#include <span>
 
 namespace Botan {
 
@@ -166,7 +167,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
       * Construct a CRL from a binary vector
       * @param vec the binary (DER) representation of the CRL
       */
-      X509_CRL(const std::vector<uint8_t>& vec);
+      X509_CRL(std::span<const uint8_t> vec);
 
       /**
       * Construct a CRL

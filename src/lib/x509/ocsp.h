@@ -14,6 +14,7 @@
 #include <botan/bigint.h>
 
 #include <chrono>
+#include <span>
 #include <optional>
 
 namespace Botan {
@@ -148,7 +149,7 @@ class BOTAN_PUBLIC_API(2,0) Response final
       * Parses an OCSP response.
       * @param response_bits response bits received
       */
-      Response(const std::vector<uint8_t>& response_bits) :
+      Response(std::span<const uint8_t> response_bits) :
          Response(response_bits.data(), response_bits.size())
          {}
 
