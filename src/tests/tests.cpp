@@ -269,20 +269,20 @@ bool Test::Result::test_eq_sz(const std::string& what, size_t produced, size_t e
    }
 
 bool Test::Result::test_eq(const std::string& what,
-                           const Botan::OctetString& produced,
-                           const Botan::OctetString& expected)
+                           std::span<const uint8_t> produced,
+                           std::span<const uint8_t> expected)
    {
    std::ostringstream out;
    out << m_who << " " << what;
 
    if(produced == expected)
       {
-      out << " produced expected result " << produced.to_string();
+      out << " produced expected result " << Botan::hex_encode(produced.data(), produced.size());
       return test_success(out.str());
       }
    else
       {
-      out << " produced unexpected result '" << produced.to_string() << "' expected '" << expected.to_string() << "'";
+      out << " produced unexpected result '" << Botan::hex_encode(produced.data(), produced.size()) << "' expected '" << Botan::hex_encode(expected.data(), expected.size()) << "'";
       return test_failure(out.str());
       }
    }
