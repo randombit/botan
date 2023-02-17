@@ -25,19 +25,11 @@ class Threefish_512 final :
       void set_tweak(const uint8_t tweak[], size_t len) override;
 
       void clear() override;
-      std::string provider() const override;
       std::string name() const override { return "Threefish-512"; }
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Threefish_512>(); }
-      size_t parallelism() const override;
       bool has_keying_material() const override;
 
    private:
-
-#if defined(BOTAN_HAS_THREEFISH_512_AVX2)
-      void avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
-      void avx2_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
-#endif
-
       void key_schedule(const uint8_t key[], size_t key_len) override;
 
       // Interface for Skein

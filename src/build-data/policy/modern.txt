@@ -62,7 +62,6 @@ aes_armv8
 aes_power8
 serpent_simd
 serpent_avx2
-threefish_512_avx2
 chacha_simd32
 chacha_avx2
 
