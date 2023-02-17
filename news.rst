@@ -93,6 +93,9 @@ New APIs
 * New ``Private_Key::public_key`` returns a new object containing the public
   key associated with that private key. (GH #2520)
 
+* ``SymmetricAlgorithm::has_keying_material`` allows checking if a key has
+  already been set on an object (GH #3295)
+
 Implementation Improvements
 ----------------------------------------
 
