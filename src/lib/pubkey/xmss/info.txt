@@ -29,6 +29,7 @@ asn1
 rng
 hash
 sha2_32
+trunc_hash
 </requires>
 
 <os_features>

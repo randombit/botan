@@ -23,19 +23,32 @@ namespace Botan {
  *     Request for Comments: 8391
  *     Release: May 2018.
  *     https://datatracker.ietf.org/doc/rfc8391/
+ * [2] Recommendation for Stateful Hash-Based Signature Schemes
+ *     NIST Special Publication 800-208
+ *     Release: October 2020.
+ *     https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-208.pdf
  **/
 class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
    {
    public:
       enum ots_algorithm_t
          {
+         // from RFC 8391
          WOTSP_SHA2_256 = 0x00000001,
+
+         // from RFC 8391 but not approved by NIST SP.800-208
+         // (see footnote on page 16)
          WOTSP_SHA2_512 = 0x00000002,
          WOTSP_SHAKE_256 = 0x00000003,
-         WOTSP_SHAKE_512 = 0x00000004
+         WOTSP_SHAKE_512 = 0x00000004,
+
+         // from NIST SP.800-208
+         WOTSP_SHA2_192 = 0x00000005,
+         WOTSP_SHAKE_256_256 = 0x00000006,
+         WOTSP_SHAKE_256_192 = 0x00000007,
          };
 
-      XMSS_WOTS_Parameters(const std::string& algo_name);
+      explicit XMSS_WOTS_Parameters(const std::string& algo_name);
       XMSS_WOTS_Parameters(ots_algorithm_t ots_spec);
 
       static ots_algorithm_t xmss_wots_id_from_string(const std::string& param_set);
@@ -116,15 +129,23 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
  *     Request for Comments: 8391
  *     Release: May 2018.
  *     https://datatracker.ietf.org/doc/rfc8391/
+ * [2] Recommendation for Stateful Hash-Based Signature Schemes
+ *     NIST Special Publication 800-208
+ *     Release: October 2020.
+ *     https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-208.pdf
  **/
 class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
    {
    public:
       enum xmss_algorithm_t
          {
+         // from RFC 8391
          XMSS_SHA2_10_256 = 0x00000001,
          XMSS_SHA2_16_256 = 0x00000002,
          XMSS_SHA2_20_256 = 0x00000003,
+
+         // from RFC 8391 but not approved by NIST SP.800-208
+         // (see footnote on page 16)
          XMSS_SHA2_10_512 = 0x00000004,
          XMSS_SHA2_16_512 = 0x00000005,
          XMSS_SHA2_20_512 = 0x00000006,
@@ -133,7 +154,18 @@ class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
          XMSS_SHAKE_20_256 = 0x00000009,
          XMSS_SHAKE_10_512 = 0x0000000a,
          XMSS_SHAKE_16_512 = 0x0000000b,
-         XMSS_SHAKE_20_512 = 0x0000000c
+         XMSS_SHAKE_20_512 = 0x0000000c,
+
+         // from NIST SP.800-208
+         XMSS_SHA2_10_192 = 0x0000000d,
+         XMSS_SHA2_16_192 = 0x0000000e,
+         XMSS_SHA2_20_192 = 0x0000000f,
+         XMSS_SHAKE256_10_256 = 0x00000010,
+         XMSS_SHAKE256_16_256 = 0x00000011,
+         XMSS_SHAKE256_20_256 = 0x00000012,
+         XMSS_SHAKE256_10_192 = 0x00000013,
+         XMSS_SHAKE256_16_192 = 0x00000014,
+         XMSS_SHAKE256_20_192 = 0x00000015,
          };
 
       static xmss_algorithm_t xmss_id_from_string(const std::string& algo_name);

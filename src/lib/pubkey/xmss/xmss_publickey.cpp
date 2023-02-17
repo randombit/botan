@@ -18,11 +18,29 @@
 #include <botan/internal/xmss_verification_operation.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/internal/loadstor.h>
+
 #include <iterator>
 
 namespace Botan {
 
 namespace {
+
+XMSS_Parameters::xmss_algorithm_t
+deserialize_xmss_oid(std::span<const uint8_t> raw_key)
+   {
+   if(raw_key.size() < 4)
+      {
+      throw Decoding_Error("XMSS signature OID missing.");
+      }
+
+   // extract and convert algorithm id to enum type
+   uint32_t raw_id = 0;
+   for(size_t i = 0; i < 4; i++)
+      { raw_id = ((raw_id << 8) | raw_key[i]); }
+
+   return static_cast<XMSS_Parameters::xmss_algorithm_t>(raw_id);
+   }
 
 // fall back to raw decoding for previous versions, which did not encode an OCTET STRING
 std::vector<uint8_t> extract_raw_public_key(std::span<const uint8_t> key_bits)
@@ -31,12 +49,24 @@ std::vector<uint8_t> extract_raw_public_key(std::span<const uint8_t> key_bits)
    try
       {
       DataSource_Memory src(key_bits);
-      BER_Decoder(src).decode(raw_key, ASN1_Type::OctetString);
+      BER_Decoder(src).decode(raw_key, ASN1_Type::OctetString).verify_end();
+
+      // Smoke check the decoded key. Valid raw keys might be decodeable as BER
+      // and they might be either a sole public key or a concatenation of public
+      // and private key.
+      XMSS_Parameters params(deserialize_xmss_oid(raw_key));
+      if(raw_key.size() != params.raw_public_key_size() && raw_key.size() != params.raw_private_key_size())
+         { throw Decoding_Error("unpacked XMSS key does not have the correct length"); }
       }
    catch(Decoding_Error&)
       {
       raw_key.assign(key_bits.begin(), key_bits.end());
       }
+   catch(Not_Implemented&)
+      {
+      raw_key.assign(key_bits.begin(), key_bits.end());
+      }
+
    return raw_key;
    }
 
@@ -51,7 +81,7 @@ XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
 
 XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits)
    : m_raw_key(extract_raw_public_key(key_bits)),
-     m_xmss_params(XMSS_PublicKey::deserialize_xmss_oid(m_raw_key)),
+     m_xmss_params(deserialize_xmss_oid(m_raw_key)),
      m_wots_params(m_xmss_params.ots_oid())
    {
    if(m_raw_key.size() < m_xmss_params.raw_public_key_size())
@@ -72,22 +102,6 @@ XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits)
    m_public_seed.clear();
    m_public_seed.reserve(m_xmss_params.element_size());
    std::copy(begin, end, std::back_inserter(m_public_seed));
-   }
-
-XMSS_Parameters::xmss_algorithm_t
-XMSS_PublicKey::deserialize_xmss_oid(const std::vector<uint8_t>& raw_key)
-   {
-   if(raw_key.size() < 4)
-      {
-      throw Decoding_Error("XMSS signature OID missing.");
-      }
-
-   // extract and convert algorithm id to enum type
-   uint32_t raw_id = 0;
-   for(size_t i = 0; i < 4; i++)
-      { raw_id = ((raw_id << 8) | raw_key[i]); }
-
-   return static_cast<XMSS_Parameters::xmss_algorithm_t>(raw_id);
    }
 
 std::unique_ptr<PK_Ops::Verification>

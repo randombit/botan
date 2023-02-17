@@ -12,19 +12,20 @@ Uses the XMSS reference implementation from here:
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import subprocess
+import asyncio
 import tempfile
 import sys
 import binascii
 
 
-def run(cmd):
-    vc = subprocess.Popen(cmd,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
-    (stdout, stderr) = vc.communicate()
+async def run(cmd, args):
+    vc = await asyncio.create_subprocess_exec(cmd, *args,
+                                              stdout=asyncio.subprocess.PIPE,
+                                              stderr=asyncio.subprocess.PIPE)
+    (stdout, stderr) = await vc.communicate()
     if stderr:
-        print(stderr, file=sys.stderr)
+        raise RuntimeError(
+            "Process execution failed with: " + stderr.decode("utf-8"))
     return stdout
 
 
@@ -43,28 +44,27 @@ TEST_MESSAGES = [b'', fromhex("01020304"), fromhex("f1cceaeaae1838a11e8f9244ba16
 
 
 class Keypair:
-    def __try_generate_keypair(self, xmss_params):
-        for i in range(5):
-            keypair = run([KEYGEN_UTIL, xmss_params])
+    @staticmethod
+    async def generate(xmss_param):
+        for _ in range(5):
+            keypair = await run(KEYGEN_UTIL, [xmss_param])
             if len(keypair) < 8:
-                raise RuntimeError("Keypair generation failed")
+                continue
+
             oid = keypair[0:4]
 
             # Slicing fails if the oid appears in the public key by chance.
             # This is just a simple test generation script, so we don't really
             # care about the bias this introduces.
             if keypair.count(oid) == 2:
-                self.keypair = keypair
-                self.oid = oid
-                return True
+                return Keypair(xmss_param, keypair)
 
-        return False
+        raise RuntimeError("Keypair generation failed")
 
-    def __init__(self, xmss_params):
+    def __init__(self, xmss_params, keypair):
+        self.keypair = keypair
+        self.oid = self.keypair[0:4]
         self.params_name = xmss_params[5:]
-
-        if not self.__try_generate_keypair(xmss_params):
-            raise RuntimeError("Failed to generate a usable keypair")
 
         # transform the public/private keys into the format Botan expects
         sk_slice = self.keypair.find(self.oid, 4)
@@ -77,51 +77,59 @@ class Keypair:
         self.public_seed = self.public_key[n+4:n*2+4]
         self.secret_key = self.public_key + self.idx + self.secret_prf + self.secret_seed
 
-    def sign(self, message):
+    async def sign(self, message):
         with tempfile.NamedTemporaryFile() as msg_file, tempfile.NamedTemporaryFile() as key_file:
             key_file.write(self.keypair)
             key_file.flush()
             msg_file.write(message)
             msg_file.flush()
-            signature_and_msg = run([SIGN_UTIL, key_file.name, msg_file.name])
+            signature_and_msg = await run(SIGN_UTIL, [key_file.name, msg_file.name])
             return signature_and_msg[:-len(message)] if len(message) != 0 else signature_and_msg
 
 
-def make_xmss_sig_vec_entry(xmss_params):
-    for msg in TEST_MESSAGES:
-        kp = Keypair(xmss_params)
-        print("Params = {}".format(kp.params_name))
-        print("Msg = {}".format(tohex(msg)))
-        print("PrivateKey = {}".format(tohex(kp.secret_key)))
-        sig = kp.sign(msg)
-        print("Signature = {}".format(tohex(sig)))
-        print()
+async def join(strings):
+    return "\n".join(await asyncio.gather(*strings))
 
 
-def make_xmss_verify_vec_entry(xmss_params):
-    for msg in TEST_MESSAGES:
-        kp = Keypair(xmss_params)
-        print("Params = {}".format(kp.params_name))
-        print("Msg = {}".format(tohex(msg)))
-        print("PublicKey = {}".format(tohex(kp.public_key)))
-        sig = kp.sign(msg)
-        print("Signature = {}".format(tohex(sig)))
-        print()
+async def make_xmss_sig_vec_entry(xmss_param):
+    async def entry(msg):
+        kp = await Keypair.generate(xmss_param)
+        out = "Params = {}\n".format(kp.params_name)
+        out += "Msg = {}\n".format(tohex(msg))
+        out += "PrivateKey = {}\n".format(tohex(kp.secret_key))
+        sig = await kp.sign(msg)
+        out += "Signature = {}\n".format(tohex(sig))
+        return out
+
+    return await join([entry(msg) for msg in TEST_MESSAGES])
 
 
-def make_xmss_keygen_vec_entry(xmss_params):
-    kp = Keypair(xmss_params)
-    print("Params = {}".format(xmss_params))
-    print("SecretSeed = {}".format(tohex(kp.secret_seed)))
-    print("PublicSeed = {}".format(tohex(kp.public_seed)))
-    print("SecretPrf = {}".format(tohex(kp.secret_prf)))
-    print("PublicKey = {}".format(tohex(kp.public_key)))
-    print("PrivateKey = {}".format(tohex(kp.secret_key)))
-    print()
+async def make_xmss_verify_vec_entry(xmss_param):
+    async def entry(msg):
+        kp = await Keypair.generate(xmss_param)
+        out = "Params = {}\n".format(kp.params_name)
+        out += "Msg = {}\n".format(tohex(msg))
+        out += "PublicKey = {}\n".format(tohex(kp.public_key))
+        sig = await kp.sign(msg)
+        out += "Signature = {}\n".format(tohex(sig))
+        return out
+
+    return await join([entry(msg) for msg in TEST_MESSAGES])
 
 
-if len(sys.argv) != 3:
-    print("Usage: {} <test vector: 'sig', 'verify', 'keygen'> <XMSS Parameter Set Name>".format(
+async def make_xmss_keygen_vec_entry(xmss_param):
+    kp = await Keypair.generate(xmss_param)
+    out = "Params = {}\n".format(xmss_param)
+    out += "SecretSeed = {}\n".format(tohex(kp.secret_seed))
+    out += "PublicSeed = {}\n".format(tohex(kp.public_seed))
+    out += "SecretPrf = {}\n".format(tohex(kp.secret_prf))
+    out += "PublicKey = {}\n".format(tohex(kp.public_key))
+    out += "PrivateKey = {}\n".format(tohex(kp.secret_key))
+    return out
+
+
+if len(sys.argv) < 3:
+    print("Usage: {} <test vector: 'sig', 'verify', 'keygen'> <XMSS Parameter Set Name(s)>".format(
         sys.argv[0]))
     sys.exit(1)
 
@@ -136,4 +144,8 @@ if tv not in funs:
     print("Unknown test vector: %s" % tv)
     sys.exit(1)
 
-funs[tv](sys.argv[2])
+
+async def main():
+    print(await join([funs[tv](p) for p in sys.argv[2:]]))
+
+asyncio.run(main())
