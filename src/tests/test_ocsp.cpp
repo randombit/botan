@@ -192,7 +192,7 @@ class OCSP_Tests final : public Test
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
                    result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
-                                  ocsp_status[0].count(expected) > 0);
+                                  ocsp_status[0].contains(expected));
             };
 
          check_ocsp(Botan::calendar_point(2016, 11, 11, 12, 30, 0).to_std_timepoint(),
@@ -234,7 +234,7 @@ class OCSP_Tests final : public Test
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
                    result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
-                                  ocsp_status[0].count(expected) > 0);
+                                  ocsp_status[0].contains(expected));
             };
 
          check_ocsp(Botan::calendar_point(2016, 11, 11, 12, 30, 0).to_std_timepoint(),
@@ -276,7 +276,7 @@ class OCSP_Tests final : public Test
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
                    result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
-                                  ocsp_status[0].count(expected) > 0);
+                                  ocsp_status[0].contains(expected));
             };
 
          check_ocsp(Botan::calendar_point(2019, 5, 28, 7, 0, 0).to_std_timepoint(),
@@ -312,7 +312,7 @@ class OCSP_Tests final : public Test
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
                    result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
-                                  ocsp_status[0].count(expected) > 0);
+                                  ocsp_status[0].contains(expected));
             };
 
          check_ocsp(Botan::calendar_point(2019, 5, 28, 7, 0, 0).to_std_timepoint(),
@@ -376,8 +376,8 @@ class OCSP_Tests final : public Test
             {
             if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1))
                {
-               const bool status_good = ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD) > 0;
-               const bool server_not_found = ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE) > 0;
+               const bool status_good = ocsp_status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
+               const bool server_not_found = ocsp_status[0].contains(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
                result.confirm("Expected status", status_good || server_not_found);
                }
             }

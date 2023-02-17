@@ -980,7 +980,7 @@ class Ciphertext
                       "unexpected length of compressed polynomial vector");
 
          PolynomialVector r(mode.k());
-         auto a = buffer.data();
+         const uint8_t* a = buffer.data();
 
          if(mode.k() == 4)
             {
@@ -1033,7 +1033,7 @@ class Ciphertext
          BOTAN_ASSERT(buffer.size() == polynomial_compressed_bytes(mode), "unexpected length of compressed polynomial");
 
          Polynomial r;
-         auto a = buffer.data();
+         const uint8_t* a = buffer.data();
 
          if(mode.k() == 4)
             {

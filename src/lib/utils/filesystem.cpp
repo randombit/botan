@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <deque>
 #include <memory>
+#include <sstream>
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
   #include <sys/types.h>
@@ -48,7 +49,10 @@ std::vector<std::string> impl_readdir(const std::string& dir_path)
             const std::string filename = dirent->d_name;
             if(filename == "." || filename == "..")
                continue;
-            const std::string full_path = cur_path + "/" + filename;
+
+            std::ostringstream full_path_sstr;
+            full_path_sstr << cur_path << "/" << filename;
+            const std::string full_path = full_path_sstr.str();
 
             struct stat stat_buf;
 

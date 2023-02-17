@@ -273,7 +273,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
       m_data->extensions.add(new Encrypt_then_MAC);
       }
 
-   if(c && c->ecc_ciphersuite() && client_hello.extension_types().count(Extension_Code::EcPointFormats))
+   if(c && c->ecc_ciphersuite() && client_hello.extension_types().contains(Extension_Code::EcPointFormats))
       {
       m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
@@ -353,7 +353,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
          }
       }
 
-   if(resumed_session.ciphersuite().ecc_ciphersuite() && client_hello.extension_types().count(Extension_Code::EcPointFormats))
+   if(resumed_session.ciphersuite().ecc_ciphersuite() && client_hello.extension_types().contains(Extension_Code::EcPointFormats))
       {
       m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }

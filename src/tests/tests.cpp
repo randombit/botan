@@ -95,7 +95,7 @@ void Test::Result::note_missing(const std::string& whatever)
    {
    static std::set<std::string> s_already_seen;
 
-   if(s_already_seen.count(whatever) == 0)
+   if(!s_already_seen.contains(whatever))
       {
       test_note("Skipping tests due to missing " + whatever);
       s_already_seen.insert(whatever);
@@ -524,13 +524,13 @@ class Test_Registry
                          bool needs_serialization,
                          std::function<std::unique_ptr<Test>()> maker_fn)
          {
-         if(m_tests.count(name) != 0)
+         if(m_tests.contains(name))
             throw Test_Error("Duplicate registration of test '" + name + "'");
 
-         if(m_tests.count(category))
+         if(m_tests.contains(category))
             throw Test_Error("'" + category + "' cannot be used as category, test exists");
 
-         if(m_categories.count(name))
+         if(m_categories.contains(name))
             throw Test_Error("'" + name + "' cannot be used as test name, category exists");
 
          if(smoke_test)
@@ -1254,7 +1254,7 @@ std::vector<Test::Result> Text_Based_Test::run()
       std::string key = strip_ws(std::string(line.begin(), line.begin() + equal_i - 1));
       std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
-      if(m_required_keys.count(key) == 0 && m_optional_keys.count(key) == 0)
+      if(!m_required_keys.contains(key) && !m_optional_keys.contains(key))
          results.push_back(Test::Result::Failure(header_or_name,
                                                  test_id + " failed unknown key " + key));
 

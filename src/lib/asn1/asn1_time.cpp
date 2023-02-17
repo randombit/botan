@@ -92,12 +92,11 @@ std::string ASN1_Time::to_string() const
 
    std::string repr = std::to_string(int_repr) + "Z";
 
-   uint32_t desired_size = (m_tag == ASN1_Type::UtcTime) ? 13 : 15;
+   const size_t desired_size = (m_tag == ASN1_Type::UtcTime) ? 13 : 15;
 
-   while(repr.size() < desired_size)
-      repr = "0" + repr;
+   const std::string zero_padding(desired_size - repr.size(), '0');
 
-   return repr;
+   return zero_padding + repr;
    }
 
 std::string ASN1_Time::readable_string() const

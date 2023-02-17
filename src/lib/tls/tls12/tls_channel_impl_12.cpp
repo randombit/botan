@@ -197,7 +197,7 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side)
 
    const uint16_t epoch = sequence_numbers().current_read_epoch();
 
-   BOTAN_ASSERT(m_read_cipher_states.count(epoch) == 0,
+   BOTAN_ASSERT(!m_read_cipher_states.contains(epoch),
                 "No read cipher state currently set for next epoch");
 
    // flip side as we are reading
@@ -226,7 +226,7 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side)
 
    const uint16_t epoch = sequence_numbers().current_write_epoch();
 
-   BOTAN_ASSERT(m_write_cipher_states.count(epoch) == 0,
+   BOTAN_ASSERT(!m_write_cipher_states.contains(epoch),
                 "No write cipher state currently set for next epoch");
 
    std::shared_ptr<Connection_Cipher_State> write_state(

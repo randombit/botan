@@ -402,7 +402,7 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
    private:
       void count_callback_invocation(const std::string& callback_name) const
          {
-         if(m_callback_invocations.count(callback_name) == 0)
+         if(!m_callback_invocations.contains(callback_name))
             { m_callback_invocations[callback_name] = 0; }
 
          m_callback_invocations[callback_name]++;
@@ -682,7 +682,7 @@ class TLS_Context
          const auto& invokes = m_callbacks.callback_invocations();
          for(const auto& cbn : callback_names)
             {
-            result.confirm(cbn + " was invoked (Context: " + context + ")", invokes.count(cbn) > 0 && invokes.at(cbn) > 0);
+            result.confirm(cbn + " was invoked (Context: " + context + ")", invokes.contains(cbn) && invokes.at(cbn) > 0);
             }
 
          for(const auto& invoke : invokes)

@@ -88,7 +88,7 @@ load_public_key(const AlgorithmIdentifier& alg_id,
    {
    const std::string oid_str = alg_id.oid().to_formatted_string();
    const std::vector<std::string> alg_info = split_on(oid_str, '/');
-   const std::string alg_name = alg_info[0];
+   const std::string& alg_name = alg_info[0];
 
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA")
@@ -179,7 +179,7 @@ load_private_key(const AlgorithmIdentifier& alg_id,
    {
    const std::string oid_str = alg_id.oid().to_formatted_string();
    const std::vector<std::string> alg_info = split_on(oid_str, '/');
-   const std::string alg_name = alg_info[0];
+   const std::string& alg_name = alg_info[0];
 
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA")

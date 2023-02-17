@@ -1248,7 +1248,7 @@ class FFI_Unit_Tests final : public Test
 
                if(s != "Unknown error")
                   {
-                  result.confirm("No duplicate messages", errors.count(s) == 0);
+                  result.confirm("No duplicate messages", !errors.contains(s));
                   errors.insert(s);
                   }
                }

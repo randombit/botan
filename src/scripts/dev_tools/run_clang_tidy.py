@@ -28,90 +28,85 @@ enabled_checks = [
     'readability-*',
 ]
 
+# these checks are ignored for cli/tests
+disabled_checks_non_lib = [
+    'cppcoreguidelines-macro-usage',
+    'performance-inefficient-string-concatenation',
+    'performance-no-automatic-move',
+    'cert-err58-cpp',
+]
+
 # these might be worth being clean for
 disabled_needs_work = [
     '*-braces-around-statements', # should fix (need clang-format)
     '*-named-parameter',
     '*-member-init', # seems bad
-    'bugprone-easily-swappable-parameters',
-    'bugprone-implicit-widening-of-multiplication-result',
     'bugprone-lambda-function-name', # should be an easy fix
     'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
-    'bugprone-narrowing-conversions', # should be fixed
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
+    'cert-err58-cpp', # many false positives eg __m128i
     'cppcoreguidelines-init-variables',
-    'cppcoreguidelines-macro-usage',
-    'cppcoreguidelines-narrowing-conversions', # lot of these
     'cppcoreguidelines-owning-memory',
     'cppcoreguidelines-prefer-member-initializer',
-    'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-slicing', # private->public key slicing
     'hicpp-explicit-conversions',
-    'hicpp-signed-bitwise', # djb shit
-    'hicpp-move-const-arg',
     'modernize-avoid-bind', # used a lot in pkcs11
     'modernize-pass-by-value',
-    'modernize-use-nodiscard',
-    'modernize-use-trailing-return-type',
-    'performance-inefficient-string-concatenation',
-    'performance-inefficient-vector-operation',
-    'performance-move-const-arg',
-    'performance-no-automatic-move',
-    'performance-no-int-to-ptr',
-    'performance-unnecessary-copy-initialization',
-    'readability-container-contains',
     'readability-convert-member-functions-to-static',
     'readability-implicit-bool-conversion', # maybe fix this
     'readability-inconsistent-declaration-parameter-name', # should fix this
-    'readability-isolate-declaration',
     'readability-qualified-auto',
-    'readability-redundant-access-specifiers',
     'readability-redundant-member-init',
-    'readability-redundant-string-cstr',
     'readability-simplify-boolean-expr', # sometimes ok
     'readability-static-accessed-through-instance',
 ]
 
-# these we are not interested in ever being clang-tidy clean for
+# these we are probably not interested in ever being clang-tidy clean for
 disabled_not_interested = [
     '*-array-to-pointer-decay',
     '*-avoid-c-arrays',
     '*-else-after-return',
     '*-function-size',
     '*-magic-numbers', # can't stop the magic
+    '*-narrowing-conversions',
     '*-no-array-decay',
     '*-use-auto', # not universally a good idea
     '*-use-emplace', # often less clear
     '*-deprecated-headers', # wrong for system headers like stdlib.h
     'bugprone-argument-comment',
     'bugprone-branch-clone', # doesn't interact well with feature macros
-    'cert-err58-cpp',
+    'bugprone-easily-swappable-parameters',
+    'bugprone-implicit-widening-of-multiplication-result',
     'cppcoreguidelines-avoid-non-const-global-variables',
-    'cppcoreguidelines-no-malloc',
     'cppcoreguidelines-non-private-member-variables-in-classes', # pk split keys
+    'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-pro-bounds-constant-array-index',
     'cppcoreguidelines-pro-type-const-cast', # see above
-    'cppcoreguidelines-pro-type-cstyle-cast', # system headers
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
     'cppcoreguidelines-pro-type-vararg', # idiocy
     'hicpp-no-assembler',
-    'hicpp-no-malloc',
     'hicpp-vararg', # idiocy
+    'hicpp-signed-bitwise', # impossible to avoid in C/C++, int promotion rules :/
     'modernize-loop-convert', # sometimes very ugly
-    'modernize-raw-string-literal',
+    'modernize-raw-string-literal', # usually less readable
+    'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
     'modernize-return-braced-init-list', # thanks I hate it
     'modernize-use-default-member-init',
+    'modernize-use-nodiscard',
     'modernize-use-using', # fine not great
     'portability-simd-intrinsics',
     'readability-container-data-pointer',
     'readability-function-cognitive-complexity',
     'readability-identifier-length', # lol, lmao
+    'readability-isolate-declaration',
     'readability-non-const-parameter',
+    'readability-redundant-access-specifiers', # reneme likes doing this
     'readability-suspicious-call-argument',
     'readability-use-anyofallof', # not more readable
 ]
 
 disabled_checks = disabled_needs_work + disabled_not_interested
+disabled_checks_non_lib = disabled_checks + disabled_checks_non_lib
 
 def create_check_option(enabled, disabled):
     return ','.join(enabled) + ',' + ','.join(['-' + d for d in disabled])
@@ -194,10 +189,11 @@ def main(args = None):
 
     compile_commands = [x for x in compile_commands if not remove_bad(x)]
 
-    check_config = create_check_option(enabled_checks, disabled_checks)
+    check_config_lib = create_check_option(enabled_checks, disabled_checks)
+    check_config_rest = create_check_option(enabled_checks, disabled_checks_non_lib)
 
     if options.list_checks:
-        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config]))
+        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config_lib]))
         return 0
 
     pool = ThreadPool(jobs)
@@ -212,11 +208,13 @@ def main(args = None):
         if not file_matches(file, args[1:]):
             continue
 
+        config = check_config_lib if file.startswith('src/lib') else check_config_rest
+
         files_checked += 1
         results.append(pool.apply_async(
             run_clang_tidy,
             (compile_commands_file,
-             check_config,
+             config,
              file,
              options)))
 

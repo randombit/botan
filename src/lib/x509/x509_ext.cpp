@@ -118,7 +118,7 @@ void Certificate_Extension::validate(const X509_Certificate& /*unused*/, const X
 void Extensions::add(std::unique_ptr<Certificate_Extension> extn, bool critical)
    {
    // sanity check: we don't want to have the same extension more than once
-   if(m_extension_info.count(extn->oid_of()) > 0)
+   if(m_extension_info.contains(extn->oid_of()))
       {
       const std::string name = extn->oid_name();
       throw Invalid_Argument("Extension " + name + " already present in Extensions::add");
@@ -132,7 +132,7 @@ void Extensions::add(std::unique_ptr<Certificate_Extension> extn, bool critical)
 
 bool Extensions::add_new(std::unique_ptr<Certificate_Extension> extn, bool critical)
    {
-   if(m_extension_info.count(extn->oid_of()) > 0)
+   if(m_extension_info.contains(extn->oid_of()))
       {
       return false; // already exists
       }
@@ -210,6 +210,7 @@ std::unique_ptr<Certificate_Extension> Extensions::get(const OID& oid) const
 std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> Extensions::extensions() const
    {
    std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> exts;
+   exts.reserve(m_extension_info.size());
    for(auto&& ext : m_extension_info)
       {
       exts.push_back(
@@ -652,6 +653,7 @@ std::vector<uint8_t> Certificate_Policies::encode_inner() const
    {
    std::vector<Policy_Information> policies;
 
+   policies.reserve(m_oids.size());
    for(const auto& oid : m_oids)
       policies.push_back(Policy_Information(oid));
 

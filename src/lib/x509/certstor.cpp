@@ -47,6 +47,7 @@ void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert)
 std::vector<X509_DN> Certificate_Store_In_Memory::all_subjects() const
    {
    std::vector<X509_DN> subjects;
+   subjects.reserve(m_certs.size());
    for(const auto& cert : m_certs)
       subjects.push_back(cert.subject_dn());
    return subjects;
@@ -61,7 +62,7 @@ Certificate_Store_In_Memory::find_cert(const X509_DN& subject_dn,
       // Only compare key ids if set in both call and in the cert
       if(!key_id.empty())
          {
-         std::vector<uint8_t> skid = cert.subject_key_id();
+         const std::vector<uint8_t>& skid = cert.subject_key_id();
 
          if(!skid.empty() && skid != key_id) // no match
             continue;
@@ -84,7 +85,7 @@ std::vector<X509_Certificate> Certificate_Store_In_Memory::find_all_certs(
       {
       if(!key_id.empty())
          {
-         std::vector<uint8_t> skid = cert.subject_key_id();
+         const std::vector<uint8_t>& skid = cert.subject_key_id();
 
          if(!skid.empty() && skid != key_id) // no match
             continue;
@@ -159,7 +160,7 @@ std::optional<X509_CRL> Certificate_Store_In_Memory::find_crl_for(const X509_Cer
       // Only compare key ids if set in both call and in the CRL
       if(!key_id.empty())
          {
-         std::vector<uint8_t> akid = c.authority_key_id();
+         const std::vector<uint8_t>& akid = c.authority_key_id();
 
          if(!akid.empty() && akid != key_id) // no match
             continue;

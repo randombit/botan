@@ -83,7 +83,7 @@ std::optional<uint32_t> New_Session_Ticket_13::early_data_byte_limit() const
    if(!m_extensions.has<EarlyDataIndication>())
       return std::nullopt;
 
-   const auto ext = m_extensions.get<EarlyDataIndication>();
+   const EarlyDataIndication* ext = m_extensions.get<EarlyDataIndication>();
    BOTAN_ASSERT_NOMSG(ext->max_early_data_size().has_value());
    return ext->max_early_data_size().value();
    }
