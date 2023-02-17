@@ -63,6 +63,8 @@ class Stream_Cipher_Mode final : public Cipher_Mode
 
       void reset() override { /* no msg state */ }
 
+      bool has_keying_material() const override { return m_cipher->has_keying_material(); }
+
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override
          {

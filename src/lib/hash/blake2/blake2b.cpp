@@ -196,7 +196,7 @@ void BLAKE2b::final_result(uint8_t output[])
 
 Key_Length_Specification BLAKE2b::key_spec() const
    {
-   return Key_Length_Specification(0, 64);
+   return Key_Length_Specification(1, 64);
    }
 
 std::string BLAKE2b::name() const
@@ -212,6 +212,11 @@ std::unique_ptr<HashFunction> BLAKE2b::new_object() const
 std::unique_ptr<HashFunction> BLAKE2b::copy_state() const
    {
    return std::make_unique<BLAKE2b>(*this);
+   }
+
+bool BLAKE2b::has_keying_material() const
+   {
+   return m_key_size > 0;
    }
 
 void BLAKE2b::key_schedule(const uint8_t key[], size_t length)

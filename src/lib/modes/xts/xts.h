@@ -20,24 +20,25 @@ namespace Botan {
 class XTS_Mode : public Cipher_Mode
    {
    public:
-      std::string name() const override;
+      std::string name() const override final;
 
-      size_t update_granularity() const override;
+      size_t update_granularity() const override final;
 
-      size_t ideal_granularity() const override;
+      size_t ideal_granularity() const override final;
 
-      size_t minimum_final_size() const override;
+      size_t minimum_final_size() const override final;
 
-      Key_Length_Specification key_spec() const override;
+      Key_Length_Specification key_spec() const override final;
 
-      size_t default_nonce_length() const override;
+      size_t default_nonce_length() const override final;
 
-      bool valid_nonce_length(size_t n) const override;
+      bool valid_nonce_length(size_t n) const override final;
 
-      void clear() override;
+      void clear() override final;
 
-      void reset() override;
+      void reset() override final;
 
+      bool has_keying_material() const override final;
    protected:
       explicit XTS_Mode(std::unique_ptr<BlockCipher> cipher);
 

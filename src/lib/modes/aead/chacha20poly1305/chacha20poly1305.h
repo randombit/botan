@@ -46,6 +46,8 @@ class ChaCha20Poly1305_Mode : public AEAD_Mode
 
       void reset() override;
 
+      bool has_keying_material() const override final;
+
    protected:
       std::unique_ptr<StreamCipher> m_chacha;
       std::unique_ptr<MessageAuthenticationCode> m_poly1305;

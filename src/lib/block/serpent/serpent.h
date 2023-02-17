@@ -28,6 +28,7 @@ class Serpent final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Serpent>(); }
 
       size_t parallelism() const override { return 4; }
+      bool has_keying_material() const override;
 
    private:
 

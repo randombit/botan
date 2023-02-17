@@ -72,6 +72,12 @@ bool XTS_Mode::valid_nonce_length(size_t n) const
    return cipher_block_size() == n;
    }
 
+bool XTS_Mode::has_keying_material() const
+   {
+   return m_cipher->has_keying_material() &&
+      m_tweak_cipher->has_keying_material();
+   }
+
 void XTS_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    const size_t key_half = length / 2;

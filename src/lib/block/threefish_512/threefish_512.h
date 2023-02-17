@@ -29,6 +29,7 @@ class Threefish_512 final :
       std::string name() const override { return "Threefish-512"; }
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Threefish_512>(); }
       size_t parallelism() const override;
+      bool has_keying_material() const override;
 
    private:
 

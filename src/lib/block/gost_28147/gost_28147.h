@@ -69,6 +69,8 @@ class GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32>
          return std::make_unique<GOST_28147_89>(m_SBOX, m_name);
          }
 
+      bool has_keying_material() const override;
+
       /**
       * @param params the sbox parameters to use
       */

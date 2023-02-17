@@ -35,6 +35,8 @@ class OFB final : public StreamCipher
 
       void clear() override;
 
+      bool has_keying_material() const override;
+
       /**
       * @param cipher the block cipher to use
       */

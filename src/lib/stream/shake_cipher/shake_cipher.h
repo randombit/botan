@@ -44,6 +44,8 @@ class SHAKE_Cipher : public StreamCipher
 
       Key_Length_Specification key_spec() const override final;
 
+      bool has_keying_material() const override final;
+
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override final;
 

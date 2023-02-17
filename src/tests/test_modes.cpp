@@ -101,14 +101,14 @@ class Cipher_Mode_Tests final : public Text_Based_Test
 
    private:
       static void test_mode(Test::Result& result,
-                     const std::string& algo,
-                     const std::string& provider,
-                     const std::string& direction,
-                     Botan::Cipher_Mode& mode,
-                     const std::vector<uint8_t>& key,
-                     const std::vector<uint8_t>& nonce,
-                     const std::vector<uint8_t>& input,
-                     const std::vector<uint8_t>& expected)
+                            const std::string& algo,
+                            const std::string& provider,
+                            const std::string& direction,
+                            Botan::Cipher_Mode& mode,
+                            const std::vector<uint8_t>& key,
+                            const std::vector<uint8_t>& nonce,
+                            const std::vector<uint8_t>& input,
+                            const std::vector<uint8_t>& expected)
          {
          const bool is_cbc = (algo.find("/CBC") != std::string::npos);
          const bool is_ctr = (algo.find("CTR") != std::string::npos);
@@ -128,6 +128,8 @@ class Cipher_Mode_Tests final : public Text_Based_Test
 
          // FFI currently requires this, so assure it is true for all modes
          result.test_gt("buffer sizes ok", mode.ideal_granularity(), min_final_bytes);
+
+         result.test_eq("key not set", mode.has_keying_material(), false);
 
          result.test_throws("Unkeyed object throws", [&]() {
             Botan::secure_vector<uint8_t> bad(update_granularity);
@@ -193,6 +195,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
          mode.reset();
 
          mode.set_key(key);
+         result.test_eq("key is set", mode.has_keying_material(), true);
          mode.start(nonce);
 
          Botan::secure_vector<uint8_t> buf;
@@ -255,6 +258,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
             }
 
          mode.clear();
+         result.test_eq("key is not set", mode.has_keying_material(), false);
 
          result.test_throws("Unkeyed object throws after clear", [&]() {
             Botan::secure_vector<uint8_t> bad(update_granularity);

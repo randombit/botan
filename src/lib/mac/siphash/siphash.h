@@ -24,6 +24,8 @@ class SipHash final : public MessageAuthenticationCode
 
       size_t output_length() const override { return 8; }
 
+      bool has_keying_material() const override;
+
       Key_Length_Specification key_spec() const override
          {
          return Key_Length_Specification(16);

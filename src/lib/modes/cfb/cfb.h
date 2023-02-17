@@ -39,6 +39,8 @@ class CFB_Mode : public Cipher_Mode
       void clear() override final;
 
       void reset() override final;
+
+      bool has_keying_material() const override final;
    protected:
       CFB_Mode(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits);
 

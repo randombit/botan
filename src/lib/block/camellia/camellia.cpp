@@ -394,39 +394,43 @@ void key_schedule(secure_vector<uint64_t>& SK, const uint8_t key[], size_t lengt
 
 void Camellia_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_SK.empty() == false);
+   assert_key_material_set();
    Camellia_F::encrypt(in, out, blocks, m_SK, 9);
    }
 
 void Camellia_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_SK.empty() == false);
+   assert_key_material_set();
    Camellia_F::encrypt(in, out, blocks, m_SK, 12);
    }
 
 void Camellia_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_SK.empty() == false);
+   assert_key_material_set();
    Camellia_F::encrypt(in, out, blocks, m_SK, 12);
    }
 
 void Camellia_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_SK.empty() == false);
+   assert_key_material_set();
    Camellia_F::decrypt(in, out, blocks, m_SK, 9);
    }
 
 void Camellia_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_SK.empty() == false);
+   assert_key_material_set();
    Camellia_F::decrypt(in, out, blocks, m_SK, 12);
    }
 
 void Camellia_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_SK.empty() == false);
+   assert_key_material_set();
    Camellia_F::decrypt(in, out, blocks, m_SK, 12);
    }
+
+bool Camellia_128::has_keying_material() const { return !m_SK.empty(); }
+bool Camellia_192::has_keying_material() const { return !m_SK.empty(); }
+bool Camellia_256::has_keying_material() const { return !m_SK.empty(); }
 
 void Camellia_128::key_schedule(const uint8_t key[], size_t length)
    {

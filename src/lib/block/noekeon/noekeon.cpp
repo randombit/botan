@@ -111,7 +111,7 @@ const uint8_t Noekeon::RC[] = {
 */
 void Noekeon::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_EK.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
    if(CPUID::has_simd_32())
@@ -164,7 +164,7 @@ void Noekeon::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_DK.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
    if(CPUID::has_simd_32())
@@ -210,6 +210,11 @@ void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
       }
+   }
+
+bool Noekeon::has_keying_material() const
+   {
+   return !m_EK.empty();
    }
 
 /*

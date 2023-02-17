@@ -21,22 +21,23 @@ namespace Botan {
 class CBC_Mode : public Cipher_Mode
    {
    public:
-      std::string name() const override;
+      std::string name() const override final;
 
-      size_t update_granularity() const override;
+      size_t update_granularity() const override final;
 
-      size_t ideal_granularity() const override;
+      size_t ideal_granularity() const override final;
 
-      Key_Length_Specification key_spec() const override;
+      Key_Length_Specification key_spec() const override final;
 
-      size_t default_nonce_length() const override;
+      size_t default_nonce_length() const override final;
 
       bool valid_nonce_length(size_t n) const override;
 
-      void clear() override;
+      void clear() override final;
 
       void reset() override;
 
+      bool has_keying_material() const override final;
    protected:
       CBC_Mode(std::unique_ptr<BlockCipher> cipher,
                std::unique_ptr<BlockCipherModePaddingMethod> padding);

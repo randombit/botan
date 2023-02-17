@@ -70,7 +70,9 @@ class Message_Auth_Tests final : public Text_Based_Test
                result.test_success("Trying to MAC with no key set fails");
                }
 
+            result.test_eq("key not set", mac->has_keying_material(), false);
             mac->set_key(key);
+            result.test_eq("key set", mac->has_keying_material(), true);
             mac->start(iv);
             mac->update(input);
             result.test_eq(provider, "correct mac", mac->final(), expected);
@@ -95,6 +97,7 @@ class Message_Auth_Tests final : public Text_Based_Test
             mac->start(iv);
             mac->update("some discarded input");
             mac->clear();
+            result.test_eq("key not set", mac->has_keying_material(), false);
 
             // do the same to test verify_mac()
             mac->set_key(key);

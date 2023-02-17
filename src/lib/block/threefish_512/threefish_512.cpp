@@ -209,7 +209,7 @@ void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    {
    using namespace Threefish_F;
 
-   verify_key_set(m_K.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_THREEFISH_512_AVX2)
    if(CPUID::has_avx2())
@@ -247,7 +247,7 @@ void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    {
    using namespace Threefish_F;
 
-   verify_key_set(m_K.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_THREEFISH_512_AVX2)
    if(CPUID::has_avx2())
@@ -288,6 +288,11 @@ void Threefish_512::set_tweak(const uint8_t tweak[], size_t len)
    m_T[0] = load_le<uint64_t>(tweak, 0);
    m_T[1] = load_le<uint64_t>(tweak, 1);
    m_T[2] = m_T[0] ^ m_T[1];
+   }
+
+bool Threefish_512::has_keying_material() const
+   {
+   return !m_K.empty();
    }
 
 void Threefish_512::key_schedule(const uint8_t key[], size_t /*length*/)

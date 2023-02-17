@@ -42,6 +42,8 @@ class BOTAN_PUBLIC_API(2,5) FPE_FE1 final : public SymmetricAlgorithm
 
       Key_Length_Specification key_spec() const override;
 
+      bool has_keying_material() const override;
+
       std::string name() const override;
 
       void clear() override;

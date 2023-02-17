@@ -82,7 +82,13 @@ size_t EAX_Mode::ideal_granularity() const
 
 Key_Length_Specification EAX_Mode::key_spec() const
    {
-   return m_cipher->key_spec();
+   return m_ctr->key_spec();
+   }
+
+bool EAX_Mode::has_keying_material() const
+   {
+   return m_ctr->has_keying_material() &&
+      m_cmac->has_keying_material();
    }
 
 /*

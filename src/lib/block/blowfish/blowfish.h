@@ -31,6 +31,8 @@ class BOTAN_TEST_API Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
       void clear() override;
       std::string name() const override { return "Blowfish"; }
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Blowfish>(); }
+
+      bool has_keying_material() const override;
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 

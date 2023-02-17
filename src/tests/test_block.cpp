@@ -62,7 +62,9 @@ class Block_Cipher_Tests final : public Text_Based_Test
             result.test_gte(provider, cipher->block_size(), 8);
             result.test_gte(provider, cipher->parallel_bytes(), cipher->block_size() * cipher->parallelism());
 
-            // Test that trying to encrypt or decrypt with now key set throws Botan::Invalid_State
+            result.test_eq("no key set", cipher->has_keying_material(), false);
+
+            // Test that trying to encrypt or decrypt with no key set throws Botan::Invalid_State
             try
                {
                std::vector<uint8_t> block(cipher->block_size());
@@ -103,6 +105,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
                }
 
             cipher->set_key(key);
+            result.test_eq("key set", cipher->has_keying_material(), true);
 
             if(!tweak.empty())
                {
@@ -165,7 +168,9 @@ class Block_Cipher_Tests final : public Text_Based_Test
                            buf.data() + 1, buf.size() - 1,
                            input.data(), input.size());
 
+            result.test_eq("key set", cipher->has_keying_material(), true);
             cipher->clear();
+            result.test_eq("key set", cipher->has_keying_material(), false);
 
             try
                {

@@ -230,6 +230,11 @@ Key_Length_Specification OCB_Mode::key_spec() const
    return m_cipher->key_spec();
    }
 
+bool OCB_Mode::has_keying_material() const
+   {
+   return m_cipher->has_keying_material();
+   }
+
 void OCB_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
@@ -238,7 +243,7 @@ void OCB_Mode::key_schedule(const uint8_t key[], size_t length)
 
 void OCB_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)
    {
-   verify_key_set(m_L != nullptr);
+   assert_key_material_set();
    m_ad_hash = ocb_hash(*m_L, *m_cipher, ad, ad_len);
    }
 
@@ -339,7 +344,7 @@ void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   verify_key_set(m_L != nullptr);
+   assert_key_material_set();
 
    m_L->init(update_nonce(nonce, nonce_len));
    zeroise(m_checksum);
@@ -348,7 +353,7 @@ void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
    {
-   verify_key_set(m_L != nullptr);
+   assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
@@ -379,7 +384,7 @@ size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
 
 void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   verify_key_set(m_L != nullptr);
+   assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
@@ -439,7 +444,7 @@ void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks)
    {
-   verify_key_set(m_L != nullptr);
+   assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
@@ -470,7 +475,7 @@ size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
 
 void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   verify_key_set(m_L != nullptr);
+   assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();

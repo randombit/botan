@@ -151,6 +151,11 @@ void Poly1305::clear()
    m_buf_pos = 0;
    }
 
+bool Poly1305::has_keying_material() const
+   {
+   return m_poly.size() == 8;
+   }
+
 void Poly1305::key_schedule(const uint8_t key[], size_t /*length*/)
    {
    m_buf_pos = 0;
@@ -162,7 +167,7 @@ void Poly1305::key_schedule(const uint8_t key[], size_t /*length*/)
 
 void Poly1305::add_data(const uint8_t input[], size_t length)
    {
-   verify_key_set(m_poly.size() == 8);
+   assert_key_material_set();
 
    if(m_buf_pos)
       {
@@ -189,7 +194,7 @@ void Poly1305::add_data(const uint8_t input[], size_t length)
 
 void Poly1305::final_result(uint8_t out[])
    {
-   verify_key_set(m_poly.size() == 8);
+   assert_key_material_set();
 
    if(m_buf_pos != 0)
       {

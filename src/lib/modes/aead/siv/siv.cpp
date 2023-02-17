@@ -72,6 +72,12 @@ Key_Length_Specification SIV_Mode::key_spec() const
    return m_mac->key_spec().multiple(2);
    }
 
+bool SIV_Mode::has_keying_material() const
+   {
+   return m_ctr->has_keying_material() &&
+      m_mac->has_keying_material();
+   }
+
 void SIV_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    const size_t keylen = length / 2;

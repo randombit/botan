@@ -37,6 +37,7 @@ class BLAKE2b final : public HashFunction, public SymmetricAlgorithm
       std::unique_ptr<HashFunction> new_object() const override;
       std::string name() const override;
       void clear() override;
+      bool has_keying_material() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;
 

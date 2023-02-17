@@ -40,6 +40,7 @@ class CommonCrypto_Cipher_Mode final : public Cipher_Mode
       void clear() override;
       void reset() override;
       Key_Length_Specification key_spec() const override;
+      bool has_keying_material() const override { return m_key_set; }
 
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
@@ -72,7 +73,7 @@ CommonCrypto_Cipher_Mode::~CommonCrypto_Cipher_Mode()
 
 void CommonCrypto_Cipher_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
-   verify_key_set(m_key_set);
+   assert_key_material_set();
 
    if(!valid_nonce_length(nonce_len))
       { throw Invalid_IV_Length(name(), nonce_len); }
@@ -89,7 +90,7 @@ void CommonCrypto_Cipher_Mode::start_msg(const uint8_t nonce[], size_t nonce_len
 
 size_t CommonCrypto_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
    {
-   verify_key_set(m_key_set);
+   assert_key_material_set();
    BOTAN_STATE_CHECK(m_nonce_set);
 
    if(msg_len == 0)
@@ -119,7 +120,7 @@ size_t CommonCrypto_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
 void CommonCrypto_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
                                       size_t offset)
    {
-   verify_key_set(m_key_set);
+   assert_key_material_set();
    BOTAN_STATE_CHECK(m_nonce_set);
 
    BOTAN_ASSERT(buffer.size() >= offset, "Offset ok");

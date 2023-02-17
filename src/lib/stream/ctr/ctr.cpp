@@ -65,6 +65,11 @@ std::unique_ptr<StreamCipher> CTR_BE::new_object() const
    return std::make_unique<CTR_BE>(m_cipher->new_object(), m_ctr_size);
    }
 
+bool CTR_BE::has_keying_material() const
+   {
+   return m_cipher->has_keying_material();
+   }
+
 void CTR_BE::key_schedule(const uint8_t key[], size_t key_len)
    {
    m_cipher->set_key(key, key_len);
@@ -84,7 +89,7 @@ std::string CTR_BE::name() const
 
 void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
-   verify_key_set(m_iv.empty() == false);
+   assert_key_material_set();
 
    const uint8_t* pad_bits = &m_pad[0];
    const size_t pad_size = m_pad.size();
@@ -124,7 +129,7 @@ void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
 
 void CTR_BE::write_keystream(uint8_t out[], size_t length)
    {
-   verify_key_set(m_iv.empty() == false);
+   assert_key_material_set();
 
    const size_t avail = m_pad.size() - m_pad_pos;
    const size_t take = std::min(length, avail);
@@ -228,7 +233,7 @@ void CTR_BE::add_counter(const uint64_t counter)
 
 void CTR_BE::seek(uint64_t offset)
    {
-   verify_key_set(m_iv.empty() == false);
+   assert_key_material_set();
 
    const uint64_t base_counter = m_ctr_blocks * (offset / m_counter.size());
 

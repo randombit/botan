@@ -64,6 +64,11 @@ void CMAC::final_result(uint8_t mac[])
    m_position = 0;
    }
 
+bool CMAC::has_keying_material() const
+   {
+   return m_cipher->has_keying_material();
+   }
+
 /*
 * CMAC Key Schedule
 */

@@ -24,6 +24,11 @@ void OFB::clear()
    m_buf_pos = 0;
    }
 
+bool OFB::has_keying_material() const
+   {
+   return m_cipher->has_keying_material();
+   }
+
 void OFB::key_schedule(const uint8_t key[], size_t key_len)
    {
    m_cipher->set_key(key, key_len);

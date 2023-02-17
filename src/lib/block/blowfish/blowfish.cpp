@@ -207,7 +207,7 @@ inline uint32_t BFF(uint32_t X, const secure_vector<uint32_t>& S)
 */
 void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_S.empty() == false);
+   assert_key_material_set();
 
    while(blocks >= 4)
       {
@@ -276,7 +276,7 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_S.empty() == false);
+   assert_key_material_set();
 
    while(blocks >= 4)
       {
@@ -339,6 +339,11 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       out += BLOCK_SIZE;
       blocks--;
       }
+   }
+
+bool Blowfish::has_keying_material() const
+   {
+   return !m_P.empty();
    }
 
 /*

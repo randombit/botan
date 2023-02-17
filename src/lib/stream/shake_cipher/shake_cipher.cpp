@@ -44,7 +44,7 @@ void SHAKE_Cipher::seek(uint64_t /*offset*/)
 
 void SHAKE_Cipher::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    while(length >= m_shake_rate - m_buf_pos)
       {
@@ -64,7 +64,7 @@ void SHAKE_Cipher::cipher(const uint8_t in[], uint8_t out[], size_t length)
 
 void SHAKE_Cipher::write_keystream(uint8_t out[], size_t length)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    if(m_buf_pos > 0)
       {
@@ -98,6 +98,11 @@ void SHAKE_Cipher::write_keystream(uint8_t out[], size_t length)
 
    copy_mem(out, &m_buffer[0], length);
    m_buf_pos += length;
+   }
+
+bool SHAKE_Cipher::has_keying_material() const
+   {
+   return !m_state.empty();
    }
 
 void SHAKE_Cipher::key_schedule(const uint8_t key[], size_t length)

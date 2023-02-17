@@ -14,8 +14,6 @@ namespace Botan {
 
 /**
 * GCM's GHASH
-* This is not intended for general use, but is exposed to allow
-* shared code between GCM and GMAC
 */
 class GHASH final : public SymmetricAlgorithm
    {
@@ -40,6 +38,8 @@ class GHASH final : public SymmetricAlgorithm
 
       Key_Length_Specification key_spec() const override
          { return Key_Length_Specification(16); }
+
+      bool has_keying_material() const override;
 
       void clear() override;
 

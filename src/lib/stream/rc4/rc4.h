@@ -30,6 +30,10 @@ class RC4 final : public StreamCipher
 
       Key_Length_Specification key_spec() const override;
 
+      void seek(uint64_t offset) override;
+
+      bool has_keying_material() const override;
+
       /**
       * @param skip skip this many initial bytes in the keystream
       */
@@ -37,7 +41,6 @@ class RC4 final : public StreamCipher
 
       ~RC4() { clear(); }
 
-      void seek(uint64_t offset) override;
    private:
       void key_schedule(const uint8_t[], size_t) override;
       void generate();

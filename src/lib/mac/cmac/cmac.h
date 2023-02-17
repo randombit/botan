@@ -24,6 +24,7 @@ class CMAC final : public MessageAuthenticationCode
       std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 
       void clear() override;
+      bool has_keying_material() const override;
 
       Key_Length_Specification key_spec() const override
          {

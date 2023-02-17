@@ -15,7 +15,7 @@ namespace Botan {
 */
 void RC4::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    while(length >= m_buffer.size() - m_position)
       {
@@ -71,6 +71,11 @@ void RC4::generate()
       m_buffer[i+3] = m_state[(SX + SY) % 256];
       }
    m_position = 0;
+   }
+
+bool RC4::has_keying_material() const
+   {
+   return m_state.size() > 0;
    }
 
 /*

@@ -105,6 +105,11 @@ Key_Length_Specification FPE_FE1::key_spec() const
    return m_mac->key_spec();
    }
 
+bool FPE_FE1::has_keying_material() const
+   {
+   return m_mac->has_keying_material();
+   }
+
 void FPE_FE1::key_schedule(const uint8_t key[], size_t length)
    {
    m_mac->set_key(key, length);

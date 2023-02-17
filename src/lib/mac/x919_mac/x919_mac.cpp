@@ -14,7 +14,7 @@ namespace Botan {
 */
 void ANSI_X919_MAC::add_data(const uint8_t input[], size_t length)
    {
-   verify_key_set(m_state.empty() == false);
+   assert_key_material_set();
 
    size_t xored = std::min(8 - m_position, length);
    xor_buf(&m_state[m_position], input, xored);
@@ -48,6 +48,12 @@ void ANSI_X919_MAC::final_result(uint8_t mac[])
    m_des1->encrypt(mac);
    zeroise(m_state);
    m_position = 0;
+   }
+
+bool ANSI_X919_MAC::has_keying_material() const
+   {
+   return m_des1->has_keying_material() &&
+      m_des2->has_keying_material();
    }
 
 /*

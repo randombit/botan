@@ -23,7 +23,7 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    using namespace Botan::Serpent_F;
 
-   verify_key_set(m_round_key.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
    if(CPUID::has_avx2())
@@ -102,7 +102,7 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    using namespace Botan::Serpent_F;
 
-   verify_key_set(m_round_key.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
    if(CPUID::has_avx2())
@@ -172,6 +172,11 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
       store_le(out + 16*i, B0, B1, B2, B3);
       }
+   }
+
+bool Serpent::has_keying_material() const
+   {
+   return !m_round_key.empty();
    }
 
 /*

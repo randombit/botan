@@ -136,7 +136,7 @@ std::string IDEA::provider() const
 */
 void IDEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_EK.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(CPUID::has_sse2())
@@ -159,7 +159,7 @@ void IDEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void IDEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   verify_key_set(m_DK.empty() == false);
+   assert_key_material_set();
 
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(CPUID::has_sse2())
@@ -175,6 +175,11 @@ void IDEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 #endif
 
    idea_op(in, out, blocks, m_DK.data());
+   }
+
+bool IDEA::has_keying_material() const
+   {
+   return !m_EK.empty();
    }
 
 /*

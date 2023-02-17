@@ -77,6 +77,11 @@ bool CFB_Mode::valid_nonce_length(size_t n) const
    return (n == 0 || n == block_size());
    }
 
+bool CFB_Mode::has_keying_material() const
+   {
+   return m_cipher->has_keying_material();
+   }
+
 void CFB_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
@@ -88,7 +93,7 @@ void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   verify_key_set(!m_keystream.empty());
+   assert_key_material_set();
 
    if(nonce_len == 0)
       {
@@ -122,7 +127,7 @@ void CFB_Mode::shift_register()
 
 size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    {
-   verify_key_set(!m_keystream.empty());
+   assert_key_material_set();
    BOTAN_STATE_CHECK(m_state.empty() == false);
 
    const size_t shift = feedback();
@@ -187,7 +192,7 @@ inline void xor_copy(uint8_t buf[], uint8_t key_buf[], size_t len)
 
 size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    {
-   verify_key_set(!m_keystream.empty());
+   assert_key_material_set();
    BOTAN_STATE_CHECK(m_state.empty() == false);
 
    const size_t shift = feedback();
