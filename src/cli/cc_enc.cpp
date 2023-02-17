@@ -67,7 +67,7 @@ uint64_t cc_derank(uint64_t cc_number)
    }
 
 uint64_t encrypt_cc_number(uint64_t cc_number,
-                           const Botan::secure_vector<uint8_t>& key,
+                           const Botan::SymmetricKey& key,
                            const std::vector<uint8_t>& tweak)
    {
    const Botan::BigInt n = 1000000000000000;
@@ -90,7 +90,7 @@ uint64_t encrypt_cc_number(uint64_t cc_number,
    }
 
 uint64_t decrypt_cc_number(uint64_t enc_cc,
-                           const Botan::secure_vector<uint8_t>& key,
+                           const Botan::SymmetricKey& key,
                            const std::vector<uint8_t>& tweak)
    {
    const Botan::BigInt n = 1000000000000000;
@@ -141,7 +141,7 @@ class CC_Encrypt final : public Command
             throw CLI_Error_Unsupported("PBKDF", "PBKDF2(SHA-256)");
             }
 
-         Botan::secure_vector<uint8_t> key = pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000);
+         auto key = Botan::SymmetricKey(pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000));
 
          output() << encrypt_cc_number(cc_number, key, tweak) << "\n";
          }
@@ -176,7 +176,7 @@ class CC_Decrypt final : public Command
             throw CLI_Error_Unsupported("PBKDF", "PBKDF2(SHA-256)");
             }
 
-         Botan::secure_vector<uint8_t> key = pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000);
+         auto key = Botan::SymmetricKey(pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000));
 
          output() << decrypt_cc_number(cc_number, key, tweak) << "\n";
          }

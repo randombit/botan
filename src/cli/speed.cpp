@@ -1742,7 +1742,7 @@ class Speed final : public Command
                {
                const auto dec_pt = dec_timer->run([&]() { return dec.decrypt(ciphertext); });
 
-               if(!(dec_pt == plaintext)) // sanity check
+               if(!(Botan::unlock(dec_pt) == plaintext)) // sanity check
                   {
                   error_output() << "Bad roundtrip in PK encrypt/decrypt bench\n";
                   }
