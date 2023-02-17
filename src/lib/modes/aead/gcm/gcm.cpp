@@ -79,8 +79,7 @@ Key_Length_Specification GCM_Mode::key_spec() const
 
 bool GCM_Mode::has_keying_material() const
    {
-   return m_ctr->has_keying_material() &&
-      m_ghash->has_keying_material();
+   return m_ctr->has_keying_material();
    }
 
 void GCM_Mode::key_schedule(const uint8_t key[], size_t keylen)

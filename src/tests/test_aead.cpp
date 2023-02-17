@@ -57,8 +57,12 @@ class AEAD_Tests final : public Text_Based_Test
                                [&]() { enc->set_associated_data(ad.data(), ad.size()); });
             }
 
+         result.test_eq("key is not set", enc->has_keying_material(), false);
+
          // Ensure that test resets AD and message state
+         result.test_eq("key is not set", enc->has_keying_material(), false);
          enc->set_key(key);
+         result.test_eq("key is set", enc->has_keying_material(), true);
 
          if(is_siv == false)
             {
@@ -180,6 +184,7 @@ class AEAD_Tests final : public Text_Based_Test
             }
 
          enc->clear();
+         result.test_eq("key is not set", enc->has_keying_material(), false);
 
          result.test_throws("Unkeyed object throws for encrypt after clear",
                             [&]() { enc->finish(buf); });
@@ -227,7 +232,9 @@ class AEAD_Tests final : public Text_Based_Test
 
          // First some tests for reset() to make sure it resets what we need it to
          // set garbage values
+         result.test_eq("key is not set", dec->has_keying_material(), false);
          dec->set_key(key);
+         result.test_eq("key is set", dec->has_keying_material(), true);
          dec->set_ad(mutate_vec(ad));
 
          if(is_siv == false)
@@ -416,6 +423,7 @@ class AEAD_Tests final : public Text_Based_Test
             }
 
          dec->clear();
+         result.test_eq("key is not set", dec->has_keying_material(), false);
 
          result.test_throws("Unkeyed object throws for decrypt",
                             [&]() { dec->finish(buf); });
