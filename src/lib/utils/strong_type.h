@@ -20,7 +20,7 @@ namespace Botan
 namespace detail
 {
 
-template <typename T>
+template <typename T, typename... CapabilityTags>
 class Strong_Base
    {
    private:
@@ -37,17 +37,23 @@ class Strong_Base
 
       T& get() { return m_value; }
       const T& get() const { return m_value; }
+
+      template<typename CapabilityTag>
+      constexpr static bool features()
+         { return (std::is_same_v<CapabilityTag, CapabilityTags> || ...); }
+
+      using underlying_t = T;
    };
 
-template <typename T>
-class Strong_Adapter : public Strong_Base<T>
+template <typename T, typename... CapabilityTags>
+class Strong_Adapter : public Strong_Base<T, CapabilityTags...>
    {
    public:
-      using Strong_Base<T>::Strong_Base;
+      using Strong_Base<T, CapabilityTags...>::Strong_Base;
    };
 
-template <concepts::container T>
-class Strong_Adapter<T> : public Strong_Base<T>
+template <concepts::container T, typename... CapabilityTags>
+class Strong_Adapter<T, CapabilityTags...> : public Strong_Base<T, CapabilityTags...>
    {
    public:
       using value_type = typename T::value_type;
@@ -58,7 +64,7 @@ class Strong_Adapter<T> : public Strong_Base<T>
       using const_pointer = typename T::const_pointer;
 
    public:
-      using Strong_Base<T>::Strong_Base;
+      using Strong_Base<T, CapabilityTags...>::Strong_Base;
 
       explicit Strong_Adapter(std::span<const value_type> span)
       requires(concepts::contiguous_container<T>)
@@ -129,11 +135,11 @@ class Strong_Adapter<T> : public Strong_Base<T>
  * This implementation was inspired by:
  *   https://stackoverflow.com/a/69030899
  */
-template<typename T, typename TagTypeT>
-class Strong : public detail::Strong_Adapter<T>
+template<typename T, typename TagTypeT, typename... CapabilityTags>
+class Strong : public detail::Strong_Adapter<T, CapabilityTags...>
    {
    public:
-      using detail::Strong_Adapter<T>::Strong_Adapter;
+      using detail::Strong_Adapter<T, CapabilityTags...>::Strong_Adapter;
 
    private:
       using Tag = TagTypeT;
