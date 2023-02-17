@@ -116,7 +116,6 @@ shacal2_x86
 sm4
 sm4_armv8
 threefish_512
-threefish_512_avx2
 twofish
 
 # modes

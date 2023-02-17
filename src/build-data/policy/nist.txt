@@ -102,7 +102,6 @@ shacal2
 shacal2_x86
 shacal2_simd
 threefish_512
-threefish_512_avx2
 twofish
 
 # modes
