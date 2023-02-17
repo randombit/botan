@@ -14,8 +14,6 @@ namespace Botan {
 
 /**
 * GCM's GHASH
-* This is not intended for general use, but is exposed to allow
-* shared code between GCM and GMAC
 */
 class GHASH final : public SymmetricAlgorithm
    {

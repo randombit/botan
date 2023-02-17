@@ -88,7 +88,7 @@ void GHASH::ghash_multiply(secure_vector<uint8_t>& x,
 void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
                          const uint8_t input[], size_t length)
    {
-   assert_key_material_set();
+   assert_key_material_set(m_H.size() > 0);
 
    /*
    This assumes if less than block size input then we're just on the
@@ -114,7 +114,7 @@ void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
 
 bool GHASH::has_keying_material() const
    {
-   return m_H.size() > 0;
+   return m_ghash.size() > 0;
    }
 
 void GHASH::key_schedule(const uint8_t key[], size_t length)

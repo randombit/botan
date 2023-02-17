@@ -176,7 +176,12 @@ class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
    protected:
       void assert_key_material_set() const
          {
-         if(!has_keying_material())
+         assert_key_material_set(has_keying_material());
+         }
+
+      void assert_key_material_set(bool predicate) const
+         {
+         if(!predicate)
             throw_key_not_set_error();
          }
 
