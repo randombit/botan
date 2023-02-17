@@ -41,7 +41,7 @@ class DLIES_KAT_Tests final : public Text_Based_Test
          const size_t mac_key_len = vars.get_req_sz("MacKeyLen");
          const std::string group_name = vars.get_req_str("Group");
 
-         const std::vector<uint8_t> iv = vars.get_opt_bin("IV");
+         const auto iv = Botan::InitializationVector(vars.get_opt_bin("IV"));
 
          Test::Result result("DLIES " + cipher_algo);
 

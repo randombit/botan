@@ -346,7 +346,7 @@ SymmetricKey Channel_Impl_13::key_material_export(const std::string& label,
    {
    BOTAN_STATE_CHECK(!is_downgrading());
    BOTAN_STATE_CHECK(m_cipher_state != nullptr && m_cipher_state->can_export_keys());
-   return m_cipher_state->export_key(label, context, length);
+   return SymmetricKey(m_cipher_state->export_key(label, context, length));
    }
 
 void Channel_Impl_13::update_traffic_keys(bool request_peer_update)

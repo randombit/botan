@@ -185,7 +185,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
    derivation_input.insert(derivation_input.end(), peh.begin(), peh.end());
 
    // ISO 18033: encryption step g / decryption step i
-   return kdf->derive_key(m_params.secret_length(), derivation_input);
+   return SymmetricKey(kdf->derive_key(m_params.secret_length(), derivation_input));
    }
 
 

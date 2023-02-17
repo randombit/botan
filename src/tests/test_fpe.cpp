@@ -24,8 +24,8 @@ class FPE_FE1_Tests final : public Text_Based_Test
          const Botan::BigInt modulus  = vars.get_req_bn("Mod");
          const Botan::BigInt input    = vars.get_req_bn("In");
          const Botan::BigInt expected = vars.get_req_bn("Out");
-         const std::vector<uint8_t> key      = vars.get_req_bin("Key");
-         const std::vector<uint8_t> tweak    = vars.get_req_bin("Tweak");
+         const auto key               = Botan::SymmetricKey(vars.get_req_bin("Key"));
+         const std::vector<uint8_t> tweak = vars.get_req_bin("Tweak");
 
          Test::Result result("FPE_FE1");
 

@@ -39,7 +39,7 @@ class SRP6_KAT_Tests final : public Text_Based_Test
          const std::vector<uint8_t> b = vars.get_req_bin("b");
          const BigInt exp_A = vars.get_req_bn("A");
          const BigInt exp_B = vars.get_req_bn("B");
-         const std::vector<uint8_t> exp_S = vars.get_req_bin("S");
+         const auto exp_S = Botan::SymmetricKey(vars.get_req_bin("S"));
 
          const std::string group_id = Botan::srp6_group_identifier(N, g);
          if(group_id.empty())
@@ -78,7 +78,7 @@ class SRP6_KAT_Tests final : public Text_Based_Test
 
          const auto S = server.step2(srp_resp.first);
 
-         result.test_eq("SRP client S", srp_resp.second.bits_of(), exp_S);
+         result.test_eq("SRP client S", srp_resp.second, exp_S);
          result.test_eq("SRP server S", S, exp_S);
 
          return result;

@@ -10,6 +10,7 @@
 
 #include <botan/secmem.h>
 #include <string>
+#include <span>
 
 namespace Botan {
 
@@ -26,6 +27,7 @@ class BOTAN_PUBLIC_API(2,0) OctetString final
       */
       size_t length() const { return m_data.size(); }
       size_t size() const { return m_data.size(); }
+      bool empty() const { return m_data.empty(); }
 
       /**
       * @return this object as a secure_vector<uint8_t>
@@ -88,13 +90,13 @@ class BOTAN_PUBLIC_API(2,0) OctetString final
       * Create a new OctetString
       * @param in a bytestring
       */
-      OctetString(const secure_vector<uint8_t>& in) : m_data(in) {}
+      explicit OctetString(std::span<const uint8_t> in) : m_data(in.begin(), in.end()) {}
 
       /**
       * Create a new OctetString
       * @param in a bytestring
       */
-      OctetString(const std::vector<uint8_t>& in) : m_data(in.begin(), in.end()) {}
+      explicit OctetString(secure_vector<uint8_t> in) : m_data(std::move(in)) {}
 
    private:
       secure_vector<uint8_t> m_data;

@@ -81,7 +81,7 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
 
    private:
       std::shared_ptr<SQL_Database> m_db;
-      secure_vector<uint8_t> m_session_key;
+      SymmetricKey m_session_key;
       size_t m_max_sessions;
    };
 
