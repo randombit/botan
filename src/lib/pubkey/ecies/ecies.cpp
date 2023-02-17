@@ -180,7 +180,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
    derivation_input.insert(derivation_input.end(), peh.begin(), peh.end());
 
    // ISO 18033: encryption step g / decryption step i
-   return kdf->derive_key(m_params.secret_length(), derivation_input);
+   return SymmetricKey(kdf->derive_key(m_params.secret_length(), derivation_input));
    }
 
 
@@ -291,7 +291,7 @@ std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[], size_t length, R
 
    // encryption
 
-   m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
+   m_cipher->set_key(secret_key.data(), m_params.dem_keylen());
    if(m_iv.size() == 0 && !m_cipher->valid_nonce_length(m_iv.size()))
       throw Invalid_Argument("ECIES with " + m_cipher->name() + " requires an IV be set");
 
@@ -307,7 +307,7 @@ std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[], size_t length, R
    buffer_insert(out, m_eph_public_key_bin.size(), encrypted_data);
 
    // mac
-   m_mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
+   m_mac->set_key(secret_key.data() + m_params.dem_keylen(), m_params.mac_keylen());
    m_mac->update(encrypted_data);
    if(!m_label.empty())
       {
@@ -383,7 +383,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    const SymmetricKey secret_key = m_ka.derive_secret(other_public_key_bin, other_public_key);
 
    // validate mac
-   m_mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
+   m_mac->set_key(secret_key.data() + m_params.dem_keylen(), m_params.mac_keylen());
    m_mac->update(encrypted_data);
    if(!m_label.empty())
       {
@@ -396,7 +396,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       {
       // decrypt data
 
-      m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
+      m_cipher->set_key(secret_key.data(), m_params.dem_keylen());
       if(m_iv.size() == 0 && !m_cipher->valid_nonce_length(m_iv.size()))
          throw Invalid_Argument("ECIES with " + m_cipher->name() + " requires an IV be set");
       m_cipher->start(m_iv.bits_of());

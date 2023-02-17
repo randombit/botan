@@ -146,7 +146,7 @@ class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
       */
       void set_key(const SymmetricKey& key)
          {
-         set_key(key.begin(), key.length());
+         set_key(key.data(), key.size());
          }
 
       template<typename Alloc>

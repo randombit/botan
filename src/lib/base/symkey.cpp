@@ -10,6 +10,8 @@
 #include <botan/hex.h>
 #include <algorithm>
 
+#if 0
+
 namespace Botan {
 
 /*
@@ -122,3 +124,5 @@ OctetString operator^(const OctetString& k1, const OctetString& k2)
    }
 
 }
+
+#endif

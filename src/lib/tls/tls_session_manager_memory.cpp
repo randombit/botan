@@ -99,7 +99,7 @@ size_t Session_Manager_In_Memory::remove_all()
    const size_t removed = m_sessions.size();
    m_info_sessions.clear();
    m_sessions.clear();
-   m_rng.random_vec(m_session_key, 32);
+   m_session_key =  m_rng.random_vec<SymmetricKey>(32);
    return removed;
    }
 

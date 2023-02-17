@@ -25,7 +25,7 @@ class BOTAN_PUBLIC_API(2,2) HOTP final
       * @param digits the number of digits in the OTP (must be 6, 7, or 8)
       */
       HOTP(const SymmetricKey& key, const std::string& hash_algo = "SHA-1", size_t digits = 6) :
-         HOTP(key.begin(), key.size(), hash_algo, digits) {}
+         HOTP(key.data(), key.size(), hash_algo, digits) {}
 
       /**
       * @param key the secret key shared between client and server
@@ -74,7 +74,7 @@ class BOTAN_PUBLIC_API(2,2) TOTP final
       TOTP(const SymmetricKey& key,
            const std::string& hash_algo = "SHA-1",
            size_t digits = 6, size_t time_step = 30) :
-         TOTP(key.begin(), key.size(), hash_algo, digits, time_step) {}
+         TOTP(key.data(), key.size(), hash_algo, digits, time_step) {}
 
       /**
       * @param key the secret key shared between client and server

@@ -17,6 +17,22 @@
 namespace Botan
 {
 
+namespace Strong_Capability {
+
+/**
+ * The contiguous container-based strong type should be XORable with other
+ * containers using operator overloading.
+ */
+struct XORable {};
+
+/**
+ * Enables methods in the legacy (free-standing) OctetString implementation.
+ * TODO: remove those, at some point.
+ */
+struct DeprecatedOctetStringMethods {};
+
+}
+
 namespace detail
 {
 
@@ -55,6 +71,9 @@ class Strong_Adapter : public Strong_Base<T, CapabilityTags...>
 template <concepts::container T, typename... CapabilityTags>
 class Strong_Adapter<T, CapabilityTags...> : public Strong_Base<T, CapabilityTags...>
    {
+   private:
+      using self_t = Strong_Adapter<T, CapabilityTags...>;
+
    public:
       using value_type = typename T::value_type;
       using size_type = typename T::size_type;
@@ -117,6 +136,10 @@ class Strong_Adapter<T, CapabilityTags...> : public Strong_Base<T, CapabilityTag
       requires(concepts::contiguous_container<T>)
          { return this->get().data(); }
 
+      T bits_of() const
+      requires(self_t::template features<Strong_Capability::DeprecatedOctetStringMethods>())
+         { return this->get(); }
+
       bool empty() const noexcept(noexcept(this->get().empty()))
       requires(concepts::has_empty<T>)
          { return this->get().empty(); }
@@ -124,17 +147,12 @@ class Strong_Adapter<T, CapabilityTags...> : public Strong_Base<T, CapabilityTag
       void resize(size_type size) noexcept(noexcept(this->get().resize(size)))
       requires(concepts::resizable_container<T>)
          { this->get().resize(size); }
+
+      size_t length() const
+      requires(self_t::template features<Strong_Capability::DeprecatedOctetStringMethods>())
+         { return size(); }
+
    };
-
-}
-
-namespace Strong_Capability {
-
-/**
- * The contiguous container-based strong type should be XORable with other
- * containers using operator overloading.
- */
-struct XORable {};
 
 }
 

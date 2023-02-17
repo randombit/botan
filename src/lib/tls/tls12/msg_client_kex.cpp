@@ -243,7 +243,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
          if(psk.length() == 0)
             {
             if(policy.hide_unknown_users())
-               psk = SymmetricKey(rng, 16);
+               psk = rng.random_vec<SymmetricKey>(16);
             else
                throw TLS_Exception(Alert::UnknownPSKIdentity,
                                    "No PSK for identifier " + psk_identity);

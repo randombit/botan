@@ -92,8 +92,8 @@ class DLIES_KAT_Tests final : public Text_Based_Test
 
          if(!iv.empty())
             {
-            encryptor.set_initialization_vector(iv);
-            decryptor.set_initialization_vector(iv);
+            encryptor.set_initialization_vector(Botan::InitializationVector(iv));
+            decryptor.set_initialization_vector(Botan::InitializationVector(iv));
             }
 
          encryptor.set_other_key(to.public_value());

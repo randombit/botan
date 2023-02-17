@@ -94,7 +94,7 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
                            const Botan::ECIES_System_Params& ecies_params, size_t iv_length = 0)
    {
    const std::vector<uint8_t> plaintext { 1, 2, 3 };
-   check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, std::vector<uint8_t>(iv_length, 0), "",
+   check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, Botan::InitializationVector(iv_length), "",
                          plaintext, std::vector<uint8_t>());
    }
 
@@ -210,7 +210,7 @@ class ECIES_Tests final : public Text_Based_Test
          const std::string kdf = vars.get_req_str("Kdf");
          const std::string dem = vars.get_req_str("Dem");
          const size_t dem_key_len = vars.get_req_sz("DemKeyLen");
-         const std::vector<uint8_t> iv = vars.get_opt_bin("Iv");
+         const auto iv = Botan::SymmetricKey(vars.get_opt_bin("Iv"));
          const std::string mac = vars.get_req_str("Mac");
          const size_t mac_key_len = vars.get_req_sz("MacKeyLen");
          const Botan::EC_Point::Compression_Type compression_type = get_compression_type(vars.get_req_str("Format"));

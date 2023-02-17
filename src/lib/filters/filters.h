@@ -278,7 +278,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher_Filter final : public Keyed_Filter
       */
       void set_iv(const InitializationVector& iv) override
          {
-         m_cipher->set_iv(iv.begin(), iv.length());
+         m_cipher->set_iv(iv.data(), iv.length());
          }
 
       /**

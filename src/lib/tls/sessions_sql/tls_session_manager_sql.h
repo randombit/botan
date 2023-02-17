@@ -68,7 +68,7 @@ class BOTAN_PUBLIC_API(2,0) Session_Manager_SQL : public Session_Manager
       void prune_session_cache();
 
       std::shared_ptr<SQL_Database> m_db;
-      secure_vector<uint8_t> m_session_key;
+      SymmetricKey m_session_key;
       RandomNumberGenerator& m_rng;
       size_t m_max_sessions;
       std::chrono::seconds m_session_lifetime;

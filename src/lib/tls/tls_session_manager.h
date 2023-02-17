@@ -147,7 +147,7 @@ class BOTAN_PUBLIC_API(2,0) Session_Manager_In_Memory final : public Session_Man
       std::chrono::seconds m_session_lifetime;
 
       RandomNumberGenerator& m_rng;
-      secure_vector<uint8_t> m_session_key;
+      SymmetricKey m_session_key;
 
       std::map<std::string, std::vector<uint8_t>> m_sessions; // hex(session_id) -> session
       std::map<Server_Information, std::string> m_info_sessions;

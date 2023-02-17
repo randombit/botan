@@ -66,7 +66,7 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length,
 
    if(m_cipher)
       {
-      SymmetricKey enc_key(secret_keys.data(), cipher_key_len);
+      SymmetricKey enc_key({secret_keys.data(), cipher_key_len});
       m_cipher->set_key(enc_key);
 
       if(m_iv.size() == 0 && !m_cipher->valid_nonce_length(m_iv.size()))
@@ -184,7 +184,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
       {
       if(valid_mask)
          {
-         SymmetricKey dec_key(secret_keys.data(), cipher_key_len);
+         SymmetricKey dec_key({secret_keys.data(), cipher_key_len});
          m_cipher->set_key(dec_key);
 
          try

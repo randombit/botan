@@ -71,7 +71,7 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
          if(check_val_created != check_val_db)
             throw Invalid_Argument("Session database password not valid");
 
-         m_session_key.assign(derived_key.begin() + 2, derived_key.end());
+         m_session_key = SymmetricKey(std::span{derived_key.begin() + 2, derived_key.end()});
          }
       }
    else
@@ -97,7 +97,7 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
       const size_t iterations = pbkdf->iterations();
 
       const size_t check_val = make_uint16(derived_key[0], derived_key[1]);
-      m_session_key.assign(derived_key.begin() + 2, derived_key.end());
+      m_session_key = SymmetricKey(std::span{derived_key.begin() + 2, derived_key.end()});
 
       auto stmt = m_db->new_statement("insert into tls_sessions_metadata values(?1, ?2, ?3)");
 

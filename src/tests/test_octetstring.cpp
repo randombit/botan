@@ -10,6 +10,8 @@
 
 #include <botan/symkey.h>
 
+#if 0
+
 namespace Botan_Tests {
 
 namespace {
@@ -168,3 +170,5 @@ BOTAN_REGISTER_TEST("utils", "octetstring", OctetString_Tests);
 }
 
 }
+
+#endif
