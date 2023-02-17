@@ -42,7 +42,6 @@ disabled_needs_work = [
     '*-named-parameter',
     '*-member-init', # seems bad
     'bugprone-lambda-function-name', # should be an easy fix
-    'bugprone-macro-parentheses', # should be fixed (using inline/constexpr)
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
     'cert-err58-cpp', # many false positives eg __m128i
     'cppcoreguidelines-init-variables',
@@ -56,7 +55,6 @@ disabled_needs_work = [
     'readability-implicit-bool-conversion', # maybe fix this
     'readability-inconsistent-declaration-parameter-name', # should fix this
     'readability-qualified-auto',
-    'readability-redundant-member-init',
     'readability-simplify-boolean-expr', # sometimes ok
     'readability-static-accessed-through-instance',
 ]
