@@ -70,6 +70,10 @@ class Strong_Adapter<T, CapabilityTags...> : public Strong_Base<T, CapabilityTag
       requires(concepts::contiguous_container<T>)
          : Strong_Adapter(T(span.begin(), span.end())) {}
 
+      explicit Strong_Adapter(size_t size)
+      requires(concepts::resizable_container<T>)
+         : Strong_Adapter(T(size)) {}
+
       // Disambiguates the usage of string literals, otherwise:
       // Strong_Adapter(std::span<>) and Strong_Adapter(const char*)
       // would be ambiguous.
@@ -124,6 +128,16 @@ class Strong_Adapter<T, CapabilityTags...> : public Strong_Base<T, CapabilityTag
 
 }
 
+namespace Strong_Capability {
+
+/**
+ * The contiguous container-based strong type should be XORable with other
+ * containers using operator overloading.
+ */
+struct XORable {};
+
+}
+
 /**
  * Strong types can be used as wrappers around common types to provide
  * compile time semantics. They usually contribute to more maintainable and
@@ -159,6 +173,42 @@ template<typename T, typename... Tags>
 requires(concepts::three_way_comparable<T>)
 auto operator<=>(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs)
    { return lhs.get() <=> rhs.get(); }
+
+template<typename StrongT>
+requires(StrongT::template features<Strong_Capability::XORable>() &&
+         concepts::resizable_container<StrongT>)
+StrongT operator^(const StrongT& lhs, const StrongT& rhs)
+   {
+   StrongT out(std::max(lhs.size(), rhs.size()));
+   copy_mem(out.data(), lhs.data(), lhs.size());
+   xor_buf(out.data(), rhs.data(), rhs.size());
+   return out;
+   }
+
+template<typename StrongT>
+requires(StrongT::template features<Strong_Capability::XORable>() &&
+         !concepts::resizable_container<StrongT>)
+StrongT operator^(const StrongT& lhs, const StrongT& rhs)
+   {
+   // assuming that a non-resizable container will have a static size that is
+   // allocated by default. Most famous example: std::array<>.
+   BOTAN_ASSERT_NOMSG(lhs.size() == rhs.size());
+   StrongT out;
+   copy_mem(out.data(), lhs.data(), lhs.size());
+   xor_buf(out.data(), rhs.data(), rhs.size());
+   return out;
+   }
+
+template<typename StrongT>
+requires(StrongT::template features<Strong_Capability::XORable>())
+StrongT& operator^=(StrongT& lhs, const StrongT& rhs)
+   {
+   if(&lhs == &rhs)
+      { clear_mem(lhs.data(), lhs.size()); }
+   else
+      { xor_buf(lhs.data(), rhs.data(), std::min(lhs.size(), rhs.size())); }
+   return lhs;
+   }
 
 }
 

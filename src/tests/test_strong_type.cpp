@@ -185,6 +185,28 @@ std::vector<Test::Result> test_container_strong_type()
          result.test_eq("generated expected secure output", tsb.get(), Botan::hex_decode_locked("baadcafe"));
          result.test_eq("generated expected fixed output", std::vector(tfa.begin(), tfa.end()), Botan::hex_decode("baadf00d"));
          }),
+
+      Botan_Tests::CHECK("Capability: XORable", [](auto& result)
+         {
+         using TestOctetString = Botan::Strong<Botan::secure_vector<uint8_t>, struct TestOctetString_, Botan::Strong_Capability::XORable>;
+         using TestOctetArray4 = Botan::Strong<std::array<uint8_t, 4>, struct TestOctetArray_, Botan::Strong_Capability::XORable>;
+
+         auto run_test = [&]<typename T>(T)
+            {
+            T tos1({'\x00', '\x01', '\x02', '\x04'});
+            T tos2({'\x04', '\x02', '\x01', '\x00'});
+            T tos3({'\x04', '\x03', '\x03', '\x04'});
+
+            auto tos4 = tos1 ^ tos2;
+            result.test_eq(nullptr, "x = a ^ b", tos4.get().data(), tos4.get().size(), tos3.get().data(), tos3.get().size());
+
+            tos1 ^= tos2;
+            result.test_eq(nullptr, "x ^= a", tos4.get().data(), tos4.get().size(), tos3.get().data(), tos3.get().size());
+            };
+
+         run_test(TestOctetString());
+         run_test(TestOctetArray4());
+         }),
       };
    }
 
