@@ -76,7 +76,7 @@ void Lion::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
 bool Lion::has_keying_material() const
    {
-   return m_key1.size() > 0 && m_key2.size() > 0;
+   return !m_key1.empty() && !m_key2.empty();
    }
 
 /*

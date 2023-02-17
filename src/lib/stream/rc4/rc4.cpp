@@ -75,7 +75,7 @@ void RC4::generate()
 
 bool RC4::has_keying_material() const
    {
-   return m_state.size() > 0;
+   return !m_state.empty();
    }
 
 /*

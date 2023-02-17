@@ -180,7 +180,7 @@ void Salsa20::initialize_state()
 
 bool Salsa20::has_keying_material() const
    {
-   return m_state.size() > 0;
+   return !m_state.empty();
    }
 
 /*

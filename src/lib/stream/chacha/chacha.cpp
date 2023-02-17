@@ -286,7 +286,7 @@ void ChaCha::initialize_state()
 
 bool ChaCha::has_keying_material() const
    {
-   return m_state.size() > 0;
+   return !m_state.empty();
    }
 
 /*
