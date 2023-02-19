@@ -126,8 +126,8 @@ bool ASN1_Time::time_is_set() const
 
 int32_t ASN1_Time::cmp(const ASN1_Time& other) const
    {
-   if(time_is_set() == false)
-      throw Invalid_State("ASN1_Time::cmp: No time set");
+   if(!time_is_set() || !other.time_is_set())
+      throw Invalid_State("ASN1_Time::cmp: Cannot compare empty times");
 
    const int32_t EARLIER = -1, LATER = 1, SAME_TIME = 0;
 
@@ -149,45 +149,37 @@ int32_t ASN1_Time::cmp(const ASN1_Time& other) const
 
 void ASN1_Time::set_to(const std::string& t_spec, ASN1_Type spec_tag)
    {
-   BOTAN_ARG_CHECK(spec_tag == ASN1_Type::UtcTime || spec_tag == ASN1_Type::GeneralizedTime, "Invalid tag.");
+   BOTAN_ARG_CHECK(spec_tag == ASN1_Type::UtcTime ||
+                   spec_tag == ASN1_Type::GeneralizedTime,
+                   "Invalid tag for ASN1_Time");
 
    if(spec_tag == ASN1_Type::GeneralizedTime)
       {
-      BOTAN_ARG_CHECK(t_spec.size() == 15, "Invalid GeneralizedTime string");
+      BOTAN_ARG_CHECK(t_spec.size() == 15, "Invalid GeneralizedTime input string");
       }
    else if(spec_tag == ASN1_Type::UtcTime)
       {
-      BOTAN_ARG_CHECK(t_spec.size() == 13, "Invalid UTCTime string");
+      BOTAN_ARG_CHECK(t_spec.size() == 13, "Invalid UTCTime input string");
       }
 
    BOTAN_ARG_CHECK(t_spec.back() == 'Z', "Botan does not support ASN1 times with timezones other than Z");
 
-   const size_t YEAR_SIZE = (spec_tag == ASN1_Type::UtcTime) ? 2 : 4;
+   const size_t field_len = 2;
 
-   std::vector<std::string> params;
-   std::string current;
+   const size_t year_start = 0;
+   const size_t year_len = (spec_tag == ASN1_Type::UtcTime) ? 2 : 4;
+   const size_t month_start = year_start + year_len;
+   const size_t day_start = month_start + field_len;
+   const size_t hour_start = day_start + field_len;
+   const size_t min_start = hour_start + field_len;
+   const size_t sec_start = min_start + field_len;
 
-   for(size_t j = 0; j != YEAR_SIZE; ++j)
-      current += t_spec[j];
-   params.push_back(current);
-   current.clear();
-
-   for(size_t j = YEAR_SIZE; j != t_spec.size() - 1; ++j)
-      {
-      current += t_spec[j];
-      if(current.size() == 2)
-         {
-         params.push_back(current);
-         current.clear();
-         }
-      }
-
-   m_year   = to_u32bit(params[0]);
-   m_month  = to_u32bit(params[1]);
-   m_day    = to_u32bit(params[2]);
-   m_hour   = to_u32bit(params[3]);
-   m_minute = to_u32bit(params[4]);
-   m_second = (params.size() == 6) ? to_u32bit(params[5]) : 0;
+   m_year   = to_u32bit(t_spec.substr(year_start, year_len));
+   m_month  = to_u32bit(t_spec.substr(month_start, field_len));
+   m_day    = to_u32bit(t_spec.substr(day_start, field_len));
+   m_hour   = to_u32bit(t_spec.substr(hour_start, field_len));
+   m_minute = to_u32bit(t_spec.substr(min_start, field_len));
+   m_second = to_u32bit(t_spec.substr(sec_start, field_len));
    m_tag    = spec_tag;
 
    if(spec_tag == ASN1_Type::UtcTime)
