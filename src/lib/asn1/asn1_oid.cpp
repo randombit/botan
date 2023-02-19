@@ -12,6 +12,7 @@
 #include <botan/internal/parsing.h>
 #include <botan/oids.h>
 #include <algorithm>
+#include <sstream>
 
 namespace Botan {
 
@@ -96,14 +97,15 @@ OID::OID(const std::string& oid_str)
 */
 std::string OID::to_string() const
    {
-   std::string out;
+   std::ostringstream out;
    for(size_t i = 0; i != m_id.size(); ++i)
       {
-      out += std::to_string(m_id[i]);
+      // avoid locale issues with integer formatting
+      out << std::to_string(m_id[i]);
       if(i != m_id.size() - 1)
-         out += ".";
+         out << ".";
       }
-   return out;
+   return out.str();
    }
 
 std::string OID::to_formatted_string() const
