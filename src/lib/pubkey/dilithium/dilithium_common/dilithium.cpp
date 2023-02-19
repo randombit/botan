@@ -523,6 +523,9 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
       */
       bool is_valid_signature(const  uint8_t* sig, size_t sig_len) override
          {
+         /* Compute CRH(H(rho, t1), msg) */
+         const auto mu = m_shake.final_stdvec();
+
          const auto& mode = m_pub_key.m_public->mode();
          if(sig_len != mode.crypto_bytes())
             {
@@ -542,9 +545,6 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
             {
             return false;
             }
-
-         /* Compute CRH(H(rho, t1), msg) */
-         const auto mu = m_shake.final_stdvec();
 
          /* Matrix-vector multiplication; compute Az - c2^dt1 */
          auto matrix = Dilithium::PolynomialMatrix::generate_matrix(m_pub_key.m_public->rho(), mode);
