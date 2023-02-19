@@ -7,6 +7,7 @@
 
 #include <botan/pkix_enums.h>
 #include <botan/pk_keys.h>
+#include <botan/internal/parsing.h>
 #include <vector>
 
 namespace Botan {
@@ -49,18 +50,7 @@ std::string Key_Constraints::to_string() const
    if(str.empty())
       return "other_unknown_constraints";
 
-   if(str.size() == 1)
-      return str[0];
-
-   std::string out;
-   for(size_t i = 0; i < str.size() - 1; ++i)
-      {
-      out += str[i];
-      out += ',';
-      }
-   out += str[str.size() - 1];
-
-   return out;
+   return string_join(str, ',');
    }
 
 /*

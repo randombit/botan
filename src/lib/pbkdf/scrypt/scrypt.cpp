@@ -12,6 +12,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/timer.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -152,15 +153,12 @@ Scrypt::Scrypt(size_t N, size_t r, size_t p) :
 
 std::string Scrypt::to_string() const
    {
-   std::string out;
-   out = "Scrypt(";
-   out += std::to_string(m_N);
-   out += ",";
-   out += std::to_string(m_r);
-   out += ",";
-   out += std::to_string(m_p);
-   out += ")";
-   return out;
+   std::ostringstream out;
+   out << "Scrypt("
+       << std::to_string(m_N) << ","
+       << std::to_string(m_r) << ","
+       << std::to_string(m_p) << ")";
+   return out.str();
    }
 
 size_t Scrypt::total_memory_usage() const
