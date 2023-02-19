@@ -93,6 +93,7 @@ PKIX
 New Protocols / Formats
 ----------------------------------------
 
+* Noise protocol
 * ACME protocol
 * Cryptographic Message Syntax (RFC 5652)
 * Fernet symmetric encryption (https://cryptography.io/en/latest/fernet/)
