@@ -25,7 +25,7 @@ class TLS_Ciphersuites final : public Command
       TLS_Ciphersuites()
          : Command("tls_ciphers --policy=default --version=tls1.2") {}
 
-      static Botan::TLS::Protocol_Version::Version_Code tls_version_from_str(const std::string& str)
+      static Botan::TLS::Protocol_Version tls_version_from_str(const std::string& str)
          {
          if(str == "tls1.2" || str == "TLS1.2" || str == "TLS-1.2")
             {
@@ -54,7 +54,7 @@ class TLS_Ciphersuites final : public Command
       void go() override
          {
          const std::string policy_type = get_arg("policy");
-         const Botan::TLS::Protocol_Version version(tls_version_from_str(get_arg("version")));
+         const Botan::TLS::Protocol_Version version = tls_version_from_str(get_arg("version"));
 
          auto policy = load_tls_policy(policy_type);
 
