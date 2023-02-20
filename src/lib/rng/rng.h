@@ -47,10 +47,11 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * or a retry because of insufficient entropy is needed.
       *
       * @param output the byte array to hold the random output.
-      * @param length the length of the byte array output in bytes.
       * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
       * @throws Exception if the RNG fails
       */
+      void randomize(std::span<uint8_t> output)
+         { this->randomize(output.data(), output.size()); }
       virtual void randomize(uint8_t output[], size_t length) = 0;
 
       /**
@@ -95,13 +96,13 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * value. See NIST SP 800-90 A, B, C series for more ideas.
       *
       * @param output buffer to hold the random output
-      * @param output_len size of the output buffer in bytes
       * @param input entropy buffer to incorporate
-      * @param input_len size of the input buffer in bytes
       * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
       * @throws Exception if the RNG fails
       * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
+      void randomize_with_input(std::span<uint8_t> output, std::span<const uint8_t> input)
+         { this->randomize_with_input(output.data(), output.size(), input.data(), input.size()); }
       virtual void randomize_with_input(uint8_t output[], size_t output_len,
                                         const uint8_t input[], size_t input_len);
 
@@ -115,11 +116,12 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * timestamps don't themselves repeat), their outputs will diverge.
       *
       * @param output buffer to hold the random output
-      * @param output_len size of the output buffer in bytes
       * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
       * @throws Exception if the RNG fails
       * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
+      void randomize_with_ts_input(std::span<uint8_t> output)
+         { this->randomize_with_ts_input(output.data(), output.size()); }
       virtual void randomize_with_ts_input(uint8_t output[], size_t output_len);
 
       /**
