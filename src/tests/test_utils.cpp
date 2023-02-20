@@ -735,15 +735,14 @@ class UUID_Tests : public Test
             public:
                explicit AllSame_RNG(uint8_t b) : m_val(b) {}
 
-               void randomize(uint8_t out[], size_t len) override
+               void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override
                   {
-                  for(size_t i = 0; i != len; ++i)
-                     out[i] = m_val;
+                  for(auto& byte : output)
+                     { byte = m_val; }
                   }
 
                std::string name() const override { return "zeros"; }
                bool accepts_input() const override { return false; }
-               void add_entropy(const uint8_t /*input*/[], size_t /*length*/) override {}
                void clear() override {}
                bool is_seeded() const override { return true; }
             private:

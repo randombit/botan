@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-void RandomNumberGenerator::randomize_with_ts_input(uint8_t output[], size_t output_len)
+void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output)
    {
    if(this->accepts_input())
       {
@@ -23,19 +23,12 @@ void RandomNumberGenerator::randomize_with_ts_input(uint8_t output[], size_t out
       store_le(OS::get_system_timestamp_ns(), additional_input);
       store_le(OS::get_high_resolution_clock(), additional_input + 8);
 
-      this->randomize_with_input(output, output_len, additional_input, sizeof(additional_input));
+      this->fill_bytes_with_input(output, additional_input);
       }
    else
       {
-      this->randomize(output, output_len);
+      this->fill_bytes_with_input(output, {});
       }
-   }
-
-void RandomNumberGenerator::randomize_with_input(uint8_t output[], size_t output_len,
-                                                 const uint8_t input[], size_t input_len)
-   {
-   this->add_entropy(input, input_len);
-   this->randomize(output, output_len);
    }
 
 size_t RandomNumberGenerator::reseed(Entropy_Sources& srcs,
@@ -56,9 +49,7 @@ void RandomNumberGenerator::reseed_from_rng(RandomNumberGenerator& rng, size_t p
    {
    if(this->accepts_input())
       {
-      secure_vector<uint8_t> buf(poll_bits / 8);
-      rng.randomize(buf.data(), buf.size());
-      this->add_entropy(buf.data(), buf.size());
+      this->add_entropy(rng.random_vec(poll_bits / 8));
       }
    }
 

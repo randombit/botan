@@ -7,6 +7,10 @@
 #include <botan/auto_rng.h>
 #include <botan/entropy_src.h>
 #include <botan/hmac_drbg.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/os_utils.h>
+
+#include <array>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
@@ -83,11 +87,6 @@ std::string AutoSeeded_RNG::name() const
    return m_rng->name();
    }
 
-void AutoSeeded_RNG::add_entropy(const uint8_t in[], size_t len)
-   {
-   m_rng->add_entropy(in, len);
-   }
-
 size_t AutoSeeded_RNG::reseed(Entropy_Sources& srcs,
                               size_t poll_bits,
                               std::chrono::milliseconds poll_timeout)
@@ -95,15 +94,17 @@ size_t AutoSeeded_RNG::reseed(Entropy_Sources& srcs,
    return m_rng->reseed(srcs, poll_bits, poll_timeout);
    }
 
-void AutoSeeded_RNG::randomize(uint8_t output[], size_t output_len)
+void AutoSeeded_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in)
    {
-   m_rng->randomize_with_ts_input(output, output_len);
-   }
+   std::array<uint8_t, 16> additional_input;
+   if(in.empty() && m_rng->accepts_input())
+      {
+      store_le(OS::get_system_timestamp_ns(), additional_input.data());
+      store_le(OS::get_high_resolution_clock(), additional_input.data() + 8);
+      in = additional_input;
+      }
 
-void AutoSeeded_RNG::randomize_with_input(uint8_t output[], size_t output_len,
-                                          const uint8_t ad[], size_t ad_len)
-   {
-   m_rng->randomize_with_input(output, output_len, ad, ad_len);
+   m_rng->randomize_with_input(out, in);
    }
 
 }

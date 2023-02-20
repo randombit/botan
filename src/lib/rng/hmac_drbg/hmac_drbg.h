@@ -132,10 +132,9 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
          { return m_max_number_of_bytes_per_request; }
 
    private:
-      void update(const uint8_t input[], size_t input_len) override;
+      void update(std::span<const uint8_t> input) override;
 
-      void generate_output(uint8_t output[], size_t output_len,
-                           const uint8_t input[], size_t input_len) override;
+      void generate_output(std::span<uint8_t> output, std::span<const uint8_t> input) override;
 
       void clear_state() override;
 

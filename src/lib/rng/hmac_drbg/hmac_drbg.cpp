@@ -139,49 +139,52 @@ std::string HMAC_DRBG::name() const
 * HMAC_DRBG generation
 * See NIST SP800-90A section 10.1.2.5
 */
-void HMAC_DRBG::generate_output(uint8_t output[], size_t output_len,
-                                const uint8_t input[], size_t input_len)
+void HMAC_DRBG::generate_output(std::span<uint8_t> output, std::span<const uint8_t> input)
    {
-   if(input_len > 0)
+   BOTAN_ASSERT_NOMSG(!output.empty());
+
+   if(!input.empty())
       {
-      update(input, input_len);
+      update(input);
       }
 
+   uint8_t* output_ptr = output.data();
+   size_t output_len = output.size();
    while(output_len > 0)
       {
       const size_t to_copy = std::min(output_len, m_V.size());
       m_mac->update(m_V.data(), m_V.size());
       m_mac->final(m_V.data());
-      copy_mem(output, m_V.data(), to_copy);
+      copy_mem(output_ptr, m_V.data(), to_copy);
 
-      output += to_copy;
+      output_ptr += to_copy;
       output_len -= to_copy;
       }
 
-   update(input, input_len);
+   update(input);
    }
 
 /*
 * Reset V and the mac key with new values
 * See NIST SP800-90A section 10.1.2.2
 */
-void HMAC_DRBG::update(const uint8_t input[], size_t input_len)
+void HMAC_DRBG::update(std::span<const uint8_t> input)
    {
    secure_vector<uint8_t> T(m_V.size());
    m_mac->update(m_V);
    m_mac->update(0x00);
-   m_mac->update(input, input_len);
+   m_mac->update(input.data(), input.size()); // TODO: pass span after merging GH #3294
    m_mac->final(T.data());
    m_mac->set_key(T);
 
    m_mac->update(m_V.data(), m_V.size());
    m_mac->final(m_V.data());
 
-   if(input_len > 0)
+   if(!input.empty())
       {
       m_mac->update(m_V);
       m_mac->update(0x01);
-      m_mac->update(input, input_len);
+      m_mac->update(input.data(), input.size()); // TODO: pass span after merging GH #3294
       m_mac->final(T.data());
       m_mac->set_key(T);
 

@@ -51,12 +51,18 @@ class System_RNG_Impl final : public RandomNumberGenerator
       System_RNG_Impl& operator=(const System_RNG_Impl& other) = delete;
       System_RNG_Impl& operator=(System_RNG_Impl&& other) = delete;
 
-      void randomize(uint8_t buf[], size_t len) override
+      bool is_seeded() const override { return true; }
+      bool accepts_input() const override { return false; }
+      void clear() override { /* not possible */ }
+      std::string name() const override { return "RtlGenRandom"; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override
          {
          const size_t limit = std::numeric_limits<ULONG>::max();
 
-         uint8_t* pData = buf;
-         size_t bytesLeft = len;
+         uint8_t* pData = output.data();
+         size_t bytesLeft = output.size();
          while (bytesLeft > 0)
             {
             const ULONG blockSize = static_cast<ULONG>(std::min(bytesLeft, limit));
@@ -73,11 +79,6 @@ class System_RNG_Impl final : public RandomNumberGenerator
             }
          }
 
-      void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
-      bool is_seeded() const override { return true; }
-      bool accepts_input() const override { return false; }
-      void clear() override { /* not possible */ }
-      std::string name() const override { return "RtlGenRandom"; }
    private:
       using RtlGenRandom_fptr = BOOLEAN (NTAPI *)(PVOID, ULONG);
 
@@ -111,12 +112,23 @@ class System_RNG_Impl final : public RandomNumberGenerator
          ::BCryptCloseAlgorithmProvider(m_prov, 0);
          }
 
-      void randomize(uint8_t buf[], size_t len) override
+      bool is_seeded() const override { return true; }
+      bool accepts_input() const override { return false; }
+      void clear() override { /* not possible */ }
+      std::string name() const override { return "crypto_ng"; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override
          {
+         /*
+         There is a flag BCRYPT_RNG_USE_ENTROPY_IN_BUFFER to provide
+         entropy inputs, but it is ignored in Windows 8 and later.
+         */
+
          const size_t limit = std::numeric_limits<ULONG>::max();
 
-         uint8_t* pData = buf;
-         size_t bytesLeft = len;
+         uint8_t* pData = output.data();
+         size_t bytesLeft = output.size();
          while (bytesLeft > 0)
             {
             const ULONG blockSize = static_cast<ULONG>(std::min(bytesLeft, limit));
@@ -133,18 +145,6 @@ class System_RNG_Impl final : public RandomNumberGenerator
             }
          }
 
-      void add_entropy(const uint8_t in[], size_t length) override
-         {
-         /*
-         There is a flag BCRYPT_RNG_USE_ENTROPY_IN_BUFFER to provide
-         entropy inputs, but it is ignored in Windows 8 and later.
-         */
-         }
-
-      bool is_seeded() const override { return true; }
-      bool accepts_input() const override { return false; }
-      void clear() override { /* not possible */ }
-      std::string name() const override { return "crypto_ng"; }
    private:
       BCRYPT_ALG_HANDLE m_prov;
    };
@@ -154,18 +154,19 @@ class System_RNG_Impl final : public RandomNumberGenerator
 class System_RNG_Impl final : public RandomNumberGenerator
    {
    public:
-      void randomize(uint8_t buf[], size_t len) override
+      bool accepts_input() const override { return false; }
+      bool is_seeded() const override { return true; }
+      void clear() override { /* not possible */ }
+      std::string name() const override { return "CCRandomGenerateBytes"; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override
          {
-         if (::CCRandomGenerateBytes(buf, len) != kCCSuccess)
+         if (::CCRandomGenerateBytes(output.data(), output.size()) != kCCSuccess)
             {
             throw System_Error("System_RNG CCRandomGenerateBytes failed", errno);
             }
          }
-      bool accepts_input() const override { return false; }
-      void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
-      bool is_seeded() const override { return true; }
-      void clear() override { /* not possible */ }
-      std::string name() const override { return "CCRandomGenerateBytes"; }
    };
 
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
@@ -175,22 +176,22 @@ class System_RNG_Impl final : public RandomNumberGenerator
    public:
       // No constructor or destructor needed as no userland state maintained
 
-      void randomize(uint8_t buf[], size_t len) override
-         {
-         // macOS 10.15 arc4random crashes if called with buf == nullptr && len == 0
-	 // however it uses ccrng_generate internally which returns a status, ignored
-	 // to respect arc4random "no-fail" interface contract
-         if(len > 0)
-            {
-            ::arc4random_buf(buf, len);
-            }
-         }
-
       bool accepts_input() const override { return false; }
-      void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
       bool is_seeded() const override { return true; }
       void clear() override { /* not possible */ }
       std::string name() const override { return "arc4random"; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override
+         {
+         // macOS 10.15 arc4random crashes if called with buf == nullptr && len == 0
+         // however it uses ccrng_generate internally which returns a status, ignored
+         // to respect arc4random "no-fail" interface contract
+         if(!output.empty())
+            {
+            ::arc4random_buf(output.data(), output.size());
+            }
+         }
    };
 
 #elif defined(BOTAN_TARGET_OS_HAS_GETRANDOM)
@@ -200,10 +201,18 @@ class System_RNG_Impl final : public RandomNumberGenerator
    public:
       // No constructor or destructor needed as no userland state maintained
 
-      void randomize(uint8_t buf[], size_t len) override
+      bool accepts_input() const override { return false; }
+      bool is_seeded() const override { return true; }
+      void clear() override { /* not possible */ }
+      std::string name() const override { return "getrandom"; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override
          {
          const unsigned int flags = 0;
 
+         uint8_t* buf = output.data();
+         size_t len = output.size();
          while(len > 0)
             {
             const ssize_t got = ::getrandom(buf, len, flags);
@@ -219,12 +228,6 @@ class System_RNG_Impl final : public RandomNumberGenerator
             len -= got;
             }
          }
-
-      bool accepts_input() const override { return false; }
-      void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
-      bool is_seeded() const override { return true; }
-      void clear() override { /* not possible */ }
-      std::string name() const override { return "getrandom"; }
    };
 
 
@@ -287,19 +290,26 @@ class System_RNG_Impl final : public RandomNumberGenerator
          m_fd = -1;
          }
 
-      void randomize(uint8_t buf[], size_t len) override;
-      void add_entropy(const uint8_t in[], size_t length) override;
       bool is_seeded() const override { return true; }
       bool accepts_input() const override { return m_writable; }
       void clear() override { /* not possible */ }
       std::string name() const override { return "urandom"; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override;
+      void maybe_write_entropy(std::span<const uint8_t> input);
+
    private:
       int m_fd;
       bool m_writable;
    };
 
-void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
+void System_RNG_Impl::fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input)
    {
+   maybe_write_entropy(input);
+
+   uint8_t* buf = output.data();
+   size_t len = output.size();
    while(len)
       {
       ssize_t got = ::read(m_fd, buf, len);
@@ -318,11 +328,13 @@ void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
       }
    }
 
-void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
+void System_RNG_Impl::maybe_write_entropy(std::span<const uint8_t> entropy_input)
    {
-   if(!m_writable)
+   if(!m_writable || entropy_input.empty())
       return;
 
+   const uint8_t* input = entropy_input.data();
+   size_t len = entropy_input.size();
    while(len)
       {
       ssize_t got = ::write(m_fd, input, len);

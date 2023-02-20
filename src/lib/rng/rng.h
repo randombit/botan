@@ -51,8 +51,9 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * @throws Exception if the RNG fails
       */
       void randomize(std::span<uint8_t> output)
-         { this->randomize(output.data(), output.size()); }
-      virtual void randomize(uint8_t output[], size_t length) = 0;
+         { this->fill_bytes_with_input(output, {}); }
+      void randomize(uint8_t output[], size_t length)
+         { this->randomize(std::span(output, length)); }
 
       /**
       * Returns false if it is known that this RNG object is not able to accept
@@ -70,11 +71,12 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * A few RNG types do not accept any externally provided input,
       * in which case this function is a no-op.
       *
-      * @param input a byte array containg the entropy to be added
-      * @param length the length of the byte array in
+      * @param input a byte array containing the entropy to be added
       * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
-      virtual void add_entropy(const uint8_t input[], size_t length) = 0;
+      void add_entropy(std::span<const uint8_t> input) { this->fill_bytes_with_input({}, input); }
+      void add_entropy(const uint8_t input[], size_t length)
+         { this->add_entropy(std::span(input, length)); }
 
       /**
       * Incorporate some additional data into the RNG state.
@@ -102,9 +104,10 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
       void randomize_with_input(std::span<uint8_t> output, std::span<const uint8_t> input)
-         { this->randomize_with_input(output.data(), output.size(), input.data(), input.size()); }
-      virtual void randomize_with_input(uint8_t output[], size_t output_len,
-                                        const uint8_t input[], size_t input_len);
+         { this->fill_bytes_with_input(output, input); }
+      void randomize_with_input(uint8_t output[], size_t output_len,
+                                const uint8_t input[], size_t input_len)
+         { this->randomize_with_input(std::span(output, output_len), std::span(input, input_len)); }
 
       /**
       * This calls `randomize_with_input` using some timestamps as extra input.
@@ -120,9 +123,9 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * @throws Exception if the RNG fails
       * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
-      void randomize_with_ts_input(std::span<uint8_t> output)
-         { this->randomize_with_ts_input(output.data(), output.size()); }
-      virtual void randomize_with_ts_input(uint8_t output[], size_t output_len);
+      void randomize_with_ts_input(std::span<uint8_t> output);
+      void randomize_with_ts_input(uint8_t output[], size_t output_len)
+         { this->randomize_with_ts_input(std::span(output, output_len)); }
 
       /**
       * @return the name of this RNG type
@@ -167,13 +170,13 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       /**
       * Fill a given byte container with @p bytes random bytes
       *
+      * @todo deprecate this overload (in favor of randomize())
+      *
       * @param  v     the container to be filled with @p bytes random bytes
       * @throws Exception if RNG fails
       */
       void random_vec(std::span<uint8_t> v)
-         {
-         this->randomize(v.data(), v.size());
-         }
+         { this->randomize(v); }
 
       /**
       * Resize a given byte container to @p bytes and fill it with random bytes
@@ -216,7 +219,7 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       uint8_t next_byte()
          {
          uint8_t b;
-         this->randomize(&b, 1);
+         this->fill_bytes_with_input(std::span(&b, 1), {});
          return b;
          }
 
@@ -232,6 +235,24 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
             b = this->next_byte();
          return b;
          }
+
+   protected:
+      /**
+      * Generic interface to provide entropy to a concrete implementation and to
+      * fill a given buffer with random output. Both @p output and @p input may
+      * be empty and should be ignored in that case. If both buffers are
+      * non-empty implementations should typically first apply the @p input data
+      * and then generate random data into @p output.
+      *
+      * This method must be implemented by all RandomNumberGenerator sub-classes.
+      *
+      * @param output  Byte buffer to write random bytes into. Implementations
+      *                should not read from this buffer.
+      * @param input   Byte buffer that may contain bytes to be incorporated in
+      *                the RNG's internal state. Implementations may choose to
+      *                ignore the bytes in this buffer.
+      */
+      virtual void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) = 0;
    };
 
 /**
@@ -261,14 +282,15 @@ class BOTAN_PUBLIC_API(2,0) Null_RNG final : public RandomNumberGenerator
 
       void clear() override {}
 
-      void randomize(uint8_t[], size_t) override
-         {
-         throw PRNG_Unseeded("Null_RNG called");
-         }
-
-      void add_entropy(const uint8_t[], size_t) override {}
-
       std::string name() const override { return "Null_RNG"; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override
+         {
+         // throw if caller tries to obtain random bytes
+         if(output.size() > 0)
+            { throw PRNG_Unseeded("Null_RNG called"); }
+         }
    };
 
 }
