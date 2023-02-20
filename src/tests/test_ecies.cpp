@@ -39,10 +39,10 @@ Botan::EC_Point::Compression_Type get_compression_type(const std::string& format
 
 Flags ecies_flags(bool cofactor_mode, bool old_cofactor_mode, bool check_mode, bool single_hash_mode)
    {
-   return (cofactor_mode ? Flags::COFACTOR_MODE : Flags::NONE)
-          | (single_hash_mode ? Flags::SINGLE_HASH_MODE : Flags::NONE)
-          | (old_cofactor_mode ? Flags::OLD_COFACTOR_MODE : Flags::NONE)
-          | (check_mode ? Flags::CHECK_MODE : Flags::NONE);
+   return (cofactor_mode ? Flags::CofactorMode : Flags::None)
+          | (single_hash_mode ? Flags::SingleHashMode : Flags::None)
+          | (old_cofactor_mode ? Flags::OldCofactorMode : Flags::None)
+          | (check_mode ? Flags::CheckMode : Flags::None);
    }
 
 void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& private_key,
@@ -142,7 +142,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test
 
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033
          // no cofactor-/oldcofactor-/singlehash-/check-mode and 128 byte secret length
-         Botan::ECIES_KA_Params ka_params(eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, Flags::NONE);
+         Botan::ECIES_KA_Params ka_params(eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, Flags::None);
          const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, true, Test::rng());
          const Botan::SymmetricKey secret_key = ka.derive_secret(eph_public_key_bin, other_public_key_point);
          result.test_eq("derived secret key", secret_key.bits_of(), k);
