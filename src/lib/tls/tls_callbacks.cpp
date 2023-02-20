@@ -223,7 +223,7 @@ std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> TLS::Callbacks::tls_ecdh
       ECDH_PrivateKey priv_key(rng, group);
       PK_Key_Agreement ka(priv_key, rng, "Raw");
       ecdh_secret = ka.derive_key(0, peer_key.public_value()).bits_of();
-      our_public_value = priv_key.public_value(compressed ? EC_Point::COMPRESSED : EC_Point::UNCOMPRESSED);
+      our_public_value = priv_key.public_value(compressed ? EC_Point_Format::Compressed : EC_Point_Format::Uncompressed);
       }
 
    return std::make_pair(ecdh_secret, our_public_value);

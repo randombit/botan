@@ -596,10 +596,10 @@ EC_Group_Source EC_Group::source() const
    return data().source();
    }
 
-size_t EC_Group::point_size(EC_Point::Compression_Type format) const
+size_t EC_Group::point_size(EC_Point_Format format) const
    {
    // Hybrid and standard format are (x,y), compressed is y, +1 format byte
-   if(format == EC_Point::COMPRESSED)
+   if(format == EC_Point_Format::Compressed)
       return (1 + get_p_bytes());
    else
       return (1 + 2*get_p_bytes());
@@ -734,7 +734,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
                .encode(BigInt::encode_1363(get_b(), p_bytes),
                        ASN1_Type::OctetString)
             .end_cons()
-              .encode(get_base_point().encode(EC_Point::UNCOMPRESSED), ASN1_Type::OctetString)
+              .encode(get_base_point().encode(EC_Point_Format::Uncompressed), ASN1_Type::OctetString)
             .encode(get_order())
             .encode(get_cofactor())
          .end_cons();

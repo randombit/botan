@@ -65,7 +65,7 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
       * Set the point encoding method to be used when encoding this key.
       * @param enc the encoding to use
       */
-      void set_point_encoding(EC_Point::Compression_Type enc);
+      void set_point_encoding(EC_Point_Format enc);
 
       /**
       * Return the DER encoding of this keys domain in whatever format
@@ -85,7 +85,7 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
       * Get the point encoding method to be used when encoding this key.
       * @result the encoding to use
       */
-      EC_Point::Compression_Type point_encoding() const
+      EC_Point_Format point_encoding() const
          { return m_point_encoding; }
 
       size_t key_length() const override;
@@ -116,7 +116,7 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
       EC_Group m_domain_params;
       EC_Point m_public_key;
       EC_Group_Encoding m_domain_encoding;
-      EC_Point::Compression_Type m_point_encoding = EC_Point::UNCOMPRESSED;
+      EC_Point_Format m_point_encoding = EC_Point_Format::Uncompressed;
    };
 
 /**

@@ -54,7 +54,7 @@ int main() {
   // import to card
   std::vector<uint8_t> ec_point;
   Botan::DER_Encoder(ec_point).encode(
-      priv_key_sw.public_point().encode(Botan::EC_Point::Compression_Type::UNCOMPRESSED),
+      priv_key_sw.public_point().encode(Botan::EC_Point_Format::Uncompressed),
       Botan::ASN1_Type::OctetString);
   Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props(priv_key_sw.DER_domain(), ec_point);
 

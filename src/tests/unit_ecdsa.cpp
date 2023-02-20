@@ -279,14 +279,14 @@ Test::Result test_encoding_options()
    Botan::ECDSA_PrivateKey key(Test::rng(), group);
 
    result.confirm("Default encoding is uncompressed",
-                  key.point_encoding() == Botan::EC_Point::UNCOMPRESSED);
+                  key.point_encoding() == Botan::EC_Point_Format::Uncompressed);
 
    const std::vector<uint8_t> enc_uncompressed = key.public_key_bits();
 
-   key.set_point_encoding(Botan::EC_Point::COMPRESSED);
+   key.set_point_encoding(Botan::EC_Point_Format::Compressed);
 
    result.confirm("set_point_encoding works",
-                  key.point_encoding() == Botan::EC_Point::COMPRESSED);
+                  key.point_encoding() == Botan::EC_Point_Format::Compressed);
 
    const std::vector<uint8_t> enc_compressed = key.public_key_bits();
 
@@ -298,10 +298,10 @@ Test::Result test_encoding_options()
    result.test_gte("Compressed points smaller by group size",
                    size_diff, 32);
 
-   key.set_point_encoding(Botan::EC_Point::HYBRID);
+   key.set_point_encoding(Botan::EC_Point_Format::Hybrid);
 
    result.confirm("set_point_encoding works",
-                  key.point_encoding() == Botan::EC_Point::HYBRID);
+                  key.point_encoding() == Botan::EC_Point_Format::Hybrid);
 
    const std::vector<uint8_t> enc_hybrid = key.public_key_bits();
 
@@ -309,7 +309,7 @@ Test::Result test_encoding_options()
                   enc_uncompressed.size(), enc_hybrid.size());
 
 #if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
-   auto invalid_format = static_cast<Botan::EC_Point::Compression_Type>(99);
+   auto invalid_format = static_cast<Botan::EC_Point_Format>(99);
 
    result.test_throws("Invalid point format throws",
                       "Invalid point encoding for EC_PublicKey",

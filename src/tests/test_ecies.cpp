@@ -20,19 +20,19 @@ namespace {
 
 using Flags = Botan::ECIES_Flags;
 
-Botan::EC_Point::Compression_Type get_compression_type(const std::string& format)
+Botan::EC_Point_Format get_compression_type(const std::string& format)
    {
    if(format == "uncompressed")
       {
-      return Botan::EC_Point::UNCOMPRESSED;
+      return Botan::EC_Point_Format::Uncompressed;
       }
    else if(format == "compressed")
       {
-      return Botan::EC_Point::COMPRESSED;
+      return Botan::EC_Point_Format::Compressed;
       }
    else if(format == "hybrid")
       {
-      return Botan::EC_Point::HYBRID;
+      return Botan::EC_Point_Format::Hybrid;
       }
    throw Botan::Invalid_Argument("invalid compression format");
    }
@@ -112,7 +112,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test
          Test::Result result("ECIES-ISO");
 
          // get test vectors defined by ISO 18033
-         const Botan::EC_Point::Compression_Type compression_type = get_compression_type(vars.get_req_str("format"));
+         const Botan::EC_Point_Format compression_type = get_compression_type(vars.get_req_str("format"));
          const Botan::BigInt p = vars.get_req_bn("p");
          const Botan::BigInt a = vars.get_req_bn("a");
          const Botan::BigInt b = vars.get_req_bn("b");
@@ -149,7 +149,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test
 
          // test encryption / decryption
 
-         for(auto comp_type : { Botan::EC_Point::UNCOMPRESSED, Botan::EC_Point::COMPRESSED, Botan::EC_Point::HYBRID })
+         for(auto comp_type : { Botan::EC_Point_Format::Uncompressed, Botan::EC_Point_Format::Compressed, Botan::EC_Point_Format::Hybrid })
             {
             for(bool cofactor_mode : { true, false })
                {
@@ -213,7 +213,7 @@ class ECIES_Tests final : public Text_Based_Test
          const std::vector<uint8_t> iv = vars.get_opt_bin("Iv");
          const std::string mac = vars.get_req_str("Mac");
          const size_t mac_key_len = vars.get_req_sz("MacKeyLen");
-         const Botan::EC_Point::Compression_Type compression_type = get_compression_type(vars.get_req_str("Format"));
+         const Botan::EC_Point_Format compression_type = get_compression_type(vars.get_req_str("Format"));
          const bool cofactor_mode = vars.get_req_sz("CofactorMode") != 0;
          const bool old_cofactor_mode = vars.get_req_sz("OldCofactorMode") != 0;
          const bool check_mode = vars.get_req_sz("CheckMode") != 0;
@@ -252,7 +252,7 @@ Test::Result test_other_key_not_set()
 
    const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
-         "HMAC(SHA-512)", 20, Botan::EC_Point::Compression_Type::COMPRESSED,
+         "HMAC(SHA-512)", 20, Botan::EC_Point_Format::Compressed,
          flags);
 
    Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
@@ -277,7 +277,7 @@ Test::Result test_kdf_not_found()
 
    const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF-XYZ(SHA-512)", "AES-256/CBC", 32,
-         "HMAC(SHA-512)", 20, Botan::EC_Point::Compression_Type::COMPRESSED,
+         "HMAC(SHA-512)", 20, Botan::EC_Point_Format::Compressed,
          flags);
 
    result.test_throws("kdf not found", [&]()
@@ -301,7 +301,7 @@ Test::Result test_mac_not_found()
 
    const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
-         "XYZMAC(SHA-512)", 20, Botan::EC_Point::Compression_Type::COMPRESSED,
+         "XYZMAC(SHA-512)", 20, Botan::EC_Point_Format::Compressed,
          flags);
 
    result.test_throws("mac not found", [&]()
@@ -325,7 +325,7 @@ Test::Result test_cipher_not_found()
 
    const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-XYZ-256/CBC", 32,
-         "HMAC(SHA-512)", 20, Botan::EC_Point::Compression_Type::COMPRESSED,
+         "HMAC(SHA-512)", 20, Botan::EC_Point_Format::Compressed,
          flags);
 
    result.test_throws("cipher not found", [&]()
