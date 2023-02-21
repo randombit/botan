@@ -31,6 +31,13 @@
   #endif
 #endif
 
+// This file contains a number of `Botan::TLS::Version_Code::TLS_V**` protocol
+// version specifications. This is to work around a compiler bug in GCC 11.3
+// where `Botan::TLS::Protocol_Version::TLS_V12` would lead to an "Internal
+// Compiler Error" when used in the affected context.
+//
+// TODO: remove the workaround once GCC 11 is not supported anymore.
+
 namespace Botan_Tests {
 
 class Test_Credentials_Manager : public Botan::Credentials_Manager
@@ -191,7 +198,7 @@ std::vector<Test::Result> test_session_manager_in_memory()
          auto sessions = mgr->find(server_info, cbs, plcy);
          if(result.confirm("session was found successfully", sessions.size() == 1))
             {
-            result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Protocol_Version::TLS_V12));
+            result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
             result.test_is_eq("ciphersuite was echoed", sessions[0].first.ciphersuite_code(), uint16_t(0x009C));
             result.test_is_eq("ID was echoed", sessions[0].second.id().value(), default_id);
             result.confirm("ticket was dropped", !sessions[0].second.ticket().has_value());
@@ -203,7 +210,7 @@ std::vector<Test::Result> test_session_manager_in_memory()
          auto session = mgr->retrieve(default_id, cbs, plcy);
          if(result.confirm("session was found successfully", session.has_value()))
             {
-            result.test_is_eq("protocol version was echoed", session->version(), Botan::TLS::Protocol_Version(Botan::TLS::Protocol_Version::TLS_V12));
+            result.test_is_eq("protocol version was echoed", session->version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
             result.test_is_eq("ciphersuite was echoed", session->ciphersuite_code(), uint16_t(0x009C));
             }
          }),
@@ -213,7 +220,7 @@ std::vector<Test::Result> test_session_manager_in_memory()
          auto session = mgr->retrieve(Botan::TLS::Opaque_Session_Handle(default_id), cbs, plcy);
          if(result.confirm("session was found successfully", session.has_value()))
             {
-            result.test_is_eq("protocol version was echoed", session->version(), Botan::TLS::Protocol_Version(Botan::TLS::Protocol_Version::TLS_V12));
+            result.test_is_eq("protocol version was echoed", session->version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
             result.test_is_eq("ciphersuite was echoed", session->ciphersuite_code(), uint16_t(0x009C));
             }
          }),
@@ -252,7 +259,7 @@ std::vector<Test::Result> test_session_manager_in_memory()
          auto sessions = mgr->find(server_info, cbs, plcy);
          if(result.confirm("found via server info", sessions.size() == 1))
             {
-            result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Protocol_Version::TLS_V12));
+            result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
             result.test_is_eq("ciphersuite was echoed", sessions[0].first.ciphersuite_code(), uint16_t(0x009C));
             result.test_is_eq("ID was echoed", sessions[0].second.id().value(), new_id);
             result.confirm("ticket was not stored", !sessions[0].second.ticket().has_value());
@@ -271,7 +278,7 @@ std::vector<Test::Result> test_session_manager_in_memory()
          auto sessions = mgr->find(server_info, cbs, plcy);
          if(result.confirm("found via server info", sessions.size() == 1))
             {
-            result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Protocol_Version::TLS_V12));
+            result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
             result.test_is_eq("ciphersuite was echoed", sessions[0].first.ciphersuite_code(), uint16_t(0x009C));
             result.confirm("ID was not stored", !sessions[0].second.id().has_value());
             result.test_is_eq("ticket was echoed", sessions[0].second.ticket().value(), new_ticket);
@@ -783,14 +790,14 @@ std::vector<Test::Result> test_session_manager_sqlite()
          auto session1 = mgr.retrieve(some_random_handle.value(), cbs, plcy);
          if(result.confirm("found session by user-provided ID", session1.has_value()))
             {
-            result.test_is_eq("protocol version was echoed", session1->version(), Botan::TLS::Protocol_Version(Botan::TLS::Protocol_Version::TLS_V12));
+            result.test_is_eq("protocol version was echoed", session1->version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
             result.test_is_eq("ciphersuite was echoed", session1->ciphersuite_code(), uint16_t(0x009C));
             }
 
          auto session2 = mgr.retrieve(some_virtual_handle.value(), cbs, plcy);
          if(result.confirm("found session by manager-generated ID", session2.has_value()))
             {
-            result.test_is_eq("protocol version was echoed", session2->version(), Botan::TLS::Protocol_Version(Botan::TLS::Protocol_Version::TLS_V12));
+            result.test_is_eq("protocol version was echoed", session2->version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
             result.test_is_eq("ciphersuite was echoed", session2->ciphersuite_code(), uint16_t(0x009C));
             }
 
@@ -951,15 +958,15 @@ std::vector<Test::Result> tls_session_manager_expiry()
          auto mgr = factory();
 
          auto handle_1 = random_id();
-         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Protocol_Version::TLS_V12), handle_1);
+         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Version_Code::TLS_V12), handle_1);
          auto handle_2 = random_ticket();
-         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Protocol_Version::TLS_V12), handle_2);
+         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Version_Code::TLS_V12), handle_2);
 
 #if defined(BOTAN_HAS_TLS_13)
          auto handle_3 = random_id();
-         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Protocol_Version::TLS_V13), handle_3);
+         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Version_Code::TLS_V13), handle_3);
          auto handle_4 = random_ticket();
-         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Protocol_Version::TLS_V13), handle_4);
+         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Version_Code::TLS_V13), handle_4);
 #endif
 
          plcy.allow_session_reuse = false;
