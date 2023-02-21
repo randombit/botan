@@ -115,8 +115,8 @@ BigInt BigInt::from_bytes_with_max_bits(const uint8_t buf[], size_t length, size
    BigInt bn;
    bn.binary_decode(buf, length);
 
-   if(8 * length > max_bits)
-      bn >>= (8 - (max_bits % 8));
+   while(bn.bits() > max_bits)
+      bn.clear_bit(bn.bits() - 1);
 
    return bn;
    }
