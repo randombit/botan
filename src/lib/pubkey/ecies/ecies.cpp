@@ -215,7 +215,7 @@ ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::stri
                                          const std::string& dem_algo_spec, size_t dem_key_len,
                                          const std::string& mac_spec, size_t mac_key_len) :
    ECIES_System_Params(domain, kdf_spec, dem_algo_spec, dem_key_len, mac_spec, mac_key_len, EC_Point::UNCOMPRESSED,
-                         ECIES_Flags::NONE)
+                       ECIES_Flags::None)
    {
    }
 

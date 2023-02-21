@@ -24,21 +24,22 @@ namespace Botan {
 
 class RandomNumberGenerator;
 
-enum class ECIES_Flags : uint32_t
-   {
-   NONE = 0,
-
+enum class ECIES_Flags : uint32_t {
+   None = 0,
    /// if set: prefix the input of the (ecdh) key agreement with the encoded (ephemeral) public key
-   SINGLE_HASH_MODE = 1,
-
+   SingleHashMode = 1,
    /// (decryption only) if set: use cofactor multiplication during (ecdh) key agreement
-   COFACTOR_MODE = 2,
-
+   CofactorMode = 2,
    /// if set: use ecdhc instead of ecdh
-   OLD_COFACTOR_MODE = 4,
-
+   OldCofactorMode = 4,
    /// (decryption only) if set: test if the (ephemeral) public key is on the curve
-   CHECK_MODE = 8
+   CheckMode = 8,
+
+   NONE BOTAN_DEPRECATED("Use None") = None,
+   SINGLE_HASH_MODE BOTAN_DEPRECATED("Use SingleHashMode") = SingleHashMode,
+   COFACTOR_MODE BOTAN_DEPRECATED("Use CofactorMode") = CofactorMode,
+   OLD_COFACTOR_MODE BOTAN_DEPRECATED("Use OldCofactorMode") = OldCofactorMode,
+   CHECK_MODE BOTAN_DEPRECATED("Use CheckMode") = CheckMode,
    };
 
 inline ECIES_Flags operator |(ECIES_Flags a, ECIES_Flags b)
@@ -84,22 +85,22 @@ class BOTAN_PUBLIC_API(2,0) ECIES_KA_Params
 
       inline bool single_hash_mode() const
          {
-         return (m_flags & ECIES_Flags::SINGLE_HASH_MODE) == ECIES_Flags::SINGLE_HASH_MODE;
+         return (m_flags & ECIES_Flags::SingleHashMode) == ECIES_Flags::SingleHashMode;
          }
 
       inline bool cofactor_mode() const
          {
-         return (m_flags & ECIES_Flags::COFACTOR_MODE) == ECIES_Flags::COFACTOR_MODE;
+         return (m_flags & ECIES_Flags::CofactorMode) == ECIES_Flags::CofactorMode;
          }
 
       inline bool old_cofactor_mode() const
          {
-         return (m_flags & ECIES_Flags::OLD_COFACTOR_MODE) == ECIES_Flags::OLD_COFACTOR_MODE;
+         return (m_flags & ECIES_Flags::OldCofactorMode) == ECIES_Flags::OldCofactorMode;
          }
 
       inline bool check_mode() const
          {
-         return (m_flags & ECIES_Flags::CHECK_MODE) == ECIES_Flags::CHECK_MODE;
+         return (m_flags & ECIES_Flags::CheckMode) == ECIES_Flags::CheckMode;
          }
 
       inline EC_Point::Compression_Type compression_type() const
