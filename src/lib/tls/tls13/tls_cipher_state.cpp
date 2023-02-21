@@ -449,7 +449,7 @@ void Cipher_State::advance_with_psk(PSK_Type type, secure_vector<uint8_t>&& psk)
    m_early_secret = hkdf_extract(std::move(psk));
 
    const char* binder_label =
-      (type == PSK_Type::RESUMPTION)
+      (type == PSK_Type::Resumption)
          ? "res binder"
          : "ext binder";
 

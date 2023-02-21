@@ -566,11 +566,11 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0()
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
    auto cs_client = Cipher_State::init_with_psk(Connection_Side::Client,
-                                         Cipher_State::PSK_Type::RESUMPTION,
+                                         Cipher_State::PSK_Type::Resumption,
                                          secure_vector<uint8_t>(psk.begin(), psk.end()),
                                          cipher);
    auto cs_server = Cipher_State::init_with_psk(Connection_Side::Server,
-                                         Cipher_State::PSK_Type::RESUMPTION,
+                                         Cipher_State::PSK_Type::Resumption,
                                          secure_vector<uint8_t>(psk.begin(), psk.end()),
                                          cipher);
 

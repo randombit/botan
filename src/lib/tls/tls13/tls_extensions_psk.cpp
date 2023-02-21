@@ -136,7 +136,7 @@ PSK::PSK(const Session& session_to_resume, Callbacks& callbacks)
    auto psk = session_to_resume.master_secret();
    cpsk.hash_algorithm = session_to_resume.ciphersuite().prf_algo();
    cpsk.cipher_state = Cipher_State::init_with_psk(Connection_Side::Client,
-                                                  Cipher_State::PSK_Type::RESUMPTION,
+                                                  Cipher_State::PSK_Type::Resumption,
                                                   std::move(psk),
                                                   session_to_resume.ciphersuite());
 

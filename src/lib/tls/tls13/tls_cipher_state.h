@@ -60,11 +60,10 @@ class Ciphersuite;
 class BOTAN_TEST_API Cipher_State
    {
    public:
-      enum class PSK_Type
-         {
-         RESUMPTION,
-         EXTERNAL
-         };
+      enum class PSK_Type {
+         Resumption,
+         External,
+      };
 
    public:
       ~Cipher_State();
