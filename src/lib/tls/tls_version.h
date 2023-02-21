@@ -17,19 +17,21 @@ namespace Botan {
 
 namespace TLS {
 
+enum class Version_Code: uint16_t {
+   TLS_V11            = 0x0302,  // not supported by Botan
+   TLS_V12            = 0x0303,
+   TLS_V13            = 0x0304,
+   DTLS_V12           = 0xFEFD,
+   DTLS_V13           = 0xFEFC,  // not supported by Botan
+};
+
 /**
 * TLS Protocol Version
 */
 class BOTAN_PUBLIC_API(2,0) Protocol_Version final
    {
    public:
-      enum Version_Code {
-         TLS_V11            = 0x0302,  // not supported by Botan
-         TLS_V12            = 0x0303,
-         TLS_V13            = 0x0304,
-         DTLS_V12           = 0xFEFD,
-         DTLS_V13           = 0xFEFC,  // not supported by Botan
-      };
+      using enum Version_Code;
 
       /**
       * @return latest known TLS version
