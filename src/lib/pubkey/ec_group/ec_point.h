@@ -16,17 +16,24 @@
 
 namespace Botan {
 
+enum class EC_Point_Format {
+   Uncompressed = 0,
+   Compressed = 1,
+   Hybrid = 2,
+
+   UNCOMPRESSED BOTAN_DEPRECATED("Use EC_Point_Format::Uncompressed") = Uncompressed,
+   COMPRESSED BOTAN_DEPRECATED("Use EC_Point_Format::Compressed") = Compressed,
+   HYBRID BOTAN_DEPRECATED("Use EC_Point_Format::Hybrid") = Hybrid,
+};
+
 /**
 * This class represents one point on a curve of GF(p)
 */
 class BOTAN_PUBLIC_API(2,0) EC_Point final
    {
    public:
-      enum Compression_Type {
-         UNCOMPRESSED = 0,
-         COMPRESSED   = 1,
-         HYBRID       = 2
-      };
+      typedef EC_Point_Format Compression_Type;
+      using enum EC_Point_Format;
 
       enum { WORKSPACE_SIZE = 8 };
 
@@ -82,7 +89,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       * EC2OSP - elliptic curve to octet string primitive
       * @param format which format to encode using
       */
-      std::vector<uint8_t> encode(EC_Point::Compression_Type format) const;
+      std::vector<uint8_t> encode(EC_Point_Format format) const;
 
       /**
       * += Operator

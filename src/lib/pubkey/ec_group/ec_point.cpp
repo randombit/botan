@@ -597,7 +597,7 @@ bool EC_Point::operator==(const EC_Point& other) const
    }
 
 // encoding and decoding
-std::vector<uint8_t> EC_Point::encode(EC_Point::Compression_Type format) const
+std::vector<uint8_t> EC_Point::encode(EC_Point_Format format) const
    {
    if(is_zero())
       return std::vector<uint8_t>(1); // single 0 byte
@@ -609,20 +609,20 @@ std::vector<uint8_t> EC_Point::encode(EC_Point::Compression_Type format) const
 
    std::vector<uint8_t> result;
 
-   if(format == EC_Point::UNCOMPRESSED)
+   if(format == EC_Point_Format::Uncompressed)
       {
       result.resize(1 + 2*p_bytes);
       result[0] = 0x04;
       BigInt::encode_1363(&result[1], p_bytes, x);
       BigInt::encode_1363(&result[1+p_bytes], p_bytes, y);
       }
-   else if(format == EC_Point::COMPRESSED)
+   else if(format == EC_Point_Format::Compressed)
       {
       result.resize(1 + p_bytes);
       result[0] = 0x02 | static_cast<uint8_t>(y.get_bit(0));
       BigInt::encode_1363(&result[1], p_bytes, x);
       }
-   else if(format == EC_Point::HYBRID)
+   else if(format == EC_Point_Format::Hybrid)
       {
       result.resize(1 + 2*p_bytes);
       result[0] = 0x06 | static_cast<uint8_t>(y.get_bit(0));

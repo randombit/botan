@@ -48,12 +48,12 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PublicKey : public virtual EC_PublicKey
       * @return public point value
       */
       std::vector<uint8_t> public_value() const
-         { return public_point().encode(EC_Point::UNCOMPRESSED); }
+         { return public_point().encode(EC_Point_Format::Uncompressed); }
 
       /**
       * @return public point value
       */
-      std::vector<uint8_t> public_value(EC_Point::Compression_Type format) const
+      std::vector<uint8_t> public_value(EC_Point_Format format) const
          { return public_point().encode(format); }
 
    protected:
@@ -92,9 +92,9 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PrivateKey final : public ECDH_PublicKey,
       std::unique_ptr<Public_Key> public_key() const override;
 
       std::vector<uint8_t> public_value() const override
-         { return ECDH_PublicKey::public_value(EC_Point::UNCOMPRESSED); }
+         { return ECDH_PublicKey::public_value(EC_Point_Format::Uncompressed); }
 
-      std::vector<uint8_t> public_value(EC_Point::Compression_Type type) const
+      std::vector<uint8_t> public_value(EC_Point_Format type) const
          { return ECDH_PublicKey::public_value(type); }
 
       std::unique_ptr<PK_Ops::Key_Agreement>

@@ -111,7 +111,7 @@ size_t PKCS11_EC_PrivateKey::key_length() const
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::public_key_bits() const
    {
-   return public_point().encode(EC_Point::COMPRESSED);
+   return public_point().encode(EC_Point_Format::Compressed);
    }
 
 size_t PKCS11_EC_PrivateKey::estimated_strength() const

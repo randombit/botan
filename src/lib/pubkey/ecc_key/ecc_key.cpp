@@ -77,11 +77,11 @@ std::vector<uint8_t> EC_PublicKey::public_key_bits() const
    return public_point().encode(point_encoding());
    }
 
-void EC_PublicKey::set_point_encoding(EC_Point::Compression_Type enc)
+void EC_PublicKey::set_point_encoding(EC_Point_Format enc)
    {
-   if(enc != EC_Point::COMPRESSED &&
-      enc != EC_Point::UNCOMPRESSED &&
-      enc != EC_Point::HYBRID)
+   if(enc != EC_Point_Format::Compressed &&
+      enc != EC_Point_Format::Uncompressed &&
+      enc != EC_Point_Format::Hybrid)
       throw Invalid_Argument("Invalid point encoding for EC_PublicKey");
 
    m_point_encoding = enc;
@@ -147,7 +147,7 @@ secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
          .encode(static_cast<size_t>(1))
          .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()), ASN1_Type::OctetString)
          .start_explicit_context_specific(1)
-            .encode(m_public_key.encode(EC_Point::Compression_Type::UNCOMPRESSED), ASN1_Type::BitString)
+            .encode(m_public_key.encode(EC_Point_Format::Uncompressed), ASN1_Type::BitString)
          .end_cons()
       .end_cons()
       .get_contents();

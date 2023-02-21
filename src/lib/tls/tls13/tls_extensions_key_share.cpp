@@ -82,7 +82,7 @@ class Key_Share_Entry
             //
             // Hence, we neither need to take Policy::use_ecc_point_compression() nor
             // ClientHello::prefers_compressed_ec_points() into account here.
-            m_key_exchange = skey->public_value(EC_Point::UNCOMPRESSED);
+            m_key_exchange = skey->public_value(EC_Point_Format::Uncompressed);
             m_private_key = std::move(skey);
             }
          else if(is_dh(group))

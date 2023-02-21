@@ -344,9 +344,9 @@ class EC_Group_Tests : public Test
          const Botan::EC_Point pt = create_random_point(Test::rng(), group);
          const Botan::EC_Point zero = group.zero_point();
 
-         for(auto scheme : { Botan::EC_Point::UNCOMPRESSED,
-                  Botan::EC_Point::COMPRESSED,
-                  Botan::EC_Point::HYBRID })
+         for(auto scheme : { Botan::EC_Point_Format::Uncompressed,
+                  Botan::EC_Point_Format::Compressed,
+                  Botan::EC_Point_Format::Hybrid })
             {
             result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)), pt);
             result.test_eq("encoded/decode rt works", group.OS2ECP(zero.encode(scheme)), zero);
@@ -420,9 +420,9 @@ class EC_Group_Tests : public Test
          result.test_eq("addition of zero does nothing", p1, p1 - zero);
          result.confirm("zero times anything is the zero point", (zero * 39193).is_zero());
 
-         for(auto scheme : { Botan::EC_Point::UNCOMPRESSED,
-                  Botan::EC_Point::COMPRESSED,
-                  Botan::EC_Point::HYBRID })
+         for(auto scheme : { Botan::EC_Point_Format::Uncompressed,
+                  Botan::EC_Point_Format::Compressed,
+                  Botan::EC_Point_Format::Hybrid })
             {
             const std::vector<uint8_t> v = zero.encode(scheme);
             result.test_eq("encoded/decode rt works", group.OS2ECP(v), zero);
@@ -592,7 +592,7 @@ Test::Result test_enc_dec_compressed_160()
    Botan::EC_Group secp160r1("secp160r1");
    const std::vector<uint8_t> G_comp = Botan::hex_decode("024A96B5688EF573284664698968C38BB913CBFC82");
    const Botan::EC_Point p = secp160r1.OS2ECP(G_comp);
-   const std::vector<uint8_t> sv_result = p.encode(Botan::EC_Point::COMPRESSED);
+   const std::vector<uint8_t> sv_result = p.encode(Botan::EC_Point_Format::Compressed);
 
    result.test_eq("result", sv_result, G_comp);
    return result;
@@ -608,7 +608,7 @@ Test::Result test_enc_dec_compressed_256()
    const std::vector<uint8_t> sv_G_secp_comp = Botan::hex_decode(G_secp_comp);
 
    Botan::EC_Point p_G = group.OS2ECP(sv_G_secp_comp);
-   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point::COMPRESSED);
+   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Compressed);
 
    result.test_eq("compressed_256", sv_result, sv_G_secp_comp);
    return result;
@@ -639,7 +639,7 @@ Test::Result test_enc_dec_uncompressed_112()
    const std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
 
    Botan::EC_Point p_G = group.OS2ECP(sv_G_secp_uncomp);
-   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point::UNCOMPRESSED);
+   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Uncompressed);
 
    result.test_eq("uncompressed_112", sv_result, sv_G_secp_uncomp);
    return result;
@@ -660,7 +660,7 @@ Test::Result test_enc_dec_uncompressed_521()
 
    Botan::EC_Point p_G = group.OS2ECP(sv_G_secp_uncomp);
 
-   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point::UNCOMPRESSED);
+   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Uncompressed);
 
    result.test_eq("expected", sv_result, sv_G_secp_uncomp);
    return result;

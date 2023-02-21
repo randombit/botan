@@ -341,7 +341,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       */
       EC_Point zero_point() const;
 
-      size_t point_size(EC_Point::Compression_Type format) const;
+      size_t point_size(EC_Point_Format format) const;
 
       EC_Point OS2ECP(const uint8_t bits[], size_t len) const;
 
