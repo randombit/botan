@@ -62,15 +62,11 @@ std::string CPUID::to_string()
    CPUID_PRINT(avx512);
    CPUID_PRINT(avx512_aes);
    CPUID_PRINT(avx512_clmul);
-#endif
-
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    CPUID_PRINT(altivec);
    CPUID_PRINT(power_crypto);
    CPUID_PRINT(darn_rng);
-#endif
-
-#if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
    CPUID_PRINT(neon);
    CPUID_PRINT(arm_sve);
 
@@ -82,6 +78,8 @@ std::string CPUID::to_string()
    CPUID_PRINT(arm_sha3);
    CPUID_PRINT(arm_sm3);
    CPUID_PRINT(arm_sm4);
+#else
+   BOTAN_UNUSED(append_fn);
 #endif
 
 #undef CPUID_PRINT
