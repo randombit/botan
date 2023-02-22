@@ -143,7 +143,7 @@ ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    secure_vector<uint8_t> to_be_hashed(k_times_P_x.bytes());
    k_times_P_x.binary_encode(to_be_hashed.data());
 
-   auto hash = m_hash->clone();
+   auto hash = m_hash->new_object();
    hash->update(to_be_hashed);
    secure_vector<uint8_t> c = hash->final();
 
