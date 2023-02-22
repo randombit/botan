@@ -115,7 +115,7 @@ class EMSA_unit_tests final : public Test
             {
             try
                {
-               const std::string hash_to_use = Botan::hash_for_emsa(pad);
+               const std::string hash_to_use = "SHA-256";
                auto emsa_1 = Botan::EMSA::create(pad + "(" + hash_to_use + ")");
                auto emsa_2 = Botan::EMSA::create(emsa_1->name());
                name_tests.test_eq("EMSA_name_test for " + pad,

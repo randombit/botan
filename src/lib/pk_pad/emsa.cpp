@@ -194,21 +194,4 @@ std::unique_ptr<EMSA> EMSA::create_or_throw(const std::string& algo_spec)
    throw Algorithm_Not_Found(algo_spec);
    }
 
-std::string hash_for_emsa(const std::string& algo_spec)
-   {
-   SCAN_Name emsa_name(algo_spec);
-
-   if(emsa_name.arg_count() > 0)
-      {
-      return emsa_name.arg(0);
-      }
-
-   // If we don't understand what this is return a safe default
-#if defined(BOTAN_HAS_SHA2_64)
-   return "SHA-512";
-#else
-   return "SHA-256";
-#endif
-   }
-
 }

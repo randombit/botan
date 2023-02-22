@@ -105,15 +105,6 @@ class BOTAN_TEST_API EMSA
       virtual std::string name() const = 0;
    };
 
-/**
-* Returns the hash function used in the given EMSA scheme
-* If the hash function is not specified or not understood,
-* returns "SHA-512"
-* @param algo_spec the name of the EMSA
-* @return hash function used in the given EMSA scheme
-*/
-BOTAN_TEST_API std::string hash_for_emsa(const std::string& algo_spec);
-
 }
 
 #endif
