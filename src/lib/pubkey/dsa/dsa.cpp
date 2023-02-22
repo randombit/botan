@@ -14,7 +14,6 @@
 #include <botan/internal/pk_ops_impl.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-  #include <botan/internal/emsa.h>
   #include <botan/internal/rfc6979.h>
 #endif
 

@@ -11,7 +11,6 @@ dl_algo
 dl_group
 keypair
 numbertheory
-emsa1
 sha2_32
 </requires>
 

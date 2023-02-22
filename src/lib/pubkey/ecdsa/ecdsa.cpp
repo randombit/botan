@@ -13,7 +13,6 @@
 #include <botan/internal/point_mul.h>
 #include <botan/internal/keypair.h>
 #include <botan/reducer.h>
-#include <botan/internal/emsa.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
   #include <botan/internal/rfc6979.h>
