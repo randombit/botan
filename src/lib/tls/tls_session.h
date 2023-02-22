@@ -136,9 +136,107 @@ class Server_Hello_13;
 class Callbacks;
 
 /**
+ * Represents basic information about a session that can be both
+ * persisted for resumption and presented to the application as
+ * a summary of a specific just-established TLS session.
+ */
+class BOTAN_PUBLIC_API(3,0) Session_Summary
+   {
+   public:
+      Session_Summary(std::chrono::system_clock::time_point start_time,
+                      Protocol_Version version,
+                      uint16_t ciphersuite,
+                      Connection_Side connection_side,
+                      uint16_t srtp_profile,
+                      bool extended_master_secret,
+                      bool encrypt_then_mac,
+                      std::vector<X509_Certificate> peer_certs,
+                      Server_Information server_info)
+         : m_start_time(start_time)
+         , m_version(version)
+         , m_ciphersuite(ciphersuite)
+         , m_connection_side(connection_side)
+         , m_srtp_profile(srtp_profile)
+         , m_extended_master_secret(extended_master_secret)
+         , m_encrypt_then_mac(encrypt_then_mac)
+         , m_peer_certs(std::move(peer_certs))
+         , m_server_info(std::move(server_info)) {}
+
+   protected:
+      Session_Summary() {}
+
+   public:
+      /**
+       * Get the wall clock time this session began
+       */
+      std::chrono::system_clock::time_point start_time() const { return m_start_time; }
+
+      /**
+       * Get the negotiated protocol version of the TLS session
+       */
+      Protocol_Version version() const { return m_version; }
+
+      /**
+       * Get the ciphersuite code of the negotiated TLS session
+       */
+      uint16_t ciphersuite_code() const { return m_ciphersuite; }
+
+      /**
+       * Get the ciphersuite info of the negotiated TLS session
+       */
+      Ciphersuite ciphersuite() const;
+
+      /**
+       * Get which side of the connection we are/were acting as.
+       */
+      Connection_Side side() const { return m_connection_side; }
+
+      /**
+       * Get the negotiated DTLS-SRTP algorithm (RFC 5764)
+       */
+      uint16_t dtls_srtp_profile() const { return m_srtp_profile; }
+
+      /**
+       * Returns true if a TLS 1.2 session negotiated "encrypt then MAC";
+       * TLS 1.3 sessions will always return false as they always use an AEAD.
+       */
+      bool supports_encrypt_then_mac() const { return m_encrypt_then_mac; }
+
+      /**
+       * Returns true if a TLS 1.2 session negotiated "extended master secret";
+       * TLS 1.3 sessions will always return true (see RFC 8446 Appendix D).
+       */
+      bool supports_extended_master_secret() const { return m_extended_master_secret; }
+
+      /**
+       * Return the certificate chain of the peer (possibly empty)
+       */
+      const std::vector<X509_Certificate>& peer_certs() const { return m_peer_certs; }
+
+      /**
+       * Get information about the TLS server
+       */
+      const Server_Information& server_info() const { return m_server_info; }
+
+   protected:
+      std::chrono::system_clock::time_point m_start_time;
+
+      Protocol_Version m_version;
+      uint16_t m_ciphersuite;
+      Connection_Side m_connection_side;
+      uint16_t m_srtp_profile;
+
+      bool m_extended_master_secret;
+      bool m_encrypt_then_mac;
+
+      std::vector<X509_Certificate> m_peer_certs;
+      Server_Information m_server_info;
+   };
+
+/**
 * Class representing a TLS session state
 */
-class BOTAN_PUBLIC_API(2,0) Session final
+class BOTAN_PUBLIC_API(2,0) Session final : public Session_Summary
    {
    public:
 
@@ -244,27 +342,6 @@ class BOTAN_PUBLIC_API(2,0) Session final
       std::string PEM_encode() const;
 
       /**
-      * Get the version of the saved session
-      */
-      Protocol_Version version() const { return m_version; }
-
-      /**
-      * Get the ciphersuite code of the saved session
-      */
-      uint16_t ciphersuite_code() const { return m_ciphersuite; }
-
-      /**
-      * Get the ciphersuite info of the saved session
-      */
-      Ciphersuite ciphersuite() const;
-
-      /**
-      * Get which side of the connection the resumed session we are/were
-      * acting as.
-      */
-      Connection_Side side() const { return m_connection_side; }
-
-      /**
       * Get a reference to the contained master secret
       */
       const secure_vector<uint8_t>& master_secret() const { return m_master_secret; }
@@ -275,25 +352,9 @@ class BOTAN_PUBLIC_API(2,0) Session final
       secure_vector<uint8_t> extract_master_secret();
 
       /**
-      * Get the negotiated DTLS-SRTP algorithm (RFC 5764)
-      */
-      uint16_t dtls_srtp_profile() const { return m_srtp_profile; }
-
-      bool supports_extended_master_secret() const { return m_extended_master_secret; }
-
-      bool supports_encrypt_then_mac() const { return m_encrypt_then_mac; }
-
+       * Get whether the saved session supports sending/receiving of early data
+       */
       bool supports_early_data() const { return m_early_data_allowed; }
-
-      /**
-      * Return the certificate chain of the peer (possibly empty)
-      */
-      const std::vector<X509_Certificate>& peer_certs() const { return m_peer_certs; }
-
-      /**
-      * Get the wall clock time this session began
-      */
-      std::chrono::system_clock::time_point start_time() const { return m_start_time; }
 
       /**
       * Return the ticket obfuscation adder
@@ -304,11 +365,6 @@ class BOTAN_PUBLIC_API(2,0) Session final
       * Return the number of bytes allowed for 0-RTT early data
       */
       uint32_t max_early_data_bytes() const { return m_max_early_data_bytes; }
-
-      /**
-      * @return information about the TLS server
-      */
-      const Server_Information& server_info() const { return m_server_info; }
 
       /**
       * @return the lifetime of the ticket as defined by the TLS server
@@ -333,19 +389,7 @@ class BOTAN_PUBLIC_API(2,0) Session final
          TLS_SESSION_PARAM_STRUCT_VERSION = 20230112
          };
 
-      std::chrono::system_clock::time_point m_start_time;
-
       secure_vector<uint8_t> m_master_secret;
-
-      Protocol_Version m_version;
-      uint16_t m_ciphersuite;
-      Connection_Side m_connection_side;
-      uint16_t m_srtp_profile;
-      bool m_extended_master_secret;
-      bool m_encrypt_then_mac;
-
-      std::vector<X509_Certificate> m_peer_certs;
-      Server_Information m_server_info; // optional
 
       bool m_early_data_allowed;
       uint32_t m_max_early_data_bytes;

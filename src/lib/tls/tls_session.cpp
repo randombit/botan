@@ -88,14 +88,29 @@ std::optional<Session_Ticket> Session_Handle::ticket() const
    }
 
 
+Ciphersuite Session_Summary::ciphersuite() const
+   {
+   auto suite = Ciphersuite::by_id(m_ciphersuite);
+   if (!suite.has_value())
+      {
+      throw Decoding_Error("Failed to find cipher suite for ID " +
+                           std::to_string(m_ciphersuite));
+      }
+   return suite.value();
+   }
+
+
 Session::Session() :
-   m_start_time(std::chrono::system_clock::time_point::min()),
-   m_version(),
-   m_ciphersuite(0),
-   m_connection_side(static_cast<Connection_Side>(0)),
-   m_srtp_profile(0),
-   m_extended_master_secret(false),
-   m_encrypt_then_mac(false),
+   Session_Summary(
+      std::chrono::system_clock::time_point::min(),
+      Protocol_Version(),
+      0,
+      static_cast<Connection_Side>(0),
+      0,
+      false,
+      false,
+      {},
+      Server_Information()),
    m_early_data_allowed(false),
    m_max_early_data_bytes(0),
    m_ticket_age_add(0),
@@ -113,16 +128,17 @@ Session::Session(const secure_vector<uint8_t>& master_secret,
                  uint16_t srtp_profile,
                  std::chrono::system_clock::time_point current_timestamp,
                  std::chrono::seconds lifetime_hint) :
-   m_start_time(current_timestamp),
+   Session_Summary(
+      current_timestamp,
+      version,
+      ciphersuite,
+      side,
+      srtp_profile,
+      extended_master_secret,
+      encrypt_then_mac,
+      certs,
+      server_info),
    m_master_secret(master_secret),
-   m_version(version),
-   m_ciphersuite(ciphersuite),
-   m_connection_side(side),
-   m_srtp_profile(srtp_profile),
-   m_extended_master_secret(extended_master_secret),
-   m_encrypt_then_mac(encrypt_then_mac),
-   m_peer_certs(certs),
-   m_server_info(server_info),
    m_early_data_allowed(false),
    m_max_early_data_bytes(0),
    m_ticket_age_add(0),
@@ -144,26 +160,27 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
                  const std::vector<X509_Certificate>& peer_certs,
                  const Server_Information& server_info,
                  std::chrono::system_clock::time_point current_timestamp) :
-   m_start_time(current_timestamp),
+   Session_Summary(
+      current_timestamp,
+      version,
+      ciphersuite,
+      side,
+
+      // TODO: SRTP might become necessary when DTLS 1.3 is being implemented
+      0,
+
+      // RFC 8446 Appendix D
+      //    Because TLS 1.3 always hashes in the transcript up to the server
+      //    Finished, implementations which support both TLS 1.3 and earlier
+      //    versions SHOULD indicate the use of the Extended Master Secret
+      //    extension in their APIs whenever TLS 1.3 is used.
+      true,
+
+      // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
+      false,
+      peer_certs,
+      server_info),
    m_master_secret(session_psk),
-   m_version(version),
-   m_ciphersuite(ciphersuite),
-   m_connection_side(side),
-
-   // TODO: Might become necessary when DTLS 1.3 is being implemented.
-   m_srtp_profile(0),
-
-   // RFC 8446 Appendix D
-   //    Because TLS 1.3 always hashes in the transcript up to the server
-   //    Finished, implementations which support both TLS 1.3 and earlier
-   //    versions SHOULD indicate the use of the Extended Master Secret
-   //    extension in their APIs whenever TLS 1.3 is used.
-   m_extended_master_secret(true),
-
-   // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
-   m_encrypt_then_mac(false),
-   m_peer_certs(peer_certs),
-   m_server_info(server_info),
    m_early_data_allowed(max_early_data_bytes.has_value()),
    m_max_early_data_bytes(max_early_data_bytes.value_or(0)),
    m_ticket_age_add(ticket_age_add),
@@ -181,15 +198,15 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
                  const Server_Hello_13& server_hello,
                  Callbacks& callbacks,
                  RandomNumberGenerator& rng) :
-   m_start_time(callbacks.tls_current_timestamp()),
+   Session_Summary(
+      callbacks.tls_current_timestamp(),
+      server_hello.selected_version(),
+      server_hello.ciphersuite(),
+      Connection_Side::Server,
+      0, true, false,  // see constructor above for rationales
+      peer_certs,
+      client_hello.sni_hostname()),
    m_master_secret(std::move(session_psk)),
-   m_version(server_hello.selected_version()),
-   m_ciphersuite(server_hello.ciphersuite()),
-   m_connection_side(Connection_Side::Server),
-   m_extended_master_secret(true),
-   m_encrypt_then_mac(true),
-   m_peer_certs(peer_certs),
-   m_server_info(client_hello.sni_hostname()),
    m_early_data_allowed(max_early_data_bytes.has_value()),
    m_max_early_data_bytes(max_early_data_bytes.value_or(0)),
    m_ticket_age_add(load_be<uint32_t>(rng.random_vec(4).data(), 0)),
@@ -324,17 +341,6 @@ secure_vector<uint8_t> Session::DER_encode() const
 std::string Session::PEM_encode() const
    {
    return PEM_Code::encode(this->DER_encode(), "TLS SESSION");
-   }
-
-Ciphersuite Session::ciphersuite() const
-   {
-   auto suite = Ciphersuite::by_id(m_ciphersuite);
-   if (!suite.has_value())
-      {
-      throw Decoding_Error("Failed to find cipher suite for ID " +
-                           std::to_string(m_ciphersuite));
-      }
-   return suite.value();
    }
 
 secure_vector<uint8_t> Session::extract_master_secret()
