@@ -10,6 +10,8 @@
 
 #include <botan/cipher_mode.h>
 
+#include <span>
+
 namespace Botan {
 
 /**
@@ -54,9 +56,11 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       * once (after set_key) is the optimum.
       *
       * @param ad the associated data
-      * @param ad_len length of add in bytes
       */
-      virtual void set_associated_data(const uint8_t ad[], size_t ad_len) = 0;
+      void set_associated_data(std::span<const uint8_t> ad)
+         { set_associated_data_n(0, ad); }
+      void set_associated_data(const uint8_t ad[], size_t ad_len)
+         { set_associated_data(std::span(ad, ad_len)); }
 
       /**
       * Set associated data that is not included in the ciphertext but
@@ -71,11 +75,14 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       * all other modes only nominal AD input 0 is supported; all
       * other values of idx will cause an exception.
       *
+      * Derived AEADs must implement this. For AEADs where
+      * `maximum_associated_data_inputs()` returns 1 (the default), the
+      * @p idx must simply be ignored.
+      *
       * @param idx which associated data to set
       * @param ad the associated data
-      * @param ad_len length of add in bytes
       */
-      virtual void set_associated_data_n(size_t idx, const uint8_t ad[], size_t ad_len);
+      virtual void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) = 0;
 
       /**
       * Returns the maximum supported number of associated data inputs which
@@ -104,7 +111,7 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       template<typename Alloc>
       void set_associated_data_vec(const std::vector<uint8_t, Alloc>& ad)
          {
-         set_associated_data(ad.data(), ad.size());
+         set_associated_data(ad);
          }
 
       /**
@@ -116,10 +123,9 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       *
       * @param ad the associated data
       */
-      template<typename Alloc>
-      void set_ad(const std::vector<uint8_t, Alloc>& ad)
+      void set_ad(std::span<const uint8_t> ad)
          {
-         set_associated_data(ad.data(), ad.size());
+         set_associated_data(ad);
          }
 
       /**

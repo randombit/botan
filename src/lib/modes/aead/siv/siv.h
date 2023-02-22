@@ -27,16 +27,10 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
       * Sets the nth element of the vector of associated data
       * @param n index into the AD vector
       * @param ad associated data
-      * @param ad_len length of associated data in bytes
       */
-      void set_associated_data_n(size_t n, const uint8_t ad[], size_t ad_len) override final;
+      void set_associated_data_n(size_t n, std::span<const uint8_t> ad) override final;
 
       size_t maximum_associated_data_inputs() const override final;
-
-      void set_associated_data(const uint8_t ad[], size_t ad_len) override final
-         {
-         set_associated_data_n(0, ad, ad_len);
-         }
 
       std::string name() const override final;
 

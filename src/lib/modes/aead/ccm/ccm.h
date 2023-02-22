@@ -21,7 +21,7 @@ namespace Botan {
 class CCM_Mode : public AEAD_Mode
    {
    public:
-      void set_associated_data(const uint8_t ad[], size_t ad_len) override final;
+      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
 
       bool associated_data_requires_key() const override final { return false; }
 
@@ -46,6 +46,7 @@ class CCM_Mode : public AEAD_Mode
       size_t tag_size() const override final { return m_tag_size; }
 
       bool has_keying_material() const override final;
+
    protected:
       CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t L);
 

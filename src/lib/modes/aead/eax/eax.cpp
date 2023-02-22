@@ -107,11 +107,12 @@ void EAX_Mode::key_schedule(const uint8_t key[], size_t length)
 /*
 * Set the EAX associated data
 */
-void EAX_Mode::set_associated_data(const uint8_t ad[], size_t length)
+void EAX_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad)
    {
+   BOTAN_ARG_CHECK(idx == 0, "EAX: cannot handle non-zero index in set_associated_data_n");
    if(m_nonce_mac.empty() == false)
       throw Invalid_State("Cannot set AD for EAX while processing a message");
-   m_ad_mac = eax_prf(1, block_size(), *m_cmac, ad, length);
+   m_ad_mac = eax_prf(1, block_size(), *m_cmac, ad.data(), ad.size());
    }
 
 void EAX_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
