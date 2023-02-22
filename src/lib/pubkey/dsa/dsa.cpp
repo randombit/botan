@@ -184,8 +184,6 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
 
       size_t max_input_bits() const override { return m_group.q_bits(); }
 
-      bool with_recovery() const override { return false; }
-
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;
    private:

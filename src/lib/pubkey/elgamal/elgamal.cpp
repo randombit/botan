@@ -81,7 +81,7 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME
 
       size_t ciphertext_length(size_t /*ptext_len*/) const override { return 2*m_group.p_bytes(); }
 
-      size_t max_raw_input_bits() const override { return m_group.p_bits() - 1; }
+      size_t max_ptext_input_bits() const override { return m_group.p_bits() - 1; }
 
       ElGamal_Encryption_Operation(const ElGamal_PublicKey& key, const std::string& eme);
 

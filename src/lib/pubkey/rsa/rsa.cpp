@@ -506,25 +506,35 @@ class RSA_Private_Operation
       const size_t m_max_d2_bits;
    };
 
-class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,
+class RSA_Signature_Operation final : public PK_Ops::Signature,
                                       private RSA_Private_Operation
    {
    public:
-      size_t max_input_bits() const override { return public_modulus_bits() - 1; }
+      void update(const uint8_t msg[], size_t msg_len) override
+         {
+         m_emsa->update(msg, msg_len);
+         }
+
+      secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override
+         {
+         const size_t max_input_bits = public_modulus_bits() - 1;
+         const secure_vector<uint8_t> msg = m_emsa->raw_data();
+         const auto padded = m_emsa->encoding_of(msg, max_input_bits, rng);
+         return raw_op(padded.data(), padded.size());
+         }
 
       size_t signature_length() const override { return public_modulus_bytes(); }
 
-      RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string& emsa, RandomNumberGenerator& rng) :
-         PK_Ops::Signature_with_EMSA(emsa, true),
-         RSA_Private_Operation(rsa, rng)
+      RSA_Signature_Operation(const RSA_PrivateKey& rsa,
+                              const std::string& padding,
+                              RandomNumberGenerator& rng) :
+         RSA_Private_Operation(rsa, rng),
+         m_emsa(EMSA::create_or_throw(padding))
          {
          }
 
-      secure_vector<uint8_t> raw_sign(const uint8_t input[], size_t input_len,
-                                      RandomNumberGenerator& /*rng*/) override
-         {
-         return raw_op(input, input_len);
-         }
+   private:
+      std::unique_ptr<EMSA> m_emsa;
    };
 
 class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
@@ -575,17 +585,9 @@ class RSA_Public_Operation
          m_public(rsa.public_data())
          {}
 
-         size_t get_max_input_bits() const
+      size_t public_modulus_bits() const
          {
-         const size_t n_bits = m_public->public_modulus_bits();
-
-         /*
-         Make Coverity happy that n_bits - 1 won't underflow
-
-         5 bit minimum: smallest possible RSA key is 3*5
-         */
-         BOTAN_ASSERT_NOMSG(n_bits >= 5);
-         return n_bits - 1;
+         return m_public->public_modulus_bits();
          }
 
    protected:
@@ -617,7 +619,7 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
 
       size_t ciphertext_length(size_t /*ptext_len*/) const override { return public_modulus_bytes(); }
 
-      size_t max_raw_input_bits() const override { return get_max_input_bits(); }
+      size_t max_ptext_input_bits() const override { return public_modulus_bits() - 1; }
 
       secure_vector<uint8_t> raw_encrypt(const uint8_t input[], size_t input_len,
                                          RandomNumberGenerator& /*rng*/) override
@@ -627,26 +629,36 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
          }
    };
 
-class RSA_Verify_Operation final : public PK_Ops::Verification_with_EMSA,
+class RSA_Verify_Operation final : public PK_Ops::Verification,
                                    private RSA_Public_Operation
    {
    public:
+      void update(const uint8_t msg[], size_t msg_len) override
+         {
+         m_emsa->update(msg, msg_len);
+         }
 
-      size_t max_input_bits() const override { return get_max_input_bits(); }
+      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override
+         {
+         const auto msg = m_emsa->raw_data();
+         const auto message_repr = recover_message_repr(sig, sig_len);
+         return m_emsa->verify(message_repr, msg, public_modulus_bits() - 1);
+         }
 
-      RSA_Verify_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa, true),
-         RSA_Public_Operation(rsa)
+      RSA_Verify_Operation(const RSA_PublicKey& rsa, const std::string& padding) :
+         RSA_Public_Operation(rsa),
+         m_emsa(EMSA::create_or_throw(padding))
          {
          }
 
-      bool with_recovery() const override { return true; }
-
-      secure_vector<uint8_t> verify_mr(const uint8_t input[], size_t input_len) override
+   private:
+      secure_vector<uint8_t> recover_message_repr(const uint8_t input[], size_t input_len)
          {
          BigInt input_bn(input, input_len);
          return BigInt::encode_locked(public_op(input_bn));
          }
+
+      std::unique_ptr<EMSA> m_emsa;
    };
 
 class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF,

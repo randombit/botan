@@ -18,13 +18,13 @@ PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme) :
 
 size_t PK_Ops::Encryption_with_EME::max_input_bits() const
    {
-   return 8 * m_eme->maximum_input_size(max_raw_input_bits());
+   return 8 * m_eme->maximum_input_size(max_ptext_input_bits());
    }
 
 secure_vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(const uint8_t msg[], size_t msg_len,
                                                          RandomNumberGenerator& rng)
    {
-   const size_t max_raw = max_raw_input_bits();
+   const size_t max_raw = max_ptext_input_bits();
    const std::vector<uint8_t> encoded = unlock(m_eme->encode(msg, msg_len, max_raw, rng));
    return raw_encrypt(encoded.data(), encoded.size(), rng);
    }
@@ -59,12 +59,12 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
    return z;
    }
 
-PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa, bool with_message_recovery) :
+PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa) :
    Signature(),
    m_emsa(EMSA::create_or_throw(emsa)),
    m_hash(hash_for_emsa(emsa))
    {
-   if(!with_message_recovery && m_emsa->requires_message_recovery())
+   if(m_emsa->requires_message_recovery())
       {
       throw Invalid_Argument("Signature padding method " + emsa +
                              " requires message recovery, which is not supported by this scheme");
@@ -83,13 +83,13 @@ secure_vector<uint8_t> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& 
    return raw_sign(padded.data(), padded.size(), rng);
    }
 
-PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa, bool with_message_recovery) :
+PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& padding) :
    Verification(),
-   m_emsa(EMSA::create_or_throw(emsa))
+   m_emsa(EMSA::create_or_throw(padding))
    {
-   if(!with_message_recovery && m_emsa->requires_message_recovery())
+   if(m_emsa->requires_message_recovery())
       {
-      throw Invalid_Argument("Signature padding method " + emsa +
+      throw Invalid_Argument("Signature padding method " + padding +
                              " requires message recovery, which is not supported by this scheme");
       }
    }
@@ -103,17 +103,9 @@ bool PK_Ops::Verification_with_EMSA::is_valid_signature(const uint8_t sig[], siz
    {
    const secure_vector<uint8_t> msg = m_emsa->raw_data();
 
-   if(with_recovery())
-      {
-      secure_vector<uint8_t> output_of_key = verify_mr(sig, sig_len);
-      return m_emsa->verify(output_of_key, msg, max_input_bits());
-      }
-   else
-      {
-      Null_RNG rng;
-      secure_vector<uint8_t> encoded = m_emsa->encoding_of(msg, max_input_bits(), rng);
-      return verify(encoded.data(), encoded.size(), sig, sig_len);
-      }
+   Null_RNG rng;
+   secure_vector<uint8_t> encoded = m_emsa->encoding_of(msg, max_input_bits(), rng);
+   return verify(encoded.data(), encoded.size(), sig, sig_len);
    }
 
 void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
