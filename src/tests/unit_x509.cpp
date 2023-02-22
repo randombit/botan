@@ -19,7 +19,6 @@
    #include <botan/ber_dec.h>
    #include <botan/der_enc.h>
    #include <botan/oids.h>
-   #include <botan/internal/padding.h>
 #endif
 
 namespace Botan_Tests {
@@ -706,8 +705,8 @@ Test::Result test_verify_gost2012_cert()
    catch (const Botan::Invalid_Argument& e)
       {
       test_result.test_eq("Build CA certitiface with invalid encoding scheme EMSA1 for key type " +
-         sk->algo_name(), e.what(),
-         "Encoding scheme with canonical name EMSA1 not supported for signature algorithm RSA");
+                          sk->algo_name(), e.what(),
+                          "Signatures using RSA/EMSA1(SHA-512) are not supported");
       }
 #endif
 
@@ -1548,6 +1547,19 @@ Test::Result test_hashes(const Botan::Private_Key& key,
    return result;
    }
 
+std::vector<std::string> get_sig_paddings(const std::string& sig_algo)
+   {
+   if(sig_algo == "RSA")
+      return {"EMSA3", "EMSA4"};
+   else if(sig_algo == "DSA" || sig_algo == "ECDSA" || sig_algo == "ECGDSA" ||
+           sig_algo == "ECKCDSA" || sig_algo == "GOST-34.10")
+      return {"EMSA1"};
+   else if(sig_algo == "Ed25519" || sig_algo == "Dilithium")
+      return {"Pure"};
+   else
+      return {};
+   }
+
 class X509_Cert_Unit_Tests final : public Test
    {
    public:
@@ -1555,7 +1567,7 @@ class X509_Cert_Unit_Tests final : public Test
          {
          std::vector<Test::Result> results;
 
-         const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10", "Ed25519", "Dilithium" };
+         const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10", "Ed25519" };
 
          for(const std::string& algo : sig_algos)
             {
@@ -1588,12 +1600,20 @@ class X509_Cert_Unit_Tests final : public Test
                }
             results.push_back(usage_result);
 
-            for(const auto& padding_scheme : Botan::get_sig_paddings(algo))
+            for(const auto& padding_scheme : get_sig_paddings(algo))
                {
                Test::Result cert_result("X509 Unit");
+
+               std::string hash = "SHA-256";
+
+               if(algo == "Ed25519")
+                  hash = "SHA-512";
+               if(algo == "Dilithium")
+                  hash = "SHAKE-256(512)";
+
                try
                   {
-                  cert_result.merge(test_x509_cert(*key, algo, padding_scheme));
+                  cert_result.merge(test_x509_cert(*key, algo, padding_scheme, hash));
                   }
                catch(std::exception& e)
                   {
