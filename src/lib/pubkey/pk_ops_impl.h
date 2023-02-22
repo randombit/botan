@@ -61,12 +61,6 @@ class Verification_with_Hash : public Verification
    protected:
       explicit Verification_with_Hash(const std::string& hash);
 
-      /**
-      * Get the maximum message size in bits supported by this public key.
-      * @return maximum message in bits
-      */
-      virtual size_t max_input_bits() const = 0;
-
       /*
       * Perform a signature check operation
       * @param msg the message
@@ -97,12 +91,6 @@ class Signature_with_Hash : public Signature
 #endif
 
    private:
-      /**
-      * Get the maximum message size in bits supported by this public key.
-      * @return maximum message in bits
-      */
-      virtual size_t max_input_bits() const = 0;
-
       virtual secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                               RandomNumberGenerator& rng) = 0;
 

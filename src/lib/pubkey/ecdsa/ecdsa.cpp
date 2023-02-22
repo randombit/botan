@@ -152,8 +152,6 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
 
       size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
 
-      size_t max_input_bits() const override { return m_group.get_order_bits(); }
-
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                       RandomNumberGenerator& rng) override;
 
@@ -218,8 +216,6 @@ class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
          m_gy_mul(m_group.get_base_point(), ecdsa.public_point())
          {
          }
-
-      size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;

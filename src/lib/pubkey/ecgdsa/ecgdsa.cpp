@@ -53,8 +53,6 @@ class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
 
       size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
 
-      size_t max_input_bits() const override { return m_group.get_order_bits(); }
-
    private:
       const EC_Group m_group;
       const BigInt& m_x;
@@ -97,8 +95,6 @@ class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Has
          m_gy_mul(m_group.get_base_point(), ecgdsa.public_point())
          {
          }
-
-      size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;
