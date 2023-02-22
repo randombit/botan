@@ -9,6 +9,7 @@ brief -> "Implementations of public key padding schemes"
 
 <requires>
 asn1
+hash
 rng
 pubkey
 </requires>

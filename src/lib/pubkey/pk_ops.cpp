@@ -11,6 +11,10 @@
 #include <botan/hash.h>
 #include <botan/rng.h>
 
+#if defined(BOTAN_HAS_RAW_HASH_FN)
+  #include <botan/internal/raw_hash.h>
+#endif
+
 namespace Botan {
 
 PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme) :
@@ -63,57 +67,6 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
 
 namespace {
 
-class RawHashFunction : public HashFunction
-   {
-   public:
-      RawHashFunction(std::unique_ptr<HashFunction> hash) :
-         RawHashFunction(hash->name(), hash->output_length())
-         {}
-
-      RawHashFunction(const std::string& name, size_t output_length) :
-         m_name(name), m_output_length(output_length) {}
-
-      void add_data(const uint8_t input[], size_t length) override
-         {
-         m_bits += std::make_pair(input, length);
-         }
-
-      void final_result(uint8_t out[]) override
-         {
-         if(m_output_length > 0 && m_bits.size() != m_output_length)
-            {
-            m_bits.resize(0);
-            throw Invalid_Argument("EMSA_Raw was configured to use a " +
-                                   std::to_string(m_output_length) +
-                                   " byte hash but instead was used for a " +
-                                   std::to_string(m_bits.size()) + " hash");
-            }
-
-         copy_mem(out, m_bits.data(), m_bits.size());
-         m_bits.resize(0);
-         }
-
-      void clear() override { m_bits.resize(0); }
-
-      std::unique_ptr<HashFunction> copy_state() const override
-         { return std::make_unique<RawHashFunction>(*this); }
-
-      std::unique_ptr<HashFunction> new_object() const override
-         { return std::make_unique<RawHashFunction>(m_name, m_output_length); }
-
-      size_t output_length() const override
-         {
-         if(m_output_length > 0)
-            return m_output_length;
-         return m_bits.size();
-         }
-      std::string name() const override { return m_name; }
-   private:
-      const std::string m_name;
-      const size_t m_output_length;
-      std::vector<uint8_t> m_bits;
-   };
-
 std::unique_ptr<HashFunction> create_signature_hash(const std::string& padding)
    {
    if(auto hash = HashFunction::create(padding))
@@ -127,16 +80,21 @@ std::unique_ptr<HashFunction> create_signature_hash(const std::string& padding)
          return hash;
       }
 
+#if defined(BOTAN_HAS_RAW_HASH_FN)
    if(req.algo_name() == "Raw")
       {
       if(req.arg_count() == 0)
+         {
          return std::make_unique<RawHashFunction>("Raw", 0);
+         }
+
       if(req.arg_count() == 1)
          {
          if(auto hash = HashFunction::create(req.arg(0)))
             return std::make_unique<RawHashFunction>(std::move(hash));
          }
       }
+#endif
 
    throw Algorithm_Not_Found(padding);
    }
