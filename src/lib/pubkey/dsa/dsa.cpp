@@ -80,7 +80,7 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if(!strong)
       return true;
 
-   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-256)");
+   return KeyPair::signature_consistency_check(rng, *this, "SHA-256");
    }
 
 std::unique_ptr<Public_Key> DSA_PrivateKey::public_key() const
