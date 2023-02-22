@@ -458,6 +458,11 @@ class BOTAN_PUBLIC_API(2,0) AlgorithmIdentifier final : public ASN1_Object
          return parameters_are_empty() || parameters_are_null();
          }
 
+      bool empty() const
+         {
+         return m_oid.empty() && m_parameters.empty();
+         }
+
    private:
       OID m_oid;
       std::vector<uint8_t> m_parameters;
