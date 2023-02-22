@@ -60,39 +60,36 @@ class Server_Handshake_State final : public Handshake_State
 
 namespace {
 
-bool check_for_resume(const Session_Handle& handle_to_resume,
-                      Session& session_info,
-                      Session_Manager& session_manager,
-                      Callbacks& cb,
-                      const Policy& policy,
-                      const Client_Hello_12* client_hello)
+std::optional<Session> check_for_resume(const Session_Handle& handle_to_resume,
+                                        Session_Manager& session_manager,
+                                        Callbacks& cb,
+                                        const Policy& policy,
+                                        const Client_Hello_12* client_hello)
    {
    auto session = session_manager.retrieve(handle_to_resume, cb, policy);
    if(!session.has_value())
-      return false;
-
-   session_info = std::move(session.value());
+      return std::nullopt;
 
    // wrong version
-   if(client_hello->legacy_version() != session_info.version())
-      return false;
+   if(client_hello->legacy_version() != session->version())
+      return std::nullopt;
 
    // client didn't send original ciphersuite
    if(!value_exists(client_hello->ciphersuites(),
-                    session_info.ciphersuite_code()))
-      return false;
+                    session->ciphersuite_code()))
+      return std::nullopt;
 
    // client sent a different SNI hostname
    if(!client_hello->sni_hostname().empty() &&
-       client_hello->sni_hostname() != session_info.server_info().hostname())
-      return false;
+       client_hello->sni_hostname() != session->server_info().hostname())
+      return std::nullopt;
 
    // Checking extended_master_secret on resume (RFC 7627 section 5.3)
-   if(client_hello->supports_extended_master_secret() != session_info.supports_extended_master_secret())
+   if(client_hello->supports_extended_master_secret() != session->supports_extended_master_secret())
       {
-      if(!session_info.supports_extended_master_secret())
+      if(!session->supports_extended_master_secret())
          {
-         return false; // force new handshake with extended master secret
+         return std::nullopt; // force new handshake with extended master secret
          }
       else
          {
@@ -106,7 +103,7 @@ bool check_for_resume(const Session_Handle& handle_to_resume,
       }
 
    // Checking encrypt_then_mac on resume (RFC 7366 section 3.1)
-   if(!client_hello->supports_encrypt_then_mac() && session_info.supports_encrypt_then_mac())
+   if(!client_hello->supports_encrypt_then_mac() && session->supports_encrypt_then_mac())
       {
       /*
       Client previously negotiated session with Encrypt-then-MAC,
@@ -116,7 +113,7 @@ bool check_for_resume(const Session_Handle& handle_to_resume,
                              "Client resumed Encrypt-then-MAC session without sending extension");
       }
 
-   return true;
+   return session;
    }
 
 /*
@@ -474,16 +471,15 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
 
    const auto session_handle = pending_state.client_hello()->session_handle();
 
-   Session session_info;
-   const bool resuming =
-      pending_state.allow_session_resumption() &&
-      session_handle.has_value() &&
-      check_for_resume(session_handle.value(),
-                       session_info,
-                       session_manager(),
-                       callbacks(),
-                       policy(),
-                       pending_state.client_hello());
+   std::optional<Session> session_info;
+   if(pending_state.allow_session_resumption() && session_handle.has_value())
+      {
+      session_info = check_for_resume(session_handle.value(),
+                                      session_manager(),
+                                      callbacks(),
+                                      policy(),
+                                      pending_state.client_hello());
+      }
 
    m_next_protocol = "";
    if(pending_state.client_hello()->supports_alpn())
@@ -491,9 +487,9 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
       m_next_protocol = callbacks().tls_server_choose_app_protocol(pending_state.client_hello()->next_protocols());
       }
 
-   if(resuming)
+   if(session_info.has_value())
       {
-      this->session_resume(pending_state, {session_info, session_handle.value()});
+      this->session_resume(pending_state, {session_info.value(), session_handle.value()});
       }
    else // new session
       {

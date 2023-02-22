@@ -239,12 +239,6 @@ class BOTAN_PUBLIC_API(3,0) Session_Summary
 class BOTAN_PUBLIC_API(2,0) Session final : public Session_Summary
    {
    public:
-
-      /**
-      * Uninitialized session
-      */
-      Session();
-
       /**
       * New TLS 1.2 session (sets session start time)
       */

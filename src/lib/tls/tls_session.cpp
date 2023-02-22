@@ -100,23 +100,6 @@ Ciphersuite Session_Summary::ciphersuite() const
    }
 
 
-Session::Session() :
-   Session_Summary(
-      std::chrono::system_clock::time_point::min(),
-      Protocol_Version(),
-      0,
-      static_cast<Connection_Side>(0),
-      0,
-      false,
-      false,
-      {},
-      Server_Information()),
-   m_early_data_allowed(false),
-   m_max_early_data_bytes(0),
-   m_ticket_age_add(0),
-   m_lifetime_hint(0)
-   {}
-
 Session::Session(const secure_vector<uint8_t>& master_secret,
                  Protocol_Version version,
                  uint16_t ciphersuite,
