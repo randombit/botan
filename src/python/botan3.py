@@ -1859,13 +1859,9 @@ def zfec_encode(k, n, input_bytes):
     ])
 
     # actual C call
-    x = _DLL.botan_zfec_encode(
+    _DLL.botan_zfec_encode(
         c_size_t(k), c_size_t(n), input_bytes, c_size_t(input_size), c_outputs
     )
-    if x != 0:
-        raise RuntimeError(
-            "Unexpected error, code={}".format(x)
-        )
     return [output.raw for output in outputs]
 
 
@@ -1908,11 +1904,7 @@ def zfec_decode(k, n, indexes, inputs):
     ])
 
     # actual C call
-    x = _DLL.botan_zfec_decode(
+    _DLL.botan_zfec_decode(
         c_size_t(k), c_size_t(n), c_indexes, c_inputs, c_size_t(share_size), c_outputs
     )
-    if x != 0:
-        raise RuntimeError(
-            "Unexpected error, code={}".format(x)
-        )
     return [output.raw for output in outputs]
