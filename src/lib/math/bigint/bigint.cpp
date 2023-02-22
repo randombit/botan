@@ -107,16 +107,19 @@ BigInt::BigInt(const uint8_t input[], size_t length, Base base)
    }
 
 //static
-BigInt BigInt::from_bytes_with_max_bits(const uint8_t buf[], size_t length, size_t max_bits)
+BigInt BigInt::from_bytes_with_max_bits(const uint8_t input[], size_t length, size_t max_bits)
    {
-   if(8 * length > max_bits)
-      length = (max_bits + 7) / 8;
+   const size_t input_bits = 8 * length;
 
    BigInt bn;
-   bn.binary_decode(buf, length);
+   bn.binary_decode(input, length);
 
-   if(8 * length > max_bits)
-      bn >>= (8 - (max_bits % 8));
+   if(input_bits > max_bits)
+      {
+      const size_t bits_to_shift = input_bits - max_bits;
+
+      bn >>= bits_to_shift;
+      }
 
    return bn;
    }

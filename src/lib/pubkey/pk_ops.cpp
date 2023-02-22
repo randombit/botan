@@ -79,8 +79,7 @@ void PK_Ops::Signature_with_EMSA::update(const uint8_t msg[], size_t msg_len)
 secure_vector<uint8_t> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& rng)
    {
    const secure_vector<uint8_t> msg = m_emsa->raw_data();
-   const auto padded = m_emsa->encoding_of(msg, this->max_input_bits(), rng);
-   return raw_sign(padded.data(), padded.size(), rng);
+   return raw_sign(msg.data(), msg.size(), rng);
    }
 
 PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& padding) :
@@ -102,10 +101,7 @@ void PK_Ops::Verification_with_EMSA::update(const uint8_t msg[], size_t msg_len)
 bool PK_Ops::Verification_with_EMSA::is_valid_signature(const uint8_t sig[], size_t sig_len)
    {
    const secure_vector<uint8_t> msg = m_emsa->raw_data();
-
-   Null_RNG rng;
-   secure_vector<uint8_t> encoded = m_emsa->encoding_of(msg, max_input_bits(), rng);
-   return verify(encoded.data(), encoded.size(), sig, sig_len);
+   return verify(msg.data(), msg.size(), sig, sig_len);
    }
 
 void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,

@@ -127,7 +127,7 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
    BigInt m = BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.q_bits());
 
-   while(m >= q)
+   if(m >= q)
       m -= q;
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
@@ -197,12 +197,14 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
    const BigInt& q = m_group.get_q();
    const size_t q_bytes = q.bytes();
 
-   if(sig_len != 2*q_bytes || msg_len > q_bytes)
+   if(sig_len != 2*q_bytes)
       return false;
 
    BigInt r(sig, q_bytes);
    BigInt s(sig + q_bytes, q_bytes);
    BigInt i = BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.q_bits());
+   if(i >= q)
+      i -= q;
 
    if(r <= 0 || r >= q || s <= 0 || s >= q)
       return false;
