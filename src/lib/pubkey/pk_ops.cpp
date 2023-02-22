@@ -25,7 +25,7 @@ secure_vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(const uint8_t msg[],
                                                          RandomNumberGenerator& rng)
    {
    const size_t max_raw = max_ptext_input_bits();
-   const std::vector<uint8_t> encoded = unlock(m_eme->encode(msg, msg_len, max_raw, rng));
+   const auto encoded = m_eme->encode(msg, msg_len, max_raw, rng);
    return raw_encrypt(encoded.data(), encoded.size(), rng);
    }
 
