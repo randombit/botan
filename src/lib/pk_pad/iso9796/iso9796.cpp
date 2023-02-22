@@ -216,11 +216,6 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
 
 }
 
-std::unique_ptr<EMSA> ISO_9796_DS2::new_object()
-   {
-   return std::make_unique<ISO_9796_DS2>(m_hash->new_object(), m_implicit, m_SALT_SIZE);
-   }
-
 /*
  *  ISO-9796-2 signature scheme 2
  *  DS 2 is probabilistic
@@ -267,11 +262,6 @@ std::string ISO_9796_DS2::name() const
    {
    return "ISO_9796_DS2(" + m_hash->name() + ","
          + (m_implicit ? "imp" : "exp") + "," + std::to_string(m_SALT_SIZE) + ")";
-   }
-
-std::unique_ptr<EMSA> ISO_9796_DS3::new_object()
-   {
-   return std::make_unique<ISO_9796_DS3>(m_hash->new_object(), m_implicit);
    }
 
 /*

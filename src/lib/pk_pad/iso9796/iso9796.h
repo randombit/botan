@@ -40,11 +40,7 @@ class ISO_9796_DS2 final : public EMSA
          m_SALT_SIZE(salt_size)
          {}
 
-      std::unique_ptr<EMSA> new_object() override;
-
       std::string name() const override;
-
-      bool requires_message_recovery() const override { return true; }
    private:
       void update(const uint8_t input[], size_t length) override;
 
@@ -79,11 +75,7 @@ class ISO_9796_DS3 final : public EMSA
          m_implicit(implicit)
          {}
 
-      std::unique_ptr<EMSA> new_object() override;
-
       std::string name() const override;
-
-      bool requires_message_recovery() const override { return true; }
 
    private:
       void update(const uint8_t input[], size_t length) override;

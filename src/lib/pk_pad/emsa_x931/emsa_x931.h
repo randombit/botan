@@ -26,12 +26,7 @@ class EMSA_X931 final : public EMSA
       */
       explicit EMSA_X931(std::unique_ptr<HashFunction> hash);
 
-      std::unique_ptr<EMSA> new_object() override { return std::make_unique<EMSA_X931>(m_hash->new_object()); }
-
       std::string name() const override;
-
-      bool requires_message_recovery() const override { return true; }
-
    private:
       void update(const uint8_t[], size_t) override;
       secure_vector<uint8_t> raw_data() override;

@@ -19,14 +19,10 @@ namespace Botan {
 class EMSA_Raw final : public EMSA
    {
    public:
-      std::unique_ptr<EMSA> new_object() override { return std::make_unique<EMSA_Raw>(); }
-
       explicit EMSA_Raw(size_t expected_hash_size = 0) :
          m_expected_size(expected_hash_size) {}
 
       std::string name() const override;
-
-      bool requires_message_recovery() const override { return false; }
    private:
       void update(const uint8_t[], size_t) override;
       secure_vector<uint8_t> raw_data() override;
