@@ -19,7 +19,7 @@ introduced in Botan 3.0.0
 """
 
 from ctypes import CDLL, POINTER, byref, create_string_buffer, \
-    c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char_p
+    c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char_p, addressof
 
 from sys import platform
 from time import strptime, mktime, time as system_time
@@ -442,6 +442,12 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_srp6_client_agree,
             [c_char_p, c_char_p, c_char_p, c_char_p, c_char_p, c_size_t, c_char_p, c_size_t, c_void_p,
              c_char_p, POINTER(c_size_t), c_char_p, POINTER(c_size_t)])
+
+    # ZFEC
+    ffi_api(dll.botan_zfec_encode,
+            [c_size_t, c_size_t, c_char_p, c_size_t, POINTER(c_char_p)])
+    ffi_api(dll.botan_zfec_decode,
+            [c_size_t, c_size_t, POINTER(c_size_t), POINTER(c_char_p), c_size_t, POINTER(c_char_p)])
 
     return dll
 
@@ -1825,3 +1831,80 @@ def srp6_client_agree(username, password, group, hsh, salt, b, rng):
                                                                     rng.handle_(),
                                                                     a, al,
                                                                     k, kl))
+
+def zfec_encode(k, n, input_bytes):
+    """
+    ZFEC-encode an input message according to the given parameters
+
+    :param int k: the number of shares required to recover the original
+    :param int n: the total number of shares
+    :param bytes input_bytes: the input message, in bytes
+
+    :returns: n arrays of bytes, each one containing a single share
+    """
+    input_size = len(input_bytes)
+    # note: the C++ code checks that input_bytes is a multiple of k
+    outsize = input_size // k
+    p_p_nbytes = c_char_p * n
+
+    # allocate memory for the outputs (create_string_buffer makes bytes)
+    outputs = [
+        create_string_buffer(outsize)
+        for a in range(n)
+    ]
+
+    c_outputs = p_p_nbytes(*[
+        addressof(output)
+        for output in outputs
+    ])
+
+    # actual C call
+    _DLL.botan_zfec_encode(
+        c_size_t(k), c_size_t(n), input_bytes, c_size_t(input_size), c_outputs
+    )
+    return [output.raw for output in outputs]
+
+
+def zfec_decode(k, n, indexes, inputs):
+    """
+    ZFEC decode
+
+    :param int k: the number of shares required to recover the original
+    :param int n: the total number of shares
+    :param list[int] indexes: which of the shares are we giving the decoder
+    :param list[bytes] inputs: the input shares (e.g. from a previous
+        call to zfec_encode) which all must be the same length
+
+    :returns: a list of bytes containing the original shares decoded
+        from the provided shares (in `inputs`)
+    """
+
+    p_size_t = c_size_t * len(indexes)
+    c_indexes = p_size_t(*[c_size_t(index) for index in indexes])
+    p_p_nbytes = c_char_p * n
+    c_inputs = p_p_nbytes(*[c_char_p(inp) for inp in inputs])
+    # all inputs must be the same length
+    share_size = len(inputs[0])
+    for i in inputs:
+        if len(i) != share_size:
+            raise ValueError(
+                "Share size mismatch: {} != {}".format(len(i), share_size)
+            )
+
+    # allocate memory for our outputs (create_string_buffer creates
+    # bytes)
+    outputs = [
+        create_string_buffer(share_size)
+        for _ in range(k)
+    ]
+    p_p_kbytes = c_char_p * k
+    c_outputs = p_p_kbytes(*[
+        addressof(output)
+        for output in outputs
+    ])
+
+    # actual C call
+    _DLL.botan_zfec_decode(
+        c_size_t(k), c_size_t(n), c_indexes, c_inputs, c_size_t(share_size), c_outputs
+    )
+    return [output.raw for output in outputs]

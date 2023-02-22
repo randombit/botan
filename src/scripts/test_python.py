@@ -12,6 +12,7 @@ import os
 import platform
 import argparse
 import sys
+from itertools import permutations
 
 # Starting with Python 3.8 DLL search locations are more restricted on Windows.
 # Hence, we need to explicitly add the current working directory before trying
@@ -717,6 +718,67 @@ ofvkP1EDmpx50fHLawIDAQAB
         (a, key_c) = botan.srp6_client_agree(identity, password, group, hash_fn, salt, b, rng)
         key_s = server.step2(a)
         self.assertEqual(key_c, key_s)
+
+
+class BotanPythonZfecTests(unittest.TestCase):
+    """
+    Tests relating to the ZFEC bindings
+    """
+
+    def test_encode(self):
+        """
+        Simple encoder test.
+
+        Could benefit from more variations
+        """
+        n = 3
+        k = 2
+        input_bytes = b"abcdefgh" + b"ijklmnop"
+        output_shares = botan.zfec_encode(k, n, input_bytes)
+        self.assertEqual(
+            output_shares,
+            [b'abcdefgh', b'ijklmnop', b'qrstuvwX']
+        )
+
+    def test_encode_decode(self):
+        """
+        Simple round-trip tests.
+        """
+        def byte_iter():
+            b = 0
+            while True:
+                yield bytes([b])
+                b = (b + 1) % 256
+
+        random_bytes = byte_iter()
+
+        for k in range(1, 5):
+            for n in range(k, k + 5):
+                for x in range(128, 256, 5):
+                    input_bytes = b"".join([
+                        next(random_bytes)
+                        for _ in range(x * k)
+                    ])
+                    with self.subTest("encode_decode variant", n=n, k=k, size=x):
+                        self._encode_decode_test(n, k, input_bytes)
+
+    def _encode_decode_test(self, n, k, input_bytes):
+        """
+        one instance of a round-trip test
+        """
+        output_shares = botan.zfec_encode(k, n, input_bytes)
+        # want to check that every permutation of the inputs decodes to the
+        # correct input bytes
+
+        for inputs in permutations(enumerate(output_shares), k):
+            # "unzip" the enumerated permutation
+            indexes, shares = zip(*inputs)
+            decoded = botan.zfec_decode(k, n, indexes, shares)
+            self.assertEqual(
+                b"".join(decoded),
+                input_bytes
+            )
+
 
 def main():
     parser = argparse.ArgumentParser()

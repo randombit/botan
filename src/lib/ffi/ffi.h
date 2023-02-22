@@ -15,7 +15,7 @@ extern "C" {
 
 /*
 This header exports some of botan's functionality via a C89 interface. This API
-is uesd by the Python, OCaml, Rust and Ruby bindings via those languages
+is uesd by the Python, OCaml, Rust, Ruby, and Haskell bindings via those languages
 respective ctypes/FFI libraries.
 
 The API is intended to be as easy as possible to call from other
@@ -1637,14 +1637,14 @@ BOTAN_PUBLIC_API(2,13) int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const 
 BOTAN_PUBLIC_API(2,13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
 
 /**
- * Given a CRL and a certificate, 
+ * Given a CRL and a certificate,
  * check if the certificate is revoked on that particular CRL
  */
 BOTAN_PUBLIC_API(2,13) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert);
 
 /**
  * Different flavor of `botan_x509_cert_verify`, supports revocation lists.
- * CRLs are passed as an array, same as intermediates and trusted CAs 
+ * CRLs are passed as an array, same as intermediates and trusted CAs
  */
 BOTAN_PUBLIC_API(2,13) int botan_x509_cert_verify_with_crl(
    int* validation_result,
@@ -1883,6 +1883,48 @@ int botan_srp6_client_agree(const char *username, const char *password,
                             const uint8_t B[], size_t B_len, botan_rng_t rng_obj,
                             uint8_t A[], size_t *A_len, uint8_t K[],
                             size_t *K_len);
+
+/**
+ * ZFEC
+ */
+
+/**
+ * Encode some bytes with certain ZFEC parameters.
+ *
+ * @param K the number of shares needed for recovery
+ * @param N the number of shares generated
+ * @param input the data to FEC
+ * @param size the length in bytes of input
+ *
+ * @param outputs An out parameter pointing to a fully allocated array of size
+ *                [N][size / K].  For all n in range, an encoded block will be
+ *                written to the memory starting at outputs[n][0].
+ *
+ * @return 0 on success, negative on failure
+ */
+BOTAN_PUBLIC_API(3, 0)
+int botan_zfec_encode(size_t K, size_t N, const uint8_t *input, size_t size, uint8_t **outputs);
+
+/**
+ * Decode some previously encoded shares using certain ZFEC parameters.
+ *
+ * @param K the number of shares needed for recovery
+ * @param N the total number of shares
+ *
+ * @param indexes The index into the encoder's outputs for the corresponding
+ *                element of the inputs array.
+ *
+ * @param inputs K previously encoded shares to decode
+ * @param shareSize the length in bytes of each input
+ *
+ * @param outputs An out parameter pointing to a fully allocated array of size
+ *                [K][shareSize].  For all k in range, a decoded block will
+ *                written to the memory starting at outputs[k][0].
+ *
+ * @return 0 on success, negative on failure
+ */
+BOTAN_PUBLIC_API(3, 0)
+int botan_zfec_decode(size_t K, size_t N, const size_t *indexes, uint8_t *const*const inputs, size_t shareSize, uint8_t **outputs);
 
 #ifdef __cplusplus
 }
