@@ -109,6 +109,7 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       * @param ad the associated data
       */
       template<typename Alloc>
+      BOTAN_DEPRECATED("Simply use set_associated_data")
       void set_associated_data_vec(const std::vector<uint8_t, Alloc>& ad)
          {
          set_associated_data(ad);

@@ -242,7 +242,7 @@ uint64_t Cipher_State::encrypt_record_fragment(const std::vector<uint8_t>& heade
    BOTAN_ASSERT_NONNULL(m_encrypt);
 
    m_encrypt->set_key(m_write_key);
-   m_encrypt->set_associated_data_vec(header);
+   m_encrypt->set_associated_data(header);
    m_encrypt->start(current_nonce(m_write_seq_no, m_write_iv));
    m_encrypt->finish(fragment);
 
@@ -257,7 +257,7 @@ uint64_t Cipher_State::decrypt_record_fragment(const std::vector<uint8_t>& heade
          "fragment too short to decrypt");
 
    m_decrypt->set_key(m_read_key);
-   m_decrypt->set_associated_data_vec(header);
+   m_decrypt->set_associated_data(header);
    m_decrypt->start(current_nonce(m_read_seq_no, m_read_iv));
 
    m_decrypt->finish(encrypted_fragment);
