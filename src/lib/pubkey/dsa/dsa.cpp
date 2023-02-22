@@ -94,13 +94,13 @@ namespace {
 /**
 * Object that can create a DSA signature
 */
-class DSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
+class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
    {
    public:
       DSA_Signature_Operation(const DSA_PrivateKey& dsa,
                               const std::string& emsa,
                               RandomNumberGenerator& rng) :
-         PK_Ops::Signature_with_EMSA(emsa),
+         PK_Ops::Signature_with_Hash(emsa),
          m_group(dsa.get_group()),
          m_x(dsa.get_x())
          {
@@ -171,12 +171,12 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 /**
 * Object that can verify a DSA signature
 */
-class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
+class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
    {
    public:
       DSA_Verification_Operation(const DSA_PublicKey& dsa,
                                  const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa),
+         PK_Ops::Verification_with_Hash(emsa),
          m_group(dsa.get_group()),
          m_y(dsa.get_y())
          {

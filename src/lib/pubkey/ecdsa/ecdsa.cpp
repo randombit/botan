@@ -132,14 +132,14 @@ namespace {
 /**
 * ECDSA signature operation
 */
-class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
+class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
    {
    public:
 
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
                                 const std::string& emsa,
                                 RandomNumberGenerator& rng) :
-         PK_Ops::Signature_with_EMSA(emsa),
+         PK_Ops::Signature_with_Hash(emsa),
          m_group(ecdsa.domain()),
          m_x(ecdsa.private_value())
          {
@@ -209,12 +209,12 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 /**
 * ECDSA verification operation
 */
-class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
+class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
    {
    public:
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa,
                                    const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa),
+         PK_Ops::Verification_with_Hash(emsa),
          m_group(ecdsa.domain()),
          m_gy_mul(m_group.get_base_point(), ecdsa.public_point())
          {

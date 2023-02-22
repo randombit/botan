@@ -132,12 +132,12 @@ BigInt decode_le(const uint8_t msg[], size_t msg_len)
 /**
 * GOST-34.10 signature operation
 */
-class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_EMSA
+class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash
    {
    public:
       GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410,
                                     const std::string& emsa) :
-         PK_Ops::Signature_with_EMSA(emsa),
+         PK_Ops::Signature_with_Hash(emsa),
          m_group(gost_3410.domain()),
          m_x(gost_3410.private_value())
          {}
@@ -183,13 +183,13 @@ GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 /**
 * GOST-34.10 verification operation
 */
-class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_EMSA
+class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_Hash
    {
    public:
 
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost,
                                        const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa),
+         PK_Ops::Verification_with_Hash(emsa),
          m_group(gost.domain()),
          m_gy_mul(m_group.get_base_point(), gost.public_point())
          {}

@@ -50,16 +50,16 @@ class Decryption_with_EME : public Decryption
       std::unique_ptr<EME> m_eme;
    };
 
-class Verification_with_EMSA : public Verification
+class Verification_with_Hash : public Verification
    {
    public:
-      ~Verification_with_EMSA() = default;
+      ~Verification_with_Hash() = default;
 
       void update(const uint8_t msg[], size_t msg_len) override;
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
 
    protected:
-      explicit Verification_with_EMSA(const std::string& padding);
+      explicit Verification_with_Hash(const std::string& padding);
 
       /**
       * Get the maximum message size in bits supported by this public key.
@@ -81,16 +81,16 @@ class Verification_with_EMSA : public Verification
       std::unique_ptr<EMSA> m_emsa;
    };
 
-class Signature_with_EMSA : public Signature
+class Signature_with_Hash : public Signature
    {
    public:
       void update(const uint8_t msg[], size_t msg_len) override;
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
    protected:
-      explicit Signature_with_EMSA(const std::string& emsa);
+      explicit Signature_with_Hash(const std::string& emsa);
 
-      ~Signature_with_EMSA() = default;
+      ~Signature_with_Hash() = default;
 
       std::string hash_for_signature() { return m_hash; }
 

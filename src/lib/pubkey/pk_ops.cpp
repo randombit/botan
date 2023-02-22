@@ -59,7 +59,7 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
    return z;
    }
 
-PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa) :
+PK_Ops::Signature_with_Hash::Signature_with_Hash(const std::string& emsa) :
    Signature(),
    m_emsa(EMSA::create_or_throw(emsa)),
    m_hash(hash_for_emsa(emsa))
@@ -71,18 +71,18 @@ PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa) :
       }
    }
 
-void PK_Ops::Signature_with_EMSA::update(const uint8_t msg[], size_t msg_len)
+void PK_Ops::Signature_with_Hash::update(const uint8_t msg[], size_t msg_len)
    {
    m_emsa->update(msg, msg_len);
    }
 
-secure_vector<uint8_t> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& rng)
+secure_vector<uint8_t> PK_Ops::Signature_with_Hash::sign(RandomNumberGenerator& rng)
    {
    const secure_vector<uint8_t> msg = m_emsa->raw_data();
    return raw_sign(msg.data(), msg.size(), rng);
    }
 
-PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& padding) :
+PK_Ops::Verification_with_Hash::Verification_with_Hash(const std::string& padding) :
    Verification(),
    m_emsa(EMSA::create_or_throw(padding))
    {
@@ -93,12 +93,12 @@ PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& paddin
       }
    }
 
-void PK_Ops::Verification_with_EMSA::update(const uint8_t msg[], size_t msg_len)
+void PK_Ops::Verification_with_Hash::update(const uint8_t msg[], size_t msg_len)
    {
    m_emsa->update(msg, msg_len);
    }
 
-bool PK_Ops::Verification_with_EMSA::is_valid_signature(const uint8_t sig[], size_t sig_len)
+bool PK_Ops::Verification_with_Hash::is_valid_signature(const uint8_t sig[], size_t sig_len)
    {
    const secure_vector<uint8_t> msg = m_emsa->raw_data();
    return verify(msg.data(), msg.size(), sig, sig_len);
