@@ -61,25 +61,11 @@ class Verification_with_EMSA : public Verification
    protected:
       explicit Verification_with_EMSA(const std::string& emsa, bool has_message_recovery = false);
 
-      std::string hash_for_signature() { return m_hash; }
-
       /**
       * Get the maximum message size in bits supported by this public key.
       * @return maximum message in bits
       */
       virtual size_t max_input_bits() const = 0;
-
-      /**
-      * @return boolean specifying if this signature scheme uses
-      * a message prefix returned by message_prefix()
-      */
-      virtual bool has_prefix() { return false; }
-
-      /**
-      * @return the message prefix if this signature scheme uses
-      * a message prefix, signaled via has_prefix()
-      */
-      virtual secure_vector<uint8_t> message_prefix() const { throw Invalid_State("No prefix"); }
 
       /**
       * @return boolean specifying if this key type supports message
@@ -113,12 +99,8 @@ class Verification_with_EMSA : public Verification
          throw Invalid_State("Message recovery not supported");
          }
 
-      std::unique_ptr<EMSA> clone_emsa() const { return m_emsa->new_object(); }
-
    private:
       std::unique_ptr<EMSA> m_emsa;
-      const std::string m_hash;
-      bool m_prefix_used;
    };
 
 class Signature_with_EMSA : public Signature
@@ -134,22 +116,7 @@ class Signature_with_EMSA : public Signature
 
       std::string hash_for_signature() { return m_hash; }
 
-      /**
-      * @return boolean specifying if this signature scheme uses
-      * a message prefix returned by message_prefix()
-      */
-      virtual bool has_prefix() { return false; }
-
-      /**
-      * @return the message prefix if this signature scheme uses
-      * a message prefix, signaled via has_prefix()
-      */
-      virtual secure_vector<uint8_t> message_prefix() const { throw Invalid_State("No prefix"); }
-
-      std::unique_ptr<EMSA> clone_emsa() const { return m_emsa->new_object(); }
-
    private:
-
       /**
       * Get the maximum message size in bits supported by this public key.
       * @return maximum message in bits
@@ -161,7 +128,6 @@ class Signature_with_EMSA : public Signature
 
       std::unique_ptr<EMSA> m_emsa;
       const std::string m_hash;
-      bool m_prefix_used;
    };
 
 class Key_Agreement_with_KDF : public Key_Agreement

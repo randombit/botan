@@ -62,8 +62,7 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
 PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa, bool with_message_recovery) :
    Signature(),
    m_emsa(EMSA::create_or_throw(emsa)),
-   m_hash(hash_for_emsa(emsa)),
-   m_prefix_used(false)
+   m_hash(hash_for_emsa(emsa))
    {
    if(!with_message_recovery && m_emsa->requires_message_recovery())
       {
@@ -74,18 +73,11 @@ PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa, bool w
 
 void PK_Ops::Signature_with_EMSA::update(const uint8_t msg[], size_t msg_len)
    {
-   if(has_prefix() && !m_prefix_used)
-      {
-      m_prefix_used = true;
-      secure_vector<uint8_t> prefix = message_prefix();
-      m_emsa->update(prefix.data(), prefix.size());
-      }
    m_emsa->update(msg, msg_len);
    }
 
 secure_vector<uint8_t> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& rng)
    {
-   m_prefix_used = false;
    const secure_vector<uint8_t> msg = m_emsa->raw_data();
    const auto padded = m_emsa->encoding_of(msg, this->max_input_bits(), rng);
    return raw_sign(padded.data(), padded.size(), rng);
@@ -93,9 +85,7 @@ secure_vector<uint8_t> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& 
 
 PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa, bool with_message_recovery) :
    Verification(),
-   m_emsa(EMSA::create_or_throw(emsa)),
-   m_hash(hash_for_emsa(emsa)),
-   m_prefix_used(false)
+   m_emsa(EMSA::create_or_throw(emsa))
    {
    if(!with_message_recovery && m_emsa->requires_message_recovery())
       {
@@ -106,18 +96,11 @@ PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa, 
 
 void PK_Ops::Verification_with_EMSA::update(const uint8_t msg[], size_t msg_len)
    {
-   if(has_prefix() && !m_prefix_used)
-      {
-      m_prefix_used = true;
-      secure_vector<uint8_t> prefix = message_prefix();
-      m_emsa->update(prefix.data(), prefix.size());
-      }
    m_emsa->update(msg, msg_len);
    }
 
 bool PK_Ops::Verification_with_EMSA::is_valid_signature(const uint8_t sig[], size_t sig_len)
    {
-   m_prefix_used = false;
    const secure_vector<uint8_t> msg = m_emsa->raw_data();
 
    if(with_recovery())

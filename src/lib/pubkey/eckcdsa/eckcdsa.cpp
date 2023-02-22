@@ -43,18 +43,25 @@ namespace {
 /**
 * ECKCDSA signature operation
 */
-class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
+class ECKCDSA_Signature_Operation final : public PK_Ops::Signature
    {
    public:
 
       ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& eckcdsa,
                                   const std::string& emsa) :
-         PK_Ops::Signature_with_EMSA(emsa),
          m_group(eckcdsa.domain()),
          m_x(eckcdsa.private_value()),
-         m_prefix()
+         m_emsa(EMSA::create_or_throw(emsa)),
+         m_hash(hash_for_emsa(emsa)),
+         m_prefix_used(false)
          {
-         auto hash = HashFunction::create_or_throw(hash_for_signature());
+         if(m_emsa->requires_message_recovery())
+            {
+            throw Invalid_Argument("Signature padding method " + emsa +
+                                   " requires message recovery, which is not supported by ECKCDSA");
+            }
+
+         auto hash = HashFunction::create_or_throw(m_hash);
 
          /*
          ECKCDSA does support hash truncation but for whatever reason uses the
@@ -85,20 +92,39 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          m_prefix.resize(hash->hash_block_size());
          }
 
-      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                      RandomNumberGenerator& rng) override;
+      void update(const uint8_t msg[], size_t msg_len) override
+         {
+         if(!m_prefix_used)
+            {
+            m_emsa->update(m_prefix.data(), m_prefix.size());
+            m_prefix_used = true;
+            }
+         m_emsa->update(msg, msg_len);
+         }
+
+      secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override
+         {
+         m_prefix_used = false;
+         const secure_vector<uint8_t> msg = m_emsa->raw_data();
+         const auto padded = m_emsa->encoding_of(msg, this->max_input_bits(), rng);
+         return raw_sign(padded.data(), padded.size(), rng);
+         }
 
       size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
-      size_t max_input_bits() const override { return m_group.get_order_bits(); }
-
-      bool has_prefix() override { return true; }
-      secure_vector<uint8_t> message_prefix() const override { return m_prefix; }
 
    private:
+      size_t max_input_bits() const { return m_group.get_order_bits(); }
+
+      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
+                                      RandomNumberGenerator& rng);
+
       const EC_Group m_group;
       const BigInt& m_x;
+      std::unique_ptr<EMSA> m_emsa;
+      const std::string m_hash;
       secure_vector<uint8_t> m_prefix;
       std::vector<BigInt> m_ws;
+      bool m_prefix_used;
    };
 
 secure_vector<uint8_t>
@@ -111,7 +137,7 @@ ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t /*msg_len*/,
    secure_vector<uint8_t> to_be_hashed(k_times_P_x.bytes());
    k_times_P_x.binary_encode(to_be_hashed.data());
 
-   std::unique_ptr<EMSA> emsa = this->clone_emsa();
+   std::unique_ptr<EMSA> emsa = m_emsa->new_object();
    emsa->update(to_be_hashed.data(), to_be_hashed.size());
    secure_vector<uint8_t> c = emsa->raw_data();
    c = emsa->encoding_of(c, max_input_bits(), rng);
@@ -134,16 +160,17 @@ ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t /*msg_len*/,
 /**
 * ECKCDSA verification operation
 */
-class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
+class ECKCDSA_Verification_Operation final : public PK_Ops::Verification
    {
    public:
 
       ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa,
                                      const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa),
          m_group(eckcdsa.domain()),
          m_gy_mul(m_group.get_base_point(), eckcdsa.public_point()),
-         m_prefix()
+         m_emsa(EMSA::create_or_throw(emsa)),
+         m_hash(hash_for_emsa(emsa)),
+         m_prefix_used(false)
          {
          const BigInt public_point_x = eckcdsa.public_point().get_affine_x();
          const BigInt public_point_y = eckcdsa.public_point().get_affine_y();
@@ -154,30 +181,52 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
          BigInt::encode_1363(&m_prefix[0], order_bytes, public_point_x);
          BigInt::encode_1363(&m_prefix[order_bytes], order_bytes, public_point_y);
 
-         const size_t block_size = HashFunction::create(hash_for_signature())->hash_block_size();
+         const size_t block_size = HashFunction::create(m_hash)->hash_block_size();
          // Either truncate or zero-extend to match the hash block size
          m_prefix.resize(block_size);
          }
 
-      bool has_prefix() override { return true; }
-      secure_vector<uint8_t> message_prefix() const override { return m_prefix; }
+      void update(const uint8_t msg[], size_t msg_len) override;
 
-      size_t max_input_bits() const override { return m_group.get_order_bits(); }
-
-      bool with_recovery() const override { return false; }
+      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
+   private:
+      size_t max_input_bits() const { return m_group.get_order_bits(); }
 
       bool verify(const uint8_t msg[], size_t msg_len,
-                  const uint8_t sig[], size_t sig_len) override;
-   private:
+                  const uint8_t sig[], size_t sig_len);
+
       const EC_Group m_group;
       const EC_Point_Multi_Point_Precompute m_gy_mul;
       secure_vector<uint8_t> m_prefix;
+      std::unique_ptr<EMSA> m_emsa;
+      const std::string m_hash;
+      bool m_prefix_used;
    };
+
+void ECKCDSA_Verification_Operation::update(const uint8_t msg[], size_t msg_len)
+   {
+   if(!m_prefix_used)
+      {
+      m_prefix_used = true;
+      m_emsa->update(m_prefix.data(), m_prefix.size());
+      }
+   m_emsa->update(msg, msg_len);
+   }
+
+bool ECKCDSA_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t sig_len)
+   {
+   m_prefix_used = false;
+   const secure_vector<uint8_t> msg = m_emsa->raw_data();
+
+   Null_RNG rng;
+   secure_vector<uint8_t> encoded = m_emsa->encoding_of(msg, max_input_bits(), rng);
+   return verify(encoded.data(), encoded.size(), sig, sig_len);
+   }
 
 bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t /*msg_len*/,
                                             const uint8_t sig[], size_t sig_len)
    {
-   const std::unique_ptr<HashFunction> hash = HashFunction::create(hash_for_signature());
+   const std::unique_ptr<HashFunction> hash = HashFunction::create(m_hash);
    //calculate size of r
 
    const size_t order_bytes = m_group.get_order_bytes();
@@ -212,7 +261,7 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t /*msg_le
    const BigInt q_x = q.get_affine_x();
    secure_vector<uint8_t> c(q_x.bytes());
    q_x.binary_encode(c.data());
-   std::unique_ptr<EMSA> emsa = this->clone_emsa();
+   std::unique_ptr<EMSA> emsa = m_emsa->new_object();
    emsa->update(c.data(), c.size());
    secure_vector<uint8_t> v = emsa->raw_data();
    Null_RNG rng;
