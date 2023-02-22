@@ -734,7 +734,7 @@ class BotanPythonZfecTests(unittest.TestCase):
         n = 3
         k = 2
         input_bytes = b"abcdefgh" + b"ijklmnop"
-        output_shares = botan2.zfec_encode(k, n, input_bytes)
+        output_shares = botan.zfec_encode(k, n, input_bytes)
         self.assertEqual(
             output_shares,
             [b'abcdefgh', b'ijklmnop', b'qrstuvwX']
@@ -766,13 +766,14 @@ class BotanPythonZfecTests(unittest.TestCase):
         """
         one instance of a round-trip test
         """
-        output_shares = botan2.zfec_encode(k, n, input_bytes)
-        # want to check that every permutation of the inputs decodes to the correct input bytes
+        output_shares = botan.zfec_encode(k, n, input_bytes)
+        # want to check that every permutation of the inputs decodes to the
+        # correct input bytes
 
         for inputs in permutations(enumerate(output_shares), k):
             # "unzip" the enumerated permutation
             indexes, shares = zip(*inputs)
-            decoded = botan2.zfec_decode(k, n, indexes, shares)
+            decoded = botan.zfec_decode(k, n, indexes, shares)
             self.assertEqual(
                 b"".join(decoded),
                 input_bytes
