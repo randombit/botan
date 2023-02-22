@@ -1554,7 +1554,7 @@ std::vector<std::string> get_sig_paddings(const std::string& sig_algo)
    else if(sig_algo == "DSA" || sig_algo == "ECDSA" || sig_algo == "ECGDSA" ||
            sig_algo == "ECKCDSA" || sig_algo == "GOST-34.10")
       return {"EMSA1"};
-   else if(sig_algo == "Ed25519" || sig_algo == "Dilithium")
+   else if(sig_algo == "Ed25519")
       return {"Pure"};
    else
       return {};
@@ -1567,7 +1567,7 @@ class X509_Cert_Unit_Tests final : public Test
          {
          std::vector<Test::Result> results;
 
-         const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10", "Ed25519" };
+         const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10", "Ed25519", "Dilithium" };
 
          for(const std::string& algo : sig_algos)
             {
