@@ -32,7 +32,14 @@ std::string CPUID::to_string()
    {
    std::vector<std::string> flags;
 
-#define CPUID_PRINT(flag) do { if(has_##flag()) { flags.push_back(#flag); } } while(0)
+   auto append_fn = [&](bool flag, const char* flag_name)
+      {
+      if(flag)
+         flags.push_back(flag_name);
+      };
+
+   // NOLINTNEXTLINE(*-macro-usage)
+#define CPUID_PRINT(flag) append_fn(has_##flag(), #flag)
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    CPUID_PRINT(rdtsc);
