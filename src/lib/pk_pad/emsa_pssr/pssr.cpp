@@ -12,7 +12,6 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/der_enc.h>
 #include <botan/pk_keys.h>
-#include <botan/internal/padding.h>
 
 namespace Botan {
 
@@ -196,10 +195,9 @@ AlgorithmIdentifier PSSR::config_for_x509(const std::string& algo_name,
       throw Invalid_Argument("PSSR: Cert hash " + cert_hash_name +
                              " incompatible with specified hash " + m_hash->name());
    // check that the signature algorithm and the padding scheme fit
-   if(!sig_algo_and_pad_ok(algo_name, "EMSA4"))
+   if(algo_name != "RSA")
       {
-      throw Invalid_Argument("Encoding scheme with canonical name EMSA4"
-         " not supported for signature algorithm " + algo_name);
+      throw Invalid_Argument("PSS signature padding not compatible with " + algo_name);
       }
 
    const AlgorithmIdentifier hash_id(cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM);
