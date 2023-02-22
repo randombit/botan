@@ -413,20 +413,21 @@ Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const
    return buf;
    }
 
-Session Session::decrypt(const uint8_t in[], size_t in_len, const SymmetricKey& key)
+Session Session::decrypt(std::span<const uint8_t> in, const SymmetricKey& key)
    {
    try
       {
       const size_t min_session_size = 48 + 4; // serious under-estimate
-      if(in_len < TLS_SESSION_CRYPT_OVERHEAD + min_session_size)
+      if(in.size() < TLS_SESSION_CRYPT_OVERHEAD + min_session_size)
          throw Decoding_Error("Encrypted session too short to be valid");
 
-      const uint8_t* magic = &in[0];
+      // TODO: replace those raw pointers with sub-spans into `in`
+      const uint8_t* magic = in.data();
       const uint8_t* key_name = magic + TLS_SESSION_CRYPT_MAGIC_LEN;
       const uint8_t* key_seed = key_name + TLS_SESSION_CRYPT_KEY_NAME_LEN;
       const uint8_t* aead_nonce = key_seed + TLS_SESSION_CRYPT_AEAD_KEY_SEED_LEN;
       const uint8_t* ctext = aead_nonce + TLS_SESSION_CRYPT_AEAD_NONCE_LEN;
-      const size_t ctext_len = in_len - TLS_SESSION_CRYPT_HDR_LEN; // includes the tag
+      const size_t ctext_len = in.size() - TLS_SESSION_CRYPT_HDR_LEN; // includes the tag
 
       if(load_be<uint64_t>(magic, 0) != TLS_SESSION_CRYPT_MAGIC)
          throw Decoding_Error("Missing expected magic numbers");
@@ -447,7 +448,7 @@ Session Session::decrypt(const uint8_t in[], size_t in_len, const SymmetricKey& 
 
       auto aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, Cipher_Dir::Decryption);
       aead->set_key(aead_key);
-      aead->set_associated_data(in, TLS_SESSION_CRYPT_HDR_LEN);
+      aead->set_associated_data(in.data(), TLS_SESSION_CRYPT_HDR_LEN);
       aead->start(aead_nonce, TLS_SESSION_CRYPT_AEAD_NONCE_LEN);
       secure_vector<uint8_t> buf(ctext, ctext + ctext_len);
       aead->finish(buf, 0);

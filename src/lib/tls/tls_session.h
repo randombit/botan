@@ -218,27 +218,23 @@ class BOTAN_PUBLIC_API(2,0) Session final
       std::vector<uint8_t> encrypt(const SymmetricKey& key,
                                 RandomNumberGenerator& rng) const;
 
-
       /**
       * Decrypt a session created by encrypt
       * @param ctext the ciphertext returned by encrypt
       * @param ctext_size the size of ctext in bytes
       * @param key the same key used by the encrypting side
       */
-      static Session decrypt(const uint8_t ctext[],
-                             size_t ctext_size,
-                             const SymmetricKey& key);
+      static inline Session decrypt(const uint8_t ctext[],
+                                    size_t ctext_size,
+                                    const SymmetricKey& key)
+         { return Session::decrypt(std::span(ctext, ctext_size), key); }
 
       /**
       * Decrypt a session created by encrypt
       * @param ctext the ciphertext returned by encrypt
       * @param key the same key used by the encrypting side
       */
-      static inline Session decrypt(std::span<const uint8_t> ctext,
-                                    const SymmetricKey& key)
-         {
-         return Session::decrypt(ctext.data(), ctext.size(), key);
-         }
+      static Session decrypt(std::span<const uint8_t> ctext, const SymmetricKey& key);
 
       /**
       * Encode this session data for storage
