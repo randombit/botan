@@ -11,7 +11,7 @@
 #include <botan/internal/pk_ops.h>
 #include <botan/internal/eme.h>
 #include <botan/kdf.h>
-#include <botan/internal/emsa.h>
+#include <botan/hash.h>
 
 namespace Botan {
 
@@ -59,7 +59,7 @@ class Verification_with_Hash : public Verification
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
 
    protected:
-      explicit Verification_with_Hash(const std::string& padding);
+      explicit Verification_with_Hash(const std::string& hash);
 
       /**
       * Get the maximum message size in bits supported by this public key.
@@ -78,7 +78,7 @@ class Verification_with_Hash : public Verification
       virtual bool verify(const uint8_t msg[], size_t msg_len,
                           const uint8_t sig[], size_t sig_len) = 0;
    private:
-      std::unique_ptr<EMSA> m_emsa;
+      std::unique_ptr<HashFunction> m_hash;
    };
 
 class Signature_with_Hash : public Signature
@@ -88,11 +88,13 @@ class Signature_with_Hash : public Signature
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
    protected:
-      explicit Signature_with_Hash(const std::string& emsa);
+      explicit Signature_with_Hash(const std::string& hash);
 
       ~Signature_with_Hash() = default;
 
-      std::string hash_for_signature() { return m_hash; }
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+      std::string rfc6979_hash_function() const;
+#endif
 
    private:
       /**
@@ -102,10 +104,9 @@ class Signature_with_Hash : public Signature
       virtual size_t max_input_bits() const = 0;
 
       virtual secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                           RandomNumberGenerator& rng) = 0;
+                                              RandomNumberGenerator& rng) = 0;
 
-      std::unique_ptr<EMSA> m_emsa;
-      const std::string m_hash;
+      std::unique_ptr<HashFunction> m_hash;
    };
 
 class Key_Agreement_with_KDF : public Key_Agreement

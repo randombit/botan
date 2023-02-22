@@ -132,7 +132,7 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    BOTAN_UNUSED(rng);
-   const BigInt k = generate_rfc6979_nonce(m_x, q, m, this->hash_for_signature());
+   const BigInt k = generate_rfc6979_nonce(m_x, q, m, this->rfc6979_hash_function());
 #else
    const BigInt k = BigInt::random_integer(rng, 1, q);
 #endif
