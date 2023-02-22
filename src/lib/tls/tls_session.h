@@ -378,9 +378,13 @@ class BOTAN_PUBLIC_API(2,0) Session final : public Session_Summary
       // 20230112 - Remove Session_ID and Session_Ticket from this object
       //            (association is now in the hands of the Session_Manager)
       //          - Peer certificates are now stored as a SEQUENCE
+      // 20230222 - Remove deprecated and unused fields
+      //            - compression method (always 0)
+      //            - fragment size (always 0)
+      //            - SRP identifier (always "")
       enum
          {
-         TLS_SESSION_PARAM_STRUCT_VERSION = 20230112
+         TLS_SESSION_PARAM_STRUCT_VERSION = 20230222
          };
 
       secure_vector<uint8_t> m_master_secret;

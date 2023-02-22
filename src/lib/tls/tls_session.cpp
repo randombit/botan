@@ -212,15 +212,10 @@ Session::Session(std::span<const uint8_t> ber_data)
    ASN1_String server_service;
    size_t server_port;
 
-   ASN1_String srp_identifier_str;
-
    uint8_t major_version = 0, minor_version = 0;
-   std::vector<uint8_t> peer_cert_bits;
 
    size_t start_time = 0;
    size_t srtp_profile = 0;
-   size_t fragment_size = 0;
-   size_t compression_method = 0;
    uint16_t ciphersuite_code = 0;
    uint64_t lifetime_hint = 0;
 
@@ -232,9 +227,7 @@ Session::Session(std::span<const uint8_t> ber_data)
         .decode_integer_type(major_version)
         .decode_integer_type(minor_version)
         .decode_integer_type(ciphersuite_code)
-        .decode_integer_type(compression_method)
         .decode_integer_type(side_code)
-        .decode_integer_type(fragment_size)
         .decode(m_extended_master_secret)
         .decode(m_encrypt_then_mac)
         .decode(m_master_secret, ASN1_Type::OctetString)
@@ -242,7 +235,6 @@ Session::Session(std::span<const uint8_t> ber_data)
         .decode(server_hostname)
         .decode(server_service)
         .decode(server_port)
-        .decode(srp_identifier_str)
         .decode(srtp_profile)
         .decode(m_early_data_allowed)
         .decode_integer_type(m_max_early_data_bytes)
@@ -250,24 +242,6 @@ Session::Session(std::span<const uint8_t> ber_data)
         .decode_integer_type(lifetime_hint)
       .end_cons()
       .verify_end();
-
-   /*
-   * Compression is not supported and must be zero
-   */
-   if(compression_method != 0)
-      {
-      throw Decoding_Error("Serialized TLS session contains non-null compression method");
-      }
-
-   /*
-   Fragment size is not supported anymore, but the field is still
-   set in the session object.
-   */
-   if(fragment_size != 0)
-      {
-      throw Decoding_Error("Serialized TLS session used maximum fragment length which is "
-                           " no longer supported");
-      }
 
    if(!Ciphersuite::by_id(ciphersuite_code))
       {
@@ -297,9 +271,7 @@ secure_vector<uint8_t> Session::DER_encode() const
          .encode(static_cast<size_t>(m_version.major_version()))
          .encode(static_cast<size_t>(m_version.minor_version()))
          .encode(static_cast<size_t>(m_ciphersuite))
-         .encode(static_cast<size_t>(/*old compression method*/0))
          .encode(static_cast<size_t>(m_connection_side))
-         .encode(static_cast<size_t>(/*old fragment size*/0))
          .encode(m_extended_master_secret)
          .encode(m_encrypt_then_mac)
          .encode(m_master_secret, ASN1_Type::OctetString)
@@ -309,7 +281,6 @@ secure_vector<uint8_t> Session::DER_encode() const
          .encode(ASN1_String(m_server_info.hostname(), ASN1_Type::Utf8String))
          .encode(ASN1_String(m_server_info.service(), ASN1_Type::Utf8String))
          .encode(static_cast<size_t>(m_server_info.port()))
-         .encode(ASN1_String("", ASN1_Type::Utf8String)) // old srp identifier
          .encode(static_cast<size_t>(m_srtp_profile))
 
          // the fields below were introduced for TLS 1.3 session tickets
