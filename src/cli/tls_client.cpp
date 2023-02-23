@@ -331,12 +331,12 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          output() << "Handshake complete, " << session.version().to_string()
                   << " using " << session.ciphersuite().to_string() << "\n";
 
-         if(auto session_id = session_handle.id())
+         if(const auto session_id = session_handle.id())
             {
             output() << "Session ID " << Botan::hex_encode(session_id->get()) << "\n";
             }
 
-         if(auto session_ticket = session_handle.ticket())
+         if(const auto session_ticket = session_handle.ticket())
             {
             output() << "Session ticket " << Botan::hex_encode(session_ticket->get()) << "\n";
             }

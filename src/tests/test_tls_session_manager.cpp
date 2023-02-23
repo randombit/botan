@@ -201,7 +201,7 @@ std::vector<Test::Result> test_session_manager_in_memory()
             result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
             result.test_is_eq("ciphersuite was echoed", sessions[0].first.ciphersuite_code(), uint16_t(0x009C));
             result.test_is_eq("ID was echoed", sessions[0].second.id().value(), default_id);
-            result.confirm("ticket was dropped", !sessions[0].second.ticket().has_value());
+            result.confirm("not a ticket", !sessions[0].second.ticket().has_value());
             }
          }),
 
@@ -225,7 +225,7 @@ std::vector<Test::Result> test_session_manager_in_memory()
             }
          }),
 
-      Botan_Tests::CHECK("obtain session from ticket == id", [&](auto& result)
+      Botan_Tests::CHECK("obtain session from ticket == id does not work", [&](auto& result)
          {
          auto session = mgr->retrieve(Botan::TLS::Session_Ticket(default_id), cbs, plcy);
          result.confirm("session was not found", !session.has_value());
@@ -867,12 +867,16 @@ std::vector<Test::Result> test_session_manager_sqlite()
          mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs), ids[0]);
          result.require("new ID exists", mgr.retrieve(ids[0], cbs, plcy).has_value());
 
-         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+         // Session timestamps are saved with second-resolution. If more than
+         // one session has the same (coarse) timestamp it is undefined which
+         // will be purged first. The clock tick ensures that session's
+         // timestamps are unique.
+         cbs.tick();
          mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs), ids[1]);
          result.require("first ID is gone", !mgr.retrieve(ids[0], cbs, plcy).has_value());
          result.require("new ID exists", mgr.retrieve(ids[1], cbs, plcy).has_value());
 
-         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+         cbs.tick();
          mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs), ids[2]);
          result.require("second ID is gone", !mgr.retrieve(ids[1], cbs, plcy).has_value());
          result.require("new ID exists", mgr.retrieve(ids[2], cbs, plcy).has_value());
@@ -1004,7 +1008,7 @@ std::vector<Test::Result> tls_session_manager_expiry()
          result.test_is_eq("find three", mgr->find(server_info, cbs, plcy).size(), size_t(plcy.session_limit));
 
          plcy.session_limit = 0;
-         result.test_is_eq("unlimitted", mgr->find(server_info, cbs, plcy).size(), size_t(5));
+         result.test_is_eq("unlimited", mgr->find(server_info, cbs, plcy).size(), size_t(5));
          }),
 
 #if defined(BOTAN_HAS_TLS_13)

@@ -215,8 +215,7 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager_SQL::find_all(co
    {
    auto stmt = m_db->new_statement("SELECT session_id, session_ticket, session FROM tls_sessions"
                                    " WHERE hostname = ?1 AND hostport = ?2"
-                                   " ORDER BY session_start DESC"
-                                   " LIMIT 5");
+                                   " ORDER BY session_start DESC");
 
    stmt->bind(1, info.hostname());
    stmt->bind(2, info.port());

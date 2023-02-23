@@ -153,6 +153,8 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager::find(const Serv
             }), sessions_and_handles.end());
       }
 
+   // std::vector::resize() cannot be used as the vector's members aren't
+   // default constructible.
    const auto session_limit = policy.maximum_session_tickets_per_client_hello();
    while(session_limit > 0 && sessions_and_handles.size() > session_limit)
       { sessions_and_handles.pop_back(); }

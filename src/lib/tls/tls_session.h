@@ -59,8 +59,8 @@ inline auto operator<(const Session_ID& id1, const Session_ID& id2)
  * a TLS 1.3 server can issue multiple tickets in one connection and the
  * resumption mechanism is compatible with the PSK establishment.
  *
- * Concrete implementations of Session_Manager use this helper to distict the
- * different states and manage sessions for both TLS 1.2 and 1.3 connections.
+ * Concrete implementations of Session_Manager use this helper to distinguish
+ * the different states and manage sessions for TLS 1.2 and 1.3 connections.
  *
  * Note that all information stored in a Session_Handle might be transmitted in
  * unprotected form. Hence, it should not contain any confidential information.

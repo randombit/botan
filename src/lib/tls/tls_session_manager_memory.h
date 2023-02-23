@@ -25,7 +25,7 @@ namespace TLS {
 /**
  * A thread-safe Session_Manager that stores TLS sessions in memory.
  *
- * The Session_Handle objects emitted when by this manager establishing a new
+ * The Session_Handle objects emitted by this manager when establishing a new
  * session (i.e in the TLS server) will never contain a Session_Ticket but only a
  * Session_ID. Storing received sessions (i.e. in the TLS client) under either
  * a Session_ID or a Session_Ticket will however echo them back.

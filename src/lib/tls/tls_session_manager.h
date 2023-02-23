@@ -109,9 +109,9 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        * @param hash_function the hash algorithm name we are going to use for
        *                      the to-be-negotiated connection
        *
-       * @retval a std::pair of the session associated to the choosenPSK  and
-       *         the index of the selected ticket.
-       * @retval std::nullopt if no PSK was chosen for usage
+       * @return a std::pair of the Session associated to the choosen PSK and
+       *         the index of the selected ticket; std::nullopt if no PSK was
+       *         chosen for usage (will result in a full handshake)
        *
        * @note if no PSK is chosen, the server will attempt a regular handshake.
        */
@@ -201,7 +201,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
       virtual size_t remove_all() = 0;
 
       /**
-       * Declares, whether the given Session_Manager implementation may emit
+       * Declares whether the given Session_Manager implementation may emit
        * session tickets. Note that this _does not_ mean that the implementation
        * must always emit tickets.
        *

@@ -355,7 +355,7 @@ std::optional<Session_Handle> Client_Hello_12::session_handle() const
    //    If a ticket is presented by the client, the server MUST NOT attempt
    //    to use the Session ID in the ClientHello for stateful session
    //    resumption.
-   if(const auto& ticket = session_ticket(); !ticket.empty())
+   if(auto ticket = session_ticket(); !ticket.empty())
       { return ticket; }
    else if(const auto& id = session_id(); !id.empty())
       { return id; }

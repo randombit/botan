@@ -356,7 +356,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
          strm << "Version: " << session.version().to_string() << "\n";
          strm << "Ciphersuite: " << session.ciphersuite().to_string() << "\n";
-         if(auto session_id = session_handle.id())
+         if(const auto session_id = session_handle.id())
             {
             strm << "SessionID: " << Botan::hex_encode(session_id->get()) << "\n";
             }
