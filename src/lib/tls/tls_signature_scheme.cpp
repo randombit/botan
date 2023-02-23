@@ -262,6 +262,14 @@ AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
       case ECDSA_SHA512:
          return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-512)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
 
+      /*
+      The hex strings are the DER encoded PssParams with
+       MGF == MGF1
+       hash == MGF1 hash
+       salt_len == hash_len
+
+      This specific set of PSS parameters is mandated by TLS 1.3
+      */
       case RSA_PSS_SHA256:
          return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
                                     hex_decode("3039A00F300D06096086480165030402010500A11C301A06092A864886F70D010108300D06096086480165030402010500A203020120A303020101"));
