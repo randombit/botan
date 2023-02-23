@@ -8,7 +8,6 @@
 #include <botan/internal/emsa1.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
-#include <botan/internal/padding.h>
 
 namespace Botan {
 
@@ -48,11 +47,6 @@ secure_vector<uint8_t> emsa1_encoding(const secure_vector<uint8_t>& msg,
 std::string EMSA1::name() const
    {
    return "EMSA1(" + m_hash->name() + ")";
-   }
-
-std::unique_ptr<EMSA> EMSA1::new_object()
-   {
-   return std::make_unique<EMSA1>(m_hash->new_object());
    }
 
 void EMSA1::update(const uint8_t input[], size_t length)
@@ -104,17 +98,20 @@ AlgorithmIdentifier EMSA1::config_for_x509(const std::string& algo_name,
       throw Invalid_Argument("EMSA1: Cert hash " + cert_hash_name +
                              " incompatible with specified hash " + m_hash->name());
 
-   // check that the signature algorithm and the padding scheme fit
-   if(!sig_algo_and_pad_ok(algo_name, "EMSA1"))
+   const std::string full_name = algo_name + "/" + name();
+
+   try
       {
-      throw Invalid_Argument("Encoding scheme with canonical name EMSA1"
-         " not supported for signature algorithm " + algo_name);
+      const OID oid = OID::from_string(full_name);
+
+      // for DSA, ECDSA, GOST parameters "SHALL" be empty
+      return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
       }
-
-   const OID oid = OID::from_string(algo_name + "/" + name());
-
-   // for DSA, ECDSA, GOST parameters "SHALL" be empty
-   return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
+   catch(Lookup_Error&)
+      {
+      throw Invalid_Argument("Signatures using " + full_name +
+                             " are not supported");
+      }
    }
 
 }

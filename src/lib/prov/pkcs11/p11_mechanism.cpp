@@ -9,7 +9,6 @@
 #include <botan/internal/p11_mechanism.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/parsing.h>
-#include <botan/internal/emsa.h>
 
 #include <tuple>
 
@@ -223,21 +222,22 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const std::string& 
    return mech;
    }
 
-MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(const std::string& hash)
+MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(const std::string& hash_spec)
    {
-   std::string hash_name = hash;
+   auto mechanism = EcdsaHash.find(hash_spec);
+   if(mechanism != EcdsaHash.end())
+      return MechanismWrapper(mechanism->second);
 
-   if(hash_name != "Raw")
+   SCAN_Name req(hash_spec);
+
+   if(req.algo_name() == "EMSA1" && req.arg_count() == 1)
       {
-      hash_name = hash_for_emsa(hash);
+      mechanism = EcdsaHash.find(req.arg(0));
+      if(mechanism != EcdsaHash.end())
+         return MechanismWrapper(mechanism->second);
       }
 
-   auto mechanism_type = EcdsaHash.find(hash_name);
-   if(mechanism_type == EcdsaHash.end())
-      {
-      throw Lookup_Error("PKCS#11 ECDSA sign/verify does not support " + hash);
-      }
-   return MechanismWrapper(mechanism_type->second);
+   throw Lookup_Error("PKCS#11 ECDSA sign/verify does not support " + hash_spec);
    }
 
 MechanismWrapper MechanismWrapper::create_ecdh_mechanism(const std::string& params)

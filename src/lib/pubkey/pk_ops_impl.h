@@ -11,7 +11,7 @@
 #include <botan/internal/pk_ops.h>
 #include <botan/internal/eme.h>
 #include <botan/kdf.h>
-#include <botan/internal/emsa.h>
+#include <botan/hash.h>
 
 namespace Botan {
 
@@ -29,7 +29,7 @@ class Encryption_with_EME : public Encryption
    protected:
       explicit Encryption_with_EME(const std::string& eme);
    private:
-      virtual size_t max_raw_input_bits() const = 0;
+      virtual size_t max_ptext_input_bits() const = 0;
 
       virtual secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t len,
                                               RandomNumberGenerator& rng) = 0;
@@ -50,42 +50,16 @@ class Decryption_with_EME : public Decryption
       std::unique_ptr<EME> m_eme;
    };
 
-class Verification_with_EMSA : public Verification
+class Verification_with_Hash : public Verification
    {
    public:
-      ~Verification_with_EMSA() = default;
+      ~Verification_with_Hash() = default;
 
       void update(const uint8_t msg[], size_t msg_len) override;
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
 
    protected:
-      explicit Verification_with_EMSA(const std::string& emsa, bool has_message_recovery = false);
-
-      std::string hash_for_signature() { return m_hash; }
-
-      /**
-      * Get the maximum message size in bits supported by this public key.
-      * @return maximum message in bits
-      */
-      virtual size_t max_input_bits() const = 0;
-
-      /**
-      * @return boolean specifying if this signature scheme uses
-      * a message prefix returned by message_prefix()
-      */
-      virtual bool has_prefix() { return false; }
-
-      /**
-      * @return the message prefix if this signature scheme uses
-      * a message prefix, signaled via has_prefix()
-      */
-      virtual secure_vector<uint8_t> message_prefix() const { throw Invalid_State("No prefix"); }
-
-      /**
-      * @return boolean specifying if this key type supports message
-      * recovery and thus if you need to call verify() or verify_mr()
-      */
-      virtual bool with_recovery() const = 0;
+      explicit Verification_with_Hash(const std::string& hash);
 
       /*
       * Perform a signature check operation
@@ -95,73 +69,32 @@ class Verification_with_EMSA : public Verification
       * @param sig_len the length of sig in bytes
       * @returns if signature is a valid one for message
       */
-      virtual bool verify(const uint8_t[], size_t,
-                          const uint8_t[], size_t)
-         {
-         throw Invalid_State("Message recovery required");
-         }
-
-      /*
-      * Perform a signature operation (with message recovery)
-      * Only call this if with_recovery() returns true
-      * @param msg the message
-      * @param msg_len the length of msg in bytes
-      * @returns recovered message
-      */
-      virtual secure_vector<uint8_t> verify_mr(const uint8_t[], size_t)
-         {
-         throw Invalid_State("Message recovery not supported");
-         }
-
-      std::unique_ptr<EMSA> clone_emsa() const { return m_emsa->new_object(); }
-
+      virtual bool verify(const uint8_t msg[], size_t msg_len,
+                          const uint8_t sig[], size_t sig_len) = 0;
    private:
-      std::unique_ptr<EMSA> m_emsa;
-      const std::string m_hash;
-      bool m_prefix_used;
+      std::unique_ptr<HashFunction> m_hash;
    };
 
-class Signature_with_EMSA : public Signature
+class Signature_with_Hash : public Signature
    {
    public:
       void update(const uint8_t msg[], size_t msg_len) override;
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
    protected:
-      explicit Signature_with_EMSA(const std::string& emsa, bool with_message_recovery = false);
+      explicit Signature_with_Hash(const std::string& hash);
 
-      ~Signature_with_EMSA() = default;
+      ~Signature_with_Hash() = default;
 
-      std::string hash_for_signature() { return m_hash; }
-
-      /**
-      * @return boolean specifying if this signature scheme uses
-      * a message prefix returned by message_prefix()
-      */
-      virtual bool has_prefix() { return false; }
-
-      /**
-      * @return the message prefix if this signature scheme uses
-      * a message prefix, signaled via has_prefix()
-      */
-      virtual secure_vector<uint8_t> message_prefix() const { throw Invalid_State("No prefix"); }
-
-      std::unique_ptr<EMSA> clone_emsa() const { return m_emsa->new_object(); }
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+      std::string rfc6979_hash_function() const;
+#endif
 
    private:
-
-      /**
-      * Get the maximum message size in bits supported by this public key.
-      * @return maximum message in bits
-      */
-      virtual size_t max_input_bits() const = 0;
-
       virtual secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                           RandomNumberGenerator& rng) = 0;
+                                              RandomNumberGenerator& rng) = 0;
 
-      std::unique_ptr<EMSA> m_emsa;
-      const std::string m_hash;
-      bool m_prefix_used;
+      std::unique_ptr<HashFunction> m_hash;
    };
 
 class Key_Agreement_with_KDF : public Key_Agreement

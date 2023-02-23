@@ -12,7 +12,6 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/der_enc.h>
 #include <botan/pk_keys.h>
-#include <botan/internal/padding.h>
 
 namespace Botan {
 
@@ -179,11 +178,6 @@ bool PSSR::verify(const secure_vector<uint8_t>& coded,
    return ok;
    }
 
-std::unique_ptr<EMSA> PSSR::new_object()
-   {
-   return std::make_unique<PSSR>(m_hash->new_object(), m_salt_size);
-   }
-
 std::string PSSR::name() const
    {
    return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
@@ -196,10 +190,9 @@ AlgorithmIdentifier PSSR::config_for_x509(const std::string& algo_name,
       throw Invalid_Argument("PSSR: Cert hash " + cert_hash_name +
                              " incompatible with specified hash " + m_hash->name());
    // check that the signature algorithm and the padding scheme fit
-   if(!sig_algo_and_pad_ok(algo_name, "EMSA4"))
+   if(algo_name != "RSA")
       {
-      throw Invalid_Argument("Encoding scheme with canonical name EMSA4"
-         " not supported for signature algorithm " + algo_name);
+      throw Invalid_Argument("PSS signature padding not compatible with " + algo_name);
       }
 
    const AlgorithmIdentifier hash_id(cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM);
@@ -276,11 +269,6 @@ bool PSSR_Raw::verify(const secure_vector<uint8_t>& coded,
       return false;
 
    return ok;
-   }
-
-std::unique_ptr<EMSA> PSSR_Raw::new_object()
-   {
-   return std::make_unique<PSSR_Raw>(m_hash->new_object(), m_salt_size);
    }
 
 std::string PSSR_Raw::name() const

@@ -25,11 +25,7 @@ class EMSA1 final : public EMSA
       */
       explicit EMSA1(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
 
-      std::unique_ptr<EMSA> new_object() override;
-
       std::string name() const override;
-
-      bool requires_message_recovery() const override { return false; }
 
       AlgorithmIdentifier config_for_x509(const std::string& algo_name,
                                           const std::string& cert_hash_name) const override;

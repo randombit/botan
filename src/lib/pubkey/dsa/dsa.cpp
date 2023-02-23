@@ -14,7 +14,6 @@
 #include <botan/internal/pk_ops_impl.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-  #include <botan/internal/emsa.h>
   #include <botan/internal/rfc6979.h>
 #endif
 
@@ -81,7 +80,7 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if(!strong)
       return true;
 
-   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-256)");
+   return KeyPair::signature_consistency_check(rng, *this, "SHA-256");
    }
 
 std::unique_ptr<Public_Key> DSA_PrivateKey::public_key() const
@@ -94,13 +93,13 @@ namespace {
 /**
 * Object that can create a DSA signature
 */
-class DSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
+class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
    {
    public:
       DSA_Signature_Operation(const DSA_PrivateKey& dsa,
                               const std::string& emsa,
                               RandomNumberGenerator& rng) :
-         PK_Ops::Signature_with_EMSA(emsa),
+         PK_Ops::Signature_with_Hash(emsa),
          m_group(dsa.get_group()),
          m_x(dsa.get_x())
          {
@@ -109,7 +108,6 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          }
 
       size_t signature_length() const override { return 2*m_group.q_bytes(); }
-      size_t max_input_bits() const override { return m_group.q_bits(); }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator& rng) override;
@@ -127,12 +125,12 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
    BigInt m = BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.q_bits());
 
-   while(m >= q)
+   if(m >= q)
       m -= q;
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    BOTAN_UNUSED(rng);
-   const BigInt k = generate_rfc6979_nonce(m_x, q, m, this->hash_for_signature());
+   const BigInt k = generate_rfc6979_nonce(m_x, q, m, this->rfc6979_hash_function());
 #else
    const BigInt k = BigInt::random_integer(rng, 1, q);
 #endif
@@ -171,20 +169,16 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 /**
 * Object that can verify a DSA signature
 */
-class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
+class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
    {
    public:
       DSA_Verification_Operation(const DSA_PublicKey& dsa,
                                  const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa),
+         PK_Ops::Verification_with_Hash(emsa),
          m_group(dsa.get_group()),
          m_y(dsa.get_y())
          {
          }
-
-      size_t max_input_bits() const override { return m_group.q_bits(); }
-
-      bool with_recovery() const override { return false; }
 
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;
@@ -199,12 +193,14 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
    const BigInt& q = m_group.get_q();
    const size_t q_bytes = q.bytes();
 
-   if(sig_len != 2*q_bytes || msg_len > q_bytes)
+   if(sig_len != 2*q_bytes)
       return false;
 
    BigInt r(sig, q_bytes);
    BigInt s(sig + q_bytes, q_bytes);
    BigInt i = BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.q_bits());
+   if(i >= q)
+      i -= q;
 
    if(r <= 0 || r >= q || s <= 0 || s >= q)
       return false;

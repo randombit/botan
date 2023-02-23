@@ -55,12 +55,6 @@ class BOTAN_TEST_API EMSA
       virtual secure_vector<uint8_t> raw_data() = 0;
 
       /**
-      * Return true if using this EMSA correctly requires a signature scheme
-      * with message recovery
-      */
-      virtual bool requires_message_recovery() const = 0;
-
-      /**
       * Return the encoding of a message
       * @param msg the result of raw_data()
       * @param output_bits the desired output bit size
@@ -95,24 +89,10 @@ class BOTAN_TEST_API EMSA
                                                   const std::string& cert_hash_name) const;
 
       /**
-      * @return a new object representing the same encoding method as *this
-      */
-      virtual std::unique_ptr<EMSA> new_object() = 0;
-
-      /**
       * @return the SCAN name of the encoding/padding scheme
       */
       virtual std::string name() const = 0;
    };
-
-/**
-* Returns the hash function used in the given EMSA scheme
-* If the hash function is not specified or not understood,
-* returns "SHA-512"
-* @param algo_spec the name of the EMSA
-* @return hash function used in the given EMSA scheme
-*/
-BOTAN_TEST_API std::string hash_for_emsa(const std::string& algo_spec);
 
 }
 

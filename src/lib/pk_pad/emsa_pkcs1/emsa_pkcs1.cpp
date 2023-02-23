@@ -9,7 +9,6 @@
 #include <botan/internal/hash_id.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
-#include <botan/internal/padding.h>
 
 namespace Botan {
 
@@ -91,14 +90,12 @@ AlgorithmIdentifier EMSA_PKCS1v15::config_for_x509(const std::string& algo_name,
                              " incompatible with specified hash " + m_hash->name());
 
    // check that the signature algorithm and the padding scheme fit
-   if(!sig_algo_and_pad_ok(algo_name, "EMSA3"))
+   if(algo_name != "RSA")
       {
-      throw Invalid_Argument("Encoding scheme with canonical name EMSA3"
-         " not supported for signature algorithm " + algo_name);
+      throw Invalid_Argument("PKCSv1.5 signature padding not compatible with " + algo_name);
       }
 
    // for RSA PKCSv1.5 parameters "SHALL" be NULL
-
    const OID oid = OID::from_string(algo_name + "/" + name());
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
    }

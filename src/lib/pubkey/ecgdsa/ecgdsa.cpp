@@ -28,7 +28,7 @@ bool ECGDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
    if(!strong)
       return true;
 
-   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-256)");
+   return KeyPair::signature_consistency_check(rng, *this, "SHA-256");
    }
 
 namespace {
@@ -36,13 +36,13 @@ namespace {
 /**
 * ECGDSA signature operation
 */
-class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
+class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
    {
    public:
 
       ECGDSA_Signature_Operation(const ECGDSA_PrivateKey& ecgdsa,
                                 const std::string& emsa) :
-         PK_Ops::Signature_with_EMSA(emsa),
+         PK_Ops::Signature_with_Hash(emsa),
          m_group(ecgdsa.domain()),
          m_x(ecgdsa.private_value())
          {
@@ -52,8 +52,6 @@ class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
                                       RandomNumberGenerator& rng) override;
 
       size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
-
-      size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
    private:
       const EC_Group m_group;
@@ -86,21 +84,17 @@ ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 /**
 * ECGDSA verification operation
 */
-class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
+class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
    {
    public:
 
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa,
                                    const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa),
+         PK_Ops::Verification_with_Hash(emsa),
          m_group(ecgdsa.domain()),
          m_gy_mul(m_group.get_base_point(), ecgdsa.public_point())
          {
          }
-
-      size_t max_input_bits() const override { return m_group.get_order_bits(); }
-
-      bool with_recovery() const override { return false; }
 
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;

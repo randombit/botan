@@ -137,6 +137,44 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 #endif
    };
 
+class ECDSA_KAT_Verification_Tests final : public PK_Signature_Verification_Test
+   {
+   public:
+      ECDSA_KAT_Verification_Tests() : PK_Signature_Verification_Test(
+            "ECDSA",
+#if !defined(BOTAN_HAS_RFC6979_GENERATOR)
+            "pubkey/ecdsa_rfc6979.vec",
+            "Group,X,Hash,Msg,Signature") {}
+#else
+            "pubkey/ecdsa_prob.vec",
+            "Group,X,Hash,Msg,Nonce,Signature") {}
+#endif
+
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
+         {
+         const std::string group_id = vars.get_req_str("Group");
+         const BigInt x = vars.get_req_bn("X");
+         Botan::EC_Group group(Botan::OID::from_string(group_id));
+
+         Botan::ECDSA_PrivateKey priv_key(Test::rng(), group, x);
+
+         return priv_key.public_key();
+         }
+
+      std::string default_padding(const VarMap& vars) const override
+         {
+         std::string hash = vars.get_req_str("Hash");
+         if(hash.substr(0,3) == "Raw")
+            return hash;
+         return "EMSA1(" + hash + ")";
+         }
+   };
+
 class ECDSA_Sign_Verify_DER_Test final : public PK_Sign_Verify_DER_Test
    {
    public:
@@ -263,6 +301,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify", ECDSA_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify_wycheproof", ECDSA_Wycheproof_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign", ECDSA_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify_kat", ECDSA_KAT_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign_verify_der", ECDSA_Sign_Verify_DER_Test);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen", ECDSA_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen_stability", ECDSA_Keygen_Stability_Tests);

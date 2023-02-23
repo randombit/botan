@@ -1,5 +1,5 @@
 /*
-* (C) 2022 Jack Lloyd
+* (C) 2022,2023 Jack Lloyd
 * (C) 2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -13,7 +13,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/hash.h>
 #include <botan/der_enc.h>
-#include <botan/internal/emsa.h>
+#include <botan/hex.h>
 
 namespace Botan::TLS {
 
@@ -242,10 +242,48 @@ AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept
 
 AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
    {
-   auto emsa = EMSA::create(padding_string());
-   if(!emsa)
-      { return AlgorithmIdentifier(); }
-   return emsa->config_for_x509(algorithm_name(), hash_function_name());
+   switch(m_code)
+      {
+      case RSA_PKCS1_SHA1:
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA3(SHA-1)"), AlgorithmIdentifier::USE_NULL_PARAM);
+      case RSA_PKCS1_SHA256:
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA3(SHA-256)"), AlgorithmIdentifier::USE_NULL_PARAM);
+      case RSA_PKCS1_SHA384:
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA3(SHA-384)"), AlgorithmIdentifier::USE_NULL_PARAM);
+      case RSA_PKCS1_SHA512:
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA3(SHA-512)"), AlgorithmIdentifier::USE_NULL_PARAM);
+
+      case ECDSA_SHA1:
+         return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-1)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+      case ECDSA_SHA256:
+         return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-256)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+      case ECDSA_SHA384:
+         return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-384)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+      case ECDSA_SHA512:
+         return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-512)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+
+      /*
+      The hex strings are the DER encoded PssParams with
+       MGF == MGF1
+       hash == MGF1 hash
+       salt_len == hash_len
+
+      This specific set of PSS parameters is mandated by TLS 1.3
+      */
+      case RSA_PSS_SHA256:
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
+                                    hex_decode("3039A00F300D06096086480165030402010500A11C301A06092A864886F70D010108300D06096086480165030402010500A203020120A303020101"));
+      case RSA_PSS_SHA384:
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
+                                    hex_decode("3039A00F300D06096086480165030402020500A11C301A06092A864886F70D010108300D06096086480165030402020500A203020130A303020101"));
+      case RSA_PSS_SHA512:
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
+                                    hex_decode("3039A00F300D06096086480165030402030500A11C301A06092A864886F70D010108300D06096086480165030402030500A203020140A303020101"));
+
+      default:
+         // Note that Ed25519 and Ed448 end up here
+         return AlgorithmIdentifier();
+      }
    }
 
 std::optional<Signature_Format> Signature_Scheme::format() const noexcept

@@ -1,13 +1,19 @@
 /*
 * PK Operation Types
-* (C) 2010,2015 Jack Lloyd
+* (C) 2010,2015,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/scan_name.h>
+#include <botan/hash.h>
 #include <botan/rng.h>
+
+#if defined(BOTAN_HAS_RAW_HASH_FN)
+  #include <botan/internal/raw_hash.h>
+#endif
 
 namespace Botan {
 
@@ -18,14 +24,14 @@ PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme) :
 
 size_t PK_Ops::Encryption_with_EME::max_input_bits() const
    {
-   return 8 * m_eme->maximum_input_size(max_raw_input_bits());
+   return 8 * m_eme->maximum_input_size(max_ptext_input_bits());
    }
 
 secure_vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(const uint8_t msg[], size_t msg_len,
                                                          RandomNumberGenerator& rng)
    {
-   const size_t max_raw = max_raw_input_bits();
-   const std::vector<uint8_t> encoded = unlock(m_eme->encode(msg, msg_len, max_raw, rng));
+   const size_t max_raw = max_ptext_input_bits();
+   const auto encoded = m_eme->encode(msg, msg_len, max_raw, rng);
    return raw_encrypt(encoded.data(), encoded.size(), rng);
    }
 
@@ -59,78 +65,84 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
    return z;
    }
 
-PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa, bool with_message_recovery) :
+namespace {
+
+std::unique_ptr<HashFunction> create_signature_hash(const std::string& padding)
+   {
+   if(auto hash = HashFunction::create(padding))
+      return hash;
+
+   SCAN_Name req(padding);
+
+   if(req.algo_name() == "EMSA1" && req.arg_count() == 1)
+      {
+      if(auto hash = HashFunction::create(req.arg(0)))
+         return hash;
+      }
+
+#if defined(BOTAN_HAS_RAW_HASH_FN)
+   if(req.algo_name() == "Raw")
+      {
+      if(req.arg_count() == 0)
+         {
+         return std::make_unique<RawHashFunction>("Raw", 0);
+         }
+
+      if(req.arg_count() == 1)
+         {
+         if(auto hash = HashFunction::create(req.arg(0)))
+            return std::make_unique<RawHashFunction>(std::move(hash));
+         }
+      }
+#endif
+
+   throw Algorithm_Not_Found(padding);
+   }
+
+}
+
+PK_Ops::Signature_with_Hash::Signature_with_Hash(const std::string& hash) :
    Signature(),
-   m_emsa(EMSA::create_or_throw(emsa)),
-   m_hash(hash_for_emsa(emsa)),
-   m_prefix_used(false)
+   m_hash(create_signature_hash(hash))
    {
-   if(!with_message_recovery && m_emsa->requires_message_recovery())
-      {
-      throw Invalid_Argument("Signature padding method " + emsa +
-                             " requires message recovery, which is not supported by this scheme");
-      }
    }
 
-void PK_Ops::Signature_with_EMSA::update(const uint8_t msg[], size_t msg_len)
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+std::string PK_Ops::Signature_with_Hash::rfc6979_hash_function() const
    {
-   if(has_prefix() && !m_prefix_used)
-      {
-      m_prefix_used = true;
-      secure_vector<uint8_t> prefix = message_prefix();
-      m_emsa->update(prefix.data(), prefix.size());
-      }
-   m_emsa->update(msg, msg_len);
+   std::string hash = m_hash->name();
+   if(hash != "Raw")
+      return hash;
+   return "SHA-512";
+   }
+#endif
+
+void PK_Ops::Signature_with_Hash::update(const uint8_t msg[], size_t msg_len)
+   {
+   m_hash->update(msg, msg_len);
    }
 
-secure_vector<uint8_t> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& rng)
+secure_vector<uint8_t> PK_Ops::Signature_with_Hash::sign(RandomNumberGenerator& rng)
    {
-   m_prefix_used = false;
-   const secure_vector<uint8_t> msg = m_emsa->raw_data();
-   const auto padded = m_emsa->encoding_of(msg, this->max_input_bits(), rng);
-   return raw_sign(padded.data(), padded.size(), rng);
+   const secure_vector<uint8_t> msg = m_hash->final();
+   return raw_sign(msg.data(), msg.size(), rng);
    }
 
-PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa, bool with_message_recovery) :
+PK_Ops::Verification_with_Hash::Verification_with_Hash(const std::string& padding) :
    Verification(),
-   m_emsa(EMSA::create_or_throw(emsa)),
-   m_hash(hash_for_emsa(emsa)),
-   m_prefix_used(false)
+   m_hash(create_signature_hash(padding))
    {
-   if(!with_message_recovery && m_emsa->requires_message_recovery())
-      {
-      throw Invalid_Argument("Signature padding method " + emsa +
-                             " requires message recovery, which is not supported by this scheme");
-      }
    }
 
-void PK_Ops::Verification_with_EMSA::update(const uint8_t msg[], size_t msg_len)
+void PK_Ops::Verification_with_Hash::update(const uint8_t msg[], size_t msg_len)
    {
-   if(has_prefix() && !m_prefix_used)
-      {
-      m_prefix_used = true;
-      secure_vector<uint8_t> prefix = message_prefix();
-      m_emsa->update(prefix.data(), prefix.size());
-      }
-   m_emsa->update(msg, msg_len);
+   m_hash->update(msg, msg_len);
    }
 
-bool PK_Ops::Verification_with_EMSA::is_valid_signature(const uint8_t sig[], size_t sig_len)
+bool PK_Ops::Verification_with_Hash::is_valid_signature(const uint8_t sig[], size_t sig_len)
    {
-   m_prefix_used = false;
-   const secure_vector<uint8_t> msg = m_emsa->raw_data();
-
-   if(with_recovery())
-      {
-      secure_vector<uint8_t> output_of_key = verify_mr(sig, sig_len);
-      return m_emsa->verify(output_of_key, msg, max_input_bits());
-      }
-   else
-      {
-      Null_RNG rng;
-      secure_vector<uint8_t> encoded = m_emsa->encoding_of(msg, max_input_bits(), rng);
-      return verify(encoded.data(), encoded.size(), sig, sig_len);
-      }
+   const secure_vector<uint8_t> msg = m_hash->final();
+   return verify(msg.data(), msg.size(), sig, sig_len);
    }
 
 void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,

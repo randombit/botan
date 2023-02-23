@@ -112,6 +112,10 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      /**
      * Create a BigInt from an integer in a byte array
+     *
+     * Note this function is primarily used for implementing signature
+     * schemes and is not useful in typical applications.
+     *
      * @param buf the byte array holding the value
      * @param length size of buf
      * @param max_bits if the resulting integer is more than max_bits,
