@@ -9,10 +9,6 @@
 #include <botan/internal/scan_name.h>
 #include <botan/exceptn.h>
 
-#if defined(BOTAN_HAS_EMSA1)
-   #include <botan/internal/emsa1.h>
-#endif
-
 #if defined(BOTAN_HAS_EMSA_X931)
    #include <botan/internal/emsa_x931.h>
 #endif
@@ -38,14 +34,6 @@ namespace Botan {
 std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
    {
    SCAN_Name req(algo_spec);
-
-#if defined(BOTAN_HAS_EMSA1)
-   if(req.algo_name() == "EMSA1" && req.arg_count() == 1)
-      {
-      if(auto hash = HashFunction::create(req.arg(0)))
-         return std::make_unique<EMSA1>(std::move(hash));
-      }
-#endif
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
    if(req.algo_name() == "EMSA_PKCS1" ||

@@ -643,7 +643,7 @@ Test::Result test_verify_gost2012_cert()
    {
    Test::Result result("X509 GOST-2012 certificates");
 
-#if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG) && defined(BOTAN_HAS_EMSA1)
+#if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG)
    try
       {
       Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
@@ -693,8 +693,6 @@ Test::Result test_verify_gost2012_cert()
    test_result.test_eq("CA certificate signature algorithm (explicit)",
       Botan::OIDS::oid2str_or_throw(ca_cert_exp.signature_algorithm().oid()),"RSA/EMSA4");
 
-#if defined(BOTAN_HAS_EMSA1)
-
    // Try to set a padding scheme that is not supported for signing with the given key type
    opt.set_padding_scheme("EMSA1");
    try
@@ -708,7 +706,6 @@ Test::Result test_verify_gost2012_cert()
                           sk->algo_name(), e.what(),
                           "Signatures using RSA/EMSA1(SHA-512) are not supported");
       }
-#endif
 
    test_result.test_eq("CA certificate signature algorithm (explicit)",
       Botan::OIDS::oid2str_or_throw(ca_cert_exp.signature_algorithm().oid()),"RSA/EMSA4");
@@ -1573,11 +1570,6 @@ class X509_Cert_Unit_Tests final : public Test
             {
 #if !defined(BOTAN_HAS_EMSA_PKCS1)
             if(algo == "RSA")
-               continue;
-#endif
-
-#if !defined(BOTAN_HAS_EMSA1)
-            if(algo != "RSA" && algo != "Ed25519")
                continue;
 #endif
 

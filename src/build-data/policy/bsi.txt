@@ -33,7 +33,6 @@ argon2fmt
 # pk_pad
 eme_oaep
 emsa_pssr
-emsa1
 iso9796
 
 # pubkey

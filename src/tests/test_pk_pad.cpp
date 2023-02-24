@@ -81,9 +81,6 @@ class EMSA_unit_tests final : public Test
 
          std::vector<std::string> pads_need_hash =
             {
-#if BOTAN_HAS_EMSA1
-             "EMSA1",
-#endif
 #if BOTAN_HAS_EMSA_X931
              "EMSA2",
 #endif
