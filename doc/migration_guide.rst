@@ -309,3 +309,17 @@ RSA. This is now no longer implemented.
 If you must generates such signatures for some horrible reason, you can pre-hash
 the message using a hash function as usual, and then sign using a "Raw" padding,
 which will allow you to sign any arbitrary bits with no preprocessing.
+
+Public Key Signature Padding
+-----------------------------
+
+In previous versions Botan was somewhat lenient about allowing the application
+to specify using a hash which was in fact incompatible with the algorithm. For
+example, Ed25519 signatures are *always* generated using SHA-512; there is no
+choice in the matter. In the past, requesting using some other hash, say
+SHA-256, would be silently ignored. Now an exception is thrown, indicating the
+desired hash is not compatible with the algorithm.
+
+In previous versions, various APIs required that the application specify the
+hash function to be used. In most cases this can now be omitted (passing an
+empty string) and a suitable default will be chosen.
