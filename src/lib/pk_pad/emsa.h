@@ -88,6 +88,15 @@ class BOTAN_TEST_API EMSA
       virtual AlgorithmIdentifier config_for_x509(const std::string& algo_name,
                                                   const std::string& cert_hash_name) const;
 
+
+      /**
+      * Return encoded algorithm parameters for this signature padding
+      * scheme, if relevant. This should be a DER encoded blob.
+      */
+      virtual std::vector<uint8_t> algorithm_parameters() const;
+
+      virtual std::string hash_function() const = 0;
+
       /**
       * @return the SCAN name of the encoding/padding scheme
       */

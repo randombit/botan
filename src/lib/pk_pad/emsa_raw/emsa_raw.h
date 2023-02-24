@@ -22,6 +22,8 @@ class EMSA_Raw final : public EMSA
       explicit EMSA_Raw(size_t expected_hash_size = 0) :
          m_expected_size(expected_hash_size) {}
 
+      std::string hash_function() const override { return "Raw"; }
+
       std::string name() const override;
    private:
       void update(const uint8_t[], size_t) override;

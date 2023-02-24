@@ -121,6 +121,10 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature
 
       size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
 
+      AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::string hash_function() const override { return m_hash->name(); }
+
    private:
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                       RandomNumberGenerator& rng);
@@ -132,6 +136,13 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature
       std::vector<BigInt> m_ws;
       bool m_prefix_used;
    };
+
+AlgorithmIdentifier ECKCDSA_Signature_Operation::algorithm_identifier() const
+   {
+   const std::string full_name = "ECKCDSA/EMSA1(" + m_hash->name() + ")";
+   const OID oid = OID::from_string(full_name);
+   return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
+   }
 
 secure_vector<uint8_t>
 ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,

@@ -17,6 +17,11 @@
 
 namespace Botan {
 
+AlgorithmIdentifier PK_Ops::Signature::algorithm_identifier() const
+   {
+   throw Not_Implemented("This signature scheme does not have an algorithm identifier available");
+   }
+
 PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme) :
    m_eme(EME::create(eme))
    {

@@ -194,4 +194,9 @@ std::unique_ptr<EMSA> EMSA::create_or_throw(const std::string& algo_spec)
    throw Algorithm_Not_Found(algo_spec);
    }
 
+std::vector<uint8_t> EMSA::algorithm_parameters() const
+   {
+   throw Not_Implemented("No algorithm parameters encoding defined for " + this->name());
+   }
+
 }

@@ -183,6 +183,23 @@ std::string PSSR::name() const
    return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
    }
 
+std::vector<uint8_t> PSSR::algorithm_parameters() const
+   {
+   const AlgorithmIdentifier hash_id(m_hash->name(), AlgorithmIdentifier::USE_NULL_PARAM);
+   const AlgorithmIdentifier mgf_id("MGF1", hash_id.BER_encode());
+
+   std::vector<uint8_t> parameters;
+   DER_Encoder(parameters)
+      .start_sequence()
+      .start_context_specific(0).encode(hash_id).end_cons()
+      .start_context_specific(1).encode(mgf_id).end_cons()
+      .start_context_specific(2).encode(m_salt_size).end_cons()
+      .start_context_specific(3).encode(size_t(1)).end_cons() // trailer field
+      .end_cons();
+
+   return parameters;
+   }
+
 AlgorithmIdentifier PSSR::config_for_x509(const std::string& algo_name,
                                           const std::string& cert_hash_name) const
    {
@@ -195,17 +212,7 @@ AlgorithmIdentifier PSSR::config_for_x509(const std::string& algo_name,
       throw Invalid_Argument("PSS signature padding not compatible with " + algo_name);
       }
 
-   const AlgorithmIdentifier hash_id(cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM);
-   const AlgorithmIdentifier mgf_id("MGF1", hash_id.BER_encode());
-
-   std::vector<uint8_t> parameters;
-   DER_Encoder(parameters)
-      .start_sequence()
-      .start_context_specific(0).encode(hash_id).end_cons()
-      .start_context_specific(1).encode(mgf_id).end_cons()
-      .start_context_specific(2).encode(m_salt_size).end_cons()
-      .start_context_specific(3).encode(size_t(1)).end_cons() // trailer field
-      .end_cons();
+   const auto parameters = this->algorithm_parameters();
 
    // hardcoded as RSA is the only valid algorithm for EMSA4 at the moment
    return AlgorithmIdentifier("RSA/EMSA4", parameters);

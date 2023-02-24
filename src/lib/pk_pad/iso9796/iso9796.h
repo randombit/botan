@@ -40,6 +40,8 @@ class ISO_9796_DS2 final : public EMSA
          m_SALT_SIZE(salt_size)
          {}
 
+      std::string hash_function() const override { return m_hash->name(); }
+
       std::string name() const override;
    private:
       void update(const uint8_t input[], size_t length) override;
@@ -76,6 +78,8 @@ class ISO_9796_DS3 final : public EMSA
          {}
 
       std::string name() const override;
+
+      std::string hash_function() const override { return m_hash->name(); }
 
    private:
       void update(const uint8_t input[], size_t length) override;

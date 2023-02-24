@@ -283,6 +283,10 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature
          return signature;
          }
 
+      std::string hash_function() const override;
+
+      AlgorithmIdentifier algorithm_identifier() const override;
+
    private:
       const PKCS11_RSA_PrivateKey& m_key;
       bool m_initialized = false;
@@ -290,6 +294,69 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature
       MechanismWrapper m_mechanism;
    };
 
+std::string PKCS11_RSA_Signature_Operation::hash_function() const
+   {
+   switch(m_mechanism.mechanism_type())
+      {
+      case MechanismType::Sha1RsaPkcs:
+      case MechanismType::Sha1RsaPkcsPss:
+      case MechanismType::Sha1RsaX931:
+         return "SHA-1";
+
+      case MechanismType::Sha224RsaPkcs:
+      case MechanismType::Sha224RsaPkcsPss:
+         return "SHA-224";
+
+      case MechanismType::Sha256RsaPkcs:
+      case MechanismType::Sha256RsaPkcsPss:
+         return "SHA-256";
+
+      case MechanismType::Sha384RsaPkcs:
+      case MechanismType::Sha384RsaPkcsPss:
+         return "SHA-348";
+
+      case MechanismType::Sha512RsaPkcs:
+      case MechanismType::Sha512RsaPkcsPss:
+         return "SHA-512";
+
+      case MechanismType::RsaX509:
+      case MechanismType::RsaX931:
+      case MechanismType::RsaPkcs:
+      case MechanismType::RsaPkcsPss:
+         return "Raw";
+
+      default:
+         throw Internal_Error("Unable to determine associated hash function of PKCS11 RSA signature operation");
+      }
+   }
+
+AlgorithmIdentifier PKCS11_RSA_Signature_Operation::algorithm_identifier() const
+   {
+   const std::string hash = this->hash_function();
+
+   switch(m_mechanism.mechanism_type())
+      {
+      case MechanismType::Sha1RsaPkcs:
+      case MechanismType::Sha224RsaPkcs:
+      case MechanismType::Sha256RsaPkcs:
+      case MechanismType::Sha384RsaPkcs:
+      case MechanismType::Sha512RsaPkcs:
+         {
+         const OID oid = OID::from_string("RSA/EMSA3(" + hash + ")");
+         return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
+         }
+
+      case MechanismType::Sha1RsaPkcsPss:
+      case MechanismType::Sha224RsaPkcsPss:
+      case MechanismType::Sha256RsaPkcsPss:
+      case MechanismType::Sha384RsaPkcsPss:
+      case MechanismType::Sha512RsaPkcsPss:
+         throw Not_Implemented("RSA-PSS identifier encoding missing for PKCS11");
+
+      default:
+         throw Not_Implemented("No algorithm identifier defined for RSA with this PKCS11 mechanism");
+      }
+   }
 
 class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification
    {

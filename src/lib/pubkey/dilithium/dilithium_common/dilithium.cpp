@@ -453,6 +453,9 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature
          return dilithium_math.crypto_bytes();
          }
 
+      AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::string hash_function() const override { return "SHAKE-256(512)"; }
    private:
       // Bit-pack signature sig = (c, z, h).
       secure_vector<uint8_t> pack_sig(const secure_vector<uint8_t>& c,
@@ -496,6 +499,11 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature
       SHAKE_256 m_shake;
       bool m_randomized;
    };
+
+AlgorithmIdentifier Dilithium_Signature_Operation::algorithm_identifier() const
+   {
+   return m_priv_key.algorithm_identifier();
+   }
 
 class Dilithium_Verification_Operation final : public PK_Ops::Verification
    {

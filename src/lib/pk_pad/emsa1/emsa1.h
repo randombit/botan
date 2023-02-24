@@ -27,6 +27,8 @@ class EMSA1 final : public EMSA
 
       std::string name() const override;
 
+      std::string hash_function() const override { return m_hash->name(); }
+
       AlgorithmIdentifier config_for_x509(const std::string& algo_name,
                                           const std::string& cert_hash_name) const override;
    private:

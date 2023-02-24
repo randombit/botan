@@ -1,6 +1,6 @@
 /*
 * RSA
-* (C) 1999-2010,2015,2016,2018,2019 Jack Lloyd
+* (C) 1999-2010,2015,2016,2018,2019,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -526,6 +526,10 @@ class RSA_Signature_Operation final : public PK_Ops::Signature,
 
       size_t signature_length() const override { return public_modulus_bytes(); }
 
+      AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::string hash_function() const override { return m_emsa->hash_function(); }
+
       RSA_Signature_Operation(const RSA_PrivateKey& rsa,
                               const std::string& padding,
                               RandomNumberGenerator& rng) :
@@ -533,10 +537,30 @@ class RSA_Signature_Operation final : public PK_Ops::Signature,
          m_emsa(EMSA::create_or_throw(padding))
          {
          }
-
    private:
       std::unique_ptr<EMSA> m_emsa;
    };
+
+AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const
+   {
+   const std::string emsa_name = m_emsa->name();
+
+   try
+      {
+      const std::string full_name = "RSA/" + emsa_name;
+      const OID oid = OID::from_string(full_name);
+      return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
+      }
+   catch(Lookup_Error&) {}
+
+   if(emsa_name.starts_with("EMSA4("))
+      {
+      const auto parameters = m_emsa->algorithm_parameters();
+      return AlgorithmIdentifier("RSA/EMSA4", parameters);
+      }
+
+   throw Not_Implemented("No algorithm identifier defined for RSA with " + emsa_name);
+   }
 
 class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
                                        private RSA_Private_Operation

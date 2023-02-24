@@ -61,8 +61,10 @@ namespace {
 class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
    {
    public:
-      PKCS11_ECDSA_Signature_Operation(const PKCS11_EC_PrivateKey& key, const std::string& emsa)
-         : PK_Ops::Signature(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
+      PKCS11_ECDSA_Signature_Operation(const PKCS11_EC_PrivateKey& key, const std::string& hash)
+         : PK_Ops::Signature(), m_key(key), m_order(key.domain().get_order()),
+           m_mechanism(MechanismWrapper::create_ecdsa_mechanism(hash)),
+           m_hash(hash)
          {}
 
       void update(const uint8_t msg[], size_t msg_len) override
@@ -106,14 +108,25 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
 
       size_t signature_length() const override { return 2*m_order.bytes(); }
 
+      AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::string hash_function() const override { return m_hash; }
+
    private:
       const PKCS11_EC_PrivateKey& m_key;
       const BigInt& m_order;
       MechanismWrapper m_mechanism;
+      const std::string m_hash;
       secure_vector<uint8_t> m_first_message;
       bool m_initialized = false;
    };
 
+AlgorithmIdentifier PKCS11_ECDSA_Signature_Operation::algorithm_identifier() const
+   {
+   const std::string full_name = "ECDSA/EMSA1(" + hash_function() + ")";
+   const OID oid = OID::from_string(full_name);
+   return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
+   }
 
 class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
    {

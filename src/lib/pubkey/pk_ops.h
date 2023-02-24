@@ -68,14 +68,14 @@ class Decryption
 class Verification
    {
    public:
-      /*
+      /**
       * Add more data to the message currently being signed
       * @param msg the message
       * @param msg_len the length of msg in bytes
       */
       virtual void update(const uint8_t msg[], size_t msg_len) = 0;
 
-      /*
+      /**
       * Perform a verification operation
       * @param rng a random number generator
       */
@@ -90,23 +90,35 @@ class Verification
 class Signature
    {
    public:
-      /*
+      /**
       * Add more data to the message currently being signed
       * @param msg the message
       * @param msg_len the length of msg in bytes
       */
       virtual void update(const uint8_t msg[], size_t msg_len) = 0;
 
-      /*
+      /**
       * Perform a signature operation
       * @param rng a random number generator
       */
       virtual secure_vector<uint8_t> sign(RandomNumberGenerator& rng) = 0;
 
-      /*
+      /**
       * Return an upper bound on the length of the output signature
       */
       virtual size_t signature_length() const = 0;
+
+      /**
+      * Return an algorithm identifier associated with this signature scheme.
+      *
+      * Default implementation throws an exception
+      */
+      virtual AlgorithmIdentifier algorithm_identifier() const;
+
+      /**
+      * Return the hash function being used by this signer
+      */
+      virtual std::string hash_function() const = 0;
 
       virtual ~Signature() = default;
    };

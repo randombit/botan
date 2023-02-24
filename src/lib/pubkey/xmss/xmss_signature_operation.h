@@ -42,6 +42,10 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature
 
       size_t signature_length() const override;
 
+      AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::string hash_function() const override { return m_hash.hash_function(); }
+
    private:
       /**
        * Algorithm 11: "treeSig"

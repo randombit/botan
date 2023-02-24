@@ -317,89 +317,53 @@ std::vector<uint8_t> X509_Object::make_signed(PK_Signer* signer,
 
 namespace {
 
-std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
-                            const Private_Key& key,
-                            const std::string& hash_fn,
-                            const std::string& user_specified)
+std::string x509_signature_padding_for(
+   const std::string& algo_name,
+   const std::string& hash_fn,
+   const std::string& user_specified_padding)
    {
-   const std::string algo_name = key.algo_name();
-   std::string padding;
-
-   // check algo_name and set default
-   if(algo_name == "RSA")
+   if(algo_name == "DSA" ||
+      algo_name == "ECDSA" ||
+      algo_name == "ECGDSA" ||
+      algo_name == "ECKCDSA" ||
+      algo_name == "GOST-34.10" ||
+      algo_name == "GOST-34.10-2012-256" ||
+      algo_name == "GOST-34.10-2012-512")
       {
-      // set to EMSA3 for compatibility reasons, originally it was the only option
-      padding = "EMSA3(" + hash_fn + ")";
+      BOTAN_ARG_CHECK(user_specified_padding.empty() || user_specified_padding == "EMSA1",
+                      "Invalid padding scheme for DSA-like scheme");
+      return "EMSA1(" + hash_fn + ")";
       }
-   else if(algo_name == "DSA" ||
-           algo_name == "ECDSA" ||
-           algo_name == "ECGDSA" ||
-           algo_name == "ECKCDSA" ||
-           algo_name == "GOST-34.10" ||
-           algo_name == "GOST-34.10-2012-256" ||
-           algo_name == "GOST-34.10-2012-512")
+   else if(algo_name == "RSA")
       {
-      padding = "EMSA1(" + hash_fn + ")";
+      // set to PKCSv1.5 for compatibility reasons, originally it was the only option
+
+      if(user_specified_padding.empty())
+         return "EMSA3(" + hash_fn + ")";
+      else
+         return user_specified_padding + "(" + hash_fn + ")";
       }
    else if(algo_name == "Ed25519")
       {
-      padding = "Pure";
-      }
-   else if(algo_name == "XMSS")
-      {
-      if(user_specified.empty() == true)
-         {
-         throw Invalid_Argument("XMSS requires padding scheme");
-         }
-      padding = user_specified;
-      sig_algo = AlgorithmIdentifier(OID::from_string("XMSS"), AlgorithmIdentifier::USE_EMPTY_PARAM);
-      return padding;
+      BOTAN_ARG_CHECK(user_specified_padding.empty() || user_specified_padding == "Pure",
+                      "Invalid padding scheme for Ed25519");
+      return "Pure";
       }
    else if(algo_name.starts_with("Dilithium-"))
       {
-      sig_algo = key.algorithm_identifier();
-      return "Randomized";
+      BOTAN_ARG_CHECK(user_specified_padding.empty() ||
+                      user_specified_padding == "Randomized" ||
+                      user_specified_padding == "Deterministic",
+                      "Invalid padding scheme for Dilithium");
+
+      if(user_specified_padding.empty())
+         return "Randomized";
+      else
+         return user_specified_padding;
       }
    else
       {
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
-      }
-
-   if(user_specified.empty() == false)
-      {
-      padding = user_specified;
-      }
-
-   if(algo_name == "Ed25519" && padding == "Pure")
-      {
-      sig_algo = AlgorithmIdentifier(OID::from_string("Ed25519"), AlgorithmIdentifier::USE_EMPTY_PARAM);
-      return "Pure";
-      }
-   else
-      {
-      // try to construct an EMSA object from the padding options or default
-
-      /*
-      * EMSA::create will return null if opts contains {"padding",<valid_padding>} but
-      * <valid_padding> does not specify a hash function.
-      * Omitting it is valid since it needs to be identical to hash_fn.
-      * If it still throws, something happened that we cannot repair here,
-      * e.g. the algorithm/padding combination is not supported.
-      */
-      std::unique_ptr<EMSA> emsa = EMSA::create(padding);
-
-      if(!emsa)
-         {
-         emsa = EMSA::create(padding + "(" + hash_fn + ")");
-         }
-
-      if(!emsa)
-         {
-         throw Invalid_Argument("Could not parse padding scheme " + padding);
-         }
-
-      sig_algo = emsa->config_for_x509(key.algo_name(), hash_fn);
-      return emsa->name();
       }
    }
 
@@ -412,11 +376,43 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(AlgorithmIdentifier& s
                                                           const Private_Key& key,
                                                           RandomNumberGenerator& rng,
                                                           const std::string& hash_fn,
-                                                          const std::string& padding_algo)
+                                                          const std::string& user_specified_padding)
    {
    const Signature_Format format = key.default_x509_signature_format();
-   const std::string emsa = choose_sig_algo(sig_algo, key, hash_fn, padding_algo);
-   return std::make_unique<PK_Signer>(key, rng, emsa, format);
+
+   if(!user_specified_padding.empty())
+      {
+      try
+         {
+         auto pk_signer = std::make_unique<PK_Signer>(key, rng, user_specified_padding, format);
+         sig_algo = pk_signer->algorithm_identifier();
+         if(pk_signer->hash_function() != hash_fn)
+            {
+            throw Invalid_Argument("Specified hash function " + hash_fn +
+                                   " is incompatible with requested padding mechanism " + user_specified_padding);
+            }
+         return pk_signer;
+         }
+      catch(Lookup_Error&) {}
+      }
+
+   const std::string padding = x509_signature_padding_for(key.algo_name(), hash_fn, user_specified_padding);
+
+   try
+      {
+      auto pk_signer = std::make_unique<PK_Signer>(key, rng, padding, format);
+      sig_algo = pk_signer->algorithm_identifier();
+      if(pk_signer->hash_function() != hash_fn)
+         {
+         throw Invalid_Argument("Specified hash function " + hash_fn +
+                                " is incompatible with requested padding mechanism " + user_specified_padding);
+         }
+      return pk_signer;
+      }
+   catch(Not_Implemented&)
+      {
+      throw Invalid_Argument("Signatures using " + key.algo_name() + "/" + padding + " are not supported");
+      }
    }
 
 }

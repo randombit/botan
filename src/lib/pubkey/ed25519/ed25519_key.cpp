@@ -239,10 +239,19 @@ class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature
 
       size_t signature_length() const override { return 64; }
 
+      AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::string hash_function() const override { return "SHA-512"; }
+
    private:
       std::vector<uint8_t> m_msg;
       const Ed25519_PrivateKey& m_key;
    };
+
+AlgorithmIdentifier Ed25519_Pure_Sign_Operation::algorithm_identifier() const
+   {
+   return AlgorithmIdentifier(OID::from_string("Ed25519"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+   }
 
 /**
 * Ed25519 signing operation with pre-hash
@@ -282,6 +291,8 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
                       m_domain_sep.data(), m_domain_sep.size());
          return sig;
          }
+
+      std::string hash_function() const override { return m_hash->name(); }
 
    private:
       std::unique_ptr<HashFunction> m_hash;

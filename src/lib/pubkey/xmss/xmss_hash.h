@@ -32,6 +32,8 @@ class XMSS_Hash final
       XMSS_Hash& operator=(const XMSS_Hash&) = delete;
       XMSS_Hash& operator=(XMSS_Hash&&) = default;
 
+      std::string hash_function() const { return m_hash->name(); }
+
    private:
       inline void calculate_hash(const uint8_t hash_id,
                                  secure_vector<uint8_t>& result,

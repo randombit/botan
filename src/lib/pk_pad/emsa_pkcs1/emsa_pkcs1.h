@@ -39,6 +39,8 @@ class EMSA_PKCS1v15 final : public EMSA
       std::string name() const override
          { return "EMSA3(" + m_hash->name() + ")"; }
 
+      std::string hash_function() const override { return m_hash->name(); }
+
       AlgorithmIdentifier config_for_x509(const std::string& algo_name,
                                           const std::string& cert_hash_name) const override;
    private:
@@ -71,6 +73,8 @@ class EMSA_PKCS1v15_Raw final : public EMSA
       * the signature.
       */
       EMSA_PKCS1v15_Raw(const std::string& hash_algo);
+
+      std::string hash_function() const override { return m_hash_name; }
 
       std::string name() const override
          {
