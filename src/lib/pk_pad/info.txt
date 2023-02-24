@@ -10,5 +10,4 @@ brief -> "Implementations of public key padding schemes"
 <requires>
 hash
 rng
-pubkey
 </requires>

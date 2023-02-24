@@ -33,8 +33,6 @@ class PSSR final : public EMSA
 
       std::string name() const override;
 
-      std::vector<uint8_t> algorithm_parameters() const override;
-
       std::string hash_function() const override { return m_hash->name(); }
    private:
       void update(const uint8_t input[], size_t length) override;

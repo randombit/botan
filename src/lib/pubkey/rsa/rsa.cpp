@@ -17,6 +17,7 @@
 #include <botan/internal/divide.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/emsa.h>
+#include <botan/internal/pss_params.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
   #include <botan/internal/thread_pool.h>
@@ -555,7 +556,7 @@ AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const
 
    if(emsa_name.starts_with("EMSA4("))
       {
-      const auto parameters = m_emsa->algorithm_parameters();
+      auto parameters = PSS_Params::from_emsa_name(m_emsa->name()).serialize();
       return AlgorithmIdentifier("RSA/EMSA4", parameters);
       }
 

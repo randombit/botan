@@ -11,6 +11,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_version.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/pss_params.h>
 #include <botan/hash.h>
 #include <botan/der_enc.h>
 #include <botan/hex.h>
@@ -262,23 +263,15 @@ AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
       case ECDSA_SHA512:
          return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-512)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
 
-      /*
-      The hex strings are the DER encoded PssParams with
-       MGF == MGF1
-       hash == MGF1 hash
-       salt_len == hash_len
-
-      This specific set of PSS parameters is mandated by TLS 1.3
-      */
       case RSA_PSS_SHA256:
          return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
-                                    hex_decode("3039A00F300D06096086480165030402010500A11C301A06092A864886F70D010108300D06096086480165030402010500A203020120A303020101"));
+                                    PSS_Params("SHA-256", 32).serialize());
       case RSA_PSS_SHA384:
          return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
-                                    hex_decode("3039A00F300D06096086480165030402020500A11C301A06092A864886F70D010108300D06096086480165030402020500A203020130A303020101"));
+                                    PSS_Params("SHA-384", 48).serialize());
       case RSA_PSS_SHA512:
          return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
-                                    hex_decode("3039A00F300D06096086480165030402030500A11C301A06092A864886F70D010108300D06096086480165030402030500A203020140A303020101"));
+                                    PSS_Params("SHA-512", 64).serialize());
 
       default:
          // Note that Ed25519 and Ed448 end up here

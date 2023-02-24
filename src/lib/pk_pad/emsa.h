@@ -76,11 +76,8 @@ class BOTAN_TEST_API EMSA
                           size_t key_bits) = 0;
 
       /**
-      * Return encoded algorithm parameters for this signature padding
-      * scheme, if relevant. This should be a DER encoded blob.
+      * Return the hash function being used by this padding scheme
       */
-      virtual std::vector<uint8_t> algorithm_parameters() const;
-
       virtual std::string hash_function() const = 0;
 
       /**

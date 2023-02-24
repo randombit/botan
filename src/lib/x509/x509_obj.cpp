@@ -12,40 +12,11 @@
 #include <botan/internal/parsing.h>
 #include <botan/pem.h>
 #include <botan/internal/emsa.h>
+#include <botan/internal/pss_params.h>
 #include <algorithm>
 #include <sstream>
 
 namespace Botan {
-
-namespace {
-struct Pss_params
-   {
-   AlgorithmIdentifier hash_algo;
-   AlgorithmIdentifier mask_gen_algo;
-   AlgorithmIdentifier mask_gen_hash;  // redundant: decoded mask_gen_algo.parameters
-   size_t salt_len;
-   size_t trailer_field;
-   };
-
-Pss_params decode_pss_params(const std::vector<uint8_t>& encoded_pss_params)
-   {
-   const AlgorithmIdentifier default_hash("SHA-1", AlgorithmIdentifier::USE_NULL_PARAM);
-   const AlgorithmIdentifier default_mgf("MGF1", default_hash.BER_encode());
-
-   Pss_params pss_parameter;
-   BER_Decoder(encoded_pss_params)
-      .start_sequence()
-         .decode_optional(pss_parameter.hash_algo, ASN1_Type(0), ASN1_Class::ExplicitContextSpecific, default_hash)
-         .decode_optional(pss_parameter.mask_gen_algo, ASN1_Type(1), ASN1_Class::ExplicitContextSpecific, default_mgf)
-         .decode_optional(pss_parameter.salt_len, ASN1_Type(2), ASN1_Class::ExplicitContextSpecific, size_t(20))
-         .decode_optional(pss_parameter.trailer_field, ASN1_Type(3), ASN1_Class::ExplicitContextSpecific, size_t(1))
-      .end_cons();
-
-   BER_Decoder(pss_parameter.mask_gen_algo.parameters()).decode(pss_parameter.mask_gen_hash);
-
-   return pss_parameter;
-   }
-}
 
 /*
 * Read a PEM or BER X.509 object
@@ -153,8 +124,8 @@ std::string X509_Object::hash_used_for_signature() const
 
    if(sig_info[1] == "EMSA4")
       {
-      const OID hash_oid = decode_pss_params(signature_algorithm().parameters()).hash_algo.oid();
-      return hash_oid.to_formatted_string();
+      PSS_Params pss_params(signature_algorithm().parameters());
+      return pss_params.hash_function();
       }
    else
       {
@@ -206,10 +177,10 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      Pss_params pss_parameter = decode_pss_params(signature_algorithm().parameters());
+      PSS_Params pss_params(signature_algorithm().parameters());
 
       // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-      const std::string hash_algo = pss_parameter.hash_algo.oid().to_formatted_string();
+      const std::string hash_algo = pss_params.hash_function();
       if(hash_algo != "SHA-1" &&
          hash_algo != "SHA-224" &&
          hash_algo != "SHA-256" &&
@@ -219,25 +190,27 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          return Certificate_Status_Code::UNTRUSTED_HASH;
          }
 
-      const std::string mgf_algo = pss_parameter.mask_gen_algo.oid().to_formatted_string();
-      if(mgf_algo != "MGF1")
+      if(pss_params.mgf_function() != "MGF1")
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      // For MGF1, it is strongly RECOMMENDED that the underlying hash function be the same as the one identified by hashAlgorithm
+      // For MGF1, it is strongly RECOMMENDED that the underlying hash
+      // function be the same as the one identified by hashAlgorithm
+      //
       // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-      if(pss_parameter.mask_gen_hash.oid() != pss_parameter.hash_algo.oid())
+      if(pss_params.hash_algid() != pss_params.mgf_hash_algid())
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      if(pss_parameter.trailer_field != 1)
+      if(pss_params.trailer_field() != 1)
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      padding += "(" + hash_algo + "," + mgf_algo + "," + std::to_string(pss_parameter.salt_len) + ")";
+      padding += "(" + hash_algo + ",MGF1," +
+         std::to_string(pss_params.salt_length()) + ")";
       }
    else
       {

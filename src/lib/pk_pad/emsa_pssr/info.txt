@@ -8,5 +8,4 @@ name -> "PSSR"
 
 <requires>
 mgf1
-asn1
 </requires>
