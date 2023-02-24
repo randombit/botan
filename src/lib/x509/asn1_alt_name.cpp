@@ -9,7 +9,6 @@
 #include <botan/pkix_types.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/oids.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/loadstor.h>

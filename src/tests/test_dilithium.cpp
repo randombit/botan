@@ -15,7 +15,6 @@
 #if defined(BOTAN_HAS_DILITHIUM_COMMON)
    #include <botan/block_cipher.h>
    #include <botan/dilithium.h>
-   #include <botan/oids.h>
    #include <botan/pubkey.h>
    #include <botan/pk_algs.h>
    #include <botan/hash.h>

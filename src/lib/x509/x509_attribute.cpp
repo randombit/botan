@@ -8,7 +8,6 @@
 #include <botan/pkix_types.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/oids.h>
 
 namespace Botan {
 

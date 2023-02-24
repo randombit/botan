@@ -12,7 +12,6 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/pubkey.h>
-#include <botan/oids.h>
 #include <botan/pem.h>
 
 namespace Botan {

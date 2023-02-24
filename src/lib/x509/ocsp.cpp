@@ -10,7 +10,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/x509_ext.h>
-#include <botan/oids.h>
 #include <botan/base64.h>
 #include <botan/pubkey.h>
 #include <botan/internal/parsing.h>

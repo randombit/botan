@@ -16,7 +16,6 @@
    #include <botan/pubkey.h>
    #include <botan/ecdsa.h>
    #include <botan/ec_group.h>
-   #include <botan/oids.h>
    #include <botan/pkcs8.h>
    #include <botan/hash.h>
    #include <botan/data_src.h>

@@ -5,7 +5,6 @@
 */
 
 #include <botan/ec_group.h>
-#include <botan/oids.h>
 #include <botan/tls_algos.h>
 #include <botan/exceptn.h>
 
