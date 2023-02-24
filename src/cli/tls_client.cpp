@@ -13,6 +13,7 @@
 
 #include <botan/tls_client.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_session_manager_memory.h>
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
 #include <botan/hex.h>
@@ -325,24 +326,24 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          output() << "Handshake complete\n";
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session) override
+      bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
          {
-         output() << "Handshake complete, " << session.version().to_string()
-                  << " using " << session.ciphersuite().to_string() << "\n";
+         output() << "Handshake complete, " << session.session.version().to_string()
+                  << " using " << session.session.ciphersuite().to_string() << "\n";
 
-         if(!session.session_id().empty())
+         if(const auto session_id = session.handle.id())
             {
-            output() << "Session ID " << Botan::hex_encode(session.session_id()) << "\n";
+            output() << "Session ID " << Botan::hex_encode(session_id->get()) << "\n";
             }
 
-         if(!session.session_ticket().empty())
+         if(const auto session_ticket = session.handle.ticket())
             {
-            output() << "Session ticket " << Botan::hex_encode(session.session_ticket()) << "\n";
+            output() << "Session ticket " << Botan::hex_encode(session_ticket->get()) << "\n";
             }
 
          if(flag_set("print-certs"))
             {
-            const std::vector<Botan::X509_Certificate>& certs = session.peer_certs();
+            const std::vector<Botan::X509_Certificate>& certs = session.session.peer_certs();
 
             for(size_t i = 0; i != certs.size(); ++i)
                {

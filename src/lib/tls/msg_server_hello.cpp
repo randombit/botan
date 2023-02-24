@@ -105,7 +105,7 @@ class Server_Hello_Internal
          random = reader.get_fixed<uint8_t>(32);
          is_hello_retry_request = random_signals_hello_retry_request(random);
 
-         session_id = reader.get_range<uint8_t>(1, 0, 32);
+         session_id = Session_ID(reader.get_range<uint8_t>(1, 0, 32));
          ciphersuite = reader.get_uint16_t();
          comp_method = reader.get_byte();
 
@@ -121,7 +121,7 @@ class Server_Hello_Internal
          }
 
       Server_Hello_Internal(Protocol_Version lv,
-                            std::vector<uint8_t> sid,
+                            Session_ID sid,
                             std::vector<uint8_t> r,
                             const uint16_t cs,
                             const uint8_t cm,
@@ -151,7 +151,7 @@ class Server_Hello_Internal
 
    public:
       Protocol_Version legacy_version;
-      std::vector<uint8_t> session_id;
+      Session_ID session_id;
       std::vector<uint8_t> random;
       bool is_hello_retry_request;
       uint16_t ciphersuite;
@@ -180,7 +180,7 @@ std::vector<uint8_t> Server_Hello::serialize() const
    buf.push_back(m_data->legacy_version.minor_version());
    buf += m_data->random;
 
-   append_tls_length_value(buf, m_data->session_id, 1);
+   append_tls_length_value(buf, m_data->session_id.get(), 1);
 
    buf.push_back(get_byte<0>(m_data->ciphersuite));
    buf.push_back(get_byte<1>(m_data->ciphersuite));
@@ -213,7 +213,7 @@ uint8_t Server_Hello::compression_method() const
    return m_data->comp_method;
    }
 
-const std::vector<uint8_t>& Server_Hello::session_id() const
+const Session_ID& Server_Hello::session_id() const
    {
    return m_data->session_id;
    }
@@ -324,7 +324,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
                                  RandomNumberGenerator& rng,
                                  const std::vector<uint8_t>& reneg_info,
                                  const Client_Hello_12& client_hello,
-                                 Session& resumed_session,
+                                 const Session& resumed_session,
                                  bool offer_session_ticket,
                                  const std::string& next_protocol) :
    Server_Hello(std::make_unique<Server_Hello_Internal>(

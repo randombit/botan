@@ -22,6 +22,7 @@
 #include <botan/internal/os_utils.h>
 
 #include <botan/tls_server.h>
+#include <botan/tls_session_manager_memory.h>
 #include <botan/x509cert.h>
 #include <botan/pkcs8.h>
 #include <botan/hex.h>
@@ -328,9 +329,9 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
          async_connect(m_server_socket, m_server_endpoints, onConnect);
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session) override
+      bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
          {
-         m_hostname = session.server_info().hostname();
+         m_hostname = session.session.server_info().hostname();
 
          return true;
          }

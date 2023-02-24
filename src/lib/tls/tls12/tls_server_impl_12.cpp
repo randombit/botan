@@ -60,43 +60,18 @@ class Server_Handshake_State final : public Handshake_State
 
 namespace {
 
-bool check_for_resume(Session& session_info,
+bool check_for_resume(const Session_Handle& handle_to_resume,
+                      Session& session_info,
                       Session_Manager& session_manager,
-                      Credentials_Manager& credentials,
                       Callbacks& cb,
-                      const Client_Hello_12* client_hello,
-                      std::chrono::seconds session_ticket_lifetime)
+                      const Policy& policy,
+                      const Client_Hello_12* client_hello)
    {
-   const std::vector<uint8_t>& client_session_id = client_hello->session_id();
-   const std::vector<uint8_t>& session_ticket = client_hello->session_ticket();
+   auto session = session_manager.retrieve(handle_to_resume, cb, policy);
+   if(!session.has_value())
+      return false;
 
-   if(session_ticket.empty())
-      {
-      if(client_session_id.empty()) // not resuming
-         return false;
-
-      // not found
-      if(!session_manager.load_from_session_id(client_session_id, session_info))
-         return false;
-      }
-   else
-      {
-      // If a session ticket was sent, ignore client session ID
-      try
-         {
-         session_info = Session::decrypt(
-            session_ticket,
-            credentials.psk("tls-server", "session-ticket", ""));
-
-         if(session_ticket_lifetime != std::chrono::seconds(0) &&
-            cb.tls_current_timestamp() - session_info.start_time() > session_ticket_lifetime)
-            return false; // ticket has expired
-         }
-      catch(...)
-         {
-         return false;
-         }
-      }
+   session_info = std::move(session.value());
 
    // wrong version
    if(client_hello->legacy_version() != session_info.version())
@@ -497,24 +472,18 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
 
    callbacks().tls_examine_extensions(pending_state.client_hello()->extensions(), Connection_Side::Client, Handshake_Type::ClientHello);
 
+   const auto session_handle = pending_state.client_hello()->session_handle();
+
    Session session_info;
    const bool resuming =
       pending_state.allow_session_resumption() &&
-      check_for_resume(session_info,
+      session_handle.has_value() &&
+      check_for_resume(session_handle.value(),
+                       session_info,
                        session_manager(),
-                       m_creds,
                        callbacks(),
-                       pending_state.client_hello(),
-                       policy().session_ticket_lifetime());
-
-   bool have_session_ticket_key = false;
-
-   try
-      {
-      have_session_ticket_key =
-         m_creds.psk("tls-server", "session-ticket", "").length() > 0;
-      }
-   catch(...) {}
+                       policy(),
+                       pending_state.client_hello());
 
    m_next_protocol = "";
    if(pending_state.client_hello()->supports_alpn())
@@ -524,11 +493,11 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
 
    if(resuming)
       {
-      this->session_resume(pending_state, have_session_ticket_key, session_info);
+      this->session_resume(pending_state, {session_info, session_handle.value()});
       }
    else // new session
       {
-      this->session_create(pending_state, have_session_ticket_key);
+      this->session_create(pending_state);
       }
    }
 
@@ -636,7 +605,6 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
       pending_state.hash().update(pending_state.handshake_io().format(contents, type));
 
       Session session_info(
-         pending_state.server_hello()->session_id(),
          pending_state.session_keys().master_secret(),
          pending_state.server_hello()->legacy_version(),
          pending_state.server_hello()->ciphersuite(),
@@ -644,29 +612,23 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
          pending_state.server_hello()->supports_extended_master_secret(),
          pending_state.server_hello()->supports_encrypt_then_mac(),
          get_peer_cert_chain(pending_state),
-         std::vector<uint8_t>(),
          Server_Information(pending_state.client_hello()->sni_hostname()),
          pending_state.server_hello()->srtp_profile(),
          callbacks().tls_current_timestamp());
 
-      if(save_session(session_info))
+      if(save_session({session_info, pending_state.server_hello()->session_id()}))
          {
-         if(pending_state.server_hello()->supports_session_ticket())
-            {
-            try
-               {
-               const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
+         auto handle = session_manager().establish(session_info, pending_state.server_hello()->session_id(), !pending_state.server_hello()->supports_session_ticket());
 
-               pending_state.new_session_ticket(
-                  new New_Session_Ticket_12(pending_state.handshake_io(),
-                                         pending_state.hash(),
-                                         session_info.encrypt(ticket_key, rng()),
-                                         policy().session_ticket_lifetime()));
-               }
-            catch(...) {}
+         if(pending_state.server_hello()->supports_session_ticket()
+            && handle.has_value() && handle->is_ticket())
+            {
+            pending_state.new_session_ticket(
+               new New_Session_Ticket_12(pending_state.handshake_io(),
+                                      pending_state.hash(),
+                                      handle->ticket().value(),
+                                      policy().session_ticket_lifetime()));
             }
-         else
-            session_manager().save(session_info);
          }
 
       if(!pending_state.new_session_ticket() &&
@@ -738,16 +700,15 @@ void Server_Impl_12::process_handshake_msg(const Handshake_State* active_state,
    }
 
 void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
-                                    bool have_session_ticket_key,
-                                    Session& session_info)
+                                    const Session_with_Handle& session)
    {
    // Only offer a resuming client a new ticket if they didn't send one this time,
    // ie, resumed via server-side resumption. TODO: also send one if expiring soon?
 
    const bool offer_new_session_ticket =
-      (pending_state.client_hello()->supports_session_ticket() &&
-       pending_state.client_hello()->session_ticket().empty() &&
-       have_session_ticket_key);
+      pending_state.client_hello()->supports_session_ticket() &&
+      pending_state.client_hello()->session_ticket().empty() &&
+      session_manager().emits_session_tickets();
 
    pending_state.server_hello(new Server_Hello_12(
                                  pending_state.handshake_io(),
@@ -757,46 +718,44 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
                                  rng(),
                                  secure_renegotiation_data_for_server_hello(),
                                  *pending_state.client_hello(),
-                                 session_info,
+                                 session.session,
                                  offer_new_session_ticket,
                                  m_next_protocol));
 
    secure_renegotiation_check(pending_state.server_hello());
 
    pending_state.mark_as_resumption();
-   pending_state.compute_session_keys(session_info.master_secret());
-   pending_state.set_resume_certs(session_info.peer_certs());
+   pending_state.compute_session_keys(session.session.master_secret());
+   pending_state.set_resume_certs(session.session.peer_certs());
 
-   if(!save_session(session_info))
+   auto new_handle = [&, this]() -> std::optional<Session_Handle>
       {
-      session_manager().remove_entry(session_info.session_id());
+      if(!save_session(session))
+         {
+         session_manager().remove(session.handle);
+         return std::nullopt;
+         }
+      else
+         {
+         return session_manager().establish(session.session, session.handle.id());
+         }
+      }();
 
-      if(pending_state.server_hello()->supports_session_ticket()) // send an empty ticket
+   if(pending_state.server_hello()->supports_session_ticket())
+      {
+      if(new_handle.has_value() && new_handle->is_ticket())
+         {
+         pending_state.new_session_ticket(
+            new New_Session_Ticket_12(pending_state.handshake_io(),
+                                      pending_state.hash(),
+                                      new_handle->ticket().value(),
+                                      policy().session_ticket_lifetime()));
+         }
+      else
          {
          pending_state.new_session_ticket(
             new New_Session_Ticket_12(pending_state.handshake_io(),
                                       pending_state.hash()));
-         }
-      }
-
-   if(pending_state.server_hello()->supports_session_ticket() && !pending_state.new_session_ticket())
-      {
-      try
-         {
-         const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
-
-         pending_state.new_session_ticket(
-            new New_Session_Ticket_12(pending_state.handshake_io(),
-                                      pending_state.hash(),
-                                      session_info.encrypt(ticket_key, rng()),
-                                      policy().session_ticket_lifetime()));
-         }
-      catch(...) {}
-
-      if(!pending_state.new_session_ticket())
-         {
-         pending_state.new_session_ticket(
-            new New_Session_Ticket_12(pending_state.handshake_io(), pending_state.hash()));
          }
       }
 
@@ -808,8 +767,7 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
    pending_state.set_expected_next(Handshake_Type::HandshakeCCS);
    }
 
-void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
-                                    bool have_session_ticket_key)
+void Server_Impl_12::session_create(Server_Handshake_State& pending_state)
    {
    std::map<std::string, std::vector<X509_Certificate>> cert_chains;
 
@@ -844,10 +802,10 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state,
                                                    *pending_state.client_hello());
 
    Server_Hello_12::Settings srv_settings(
-      make_hello_random(rng(), callbacks(), policy()), // new session ID
+      Session_ID(make_hello_random(rng(), callbacks(), policy())),
       pending_state.version(),
       ciphersuite,
-      have_session_ticket_key);
+      session_manager().emits_session_tickets());
 
    pending_state.server_hello(new Server_Hello_12(
                                  pending_state.handshake_io(),

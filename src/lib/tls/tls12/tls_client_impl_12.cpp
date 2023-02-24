@@ -13,7 +13,9 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_client_impl_12.h>
+
 #include <sstream>
+#include <optional>
 
 namespace Botan::TLS {
 
@@ -33,7 +35,7 @@ class Client_Handshake_State_12 final : public Handshake_State
          return *server_public_key.get();
          }
 
-      bool is_a_resumption() const { return (resumed_session.has_value()); }
+      bool is_a_resumption() const { return resumed_session.has_value(); }
 
       bool is_a_renegotiation() const { return m_is_reneg; }
 
@@ -108,8 +110,8 @@ Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgr
       // Downgrade initiated after a TLS 1.2 session was found. No communication
       // has happened yet but the found session should be used for resumption.
       BOTAN_ASSERT_NOMSG(downgrade_info.tls12_session.has_value() &&
-                         downgrade_info.tls12_session->version().is_pre_tls_13());
-      send_client_hello(state, false, downgrade_info.tls12_session->version(), downgrade_info.tls12_session, downgrade_info.next_protocols);
+                         downgrade_info.tls12_session->session.version().is_pre_tls_13());
+      send_client_hello(state, false, downgrade_info.tls12_session->session.version(), downgrade_info.tls12_session, downgrade_info.next_protocols);
       }
    }
 
@@ -147,7 +149,7 @@ void Client_Impl_12::initiate_handshake(Handshake_State& state,
 void Client_Impl_12::send_client_hello(Handshake_State& state_base,
                                        bool force_full_renegotiation,
                                        Protocol_Version version,
-                                       std::optional<Session> session_info,
+                                       std::optional<Session_with_Handle> session_and_handle,
                                        const std::vector<std::string>& next_protocols)
    {
    Client_Handshake_State_12& state = dynamic_cast<Client_Handshake_State_12&>(state_base);
@@ -159,27 +161,29 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
    if(!force_full_renegotiation)
       {
       // if no session is provided, we need to try and find one opportunistically
-      if(!session_info.has_value() && !m_info.empty())
+      if(!session_and_handle.has_value() && !m_info.empty())
          {
-         session_info = Session();
-         if(!session_manager().load_from_server_info(m_info, session_info.value()))
-            { session_info.reset(); }
+         if(auto sessions = session_manager().find(m_info, callbacks(), policy()); !sessions.empty())
+            {
+            session_and_handle = std::move(sessions.front());
+            }
          }
 
-      if(session_info.has_value())
+      if(session_and_handle.has_value())
          {
          /*
          Ensure that the session protocol cipher and version are acceptable
          If not skip the resume and establish a new session
          */
-         const bool exact_version = session_info->version() == version;
+         auto& session_info = session_and_handle->session;
+         const bool exact_version = session_info.version() == version;
          const bool ok_version =
-            (session_info->version().is_datagram_protocol() == version.is_datagram_protocol()) &&
-            policy().acceptable_protocol_version(session_info->version());
+            (session_info.version().is_datagram_protocol() == version.is_datagram_protocol()) &&
+            policy().acceptable_protocol_version(session_info.version());
 
          const bool session_version_ok = policy().only_resume_with_exact_version() ? exact_version : ok_version;
 
-         if(policy().acceptable_ciphersuite(session_info->ciphersuite()) && session_version_ok)
+         if(policy().acceptable_ciphersuite(session_info.ciphersuite()) && session_version_ok)
             {
             state.client_hello(
                new Client_Hello_12(state.handshake_io(),
@@ -188,7 +192,7 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
                                    callbacks(),
                                    rng(),
                                    secure_renegotiation_data_for_client_hello(),
-                                   *session_info,
+                                   session_and_handle.value(),
                                    next_protocols));
 
             state.resumed_session = std::move(session_info);
@@ -761,15 +765,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          state.client_finished(new Finished_12(state.handshake_io(), state, Connection_Side::Client));
          }
 
-      std::vector<uint8_t> session_id = state.server_hello()->session_id();
-
-      const std::vector<uint8_t>& session_ticket = state.session_ticket();
-
-      if(session_id.empty() && !session_ticket.empty())
-         session_id = make_hello_random(rng(), callbacks(), policy());
-
       Session session_info(
-         session_id,
          state.session_keys().master_secret(),
          state.server_hello()->legacy_version(),
          state.server_hello()->ciphersuite(),
@@ -777,7 +773,6 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          state.server_hello()->supports_extended_master_secret(),
          state.server_hello()->supports_encrypt_then_mac(),
          get_peer_cert_chain(state),
-         session_ticket,
          m_info,
          state.server_hello()->srtp_profile(),
          callbacks().tls_current_timestamp(),
@@ -789,14 +784,56 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
             : std::chrono::seconds::max())
          );
 
-      const bool should_save = save_session(session_info);
-
-      if(!session_id.empty() && state.is_a_resumption() == false)
+      // RFC 5077 3.4
+      //    If the client receives a session ticket from the server, then it
+      //    discards any Session ID that was sent in the ServerHello.
+      const auto handle = [&]() -> std::optional<Session_Handle>
          {
-         if(should_save)
-            session_manager().save(session_info);
+         if(const auto& session_ticket = state.session_ticket(); !session_ticket.empty())
+            { return session_ticket; }
+         else if(const auto& session_id = state.server_hello()->session_id(); !session_id.empty())
+            { return session_id; }
          else
-            session_manager().remove_entry(session_info.session_id());
+            { return std::nullopt; }
+         }();
+
+      if(handle.has_value())
+         {
+         // TODO: This should be move outside the `if(handle.has_value())`
+         //       once we adapt
+         //       TLS::Callbacks::session_established(Session) to
+         //       something along the lines of
+         //       TLS::Callbacks::connection_established(Summary)
+         //
+         // This should be called for all successfully established sessions
+         // not only the ones providing a handle for resumption.
+         const bool should_save = save_session({session_info, handle.value()});
+
+         // RFC 5077 3.3
+         //    If the server successfully verifies the client's ticket, then it
+         //    MAY renew the ticket by including a NewSessionTicket handshake
+         //    message after the ServerHello in the abbreviated handshake. The
+         //    client should start using the new ticket as soon as possible
+         //    after it verifies the server's Finished message for new
+         //    connections.
+         if(state.is_a_resumption() &&
+            !state.client_hello()->session_ticket().empty() &&
+            handle->is_ticket() &&
+            should_save)
+            {
+            // renew the session ticket by removing the one we used to establish
+            // this connection and replace it with the one we just received
+            session_manager().remove(state.client_hello()->session_ticket());
+            session_manager().store(session_info, handle.value());
+            }
+
+         if(!state.is_a_resumption())
+            {
+            if(should_save)
+               session_manager().store(session_info, handle.value());
+            else
+               session_manager().remove(handle.value());
+            }
          }
 
       activate_session();

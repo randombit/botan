@@ -15,13 +15,11 @@ namespace TLS {
 Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
                                                RandomNumberGenerator& rng,
                                                const std::string& db_filename,
-                                               size_t max_sessions,
-                                               std::chrono::seconds session_lifetime) :
+                                               size_t max_sessions) :
    Session_Manager_SQL(std::make_shared<Sqlite3_Database>(db_filename),
                        passphrase,
                        rng,
-                       max_sessions,
-                       session_lifetime)
+                       max_sessions)
    {}
 
 }

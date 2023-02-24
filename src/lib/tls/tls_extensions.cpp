@@ -573,7 +573,7 @@ Signature_Algorithms_Cert::Signature_Algorithms_Cert(TLS_Data_Reader& reader,
 
 Session_Ticket_Extension::Session_Ticket_Extension(TLS_Data_Reader& reader,
                                                    uint16_t extension_size)
-   : m_ticket(reader.get_elem<uint8_t, std::vector<uint8_t>>(extension_size))
+   : m_ticket(Session_Ticket(reader.get_elem<uint8_t, std::vector<uint8_t>>(extension_size)))
    {}
 
 SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,

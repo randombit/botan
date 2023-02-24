@@ -162,7 +162,7 @@ class Channel_Impl
 
          /// The TLS 1.2 session information found by a TLS 1.3 client that
          /// caused it to initiate a downgrade before even sending a client hello.
-         std::optional<Session> tls12_session;
+         std::optional<Session_with_Handle> tls12_session;
 
          Server_Information server_info;
          std::vector<std::string> next_protocols;
@@ -215,12 +215,13 @@ class Channel_Impl
          m_downgrade_info->will_downgrade = true;
          }
 
-      void request_downgrade_for_resumption(Session session)
+      void request_downgrade_for_resumption(Session_with_Handle session)
          {
          BOTAN_STATE_CHECK(m_downgrade_info &&
                            m_downgrade_info->client_hello_message.empty() &&
                            m_downgrade_info->peer_transcript.empty() &&
                            !m_downgrade_info->tls12_session.has_value());
+         BOTAN_ASSERT_NOMSG(session.session.version().is_pre_tls_13());
          m_downgrade_info->tls12_session = std::move(session);
          request_downgrade();
          }

@@ -12,6 +12,7 @@
 
 #include <botan/asio_stream.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_session_manager_noop.h>
 
 // The boost::beast::test::stream we use is available starting from boost
 // version 1.68, so we cannot run these tests with a smaller version.

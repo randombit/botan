@@ -1,6 +1,7 @@
 /*
 * TLS Session Manager
 * (C) 2011 Jack Lloyd
+*     2023 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,152 +9,260 @@
 #ifndef BOTAN_TLS_SESSION_MANAGER_H_
 #define BOTAN_TLS_SESSION_MANAGER_H_
 
+#include <botan/build.h>
 #include <botan/tls_session.h>
 #include <botan/mutex.h>
+
+#if defined(BOTAN_HAS_TLS_13)
+   #include <botan/tls_ticket_13.h>
+#endif
+
 #include <chrono>
 #include <map>
+#include <variant>
 
 namespace Botan {
+class RandomNumberGenerator;
+}
 
-namespace TLS {
+namespace Botan::TLS {
+
+class Callbacks;
+class Policy;
 
 /**
-* Session_Manager is an interface to systems which can save
-* session parameters for supporting session resumption.
+* Session_Manager is an interface to systems which can save session parameters
+* for supporting session resumption.
 *
 * Saving sessions is done on a best-effort basis; an implementation is
-* allowed to drop sessions due to space constraints.
+* allowed to drop sessions due to space constraints or other issues.
 *
-* Implementations should strive to be thread safe
+* Implementations should strive to be thread safe. This base class provides a
+* recursive mutex (via Session_Manager::mutex()). Derived classes may simply
+* reuse this for their own locking.
 */
-class BOTAN_PUBLIC_API(2,0) Session_Manager
+class BOTAN_PUBLIC_API(3, 0) Session_Manager
    {
    public:
-      /**
-      * Try to load a saved session (using session ID)
-      * @param session_id the session identifier we are trying to resume
-      * @param session will be set to the saved session data (if found),
-               or not modified if not found
-      * @return true if session was modified
-      */
-      virtual bool load_from_session_id(const std::vector<uint8_t>& session_id,
-                                        Session& session) = 0;
+      Session_Manager(RandomNumberGenerator& rng);
 
       /**
-      * Try to load a saved session (using info about server)
-      * @param info the information about the server
-      * @param session will be set to the saved session data (if found),
-               or not modified if not found
-      * @return true if session was modified
-      */
-      virtual bool load_from_server_info(const Server_Information& info,
-                                         Session& session) = 0;
+       * @brief Save a new Session and assign a Session_Handle (TLS Server)
+       *
+       * Save a new session on a best effort basis; the manager may not in fact
+       * be able to save the session for whatever reason; this is not an error.
+       * Callers cannot assume that calling establish() followed immediately by
+       * retrieve() or choose_from_offered_tickets() will result in a successful
+       * lookup. In case no session was stored, std::nullopt is returned.
+       *
+       * This method is only called on TLS servers.
+       *
+       * Note that implementations will silently refrain from sending session
+       * tickets to the client when this method returns std::nullopt.
+       *
+       * @param session to save
+       * @param id to use (instead of an ID chosen by the manager)
+       * @param tls12_no_ticket disable tickets for this establishment
+       *                        (set when TLS 1.2 client does not support them)
+       * @return a Session_Handle containing either an ID or a ticket
+       *         if the session was saved, otherwise std::nullopt
+       */
+      virtual std::optional<Session_Handle> establish(const Session& session,
+            std::optional<Session_ID> id = std::nullopt,
+            bool tls12_no_ticket = false);
 
       /**
-      * Remove this session id from the cache, if it exists
-      */
-      virtual void remove_entry(const std::vector<uint8_t>& session_id) = 0;
+       * @brief Save a Session under a Session_Handle (TLS Client)
+       *
+       * Save a session on a best effort basis; the manager may not in fact be
+       * able to save the session for whatever reason; this is not an error.
+       * Callers cannot assume that calling store() followed immediately by
+       * find() will result in a successful lookup.
+       *
+       * In contrast to establish(), this stores sessions that were created by
+       * the server along with a Session_Handle also coined by the server.
+       *
+       * This method is only called on TLS clients.
+       *
+       * @param session to save
+       * @param handle a Session_Handle on which this session shoud by stored
+       */
+      virtual void store(const Session& session, const Session_Handle& handle) = 0;
+
+#if defined(BOTAN_HAS_TLS_13)
+      /**
+       * Lets the server application choose a PSK to use for a new TLS
+       * connection. Implementers must make sure that the PSK's associated
+       * hash function is equal to the passed @p hash_function.
+       *
+       * RFC 8446 4.2.11
+       *    The server MUST ensure that it selects a compatible PSK (if any)
+       *    and cipher suite.
+       *
+       * The default implementation simply tries to retrieve all tickets in
+       * the order offered by the peer and picks the first that is found and
+       * features a matching hash algorithm.
+       *
+       * This method is called only by TLS 1.3 servers.
+       *
+       * @param tickets a list of tickets that were offered by the client
+       * @param hash_function the hash algorithm name we are going to use for
+       *                      the to-be-negotiated connection
+       *
+       * @return a std::pair of the Session associated to the choosen PSK and
+       *         the index of the selected ticket; std::nullopt if no PSK was
+       *         chosen for usage (will result in a full handshake)
+       *
+       * @note if no PSK is chosen, the server will attempt a regular handshake.
+       */
+      virtual std::optional<std::pair<Session, uint16_t>>
+            choose_from_offered_tickets(const std::vector<Ticket>& tickets,
+                                        const std::string& hash_function,
+                                        Callbacks& callbacks,
+                                        const Policy& policy);
+#endif
 
       /**
-      * Remove all sessions from the cache, return number of sessions deleted
-      */
+       * @brief Retrieves a specific session given a @p handle
+       *
+       * This is typically used by TLS servers to obtain resumption information
+       * for a previous call to Session_Manager::establish() when a client
+       * requested resumption using the @p handle.
+       *
+       * Even if the session is found successfully, it is returned only if it
+       * passes policy validations. Most notably an expiry check. If the expiry
+       * check fails, the default implementation calls Session_Manager::remove()
+       * for the provided @p handle.
+       *
+       * Applications that wish to implement their own Session_Manager may
+       * override the default implementation to add further policy checks.
+       * Though, typically implementing Session_Manager::retrieve_one() and
+       * relying on the default implementation is enough.
+       *
+       * @param handle     the Session_Handle to be retrieved
+       * @param callbacks  callbacks to be used for session policy decisions
+       * @param policy     policy to be used for session policy decisions
+       * @return           the obtained session or std::nullopt if no session
+       *                   was found or the policy checks failed
+       */
+      virtual std::optional<Session> retrieve(const Session_Handle& handle,
+                                              Callbacks& callbacks,
+                                              const Policy& policy);
+
+      /**
+       * @brief Find all sessions that match a given server @p info
+       *
+       * TLS clients use this to obtain session resumption information for a
+       * server they are wishing to handshake with. Typically, session info will
+       * have been received in prior connections to that same server and stored
+       * using Session_Manager::store().
+       *
+       * The default implementation will invoke Session_Manager::find_all() and
+       * filter the result against a policy. Most notably an expiry check.
+       * Expired sessions will be removed via Session_Manager::remove().
+       *
+       * The TLS client implementations will query the session manager exactly
+       * once per handshake attempt. If no reuse is desired, the session manager
+       * may remove the sessions internally when handing them out to the client.
+       * The default implementation adheres to Policy::reuse_session_tickets().
+       *
+       * For TLS 1.2 the client implementation will attempt a resumption with
+       * the first session in the returned list. For TLS 1.3, it will offer all
+       * found sessions to the server.
+       *
+       * Applications that wish to implement their own Session_Manager may
+       * override the default implementation to add further policy checks.
+       * Though, typically implementing Session_Manager::find_all() and
+       * relying on the default implementation is enough.
+       *
+       * @param info       the info about the server we want to handshake with
+       * @param callbacks  callbacks to be used for session policy decisions
+       * @param policy     policy to be used for session policy decisions
+       * @return           a list of usable sessions that might be empty if no
+       *                   such session exists or passed the policy validation
+       */
+      virtual std::vector<Session_with_Handle> find(const Server_Information& info,
+                                                                   Callbacks& callbacks,
+                                                                   const Policy& policy);
+
+      /**
+       * Remove a specific session from the cache, if it exists.
+       * The handle might contain either a session ID or a ticket.
+       *
+       * @param handle a Session_Handle of the session to be removed
+       * @return the number of sessions that were removed
+       */
+      virtual size_t remove(const Session_Handle& handle) = 0;
+
+      /**
+       * Remove all sessions from the cache
+       * @return the number of sessions that were removed
+       */
       virtual size_t remove_all() = 0;
 
       /**
-      * Save a session on a best effort basis; the manager may not in
-      * fact be able to save the session for whatever reason; this is
-      * not an error. Caller cannot assume that calling save followed
-      * immediately by load_from_* will result in a successful lookup.
-      *
-      * @param session to save
-      */
-      virtual void save(const Session& session) = 0;
-
-      /**
-      * Return the allowed lifetime of a session; beyond this time,
-      * sessions are not resumed. Returns 0 if unknown/no explicit
-      * expiration policy.
-      */
-      virtual std::chrono::seconds session_lifetime() const = 0;
+       * Declares whether the given Session_Manager implementation may emit
+       * session tickets. Note that this _does not_ mean that the implementation
+       * must always emit tickets.
+       *
+       * Concrete implementations should declare this, to allow the TLS
+       * implementations to act accordingly. E.g. to advertise support for
+       * session tickets in their Server Hello.
+       *
+       * @return true if the Session_Manager produces session tickets
+       */
+      virtual bool emits_session_tickets() { return false; }
 
       virtual ~Session_Manager() = default;
-   };
 
-/**
-* An implementation of Session_Manager that does not save sessions at
-* all, preventing session resumption.
-*/
-class BOTAN_PUBLIC_API(2,0) Session_Manager_Noop final : public Session_Manager
-   {
-   public:
-      bool load_from_session_id(const std::vector<uint8_t>&, Session&) override
-         { return false; }
-
-      bool load_from_server_info(const Server_Information&, Session&) override
-         { return false; }
-
-      void remove_entry(const std::vector<uint8_t>&) override {}
-
-      size_t remove_all() override { return 0; }
-
-      void save(const Session&) override {}
-
-      std::chrono::seconds session_lifetime() const override
-         { return std::chrono::seconds(0); }
-   };
-
-/**
-* An implementation of Session_Manager that saves values in memory.
-*/
-class BOTAN_PUBLIC_API(2,0) Session_Manager_In_Memory final : public Session_Manager
-   {
-   public:
+   protected:
       /**
-      * @param rng a RNG used for generating session key and for
-      *        session encryption
-      * @param max_sessions a hint on the maximum number of sessions
-      *        to keep in memory at any one time. (If zero, don't cap)
-      * @param session_lifetime sessions are expired after this many
-      *        seconds have elapsed from initial handshake.
-      */
-      Session_Manager_In_Memory(RandomNumberGenerator& rng,
-                                size_t max_sessions = 1000,
-                                std::chrono::seconds session_lifetime =
-                                   std::chrono::seconds(7200));
+       * @brief Internal retrieval function for a single session
+       *
+       * Try to obtain a Session from a Session_Handle that contains either
+       * a session ID or a session ticket. This method should not apply any
+       * policy decision (such as ticket expiry) but simply be a storage
+       * interface.
+       *
+       * Applications that wish to implement their own Session_Manager will
+       * have to provide an implementation for it.
+       *
+       * This method is called only by servers.
+       *
+       * @param handle a Session_Handle containing either an ID or a ticket
+       * @return the obtained session or std::nullopt if none can be obtained
+       */
+      virtual std::optional<Session> retrieve_one(const Session_Handle& handle) = 0;
 
-      bool load_from_session_id(const std::vector<uint8_t>& session_id,
-                                Session& session) override;
+      /**
+       * @brief Internal retrieval function to find sessions to resume
+       *
+       * Try to find saved sessions using info about the server we're planning
+       * to connect to. It should return a list of sessions in preference order
+       * of the session manager.
+       *
+       * Applications that wish to implement their own Session_Manager will
+       * have to provide an implementation for it.
+       *
+       * This is called for TLS clients only.
+       *
+       * @param info the information about the server
+       * @return the found sessions along with their handles (containing either a
+       *         session ID or a ticket)
+       */
+      virtual std::vector<Session_with_Handle> find_all(const Server_Information& info) = 0;
 
-      bool load_from_server_info(const Server_Information& info,
-                                 Session& session) override;
+      /**
+       * Returns the base class' recursive mutex for reuse in derived classes
+       */
+      recursive_mutex_type& mutex() { return m_mutex; }
 
-      void remove_entry(const std::vector<uint8_t>& session_id) override;
-
-      size_t remove_all() override;
-
-      void save(const Session& session_data) override;
-
-      std::chrono::seconds session_lifetime() const override
-         { return m_session_lifetime; }
+   protected:
+      RandomNumberGenerator& m_rng;
 
    private:
-      bool load_from_session_str(const std::string& session_str,
-                                 Session& session);
-
-      mutex_type m_mutex;
-
-      size_t m_max_sessions;
-
-      std::chrono::seconds m_session_lifetime;
-
-      RandomNumberGenerator& m_rng;
-      secure_vector<uint8_t> m_session_key;
-
-      std::map<std::string, std::vector<uint8_t>> m_sessions; // hex(session_id) -> session
-      std::map<Server_Information, std::string> m_info_sessions;
+      recursive_mutex_type m_mutex;
    };
-
-}
 
 }
 

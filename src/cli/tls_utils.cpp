@@ -159,7 +159,7 @@ class TLS_Client_Hello_Reader final : public Command
              << "Random: " << Botan::hex_encode(hello.random()) << "\n";
 
          if(!hello.session_id().empty())
-            oss << "SessionID: " << Botan::hex_encode(hello.session_id()) << "\n";
+            oss << "SessionID: " << Botan::hex_encode(hello.session_id().get()) << "\n";
          for(uint16_t csuite_id : hello.ciphersuites())
             {
             const auto csuite = Botan::TLS::Ciphersuite::by_id(csuite_id);

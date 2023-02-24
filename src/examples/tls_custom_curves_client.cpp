@@ -3,8 +3,7 @@
 #include <botan/tls_callbacks.h>
 #include <botan/tls_client.h>
 #include <botan/tls_policy.h>
-#include <botan/tls_session_manager.h>
-
+#include <botan/tls_session_manager_memory.h>
 #include <botan/ec_group.h>
 #include <botan/oids.h>
 
@@ -30,7 +29,7 @@ public:
     // handle a tls alert received from the tls server
   }
 
-  bool tls_session_established(const Botan::TLS::Session &session) override {
+  bool tls_session_established(const Botan::TLS::Session_with_Handle &session) override {
     // the session with the tls server was established
     // return false to prevent the session from being cached, true to
     // cache the session in the configured session manager

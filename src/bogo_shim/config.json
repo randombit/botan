@@ -217,8 +217,6 @@
 
         "RSAKeyUsage-*-UnenforcedTLS*": "We always enforce key usage",
 
-        "Basic-Client-RenewTicket*" : "Needs investigation -- apparently Botan TLS 1.2 does not fully support renewing tickets after resumption?",
-
         "AllExtensions-Client-Permute-TLS-TLS12" : "Requires new shim flags that are NYI (as of March 2022)",
         "AllExtensions-Client-Permute-DTLS-TLS12" : "Requires new shim flags that are NYI (as of March 2022)",
         "EarlyData-WriteAfterEncryptedExtensions" : "Requires new shim flags that are NYI (as of March 2022)",

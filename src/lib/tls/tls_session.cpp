@@ -18,7 +18,73 @@
 #include <botan/tls_messages.h>
 #include <botan/tls_callbacks.h>
 
+#include <botan/internal/stl_util.h>
+
 namespace Botan::TLS {
+
+void Session_Handle::validate_constraints() const
+   {
+   std::visit(overloaded
+      {
+      [](const Session_ID& id)
+         {
+         // RFC 5246 7.4.1.2
+         //    opaque SessionID<0..32>;
+         BOTAN_ARG_CHECK(!id.empty(), "Session ID must not be empty");
+         BOTAN_ARG_CHECK(id.size() <= 32,
+                         "Session ID cannot be longer than 32 bytes");
+         },
+      [](const Session_Ticket& ticket)
+         {
+         BOTAN_ARG_CHECK(!ticket.empty(), "Ticket most not be empty");
+         BOTAN_ARG_CHECK(ticket.size() <= std::numeric_limits<uint16_t>::max(),
+                         "Ticket cannot be longer than 64kB");
+         },
+      [](const Opaque_Session_Handle& handle)
+         {
+         // RFC 8446 4.6.1
+         //    opaque ticket<1..2^16-1>;
+         BOTAN_ARG_CHECK(!handle.empty(), "Opaque session handle must not be empty");
+         BOTAN_ARG_CHECK(handle.size() <= std::numeric_limits<uint16_t>::max(),
+                         "Opaque session handle cannot be longer than 64kB");
+         },
+      }, m_handle);
+   }
+
+Opaque_Session_Handle Session_Handle::opaque_handle() const
+   {
+   // both a Session_ID and a Session_Ticket could be an Opaque_Session_Handle
+   return Opaque_Session_Handle(std::visit([](const auto& handle) { return handle.get(); }, m_handle));
+   }
+
+std::optional<Session_ID> Session_Handle::id() const
+   {
+   if(is_id())
+      { return std::get<Session_ID>(m_handle); }
+
+   // Opaque handles can mimick as a Session_ID if they are short enough
+   if(is_opaque_handle())
+      {
+      const auto& handle = std::get<Opaque_Session_Handle>(m_handle);
+      if(handle.size() <= 32)
+         { return Session_ID(handle.get()); }
+      }
+
+   return std::nullopt;
+   }
+
+std::optional<Session_Ticket> Session_Handle::ticket() const
+   {
+   if(is_ticket())
+      { return std::get<Session_Ticket>(m_handle); }
+
+   // Opaque handles can mimick 'normal' Session_Tickets at any time
+   if(is_opaque_handle())
+      { return Session_Ticket(std::get<Opaque_Session_Handle>(m_handle).get()); }
+
+   return std::nullopt;
+   }
+
 
 Session::Session() :
    m_start_time(std::chrono::system_clock::time_point::min()),
@@ -34,22 +100,18 @@ Session::Session() :
    m_lifetime_hint(0)
    {}
 
-Session::Session(const std::vector<uint8_t>& session_identifier,
-                 const secure_vector<uint8_t>& master_secret,
+Session::Session(const secure_vector<uint8_t>& master_secret,
                  Protocol_Version version,
                  uint16_t ciphersuite,
                  Connection_Side side,
                  bool extended_master_secret,
                  bool encrypt_then_mac,
                  const std::vector<X509_Certificate>& certs,
-                 const std::vector<uint8_t>& ticket,
                  const Server_Information& server_info,
                  uint16_t srtp_profile,
                  std::chrono::system_clock::time_point current_timestamp,
                  std::chrono::seconds lifetime_hint) :
    m_start_time(current_timestamp),
-   m_identifier(session_identifier),
-   m_session_ticket(ticket),
    m_master_secret(master_secret),
    m_version(version),
    m_ciphersuite(ciphersuite),
@@ -70,8 +132,7 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
 
 #if defined(BOTAN_HAS_TLS_13)
 
-Session::Session(const std::vector<uint8_t>& session_ticket,
-                 const secure_vector<uint8_t>& session_psk,
+Session::Session(const secure_vector<uint8_t>& session_psk,
                  const std::optional<uint32_t>& max_early_data_bytes,
                  uint32_t ticket_age_add,
                  std::chrono::seconds lifetime_hint,
@@ -82,13 +143,6 @@ Session::Session(const std::vector<uint8_t>& session_ticket,
                  const Server_Information& server_info,
                  std::chrono::system_clock::time_point current_timestamp) :
    m_start_time(current_timestamp),
-
-   // In TLS 1.3 the PSK and Session Resumption concepts were merged and the
-   // explicit SessionID was retired. Instead an opaque session ticket is used
-   // to identify sessions during resumption. Hence, we deliberately set the
-   // legacy m_identifier as "empty".
-   m_identifier(),
-   m_session_ticket(session_ticket),
    m_master_secret(session_psk),
    m_version(version),
    m_ciphersuite(ciphersuite),
@@ -143,13 +197,9 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
 #endif
 
 Session::Session(const std::string& pem)
-   {
-   secure_vector<uint8_t> der = PEM_Code::decode_check_label(pem, "TLS SESSION");
+   : Session(PEM_Code::decode_check_label(pem, "TLS SESSION")) {}
 
-   *this = Session(der.data(), der.size());
-   }
-
-Session::Session(const uint8_t ber[], size_t ber_len)
+Session::Session(std::span<const uint8_t> ber_data)
    {
    uint8_t side_code = 0;
 
@@ -169,15 +219,13 @@ Session::Session(const uint8_t ber[], size_t ber_len)
    uint16_t ciphersuite_code = 0;
    uint64_t lifetime_hint = 0;
 
-   BER_Decoder(ber, ber_len)
+   BER_Decoder(ber_data.data(), ber_data.size())
       .start_sequence()
         .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
                           "Unknown version in serialized TLS session")
         .decode_integer_type(start_time)
         .decode_integer_type(major_version)
         .decode_integer_type(minor_version)
-        .decode(m_identifier, ASN1_Type::OctetString)
-        .decode(m_session_ticket, ASN1_Type::OctetString)
         .decode_integer_type(ciphersuite_code)
         .decode_integer_type(compression_method)
         .decode_integer_type(side_code)
@@ -185,7 +233,7 @@ Session::Session(const uint8_t ber[], size_t ber_len)
         .decode(m_extended_master_secret)
         .decode(m_encrypt_then_mac)
         .decode(m_master_secret, ASN1_Type::OctetString)
-        .decode(peer_cert_bits, ASN1_Type::OctetString)
+        .decode_list<X509_Certificate>(m_peer_certs)
         .decode(server_hostname)
         .decode(server_service)
         .decode(server_port)
@@ -232,35 +280,17 @@ Session::Session(const uint8_t ber[], size_t ber_len)
                                       server_service.value(),
                                       static_cast<uint16_t>(server_port));
 
-   if(!peer_cert_bits.empty())
-      {
-      DataSource_Memory certs(peer_cert_bits.data(), peer_cert_bits.size());
-
-      while(!certs.end_of_data())
-         m_peer_certs.push_back(X509_Certificate(certs));
-      }
-
    m_lifetime_hint = std::chrono::seconds(lifetime_hint);
    }
 
 secure_vector<uint8_t> Session::DER_encode() const
    {
-   // TODO note for anyone making an incompatible change to the
-   // encodings of TLS sessions. The peer cert list should have been a
-   // SEQUENCE not a concatenation:
-
-   std::vector<uint8_t> peer_cert_bits;
-   for(const auto& peer_cert : m_peer_certs)
-      peer_cert_bits += peer_cert.BER_encode();
-
    return DER_Encoder()
       .start_sequence()
          .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
          .encode(static_cast<size_t>(std::chrono::system_clock::to_time_t(m_start_time)))
          .encode(static_cast<size_t>(m_version.major_version()))
          .encode(static_cast<size_t>(m_version.minor_version()))
-         .encode(m_identifier, ASN1_Type::OctetString)
-         .encode(m_session_ticket, ASN1_Type::OctetString)
          .encode(static_cast<size_t>(m_ciphersuite))
          .encode(static_cast<size_t>(/*old compression method*/0))
          .encode(static_cast<size_t>(m_connection_side))
@@ -268,7 +298,9 @@ secure_vector<uint8_t> Session::DER_encode() const
          .encode(m_extended_master_secret)
          .encode(m_encrypt_then_mac)
          .encode(m_master_secret, ASN1_Type::OctetString)
-         .encode(peer_cert_bits, ASN1_Type::OctetString)
+         .start_sequence()
+            .encode_list(m_peer_certs)
+         .end_cons()
          .encode(ASN1_String(m_server_info.hostname(), ASN1_Type::Utf8String))
          .encode(ASN1_String(m_server_info.service(), ASN1_Type::Utf8String))
          .encode(static_cast<size_t>(m_server_info.port()))
@@ -298,19 +330,6 @@ Ciphersuite Session::ciphersuite() const
                            std::to_string(m_ciphersuite));
       }
    return suite.value();
-   }
-
-const std::vector<uint8_t>& Session::session_id() const
-   {
-   if(m_version.is_pre_tls_13())
-      return m_identifier;
-
-   // RFC 8446 4.6.1
-   //    ticket:  The value of the ticket to be used as the PSK identity.  The
-   //             ticket itself is an opaque label.  It MAY be either a database
-   //             lookup key or a self-encrypted and self-authenticated value.
-   BOTAN_ASSERT_NOMSG(m_identifier.empty());
-   return m_session_ticket;
    }
 
 namespace {
@@ -421,7 +440,7 @@ Session Session::decrypt(const uint8_t in[], size_t in_len, const SymmetricKey& 
       aead->start(aead_nonce, TLS_SESSION_CRYPT_AEAD_NONCE_LEN);
       secure_vector<uint8_t> buf(ctext, ctext + ctext_len);
       aead->finish(buf, 0);
-      return Session(buf.data(), buf.size());
+      return Session(buf);
       }
    catch(std::exception& e)
       {

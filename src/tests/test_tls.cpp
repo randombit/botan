@@ -40,17 +40,15 @@ class TLS_Session_Tests final : public Test
 
          result.test_gte("Encoded default session has size", default_der.size(), 0);
          result.test_throws("Encoded default session cannot be read",
-                            [&] { Botan::TLS::Session{default_der.data(), default_der.size()}; });
+                            [&] { Botan::TLS::Session{default_der}; });
 
-         Botan::TLS::Session session(std::vector<uint8_t>{0xAA, 0xBB},
-                                     Botan::secure_vector<uint8_t>{0xCC, 0xDD},
+         Botan::TLS::Session session(Botan::secure_vector<uint8_t>{0xCC, 0xDD},
                                      Botan::TLS::Protocol_Version::TLS_V12,
                                      0xC02F,
                                      Botan::TLS::Connection_Side::Client,
                                      true,
                                      false,
                                      std::vector<Botan::X509_Certificate>(),
-                                     std::vector<uint8_t>(),
                                      Botan::TLS::Server_Information("server"),
                                      0x0000,
                                      std::chrono::system_clock::now());
@@ -60,7 +58,7 @@ class TLS_Session_Tests final : public Test
          result.test_eq("Roundtrip from pem", session.DER_encode(), session_from_pem.DER_encode());
 
          const auto der = session.DER_encode();
-         Botan::TLS::Session session_from_der(der.data(), der.size());
+         Botan::TLS::Session session_from_der(der);
          result.test_eq("Roundtrip from der", session.DER_encode(), session_from_der.DER_encode());
 
          const Botan::SymmetricKey key("ABCDEF");
@@ -87,15 +85,13 @@ class TLS_Session_Tests final : public Test
 
          result.test_eq("Only randomness comes from RNG", ctextf1, ctextf2);
 
-         Botan::TLS::Session session2(std::vector<uint8_t>{0xAA, 0xCC},
-                                     Botan::secure_vector<uint8_t>{0xCC, 0xEE},
+         Botan::TLS::Session session2(Botan::secure_vector<uint8_t>{0xCC, 0xEE},
                                      Botan::TLS::Protocol_Version::TLS_V12,
                                      0xBAAD, // cipher suite does not exist
                                      Botan::TLS::Connection_Side::Client,
                                      true,
                                      false,
                                      std::vector<Botan::X509_Certificate>(),
-                                     std::vector<uint8_t>(),
                                      Botan::TLS::Server_Information("server"),
                                      0x0000,
                                      std::chrono::system_clock::now());

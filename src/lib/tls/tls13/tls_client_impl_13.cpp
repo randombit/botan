@@ -38,17 +38,17 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
       { expect_downgrade(info, next_protocols); }
 #endif
 
-   if(auto session_to_resume = find_session_for_resumption())
+   if(auto session = find_session_for_resumption())
       {
-      if(!session_to_resume->version().is_pre_tls_13())
+      if(!session->session.version().is_pre_tls_13())
          {
-         m_resumed_session = std::move(session_to_resume);
+         m_resumed_session = std::move(session);
          }
       else if(expects_downgrade())
          {
          // If we found a session that was created with TLS 1.2, we downgrade
          // the implementation right away, before even issuing a Client Hello.
-         request_downgrade_for_resumption(std::move(session_to_resume.value()));
+         request_downgrade_for_resumption(std::move(session.value()));
          return;
          }
       }
@@ -128,27 +128,14 @@ bool Client_Impl_13::handshake_finished() const
    return m_handshake_state.handshake_finished();
    }
 
-std::optional<Session> Client_Impl_13::find_session_for_resumption()
+std::optional<Session_with_Handle> Client_Impl_13::find_session_for_resumption()
    {
-   Session session;
-   if(!session_manager().load_from_server_info(m_info, session))
-      return std::nullopt;
-
-
-   // RFC 8446 4.2.11.1
-   //    Clients MUST NOT attempt to use tickets which have ages greater than
-   //    the "ticket_lifetime" value which was provided with the ticket.
-   const auto session_age =
-      std::chrono::duration_cast<std::chrono::seconds>(
-         callbacks().tls_current_timestamp() - session.start_time());
-
-   if(session_age > session.lifetime_hint())
-      {
-      session_manager().remove_entry(session.session_id());
-      return std::nullopt;
-      }
-
-   return session;
+   // TODO: TLS 1.3 allows sending more than one ticket (for resumption) in a
+   //       Client Hello. Currently, we do not support that. The Session_Manager
+   //       does imply otherwise with its API, though.
+   if(auto sessions = session_manager().find(m_info, callbacks(), policy()); !sessions.empty())
+      return sessions.front();
+   return std::nullopt;
    }
 
 void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
@@ -599,8 +586,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
 
 void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket)
    {
-   Session session(new_session_ticket.ticket(),
-                   m_cipher_state->psk(new_session_ticket.nonce()),
+   Session session(m_cipher_state->psk(new_session_ticket.nonce()),
                    new_session_ticket.early_data_byte_limit(),
                    new_session_ticket.ticket_age_add(),
                    new_session_ticket.lifetime_hint(),
@@ -614,15 +600,19 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
    callbacks().tls_examine_extensions(new_session_ticket.extensions(), Connection_Side::Server, Handshake_Type::NewSessionTicket);
    if(callbacks().tls_session_ticket_received(session))
       {
-      session_manager().save(session);
+      session_manager().store(session, new_session_ticket.ticket());
       }
    }
 
 std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const
    {
-   return (m_handshake_state.has_server_certificate_chain())
-      ? m_handshake_state.server_certificate().cert_chain()
-      : m_resumed_session->peer_certs();
+   if(m_handshake_state.has_server_certificate_chain())
+      { return m_handshake_state.server_certificate().cert_chain(); }
+
+   if(m_resumed_session.has_value())
+      { return m_resumed_session->session.peer_certs(); }
+
+   return {};
    }
 
 bool Client_Impl_13::prepend_ccs()

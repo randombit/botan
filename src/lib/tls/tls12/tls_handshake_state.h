@@ -88,7 +88,7 @@ class Handshake_State
       std::pair<Handshake_Type, std::vector<uint8_t>>
          get_next_handshake_msg();
 
-      std::vector<uint8_t> session_ticket() const;
+      Session_Ticket session_ticket() const;
 
       std::pair<std::string, Signature_Format>
          parse_sig_format(const Public_Key& key,

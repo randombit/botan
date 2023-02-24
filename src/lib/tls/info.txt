@@ -25,6 +25,10 @@ tls_policy.h
 tls_server.h
 tls_session.h
 tls_session_manager.h
+tls_session_manager_noop.h
+tls_session_manager_memory.h
+tls_session_manager_stateless.h
+tls_session_manager_hybrid.h
 tls_signature_scheme.h
 tls_version.h
 </header:public>

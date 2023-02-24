@@ -196,9 +196,19 @@ bool Text_Policy::hide_unknown_users() const
    return get_bool("hide_unknown_users", Policy::hide_unknown_users());
    }
 
+size_t Text_Policy::maximum_session_tickets_per_client_hello() const
+   {
+   return get_len("maximum_session_tickets_per_client_hello", Policy::maximum_session_tickets_per_client_hello());
+   }
+
 std::chrono::seconds Text_Policy::session_ticket_lifetime() const
    {
    return get_duration("session_ticket_lifetime", Policy::session_ticket_lifetime());
+   }
+
+bool Text_Policy::reuse_session_tickets() const
+   {
+   return get_bool("reuse_session_tickets", Policy::reuse_session_tickets());
    }
 
 std::vector<uint16_t> Text_Policy::srtp_profiles() const

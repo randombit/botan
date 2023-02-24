@@ -25,7 +25,7 @@ namespace TLS {
 * sessions are stored in the database in plaintext. This may be a
 * serious privacy risk in some situations.
 */
-class BOTAN_PUBLIC_API(2,0) Session_Manager_SQL : public Session_Manager
+class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
    {
    public:
       /**
@@ -36,42 +36,53 @@ class BOTAN_PUBLIC_API(2,0) Session_Manager_SQL : public Session_Manager
       * @param rng a random number generator
       * @param max_sessions a hint on the maximum number of sessions
       *        to keep in memory at any one time. (If zero, don't cap)
-      * @param session_lifetime sessions are expired after this many
-      *        seconds have elapsed from initial handshake.
       */
       Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                           const std::string& passphrase,
                           RandomNumberGenerator& rng,
-                          size_t max_sessions = 1000,
-                          std::chrono::seconds session_lifetime = std::chrono::seconds(7200));
+                          size_t max_sessions = 1000);
 
       Session_Manager_SQL(const Session_Manager_SQL&) = delete;
-
       Session_Manager_SQL& operator=(const Session_Manager_SQL&) = delete;
 
-      bool load_from_session_id(const std::vector<uint8_t>& session_id,
-                                Session& session) override;
-
-      bool load_from_server_info(const Server_Information& info,
-                                 Session& session) override;
-
-      void remove_entry(const std::vector<uint8_t>& session_id) override;
-
+      void store(const Session& session, const Session_Handle& handle) override;
+      size_t remove(const Session_Handle& handle) override;
       size_t remove_all() override;
 
-      void save(const Session& session_data) override;
+      bool emits_session_tickets() override { return false; }
 
-      std::chrono::seconds session_lifetime() const override
-         { return m_session_lifetime; }
+   protected:
+      std::optional<Session> retrieve_one(const Session_Handle& handle) override;
+      std::vector<Session_with_Handle> find_all(const Server_Information& info) override;
 
    private:
+
+      // Database Schema Revision history
+      //
+      // 0        - empty database (needs creation with latest schema)
+      // 1        - corrupted database detected (re-create it with latest schema)
+      // 20120609 - older (Botan 2.0) database scheme
+      // 20230113 - adapt to Botan 3.0 Session_Manager API
+      //            (Session objects don't contain Session_ID, Session_Ticket)
+      enum Schema_Revision
+         {
+         EMPTY         = 0,
+         CORRUPTED     = 1,
+         PRE_BOTAN_3_0 = 20120609,
+         BOTAN_3_0     = 20230112,
+         };
+
+      void create_or_migrate_and_open(const std::string& passphrase);
+      Schema_Revision detect_schema_revision();
+      void create_with_latest_schema(const std::string& passphrase, Schema_Revision rev);
+      void initialize_existing_database(const std::string& passphrase);
+
       void prune_session_cache();
 
+   private:
       std::shared_ptr<SQL_Database> m_db;
       secure_vector<uint8_t> m_session_key;
-      RandomNumberGenerator& m_rng;
       size_t m_max_sessions;
-      std::chrono::seconds m_session_lifetime;
    };
 
 }

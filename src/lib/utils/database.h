@@ -80,6 +80,10 @@ class BOTAN_PUBLIC_API(2,0) SQL_Database
 
       virtual void create_table(const std::string& table_schema) = 0;
 
+      virtual size_t rows_changed_by_last_statement() = 0;
+
+      virtual size_t exec(const std::string& sql) { return new_statement(sql)->spin(); }
+
       virtual ~SQL_Database() = default;
 };
 

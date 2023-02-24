@@ -249,11 +249,32 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool hide_unknown_users() const;
 
       /**
+      * Defines the maximum number of session tickets a client might
+      * offer in a single resumption attempt. 0 means 'no limit'.
+      *
+      * TODO: Currently, the TLS 1.3 client implementation supports
+      *       exactly one ticket per handshake. RFC 8446 allows for
+      *       an arbitrary amount, though.
+      *
+      * @note Has an effect on TLS 1.3 connections, only.
+      */
+      virtual size_t maximum_session_tickets_per_client_hello() const;
+
+      /**
       * Return the allowed lifetime of a session ticket. If 0, session
       * tickets do not expire until the session ticket key rolls over.
       * Expired session tickets cannot be used to resume a session.
       */
       virtual std::chrono::seconds session_ticket_lifetime() const;
+
+      /**
+       * Decides whether stored session tickets should be used multiple
+       * times (until their lifetime runs out). This might allow passive
+       * observers to correlate connections (RFC 8446 Appendix C.4). This
+       * has no effect on TLS 1.2 resumptions based on session IDs as those
+       * are negotiated in the clear anyway.
+       */
+      virtual bool reuse_session_tickets() const;
 
       /**
       * If this returns a non-empty vector, and DTLS is negotiated,
@@ -630,7 +651,11 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       bool hide_unknown_users() const override;
 
+      size_t maximum_session_tickets_per_client_hello() const override;
+
       std::chrono::seconds session_ticket_lifetime() const override;
+
+      bool reuse_session_tickets() const override;
 
       bool tls_13_middlebox_compatibility_mode() const override;
 

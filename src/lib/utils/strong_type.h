@@ -146,7 +146,7 @@ decltype(auto) operator<<(std::ostream& os, const Strong<T, Tags...>& v)
 
 template<typename T, typename... Tags>
 requires(concepts::equality_comparable<T>)
-auto operator==(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs)
+bool operator==(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs)
    { return lhs.get() == rhs.get(); }
 
 template<typename T, typename... Tags>

@@ -40,7 +40,6 @@ Client::Client(Callbacks& callbacks,
                    "Policy does not allow to offer requested protocol version");
 
 #if defined(BOTAN_HAS_TLS_13)
-
    if(offer_version == Protocol_Version::TLS_V13)
       {
       m_impl = std::make_unique<Client_Impl_13>(

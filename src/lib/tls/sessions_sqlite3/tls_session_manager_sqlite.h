@@ -24,7 +24,7 @@ namespace TLS {
 * sessions are stored in the database in plaintext. This may be a
 * serious privacy risk in some situations.
 */
-class BOTAN_PUBLIC_API(2,0)
+class BOTAN_PUBLIC_API(3,0)
 Session_Manager_SQLite final : public Session_Manager_SQL
    {
    public:
@@ -36,14 +36,11 @@ Session_Manager_SQLite final : public Session_Manager_SQL
                will be used
       * @param max_sessions a hint on the maximum number of sessions
       *        to keep in memory at any one time. (If zero, don't cap)
-      * @param session_lifetime sessions are expired after this many
-      *        seconds have elapsed from initial handshake.
       */
       Session_Manager_SQLite(const std::string& passphrase,
                              RandomNumberGenerator& rng,
                              const std::string& db_filename,
-                             size_t max_sessions = 1000,
-                             std::chrono::seconds session_lifetime = std::chrono::seconds(7200));
+                             size_t max_sessions = 1000);
 };
 
 }

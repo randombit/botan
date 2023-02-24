@@ -13,6 +13,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_session.h>
+#include <botan/tls_session_manager.h>
 
 #include <utility>
 
@@ -119,26 +120,26 @@ PSK::PSK(TLS_Data_Reader& reader,
    }
 
 
-PSK::PSK(const Session& session_to_resume, Callbacks& callbacks)
+PSK::PSK(const Session_with_Handle& session_to_resume, Callbacks& callbacks)
    {
    std::vector<Client_PSK> psks;
    auto& cpsk = psks.emplace_back();
 
-   cpsk.identity = session_to_resume.session_ticket();
+   cpsk.identity = session_to_resume.handle.opaque_handle().get();
 
    const auto age =
       std::chrono::duration_cast<std::chrono::milliseconds>(
-         callbacks.tls_current_timestamp() - session_to_resume.start_time());
+         callbacks.tls_current_timestamp() - session_to_resume.session.start_time());
 
    cpsk.obfuscated_ticket_age =
-      obfuscate_ticket_age(age, session_to_resume.session_age_add());
+      obfuscate_ticket_age(age, session_to_resume.session.session_age_add());
 
-   auto psk = session_to_resume.master_secret();
-   cpsk.hash_algorithm = session_to_resume.ciphersuite().prf_algo();
+   auto psk = session_to_resume.session.master_secret();
+   cpsk.hash_algorithm = session_to_resume.session.ciphersuite().prf_algo();
    cpsk.cipher_state = Cipher_State::init_with_psk(Connection_Side::Client,
-                                                  Cipher_State::PSK_Type::Resumption,
-                                                  std::move(psk),
-                                                  session_to_resume.ciphersuite());
+                                                   Cipher_State::PSK_Type::Resumption,
+                                                   std::move(psk),
+                                                   session_to_resume.session.ciphersuite());
 
    // RFC 8446 4.2.11.2
    //    Each entry in the binders list is computed as an HMAC over a transcript
