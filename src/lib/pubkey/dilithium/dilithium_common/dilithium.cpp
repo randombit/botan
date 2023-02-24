@@ -349,6 +349,9 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature
          const auto& mode = m_priv_key.m_private->mode();
          const auto mu = m_shake.final_stdvec();
 
+         // Get set up for the next message (if any)
+         m_shake.update(m_priv_key.m_private->tr());
+
          const auto rhoprime = (m_randomized)
 	         ? rng.random_vec(DilithiumModeConstants::CRHBYTES)
 	         : mode.CRH(concat(m_priv_key.m_private->get_key(), mu));

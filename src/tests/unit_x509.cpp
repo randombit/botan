@@ -1555,6 +1555,8 @@ std::vector<std::string> get_sig_paddings(const std::string& sig_algo)
       return {"EMSA1"};
    else if(sig_algo == "Ed25519")
       return {"Pure"};
+   else if(sig_algo == "Dilithium")
+      return {"Randomized"};
    else
       return {};
    }
