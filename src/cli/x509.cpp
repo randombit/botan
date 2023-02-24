@@ -86,7 +86,7 @@ class Sign_Cert final : public Command
    {
    public:
       Sign_Cert()
-         : Command("sign_cert --ca-key-pass= --hash=SHA-256 "
+         : Command("sign_cert --ca-key-pass= --hash= "
                    "--duration=365 --emsa= ca_cert ca_key pkcs10_req") {}
 
       std::string group() const override
@@ -293,7 +293,7 @@ class Gen_Self_Signed final : public Command
    public:
       Gen_Self_Signed()
          : Command("gen_self_signed key CN --country= --dns= "
-                   "--organization= --email= --path-limit=1 --days=365 --key-pass= --ca --hash=SHA-256 --emsa= --der") {}
+                   "--organization= --email= --path-limit=1 --days=365 --key-pass= --ca --hash= --emsa= --der") {}
 
       std::string group() const override
          {
@@ -357,7 +357,7 @@ class Generate_PKCS10 final : public Command
    public:
       Generate_PKCS10()
          : Command("gen_pkcs10 key CN --country= --organization= "
-                   "--ca --path-limit=1 --email= --dns= --ext-ku= --key-pass= --hash=SHA-256 --emsa=") {}
+                   "--ca --path-limit=1 --email= --dns= --ext-ku= --key-pass= --hash= --emsa=") {}
 
       std::string group() const override
          {

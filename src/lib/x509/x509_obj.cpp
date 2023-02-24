@@ -13,6 +13,7 @@
 #include <botan/pem.h>
 #include <botan/internal/emsa.h>
 #include <algorithm>
+#include <sstream>
 
 namespace Botan {
 
@@ -332,16 +333,30 @@ std::string x509_signature_padding_for(
       {
       BOTAN_ARG_CHECK(user_specified_padding.empty() || user_specified_padding == "EMSA1",
                       "Invalid padding scheme for DSA-like scheme");
-      return "EMSA1(" + hash_fn + ")";
+
+      if(hash_fn.empty())
+         return "EMSA1(SHA-256)";
+      else
+         return "EMSA1(" + hash_fn + ")";
       }
    else if(algo_name == "RSA")
       {
       // set to PKCSv1.5 for compatibility reasons, originally it was the only option
 
       if(user_specified_padding.empty())
-         return "EMSA3(" + hash_fn + ")";
+         {
+         if(hash_fn.empty())
+            return "EMSA3(SHA-256)";
+         else
+            return "EMSA3(" + hash_fn + ")";
+         }
       else
-         return user_specified_padding + "(" + hash_fn + ")";
+         {
+         if(hash_fn.empty())
+            return user_specified_padding + "(SHA-256)";
+         else
+            return user_specified_padding + "(" + hash_fn + ")";
+         }
       }
    else if(algo_name == "Ed25519")
       {
@@ -367,6 +382,28 @@ std::string x509_signature_padding_for(
       }
    }
 
+std::string format_padding_error_message(const std::string& key_name,
+                                         const std::string& signer_hash_fn,
+                                         const std::string& user_hash_fn,
+                                         const std::string& chosen_padding,
+                                         const std::string& user_specified_padding)
+   {
+   std::ostringstream oss;
+
+   oss << "Specified hash function " << user_hash_fn
+       << " is incompatible with " << key_name;
+
+   if(!signer_hash_fn.empty())
+      oss << " chose hash function " << signer_hash_fn;
+
+   if(!chosen_padding.empty())
+      oss << " chose padding " << chosen_padding;
+   if(!user_specified_padding.empty())
+      oss << " with user specified padding " << user_specified_padding;
+
+   return oss.str();
+   }
+
 }
 
 /*
@@ -386,10 +423,12 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(AlgorithmIdentifier& s
          {
          auto pk_signer = std::make_unique<PK_Signer>(key, rng, user_specified_padding, format);
          sig_algo = pk_signer->algorithm_identifier();
-         if(pk_signer->hash_function() != hash_fn)
+         if(!hash_fn.empty() && pk_signer->hash_function() != hash_fn)
             {
-            throw Invalid_Argument("Specified hash function " + hash_fn +
-                                   " is incompatible with requested padding mechanism " + user_specified_padding);
+            throw Invalid_Argument(
+               format_padding_error_message(key.algo_name(), pk_signer->hash_function(),
+                                            hash_fn, "", user_specified_padding)
+               );
             }
          return pk_signer;
          }
@@ -402,10 +441,11 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(AlgorithmIdentifier& s
       {
       auto pk_signer = std::make_unique<PK_Signer>(key, rng, padding, format);
       sig_algo = pk_signer->algorithm_identifier();
-      if(pk_signer->hash_function() != hash_fn)
+      if(!hash_fn.empty() && pk_signer->hash_function() != hash_fn)
          {
-         throw Invalid_Argument("Specified hash function " + hash_fn +
-                                " is incompatible with requested padding mechanism " + user_specified_padding);
+         throw Invalid_Argument(
+            format_padding_error_message(key.algo_name(), pk_signer->hash_function(),
+                                         hash_fn, padding, user_specified_padding));
          }
       return pk_signer;
       }

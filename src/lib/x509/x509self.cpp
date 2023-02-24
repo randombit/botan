@@ -79,7 +79,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
       }
 
-   std::unique_ptr<Cert_Extension::Subject_Key_ID> skid(std::make_unique<Cert_Extension::Subject_Key_ID>(pub_key, hash_fn));
+   auto skid = std::make_unique<Cert_Extension::Subject_Key_ID>(pub_key, signer->hash_function());
 
    extensions.add_new(std::make_unique<Cert_Extension::Authority_Key_ID>(skid->get_key_id()));
    extensions.add_new(std::move(skid));

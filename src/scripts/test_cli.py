@@ -101,7 +101,7 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_st
 
     if stderr:
         if expected_stderr is None:
-            logging.error("Got output on stderr %s (stdout was %s)", stderr, stdout)
+            logging.error("Got output on stderr %s (stdout was %s) for command %s", stderr, stdout, cmdline)
         else:
             if stderr != expected_stderr:
                 logging.error("Got output on stderr %s which did not match expected value %s", stderr, expected_stderr)
@@ -803,7 +803,7 @@ def cli_cert_issuance_tests(tmp_dir, algos=None):
 
 def cli_cert_issuance_alternative_algos_tests(tmp_dir):
     for i, algo in enumerate([[("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3")],
-                              [("ECDSA",     "secp256r1"),            ("ECDSA",     "secp256r1"),            ("ECDSA",     "secp256r1")],
+                              [("ECDSA",     "secp256r1"),            ("ECDSA",     "secp384r1"),            ("ECDSA",     "secp256r1")],
                               [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("RSA",       "2048")]]):
         sub_tmp_dir = os.path.join(tmp_dir, str(i))
         os.mkdir(sub_tmp_dir)
