@@ -77,7 +77,6 @@ class Verification
 
       /**
       * Perform a verification operation
-      * @param rng a random number generator
       */
       virtual bool is_valid_signature(const uint8_t sig[], size_t sig_len) = 0;
 
