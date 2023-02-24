@@ -40,12 +40,10 @@ void Session_Manager_In_Memory::store(const Session& session, const Session_Hand
          }
       }
 
-   std::pair<Session, Session_Handle> item(session, handle);
-
    // Generate a random session ID if the peer did not provide one. Note that
    // this ID is just for internal use and won't be returned on ::find().
-   auto id = item.second.id().value_or(m_rng.random_vec<Session_ID>(32));
-   m_sessions.emplace(id, std::move(item));
+   auto id = handle.id().value_or(m_rng.random_vec<Session_ID>(32));
+   m_sessions.emplace(id, Session_with_Handle{session, handle});
 
    if(m_fifo.has_value())
       {
@@ -61,20 +59,21 @@ std::optional<Session> Session_Manager_In_Memory::retrieve_one(const Session_Han
       {
       const auto session = m_sessions.find(id.value());
       if(session != m_sessions.end())
-         { return session->second.first; }
+         { return session->second.session; }
       }
 
    return std::nullopt;
    }
 
-std::vector<std::pair<Session, Session_Handle>> Session_Manager_In_Memory::find_all(const Server_Information& info)
+std::vector<Session_with_Handle> Session_Manager_In_Memory::find_all(const Server_Information& info)
    {
    lock_guard_type<recursive_mutex_type> lk(mutex());
 
-   std::vector<std::pair<Session, Session_Handle>> found_sessions;
+   std::vector<Session_with_Handle> found_sessions;
+   // TODO: std::copy_if?
    for(const auto& [_, session_and_handle] : m_sessions)
       {
-      if(session_and_handle.first.server_info() == info)
+      if(session_and_handle.session.server_info() == info)
          { found_sessions.emplace_back(session_and_handle); }
       }
 

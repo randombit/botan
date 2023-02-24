@@ -53,7 +53,7 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
 
    protected:
       std::optional<Session> retrieve_one(const Session_Handle& handle) override;
-      std::vector<std::pair<Session, Session_Handle>> find_all(const Server_Information& info) override;
+      std::vector<Session_with_Handle> find_all(const Server_Information& info) override;
 
    private:
 

@@ -700,7 +700,7 @@ void Server_Impl_12::process_handshake_msg(const Handshake_State* active_state,
    }
 
 void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
-                                    const std::pair<Session, Session_Handle>& session_and_handle)
+                                    const Session_with_Handle& session)
    {
    // Only offer a resuming client a new ticket if they didn't send one this time,
    // ie, resumed via server-side resumption. TODO: also send one if expiring soon?
@@ -710,11 +710,6 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
       pending_state.client_hello()->session_ticket().empty() &&
       session_manager().emits_session_tickets();
 
-   // TODO: C++20 can capture structured bindings into lambdas
-   //       but XCode clang 14 chokes on it...
-   const auto& session_info = session_and_handle.first;
-   const auto& session_handle = session_and_handle.second;
-
    pending_state.server_hello(new Server_Hello_12(
                                  pending_state.handshake_io(),
                                  pending_state.hash(),
@@ -723,26 +718,26 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
                                  rng(),
                                  secure_renegotiation_data_for_server_hello(),
                                  *pending_state.client_hello(),
-                                 session_info,
+                                 session.session,
                                  offer_new_session_ticket,
                                  m_next_protocol));
 
    secure_renegotiation_check(pending_state.server_hello());
 
    pending_state.mark_as_resumption();
-   pending_state.compute_session_keys(session_info.master_secret());
-   pending_state.set_resume_certs(session_info.peer_certs());
+   pending_state.compute_session_keys(session.session.master_secret());
+   pending_state.set_resume_certs(session.session.peer_certs());
 
    auto new_handle = [&, this]() -> std::optional<Session_Handle>
       {
-      if(!save_session({session_info, session_handle}))
+      if(!save_session(session))
          {
-         session_manager().remove(session_handle);
+         session_manager().remove(session.handle);
          return std::nullopt;
          }
       else
          {
-         return session_manager().establish(session_info, session_handle.id());
+         return session_manager().establish(session.session, session.handle.id());
          }
       }();
 

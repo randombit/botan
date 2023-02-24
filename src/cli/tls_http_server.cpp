@@ -350,19 +350,19 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          m_connection_summary = strm.str();
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session, const Botan::TLS::Session_Handle& session_handle) override
+      bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
          {
          std::ostringstream strm;
 
-         strm << "Version: " << session.version().to_string() << "\n";
-         strm << "Ciphersuite: " << session.ciphersuite().to_string() << "\n";
-         if(const auto session_id = session_handle.id())
+         strm << "Version: " << session.session.version().to_string() << "\n";
+         strm << "Ciphersuite: " << session.session.ciphersuite().to_string() << "\n";
+         if(const auto session_id = session.handle.id())
             {
             strm << "SessionID: " << Botan::hex_encode(session_id->get()) << "\n";
             }
-         if(session.server_info().hostname() != "")
+         if(session.session.server_info().hostname() != "")
             {
-            strm << "SNI: " << session.server_info().hostname() << "\n";
+            strm << "SNI: " << session.session.server_info().hostname() << "\n";
             }
 
          m_session_summary = strm.str();

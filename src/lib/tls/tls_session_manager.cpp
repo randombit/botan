@@ -86,9 +86,9 @@ std::optional<Session> Session_Manager::retrieve(const Session_Handle& handle,
       }
    }
 
-std::vector<std::pair<Session, Session_Handle>> Session_Manager::find(const Server_Information& info,
-                                                                      Callbacks& callbacks,
-                                                                      const Policy& policy)
+std::vector<Session_with_Handle> Session_Manager::find(const Server_Information& info,
+                                                       Callbacks& callbacks,
+                                                       const Policy& policy)
    {
    lock_guard_type<recursive_mutex_type> lk(mutex());
 
@@ -107,11 +107,10 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager::find(const Serv
 
       // TODO: C++20, use std::ranges::remove_if() once XCode and Android NDK caught up.
       sessions_and_handles.erase(
-         std::remove_if(sessions_and_handles.begin(), sessions_and_handles.end(), [&] (const auto& session_and_handle)
+         std::remove_if(sessions_and_handles.begin(), sessions_and_handles.end(), [&] (const auto& session)
             {
-            const auto& [session, handle] = session_and_handle;
             const auto age =
-               std::chrono::duration_cast<std::chrono::seconds>(now - session.start_time());
+               std::chrono::duration_cast<std::chrono::seconds>(now - session.session.start_time());
 
             // RFC 5077 3.3 -- "Old Session Tickets"
             //    The ticket_lifetime_hint field contains a hint from the
@@ -143,11 +142,11 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager::find(const Serv
             //       Policy::session_ticket_lifetime(). Session lifetimes as
             //       communicated by the server via the "lifetime_hint" are
             //       obeyed regardless of the policy setting.
-            const auto session_lifetime_hint = session.lifetime_hint();
+            const auto session_lifetime_hint = session.session.lifetime_hint();
             const bool expired = age > std::min(policy_lifetime, session_lifetime_hint);
 
             if(expired)
-               { remove(std::get<Session_Handle>(session_and_handle)); }
+               { remove(session.handle); }
 
             return expired;
             }), sessions_and_handles.end());

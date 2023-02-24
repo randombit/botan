@@ -188,7 +188,7 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          return false;
          }
 
-      bool tls_session_established(const Botan::TLS::Session&, const Botan::TLS::Session_Handle&) override
+      bool tls_session_established(const Botan::TLS::Session_with_Handle&) override
          {
          count_callback_invocation("tls_session_established");
          // the session with the tls client was established
@@ -546,14 +546,13 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
    private:
       decltype(auto) find_by_handle(const Session_Handle& handle)
          {
-         return [=](const std::pair<Session, Session_Handle> pair)
+         return [=](const Session_with_Handle session)
             {
-            const auto& current_handle = pair.second;
-            if(current_handle.id().has_value() && handle.id().has_value() &&
-               current_handle.id().value() == handle.id().value())
+            if(session.handle.id().has_value() && handle.id().has_value() &&
+               session.handle.id().value() == handle.id().value())
                { return true; }
-            if(current_handle.ticket().has_value() && handle.ticket().has_value() &&
-               current_handle.ticket().value() == handle.ticket().value())
+            if(session.handle.ticket().has_value() && handle.ticket().has_value() &&
+               session.handle.ticket().value() == handle.ticket().value())
                { return true; }
             return false;
             };
@@ -563,7 +562,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
       RFC8448_Session_Manager()
          : Session_Manager(m_null_rng) {}
 
-      const std::vector<std::pair<Session, Session_Handle>>& all_sessions() const
+      const std::vector<Session_with_Handle>& all_sessions() const
          {
          return m_sessions;
          }
@@ -575,7 +574,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
 
       std::optional<Session_Handle> establish(const Session& session, std::optional<Session_ID> id, bool) override
          {
-         m_sessions.emplace_back(session, id.value_or(Session_ID()));
+         m_sessions.emplace_back(Session_with_Handle{session, id.value_or(Session_ID())});
          return id;
          }
 
@@ -585,16 +584,16 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
          if(itr == m_sessions.end())
             return std::nullopt;
          else
-            return itr->first;
+            return itr->session;
          }
 
-      std::vector<std::pair<Session, Session_Handle>> find_all(const Server_Information& info) override
+      std::vector<Session_with_Handle> find_all(const Server_Information& info) override
          {
-         std::vector<std::pair<Session, Session_Handle>> found_sessions;
+         std::vector<Session_with_Handle> found_sessions;
          for(const auto& [session, handle] : m_sessions)
             {
             if(session.server_info() == info)
-               { found_sessions.emplace_back(session, handle); }
+               { found_sessions.emplace_back(Session_with_Handle{session, handle}); }
             }
 
          return found_sessions;
@@ -625,7 +624,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
          }
 
    private:
-      std::vector<std::pair<Session, Session_Handle>> m_sessions;
+      std::vector<Session_with_Handle> m_sessions;
       Botan::Null_RNG m_null_rng;
    };
 
@@ -703,7 +702,7 @@ class TLS_Context
          m_callbacks.reset_callback_invocation_counters();
          }
 
-      const std::vector<std::pair<Session, Session_Handle>>& stored_sessions() const
+      const std::vector<Session_with_Handle>& stored_sessions() const
          {
          return m_session_mgr.all_sessions();
          }

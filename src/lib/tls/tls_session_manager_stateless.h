@@ -51,8 +51,7 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_Stateless : public Session_Manager
 
    protected:
       std::optional<Session> retrieve_one(const Session_Handle& handle) override;
-      std::vector<std::pair<Session, Session_Handle>>
-         find_all(const Server_Information&) override { return {}; }
+      std::vector<Session_with_Handle> find_all(const Server_Information&) override { return {}; }
 
    private:
       std::optional<SymmetricKey> get_ticket_key() noexcept;

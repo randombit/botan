@@ -211,7 +211,7 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
    return std::nullopt;
    }
 
-std::vector<std::pair<Session, Session_Handle>> Session_Manager_SQL::find_all(const Server_Information& info)
+std::vector<Session_with_Handle> Session_Manager_SQL::find_all(const Server_Information& info)
    {
    auto stmt = m_db->new_statement("SELECT session_id, session_ticket, session FROM tls_sessions"
                                    " WHERE hostname = ?1 AND hostport = ?2"
@@ -220,7 +220,7 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager_SQL::find_all(co
    stmt->bind(1, info.hostname());
    stmt->bind(2, info.port());
 
-   std::vector<std::pair<Session, Session_Handle>> found_sessions;
+   std::vector<Session_with_Handle> found_sessions;
    while(stmt->step())
       {
       auto handle = [&]() -> Session_Handle
@@ -240,7 +240,7 @@ std::vector<std::pair<Session, Session_Handle>> Session_Manager_SQL::find_all(co
 
       try
          {
-         found_sessions.emplace_back(Session::decrypt(blob.first, blob.second, m_session_key), std::move(handle));
+         found_sessions.emplace_back(Session_with_Handle{Session::decrypt(blob.first, blob.second, m_session_key), std::move(handle)});
          }
       catch(...)
          {

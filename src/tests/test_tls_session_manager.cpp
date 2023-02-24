@@ -73,7 +73,7 @@ class Session_Manager_Callbacks : public Botan::TLS::Callbacks
          { BOTAN_ASSERT_NOMSG(false); }
       void tls_alert(Botan::TLS::Alert) override
          { BOTAN_ASSERT_NOMSG(false); }
-      bool tls_session_established(const Botan::TLS::Session&, const Botan::TLS::Session_Handle&) override
+      bool tls_session_established(const Botan::TLS::Session_with_Handle&) override
          { BOTAN_ASSERT_NOMSG(false); }
 
       std::chrono::system_clock::time_point tls_current_timestamp() override
@@ -198,10 +198,10 @@ std::vector<Test::Result> test_session_manager_in_memory()
          auto sessions = mgr->find(server_info, cbs, plcy);
          if(result.confirm("session was found successfully", sessions.size() == 1))
             {
-            result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-            result.test_is_eq("ciphersuite was echoed", sessions[0].first.ciphersuite_code(), uint16_t(0x009C));
-            result.test_is_eq("ID was echoed", sessions[0].second.id().value(), default_id);
-            result.confirm("not a ticket", !sessions[0].second.ticket().has_value());
+            result.test_is_eq("protocol version was echoed", sessions[0].session.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
+            result.test_is_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+            result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), default_id);
+            result.confirm("not a ticket", !sessions[0].handle.ticket().has_value());
             }
          }),
 
@@ -259,10 +259,10 @@ std::vector<Test::Result> test_session_manager_in_memory()
          auto sessions = mgr->find(server_info, cbs, plcy);
          if(result.confirm("found via server info", sessions.size() == 1))
             {
-            result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-            result.test_is_eq("ciphersuite was echoed", sessions[0].first.ciphersuite_code(), uint16_t(0x009C));
-            result.test_is_eq("ID was echoed", sessions[0].second.id().value(), new_id);
-            result.confirm("ticket was not stored", !sessions[0].second.ticket().has_value());
+            result.test_is_eq("protocol version was echoed", sessions[0].session.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
+            result.test_is_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+            result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), new_id);
+            result.confirm("ticket was not stored", !sessions[0].handle.ticket().has_value());
             }
 
          mgr->remove_all();
@@ -278,10 +278,10 @@ std::vector<Test::Result> test_session_manager_in_memory()
          auto sessions = mgr->find(server_info, cbs, plcy);
          if(result.confirm("found via server info", sessions.size() == 1))
             {
-            result.test_is_eq("protocol version was echoed", sessions[0].first.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-            result.test_is_eq("ciphersuite was echoed", sessions[0].first.ciphersuite_code(), uint16_t(0x009C));
-            result.confirm("ID was not stored", !sessions[0].second.id().has_value());
-            result.test_is_eq("ticket was echoed", sessions[0].second.ticket().value(), new_ticket);
+            result.test_is_eq("protocol version was echoed", sessions[0].session.version(), Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
+            result.test_is_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+            result.confirm("ID was not stored", !sessions[0].handle.id().has_value());
+            result.test_is_eq("ticket was echoed", sessions[0].handle.ticket().value(), new_ticket);
             }
 
          mgr->remove_all();
@@ -949,7 +949,7 @@ std::vector<Test::Result> tls_session_manager_expiry()
          auto sessions_and_handles = mgr->find(server_info, cbs, plcy);
          result.require("sessions are found", !sessions_and_handles.empty());
          result.test_is_eq("exactly one session is found", sessions_and_handles.size(), size_t(1));
-         result.test_is_eq("the new session is found", sessions_and_handles.front().second.id().value(), handle_new);
+         result.test_is_eq("the new session is found", sessions_and_handles.front().handle.id().value(), handle_new);
 
          result.test_is_eq("old session was deleted when it expired", mgr->remove_all(), size_t(1));
          }),
@@ -980,9 +980,9 @@ std::vector<Test::Result> tls_session_manager_expiry()
 
          auto sessions_and_handles2 = mgr->find(server_info, cbs, plcy);
          result.test_is_eq("only one session is found", sessions_and_handles2.size(), size_t(1));
-         result.confirm("found session is the Session_ID", std::get<Botan::TLS::Session_Handle>(sessions_and_handles2.front()).is_id());
-         result.test_is_eq("found session is the Session_ID", std::get<Botan::TLS::Session_Handle>(sessions_and_handles2.front()).id().value(), handle_1);
-         result.confirm("found session is TLS 1.2", std::get<Botan::TLS::Session>(sessions_and_handles2.front()).version().is_pre_tls_13());
+         result.confirm("found session is the Session_ID", sessions_and_handles2.front().handle.is_id());
+         result.test_is_eq("found session is the Session_ID", sessions_and_handles2.front().handle.id().value(), handle_1);
+         result.confirm("found session is TLS 1.2", sessions_and_handles2.front().session.version().is_pre_tls_13());
          }),
 
       CHECK_all("number of found tickets is capped", [&](std::string type, auto factory, auto& result)

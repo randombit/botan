@@ -181,7 +181,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        * @return           a list of usable sessions that might be empty if no
        *                   such session exists or passed the policy validation
        */
-      virtual std::vector<std::pair<Session, Session_Handle>> find(const Server_Information& info,
+      virtual std::vector<Session_with_Handle> find(const Server_Information& info,
                                                                    Callbacks& callbacks,
                                                                    const Policy& policy);
 
@@ -250,8 +250,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        * @return the found sessions along with their handles (containing either a
        *         session ID or a ticket)
        */
-      virtual std::vector<std::pair<Session, Session_Handle>>
-            find_all(const Server_Information& info) = 0;
+      virtual std::vector<Session_with_Handle> find_all(const Server_Information& info) = 0;
 
       /**
        * Returns the base class' recursive mutex for reuse in derived classes

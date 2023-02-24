@@ -38,18 +38,17 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
       { expect_downgrade(info, next_protocols); }
 #endif
 
-   if(auto session_to_resume = find_session_for_resumption())
+   if(auto session = find_session_for_resumption())
       {
-      const auto& session = std::get<Session>(session_to_resume.value());
-      if(!session.version().is_pre_tls_13())
+      if(!session->session.version().is_pre_tls_13())
          {
-         m_resumed_session = std::move(session_to_resume);
+         m_resumed_session = std::move(session);
          }
       else if(expects_downgrade())
          {
          // If we found a session that was created with TLS 1.2, we downgrade
          // the implementation right away, before even issuing a Client Hello.
-         request_downgrade_for_resumption(std::move(session_to_resume.value()));
+         request_downgrade_for_resumption(std::move(session.value()));
          return;
          }
       }
@@ -129,7 +128,7 @@ bool Client_Impl_13::handshake_finished() const
    return m_handshake_state.handshake_finished();
    }
 
-std::optional<std::pair<Session, Session_Handle>> Client_Impl_13::find_session_for_resumption()
+std::optional<Session_with_Handle> Client_Impl_13::find_session_for_resumption()
    {
    // TODO: TLS 1.3 allows sending more than one ticket (for resumption) in a
    //       Client Hello. Currently, we do not support that. The Session_Manager
@@ -611,7 +610,7 @@ std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const
       { return m_handshake_state.server_certificate().cert_chain(); }
 
    if(m_resumed_session.has_value())
-      { return std::get<Session>(m_resumed_session.value()).peer_certs(); }
+      { return m_resumed_session->session.peer_certs(); }
 
    return {};
    }

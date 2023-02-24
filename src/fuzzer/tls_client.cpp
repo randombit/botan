@@ -54,7 +54,7 @@ class Fuzzer_TLS_Client_Callbacks : public Botan::TLS::Callbacks
          // ignore alert
          }
 
-      bool tls_session_established(const Botan::TLS::Session&, const Botan::TLS::Session_Handle&) override
+      bool tls_session_established(const Botan::TLS::Session_with_Handle&) override
          {
          return true; // cache it
          }

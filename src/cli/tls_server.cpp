@@ -280,17 +280,17 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          return fd;
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session, const Botan::TLS::Session_Handle& session_handle) override
+      bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
          {
-         output() << "Handshake complete, " << session.version().to_string()
-                  << " using " << session.ciphersuite().to_string() << std::endl;
+         output() << "Handshake complete, " << session.session.version().to_string()
+                  << " using " << session.session.ciphersuite().to_string() << std::endl;
 
-         if(const auto session_id = session_handle.id())
+         if(const auto session_id = session.handle.id())
             {
             output() << "Session ID " << Botan::hex_encode(session_id->get()) << std::endl;
             }
 
-         if(const auto session_ticket = session_handle.ticket())
+         if(const auto session_ticket = session.handle.ticket())
             {
             output() << "Session ticket " << Botan::hex_encode(session_ticket->get()) << std::endl;
             }

@@ -62,9 +62,9 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
                                       Callbacks& callbacks,
                                       const Policy& policy) override;
 
-      std::vector<std::pair<Session, Session_Handle>> find(const Server_Information& info,
-                                                           Callbacks& callbacks,
-                                                           const Policy& policy) override
+      std::vector<Session_with_Handle> find(const Server_Information& info,
+                                            Callbacks& callbacks,
+                                            const Policy& policy) override
          {
          return m_stateful->find(info, callbacks, policy);
          }
@@ -83,7 +83,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
       // never called.
       std::optional<Session> retrieve_one(const Session_Handle&) override
          { BOTAN_ASSERT(false, "This should never be called"); }
-      std::vector<std::pair<Session, Session_Handle>> find_all(const Server_Information&) override
+      std::vector<Session_with_Handle> find_all(const Server_Information&) override
          { BOTAN_ASSERT(false, "This should never be called"); }
 
    private:

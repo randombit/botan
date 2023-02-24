@@ -103,7 +103,7 @@ class Server_Impl_12 : public Channel_Impl_12
                                 const std::vector<uint8_t>& contents);
 
       void session_resume(Server_Handshake_State& pending_state,
-                          const std::pair<Session, Session_Handle>& session_info);
+                          const Session_with_Handle& session_info);
 
       void session_create(Server_Handshake_State& pending_state);
 

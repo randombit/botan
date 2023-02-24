@@ -83,7 +83,7 @@ class Client_Impl_13 : public Channel_Impl_13
       void handle(const New_Session_Ticket_13& new_session_ticket);
 
       void send_client_authentication(Channel_Impl_13::AggregatedMessages& flight);
-      std::optional<std::pair<Session, Session_Handle>> find_session_for_resumption();
+      std::optional<Session_with_Handle> find_session_for_resumption();
 
    private:
       const Server_Information m_info;
@@ -93,7 +93,7 @@ class Client_Impl_13 : public Channel_Impl_13
 
       bool m_should_send_ccs;
 
-      std::optional<std::pair<Session, Session_Handle>> m_resumed_session;
+      std::optional<Session_with_Handle> m_resumed_session;
    };
 
 }

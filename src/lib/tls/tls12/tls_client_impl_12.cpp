@@ -110,8 +110,8 @@ Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgr
       // Downgrade initiated after a TLS 1.2 session was found. No communication
       // has happened yet but the found session should be used for resumption.
       BOTAN_ASSERT_NOMSG(downgrade_info.tls12_session.has_value() &&
-                         downgrade_info.tls12_session->first.version().is_pre_tls_13());
-      send_client_hello(state, false, downgrade_info.tls12_session->first.version(), downgrade_info.tls12_session, downgrade_info.next_protocols);
+                         downgrade_info.tls12_session->session.version().is_pre_tls_13());
+      send_client_hello(state, false, downgrade_info.tls12_session->session.version(), downgrade_info.tls12_session, downgrade_info.next_protocols);
       }
    }
 
@@ -149,7 +149,7 @@ void Client_Impl_12::initiate_handshake(Handshake_State& state,
 void Client_Impl_12::send_client_hello(Handshake_State& state_base,
                                        bool force_full_renegotiation,
                                        Protocol_Version version,
-                                       std::optional<std::pair<Session, Session_Handle>> session_and_handle,
+                                       std::optional<Session_with_Handle> session_and_handle,
                                        const std::vector<std::string>& next_protocols)
    {
    Client_Handshake_State_12& state = dynamic_cast<Client_Handshake_State_12&>(state_base);
@@ -175,7 +175,7 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
          Ensure that the session protocol cipher and version are acceptable
          If not skip the resume and establish a new session
          */
-         const auto& session_info = std::get<Session>(session_and_handle.value());
+         auto& session_info = session_and_handle->session;
          const bool exact_version = session_info.version() == version;
          const bool ok_version =
             (session_info.version().is_datagram_protocol() == version.is_datagram_protocol()) &&

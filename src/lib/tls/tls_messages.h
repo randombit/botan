@@ -181,7 +181,7 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello
                       Callbacks& cb,
                       RandomNumberGenerator& rng,
                       const std::vector<uint8_t>& reneg_info,
-                      const std::pair<Session, Session_Handle>& session_and_handle,
+                      const Session_with_Handle& session_and_handle,
                       const std::vector<std::string>& next_protocols);
 
    protected:
@@ -223,7 +223,7 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
                       RandomNumberGenerator& rng,
                       const std::string& hostname,
                       const std::vector<std::string>& next_protocols,
-                      const std::optional<std::pair<Session, Session_Handle>>& session_and_handle = std::nullopt);
+                      const std::optional<Session_with_Handle>& session = std::nullopt);
 
       static std::variant<Client_Hello_13, Client_Hello_12>
       parse(const std::vector<uint8_t>& buf);

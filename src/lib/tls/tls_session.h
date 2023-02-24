@@ -352,6 +352,15 @@ class BOTAN_PUBLIC_API(2,0) Session final
       std::chrono::seconds m_lifetime_hint;
    };
 
+/**
+ * Helper struct to conveniently pass a Session and its Session_Handle around
+ */
+struct BOTAN_PUBLIC_API(3, 0) Session_with_Handle
+   {
+   Session session;
+   Session_Handle handle;
+   };
+
 }
 
 }

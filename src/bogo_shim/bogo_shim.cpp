@@ -1547,12 +1547,12 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             }
          }
 
-      bool tls_session_established(const Botan::TLS::Session& session, const Botan::TLS::Session_Handle& session_handle) override
+      bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
          {
-         shim_log("Session established: " + Botan::hex_encode(session_handle.opaque_handle().get()) +
-                  " version " + session.version().to_string() +
-                  " cipher " + session.ciphersuite().to_string() +
-                  " EMS " + std::to_string(session.supports_extended_master_secret()));
+         shim_log("Session established: " + Botan::hex_encode(session.handle.opaque_handle().get()) +
+                  " version " + session.session.version().to_string() +
+                  " cipher " + session.session.ciphersuite().to_string() +
+                  " EMS " + std::to_string(session.session.supports_extended_master_secret()));
          // probably need tests here?
 
          m_policy.incr_session_established();
@@ -1561,17 +1561,17 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          if(m_args.flag_set("expect-no-session-id"))
             {
             // BoGo expects that ticket issuance implies no stateful session...
-            if(!m_args.flag_set("server") && session_handle.is_id())
+            if(!m_args.flag_set("server") && session.handle.is_id())
                shim_exit_with_error("Unexpectedly got a session ID");
             }
-         else if(m_args.flag_set("expect-session-id") && !session_handle.is_id())
+         else if(m_args.flag_set("expect-session-id") && !session.handle.is_id())
             {
             shim_exit_with_error("Unexpectedly got no session ID");
             }
 
          if(m_args.option_used("expect-version"))
             {
-            if(session.version().version_code() != m_args.get_int_opt("expect-version"))
+            if(session.session.version().version_code() != m_args.get_int_opt("expect-version"))
                shim_exit_with_error("Unexpected version");
             }
 
@@ -1588,7 +1588,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
          if(m_args.flag_set("expect-extended-master-secret"))
             {
-            if(session.supports_extended_master_secret() == false)
+            if(session.session.supports_extended_master_secret() == false)
                shim_exit_with_error("Expected extended maseter secret");
             }
 

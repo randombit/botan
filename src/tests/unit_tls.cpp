@@ -385,19 +385,19 @@ class TLS_Handshake_Test final
                   }
                }
 
-            bool tls_session_established(const Botan::TLS::Session& session, const Botan::TLS::Session_Handle& handle) override
+            bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
                {
                const std::string session_report =
-                  "Session established " + session.version().to_string() + " " +
-                  session.ciphersuite().to_string() + " " +
-                  Botan::hex_encode(handle.opaque_handle().get());
+                  "Session established " + session.session.version().to_string() + " " +
+                  session.session.ciphersuite().to_string() + " " +
+                  Botan::hex_encode(session.handle.opaque_handle().get());
 
                m_results.test_note(session_report);
 
-               if(session.version() != m_expected_version)
+               if(session.session.version() != m_expected_version)
                   {
                   m_results.test_failure("Expected " + m_expected_version.to_string() +
-                                         " negotiated " + session.version().to_string());
+                                         " negotiated " + session.session.version().to_string());
                   }
 
                return true;
@@ -956,7 +956,7 @@ class DTLS_Reconnection_Test : public Test
                   // ignore
                   }
 
-               bool tls_session_established(const Botan::TLS::Session& /*session*/, const Botan::TLS::Session_Handle&) override
+               bool tls_session_established(const Botan::TLS::Session_with_Handle& /*session*/) override
                   {
                   m_results.test_success("Established a session");
                   return true;

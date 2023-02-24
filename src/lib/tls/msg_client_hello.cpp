@@ -537,12 +537,10 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  Callbacks& cb,
                                  RandomNumberGenerator& rng,
                                  const std::vector<uint8_t>& reneg_info,
-                                 const std::pair<Session, Session_Handle>& session_and_handle,
+                                 const Session_with_Handle& session,
                                  const std::vector<std::string>& next_protocols)
    {
-   const auto& [session, session_handle] = session_and_handle;
-
-   m_data->legacy_version = session.version();
+   m_data->legacy_version = session.session.version();
    m_data->random = make_hello_random(rng, cb, policy);
 
    // RFC 5077 3.4
@@ -550,15 +548,15 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    //    Session ID in the TLS ClientHello. [...] If a ticket is presented by
    //    the client, the server MUST NOT attempt to use the Session ID in the
    //    ClientHello for stateful session resumption.
-   m_data->session_id = session_handle.id().value_or(Session_ID(make_hello_random(rng, cb, policy)));
+   m_data->session_id = session.handle.id().value_or(Session_ID(make_hello_random(rng, cb, policy)));
    m_data->suites = policy.ciphersuite_list(m_data->legacy_version);
 
-   if(!policy.acceptable_protocol_version(session.version()))
+   if(!policy.acceptable_protocol_version(session.session.version()))
       throw Internal_Error("Offering " + m_data->legacy_version.to_string() +
                            " but our own policy does not accept it");
 
-   if(!value_exists(m_data->suites, session.ciphersuite_code()))
-      { m_data->suites.push_back(session.ciphersuite_code()); }
+   if(!value_exists(m_data->suites, session.session.ciphersuite_code()))
+      { m_data->suites.push_back(session.session.ciphersuite_code()); }
 
    /*
    * As EMS must always be used with TLS 1.2, add it even if it wasn't used
@@ -568,15 +566,15 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    */
    m_data->extensions.add(new Extended_Master_Secret);
 
-   if(session.supports_encrypt_then_mac())
+   if(session.session.supports_encrypt_then_mac())
       { m_data->extensions.add(new Encrypt_then_MAC); }
 
-   if(session_handle.is_ticket())
-      { m_data->extensions.add(new Session_Ticket_Extension(session_handle.ticket().value())); }
+   if(session.handle.is_ticket())
+      { m_data->extensions.add(new Session_Ticket_Extension(session.handle.ticket().value())); }
 
    m_data->extensions.add(new Renegotiation_Extension(reneg_info));
 
-   m_data->extensions.add(new Server_Name_Indicator(session.server_info().hostname()));
+   m_data->extensions.add(new Server_Name_Indicator(session.session.server_info().hostname()));
 
    if(policy.support_cert_status_message())
       m_data->extensions.add(new Certificate_Status_Request({}, {}));
@@ -749,7 +747,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  RandomNumberGenerator& rng,
                                  const std::string& hostname,
                                  const std::vector<std::string>& next_protocols,
-                                 const std::optional<std::pair<Session, Session_Handle>>& session_and_handle)
+                                 const std::optional<Session_with_Handle>& session)
    {
    // RFC 8446 4.1.2
    //    In TLS 1.3, the client indicates its version preferences in the
@@ -839,9 +837,9 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    //
    // The PSK extension takes the partial transcript hash into account. Passing
    // into Callbacks::tls_modify_extensions() does not make sense therefore.
-   if(session_and_handle.has_value())
+   if(session.has_value())
       {
-      m_data->extensions.add(new PSK(session_and_handle.value(), cb));
+      m_data->extensions.add(new PSK(session.value(), cb));
       calculate_psk_binders({});
       }
    }
