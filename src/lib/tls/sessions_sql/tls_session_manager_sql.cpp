@@ -163,6 +163,11 @@ void Session_Manager_SQL::initialize_existing_database(const std::string& passph
 
 void Session_Manager_SQL::store(const Session& session, const Session_Handle& handle)
    {
+   // TODO: C++20 allows CTAD for template aliases (read: lock_guard_type), so
+   //       technically we should be able to omit the explicit mutex type.
+   //       Unfortuately clang does not agree, yet.
+   lock_guard_type<recursive_mutex_type> lk(mutex());
+
    if(session.server_info().hostname().empty())
       return;
 
@@ -188,6 +193,8 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
 
 std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& handle)
    {
+   lock_guard_type<recursive_mutex_type> lk(mutex());
+
    if(auto session_id = handle.id())
       {
       auto stmt = m_db->new_statement("SELECT session FROM tls_sessions WHERE session_id = ?1");
@@ -213,6 +220,8 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
 
 std::vector<Session_with_Handle> Session_Manager_SQL::find_all(const Server_Information& info)
    {
+   lock_guard_type<recursive_mutex_type> lk(mutex());
+
    auto stmt = m_db->new_statement("SELECT session_id, session_ticket, session FROM tls_sessions"
                                    " WHERE hostname = ?1 AND hostport = ?2"
                                    " ORDER BY session_start DESC");
@@ -252,6 +261,8 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_all(const Server_Info
 
 size_t Session_Manager_SQL::remove(const Session_Handle& handle)
    {
+   lock_guard_type<recursive_mutex_type> lk(mutex());
+
    if(const auto id = handle.id())
       {
       auto stmt = m_db->new_statement("DELETE FROM tls_sessions WHERE session_id = ?1");
@@ -275,12 +286,16 @@ size_t Session_Manager_SQL::remove(const Session_Handle& handle)
 
 size_t Session_Manager_SQL::remove_all()
    {
+   lock_guard_type<recursive_mutex_type> lk(mutex());
+
    m_db->exec("DELETE FROM tls_sessions");
    return m_db->rows_changed_by_last_statement();
    }
 
 void Session_Manager_SQL::prune_session_cache()
    {
+   // internal API: assuming that the lock is held already
+
    auto remove_oldest = m_db->new_statement("DELETE FROM tls_sessions WHERE session_id NOT IN "
                                             "(SELECT session_id FROM tls_sessions ORDER BY session_start DESC LIMIT ?1)");
    remove_oldest->bind(1, m_max_sessions);
