@@ -298,3 +298,14 @@ implementation had to keep alive "forever", since there was no way for it to
 know when or if the TLS layer had completed using the returned key.
 
 Now this function returns std::shared_ptr<Private_Key>
+
+RSA with "EMSA1" padding
+-------------------------
+
+EMSA1 indicates that effectively the plain hash is signed, with no other
+padding. It is typically used for algorithms like ECSDA, but was allowed for
+RSA. This is now no longer implemented.
+
+If you must generates such signatures for some horrible reason, you can pre-hash
+the message using a hash function as usual, and then sign using a "Raw" padding,
+which will allow you to sign any arbitrary bits with no preprocessing.

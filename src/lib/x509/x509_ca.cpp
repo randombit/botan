@@ -23,13 +23,13 @@ X509_CA::X509_CA(const X509_Certificate& cert,
                  const std::string& hash_fn,
                  const std::string& padding_method,
                  RandomNumberGenerator& rng) :
-   m_ca_cert(cert),
-   m_hash_fn(hash_fn)
+   m_ca_cert(cert)
    {
    if(!m_ca_cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
    m_signer = X509_Object::choose_sig_format(m_ca_sig_algo, key, rng, hash_fn, padding_method);
+   m_hash_fn = m_signer->hash_function();
    }
 
 X509_CA::~X509_CA() = default;

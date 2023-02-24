@@ -42,8 +42,6 @@ Deprecated Functionality
 This section lists cryptographic functionality which will be removed
 in a future major release.
 
-- Using RSA signatures with EMSA1 padding
-
 - DSA, ECDSA, ECGDSA, ECKCDSA, and GOST-34.10 previously (before Botan 3)
   required that the hash be named as "EMSA1(HASH_NAME)". This is no longer
   required. In a future major release, only "HASH_NAME" will be accepted.

@@ -28,7 +28,6 @@ shake
 # pk_pad
 eme_oaep
 emsa_pssr
-emsa1
 
 # pubkey
 dh

@@ -643,7 +643,7 @@ Test::Result test_verify_gost2012_cert()
    {
    Test::Result result("X509 GOST-2012 certificates");
 
-#if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG) && defined(BOTAN_HAS_EMSA1)
+#if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG)
    try
       {
       Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
@@ -693,10 +693,9 @@ Test::Result test_verify_gost2012_cert()
    test_result.test_eq("CA certificate signature algorithm (explicit)",
       Botan::OIDS::oid2str_or_throw(ca_cert_exp.signature_algorithm().oid()),"RSA/EMSA4");
 
-#if defined(BOTAN_HAS_EMSA1)
-
+#if defined(BOTAN_HAS_EMSA2)
    // Try to set a padding scheme that is not supported for signing with the given key type
-   opt.set_padding_scheme("EMSA1");
+   opt.set_padding_scheme("EMSA2");
    try
       {
       Botan::X509_Certificate ca_cert_wrong = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", Test::rng());
@@ -704,9 +703,9 @@ Test::Result test_verify_gost2012_cert()
       }
    catch (const Botan::Invalid_Argument& e)
       {
-      test_result.test_eq("Build CA certitiface with invalid encoding scheme EMSA1 for key type " +
+      test_result.test_eq("Build CA certificate with invalid encoding scheme EMSA1 for key type " +
                           sk->algo_name(), e.what(),
-                          "Signatures using RSA/EMSA1(SHA-512) are not supported");
+                          "Signatures using RSA/EMSA2(SHA-512) are not supported");
       }
 #endif
 
@@ -732,7 +731,7 @@ Test::Result test_verify_gost2012_cert()
       {
       test_result.test_eq("Configured conflicting hash functions for CA",
                           e.what(),
-                          "PSSR: Cert hash SHA-512 incompatible with specified hash SHA-256");
+                          "Specified hash function SHA-512 is incompatible with RSA chose hash function SHA-256 with user specified padding EMSA4(SHA-256)");
       }
 
    // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. EMSA3
@@ -769,7 +768,7 @@ Test::Result test_verify_gost2012_cert()
 
 Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
                              const std::string& sig_padding,
-                             const std::string& hash_fn = "SHA-256")
+                             const std::string& hash_fn)
    {
    Test::Result result("PKCS10 extensions");
 
@@ -802,8 +801,8 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
 
 Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
                             const std::string& sig_algo,
-                            const std::string& sig_padding = "",
-                            const std::string& hash_fn = "SHA-256")
+                            const std::string& sig_padding,
+                            const std::string& hash_fn)
    {
    Test::Result result("X509 Unit");
 
@@ -994,7 +993,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
 Test::Result test_usage(const Botan::Private_Key& ca_key,
                         const std::string& sig_algo,
-                        const std::string& hash_fn = "SHA-256")
+                        const std::string& hash_fn)
    {
    using Botan::Key_Constraints;
    using Botan::Usage_Type;
@@ -1102,8 +1101,8 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
 
 Test::Result test_self_issued(const Botan::Private_Key& ca_key,
                               const std::string& sig_algo,
-                              const std::string& sig_padding = "",
-                              const std::string& hash_fn = "SHA-256")
+                              const std::string& sig_padding,
+                              const std::string& hash_fn)
    {
    using Botan::Key_Constraints;
 
@@ -1335,9 +1334,9 @@ class String_Extension final : public Botan::Certificate_Extension
    };
 
 Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
-                                  const std::string& sig_algo,
-                                  const std::string& sig_padding = "",
-                                  const std::string& hash_fn = "SHA-256")
+                                 const std::string& sig_algo,
+                                 const std::string& sig_padding,
+                                 const std::string& hash_fn)
    {
    Test::Result result("X509 Custom DN");
 
@@ -1403,8 +1402,8 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
 Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
                                   const std::string& sig_algo,
-                                  const std::string& sig_padding = "",
-                                  const std::string& hash_fn = "SHA-256")
+                                  const std::string& sig_padding,
+                                  const std::string& hash_fn)
    {
    using Botan::Key_Constraints;
 
@@ -1483,7 +1482,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    }
 
 Test::Result test_hashes(const Botan::Private_Key& key,
-                         const std::string& hash_fn = "SHA-256")
+                         const std::string& hash_fn)
    {
    Test::Result result("X509 Hashes");
 
@@ -1556,6 +1555,8 @@ std::vector<std::string> get_sig_paddings(const std::string& sig_algo)
       return {"EMSA1"};
    else if(sig_algo == "Ed25519")
       return {"Pure"};
+   else if(sig_algo == "Dilithium")
+      return {"Randomized"};
    else
       return {};
    }
@@ -1576,23 +1577,25 @@ class X509_Cert_Unit_Tests final : public Test
                continue;
 #endif
 
-#if !defined(BOTAN_HAS_EMSA1)
-            if(algo != "RSA" && algo != "Ed25519")
-               continue;
-#endif
+            std::string hash = "SHA-256";
+
+            if(algo == "Ed25519")
+               hash = "SHA-512";
+            if(algo == "Dilithium")
+               hash = "SHAKE-256(512)";
 
             std::unique_ptr<Botan::Private_Key> key = make_a_private_key(algo);
 
             if(key == nullptr)
                continue;
 
-            results.push_back(test_hashes(*key));
+            results.push_back(test_hashes(*key, hash));
             results.push_back(test_valid_constraints(*key, algo));
 
             Test::Result usage_result("X509 Usage");
             try
                {
-               usage_result.merge(test_usage(*key, algo));
+               usage_result.merge(test_usage(*key, algo, hash));
                }
             catch(std::exception& e)
                {
@@ -1603,13 +1606,6 @@ class X509_Cert_Unit_Tests final : public Test
             for(const auto& padding_scheme : get_sig_paddings(algo))
                {
                Test::Result cert_result("X509 Unit");
-
-               std::string hash = "SHA-256";
-
-               if(algo == "Ed25519")
-                  hash = "SHA-512";
-               if(algo == "Dilithium")
-                  hash = "SHAKE-256(512)";
 
                try
                   {
@@ -1624,7 +1620,7 @@ class X509_Cert_Unit_Tests final : public Test
                Test::Result pkcs10_result("PKCS10 extensions");
                try
                   {
-                  pkcs10_result.merge(test_pkcs10_ext(*key, padding_scheme));
+                  pkcs10_result.merge(test_pkcs10_ext(*key, padding_scheme, hash));
                   }
                catch(std::exception& e)
                   {
@@ -1635,7 +1631,7 @@ class X509_Cert_Unit_Tests final : public Test
                Test::Result self_issued_result("X509 Self Issued");
                try
                   {
-                  self_issued_result.merge(test_self_issued(*key, algo, padding_scheme));
+                  self_issued_result.merge(test_self_issued(*key, algo, padding_scheme, hash));
                   }
                catch(std::exception& e)
                   {
@@ -1646,7 +1642,7 @@ class X509_Cert_Unit_Tests final : public Test
                Test::Result extensions_result("X509 Extensions");
                try
                   {
-                  extensions_result.merge(test_x509_extensions(*key, algo, padding_scheme));
+                  extensions_result.merge(test_x509_extensions(*key, algo, padding_scheme, hash));
                   }
                catch(std::exception& e)
                   {
@@ -1657,7 +1653,7 @@ class X509_Cert_Unit_Tests final : public Test
                Test::Result custom_dn_result("X509 Custom DN");
                try
                   {
-                  custom_dn_result.merge(test_custom_dn_attr(*key, algo, padding_scheme));
+                  custom_dn_result.merge(test_custom_dn_attr(*key, algo, padding_scheme, hash));
                   }
                catch(std::exception& e)
                   {

@@ -86,6 +86,11 @@ class MechanismWrapper final
          return const_cast<Mechanism*>(&m_mechanism);
          }
 
+      inline MechanismType mechanism_type() const
+         {
+         return static_cast<MechanismType>(m_mechanism.mechanism);
+         }
+
       /// @return the size of the padding in bytes (for encryption/decryption)
       inline size_t padding_size() const
          {

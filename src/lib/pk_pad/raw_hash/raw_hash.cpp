@@ -19,10 +19,10 @@ void RawHashFunction::final_result(uint8_t out[])
    if(m_output_length > 0 && m_bits.size() != m_output_length)
       {
       m_bits.resize(0);
-      throw Invalid_Argument("EMSA_Raw was configured to use a " +
+      throw Invalid_Argument("Raw padding was configured to use a " +
                              std::to_string(m_output_length) +
                              " byte hash but instead was used for a " +
-                             std::to_string(m_bits.size()) + " hash");
+                             std::to_string(m_bits.size()) + " byte hash");
       }
 
    copy_mem(out, m_bits.data(), m_bits.size());

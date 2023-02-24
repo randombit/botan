@@ -86,6 +86,8 @@ class Signature_with_Hash : public Signature
 
       ~Signature_with_Hash() = default;
 
+      std::string hash_function() const override final { return m_hash->name(); }
+
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
       std::string rfc6979_hash_function() const;
 #endif

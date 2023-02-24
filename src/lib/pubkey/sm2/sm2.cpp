@@ -128,6 +128,7 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
 
+      std::string hash_function() const override { return m_hash->name(); }
    private:
       const EC_Group m_group;
       const BigInt& m_x;

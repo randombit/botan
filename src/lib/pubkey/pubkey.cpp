@@ -233,6 +233,16 @@ PK_Signer::PK_Signer(const Private_Key& key,
    check_der_format_supported(format, m_parts);
    }
 
+AlgorithmIdentifier PK_Signer::algorithm_identifier() const
+   {
+   return m_op->algorithm_identifier();
+   }
+
+std::string PK_Signer::hash_function() const
+   {
+   return m_op->hash_function();
+   }
+
 PK_Signer::~PK_Signer() = default;
 
 void PK_Signer::update(const uint8_t in[], size_t length)

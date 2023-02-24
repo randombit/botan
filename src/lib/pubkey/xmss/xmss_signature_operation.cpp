@@ -121,5 +121,10 @@ void XMSS_Signature_Operation::initialize()
    m_is_initialized = true;
    }
 
+AlgorithmIdentifier XMSS_Signature_Operation::algorithm_identifier() const
+   {
+   return AlgorithmIdentifier(OID::from_string("XMSS"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+   }
+
 }
 

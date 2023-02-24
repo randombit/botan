@@ -33,8 +33,7 @@ class PSSR final : public EMSA
 
       std::string name() const override;
 
-      AlgorithmIdentifier config_for_x509(const std::string& algo_name,
-                                          const std::string& cert_hash_name) const override;
+      std::string hash_function() const override { return m_hash->name(); }
    private:
       void update(const uint8_t input[], size_t length) override;
 
@@ -71,6 +70,8 @@ class PSSR_Raw final : public EMSA
       * @param salt_size the size of the salt to use in bytes
       */
       PSSR_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size);
+
+      std::string hash_function() const override { return m_hash->name(); }
 
       std::string name() const override;
    private:

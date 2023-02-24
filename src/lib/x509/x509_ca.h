@@ -204,7 +204,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
               const std::map<std::string,std::string>& opts,
               const std::string& hash_fn,
               RandomNumberGenerator& rng) :
-         X509_CA(ca_certificate, key, opts.at("padding"), hash_fn, rng) {}
+         X509_CA(ca_certificate, key, hash_fn, opts.at("padding"), rng) {}
 
       X509_CA(const X509_CA&) = delete;
       X509_CA& operator=(const X509_CA&) = delete;

@@ -405,6 +405,11 @@ class TPM_Signing_Operation final : public PK_Ops::Signature
          {
          }
 
+      std::string hash_function() const override
+         {
+         return m_hash->name();
+         }
+
       size_t signature_length() const override
          {
          return m_key.get_n().bytes();
@@ -413,6 +418,13 @@ class TPM_Signing_Operation final : public PK_Ops::Signature
       void update(const uint8_t msg[], size_t msg_len) override
          {
          m_hash->update(msg, msg_len);
+         }
+
+      AlgorithmIdentifier algorithm_identifier() const override
+         {
+         const std::string full_name = "RSA/EMSA3(" + m_hash->name() + ")";
+         const OID oid = OID::from_string(full_name);
+         return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
          }
 
       secure_vector<uint8_t> sign(RandomNumberGenerator&) override

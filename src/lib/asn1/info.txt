@@ -18,3 +18,7 @@ der_enc.h
 oids.h
 ber_dec.h
 </header:public>
+
+<header:internal>
+pss_params.h
+</header:internal>
