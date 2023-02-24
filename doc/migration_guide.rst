@@ -26,8 +26,15 @@ algorithm headers (such as ``aes.h``) have been removed. Instead you should
 create objects via the factory methods (in the case of AES,
 ``BlockCipher::create``) which works in both 2.x and 3.0
 
-TLS Functionality Removed
----------------------------
+TLS
+---
+
+Starting with Botan 3.0 TLS 1.3 is supported.
+This development required a number of backward-incompatible changes to
+accomodate the protocol differences to TLS 1.2, which is still supported.
+
+Removed Functionality
+^^^^^^^^^^^^^^^^^^^^^
 
 Functionality removed from the TLS implementation includes
 
@@ -41,19 +48,119 @@ Functionality removed from the TLS implementation includes
 * DHE_PSK ciphersuites
 * CECPQ1 ciphersuites
 
-TLS 1.3 API adaptions
----------------------
+enum classes
+^^^^^^^^^^^^
 
-Sessions
-^^^^^^^^
+The publicly available C++ enums in the TLS namespace are now `enum class` and
+their member naming scheme was converted from `SHOUTING_SNAKE_CASE` to
+`CamelCase`.
+
+Callbacks
+^^^^^^^^^
+
+A number of new callbacks were added with TLS 1.3. None of those new callbacks
+is mandatory to implement by applications, though. Additionally there are a few
+backward incompatible changes in callbacks that might require attention by some
+applications:
+
+tls_verify_cert_chain()
+"""""""""""""""""""""""
+
+The parameter `ocsp_responses`, which was previously
+`std::shared_ptr<OCSP::Response>`, is now `std::optional<OCSP::Response>`.
+
+tls_modify_extensions() / tls_examine_extensions()
+""""""""""""""""""""""""""""""""""""""""""""""""""
+
+These callbacks now have an additional parameter of type `Handshake_Type` that
+identify the TLS handshake message the extensions in question are residing in.
+TLS 1.3 makes much heavier use of such extensions in a wider range of messages
+to implement core protocol functionality.
+
+Policy
+^^^^^^
+
+choose_key_exchange_group()
+"""""""""""""""""""""""""""
+
+The new parameter `offered_by_peer` identifies the key exchange groups a peer
+has sent public exchange offerings for (in TLS 1.3 handshakes only).
+Choosing a key exchange group that is not listed is legal but will result in an
+additional network round trip (cf. "Hello Retry Request").
+In TLS 1.2, this vector is always empty and can be ignored.
+
+session_ticket_lifetime()
+"""""""""""""""""""""""""
+
+Now returns `std::chrono::seconds` rather than a bare `uint32_t`.
+
+Credentials Manager
+^^^^^^^^^^^^^^^^^^^
+
+find_cert_chain(), cert_chain() and cert_chain_single_type()
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+These methods now have a `cert_signature_schemes` parameter that identifies
+a list of signature schemes the peer is willing to accept for signatures
+in certificates.
+Notably, this *does not necessarily* mean that the leaf certificate must feature
+a public key type able to generate one of those schemes.
+
+private_key_for()
+"""""""""""""""""
+
+Applications must now provide a `std::shared_ptr<>` to the requested private key
+object instead of a raw pointer to better communicate the implementation's
+life-time expectations of this private key object.
+
+Session and Ticket Handling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Old (pre-Botan 3.0) sessions won't load in Botan 3.0 anymore and should be
 discarded.
+For applications using `Session_Manager_SQL` or `Session_Manager_SQLite`
+discarding happens automatically on first access after the update.
 
-``Session::session_id()`` is equal to the "session ticket" for TLS 1.3 sessions.
-This ticket might be longer than a typical ID (up to 64kB). If your application
-depends on a short ID for each session, it is safe to just hash the returned
-buffer.
+With Botan 3.0 the session manager now is responsible for stateful session
+handling (backed by a database) and creation and management of stateless session
+tickets.
+The latter was previously handled transparently by the TLS implementation itself.
+
+Therefore, TLS server applications that relied on Botan's default session
+management implementations (most notably `Session_Manager_SQLite` or
+`Session_Manager_In_Memory`) are advised to re-evaluate their choice.
+Have a look at `Session_Manager_Hybrid` to retain support for both stateful and
+stateless TLS sessions.
+TLS client applications may safely keep relying on the above-mentioned default
+implementations.
+
+Applications implementing their own `Session_Manager` will need to adapt to the
+new base class API.
+
+New API of Session Manager
+""""""""""""""""""""""""""
+
+TLS 1.3 removed the legacy resumption procedures based on session IDs or session
+tickets and combined them under the protocol's Pre-Shared Key mechanism.
+This new approach allows TLS servers to handle sessions both stateless (as
+self-contained encrypted and authenticated tickets) and stateful (identified
+with unique database handles).
+
+To accomodates this flexibility the `Session_Manager` base class API has changed
+drastically and is now responsible for creation, storage and management of both
+stateful sessions and stateless session tickets.
+Sub-classes therefore gain full control over the session ticket's structure and
+content.
+
+API details are documented in the class' doxygen comments.
+
+The Session Object and its Handle
+"""""""""""""""""""""""""""""""""
+
+Objects of class `Session` are not aware of their "session ID" or their "session
+ticket" anymore.
+Instead, the new class `Session_Handle` encapsulates the session's identifier or
+ticket and accompanies the `Session` object where necessary.
 
 Algorithms Removed
 -------------------
