@@ -731,7 +731,7 @@ Test::Result test_verify_gost2012_cert()
       {
       test_result.test_eq("Configured conflicting hash functions for CA",
                           e.what(),
-                          "Specified hash function SHA-512 is incompatible with requested padding mechanism EMSA4(SHA-256)");
+                          "Specified hash function SHA-512 is incompatible with RSA chose hash function SHA-256 with user specified padding EMSA4(SHA-256)");
       }
 
    // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. EMSA3
