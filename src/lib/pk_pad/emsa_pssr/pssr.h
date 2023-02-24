@@ -36,9 +36,6 @@ class PSSR final : public EMSA
       std::vector<uint8_t> algorithm_parameters() const override;
 
       std::string hash_function() const override { return m_hash->name(); }
-
-      AlgorithmIdentifier config_for_x509(const std::string& algo_name,
-                                          const std::string& cert_hash_name) const override;
    private:
       void update(const uint8_t input[], size_t length) override;
 

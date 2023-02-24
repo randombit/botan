@@ -200,24 +200,6 @@ std::vector<uint8_t> PSSR::algorithm_parameters() const
    return parameters;
    }
 
-AlgorithmIdentifier PSSR::config_for_x509(const std::string& algo_name,
-                                          const std::string& cert_hash_name) const
-   {
-   if(cert_hash_name != m_hash->name())
-      throw Invalid_Argument("PSSR: Cert hash " + cert_hash_name +
-                             " incompatible with specified hash " + m_hash->name());
-   // check that the signature algorithm and the padding scheme fit
-   if(algo_name != "RSA")
-      {
-      throw Invalid_Argument("PSS signature padding not compatible with " + algo_name);
-      }
-
-   const auto parameters = this->algorithm_parameters();
-
-   // hardcoded as RSA is the only valid algorithm for EMSA4 at the moment
-   return AlgorithmIdentifier("RSA/EMSA4", parameters);
-   }
-
 PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash) :
    m_hash(std::move(hash)),
    m_salt_size(m_hash->output_length()),

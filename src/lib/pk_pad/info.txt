@@ -8,7 +8,6 @@ brief -> "Implementations of public key padding schemes"
 </module_info>
 
 <requires>
-asn1
 hash
 rng
 pubkey

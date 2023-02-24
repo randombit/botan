@@ -82,24 +82,6 @@ bool EMSA_PKCS1v15::verify(const secure_vector<uint8_t>& coded,
       }
    }
 
-AlgorithmIdentifier EMSA_PKCS1v15::config_for_x509(const std::string& algo_name,
-                                                   const std::string& cert_hash_name) const
-   {
-   if(cert_hash_name != m_hash->name())
-      throw Invalid_Argument("PKCS1v15: Cert hash " + cert_hash_name +
-                             " incompatible with specified hash " + m_hash->name());
-
-   // check that the signature algorithm and the padding scheme fit
-   if(algo_name != "RSA")
-      {
-      throw Invalid_Argument("PKCSv1.5 signature padding not compatible with " + algo_name);
-      }
-
-   // for RSA PKCSv1.5 parameters "SHALL" be NULL
-   const OID oid = OID::from_string(algo_name + "/" + name());
-   return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
-   }
-
 EMSA_PKCS1v15::EMSA_PKCS1v15(std::unique_ptr<HashFunction> hash) :
    m_hash(std::move(hash))
    {

@@ -91,27 +91,4 @@ bool EMSA1::verify(const secure_vector<uint8_t>& input,
    return constant_time_compare(input.data(), &our_coding[offset], input.size());
    }
 
-AlgorithmIdentifier EMSA1::config_for_x509(const std::string& algo_name,
-                                           const std::string& cert_hash_name) const
-   {
-   if(cert_hash_name != m_hash->name())
-      throw Invalid_Argument("EMSA1: Cert hash " + cert_hash_name +
-                             " incompatible with specified hash " + m_hash->name());
-
-   const std::string full_name = algo_name + "/" + name();
-
-   try
-      {
-      const OID oid = OID::from_string(full_name);
-
-      // for DSA, ECDSA, GOST parameters "SHALL" be empty
-      return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
-      }
-   catch(Lookup_Error&)
-      {
-      throw Invalid_Argument("Signatures using " + full_name +
-                             " are not supported");
-      }
-   }
-
 }

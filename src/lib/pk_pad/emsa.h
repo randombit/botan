@@ -9,7 +9,6 @@
 #define BOTAN_PUBKEY_EMSA_H_
 
 #include <botan/secmem.h>
-#include <botan/asn1_obj.h>
 #include <string>
 
 namespace Botan {
@@ -75,19 +74,6 @@ class BOTAN_TEST_API EMSA
       virtual bool verify(const secure_vector<uint8_t>& coded,
                           const secure_vector<uint8_t>& raw,
                           size_t key_bits) = 0;
-
-      /**
-      * Prepare sig_algo for use in choose_sig_format for x509 certs
-      *
-      * @param algo_name used for checking compatibility with the encoding scheme
-      *        this should match the canonical algorithm name eg "RSA", "ECDSA"
-      * @param cert_hash_name is checked to equal the hash for the encoding
-      * @return algorithm identifier to signatures created using this key,
-      *         padding method and hash.
-      */
-      virtual AlgorithmIdentifier config_for_x509(const std::string& algo_name,
-                                                  const std::string& cert_hash_name) const;
-
 
       /**
       * Return encoded algorithm parameters for this signature padding
