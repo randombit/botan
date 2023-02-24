@@ -693,8 +693,9 @@ Test::Result test_verify_gost2012_cert()
    test_result.test_eq("CA certificate signature algorithm (explicit)",
       Botan::OIDS::oid2str_or_throw(ca_cert_exp.signature_algorithm().oid()),"RSA/EMSA4");
 
+#if defined(BOTAN_HAS_EMSA2)
    // Try to set a padding scheme that is not supported for signing with the given key type
-   opt.set_padding_scheme("EMSA1");
+   opt.set_padding_scheme("EMSA2");
    try
       {
       Botan::X509_Certificate ca_cert_wrong = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", Test::rng());
@@ -704,8 +705,9 @@ Test::Result test_verify_gost2012_cert()
       {
       test_result.test_eq("Build CA certificate with invalid encoding scheme EMSA1 for key type " +
                           sk->algo_name(), e.what(),
-                          "Signatures using RSA/EMSA1(SHA-512) are not supported");
+                          "Signatures using RSA/EMSA2(SHA-512) are not supported");
       }
+#endif
 
    test_result.test_eq("CA certificate signature algorithm (explicit)",
       Botan::OIDS::oid2str_or_throw(ca_cert_exp.signature_algorithm().oid()),"RSA/EMSA4");
