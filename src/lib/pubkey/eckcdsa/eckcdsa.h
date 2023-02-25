@@ -39,7 +39,6 @@ class BOTAN_PUBLIC_API(2,0) ECKCDSA_PublicKey : public virtual EC_PublicKey
 
       /**
       * Get this keys algorithm name.
-      * @result this keys algorithm name ("ECGDSA")
       */
       std::string algo_name() const override { return "ECKCDSA"; }
 
