@@ -26,7 +26,9 @@ Session_Manager_Hybrid::Session_Manager_Hybrid(std::unique_ptr<Session_Manager> 
    }
 
 std::optional<Session_Handle>
-Session_Manager_Hybrid::establish(const Session& session, std::optional<Session_ID> id, bool tls12_no_ticket)
+Session_Manager_Hybrid::establish(const Session& session,
+                                  const std::optional<Session_ID>& id,
+                                  bool tls12_no_ticket)
    {
    auto create_ticket = [&]() -> std::optional<Session_Handle>
       {

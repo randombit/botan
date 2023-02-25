@@ -360,14 +360,19 @@ class FFI_Unit_Tests final : public Test
          const uint8_t input[totalSize + 1] = "Does this work?AAAAAAAAAAAAAAAzzzzzzzzzzzzzzz";
 
          // Allocate memory for the encoding and decoding output parameters.
+         std::vector<uint8_t> encoded_buf(N * blockSize);
+         std::vector<uint8_t> decoded_buf(K * blockSize);
+
          std::vector<uint8_t*> encoded(N);
+         for(size_t i = 0; i < N; ++i)
+            {
+            encoded[i] = &encoded_buf[i * blockSize];
+            }
          std::vector<uint8_t*> decoded(K);
-         for (size_t n = 0; n < N; ++n) {
-            encoded[n] = new uint8_t[blockSize];
-         };
-         for (size_t k = 0; k < K; ++k) {
-            decoded[k] = new uint8_t[blockSize];
-         };
+         for(size_t i = 0; i < K; ++i)
+            {
+            decoded[i] = &decoded_buf[i * blockSize];
+            }
 
          // First encode the complete input string into N blocks where K are
          // required for reconstruction.  The N encoded blocks will end up in
@@ -392,14 +397,6 @@ class FFI_Unit_Tests final : public Test
             }
          }
 
-         // Clean up the memory we allocated at the top.
-         for (size_t n = 0; n < N; ++n) {
-            delete[] encoded[n];
-         }
-         for (size_t k = 0; k < K; ++k) {
-            delete[] decoded[k];
-         }
-
          /* Exercise a couple basic failure cases, such as you encounter if
           * the caller supplies invalid parameters.  We don't try to
           * exhaustively prove invalid parameters are handled through this
@@ -409,10 +406,10 @@ class FFI_Unit_Tests final : public Test
           */
          TEST_FFI_FAIL("encode with out-of-bounds encoding parameters should have failed",
                        botan_zfec_encode,
-                       (0, 0, NULL, 0, NULL));
+                       (0, 0, nullptr, 0, nullptr));
          TEST_FFI_FAIL("decode with out-of-bounds encoding parameters should have failed",
                        botan_zfec_decode,
-                       (0, 0, NULL, NULL, 0, NULL));
+                       (0, 0, nullptr, nullptr, 0, nullptr));
 #endif
 
          return result;

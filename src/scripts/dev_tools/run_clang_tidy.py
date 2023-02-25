@@ -53,7 +53,7 @@ disabled_needs_work = [
     'modernize-pass-by-value',
     'readability-convert-member-functions-to-static',
     'readability-implicit-bool-conversion', # maybe fix this
-    'readability-inconsistent-declaration-parameter-name', # should fix this
+    'readability-inconsistent-declaration-parameter-name', # should fix this, blocked by https://github.com/llvm/llvm-project/issues/60845
     'readability-qualified-auto',
     'readability-simplify-boolean-expr', # sometimes ok
     'readability-static-accessed-through-instance',

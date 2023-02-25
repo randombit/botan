@@ -17,9 +17,10 @@ namespace Botan::TLS {
 Session_Manager::Session_Manager(RandomNumberGenerator& rng)
    : m_rng(rng) {}
 
-std::optional<Session_Handle> Session_Manager::establish(const Session& session,
-            std::optional<Session_ID> id,
-            bool tls12_no_ticket)
+std::optional<Session_Handle> Session_Manager::establish(
+   const Session& session,
+   const std::optional<Session_ID>& id,
+   bool tls12_no_ticket)
 {
    // By default, the session manager does not emit session tickets anyway
    BOTAN_UNUSED(tls12_no_ticket);

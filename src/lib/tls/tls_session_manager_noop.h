@@ -26,8 +26,10 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Noop final : public Session_Manager
    public:
       Session_Manager_Noop();
 
-      std::optional<Session_Handle> establish(const Session&, std::optional<Session_ID> = std::nullopt,
+      std::optional<Session_Handle> establish(const Session&,
+                                              const std::optional<Session_ID>& = std::nullopt,
                                               bool = false) override { return std::nullopt; }
+
       void store(const Session&, const Session_Handle&) override {}
       size_t remove(const Session_Handle&) override { return 0; }
       size_t remove_all() override { return 0; }

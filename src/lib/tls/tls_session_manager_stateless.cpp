@@ -20,8 +20,10 @@ Session_Manager_Stateless::Session_Manager_Stateless(Credentials_Manager& creds,
    : Session_Manager(rng)
    , m_credentials_manager(creds) {}
 
-std::optional<Session_Handle> Session_Manager_Stateless::establish(const Session& session, std::optional<Session_ID>,
-      bool tls12_no_ticket)
+std::optional<Session_Handle> Session_Manager_Stateless::establish(
+   const Session& session,
+   const std::optional<Session_ID>&,
+   bool tls12_no_ticket)
    {
    BOTAN_ASSERT(session.side() == Connection_Side::Server,
                 "Client tried to establish a session");

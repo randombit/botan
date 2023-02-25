@@ -389,7 +389,7 @@ std::vector<Test::Result> test_session_manager_choose_ticket()
    Session_Manager_Callbacks cbs;
    Session_Manager_Policy plcy;
 
-   auto default_session = [&](std::string suite, Botan::TLS::Callbacks& mycbs)
+   auto default_session = [&](const std::string& suite, Botan::TLS::Callbacks& mycbs)
       {
       return Botan::TLS::Session(
             {}, std::nullopt, 0, std::chrono::seconds(1024),
@@ -614,7 +614,7 @@ std::vector<Test::Result> test_session_manager_hybrid()
    // managers. The `make_manager()` helper is passed into the test code and
    // transparently constructs a hybrid manager with the respective internal
    // stateful manager.
-   auto CHECK_all = [&](std::string name, auto lambda) -> std::vector<Test::Result>
+   auto CHECK_all = [&](const std::string& name, auto lambda) -> std::vector<Test::Result>
       {
       std::vector<std::pair<std::string, std::function<std::unique_ptr<Botan::TLS::Session_Manager>()>>>
          stateful_manager_factories =
@@ -728,6 +728,8 @@ class Temporary_Database_File
 
       Temporary_Database_File(const Temporary_Database_File&) = delete;
       Temporary_Database_File& operator=(const Temporary_Database_File&) = delete;
+      Temporary_Database_File(Temporary_Database_File&&) = delete;
+      Temporary_Database_File& operator=(Temporary_Database_File&&) = delete;
    };
 
 }
@@ -895,7 +897,7 @@ std::vector<Test::Result> tls_session_manager_expiry()
    Session_Manager_Callbacks cbs;
    Session_Manager_Policy plcy;
 
-   auto CHECK_all = [&](std::string name, auto lambda) -> std::vector<Test::Result>
+   auto CHECK_all = [&](const std::string& name, auto lambda) -> std::vector<Test::Result>
       {
       std::vector<std::pair<std::string, std::function<std::unique_ptr<Botan::TLS::Session_Manager>()>>>
          stateful_manager_factories =
@@ -908,6 +910,7 @@ std::vector<Test::Result> tls_session_manager_expiry()
             };
 
       std::vector<Test::Result> results;
+      results.reserve(stateful_manager_factories.size());
       using namespace std::placeholders;
       for(auto& [sub_name, factory] : stateful_manager_factories)
          {
@@ -930,7 +933,7 @@ std::vector<Test::Result> tls_session_manager_expiry()
          result.test_is_eq("session was deleted when it expired", mgr->remove_all(), size_t(0));
          }),
 
-      CHECK_all("expired sessions are not found", [&](std::string type, auto factory, auto& result)
+      CHECK_all("expired sessions are not found", [&](const std::string& type, auto factory, auto& result)
          {
          if(type == "Stateless")
             return; // this manager can neither store nor find anything
@@ -954,7 +957,7 @@ std::vector<Test::Result> tls_session_manager_expiry()
          result.test_is_eq("old session was deleted when it expired", mgr->remove_all(), size_t(1));
          }),
 
-      CHECK_all("session tickets are not reused", [&](std::string type, auto factory, auto& result)
+      CHECK_all("session tickets are not reused", [&](const std::string& type, auto factory, auto& result)
          {
          if(type == "Stateless")
             return; // this manager can neither store nor find anything
@@ -985,7 +988,7 @@ std::vector<Test::Result> tls_session_manager_expiry()
          result.confirm("found session is TLS 1.2", sessions_and_handles2.front().session.version().is_pre_tls_13());
          }),
 
-      CHECK_all("number of found tickets is capped", [&](std::string type, auto factory, auto& result)
+      CHECK_all("number of found tickets is capped", [&](const std::string& type, auto factory, auto& result)
          {
          if(type == "Stateless")
             return;  // this manager can neither store nor find anything
@@ -1014,7 +1017,7 @@ std::vector<Test::Result> tls_session_manager_expiry()
 #if defined(BOTAN_HAS_TLS_13)
       CHECK_all("expired tickets are not selected for PSK resumption", [&](auto, auto factory, auto& result)
          {
-         auto ticket = [&](Botan::TLS::Session_Handle handle)
+         auto ticket = [&](const Botan::TLS::Session_Handle& handle)
             {
             return Botan::TLS::Ticket(handle.opaque_handle(), 0);
             };
