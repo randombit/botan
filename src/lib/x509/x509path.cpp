@@ -133,21 +133,28 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
             }
          else
             {
-            const Certificate_Status_Code sig_status = subject.verify_signature(*issuer_key);
+            const auto sig_status = subject.verify_signature(*issuer_key);
 
-            if(sig_status != Certificate_Status_Code::VERIFIED)
-               status.insert(sig_status);
+            if(sig_status.first == Certificate_Status_Code::VERIFIED)
+               {
+               const std::string hash_used_for_signature = sig_status.second;
+               BOTAN_ASSERT_NOMSG(!hash_used_for_signature.empty());
+               const auto& trusted_hashes = restrictions.trusted_hashes();
+
+               // Ignore untrusted hashes on self-signed roots
+               if(!trusted_hashes.empty() && !at_self_signed_root)
+                  {
+                  if(!trusted_hashes.contains(hash_used_for_signature))
+                     status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
+                  }
+               }
+            else
+               {
+               status.insert(sig_status.first);
+               }
 
             if(issuer_key->estimated_strength() < restrictions.minimum_key_strength())
                status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
-            }
-
-         // Ignore untrusted hashes on self-signed roots
-         const auto& trusted_hashes = restrictions.trusted_hashes();
-         if(!trusted_hashes.empty() && !at_self_signed_root)
-            {
-            if(!trusted_hashes.contains(subject.hash_used_for_signature()))
-               status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
             }
          }
 
@@ -1103,14 +1110,6 @@ const X509_Certificate& Path_Validation_Result::trust_root() const
       throw Invalid_State("Path_Validation_Result::trust_root meaningless with invalid status");
 
    return m_cert_path[m_cert_path.size()-1];
-   }
-
-std::set<std::string> Path_Validation_Result::trusted_hashes() const
-   {
-   std::set<std::string> hashes;
-   for(const auto& cert : m_cert_path)
-      hashes.insert(cert.hash_used_for_signature());
-   return hashes;
    }
 
 bool Path_Validation_Result::successful_validation() const

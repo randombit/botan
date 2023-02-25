@@ -48,11 +48,6 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       const AlgorithmIdentifier& signature_algorithm() const { return m_sig_algo; }
 
       /**
-      * @return hash algorithm that was used to generate signature
-      */
-      std::string hash_used_for_signature() const;
-
-      /**
       * Create a signed X509 object.
       * @param signer the signer used to sign the object
       * @param rng the random number generator to use
@@ -69,9 +64,11 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       * Check the signature on this data
       * @param key the public key purportedly used to sign this data
       * @return status of the signature - OK if verified or otherwise an indicator of
-      *         the problem preventing verification.
+      *         the problem preventing verification, along with the hash function that
+      *         was used, for further policy checks. The second parameter is empty
+      *         unless the validation was sucessful.
       */
-      Certificate_Status_Code verify_signature(const Public_Key& key) const;
+      std::pair<Certificate_Status_Code, std::string> verify_signature(const Public_Key& key) const;
 
       /**
       * Check the signature on this data
