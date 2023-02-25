@@ -1218,7 +1218,7 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key,
       result.test_eq("non repudiation not permitted", non_repudiation.compatible_with(key), false);
       result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
       result.test_eq("sign", sign_everything.compatible_with(key), false);
-      result.test_eq("usage acceptable", key_agreement.compatible_with(key), true);
+      result.test_eq("key agreement not permitted", key_agreement.compatible_with(key), false);
       result.test_eq("usage acceptable", data_encipherment.compatible_with(key), true);
       result.test_eq("usage acceptable", key_encipherment.compatible_with(key), true);
       }

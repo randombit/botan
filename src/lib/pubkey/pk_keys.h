@@ -19,7 +19,10 @@ class BigInt;
 class RandomNumberGenerator;
 
 /**
-* The two types of signature format supported by Botan.
+* Enumeration specifying the signature format.
+*
+* This is mostly used for requesting DER encoding of ECDSA signatures;
+* most other algorithms only support "standard".
 */
 enum class Signature_Format {
    Standard,
@@ -27,6 +30,17 @@ enum class Signature_Format {
 
    IEEE_1363 BOTAN_DEPRECATED("Use Standard") = Standard,
    DER_SEQUENCE BOTAN_DEPRECATED("Use DerSequence") = DerSequence,
+};
+
+/**
+* Enumeration of possible operations a public key could be used for.
+* This is returned by Asymmetric_Key::operations()
+*/
+enum class PublicKeyOperation {
+   Encryption,
+   Signature,
+   KeyEncapsulation,
+   KeyAgreement,
 };
 
 /**
@@ -76,6 +90,12 @@ class BOTAN_PUBLIC_API(3,0) Asymmetric_Key
       * and botan_privkey_get_field functions.
       */
       virtual const BigInt& get_int_field(const std::string& field) const;
+
+      /**
+      * Return true if this key could be used for the specified type
+      * of operation.
+      */
+      virtual bool supports_operation(PublicKeyOperation op) const = 0;
    };
 
 /*

@@ -50,6 +50,11 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDH_PublicKey : public PKCS11_EC_PublicKey
          return "ECDH";
          }
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::KeyAgreement);
+         }
+
       /// @return the exported ECDH public key
       ECDH_PublicKey export_key() const;
    };
@@ -104,6 +109,11 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDH_PrivateKey final : public virtual PKCS11
       ECDH_PrivateKey export_key() const;
 
       secure_vector<uint8_t> private_key_bits() const override;
+
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::KeyAgreement);
+         }
 
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,

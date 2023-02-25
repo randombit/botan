@@ -119,6 +119,11 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
        **/
       std::vector<uint8_t> raw_public_key() const;
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::Signature);
+         }
+
    protected:
       friend class XMSS_Verification_Operation;
 

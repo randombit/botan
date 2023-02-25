@@ -21,6 +21,11 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PublicKey : public virtual DL_Scheme_PublicK
       std::string algo_name() const override { return "ElGamal"; }
       DL_Group_Format group_format() const override { return DL_Group_Format::ANSI_X9_42; }
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::Encryption);
+         }
+
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier

@@ -97,6 +97,11 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_Pri
          return "ECDSA";
          }
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::Signature);
+         }
+
       size_t message_parts() const override { return 2; }
 
       size_t message_part_size() const override
