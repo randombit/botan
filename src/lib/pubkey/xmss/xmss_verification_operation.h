@@ -28,6 +28,7 @@ namespace Botan {
 
       void update(const uint8_t msg[], size_t msg_len) override;
 
+      std::string hash_function() const override { return m_hash.hash_function(); }
    private:
       /**
        * Algorithm 13: "XMSS_rootFromSig"

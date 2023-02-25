@@ -294,9 +294,11 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature
       MechanismWrapper m_mechanism;
    };
 
-std::string PKCS11_RSA_Signature_Operation::hash_function() const
+namespace {
+
+std::string hash_function_name_from_pkcs11_rsa_mechanism_type(MechanismType type)
    {
-   switch(m_mechanism.mechanism_type())
+   switch(type)
       {
       case MechanismType::Sha1RsaPkcs:
       case MechanismType::Sha1RsaPkcsPss:
@@ -328,6 +330,13 @@ std::string PKCS11_RSA_Signature_Operation::hash_function() const
       default:
          throw Internal_Error("Unable to determine associated hash function of PKCS11 RSA signature operation");
       }
+   }
+
+}
+
+std::string PKCS11_RSA_Signature_Operation::hash_function() const
+   {
+   return hash_function_name_from_pkcs11_rsa_mechanism_type(m_mechanism.mechanism_type());
    }
 
 AlgorithmIdentifier PKCS11_RSA_Signature_Operation::algorithm_identifier() const
@@ -411,12 +420,19 @@ class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification
          return return_value == ReturnValue::OK;
          }
 
+      std::string hash_function() const override;
+
    private:
       const PKCS11_RSA_PublicKey& m_key;
       bool m_initialized = false;
       secure_vector<uint8_t> m_first_message;
       MechanismWrapper m_mechanism;
    };
+
+std::string PKCS11_RSA_Verification_Operation::hash_function() const
+   {
+   return hash_function_name_from_pkcs11_rsa_mechanism_type(m_mechanism.mechanism_type());
+   }
 
 }
 

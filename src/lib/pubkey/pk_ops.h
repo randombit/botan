@@ -80,6 +80,11 @@ class Verification
       */
       virtual bool is_valid_signature(const uint8_t sig[], size_t sig_len) = 0;
 
+      /**
+      * Return the hash function being used by this signer
+      */
+      virtual std::string hash_function() const = 0;
+
       virtual ~Verification() = default;
    };
 

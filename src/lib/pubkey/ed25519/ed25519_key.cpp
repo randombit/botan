@@ -166,6 +166,8 @@ class Ed25519_Pure_Verify_Operation final : public PK_Ops::Verification
          return ok;
          }
 
+      std::string hash_function() const override { return "SHA-512"; }
+
    private:
       std::vector<uint8_t> m_msg;
       const Ed25519_PublicKey& m_key;
@@ -207,6 +209,8 @@ class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification
          BOTAN_ASSERT_EQUAL(pub_key.size(), 32, "Expected size");
          return ed25519_verify(msg_hash.data(), msg_hash.size(), sig, pub_key.data(), m_domain_sep.data(), m_domain_sep.size());
          }
+
+      std::string hash_function() const override { return m_hash->name(); }
 
    private:
       std::unique_ptr<HashFunction> m_hash;

@@ -171,14 +171,13 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       * Construct a PK Signer.
       * @param key the key to use inside this signer
       * @param rng the random generator to use
-      * @param emsa the EMSA to use
-      * An example would be "EMSA1(SHA-224)".
+      * @param padding the padding/hash to use, eg "EMSA_PKCS1(SHA-256)"
       * @param format the signature format to use
       * @param provider the provider to use
       */
       PK_Signer(const Private_Key& key,
                 RandomNumberGenerator& rng,
-                const std::string& emsa,
+                const std::string& padding,
                 Signature_Format format = Signature_Format::Standard,
                 const std::string& provider = "");
 
@@ -301,12 +300,12 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       /**
       * Construct a PK Verifier.
       * @param pub_key the public key to verify against
-      * @param emsa the EMSA to use (eg "EMSA3(SHA-1)")
+      * @param padding the padding/hash to use (eg "EMSA_PKCS1(SHA-256)")
       * @param format the signature format to use
       * @param provider the provider to use
       */
       PK_Verifier(const Public_Key& pub_key,
-                  const std::string& emsa,
+                  const std::string& padding,
                   Signature_Format format = Signature_Format::Standard,
                   const std::string& provider = "");
 
@@ -402,6 +401,14 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       * @param format the signature format to use
       */
       void set_input_format(Signature_Format format);
+
+      /**
+      * Return the hash function which is being used to verify signatures.
+      * This should never return an empty string however it may return a string
+      * which does not map directly to a hash function, in particular if "Raw"
+      * (unhashed) encoding is being used.
+      */
+      std::string hash_function() const;
 
    private:
       std::unique_ptr<PK_Ops::Verification> m_op;

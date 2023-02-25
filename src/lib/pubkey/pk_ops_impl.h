@@ -58,6 +58,8 @@ class Verification_with_Hash : public Verification
       void update(const uint8_t msg[], size_t msg_len) override;
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
 
+      std::string hash_function() const override final { return m_hash->name(); }
+
    protected:
       explicit Verification_with_Hash(const std::string& hash);
 
