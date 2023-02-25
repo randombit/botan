@@ -321,6 +321,11 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
 
 PK_Verifier::~PK_Verifier() = default;
 
+std::string PK_Verifier::hash_function() const
+   {
+   return m_op->hash_function();
+   }
+
 void PK_Verifier::set_input_format(Signature_Format format)
    {
    check_der_format_supported(format, m_parts);

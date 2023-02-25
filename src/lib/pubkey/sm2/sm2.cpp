@@ -203,6 +203,8 @@ class SM2_Verification_Operation final : public PK_Ops::Verification
          }
 
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
+
+      std::string hash_function() const override { return m_hash->name(); }
    private:
       const EC_Group m_group;
       const EC_Point_Multi_Point_Precompute m_gy_mul;

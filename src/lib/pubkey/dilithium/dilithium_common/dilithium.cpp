@@ -588,6 +588,8 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
          return std::equal(c.begin(), c.end(), c2.begin());
          }
 
+      std::string hash_function() const override { return "SHAKE-256(512)"; }
+
    private:
       const Dilithium_PublicKey& m_pub_key;
       SHAKE_256 m_shake;

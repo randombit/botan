@@ -677,6 +677,8 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
          {
          }
 
+      std::string hash_function() const override { return m_emsa->hash_function(); }
+
    private:
       secure_vector<uint8_t> recover_message_repr(const uint8_t input[], size_t input_len)
          {

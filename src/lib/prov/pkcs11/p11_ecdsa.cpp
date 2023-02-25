@@ -131,8 +131,10 @@ AlgorithmIdentifier PKCS11_ECDSA_Signature_Operation::algorithm_identifier() con
 class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
    {
    public:
-      PKCS11_ECDSA_Verification_Operation(const PKCS11_EC_PublicKey& key, const std::string& emsa)
-         : PK_Ops::Verification(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
+      PKCS11_ECDSA_Verification_Operation(const PKCS11_EC_PublicKey& key, const std::string& hash)
+         : PK_Ops::Verification(), m_key(key), m_order(key.domain().get_order()),
+           m_mechanism(MechanismWrapper::create_ecdsa_mechanism(hash)),
+           m_hash(hash)
          {}
 
       void update(const uint8_t msg[], size_t msg_len) override
@@ -183,10 +185,13 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
          return return_value == ReturnValue::OK;
          }
 
+      std::string hash_function() const override { return m_hash; }
+
    private:
       const PKCS11_EC_PublicKey& m_key;
       const BigInt& m_order;
       MechanismWrapper m_mechanism;
+      const std::string m_hash;
       secure_vector<uint8_t> m_first_message;
       bool m_initialized = false;
    };

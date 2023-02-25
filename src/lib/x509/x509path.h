@@ -144,12 +144,6 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
       typedef Certificate_Status_Code Code;
 
       /**
-      * @return the set of hash functions you are implicitly
-      * trusting by trusting this result.
-      */
-      std::set<std::string> trusted_hashes() const;
-
-      /**
       * @return the trust root of the validation if successful
       * throws an exception if the validation failed
       */

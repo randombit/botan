@@ -198,7 +198,7 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
 
       /**
       * This is an internal library function exposed on key types.
-      * In almost all cases applications should use wrappers in pubkey.h
+      * In all cases applications should use wrappers in pubkey.h
       *
       * Return a verification operation for this key/params or throw
       * @param params additional parameters
@@ -255,7 +255,7 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
 
       /**
       * This is an internal library function exposed on key types.
-      * In almost all cases applications should use wrappers in pubkey.h
+      * In all cases applications should use wrappers in pubkey.h
       *
       * Return an decryption operation for this key/params or throw
       *
@@ -273,7 +273,7 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
 
       /**
       * This is an internal library function exposed on key types.
-      * In almost all cases applications should use wrappers in pubkey.h
+      * In all cases applications should use wrappers in pubkey.h
       *
       * Return a KEM decryption operation for this key/params or throw
       *
@@ -290,7 +290,7 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
 
       /**
       * This is an internal library function exposed on key types.
-      * In almost all cases applications should use wrappers in pubkey.h
+      * In all cases applications should use wrappers in pubkey.h
       *
       * Return a signature operation for this key/params or throw
       *
@@ -307,7 +307,7 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
 
       /**
       * This is an internal library function exposed on key types.
-      * In almost all cases applications should use wrappers in pubkey.h
+      * In all cases applications should use wrappers in pubkey.h
       *
       * Return a key agreement operation for this key/params or throw
       *

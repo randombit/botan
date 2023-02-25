@@ -308,10 +308,10 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
             {
             std::unique_ptr<Public_Key> pub_key(X509::load_key(data->m_subject_public_key_bits_seq));
 
-            Certificate_Status_Code sig_status = obj.verify_signature(*pub_key);
+            const auto sig_status = obj.verify_signature(*pub_key);
 
-            if(sig_status == Certificate_Status_Code::OK ||
-               sig_status == Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN)
+            if(sig_status.first == Certificate_Status_Code::OK ||
+               sig_status.first == Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN)
                {
                data->m_self_signed = true;
                }

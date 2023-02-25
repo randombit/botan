@@ -205,6 +205,9 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification
       void update(const uint8_t msg[], size_t msg_len) override;
 
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
+
+      std::string hash_function() const override { return m_hash->name(); }
+
    private:
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len);

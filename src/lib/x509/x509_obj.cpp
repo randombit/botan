@@ -105,58 +105,22 @@ std::vector<uint8_t> X509_Object::tbs_data() const
    }
 
 /*
-* Return the hash used in generating the signature
-*/
-std::string X509_Object::hash_used_for_signature() const
-   {
-   const OID& oid = m_sig_algo.oid();
-   const std::vector<std::string> sig_info = split_on(oid.to_formatted_string(), '/');
-
-   if(sig_info.size() == 1)
-      {
-      if(sig_info[0] == "Ed25519")
-         return "SHA-512";
-      else if(sig_info[0].starts_with("Dilithium-"))
-         return "SHAKE-256(512)";
-      }
-   else if(sig_info.size() != 2)
-      throw Internal_Error("Invalid name format found for " + oid.to_string());
-
-   if(sig_info[1] == "EMSA4")
-      {
-      PSS_Params pss_params(signature_algorithm().parameters());
-      return pss_params.hash_function();
-      }
-   else
-      {
-      const std::vector<std::string> pad_and_hash =
-         parse_algorithm_name(sig_info[1]);
-
-      if(pad_and_hash.size() != 2)
-         {
-         throw Internal_Error("Invalid name format " + sig_info[1]);
-         }
-
-      return pad_and_hash[1];
-      }
-   }
-
-/*
 * Check the signature on an object
 */
 bool X509_Object::check_signature(const Public_Key& pub_key) const
    {
-   const Certificate_Status_Code code = verify_signature(pub_key);
-   return (code == Certificate_Status_Code::VERIFIED);
+   const auto result = this->verify_signature(pub_key);
+   return (result.first == Certificate_Status_Code::VERIFIED);
    }
 
-Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key) const
+std::pair<Certificate_Status_Code, std::string>
+X509_Object::verify_signature(const Public_Key& pub_key) const
    {
    const std::vector<std::string> sig_info =
       split_on(m_sig_algo.oid().to_formatted_string(), '/');
 
    if(sig_info.empty() || sig_info.size() > 2 || sig_info[0] != pub_key.algo_name())
-      return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+      return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
 
    const auto& pub_key_algo = sig_info[0];
    std::string padding;
@@ -165,7 +129,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
    else if(pub_key_algo == "Ed25519" || pub_key_algo == "XMSS" || pub_key_algo.starts_with("Dilithium-"))
       padding = "Pure";
    else
-      return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+      return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
 
    const Signature_Format format = pub_key.default_x509_signature_format();
 
@@ -174,7 +138,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
       // "MUST contain RSASSA-PSS-params"
       if(signature_algorithm().parameters().empty())
          {
-         return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+         return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
          }
 
       PSS_Params pss_params(signature_algorithm().parameters());
@@ -187,12 +151,12 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          hash_algo != "SHA-384" &&
          hash_algo != "SHA-512")
          {
-         return Certificate_Status_Code::UNTRUSTED_HASH;
+         return std::make_pair(Certificate_Status_Code::UNTRUSTED_HASH, "");
          }
 
       if(pss_params.mgf_function() != "MGF1")
          {
-         return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+         return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
          }
 
       // For MGF1, it is strongly RECOMMENDED that the underlying hash
@@ -201,12 +165,12 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
       // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
       if(pss_params.hash_algid() != pss_params.mgf_hash_algid())
          {
-         return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+         return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
          }
 
       if(pss_params.trailer_field() != 1)
          {
-         return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+         return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
          }
 
       padding += "(" + hash_algo + ",MGF1," +
@@ -235,14 +199,14 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          {
          if(!signature_algorithm().parameters_are_empty())
             {
-            return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+            return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
             }
          }
       else
          {
          if(!signature_algorithm().parameters_are_null_or_empty())
             {
-            return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+            return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
             }
          }
       }
@@ -253,18 +217,18 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
       const bool valid = verifier.verify_message(tbs_data(), signature());
 
       if(valid)
-         return Certificate_Status_Code::VERIFIED;
+         return std::make_pair(Certificate_Status_Code::VERIFIED, verifier.hash_function());
       else
-         return Certificate_Status_Code::SIGNATURE_ERROR;
+         return std::make_pair(Certificate_Status_Code::SIGNATURE_ERROR, "");
       }
    catch(Algorithm_Not_Found&)
       {
-      return Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN;
+      return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN, "");
       }
    catch(...)
       {
       // This shouldn't happen, fallback to generic signature error
-      return Certificate_Status_Code::SIGNATURE_ERROR;
+      return std::make_pair(Certificate_Status_Code::SIGNATURE_ERROR, "");
       }
    }
 
