@@ -11,6 +11,9 @@ Version 2.19.4, Not Yet Released
   that already existed could cause incorrect references to the
   existing attributes. (GH #3185)
 
+* Apply patches which allow GCC 4.7 to compile Botan 2.x. Previously
+  at least GCC 4.8 had been required. (GH #3273)
+
 * Fix a build time problem affecting VCpkg (GH #3071)
 
 Version 2.19.3, 2022-11-16
