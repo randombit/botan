@@ -713,7 +713,7 @@ std::map < AttributeType, std::vector<uint8_t>> get_attribute_values(const RAII_
 
    for(const auto& type : attribute_types)
       {
-      received_attributes.emplace(type, std::vector<uint8_t>());
+      received_attributes[type] = std::vector<uint8_t>();
       }
 
    p11_low_level.get()->C_GetAttributeValue(session_handle, object_handle, received_attributes);

@@ -93,13 +93,13 @@ class BigInt_Unit_Tests final : public Test
 
          result.test_throws("Invalid bit size",
                             "random_prime: Can't make a prime of 0 bits",
-                            []() { Botan::random_prime(Test::rng(), 0); });
+                            [this]() { Botan::random_prime(Test::rng(), 0); });
          result.test_throws("Invalid bit size",
                             "random_prime: Can't make a prime of 1 bits",
-                            []() { Botan::random_prime(Test::rng(), 1); });
+                            [this]() { Botan::random_prime(Test::rng(), 1); });
          result.test_throws("Invalid arg",
                             "random_prime Invalid value for equiv/modulo",
-                            []() { Botan::random_prime(Test::rng(), 2, 1, 0, 2); });
+                            [this]() { Botan::random_prime(Test::rng(), 2, 1, 0, 2); });
 
          BigInt p = Botan::random_prime(Test::rng(), 2);
          result.confirm("Only two 2-bit primes", p == 2 || p == 3);

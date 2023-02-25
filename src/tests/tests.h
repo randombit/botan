@@ -427,7 +427,7 @@ class Test
             std::vector<std::string> m_log;
          };
 
-      virtual ~Test() = default;
+      virtual ~Test() {}
       virtual std::vector<Test::Result> run() = 0;
 
       virtual std::vector<std::string> possible_providers(const std::string&);

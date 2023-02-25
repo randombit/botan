@@ -133,7 +133,7 @@ void Extensions::add(Certificate_Extension* extn, bool critical)
    const OID oid = extn->oid_of();
    Extensions_Info info(critical, extn);
    m_extension_oids.push_back(oid);
-   m_extension_info.emplace(oid, info);
+   m_extension_info[oid] = info;
    }
 
 bool Extensions::add_new(Certificate_Extension* extn, bool critical)
@@ -147,7 +147,7 @@ bool Extensions::add_new(Certificate_Extension* extn, bool critical)
    const OID oid = extn->oid_of();
    Extensions_Info info(critical, extn);
    m_extension_oids.push_back(oid);
-   m_extension_info.emplace(oid, info);
+   m_extension_info[oid] = info;
    return true;
    }
 
@@ -171,7 +171,7 @@ void Extensions::replace(Certificate_Extension* extn, bool critical)
    const OID oid = extn->oid_of();
    Extensions_Info info(critical, extn);
    m_extension_oids.push_back(oid);
-   m_extension_info.emplace(oid, info);
+   m_extension_info[oid] = info;
    }
 
 bool Extensions::extension_set(const OID& oid) const
@@ -233,9 +233,10 @@ std::map<OID, std::pair<std::vector<uint8_t>, bool>> Extensions::extensions_raw(
    std::map<OID, std::pair<std::vector<uint8_t>, bool>> out;
    for(auto&& ext : m_extension_info)
       {
-      out.emplace(ext.first,
-                  std::make_pair(ext.second.bits(),
-                                 ext.second.is_critical()));
+      const auto bits = ext.second.bits();
+      const bool is_critical = ext.second.is_critical();
+
+      out[ext.first] = std::make_pair(bits, is_critical);
       }
    return out;
    }
@@ -290,7 +291,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
       Extensions_Info info(critical, bits, obj.release());
 
       m_extension_oids.push_back(oid);
-      m_extension_info.emplace(oid, info);
+      m_extension_info[oid] = info;
       }
    sequence.verify_end();
    }

@@ -27,7 +27,7 @@ class Modular_Exponentiator
       Modular_Exponentiator() = default;
       Modular_Exponentiator(const Modular_Exponentiator&) = default;
       Modular_Exponentiator & operator=(const Modular_Exponentiator&) = default;
-      virtual ~Modular_Exponentiator() = default;
+      virtual ~Modular_Exponentiator() {}
    };
 
 namespace {

@@ -72,7 +72,7 @@ class BOTAN_PUBLIC_API(2,0) Compression_Algorithm
       */
       virtual void clear() = 0;
 
-      virtual ~Compression_Algorithm() = default;
+      virtual ~Compression_Algorithm() {}
    };
 
 /*
@@ -128,7 +128,7 @@ class BOTAN_PUBLIC_API(2,0) Decompression_Algorithm
       */
       virtual void clear() = 0;
 
-      virtual ~Decompression_Algorithm() = default;
+      virtual ~Decompression_Algorithm() {}
    };
 
 BOTAN_PUBLIC_API(2,0) Compression_Algorithm* make_compressor(const std::string& type);
@@ -170,7 +170,7 @@ class BOTAN_PUBLIC_API(2,9) Compression_Error : public Exception
 class Compression_Stream
    {
    public:
-      virtual ~Compression_Stream() = default;
+      virtual ~Compression_Stream() {}
 
       virtual void next_in(uint8_t* b, size_t len) = 0;
 

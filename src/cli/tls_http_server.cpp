@@ -106,7 +106,7 @@ class HTTP_Parser final
          {
          public:
             virtual void handle_http_request(const Request& request) = 0;
-            virtual ~Callbacks() = default;
+            virtual ~Callbacks() {}
          };
 
       HTTP_Parser(Callbacks& cb) : m_cb(cb) {}

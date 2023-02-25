@@ -328,7 +328,7 @@ class TestBase
            m_server(server),
            m_result(ioc, name) {}
 
-      virtual ~TestBase() = default;
+      virtual ~TestBase() {}
 
       virtual void finishAsynchronousWork() {}
 

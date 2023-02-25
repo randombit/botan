@@ -89,7 +89,7 @@ class Stream
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
 
-      virtual ~Stream() = default;
+      virtual ~Stream() {}
 
       Stream(Stream&& other) = default;
       Stream& operator=(Stream&& other) = default;
@@ -590,7 +590,7 @@ class Stream
          public:
             StreamCore(Stream& stream) : m_stream(stream) {}
 
-            virtual ~StreamCore() = default;
+            virtual ~StreamCore() {}
 
             void tls_emit_data(const uint8_t data[], std::size_t size) override
                {

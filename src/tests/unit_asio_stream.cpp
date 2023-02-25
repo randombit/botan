@@ -116,7 +116,7 @@ class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel>
          m_native_handle = std::unique_ptr<MockChannel>(new MockChannel(m_core));
          }
 
-      virtual ~AsioStream() = default;
+      virtual ~AsioStream() {}
    };
 
 class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockChannel>
@@ -129,7 +129,7 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
          m_native_handle = std::unique_ptr<ThrowingMockChannel>(new ThrowingMockChannel(m_core));
          }
 
-      virtual ~ThrowingAsioStream() = default;
+      virtual ~ThrowingAsioStream() {}
    };
 
 /**

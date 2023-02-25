@@ -73,7 +73,7 @@ class Timing_Test
          m_rng = cli_make_rng("", drbg_seed); // throws if it can't find anything to use
          }
 
-      virtual ~Timing_Test() = default;
+      virtual ~Timing_Test() {}
 
       std::vector<std::vector<ticks>> execute_evaluation(
                                       const std::vector<std::string>& inputs,
