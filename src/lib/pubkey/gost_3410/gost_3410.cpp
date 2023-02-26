@@ -163,13 +163,13 @@ AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const
 
    std::string oid_name;
    if(hash_fn == "GOST-R-34.11-94")
-      oid_name = "GOST-34.10/EMSA1(GOST-R-34.11-94)";
+      oid_name = "GOST-34.10/GOST-R-34.11-94";
    else if(hash_fn == "Streebog-256" && p_bits == 256)
-      oid_name = "GOST-34.10-2012-256/EMSA1(Streebog-256)";
+      oid_name = "GOST-34.10-2012-256/Streebog-256";
    else if(hash_fn == "Streebog-512" && p_bits == 512)
-      oid_name = "GOST-34.10-2012-512/EMSA1(Streebog-512)";
+      oid_name = "GOST-34.10-2012-512/Streebog-512";
    else if(hash_fn == "SHA-256" && p_bits == 256)
-      oid_name = "GOST-34.10-2012-256/EMSA1(SHA-256)";
+      oid_name = "GOST-34.10-2012-256/SHA-256";
 
    if(oid_name.empty())
       throw Not_Implemented("No encoding defined for GOST with " + hash_fn);

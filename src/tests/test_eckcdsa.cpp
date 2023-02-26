@@ -39,7 +39,7 @@ class ECKCDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         return "EMSA1(" + vars.get_req_str("Hash") + ")";
+         return vars.get_req_str("Hash");
          }
 
       std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override

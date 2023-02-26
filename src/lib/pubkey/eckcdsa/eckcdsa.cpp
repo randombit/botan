@@ -139,7 +139,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature
 
 AlgorithmIdentifier ECKCDSA_Signature_Operation::algorithm_identifier() const
    {
-   const std::string full_name = "ECKCDSA/EMSA1(" + m_hash->name() + ")";
+   const std::string full_name = "ECKCDSA/" + m_hash->name();
    const OID oid = OID::from_string(full_name);
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
    }

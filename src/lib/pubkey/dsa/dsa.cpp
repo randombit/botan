@@ -121,7 +121,7 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
 
 AlgorithmIdentifier DSA_Signature_Operation::algorithm_identifier() const
    {
-   const std::string full_name = "DSA/EMSA1(" + hash_function() + ")";
+   const std::string full_name = "DSA/" + hash_function();
    const OID oid = OID::from_string(full_name);
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
    }

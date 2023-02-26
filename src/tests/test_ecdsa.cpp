@@ -88,7 +88,7 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
 
       std::string default_padding(const VarMap& vars) const override
          {
-         return "EMSA1(" + vars.get_req_str("Hash") + ")";
+         return vars.get_req_str("Hash");
          }
    };
 
@@ -121,10 +121,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         std::string hash = vars.get_req_str("Hash");
-         if(hash.substr(0,3) == "Raw")
-            return hash;
-         return "EMSA1(" + hash + ")";
+         return vars.get_req_str("Hash");
          }
 
 #if !defined(BOTAN_HAS_RFC6979_GENERATOR)
@@ -168,10 +165,7 @@ class ECDSA_KAT_Verification_Tests final : public PK_Signature_Verification_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         std::string hash = vars.get_req_str("Hash");
-         if(hash.substr(0,3) == "Raw")
-            return hash;
-         return "EMSA1(" + hash + ")";
+         return vars.get_req_str("Hash");
          }
    };
 
@@ -179,7 +173,7 @@ class ECDSA_Sign_Verify_DER_Test final : public PK_Sign_Verify_DER_Test
    {
    public:
       ECDSA_Sign_Verify_DER_Test() :
-         PK_Sign_Verify_DER_Test("ECDSA", "EMSA1(SHA-512)") {}
+         PK_Sign_Verify_DER_Test("ECDSA", "SHA-512") {}
 
       std::unique_ptr<Botan::Private_Key> key() const override
          {

@@ -263,7 +263,7 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
                throw Test_Error("TLS implementation selected unexpected signature format for ECDSA");
                }
 
-            if(emsa != "EMSA1(SHA-256)")
+            if(emsa != "SHA-256")
                {
                throw Test_Error("TLS implementation selected unexpected padding for ECDSA: " + emsa);
                }

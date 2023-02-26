@@ -1977,7 +1977,7 @@ class Speed final : public Command
                        const std::string& provider,
                        std::chrono::milliseconds msec)
          {
-         return bench_pk_sig_ecc("ECDSA", "EMSA1(SHA-256)", provider, groups, msec);
+         return bench_pk_sig_ecc("ECDSA", "SHA-256", provider, groups, msec);
          }
 
       void bench_ecdsa_recovery(const std::vector<std::string>& groups,
@@ -2027,7 +2027,7 @@ class Speed final : public Command
                          const std::string& provider,
                          std::chrono::milliseconds msec)
          {
-         return bench_pk_sig_ecc("ECKCDSA", "EMSA1(SHA-256)", provider, groups, msec);
+         return bench_pk_sig_ecc("ECKCDSA", "SHA-256", provider, groups, msec);
          }
 #endif
 
@@ -2035,7 +2035,7 @@ class Speed final : public Command
       void bench_gost_3410(const std::string& provider,
                            std::chrono::milliseconds msec)
          {
-         return bench_pk_sig_ecc("GOST-34.10", "EMSA1(GOST-34.11)", provider, {"gost_256A"}, msec);
+         return bench_pk_sig_ecc("GOST-34.10", "GOST-34.11", provider, {"gost_256A"}, msec);
          }
 #endif
 
@@ -2053,7 +2053,7 @@ class Speed final : public Command
                         const std::string& provider,
                         std::chrono::milliseconds msec)
          {
-         return bench_pk_sig_ecc("ECGDSA", "EMSA1(SHA-256)", provider, groups, msec);
+         return bench_pk_sig_ecc("ECGDSA", "SHA-256", provider, groups, msec);
          }
 #endif
 
@@ -2098,7 +2098,7 @@ class Speed final : public Command
 
             record_result(keygen_timer);
 
-            bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
+            bench_pk_sig(*key, nm, provider, "SHA-256", msec);
             }
          }
 #endif

@@ -1537,13 +1537,14 @@ Test::Result test_hashes(const Botan::Private_Key& key,
    return result;
    }
 
-std::vector<std::string> get_sig_paddings(const std::string& sig_algo)
+std::vector<std::string> get_sig_paddings(const std::string& sig_algo,
+                                          const std::string& hash)
    {
    if(sig_algo == "RSA")
-      return {"EMSA3", "EMSA4"};
+      return {"EMSA3(" + hash + ")", "EMSA4(" + hash + ")" };
    else if(sig_algo == "DSA" || sig_algo == "ECDSA" || sig_algo == "ECGDSA" ||
            sig_algo == "ECKCDSA" || sig_algo == "GOST-34.10")
-      return {"EMSA1"};
+      return {hash};
    else if(sig_algo == "Ed25519")
       return {"Pure"};
    else if(sig_algo == "Dilithium")
@@ -1594,7 +1595,7 @@ class X509_Cert_Unit_Tests final : public Test
                }
             results.push_back(usage_result);
 
-            for(const auto& padding_scheme : get_sig_paddings(algo))
+            for(const auto& padding_scheme : get_sig_paddings(algo, hash))
                {
                Test::Result cert_result("X509 Unit");
 

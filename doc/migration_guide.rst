@@ -310,6 +310,24 @@ If you must generates such signatures for some horrible reason, you can pre-hash
 the message using a hash function as usual, and then sign using a "Raw" padding,
 which will allow you to sign any arbitrary bits with no preprocessing.
 
+ECDSA/DSA with "EMSA1" padding
+---------------------------------
+
+Previous versions of Botan required using a hash specifier like "EMSA1(SHA-256)"
+when generating or verifying ECDSA/DSA signatures, with the specified hash. The
+"EMSA1" was a reference to a now obsolete IEEE standard.
+
+In Botan 3 the "EMSA1" notation is still accepted, but now also it is possible
+to simply use the name of the hash, eg "EMSA1(SHA-256)" becomes "SHA-256".
+
+Signature Algorithm OIDs
+-----------------------------
+
+In line with the previous entries, previously Botan used a string like
+"ECDSA/EMSA1(SHA-256)" to identify the OID 1.2.840.10045.4.3.2. Now it
+uses the string "ECDSA/SHA-256" instead, and does not recognize the
+EMSA1 variant at all (for example in ``OID::from_string``).
+
 Public Key Signature Padding
 -----------------------------
 

@@ -59,17 +59,17 @@ Test::Result test_hash_larger_than_n()
       return result;
       }
 
-   Botan::PK_Signer pk_signer_160(priv_key, Test::rng(), "EMSA1(SHA-1)");
-   Botan::PK_Verifier pk_verifier_160(priv_key, "EMSA1(SHA-1)");
+   Botan::PK_Signer pk_signer_160(priv_key, Test::rng(), "SHA-1");
+   Botan::PK_Verifier pk_verifier_160(priv_key, "SHA-1");
 
    // Verify we can sign and verify with SHA-1
    std::vector<uint8_t> signature_160 = pk_signer_160.sign_message(message, Test::rng());
    result.test_eq("message verifies", pk_verifier_160.verify_message(message, signature_160), true);
 
    // Verify we can sign and verify with SHA-224
-   Botan::PK_Signer pk_signer(priv_key, Test::rng(), "EMSA1(SHA-224)");
+   Botan::PK_Signer pk_signer(priv_key, Test::rng(), "SHA-224");
    std::vector<uint8_t> signature = pk_signer.sign_message(message, Test::rng());
-   Botan::PK_Verifier pk_verifier(priv_key, "EMSA1(SHA-224)");
+   Botan::PK_Verifier pk_verifier(priv_key, "SHA-224");
    result.test_eq("message verifies", pk_verifier.verify_message(message, signature), true);
 
    return result;
@@ -81,7 +81,7 @@ Test::Result test_decode_ecdsa_X509()
    Test::Result result("ECDSA Unit");
    Botan::X509_Certificate cert(Test::data_file("x509/ecc/CSCA.CSCA.csca-germany.1.crt"));
 
-   result.test_eq("correct signature oid", cert.signature_algorithm().oid().to_formatted_string(), "ECDSA/EMSA1(SHA-224)");
+   result.test_eq("correct signature oid", cert.signature_algorithm().oid().to_formatted_string(), "ECDSA/SHA-224");
 
    result.test_eq("serial number", cert.serial_number(), Botan::hex_decode("01"));
    result.test_eq("authority key id", cert.authority_key_id(), cert.subject_key_id());
@@ -133,12 +133,12 @@ Test::Result test_sign_then_ver()
    Botan::EC_Group dom_pars("secp160r1");
    Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
 
-   Botan::PK_Signer signer(ecdsa, Test::rng(), "EMSA1(SHA-256)");
+   Botan::PK_Signer signer(ecdsa, Test::rng(), "SHA-256");
 
    auto msg = Botan::hex_decode("12345678901234567890abcdef12");
    std::vector<uint8_t> sig = signer.sign_message(msg, Test::rng());
 
-   Botan::PK_Verifier verifier(ecdsa, "EMSA1(SHA-256)");
+   Botan::PK_Verifier verifier(ecdsa, "SHA-256");
 
    result.confirm("signature verifies", verifier.verify_message(msg, sig));
 
@@ -155,8 +155,8 @@ Test::Result test_ec_sign()
       {
       Botan::EC_Group dom_pars("secp160r1");
       Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
-      Botan::PK_Signer signer(priv_key, Test::rng(), "EMSA1(SHA-224)");
-      Botan::PK_Verifier verifier(priv_key, "EMSA1(SHA-224)");
+      Botan::PK_Signer signer(priv_key, Test::rng(), "SHA-224");
+      Botan::PK_Verifier verifier(priv_key, "SHA-224");
 
       for(size_t i = 0; i != 256; ++i)
          {
@@ -210,7 +210,7 @@ Test::Result test_ecdsa_create_save_load()
       Botan::EC_Group dom_pars("secp160r1");
       Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
 
-      Botan::PK_Signer signer(key, Test::rng(), "EMSA1(SHA-256)");
+      Botan::PK_Signer signer(key, Test::rng(), "SHA-256");
       msg_signature = signer.sign_message(msg, Test::rng());
 
       ecc_private_key_pem = Botan::PKCS8::PEM_encode(key);
@@ -229,7 +229,7 @@ Test::Result test_ecdsa_create_save_load()
       {
       result.confirm("the loaded key produces equal encoding",
                      (ecc_private_key_pem == Botan::PKCS8::PEM_encode(*loaded_ec_key)));
-      Botan::PK_Verifier verifier(*loaded_ec_key, "EMSA1(SHA-256)");
+      Botan::PK_Verifier verifier(*loaded_ec_key, "SHA-256");
       result.confirm("generated signature valid", verifier.verify_message(msg, msg_signature));
       }
 
@@ -337,8 +337,8 @@ Test::Result test_read_pkcs8()
          throw Test_Error("Unable to load valid PKCS8 ECDSA key");
          }
 
-      Botan::PK_Signer signer(*ecdsa_nodp, Test::rng(), "EMSA1(SHA-256)");
-      Botan::PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-256)");
+      Botan::PK_Signer signer(*ecdsa_nodp, Test::rng(), "SHA-256");
+      Botan::PK_Verifier verifier(*ecdsa_nodp, "SHA-256");
 
       std::vector<uint8_t> signature_nodp = signer.sign_message(msg, Test::rng());
 
@@ -418,8 +418,8 @@ Test::Result test_curve_registry()
          Botan::EC_Group group(group_name);
          Botan::ECDSA_PrivateKey ecdsa(Test::rng(), group);
 
-         Botan::PK_Signer signer(ecdsa, Test::rng(), "EMSA1(SHA-256)");
-         Botan::PK_Verifier verifier(ecdsa, "EMSA1(SHA-256)");
+         Botan::PK_Signer signer(ecdsa, Test::rng(), "SHA-256");
+         Botan::PK_Verifier verifier(ecdsa, "SHA-256");
 
          const std::vector<uint8_t> msg = Botan::hex_decode("12345678901234567890abcdef12");
          const std::vector<uint8_t> sig = signer.sign_message(msg, Test::rng());

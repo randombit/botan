@@ -157,13 +157,13 @@ std::string Signature_Scheme::padding_string() const noexcept
          return "EMSA_PKCS1(SHA-512)";
 
       case ECDSA_SHA1:
-         return "EMSA1(SHA-1)";
+         return "SHA-1";
       case ECDSA_SHA256:
-         return "EMSA1(SHA-256)";
+         return "SHA-256";
       case ECDSA_SHA384:
-         return "EMSA1(SHA-384)";
+         return "SHA-384";
       case ECDSA_SHA512:
-         return "EMSA1(SHA-512)";
+         return "SHA-512";
 
       case RSA_PSS_SHA256:
          return "PSSR(SHA-256,MGF1,32)";
@@ -255,13 +255,13 @@ AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
          return AlgorithmIdentifier(OID::from_string("RSA/EMSA3(SHA-512)"), AlgorithmIdentifier::USE_NULL_PARAM);
 
       case ECDSA_SHA1:
-         return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-1)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+         return AlgorithmIdentifier(OID::from_string("ECDSA/SHA-1"), AlgorithmIdentifier::USE_EMPTY_PARAM);
       case ECDSA_SHA256:
-         return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-256)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+         return AlgorithmIdentifier(OID::from_string("ECDSA/SHA-256"), AlgorithmIdentifier::USE_EMPTY_PARAM);
       case ECDSA_SHA384:
-         return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-384)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+         return AlgorithmIdentifier(OID::from_string("ECDSA/SHA-384"), AlgorithmIdentifier::USE_EMPTY_PARAM);
       case ECDSA_SHA512:
-         return AlgorithmIdentifier(OID::from_string("ECDSA/EMSA1(SHA-512)"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+         return AlgorithmIdentifier(OID::from_string("ECDSA/SHA-512"), AlgorithmIdentifier::USE_EMPTY_PARAM);
 
       case RSA_PSS_SHA256:
          return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
