@@ -97,8 +97,16 @@ class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Has
    public:
 
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa,
-                                   const std::string& emsa) :
-         PK_Ops::Verification_with_Hash(emsa),
+                                   const std::string& padding) :
+         PK_Ops::Verification_with_Hash(padding),
+         m_group(ecgdsa.domain()),
+         m_gy_mul(m_group.get_base_point(), ecgdsa.public_point())
+         {
+         }
+
+      ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa,
+                                    const AlgorithmIdentifier& alg_id) :
+         PK_Ops::Verification_with_Hash(alg_id, "ECGDSA"),
          m_group(ecgdsa.domain()),
          m_gy_mul(m_group.get_base_point(), ecgdsa.public_point())
          {
@@ -146,6 +154,16 @@ ECGDSA_PublicKey::create_verification_op(const std::string& params,
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<ECGDSA_Verification_Operation>(*this, params);
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::Verification>
+ECGDSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
+                                              const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::make_unique<ECGDSA_Verification_Operation>(*this, signature_algorithm);
+
    throw Provider_Not_Found(algo_name(), provider);
    }
 

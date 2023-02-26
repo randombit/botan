@@ -54,6 +54,8 @@ in a future major release.
 
 - Hash function GOST 34.11-94, MD4
 
+- GOST 34.10 signature scheme
+
 - X9.42 KDF
 
 - The current McEliece implementation (in ``pubkey/mce``) will be

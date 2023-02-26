@@ -136,9 +136,9 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
    public:
 
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
-                                const std::string& emsa,
+                                const std::string& padding,
                                 RandomNumberGenerator& rng) :
-         PK_Ops::Signature_with_Hash(emsa),
+         PK_Ops::Signature_with_Hash(padding),
          m_group(ecdsa.domain()),
          m_x(ecdsa.private_value())
          {
@@ -219,8 +219,16 @@ class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
    {
    public:
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa,
-                                   const std::string& emsa) :
-         PK_Ops::Verification_with_Hash(emsa),
+                                   const std::string& padding) :
+         PK_Ops::Verification_with_Hash(padding),
+         m_group(ecdsa.domain()),
+         m_gy_mul(m_group.get_base_point(), ecdsa.public_point())
+         {
+         }
+
+      ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa,
+                                   const AlgorithmIdentifier& alg_id) :
+         PK_Ops::Verification_with_Hash(alg_id, "ECDSA", true),
          m_group(ecdsa.domain()),
          m_gy_mul(m_group.get_base_point(), ecdsa.public_point())
          {
@@ -272,6 +280,16 @@ ECDSA_PublicKey::create_verification_op(const std::string& params,
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<ECDSA_Verification_Operation>(*this, params);
+
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::Verification>
+ECDSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
+                                             const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::make_unique<ECDSA_Verification_Operation>(*this, signature_algorithm);
 
    throw Provider_Not_Found(algo_name(), provider);
    }

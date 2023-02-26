@@ -202,6 +202,27 @@ GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    return BigInt::encode_fixed_length_int_pair(s, r, m_group.get_order_bytes());
    }
 
+std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id)
+   {
+   if(!alg_id.parameters_are_empty())
+      throw Decoding_Error("Unexpected non-empty AlgorithmIdentifier parameters for GOST 34.10 signature");
+
+   const std::string oid_str = alg_id.oid().to_formatted_string();
+   if(oid_str == "GOST-34.10/GOST-R-34.11-94")
+      return "GOST-R-34.11-94";
+   if(oid_str == "GOST-34.10-2012-256/Streebog-256")
+      return "Streebog-256";
+   if(oid_str == "GOST-34.10-2012-512/Streebog-512")
+      return "Streebog-512";
+   if(oid_str == "GOST-34.10-2012-256/SHA-256")
+      return "SHA-256";
+
+   throw Decoding_Error("Unknown OID (" + alg_id.oid().to_string() +
+                        ") for GOST 34.10 signatures");
+   }
+
+
+
 /**
 * GOST-34.10 verification operation
 */
@@ -210,8 +231,15 @@ class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_
    public:
 
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost,
-                                       const std::string& emsa) :
-         PK_Ops::Verification_with_Hash(emsa),
+                                       const std::string& padding) :
+         PK_Ops::Verification_with_Hash(padding),
+         m_group(gost.domain()),
+         m_gy_mul(m_group.get_base_point(), gost.public_point())
+         {}
+
+      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost,
+                                       const AlgorithmIdentifier& alg_id) :
+         PK_Ops::Verification_with_Hash(gost_hash_from_algid(alg_id)),
          m_group(gost.domain()),
          m_gy_mul(m_group.get_base_point(), gost.public_point())
          {}
@@ -265,6 +293,17 @@ GOST_3410_PublicKey::create_verification_op(const std::string& params,
       return std::make_unique<GOST_3410_Verification_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
+
+std::unique_ptr<PK_Ops::Verification>
+GOST_3410_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
+                                             const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::make_unique<GOST_3410_Verification_Operation>(*this, signature_algorithm);
+
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
 
 std::unique_ptr<PK_Ops::Signature>
 GOST_3410_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,

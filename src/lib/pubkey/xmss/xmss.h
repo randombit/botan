@@ -88,10 +88,6 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
          return true;
          }
 
-      std::unique_ptr<PK_Ops::Verification>
-      create_verification_op(const std::string&,
-                             const std::string& provider) const override;
-
       size_t estimated_strength() const override
          {
          return m_xmss_params.estimated_strength();
@@ -123,6 +119,14 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
          {
          return (op == PublicKeyOperation::Signature);
          }
+
+      std::unique_ptr<PK_Ops::Verification>
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const override;
+
+      std::unique_ptr<PK_Ops::Verification>
+      create_x509_verification_op(const AlgorithmIdentifier& alg_id,
+                                  const std::string& provider) const override;
 
    protected:
       friend class XMSS_Verification_Operation;

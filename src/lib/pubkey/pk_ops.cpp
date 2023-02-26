@@ -8,6 +8,7 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/parsing.h>
 #include <botan/hash.h>
 #include <botan/rng.h>
 
@@ -137,6 +138,36 @@ PK_Ops::Verification_with_Hash::Verification_with_Hash(const std::string& paddin
    Verification(),
    m_hash(create_signature_hash(padding))
    {
+   }
+
+PK_Ops::Verification_with_Hash::Verification_with_Hash(const AlgorithmIdentifier& alg_id,
+                                                       const std::string& pk_algo,
+                                                       bool allow_null_parameters)
+   {
+   const auto oid_info = split_on(alg_id.oid().to_formatted_string(), '/');
+
+   if(oid_info.empty() || oid_info.size() != 2 || oid_info[0] != pk_algo)
+      {
+      throw Decoding_Error("Unexpected AlgorithmIdentifier OID " + alg_id.oid().to_string()
+                           + " in association with " + pk_algo + " key");
+      }
+
+   if(!alg_id.parameters_are_empty())
+      {
+      if(alg_id.parameters_are_null())
+         {
+         if(!allow_null_parameters)
+            {
+            throw Decoding_Error("Unexpected NULL AlgorithmIdentifier parameters for " + pk_algo);
+            }
+         }
+      else
+         {
+         throw Decoding_Error("Unexpected AlgorithmIdentifier parameters for " + pk_algo);
+         }
+      }
+
+   m_hash = HashFunction::create_or_throw(oid_info[1]);
    }
 
 void PK_Ops::Verification_with_Hash::update(const uint8_t msg[], size_t msg_len)

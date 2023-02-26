@@ -189,6 +189,14 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
          {
          }
 
+      DSA_Verification_Operation(const DSA_PublicKey& dsa,
+                                 const AlgorithmIdentifier& alg_id) :
+         PK_Ops::Verification_with_Hash(alg_id, "DSA"),
+         m_group(dsa.get_group()),
+         m_y(dsa.get_y())
+         {
+         }
+
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;
    private:
@@ -233,6 +241,16 @@ DSA_PublicKey::create_verification_op(const std::string& params,
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<DSA_Verification_Operation>(*this, params);
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::Verification>
+DSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
+                                           const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::make_unique<DSA_Verification_Operation>(*this, signature_algorithm);
+
    throw Provider_Not_Found(algo_name(), provider);
    }
 

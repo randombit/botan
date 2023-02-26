@@ -322,6 +322,20 @@ Ed25519_PublicKey::create_verification_op(const std::string& params,
    throw Provider_Not_Found(algo_name(), provider);
    }
 
+std::unique_ptr<PK_Ops::Verification>
+Ed25519_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
+                                               const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      {
+      if(alg_id != this->algorithm_identifier())
+         throw Decoding_Error("Unexpected AlgorithmIdentifier for Ed25519 X509 signature");
+
+      return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
+      }
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
 std::unique_ptr<PK_Ops::Signature>
 Ed25519_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                         const std::string& params,

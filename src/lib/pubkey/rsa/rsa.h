@@ -82,6 +82,10 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKey : public virtual Public_Key
          create_verification_op(const std::string& params,
                                 const std::string& provider) const override;
 
+      std::unique_ptr<PK_Ops::Verification>
+         create_x509_verification_op(const AlgorithmIdentifier& alg_id,
+                                     const std::string& provider) const override;
+
    protected:
       RSA_PublicKey() = default;
 

@@ -12,6 +12,7 @@
 #include <botan/internal/keypair.h>
 #include <botan/reducer.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/parsing.h>
 #include <botan/hash.h>
 #include <botan/rng.h>
 
@@ -59,6 +60,41 @@ std::unique_ptr<HashFunction> eckcdsa_signature_hash(const std::string& padding)
    throw Algorithm_Not_Found(padding);
    }
 
+std::unique_ptr<HashFunction> eckcdsa_signature_hash(const AlgorithmIdentifier& alg_id)
+   {
+   const auto oid_info = split_on(alg_id.oid().to_formatted_string(), '/');
+
+   if(oid_info.empty() || oid_info.size() != 2 || oid_info[0] != "ECKCDSA")
+      {
+      throw Decoding_Error("Unexpected AlgorithmIdentifier OID " + alg_id.oid().to_string()
+                           + " in association with ECKCDSA key");
+      }
+
+   if(!alg_id.parameters_are_empty())
+      {
+      throw Decoding_Error("Unexpected non-empty AlgorithmIdentifier parameters for ECKCDSA");
+      }
+
+   return HashFunction::create_or_throw(oid_info[1]);
+   }
+
+std::vector<uint8_t> eckcdsa_prefix(const PointGFp& point,
+                                    size_t order_bytes,
+                                    size_t hash_block_size)
+   {
+   const BigInt public_x = point.get_affine_x();
+   const BigInt public_y = point.get_affine_y();
+
+   std::vector<uint8_t> prefix(2*order_bytes);
+   BigInt::encode_1363(&prefix[0], order_bytes, public_x);
+   BigInt::encode_1363(&prefix[order_bytes], order_bytes, public_y);
+
+   // Either truncate or zero-extend to match the hash block size
+   prefix.resize(hash_block_size);
+
+   return prefix;
+   }
+
 /**
 * ECKCDSA signature operation
 */
@@ -89,17 +125,9 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature
          if(m_hash->output_length() > m_group.get_order_bytes())
             throw Encoding_Error("ECKCDSA does not support the hash being larger than the group");
 
-         const BigInt public_point_x = eckcdsa.public_point().get_affine_x();
-         const BigInt public_point_y = eckcdsa.public_point().get_affine_y();
-
-         const size_t order_bytes = m_group.get_order_bytes();
-
-         m_prefix.resize(2*order_bytes);
-         BigInt::encode_1363(&m_prefix[0], order_bytes, public_point_x);
-         BigInt::encode_1363(&m_prefix[order_bytes], order_bytes, public_point_y);
-
-         // Either truncate or zero-extend to match the hash block size
-         m_prefix.resize(m_hash->hash_block_size());
+         m_prefix = eckcdsa_prefix(eckcdsa.public_point(),
+                                   m_group.get_order_bytes(),
+                                   m_hash->hash_block_size());
          }
 
       void update(const uint8_t msg[], size_t msg_len) override
@@ -132,7 +160,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature
       const EC_Group m_group;
       const BigInt& m_x;
       std::unique_ptr<HashFunction> m_hash;
-      secure_vector<uint8_t> m_prefix;
+      std::vector<uint8_t> m_prefix;
       std::vector<BigInt> m_ws;
       bool m_prefix_used;
    };
@@ -188,18 +216,21 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification
          m_hash(eckcdsa_signature_hash(padding)),
          m_prefix_used(false)
          {
-         const BigInt public_point_x = eckcdsa.public_point().get_affine_x();
-         const BigInt public_point_y = eckcdsa.public_point().get_affine_y();
+         m_prefix = eckcdsa_prefix(eckcdsa.public_point(),
+                                   m_group.get_order_bytes(),
+                                   m_hash->hash_block_size());
+         }
 
-         const size_t order_bytes = m_group.get_order_bytes();
-
-         m_prefix.resize(2*order_bytes);
-         BigInt::encode_1363(&m_prefix[0], order_bytes, public_point_x);
-         BigInt::encode_1363(&m_prefix[order_bytes], order_bytes, public_point_y);
-
-         const size_t block_size = m_hash->hash_block_size();
-         // Either truncate or zero-extend to match the hash block size
-         m_prefix.resize(block_size);
+      ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa,
+                                     const AlgorithmIdentifier& alg_id) :
+         m_group(eckcdsa.domain()),
+         m_gy_mul(m_group.get_base_point(), eckcdsa.public_point()),
+         m_hash(eckcdsa_signature_hash(alg_id)),
+         m_prefix_used(false)
+         {
+         m_prefix = eckcdsa_prefix(eckcdsa.public_point(),
+                                   m_group.get_order_bytes(),
+                                   m_hash->hash_block_size());
          }
 
       void update(const uint8_t msg[], size_t msg_len) override;
@@ -214,7 +245,7 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification
 
       const EC_Group m_group;
       const EC_Point_Multi_Point_Precompute m_gy_mul;
-      secure_vector<uint8_t> m_prefix;
+      std::vector<uint8_t> m_prefix;
       std::unique_ptr<HashFunction> m_hash;
       bool m_prefix_used;
    };
@@ -288,6 +319,16 @@ ECKCDSA_PublicKey::create_verification_op(const std::string& params,
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<ECKCDSA_Verification_Operation>(*this, params);
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::Verification>
+ECKCDSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
+                                               const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::make_unique<ECKCDSA_Verification_Operation>(*this, signature_algorithm);
+
    throw Provider_Not_Found(algo_name(), provider);
    }
 

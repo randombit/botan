@@ -35,6 +35,8 @@ class BOTAN_PUBLIC_API(2,2) Ed25519_PublicKey : public virtual Public_Key
          return (op == PublicKeyOperation::Signature);
          }
 
+      const std::vector<uint8_t>& get_public_key() const { return m_public; }
+
       /**
       * Create a Ed25519 Public Key.
       * @param alg_id the X.509 algorithm identifier
@@ -53,8 +55,9 @@ class BOTAN_PUBLIC_API(2,2) Ed25519_PublicKey : public virtual Public_Key
          create_verification_op(const std::string& params,
                                 const std::string& provider) const override;
 
-      const std::vector<uint8_t>& get_public_key() const { return m_public; }
-
+      std::unique_ptr<PK_Ops::Verification>
+         create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
+                                     const std::string& provider) const override;
    protected:
       Ed25519_PublicKey() = default;
       std::vector<uint8_t> m_public;
