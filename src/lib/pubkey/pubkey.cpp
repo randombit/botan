@@ -10,6 +10,8 @@
 #include <botan/bigint.h>
 #include <botan/internal/pk_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/pss_params.h>
+#include <botan/internal/parsing.h>
 #include <botan/rng.h>
 
 namespace Botan {
@@ -317,6 +319,124 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
    check_der_format_supported(format, m_parts);
+   }
+
+namespace {
+
+std::string decode_signature_algorithm_to_padding_string(
+   const Public_Key& pub_key,
+   const AlgorithmIdentifier& signature_algorithm)
+   {
+   const std::vector<std::string> sig_info =
+      split_on(signature_algorithm.oid().to_formatted_string(), '/');
+
+   if(sig_info.empty() || sig_info.size() > 2 || sig_info[0] != pub_key.algo_name())
+      throw Decoding_Error("Unexpected signature_algorithm value");
+
+   const auto& pub_key_algo = sig_info[0];
+   std::string padding;
+   if(sig_info.size() == 2)
+      padding = sig_info[1];
+   else if(pub_key_algo == "Ed25519" || pub_key_algo == "XMSS" || pub_key_algo.starts_with("Dilithium-"))
+      padding = "Pure";
+   else
+      throw Decoding_Error("X.509 signatures not implemented for " + pub_key_algo);
+
+   if(padding == "EMSA4")
+      {
+      // "MUST contain RSASSA-PSS-params"
+      if(signature_algorithm.parameters().empty())
+         {
+         throw Decoding_Error("PSS params must be provided");
+         }
+
+      PSS_Params pss_params(signature_algorithm.parameters());
+
+      // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
+      const std::string hash_algo = pss_params.hash_function();
+      if(hash_algo != "SHA-1" &&
+         hash_algo != "SHA-224" &&
+         hash_algo != "SHA-256" &&
+         hash_algo != "SHA-384" &&
+         hash_algo != "SHA-512")
+         {
+         throw Decoding_Error("Unacceptable hash for PSS signatures");
+         }
+
+      if(pss_params.mgf_function() != "MGF1")
+         {
+         throw Decoding_Error("Unacceptable MGF for PSS signatures");
+         }
+
+      // For MGF1, it is strongly RECOMMENDED that the underlying hash
+      // function be the same as the one identified by hashAlgorithm
+      //
+      // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
+      if(pss_params.hash_algid() != pss_params.mgf_hash_algid())
+         {
+         throw Decoding_Error("Unacceptable MGF hash for PSS signatures");
+         }
+
+      if(pss_params.trailer_field() != 1)
+         {
+         throw Decoding_Error("Unacceptable trailer field for PSS signatures");
+         }
+
+      padding += "(" + hash_algo + ",MGF1," +
+         std::to_string(pss_params.salt_length()) + ")";
+      }
+   else
+      {
+      /*
+      * For all other signature types the signature parameters should
+      * be either NULL or empty. In theory there is some distinction between
+      * these but in practice they seem to be used somewhat interchangeably.
+      *
+      * The various RFCs all have prescriptions of what is allowed:
+      * RSA - NULL (RFC 3279)
+      * DSA - empty (RFC 3279)
+      * ECDSA - empty (RFC 3279)
+      * GOST - empty (RFC 4491)
+      * Ed25519 - empty (RFC 8410)
+      * XMSS - empty (draft-vangeest-x509-hash-sigs)
+      *
+      * But in practice we find RSA with empty and ECDSA will NULL all
+      * over the place so it's not really possible to enforce. For Ed25519
+      * and XMSS because they are new we attempt to enforce.
+      */
+      if(pub_key_algo == "Ed25519" || pub_key_algo == "XMSS")
+         {
+         if(!signature_algorithm.parameters_are_empty())
+            {
+            throw Decoding_Error("Unexpected value for signature parameters");
+            }
+         }
+      else
+         {
+         if(!signature_algorithm.parameters_are_null_or_empty())
+            {
+            throw Decoding_Error("Unexpected value for signature parameters");
+            }
+         }
+      }
+
+   return padding;
+   }
+
+}
+
+PK_Verifier::PK_Verifier(const Public_Key& key,
+                         const AlgorithmIdentifier& signature_algorithm,
+                         const std::string& provider)
+   {
+   const std::string padding = decode_signature_algorithm_to_padding_string(key, signature_algorithm);
+   m_op = key.create_verification_op(padding, provider);
+   if(!m_op)
+      throw Invalid_Argument("Key type " + key.algo_name() + " does not support signature verification");
+   m_sig_format = key.default_x509_signature_format();
+   m_parts = key.message_parts();
+   m_part_size = key.message_part_size();
+   check_der_format_supported(m_sig_format, m_parts);
    }
 
 PK_Verifier::~PK_Verifier() = default;
