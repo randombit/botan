@@ -35,7 +35,7 @@ bool PKCS11_ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong)
       }
 
    ECDSA_PublicKey pubkey(domain(), public_point());
-   return KeyPair::signature_consistency_check(rng, *this, pubkey, "EMSA1(SHA-256)");
+   return KeyPair::signature_consistency_check(rng, *this, pubkey, "SHA-256");
    }
 
 ECDSA_PrivateKey PKCS11_ECDSA_PrivateKey::export_key() const
@@ -123,7 +123,7 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
 
 AlgorithmIdentifier PKCS11_ECDSA_Signature_Operation::algorithm_identifier() const
    {
-   const std::string full_name = "ECDSA/EMSA1(" + hash_function() + ")";
+   const std::string full_name = "ECDSA/" + hash_function();
    const OID oid = OID::from_string(full_name);
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
    }

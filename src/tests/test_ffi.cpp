@@ -2115,7 +2115,7 @@ class FFI_Unit_Tests final : public Test
             std::vector<uint8_t> message(6, 6);
             std::vector<uint8_t> signature;
 
-            if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "EMSA1(SHA-256)", 0)))
+            if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "SHA-256", 0)))
                {
                // TODO: break input into multiple calls to update
                TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
@@ -2134,7 +2134,7 @@ class FFI_Unit_Tests final : public Test
 
             botan_pk_op_verify_t verifier = nullptr;
 
-            if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-256)", 0)))
+            if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "SHA-256", 0)))
                {
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
                TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
@@ -2225,7 +2225,7 @@ class FFI_Unit_Tests final : public Test
          for(uint32_t flags = 0; flags <= 1; ++flags)
             {
             botan_pk_op_sign_t signer;
-            if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "EMSA1(SHA-384)", flags)))
+            if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "SHA-384", flags)))
                {
                // TODO: break input into multiple calls to update
                TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
@@ -2244,7 +2244,7 @@ class FFI_Unit_Tests final : public Test
 
             botan_pk_op_verify_t verifier = nullptr;
 
-            if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", flags)))
+            if(!signature.empty() && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "SHA-384", flags)))
                {
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
                TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));

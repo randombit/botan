@@ -48,10 +48,7 @@ class GOST_3410_2001_Verification_Tests final : public PK_Signature_Verification
 
       std::string default_padding(const VarMap& vars) const override
          {
-         auto hash = vars.get_req_str("Hash");
-         if(hash == "Raw")
-            return hash;
-         return "EMSA1(" + hash + ")";
+         return vars.get_req_str("Hash");
          }
    };
 
@@ -83,10 +80,7 @@ class GOST_3410_2001_Signature_Tests final : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         auto hash = vars.get_req_str("Hash");
-         if(hash == "Raw")
-            return hash;
-         return "EMSA1(" + hash + ")";
+         return vars.get_req_str("Hash");
          }
 
       std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override

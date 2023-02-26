@@ -1184,8 +1184,8 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding ec_dompar_enc, const 
         // SoftHSMv2 until now only supports "Raw"
         if(manufacturer.find("SoftHSM project") == std::string::npos)
            {
-           sign_and_verify("EMSA1(SHA-256)", Botan::Signature_Format::Standard, true);
-           sign_and_verify("EMSA1(SHA-256)", Botan::Signature_Format::DerSequence, true);
+           sign_and_verify("SHA-256", Botan::Signature_Format::Standard, true);
+           sign_and_verify("SHA-256", Botan::Signature_Format::DerSequence, true);
            }
 
 #if defined (BOTAN_HAS_EMSA_RAW)
