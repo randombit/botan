@@ -117,16 +117,6 @@ std::string OID::to_formatted_string() const
    }
 
 /*
-* Append another component to the OID
-*/
-OID operator+(const OID& oid, uint32_t new_component)
-   {
-   std::vector<uint32_t> val = oid.get_components();
-   val.push_back(new_component);
-   return OID(std::move(val));
-   }
-
-/*
 * Compare two OIDs
 */
 bool operator<(const OID& a, const OID& b)
