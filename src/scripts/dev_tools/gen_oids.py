@@ -224,7 +224,7 @@ def main(args = None):
 
     oid_lines = open('./src/build-data/oids.txt').readlines()
 
-    oid_re = re.compile("^([0-9][0-9.]+) = ([A-Za-z0-9_\./\(\), -]+)(?: = )?([0-9]+)?$")
+    oid_re = re.compile("^([0-9][0-9.]+) += +([A-Za-z0-9_\./\(\), -]+)(?: = )?([0-9]+)?$")
     hdr_re = re.compile("^\[([a-z0-9_]+)\]$")
 
     oid2str = {}
