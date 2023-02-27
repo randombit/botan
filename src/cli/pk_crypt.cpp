@@ -13,7 +13,6 @@
 #include <botan/pkcs8.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/oids.h>
 #include <botan/aead.h>
 #include <botan/pem.h>
 #include <botan/rng.h>
@@ -159,7 +158,7 @@ class PK_Decrypt final : public Command
             return set_return_code(1);
             }
 
-         const std::string aead_algo = Botan::OIDS::oid2str_or_empty(aead_oid);
+         const std::string aead_algo = aead_oid.human_name_or_empty();
          if(aead_algo.empty())
             {
             error_output() << "Ciphertext was encrypted with an unknown algorithm";
@@ -175,7 +174,7 @@ class PK_Decrypt final : public Command
          Botan::AlgorithmIdentifier oaep_hash_id;
          Botan::BER_Decoder(pk_alg_id.parameters()).decode(oaep_hash_id);
 
-         const std::string oaep_hash = Botan::OIDS::oid2str_or_empty(oaep_hash_id.oid());
+         const std::string oaep_hash = oaep_hash_id.oid().human_name_or_empty();
 
          if(oaep_hash.empty())
             {

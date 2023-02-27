@@ -25,8 +25,6 @@ BOTAN_UNSTABLE_API void add_oid(const OID& oid, const std::string& name);
 BOTAN_UNSTABLE_API void add_oid2str(const OID& oid, const std::string& name);
 BOTAN_UNSTABLE_API void add_str2oid(const OID& oid, const std::string& name);
 
-BOTAN_UNSTABLE_API void add_oidstr(const char* oidstr, const char* name);
-
 std::unordered_map<std::string, std::string> load_oid2str_map();
 std::unordered_map<std::string, OID> load_str2oid_map();
 
