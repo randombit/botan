@@ -13,7 +13,6 @@
 #include <botan/ber_dec.h>
 #include <botan/internal/parsing.h>
 #include <botan/asn1_obj.h>
-#include <botan/oids.h>
 #include <botan/rng.h>
 
 namespace Botan {
@@ -51,7 +50,9 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
       if(key_length == 0)
          key_length = default_key_size;
 
-      const std::string prf = OIDS::oid2str_or_throw(prf_algo.oid());
+      const std::string prf = prf_algo.oid().human_name_or_empty();
+      if(prf.empty() || !prf.starts_with("HMAC"))
+         throw Decoding_Error("Unknown PBES2 PRF " + prf_algo.oid().to_string());
       auto pbkdf_fam = PasswordHashFamily::create_or_throw("PBKDF2(" + prf + ")");
       auto pbkdf = pbkdf_fam->from_params(iterations);
 
@@ -212,10 +213,6 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    if(!known_pbes_cipher_mode(cipher_spec[1]))
       throw Encoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
-   const OID cipher_oid = OIDS::str2oid_or_empty(cipher);
-   if(cipher_oid.empty())
-      throw Encoding_Error("PBE-PKCS5 v2.0: No OID assigned for " + cipher);
-
    std::unique_ptr<Cipher_Mode> enc = Cipher_Mode::create(cipher, Cipher_Dir::Encryption);
 
    if(!enc)
@@ -310,12 +307,10 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
          .decode(enc_algo)
       .end_cons();
 
-   const std::string cipher = OIDS::oid2str_or_throw(enc_algo.oid());
+   const std::string cipher = enc_algo.oid().human_name_or_empty();
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
-   if(cipher_spec.size() != 2)
-      throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
-   if(!known_pbes_cipher_mode(cipher_spec[1]))
-      throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
+   if(cipher_spec.size() != 2 || !known_pbes_cipher_mode(cipher_spec[1]))
+      throw Decoding_Error("PBE-PKCS5 v2.0: Unknown/invalid cipher OID " + enc_algo.oid().to_string());
 
    secure_vector<uint8_t> iv;
    BER_Decoder(enc_algo.parameters()).decode(iv, ASN1_Type::OctetString).verify_end();

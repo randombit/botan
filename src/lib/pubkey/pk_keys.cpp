@@ -8,7 +8,6 @@
 #include <botan/pk_keys.h>
 #include <botan/internal/pk_ops.h>
 #include <botan/der_enc.h>
-#include <botan/oids.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
 
@@ -21,10 +20,14 @@ const BigInt& Asymmetric_Key::get_int_field(const std::string& field) const
 
 OID Asymmetric_Key::object_identifier() const
    {
-   OID o = OIDS::str2oid_or_empty(algo_name());
-   if(o.empty())
+   try
+      {
+      return OID::from_string(algo_name());
+      }
+   catch(Lookup_Error&)
+      {
       throw Lookup_Error("PK algo " + algo_name() + " has no defined OIDs");
-   return o;
+      }
    }
 
 std::string create_hex_fingerprint(const uint8_t bits[],

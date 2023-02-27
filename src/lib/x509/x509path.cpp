@@ -10,7 +10,6 @@
 #include <botan/x509_ext.h>
 #include <botan/pk_keys.h>
 #include <botan/ocsp.h>
-#include <botan/oids.h>
 #include <botan/internal/stl_util.h>
 #include <algorithm>
 #include <chrono>
@@ -120,7 +119,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
       std::unique_ptr<Public_Key> issuer_key(issuer.subject_public_key());
 
       // Check the signature algorithm is known
-      if(OIDS::oid2str_or_empty(subject.signature_algorithm().oid()).empty())
+      if(!subject.signature_algorithm().oid().registered_oid())
          {
          status.insert(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN);
          }
@@ -398,7 +397,7 @@ PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
             // for example see #1652
 
             // is the extension critical and unknown?
-            if(extension.second && OIDS::oid2str_or_empty(extension.first->oid_of()).empty())
+            if(extension.second && !extension.first->oid_of().registered_oid())
                {
                /* NIST Certificate Path Valiadation Testing document: "When an implementation does not recognize a critical extension in the
                 * crlExtensions field, it shall assume that identified certificates have been revoked and are no longer valid"
