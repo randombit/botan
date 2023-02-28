@@ -87,11 +87,6 @@ void OIDS::add_oid(const OID& oid, const std::string& name)
    OID_Map::global_registry().add_oid(oid, name);
    }
 
-void OIDS::add_oidstr(const char* oidstr, const char* name)
-   {
-   add_oid(OID(oidstr), name);
-   }
-
 void OIDS::add_oid2str(const OID& oid, const std::string& name)
    {
    OID_Map::global_registry().add_oid2str(oid, name);

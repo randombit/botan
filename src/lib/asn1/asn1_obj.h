@@ -283,6 +283,18 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       std::string to_formatted_string() const;
 
       /**
+      * If there is a known name associated with this OID, return that.
+      * Otherwise return the empty string.
+      */
+      std::string human_name_or_empty() const;
+
+      /**
+      * Return true if the OID in *this is registered in the internal
+      * set of constants as a known OID.
+      */
+      bool registered_oid() const;
+
+      /**
       * Compare two OIDs.
       * @return true if they are equal, false otherwise
       */

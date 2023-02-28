@@ -20,7 +20,6 @@
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    #include <botan/hex.h>
    #include <botan/kyber.h>
-   #include <botan/oids.h>
    #include <botan/rng.h>
    #include <botan/pubkey.h>
    #include "test_pubkey.h"
@@ -210,7 +209,7 @@ Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::Ky
    // Algorithm identifiers
    result.test_eq("algo name", priv_key.algo_name(), algo_name);
    result.confirm("algo mode", priv_key.mode() == mode);
-   result.test_eq("algo id", Botan::OIDS::oid2str_or_throw(priv_key.algorithm_identifier().oid()), algo_name);
+   result.test_eq("algo id", priv_key.algorithm_identifier().oid().to_formatted_string(), algo_name);
 
    return result;
    }

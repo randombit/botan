@@ -73,7 +73,7 @@ Test::Result test_add_have_OID_str()
 
    result.test_eq("there is no OID 'botan-test-oid2'", Botan::OIDS::str2oid_or_empty("botan-test-oid2").has_value(), false);
 
-   Botan::OIDS::add_oidstr("1.2.345.6.777", "botan-test-oid2");
+   Botan::OIDS::add_oid(Botan::OID("1.2.345.6.777"), "botan-test-oid2");
 
    result.test_eq("OID 'botan-test-oid2' added successfully", Botan::OIDS::str2oid_or_empty("botan-test-oid2").has_value(), true);
 

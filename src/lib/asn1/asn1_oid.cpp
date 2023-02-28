@@ -110,10 +110,20 @@ std::string OID::to_string() const
 
 std::string OID::to_formatted_string() const
    {
-   std::string s = OIDS::oid2str_or_empty(*this);
+   std::string s = this->human_name_or_empty();
    if(!s.empty())
       return s;
    return this->to_string();
+   }
+
+std::string OID::human_name_or_empty() const
+   {
+   return OIDS::oid2str_or_empty(*this);
+   }
+
+bool OID::registered_oid() const
+   {
+   return !OIDS::oid2str_or_empty(*this).empty();
    }
 
 /*

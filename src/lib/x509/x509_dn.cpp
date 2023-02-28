@@ -9,7 +9,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/internal/stl_util.h>
-#include <botan/oids.h>
 #include <ostream>
 #include <sstream>
 #include <cctype>
@@ -125,11 +124,15 @@ std::multimap<std::string, std::string> X509_DN::contents() const
 
 bool X509_DN::has_field(const std::string& attr) const
    {
-   const OID o = OIDS::str2oid_or_empty(deref_info_field(attr));
-   if(o.has_value())
-      return has_field(o);
-   else
-      return false;
+   try
+      {
+      const OID o = OID::from_string(deref_info_field(attr));
+      if(o.has_value())
+         return has_field(o);
+      }
+   catch(Lookup_Error&) {}
+
+   return false;
    }
 
 bool X509_DN::has_field(const OID& oid) const

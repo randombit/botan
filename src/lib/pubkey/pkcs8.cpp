@@ -10,7 +10,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/asn1_obj.h>
-#include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/internal/scan_name.h>
 #include <botan/pk_algs.h>
@@ -102,7 +101,7 @@ secure_vector<uint8_t> PKCS8_decode(
       {
       if(is_encrypted)
          {
-         if(OIDS::oid2str_or_throw(pbe_alg_id.oid()) != "PBE-PKCS5v20")
+         if(pbe_alg_id.oid().to_formatted_string() != "PBE-PKCS5v20")
             throw PKCS8_Exception("Unknown PBE type " + pbe_alg_id.oid().to_string());
 #if defined(BOTAN_HAS_PKCS5_PBES2)
          key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.parameters());
@@ -339,7 +338,7 @@ load_key(DataSource& source,
    AlgorithmIdentifier alg_id;
    secure_vector<uint8_t> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
 
-   const std::string alg_name = OIDS::oid2str_or_empty(alg_id.oid());
+   const std::string alg_name = alg_id.oid().human_name_or_empty();
    if(alg_name.empty())
       throw PKCS8_Exception("Unknown algorithm OID: " +
                             alg_id.oid().to_string());

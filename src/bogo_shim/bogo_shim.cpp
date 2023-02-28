@@ -21,7 +21,6 @@
 #include <botan/pkcs8.h>
 #include <botan/internal/loadstor.h>
 #include <botan/ocsp.h>
-#include <botan/oids.h>
 #include <botan/chacha_rng.h>
 #include <botan/base64.h>
 #include <botan/hex.h>

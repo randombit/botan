@@ -9,7 +9,6 @@
 #include <botan/hex.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/oids.h>
 #include <iomanip>
 #include <sstream>
 #include <cctype>
@@ -147,7 +146,7 @@ void ASN1_Formatter::decode(std::ostream& output,
          OID oid;
          data.decode(oid);
 
-         std::string out = OIDS::oid2str_or_empty(oid);
+         std::string out = oid.human_name_or_empty();
          if(out.empty())
             {
             out = oid.to_string();

@@ -18,7 +18,6 @@
    #include <botan/pk_algs.h>
    #include <botan/ber_dec.h>
    #include <botan/der_enc.h>
-   #include <botan/oids.h>
 #endif
 
 namespace Botan_Tests {
@@ -685,13 +684,15 @@ Test::Result test_verify_gost2012_cert()
 
    Botan::X509_Certificate ca_cert_def = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", Test::rng());
    test_result.test_eq("CA certificate signature algorithm (default)",
-      Botan::OIDS::oid2str_or_throw(ca_cert_def.signature_algorithm().oid()),"RSA/EMSA3(SHA-512)");
+                       ca_cert_def.signature_algorithm().oid().to_formatted_string(),
+                       "RSA/EMSA3(SHA-512)");
 
    // Create X509 CA certificate; RSA-PSS is explicitly set
    opt.set_padding_scheme("PSSR");
    Botan::X509_Certificate ca_cert_exp = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", Test::rng());
    test_result.test_eq("CA certificate signature algorithm (explicit)",
-      Botan::OIDS::oid2str_or_throw(ca_cert_exp.signature_algorithm().oid()),"RSA/EMSA4");
+                       ca_cert_exp.signature_algorithm().oid().to_formatted_string(),
+                       "RSA/EMSA4");
 
 #if defined(BOTAN_HAS_EMSA2)
    // Try to set a padding scheme that is not supported for signing with the given key type
@@ -710,7 +711,8 @@ Test::Result test_verify_gost2012_cert()
 #endif
 
    test_result.test_eq("CA certificate signature algorithm (explicit)",
-      Botan::OIDS::oid2str_or_throw(ca_cert_exp.signature_algorithm().oid()),"RSA/EMSA4");
+                       ca_cert_exp.signature_algorithm().oid().to_formatted_string(),
+                       "RSA/EMSA4");
 
    const Botan::X509_Time not_before = from_date(-1, 1, 1);
    const Botan::X509_Time not_after = from_date(2, 1, 2);
@@ -719,7 +721,9 @@ Test::Result test_verify_gost2012_cert()
    Botan::X509_Cert_Options req_opt("endpoint");
    req_opt.set_padding_scheme("EMSA4(SHA-512,MGF1,64)");
    Botan::PKCS10_Request end_req = Botan::X509::create_cert_req(req_opt, (*sk), "SHA-512", Test::rng());
-   test_result.test_eq("Certificate request signature algorithm", Botan::OIDS::oid2str_or_throw(end_req.signature_algorithm().oid()),"RSA/EMSA4");
+   test_result.test_eq("Certificate request signature algorithm",
+                       end_req.signature_algorithm().oid().to_formatted_string(),
+                       "RSA/EMSA4");
 
    // Create X509 CA object: will fail as the chosen hash functions differ
    try
@@ -737,21 +741,29 @@ Test::Result test_verify_gost2012_cert()
    // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. EMSA3
    Botan::X509_CA ca_def(ca_cert_def, (*sk), "SHA-512", Test::rng());
    Botan::X509_Certificate end_cert_emsa3 = ca_def.sign_request(end_req, Test::rng(), not_before, not_after);
-   test_result.test_eq("End certificate signature algorithm", Botan::OIDS::oid2str_or_throw(end_cert_emsa3.signature_algorithm().oid()), "RSA/EMSA3(SHA-512)");
+   test_result.test_eq("End certificate signature algorithm",
+                       end_cert_emsa3.signature_algorithm().oid().to_formatted_string(),
+                       "RSA/EMSA3(SHA-512)");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is different from the CA certificate's scheme
    Botan::X509_CA ca_diff(ca_cert_def, (*sk), "SHA-512", "EMSA-PSS", Test::rng());
    Botan::X509_Certificate end_cert_diff_emsa4 = ca_diff.sign_request(end_req, Test::rng(), not_before, not_after);
-   test_result.test_eq("End certificate signature algorithm", Botan::OIDS::oid2str_or_throw(end_cert_diff_emsa4.signature_algorithm().oid()), "RSA/EMSA4");
+   test_result.test_eq("End certificate signature algorithm",
+                       end_cert_diff_emsa4.signature_algorithm().oid().to_formatted_string(),
+                       "RSA/EMSA4");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is identical to the CA certificate's scheme
    Botan::X509_CA ca_exp(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-512,MGF1,64)", Test::rng());
    Botan::X509_Certificate end_cert_emsa4= ca_exp.sign_request(end_req, Test::rng(), not_before, not_after);
-   test_result.test_eq("End certificate signature algorithm", Botan::OIDS::oid2str_or_throw(end_cert_emsa4.signature_algorithm().oid()), "RSA/EMSA4");
+   test_result.test_eq("End certificate signature algorithm",
+                       end_cert_emsa4.signature_algorithm().oid().to_formatted_string(),
+                       "RSA/EMSA4");
 
    // Check CRL signature algorithm
    Botan::X509_CRL crl = ca_exp.new_crl(Test::rng());
-   test_result.test_eq("CRL signature algorithm", Botan::OIDS::oid2str_or_throw(crl.signature_algorithm().oid()), "RSA/EMSA4");
+   test_result.test_eq("CRL signature algorithm",
+                       crl.signature_algorithm().oid().to_formatted_string(),
+                       "RSA/EMSA4");
 
    // sanity check for verification, the heavy lifting is done in the other unit tests
    const Botan::Certificate_Store_In_Memory trusted(ca_exp.ca_certificate());
