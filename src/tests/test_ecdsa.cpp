@@ -59,8 +59,7 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
       ECDSA_Wycheproof_Verification_Tests() : PK_Signature_Verification_Test(
             "ECDSA",
             "pubkey/ecdsa_wycheproof.vec",
-            "Group,Px,Py,Hash,Msg,Signature",
-            "Valid") {}
+            "Group,Px,Py,Hash,Msg,Signature,Valid") {}
 
       bool clear_between_callbacks() const override
          {
