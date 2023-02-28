@@ -308,13 +308,6 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
    };
 
 /**
-* Append another component onto the OID.
-* @param oid the OID to add the new component to
-* @param new_comp the new component to add
-*/
-OID BOTAN_PUBLIC_API(2,0) operator+(const OID& oid, uint32_t new_comp);
-
-/**
 * Compare two OIDs.
 * @param a the first OID
 * @param b the second OID

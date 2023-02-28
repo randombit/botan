@@ -299,6 +299,17 @@ know when or if the TLS layer had completed using the returned key.
 
 Now this function returns std::shared_ptr<Private_Key>
 
+OID operator+
+------------------------
+
+OID operator+ allowed concatenating new fields onto an object identifier. This
+was not used at all within the library or the tests, and seems of marginal
+value, so it was removed.
+
+If necessary in your application, this can be done by retrieving the
+vector of components from your source OID, push the new element onto the vector
+and create an OID from the result.
+
 RSA with "EMSA1" padding
 -------------------------
 
