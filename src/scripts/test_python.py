@@ -440,13 +440,19 @@ ofvkP1EDmpx50fHLawIDAQAB
             a_op = botan.PKKeyAgreement(a_priv, kdf)
             b_op = botan.PKKeyAgreement(b_priv, kdf)
 
-            a_pub = a_op.public_value()
-            b_pub = b_op.public_value()
+            a_pubv = a_op.public_value()
+            b_pubv = b_op.public_value()
+
+            a_pub_pt = a_priv.get_public_key().get_public_point()
+            b_pub_pt = b_priv.get_public_key().get_public_point()
+
+            self.assertEqual(a_op.public_value(), a_pub_pt)
+            self.assertEqual(b_op.public_value(), b_pub_pt)
 
             salt = a_rng.get(8) + b_rng.get(8)
 
-            a_key = a_op.agree(b_pub, 32, salt)
-            b_key = b_op.agree(a_pub, 32, salt)
+            a_key = a_op.agree(b_pubv, 32, salt)
+            b_key = b_op.agree(a_pubv, 32, salt)
 
             self.assertEqual(a_key, b_key)
 

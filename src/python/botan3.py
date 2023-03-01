@@ -332,6 +332,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_privkey_load_sm2_enc, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_sm2_compute_za,
             [c_char_p, POINTER(c_size_t), c_char_p, c_char_p, c_void_p])
+    ffi_api(dll.botan_pubkey_get_ec_public_point,
+            [c_char_p, POINTER(c_size_t), c_void_p])
 
     #  PK
     ffi_api(dll.botan_pk_op_encrypt_create, [c_void_p, c_void_p, c_char_p, c_uint32])
@@ -1041,6 +1043,9 @@ class PublicKey: # pylint: disable=invalid-name
         v = MPI()
         _DLL.botan_pubkey_get_field(v.handle_(), self.__obj, _ctype_str(field_name))
         return int(v)
+
+    def get_public_point(self):
+        return _call_fn_returning_vec(130, lambda b, bl: _DLL.botan_pubkey_get_ec_public_point(b, bl, self.__obj))
 
 #
 # Private Key

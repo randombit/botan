@@ -410,9 +410,6 @@ inline bool operator!=(const EC_Group& lhs,
    return !(lhs == rhs);
    }
 
-// For compatibility with 1.8
-typedef EC_Group EC_Domain_Params;
-
 }
 
 #endif
