@@ -45,6 +45,11 @@ class ECIES_PrivateKey final : public EC_PrivateKey, public PK_Key_Agreement_Key
          return m_key.public_key();
          }
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::KeyAgreement);
+         }
+
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,
                                  const std::string& params,

@@ -24,6 +24,11 @@ class BOTAN_PUBLIC_API(2,0) DH_PublicKey : public virtual DL_Scheme_PublicKey
 
       DL_Group_Format group_format() const override { return DL_Group_Format::ANSI_X9_42; }
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::KeyAgreement);
+         }
+
       /**
       * Create a public key.
       * @param alg_id the X.509 algorithm identifier

@@ -85,6 +85,11 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
 
       bool check_key(RandomNumberGenerator&, bool) const override;
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::Signature);
+         }
+
       std::unique_ptr<PK_Ops::Verification>
       create_verification_op(const std::string& params,
                              const std::string& provider) const override;

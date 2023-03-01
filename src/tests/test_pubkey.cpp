@@ -126,7 +126,13 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
       return result;
       }
 
+   result.confirm("private key claims to support signatures",
+                  privkey->supports_operation(Botan::PublicKeyOperation::Signature));
+
    std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
+
+   result.confirm("public key claims to support signatures",
+                  privkey->supports_operation(Botan::PublicKeyOperation::Signature));
 
    std::vector<std::unique_ptr<Botan::PK_Verifier>> verifiers;
 
@@ -217,6 +223,9 @@ PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const V
    std::unique_ptr<Botan::Public_Key> pubkey = load_public_key(vars);
 
    Test::Result result(algo_name() + "/" + padding + " signature verification");
+
+   result.confirm("public key claims to support signatures",
+                  pubkey->supports_operation(Botan::PublicKeyOperation::Signature));
 
    for(auto const& verify_provider : possible_providers(algo_name()))
       {
@@ -357,6 +366,9 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
    Test::Result result(algo_name() + (padding.empty() ? padding : "/" + padding) + " encryption");
 
    std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
+
+   result.confirm("private key claims to support encryption",
+                  privkey->supports_operation(Botan::PublicKeyOperation::Encryption));
 
    // instead slice the private key to work around elgamal test inputs
    //std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
@@ -508,6 +520,9 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
 
    std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
 
+   result.confirm("private key claims to support KEM",
+                  privkey->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
+
    const Botan::Public_Key& pubkey = *privkey;
 
    const size_t desired_key_len = K.size();
@@ -567,6 +582,10 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
                        " key agreement");
 
    std::unique_ptr<Botan::Private_Key> privkey = load_our_key(header, vars);
+
+   result.confirm("private key claims to support key agreement",
+                  privkey->supports_operation(Botan::PublicKeyOperation::KeyAgreement));
+
    const std::vector<uint8_t> pubkey = load_their_key(header, vars);
 
    const size_t key_len = vars.get_opt_sz("OutLen", 0);

@@ -45,6 +45,12 @@ class BOTAN_PUBLIC_API(2,2) SM2_PublicKey : public virtual EC_PublicKey
 
       size_t message_parts() const override { return 2; }
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::Signature ||
+                 op == PublicKeyOperation::Encryption);
+         }
+
       size_t message_part_size() const override
          { return domain().get_order().bytes(); }
 

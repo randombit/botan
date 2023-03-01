@@ -24,6 +24,11 @@ class BOTAN_PUBLIC_API(2,0) DSA_PublicKey : public virtual DL_Scheme_PublicKey
       size_t message_parts() const override { return 2; }
       size_t message_part_size() const override { return group_q().bytes(); }
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::Signature);
+         }
+
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier

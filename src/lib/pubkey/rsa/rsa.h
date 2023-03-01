@@ -63,6 +63,8 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKey : public virtual Public_Key
 
       const BigInt& get_int_field(const std::string& field) const override;
 
+      bool supports_operation(PublicKeyOperation op) const override;
+
       // internal functions:
       std::shared_ptr<const RSA_Public_Data> public_data() const;
 

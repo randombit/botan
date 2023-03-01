@@ -136,6 +136,13 @@ RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier& /*unused*/,
    init(std::move(n), std::move(e));
    }
 
+bool RSA_PublicKey::supports_operation(PublicKeyOperation op) const
+   {
+   return op == PublicKeyOperation::Signature ||
+      op == PublicKeyOperation::Encryption ||
+      op == PublicKeyOperation::KeyEncapsulation;
+   }
+
 RSA_PublicKey::RSA_PublicKey(const BigInt& modulus, const BigInt& exponent)
    {
    BigInt n = modulus;

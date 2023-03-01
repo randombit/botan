@@ -58,33 +58,23 @@ std::string Key_Constraints::to_string() const
 */
 bool Key_Constraints::compatible_with(const Public_Key& pub_key) const
    {
-   const std::string name = pub_key.algo_name();
-
-   const bool can_agree = (name == "DH" || name == "ECDH" || name.starts_with("Kyber-"));
-   const bool can_encrypt = (name == "RSA" || name == "ElGamal" || name.starts_with("Kyber-"));
-
-   const bool can_sign =
-      (name == "RSA" || name == "DSA" ||
-       name == "ECDSA" || name == "ECGDSA" || name == "ECKCDSA" || name == "Ed25519" ||
-       name == "GOST-34.10" || name == "GOST-34.10-2012-256" || name == "GOST-34.10-2012-512" ||
-       name.starts_with("Dilithium-"));
-
    uint32_t permitted = 0;
 
-   if(can_agree)
+   if(pub_key.supports_operation(PublicKeyOperation::KeyAgreement))
       {
       permitted |= Key_Constraints::KeyAgreement |
          Key_Constraints::EncipherOnly |
          Key_Constraints::DecipherOnly;
       }
 
-   if(can_encrypt)
+   if(pub_key.supports_operation(PublicKeyOperation::Encryption) ||
+      pub_key.supports_operation(PublicKeyOperation::KeyEncapsulation))
       {
       permitted |= Key_Constraints::KeyEncipherment |
          Key_Constraints::DataEncipherment;
       }
 
-   if(can_sign)
+   if(pub_key.supports_operation(PublicKeyOperation::Signature))
       {
       permitted |= Key_Constraints::DigitalSignature |
          Key_Constraints::NonRepudiation |

@@ -29,6 +29,11 @@ class BOTAN_PUBLIC_API(2,0) Curve25519_PublicKey : public virtual Public_Key
 
       std::vector<uint8_t> public_value() const { return m_public; }
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::KeyAgreement);
+         }
+
       /**
       * Create a Curve25519 Public Key.
       * @param alg_id the X.509 algorithm identifier

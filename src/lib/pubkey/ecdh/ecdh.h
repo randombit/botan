@@ -56,6 +56,11 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PublicKey : public virtual EC_PublicKey
       std::vector<uint8_t> public_value(EC_Point_Format format) const
          { return public_point().encode(format); }
 
+      bool supports_operation(PublicKeyOperation op) const override
+         {
+         return (op == PublicKeyOperation::KeyAgreement);
+         }
+
    protected:
       ECDH_PublicKey() = default;
    };
