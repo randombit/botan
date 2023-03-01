@@ -25,9 +25,12 @@ class Channel_Impl_13 : public Channel_Impl
    {
    protected:
       /**
-       * Helper class to coalesce handshake messages into a single TLS record of type
-       * 'Handshake'. This is used entirely internally in the Channel, Client and Server
-       * implementation.
+       * Helper class to coalesce handshake messages into a single TLS record
+       * of type 'Handshake'. This is used entirely internally in the Channel,
+       * Client and Server implementations.
+       *
+       * Note that implementations should use the derived classes that either
+       * aggregate conventional Handshake messages or Post-Handshake messages.
        */
       class AggregatedMessages
          {
@@ -59,6 +62,11 @@ class Channel_Impl_13 : public Channel_Impl
             Handshake_Layer& m_handshake_layer;
          };
 
+      /**
+       * Aggregate conventional handshake messages. This will update the given
+       * Transcript_Hash_State accordingly as individual messages are added to
+       * the aggregation.
+       */
       class AggregatedHandshakeMessages : public AggregatedMessages
          {
          public:
@@ -77,6 +85,10 @@ class Channel_Impl_13 : public Channel_Impl
             Transcript_Hash_State& m_transcript_hash;
          };
 
+      /**
+       * Aggregate post-handshake messages. In contrast to ordinary handshake
+       * messages this does not maintain a Transcript_Hash_State.
+       */
       class AggregatedPostHandshakeMessages : public AggregatedMessages
          {
          public:

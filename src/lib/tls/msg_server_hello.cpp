@@ -787,7 +787,8 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
       const auto psk_modes = ch_exts.get<PSK_Key_Exchange_Modes>();
       BOTAN_ASSERT_NONNULL(psk_modes);
 
-      // TODO: also support non-DHE PSK Key-Exchange mode
+      // TODO: also support PSK_Key_Exchange_Mode::PSK_KE
+      //       (PSK-based handshake without an additional ephemeral key exchange)
       if(value_exists(psk_modes->modes(), PSK_Key_Exchange_Mode::PSK_DHE_KE))
          {
          if(auto server_psk = ch_exts.get<PSK>()->select_offered_psk(cs.value(), session_mgr, cb, policy))

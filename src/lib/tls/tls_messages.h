@@ -17,6 +17,7 @@
 #include <variant>
 #include <chrono>
 
+#include <botan/strong_type.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_handshake_msg.h>
 #include <botan/tls_session.h>
@@ -935,8 +936,6 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message
    };
 
 #if defined(BOTAN_HAS_TLS_13)
-
-#include <botan/strong_type.h>
 
 /// @brief Used to derive the ticket's PSK from the resumption_master_secret
 using Ticket_Nonce = Strong<std::vector<uint8_t>, struct Ticket_Nonce_>;

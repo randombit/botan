@@ -130,6 +130,21 @@ bool Client_Impl_13::handshake_finished() const
 
 std::optional<Session_with_Handle> Client_Impl_13::find_session_for_resumption()
    {
+   // RFC 8446 4.6.1
+   //    Clients MUST only resume if the new SNI value is valid for the
+   //    server certificate presented in the original session and SHOULD only
+   //    resume if the SNI value matches the one used in the original session.
+   //
+   // Below we search sessions based on their SNI value. Assuming that a
+   // 3rd party session manager does not lie to the implementation, we don't
+   // explicitly re-check that the SNI values match.
+   //
+   // Also, the default implementation did verify that very same SNI information
+   // against the server's certificate (via Callbacks::tls_verify_cert_chain())
+   // before storing it in the session.
+   //
+   // We therefore assume that the session returned by the `Session_Manager` is
+   // suitable for resumption in this context.
    auto sessions = session_manager().find(m_info, callbacks(), policy());
    if(sessions.empty())
       { return std::nullopt; }
@@ -138,27 +153,6 @@ std::optional<Session_with_Handle> Client_Impl_13::find_session_for_resumption()
    //       Client Hello. Currently, we do not support that. The Session_Manager
    //       does imply otherwise with its API, though.
    auto& session_to_resume = sessions.front();
-
-   // RFC 8446 4.6.1
-   //    Clients MUST only resume if the new SNI value is valid for the
-   //    server certificate presented in the original session and SHOULD only
-   //    resume if the SNI value matches the one used in the original session.
-   //
-   // ... i.e. we do not attempt a resumption if the session's certificate does
-   // not withstand basic validity checks or -- if no server certificate is
-   // available -- at least the session's host name matches the expectations.
-   const auto& cert_chain = session_to_resume.session.peer_certs();
-   if(!cert_chain.empty())
-      {
-      const auto& server_cert = cert_chain.front();
-      if(!server_cert.is_self_signed() &&
-         (!server_cert.matches_dns_name(m_info.hostname()) ||
-          X509_Time(callbacks().tls_current_timestamp()) > server_cert.not_after()))
-         { return std::nullopt; }
-      }
-   else if(!session_to_resume.session.server_info().empty() &&
-           session_to_resume.session.server_info().hostname() != m_info.hostname())
-      { return std::nullopt; }
 
    return std::move(session_to_resume);
    }
