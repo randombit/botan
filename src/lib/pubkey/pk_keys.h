@@ -34,7 +34,9 @@ enum class Signature_Format {
 
 /**
 * Enumeration of possible operations a public key could be used for.
-* This is returned by Asymmetric_Key::operations()
+*
+* It is possible to query if a key supports a particular operation
+* type using Asymmetric_Key::supports_operation()
 */
 enum class PublicKeyOperation {
    Encryption,
