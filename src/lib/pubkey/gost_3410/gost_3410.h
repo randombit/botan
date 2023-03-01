@@ -65,6 +65,9 @@ class BOTAN_PUBLIC_API(2,0) GOST_3410_PublicKey : public virtual EC_PublicKey
          create_verification_op(const std::string& params,
                                 const std::string& provider) const override;
 
+      std::unique_ptr<PK_Ops::Verification>
+         create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
+                                     const std::string& provider) const override;
    protected:
       GOST_3410_PublicKey() = default;
    };

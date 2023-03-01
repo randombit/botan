@@ -18,6 +18,7 @@
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/emsa.h>
 #include <botan/internal/pss_params.h>
+#include <botan/internal/parsing.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
   #include <botan/internal/thread_pool.h>
@@ -749,6 +750,76 @@ RSA_PublicKey::create_verification_op(const std::string& params,
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Verify_Operation>(*this, params);
+
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+namespace {
+
+std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id)
+   {
+   const auto sig_info = split_on(alg_id.oid().to_formatted_string(), '/');
+
+   if(sig_info.empty() || sig_info.size() != 2 || sig_info[0] != "RSA")
+      throw Decoding_Error("Unknown AlgorithmIdentifier for RSA X.509 signatures");
+
+   std::string padding = sig_info[1];
+
+   if(padding == "EMSA4")
+      {
+      // "MUST contain RSASSA-PSS-params"
+      if(alg_id.parameters().empty())
+         {
+         throw Decoding_Error("PSS params must be provided");
+         }
+
+      PSS_Params pss_params(alg_id.parameters());
+
+      // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
+      const std::string hash_algo = pss_params.hash_function();
+      if(hash_algo != "SHA-1" &&
+         hash_algo != "SHA-224" &&
+         hash_algo != "SHA-256" &&
+         hash_algo != "SHA-384" &&
+         hash_algo != "SHA-512")
+         {
+         throw Decoding_Error("Unacceptable hash for PSS signatures");
+         }
+
+      if(pss_params.mgf_function() != "MGF1")
+         {
+         throw Decoding_Error("Unacceptable MGF for PSS signatures");
+         }
+
+      // For MGF1, it is strongly RECOMMENDED that the underlying hash
+      // function be the same as the one identified by hashAlgorithm
+      //
+      // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
+      if(pss_params.hash_algid() != pss_params.mgf_hash_algid())
+         {
+         throw Decoding_Error("Unacceptable MGF hash for PSS signatures");
+         }
+
+      if(pss_params.trailer_field() != 1)
+         {
+         throw Decoding_Error("Unacceptable trailer field for PSS signatures");
+         }
+
+      padding += "(" + hash_algo + ",MGF1," +
+         std::to_string(pss_params.salt_length()) + ")";
+      }
+
+   return padding;
+   }
+
+}
+
+std::unique_ptr<PK_Ops::Verification>
+RSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
+                                           const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::make_unique<RSA_Verify_Operation>(*this, parse_rsa_signature_algorithm(alg_id));
 
    throw Provider_Not_Found(algo_name(), provider);
    }

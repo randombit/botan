@@ -90,10 +90,6 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
          return (op == PublicKeyOperation::Signature);
          }
 
-      std::unique_ptr<PK_Ops::Verification>
-      create_verification_op(const std::string& params,
-                             const std::string& provider) const override;
-
       void set_binary_encoding(DilithiumKeyEncoding encoding)
          {
          m_key_encoding = encoding;
@@ -108,6 +104,14 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
 
       Dilithium_PublicKey(const std::vector<uint8_t>& pk,
                           DilithiumMode mode, DilithiumKeyEncoding encoding);
+
+      std::unique_ptr<PK_Ops::Verification>
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const override;
+
+      std::unique_ptr<PK_Ops::Verification>
+         create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
+                                     const std::string& provider) const override;
 
    protected:
       Dilithium_PublicKey() : m_key_encoding(DilithiumKeyEncoding::Raw)

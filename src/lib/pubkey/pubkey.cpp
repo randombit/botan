@@ -10,6 +10,8 @@
 #include <botan/bigint.h>
 #include <botan/internal/pk_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/pss_params.h>
+#include <botan/internal/parsing.h>
 #include <botan/rng.h>
 
 namespace Botan {
@@ -317,6 +319,24 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
    check_der_format_supported(format, m_parts);
+   }
+
+PK_Verifier::PK_Verifier(const Public_Key& key,
+                         const AlgorithmIdentifier& signature_algorithm,
+                         const std::string& provider)
+   {
+   m_op = key.create_x509_verification_op(signature_algorithm, provider);
+
+   if(!m_op)
+      {
+      throw Invalid_Argument("Key type " + key.algo_name() +
+                             " does not support X.509 signature verification");
+      }
+
+   m_sig_format = key.default_x509_signature_format();
+   m_parts = key.message_parts();
+   m_part_size = key.message_part_size();
+   check_der_format_supported(m_sig_format, m_parts);
    }
 
 PK_Verifier::~PK_Verifier() = default;

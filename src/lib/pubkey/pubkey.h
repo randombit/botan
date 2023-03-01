@@ -309,6 +309,21 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
                   Signature_Format format = Signature_Format::Standard,
                   const std::string& provider = "");
 
+      /**
+      * Construct a PK Verifier (X.509 specific)
+      *
+      * This constructor will attempt to decode signature_format relative
+      * to the public key provided. If they seem to be inconsistent or
+      * otherwise unsupported, a Decoding_Error is thrown.
+      *
+      * @param pub_key the public key to verify against
+      * @param signature_algorithm the supposed signature algorithm
+      * @param provider the provider to use
+      */
+      PK_Verifier(const Public_Key& pub_key,
+                  const AlgorithmIdentifier& signature_algorithm,
+                  const std::string& provider = "");
+
       ~PK_Verifier();
 
       PK_Verifier(const PK_Verifier&) = delete;

@@ -63,6 +63,10 @@ class Verification_with_Hash : public Verification
    protected:
       explicit Verification_with_Hash(const std::string& hash);
 
+      explicit Verification_with_Hash(const AlgorithmIdentifier& alg_id,
+                                      const std::string& pk_algo,
+                                      bool allow_null_parameters = false);
+
       /*
       * Perform a signature check operation
       * @param msg the message

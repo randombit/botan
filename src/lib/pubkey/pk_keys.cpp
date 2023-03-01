@@ -115,6 +115,13 @@ Public_Key::create_verification_op(const std::string& /*params*/,
    throw Lookup_Error(algo_name() + " does not support verification");
    }
 
+std::unique_ptr<PK_Ops::Verification>
+Public_Key::create_x509_verification_op(const AlgorithmIdentifier& /*params*/,
+                                        const std::string& /*provider*/) const
+   {
+   throw Lookup_Error(algo_name() + " does not support X.509 verification");
+   }
+
 std::unique_ptr<PK_Ops::Decryption>
 Private_Key::create_decryption_op(RandomNumberGenerator& /*rng*/,
                                   const std::string& /*params*/,
