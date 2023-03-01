@@ -178,10 +178,7 @@ std::string x509_signature_padding_for(
       BOTAN_ARG_CHECK(user_specified_padding.empty() || user_specified_padding == "EMSA1",
                       "Invalid padding scheme for DSA-like scheme");
 
-      if(hash_fn.empty())
-         return "EMSA1(SHA-256)";
-      else
-         return "EMSA1(" + hash_fn + ")";
+      return hash_fn.empty() ? "SHA-256" : hash_fn;
       }
    else if(algo_name == "RSA")
       {
@@ -204,21 +201,11 @@ std::string x509_signature_padding_for(
       }
    else if(algo_name == "Ed25519")
       {
-      BOTAN_ARG_CHECK(user_specified_padding.empty() || user_specified_padding == "Pure",
-                      "Invalid padding scheme for Ed25519");
-      return "Pure";
+      return user_specified_padding.empty() ? "Pure" : user_specified_padding;
       }
    else if(algo_name.starts_with("Dilithium-"))
       {
-      BOTAN_ARG_CHECK(user_specified_padding.empty() ||
-                      user_specified_padding == "Randomized" ||
-                      user_specified_padding == "Deterministic",
-                      "Invalid padding scheme for Dilithium");
-
-      if(user_specified_padding.empty())
-         return "Randomized";
-      else
-         return user_specified_padding;
+      return user_specified_padding.empty() ? "Randomized" : user_specified_padding;
       }
    else
       {
