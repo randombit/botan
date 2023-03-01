@@ -222,7 +222,14 @@ PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const V
 
    std::unique_ptr<Botan::Public_Key> pubkey = load_public_key(vars);
 
-   Test::Result result(algo_name() + "/" + padding + " signature verification");
+   std::ostringstream result_name;
+   result_name << algo_name();
+   if(vars.has_key("Group"))
+      result_name << "-" << vars.get_req_str("Group");
+   if(!padding.empty())
+      result_name << "/" << padding;
+   result_name << " signature verification";
+   Test::Result result(result_name.str());
 
    result.confirm("public key claims to support signatures",
                   pubkey->supports_operation(Botan::PublicKeyOperation::Signature));
