@@ -42,6 +42,10 @@ Deprecated Functionality
 This section lists cryptographic functionality which will be removed
 in a future major release.
 
+- Currently it is possible to create an EC_Group with cofactor > 1.
+  None of the builtin groups have composite order, and in the future
+  it will be impossible to create composite order EC_Groups.
+
 - DSA, ECDSA, ECGDSA, ECKCDSA, and GOST-34.10 previously (before Botan 3)
   required that the hash be named as "EMSA1(HASH_NAME)". This is no longer
   required. In a future major release, only "HASH_NAME" will be accepted.
