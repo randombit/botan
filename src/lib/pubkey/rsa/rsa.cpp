@@ -689,6 +689,8 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
    private:
       secure_vector<uint8_t> recover_message_repr(const uint8_t input[], size_t input_len)
          {
+         if(input_len > public_modulus_bytes())
+            throw Decoding_Error("RSA signature too large to be valid for this key");
          BigInt input_bn(input, input_len);
          return BigInt::encode_locked(public_op(input_bn));
          }
