@@ -55,7 +55,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
                              RandomNumberGenerator& rng,
                              bool prefer_tickets = true);
 
-      std::optional<Session_Handle> establish(const Session& session, std::optional<Session_ID> id = std::nullopt,
+      std::optional<Session_Handle> establish(const Session& session,
+                                              const std::optional<Session_ID>& id = std::nullopt,
                                               bool tls12_no_ticket = false) override;
 
       std::optional<Session> retrieve(const Session_Handle& handle,

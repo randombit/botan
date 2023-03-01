@@ -546,7 +546,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
    private:
       decltype(auto) find_by_handle(const Session_Handle& handle)
          {
-         return [=](const Session_with_Handle session)
+         return [=](const Session_with_Handle& session)
             {
             if(session.handle.id().has_value() && handle.id().has_value() &&
                session.handle.id().value() == handle.id().value())
@@ -572,7 +572,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
          m_sessions.push_back({session, handle});
          }
 
-      std::optional<Session_Handle> establish(const Session& session, std::optional<Session_ID> id, bool) override
+      std::optional<Session_Handle> establish(const Session& session, const std::optional<Session_ID>& id, bool) override
          {
          m_sessions.emplace_back(Session_with_Handle{session, id.value_or(Session_ID())});
          return id;

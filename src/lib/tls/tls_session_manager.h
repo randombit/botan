@@ -67,9 +67,10 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        * @return a Session_Handle containing either an ID or a ticket
        *         if the session was saved, otherwise std::nullopt
        */
-      virtual std::optional<Session_Handle> establish(const Session& session,
-            std::optional<Session_ID> id = std::nullopt,
-            bool tls12_no_ticket = false);
+      virtual std::optional<Session_Handle> establish(
+         const Session& session,
+         const std::optional<Session_ID>& id = std::nullopt,
+         bool tls12_no_ticket = false);
 
       /**
        * @brief Save a Session under a Session_Handle (TLS Client)

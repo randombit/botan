@@ -106,9 +106,8 @@ size_t Session_Manager_In_Memory::remove_internal(const Session_Handle& handle)
          const auto before = m_sessions.size();
          std::erase_if(m_sessions, [&](const auto& item)
             {
-            const auto& [_, session_and_handle] = item;
-            const auto& [__, this_handle] = session_and_handle;
-
+            const auto& [_unused1, session_and_handle] = item;
+            const auto& [_unused2, this_handle] = session_and_handle;
             return this_handle.is_ticket() && this_handle.ticket().value() == ticket;
             });
          return before - m_sessions.size();
