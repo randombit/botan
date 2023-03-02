@@ -152,6 +152,8 @@ void EAX_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    xor_buf(data_mac, m_ad_mac, data_mac.size());
 
    buffer += std::make_pair(data_mac.data(), tag_size());
+
+   m_nonce_mac.clear();
    }
 
 size_t EAX_Decryption::process(uint8_t buf[], size_t sz)
@@ -190,12 +192,14 @@ void EAX_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    mac ^= m_ad_mac;
 
-   if(!constant_time_compare(mac.data(), included_tag, tag_size()))
-      throw Invalid_Authentication_Tag("EAX tag check failed");
+   bool accept_mac = constant_time_compare(mac.data(), included_tag, tag_size());
 
    buffer.resize(offset + remaining);
 
    m_nonce_mac.clear();
+
+   if(!accept_mac)
+      throw Invalid_Authentication_Tag("EAX tag check failed");
    }
 
 }
