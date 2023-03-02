@@ -1568,7 +1568,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Send Session Ticket", [&](Test::Result& result)
                {
-               ctx->server.send_new_session_tickets(1);
+               const auto new_tickets = ctx->server.send_new_session_tickets(1);
+
+               result.test_eq("session ticket was sent", new_tickets, 1);
 
                ctx->check_callback_invocations(result, "issued new session ticket", {
                   "tls_inspect_handshake_msg_new_session_ticket",

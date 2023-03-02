@@ -113,9 +113,9 @@ bool Server::new_session_ticket_supported() const
    return m_impl->new_session_ticket_supported();
    }
 
-void Server::send_new_session_tickets(const size_t tickets)
+size_t Server::send_new_session_tickets(const size_t tickets)
    {
-   m_impl->send_new_session_tickets(tickets);
+   return m_impl->send_new_session_tickets(tickets);
    }
 
 void Server::update_traffic_keys(bool request_peer_update)

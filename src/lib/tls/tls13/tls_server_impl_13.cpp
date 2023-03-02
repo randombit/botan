@@ -72,14 +72,15 @@ bool Server_Impl_13::new_session_ticket_supported() const
           value_exists(m_handshake_state.client_hello().extensions().get<PSK_Key_Exchange_Modes>()->modes(), PSK_Key_Exchange_Mode::PSK_DHE_KE);
    }
 
-void Server_Impl_13::send_new_session_tickets(const size_t tickets)
+size_t Server_Impl_13::send_new_session_tickets(const size_t tickets)
    {
    BOTAN_STATE_CHECK(handshake_finished());
 
    if(tickets == 0)
-      { return; }
+      { return 0; }
 
    auto flight = aggregate_post_handshake_messages();
+   size_t tickets_created = 0;
 
    for(size_t i = 0; i < tickets; ++i)
       {
@@ -99,6 +100,7 @@ void Server_Impl_13::send_new_session_tickets(const size_t tickets)
                                           session,
                                           std::move(handle.value()),
                                           callbacks()));
+         ++tickets_created;
          }
       }
 
@@ -106,6 +108,8 @@ void Server_Impl_13::send_new_session_tickets(const size_t tickets)
       {
       flight.send();
       }
+
+   return tickets_created;
    }
 
 void Server_Impl_13::process_handshake_msg(Handshake_Message_13 message)
