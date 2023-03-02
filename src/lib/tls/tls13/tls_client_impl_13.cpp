@@ -605,6 +605,8 @@ void Client_Impl_13::handle(const Finished_13& finished_msg)
 
 void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket)
    {
+   callbacks().tls_examine_extensions(new_session_ticket.extensions(), Connection_Side::Server, Handshake_Type::NewSessionTicket);
+
    Session session(m_cipher_state->psk(new_session_ticket.nonce()),
                    new_session_ticket.early_data_byte_limit(),
                    new_session_ticket.ticket_age_add(),
@@ -616,8 +618,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
                    m_info,
                    callbacks().tls_current_timestamp());
 
-   callbacks().tls_examine_extensions(new_session_ticket.extensions(), Connection_Side::Server, Handshake_Type::NewSessionTicket);
-   if(callbacks().tls_session_ticket_received(session))
+   if(callbacks().tls_should_persist_resumption_information(session))
       {
       session_manager().store(session, new_session_ticket.handle());
       }

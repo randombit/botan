@@ -94,13 +94,16 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets)
                             callbacks(),
                             rng());
 
-      if(auto handle = session_manager().establish(session))
+      if(callbacks().tls_should_persist_resumption_information(session))
          {
-         flight.add(New_Session_Ticket_13(std::move(nonce),
-                                          session,
-                                          handle.value(),
-                                          callbacks()));
-         ++tickets_created;
+         if(auto handle = session_manager().establish(session))
+            {
+            flight.add(New_Session_Ticket_13(std::move(nonce),
+                                             session,
+                                             std::move(handle.value()),
+                                             callbacks()));
+            ++tickets_created;
+            }
          }
       }
 

@@ -203,9 +203,9 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          session_activated_called = true;
          }
 
-      bool tls_session_ticket_received(const Session&) override
+      bool tls_should_persist_resumption_information(const Session&) override
          {
-         count_callback_invocation("tls_session_ticket_received");
+         count_callback_invocation("tls_should_persist_resumption_information");
          return true; // should always store the session
          }
 
@@ -1089,7 +1089,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                ctx->check_callback_invocations(result, "new session ticket received",
                   {
                   "tls_examine_extensions_new_session_ticket",
-                  "tls_session_ticket_received",
+                  "tls_should_persist_resumption_information",
                   "tls_current_timestamp"
                   });
                if(result.test_eq("session was stored", ctx->stored_sessions().size(), 1))
@@ -1579,7 +1579,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
                   "tls_inspect_handshake_msg_new_session_ticket",
                   "tls_current_timestamp",
                   "tls_emit_data",
-                  "tls_modify_extensions_new_session_ticket"
+                  "tls_modify_extensions_new_session_ticket",
+                  "tls_should_persist_resumption_information"
                   });
                }),
 

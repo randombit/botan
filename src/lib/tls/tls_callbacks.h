@@ -121,19 +121,20 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
          }
 
        /**
-       * Optional callback: New session ticket received
-       * Called when we receive a session ticket from the server at any point
-       * after the initial handshake has finished. Clients may decide to keep or
-       * discard the session ticket in the configured session manager.
+       * Optional callback: Resumption information was received/established
        *
-       * Note: this is called for connections that negotiated TLS 1.3 only.
+       * TLS 1.3 calls this when we sent or received a TLS 1.3 session ticket at
+       * any point after the initial handshake has finished.
+       *
+       * TLS 1.2 calls this when a session was established successfully and
+       * its resumption information may be stored for later usage.
        *
        * @param session the session descriptor
        *
-       * @return false to prevent the session from being cached, and true to
-       *         cache the session in the configured session manager
+       * @return false to prevent the resumption information from being cached,
+       *         and true to cache it in the configured Session_Manager
        */
-       virtual bool tls_session_ticket_received(const Session& session);
+       virtual bool tls_should_persist_resumption_information(const Session& session);
 
        /**
        * Optional callback with default impl: verify cert chain
