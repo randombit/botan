@@ -389,11 +389,19 @@ std::vector<Test::Result> test_session_manager_choose_ticket()
    Session_Manager_Callbacks cbs;
    Session_Manager_Policy plcy;
 
-   auto default_session = [&](const std::string& suite, Botan::TLS::Callbacks& mycbs)
+   auto default_session = [&](const std::string& suite, Botan::TLS::Callbacks& mycbs, Botan::TLS::Protocol_Version version = Botan::TLS::Protocol_Version::TLS_V13)
       {
-      return Botan::TLS::Session(
+      return (version.is_pre_tls_13())
+         ? Botan::TLS::Session(
+            {},
+            version,
+            Botan::TLS::Ciphersuite::from_name(suite)->ciphersuite_code(),
+            Botan::TLS::Connection_Side::Server,
+            true, true, {}, server_info, 0,
+            mycbs.tls_current_timestamp())
+         : Botan::TLS::Session(
             {}, std::nullopt, 0, std::chrono::seconds(1024),
-            Botan::TLS::Protocol_Version::TLS_V13,
+            version,
             Botan::TLS::Ciphersuite::from_name(suite)->ciphersuite_code(),
             Botan::TLS::Connection_Side::Server,
             {}, server_info,
@@ -479,6 +487,20 @@ std::vector<Test::Result> test_session_manager_choose_ticket()
          auto session = mgr.choose_from_offered_tickets(std::vector{ticket(random_ticket()), ticket(handles[0].ticket().value()), ticket(handles[1].ticket().value())}, "SHA-384", cbs, plcy);
          result.require("ticket was chosen and produced a session", session.has_value());
          result.test_is_eq("chosen second offset", session->second, uint16_t(2));
+         }),
+
+      CHECK("choose ticket based on protocol version", [&](auto& result)
+         {
+         Test_Credentials_Manager creds;
+         Botan::TLS::Session_Manager_Stateless mgr(creds, Test::rng());
+         std::vector<Botan::TLS::Session_Handle> handles;
+
+         handles.push_back(mgr.establish(default_session("AES_128_GCM_SHA256", cbs, Botan::TLS::Version_Code::TLS_V12)).value());
+         handles.push_back(mgr.establish(default_session("AES_128_GCM_SHA256", cbs, Botan::TLS::Version_Code::TLS_V13)).value());
+
+         auto session = mgr.choose_from_offered_tickets(std::vector{ticket(random_ticket()), ticket(handles[0].ticket().value()), ticket(handles[1].ticket().value())}, "SHA-256", cbs, plcy);
+         result.require("ticket was chosen and produced a session", session.has_value());
+         result.test_is_eq("chosen second offset (TLS 1.3 ticket)", session->second, uint16_t(2));
          }),
       };
 #else
@@ -1024,9 +1046,9 @@ std::vector<Test::Result> tls_session_manager_expiry()
 
          auto mgr = factory();
 
-         auto old_handle = mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
+         auto old_handle = mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs, Botan::TLS::Version_Code::TLS_V13));
          cbs.tick();
-         auto new_handle = mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
+         auto new_handle = mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs, Botan::TLS::Version_Code::TLS_V13));
          result.require("both sessions are stored", old_handle.has_value() && new_handle.has_value());
 
          auto session_and_index = mgr->choose_from_offered_tickets(std::vector{ticket(old_handle.value()), ticket(new_handle.value())}, "SHA-256", cbs, plcy);
