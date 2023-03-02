@@ -720,8 +720,27 @@ uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy)
 
    for(auto suite_id : pref_list)
       {
-      // TODO: take potentially available PSKs into account to select
-      //       a compatible ciphersuite (if possible).
+      // TODO: take potentially available PSKs into account to select a
+      //       compatible ciphersuite.
+      //
+      // Assuming the client sent one or more PSKs, we would first need to find
+      // the hash functions they are associated to. For session tickets, that
+      // would mean decrypting the ticket and comparing the cipher suite used in
+      // those tickets. For (currently not yet supported) pre-assigned PSKs, the
+      // hash function needs to be specified along with them.
+      //
+      // Then we could refine the ciphersuite selection using the required hash
+      // function for the PSK(s) we are wishing to use down the road.
+      //
+      // For now, we just negotiate the cipher suite blindly and hope for the
+      // best. As long as PSKs are used for session resumption only, this has a
+      // high chance of success. Previous handshakes with this client have very
+      // likely selected the same ciphersuite anyway.
+      //
+      // See also RFC 8446 4.2.11
+      //    When session resumption is the primary use case of PSKs, the most
+      //    straightforward way to implement the PSK/cipher suite matching
+      //    requirements is to negotiate the cipher suite first [...].
       if(value_exists(other_list, suite_id))
          { return suite_id; }
       }
@@ -745,16 +764,6 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
                      Protocol_Version::TLS_V12,
                      ch.session_id(),
                      make_server_hello_random(rng, Protocol_Version::TLS_V13, cb, policy),
-
-                     // RFC 8446 4.2.11
-                     //    When session resumption is the primary use case of
-                     //    PSKs, the most straightforward way to implement the
-                     //    PSK/cipher suite matching requirements is to negotiate
-                     //    the cipher suite first [...]. If backward compatibility
-                     //    is important, client-provided, externally established
-                     //    PSKs SHOULD influence cipher suite selection.
-                     //
-                     // We go the easy route and select a ciphersuite first...
                      choose_ciphersuite(ch, policy),
                      uint8_t(0) /* compression method */
                   ))
