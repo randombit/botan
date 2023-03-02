@@ -20,6 +20,8 @@
 
 #include <botan/internal/stl_util.h>
 
+#include <utility>
+
 namespace Botan::TLS {
 
 void Session_Handle::validate_constraints() const
@@ -192,7 +194,10 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
    m_max_early_data_bytes(max_early_data_bytes.value_or(0)),
    m_ticket_age_add(load_be<uint32_t>(rng.random_vec(4).data(), 0)),
    m_lifetime_hint(lifetime_hint)
-   {}
+   {
+   BOTAN_ARG_CHECK(!m_version.is_pre_tls_13(),
+                   "Instantiated a TLS 1.3 session object with a TLS version older than 1.3");
+   }
 
 #endif
 
@@ -330,6 +335,12 @@ Ciphersuite Session::ciphersuite() const
                            std::to_string(m_ciphersuite));
       }
    return suite.value();
+   }
+
+secure_vector<uint8_t> Session::extract_master_secret()
+   {
+   BOTAN_STATE_CHECK(!m_master_secret.empty());
+   return std::exchange(m_master_secret, {});
    }
 
 namespace {

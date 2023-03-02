@@ -31,6 +31,7 @@
         "TLS11-*": "No TLS 1.1",
 
         "CBCRecordSplitting*": "No need to split CBC records in TLS 1.2",
+        "DelegatedCredentials*": "No support of -delegated-cerdential",
 
         "*SCSV*": "SCSV is meaningless without TLS 1.0/1.1 support",
 
@@ -49,16 +50,9 @@
         "Ticket-Forbidden-TLS13": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
         "Resume-Client-NoResume-TLS12-TLS13-TLS": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
         "Resume-Client-Mismatch-TLS12-TLS13-TLS": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
-
-        "DelegatedCredentials*": "No TLS 1.3 server, yet",
-        "Resume-Server-OmitPSKsOnSecondClientHello": "No TLS 1.3 server, yet",
-        "PartialClientFinishedWithSecondClientHello": "No TLS 1.3 server, yet",
-
-        "Resume-Server*TLS13*": "No TLS 1.3 server, yet",
-        "Resume-Server-*": "No TLS 1.3 server, yet",
+        "Resume-Server-UnofferedCipher-TLS13": "BoringSSL will not allow switching ciphers during TLS 1.3 resumption, we do, though.",
 
         "ExportKeyingMaterial-Server-HalfRTT-TLS13": "No TLS 1.3 server, yet",
-        "TLS13-TicketAgeSkew-*": "No TLS 1.3 server, yet",
 
         "HttpGET": "TLS 1.3 server does not detect HTTP",
         "HttpPOST": "TLS 1.3 server does not detect HTTP",
@@ -68,30 +62,13 @@
 
         "ExtraClientEncryptedExtension-TLS-TLS13": "TLS 1.3 server UNIMPLEMENTED",
 
+        "Server-Verify-*-TLS13": "TODO: FIXME - missing deny-list for outdated signature schemes",
+        "Server-VerifyDefault-*-TLS13": "TODO: FIXME - missing deny-list for outdated signature schemes",
+
         "ALPNServer-Decline-TLS-TLS13": "TLS 1.3 server session resumption NYI",
-        "ALPNServer-TLS-TLS13": "TLS 1.3 server session resumption NYI",
-        "ALPNServer-Async-TLS-TLS13": "TLS 1.3 server session resumption NYI",
-        "CertificateVerificationSucceed-Server-TLS13-*": "TLS 1.3 server session resumption NYI",
-        "CurveID-Resume-Server-TLS13": "TLS 1.3 server session resumption NYI",
-        "ExtraPSKIdentity-TLS13": "TLS 1.3 server session resumption NYI",
-        "NoClientCertificate-Server-TLS13": "TLS 1.3 server session resumption NYI",
-        "NoClientCertificateRequested-Server-TLS13": "TLS 1.3 server session resumption NYI",
-        "Server-Verify-*-TLS13": "TLS 1.3 server session resumption NYI",
-        "Server-VerifyDefault-*-TLS13": "TLS 1.3 server session resumption NYI",
-        "ServerNameExtensionServer-TLS-TLS13": "TLS 1.3 server session resumption NYI",
-        "TLS-TLS13-*-server": "TLS 1.3 server session resumption NYI",
-        "TLS13-SendNoKEMModesWithPSK-Server": "TLS 1.3 server session resumption NYI",
-        "TrailingDataWithFinished-Resume-Server-TLS13": "TLS 1.3 server session resumption NYI",
-        "TLS13-ExpectNoSessionTicketOnBadKEMode-Server": "TLS 1.3 server session resumption NYI",
-        "TLS13-SendUnknownModeSessionTicket-Server": "TLS 1.3 server session resumption NYI",
-        "TLS13-SendBadKEModeSessionTicket-Server": "TLS 1.3 server session resumption NYI",
-        "TLS13-HelloRetryRequest-Server-*": "TLS 1.3 server session resumption NYI",
-        "OCSPStapling-Server-TLS13-*":  "TLS 1.3 server session resumption NYI",
-        "ServerOCSPCallback*-TLS13-*":  "TLS 1.3 server session resumption NYI",
-        "TLS13-1RTT-Server-*":  "TLS 1.3 server session resumption NYI",
 
         "*EarlyData*": "No TLS 1.3 Early Data, yet",
-        "TLS13-1RTT-Client-*": "No TLS 1.3 Early Data, yet",
+        "TLS13-TicketAgeSkew-*": "No TLS 1.3 Early Data, yet",
 
         "SendNoClientCertificateExtensions-TLS13": "-signed-cert-timestamps currently not supported in the shim",
         "KeyUpdate-RequestACK-UnfinishedWrite": "-read-with-unfinished-write currently not supported in the shim",

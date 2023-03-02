@@ -169,7 +169,7 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
    lock_guard_type<recursive_mutex_type> lk(mutex());
 
    if(session.server_info().hostname().empty())
-      return;
+      { return; }
 
    auto stmt = m_db->new_statement("INSERT OR REPLACE INTO tls_sessions"
                                    " VALUES (?1, ?2, ?3, ?4, ?5, ?6)");

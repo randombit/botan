@@ -1,7 +1,7 @@
 /*
 * TLS Session Manager
-* (C) 2011 Jack Lloyd
-*     2023 René Meusel - Rohde & Schwarz Cybersecurity
+* (C) 2011-2023 Jack Lloyd
+*     2022-2023 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -20,6 +20,7 @@
 #include <chrono>
 #include <map>
 #include <variant>
+#include <utility>
 
 namespace Botan {
 class RandomNumberGenerator;
@@ -244,6 +245,12 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        *
        * Applications that wish to implement their own Session_Manager will
        * have to provide an implementation for it.
+       *
+       * Note that the TLS client implementations do not perform any checks on
+       * the validity of the session for a given @p info. Particularly, it is
+       * the Session_Manager's responsibility to ensure the restrictions posed
+       * in RFC 8446 4.6.1 regarding server certificate validity for the given
+       * @p info.
        *
        * This is called for TLS clients only.
        *

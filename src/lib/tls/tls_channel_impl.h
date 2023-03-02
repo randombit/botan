@@ -113,6 +113,24 @@ class Channel_Impl
       virtual void renegotiate(bool force_full_renegotiation = false) = 0;
 
       /**
+      * @return true if this channel can issue TLS 1.3 style session tickets.
+      */
+      virtual bool new_session_ticket_supported() const { return false; }
+
+      /**
+      * Send @p tickets new session tickets to the peer. This is only supported
+      * on TLS 1.3 servers.
+      *
+      * If the server's Session_Manager does not accept the generated Session
+      * objects, the server implementation won't be able to send new tickets.
+      * Additionally, anything but TLS 1.3 servers will return 0 (because they
+      * don't support sending such session tickets).
+      *
+      * @returns the number of session tickets successfully sent to the client
+      */
+      virtual size_t send_new_session_tickets(const size_t /* tickets */) { return 0; }
+
+      /**
       * Attempt to update the session's traffic key material
       * Note that this is possible with a TLS 1.3 channel, only.
       *

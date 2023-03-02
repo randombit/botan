@@ -30,6 +30,9 @@ class Server_Impl_13 : public Channel_Impl_13
       std::string application_protocol() const override;
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
+      bool new_session_ticket_supported() const override;
+      size_t send_new_session_tickets(const size_t tickets) override;
+
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;
@@ -42,8 +45,10 @@ class Server_Impl_13 : public Channel_Impl_13
       void handle(const Certificate_Verify_13& certificate_verify_msg);
       void handle(const Finished_13& finished_msg);
 
-      void handle_reply_to_client_hello(const Server_Hello_13& server_hello);
-      void handle_reply_to_client_hello(const Hello_Retry_Request& hello_retry_request);
+      void handle_reply_to_client_hello(Server_Hello_13 server_hello);
+      void handle_reply_to_client_hello(Hello_Retry_Request hello_retry_request);
+
+      void maybe_handle_compatibility_mode();
 
       bool handshake_finished() const override;
 
@@ -52,6 +57,8 @@ class Server_Impl_13 : public Channel_Impl_13
    private:
       Server_Handshake_State_13 m_handshake_state;
       Handshake_Transitions m_transitions;
+
+      std::optional<Session> m_resumed_session;
    };
 
 }

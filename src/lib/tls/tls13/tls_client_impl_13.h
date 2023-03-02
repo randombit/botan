@@ -82,7 +82,7 @@ class Client_Impl_13 : public Channel_Impl_13
       void handle(const Finished_13& finished_msg);
       void handle(const New_Session_Ticket_13& new_session_ticket);
 
-      void send_client_authentication(Channel_Impl_13::AggregatedMessages& flight);
+      void send_client_authentication(Channel_Impl_13::AggregatedHandshakeMessages& flight);
       std::optional<Session_with_Handle> find_session_for_resumption();
 
    private:

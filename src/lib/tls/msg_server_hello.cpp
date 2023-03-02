@@ -14,6 +14,7 @@
 #include <botan/tls_extensions.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_session_manager.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/tls_session_key.h>
@@ -501,9 +502,18 @@ Server_Hello_13::Hello_Retry_Request_Creation_Tag Server_Hello_13::as_new_hello_
 
 std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const Client_Hello_13& ch,
       bool hello_retry_request_allowed,
+      Session_Manager& session_mgr,
       RandomNumberGenerator& rng, const Policy& policy, Callbacks& cb)
    {
    const auto& exts = ch.extensions();
+
+   // RFC 8446 4.2.9
+   //    [With PSK with (EC)DHE key establishment], the client and server MUST
+   //    supply "key_share" values [...].
+   //
+   // Note: We currently do not support PSK without (EC)DHE, hence, we can
+   //       assume that those extensions are available.
+   BOTAN_ASSERT_NOMSG(exts.has<Supported_Groups>() && exts.has<Key_Share>());
    const auto& supported_by_client = exts.get<Supported_Groups>()->groups();
    const auto& offered_by_client = exts.get<Key_Share>()->offered_groups();
    const auto selected_group = policy.choose_key_exchange_group(supported_by_client, offered_by_client);
@@ -529,7 +539,7 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
       }
    else
       {
-      return Server_Hello_13(ch, selected_group, rng, cb, policy);
+      return Server_Hello_13(ch, selected_group, session_mgr, rng, cb, policy);
       }
    }
 
@@ -631,7 +641,6 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    const std::set<Extension_Code> allowed =
       {
       Extension_Code::KeyShare,
-      Extension_Code::PskKeyExchangeModes,
       Extension_Code::SupportedVersions,
       Extension_Code::PresharedKey,
       };
@@ -711,6 +720,27 @@ uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy)
 
    for(auto suite_id : pref_list)
       {
+      // TODO: take potentially available PSKs into account to select a
+      //       compatible ciphersuite.
+      //
+      // Assuming the client sent one or more PSKs, we would first need to find
+      // the hash functions they are associated to. For session tickets, that
+      // would mean decrypting the ticket and comparing the cipher suite used in
+      // those tickets. For (currently not yet supported) pre-assigned PSKs, the
+      // hash function needs to be specified along with them.
+      //
+      // Then we could refine the ciphersuite selection using the required hash
+      // function for the PSK(s) we are wishing to use down the road.
+      //
+      // For now, we just negotiate the cipher suite blindly and hope for the
+      // best. As long as PSKs are used for session resumption only, this has a
+      // high chance of success. Previous handshakes with this client have very
+      // likely selected the same ciphersuite anyway.
+      //
+      // See also RFC 8446 4.2.11
+      //    When session resumption is the primary use case of PSKs, the most
+      //    straightforward way to implement the PSK/cipher suite matching
+      //    requirements is to negotiate the cipher suite first [...].
       if(value_exists(other_list, suite_id))
          { return suite_id; }
       }
@@ -726,6 +756,7 @@ uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy)
 
 Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
                                  std::optional<Named_Group> key_exchange_group,
+                                 Session_Manager& session_mgr,
                                  RandomNumberGenerator& rng,
                                  Callbacks& cb,
                                  const Policy& policy)
@@ -749,6 +780,35 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
 
    if(key_exchange_group.has_value())
       { m_data->extensions.add(new Key_Share(key_exchange_group.value(), cb, rng)); }
+
+   auto& ch_exts = ch.extensions();
+
+   if(ch_exts.has<PSK>())
+      {
+      const auto cs = Ciphersuite::by_id(m_data->ciphersuite);
+      BOTAN_ASSERT_NOMSG(cs);
+
+      // RFC 8446 4.2.9
+      //    A client MUST provide a "psk_key_exchange_modes" extension if it
+      //    offers a "pre_shared_key" extension.
+      //
+      // Note: Client_Hello_13 constructor already performed a graceful check.
+      const auto psk_modes = ch_exts.get<PSK_Key_Exchange_Modes>();
+      BOTAN_ASSERT_NONNULL(psk_modes);
+
+      // TODO: also support PSK_Key_Exchange_Mode::PSK_KE
+      //       (PSK-based handshake without an additional ephemeral key exchange)
+      if(value_exists(psk_modes->modes(), PSK_Key_Exchange_Mode::PSK_DHE_KE))
+         {
+         if(auto server_psk = ch_exts.get<PSK>()->select_offered_psk(cs.value(), session_mgr, cb, policy))
+            {
+            // RFC 8446 4.2.11
+            //    In order to accept PSK key establishment, the server sends a
+            //    "pre_shared_key" extension indicating the selected identity.
+            m_data->extensions.add(std::move(server_psk));
+            }
+         }
+      }
 
    cb.tls_modify_extensions(m_data->extensions, Connection_Side::Server, type());
    }

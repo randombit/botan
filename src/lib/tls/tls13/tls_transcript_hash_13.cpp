@@ -133,7 +133,7 @@ size_t find_client_hello_truncation_mark(std::span<const uint8_t> client_hello)
       const auto binders_length = reader.peek_uint16_t();
       if(binders_length != reader.remaining_bytes() - 2 /* binders_length */)
          {
-         throw TLS_Exception(Alert::DecodeError,
+         throw TLS_Exception(Alert::IllegalParameter,
                              "Failed to truncate Client Hello that doesn't end on the PSK binders list");
          }
 

@@ -1,7 +1,7 @@
 /**
- * TLS Session Manager
- * (C) 2011 Jack Lloyd
- *     2023 René Meusel - Rohde & Schwarz Cybersecurity
+ * TLS Session Manger base class implementations
+ * (C) 2011-2023 Jack Lloyd
+ *     2022-2023 René Meusel - Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
@@ -192,7 +192,9 @@ std::optional<std::pair<Session, uint16_t>>
    for(uint16_t i = 0; const auto& ticket : tickets)
       {
       auto session = retrieve(ticket.identity(), callbacks, policy);
-      if(session.has_value() && session->ciphersuite().prf_algo() == hash_function)
+      if(session.has_value() &&
+         session->ciphersuite().prf_algo() == hash_function &&
+         session->version().is_tls_13_or_later())
          {
          return std::pair{std::move(session.value()), i};
          }

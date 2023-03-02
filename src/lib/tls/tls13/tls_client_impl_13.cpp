@@ -130,12 +130,31 @@ bool Client_Impl_13::handshake_finished() const
 
 std::optional<Session_with_Handle> Client_Impl_13::find_session_for_resumption()
    {
+   // RFC 8446 4.6.1
+   //    Clients MUST only resume if the new SNI value is valid for the
+   //    server certificate presented in the original session and SHOULD only
+   //    resume if the SNI value matches the one used in the original session.
+   //
+   // Below we search sessions based on their SNI value. Assuming that a
+   // 3rd party session manager does not lie to the implementation, we don't
+   // explicitly re-check that the SNI values match.
+   //
+   // Also, the default implementation did verify that very same SNI information
+   // against the server's certificate (via Callbacks::tls_verify_cert_chain())
+   // before storing it in the session.
+   //
+   // We therefore assume that the session returned by the `Session_Manager` is
+   // suitable for resumption in this context.
+   auto sessions = session_manager().find(m_info, callbacks(), policy());
+   if(sessions.empty())
+      { return std::nullopt; }
+
    // TODO: TLS 1.3 allows sending more than one ticket (for resumption) in a
    //       Client Hello. Currently, we do not support that. The Session_Manager
    //       does imply otherwise with its API, though.
-   if(auto sessions = session_manager().find(m_info, callbacks(), policy()); !sessions.empty())
-      return sessions.front();
-   return std::nullopt;
+   auto& session_to_resume = sessions.front();
+
+   return std::move(session_to_resume);
    }
 
 void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg)
@@ -504,7 +523,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    m_transitions.set_expected_next(Handshake_Type::Finished);
    }
 
-void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedMessages& flight)
+void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHandshakeMessages& flight)
    {
    BOTAN_ASSERT_NOMSG(m_handshake_state.has_certificate_request());
    const auto& cert_request = m_handshake_state.certificate_request();
@@ -600,7 +619,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
    callbacks().tls_examine_extensions(new_session_ticket.extensions(), Connection_Side::Server, Handshake_Type::NewSessionTicket);
    if(callbacks().tls_session_ticket_received(session))
       {
-      session_manager().store(session, new_session_ticket.ticket());
+      session_manager().store(session, new_session_ticket.handle());
       }
    }
 

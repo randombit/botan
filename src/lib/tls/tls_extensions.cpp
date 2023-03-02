@@ -848,13 +848,12 @@ PSK_Key_Exchange_Modes::PSK_Key_Exchange_Modes(TLS_Data_Reader& reader, uint16_t
    const auto mode_count = reader.get_byte();
    for(uint16_t i = 0; i < mode_count; ++i)
       {
-      const uint8_t mode = reader.get_byte();
-      if (mode != 0 && mode != 1)
+      const auto mode = static_cast<PSK_Key_Exchange_Mode>(reader.get_byte());
+      if (mode == PSK_Key_Exchange_Mode::PSK_KE ||
+          mode == PSK_Key_Exchange_Mode::PSK_DHE_KE)
          {
-         throw Decoding_Error("Unexpected PSK mode: " + std::to_string(mode));
+         m_modes.push_back(mode);
          }
-
-      m_modes.push_back(PSK_Key_Exchange_Mode(mode));
       }
    }
 

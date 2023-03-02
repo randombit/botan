@@ -290,6 +290,11 @@ bool Policy::reuse_session_tickets() const
    return false;
    }
 
+size_t Policy::new_session_tickets_upon_handshake_success() const
+   {
+   return 1;
+   }
+
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
 #if defined(BOTAN_HAS_TLS_13)
@@ -599,6 +604,7 @@ void Policy::print(std::ostream& o) const
    o << "maximum_session_tickets_per_client_hello = " << maximum_session_tickets_per_client_hello() << '\n';
    o << "session_ticket_lifetime = " << session_ticket_lifetime().count() << '\n';
    o << "reuse_session_tickets = " << reuse_session_tickets() << '\n';
+   o << "new_session_tickets_upon_handshake_success = " << new_session_tickets_upon_handshake_success() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
    o << "minimum_ecdh_group_size = " << minimum_ecdh_group_size() << '\n';
    o << "minimum_rsa_bits = " << minimum_rsa_bits() << '\n';
