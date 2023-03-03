@@ -388,6 +388,15 @@ BOTAN_PUBLIC_API(2,0) int botan_mac_output_length(botan_mac_t mac, size_t* outpu
 BOTAN_PUBLIC_API(2,0) int botan_mac_set_key(botan_mac_t mac, const uint8_t* key, size_t key_len);
 
 /**
+* Sets the nonce on the MAC
+* @param mac mac object
+* @param nonce buffer holding the key
+* @param nonce_len size of the key buffer in bytes
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_PUBLIC_API(3,0) int botan_mac_set_nonce(botan_mac_t mac, const uint8_t* nonce, size_t nonce_len);
+
+/**
 * Send more input to the message authentication code
 * @param mac mac object
 * @param buf input buffer

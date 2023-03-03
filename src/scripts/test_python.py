@@ -130,6 +130,18 @@ class BotanPythonTests(unittest.TestCase):
 
         self.assertEqual(hex_encode(expected), hex_encode(produced))
 
+    def test_gmac(self):
+        gmac = botan.MsgAuthCode('GMAC(AES-128)')
+        self.assertEqual(gmac.algo_name(), 'GMAC(AES-128)')
+        gmac.set_key(hex_decode('00000000000000000000000000000000'))
+        gmac.set_nonce(hex_decode('000000000000000000000000'))
+
+        expected = hex_decode('58E2FCCEFA7E3061367F1D57A4E7455A')
+
+        produced = gmac.final()
+
+        self.assertEqual(hex_encode(expected), hex_encode(produced))
+
     def test_rng(self):
         user_rng = botan.RandomNumberGenerator("user")
 
