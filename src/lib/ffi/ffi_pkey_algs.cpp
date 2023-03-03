@@ -870,6 +870,29 @@ int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key,
 #endif
    }
 
+int botan_pubkey_get_ec_public_point(uint8_t out[],
+                                     size_t* out_len,
+                                     const botan_pubkey_t key)
+   {
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
+      if(auto ecc = dynamic_cast<const Botan::EC_PublicKey*>(&k))
+         {
+         auto pt = ecc->public_point().encode(Botan::EC_Point_Format::Uncompressed);
+         return write_vec_output(out, out_len, pt);
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(out, out_len, key);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_privkey_create_mceliece(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n, size_t t)
    {
    const std::string mce_params = std::to_string(n) + "," + std::to_string(t);

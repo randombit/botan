@@ -1385,6 +1385,14 @@ int botan_pubkey_sm2_compute_za(uint8_t out[],
                                 const char* hash_algo,
                                 const botan_pubkey_t key);
 
+/**
+* Return the uncompressed public point associated with the key
+*/
+BOTAN_PUBLIC_API(3,0)
+int botan_pubkey_get_ec_public_point(uint8_t out[],
+                                     size_t* out_len,
+                                     const botan_pubkey_t key);
+
 /*
 * Public Key Encryption
 */
