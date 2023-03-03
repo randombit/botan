@@ -99,6 +99,32 @@ enum class Group_Params : uint16_t {
    FFDHE_8192 = 260,
 };
 
+constexpr bool is_x25519(const Group_Params group)
+   {
+   return group == Group_Params::X25519;
+   }
+
+constexpr bool is_ecdh(const Group_Params group)
+   {
+   return
+      group == Group_Params::SECP256R1      ||
+      group == Group_Params::SECP384R1      ||
+      group == Group_Params::SECP521R1      ||
+      group == Group_Params::BRAINPOOL256R1 ||
+      group == Group_Params::BRAINPOOL384R1 ||
+      group == Group_Params::BRAINPOOL512R1;
+   }
+
+constexpr bool is_dh(const Group_Params group)
+   {
+   return
+      group == Group_Params::FFDHE_2048 ||
+      group == Group_Params::FFDHE_3072 ||
+      group == Group_Params::FFDHE_4096 ||
+      group == Group_Params::FFDHE_6144 ||
+      group == Group_Params::FFDHE_8192;
+   }
+
 std::string group_param_to_string(Group_Params group);
 Group_Params group_param_from_string(const std::string& group_name);
 bool group_param_is_dh(Group_Params group);
