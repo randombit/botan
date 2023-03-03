@@ -106,7 +106,24 @@ nist_key_wrap(const uint8_t input[],
    if(input_len % 8 != 0)
       throw Invalid_Argument("Bad input size for NIST key wrap");
 
-   return raw_nist_key_wrap(input, input_len, bc, 0xA6A6A6A6A6A6A6A6);
+   const uint64_t ICV = 0xA6A6A6A6A6A6A6A6;
+
+   if(input_len == 8)
+      {
+      /*
+      * Special case for small inputs: if input == 8 bytes just use ECB
+      * (see RFC 3394 Section 2)
+      */
+      std::vector<uint8_t> block(16);
+      store_be(ICV, block.data());
+      copy_mem(block.data() + 8, input, input_len);
+      bc.encrypt(block);
+      return block;
+      }
+   else
+      {
+      return raw_nist_key_wrap(input, input_len, bc, ICV);
+      }
    }
 
 secure_vector<uint8_t>
@@ -120,11 +137,26 @@ nist_key_unwrap(const uint8_t input[],
    if(input_len < 16 || input_len % 8 != 0)
       throw Invalid_Argument("Bad input size for NIST key unwrap");
 
+   const uint64_t ICV = 0xA6A6A6A6A6A6A6A6;
+
    uint64_t ICV_out = 0;
+   secure_vector<uint8_t> R;
 
-   secure_vector<uint8_t> R = raw_nist_key_unwrap(input, input_len, bc, ICV_out);
+   if(input_len == 16)
+      {
+      secure_vector<uint8_t> block(input, input + input_len);
+      bc.decrypt(block);
 
-   if(ICV_out != 0xA6A6A6A6A6A6A6A6)
+      ICV_out = load_be<uint64_t>(block.data(), 0);
+      R.resize(8);
+      copy_mem(R.data(), block.data() + 8, 8);
+      }
+   else
+      {
+      R = raw_nist_key_unwrap(input, input_len, bc, ICV_out);
+      }
+
+   if(ICV_out != ICV)
       throw Invalid_Authentication_Tag("NIST key unwrap failed");
 
    return R;
@@ -190,7 +222,7 @@ nist_key_unwrap_padded(const uint8_t input[],
 
    const size_t len = (ICV_out & 0xFFFFFFFF);
 
-   if(R.size() < 8 || len > R.size() || len < R.size() - 8)
+   if(R.size() < 8 || len > R.size() || len <= R.size() - 8)
       throw Invalid_Authentication_Tag("NIST key unwrap failed");
 
    const size_t padding = R.size() - len;
