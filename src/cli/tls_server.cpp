@@ -280,22 +280,20 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          return fd;
          }
 
-      bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
+      void tls_session_established(const Botan::TLS::Session_Summary& session) override
          {
-         output() << "Handshake complete, " << session.session.version().to_string()
-                  << " using " << session.session.ciphersuite().to_string() << std::endl;
+         output() << "Handshake complete, " << session.version().to_string()
+                  << " using " << session.ciphersuite().to_string() << std::endl;
 
-         if(const auto session_id = session.handle.id())
+         if(const auto& session_id = session.session_id(); !session_id.empty())
             {
-            output() << "Session ID " << Botan::hex_encode(session_id->get()) << std::endl;
+            output() << "Session ID " << Botan::hex_encode(session_id.get()) << std::endl;
             }
 
-         if(const auto session_ticket = session.handle.ticket())
+         if(const auto& session_ticket = session.session_ticket())
             {
             output() << "Session ticket " << Botan::hex_encode(session_ticket->get()) << std::endl;
             }
-
-         return true;
          }
 
       void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> input) override

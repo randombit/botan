@@ -88,7 +88,7 @@ std::optional<Session_Ticket> Session_Handle::ticket() const
    }
 
 
-Ciphersuite Session_Summary::ciphersuite() const
+Ciphersuite Session_Base::ciphersuite() const
    {
    auto suite = Ciphersuite::by_id(m_ciphersuite);
    if (!suite.has_value())
@@ -111,7 +111,7 @@ Session::Session(const secure_vector<uint8_t>& master_secret,
                  uint16_t srtp_profile,
                  std::chrono::system_clock::time_point current_timestamp,
                  std::chrono::seconds lifetime_hint) :
-   Session_Summary(
+   Session_Base(
       current_timestamp,
       version,
       ciphersuite,
@@ -143,7 +143,7 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
                  const std::vector<X509_Certificate>& peer_certs,
                  const Server_Information& server_info,
                  std::chrono::system_clock::time_point current_timestamp) :
-   Session_Summary(
+   Session_Base(
       current_timestamp,
       version,
       ciphersuite,
@@ -181,7 +181,7 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
                  const Server_Hello_13& server_hello,
                  Callbacks& callbacks,
                  RandomNumberGenerator& rng) :
-   Session_Summary(
+   Session_Base(
       callbacks.tls_current_timestamp(),
       server_hello.selected_version(),
       server_hello.ciphersuite(),

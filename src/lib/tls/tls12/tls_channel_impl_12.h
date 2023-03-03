@@ -174,8 +174,6 @@ class Channel_Impl_12 : public Channel_Impl
 
       const Policy& policy() const { return m_policy; }
 
-      bool save_session(const Session_with_Handle& session);
-
       Callbacks& callbacks() const { return m_callbacks; }
 
       void reset_active_association_state();

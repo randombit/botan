@@ -350,23 +350,22 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          m_connection_summary = strm.str();
          }
 
-      bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
+      void tls_session_established(const Botan::TLS::Session_Summary& session) override
          {
          std::ostringstream strm;
 
-         strm << "Version: " << session.session.version().to_string() << "\n";
-         strm << "Ciphersuite: " << session.session.ciphersuite().to_string() << "\n";
-         if(const auto session_id = session.handle.id())
+         strm << "Version: " << session.version().to_string() << "\n";
+         strm << "Ciphersuite: " << session.ciphersuite().to_string() << "\n";
+         if(const auto& session_id = session.session_id(); !session_id.empty())
             {
-            strm << "SessionID: " << Botan::hex_encode(session_id->get()) << "\n";
+            strm << "SessionID: " << Botan::hex_encode(session_id.get()) << "\n";
             }
-         if(session.session.server_info().hostname() != "")
+         if(!session.server_info().hostname().empty())
             {
-            strm << "SNI: " << session.session.server_info().hostname() << "\n";
+            strm << "SNI: " << session.server_info().hostname() << "\n";
             }
 
          m_session_summary = strm.str();
-         return true;
          }
 
       void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message) override

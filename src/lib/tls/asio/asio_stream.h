@@ -642,12 +642,6 @@ class Stream
                return std::chrono::milliseconds(1000);
                }
 
-            bool tls_session_established(const TLS::Session_with_Handle&) override
-               {
-               // TODO: it should be possible to configure this in the using application (via callback?)
-               return true;
-               }
-
             void tls_verify_cert_chain(
                const std::vector<X509_Certificate>& cert_chain,
                const std::vector<std::optional<OCSP::Response>>& ocsp_responses,

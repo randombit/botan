@@ -78,16 +78,13 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        virtual void tls_alert(Alert alert) = 0;
 
        /**
-       * Mandatory callback: session established
+       * Optional callback: session established
        * Called when a session is established. Throw an exception to abort
        * the connection.
        *
-       * @param session the session descriptor and its associated handle
-       *
-       * @return return false to prevent the session from being cached,
-       * return true to cache the session in the configured session manager
+       * @param session the session descriptor
        */
-       virtual bool tls_session_established(const Session_with_Handle& session) = 0;
+       virtual void tls_session_established(const Session_Summary& session) { BOTAN_UNUSED(session); }
 
        /**
        * Optional callback: session activated

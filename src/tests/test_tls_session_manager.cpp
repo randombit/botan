@@ -73,7 +73,7 @@ class Session_Manager_Callbacks : public Botan::TLS::Callbacks
          { BOTAN_ASSERT_NOMSG(false); }
       void tls_alert(Botan::TLS::Alert) override
          { BOTAN_ASSERT_NOMSG(false); }
-      bool tls_session_established(const Botan::TLS::Session_with_Handle&) override
+      void tls_session_established(const Botan::TLS::Session_Summary&) override
          { BOTAN_ASSERT_NOMSG(false); }
 
       std::chrono::system_clock::time_point tls_current_timestamp() override

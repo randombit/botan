@@ -140,18 +140,18 @@ class Callbacks;
  * persisted for resumption and presented to the application as
  * a summary of a specific just-established TLS session.
  */
-class BOTAN_PUBLIC_API(3,0) Session_Summary
+class BOTAN_PUBLIC_API(3,0) Session_Base
    {
    public:
-      Session_Summary(std::chrono::system_clock::time_point start_time,
-                      Protocol_Version version,
-                      uint16_t ciphersuite,
-                      Connection_Side connection_side,
-                      uint16_t srtp_profile,
-                      bool extended_master_secret,
-                      bool encrypt_then_mac,
-                      std::vector<X509_Certificate> peer_certs,
-                      Server_Information server_info)
+      Session_Base(std::chrono::system_clock::time_point start_time,
+                   Protocol_Version version,
+                   uint16_t ciphersuite,
+                   Connection_Side connection_side,
+                   uint16_t srtp_profile,
+                   bool extended_master_secret,
+                   bool encrypt_then_mac,
+                   std::vector<X509_Certificate> peer_certs,
+                   Server_Information server_info)
          : m_start_time(start_time)
          , m_version(version)
          , m_ciphersuite(ciphersuite)
@@ -163,7 +163,7 @@ class BOTAN_PUBLIC_API(3,0) Session_Summary
          , m_server_info(std::move(server_info)) {}
 
    protected:
-      Session_Summary() {}
+      Session_Base() {}
 
    public:
       /**
@@ -233,10 +233,53 @@ class BOTAN_PUBLIC_API(3,0) Session_Summary
       Server_Information m_server_info;
    };
 
+
 /**
-* Class representing a TLS session state
-*/
-class BOTAN_PUBLIC_API(2,0) Session final : public Session_Summary
+ * Summarizes the negotiated features after a TLS handshake. Applications may
+ * query those in Callbacks::tls_session_established().
+ */
+class BOTAN_PUBLIC_API(3,0) Session_Summary : public Session_Base
+   {
+   public:
+      Session_Summary(const Session_Base& base) : Session_Base(base) {}
+
+      const Session_ID& session_id() const { return m_session_id; }
+
+      /**
+       * The session ticket a TLS 1.2 server issued for this session.
+       * Note that this may be set in TLS 1.2 clients only. It is _not_ the
+       * ticket used to establish this session.
+       */
+      const std::optional<Session_Ticket>& session_ticket() const { return m_session_ticket; }
+
+   private:
+      friend class Server_Impl_12;
+      friend class Client_Impl_12;
+
+      Session_Summary(const Session_Base& base, bool was_resumption);
+
+#if defined(BOTAN_HAS_TLS_13)
+      Session_Summary(const Server_Hello_13& server_hello,
+                      Connection_Side side,
+                      std::vector<X509_Certificate> peer_certs,
+                      Server_Information server_info,
+                      std::chrono::system_clock::time_point current_timestamp);
+#endif
+
+      void set_session_id(Session_ID id) { m_session_id = std::move(id); }
+      void set_session_ticket(Session_Ticket ticket) { m_session_ticket = std::move(ticket); }
+
+   private:
+      Session_ID m_session_id;
+      std::optional<Session_Ticket> m_session_ticket;
+   };
+
+
+/**
+ * Represents a session's negotiated features along with all resumption
+ * information to re-establish a TLS connection later on.
+ */
+class BOTAN_PUBLIC_API(3,0) Session final : public Session_Base
    {
    public:
       /**

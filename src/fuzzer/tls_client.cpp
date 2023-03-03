@@ -54,11 +54,6 @@ class Fuzzer_TLS_Client_Callbacks : public Botan::TLS::Callbacks
          // ignore alert
          }
 
-      bool tls_session_established(const Botan::TLS::Session_with_Handle&) override
-         {
-         return true; // cache it
-         }
-
       void tls_verify_cert_chain(
          const std::vector<Botan::X509_Certificate>& cert_chain,
          const std::vector<std::optional<Botan::OCSP::Response>>& ocsp_responses,

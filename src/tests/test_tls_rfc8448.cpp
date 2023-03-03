@@ -188,13 +188,9 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          return false;
          }
 
-      bool tls_session_established(const Botan::TLS::Session_with_Handle&) override
+      void tls_session_established(const Botan::TLS::Session_Summary&) override
          {
          count_callback_invocation("tls_session_established");
-         // the session with the tls client was established
-         // return false to prevent the session from being cached, true to
-         // cache the session in the configured session manager
-         return false;
          }
 
       void tls_session_activated() override
