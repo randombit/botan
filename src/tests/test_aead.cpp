@@ -183,6 +183,8 @@ class AEAD_Tests final : public Text_Based_Test
                }
             }
 
+         // Make sure we can set the AD after processing a message
+         enc->set_ad(ad);
          enc->clear();
          result.test_eq("key is not set", enc->has_keying_material(), false);
 
@@ -422,6 +424,8 @@ class AEAD_Tests final : public Text_Based_Test
             result.test_failure("unexpected error while rejecting modified nonce", e.what());
             }
 
+         // Make sure we can set the AD after processing a message
+         dec->set_ad(ad);
          dec->clear();
          result.test_eq("key is not set", dec->has_keying_material(), false);
 
