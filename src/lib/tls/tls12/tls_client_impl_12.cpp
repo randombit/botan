@@ -801,7 +801,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       // establishing the connection.
       callbacks().tls_session_established([&]
          {
-         Session_Summary summary(session_info);
+         Session_Summary summary(session_info, state.is_a_resumption());
          summary.set_session_id(state.server_hello()->session_id());
          if(auto nst = state.new_session_ticket())
             {

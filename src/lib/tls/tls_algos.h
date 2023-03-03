@@ -135,6 +135,7 @@ enum class Kex_Algo {
    ECDH,
    PSK,
    ECDHE_PSK,
+   DHE_PSK,
 
    // To support TLS 1.3 ciphersuites, which do not determine the kex algo
    UNDEFINED
@@ -146,7 +147,8 @@ Kex_Algo BOTAN_TEST_API kex_method_from_string(const std::string& str);
 inline bool key_exchange_is_psk(Kex_Algo m)
    {
    return (m == Kex_Algo::PSK ||
-           m == Kex_Algo::ECDHE_PSK);
+           m == Kex_Algo::ECDHE_PSK ||
+           m == Kex_Algo::DHE_PSK);
    }
 
 }

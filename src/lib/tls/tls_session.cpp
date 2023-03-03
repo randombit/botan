@@ -100,6 +100,19 @@ Ciphersuite Session_Base::ciphersuite() const
    }
 
 
+Session_Summary::Session_Summary(const Session_Base& base,
+                                 bool was_resumption)
+   : Session_Base(base)
+   {
+   BOTAN_ARG_CHECK(version().is_pre_tls_13(),
+                   "Instantiated a TLS 1.2 session summary with an newer TLS version");
+
+   const auto cs = ciphersuite();
+   m_psk_used = cs.psk_ciphersuite();
+   m_kex_algo = cs.kex_algo();
+   m_was_resumption = was_resumption;
+   }
+
 #if defined(BOTAN_HAS_TLS_13)
 
 Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
@@ -131,6 +144,45 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
    BOTAN_ARG_CHECK(version().is_tls_13_or_later(),
                    "Instantiated a TLS 1.3 session summary with an older TLS version");
    set_session_id(server_hello.session_id());
+
+   // Currently, we use PSK exclusively for session resumption. Hence, a
+   // server hello with a PSK extension indicates a session resumption.
+   //
+   // TODO: once manually configured PSKs are implemented, this will need
+   //       extra consideration to tell PSK usage and resumption apart.
+   m_psk_used = server_hello.extensions().has<PSK>();
+   m_was_resumption = m_psk_used;
+
+   // In TLS 1.3 the key exchange algorithm is not negotiated in the ciphersuite
+   // anymore. This provides a compatible identifier for applications to use.
+   m_kex_algo = kex_method_to_string([&]
+      {
+      if(m_psk_used)
+         {
+         if(const auto keyshare = server_hello.extensions().get<Key_Share>())
+            {
+            const auto group = keyshare->selected_group();
+            if(is_dh(group))
+               { return Kex_Algo::DHE_PSK; }
+            else if(is_ecdh(group) || is_x25519(group))
+               { return Kex_Algo::ECDHE_PSK; }
+            }
+         else
+            { return Kex_Algo::PSK; }
+         }
+      else
+         {
+         const auto keyshare = server_hello.extensions().get<Key_Share>();
+         BOTAN_ASSERT_NONNULL(keyshare);
+         const auto group = keyshare->selected_group();
+         if(is_dh(group))
+            { return Kex_Algo::DH; }
+         else if(is_ecdh(group) || is_x25519(group))
+            { return Kex_Algo::ECDH; }
+         }
+
+      return Kex_Algo::UNDEFINED;
+      }());
    }
 
 #endif

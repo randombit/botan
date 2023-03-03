@@ -241,16 +241,11 @@ class BOTAN_PUBLIC_API(3,0) Session_Base
 class BOTAN_PUBLIC_API(3,0) Session_Summary : public Session_Base
    {
    public:
-      Session_Summary(const Session_Base& base) : Session_Base(base) {}
-
-#if defined(BOTAN_HAS_TLS_13)
-      Session_Summary(const Server_Hello_13& server_hello,
-                      Connection_Side side,
-                      std::vector<X509_Certificate> peer_certs,
-                      Server_Information server_info,
-                      std::chrono::system_clock::time_point current_timestamp);
-#endif
-
+      /**
+       * The Session_ID negotiated during the handshake.
+       * Note that this does not carry any meaning in TLS 1.3 and might even
+       * be empty.
+       */
       const Session_ID& session_id() const { return m_session_id; }
 
       /**
@@ -259,6 +254,13 @@ class BOTAN_PUBLIC_API(3,0) Session_Summary : public Session_Base
        * ticket used to establish this session.
        */
       const std::optional<Session_Ticket>& session_ticket() const { return m_session_ticket; }
+
+      bool psk_used() const { return m_psk_used; }
+      bool was_resumption() const { return m_was_resumption; }
+      std::string kex_algo() const { return m_kex_algo; }
+      std::string cipher_algo() const { return ciphersuite().cipher_algo(); }
+      std::string mac_algo() const { return ciphersuite().mac_algo(); }
+      std::string prf_algo() const { return ciphersuite().prf_algo(); }
 
    private:
       friend class Server_Impl_12;
@@ -282,6 +284,10 @@ class BOTAN_PUBLIC_API(3,0) Session_Summary : public Session_Base
    private:
       Session_ID m_session_id;
       std::optional<Session_Ticket> m_session_ticket;
+
+      bool m_psk_used;
+      bool m_was_resumption;
+      std::string m_kex_algo;
    };
 
 
