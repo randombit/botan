@@ -100,6 +100,42 @@ Ciphersuite Session_Base::ciphersuite() const
    }
 
 
+#if defined(BOTAN_HAS_TLS_13)
+
+Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
+                                 Connection_Side side,
+                                 std::vector<X509_Certificate> peer_certs,
+                                 Server_Information server_info,
+                                 std::chrono::system_clock::time_point current_timestamp) :
+   Session_Base(
+      std::move(current_timestamp),
+      server_hello.selected_version(),
+      server_hello.ciphersuite(),
+      side,
+
+      // TODO: SRTP might become necessary when DTLS 1.3 is being implemented
+      0,
+
+      // RFC 8446 Appendix D
+      //    Because TLS 1.3 always hashes in the transcript up to the server
+      //    Finished, implementations which support both TLS 1.3 and earlier
+      //    versions SHOULD indicate the use of the Extended Master Secret
+      //    extension in their APIs whenever TLS 1.3 is used.
+      true,
+
+      // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
+      false,
+      std::move(peer_certs),
+      std::move(server_info))
+   {
+   BOTAN_ARG_CHECK(version().is_tls_13_or_later(),
+                   "Instantiated a TLS 1.3 session summary with an older TLS version");
+   set_session_id(server_hello.session_id());
+   }
+
+#endif
+
+
 Session::Session(const secure_vector<uint8_t>& master_secret,
                  Protocol_Version version,
                  uint16_t ciphersuite,

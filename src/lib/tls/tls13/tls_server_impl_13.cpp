@@ -574,6 +574,15 @@ void Server_Impl_13::handle(const Finished_13& finished_msg)
                            m_transcript_hash.previous()))
       { throw TLS_Exception(Alert::DecryptError, "Finished message didn't verify"); }
 
+   // Give the application a chance for a final veto before fully
+   // establishing the connection.
+   callbacks().tls_session_established(
+      Session_Summary(m_handshake_state.server_hello(),
+                      Connection_Side::Server,
+                      peer_cert_chain(),
+                      Server_Information(m_handshake_state.client_hello().sni_hostname()),
+                      callbacks().tls_current_timestamp()));
+
    m_cipher_state->advance_with_client_finished(m_transcript_hash.current());
 
    // no more handshake messages expected

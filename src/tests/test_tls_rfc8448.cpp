@@ -1064,6 +1064,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   "tls_examine_extensions_encrypted_extensions",
                   "tls_examine_extensions_certificate",
                   "tls_emit_data",
+                  "tls_current_timestamp",
+                  "tls_session_established",
                   "tls_session_activated",
                   "tls_verify_cert_chain",
                   "tls_verify_message"
@@ -1288,6 +1290,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   "tls_examine_extensions_encrypted_extensions",
                   "tls_examine_extensions_certificate",
                   "tls_emit_data",
+                  "tls_current_timestamp",
+                  "tls_session_established",
                   "tls_session_activated",
                   "tls_verify_cert_chain",
                   "tls_verify_message"
@@ -1376,6 +1380,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   "tls_inspect_handshake_msg_certificate_verify",
                   "tls_inspect_handshake_msg_encrypted_extensions",
                   "tls_inspect_handshake_msg_finished",
+                  "tls_current_timestamp",
+                  "tls_session_established",
                   "tls_session_activated",
                   "tls_verify_cert_chain",
                   "tls_verify_message",
@@ -1458,6 +1464,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   "tls_examine_extensions_encrypted_extensions",
                   "tls_examine_extensions_certificate",
                   "tls_emit_data",
+                  "tls_current_timestamp",
+                  "tls_session_established",
                   "tls_session_activated",
                   "tls_verify_cert_chain",
                   "tls_verify_message"
@@ -1560,6 +1568,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
                ctx->check_callback_invocations(result, "client finished received", {
                   "tls_inspect_handshake_msg_finished",
+                  "tls_current_timestamp",
+                  "tls_session_established",
                   "tls_session_activated"
                   });
                }),
@@ -1787,6 +1797,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
                ctx->check_callback_invocations(result, "client finished received", {
                   "tls_inspect_handshake_msg_finished",
+                  "tls_current_timestamp",
+                  "tls_session_established",
                   "tls_session_activated"
                   });
 
@@ -1891,6 +1903,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
                   "tls_examine_extensions_certificate",
                   "tls_verify_cert_chain",
                   "tls_verify_message",
+                  "tls_current_timestamp",
+                  "tls_session_established",
                   "tls_session_activated"
                   });
 
@@ -1987,6 +2001,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
                ctx->check_callback_invocations(result, "client finished received", {
                   "tls_inspect_handshake_msg_finished",
+                  "tls_current_timestamp",
+                  "tls_session_established",
                   "tls_session_activated"
                   });
 
