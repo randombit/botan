@@ -34,14 +34,6 @@ class TLS_Session_Tests final : public Test
          {
          Test::Result result("TLS::Session");
 
-         Botan::TLS::Session default_session;
-
-         Botan::secure_vector<uint8_t> default_der = default_session.DER_encode();
-
-         result.test_gte("Encoded default session has size", default_der.size(), 0);
-         result.test_throws("Encoded default session cannot be read",
-                            [&] { Botan::TLS::Session{default_der}; });
-
          Botan::TLS::Session session(Botan::secure_vector<uint8_t>{0xCC, 0xDD},
                                      Botan::TLS::Protocol_Version::TLS_V12,
                                      0xC02F,

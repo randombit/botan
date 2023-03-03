@@ -1543,6 +1543,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify generated messages in server's first flight", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                const auto& msgs = ctx->observed_handshake_messages();
 
                result.test_eq("Server Hello", msgs.at("server_hello")[0], strip_message_header(vars.get_opt_bin("Message_ServerHello")));
@@ -1558,6 +1559,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Send Client Finished", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1568,6 +1570,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Send Session Ticket", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                const auto new_tickets = ctx->server.send_new_session_tickets(1);
 
                result.test_eq("session ticket was sent", new_tickets, 1);
@@ -1582,11 +1585,13 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify generated new session ticket message", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                result.test_eq("New Session Ticket", ctx->pull_send_buffer(), vars.get_req_bin("Record_NewSessionTicket"));
                }),
 
             Botan_Tests::CHECK("Receive Application Data", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.received_data(vars.get_req_bin("Record_Client_AppData"));
                ctx->check_callback_invocations(result, "application data received", { "tls_record_received" });
 
@@ -1597,6 +1602,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Send Application Data", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->send(vars.get_req_bin("Server_AppData"));
 
                ctx->check_callback_invocations(result, "application data sent", { "tls_emit_data" });
@@ -1607,6 +1613,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client's close_notify", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1620,6 +1627,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Expect Server close_notify", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.close();
 
                result.confirm("connection is now inactive", !ctx->server.is_active());
@@ -1672,6 +1680,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify generated messages in server's first flight", [&](Test::Result& result)
                {
+               result.require("ctx is available", ctx != nullptr);
                const auto& msgs = ctx->observed_handshake_messages();
 
                result.test_eq("Server Hello", msgs.at("server_hello")[0], strip_message_header(vars.get_opt_bin("Message_ServerHello")));
@@ -1731,14 +1740,14 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify generated Hello Retry Request message", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                result.test_eq("Server's Hello Retry Request record", ctx->pull_send_buffer(), vars.get_req_bin("Record_HelloRetryRequest"));
                result.confirm("TLS handshake not yet finished", !ctx->server.is_active());
                }),
 
             Botan_Tests::CHECK("Receive updated Client Hello message", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.received_data(vars.get_req_bin("Record_ClientHello_2"));
 
                ctx->check_callback_invocations(result, "updated client hello received", {
@@ -1760,7 +1769,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify generated messages in server's second flight", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                const auto& msgs = ctx->observed_handshake_messages();
 
                result.test_eq("Server Hello", msgs.at("server_hello")[0], strip_message_header(vars.get_opt_bin("Message_ServerHello")));
@@ -1776,7 +1785,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client Finished", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1789,7 +1798,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client close_notify", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1803,7 +1812,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Expect Server close_notify", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.close();
 
                result.confirm("connection is now inactive", !ctx->server.is_active());
@@ -1852,7 +1861,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify server's generated handshake messages", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                const auto& msgs = ctx->observed_handshake_messages();
 
                result.test_eq("Server Hello", msgs.at("server_hello")[0], strip_message_header(vars.get_opt_bin("Message_ServerHello")));
@@ -1871,7 +1880,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client's second flight", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                // This encrypted message contains the following messages:
                // * client's Certificate message
                // * client's Certificate_Verify message
@@ -1896,7 +1905,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client close_notify", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1910,7 +1919,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Expect Server close_notify", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.close();
 
                result.confirm("connection is now inactive", !ctx->server.is_active());
@@ -1958,7 +1967,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Verify server's generated handshake messages", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                const auto& msgs = ctx->observed_handshake_messages();
 
                result.test_eq("Server Hello", msgs.at("server_hello")[0], strip_message_header(vars.get_opt_bin("Message_ServerHello")));
@@ -1976,7 +1985,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client Finished", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -1989,7 +1998,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Receive Client close_notify", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
                ctx->check_callback_invocations(result, "client finished received", {
@@ -2003,7 +2012,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
 
             Botan_Tests::CHECK("Expect Server close_notify", [&](Test::Result& result)
                {
-               BOTAN_ASSERT_NONNULL(ctx);
+               result.require("ctx is available", ctx != nullptr);
                ctx->server.close();
 
                result.confirm("connection is now inactive", !ctx->server.is_active());
