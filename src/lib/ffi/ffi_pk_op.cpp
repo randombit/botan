@@ -21,6 +21,9 @@ BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_sign_struct, Botan::PK_Signer, 0x1AF0C39F);
 BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_verify_struct, Botan::PK_Verifier, 0x2B91F936);
 BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_ka_struct, Botan::PK_Key_Agreement, 0x2939CAB1);
 
+BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_kem_encrypt_struct, Botan::PK_KEM_Encryptor, 0x1D13A446);
+BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_kem_decrypt_struct, Botan::PK_KEM_Decryptor, 0x1743D8E6);
+
 int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
                                botan_pubkey_t key_obj,
                                const char* padding,
@@ -261,6 +264,141 @@ int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
       auto k = o.derive_key(*out_len, other_key, other_key_len, salt, salt_len).bits_of();
       return write_vec_output(out, out_len, k);
       });
+   }
+
+int botan_pk_op_kem_encrypt_create(botan_pk_op_kem_encrypt_t* op,
+                                   botan_pubkey_t key_obj,
+                                   const char* padding)
+   {
+   if(op == nullptr || padding == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto pk = std::make_unique<Botan::PK_KEM_Encryptor>(safe_get(key_obj), padding);
+      *op = new botan_pk_op_kem_encrypt_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+      });
+   }
+
+int botan_pk_op_kem_encrypt_destroy(botan_pk_op_kem_encrypt_t op)
+   {
+   return BOTAN_FFI_CHECKED_DELETE(op);
+   }
+
+int botan_pk_op_kem_encrypt_shared_key_length(botan_pk_op_kem_encrypt_t op,
+                                              size_t desired_shared_key_length,
+                                              size_t* output_shared_key_length)
+   {
+   if(output_shared_key_length == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_VISIT(op, [=](auto& kem)
+      {
+      *output_shared_key_length = kem.shared_key_length(desired_shared_key_length);
+      return BOTAN_FFI_SUCCESS;
+      });
+   }
+
+int botan_pk_op_kem_encrypt_encapsulated_key_length(botan_pk_op_kem_encrypt_t op,
+                                                    size_t* output_encapsulated_key_length)
+   {
+   if(output_encapsulated_key_length == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_VISIT(op, [=](auto& kem)
+      {
+      *output_encapsulated_key_length = kem.encapsulated_key_length();
+      return BOTAN_FFI_SUCCESS;
+      });
+   }
+
+int botan_pk_op_kem_encrypt_create_shared_key(
+   botan_pk_op_kem_encrypt_t op,
+   botan_rng_t rng,
+   const uint8_t salt[],
+   size_t salt_len,
+   size_t desired_shared_key_len,
+   uint8_t shared_key_out[],
+   size_t* shared_key_len,
+   uint8_t encapsulated_key_out[],
+   size_t* encapsulated_key_len)
+   {
+   return BOTAN_FFI_VISIT(op, [=](auto& kem)
+      {
+      Botan::secure_vector<uint8_t> encapsulated_key;
+      Botan::secure_vector<uint8_t> shared_key;
+
+      kem.encrypt(encapsulated_key, shared_key,
+                  desired_shared_key_len,
+                  safe_get(rng),
+                  salt,
+                  salt_len);
+
+      int rc = write_vec_output(encapsulated_key_out,
+                                encapsulated_key_len,
+                                encapsulated_key);
+
+      if(rc != 0)
+         return rc;
+
+      return write_vec_output(shared_key_out, shared_key_len, shared_key);
+      });
+   }
+
+int botan_pk_op_kem_decrypt_create(botan_pk_op_kem_decrypt_t* op,
+                                   botan_privkey_t key_obj,
+                                   const char* padding)
+   {
+   if(op == nullptr || padding == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto pk = std::make_unique<Botan::PK_KEM_Decryptor>(safe_get(key_obj), Botan::system_rng(), padding);
+      *op = new botan_pk_op_kem_decrypt_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+      });
+   }
+
+int botan_pk_op_kem_decrypt_shared_key_length(botan_pk_op_kem_decrypt_t op,
+                                              size_t desired_shared_key_length,
+                                              size_t* output_shared_key_length)
+   {
+   if(output_shared_key_length == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_VISIT(op, [=](auto& kem)
+      {
+      *output_shared_key_length = kem.shared_key_length(desired_shared_key_length);
+      return BOTAN_FFI_SUCCESS;
+      });
+   }
+
+int botan_pk_op_kem_decrypt_shared_key(
+   botan_pk_op_kem_decrypt_t op,
+   const uint8_t salt[],
+   size_t salt_len,
+   const uint8_t encapsulated_key[],
+   size_t encapsulated_key_len,
+   size_t desired_shared_key_len,
+   uint8_t shared_key_out[],
+   size_t* shared_key_len)
+   {
+   return BOTAN_FFI_VISIT(op, [=](auto& kem)
+      {
+      const auto shared_key =
+         kem.decrypt(encapsulated_key,
+                     encapsulated_key_len,
+                     desired_shared_key_len,
+                     salt,
+                     salt_len);
+
+      write_vec_output(shared_key_out, shared_key_len, shared_key);
+      });
+   }
+
+int botan_pk_op_kem_decrypt_destroy(botan_pk_op_kem_decrypt_t op)
+   {
+   return BOTAN_FFI_CHECKED_DELETE(op);
    }
 
 }

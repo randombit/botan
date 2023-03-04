@@ -557,6 +557,12 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
                 fixed_output_rng,
                 salt);
 
+   result.test_eq("encapsulated key length matches expected",
+                  produced_encap_key.size(), enc->encapsulated_key_length());
+
+   result.test_eq("shared key length matches expected",
+                  shared_key.size(), enc->shared_key_length(desired_key_len));
+
    result.test_eq("C0 matches", produced_encap_key, C0);
    result.test_eq("K matches", shared_key, K);
 
@@ -576,6 +582,9 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
                    desired_key_len,
                    salt.data(),
                    salt.size());
+
+   result.test_eq("shared key length matches expected",
+                  decr_shared_key.size(), dec->shared_key_length(desired_key_len));
 
    result.test_eq("decrypted K matches", decr_shared_key, K);
 

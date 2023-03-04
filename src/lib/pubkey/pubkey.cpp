@@ -148,6 +148,16 @@ PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
 
 PK_KEM_Encryptor::~PK_KEM_Encryptor() = default;
 
+size_t PK_KEM_Encryptor::shared_key_length(size_t desired_shared_key_len) const
+   {
+   return m_op->shared_key_length(desired_shared_key_len);
+   }
+
+size_t PK_KEM_Encryptor::encapsulated_key_length() const
+   {
+   return m_op->encapsulated_key_length();
+   }
+
 void PK_KEM_Encryptor::encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                                secure_vector<uint8_t>& out_shared_key,
                                size_t desired_shared_key_len,
@@ -161,6 +171,11 @@ void PK_KEM_Encryptor::encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                      rng,
                      salt,
                      salt_len);
+   }
+
+size_t PK_KEM_Decryptor::shared_key_length(size_t desired_shared_key_len) const
+   {
+   return m_op->shared_key_length(desired_shared_key_len);
    }
 
 PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
