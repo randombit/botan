@@ -41,6 +41,11 @@ int botan_mac_set_key(botan_mac_t mac, const uint8_t* key, size_t key_len)
    return BOTAN_FFI_VISIT(mac, [=](auto& m) { m.set_key(key, key_len); });
    }
 
+int botan_mac_set_nonce(botan_mac_t mac, const uint8_t* nonce, size_t nonce_len)
+   {
+   return BOTAN_FFI_VISIT(mac, [=](auto& m) { m.start(nonce, nonce_len); });
+   }
+
 int botan_mac_output_length(botan_mac_t mac, size_t* out)
    {
    return BOTAN_FFI_VISIT(mac, [=](const auto& m) { *out = m.output_length(); });

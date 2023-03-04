@@ -159,6 +159,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_mac_init, [c_void_p, c_char_p, c_uint32])
     ffi_api(dll.botan_mac_output_length, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_mac_set_key, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_mac_set_nonce, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_mac_update, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_mac_final, [c_void_p, c_char_p])
     ffi_api(dll.botan_mac_clear, [c_void_p])
@@ -742,6 +743,9 @@ class MsgAuthCode:
 
     def set_key(self, key):
         _DLL.botan_mac_set_key(self.__obj, key, len(key))
+
+    def set_nonce(self, nonce):
+        _DLL.botan_mac_set_nonce(self.__obj, nonce, len(nonce))
 
     def update(self, x):
         _DLL.botan_mac_update(self.__obj, x, len(x))
