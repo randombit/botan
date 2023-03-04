@@ -1680,15 +1680,29 @@ BOTAN_PUBLIC_API(2,13) int botan_x509_cert_verify_with_crl(
 /**
  * Key wrapping as per RFC 3394
  */
+BOTAN_DEPRECATED("Use botan_nist_kw_enc")
 BOTAN_PUBLIC_API(2,2)
 int botan_key_wrap3394(const uint8_t key[], size_t key_len,
                        const uint8_t kek[], size_t kek_len,
                        uint8_t wrapped_key[], size_t *wrapped_key_len);
 
+BOTAN_DEPRECATED("Use botan_nist_kw_dec")
 BOTAN_PUBLIC_API(2,2)
 int botan_key_unwrap3394(const uint8_t wrapped_key[], size_t wrapped_key_len,
                          const uint8_t kek[], size_t kek_len,
                          uint8_t key[], size_t *key_len);
+
+BOTAN_PUBLIC_API(3,0)
+int botan_nist_kw_enc(const char* cipher_algo, int padded,
+                      const uint8_t key[], size_t key_len,
+                      const uint8_t kek[], size_t kek_len,
+                      uint8_t wrapped_key[], size_t *wrapped_key_len);
+
+BOTAN_PUBLIC_API(3,0)
+int botan_nist_kw_dec(const char* cipher_algo, int padded,
+                      const uint8_t wrapped_key[], size_t wrapped_key_len,
+                      const uint8_t kek[], size_t kek_len,
+                      uint8_t key[], size_t *key_len);
 
 /**
 * HOTP

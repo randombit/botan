@@ -406,10 +406,10 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_verify_with_crl,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
 
-    ffi_api(dll.botan_key_wrap3394,
-            [c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_key_unwrap3394,
-            [c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_nist_kw_enc,
+            [c_char_p, c_int, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_nist_kw_dec,
+            [c_char_p, c_int, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
 
     #  HOTP
     ffi_api(dll.botan_hotp_init,
@@ -1784,16 +1784,26 @@ class TOTP:
             return True
         return False
 
-def nist_key_wrap(kek, key):
+def nist_key_wrap(kek, key, cipher=None):
+    cipher_algo = "AES-%d" % (8*len(kek)) if cipher is None else cipher
+    padding = 0
     output = create_string_buffer(len(key) + 8)
     out_len = c_size_t(len(output))
-    _DLL.botan_key_wrap3394(key, len(key), kek, len(kek), output, byref(out_len))
+    _DLL.botan_nist_kw_enc(_ctype_str(cipher_algo), padding,
+                           key, len(key),
+                           kek, len(kek),
+                           output, byref(out_len))
     return output[0:int(out_len.value)]
 
-def nist_key_unwrap(kek, wrapped):
+def nist_key_unwrap(kek, wrapped, cipher=None):
+    cipher_algo = "AES-%d" % (8*len(kek)) if cipher is None else cipher
+    padding = 0
     output = create_string_buffer(len(wrapped))
     out_len = c_size_t(len(output))
-    _DLL.botan_key_unwrap3394(wrapped, len(wrapped), kek, len(kek), output, byref(out_len))
+    _DLL.botan_nist_kw_dec(_ctype_str(cipher_algo), padding,
+                           wrapped, len(wrapped),
+                           kek, len(kek),
+                           output, byref(out_len))
     return output[0:int(out_len.value)]
 
 class Srp6ServerSession:
