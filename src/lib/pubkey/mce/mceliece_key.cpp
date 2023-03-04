@@ -372,8 +372,7 @@ class MCE_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption>
-McEliece_PublicKey::create_kem_encryption_op(RandomNumberGenerator& /*rng*/,
-                                             const std::string& params,
+McEliece_PublicKey::create_kem_encryption_op(const std::string& params,
                                              const std::string& provider) const
    {
    if(provider == "base" || provider.empty())

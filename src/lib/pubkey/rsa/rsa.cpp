@@ -737,8 +737,7 @@ RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
    }
 
 std::unique_ptr<PK_Ops::KEM_Encryption>
-RSA_PublicKey::create_kem_encryption_op(RandomNumberGenerator& /*rng*/,
-                                        const std::string& params,
+RSA_PublicKey::create_kem_encryption_op(const std::string& params,
                                         const std::string& provider) const
    {
    if(provider == "base" || provider.empty())

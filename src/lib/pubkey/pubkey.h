@@ -612,15 +612,30 @@ class BOTAN_PUBLIC_API(2,0) PK_KEM_Encryptor final
    public:
       /**
       * Construct an instance.
-      * @param key the key to use inside the encryptor
-      * @param rng the RNG to use
+      * @param key the key to encrypt to
       * @param kem_param additional KEM parameters
       * @param provider the provider to use
       */
       PK_KEM_Encryptor(const Public_Key& key,
-                       RandomNumberGenerator& rng,
                        const std::string& kem_param = "",
                        const std::string& provider = "");
+
+      /**
+      * Construct an instance.
+      * @param key the key to encrypt to
+      * @param rng the RNG to use
+      * @param kem_param additional KEM parameters
+      * @param provider the provider to use
+      */
+      BOTAN_DEPRECATED("Use constructor that does not take RNG")
+      PK_KEM_Encryptor(const Public_Key& key,
+                       RandomNumberGenerator& rng,
+                       const std::string& kem_param = "",
+                       const std::string& provider = "") :
+         PK_KEM_Encryptor(key, kem_param, provider)
+         {
+         BOTAN_UNUSED(rng);
+         }
 
       ~PK_KEM_Encryptor();
 

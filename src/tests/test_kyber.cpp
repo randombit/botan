@@ -58,7 +58,7 @@ class KYBER_Tests final : public Test
 
          auto roundtrip = [&] (const auto& pkey, const auto& skey, const std::string& context, const std::string& kdf)
             {
-            auto e = Botan::PK_KEM_Encryptor(*pkey, Test::rng(), kdf, "base");
+            auto e = Botan::PK_KEM_Encryptor(*pkey, kdf, "base");
             Botan::secure_vector<uint8_t> ct, shared_key;
             e.encrypt(ct, shared_key, 64, Test::rng());
 
@@ -113,7 +113,7 @@ class KYBER_Tests final : public Test
 
          // Bob (reading from serialized public key)
          Botan::Kyber_PublicKey alice_pub_key(pub_key_bits, mode, Botan::KyberKeyEncoding::Full);
-         auto enc = Botan::PK_KEM_Encryptor(alice_pub_key, Test::rng(), "Raw", "base");
+         auto enc = Botan::PK_KEM_Encryptor(alice_pub_key, "Raw", "base");
          Botan::secure_vector<uint8_t> cipher_text, key_bob;
          enc.encrypt(cipher_text, key_bob, 0 /* no KDF */, Test::rng());
 
@@ -195,7 +195,7 @@ Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::Ky
    result.test_eq("Secret Key Output", priv_key.private_key_bits(), sk_in);
 
    // Bob
-   auto enc = Botan::PK_KEM_Encryptor(*pub_key, ctr_drbg, "Raw", "base");
+   auto enc = Botan::PK_KEM_Encryptor(*pub_key, "Raw", "base");
    Botan::secure_vector<uint8_t> cipher_text, key_bob;
    enc.encrypt(cipher_text, key_bob, 0 /* no KDF */, ctr_drbg);
    result.test_eq("Cipher-Text Output", cipher_text, ct_in);

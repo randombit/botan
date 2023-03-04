@@ -207,15 +207,11 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       *
       * Return a KEM encryption operation for this key/params or throw
       *
-      * @param rng a random number generator. The PK_Op may maintain a
-      * reference to the RNG and use it many times. The rng must outlive
-      * any operations which reference it.
       * @param params additional parameters
       * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
+         create_kem_encryption_op(const std::string& params,
                                   const std::string& provider) const;
 
       /**

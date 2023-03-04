@@ -1569,11 +1569,11 @@ secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits_der() const
    return output;
    }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_op(RandomNumberGenerator& rng,
-      const std::string& params,
-      const std::string& provider) const
+std::unique_ptr<PK_Ops::KEM_Encryption>
+Kyber_PublicKey::create_kem_encryption_op(
+   const std::string& params,
+   const std::string& provider) const
    {
-   BOTAN_UNUSED(rng);
    if(provider.empty() || provider == "base")
       return std::make_unique<Kyber_KEM_Encryptor>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);

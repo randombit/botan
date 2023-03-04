@@ -138,11 +138,10 @@ secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask,
    }
 
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
-                                   RandomNumberGenerator& rng,
                                    const std::string& param,
                                    const std::string& provider)
    {
-   m_op = key.create_kem_encryption_op(rng, param, provider);
+   m_op = key.create_kem_encryption_op(param, provider);
    if(!m_op)
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support KEM encryption");
    }

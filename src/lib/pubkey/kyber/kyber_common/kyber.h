@@ -100,7 +100,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
          return (op == PublicKeyOperation::KeyEncapsulation);
          }
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(RandomNumberGenerator& rng,
+      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
             const std::string& params,
             const std::string& provider) const override;
 

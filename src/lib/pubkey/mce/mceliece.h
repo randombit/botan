@@ -62,8 +62,7 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PublicKey : public virtual Public_Key
          }
 
       std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
+         create_kem_encryption_op(const std::string& params,
                                   const std::string& provider) const override;
 
    protected:
