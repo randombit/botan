@@ -172,17 +172,17 @@ alignas(256) const uint32_t CRC24_T3[256] = {
 
 inline uint32_t process8(uint32_t crc, uint8_t data)
    {
-   return (crc >> 8) ^ CRC24_T0[(crc & 0xff) ^ data];
+   return (crc >> 8) ^ CRC24_T0[get_byte<3>(crc) ^ data];
    }
 
 inline uint32_t process32(uint32_t crc, uint32_t word)
    {
-   crc ^= word;
-   crc = CRC24_T3[(crc >>  0) & 0xff]
-       ^ CRC24_T2[(crc >>  8) & 0xff]
-       ^ CRC24_T1[(crc >> 16) & 0xff]
-       ^ CRC24_T0[(crc >> 24) & 0xff];
-   return crc;
+   const uint32_t sum = crc ^ word;
+
+   return CRC24_T3[get_byte<3>(sum)] ^
+      CRC24_T2[get_byte<2>(sum)] ^
+      CRC24_T1[get_byte<1>(sum)] ^
+      CRC24_T0[get_byte<0>(sum)];
    }
 }
 
@@ -210,11 +210,10 @@ std::unique_ptr<HashFunction> CRC24::copy_state() const
 */
 void CRC24::add_data(const uint8_t input[], size_t length)
    {
-   uint32_t d[4];
    uint32_t tmp = m_crc;
 
    // Input is word aligned if WA & input == 0
-   static const uint8_t WA = (BOTAN_MP_WORD_BITS/8) - 1;
+   static const uint8_t WA = sizeof(size_t) - 1;
 
    // Ensure input is word aligned before processing in parallel
    for(;length && (reinterpret_cast<uintptr_t>(input) & WA); length--)
@@ -222,6 +221,7 @@ void CRC24::add_data(const uint8_t input[], size_t length)
 
    while(length >= 16)
       {
+      uint32_t d[4];
       load_le(d, input, 4);
       tmp = process32(tmp, d[0]);
       tmp = process32(tmp, d[1]);
@@ -235,7 +235,7 @@ void CRC24::add_data(const uint8_t input[], size_t length)
    while(length--)
       tmp = process8(tmp, *input++);
 
-   m_crc = tmp & 0xffffff;
+   m_crc = tmp;
    }
 
 /*

@@ -15,6 +15,8 @@ namespace Botan {
 
 /**
 * 24-bit cyclic redundancy check
+*
+* This is the CRC used for checksums in PGP
 */
 class CRC24 final : public HashFunction
    {
