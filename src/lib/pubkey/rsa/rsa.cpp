@@ -430,9 +430,11 @@ class RSA_Private_Operation
 
       secure_vector<uint8_t> raw_op(const uint8_t input[], size_t input_len)
          {
+         if(input_len > public_modulus_bytes())
+            throw Decoding_Error("RSA input is too long for this key");
          const BigInt input_bn(input, input_len);
          if(input_bn >= m_public->get_n())
-            throw Invalid_Argument("RSA private op - input is too large");
+            throw Decoding_Error("RSA input is too large for this key");
 
          // TODO: This should be a function on blinder
          // BigInt Blinder::run_blinded_function(std::function<BigInt, BigInt> fn, const BigInt& input);
@@ -628,7 +630,7 @@ class RSA_Public_Operation
       BigInt public_op(const BigInt& m) const
          {
          if(m >= m_public->get_n())
-            throw Invalid_Argument("RSA public op - input is too large");
+            throw Decoding_Error("RSA public op - input is too large");
 
          return m_public->public_op(m);
          }
