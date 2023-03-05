@@ -1806,7 +1806,7 @@ class Speed final : public Command
                         std::chrono::milliseconds msec)
          {
          Botan::PK_KEM_Decryptor dec(key, rng(), kdf, provider);
-         Botan::PK_KEM_Encryptor enc(key, rng(), kdf, provider);
+         Botan::PK_KEM_Encryptor enc(key, kdf, provider);
 
          auto kem_enc_timer = make_timer(nm, provider, "KEM encrypt");
          auto kem_dec_timer = make_timer(nm, provider, "KEM decrypt");

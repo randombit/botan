@@ -537,7 +537,7 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
    std::unique_ptr<Botan::PK_KEM_Encryptor> enc;
    try
       {
-      enc = std::make_unique<Botan::PK_KEM_Encryptor>(pubkey, Test::rng(), kdf);
+      enc = std::make_unique<Botan::PK_KEM_Encryptor>(pubkey, kdf);
       }
    catch(Botan::Lookup_Error&)
       {
