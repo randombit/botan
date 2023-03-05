@@ -51,7 +51,7 @@ class BOTAN_TEST_API EMSA
       /**
       * @return raw hash
       */
-      virtual secure_vector<uint8_t> raw_data() = 0;
+      virtual std::vector<uint8_t> raw_data() = 0;
 
       /**
       * Return the encoding of a message
@@ -60,7 +60,7 @@ class BOTAN_TEST_API EMSA
       * @param rng a random number generator
       * @return encoded signature
       */
-      virtual secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>& msg,
+      virtual std::vector<uint8_t> encoding_of(const std::vector<uint8_t>& msg,
                                              size_t output_bits,
                                              RandomNumberGenerator& rng) = 0;
 
@@ -71,8 +71,8 @@ class BOTAN_TEST_API EMSA
       * @param key_bits the size of the key in bits
       * @return true if coded is a valid encoding of raw, otherwise false
       */
-      virtual bool verify(const secure_vector<uint8_t>& coded,
-                          const secure_vector<uint8_t>& raw,
+      virtual bool verify(const std::vector<uint8_t>& coded,
+                          const std::vector<uint8_t>& raw,
                           size_t key_bits) = 0;
 
       /**

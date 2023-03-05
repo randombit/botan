@@ -17,7 +17,7 @@ void mgf1_mask(HashFunction& hash,
    {
    uint32_t counter = 0;
 
-   secure_vector<uint8_t> buffer(hash.output_length());
+   std::vector<uint8_t> buffer(hash.output_length());
    while(out_len)
       {
       hash.update(in, in_len);

@@ -28,12 +28,12 @@ class EMSA_PKCS1v15 final : public EMSA
 
       void update(const uint8_t[], size_t) override;
 
-      secure_vector<uint8_t> raw_data() override;
+      std::vector<uint8_t> raw_data() override;
 
-      secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
+      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t,
                                      RandomNumberGenerator& rng) override;
 
-      bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
+      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&,
                   size_t) override;
 
       std::string name() const override
@@ -55,12 +55,12 @@ class EMSA_PKCS1v15_Raw final : public EMSA
    public:
       void update(const uint8_t[], size_t) override;
 
-      secure_vector<uint8_t> raw_data() override;
+      std::vector<uint8_t> raw_data() override;
 
-      secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
+      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t,
                                      RandomNumberGenerator& rng) override;
 
-      bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
+      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&,
                   size_t) override;
 
       EMSA_PKCS1v15_Raw();
@@ -82,7 +82,7 @@ class EMSA_PKCS1v15_Raw final : public EMSA
       size_t m_hash_output_len = 0;
       std::string m_hash_name;
       std::vector<uint8_t> m_hash_id;
-      secure_vector<uint8_t> m_message;
+      std::vector<uint8_t> m_message;
    };
 
 }

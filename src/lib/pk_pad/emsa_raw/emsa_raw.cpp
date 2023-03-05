@@ -28,7 +28,7 @@ void EMSA_Raw::update(const uint8_t input[], size_t length)
 /*
 * Return the raw (unencoded) data
 */
-secure_vector<uint8_t> EMSA_Raw::raw_data()
+std::vector<uint8_t> EMSA_Raw::raw_data()
    {
    if(m_expected_size && m_message.size() != m_expected_size)
       throw Invalid_Argument("EMSA_Raw was configured to use a " +
@@ -36,7 +36,7 @@ secure_vector<uint8_t> EMSA_Raw::raw_data()
                              " byte hash but instead was used for a " +
                              std::to_string(m_message.size()) + " hash");
 
-   secure_vector<uint8_t> output;
+   std::vector<uint8_t> output;
    std::swap(m_message, output);
    return output;
    }
@@ -44,8 +44,8 @@ secure_vector<uint8_t> EMSA_Raw::raw_data()
 /*
 * EMSA-Raw Encode Operation
 */
-secure_vector<uint8_t>
-EMSA_Raw::encoding_of(const secure_vector<uint8_t>& msg,
+std::vector<uint8_t>
+EMSA_Raw::encoding_of(const std::vector<uint8_t>& msg,
                       size_t /*output_bits*/,
                       RandomNumberGenerator& /*rng*/)
    {
@@ -61,8 +61,8 @@ EMSA_Raw::encoding_of(const secure_vector<uint8_t>& msg,
 /*
 * EMSA-Raw Verify Operation
 */
-bool EMSA_Raw::verify(const secure_vector<uint8_t>& coded,
-                      const secure_vector<uint8_t>& raw,
+bool EMSA_Raw::verify(const std::vector<uint8_t>& coded,
+                      const std::vector<uint8_t>& raw,
                       size_t /*key_bits*/)
    {
    if(m_expected_size && raw.size() != m_expected_size)
