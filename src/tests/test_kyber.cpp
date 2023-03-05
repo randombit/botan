@@ -171,9 +171,11 @@ class KYBER_Tests final : public Test
    };
 BOTAN_REGISTER_TEST("kyber", "kyber_pairwise", KYBER_Tests);
 
+#if defined(BOTAN_HAS_AES)
+
 namespace {
 
-Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::KyberMode mode,
+Test::Result check_kyber_kat(const char* test_name, const VarMap& vars, Botan::KyberMode mode,
                             const std::string& algo_name)
    {
    Test::Result result(test_name);
@@ -226,7 +228,7 @@ Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::Ky
                                                                                                        \
          Test::Result run_one_test(const std::string &name, const VarMap &vars) override               \
             {                                                                                          \
-            return run_kyber_test("Kyber_" #mode, vars, Botan::KyberMode::Kyber##mode, name);          \
+            return check_kyber_kat("Kyber_" #mode, vars, Botan::KyberMode::Kyber##mode, name);         \
             }                                                                                          \
     };                                                                                                 \
     BOTAN_REGISTER_TEST("kyber", "kyber_kat_" #mode, KYBER_KAT_##mode)
@@ -243,6 +245,8 @@ Test::Result run_kyber_test(const char* test_name, const VarMap& vars, Botan::Ky
 #endif
 
 #undef REGISTER_KYBER_KAT_TEST
+
+#endif
 
 class Kyber_Encoding_Test : public Text_Based_Test
    {
