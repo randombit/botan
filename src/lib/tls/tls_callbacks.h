@@ -126,6 +126,10 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * TLS 1.2 calls this when a session was established successfully and
        * its resumption information may be stored for later usage.
        *
+       * Note that for servers this is called as soon as resumption information
+       * is available and _could_ be sent to the client. If this callback
+       * returns 'false', the information will neither be cached nor sent.
+       *
        * @param session the session descriptor
        *
        * @return false to prevent the resumption information from being cached,
