@@ -530,7 +530,7 @@ class RSA_Signature_Operation final : public PK_Ops::Signature,
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override
          {
          const size_t max_input_bits = public_modulus_bits() - 1;
-         const secure_vector<uint8_t> msg = m_emsa->raw_data();
+         const auto msg = m_emsa->raw_data();
          const auto padded = m_emsa->encoding_of(msg, max_input_bits, rng);
          return raw_op(padded.data(), padded.size());
          }
@@ -690,12 +690,12 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
       std::string hash_function() const override { return m_emsa->hash_function(); }
 
    private:
-      secure_vector<uint8_t> recover_message_repr(const uint8_t input[], size_t input_len)
+      std::vector<uint8_t> recover_message_repr(const uint8_t input[], size_t input_len)
          {
          if(input_len > public_modulus_bytes())
             throw Decoding_Error("RSA signature too large to be valid for this key");
          BigInt input_bn(input, input_len);
-         return BigInt::encode_locked(public_op(input_bn));
+         return BigInt::encode(public_op(input_bn));
          }
 
       std::unique_ptr<EMSA> m_emsa;

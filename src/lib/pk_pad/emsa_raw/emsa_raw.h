@@ -27,17 +27,17 @@ class EMSA_Raw final : public EMSA
       std::string name() const override;
    private:
       void update(const uint8_t[], size_t) override;
-      secure_vector<uint8_t> raw_data() override;
+      std::vector<uint8_t> raw_data() override;
 
-      secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
+      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t,
                                          RandomNumberGenerator&) override;
 
-      bool verify(const secure_vector<uint8_t>&,
-                  const secure_vector<uint8_t>&,
+      bool verify(const std::vector<uint8_t>&,
+                  const std::vector<uint8_t>&,
                   size_t) override;
 
       const size_t m_expected_size;
-      secure_vector<uint8_t> m_message;
+      std::vector<uint8_t> m_message;
    };
 
 }

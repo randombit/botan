@@ -46,20 +46,20 @@ class ISO_9796_DS2 final : public EMSA
    private:
       void update(const uint8_t input[], size_t length) override;
 
-      secure_vector<uint8_t> raw_data() override;
+      std::vector<uint8_t> raw_data() override;
 
-      secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>& msg,
+      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator& rng) override;
 
-      bool verify(const secure_vector<uint8_t>& coded,
-                  const secure_vector<uint8_t>& raw,
+      bool verify(const std::vector<uint8_t>& coded,
+                  const std::vector<uint8_t>& raw,
                   size_t key_bits) override;
 
       std::unique_ptr<HashFunction> m_hash;
       bool m_implicit;
       size_t m_SALT_SIZE;
-      secure_vector<uint8_t> m_msg_buffer;
+      std::vector<uint8_t> m_msg_buffer;
    };
 
 /**
@@ -84,19 +84,19 @@ class ISO_9796_DS3 final : public EMSA
    private:
       void update(const uint8_t input[], size_t length) override;
 
-      secure_vector<uint8_t> raw_data() override;
+      std::vector<uint8_t> raw_data() override;
 
-      secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>& msg,
+      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator& rng) override;
 
-      bool verify(const secure_vector<uint8_t>& coded,
-                  const secure_vector<uint8_t>& raw,
+      bool verify(const std::vector<uint8_t>& coded,
+                  const std::vector<uint8_t>& raw,
                   size_t key_bits) override;
 
       std::unique_ptr<HashFunction> m_hash;
       bool m_implicit;
-      secure_vector<uint8_t> m_msg_buffer;
+      std::vector<uint8_t> m_msg_buffer;
    };
 
 }

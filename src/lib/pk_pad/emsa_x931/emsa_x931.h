@@ -31,15 +31,15 @@ class EMSA_X931 final : public EMSA
       std::string hash_function() const override { return m_hash->name(); }
    private:
       void update(const uint8_t[], size_t) override;
-      secure_vector<uint8_t> raw_data() override;
+      std::vector<uint8_t> raw_data() override;
 
-      secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
+      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t,
                                      RandomNumberGenerator& rng) override;
 
-      bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
+      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&,
                   size_t) override;
 
-      secure_vector<uint8_t> m_empty_hash;
+      std::vector<uint8_t> m_empty_hash;
       std::unique_ptr<HashFunction> m_hash;
       uint8_t m_hash_id;
    };

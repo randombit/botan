@@ -13,7 +13,7 @@ namespace Botan {
 
 namespace {
 
-secure_vector<uint8_t> emsa3_encoding(const secure_vector<uint8_t>& msg,
+std::vector<uint8_t> emsa3_encoding(const std::vector<uint8_t>& msg,
                                    size_t output_bits,
                                    const uint8_t hash_id[],
                                    size_t hash_id_length)
@@ -22,7 +22,7 @@ secure_vector<uint8_t> emsa3_encoding(const secure_vector<uint8_t>& msg,
    if(output_length < hash_id_length + msg.size() + 10)
       throw Encoding_Error("emsa3_encoding: Output length is too small");
 
-   secure_vector<uint8_t> T(output_length);
+   std::vector<uint8_t> T(output_length);
    const size_t P_LENGTH = output_length - msg.size() - hash_id_length - 2;
 
    T[0] = 0x01;
@@ -46,13 +46,13 @@ void EMSA_PKCS1v15::update(const uint8_t input[], size_t length)
    m_hash->update(input, length);
    }
 
-secure_vector<uint8_t> EMSA_PKCS1v15::raw_data()
+std::vector<uint8_t> EMSA_PKCS1v15::raw_data()
    {
-   return m_hash->final();
+   return m_hash->final_stdvec();
    }
 
-secure_vector<uint8_t>
-EMSA_PKCS1v15::encoding_of(const secure_vector<uint8_t>& msg,
+std::vector<uint8_t>
+EMSA_PKCS1v15::encoding_of(const std::vector<uint8_t>& msg,
                            size_t output_bits,
                            RandomNumberGenerator& /*rng*/)
    {
@@ -63,8 +63,8 @@ EMSA_PKCS1v15::encoding_of(const secure_vector<uint8_t>& msg,
                          m_hash_id.data(), m_hash_id.size());
    }
 
-bool EMSA_PKCS1v15::verify(const secure_vector<uint8_t>& coded,
-                           const secure_vector<uint8_t>& raw,
+bool EMSA_PKCS1v15::verify(const std::vector<uint8_t>& coded,
+                           const std::vector<uint8_t>& raw,
                            size_t key_bits)
    {
    if(raw.size() != m_hash->output_length())
@@ -106,9 +106,9 @@ void EMSA_PKCS1v15_Raw::update(const uint8_t input[], size_t length)
    m_message += std::make_pair(input, length);
    }
 
-secure_vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data()
+std::vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data()
    {
-   secure_vector<uint8_t> ret;
+   std::vector<uint8_t> ret;
    std::swap(ret, m_message);
 
    if(m_hash_output_len > 0 && ret.size() != m_hash_output_len)
@@ -117,16 +117,16 @@ secure_vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data()
    return ret;
    }
 
-secure_vector<uint8_t>
-EMSA_PKCS1v15_Raw::encoding_of(const secure_vector<uint8_t>& msg,
+std::vector<uint8_t>
+EMSA_PKCS1v15_Raw::encoding_of(const std::vector<uint8_t>& msg,
                                size_t output_bits,
                                RandomNumberGenerator& /*rng*/)
    {
    return emsa3_encoding(msg, output_bits, m_hash_id.data(), m_hash_id.size());
    }
 
-bool EMSA_PKCS1v15_Raw::verify(const secure_vector<uint8_t>& coded,
-                               const secure_vector<uint8_t>& raw,
+bool EMSA_PKCS1v15_Raw::verify(const std::vector<uint8_t>& coded,
+                               const std::vector<uint8_t>& raw,
                                size_t key_bits)
    {
    if(m_hash_output_len > 0 && raw.size() != m_hash_output_len)
