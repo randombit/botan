@@ -14,12 +14,12 @@
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_mp.h>
 
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
-  #include <botan/ecc_key.h>
+#if defined(BOTAN_HAS_DL_GROUP)
+  #include <botan/dl_group.h>
 #endif
 
-#if defined(BOTAN_HAS_DL_PUBLIC_KEY_FAMILY)
-  #include <botan/dl_algo.h>
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+  #include <botan/ecc_key.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA)
@@ -346,9 +346,8 @@ int botan_privkey_load_dsa(botan_privkey_t* key,
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::Null_RNG null_rng;
       Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
-      auto dsa = std::make_unique<Botan::DSA_PrivateKey>(null_rng, group, safe_get(x));
+      auto dsa = std::make_unique<Botan::DSA_PrivateKey>(group, safe_get(x));
       *key = new botan_privkey_struct(std::move(dsa));
       return BOTAN_FFI_SUCCESS;
       });
@@ -502,9 +501,8 @@ int botan_privkey_load_elgamal(botan_privkey_t* key,
 #if defined(BOTAN_HAS_ELGAMAL)
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::Null_RNG null_rng;
       Botan::DL_Group group(safe_get(p), safe_get(g));
-      auto elg = std::make_unique<Botan::ElGamal_PrivateKey>(null_rng, group, safe_get(x));
+      auto elg = std::make_unique<Botan::ElGamal_PrivateKey>(group, safe_get(x));
       *key = new botan_privkey_struct(std::move(elg));
       return BOTAN_FFI_SUCCESS;
       });
@@ -527,9 +525,8 @@ int botan_privkey_load_dh(botan_privkey_t* key,
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::Null_RNG null_rng;
       Botan::DL_Group group(safe_get(p), safe_get(g));
-      auto dh = std::make_unique<Botan::DH_PrivateKey>(null_rng, group, safe_get(x));
+      auto dh = std::make_unique<Botan::DH_PrivateKey>(group, safe_get(x));
       *key = new botan_privkey_struct(std::move(dh));
       return BOTAN_FFI_SUCCESS;
       });

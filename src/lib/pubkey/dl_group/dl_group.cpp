@@ -379,6 +379,20 @@ bool DL_Group::verify_public_element(const BigInt& y) const
    return true;
    }
 
+bool DL_Group::verify_private_element(const BigInt& x) const
+   {
+   const BigInt& p = get_p();
+   const BigInt& q = get_q();
+
+   if(x <= 1 || x >= p)
+      return false;
+
+   if(q > 0 && x > q)
+      return false;
+
+   return true;
+   }
+
 bool DL_Group::verify_element_pair(const BigInt& y, const BigInt& x) const
    {
    const BigInt& p = get_p();
@@ -484,6 +498,11 @@ std::shared_ptr<const Montgomery_Params> DL_Group::monty_params_p() const
    return data().monty_params_p();
    }
 
+bool DL_Group::has_q() const
+   {
+   return data().q_is_set();
+   }
+
 size_t DL_Group::p_bits() const
    {
    return data().p_bits();
@@ -576,6 +595,11 @@ BigInt DL_Group::power_g_p(const BigInt& x) const
 BigInt DL_Group::power_g_p(const BigInt& x, size_t max_x_bits) const
    {
    return data().power_g_p(x, max_x_bits);
+   }
+
+BigInt DL_Group::power_b_p(const BigInt& b, const BigInt& x) const
+   {
+   return this->power_b_p(b, x, data().p_bits());
    }
 
 BigInt DL_Group::power_b_p(const BigInt& b, const BigInt& x, size_t max_x_bits) const

@@ -26,6 +26,7 @@
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   #include <botan/dl_group.h>
    #include <botan/dh.h>
 #endif
 
@@ -134,7 +135,7 @@ class TLS_Policy_Unit_Tests final : public Test
          const BigInt p("58458002095536094658683755258523362961421200751439456159756164191494576279467");
          const Botan::DL_Group grp(p, g);
          const Botan::BigInt x("46205663093589612668746163860870963912226379131190812163519349848291472898748");
-         auto dhkey = std::make_unique<Botan::DH_PrivateKey>(Test::rng(), grp, x);
+         auto dhkey = std::make_unique<Botan::DH_PrivateKey>(grp, x);
 
          Botan::TLS::Policy policy;
          try

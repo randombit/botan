@@ -291,6 +291,9 @@ create_ec_private_key(const std::string& alg_name,
                       const EC_Group& ec_group,
                       RandomNumberGenerator& rng)
    {
+   // Potentially unused if all EC algorthms are disabled
+   BOTAN_UNUSED(alg_name, ec_group, rng);
+
 #if defined(BOTAN_HAS_ECDSA)
    if(alg_name == "ECDSA")
       return std::make_unique<ECDSA_PrivateKey>(rng, ec_group);

@@ -13,6 +13,7 @@
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
 #include <botan/dh.h>
+#include <botan/dl_group.h>
 #include <botan/ecdh.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/ct_utils.h>

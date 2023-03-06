@@ -1,10 +1,10 @@
 <defines>
-DL_PUBLIC_KEY_FAMILY -> 20131128
+DL_SCHEME -> 20230101
 </defines>
 
 <module_info>
 name -> "Discrete Logarithm"
-brief -> "Base classes for discrete logarithm based schemes"
+brief -> "Classes for discrete logarithm based schemes"
 </module_info>
 
 <requires>
@@ -14,6 +14,6 @@ numbertheory
 rng
 </requires>
 
-<header:public>
-dl_algo.h
-</header:public>
+<header:internal>
+dl_scheme.h
+</header:internal>

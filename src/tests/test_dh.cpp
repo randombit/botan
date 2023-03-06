@@ -10,6 +10,7 @@
    #include "test_pubkey.h"
    #include <botan/pubkey.h>
    #include <botan/dh.h>
+   #include <botan/dl_group.h>
 #endif
 
 namespace Botan_Tests {
@@ -40,17 +41,17 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt x = vars.get_req_bn("X");
 
-         Botan::DL_Group grp;
+         Botan::DL_Group group;
          if(q == 0)
             {
-            grp = Botan::DL_Group(p, g);
+            group = Botan::DL_Group(p, g);
             }
          else
             {
-            grp = Botan::DL_Group(p, q, g);
+            group = Botan::DL_Group(p, q, g);
             }
 
-         return std::make_unique<Botan::DH_PrivateKey>(Test::rng(), grp, x);
+         return std::make_unique<Botan::DH_PrivateKey>(group, x);
          }
 
       std::vector<uint8_t> load_their_key(const std::string& /*header*/, const VarMap& vars) override
@@ -60,17 +61,17 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt y = vars.get_req_bn("Y");
 
-         Botan::DL_Group grp;
+         Botan::DL_Group group;
          if(q == 0)
             {
-            grp = Botan::DL_Group(p, g);
+            group = Botan::DL_Group(p, g);
             }
          else
             {
-            grp = Botan::DL_Group(p, q, g);
+            group = Botan::DL_Group(p, q, g);
             }
 
-         Botan::DH_PublicKey key(grp, y);
+         Botan::DH_PublicKey key(group, y);
          return key.public_value();
          }
 
@@ -80,10 +81,10 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
 
          const BigInt g("2");
          const BigInt p("58458002095536094658683755258523362961421200751439456159756164191494576279467");
-         const Botan::DL_Group grp(p, g);
+         const Botan::DL_Group group(p, g);
 
          const Botan::BigInt x("46205663093589612668746163860870963912226379131190812163519349848291472898748");
-         auto privkey = std::make_unique<Botan::DH_PrivateKey>(Test::rng(), grp, x);
+         auto privkey = std::make_unique<Botan::DH_PrivateKey>(group, x);
 
          auto kas = std::make_unique<Botan::PK_Key_Agreement>(*privkey, rng(), "Raw");
 
@@ -128,8 +129,9 @@ class DH_Invalid_Key_Tests final : public Text_Based_Test
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt pubkey = vars.get_req_bn("InvalidKey");
 
-         Botan::DL_Group grp(p, q, g);
-         auto key = std::make_unique<Botan::DH_PublicKey>(grp, pubkey);
+         Botan::DL_Group group(p, q, g);
+
+         auto key = std::make_unique<Botan::DH_PublicKey>(group, pubkey);
          result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
          return result;
          }

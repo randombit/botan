@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_ELGAMAL)
    #include <botan/elgamal.h>
+   #include <botan/dl_group.h>
    #include "test_pubkey.h"
 #endif
 
@@ -29,9 +30,9 @@ class ElGamal_Encrypt_Tests final : public PK_Encryption_Decryption_Test
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
          const Botan::BigInt x = vars.get_req_bn("Secret");
-         const Botan::DL_Group grp(vars.get_req_str("Group"));
+         const Botan::DL_Group group(vars.get_req_str("Group"));
 
-         return std::make_unique<Botan::ElGamal_PrivateKey>(Test::rng(), grp, x);
+         return std::make_unique<Botan::ElGamal_PrivateKey>(group, x);
          }
    };
 
@@ -50,9 +51,9 @@ class ElGamal_Decrypt_Tests final : public PK_Decryption_Test
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt x = vars.get_req_bn("X");
 
-         const Botan::DL_Group grp(p, g);
+         const Botan::DL_Group group(p, g);
 
-         return std::make_unique<Botan::ElGamal_PrivateKey>(Test::rng(), grp, x);
+         return std::make_unique<Botan::ElGamal_PrivateKey>(group, x);
          }
    };
 
