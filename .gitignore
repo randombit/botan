@@ -28,7 +28,6 @@ vgcore.*
 # Editor configuration files (top level)
 /*.sublime-project
 /*.sublime-workspace
-/.editorconfig
 
 # Archive files
 *.tgz
