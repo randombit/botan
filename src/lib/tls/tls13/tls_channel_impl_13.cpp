@@ -468,4 +468,9 @@ void Channel_Impl_13::set_record_size_limits(const uint16_t outgoing_limit,
    m_record_layer.set_record_size_limits(outgoing_limit, incoming_limit);
    }
 
+void Channel_Impl_13::set_certificate_type(const Certificate_Type cert_type)
+   {
+   m_handshake_layer.set_certificate_type(cert_type);
+   }
+
 }

@@ -249,6 +249,8 @@ class BOTAN_UNSTABLE_API Certificate_Type_Base : public Extension
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
+      Certificate_Type selected_certificate_type() const;
+
       bool empty() const override
          {
          // RFC 7250 4.1

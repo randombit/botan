@@ -217,7 +217,8 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
 */
 Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
                                const Policy& policy,
-                               const Connection_Side side)
+                               const Connection_Side side,
+                               const Certificate_Type cert_type)
    : m_side(side)
    {
    TLS_Data_Reader reader("cert message reader", buf);

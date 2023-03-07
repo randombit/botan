@@ -501,6 +501,13 @@ std::vector<uint8_t> Certificate_Type_Base::serialize(Connection_Side whoami) co
    return result;
    }
 
+Certificate_Type Certificate_Type_Base::selected_certificate_type() const
+   {
+   BOTAN_ASSERT_NOMSG(m_from == Connection_Side::Server);
+   BOTAN_ASSERT_NOMSG(m_certificate_types.size() == 1);
+   return m_certificate_types.front();
+   }
+
 
 Supported_Groups::Supported_Groups(const std::vector<Group_Params>& groups) : m_groups(groups)
    {

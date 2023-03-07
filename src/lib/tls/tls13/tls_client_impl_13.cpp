@@ -438,6 +438,18 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
       }
 
+   if(auto server_cert_type = exts.get<Server_Certificate_Type>())
+      {
+      // RFC 7250 4.2
+      //   With the server_certificate_type extension in the server hello, the
+      //   TLS server indicates the certificate type carried in the Certificate
+      //   payload.
+      //
+      // Note: TLS 1.3 carries this extension in the Encrypted Extensions
+      //       message instead of the Server Hello.
+      set_certificate_type(server_cert_type->selected_certificate_type());
+      }
+
    callbacks().tls_examine_extensions(exts, Connection_Side::Server, Handshake_Type::EncryptedExtensions);
 
    if(m_handshake_state.server_hello().extensions().has<PSK>())

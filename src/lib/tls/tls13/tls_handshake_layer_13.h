@@ -28,7 +28,17 @@ class Transcript_Hash_State;
 class BOTAN_TEST_API Handshake_Layer
    {
    public:
-      Handshake_Layer(Connection_Side whoami) : m_peer(whoami == Connection_Side::Server ? Connection_Side::Client : Connection_Side::Server) {}
+      Handshake_Layer(Connection_Side whoami)
+         : m_peer(whoami == Connection_Side::Server ? Connection_Side::Client : Connection_Side::Server)
+         // RFC 8446 4.4.2
+         //    If the corresponding certificate type extension
+         //    ("server_certificate_type" or "client_certificate_type") was not
+         //    negotiated in EncryptedExtensions, or the X.509 certificate type
+         //    was negotiated, then each CertificateEntry contains a DER-encoded
+         //    X.509 certificate.
+         //
+         // We need the certificate_type info to parse Certificate messages.
+         , m_certificate_type(Certificate_Type::X509) {}
 
       /**
        * Reads data that was received in handshake records and stores it internally for further
@@ -83,9 +93,15 @@ class BOTAN_TEST_API Handshake_Layer
        */
       bool has_pending_data() const { return !m_read_buffer.empty(); }
 
+      /**
+       * Set the certificate_type used for parsing Certificate messages
+       */
+      void set_certificate_type(Certificate_Type cert_type) { m_certificate_type = cert_type; }
+
    private:
       std::vector<uint8_t> m_read_buffer;
       Connection_Side m_peer;
+      Certificate_Type m_certificate_type;
    };
 
 }

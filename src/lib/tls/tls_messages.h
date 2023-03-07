@@ -580,7 +580,8 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
       */
       Certificate_13(const std::vector<uint8_t>& buf,
                      const Policy& policy,
-                     const Connection_Side side);
+                     const Connection_Side side,
+                     const Certificate_Type cert_type);
 
       /**
       * Validate a Certificate message regarding what extensions are expected based on
