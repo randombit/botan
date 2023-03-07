@@ -37,7 +37,7 @@ confidence=
 #   not libraries
 # * fixme is marking TODOs in the future
 # * no-else-return is often awkward
-disable=missing-docstring,fixme,duplicate-code,no-else-return,consider-using-f-string,consider-using-with
+disable=missing-docstring,fixme,duplicate-code,no-else-return,consider-using-f-string,consider-using-with,broad-exception-raised
 
 [REPORTS]
 
@@ -306,6 +306,4 @@ max-bool-expr=5
 
 [EXCEPTIONS]
 
-# Exceptions that will emit a warning when being caught. Defaults to
-# "Exception"
-overgeneral-exceptions=Exception
+#overgeneral-exceptions=builtins.Exception
