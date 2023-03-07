@@ -74,12 +74,10 @@ information about the connection.
 
  .. cpp:function:: void tls_session_established(const Botan::TLS::Session_Summary& session)
 
-     Mandatory. Called whenever a negotiation completes. This can happen more
-     than once on any connection, if renegotiation occurs. The *session* parameter
+     Optional - default implementation is a no-op
+     Called whenever a negotiation completes. This can happen more than once on
+     TLS 1.2 connections, if renegotiation occurs. The *session* parameter
      provides information about the session which was just established.
-
-     If this function returns false, the session will not be cached
-     for later resumption.
 
      If this function wishes to cancel the handshake, it can throw an
      exception which will send a close message to the counterparty and
