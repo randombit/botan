@@ -408,9 +408,12 @@ def run_cmd(cmd, root_dir, build_dir):
     sub_env['PYTHONPATH'] = os.path.abspath(os.path.join(root_dir, 'src/python'))
     cwd = None
 
-    redirect_stdout = None
+    redirect_stdout_fd = None
+    redirect_stdout_fsname = None
+
     if len(cmd) >= 3 and cmd[-2] == '>':
-        redirect_stdout = open(cmd[-1], 'w', encoding='utf8')
+        redirect_stdout_fsname = cmd[-1]
+        redirect_stdout_fd = open(redirect_stdout_fsname, 'w', encoding='utf8')
         cmd = cmd[:-2]
     if len(cmd) > 1 and cmd[0].startswith('indir:'):
         cwd = cmd[0][6:]
@@ -420,7 +423,7 @@ def run_cmd(cmd, root_dir, build_dir):
         sub_env[env_key] = env_val
         cmd = cmd[1:]
 
-    proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout)
+    proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout_fd)
     proc.communicate()
 
     time_taken = int(time.time() - start)
@@ -430,6 +433,10 @@ def run_cmd(cmd, root_dir, build_dir):
 
     if proc.returncode != 0:
         print("Command '%s' failed with error code %d" % (' '.join(cmd), proc.returncode))
+
+        if redirect_stdout_fd is not None:
+            redirect_stdout_fd.close()
+            print("%s", open(redirect_stdout_fsname, encoding='utf8').read())
 
         if cmd[0] not in ['lcov']:
             sys.exit(proc.returncode)
@@ -717,7 +724,8 @@ def main(args=None):
 
             if have_prog('codecov'):
                 # If codecov exists assume we are in CI and report to codecov.io
-                cmds.append(['indir:%s' % root_dir, 'codecov', '--required', '--gcov-root', build_dir, '>', os.path.join(build_dir, 'codecov_stdout.log')])
+                cmds.append(['indir:%s' % root_dir, 'codecov', '--required', '--gcov-root', build_dir,
+                             '>', os.path.join(build_dir, 'codecov_stdout.log')])
             else:
                 # Otherwise generate a local HTML report
                 cmds.append(['genhtml', cov_file, '--output-directory', os.path.join(build_dir, 'lcov-out')])
