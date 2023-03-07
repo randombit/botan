@@ -4,6 +4,7 @@
 *     2016 Juraj Somorovsky
 *     2021 Elektrobit Automotive GmbH
 *     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
+*     2023 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -57,6 +58,12 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 
       case Extension_Code::ApplicationLayerProtocolNegotiation:
          return std::make_unique<Application_Layer_Protocol_Notification>(reader, size, from);
+
+      case Extension_Code::ClientCertificateType:
+         return std::make_unique<Client_Certificate_Type>(reader, size, from);
+
+      case Extension_Code::ServerCertificateType:
+         return std::make_unique<Server_Certificate_Type>(reader, size, from);
 
       case Extension_Code::ExtendedMasterSecret:
          return std::make_unique<Extended_Master_Secret>(reader, size);
@@ -389,6 +396,82 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
 
    return buf;
    }
+
+std::string certificate_type_to_string(Certificate_Type type)
+   {
+   switch(type)
+      {
+      case Certificate_Type::X509:
+         return "X509";
+      case Certificate_Type::RawPublicKey:
+         return "RawPublicKey";
+      }
+
+   return "Unknown";
+   }
+
+Certificate_Type certificate_type_from_string(const std::string& type_str)
+   {
+   if(type_str == "X509")
+      return Certificate_Type::X509;
+   else if(type_str == "RawPublicKey")
+      return Certificate_Type::RawPublicKey;
+   else
+      throw Decoding_Error("Unknown certificate type: " + type_str);
+   }
+
+Certificate_Type_Base::Certificate_Type_Base(std::vector<Certificate_Type> supported_cert_types)
+   : m_certificate_types(std::move(supported_cert_types))
+   , m_from(Connection_Side::Client)
+   {
+   BOTAN_ARG_CHECK(!m_certificate_types.empty(), "at least one certificate type must be supported");
+   }
+
+Certificate_Type_Base::Certificate_Type_Base(Certificate_Type selected_cert_types)
+   : m_certificate_types({selected_cert_types})
+   , m_from(Connection_Side::Server) {}
+
+Certificate_Type_Base::Certificate_Type_Base(TLS_Data_Reader& reader,
+                                             uint16_t extension_size,
+                                             Connection_Side from)
+   : m_from(from)
+   {
+   if(extension_size == 0)
+      throw Decoding_Error("Certificate type extension cannot be empty");
+
+   if(from == Connection_Side::Client)
+      {
+      const auto type_bytes = reader.get_tls_length_value(1);
+      std::transform(type_bytes.begin(), type_bytes.end(), std::back_inserter(m_certificate_types),
+                     [](const auto type_byte) { return static_cast<Certificate_Type>(type_byte); });
+      }
+   else
+      {
+      if(extension_size != 1)
+         throw Decoding_Error("Server's certificate type extension must be of length 1");
+      const auto type_byte = reader.get_byte();
+      m_certificate_types.push_back(static_cast<Certificate_Type>(type_byte));
+      }
+   }
+
+std::vector<uint8_t> Certificate_Type_Base::serialize(Connection_Side whoami) const
+   {
+   std::vector<uint8_t> result;
+   if(whoami == Connection_Side::Client)
+      {
+      std::vector<uint8_t> type_bytes;
+      std::transform(m_certificate_types.begin(), m_certificate_types.end(), std::back_inserter(type_bytes),
+                     [](const auto type) { return static_cast<uint8_t>(type); });
+      append_tls_length_value(result, type_bytes, 1);
+      }
+   else
+      {
+      BOTAN_ASSERT_NOMSG(m_certificate_types.size() == 1);
+      result.push_back(static_cast<uint8_t>(m_certificate_types.front()));
+      }
+   return result;
+   }
+
 
 Supported_Groups::Supported_Groups(const std::vector<Group_Params>& groups) : m_groups(groups)
    {
