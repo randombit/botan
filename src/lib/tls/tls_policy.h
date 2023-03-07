@@ -371,6 +371,10 @@ class BOTAN_PUBLIC_API(2,0) Policy
       * Returns a list of accepted certificate types for client authentication
       * in order of preference. See RFC 7250 and RFC 8446 4.4.2 for details.
       * Defaults to X509 only.
+      *
+      * Note that it is the application's responsibility to provide public keys
+      * and/or certificates according to the specification in this list via the
+      * Credentials_Manager.
       */
       virtual std::vector<Certificate_Type> accepted_client_certificate_types() const;
 
@@ -378,6 +382,10 @@ class BOTAN_PUBLIC_API(2,0) Policy
       * Returns a list of accepted certificate types for server authentication
       * in order of preference. See RFC 7250 and RFC 8446 4.4.2 for details.
       * Defaults to X509 only.
+      *
+      * Note that it is the application's responsibility to provide public keys
+      * and/or certificates according to the specification in this list via the
+      * Credentials_Manager.
       */
       virtual std::vector<Certificate_Type> accepted_server_certificate_types() const;
 

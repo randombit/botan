@@ -235,11 +235,14 @@ class BOTAN_UNSTABLE_API Certificate_Type_Base : public Extension
        */
       Certificate_Type_Base(std::vector<Certificate_Type> supported_cert_types);
 
+   protected:
       /**
        * Called by the server to select a cert type to be used in the handshake.
        */
-      Certificate_Type_Base(Certificate_Type selected_cert_types);
+      Certificate_Type_Base(const Certificate_Type_Base& certificate_type_from_client,
+                            const std::vector<Certificate_Type>& server_preference);
 
+   public:
       Certificate_Type_Base(TLS_Data_Reader& reader,
                             uint16_t extension_size,
                             Connection_Side from);
@@ -267,6 +270,11 @@ class BOTAN_UNSTABLE_API Client_Certificate_Type final : public Certificate_Type
    public:
       using Certificate_Type_Base::Certificate_Type_Base;
 
+      /**
+       * Creates the Server Hello extension from the received client preferences.
+       */
+      Client_Certificate_Type(const Client_Certificate_Type& cct, const Policy& policy);
+
       static Extension_Code static_type()
          { return Extension_Code::ClientCertificateType; }
 
@@ -277,6 +285,11 @@ class BOTAN_UNSTABLE_API Server_Certificate_Type final : public Certificate_Type
    {
    public:
       using Certificate_Type_Base::Certificate_Type_Base;
+
+      /**
+       * Creates the Server Hello extension from the received client preferences.
+       */
+      Server_Certificate_Type(const Server_Certificate_Type& sct, const Policy& policy);
 
       static Extension_Code static_type()
          { return Extension_Code::ServerCertificateType; }

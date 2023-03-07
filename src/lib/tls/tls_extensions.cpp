@@ -427,9 +427,38 @@ Certificate_Type_Base::Certificate_Type_Base(std::vector<Certificate_Type> suppo
    BOTAN_ARG_CHECK(!m_certificate_types.empty(), "at least one certificate type must be supported");
    }
 
-Certificate_Type_Base::Certificate_Type_Base(Certificate_Type selected_cert_types)
-   : m_certificate_types({selected_cert_types})
-   , m_from(Connection_Side::Server) {}
+Client_Certificate_Type::Client_Certificate_Type(const Client_Certificate_Type& cct, const Policy& policy)
+   : Certificate_Type_Base(cct, policy.accepted_client_certificate_types()) {}
+
+Server_Certificate_Type::Server_Certificate_Type(const Server_Certificate_Type& sct, const Policy& policy)
+   : Certificate_Type_Base(sct, policy.accepted_server_certificate_types()) {}
+
+Certificate_Type_Base::Certificate_Type_Base(const Certificate_Type_Base& certificate_type_from_client,
+                                             const std::vector<Certificate_Type>& server_preference)
+   : m_from(Connection_Side::Server)
+   {
+   // RFC 7250 4.2
+   //    The server_certificate_type extension in the client hello indicates the
+   //    types of certificates the client is able to process when provided by
+   //    the server in a subsequent certificate payload. [...] With the
+   //    server_certificate_type extension in the server hello, the TLS server
+   //    indicates the certificate type carried in the Certificate payload.
+   for(const auto server_supported_cert_type : server_preference)
+      {
+      if(value_exists(certificate_type_from_client.m_certificate_types, server_supported_cert_type))
+         {
+         m_certificate_types.push_back(server_supported_cert_type);
+         return;
+         }
+      }
+
+   // RFC 7250 4.2 (3.)
+   //    The server supports the extension defined in this document, but
+   //    it does not have any certificate type in common with the client.
+   //    Then, the server terminates the session with a fatal alert of
+   //    type "unsupported_certificate".
+   throw TLS_Exception(Alert::UnsupportedCertificate, "Failed to agree on certificate_type");
+   }
 
 Certificate_Type_Base::Certificate_Type_Base(TLS_Data_Reader& reader,
                                              uint16_t extension_size,
