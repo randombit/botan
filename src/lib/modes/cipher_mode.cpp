@@ -54,7 +54,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
 #if defined(BOTAN_HAS_COMMONCRYPTO)
    if(provider.empty() || provider == "commoncrypto")
       {
-      std::unique_ptr<Cipher_Mode> commoncrypto_cipher(make_commoncrypto_cipher_mode(algo, direction));
+      auto commoncrypto_cipher = make_commoncrypto_cipher_mode(algo, direction);
 
       if(commoncrypto_cipher)
          return commoncrypto_cipher;
@@ -108,7 +108,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
       return std::unique_ptr<Cipher_Mode>();
       }
 
-   std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0), provider));
+   auto bc = BlockCipher::create(spec.arg(0), provider);
 
    if(!bc)
       {

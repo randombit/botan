@@ -35,7 +35,7 @@ class PBKDF_KAT_Tests final : public Text_Based_Test
          const size_t outlen = expected.size();
 
          Test::Result result(pbkdf_name);
-         std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create(pbkdf_name));
+         auto pbkdf = Botan::PBKDF::create(pbkdf_name);
 
          if(!pbkdf)
             {

@@ -6,7 +6,7 @@
 int main() {
   Botan::X509_Certificate cert("cert.pem");
   Botan::AutoSeeded_RNG rng;
-  std::unique_ptr<Botan::Public_Key> key(cert.subject_public_key());
+  auto key = cert.subject_public_key();
   if (!key->check_key(rng, false)) {
     throw std::invalid_argument("Loaded key is invalid");
   }

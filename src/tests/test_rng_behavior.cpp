@@ -190,8 +190,8 @@ class Stateful_RNG_Tests : public Test
          result.test_throws("broken underlying rng", [&rng_with_broken_rng]() { rng_with_broken_rng->random_vec(16); });
 
          // entropy_sources throw exception
-         std::unique_ptr<Broken_Entropy_Source> broken_entropy_source_1(new Broken_Entropy_Source());
-         std::unique_ptr<Broken_Entropy_Source> broken_entropy_source_2(new Broken_Entropy_Source());
+         auto broken_entropy_source_1 = std::make_unique<Broken_Entropy_Source>();
+         auto broken_entropy_source_2 = std::make_unique<Broken_Entropy_Source>();
 
          Botan::Entropy_Sources broken_entropy_sources;
          broken_entropy_sources.add_source(std::move(broken_entropy_source_1));
@@ -202,7 +202,7 @@ class Stateful_RNG_Tests : public Test
 
          // entropy source returns insufficient entropy
          Botan::Entropy_Sources insufficient_entropy_sources;
-         std::unique_ptr<Insufficient_Entropy_Source> insufficient_entropy_source(new Insufficient_Entropy_Source());
+         auto insufficient_entropy_source = std::make_unique<Insufficient_Entropy_Source>();
          insufficient_entropy_sources.add_source(std::move(insufficient_entropy_source));
 
          std::unique_ptr<Botan::Stateful_RNG> rng_with_insufficient_es = make_rng(insufficient_entropy_sources);

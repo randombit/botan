@@ -129,7 +129,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
    result.confirm("private key claims to support signatures",
                   privkey->supports_operation(Botan::PublicKeyOperation::Signature));
 
-   std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
+   auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey));
 
    result.confirm("public key claims to support signatures",
                   privkey->supports_operation(Botan::PublicKeyOperation::Signature));
@@ -378,7 +378,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
                   privkey->supports_operation(Botan::PublicKeyOperation::Encryption));
 
    // instead slice the private key to work around elgamal test inputs
-   //std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
+   //auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey));
    Botan::Public_Key* pubkey = privkey.get();
 
    std::vector<std::unique_ptr<Botan::PK_Decryptor>> decryptors;
@@ -734,7 +734,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
          try
             {
             Botan::DataSource_Memory data_src(Botan::X509::PEM_encode(key));
-            std::unique_ptr<Botan::Public_Key> loaded(Botan::X509::load_key(data_src));
+            auto loaded = Botan::X509::load_key(data_src);
 
             result.confirm("recovered public key from private", loaded != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
@@ -755,7 +755,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
             {
             const auto ber = key.subject_public_key();
             Botan::DataSource_Memory data_src(ber);
-            std::unique_ptr<Botan::Public_Key> loaded(Botan::X509::load_key(data_src));
+            auto loaded = Botan::X509::load_key(data_src);
 
             result.confirm("recovered public key from private", loaded != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());

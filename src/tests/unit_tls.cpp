@@ -70,7 +70,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
          m_ecdsa_ca(ecdsa_ca),
          m_ecdsa_key(ecdsa_key)
          {
-         std::unique_ptr<Botan::Certificate_Store_In_Memory> store(new Botan::Certificate_Store_In_Memory);
+         auto store = std::make_unique<Botan::Certificate_Store_In_Memory>();
          store->add_certificate(m_rsa_ca);
          store->add_certificate(m_ecdsa_ca);
          store->add_crl(rsa_crl);
@@ -185,7 +185,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
       std::vector<Botan::X509_DN> m_acceptable_cas;
    };
 
-Botan::Credentials_Manager*
+std::unique_ptr<Botan::Credentials_Manager>
 create_creds(Botan::RandomNumberGenerator& rng,
              bool with_client_certs = false)
    {
@@ -240,12 +240,10 @@ create_creds(Botan::RandomNumberGenerator& rng,
    std::unique_ptr<Botan::X509_Certificate> dsa_srv_cert;
    std::unique_ptr<Botan::X509_Certificate> dsa_ca_cert;
 
-   Credentials_Manager_Test* cmt = new Credentials_Manager_Test(
+   return std::make_unique<Credentials_Manager_Test>(
       with_client_certs,
       rsa_srv_cert, rsa_srv_key.release(), rsa_ca_cert, rsa_crl,
       ecdsa_srv_cert, ecdsa_srv_key.release(), ecdsa_ca_cert, ecdsa_crl);
-
-   return cmt;
    }
 
 class TLS_Handshake_Test final
@@ -796,7 +794,7 @@ class TLS_Unit_Tests final : public Test
          server_ses = std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng);
 #endif
 
-         std::unique_ptr<Botan::Credentials_Manager> creds(create_creds(rng));
+         auto creds = create_creds(rng);
 
 #if defined(BOTAN_HAS_TLS_CBC)
          for(std::string etm_setting : { "false", "true" })
@@ -865,7 +863,7 @@ class TLS_Unit_Tests final : public Test
                               results, *client_ses, *server_ses, *creds, "DH", "AES-128/GCM", "AEAD",
                               { { "groups", "ffdhe/ietf/2048" } });
 
-         std::unique_ptr<Botan::Credentials_Manager> creds_with_client_cert(create_creds(rng, true));
+         auto creds_with_client_cert = create_creds(rng, true);
 
          client_ses->remove_all();
          test_modern_versions("AES-256/GCM client certs",

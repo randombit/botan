@@ -86,7 +86,7 @@ bool Certificate_Verify_12::verify(const X509_Certificate& cert,
                                    const Handshake_State& state,
                                    const Policy& policy) const
    {
-   std::unique_ptr<Public_Key> key(cert.subject_public_key());
+   auto key = cert.subject_public_key();
 
    policy.check_peer_key_acceptable(*key);
 

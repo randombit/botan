@@ -34,7 +34,7 @@ std::string create_hex_fingerprint(const uint8_t bits[],
                                    size_t bits_len,
                                    const std::string& hash_name)
    {
-   std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_name));
+   auto hash_fn = HashFunction::create_or_throw(hash_name);
    const std::string hex_hash = hex_encode(hash_fn->process(bits, bits_len));
 
    std::string fprint;

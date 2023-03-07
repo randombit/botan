@@ -103,7 +103,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
       return std::unique_ptr<AEAD_Mode>();
       }
 
-   std::unique_ptr<BlockCipher> bc(BlockCipher::create(req.arg(0), provider));
+   auto bc = BlockCipher::create(req.arg(0), provider);
 
    if(!bc)
       {

@@ -61,16 +61,15 @@ class Zlib_Style_Stream : public Compression_Stream
 
       size_t avail_out() const override { return m_stream.avail_out; }
 
-      Zlib_Style_Stream()
+      Zlib_Style_Stream() :
+         m_allocs(std::make_unique<Compression_Alloc_Info>())
          {
          clear_mem(&m_stream, 1);
-         m_allocs.reset(new Compression_Alloc_Info);
          }
 
       ~Zlib_Style_Stream()
          {
          clear_mem(&m_stream, 1);
-         m_allocs.reset();
          }
 
    protected:

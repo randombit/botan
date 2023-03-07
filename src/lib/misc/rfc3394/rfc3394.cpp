@@ -18,7 +18,7 @@ secure_vector<uint8_t> rfc3394_keywrap(const secure_vector<uint8_t>& key,
                    "Invalid KEK length for NIST key wrap");
 
    const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
-   std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));
+   auto aes = BlockCipher::create_or_throw(cipher_name);
    aes->set_key(kek);
 
    std::vector<uint8_t> wrapped = nist_key_wrap(key.data(), key.size(), *aes);
@@ -35,7 +35,7 @@ secure_vector<uint8_t> rfc3394_keyunwrap(const secure_vector<uint8_t>& key,
                    "Bad input key size for NIST key unwrap");
 
    const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
-   std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));
+   auto aes = BlockCipher::create_or_throw(cipher_name);
    aes->set_key(kek);
 
    return nist_key_unwrap(key.data(), key.size(), *aes);

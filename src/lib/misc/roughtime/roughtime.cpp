@@ -120,7 +120,7 @@ bool verify_signature(const std::array<uint8_t, 32>& pk, const std::vector<uint8
 std::array<uint8_t, 64> hashLeaf(const std::array<uint8_t, 64>& leaf)
    {
    std::array<uint8_t, 64> ret{};
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw("SHA-512"));
+   auto hash = HashFunction::create_or_throw("SHA-512");
    hash->update(0);
    hash->update(leaf.data(), leaf.size());
    hash->final(ret.data());
@@ -129,7 +129,7 @@ std::array<uint8_t, 64> hashLeaf(const std::array<uint8_t, 64>& leaf)
 
 void hashNode(std::array<uint8_t, 64>& hash, const std::array<uint8_t, 64>& node, bool reverse)
    {
-   std::unique_ptr<HashFunction> h(HashFunction::create_or_throw("SHA-512"));
+   auto h = HashFunction::create_or_throw("SHA-512");
    h->update(1);
    if(reverse)
       {
@@ -240,7 +240,7 @@ Nonce nonce_from_blind(const std::vector<uint8_t>& previous_response,
    {
    std::array<uint8_t, 64> ret{};
    const auto blind_arr = blind.get_nonce();
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw("SHA-512"));
+   auto hash = HashFunction::create_or_throw("SHA-512");
    hash->update(previous_response);
    hash->update(hash->final());
    hash->update(blind_arr.data(), blind_arr.size());

@@ -48,7 +48,7 @@ std::string generate_passhash9(const std::string& pass,
    {
    BOTAN_ARG_CHECK(work_factor > 0 && work_factor < 512, "Invalid Passhash9 work factor");
 
-   std::unique_ptr<MessageAuthenticationCode> prf = get_pbkdf_prf(alg_id);
+   auto prf = get_pbkdf_prf(alg_id);
 
    if(!prf)
       throw Invalid_Argument("Passhash9: Algorithm id " +
@@ -112,7 +112,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
 
    const size_t kdf_iterations = WORK_FACTOR_SCALE * work_factor;
 
-   std::unique_ptr<MessageAuthenticationCode> pbkdf_prf = get_pbkdf_prf(alg_id);
+   auto pbkdf_prf = get_pbkdf_prf(alg_id);
 
    if(!pbkdf_prf)
       return false; // unknown algorithm, reject

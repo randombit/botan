@@ -135,7 +135,7 @@ class CC_Encrypt final : public Command
          const std::vector<uint8_t> tweak = Botan::hex_decode(get_arg("tweak"));
          const std::string pass = get_arg("passphrase");
 
-         std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
+         auto pbkdf = Botan::PBKDF::create("PBKDF2(SHA-256)");
          if(!pbkdf)
             {
             throw CLI_Error_Unsupported("PBKDF", "PBKDF2(SHA-256)");
@@ -170,7 +170,7 @@ class CC_Decrypt final : public Command
          const std::vector<uint8_t> tweak = Botan::hex_decode(get_arg("tweak"));
          const std::string pass = get_arg("passphrase");
 
-         std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
+         auto pbkdf = Botan::PBKDF::create("PBKDF2(SHA-256)");
          if(!pbkdf)
             {
             throw CLI_Error_Unsupported("PBKDF", "PBKDF2(SHA-256)");

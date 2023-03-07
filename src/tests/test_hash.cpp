@@ -94,7 +94,7 @@ class Hash_Function_Tests final : public Text_Based_Test
 
          for(auto const& provider_ask : providers)
             {
-            std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(algo, provider_ask));
+            auto hash = Botan::HashFunction::create(algo, provider_ask);
 
             if(!hash)
                {
@@ -102,7 +102,7 @@ class Hash_Function_Tests final : public Text_Based_Test
                continue;
                }
 
-            std::unique_ptr<Botan::HashFunction> clone(hash->clone());
+            auto clone = hash->new_object();
 
             const std::string provider(hash->provider());
             result.test_is_nonempty("provider", provider);
@@ -209,7 +209,7 @@ class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test
 
          for(auto const& provider_ask : providers)
             {
-            std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(algo, provider_ask));
+            auto hash = Botan::HashFunction::create(algo, provider_ask);
 
             if(!hash)
                {
@@ -298,7 +298,7 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test
 
          for(auto const& provider_ask : providers)
             {
-            std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(algo, provider_ask));
+            auto hash = Botan::HashFunction::create(algo, provider_ask);
 
             if(!hash)
                {

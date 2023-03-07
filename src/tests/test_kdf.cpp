@@ -29,7 +29,7 @@ class KDF_KAT_Tests final : public Text_Based_Test
          {
          Test::Result result(kdf_name);
 
-         std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdf_name));
+         auto kdf = Botan::KDF::create(kdf_name);
 
          if(!kdf)
             {
@@ -46,7 +46,7 @@ class KDF_KAT_Tests final : public Text_Based_Test
          result.test_eq("derived key", kdf->derive_key(expected.size(), secret, salt, label), expected);
 
          // Test that clone works
-         std::unique_ptr<Botan::KDF> clone(kdf->clone());
+         auto clone = kdf->new_object();
          result.confirm("Clone has different pointer", kdf.get() != clone.get());
          result.test_eq("Clone has same name", kdf->name(), clone->name());
 

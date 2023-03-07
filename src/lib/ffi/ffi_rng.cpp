@@ -154,7 +154,7 @@ int botan_rng_init_custom(botan_rng_t* rng_out, const char* rng_name, void* cont
          std::function<void(void* context)> m_destroy_cb;
       };
 
-   std::unique_ptr<Botan::RandomNumberGenerator> rng(new Custom_RNG(rng_name, context, get_cb, add_entropy_cb, destroy_cb));
+   auto rng = std::make_unique<Custom_RNG>(rng_name, context, get_cb, add_entropy_cb, destroy_cb);
 
    *rng_out = new botan_rng_struct(std::move(rng));
    return BOTAN_FFI_SUCCESS;

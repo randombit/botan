@@ -46,7 +46,7 @@ class Message_Auth_Tests final : public Text_Based_Test
 
          for(auto const& provider_ask : providers)
             {
-            std::unique_ptr<Botan::MessageAuthenticationCode> mac(Botan::MessageAuthenticationCode::create(algo, provider_ask));
+            auto mac = Botan::MessageAuthenticationCode::create(algo, provider_ask);
 
             if(!mac)
                {
@@ -105,7 +105,7 @@ class Message_Auth_Tests final : public Text_Based_Test
             mac->update(input);
 
             // Test that clone works and does not affect parent object
-            std::unique_ptr<Botan::MessageAuthenticationCode> clone(mac->clone());
+            auto clone = mac->new_object();
             result.confirm("Clone has different pointer", mac.get() != clone.get());
             result.test_eq("Clone has same name", mac->name(), clone->name());
             clone->set_key(key);
