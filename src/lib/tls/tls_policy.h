@@ -10,6 +10,7 @@
 #ifndef BOTAN_TLS_POLICY_H_
 #define BOTAN_TLS_POLICY_H_
 
+#include <botan/tls_extensions.h>
 #include <botan/tls_version.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_signature_scheme.h>
@@ -367,6 +368,20 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool request_client_certificate_authentication() const;
 
       /**
+      * Returns a list of accepted certificate types for client authentication
+      * in order of preference. See RFC 7250 and RFC 8446 4.4.2 for details.
+      * Defaults to X509 only.
+      */
+      virtual std::vector<Certificate_Type> accepted_client_certificate_types() const;
+
+      /**
+      * Returns a list of accepted certificate types for server authentication
+      * in order of preference. See RFC 7250 and RFC 8446 4.4.2 for details.
+      * Defaults to X509 only.
+      */
+      virtual std::vector<Certificate_Type> accepted_server_certificate_types() const;
+
+      /**
       * If true, then allow a DTLS client to restart a connection to the
       * same server association as described in section 4.2.8 of the DTLS RFC
       */
@@ -647,6 +662,9 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       bool require_client_certificate_authentication() const override;
 
+      std::vector<Certificate_Type> accepted_client_certificate_types() const override;
+      std::vector<Certificate_Type> accepted_server_certificate_types() const override;
+
       size_t minimum_ecdh_group_size() const override;
 
       size_t minimum_ecdsa_group_size() const override;
@@ -693,6 +711,7 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
                                         const std::vector<std::string>& def) const;
 
       std::vector<Group_Params> read_group_list(const std::string &group_str) const;
+      std::vector<Certificate_Type> read_cert_type_list(const std::string &cert_type_str) const;
 
       size_t get_len(const std::string& key, size_t def) const;
 
