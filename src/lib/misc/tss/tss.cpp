@@ -255,7 +255,7 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
                                           shares[0].m_contents[19]);
 
    const uint8_t hash_id = shares[0].m_contents[16];
-   std::unique_ptr<HashFunction> hash(get_rtss_hash_by_id(hash_id));
+   auto hash = get_rtss_hash_by_id(hash_id);
    const size_t hash_len = (hash ? hash->output_length() : 0);
 
    if(shares[0].size() != RTSS_HEADER_SIZE + share_len)

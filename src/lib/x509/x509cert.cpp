@@ -305,7 +305,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
          try
             {
-            std::unique_ptr<Public_Key> pub_key(X509::load_key(data->m_subject_public_key_bits_seq));
+            auto pub_key = X509::load_key(data->m_subject_public_key_bits_seq);
 
             const auto sig_status = obj.verify_signature(*pub_key);
 
@@ -328,7 +328,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    const std::vector<uint8_t> full_encoding = obj.BER_encode();
 
-   std::unique_ptr<HashFunction> sha1(HashFunction::create("SHA-1"));
+   auto sha1 = HashFunction::create("SHA-1");
    if(sha1)
       {
       sha1->update(data->m_subject_public_key_bitstring);
@@ -338,7 +338,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       data->m_fingerprint_sha1 = create_hex_fingerprint(full_encoding, "SHA-1");
       }
 
-   std::unique_ptr<HashFunction> sha256(HashFunction::create("SHA-256"));
+   auto sha256 = HashFunction::create("SHA-256");
    if(sha256)
       {
       sha256->update(data->m_issuer_dn_bits);
@@ -869,7 +869,7 @@ std::string X509_Certificate::to_string() const
 
    try
       {
-      std::unique_ptr<Public_Key> pubkey(this->subject_public_key());
+      auto pubkey = this->subject_public_key();
       out << "Public Key [" << pubkey->algo_name() << "-" << pubkey->key_length() << "]\n\n";
       out << X509::PEM_encode(*pubkey);
       }

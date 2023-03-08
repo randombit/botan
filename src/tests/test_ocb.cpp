@@ -291,7 +291,7 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
 
          Test::Result result("OCB long");
 
-         std::unique_ptr<Botan::BlockCipher> aes(Botan::BlockCipher::create_or_throw(algo));
+         auto aes = Botan::BlockCipher::create_or_throw(algo);
 
          Botan::OCB_Encryption enc(aes->new_object(), taglen / 8);
          Botan::OCB_Decryption dec(std::move(aes), taglen / 8);

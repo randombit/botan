@@ -63,7 +63,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          " bit long q requires a seed at least as many bits long");
 
    const std::string hash_name = hash_function_for(qbits);
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_name));
+   auto hash = HashFunction::create_or_throw(hash_name);
 
    const size_t HASH_SIZE = hash->output_length();
 

@@ -110,8 +110,7 @@ XMSS_PublicKey::create_verification_op(const std::string& /*params*/,
    {
    if(provider == "base" || provider.empty())
       {
-      return std::unique_ptr<PK_Ops::Verification>(
-                new XMSS_Verification_Operation(*this));
+      return std::make_unique<XMSS_Verification_Operation>(*this);
       }
    throw Provider_Not_Found(algo_name(), provider);
    }

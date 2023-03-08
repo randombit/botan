@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 
   // load keypair
   Botan::DataSource_Stream in(argv[1]);
-  std::unique_ptr<Botan::Private_Key> kp(Botan::PKCS8::load_key(in));
+  auto kp = Botan::PKCS8::load_key(in);
 
   // encrypt with pk
   Botan::PK_Encryptor_EME enc(*kp, rng, "EME1(SHA-256)");

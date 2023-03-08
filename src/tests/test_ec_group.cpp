@@ -828,7 +828,7 @@ class ECC_Invalid_Key_Tests final : public Text_Based_Test
 
          try
             {
-            std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_data));
+            auto key = Botan::X509::load_key(key_data);
             result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
             }
          catch(Botan::Decoding_Error&)

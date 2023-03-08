@@ -93,7 +93,7 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
    private:
       static std::vector<uint8_t> hash_bytes(const uint8_t b[], size_t len, const std::string& hash_fn = "SHA-256")
          {
-         std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_fn));
+         auto hash = Botan::HashFunction::create(hash_fn);
          hash->update(b, len);
          std::vector<uint8_t> r(hash->output_length());
          hash->final(r.data());
@@ -120,7 +120,7 @@ class McEliece_Tests final : public Test
 
       static std::string fingerprint(const Botan::Private_Key& key, const std::string& hash_algo = "SHA-256")
          {
-         std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
+         auto hash = Botan::HashFunction::create(hash_algo);
          if(!hash)
             {
             throw Test_Error("Hash " + hash_algo + " not available");
@@ -132,7 +132,7 @@ class McEliece_Tests final : public Test
 
       static std::string fingerprint(const Botan::Public_Key& key, const std::string& hash_algo = "SHA-256")
          {
-         std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
+         auto hash = Botan::HashFunction::create(hash_algo);
          if(!hash)
             {
             throw Test_Error("Hash " + hash_algo + " not available");

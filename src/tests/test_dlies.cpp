@@ -45,14 +45,14 @@ class DLIES_KAT_Tests final : public Text_Based_Test
 
          Test::Result result("DLIES " + cipher_algo);
 
-         std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdf_algo));
+         auto kdf = Botan::KDF::create(kdf_algo);
          if(!kdf)
             {
             result.test_note("Skipping due to missing KDF:  " + kdf_algo);
             return result;
             }
 
-         std::unique_ptr<Botan::MAC> mac(Botan::MAC::create(mac_algo));
+         auto mac = Botan::MAC::create(mac_algo);
          if(!mac)
             {
             result.test_note("Skipping due to missing MAC:  " + mac_algo);

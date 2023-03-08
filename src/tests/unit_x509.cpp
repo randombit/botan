@@ -829,7 +829,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
       }
 
    /* Create user #1's key and cert request */
-   std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
+   auto user1_key = make_a_private_key(sig_algo);
 
    Botan::PKCS10_Request user1_req =
       Botan::X509::create_cert_req(req_opts1(sig_algo, sig_padding),
@@ -841,7 +841,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
                   user1_req.challenge_password(), "zoom");
 
    /* Create user #2's key and cert request */
-   std::unique_ptr<Botan::Private_Key> user2_key(make_a_private_key(sig_algo));
+   auto user2_key = make_a_private_key(sig_algo);
 
    Botan::PKCS10_Request user2_req =
       Botan::X509::create_cert_req(req_opts2(sig_padding),
@@ -850,7 +850,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
                                    Test::rng());
 
    // /* Create user #3's key and cert request */
-   std::unique_ptr<Botan::Private_Key> user3_key(make_a_private_key(sig_algo));
+   auto user3_key = make_a_private_key(sig_algo);
 
    Botan::PKCS10_Request user3_req =
       Botan::X509::create_cert_req(req_opts3(sig_padding),
@@ -1013,7 +1013,7 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, Test::rng());
 
-   std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
+   auto user1_key = make_a_private_key(sig_algo);
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
    opts.constraints = Key_Constraints::DigitalSignature;
@@ -1118,7 +1118,7 @@ Test::Result test_self_issued(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, Test::rng());
 
-   std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
+   auto user_key = make_a_private_key(sig_algo);
 
    // create a self-issued certificate, that is, a certificate with subject dn == issuer dn,
    // but signed by a CA, not signed by it's own private key
@@ -1350,7 +1350,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, Test::rng());
 
-   std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
+   auto user_key = make_a_private_key(sig_algo);
 
    Botan::X509_DN subject_dn;
 
@@ -1419,7 +1419,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, Test::rng());
 
-   std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
+   auto user_key = make_a_private_key(sig_algo);
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
    opts.constraints = Key_Constraints::DigitalSignature;

@@ -109,7 +109,7 @@ std::vector<std::string> probe_providers_of(const std::string& algo_spec,
    std::vector<std::string> providers;
    for(auto&& prov : possible)
       {
-      std::unique_ptr<T> o(T::create(algo_spec, prov));
+      auto o = T::create(algo_spec, prov);
       if(o)
          {
          providers.push_back(prov); // available

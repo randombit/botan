@@ -164,7 +164,7 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
 
    try
       {
-      std::unique_ptr<Public_Key> pub_key(issuer.subject_public_key());
+      auto pub_key = issuer.subject_public_key();
 
       PK_Verifier verifier(*pub_key, m_sig_algo);
 

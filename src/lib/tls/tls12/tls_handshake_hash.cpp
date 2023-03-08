@@ -19,7 +19,7 @@ secure_vector<uint8_t> Handshake_Hash::final(const std::string& mac_algo) const
    if(mac_algo == "SHA-1")
       hash_algo = "SHA-256";
 
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo));
+   auto hash = HashFunction::create_or_throw(hash_algo);
    hash->update(m_data);
    return hash->final();
    }

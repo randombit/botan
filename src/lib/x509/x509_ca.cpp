@@ -43,7 +43,7 @@ Extensions choose_extensions(const PKCS10_Request& req,
    const auto constraints =
       req.is_CA() ? Key_Constraints::ca_constraints() : req.constraints();
 
-   std::unique_ptr<Public_Key> key(req.subject_public_key());
+   auto key = req.subject_public_key();
    if(!constraints.compatible_with(*key))
       throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
 

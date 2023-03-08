@@ -15,7 +15,7 @@ namespace Botan {
 
 GMAC::GMAC(std::unique_ptr<BlockCipher> cipher) :
    m_cipher(std::move(cipher)),
-   m_ghash(new GHASH),
+   m_ghash(std::make_unique<GHASH>()),
    m_aad_buf(GCM_BS),
    m_H(GCM_BS),
    m_aad_buf_pos(0),

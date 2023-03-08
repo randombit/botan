@@ -208,7 +208,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode_Filter final : public Keyed_Filter,
 inline Keyed_Filter* get_cipher(const std::string& algo_spec,
                                 Cipher_Dir direction)
    {
-   std::unique_ptr<Cipher_Mode> c(Cipher_Mode::create_or_throw(algo_spec, direction));
+   auto c = Cipher_Mode::create_or_throw(algo_spec, direction);
    return new Cipher_Mode_Filter(c.release());
    }
 

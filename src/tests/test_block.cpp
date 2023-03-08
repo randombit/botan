@@ -47,7 +47,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
 
          for(auto const& provider_ask : providers)
             {
-            std::unique_ptr<Botan::BlockCipher> cipher(Botan::BlockCipher::create(algo, provider_ask));
+            auto cipher = Botan::BlockCipher::create(algo, provider_ask);
 
             if(!cipher)
                {
@@ -117,7 +117,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
                }
 
             // Test that clone works and does not affect parent object
-            std::unique_ptr<Botan::BlockCipher> clone(cipher->clone());
+            auto clone = cipher->new_object();
             result.confirm("Clone has different pointer", cipher.get() != clone.get());
             result.test_eq("Clone has same name", cipher->name(), clone->name());
             clone->set_key(Test::rng().random_vec(cipher->maximum_keylength()));

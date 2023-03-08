@@ -4,9 +4,9 @@
 #include <iostream>
 
 int main() {
-  std::unique_ptr<Botan::HashFunction> hash1(Botan::HashFunction::create("SHA-256"));
-  std::unique_ptr<Botan::HashFunction> hash2(Botan::HashFunction::create("SHA-384"));
-  std::unique_ptr<Botan::HashFunction> hash3(Botan::HashFunction::create("SHA-3"));
+  auto hash1 = Botan::HashFunction::create("SHA-256");
+  auto hash2 = Botan::HashFunction::create("SHA-384");
+  auto hash3 = Botan::HashFunction::create("SHA-3");
   std::vector<uint8_t> buf(2048);
 
   while (std::cin.good()) {

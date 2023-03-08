@@ -285,7 +285,7 @@ class PK_Verify final : public Command
 
       void go() override
          {
-         std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(get_arg("pubkey")));
+         auto key = Botan::X509::load_key(get_arg("pubkey"));
          if(!key)
             {
             throw CLI_Error("Unable to load public key");

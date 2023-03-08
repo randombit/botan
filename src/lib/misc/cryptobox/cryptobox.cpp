@@ -143,7 +143,7 @@ decrypt_bin(const uint8_t input[], size_t input_len,
    if(!constant_time_compare(computed_mac.data(), box_mac, MAC_OUTPUT_LEN))
       throw Decoding_Error("CryptoBox integrity failure");
 
-   std::unique_ptr<Cipher_Mode> ctr(Cipher_Mode::create_or_throw("Serpent/CTR-BE", Cipher_Dir::Decryption));
+   auto ctr = Cipher_Mode::create_or_throw("Serpent/CTR-BE", Cipher_Dir::Decryption);
    ctr->set_key(cipher_key, CIPHER_KEY_LEN);
    ctr->start(iv, CIPHER_IV_LEN);
    ctr->finish(ciphertext, CRYPTOBOX_HEADER_LEN);

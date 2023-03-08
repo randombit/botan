@@ -472,8 +472,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
 
 std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const
    {
-   return std::unique_ptr<Public_Key>(
-      new XMSS_PublicKey(xmss_parameters().oid(), root(), public_seed()));
+   return std::make_unique<XMSS_PublicKey>(xmss_parameters().oid(), root(), public_seed());
    }
 
 std::unique_ptr<PK_Ops::Signature>
@@ -482,8 +481,7 @@ XMSS_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Signature>(
-         new XMSS_Signature_Operation(*this));
+      return std::make_unique<XMSS_Signature_Operation>(*this);
 
    throw Provider_Not_Found(algo_name(), provider);
    }

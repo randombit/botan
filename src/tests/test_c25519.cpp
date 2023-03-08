@@ -117,8 +117,8 @@ class Curve25519_Roundtrip_Test final : public Test
             Botan::DataSource_Memory a_pub_ds(a_pub_pem);
             Botan::DataSource_Memory b_pub_ds(b_pub_pem);
 
-            std::unique_ptr<Botan::Public_Key> a_pub(Botan::X509::load_key(a_pub_ds));
-            std::unique_ptr<Botan::Public_Key> b_pub(Botan::X509::load_key(b_pub_ds));
+            auto a_pub = Botan::X509::load_key(a_pub_ds);
+            auto b_pub = Botan::X509::load_key(b_pub_ds);
 
             Botan::Curve25519_PublicKey* a_pub_key = dynamic_cast<Botan::Curve25519_PublicKey*>(a_pub.get());
             Botan::Curve25519_PublicKey* b_pub_key = dynamic_cast<Botan::Curve25519_PublicKey*>(b_pub.get());

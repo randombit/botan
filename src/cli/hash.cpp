@@ -36,7 +36,7 @@ class Hash final : public Command
          const size_t buf_size = get_arg_sz("buf-size");
          const bool no_fsname = flag_set("no-fsname");
 
-         std::unique_ptr<Botan::HashFunction> hash_fn(Botan::HashFunction::create(hash_algo));
+         auto hash_fn = Botan::HashFunction::create(hash_algo);
 
          if(!hash_fn)
             {

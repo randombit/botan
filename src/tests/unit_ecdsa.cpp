@@ -88,7 +88,7 @@ Test::Result test_decode_ecdsa_X509()
    result.test_eq("key fingerprint", cert.fingerprint("SHA-256"),
                   "3B:6C:99:1C:D6:5A:51:FC:EB:17:E3:AA:F6:3C:1A:DA:14:1F:82:41:30:6F:64:EE:FF:63:F3:1F:D6:07:14:9F");
 
-   std::unique_ptr<Botan::Public_Key> pubkey(cert.subject_public_key());
+   auto pubkey = cert.subject_public_key();
    result.test_eq("verify self-signed signature", cert.check_signature(*pubkey), true);
 
    return result;
@@ -100,7 +100,7 @@ Test::Result test_decode_ver_link_SHA256()
    Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root2_SHA256.cer"));
    Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA256.cer"));
 
-   std::unique_ptr<Botan::Public_Key> pubkey(root_cert.subject_public_key());
+   auto pubkey = root_cert.subject_public_key();
    result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
    return result;
    }
@@ -111,7 +111,7 @@ Test::Result test_decode_ver_link_SHA1()
    Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA1.166.crt"));
 
    Test::Result result("ECDSA Unit");
-   std::unique_ptr<Botan::Public_Key> pubkey(root_cert.subject_public_key());
+   auto pubkey = root_cert.subject_public_key();
 
    auto sha1 = Botan::HashFunction::create("SHA-1");
 

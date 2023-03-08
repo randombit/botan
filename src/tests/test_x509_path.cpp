@@ -485,12 +485,12 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run()
          }
       else if(end && !root)    // CRT self signed tests
          {
-         std::unique_ptr<Botan::Public_Key> pubkey(end->subject_public_key());
+         auto pubkey = end->subject_public_key();
          result.test_eq(test_name + " verify signature", end->check_signature(*pubkey), !!(std::stoi(expected_result)));
          }
       else if(csr)    // PKCS#10 Request
          {
-         std::unique_ptr<Botan::Public_Key> pubkey(csr->subject_public_key());
+         auto pubkey = csr->subject_public_key();
          result.test_eq(test_name + " verify signature", csr->check_signature(*pubkey), !!(std::stoi(expected_result)));
          }
 

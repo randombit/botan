@@ -262,7 +262,7 @@ Server_Impl_12::Server_Impl_12(const Channel_Impl::Downgrade_Information& downgr
 
 std::unique_ptr<Handshake_State> Server_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io)
    {
-   std::unique_ptr<Handshake_State> state(new Server_Handshake_State(std::move(io), callbacks()));
+   auto state = std::make_unique<Server_Handshake_State>(std::move(io), callbacks());
    state->set_expected_next(Handshake_Type::ClientHello);
    return state;
    }

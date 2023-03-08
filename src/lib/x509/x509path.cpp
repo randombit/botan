@@ -116,7 +116,7 @@ PKIX::check_chain(const std::vector<X509_Certificate>& cert_path,
       if(!issuer.is_CA_cert() && !self_signed_ee_cert)
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
 
-      std::unique_ptr<Public_Key> issuer_key(issuer.subject_public_key());
+      auto issuer_key = issuer.subject_public_key();
 
       // Check the signature algorithm is known
       if(!subject.signature_algorithm().oid().registered_oid())

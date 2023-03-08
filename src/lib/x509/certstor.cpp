@@ -104,7 +104,7 @@ Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(const std::vector<uint8_t>
    if(key_hash.size() != 20)
       throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_pubkey_sha1 invalid hash");
 
-   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-1"));
+   auto hash = HashFunction::create("SHA-1");
 
    for(const auto& cert : m_certs){
       hash->update(cert.subject_public_key_bitstring());
@@ -121,7 +121,7 @@ Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256(const std::vecto
    if(subject_hash.size() != 32)
       throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256 invalid hash");
 
-   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
+   auto hash = HashFunction::create("SHA-256");
 
    for(const auto& cert : m_certs){
       hash->update(cert.raw_subject_dn());

@@ -17,8 +17,8 @@ namespace Botan {
 SIV_Mode::SIV_Mode(std::unique_ptr<BlockCipher> cipher) :
    m_name(cipher->name() + "/SIV"),
    m_bs(cipher->block_size()),
-   m_ctr(new CTR_BE(cipher->new_object(), 8)),
-   m_mac(new CMAC(std::move(cipher)))
+   m_ctr(std::make_unique<CTR_BE>(cipher->new_object(), 8)),
+   m_mac(std::make_unique<CMAC>(std::move(cipher)))
    {
    // Not really true but only 128 bit allowed at the moment
    if(m_bs != 16)

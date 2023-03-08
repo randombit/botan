@@ -190,8 +190,8 @@ class CompressionCreate_Tests final : public Test
                {
                Test::Result result(algo + " create compression");
 
-               std::unique_ptr<Botan::Compression_Algorithm> c1(Botan::Compression_Algorithm::create(algo));
-               std::unique_ptr<Botan::Decompression_Algorithm> d1(Botan::Decompression_Algorithm::create(algo));
+               auto c1 = Botan::Compression_Algorithm::create(algo);
+               auto d1 = Botan::Decompression_Algorithm::create(algo);
 
                if(!c1 || !d1)
                   {
@@ -200,8 +200,8 @@ class CompressionCreate_Tests final : public Test
                   }
                result.test_ne("Not the same name after create", c1->name(), d1->name());
 
-               std::unique_ptr<Botan::Compression_Algorithm> c2(Botan::Compression_Algorithm::create_or_throw(algo));
-               std::unique_ptr<Botan::Decompression_Algorithm> d2(Botan::Decompression_Algorithm::create_or_throw(algo));
+               auto c2 = Botan::Compression_Algorithm::create_or_throw(algo);
+               auto d2 = Botan::Decompression_Algorithm::create_or_throw(algo);
 
                if(!c2 || !d2)
                   {

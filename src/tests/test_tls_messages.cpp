@@ -45,7 +45,7 @@ Test::Result test_hello_verify_request()
    Botan::TLS::Hello_Verify_Request hfr(test_data, "", sk);
 
    // Compute HMAC
-   std::unique_ptr<Botan::MessageAuthenticationCode> hmac(Botan::MessageAuthenticationCode::create("HMAC(SHA-256)"));
+   auto hmac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
    hmac->set_key(sk);
    hmac->update_be(uint64_t(0)); // length of client hello
    hmac->update_be(uint64_t(0)); // length of client identity

@@ -538,7 +538,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
             throw TLS_Exception(Alert::BadCertificate, "Server certificate changed during renegotiation");
          }
 
-      std::unique_ptr<Public_Key> peer_key(server_cert.subject_public_key());
+      auto peer_key = server_cert.subject_public_key();
 
       const std::string expected_key_type =
          state.ciphersuite().signature_used() ? state.ciphersuite().sig_algo() : "RSA";
