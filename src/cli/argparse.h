@@ -166,6 +166,11 @@ void Argument_Parser::parse_args(const std::vector<std::string>& params)
                throw CLI_Usage_Error("Unknown option --" + opt_name);
                }
 
+            if(m_user_args.contains(opt_name))
+               {
+               throw CLI_Usage_Error("Duplicated option --" + opt_name);
+               }
+
             m_user_args.insert(std::make_pair(opt_name, opt_val));
             }
          }
