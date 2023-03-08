@@ -6,6 +6,15 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "botan/tls_extensions.h"
+#include "botan/internal/tls_reader.h"
+#include "botan/assert.h"
+#include "botan/exceptn.h"
+#include "botan/pk_keys.h"
+#include "botan/tls_exceptn.h"
+#include "botan/tls_alert.h"
+#include "botan/tls_magic.h"
+#include "botan/x509cert.h"
 #include <botan/tls_messages.h>
 
 #include <botan/credentials_manager.h>
@@ -14,13 +23,17 @@
 #include <botan/tls_extensions.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_alert.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/loadstor.h>
 #include <botan/data_src.h>
+#include <botan/x509_key.h>
 
 #include <iterator>
+#include <memory>
+#include <variant>
 
 namespace Botan::TLS {
 
@@ -59,11 +72,22 @@ filter_signature_schemes(const std::vector<Signature_Scheme>& peer_scheme_prefer
 
 }
 
+bool Certificate_13::has_certificate_chain() const
+   {
+   return !empty() && m_entries.front().has_certificate();
+   }
+
+bool Certificate_13::is_raw_public_key() const
+   {
+   return !empty() && !has_certificate_chain();
+   }
+
 std::vector<X509_Certificate> Certificate_13::cert_chain() const
    {
+   BOTAN_STATE_CHECK(has_certificate_chain());
    std::vector<X509_Certificate> result;
    std::transform(m_entries.cbegin(), m_entries.cend(), std::back_inserter(result),
-                  [](const auto& cert_entry) { return cert_entry.certificate; });
+                  [](const auto& cert_entry) { return cert_entry.certificate(); });
    return result;
    }
 
@@ -76,17 +100,17 @@ void Certificate_13::validate_extensions(const std::set<Extension_Code>& request
    //    extensions in the CertificateRequest message from the server.
    for(const auto& entry : m_entries)
       {
-      if(entry.extensions.contains_other_than(requested_extensions))
+      if(entry.extensions().contains_other_than(requested_extensions))
          { throw TLS_Exception(Alert::IllegalParameter, "Certificate Entry contained an extension that was not offered"); }
 
-      cb.tls_examine_extensions(entry.extensions, m_side, type());
+      cb.tls_examine_extensions(entry.extensions(), m_side, type());
       }
    }
 
-const X509_Certificate& Certificate_13::leaf() const
+const Public_Key& Certificate_13::public_key() const
    {
    BOTAN_STATE_CHECK(!empty());
-   return m_entries.front().certificate;
+   return m_entries.front().public_key();
    }
 
 void Certificate_13::verify(Callbacks& callbacks,
@@ -95,18 +119,38 @@ void Certificate_13::verify(Callbacks& callbacks,
                             const std::string& hostname,
                             bool use_ocsp) const
    {
+   const auto usage = (m_side == Connection_Side::Client) 
+                        ? Usage_Type::TLS_CLIENT_AUTH
+                        : Usage_Type::TLS_SERVER_AUTH;
+   
+   if(!has_certificate_chain())
+      {
+      callbacks.tls_verify_raw_public_key(public_key(), usage, hostname, policy);
+      return;
+      }
+
+   verify_certificate_chain(callbacks, policy, creds, hostname, use_ocsp, usage);
+   }
+
+void Certificate_13::verify_certificate_chain(Callbacks& callbacks,
+                                              const Policy& policy,
+                                              Credentials_Manager& creds,
+                                              const std::string& hostname,
+                                              bool use_ocsp,
+                                              Usage_Type usage_type) const
+   {
    std::vector<X509_Certificate> certs;
    std::vector<std::optional<OCSP::Response>> ocsp_responses;
    for(const auto& entry : m_entries)
       {
-      certs.push_back(entry.certificate);
+      certs.push_back(entry.certificate());
       if(use_ocsp)
          {
-         if(entry.extensions.has<Certificate_Status_Request>())
+         if(entry.extensions().has<Certificate_Status_Request>())
             {
             ocsp_responses.push_back(
                callbacks.tls_parse_ocsp_response(
-                  entry.extensions.get<Certificate_Status_Request>()->get_ocsp_response()));
+                  entry.extensions().get<Certificate_Status_Request>()->get_ocsp_response()));
             }
          else
             {
@@ -117,7 +161,7 @@ void Certificate_13::verify(Callbacks& callbacks,
          }
       }
 
-   const auto& server_cert = m_entries.front().certificate;
+   const auto& server_cert = m_entries.front().certificate();
    if(!certificate_allows_signing(server_cert))
       {
       throw TLS_Exception(Alert::BadCertificate,
@@ -128,8 +172,7 @@ void Certificate_13::verify(Callbacks& callbacks,
                                      m_side == Connection_Side::Client ? "tls-client" : "tls-server",
                                      hostname);
 
-   const auto usage = (m_side == Connection_Side::Client) ? Usage_Type::TLS_CLIENT_AUTH : Usage_Type::TLS_SERVER_AUTH;
-   callbacks.tls_verify_cert_chain(certs, ocsp_responses, trusted_CAs, usage, hostname, policy);
+   callbacks.tls_verify_cert_chain(certs, ocsp_responses, trusted_CAs, usage_type, hostname, policy);
    }
 
 void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
@@ -161,11 +204,10 @@ void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
       //       context depending on the message whose extensions should be
       //       manipulatable.
       callbacks.tls_modify_extensions(exts, m_side, type());
-      auto& entry = m_entries.emplace_back();
-      entry.certificate = cert_chain[i];
+      auto& entry = m_entries.emplace_back(cert_chain[i]);
       if(!ocsp_responses[i].empty())
          {
-         entry.extensions.add(new Certificate_Status_Request(ocsp_responses[i]));
+         entry.extensions().add(new Certificate_Status_Request(ocsp_responses[i]));
          }
       }
    }
@@ -212,6 +254,73 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
                  callbacks);
    }
 
+Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
+                                                     const Connection_Side side,
+                                                     const Certificate_Type cert_type)
+   {
+   switch(cert_type)
+      {
+      case Certificate_Type::X509:
+         m_certificate = X509_Certificate(reader.get_tls_length_value(3));
+         m_raw_public_key = m_certificate->subject_public_key();
+         break;
+      case Certificate_Type::RawPublicKey:
+         m_raw_public_key = X509::load_key(reader.get_tls_length_value(3));
+         break;
+      default:
+         throw TLS_Exception(Alert::InternalError, "Unknown certificate type");
+      }
+   
+   // Extensions are simply tacked at the end of the certificate entry. This
+   // is a departure from the typical "tag-length-value" in a sense that the
+   // Extensions deserializer needs the length value of the extensions.
+   const auto extensions_length = reader.peek_uint16_t();
+   const auto exts_buf = reader.get_fixed<uint8_t>(extensions_length + 2);
+   TLS_Data_Reader exts_reader("extensions reader", exts_buf);
+   m_extensions.deserialize(exts_reader, side, Handshake_Type::Certificate);
+
+   if(cert_type == Certificate_Type::X509)
+      {
+      // RFC 8446 4.4.2
+      //    Valid extensions for server certificates at present include the
+      //    OCSP Status extension [RFC6066] and the SignedCertificateTimestamp
+      //    extension [RFC6962]; future extensions may be defined for this
+      //    message as well.
+      //
+      // RFC 8446 4.4.2.1
+      //    A server MAY request that a client present an OCSP response with its
+      //    certificate by sending an empty "status_request" extension in its
+      //    CertificateRequest message.
+      if(m_extensions.contains_implemented_extensions_other_than({
+            Extension_Code::CertificateStatusRequest,
+            // Extension_Code::SignedCertificateTimestamp
+         }))
+         {
+         throw TLS_Exception(Alert::IllegalParameter, "Certificate Entry contained an extension that is not allowed");
+         }
+      }
+   else if(m_extensions.contains_implemented_extensions_other_than({}))
+      {
+      throw TLS_Exception(Alert::IllegalParameter, "Certificate Entry holding something else than a certificate contained unexpected extensions");
+      }
+   }
+
+Certificate_13::Certificate_Entry::Certificate_Entry(X509_Certificate cert)
+   : m_certificate(std::move(cert))
+   , m_raw_public_key(m_certificate->subject_public_key()) {}
+
+const X509_Certificate& Certificate_13::Certificate_Entry::certificate() const
+   {
+   BOTAN_STATE_CHECK(has_certificate());
+   return m_certificate.value();
+   }
+
+const Public_Key& Certificate_13::Certificate_Entry::public_key() const
+   {
+   BOTAN_ASSERT_NONNULL(m_raw_public_key);
+   return *m_raw_public_key;
+   }
+
 /**
 * Deserialize a Certificate message
 */
@@ -246,50 +355,7 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
 
    while(reader.has_remaining())
       {
-      Certificate_Entry entry;
-      entry.certificate = X509_Certificate(reader.get_tls_length_value(3));
-
-      // RFC 8446 4.4.2.2
-      //    The certificate type MUST be X.509v3 [RFC5280], unless explicitly
-      //    negotiated otherwise (e.g., [RFC7250]).
-      //
-      // TLS 1.0 through 1.3 all seem to require that the certificate be
-      // precisely a v3 certificate. In fact the strict wording would seem
-      // to require that every certificate in the chain be v3. But often
-      // the intermediates are outside of the control of the server.
-      // But, require that the leaf certificate be v3.
-      if(m_entries.empty() && entry.certificate.x509_version() != 3)
-         {
-         throw TLS_Exception(Alert::BadCertificate, "The leaf certificate must be v3");
-         }
-
-      // Extensions are simply tacked at the end of the certificate entry. This
-      // is a departure from the typical "tag-length-value" in a sense that the
-      // Extensions deserializer needs the length value of the extensions.
-      const auto extensions_length = reader.peek_uint16_t();
-      const auto exts_buf = reader.get_fixed<uint8_t>(extensions_length + 2);
-      TLS_Data_Reader exts_reader("extensions reader", exts_buf);
-      entry.extensions.deserialize(exts_reader, m_side, type());
-
-      // RFC 8446 4.4.2
-      //    Valid extensions for server certificates at present include the
-      //    OCSP Status extension [RFC6066] and the SignedCertificateTimestamp
-      //    extension [RFC6962]; future extensions may be defined for this
-      //    message as well.
-      //
-      // RFC 8446 4.4.2.1
-      //    A server MAY request that a client present an OCSP response with its
-      //    certificate by sending an empty "status_request" extension in its
-      //    CertificateRequest message.
-      if(entry.extensions.contains_implemented_extensions_other_than({
-            Extension_Code::CertificateStatusRequest,
-            // Extension_Code::SignedCertificateTimestamp
-         }))
-         {
-         throw TLS_Exception(Alert::IllegalParameter, "Certificate Entry contained an extension that is not allowed");
-         }
-
-      m_entries.push_back(std::move(entry));
+      m_entries.emplace_back(reader, side, cert_type);
       }
 
    // RFC 8446 4.4.2
@@ -306,19 +372,44 @@ Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
          {
          throw TLS_Exception(Alert::DecodeError, "No certificates sent by server");
          }
+
+      return;
       }
-   else
+
+   BOTAN_ASSERT_NOMSG(!m_entries.empty());
+
+   // RFC 8446 4.4.2.2
+   //    The certificate type MUST be X.509v3 [RFC5280], unless explicitly
+   //    negotiated otherwise (e.g., [RFC7250]).
+   //
+   // TLS 1.0 through 1.3 all seem to require that the certificate be
+   // precisely a v3 certificate. In fact the strict wording would seem
+   // to require that every certificate in the chain be v3. But often
+   // the intermediates are outside of the control of the server.
+   // But, require that the leaf certificate be v3.
+   if(cert_type == Certificate_Type::X509 &&
+      m_entries.front().certificate().x509_version() != 3)
       {
-      /* validation of provided certificate public key */
-      auto key = m_entries.front().certificate.subject_public_key();
+      throw TLS_Exception(Alert::BadCertificate, "The leaf certificate must be v3");
+      }
+   
+   // RFC 8446 4.4.2
+   //    If the RawPublicKey certificate type was negotiated, then the
+   //    certificate_list MUST contain no more than one CertificateEntry.
+   if(cert_type == Certificate_Type::RawPublicKey &&
+      m_entries.size() != 1)
+      {
+      throw TLS_Exception(Alert::IllegalParameter, "Certificate message contained more than one RawPublicKey");
+      }
 
-      policy.check_peer_key_acceptable(*key);
+   // Validate the provided (certificate) public key against our policy
+   const auto& pubkey = public_key();
+   policy.check_peer_key_acceptable(pubkey);
 
-      if(!policy.allowed_signature_method(key->algo_name()))
-         {
-         throw TLS_Exception(Alert::HandshakeFailure,
-                             "Rejecting " + key->algo_name() + " signature");
-         }
+   if(!policy.allowed_signature_method(pubkey.algo_name()))
+      {
+      throw TLS_Exception(Alert::HandshakeFailure,
+                           "Rejecting " + pubkey.algo_name() + " signature");
       }
    }
 
@@ -334,7 +425,7 @@ std::vector<uint8_t> Certificate_13::serialize() const
    std::vector<uint8_t> entries;
    for(const auto& entry : m_entries)
       {
-      append_tls_length_value(entries, entry.certificate.BER_encode(), 3);
+      append_tls_length_value(entries, entry.certificate().BER_encode(), 3);
 
       // Extensions are tacked at the end of certificate entries. Note that
       // Extensions::serialize() usually emits the required length field,
@@ -343,7 +434,7 @@ std::vector<uint8_t> Certificate_13::serialize() const
       //
       // TODO: look into this issue more generally when overhauling the
       //       message marshalling.
-      auto extensions = entry.extensions.serialize(m_side);
+      auto extensions = entry.extensions().serialize(m_side);
       entries += (!extensions.empty())
                  ? extensions
                  : std::vector<uint8_t>{0, 0};

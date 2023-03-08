@@ -321,6 +321,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             }
          }
 
+
       void tls_session_activated() override
          {
          output() << "Handshake complete\n";

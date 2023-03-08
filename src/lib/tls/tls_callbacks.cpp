@@ -7,6 +7,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "botan/tls_exceptn.h"
 #include <botan/tls_callbacks.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_algos.h>
@@ -94,6 +95,16 @@ void TLS::Callbacks::tls_verify_cert_chain(
       throw TLS_Exception(Alert::BadCertificate,
                           "Certificate validation failure: " + result.result_string());
       }
+   }
+
+void TLS::Callbacks::tls_verify_raw_public_key(
+          const Public_Key& raw_public_key,
+          Usage_Type usage,
+          const std::string& hostname,
+          const TLS::Policy& policy)
+   {
+   BOTAN_UNUSED(raw_public_key, usage, hostname, policy);
+   throw TLS_Exception(Alert::CertificateUnknown, "Application did not provide a means to validate the raw public key");
    }
 
 std::optional<OCSP::Response> TLS::Callbacks::tls_parse_ocsp_response(const std::vector<uint8_t>& raw_response)

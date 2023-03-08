@@ -9,6 +9,10 @@
 #ifndef BOTAN_TLS_MESSAGES_H_
 #define BOTAN_TLS_MESSAGES_H_
 
+#include "botan/tls_extensions.h"
+#include "botan/internal/tls_reader.h"
+#include "botan/tls_magic.h"
+#include "botan/x509cert.h"
 #include <vector>
 #include <string>
 #include <set>
@@ -536,22 +540,37 @@ class Certificate_Request_13;
 class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
    {
    public:
-      struct Certificate_Entry
+      class Certificate_Entry
          {
-         // TODO: RFC 8446 4.4.2 specifies the possibility to negotiate the usage
-         //       of a single raw public key in lieu of the X.509 certificate
-         //       chain. This is left for future work.
-         X509_Certificate certificate;
-         Extensions       extensions;
+         public:
+            Certificate_Entry(TLS_Data_Reader& reader,
+                              const Connection_Side side,
+                              const Certificate_Type cert_type);
+            Certificate_Entry(X509_Certificate cert);
+
+            bool has_certificate() const { return m_certificate.has_value(); }
+
+            const X509_Certificate& certificate() const;
+            const Public_Key& public_key() const;
+            Extensions& extensions() { return m_extensions; }
+            const Extensions& extensions() const { return m_extensions; }
+         
+         private:
+            std::optional<X509_Certificate> m_certificate;
+            std::unique_ptr<Public_Key>     m_raw_public_key;
+            Extensions                      m_extensions;
          };
 
    public:
       Handshake_Type type() const override { return Handshake_Type::Certificate; }
       std::vector<X509_Certificate> cert_chain() const;
 
+      bool has_certificate_chain() const;
+      bool is_raw_public_key() const;
+      
       size_t count() const { return m_entries.size(); }
       bool empty() const { return m_entries.empty(); }
-      const X509_Certificate& leaf() const;
+      const Public_Key& public_key() const;
       const std::vector<uint8_t>& request_context() const { return m_request_context; }
 
       /**
@@ -610,8 +629,16 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
                          const Certificate_Status_Request* csr,
                          Callbacks& callbacks);
 
+      void verify_certificate_chain(Callbacks& callbacks,
+                                    const Policy& policy,
+                                    Credentials_Manager& creds,
+                                    const std::string& hostname,
+                                    bool use_ocsp,
+                                    Usage_Type usage_type) const;
+
    private:
       std::vector<uint8_t>           m_request_context;
+      std::unique_ptr<Public_Key>    m_public_key;
       std::vector<Certificate_Entry> m_entries;
       Connection_Side                m_side;
    };
@@ -785,7 +812,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
             Callbacks& callbacks,
             RandomNumberGenerator& rng);
 
-      bool verify(const X509_Certificate& cert,
+      bool verify(const Public_Key& cert,
                   Callbacks& callbacks,
                   const Transcript_Hash& transcript_hash) const;
 

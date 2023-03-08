@@ -954,6 +954,11 @@ class BOTAN_UNSTABLE_API Extensions final
          return m_extensions.size();
          }
 
+      bool empty() const
+         {
+         return m_extensions.empty();
+         }
+
       void add(std::unique_ptr<Extension> extn);
 
       void add(Extension* extn)

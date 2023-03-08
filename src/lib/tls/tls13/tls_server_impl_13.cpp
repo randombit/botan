@@ -49,7 +49,7 @@ std::vector<X509_Certificate> Server_Impl_13::peer_cert_chain() const
    {
    if(m_resumed_session.has_value())
       { return m_resumed_session->peer_certs(); }
-   else if(m_handshake_state.has_client_certificate_chain())
+   else if(m_handshake_state.has_client_certificate_msg())
       { return m_handshake_state.client_certificate().cert_chain(); }
    else
       { return {}; }
@@ -545,10 +545,10 @@ void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
                           " as a signature scheme");
       }
 
-   BOTAN_ASSERT_NOMSG(m_handshake_state.has_client_certificate_chain() &&
+   BOTAN_ASSERT_NOMSG(m_handshake_state.has_client_certificate_msg() &&
                       !m_handshake_state.client_certificate().empty());
    bool sig_valid = certificate_verify_msg.verify(
-                       m_handshake_state.client_certificate().leaf(),
+                       m_handshake_state.client_certificate().public_key(),
                        callbacks(),
                        m_transcript_hash.previous());
 
