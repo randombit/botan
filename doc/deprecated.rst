@@ -52,7 +52,7 @@ in a future major release.
 
 - Block cipher GOST 28147, Noekeon, Lion
 
-- Hash function GOST 34.11-94, MD4
+- Hash function GOST 34.11-94, Streebog, MD4
 
 - GOST 34.10 signature scheme
 
@@ -91,8 +91,7 @@ Deprecated Headers
   ``curve_gfp.h``,
   ``reducer.h``,
   ``tls_algos.h``,
-  ``tls_magic.h``,
-  ``xmss_hash.h``,
+  ``tls_magic.h``
 
   Utility headers, nominally useful in applications but not a core part of
   the library API and most are just sufficient for what the library needs
