@@ -213,7 +213,7 @@ int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
          }
       else
          {
-         return -2;
+         return -30;
          }
       });
    }
@@ -245,7 +245,7 @@ int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key,
          }
       else
          {
-         return -2;
+         return -30;
          }
       });
    }
