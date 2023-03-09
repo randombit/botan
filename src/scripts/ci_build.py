@@ -194,7 +194,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
             'srp6_kat', 'x509_path_bsi', 'xmss_keygen', 'xmss_sign',
             'pbkdf', 'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression',
-            'ed25519_sign', 'elgamal_keygen', 'x509_path_rsa_pss']
+            'ed25519_sign', 'elgamal_keygen', 'x509_path_rsa_pss',
+            'dsa_kat_verify']
 
         disabled_tests += slow_tests
 
