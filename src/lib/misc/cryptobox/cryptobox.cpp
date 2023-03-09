@@ -73,7 +73,7 @@ std::string encrypt(const uint8_t input[], size_t input_len,
    const uint8_t* iv = mk + CIPHER_KEY_LEN + MAC_KEY_LEN;
 
    // Now encrypt and authenticate
-   std::unique_ptr<Cipher_Mode> ctr = Cipher_Mode::create_or_throw("Serpent/CTR-BE", Cipher_Dir::Encryption);
+   auto ctr = Cipher_Mode::create_or_throw("Serpent/CTR-BE", Cipher_Dir::Encryption);
    ctr->set_key(cipher_key, CIPHER_KEY_LEN);
    ctr->start(iv, CIPHER_IV_LEN);
    ctr->finish(out_buf, CRYPTOBOX_HEADER_LEN);

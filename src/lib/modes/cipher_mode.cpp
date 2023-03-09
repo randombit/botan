@@ -175,7 +175,7 @@ std::vector<std::string> Cipher_Mode::providers(const std::string& algo_spec)
    std::vector<std::string> providers;
    for(auto&& prov : possible)
       {
-      std::unique_ptr<Cipher_Mode> mode = Cipher_Mode::create(algo_spec, Cipher_Dir::Encryption, prov);
+      auto mode = Cipher_Mode::create(algo_spec, Cipher_Dir::Encryption, prov);
       if(mode)
          {
          providers.push_back(prov); // available

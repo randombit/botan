@@ -82,7 +82,7 @@ Extensions::create_extn_obj(const OID& oid,
    {
    const std::string oid_str = oid.to_string();
 
-   std::unique_ptr<Certificate_Extension> extn = extension_from_oid(oid);
+   auto extn = extension_from_oid(oid);
 
    if(!extn)
       {
@@ -280,7 +280,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
          .decode(bits, ASN1_Type::OctetString)
       .end_cons();
 
-      std::unique_ptr<Certificate_Extension> obj = create_extn_obj(oid, critical, bits);
+      auto obj = create_extn_obj(oid, critical, bits);
       Extensions_Info info(critical, bits, std::move(obj));
 
       m_extension_oids.push_back(oid);

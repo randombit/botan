@@ -64,7 +64,7 @@ PKCS10_Request PKCS10_Request::create(const Private_Key& key,
                                       const std::string& challenge)
    {
    AlgorithmIdentifier sig_algo;
-   std::unique_ptr<PK_Signer> signer = choose_sig_format(sig_algo, key, rng, hash_fn, padding_scheme);
+   auto signer = choose_sig_format(sig_algo, key, rng, hash_fn, padding_scheme);
 
    const size_t PKCS10_VERSION = 0;
 
@@ -180,9 +180,7 @@ void PKCS10_Request::force_decode()
    {
    m_data.reset();
 
-   std::unique_ptr<PKCS10_Data> data = decode_pkcs10(signed_body());
-
-   m_data.reset(data.release());
+   m_data = decode_pkcs10(signed_body());
 
    auto key = this->subject_public_key();
    if(!this->check_signature(*key))

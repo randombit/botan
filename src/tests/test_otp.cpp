@@ -30,7 +30,7 @@ class HOTP_KAT_Tests final : public Text_Based_Test
          {
          Test::Result result("HOTP " + hash_algo);
 
-         std::unique_ptr<Botan::HashFunction> hash_test = Botan::HashFunction::create(hash_algo);
+         auto hash_test = Botan::HashFunction::create(hash_algo);
          if(!hash_test)
             return {result};
 
@@ -81,7 +81,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test
          {
          Test::Result result("TOTP " + hash_algo);
 
-         std::unique_ptr<Botan::HashFunction> hash_test = Botan::HashFunction::create(hash_algo);
+         auto hash_test = Botan::HashFunction::create(hash_algo);
          if(!hash_test)
             return {result};
 

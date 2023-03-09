@@ -46,10 +46,11 @@ class Cipher_Mode_Tests final : public Text_Based_Test
 
          for(auto&& provider_ask : providers)
             {
-            std::unique_ptr<Botan::Cipher_Mode> enc(Botan::Cipher_Mode::create(
-                  algo, Botan::Cipher_Dir::Encryption, provider_ask));
-            std::unique_ptr<Botan::Cipher_Mode> dec(Botan::Cipher_Mode::create(
-                  algo, Botan::Cipher_Dir::Decryption, provider_ask));
+            auto enc = Botan::Cipher_Mode::create(
+               algo, Botan::Cipher_Dir::Encryption, provider_ask);
+
+            auto dec = Botan::Cipher_Mode::create(
+               algo, Botan::Cipher_Dir::Decryption, provider_ask);
 
             if(!enc || !dec)
                {

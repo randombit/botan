@@ -18,7 +18,7 @@ namespace {
 
 uint32_t sha256_d_checksum(const uint8_t input[], size_t input_length)
    {
-   std::unique_ptr<HashFunction> sha256 = HashFunction::create_or_throw("SHA-256");
+   auto sha256 = HashFunction::create_or_throw("SHA-256");
 
    std::vector<uint8_t> checksum(32);
 

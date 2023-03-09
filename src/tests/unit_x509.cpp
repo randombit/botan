@@ -444,7 +444,7 @@ Test::Result test_crl_dn_name()
    Botan::X509_Certificate cert(Test::data_file("x509/misc/opcuactt_ca.der"));
 
    Botan::DataSource_Stream key_input(Test::data_file("x509/misc/opcuactt_ca.pem"));
-   std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(key_input);
+   auto key = Botan::PKCS8::load_key(key_input);
    Botan::X509_CA ca(cert, *key, "SHA-256", Test::rng());
 
    Botan::X509_CRL crl = ca.new_crl(Test::rng());
@@ -676,7 +676,7 @@ Test::Result test_verify_gost2012_cert()
    Test::Result test_result("X509 Padding Config");
 
    Botan::DataSource_Stream key_stream(Test::data_file("x509/misc/rsa_key.pem"));
-   std::unique_ptr<Botan::Private_Key> sk = Botan::PKCS8::load_key(key_stream);
+   auto sk = Botan::PKCS8::load_key(key_stream);
 
    // Create X509 CA certificate; EMSA3 is used for signing by default
    Botan::X509_Cert_Options opt("TESTCA");
@@ -1588,7 +1588,7 @@ class X509_Cert_Unit_Tests final : public Test
             if(algo == "Dilithium")
                hash = "SHAKE-256(512)";
 
-            std::unique_ptr<Botan::Private_Key> key = make_a_private_key(algo);
+            auto key = make_a_private_key(algo);
 
             if(key == nullptr)
                continue;
@@ -1675,7 +1675,7 @@ class X509_Cert_Unit_Tests final : public Test
 
          for(const std::string& algo : enc_algos)
             {
-            std::unique_ptr<Botan::Private_Key> key = make_a_private_key(algo);
+            auto key = make_a_private_key(algo);
 
             if(key)
                {
