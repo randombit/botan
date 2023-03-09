@@ -39,6 +39,7 @@ int botan_nist_kw_enc(const char* cipher_algo, int padded,
       return write_vec_output(wrapped_key, wrapped_key_len, output);
       });
 #else
+   BOTAN_UNUSED(cipher_algo, padded, key, key_len, kek, kek_len, wrapped_key, wrapped_key_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -66,6 +67,7 @@ int botan_nist_kw_dec(const char* cipher_algo, int padded,
       return write_vec_output(key, key_len, output);
       });
 #else
+   BOTAN_UNUSED(cipher_algo, padded, key, key_len, kek, kek_len, wrapped_key, wrapped_key_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }

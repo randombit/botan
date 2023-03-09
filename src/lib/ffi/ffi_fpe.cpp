@@ -28,9 +28,7 @@ int botan_fpe_fe1_init(botan_fpe_t* fpe, botan_mp_t n,
                        size_t rounds, uint32_t flags)
    {
 #if defined(BOTAN_HAS_FPE_FE1)
-
    return ffi_guard_thunk(__func__, [=]() {
-
       if(fpe == nullptr || key == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -50,7 +48,7 @@ int botan_fpe_fe1_init(botan_fpe_t* fpe, botan_mp_t n,
       return BOTAN_FFI_SUCCESS;
       });
 #else
-   *fpe = nullptr;
+   BOTAN_UNUSED(fpe, n, key, key_len, rounds, flags);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -58,9 +56,10 @@ int botan_fpe_fe1_init(botan_fpe_t* fpe, botan_mp_t n,
 int botan_fpe_destroy(botan_fpe_t fpe)
    {
 #if defined(BOTAN_HAS_FPE_FE1)
-   return BOTAN_FFI_CHECKED_DELETE(fpe);
+    return BOTAN_FFI_CHECKED_DELETE(fpe);
 #else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+    BOTAN_UNUSED(fpe);
+    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
 
@@ -73,6 +72,7 @@ int botan_fpe_encrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size
       return BOTAN_FFI_SUCCESS;
       });
 #else
+   BOTAN_UNUSED(fpe, x, tweak, tweak_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -87,6 +87,7 @@ int botan_fpe_decrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size
       });
 
 #else
+   BOTAN_UNUSED(fpe, x, tweak, tweak_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }

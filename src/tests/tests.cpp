@@ -403,6 +403,32 @@ bool Test::Result::test_eq(const std::string& what, bool produced, bool expected
    return test_is_eq(what, produced, expected);
    }
 
+bool Test::Result::test_rc_init(const std::string& func, int rc)
+   {
+   if(rc == 0)
+      {
+      return test_success();
+      }
+   else
+      {
+      std::ostringstream msg;
+      msg << m_who;
+      msg << " " << func;
+
+      // -40 is BOTAN_FFI_ERROR_NOT_IMPLEMENTED
+      if(rc == -40)
+         msg << " returned not implemented";
+      else
+         msg << " unexpectedly failed with error code " << rc;
+
+      if(rc == -40)
+         this->test_note(msg.str());
+      else
+         this->test_failure(msg.str());
+      return false;
+      }
+   }
+
 bool Test::Result::test_rc(const std::string& func, int expected, int rc)
    {
    if(expected != rc)
