@@ -30,6 +30,34 @@ int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc)
    return rc;
    }
 
+int botan_view_str_bounce_fn(botan_view_ctx vctx, const char* str, size_t len)
+   {
+   return botan_view_bin_bounce_fn(vctx, reinterpret_cast<const uint8_t*>(str), len);
+   }
+
+int botan_view_bin_bounce_fn(botan_view_ctx vctx, const uint8_t* buf, size_t len)
+   {
+   if(vctx == nullptr || buf == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   botan_view_bounce_struct* ctx = static_cast<botan_view_bounce_struct*>(vctx);
+
+   const size_t avail = *ctx->out_len;
+   *ctx->out_len = len;
+
+   if(avail < len || ctx->out_ptr == nullptr)
+      {
+      if(ctx->out_ptr)
+         Botan::clear_mem(ctx->out_ptr, avail);
+      return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+      }
+   else
+      {
+      Botan::copy_mem(ctx->out_ptr, buf, len);
+      return BOTAN_FFI_SUCCESS;
+      }
+   }
+
 namespace {
 
 int ffi_map_error_type(Botan::ErrorType err)
@@ -150,6 +178,9 @@ const char* botan_error_description(int err)
 
       case BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE:
          return "Insufficient buffer space";
+
+      case BOTAN_FFI_ERROR_STRING_CONVERSION_ERROR:
+         return "String conversion error";
 
       case BOTAN_FFI_ERROR_EXCEPTION_THROWN:
          return "Exception thrown";

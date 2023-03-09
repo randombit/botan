@@ -226,10 +226,19 @@ int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op)
 int botan_pk_op_key_agreement_export_public(botan_privkey_t key,
                                             uint8_t out[], size_t* out_len)
    {
+   return copy_view_bin(out, out_len, botan_pk_op_key_agreement_view_public, key);
+   }
+
+int botan_pk_op_key_agreement_view_public(
+   botan_privkey_t key,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view)
+   {
    return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
       if(auto kak = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(&k))
-         return write_vec_output(out, out_len, kak->public_value());
-      return BOTAN_FFI_ERROR_BAD_FLAG;
+         return invoke_view_callback(view, ctx, kak->public_value());
+      else
+         return BOTAN_FFI_ERROR_INVALID_INPUT;
       });
    }
 

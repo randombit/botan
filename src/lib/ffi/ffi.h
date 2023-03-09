@@ -73,6 +73,7 @@ enum BOTAN_FFI_ERROR {
    BOTAN_FFI_ERROR_BAD_MAC = -2,
 
    BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE = -10,
+   BOTAN_FFI_ERROR_STRING_CONVERSION_ERROR = -11,
 
    BOTAN_FFI_ERROR_EXCEPTION_THROWN = -20,
    BOTAN_FFI_ERROR_OUT_OF_MEMORY = -21,
@@ -95,6 +96,26 @@ enum BOTAN_FFI_ERROR {
 
    BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100,
 };
+
+typedef void* botan_view_ctx;
+
+/**
+* Viewer function for binary data
+*
+* @param view_ctx some application context
+* @param data the binary data
+* @param len the length of data in bytes
+*/
+typedef int (*botan_view_bin_fn)(botan_view_ctx view_ctx, const uint8_t* data, size_t len);
+
+/**
+* Viewer function for string data
+*
+* @param view_ctx some application context
+* @param str the null terminated string
+* @param len the length of string *including* the null terminator
+*/
+typedef int (*botan_view_str_fn)(botan_view_ctx view_ctx, const char* str, size_t len);
 
 /**
 * Convert an error code into a string. Returns "Unknown error"
@@ -1103,6 +1124,22 @@ BOTAN_PUBLIC_API(2,0) int botan_privkey_export(botan_privkey_t key,
                                    uint8_t out[], size_t* out_len,
                                    uint32_t flags);
 
+/**
+* View the private key's DER encoding
+*/
+BOTAN_PUBLIC_API(3,0) int botan_privkey_view_der(
+   botan_privkey_t key,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view);
+
+/**
+* View the private key's PEM encoding
+*/
+BOTAN_PUBLIC_API(3,0) int botan_privkey_view_pem(
+   botan_privkey_t key,
+   botan_view_ctx ctx,
+   botan_view_str_fn view);
+
 BOTAN_PUBLIC_API(2,8) int botan_privkey_algo_name(botan_privkey_t key, char out[], size_t* out_len);
 
 /**
@@ -1149,6 +1186,22 @@ BOTAN_PUBLIC_API(2,0) int botan_pubkey_load(botan_pubkey_t* key, const uint8_t b
 BOTAN_PUBLIC_API(2,0) int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t in);
 
 BOTAN_PUBLIC_API(2,0) int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
+
+/**
+* View the public key's DER encoding
+*/
+BOTAN_PUBLIC_API(3,0) int botan_pubkey_view_der(
+   botan_pubkey_t key,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view);
+
+/**
+* View the public key's PEM encoding
+*/
+BOTAN_PUBLIC_API(3,0) int botan_pubkey_view_pem(
+   botan_pubkey_t key,
+   botan_view_ctx ctx,
+   botan_view_str_fn view);
 
 BOTAN_PUBLIC_API(2,0) int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len);
 
@@ -1402,12 +1455,13 @@ int botan_pubkey_sm2_compute_za(uint8_t out[],
                                 const botan_pubkey_t key);
 
 /**
-* Return the uncompressed public point associated with the key
+* View the uncompressed public point associated with the key
 */
 BOTAN_PUBLIC_API(3,0)
-int botan_pubkey_get_ec_public_point(uint8_t out[],
-                                     size_t* out_len,
-                                     const botan_pubkey_t key);
+int botan_pubkey_view_ec_public_point(
+   const botan_pubkey_t key,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view);
 
 /*
 * Public Key Encryption
@@ -1522,6 +1576,11 @@ BOTAN_PUBLIC_API(2,0) int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op)
 
 BOTAN_PUBLIC_API(2,0) int botan_pk_op_key_agreement_export_public(botan_privkey_t key,
                                                       uint8_t out[], size_t* out_len);
+
+BOTAN_PUBLIC_API(3,0) int botan_pk_op_key_agreement_view_public(
+   botan_privkey_t key,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view);
 
 BOTAN_PUBLIC_API(2,8) int botan_pk_op_key_agreement_size(botan_pk_op_ka_t op, size_t* out_len);
 

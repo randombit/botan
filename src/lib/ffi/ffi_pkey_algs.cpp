@@ -867,17 +867,17 @@ int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key,
 #endif
    }
 
-int botan_pubkey_get_ec_public_point(uint8_t out[],
-                                     size_t* out_len,
-                                     const botan_pubkey_t key)
+int botan_pubkey_view_ec_public_point(
+   const botan_pubkey_t key,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view)
    {
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
-
    return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
       if(auto ecc = dynamic_cast<const Botan::EC_PublicKey*>(&k))
          {
          auto pt = ecc->public_point().encode(Botan::EC_Point_Format::Uncompressed);
-         return write_vec_output(out, out_len, pt);
+         return invoke_view_callback(view, ctx, pt);
          }
       else
          {
