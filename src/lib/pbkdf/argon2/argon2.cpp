@@ -79,7 +79,7 @@ void extract_key(uint8_t output[], size_t output_len,
 
    if(output_len <= 64)
       {
-      std::unique_ptr<HashFunction> blake2b = HashFunction::create_or_throw("BLAKE2b(" + std::to_string(output_len*8) + ")");
+      auto blake2b = HashFunction::create_or_throw("BLAKE2b(" + std::to_string(output_len*8) + ")");
       blake2b->update_le(static_cast<uint32_t>(output_len));
       for(size_t i = 0; i != 128; ++i)
          blake2b->update_le(sum[i]);
@@ -89,7 +89,7 @@ void extract_key(uint8_t output[], size_t output_len,
       {
       secure_vector<uint8_t> T(64);
 
-      std::unique_ptr<HashFunction> blake2b = HashFunction::create_or_throw("BLAKE2b(512)");
+      auto blake2b = HashFunction::create_or_throw("BLAKE2b(512)");
       blake2b->update_le(static_cast<uint32_t>(output_len));
       for(size_t i = 0; i != 128; ++i)
          blake2b->update_le(sum[i]);
@@ -115,7 +115,7 @@ void extract_key(uint8_t output[], size_t output_len,
          }
       else
          {
-         std::unique_ptr<HashFunction> blake2b_f = HashFunction::create_or_throw("BLAKE2b(" + std::to_string(output_len*8) + ")");
+         auto blake2b_f = HashFunction::create_or_throw("BLAKE2b(" + std::to_string(output_len*8) + ")");
          blake2b_f->update(T);
          blake2b_f->final(output);
          }

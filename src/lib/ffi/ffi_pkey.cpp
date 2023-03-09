@@ -259,7 +259,7 @@ int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash_fn,
                              uint8_t out[], size_t* out_len)
    {
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
-      std::unique_ptr<Botan::HashFunction> h(Botan::HashFunction::create(hash_fn));
+      auto h = Botan::HashFunction::create_or_throw(hash_fn);
       return write_vec_output(out, out_len, h->process(k.public_key_bits()));
       });
    }

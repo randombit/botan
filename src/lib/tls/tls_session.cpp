@@ -360,7 +360,7 @@ Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const
    buf += key_seed;
    buf += aead_nonce;
 
-   std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, Cipher_Dir::Encryption);
+   auto aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, Cipher_Dir::Encryption);
    BOTAN_ASSERT_NOMSG(aead->valid_nonce_length(TLS_SESSION_CRYPT_AEAD_NONCE_LEN));
    BOTAN_ASSERT_NOMSG(aead->tag_size() == TLS_SESSION_CRYPT_AEAD_TAG_SIZE);
    aead->set_key(aead_key);

@@ -250,8 +250,8 @@ BlockCipher::create(const std::string& algo,
 #if defined(BOTAN_HAS_CASCADE)
    if(req.algo_name() == "Cascade" && req.arg_count() == 2)
       {
-      std::unique_ptr<BlockCipher> c1 = BlockCipher::create(req.arg(0));
-      std::unique_ptr<BlockCipher> c2 = BlockCipher::create(req.arg(1));
+      auto c1 = BlockCipher::create(req.arg(0));
+      auto c2 = BlockCipher::create(req.arg(1));
 
       if(c1 && c2)
          return std::make_unique<Cascade_Cipher>(std::move(c1), std::move(c2));
@@ -261,8 +261,8 @@ BlockCipher::create(const std::string& algo,
 #if defined(BOTAN_HAS_LION)
    if(req.algo_name() == "Lion" && req.arg_count_between(2, 3))
       {
-      std::unique_ptr<HashFunction> hash = HashFunction::create(req.arg(0));
-      std::unique_ptr<StreamCipher> stream = StreamCipher::create(req.arg(1));
+      auto hash = HashFunction::create(req.arg(0));
+      auto stream = StreamCipher::create(req.arg(1));
 
       if(hash && stream)
          {

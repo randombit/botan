@@ -159,7 +159,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
       throw Invalid_Argument("ECIES: other public key point is zero");
       }
 
-   std::unique_ptr<KDF> kdf = KDF::create_or_throw(m_params.kdf_spec());
+   auto kdf = KDF::create_or_throw(m_params.kdf_spec());
 
    EC_Point other_point = other_public_key_point;
 

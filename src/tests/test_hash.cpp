@@ -146,7 +146,7 @@ class Hash_Function_Tests final : public Text_Based_Test
                {
                hash->update(input[0]);
 
-               std::unique_ptr<Botan::HashFunction> fork = hash->copy_state();
+               auto fork = hash->copy_state();
                // verify fork copy doesn't affect original computation
                fork->update(&input[1], input.size() - 2);
 

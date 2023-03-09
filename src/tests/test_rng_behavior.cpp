@@ -118,7 +118,7 @@ class Stateful_RNG_Tests : public Test
          // test reseed_interval is enforced
          Request_Counting_RNG counting_rng;
 
-         std::unique_ptr<Botan::Stateful_RNG> rng = make_rng(counting_rng, 2);
+         auto rng = make_rng(counting_rng, 2);
 
          rng->random_vec(7);
          result.test_eq("initial seeding", counting_rng.randomize_count(), 1);
@@ -185,7 +185,7 @@ class Stateful_RNG_Tests : public Test
          // underlying_rng throws exception
          Botan::Null_RNG broken_entropy_input_rng;
          result.test_eq("Null_RNG not seeded", broken_entropy_input_rng.is_seeded(), false);
-         std::unique_ptr<Botan::Stateful_RNG> rng_with_broken_rng = make_rng(broken_entropy_input_rng);
+         auto rng_with_broken_rng = make_rng(broken_entropy_input_rng);
 
          result.test_throws("broken underlying rng", [&rng_with_broken_rng]() { rng_with_broken_rng->random_vec(16); });
 
@@ -197,7 +197,7 @@ class Stateful_RNG_Tests : public Test
          broken_entropy_sources.add_source(std::move(broken_entropy_source_1));
          broken_entropy_sources.add_source(std::move(broken_entropy_source_2));
 
-         std::unique_ptr<Botan::Stateful_RNG> rng_with_broken_es = make_rng(broken_entropy_sources);
+         auto rng_with_broken_es = make_rng(broken_entropy_sources);
          result.test_throws("broken entropy sources", [&rng_with_broken_es]() { rng_with_broken_es->random_vec(16); });
 
          // entropy source returns insufficient entropy
@@ -205,24 +205,24 @@ class Stateful_RNG_Tests : public Test
          auto insufficient_entropy_source = std::make_unique<Insufficient_Entropy_Source>();
          insufficient_entropy_sources.add_source(std::move(insufficient_entropy_source));
 
-         std::unique_ptr<Botan::Stateful_RNG> rng_with_insufficient_es = make_rng(insufficient_entropy_sources);
+         auto rng_with_insufficient_es = make_rng(insufficient_entropy_sources);
          result.test_throws("insufficient entropy source", [&rng_with_insufficient_es]() { rng_with_insufficient_es->random_vec(16); });
 
          // one of or both underlying_rng and entropy_sources throw exception
 
-         std::unique_ptr<Botan::Stateful_RNG> rng_with_broken_rng_and_good_es =
+         auto rng_with_broken_rng_and_good_es =
             make_rng(broken_entropy_input_rng, Botan::Entropy_Sources::global_sources());
 
          result.test_throws("broken underlying rng but good entropy sources", [&rng_with_broken_rng_and_good_es]()
             { rng_with_broken_rng_and_good_es->random_vec(16); });
 
-         std::unique_ptr<Botan::Stateful_RNG> rng_with_good_rng_and_broken_es =
+         auto rng_with_good_rng_and_broken_es =
             make_rng(Test::rng(), broken_entropy_sources);
 
          result.test_throws("good underlying rng but broken entropy sources", [&rng_with_good_rng_and_broken_es]()
             { rng_with_good_rng_and_broken_es->random_vec(16); });
 
-         std::unique_ptr<Botan::Stateful_RNG> rng_with_broken_rng_and_broken_es =
+         auto rng_with_broken_rng_and_broken_es =
             make_rng(broken_entropy_input_rng, broken_entropy_sources);
 
          result.test_throws("underlying rng and entropy sources broken", [&rng_with_broken_rng_and_broken_es]()
@@ -236,7 +236,7 @@ class Stateful_RNG_Tests : public Test
          Test::Result result(rng_name() + " Nonce Check");
 
          // make sure the nonce has at least security_strength bits
-         std::unique_ptr<Botan::Stateful_RNG> rng = create_rng(nullptr, nullptr, 0);
+         auto rng = create_rng(nullptr, nullptr, 0);
 
          for(size_t nonce_size : { 0, 4, 8, 16, 31, 32, 34, 64 })
             {
@@ -267,7 +267,7 @@ class Stateful_RNG_Tests : public Test
 
          // set reseed_interval = 1, forcing a reseed for every RNG request
          Request_Counting_RNG counting_rng;
-         std::unique_ptr<Botan::Stateful_RNG> rng = make_rng(counting_rng, 1);
+         auto rng = make_rng(counting_rng, 1);
 
          rng->random_vec(16);
          result.test_eq("first request", counting_rng.randomize_count(), size_t(1));
@@ -290,7 +290,7 @@ class Stateful_RNG_Tests : public Test
 
          // make sure rng is reseeded after every fork
          Request_Counting_RNG counting_rng;
-         std::unique_ptr<Botan::Stateful_RNG> rng = make_rng(counting_rng, reseed_interval);
+         auto rng = make_rng(counting_rng, reseed_interval);
 
          rng->random_vec(16);
          result.test_eq("first request", counting_rng.randomize_count(), size_t(1));
@@ -394,8 +394,8 @@ class Stateful_RNG_Tests : public Test
          Fixed_Output_RNG fixed_output_rng1(seed);
          Fixed_Output_RNG fixed_output_rng2(seed);
 
-         std::unique_ptr<Botan::Stateful_RNG> rng1 = make_rng(fixed_output_rng1);
-         std::unique_ptr<Botan::Stateful_RNG> rng2 = make_rng(fixed_output_rng2);
+         auto rng1 = make_rng(fixed_output_rng1);
+         auto rng2 = make_rng(fixed_output_rng2);
 
          Botan::secure_vector<uint8_t> output1(request_bytes);
          Botan::secure_vector<uint8_t> output2(request_bytes);
@@ -546,7 +546,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests
          Test::Result result("HMAC_DRBG Reseed KAT");
 
          Request_Counting_RNG counting_rng;
-         std::unique_ptr<Botan::Stateful_RNG> rng = make_rng(counting_rng, 2);
+         auto rng = make_rng(counting_rng, 2);
 
          const Botan::secure_vector<uint8_t> seed_input(
             {
@@ -629,7 +629,7 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests
          Test::Result result("ChaCha_RNG Reseed KAT");
 
          Request_Counting_RNG counting_rng;
-         std::unique_ptr<Botan::Stateful_RNG> rng = make_rng(counting_rng, 2);
+         auto rng = make_rng(counting_rng, 2);
 
          const Botan::secure_vector<uint8_t> seed_input(32);
 

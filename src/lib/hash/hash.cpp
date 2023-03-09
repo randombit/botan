@@ -310,8 +310,8 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
 #if defined(BOTAN_HAS_COMB4P)
    if(req.algo_name() == "Comb4P" && req.arg_count() == 2)
       {
-      std::unique_ptr<HashFunction> h1 = HashFunction::create(req.arg(0));
-      std::unique_ptr<HashFunction> h2 = HashFunction::create(req.arg(1));
+      auto h1 = HashFunction::create(req.arg(0));
+      auto h2 = HashFunction::create(req.arg(1));
 
       if(h1 && h2)
          return std::make_unique<Comb4P>(std::move(h1), std::move(h2));
