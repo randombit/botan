@@ -11,6 +11,7 @@
 
 #if defined(BOTAN_HAS_SRP6)
   #include <botan/bigint.h>
+  #include <botan/dl_group.h>
   #include <botan/rng.h>
   #include <botan/srp6.h>
   #include <botan/symkey.h>
@@ -45,6 +46,24 @@ int botan_srp6_server_session_init(botan_srp6_server_session_t* srp6)
 int botan_srp6_server_session_destroy(botan_srp6_server_session_t srp6)
    {
    return BOTAN_FFI_CHECKED_DELETE(srp6);
+   }
+
+int botan_srp6_group_size(const char* group_id, size_t* group_p_bytes)
+   {
+#if defined(BOTAN_HAS_SRP6)
+   if(group_id == nullptr || group_p_bytes == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return ffi_guard_thunk(__func__, [=]() -> int
+      {
+      Botan::DL_Group group(group_id);
+      *group_p_bytes = group.p_bytes();
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(group_id, group_p_bytes);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_srp6_server_session_step1(botan_srp6_server_session_t srp6,

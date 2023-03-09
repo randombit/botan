@@ -456,6 +456,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_srp6_client_agree,
             [c_char_p, c_char_p, c_char_p, c_char_p, c_char_p, c_size_t, c_char_p, c_size_t, c_void_p,
              c_char_p, POINTER(c_size_t), c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_srp6_group_size, [c_char_p, POINTER(c_size_t)])
 
     # ZFEC
     ffi_api(dll.botan_zfec_encode,
@@ -1839,29 +1840,35 @@ def nist_key_unwrap(kek, wrapped, cipher=None):
 class Srp6ServerSession:
     __obj = c_void_p(0)
 
-    def __init__(self):
+    def __init__(self, group):
         _DLL.botan_srp6_server_session_init(byref(self.__obj))
+        self.__group = group
+        self.__group_size = _call_fn_returning_sz(
+            lambda l: _DLL.botan_srp6_group_size(_ctype_str(group), l))
 
     def __del__(self):
         _DLL.botan_srp6_server_session_destroy(self.__obj)
 
-    def step1(self, verifier, group, hsh, rng):
-        return _call_fn_returning_vec(128,
+    def step1(self, verifier, hsh, rng):
+        return _call_fn_returning_vec(self.__group_size,
                                       lambda b, bl:
                                       _DLL.botan_srp6_server_session_step1(self.__obj,
                                                                            verifier, len(verifier),
-                                                                           _ctype_str(group), _ctype_str(hsh),
+                                                                           _ctype_str(self.__group),
+                                                                           _ctype_str(hsh),
                                                                            rng.handle_(),
                                                                            b, bl))
 
     def step2(self, a):
-        return _call_fn_returning_vec(128, lambda k, kl:
+        return _call_fn_returning_vec(self.__group_size, lambda k, kl:
                                       _DLL.botan_srp6_server_session_step2(self.__obj,
                                                                            a, len(a),
                                                                            k, kl))
 
 def generate_srp6_verifier(identifier, password, salt, group, hsh):
-    return _call_fn_returning_vec(128, lambda v, vl:
+    sz = _call_fn_returning_sz(lambda l: _DLL.botan_srp6_group_size(_ctype_str(group), l))
+
+    return _call_fn_returning_vec(sz, lambda v, vl:
                                   _DLL.botan_generate_srp6_verifier(_ctype_str(identifier),
                                                                     _ctype_str(password),
                                                                     salt, len(salt),
@@ -1870,7 +1877,9 @@ def generate_srp6_verifier(identifier, password, salt, group, hsh):
                                                                     v, vl))
 
 def srp6_client_agree(username, password, group, hsh, salt, b, rng):
-    return _call_fn_returning_vec_pair(128, 128, lambda a, al, k, kl:
+    sz = _call_fn_returning_sz(lambda l: _DLL.botan_srp6_group_size(_ctype_str(group), l))
+
+    return _call_fn_returning_vec_pair(sz, sz, lambda a, al, k, kl:
                                        _DLL.botan_srp6_client_agree(_ctype_str(username),
                                                                     _ctype_str(password),
                                                                     _ctype_str(group),
