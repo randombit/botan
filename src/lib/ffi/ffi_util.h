@@ -144,6 +144,47 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
 
 #define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, __func__)
 
+template<typename Alloc>
+inline int invoke_view_callback(botan_view_bin_fn view,
+                                botan_view_ctx ctx,
+                                const std::vector<uint8_t, Alloc>& buf)
+   {
+   return view(ctx, buf.data(), buf.size());
+   }
+
+inline int invoke_view_callback(botan_view_str_fn view,
+                                botan_view_ctx ctx,
+                                const std::string& str)
+   {
+   return view(ctx, str.data(), str.size() + 1);
+   }
+
+struct botan_view_bounce_struct {
+   uint8_t* out_ptr;
+   size_t* out_len;
+   };
+
+int botan_view_bin_bounce_fn(botan_view_ctx ctx, const uint8_t* buf, size_t len);
+int botan_view_str_bounce_fn(botan_view_ctx ctx, const char* str, size_t len);
+
+template<typename Fn, typename... Args>
+int copy_view_bin(uint8_t out[], size_t* out_len, Fn fn, Args... args)
+   {
+   botan_view_bounce_struct ctx;
+   ctx.out_ptr = out;
+   ctx.out_len = out_len;
+   return fn(args..., &ctx, botan_view_bin_bounce_fn);
+   }
+
+template<typename Fn, typename... Args>
+int copy_view_str(uint8_t out[], size_t* out_len, Fn fn, Args... args)
+   {
+   botan_view_bounce_struct ctx;
+   ctx.out_ptr = out;
+   ctx.out_len = out_len;
+   return fn(args..., &ctx, botan_view_str_bounce_fn);
+   }
+
 inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], size_t buf_len)
    {
    if(out_len == nullptr)

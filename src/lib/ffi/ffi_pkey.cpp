@@ -152,25 +152,53 @@ int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags
 
 int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
    {
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
-      if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
-         return write_vec_output(out, out_len, Botan::X509::BER_encode(k));
-      else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
-         return write_str_output(out, out_len, Botan::X509::PEM_encode(k));
-      else
-         return BOTAN_FFI_ERROR_BAD_FLAG;
+   if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+      return copy_view_bin(out, out_len, botan_pubkey_view_der, key);
+   else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+      return copy_view_str(out, out_len, botan_pubkey_view_pem, key);
+   else
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+int botan_pubkey_view_der(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view)
+   {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int
+      {
+      return invoke_view_callback(view, ctx, Botan::X509::BER_encode(k));
+      });
+   }
+
+int botan_pubkey_view_pem(botan_pubkey_t key, botan_view_ctx ctx, botan_view_str_fn view)
+   {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int
+      {
+      return invoke_view_callback(view, ctx, Botan::X509::PEM_encode(k));
       });
    }
 
 int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
    {
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
-      if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
-         return write_vec_output(out, out_len, Botan::PKCS8::BER_encode(k));
-      else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
-         return write_str_output(out, out_len, Botan::PKCS8::PEM_encode(k));
-      else
-         return BOTAN_FFI_ERROR_BAD_FLAG;
+   if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+      return copy_view_bin(out, out_len, botan_privkey_view_der, key);
+   else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+      return copy_view_str(out, out_len, botan_privkey_view_pem, key);
+   else
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+int botan_privkey_view_der(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view)
+   {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int
+      {
+      return invoke_view_callback(view, ctx, Botan::PKCS8::BER_encode(k));
+      });
+   }
+
+int botan_privkey_view_pem(botan_privkey_t key, botan_view_ctx ctx, botan_view_str_fn view)
+   {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int
+      {
+      return invoke_view_callback(view, ctx, Botan::PKCS8::PEM_encode(k));
       });
    }
 
