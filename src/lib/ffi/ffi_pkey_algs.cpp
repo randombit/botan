@@ -307,7 +307,7 @@ int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key,
          }
       });
 #else
-   BOTAN_UNUSED(rsa_key, out, out_len);
+   BOTAN_UNUSED(rsa_key, out, out_len, flags);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -473,7 +473,7 @@ int botan_privkey_create_elgamal(botan_privkey_t* key,
       return BOTAN_FFI_SUCCESS;
     });
 #else
-    BOTAN_UNUSED(key, rng_obj, pbits);
+    BOTAN_UNUSED(key, rng_obj, pbits, qbits);
     return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }

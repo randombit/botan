@@ -40,9 +40,15 @@ API follows a few simple rules:
   output array and a read/write pointer to the length. If the length is insufficient, an
   error is returned. So passing nullptr/0 allows querying the final value.
 
-  Note this does not apply to all functions, like `botan_hash_final`
-  which is not idempotent and are documented specially. But it's a
-  general theory of operation.
+  Typically there is also a function which allows querying the expected output
+  length of a function, for example `botan_hash_output_length` allows knowing in
+  advance the expected size for `botan_hash_final`. Some of these are exact,
+  while others such as `botan_pk_op_decrypt_output_length` only provide an upper
+  bound.
+
+  The big exception to this currently is the various functions which serialize
+  public and private keys, where there are currently no function that can
+  estimate the serialized size.
 
  TODO:
  - Doxygen comments for all functions/params
@@ -152,6 +158,7 @@ BOTAN_PUBLIC_API(2,3) int botan_constant_time_compare(const uint8_t* x, const ui
 /**
 * Deprecated equivalent to botan_constant_time_compare
 */
+BOTAN_DEPRECATED("Use botan_constant_time_compare")
 BOTAN_PUBLIC_API(2,0) int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len);
 
 /**

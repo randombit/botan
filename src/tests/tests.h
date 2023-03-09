@@ -458,6 +458,8 @@ class Test
 
             bool test_rc(const std::string& func, int expected, int rc);
 
+            bool test_rc_init(const std::string& func, int rc);
+
             bool test_ne(const std::string& what, size_t produced, size_t expected);
 
             bool test_ne(const std::string& what, const std::string& str1, const std::string& str2);

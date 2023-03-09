@@ -165,11 +165,18 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
       if(wf < 4 || wf > 18)
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
 
+      if(*out_len < 61)
+         {
+         *out_len = 61;
+         return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         }
+
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       const std::string bcrypt = Botan::generate_bcrypt(pass, rng, static_cast<uint16_t>(wf));
       return write_str_output(out, out_len, bcrypt);
       });
 #else
+   BOTAN_UNUSED(out, out_len, pass, rng_obj, wf, flags);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -181,6 +188,7 @@ int botan_bcrypt_is_valid(const char* pass, const char* hash)
       return Botan::check_bcrypt(pass, hash) ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER;
       });
 #else
+   BOTAN_UNUSED(pass, hash);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
