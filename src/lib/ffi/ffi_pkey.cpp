@@ -214,67 +214,163 @@ int botan_privkey_export_encrypted(botan_privkey_t key,
 
 int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
                                               uint8_t out[], size_t* out_len,
-                                              botan_rng_t rng_obj,
-                                              const char* pass,
+                                              botan_rng_t rng,
+                                              const char* passphrase,
                                               uint32_t pbkdf_msec,
                                               size_t* pbkdf_iters_out,
-                                              const char* maybe_cipher,
-                                              const char* maybe_pbkdf_hash,
+                                              const char* cipher,
+                                              const char* pbkdf_hash,
                                               uint32_t flags)
    {
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
-      const std::chrono::milliseconds pbkdf_time(pbkdf_msec);
+   if(pbkdf_iters_out)
+      *pbkdf_iters_out = 0;
+
+   if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+      {
+      return copy_view_bin(out, out_len, botan_privkey_view_encrypted_der_timed,
+                           key, rng, passphrase, cipher, pbkdf_hash, pbkdf_msec);
+      }
+   else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+      {
+      return copy_view_str(out, out_len, botan_privkey_view_encrypted_pem_timed,
+                           key, rng, passphrase, cipher, pbkdf_hash, pbkdf_msec);
+      }
+   else
+      {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+      }
+   }
+
+int botan_privkey_view_encrypted_der_timed(
+   botan_privkey_t key,
+   botan_rng_t rng_obj,
+   const char* passphrase,
+   const char* maybe_cipher,
+   const char* maybe_pbkdf_algo,
+   size_t pbkdf_runtime_msec,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view)
+   {
+   if(passphrase == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_VISIT(key, [=](const auto& k)
+      {
+      const std::chrono::milliseconds pbkdf_time(pbkdf_runtime_msec);
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
       const std::string cipher = (maybe_cipher ? maybe_cipher : "");
-      const std::string pbkdf_hash = (maybe_pbkdf_hash ? maybe_pbkdf_hash : "");
+      const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
 
-      if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
-         {
-         return write_vec_output(out, out_len,
-                                 Botan::PKCS8::BER_encode_encrypted_pbkdf_msec(k, rng, pass, pbkdf_time, pbkdf_iters_out, cipher, pbkdf_hash));
-         }
-      else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
-         {
-         return write_str_output(out, out_len,
-                                 Botan::PKCS8::PEM_encode_encrypted_pbkdf_msec(k, rng, pass, pbkdf_time, pbkdf_iters_out, cipher, pbkdf_hash));
-         }
-      else
-         {
-         return -30;
-         }
+      auto pkcs8 = Botan::PKCS8::BER_encode_encrypted_pbkdf_msec(
+         k, rng, passphrase, pbkdf_time, nullptr, cipher, pbkdf_algo);
+
+      return invoke_view_callback(view, ctx, pkcs8);
+      });
+   }
+
+int botan_privkey_view_encrypted_pem_timed(
+   botan_privkey_t key,
+   botan_rng_t rng_obj,
+   const char* passphrase,
+   const char* maybe_cipher,
+   const char* maybe_pbkdf_algo,
+   size_t pbkdf_runtime_msec,
+   botan_view_ctx ctx,
+   botan_view_str_fn view)
+   {
+   if(passphrase == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_VISIT(key, [=](const auto& k)
+      {
+      const std::chrono::milliseconds pbkdf_time(pbkdf_runtime_msec);
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      const std::string cipher = (maybe_cipher ? maybe_cipher : "");
+      const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
+
+      auto pkcs8 = Botan::PKCS8::PEM_encode_encrypted_pbkdf_msec(
+         k, rng, passphrase, pbkdf_time, nullptr, cipher, pbkdf_algo);
+
+      return invoke_view_callback(view, ctx, pkcs8);
       });
    }
 
 int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key,
                                               uint8_t out[], size_t* out_len,
-                                              botan_rng_t rng_obj,
-                                              const char* pass,
+                                              botan_rng_t rng,
+                                              const char* passphrase,
                                               size_t pbkdf_iter,
-                                              const char* maybe_cipher,
-                                              const char* maybe_pbkdf_hash,
+                                              const char* cipher,
+                                              const char* pbkdf_algo,
                                               uint32_t flags)
    {
+   if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+      {
+      return copy_view_bin(out, out_len, botan_privkey_view_encrypted_der,
+                           key, rng, passphrase, cipher, pbkdf_algo, pbkdf_iter);
+      }
+   else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+      {
+      return copy_view_str(out, out_len, botan_privkey_view_encrypted_pem,
+                           key, rng, passphrase, cipher, pbkdf_algo, pbkdf_iter);
+      }
+   else
+      {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+      }
+   }
+
+int botan_privkey_view_encrypted_der(
+   botan_privkey_t key,
+   botan_rng_t rng_obj,
+   const char* passphrase,
+   const char* maybe_cipher,
+   const char* maybe_pbkdf_algo,
+   size_t maybe_pbkdf_iterations,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view)
+   {
+   if(passphrase == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
       const std::string cipher = (maybe_cipher ? maybe_cipher : "");
-      const std::string pbkdf_hash = (maybe_pbkdf_hash ? maybe_pbkdf_hash : "");
+      const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
+      const size_t pbkdf_iter = (maybe_pbkdf_iterations ? maybe_pbkdf_iterations : 100000);
 
-      if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
-         {
-         return write_vec_output(out, out_len,
-                                 Botan::PKCS8::BER_encode_encrypted_pbkdf_iter(k, rng, pass, pbkdf_iter, cipher, pbkdf_hash));
-         }
-      else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
-         {
-         return write_str_output(out, out_len,
-                                 Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(k, rng, pass, pbkdf_iter, cipher, pbkdf_hash));
-         }
-      else
-         {
-         return -30;
-         }
+      auto pkcs8 = Botan::PKCS8::BER_encode_encrypted_pbkdf_iter(k, rng, passphrase, pbkdf_iter, cipher, pbkdf_algo);
+
+      return invoke_view_callback(view, ctx, pkcs8);
+      });
+   }
+
+int botan_privkey_view_encrypted_pem(
+   botan_privkey_t key,
+   botan_rng_t rng_obj,
+   const char* passphrase,
+   const char* maybe_cipher,
+   const char* maybe_pbkdf_algo,
+   size_t maybe_pbkdf_iterations,
+   botan_view_ctx ctx,
+   botan_view_str_fn view)
+   {
+   if(passphrase == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      const std::string cipher = (maybe_cipher ? maybe_cipher : "");
+      const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
+      const size_t pbkdf_iter = (maybe_pbkdf_iterations ? maybe_pbkdf_iterations : 100000);
+
+      auto pkcs8 = Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(k, rng, passphrase, pbkdf_iter, cipher, pbkdf_algo);
+
+      return invoke_view_callback(view, ctx, pkcs8);
       });
    }
 

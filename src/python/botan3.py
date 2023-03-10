@@ -288,6 +288,17 @@ def _set_prototypes(dll):
             [c_void_p, c_char_p, POINTER(c_size_t), c_void_p, c_char_p, c_uint32, POINTER(c_size_t), c_char_p, c_char_p, c_uint32])
     ffi_api(dll.botan_privkey_export_encrypted_pbkdf_iter,
             [c_void_p, c_char_p, POINTER(c_size_t), c_void_p, c_char_p, c_size_t, c_char_p, c_char_p, c_uint32])
+
+    ffi_api(dll.botan_privkey_view_encrypted_der,
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_privkey_view_encrypted_pem,
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_STR_CALLBACK])
+
+    ffi_api(dll.botan_privkey_view_encrypted_der_timed,
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_privkey_view_encrypted_pem_timed,
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_STR_CALLBACK])
+
     ffi_api(dll.botan_privkey_export_pubkey, [c_void_p, c_void_p])
     ffi_api(dll.botan_pubkey_load, [c_void_p, c_char_p, c_size_t])
 
@@ -1208,19 +1219,17 @@ class PrivateKey:
         else:
             return self.to_der()
 
-    def export_encrypted(self, passphrase, rng_obj, pem=False, msec=300, cipher=None, pbkdf=None): # pylint: disable=redefined-outer-name
-        flags = 1 if pem else 0
-        msec = c_uint32(msec)
-        _iters = c_size_t(0)
-
-        cb = lambda b, bl: _DLL.botan_privkey_export_encrypted_pbkdf_msec(
-            self.__obj, b, bl, rng_obj.handle_(), _ctype_str(passphrase),
-            msec, byref(_iters), _ctype_str(cipher), _ctype_str(pbkdf), flags)
-
+    def export_encrypted(self, passphrase, rng, pem=False, msec=300, cipher=None, pbkdf=None): # pylint: disable=redefined-outer-name
         if pem:
-            return _call_fn_returning_str(8192, cb)
+            return _call_fn_viewing_str(
+                lambda vc, vfn: _DLL.botan_privkey_view_encrypted_pem_timed(
+                    self.__obj, rng.handle_(), _ctype_str(passphrase),
+                    _ctype_str(cipher), _ctype_str(pbkdf), c_size_t(msec), vc, vfn))
         else:
-            return _call_fn_returning_vec(4096, cb)
+            return _call_fn_viewing_vec(
+                lambda vc, vfn: _DLL.botan_privkey_view_encrypted_der_timed(
+                    self.__obj, rng.handle_(), _ctype_str(passphrase),
+                    _ctype_str(cipher), _ctype_str(pbkdf), c_size_t(msec), vc, vfn))
 
     def get_field(self, field_name):
         v = MPI()
