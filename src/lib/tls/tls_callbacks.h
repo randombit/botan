@@ -318,60 +318,6 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
                                                                  const Policy& policy);
 
        /**
-       * Optional callback with default impl: client side DH agreement
-       *
-       * Default implementation uses PK_Key_Agreement::derive_key().
-       * Override to provide a different approach, e.g. using an external device.
-       *
-       * @param modulus the modulus p of the discrete logarithm group
-       * @param generator the generator of the DH subgroup
-       * @param peer_public_value the public value of the peer
-       * @param policy the TLS policy associated with the session being established
-       * @param rng a random number generator
-       *
-       * @return a pair consisting of the agreed raw secret and our public value
-       *
-       * TODO: Currently, this is called in TLS 1.2 only. The key agreement mechanics
-       *       changed in TLS 1.3, so this callback would (at least) need to be aware
-       *       of the negotiated protocol version.
-       *       Suggestion: Lets think about a more generic interface for this and
-       *                   deprecate/remove this callback in Botan 3.0
-       */
-       virtual std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> tls_dh_agree(
-          const std::vector<uint8_t>& modulus,
-          const std::vector<uint8_t>& generator,
-          const std::vector<uint8_t>& peer_public_value,
-          const Policy& policy,
-          RandomNumberGenerator& rng);
-
-       /**
-       * Optional callback with default impl: client side ECDH agreement
-       *
-       * Default implementation uses PK_Key_Agreement::derive_key().
-       * Override to provide a different approach, e.g. using an external device.
-       *
-       * @param curve_name the name of the elliptic curve
-       * @param peer_public_value the public value of the peer
-       * @param policy the TLS policy associated with the session being established
-       * @param rng a random number generator
-       * @param compressed the compression preference for our public value
-       *
-       * @return a pair consisting of the agreed raw secret and our public value
-       *
-       * TODO: Currently, this is called in TLS 1.2 only. The key agreement mechanics
-       *       changed in TLS 1.3, so this callback would (at least) need to be aware
-       *       of the negotiated protocol version.
-       *       Suggestion: Lets think about a more generic interface for this and
-       *                   deprecate/remove this callback in Botan 3.0
-       */
-       virtual std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> tls_ecdh_agree(
-          const std::string& curve_name,
-          const std::vector<uint8_t>& peer_public_value,
-          const Policy& policy,
-          RandomNumberGenerator& rng,
-          bool compressed);
-
-       /**
        * Optional callback: inspect handshake message
        * Throw an exception to abort the handshake.
        * Default simply ignores the message.
@@ -439,19 +385,6 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @param which_message will state the handshake message type containing the extensions
        */
        virtual void tls_examine_extensions(const Extensions& extn, Connection_Side which_side, Handshake_Type which_message);
-
-       /**
-       * Optional callback: decode TLS group ID
-       *
-       * TLS uses a 16-bit field to identify ECC and DH groups. This callback
-       * handles the decoding. You only need to implement this if you are using
-       * a custom ECC or DH group (this is extremely uncommon).
-       *
-       * Default implementation uses the standard (IETF-defined) mappings.
-       *
-       * TODO: reconsider this callback together with `tls_dh_agree` and `tls_ecdh_agree`.
-       */
-       virtual std::string tls_decode_group_param(Group_Params group_param);
 
       /**
        * Optional callback: parse a single OCSP Response
