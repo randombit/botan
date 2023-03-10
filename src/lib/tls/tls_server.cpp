@@ -55,9 +55,9 @@ Server::Server(Callbacks& callbacks,
 
 Server::~Server() = default;
 
-size_t Server::received_data(const uint8_t buf[], size_t buf_size)
+size_t Server::from_peer(std::span<const uint8_t> data)
    {
-   auto read = m_impl->received_data(buf, buf_size);
+   auto read = m_impl->from_peer(data);
 
    if(m_impl->is_downgrading())
       {
@@ -65,7 +65,7 @@ size_t Server::received_data(const uint8_t buf[], size_t buf_size)
       m_impl = std::make_unique<Server_Impl_12>(*info);
 
       // replay peer data received so far
-      read = m_impl->received_data(info->peer_transcript.data(), info->peer_transcript.size());
+      read = m_impl->from_peer(info->peer_transcript);
       }
 
    return read;
@@ -128,9 +128,9 @@ bool Server::secure_renegotiation_supported() const
    return m_impl->secure_renegotiation_supported();
    }
 
-void Server::send(const uint8_t buf[], size_t buf_size)
+void Server::to_peer(std::span<const uint8_t> data)
    {
-   m_impl->send(buf, buf_size);
+   m_impl->to_peer(data);
    }
 
 void Server::send_alert(const Alert& alert)

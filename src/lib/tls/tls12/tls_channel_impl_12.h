@@ -74,13 +74,8 @@ class Channel_Impl_12 : public Channel_Impl
 
       virtual ~Channel_Impl_12();
 
-      size_t received_data(const uint8_t buf[], size_t buf_size) override;
-
-      /**
-      * Inject plaintext intended for counterparty
-      * Throws an exception if is_active() is false
-      */
-      void send(const uint8_t buf[], size_t buf_size) override;
+      size_t from_peer(std::span<const uint8_t> data) override;
+      void to_peer(std::span<const uint8_t> data) override;
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal

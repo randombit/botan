@@ -782,7 +782,7 @@ class Stream
             const boost::asio::const_buffer buffer = *it;
             try_with_error_code([&]
                {
-               native_handle()->send(static_cast<const uint8_t*>(buffer.data()), buffer.size());
+               native_handle()->send({static_cast<const uint8_t*>(buffer.data()), buffer.size()});
                }, ec);
             }
          }
@@ -799,7 +799,7 @@ class Stream
          {
          try_with_error_code([&]
             {
-            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
+            native_handle()->received_data({static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size()});
             }, ec);
          }
 

@@ -39,13 +39,13 @@ class Channel_Impl
       * @return a hint as the how many more bytes we need to q the
       *         current record (this may be 0 if on a record boundary)
       */
-      virtual size_t received_data(const uint8_t buf[], size_t buf_size) = 0;
+      virtual size_t from_peer(std::span<const uint8_t> data) = 0;
 
       /**
       * Inject plaintext intended for counterparty
       * Throws an exception if is_active() is false
       */
-      virtual void send(const uint8_t buf[], size_t buf_size) = 0;
+      virtual void to_peer(std::span<const uint8_t> data) = 0;
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal

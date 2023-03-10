@@ -76,7 +76,7 @@ size_t Client::downgrade()
    if(!info->peer_transcript.empty())
       {
       // replay peer data received so far
-      return m_impl->received_data(info->peer_transcript.data(), info->peer_transcript.size());
+      return m_impl->from_peer(info->peer_transcript);
       }
    else
       {
@@ -86,9 +86,9 @@ size_t Client::downgrade()
       }
    }
 
-size_t Client::received_data(const uint8_t buf[], size_t buf_size)
+size_t Client::from_peer(std::span<const uint8_t> data)
    {
-   auto read = m_impl->received_data(buf, buf_size);
+   auto read = m_impl->from_peer(data);
 
    if(m_impl->is_downgrading())
       {
@@ -145,9 +145,9 @@ bool Client::secure_renegotiation_supported() const
    return m_impl->secure_renegotiation_supported();
    }
 
-void Client::send(const uint8_t buf[], size_t buf_size)
+void Client::to_peer(std::span<const uint8_t> data)
    {
-   m_impl->send(buf, buf_size);
+   m_impl->to_peer(data);
    }
 
 void Client::send_alert(const Alert& alert)

@@ -19,6 +19,8 @@
 
 #include <vector>
 #include <string>
+#include <string_view>
+#include <span>
 
 namespace Botan::TLS {
 
@@ -32,47 +34,41 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       virtual ~Channel() = default;
 
+   protected:
+      virtual size_t from_peer(std::span<const uint8_t> data) = 0;
+      virtual void to_peer(std::span<const uint8_t> data) = 0;
+
+   public:
       /**
       * Inject TLS traffic received from counterparty
-      * @return a hint as the how many more bytes we need to process the
+      * @return a hint as to how many more bytes we need to process the
       *         current record (this may be 0 if on a record boundary)
       */
-      virtual size_t received_data(const uint8_t buf[], size_t buf_size) = 0;
-
+      size_t received_data(std::span<const uint8_t> data)
+         { return this->from_peer(data); }
+      size_t received_data(const uint8_t buf[], size_t buf_size)
+         { return this->from_peer(std::span(buf, buf_size)); }
+      
       /**
-      * Inject TLS traffic received from counterparty
-      * @return a hint as the how many more bytes we need to process the
-      *         current record (this may be 0 if on a record boundary)
+      * Inject plaintext intended for counterparty
+      * Throws an exception if is_active() is false
       */
-      size_t received_data(const std::vector<uint8_t>& buf)
-         {
-         return this->received_data(buf.data(), buf.size());
-         }
+      void send(std::span<const uint8_t> data)
+         { this->to_peer(data); }
+      void send(const uint8_t buf[], size_t buf_size)
+         { this->to_peer(std::span(buf, buf_size)); }
 
       /**
       * Inject plaintext intended for counterparty
       * Throws an exception if is_active() is false
       */
-      virtual void send(const uint8_t buf[], size_t buf_size) = 0;
+      void send(std::string_view val)
+         { this->send(std::span(cast_char_ptr_to_uint8(val.data()), val.size())); }
 
       /**
       * Inject plaintext intended for counterparty
       * Throws an exception if is_active() is false
       */
-      void send(const std::string& val)
-         {
-         this->send(cast_char_ptr_to_uint8(val.data()), val.size());
-         }
-
-      /**
-      * Inject plaintext intended for counterparty
-      * Throws an exception if is_active() is false
-      */
-      template<typename Alloc>
-      void send(const std::vector<unsigned char, Alloc>& val)
-         {
-         send(val.data(), val.size());
-         }
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal

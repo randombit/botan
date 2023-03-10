@@ -272,9 +272,12 @@ void Channel_Impl_12::activate_session()
    callbacks().tls_session_activated();
    }
 
-size_t Channel_Impl_12::received_data(const uint8_t input[], size_t input_size)
+size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data)
    {
    const bool allow_epoch0_restart = m_is_datagram && m_is_server && policy().allow_dtls_epoch0_restart();
+
+   auto input = data.data();
+   auto input_size = data.size();
 
    try
       {
@@ -575,13 +578,13 @@ void Channel_Impl_12::send_record_under_epoch(uint16_t epoch, Record_Type record
    send_record_array(epoch, record_type, record.data(), record.size());
    }
 
-void Channel_Impl_12::send(const uint8_t buf[], size_t buf_size)
+void Channel_Impl_12::to_peer(std::span<const uint8_t> data)
    {
    if(!is_active())
       throw Invalid_State("Data cannot be sent on inactive TLS connection");
 
    send_record_array(sequence_numbers().current_write_epoch(),
-                     Record_Type::ApplicationData, buf, buf_size);
+                     Record_Type::ApplicationData, data.data(), data.size());
    }
 
 void Channel_Impl_12::send_alert(const Alert& alert)
