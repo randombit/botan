@@ -885,7 +885,7 @@ int botan_pubkey_view_ec_public_point(
          }
       });
 #else
-   BOTAN_UNUSED(out, out_len, key);
+   BOTAN_UNUSED(key, view, ctx);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
