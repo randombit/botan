@@ -13,6 +13,7 @@
 
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
+#include <botan/dl_group.h>
 #include <botan/pubkey.h>
 #include <botan/ocsp.h>
 #include <optional>
@@ -262,6 +263,59 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
           Signature_Format format,
           const std::vector<uint8_t>& msg,
           const std::vector<uint8_t>& sig);
+
+      /**
+       * Generate an ephemeral key pair for the TLS handshake.
+       *
+       * Applications may use this to add custom groups, curves or entirely
+       * different ephemeral key agreement mechanisms to the TLS handshake.
+       * Note that this callback must be used in conjunction with
+       * Callbacks::tls_ephemeral_key_agreement.
+       *
+       * Typical use cases of the library don't need to do that and serious
+       * security risks are associated with customizing TLS's key exchange
+       * mechanism.
+       *
+       * @throws TLS_Exception(Alert::DecodeError) if the @p group is not known.
+       *
+       * @param group the group identifier to generate an ephemeral keypair for
+       *              TLS 1.2 allows for specifying custom discrete logarithm
+       *              parameters as part of the protocol. Hence the variant<>.
+       * @param rng a random number generator
+       *
+       * @return a private key of an algorithm usable for key agreement
+       */
+      virtual std::unique_ptr<PK_Key_Agreement_Key> tls_generate_ephemeral_key(std::variant<TLS::Group_Params, DL_Group> group, RandomNumberGenerator& rng);
+
+      /**
+       * Agree on a shared secret with the peer's ephemeral public key for
+       * the TLS handshake.
+       *
+       * Applications may use this to add custom groups, curves or entirely
+       * different ephemeral key agreement mechanisms to the TLS handshake.
+       * Note that this callback must be used in conjunction with
+       * Callbacks::tls_generate_ephemeral_key.
+       *
+       * Typical use cases of the library don't need to do that and serious
+       * security risks are associated with customizing TLS's key exchange
+       * mechanism.
+       *
+       * @param group         the TLS group identifier to be used
+       *                      TLS 1.2 allows for specifying custom discrete
+       *                      logarithm parameters as part of the protocol.
+       *                      Hence the variant<>.
+       * @param private_key   the private key (generated ahead in tls_generate_ephemeral_key)
+       * @param public_value  the public key exchange information received by the peer
+       * @param rng           a random number generator
+       * @param policy        a TLS policy object
+       *
+       * @return the shared secret derived from public_value and private_key
+       */
+      virtual secure_vector<uint8_t> tls_ephemeral_key_agreement(std::variant<TLS::Group_Params, DL_Group> group,
+                                                                 const PK_Key_Agreement_Key& private_key,
+                                                                 const std::vector<uint8_t>& public_value,
+                                                                 RandomNumberGenerator& rng,
+                                                                 const Policy& policy);
 
        /**
        * Optional callback with default impl: client side DH agreement
