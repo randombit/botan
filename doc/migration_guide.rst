@@ -96,6 +96,19 @@ identify the TLS handshake message the extensions in question are residing in.
 TLS 1.3 makes much heavier use of such extensions in a wider range of messages
 to implement core protocol functionality.
 
+tls_dh_agree() / tls_ecdh_agree() / tls_decode_group_param()
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+These callbacks were used as customization points for the TLS 1.2 key exchange
+in the TLS client. To allow similar (and more) customizations with the
+introduction of TLS 1.3, these callbacks were replaced with a more generic
+approach.
+
+Key agreement is split into two callbacks, namely `tls_generate_ephemeral_key()`
+and `tls_ephemeral_key_agreement()`. Those are used in both clients and servers
+and in all protocol versions. `tls_decode_group_param()` is removed as it became
+obsolete by the replacement of the other two callbacks.
+
 Policy
 ^^^^^^
 
