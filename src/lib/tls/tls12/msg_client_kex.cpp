@@ -18,6 +18,7 @@
 #include <botan/internal/ct_utils.h>
 
 #include <botan/rsa.h>
+#include <botan/ecdh.h>
 
 namespace Botan::TLS {
 
@@ -76,25 +77,36 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       if(kex_algo == Kex_Algo::DH)
          {
-         const std::vector<uint8_t> modulus = reader.get_range<uint8_t>(2, 1, 65535);
-         const std::vector<uint8_t> generator = reader.get_range<uint8_t>(2, 1, 65535);
+         const auto modulus = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
+         const auto generator = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(2, 1, 65535);
 
          if(reader.remaining_bytes())
             throw Decoding_Error("Bad params size for DH key exchange");
 
-         const std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> dh_result =
-            state.callbacks().tls_dh_agree(modulus, generator, peer_public_value, policy, rng);
+         DL_Group group(modulus, generator);
+
+         if(!group.verify_group(rng, false))
+            { throw TLS_Exception(Alert::InsufficientSecurity, "DH group validation failed"); }
+
+         const auto private_key = state.callbacks().tls_generate_ephemeral_key(group, rng);
+         auto shared_secret =
+            CT::strip_leading_zeros(
+               state.callbacks().tls_ephemeral_key_agreement(group,
+                                                             *private_key,
+                                                             peer_public_value,
+                                                             rng,
+                                                             policy));
 
          if(kex_algo == Kex_Algo::DH)
-            m_pre_master = dh_result.first;
+            m_pre_master = std::move(shared_secret);
          else
             {
-            append_tls_length_value(m_pre_master, dh_result.first, 2);
+            append_tls_length_value(m_pre_master, shared_secret, 2);
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
             }
 
-         append_tls_length_value(m_key_material, dh_result.second, 2);
+         append_tls_length_value(m_key_material, private_key->public_value(), 2);
          }
       else if(kex_algo == Kex_Algo::ECDH ||
               kex_algo == Kex_Algo::ECDHE_PSK)
@@ -112,27 +124,43 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                 "Server sent ECC curve prohibited by policy");
             }
 
-         const std::string curve_name = state.callbacks().tls_decode_group_param(curve_id);
-
-         if(curve_name.empty())
-            throw Decoding_Error("Server sent unknown named curve " +
-                                 std::to_string(static_cast<uint16_t>(curve_id)));
-
-         const std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> ecdh_result =
-            state.callbacks().tls_ecdh_agree(curve_name, peer_public_value, policy, rng,
-                                             state.server_hello()->prefers_compressed_ec_points());
+         const auto private_key = state.callbacks().tls_generate_ephemeral_key(curve_id, rng);
+         auto shared_secret =
+            state.callbacks().tls_ephemeral_key_agreement(curve_id,
+                                                          *private_key,
+                                                          peer_public_value,
+                                                          rng,
+                                                          policy);
 
          if(kex_algo == Kex_Algo::ECDH)
             {
-            m_pre_master = ecdh_result.first;
+            m_pre_master = std::move(shared_secret);
             }
          else
             {
-            append_tls_length_value(m_pre_master, ecdh_result.first, 2);
+            append_tls_length_value(m_pre_master, shared_secret, 2);
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
             }
 
-         append_tls_length_value(m_key_material, ecdh_result.second, 1);
+         if(is_ecdh(curve_id))
+            {
+            auto ecdh_key = dynamic_cast<ECDH_PublicKey*>(private_key.get());
+            if(!ecdh_key)
+               {
+               throw TLS_Exception(Alert::InternalError,
+                                 "Application did not provide a ECDH_PublicKey");
+               }
+            append_tls_length_value(m_key_material,
+                                    ecdh_key->public_value(
+                                       state.server_hello()->prefers_compressed_ec_points()
+                                          ? EC_Point_Format::Compressed
+                                          : EC_Point_Format::Uncompressed),
+                                    1);
+            }
+         else
+            {
+            append_tls_length_value(m_key_material, private_key->public_value(), 1);
+            }
          }
       else
          {
