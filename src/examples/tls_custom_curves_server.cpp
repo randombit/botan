@@ -20,11 +20,11 @@
  */
 class Callbacks : public Botan::TLS::Callbacks {
 public:
-  void tls_emit_data(const uint8_t data[], size_t size) override {
+  void tls_emit_data(std::span<const uint8_t> data) override {
     // send data to tls client, e.g., using BSD sockets or boost asio
   }
 
-  void tls_record_received(uint64_t seq_no, const uint8_t data[], size_t size) override {
+  void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) override {
     // process full TLS record received by tls client, e.g.,
     // by passing it to the application
   }

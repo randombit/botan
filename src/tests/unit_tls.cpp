@@ -321,14 +321,14 @@ class TLS_Handshake_Test final
                m_recv(recv_buf)
                {}
 
-            void tls_emit_data(const uint8_t bits[], size_t len) override
+            void tls_emit_data(std::span<const uint8_t> bits) override
                {
-               m_outbound.insert(m_outbound.end(), bits, bits + len);
+               m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
                }
 
-            void tls_record_received(uint64_t /*seq*/, const uint8_t bits[], size_t len) override
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> bits) override
                {
-               m_recv.insert(m_recv.end(), bits, bits + len);
+               m_recv.insert(m_recv.end(), bits.begin(), bits.end());
                }
 
             void tls_alert(Botan::TLS::Alert /*alert*/) override
@@ -939,14 +939,14 @@ class DTLS_Reconnection_Test : public Test
                   m_recv(recv_buf)
                   {}
 
-               void tls_emit_data(const uint8_t bits[], size_t len) override
+               void tls_emit_data(std::span<const uint8_t> bits) override
                   {
-                  m_outbound.insert(m_outbound.end(), bits, bits + len);
+                  m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
                   }
 
-               void tls_record_received(uint64_t /*seq*/, const uint8_t bits[], size_t len) override
+               void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> bits) override
                   {
-                  m_recv.insert(m_recv.end(), bits, bits + len);
+                  m_recv.insert(m_recv.end(), bits.begin(), bits.end());
                   }
 
                void tls_alert(Botan::TLS::Alert /*alert*/) override

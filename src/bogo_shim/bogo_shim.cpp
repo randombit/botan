@@ -1368,32 +1368,32 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
       bool saw_close_notify() const { return m_got_close; }
 
-      void tls_emit_data(const uint8_t data[], size_t size) override
+      void tls_emit_data(std::span<const uint8_t> data) override
          {
-         shim_log("sending record of len " + std::to_string(size));
+         shim_log("sending record of len " + std::to_string(data.size()));
 
          if(m_args.option_used("write-settings"))
             {
             // TODO: the transcript option should probably be used differently
             std::cout << ">>>" << std::endl
-                            << Botan::hex_encode(data, size) << std::endl
+                            << Botan::hex_encode(data) << std::endl
                             << ">>>" << std::endl;
             }
 
          if(m_is_datagram)
             {
-            std::vector<uint8_t> packet(size + 5);
+            std::vector<uint8_t> packet(data.size() + 5);
 
             packet[0] = 'P';
             for(size_t i = 0; i != 4; ++i)
-               packet[i+1] = static_cast<uint8_t>((size >> (24-8*i)) & 0xFF);
-            std::memcpy(packet.data() + 5, data, size);
+               packet[i+1] = static_cast<uint8_t>((data.size() >> (24-8*i)) & 0xFF);
+            std::memcpy(packet.data() + 5, data.data(), data.size());
 
             m_socket.write(packet.data(), packet.size());
             }
          else
             {
-            m_socket.write(data, size);
+            m_socket.write(data.data(), data.size());
             }
          }
 
@@ -1414,9 +1414,9 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
           return {};
           }
 
-      void tls_record_received(uint64_t /*seq_no*/, const uint8_t data[], size_t size) override
+      void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> data) override
          {
-         if(size == 0)
+         if(data.empty())
             {
             m_empty_records += 1;
             if(m_empty_records > 32)
@@ -1427,11 +1427,11 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             m_empty_records = 0;
             }
 
-         shim_log("Reflecting application_data len " + std::to_string(size));
+         shim_log("Reflecting application_data len " + std::to_string(data.size()));
 
-         std::vector<uint8_t> buf(data, data + size);
-         for(size_t i = 0; i != size; ++i)
-            buf[i] ^= 0xFF;
+         std::vector<uint8_t> buf(data.begin(), data.end());
+         for(auto& b : buf)
+            b ^= 0xFF;
 
          m_channel->send(buf);
          }

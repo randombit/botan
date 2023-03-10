@@ -482,7 +482,7 @@ void Channel_Impl_12::process_application_data(uint64_t seq_no, const secure_vec
    if(!active_state())
       throw Unexpected_Message("Application data before handshake done");
 
-   callbacks().tls_record_received(seq_no, record.data(), record.size());
+   callbacks().tls_record_received(seq_no, record);
    }
 
 void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record)
@@ -545,7 +545,7 @@ void Channel_Impl_12::write_record(Connection_Cipher_State* cipher_state, uint16
                         input, length, *cipher_state, m_rng);
       }
 
-   callbacks().tls_emit_data(m_writebuf.data(), m_writebuf.size());
+   callbacks().tls_emit_data(m_writebuf);
    }
 
 void Channel_Impl_12::send_record_array(uint16_t epoch, Record_Type type,

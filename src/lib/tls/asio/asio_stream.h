@@ -602,17 +602,21 @@ class Stream
 
             virtual ~StreamCore() = default;
 
-            void tls_emit_data(const uint8_t data[], std::size_t size) override
+            void tls_emit_data(std::span<const uint8_t> data) override
                {
                send_buffer.commit(
-                  boost::asio::buffer_copy(send_buffer.prepare(size), boost::asio::buffer(data, size))
+                  boost::asio::buffer_copy(
+                     send_buffer.prepare(data.size()),
+                     boost::asio::buffer(data.data(), data.size()))
                );
                }
 
-            void tls_record_received(uint64_t, const uint8_t data[], std::size_t size) override
+            void tls_record_received(uint64_t, std::span<const uint8_t> data) override
                {
                receive_buffer.commit(
-                  boost::asio::buffer_copy(receive_buffer.prepare(size), boost::asio::const_buffer(data, size))
+                  boost::asio::buffer_copy(
+                     receive_buffer.prepare(data.size()),
+                     boost::asio::const_buffer(data.data(), data.size()))
                );
                }
 

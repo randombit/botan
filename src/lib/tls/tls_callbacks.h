@@ -52,11 +52,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * when the function returns so a copy must be made if the data cannot be
        * sent immediately.
        *
-       * @param data the vector of data to send
-       *
-       * @param size the number of bytes to send
+       * @param data a contiguous data buffer to send
        */
-       virtual void tls_emit_data(const uint8_t data[], size_t size) = 0;
+       virtual void tls_emit_data(std::span<const uint8_t> data) = 0;
 
        /**
        * Mandatory callback: process application data
@@ -65,11 +63,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @param seq_no the underlying TLS/DTLS record sequence number
        *
-       * @param data the vector containing the received record
-       *
-       * @param size the length of the received record, in bytes
+       * @param data a contiguous data buffer containing the received record
        */
-       virtual void tls_record_received(uint64_t seq_no, const uint8_t data[], size_t size) = 0;
+       virtual void tls_record_received(uint64_t seq_no, const std::span<const uint8_t> data) = 0;
 
        /**
        * Mandatory callback: alert received

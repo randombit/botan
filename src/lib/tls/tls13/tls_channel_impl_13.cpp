@@ -173,7 +173,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data)
          else if(record.type == Record_Type::ApplicationData)
             {
             BOTAN_ASSERT(record.seq_no.has_value(), "decrypted application traffic had a sequence number");
-            callbacks().tls_record_received(record.seq_no.value(), record.fragment.data(), record.fragment.size());
+            callbacks().tls_record_received(record.seq_no.value(), record.fragment);
             }
          else if(record.type == Record_Type::Alert)
             {
@@ -385,7 +385,7 @@ void Channel_Impl_13::send_record(Record_Type record_type, const std::vector<uin
       to_write = concat(ccs, to_write);
       }
 
-   callbacks().tls_emit_data(to_write.data(), to_write.size());
+   callbacks().tls_emit_data(to_write);
    }
 
 void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record)

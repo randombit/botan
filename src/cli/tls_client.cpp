@@ -366,18 +366,16 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             }
          }
 
-      void tls_emit_data(const uint8_t buf[], size_t length) override
+      void tls_emit_data(std::span<const uint8_t> buf) override
          {
-         size_t offset = 0;
-
          if(flag_set("debug"))
             {
-            output() << "<< " << Botan::hex_encode(buf, length) << "\n";
+            output() << "<< " << Botan::hex_encode(buf) << "\n";
             }
 
-         while(length)
+         while(!buf.empty())
             {
-            ssize_t sent = ::send(m_sockfd, buf + offset, length, MSG_NOSIGNAL);
+            ssize_t sent = ::send(m_sockfd, buf.data(), buf.size(), MSG_NOSIGNAL);
 
             if(sent == -1)
                {
@@ -391,8 +389,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                   }
                }
 
-            offset += sent;
-            length -= sent;
+            buf = buf.subspan(sent);
             }
          }
 
@@ -401,11 +398,11 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          output() << "Alert: " << alert.type_string() << "\n";
          }
 
-      void tls_record_received(uint64_t /*seq_no*/, const uint8_t buf[], size_t buf_size) override
+      void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> buf) override
          {
-         for(size_t i = 0; i != buf_size; ++i)
+         for(const auto c : buf)
             {
-            output() << buf[i];
+            output() << c;
             }
          }
 

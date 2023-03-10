@@ -112,9 +112,9 @@ class HTTP_Parser final
 
       HTTP_Parser(Callbacks& cb) : m_cb(cb) {}
 
-      void consume_input(const uint8_t buf[], size_t buf_len)
+      void consume_input(std::span<const uint8_t> buf)
          {
-         m_req_buf.append(reinterpret_cast<const char*>(buf), buf_len);
+         m_req_buf.append(reinterpret_cast<const char*>(buf.data()), buf.size());
 
          std::istringstream strm(m_req_buf);
 
@@ -251,7 +251,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
             {
             m_client_socket.close();
             }
-         tls_emit_data(nullptr, 0); // initiate another write if needed
+         tls_emit_data({}); // initiate another write if needed
          }
 
       std::string tls_server_choose_app_protocol(const std::vector<std::string>& /*client_protos*/) override
@@ -259,12 +259,12 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          return "http/1.1";
          }
 
-      void tls_record_received(uint64_t /*rec_no*/, const uint8_t buf[], size_t buf_len) override
+      void tls_record_received(uint64_t /*rec_no*/, std::span<const uint8_t> buf) override
          {
          if(!m_http_parser)
             m_http_parser.reset(new HTTP_Parser(*this));
 
-         m_http_parser->consume_input(buf, buf_len);
+         m_http_parser->consume_input(buf);
          }
 
       std::string summarize_request(const HTTP_Parser::Request& request)
@@ -318,11 +318,11 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          m_tls.close();
          }
 
-      void tls_emit_data(const uint8_t buf[], size_t buf_len) override
+      void tls_emit_data(std::span<const uint8_t> buf) override
          {
-         if(buf_len > 0)
+         if(!buf.empty())
             {
-            m_s2c_pending.insert(m_s2c_pending.end(), buf, buf + buf_len);
+            m_s2c_pending.insert(m_s2c_pending.end(), buf.begin(), buf.end());
             }
 
          // no write now active and we still have output pending
