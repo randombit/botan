@@ -43,11 +43,22 @@ class Key_Share_Entry
 
       Key_Share_Entry(const TLS::Group_Params group, Callbacks& cb, RandomNumberGenerator& rng)
          : m_group(group)
+         , m_private_key(cb.tls_generate_ephemeral_key(group, rng))
          {
+         if(!m_private_key)
+            {
+            throw TLS_Exception(Alert::InternalError,
+                                "Application did not provide a suitable ephemeral key pair");
+            }
+
          if(is_ecdh(group))
             {
-            const EC_Group ec_group(cb.tls_decode_group_param(group));
-            auto skey = std::make_unique<ECDH_PrivateKey>(rng, ec_group);
+            auto pkey = dynamic_cast<ECDH_PublicKey*>(m_private_key.get());
+            if(!pkey)
+               {
+               throw TLS_Exception(Alert::InternalError,
+                                 "Application did not provide a ECDH_PublicKey");
+               }
 
             // RFC 8446 Ch. 4.2.8.2
             //
@@ -57,32 +68,11 @@ class Key_Share_Entry
             //
             // Hence, we neither need to take Policy::use_ecc_point_compression() nor
             // ClientHello::prefers_compressed_ec_points() into account here.
-            m_key_exchange = skey->public_value(EC_Point_Format::Uncompressed);
-            m_private_key = std::move(skey);
+            m_key_exchange = pkey->public_value(EC_Point_Format::Uncompressed);
             }
-         else if(is_dh(group))
-            {
-            // RFC 8446 Ch. 4.2.8.1
-            //
-            //   The opaque value contains the Diffie-Hellman
-            //   public value (Y = g^X mod p) for the specified group (see [RFC7919]
-            //   for group definitions) encoded as a big-endian integer and padded to
-            //   the left with zeros to the size of p in bytes.
-            auto skey = std::make_unique<DH_PrivateKey>(rng, DL_Group(cb.tls_decode_group_param(group)));
-            m_key_exchange = skey->public_value();
-            m_private_key = std::move(skey);
-            }
-#if defined(BOTAN_HAS_CURVE_25519)
-         else if(is_x25519(group))
-            {
-            auto skey = std::make_unique<X25519_PrivateKey>(rng);
-            m_key_exchange = skey->public_value();
-            m_private_key = std::move(skey);
-            }
-#endif
          else
             {
-            throw Decoding_Error("cannot create a key offering without a group definition");
+            m_key_exchange = m_private_key->public_value();
             }
          }
 
@@ -115,48 +105,7 @@ class Key_Share_Entry
          BOTAN_ASSERT_NOMSG(m_private_key != nullptr);
          BOTAN_ASSERT_NOMSG(m_group == received.m_group);
 
-         PK_Key_Agreement ka(*m_private_key, rng, "Raw");
-
-         if(is_ecdh(m_group))
-            {
-            const EC_Group ec_group(cb.tls_decode_group_param(m_group));
-            ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(received.m_key_exchange));
-            policy.check_peer_key_acceptable(peer_key);
-
-            return ka.derive_key(0, peer_key.public_value()).bits_of();
-            }
-
-         if(is_dh(m_group))
-            {
-            const DL_Group dl_group(cb.tls_decode_group_param(m_group));
-
-            if(!dl_group.verify_group(rng, false))
-               { throw TLS_Exception(Alert::InsufficientSecurity, "DH group validation failed"); }
-
-            DH_PublicKey peer_key(dl_group, BigInt::decode(received.m_key_exchange));
-            policy.check_peer_key_acceptable(peer_key);
-
-            // Note: in contrast to TLS 1.2, no leading zeros are stripped here
-            // cf. RFC 8446 7.4.1
-            return ka.derive_key(0, peer_key.public_value()).bits_of();
-            }
-
-#if defined(BOTAN_HAS_CURVE_25519)
-         if(is_x25519(m_group))
-            {
-            if(received.m_key_exchange.size() != 32)
-               {
-               throw TLS_Exception(Alert::HandshakeFailure, "Invalid X25519 key size");
-               }
-
-            Curve25519_PublicKey peer_key(received.m_key_exchange);
-            policy.check_peer_key_acceptable(peer_key);
-
-            return ka.derive_key(0, peer_key.public_value()).bits_of();
-            }
-#endif
-
-         BOTAN_ASSERT_NOMSG(false);
+         return cb.tls_ephemeral_key_agreement(m_group, *m_private_key, received.m_key_exchange, rng, policy);
          }
 
       void erase()
@@ -165,9 +114,9 @@ class Key_Share_Entry
          }
 
    private:
-      Named_Group                  m_group;
-      std::vector<uint8_t>         m_key_exchange;
-      std::unique_ptr<Private_Key> m_private_key;
+      Named_Group                           m_group;
+      std::vector<uint8_t>                  m_key_exchange;
+      std::unique_ptr<PK_Key_Agreement_Key> m_private_key;
    };
 
 class Key_Share_ClientHello;
