@@ -17,6 +17,8 @@
 #include <botan/internal/stl_util.h>
 #include <botan/tls_messages.h>
 
+#include <array>
+
 namespace {
 bool is_user_canceled_alert(const Botan::TLS::Alert& alert)
    {
@@ -71,15 +73,12 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data)
    if(!m_can_read)
       { return 0; }
 
-   auto input = data.data();
-   auto input_size = data.size();
-
    try
       {
       if(expects_downgrade())
-         { preserve_peer_transcript(input, input_size); }
+         { preserve_peer_transcript(data); }
 
-      m_record_layer.copy_data(input, input_size);
+      m_record_layer.copy_data(data);
 
       while(true)
          {
@@ -381,7 +380,8 @@ void Channel_Impl_13::send_record(Record_Type record_type, const std::vector<uin
    // an unprotected Alert record.
    if(prepend_ccs() && (m_cipher_state || record_type != Record_Type::Alert))
       {
-      const auto ccs = m_record_layer.prepare_records(Record_Type::ChangeCipherSpec, {0x01}, m_cipher_state.get());
+      std::array<uint8_t, 1> ccs_content = {0x01};
+      const auto ccs = m_record_layer.prepare_records(Record_Type::ChangeCipherSpec, ccs_content, m_cipher_state.get());
       to_write = concat(ccs, to_write);
       }
 

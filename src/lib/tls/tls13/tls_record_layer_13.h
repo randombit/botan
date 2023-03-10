@@ -12,6 +12,7 @@
 #include <optional>
 #include <variant>
 #include <vector>
+#include <span>
 
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
@@ -58,8 +59,7 @@ class BOTAN_TEST_API Record_Layer
        *
        * @param data_from_peer  The data to be parsed.
        */
-      void copy_data(const std::vector<uint8_t>& data_from_peer);
-      void copy_data(const uint8_t data[], size_t size);
+      void copy_data(std::span<const uint8_t> data_from_peer);
 
       /**
        * Parses one record off the internal buffer that is being filled using `copy_data`.
@@ -75,7 +75,7 @@ class BOTAN_TEST_API Record_Layer
       ReadResult<Record> next_record(Cipher_State* cipher_state = nullptr);
 
       std::vector<uint8_t> prepare_records(const Record_Type type,
-                                           const std::vector<uint8_t>& data,
+                                           std::span<const uint8_t> data,
                                            Cipher_State* cipher_state=nullptr) const;
 
       /**

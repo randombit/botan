@@ -198,17 +198,17 @@ class Channel_Impl
 
       std::unique_ptr<Downgrade_Information> m_downgrade_info;
 
-      void preserve_peer_transcript(const uint8_t input[], size_t input_size)
+      void preserve_peer_transcript(std::span<const uint8_t> input)
          {
          BOTAN_STATE_CHECK(m_downgrade_info);
          m_downgrade_info->peer_transcript.insert(m_downgrade_info->peer_transcript.end(),
-                                                  input, input+input_size);
+                                                  input.begin(), input.end());
          }
 
-      void preserve_client_hello(const std::vector<uint8_t>& msg)
+      void preserve_client_hello(std::span<const uint8_t> msg)
          {
          BOTAN_STATE_CHECK(m_downgrade_info);
-         m_downgrade_info->client_hello_message = msg;
+         m_downgrade_info->client_hello_message.assign(msg.begin(), msg.end());
          }
 
       friend class Client;

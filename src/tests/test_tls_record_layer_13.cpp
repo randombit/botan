@@ -18,6 +18,8 @@
 
 #include <botan/internal/tls_record_layer_13.h>
 
+#include <array>
+
 namespace Botan_Tests {
 
 namespace {
@@ -277,24 +279,24 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
       Botan_Tests::CHECK("initial received record versions might be 0x03XX ", [&](auto& result)
          {
          auto rl = record_layer_client();
-         rl.copy_data({0x16, 0x03, 0x00, 0x00, 0x01, 0x42});
+         rl.copy_data(std::vector<uint8_t>{0x16, 0x03, 0x00, 0x00, 0x01, 0x42});
          result.test_no_throw("0x03 0x00 should be fine for first records", [&] { rl.next_record(); });
 
-         rl.copy_data({0x16, 0x03, 0x01, 0x00, 0x01, 0x42});
+         rl.copy_data(std::vector<uint8_t>{0x16, 0x03, 0x01, 0x00, 0x01, 0x42});
          result.test_no_throw("0x03 0x01 should be fine for first records", [&] { rl.next_record(); });
 
-         rl.copy_data({0x16, 0x03, 0x02, 0x00, 0x01, 0x42});
+         rl.copy_data(std::vector<uint8_t>{0x16, 0x03, 0x02, 0x00, 0x01, 0x42});
          result.test_no_throw("0x03 0x02 should be fine for first records", [&] { rl.next_record(); });
 
-         rl.copy_data({0x16, 0x03, 0x03, 0x00, 0x01, 0x42});
+         rl.copy_data(std::vector<uint8_t>{0x16, 0x03, 0x03, 0x00, 0x01, 0x42});
          result.test_no_throw("0x03 0x03 should be fine for first records", [&] { rl.next_record(); });
 
          rl.disable_receiving_compat_mode();
 
-         rl.copy_data({0x16, 0x03, 0x03, 0x00, 0x01, 0x42});
+         rl.copy_data(std::vector<uint8_t>{0x16, 0x03, 0x03, 0x00, 0x01, 0x42});
          result.test_no_throw("0x03 0x03 is okay regardless", [&] { rl.next_record(); });
 
-         rl.copy_data({0x16, 0x03, 0x01, 0x00, 0x01, 0x42});
+         rl.copy_data(std::vector<uint8_t>{0x16, 0x03, 0x01, 0x00, 0x01, 0x42});
          result.test_throws("0x03 0x01 not okay once client hello was received", [&] { rl.next_record(); });
          }),
 
@@ -347,7 +349,7 @@ std::vector<Test::Result> read_fragmented_records()
          wait_for_more_bytes(1, rl, {'\x00'}, result);
          wait_for_more_bytes(1, rl, {'\x01'}, result);
 
-         rl.copy_data({'\x01'});
+         rl.copy_data(std::vector<uint8_t>{'\x01'});
          auto res1 = rl.next_record();
          result.require("received something 1", std::holds_alternative<TLS::Record>(res1));
 
@@ -362,7 +364,7 @@ std::vector<Test::Result> read_fragmented_records()
          {
          wait_for_more_bytes(1, rl, {'\x14', '\x03', '\x03', '\x00'}, result);
 
-         rl.copy_data({'\x01', '\x01', /* second CCS starts here */ '\x14', '\x03'});
+         rl.copy_data(std::vector<uint8_t>{'\x01', '\x01', /* second CCS starts here */ '\x14', '\x03'});
 
          auto res2 = rl.next_record();
          result.require("received something 2", std::holds_alternative<TLS::Record>(res2));
@@ -373,7 +375,7 @@ std::vector<Test::Result> read_fragmented_records()
 
          wait_for_more_bytes(2, rl, {'\x03'}, result);
 
-         rl.copy_data({'\x00', '\x01', '\x01'});
+         rl.copy_data(std::vector<uint8_t>{'\x00', '\x01', '\x01'});
          auto res3 = rl.next_record();
          result.require("received something 3", std::holds_alternative<TLS::Record>(res3));
 
@@ -418,7 +420,8 @@ std::vector<Test::Result> write_records()
          }),
       Botan_Tests::CHECK("prepare a dummy CCS", [&](auto& result)
          {
-         auto record = record_layer_client(true).prepare_records(Botan::TLS::Record_Type::ChangeCipherSpec, {0x01});
+         std::array<uint8_t, 1> ccs_content = {0x01};
+         auto record = record_layer_client(true).prepare_records(Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content);
          result.require("record was created", record.size() == Botan::TLS::TLS_HEADER_SIZE + 1);
 
          result.test_eq("CCS record is well-formed", record, Botan::hex_decode("140303000101"));
@@ -763,7 +766,8 @@ std::vector<Test::Result> write_encrypted_records()
 
       Botan_Tests::CHECK("write a dummy CCS (that must not be encrypted)", [&](auto& result)
          {
-         auto record = record_layer_client(true).prepare_records(Botan::TLS::Record_Type::ChangeCipherSpec, {0x01}, cs.get());
+         std::array<uint8_t, 1> ccs_content = {0x01};
+         auto record = record_layer_client(true).prepare_records(Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content, cs.get());
          result.require("record was created and not encrypted", record.size() == Botan::TLS::TLS_HEADER_SIZE + 1);
 
          result.test_eq("CCS record is well-formed", record, Botan::hex_decode("140303000101"));
