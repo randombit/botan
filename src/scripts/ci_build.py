@@ -186,16 +186,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
         # valgrind is single threaded anyway
         test_cmd += ['--test-threads=1']
+
         # valgrind is slow
         slow_tests = [
-            'cryptobox', 'dh_invalid', 'dh_kat', 'dh_keygen',
-            'dl_group_gen', 'dlies', 'dsa_param', 'ecc_basemul',
-            'ecdsa_verify_wycheproof', 'mce_keygen', 'passhash9',
-            'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
-            'srp6_kat', 'x509_path_bsi', 'xmss_keygen', 'xmss_sign',
-            'pbkdf', 'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression',
-            'ed25519_sign', 'elgamal_keygen', 'x509_path_rsa_pss',
-            'dsa_kat_verify']
+            'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression', 'cryptobox',
+            'dh_invalid', 'dh_kat', 'dh_keygen', 'dl_group_gen', 'dlies',
+            'dsa_kat_verify', 'dsa_param', 'ecc_basemul', 'ecdsa_verify_wycheproof',
+            'ed25519_sign', 'elgamal_decrypt', 'elgamal_encrypt', 'elgamal_keygen',
+            'ffi_dsa', 'ffi_elgamal', 'mce_keygen', 'passhash9', 'pbkdf', 'rsa_encrypt',
+            'rsa_pss', 'rsa_pss_raw', 'scrypt', 'srp6_kat', 'x509_path_bsi',
+            'x509_path_rsa_pss', 'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign']
 
         disabled_tests += slow_tests
 
