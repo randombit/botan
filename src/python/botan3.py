@@ -394,13 +394,13 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_get_serial_number, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_authority_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_subject_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_get_public_key_bits, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_view_public_key_bits, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_x509_cert_get_public_key, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_cert_get_issuer_dn,
             [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_subject_dn,
             [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_to_string, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_view_as_string, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
     ffi_api(dll.botan_x509_cert_allowed_usage, [c_void_p, c_uint])
     ffi_api(dll.botan_x509_cert_hostname_match, [c_void_p, c_char_p], [-1])
     ffi_api(dll.botan_x509_cert_verify,
@@ -1381,8 +1381,8 @@ class X509Cert: # pylint: disable=invalid-name
         return datetime.fromtimestamp(mktime(struct_time))
 
     def to_string(self):
-        return _call_fn_returning_str(
-            4096, lambda b, bl: _DLL.botan_x509_cert_to_string(self.__obj, b, bl))
+        return _call_fn_viewing_str(
+            lambda vc, vfn: _DLL.botan_x509_cert_view_as_string(self.__obj, vc, vfn))
 
     def fingerprint(self, hash_algo='SHA-256'):
         n = HashFunction(hash_algo).output_length() * 3
@@ -1402,8 +1402,8 @@ class X509Cert: # pylint: disable=invalid-name
             32, lambda b, bl: _DLL.botan_x509_cert_get_subject_key_id(self.__obj, b, bl))
 
     def subject_public_key_bits(self):
-        return _call_fn_returning_vec(
-            512, lambda b, bl: _DLL.botan_x509_cert_get_public_key_bits(self.__obj, b, bl))
+        return _call_fn_viewing_vec(
+            lambda vc, vfn: _DLL.botan_x509_cert_view_public_key_bits(self.__obj, vc, vfn))
 
     def subject_public_key(self):
         pub = c_void_p(0)

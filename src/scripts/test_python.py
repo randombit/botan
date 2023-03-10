@@ -481,6 +481,8 @@ ofvkP1EDmpx50fHLawIDAQAB
         cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt"))
         pubkey = cert.subject_public_key()
 
+        self.assertEqual(len(cert.subject_public_key_bits()), 275)
+
         self.assertEqual(pubkey.algo_name(), 'ECDSA')
         self.assertEqual(pubkey.estimated_strength(), 112)
 

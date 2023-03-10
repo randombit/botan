@@ -126,10 +126,18 @@ int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert,
 
 int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len)
    {
+   return copy_view_str(reinterpret_cast<uint8_t*>(out), out_len, botan_x509_cert_view_as_string, cert);
+   }
+
+int botan_x509_cert_view_as_string(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view)
+   {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_str_output(out, out_len, c.to_string()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c)
+      {
+      return invoke_view_callback(view, ctx, c.to_string());
+      });
 #else
-   BOTAN_UNUSED(cert, out, out_len);
+   BOTAN_UNUSED(cert, ctx, view);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -245,10 +253,18 @@ int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], si
 
 int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
+   return copy_view_bin(out, out_len, botan_x509_cert_view_public_key_bits, cert);
+   }
+
+int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_bin_fn view)
+   {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_vec_output(out, out_len, c.subject_public_key_bits()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c)
+      {
+      return invoke_view_callback(view, ctx, c.subject_public_key_bits());
+      });
 #else
-   BOTAN_UNUSED(cert, out, out_len);
+   BOTAN_UNUSED(cert, ctx, view);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }

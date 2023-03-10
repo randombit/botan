@@ -1646,6 +1646,11 @@ BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_subject_key_id(botan_x509_cert_t c
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert,
                                                   uint8_t out[], size_t* out_len);
 
+BOTAN_PUBLIC_API(3,0) int botan_x509_cert_view_public_key_bits(
+   botan_x509_cert_t cert,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view);
+
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key);
 
 BOTAN_PUBLIC_API(2,0)
@@ -1659,6 +1664,11 @@ int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert,
                                    uint8_t out[], size_t* out_len);
 
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len);
+
+BOTAN_PUBLIC_API(3,0) int botan_x509_cert_view_as_string(
+   botan_x509_cert_t cert,
+   botan_view_ctx ctx,
+   botan_view_str_fn view);
 
 /* Must match values of Key_Constraints in key_constraints.h */
 enum botan_x509_cert_key_constraints {
