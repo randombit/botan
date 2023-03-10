@@ -1,11 +1,11 @@
 #include <botan/auto_rng.h>
 #include <botan/certstor.h>
+#include <botan/ecdh.h>
+#include <botan/oids.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_client.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_session_manager_memory.h>
-#include <botan/ec_group.h>
-#include <botan/oids.h>
 
 /**
  * @brief Callbacks invoked by TLS::Channel.
@@ -29,16 +29,34 @@ public:
     // handle a tls alert received from the tls server
   }
 
-  std::string tls_decode_group_param(Botan::TLS::Group_Params group_param) override {
-    // handle TLS group identifier decoding and return name as string
-    // return empty string to indicate decoding failure
+  std::unique_ptr<Botan::PK_Key_Agreement_Key>
+  tls_generate_ephemeral_key(std::variant<Botan::TLS::Group_Params, Botan::DL_Group> group,
+                             Botan::RandomNumberGenerator &rng) override {
+    if (std::holds_alternative<Botan::TLS::Group_Params>(group) &&
+        std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
+      // generate a private key of my custom curve
+      const Botan::EC_Group ec_group("testcurve1102");
+      return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
+    } else {
+      // no custom curve used: up-call the default implementation
+      return tls_generate_ephemeral_key(group, rng);
+    }
+  }
 
-    switch (static_cast<uint16_t>(group_param)) {
-    case 0xFE00:
-      return "testcurve1102";
-    default:
-      // decode non-custom groups
-      return Botan::TLS::Callbacks::tls_decode_group_param(group_param);
+  Botan::secure_vector<uint8_t> tls_ephemeral_key_agreement(
+      std::variant<Botan::TLS::Group_Params, Botan::DL_Group> group,
+      const Botan::PK_Key_Agreement_Key &private_key, const std::vector<uint8_t> &public_value,
+      Botan::RandomNumberGenerator &rng, const Botan::TLS::Policy &policy) override {
+    if (std::holds_alternative<Botan::TLS::Group_Params>(group) &&
+        std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
+      // perform a key agreement on my custom curve
+      const Botan::EC_Group ec_group("testcurve1102");
+      Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
+      Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
+      return ka.derive_key(0, peer_key.public_value()).bits_of();
+    } else {
+      // no custom curve used: up-call the default implementation
+      return tls_ephemeral_key_agreement(group, private_key, public_value, rng, policy);
     }
   }
 };
