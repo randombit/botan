@@ -1982,6 +1982,12 @@ int botan_srp6_client_agree(const char *username, const char *password,
                             size_t *K_len);
 
 /**
+* Return the size, in bytes, of the prime associated with group_id
+*/
+BOTAN_PUBLIC_API(3,0)
+int botan_srp6_group_size(const char* group_id, size_t* group_p_bytes);
+
+/**
  * ZFEC
  */
 
