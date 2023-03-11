@@ -288,6 +288,17 @@ def _set_prototypes(dll):
             [c_void_p, c_char_p, POINTER(c_size_t), c_void_p, c_char_p, c_uint32, POINTER(c_size_t), c_char_p, c_char_p, c_uint32])
     ffi_api(dll.botan_privkey_export_encrypted_pbkdf_iter,
             [c_void_p, c_char_p, POINTER(c_size_t), c_void_p, c_char_p, c_size_t, c_char_p, c_char_p, c_uint32])
+
+    ffi_api(dll.botan_privkey_view_encrypted_der,
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_privkey_view_encrypted_pem,
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_STR_CALLBACK])
+
+    ffi_api(dll.botan_privkey_view_encrypted_der_timed,
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_privkey_view_encrypted_pem_timed,
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_STR_CALLBACK])
+
     ffi_api(dll.botan_privkey_export_pubkey, [c_void_p, c_void_p])
     ffi_api(dll.botan_pubkey_load, [c_void_p, c_char_p, c_size_t])
 
@@ -394,13 +405,13 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_get_serial_number, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_authority_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_subject_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_get_public_key_bits, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_view_public_key_bits, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_x509_cert_get_public_key, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_cert_get_issuer_dn,
             [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_subject_dn,
             [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_to_string, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_view_as_string, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
     ffi_api(dll.botan_x509_cert_allowed_usage, [c_void_p, c_uint])
     ffi_api(dll.botan_x509_cert_hostname_match, [c_void_p, c_char_p], [-1])
     ffi_api(dll.botan_x509_cert_verify,
@@ -1208,19 +1219,17 @@ class PrivateKey:
         else:
             return self.to_der()
 
-    def export_encrypted(self, passphrase, rng_obj, pem=False, msec=300, cipher=None, pbkdf=None): # pylint: disable=redefined-outer-name
-        flags = 1 if pem else 0
-        msec = c_uint32(msec)
-        _iters = c_size_t(0)
-
-        cb = lambda b, bl: _DLL.botan_privkey_export_encrypted_pbkdf_msec(
-            self.__obj, b, bl, rng_obj.handle_(), _ctype_str(passphrase),
-            msec, byref(_iters), _ctype_str(cipher), _ctype_str(pbkdf), flags)
-
+    def export_encrypted(self, passphrase, rng, pem=False, msec=300, cipher=None, pbkdf=None): # pylint: disable=redefined-outer-name
         if pem:
-            return _call_fn_returning_str(8192, cb)
+            return _call_fn_viewing_str(
+                lambda vc, vfn: _DLL.botan_privkey_view_encrypted_pem_timed(
+                    self.__obj, rng.handle_(), _ctype_str(passphrase),
+                    _ctype_str(cipher), _ctype_str(pbkdf), c_size_t(msec), vc, vfn))
         else:
-            return _call_fn_returning_vec(4096, cb)
+            return _call_fn_viewing_vec(
+                lambda vc, vfn: _DLL.botan_privkey_view_encrypted_der_timed(
+                    self.__obj, rng.handle_(), _ctype_str(passphrase),
+                    _ctype_str(cipher), _ctype_str(pbkdf), c_size_t(msec), vc, vfn))
 
     def get_field(self, field_name):
         v = MPI()
@@ -1381,8 +1390,8 @@ class X509Cert: # pylint: disable=invalid-name
         return datetime.fromtimestamp(mktime(struct_time))
 
     def to_string(self):
-        return _call_fn_returning_str(
-            4096, lambda b, bl: _DLL.botan_x509_cert_to_string(self.__obj, b, bl))
+        return _call_fn_viewing_str(
+            lambda vc, vfn: _DLL.botan_x509_cert_view_as_string(self.__obj, vc, vfn))
 
     def fingerprint(self, hash_algo='SHA-256'):
         n = HashFunction(hash_algo).output_length() * 3
@@ -1402,8 +1411,8 @@ class X509Cert: # pylint: disable=invalid-name
             32, lambda b, bl: _DLL.botan_x509_cert_get_subject_key_id(self.__obj, b, bl))
 
     def subject_public_key_bits(self):
-        return _call_fn_returning_vec(
-            512, lambda b, bl: _DLL.botan_x509_cert_get_public_key_bits(self.__obj, b, bl))
+        return _call_fn_viewing_vec(
+            lambda vc, vfn: _DLL.botan_x509_cert_view_public_key_bits(self.__obj, vc, vfn))
 
     def subject_public_key(self):
         pub = c_void_p(0)

@@ -284,15 +284,15 @@ ofvkP1EDmpx50fHLawIDAQAB
         for is_pem in [True, False]:
             ref_val = priv.export(is_pem)
 
-            enc1 = priv.export_encrypted(passphrase, rng, True, msec=10)
+            enc1 = priv.export_encrypted(passphrase, rng, is_pem, msec=10)
             dec1 = botan.PrivateKey.load(enc1, passphrase)
             self.assertEqual(dec1.export(is_pem), ref_val)
 
-            pem2 = priv.export_encrypted(passphrase, rng, True, msec=10, cipher="AES-128/SIV")
+            pem2 = priv.export_encrypted(passphrase, rng, is_pem, msec=10, cipher="AES-128/SIV")
             dec2 = botan.PrivateKey.load(pem2, passphrase)
             self.assertEqual(dec2.export(is_pem), ref_val)
 
-            pem3 = priv.export_encrypted(passphrase, rng, True, msec=10, cipher="AES-128/GCM", pbkdf="Scrypt")
+            pem3 = priv.export_encrypted(passphrase, rng, is_pem, msec=10, cipher="AES-128/GCM", pbkdf="Scrypt")
             dec3 = botan.PrivateKey.load(pem3, passphrase)
             self.assertEqual(dec3.export(is_pem), ref_val)
 
@@ -480,6 +480,8 @@ ofvkP1EDmpx50fHLawIDAQAB
         # pylint: disable=too-many-statements
         cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt"))
         pubkey = cert.subject_public_key()
+
+        self.assertEqual(len(cert.subject_public_key_bits()), 275)
 
         self.assertEqual(pubkey.algo_name(), 'ECDSA')
         self.assertEqual(pubkey.estimated_strength(), 112)

@@ -1156,6 +1156,8 @@ BOTAN_PUBLIC_API(2,0) int botan_privkey_export_encrypted(botan_privkey_t key,
 /*
 * Export a private key, running PBKDF for specified amount of time
 * @param key the private key to export
+*
+* Note: starting in 3.0, the output iterations count is not provided
 */
 BOTAN_PUBLIC_API(2,0) int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
                                                         uint8_t out[], size_t* out_len,
@@ -1178,6 +1180,68 @@ BOTAN_PUBLIC_API(2,0) int botan_privkey_export_encrypted_pbkdf_iter(botan_privke
                                                         const char* cipher_algo,
                                                         const char* pbkdf_algo,
                                                         uint32_t flags);
+
+/**
+* View the encryption of a private key (binary DER encoding)
+*
+* Set cipher_algo, pbkdf_algo to NULL to use defaults
+* Set pbkdf_iterations to 0 to use defaults
+*/
+BOTAN_PUBLIC_API(3,0) int botan_privkey_view_encrypted_der(
+   botan_privkey_t key,
+   botan_rng_t rng,
+   const char* passphrase,
+   const char* cipher_algo,
+   const char* pbkdf_algo,
+   size_t pbkdf_iterations,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view);
+
+/**
+* View the encryption of a private key (binary DER encoding)
+*
+* Set cipher_algo, pbkdf_algo to NULL to use defaults
+*/
+BOTAN_PUBLIC_API(3,0) int botan_privkey_view_encrypted_der_timed(
+   botan_privkey_t key,
+   botan_rng_t rng,
+   const char* passphrase,
+   const char* cipher_algo,
+   const char* pbkdf_algo,
+   size_t pbkdf_runtime_msec,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view);
+
+/**
+* View the encryption of a private key (PEM encoding)
+*
+* Set cipher_algo, pbkdf_algo to NULL to use defaults
+* Set pbkdf_iterations to 0 to use defaults
+*/
+BOTAN_PUBLIC_API(3,0) int botan_privkey_view_encrypted_pem(
+   botan_privkey_t key,
+   botan_rng_t rng,
+   const char* passphrase,
+   const char* cipher_algo,
+   const char* pbkdf_algo,
+   size_t pbkdf_iterations,
+   botan_view_ctx ctx,
+   botan_view_str_fn view);
+
+/**
+* View the encryption of a private key (PEM encoding)
+*
+* Set cipher_algo, pbkdf_algo to NULL to use defaults
+*/
+BOTAN_PUBLIC_API(3,0) int botan_privkey_view_encrypted_pem_timed(
+   botan_privkey_t key,
+   botan_rng_t rng,
+   const char* passphrase,
+   const char* cipher_algo,
+   const char* pbkdf_algo,
+   size_t pbkdf_runtime_msec,
+   botan_view_ctx ctx,
+   botan_view_str_fn view);
 
 typedef struct botan_pubkey_struct* botan_pubkey_t;
 
@@ -1646,6 +1710,11 @@ BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_subject_key_id(botan_x509_cert_t c
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert,
                                                   uint8_t out[], size_t* out_len);
 
+BOTAN_PUBLIC_API(3,0) int botan_x509_cert_view_public_key_bits(
+   botan_x509_cert_t cert,
+   botan_view_ctx ctx,
+   botan_view_bin_fn view);
+
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key);
 
 BOTAN_PUBLIC_API(2,0)
@@ -1659,6 +1728,11 @@ int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert,
                                    uint8_t out[], size_t* out_len);
 
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len);
+
+BOTAN_PUBLIC_API(3,0) int botan_x509_cert_view_as_string(
+   botan_x509_cert_t cert,
+   botan_view_ctx ctx,
+   botan_view_str_fn view);
 
 /* Must match values of Key_Constraints in key_constraints.h */
 enum botan_x509_cert_key_constraints {

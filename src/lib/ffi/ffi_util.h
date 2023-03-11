@@ -179,6 +179,8 @@ int copy_view_bin(uint8_t out[], size_t* out_len, Fn fn, Args... args)
 template<typename Fn, typename... Args>
 int copy_view_str(uint8_t out[], size_t* out_len, Fn fn, Args... args)
    {
+   if(fn == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
    botan_view_bounce_struct ctx;
    ctx.out_ptr = out;
    ctx.out_len = out_len;
