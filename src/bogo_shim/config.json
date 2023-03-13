@@ -55,15 +55,12 @@
         "Resume-Client-Mismatch-TLS12-TLS13-TLS": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
         "Resume-Server-UnofferedCipher-TLS13": "BoringSSL will not allow switching ciphers during TLS 1.3 resumption, we do, though.",
 
-        "ExportKeyingMaterial-Server-HalfRTT-TLS13": "No TLS 1.3 server, yet",
-
         "HttpGET": "TLS 1.3 server does not detect HTTP",
         "HttpPOST": "TLS 1.3 server does not detect HTTP",
         "HttpPUT": "TLS 1.3 server does not detect HTTP",
         "HttpHEAD": "TLS 1.3 server does not detect HTTP",
         "HttpCONNECT": "TLS 1.3 server does not detect HTTP",
 
-        "ExtraClientEncryptedExtension-TLS-TLS13": "TLS 1.3 server UNIMPLEMENTED",
 
         "Server-Verify-*-TLS13": "TODO: FIXME - missing deny-list for outdated signature schemes",
         "Server-VerifyDefault-*-TLS13": "TODO: FIXME - missing deny-list for outdated signature schemes",
@@ -72,12 +69,15 @@
 
         "*EarlyData*": "No TLS 1.3 Early Data, yet",
         "TLS13-TicketAgeSkew-*": "No TLS 1.3 Early Data, yet",
+        "ExportKeyingMaterial-Server-HalfRTT-TLS13": "No TLS 1.3 Early Data, yet",
+        "EarlyDataEnabled*": "No TLS 1.3 Early Data, yet",
+        "EarlyData-Reject0RTT*": "No TLS 1.3 Early Data, yet",
+        "PartialEndOfEarlyDataWithClientHello": "No TLS 1.3 Early Data, yet",
 
         "SendNoClientCertificateExtensions-TLS13": "-signed-cert-timestamps currently not supported in the shim",
         "KeyUpdate-RequestACK-UnfinishedWrite": "-read-with-unfinished-write currently not supported in the shim",
 
         "NoExportEarlyKeyingMaterial*": "No TLS 1.3",
-        "EarlyDataEnabled*": "No TLS 1.3",
         "TLS-ECH*": "No ECH support",
         "ECH*": "No ECH support",
 
@@ -98,9 +98,7 @@
 
         "*QUIC*": "No QUIC",
         "ALPS*": "No ALPS",
-
-        "EarlyData-Reject0RTT*": "No support for 0RTT",
-        "PartialEndOfEarlyDataWithClientHello": "No support for 0RTT",
+        "ExtraClientEncryptedExtension-TLS-TLS13": "No ALPS",
 
         "*NPN*": "No support for NPN",
         "ALPNServer-Preferred-*": "No support for NPN",
