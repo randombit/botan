@@ -63,6 +63,12 @@ is mandatory to implement by applications, though. Additionally there are a few
 backward incompatible changes in callbacks that might require attention by some
 applications:
 
+tls_record_received() / tls_emit_data()
+"""""""""""""""""""""""""""""""""""""""
+
+Those callbacks now take `std::span<const uint8_t>` instead of `const uint8_t*`
+with a `size_t` buffer length.
+
 tls_verify_cert_chain()
 """""""""""""""""""""""
 
