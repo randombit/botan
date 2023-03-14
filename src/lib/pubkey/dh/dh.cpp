@@ -110,12 +110,12 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
 
-      DH_KA_Operation(std::shared_ptr<const DL_PrivateKey> key,
+      DH_KA_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
                       const std::string& kdf,
                       RandomNumberGenerator& rng) :
          PK_Ops::Key_Agreement_with_KDF(kdf),
          m_key(key),
-         m_blinder(key->group().get_p(),
+         m_blinder(m_key->group().get_p(),
                    rng,
                    [](const BigInt& k) { return k; },
                    [this](const BigInt& k)

@@ -14,7 +14,6 @@
 #include <botan/credentials_manager.h>
 #include <botan/internal/loadstor.h>
 #include <botan/pubkey.h>
-#include <botan/pubkey.h>
 
 #include <botan/dl_group.h>
 #include <botan/dh.h>
