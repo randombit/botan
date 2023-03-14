@@ -100,6 +100,8 @@ class KYBER_Tests final : public Test
          {
          Test::Result result(test_name);
 
+         const std::vector<uint8_t> empty_salt;
+
          // Alice
          const Botan::Kyber_PrivateKey priv_key(Test::rng(), mode);
          const auto pub_key = priv_key.public_key();
@@ -120,7 +122,7 @@ class KYBER_Tests final : public Test
          // Alice (reading from serialized private key)
          Botan::Kyber_PrivateKey alice_priv_key(priv_key_bits, mode, Botan::KyberKeyEncoding::Full);
          auto dec = Botan::PK_KEM_Decryptor(alice_priv_key, Test::rng(), "Raw", "base");
-         const auto key_alice = dec.decrypt(cipher_text, 0 /* no KDF */, std::vector<uint8_t>());
+         const auto key_alice = dec.decrypt(cipher_text, 0 /* no KDF */, empty_salt);
          result.test_eq("shared secrets are equal", key_alice, key_bob);
 
          //
@@ -132,18 +134,18 @@ class KYBER_Tests final : public Test
             {
             auto short_cipher_text = cipher_text;
             short_cipher_text.pop_back();
-            dec.decrypt(short_cipher_text, 0, std::vector<uint8_t>());
+            dec.decrypt(short_cipher_text, 0, empty_salt);
             });
 
          // Invalid cipher_text from Alice
          Botan::secure_vector<uint8_t> reverse_cipher_text;
          std::copy(cipher_text.crbegin(), cipher_text.crend(), std::back_inserter(reverse_cipher_text));
          const auto key_alice_rev =
-            dec.decrypt(reverse_cipher_text, 0, std::vector<uint8_t>());
+            dec.decrypt(reverse_cipher_text, 0, empty_salt);
          result.confirm("shared secrets are not equal", key_alice != key_alice_rev);
 
          // Try to decrypt the valid ciphertext again
-         const auto key_alice_try2 = dec.decrypt(cipher_text, 0 /* no KDF */, std::vector<uint8_t>());
+         const auto key_alice_try2 = dec.decrypt(cipher_text, 0 /* no KDF */, empty_salt);
          result.test_eq("shared secrets are equal", key_alice_try2, key_bob);
 
          //
