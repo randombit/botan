@@ -3,6 +3,7 @@
 *     2016 Matthias Gierlings
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2023 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -19,6 +20,7 @@
    #include <botan/tls_extensions.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
+   #include <botan/tls_exceptn.h>
    #include <botan/internal/tls_reader.h>
 
    #include <botan/ec_group.h>
@@ -279,6 +281,31 @@ class TLS_Handshake_Test final
       void go();
 
       const Test::Result& results() const { return m_results; }
+
+      void set_custom_client_tls_session_established_callback(std::function<void(const Botan::TLS::Session&)> clbk)
+         {
+         BOTAN_ASSERT_NONNULL(m_client_cb);
+         m_client_cb->set_custom_tls_session_established_callback(std::move(clbk));
+         }
+
+      void set_custom_server_tls_session_established_callback(std::function<void(const Botan::TLS::Session&)> clbk)
+         {
+         BOTAN_ASSERT_NONNULL(m_server_cb);
+         m_server_cb->set_custom_tls_session_established_callback(std::move(clbk));
+         }
+
+      void set_client_expected_handshake_alert(Botan::TLS::Alert alert)
+         {
+         BOTAN_ASSERT_NONNULL(m_client_cb);
+         m_client_cb->set_expected_handshake_alert(alert);
+         }
+
+      void set_server_expected_handshake_alert(Botan::TLS::Alert alert)
+         {
+         BOTAN_ASSERT_NONNULL(m_server_cb);
+         m_server_cb->set_expected_handshake_alert(alert);
+         }
+
    private:
 
       class Test_Extension : public Botan::TLS::Extension
@@ -321,6 +348,14 @@ class TLS_Handshake_Test final
                m_recv(recv_buf)
                {}
 
+            ~Test_Callbacks()
+               {
+               if(m_expected_handshake_alert.has_value())
+                  {
+                  m_results.test_failure("Expected: " + m_expected_handshake_alert->type_string() + " during handshake");
+                  }
+               }
+
             void tls_emit_data(std::span<const uint8_t> bits) override
                {
                m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
@@ -331,10 +366,24 @@ class TLS_Handshake_Test final
                m_recv.insert(m_recv.end(), bits.begin(), bits.end());
                }
 
-            void tls_alert(Botan::TLS::Alert /*alert*/) override
+            void tls_alert(Botan::TLS::Alert alert) override
                {
                // TODO test that it is a no_renegotiation alert
-               // ignore
+
+               if(m_expected_handshake_alert.has_value())
+                  {
+                  if(m_expected_handshake_alert->type() != alert.type())
+                     {
+                     m_results.test_failure("Got unexpected alert: " + alert.type_string() +
+                                            " expected: " + m_expected_handshake_alert->type_string());
+                     }
+                  else
+                     {
+                     // acknowledge that the expected Alert was detected
+                     m_results.test_note("saw expected alert: " + m_expected_handshake_alert->type_string());
+                     m_expected_handshake_alert.reset();
+                     }
+                  }
                }
 
             void tls_modify_extensions(Botan::TLS::Extensions& extn, Botan::TLS::Connection_Side which_side, Botan::TLS::Handshake_Type /* unused */) override
@@ -392,6 +441,11 @@ class TLS_Handshake_Test final
 
                m_results.test_note(session_report);
 
+               if(m_session_established_callback)
+                  {
+                  m_session_established_callback(session.session);
+                  }
+
                if(session.session.version() != m_expected_version)
                   {
                   m_results.test_failure("Expected " + m_expected_version.to_string() +
@@ -417,11 +471,24 @@ class TLS_Handshake_Test final
                return Botan::TLS::Callbacks::tls_decode_group_param(group_param);
                }
 
+            void set_custom_tls_session_established_callback(std::function<void(const Botan::TLS::Session&)> clbk)
+               {
+               m_session_established_callback = std::move(clbk);
+               }
+
+            void set_expected_handshake_alert(Botan::TLS::Alert alert)
+               {
+               m_expected_handshake_alert = alert;
+               }
+
          private:
             Test::Result& m_results;
             const Botan::TLS::Protocol_Version m_expected_version;
             std::vector<uint8_t>& m_outbound;
             std::vector<uint8_t>& m_recv;
+
+            std::function<void(const Botan::TLS::Session&)> m_session_established_callback;
+            std::optional<Botan::TLS::Alert> m_expected_handshake_alert;
          };
 
       const Botan::TLS::Protocol_Version m_offer_version;
@@ -490,11 +557,6 @@ void TLS_Handshake_Test::go()
       if(server_handshake_completed == false && m_server->is_active())
          server_handshake_completed = true;
 
-      if(client->is_closed() || m_server->is_closed())
-         {
-         break;
-         }
-
       if(client->is_active() && client_has_written == false)
          {
          m_results.test_eq("client ALPN protocol", client->application_protocol(), "test/3");
@@ -542,8 +604,13 @@ void TLS_Handshake_Test::go()
          std::vector<uint8_t> input;
          std::swap(m_c2s, input);
 
-         size_t needed = m_server->received_data(input.data(), input.size());
-         m_results.test_eq("full packet received", needed, 0);
+         try
+            {
+            size_t needed = m_server->received_data(input.data(), input.size());
+            m_results.test_eq("full packet received", needed, 0);
+            }
+         catch(...)
+            { /* ignore exceptions */ }
 
          continue;
          }
@@ -553,8 +620,13 @@ void TLS_Handshake_Test::go()
          std::vector<uint8_t> input;
          std::swap(m_s2c, input);
 
-         size_t needed = client->received_data(input.data(), input.size());
-         m_results.test_eq("full packet received", needed, 0);
+         try
+            {
+            size_t needed = client->received_data(input.data(), input.size());
+            m_results.test_eq("full packet received", needed, 0);
+            }
+         catch(...)
+            { /* ignore exceptions */ }
 
          continue;
          }
@@ -773,6 +845,80 @@ class TLS_Unit_Tests final : public Test
          return test_with_policy(test_descr, results, client_ses, server_ses, creds, versions, policy, client_auth);
          }
 
+      void test_session_established_abort(std::vector<Test::Result>& results,
+                                          Botan::Credentials_Manager& creds,
+                                          Botan::RandomNumberGenerator& rng)
+         {
+         std::vector<Botan::TLS::Protocol_Version> versions =
+            {
+            Botan::TLS::Protocol_Version::TLS_V12,
+            Botan::TLS::Protocol_Version::DTLS_V12
+            };
+
+         Test_Policy policy;
+         Botan::TLS::Session_Manager_Noop noop_session_manager;
+
+         auto client_aborts = [&](std::exception_ptr ex, Botan::TLS::Alert expected_server_alert)
+            {
+            for(const auto version : versions)
+               {
+               TLS_Handshake_Test test(
+                  "Client aborts in tls_session_established with " +
+                  expected_server_alert.type_string() + ": " + version.to_string(),
+                  version, creds, policy, policy, rng, noop_session_manager, noop_session_manager, false);
+               test.set_custom_client_tls_session_established_callback([=](const Botan::TLS::Session&)
+                  {
+                  std::rethrow_exception(ex);
+                  });
+               test.set_server_expected_handshake_alert(expected_server_alert);
+
+               test.go();
+               results.push_back(test.results());
+               }
+            };
+
+         auto server_aborts = [&](std::exception_ptr ex, Botan::TLS::Alert expected_server_alert)
+            {
+            for(const auto version : versions)
+               {
+               TLS_Handshake_Test test(
+                  "Server aborts in tls_session_established with " +
+                  expected_server_alert.type_string() + ": " + version.to_string(),
+                  version, creds, policy, policy, rng, noop_session_manager, noop_session_manager, false);
+               test.set_custom_server_tls_session_established_callback([=](const Botan::TLS::Session&)
+                  {
+                  std::rethrow_exception(ex);
+                  });
+               test.set_client_expected_handshake_alert(expected_server_alert);
+
+               test.go();
+               results.push_back(test.results());
+               }
+            };
+
+         client_aborts(std::make_exception_ptr(
+                           Botan::TLS::TLS_Exception(Botan::TLS::Alert::AccessDenied,
+                                                     "some test TLS exception")),
+                       Botan::TLS::Alert::AccessDenied);
+         client_aborts(std::make_exception_ptr(
+                           Botan::Invalid_Authentication_Tag("some symmetric crypto failed :o)")),
+                       Botan::TLS::Alert::BadRecordMac);
+         client_aborts(std::make_exception_ptr(
+                           std::runtime_error("something strange happened")),
+                       Botan::TLS::Alert::InternalError);
+
+         server_aborts(std::make_exception_ptr(
+                           Botan::TLS::TLS_Exception(Botan::TLS::Alert::AccessDenied,
+                                                     "some server test TLS exception")),
+                       Botan::TLS::Alert::AccessDenied);
+         server_aborts(std::make_exception_ptr(
+                           Botan::Invalid_Authentication_Tag("some symmetric crypto failed in the server :o)")),
+                       Botan::TLS::Alert::BadRecordMac);
+         server_aborts(std::make_exception_ptr(
+                           std::runtime_error("something strange happened in the server")),
+                       Botan::TLS::Alert::InternalError);
+         }
+
    public:
       std::vector<Test::Result> run() override
          {
@@ -915,6 +1061,11 @@ class TLS_Unit_Tests final : public Test
 
          test_modern_versions("AES-256/GCM secp112r1", results, *client_ses, *server_ses, *creds, "ECDH", "AES-256/GCM", "AEAD",
                               { { "groups", "0xFEE1" }, { "minimum_ecdh_group_size", "112" } });
+
+         // Test connection abort by the application
+         // by throwing in Callbacks::tls_session_established()
+
+         test_session_established_abort(results, *creds, rng);
 
          return results;
          }
