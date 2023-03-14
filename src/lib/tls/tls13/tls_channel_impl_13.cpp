@@ -17,6 +17,8 @@
 #include <botan/internal/stl_util.h>
 #include <botan/tls_messages.h>
 
+#include <array>
+
 namespace {
 bool is_user_canceled_alert(const Botan::TLS::Alert& alert)
    {
@@ -62,7 +64,7 @@ Channel_Impl_13::Channel_Impl_13(Callbacks& callbacks,
 
 Channel_Impl_13::~Channel_Impl_13() = default;
 
-size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
+size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data)
    {
    BOTAN_STATE_CHECK(!is_downgrading());
 
@@ -74,9 +76,9 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
    try
       {
       if(expects_downgrade())
-         { preserve_peer_transcript(input, input_size); }
+         { preserve_peer_transcript(data); }
 
-      m_record_layer.copy_data(input, input_size);
+      m_record_layer.copy_data(data);
 
       while(true)
          {
@@ -170,7 +172,7 @@ size_t Channel_Impl_13::received_data(const uint8_t input[], size_t input_size)
          else if(record.type == Record_Type::ApplicationData)
             {
             BOTAN_ASSERT(record.seq_no.has_value(), "decrypted application traffic had a sequence number");
-            callbacks().tls_record_received(record.seq_no.value(), record.fragment.data(), record.fragment.size());
+            callbacks().tls_record_received(record.seq_no.value(), record.fragment);
             }
          else if(record.type == Record_Type::Alert)
             {
@@ -282,7 +284,7 @@ void Channel_Impl_13::send_dummy_change_cipher_spec()
    send_record(Record_Type::ChangeCipherSpec, {0x01});
    }
 
-void Channel_Impl_13::send(const uint8_t buf[], size_t buf_size)
+void Channel_Impl_13::to_peer(std::span<const uint8_t> data)
    {
    if(!is_active())
       { throw Invalid_State("Data cannot be sent on inactive TLS connection"); }
@@ -301,7 +303,7 @@ void Channel_Impl_13::send(const uint8_t buf[], size_t buf_size)
       m_opportunistic_key_update = false;
       }
 
-   send_record(Record_Type::ApplicationData, {buf, buf+buf_size});
+   send_record(Record_Type::ApplicationData, {data.begin(), data.end()});
    }
 
 void Channel_Impl_13::send_alert(const Alert& alert)
@@ -378,11 +380,12 @@ void Channel_Impl_13::send_record(Record_Type record_type, const std::vector<uin
    // an unprotected Alert record.
    if(prepend_ccs() && (m_cipher_state || record_type != Record_Type::Alert))
       {
-      const auto ccs = m_record_layer.prepare_records(Record_Type::ChangeCipherSpec, {0x01}, m_cipher_state.get());
+      std::array<uint8_t, 1> ccs_content = {0x01};
+      const auto ccs = m_record_layer.prepare_records(Record_Type::ChangeCipherSpec, ccs_content, m_cipher_state.get());
       to_write = concat(ccs, to_write);
       }
 
-   callbacks().tls_emit_data(to_write.data(), to_write.size());
+   callbacks().tls_emit_data(to_write);
    }
 
 void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record)

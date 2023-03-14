@@ -206,7 +206,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
             {
             m_client_socket.close();
             }
-         tls_emit_data(nullptr, 0); // initiate another write if needed
+         tls_emit_data({}); // initiate another write if needed
          }
 
       void handle_server_write_completion(const boost::system::error_code& error)
@@ -219,20 +219,20 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
             }
 
          m_p2s.clear();
-         proxy_write_to_server(nullptr, 0); // initiate another write if needed
+         proxy_write_to_server({}); // initiate another write if needed
          }
 
-      void tls_record_received(uint64_t /*rec_no*/, const uint8_t buf[], size_t buf_len) override
+      void tls_record_received(uint64_t /*rec_no*/, std::span<const uint8_t> buf) override
          {
          // Immediately bounce message to server
-         proxy_write_to_server(buf, buf_len);
+         proxy_write_to_server(buf);
          }
 
-      void tls_emit_data(const uint8_t buf[], size_t buf_len) override
+      void tls_emit_data(std::span<const uint8_t> buf) override
          {
-         if(buf_len > 0)
+         if(!buf.empty())
             {
-            m_p2c_pending.insert(m_p2c_pending.end(), buf, buf + buf_len);
+            m_p2c_pending.insert(m_p2c_pending.end(), buf.begin(), buf.end());
             }
 
          // no write now active and we still have output pending
@@ -253,11 +253,11 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
             }
          }
 
-      void proxy_write_to_server(const uint8_t buf[], size_t buf_len)
+      void proxy_write_to_server(std::span<const uint8_t> buf)
          {
-         if(buf_len > 0)
+         if(!buf.empty())
             {
-            m_p2s_pending.insert(m_p2s_pending.end(), buf, buf + buf_len);
+            m_p2s_pending.insert(m_p2s_pending.end(), buf.begin(), buf.end());
             }
 
          // no write now active and we still have output pending
@@ -324,7 +324,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
                return;
                }
             server_read(boost::system::error_code(), 0); // start read loop
-            proxy_write_to_server(nullptr, 0);
+            proxy_write_to_server({});
             };
          async_connect(m_server_socket, m_server_endpoints, onConnect);
          }

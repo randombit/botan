@@ -602,17 +602,21 @@ class Stream
 
             virtual ~StreamCore() = default;
 
-            void tls_emit_data(const uint8_t data[], std::size_t size) override
+            void tls_emit_data(std::span<const uint8_t> data) override
                {
                send_buffer.commit(
-                  boost::asio::buffer_copy(send_buffer.prepare(size), boost::asio::buffer(data, size))
+                  boost::asio::buffer_copy(
+                     send_buffer.prepare(data.size()),
+                     boost::asio::buffer(data.data(), data.size()))
                );
                }
 
-            void tls_record_received(uint64_t, const uint8_t data[], std::size_t size) override
+            void tls_record_received(uint64_t, std::span<const uint8_t> data) override
                {
                receive_buffer.commit(
-                  boost::asio::buffer_copy(receive_buffer.prepare(size), boost::asio::const_buffer(data, size))
+                  boost::asio::buffer_copy(
+                     receive_buffer.prepare(data.size()),
+                     boost::asio::const_buffer(data.data(), data.size()))
                );
                }
 
@@ -782,7 +786,7 @@ class Stream
             const boost::asio::const_buffer buffer = *it;
             try_with_error_code([&]
                {
-               native_handle()->send(static_cast<const uint8_t*>(buffer.data()), buffer.size());
+               native_handle()->send({static_cast<const uint8_t*>(buffer.data()), buffer.size()});
                }, ec);
             }
          }
@@ -799,7 +803,7 @@ class Stream
          {
          try_with_error_code([&]
             {
-            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
+            native_handle()->received_data({static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size()});
             }, ec);
          }
 

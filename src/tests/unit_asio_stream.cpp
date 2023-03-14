@@ -51,19 +51,19 @@ class MockChannel
          , m_active(false) {}
 
    public:
-      std::size_t received_data(const uint8_t[], std::size_t buf_size)
+      std::size_t received_data(std::span<const uint8_t> data)
          {
-         if(m_bytes_till_complete_record <= buf_size)
+         if(m_bytes_till_complete_record <= data.size())
             {
-            m_callbacks.tls_record_received(0, TEST_DATA, TEST_DATA_SIZE);
+            m_callbacks.tls_record_received(0, TEST_DATA);
             m_active = true;  // claim to be active once a full record has been received (for handshake test)
             return 0;
             }
-         m_bytes_till_complete_record -= buf_size;
+         m_bytes_till_complete_record -= data.size();
          return m_bytes_till_complete_record;
          }
 
-      void send(const uint8_t buf[], std::size_t buf_size) { m_callbacks.tls_emit_data(buf, buf_size); }
+      void send(std::span<const uint8_t> buf) { m_callbacks.tls_emit_data(buf); }
 
       bool is_active() { return m_active; }
 
@@ -85,12 +85,12 @@ class ThrowingMockChannel : public MockChannel
          {
          }
 
-      std::size_t received_data(const uint8_t[], std::size_t)
+      std::size_t received_data(std::span<const uint8_t>)
          {
          throw Botan::TLS::Unexpected_Message("test_error");
          }
 
-      void send(const uint8_t[], std::size_t)
+      void send(std::span<const uint8_t>)
          {
          throw Botan::TLS::Unexpected_Message("test_error");
          }
@@ -186,7 +186,7 @@ class Asio_Stream_Tests final : public Test
          ssl.next_layer().connect(remote);
 
          // mimic handshake initialization
-         ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
+         ssl.native_handle()->send(TEST_DATA);
 
          error_code ec;
          ssl.handshake(Botan::TLS::Connection_Side::Client, ec);
@@ -225,7 +225,7 @@ class Asio_Stream_Tests final : public Test
          ssl.next_layer().connect(remote);
 
          // mimic handshake initialization
-         ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
+         ssl.native_handle()->send(TEST_DATA);
 
          Test::Result result("async TLS handshake");
 
@@ -255,7 +255,7 @@ class Asio_Stream_Tests final : public Test
          ssl.next_layer().connect(remote);
 
          // mimic handshake initialization
-         ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
+         ssl.native_handle()->send(TEST_DATA);
 
          Test::Result result("async TLS handshake error");
 

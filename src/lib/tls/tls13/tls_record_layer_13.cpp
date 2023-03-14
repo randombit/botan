@@ -159,18 +159,13 @@ Record_Layer::Record_Layer(Connection_Side side)
    , m_receiving_compat_mode(true) {}
 
 
-void Record_Layer::copy_data(const uint8_t data[], size_t size)
+void Record_Layer::copy_data(std::span<const uint8_t> data)
    {
-   m_read_buffer.insert(m_read_buffer.end(), data, data+size);
-   }
-
-void Record_Layer::copy_data(const std::vector<uint8_t>& data_from_peer)
-   {
-   copy_data(data_from_peer.data(), data_from_peer.size());
+   m_read_buffer.insert(m_read_buffer.end(), data.begin(), data.end());
    }
 
 std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
-      const std::vector<uint8_t>& data,
+      std::span<const uint8_t> data,
       Cipher_State* cipher_state) const
    {
    // RFC 8446 5.
@@ -197,7 +192,7 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
                 "zero-length fragments of types other than application data are not allowed");
 
    if(type == Record_Type::ChangeCipherSpec &&
-         !verify_change_cipher_spec(data.cbegin(), data.size()))
+         !verify_change_cipher_spec(data.begin(), data.size()))
       {
       throw Invalid_Argument("TLS 1.3 deprecated CHANGE_CIPHER_SPEC");
       }
@@ -255,13 +250,14 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
 
       output.insert(output.end(), record_header.cbegin(), record_header.cend());
 
+      auto pt_fragment = data.subspan(pt_offset, pt_size);
       if(protect)
          {
          secure_vector<uint8_t> fragment;
          fragment.reserve(ct_size);
 
          // assemble TLSInnerPlaintext structure
-         fragment.insert(fragment.end(), data.cbegin() + pt_offset, data.cbegin() + pt_offset + pt_size);
+         fragment.insert(fragment.end(), pt_fragment.begin(), pt_fragment.end());
          fragment.push_back(static_cast<uint8_t>(type));
          // TODO: zero padding could go here, see RFC 8446 5.4
 
@@ -272,7 +268,7 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
          }
       else
          {
-         output.insert(output.end(), data.cbegin() + pt_offset, data.cbegin() + pt_offset + pt_size);
+         output.insert(output.end(), pt_fragment.begin(), pt_fragment.end());
          }
 
       pt_offset += pt_size;

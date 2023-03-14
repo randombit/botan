@@ -298,9 +298,9 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          return true;
          }
 
-      void tls_record_received(uint64_t /*seq_no*/, const uint8_t input[], size_t input_len) override
+      void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> input) override
          {
-         for(size_t i = 0; i != input_len; ++i)
+         for(size_t i = 0; i != input.size(); ++i)
             {
             const char c = static_cast<char>(input[i]);
             m_line_buf += c;
@@ -312,26 +312,26 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
             }
          }
 
-      void tls_emit_data(const uint8_t buf[], size_t length) override
+      void tls_emit_data(std::span<const uint8_t> buf) override
          {
          if(m_is_tcp)
             {
-            ssize_t sent = ::send(m_socket, buf, static_cast<sendrecv_len_type>(length), MSG_NOSIGNAL);
+            ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
 
             if(sent == -1)
                {
                error_output() << "Error writing to socket - " << err_to_string(errno) << std::endl;
                }
-            else if(sent != static_cast<ssize_t>(length))
+            else if(sent != static_cast<ssize_t>(buf.size()))
                {
-               error_output() << "Packet of length " << length << " truncated to " << sent << std::endl;
+               error_output() << "Packet of length " << buf.size() << " truncated to " << sent << std::endl;
                }
             }
          else
             {
-            while(length)
+            while(!buf.empty())
                {
-               ssize_t sent = ::send(m_socket, buf, static_cast<sendrecv_len_type>(length), MSG_NOSIGNAL);
+               ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
 
                if(sent == -1)
                   {
@@ -345,8 +345,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                      }
                   }
 
-               buf += sent;
-               length -= sent;
+               buf = buf.subspan(sent);
                }
             }
          }

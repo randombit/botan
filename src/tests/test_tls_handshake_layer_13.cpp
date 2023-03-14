@@ -173,7 +173,7 @@ std::vector<Test::Result> read_handshake_messages()
          {
          Handshake_Layer hl(Connection_Side::Client);
          Transcript_Hash_State th("SHA-256");
-         hl.copy_data({0x00, 0x01, 0x02});
+         hl.copy_data(std::vector<uint8_t>{0x00, 0x01, 0x02});
          result.confirm("needs more bytes", !hl.next_message(Policy(), th));
          check_transcript_hash_empty(result, th);
          }),

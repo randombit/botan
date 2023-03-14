@@ -39,13 +39,13 @@ class Channel_Impl
       * @return a hint as the how many more bytes we need to q the
       *         current record (this may be 0 if on a record boundary)
       */
-      virtual size_t received_data(const uint8_t buf[], size_t buf_size) = 0;
+      virtual size_t from_peer(std::span<const uint8_t> data) = 0;
 
       /**
       * Inject plaintext intended for counterparty
       * Throws an exception if is_active() is false
       */
-      virtual void send(const uint8_t buf[], size_t buf_size) = 0;
+      virtual void to_peer(std::span<const uint8_t> data) = 0;
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal
@@ -198,17 +198,17 @@ class Channel_Impl
 
       std::unique_ptr<Downgrade_Information> m_downgrade_info;
 
-      void preserve_peer_transcript(const uint8_t input[], size_t input_size)
+      void preserve_peer_transcript(std::span<const uint8_t> input)
          {
          BOTAN_STATE_CHECK(m_downgrade_info);
          m_downgrade_info->peer_transcript.insert(m_downgrade_info->peer_transcript.end(),
-                                                  input, input+input_size);
+                                                  input.begin(), input.end());
          }
 
-      void preserve_client_hello(const std::vector<uint8_t>& msg)
+      void preserve_client_hello(std::span<const uint8_t> msg)
          {
          BOTAN_STATE_CHECK(m_downgrade_info);
-         m_downgrade_info->client_hello_message = msg;
+         m_downgrade_info->client_hello_message.assign(msg.begin(), msg.end());
          }
 
       friend class Client;

@@ -16,9 +16,9 @@
 
 namespace Botan::TLS {
 
-void Handshake_Layer::copy_data(const secure_vector<uint8_t>& data_from_peer)
+void Handshake_Layer::copy_data(std::span<const uint8_t> data_from_peer)
    {
-   m_read_buffer.insert(m_read_buffer.end(), data_from_peer.cbegin(), data_from_peer.cend());
+   m_read_buffer.insert(m_read_buffer.end(), data_from_peer.begin(), data_from_peer.end());
    }
 
 namespace {
