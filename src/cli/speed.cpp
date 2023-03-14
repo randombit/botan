@@ -1907,13 +1907,13 @@ class Speed final : public Command
 
                if(verified_bad)
                   {
-                  error_output() << "Bad signature accepted in PK signature bench\n";
+                  error_output() << "Bad signature accepted in " << nm << " signature bench\n";
                   }
                }
             }
 
          if(invalid_sigs > 0)
-            error_output() << invalid_sigs << " generated signatures rejected in PK signature bench\n";
+            error_output() << invalid_sigs << " generated signatures rejected in " << nm << " signature bench\n";
 
          const size_t events = static_cast<size_t>(std::min(sig_timer->events(), ver_timer->events()));
 
