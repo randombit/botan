@@ -40,9 +40,9 @@ shared secret created using Diffie-Hellman key agreement.
    randomly or is some string associated with the current protocol
    instance, for example a session identifier.
 
-You can create a :cpp:class:`KDF` using
+You can create a :cpp:class:`KDF` using the static function
 
-.. cpp:function:: KDF* get_kdf(const std::string& algo_spec)
+.. cpp:function:: std::unique_ptr<KDF> KDF::create(const std::string& algo)
 
 
 Available KDFs
