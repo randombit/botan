@@ -65,6 +65,9 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
                                                           const uint8_t w[], size_t w_len,
                                                           const uint8_t salt[], size_t salt_len)
    {
+   if(salt_len > 0 && m_kdf == nullptr)
+      throw Invalid_Argument("PK_Key_Agreement::derive_key requires a KDF to use a salt");
+
    secure_vector<uint8_t> z = raw_agree(w, w_len);
    if(m_kdf)
       return m_kdf->derive_key(key_len, z, salt, salt_len);
@@ -188,6 +191,9 @@ void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_en
                                                   const uint8_t salt[],
                                                   size_t salt_len)
    {
+   if(salt_len > 0 && m_kdf == nullptr)
+      throw Invalid_Argument("PK_KEM_Encryptor::encrypt requires a KDF to use a salt");
+
    secure_vector<uint8_t> raw_shared;
    this->raw_kem_encrypt(out_encapsulated_key, raw_shared, rng);
 
@@ -211,6 +217,9 @@ PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(const uint8_t encap_key[],
                                              const uint8_t salt[],
                                              size_t salt_len)
    {
+   if(salt_len > 0 && m_kdf == nullptr)
+      throw Invalid_Argument("PK_KEM_Decryptor::decrypt requires a KDF to use a salt");
+
    secure_vector<uint8_t> raw_shared = this->raw_kem_decrypt(encap_key, len);
 
    if(m_kdf)

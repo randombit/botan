@@ -128,9 +128,8 @@ class Curve25519_Roundtrip_Test final : public Test
                Botan::PK_Key_Agreement a_ka(*a_priv, Test::rng(), "Raw");
                Botan::PK_Key_Agreement b_ka(*b_priv, Test::rng(), "Raw");
 
-               const std::string context = "shared context value";
-               Botan::SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value(), context);
-               Botan::SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value(), context);
+               Botan::SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value());
+               Botan::SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value());
 
                if(!result.test_eq("key agreement", a_key.bits_of(), b_key.bits_of()))
                   {

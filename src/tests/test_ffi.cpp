@@ -2835,10 +2835,6 @@ class FFI_DH_Test final : public FFI_Test
          std::vector<uint8_t> pubkey2(pubkey2_len);
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_export_public, (priv2, pubkey2.data(), &pubkey2_len));
 
-         std::vector<uint8_t> salt(32);
-
-         TEST_FFI_OK(botan_rng_get, (rng, salt.data(), salt.size()));
-
          const size_t shared_key_len = 256;
 
          std::vector<uint8_t> key1(shared_key_len);
@@ -2846,14 +2842,14 @@ class FFI_DH_Test final : public FFI_Test
 
          TEST_FFI_OK(botan_pk_op_key_agreement, (ka1, key1.data(), &key1_len,
                                                  pubkey2.data(), pubkey2.size(),
-                                                 salt.data(), salt.size()));
+                                                 nullptr, 0));
 
          std::vector<uint8_t> key2(shared_key_len);
          size_t key2_len = key2.size();
 
          TEST_FFI_OK(botan_pk_op_key_agreement, (ka2, key2.data(), &key2_len,
                                                  pubkey1.data(), pubkey1.size(),
-                                                 salt.data(), salt.size()));
+                                                 nullptr, 0));
 
          result.test_eq("shared DH key", key1, key2);
 
