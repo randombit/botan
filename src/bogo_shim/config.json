@@ -30,6 +30,9 @@
         "*-TLS11-*": "No TLS 1.1",
         "TLS11-*": "No TLS 1.1",
 
+        "*RSA_PKCS1_MD5_SHA1": "We do not implement MD5/SHA1 concatenation anyway",
+        "Compliance-fips202205-*": "We do not have explicit support for a FIPS TLS policy",
+
         "CBCRecordSplitting*": "No need to split CBC records in TLS 1.2",
         "DelegatedCredentials*": "No support of -delegated-cerdential",
 
@@ -192,19 +195,22 @@
         "PartialClientFinishedWithClientHello": "Need to check for buffered messages when CCS (bug)",
         "SendUnencryptedFinished-DTLS": "Need to check for buffered messages when CCS (bug)",
 
-        "RSAKeyUsage-*-UnenforcedTLS*": "We always enforce key usage",
+        "RSAKeyUsage-*-TLS12": "We always enforce key usage",
 
         "AllExtensions-Client-Permute-TLS-TLS12" : "Requires new shim flags that are NYI (as of March 2022)",
         "AllExtensions-Client-Permute-DTLS-TLS12" : "Requires new shim flags that are NYI (as of March 2022)",
         "EarlyData-WriteAfterEncryptedExtensions" : "Requires new shim flags that are NYI (as of March 2022)",
         "EarlyData-WriteAfterServerHello" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-CipherMismatch1" : "Requires new shim flags that are NYI (as of March 2023)",
+        "TLS-HintMismatch-CipherMismatch2" : "Requires new shim flags that are NYI (as of March 2023)",
+        "TLS-HintMismatch-ECDHE-Group" : "Requires new shim flags that are NYI (as of March 2023)",
         "TLS-HintMismatch-SignatureInput" : "Requires new shim flags that are NYI (as of March 2022)",
         "TLS-HintMismatch-KeyShare" : "Requires new shim flags that are NYI (as of March 2022)",
         "TLS-HintMismatch-HandshakerHelloRetryRequest" : "Requires new shim flags that are NYI (as of March 2022)",
         "TLS-HintMismatch-ShimHelloRetryRequest" : "Requires new shim flags that are NYI (as of March 2022)",
-        "TLS-HintMismatch-SignatureAlgorithm" : "Requires new shim flags that are NYI (as of March 2022)",
-        "TLS-HintMismatch-NoTickets1" : "Requires new shim flags that are NYI (as of March 2022)",
-        "TLS-HintMismatch-NoTickets2" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-SignatureAlgorithm-TLS*" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-NoTickets1-TLS*" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-NoTickets2-TLS*" : "Requires new shim flags that are NYI (as of March 2022)",
         "TLS-HintMismatch-Version2" : "Requires new shim flags that are NYI (as of March 2022)",
         "TLS-HintMismatch-CertificateRequest" : "Requires new shim flags that are NYI (as of March 2022)",
         "TLS-HintMismatch-CertificateCompression-HandshakerOnly" : "Requires new shim flags that are NYI (as of March 2022)",

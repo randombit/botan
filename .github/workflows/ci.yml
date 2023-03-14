@@ -154,8 +154,8 @@ jobs:
       - name: Fetch BoringSSL fork for BoGo tests
         uses: actions/checkout@v3
         with:
-          repository: reneme/boringssl
-          ref: rene/runner-20220322 # TODO: merge changes to Botan's boring fork
+          repository: randombit/boringssl
+          ref: rene/runner-20230313
           path: ./boringssl
         if: matrix.target == 'coverage' || matrix.target == 'sanitizer'
 
