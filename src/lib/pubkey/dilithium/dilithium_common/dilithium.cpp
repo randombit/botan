@@ -167,6 +167,8 @@ class Dilithium_PublicKeyInternal : public ASN1_Object
 
          BOTAN_ASSERT_NOMSG(s.remaining() == 0);
          BOTAN_STATE_CHECK(m_t1.m_vec.size() == m_mode.k());
+
+         m_raw_pk_shake256 = compute_raw_pk_shake256();
          }
 
       Dilithium_PublicKeyInternal(DilithiumModeConstants mode, std::vector<uint8_t> rho, const Dilithium::PolynomialVector& s1, const Dilithium::PolynomialVector& s2)
@@ -174,6 +176,7 @@ class Dilithium_PublicKeyInternal : public ASN1_Object
          {
          BOTAN_ASSERT_NOMSG(!m_rho.empty());
          BOTAN_ASSERT_NOMSG(!m_t1.m_vec.empty());
+         m_raw_pk_shake256 = compute_raw_pk_shake256();
          }
 
       Dilithium_PublicKeyInternal(DilithiumModeConstants mode, std::vector<uint8_t> rho, Dilithium::PolynomialVector t1)
@@ -181,6 +184,7 @@ class Dilithium_PublicKeyInternal : public ASN1_Object
          {
          BOTAN_ASSERT_NOMSG(!m_rho.empty());
          BOTAN_ASSERT_NOMSG(!m_t1.m_vec.empty());
+         m_raw_pk_shake256 = compute_raw_pk_shake256();
          }
 
       Dilithium_PublicKeyInternal(const Dilithium_PublicKeyInternal&) = delete;
@@ -210,17 +214,33 @@ class Dilithium_PublicKeyInternal : public ASN1_Object
             .end_cons();
 
          m_t1 = Dilithium::PolynomialVector::unpack_t1(t1, m_mode);
+         m_raw_pk_shake256 = compute_raw_pk_shake256();
          }
 
       std::vector<uint8_t> raw_pk() const
          { return concat_as<std::vector<uint8_t>>(m_rho, m_t1.polyvec_pack_t1()); }
+
+      const std::vector<uint8_t>& raw_pk_shake256() const
+         {
+         BOTAN_STATE_CHECK(m_raw_pk_shake256.size() == DilithiumModeConstants::SEEDBYTES);
+         return m_raw_pk_shake256;
+         }
 
       const Dilithium::PolynomialVector& t1() const { return m_t1; }
       const std::vector<uint8_t>& rho() const { return m_rho; }
       const DilithiumModeConstants& mode() const { return m_mode; }
 
    private:
+      std::vector<uint8_t> compute_raw_pk_shake256() const
+         {
+         SHAKE_256 shake(DilithiumModeConstants::SEEDBYTES * 8);
+         shake.update(m_rho);
+         shake.update(m_t1.polyvec_pack_t1());
+         return shake.final_stdvec();
+         }
+
       const DilithiumModeConstants m_mode;
+      std::vector<uint8_t> m_raw_pk_shake256;
       std::vector<uint8_t> m_rho;
       Dilithium::PolynomialVector m_t1;
    };
@@ -512,10 +532,11 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
    {
    public:
       Dilithium_Verification_Operation(const Dilithium_PublicKey& pub_dilithium)
-         : m_pub_key(pub_dilithium), m_shake(DilithiumModeConstants::CRHBYTES * 8)
+         : m_pub_key(pub_dilithium.m_public),
+           m_pk_hash(m_pub_key->raw_pk_shake256()),
+           m_shake(DilithiumModeConstants::CRHBYTES * 8)
          {
-         const auto& mode = m_pub_key.m_public->mode();
-         m_shake.update(mode.H(m_pub_key.m_public->raw_pk(), DilithiumModeConstants::SEEDBYTES));
+         m_shake.update(m_pk_hash);
          }
 
       /*
@@ -534,13 +555,13 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
       */
       bool is_valid_signature(const  uint8_t* sig, size_t sig_len) override
          {
-         const auto& mode = m_pub_key.m_public->mode();
-
          /* Compute CRH(H(rho, t1), msg) */
          const auto mu = m_shake.final_stdvec();
 
-         // Reset shake context for the next message
-         m_shake.update(mode.H(m_pub_key.m_public->raw_pk(), DilithiumModeConstants::SEEDBYTES));
+         // Reset the SHAKE context for the next message
+         m_shake.update(m_pk_hash);
+
+         const auto& mode = m_pub_key->mode();
 
          if(sig_len != mode.crypto_bytes())
             {
@@ -562,12 +583,12 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
             }
 
          /* Matrix-vector multiplication; compute Az - c2^dt1 */
-         auto matrix = Dilithium::PolynomialMatrix::generate_matrix(m_pub_key.m_public->rho(), mode);
+         auto matrix = Dilithium::PolynomialMatrix::generate_matrix(m_pub_key->rho(), mode);
 
          auto cp = Dilithium::Polynomial::poly_challenge(c.data(), mode);
          cp.ntt();
 
-         Dilithium::PolynomialVector t1 = m_pub_key.m_public->t1();
+         Dilithium::PolynomialVector t1 = m_pub_key->t1();
          t1.polyvec_shiftl();
          t1.ntt();
          t1.polyvec_pointwise_poly_montgomery(t1, cp);
@@ -595,7 +616,8 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
       std::string hash_function() const override { return "SHAKE-256(512)"; }
 
    private:
-      const Dilithium_PublicKey& m_pub_key;
+      std::shared_ptr<Dilithium_PublicKeyInternal> m_pub_key;
+      const std::vector<uint8_t> m_pk_hash;
       SHAKE_256 m_shake;
    };
 
@@ -700,7 +722,7 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, Dilithium
 
    auto seed = mode.H(seedbuf, 2 * DilithiumModeConstants::SEEDBYTES + DilithiumModeConstants::CRHBYTES);
 
-   // seed is a concatination of rho || rhoprime || key
+   // seed is a concatenation of rho || rhoprime || key
    std::vector<uint8_t> rho(seed.begin(), seed.begin() + DilithiumModeConstants::SEEDBYTES);
    secure_vector<uint8_t> rhoprime(seed.begin() + DilithiumModeConstants::SEEDBYTES,
                                    seed.begin() + DilithiumModeConstants::SEEDBYTES + DilithiumModeConstants::CRHBYTES);
