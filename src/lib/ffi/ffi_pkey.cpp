@@ -115,10 +115,8 @@ int botan_pubkey_destroy(botan_pubkey_t key)
 int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj)
    {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      std::unique_ptr<Botan::Public_Key>
-         pubkey(Botan::X509::load_key(Botan::X509::BER_encode(safe_get(key_obj))));
-
-      *pubout = new botan_pubkey_struct(std::move(pubkey));
+      auto public_key = safe_get(key_obj).public_key();
+      *pubout = new botan_pubkey_struct(std::move(public_key));
       return BOTAN_FFI_SUCCESS;
       });
    }
