@@ -437,9 +437,10 @@ def run_cmd(cmd, root_dir, build_dir):
 
         if redirect_stdout_fd is not None:
             redirect_stdout_fd.close()
-            print("%s", open(redirect_stdout_fsname, encoding='utf8').read())
+            last_lines = open(redirect_stdout_fsname, encoding='utf8').readlines()[-100:]
+            print("%s", ''.join(last_lines))
 
-        if cmd[0] not in ['lcov']:
+        if cmd[0] not in ['lcov', 'codecov']:
             sys.exit(proc.returncode)
 
 def default_os():
