@@ -1190,6 +1190,27 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
          {
          }
 
+      size_t raw_kem_shared_key_length() const override
+         {
+         return 32;
+         }
+
+      size_t encapsulated_key_length() const override
+         {
+         const size_t key_length = m_key.key_length();
+         switch(key_length)
+            {
+            case 800:
+               return 768;
+            case 1184:
+               return 1088;
+            case 1568:
+               return 1568;
+            default:
+               throw Internal_Error("Unexpected Kyber key length");
+            }
+         }
+
       void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                            secure_vector<uint8_t>& out_shared_key,
                            RandomNumberGenerator& rng) override
@@ -1231,6 +1252,11 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
          , Kyber_KEM_Cryptor(key.m_private->mode())
          , m_key(key)
          {
+         }
+
+      size_t raw_kem_shared_key_length() const override
+         {
+         return 32;
          }
 
       secure_vector<uint8_t> raw_kem_decrypt(const uint8_t encap_key[], size_t len_encap_key) override

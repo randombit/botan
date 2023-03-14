@@ -604,6 +604,11 @@ class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KD
          RSA_Private_Operation(key, rng)
          {}
 
+      size_t raw_kem_shared_key_length() const override
+         {
+         return public_modulus_bytes();
+         }
+
       secure_vector<uint8_t>
       raw_kem_decrypt(const uint8_t encap_key[], size_t len) override
          {
@@ -712,6 +717,16 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
          RSA_Public_Operation(key) {}
 
    private:
+      size_t raw_kem_shared_key_length() const override
+         {
+         return public_modulus_bytes();
+         }
+
+      size_t encapsulated_key_length() const override
+         {
+         return public_modulus_bytes();
+         }
+
       void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                            secure_vector<uint8_t>& raw_shared_key,
                            RandomNumberGenerator& rng) override
@@ -719,8 +734,8 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
          const BigInt r = BigInt::random_integer(rng, 1, get_n());
          const BigInt c = public_op(r);
 
-         out_encapsulated_key = BigInt::encode_locked(c);
-         raw_shared_key = BigInt::encode_locked(r);
+         out_encapsulated_key = BigInt::encode_1363(c, public_modulus_bytes());
+         raw_shared_key = BigInt::encode_1363(r, public_modulus_bytes());
          }
    };
 

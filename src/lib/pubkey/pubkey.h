@@ -645,6 +645,27 @@ class BOTAN_PUBLIC_API(2,0) PK_KEM_Encryptor final
       PK_KEM_Encryptor& operator=(PK_KEM_Encryptor&&) = delete;
 
       /**
+      * Return the length of the shared key returned by this KEM
+      *
+      * If this KEM was used with a KDF, then it will always return
+      * exactly the desired key length, because the output of the KEM
+      * will be hashed by the KDF.
+      *
+      * However if the KEM was used with "Raw" kdf, to request the
+      * algorithmic output of the KEM directly, then the desired key
+      * length will be ignored and a bytestring that depends on the
+      * algorithm is returned
+      *
+      * @param desired_shared_key_len is the requested length
+      */
+      size_t shared_key_length(size_t desired_shared_key_len) const;
+
+      /**
+      * Return the length in bytes of encapsulated keys returned by this KEM
+      */
+      size_t encapsulated_key_length() const;
+
+      /**
       * Generate a shared key for data encryption.
       * @param out_encapsulated_key the generated encapsulated key
       * @param out_shared_key the generated shared key
@@ -730,6 +751,22 @@ class BOTAN_PUBLIC_API(2,0) PK_KEM_Decryptor final
       PK_KEM_Decryptor(PK_KEM_Decryptor&&) = delete;
       PK_KEM_Decryptor& operator=(const PK_KEM_Decryptor&) = delete;
       PK_KEM_Decryptor& operator=(PK_KEM_Decryptor&&) = delete;
+
+      /**
+      * Return the length of the shared key returned by this KEM
+      *
+      * If this KEM was used with a KDF, then it will always return
+      * exactly the desired key length, because the output of the KEM
+      * will be hashed by the KDF.
+      *
+      * However if the KEM was used with "Raw" kdf, to request the
+      * algorithmic output of the KEM directly, then the desired key
+      * length will be ignored and a bytestring that depends on the
+      * algorithm is returned
+      *
+      * @param desired_shared_key_len is the requested length.
+      */
+      size_t shared_key_length(size_t desired_shared_key_len) const;
 
       /**
       * Decrypts the shared key for data encryption.

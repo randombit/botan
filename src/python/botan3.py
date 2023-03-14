@@ -387,10 +387,23 @@ def _set_prototypes(dll):
 
     ffi_api(dll.botan_pkcs_hash_id, [c_char_p, c_char_p, POINTER(c_size_t)])
 
-    ffi_api(dll.botan_mceies_encrypt,
-            [c_void_p, c_void_p, c_char_p, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_mceies_decrypt,
-            [c_void_p, c_char_p, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_pk_op_kem_encrypt_create, [c_void_p, c_void_p, c_char_p])
+    ffi_api(dll.botan_pk_op_kem_encrypt_destroy, [c_void_p])
+
+    ffi_api(dll.botan_pk_op_kem_encrypt_shared_key_length, [c_void_p, c_size_t, POINTER(c_size_t)])
+    ffi_api(dll.botan_pk_op_kem_encrypt_encapsulated_key_length, [c_void_p, POINTER(c_size_t)])
+
+    ffi_api(dll.botan_pk_op_kem_encrypt_create_shared_key,
+            [c_void_p, c_void_p, c_char_p, c_size_t, c_size_t,
+             c_char_p, POINTER(c_size_t), c_char_p, POINTER(c_size_t)])
+
+    ffi_api(dll.botan_pk_op_kem_decrypt_create, [c_void_p, c_void_p, c_char_p])
+    ffi_api(dll.botan_pk_op_kem_decrypt_destroy, [c_void_p])
+
+    ffi_api(dll.botan_pk_op_kem_decrypt_shared_key_length, [c_void_p, c_size_t, POINTER(c_size_t)])
+
+    ffi_api(dll.botan_pk_op_kem_decrypt_shared_key,
+            [c_void_p, c_char_p, c_size_t, c_char_p, c_size_t, c_size_t, c_char_p, POINTER(c_size_t)])
 
     #  X509
     ffi_api(dll.botan_x509_cert_load, [c_void_p, c_char_p, c_size_t])
@@ -1334,6 +1347,73 @@ class PKKeyAgreement:
                                                                      other, len(other),
                                                                      salt, len(salt)))
 
+class KemEncrypt:
+    def __init__(self, key, params):
+        self.__obj = c_void_p(0)
+        _DLL.botan_pk_op_kem_encrypt_create(byref(self.__obj), key.handle_(), _ctype_str(params))
+
+    def __del__(self):
+        _DLL.botan_pk_op_kem_encrypt_destroy(self.__obj)
+
+    def shared_key_length(self, desired_key_len):
+        return _call_fn_returning_sz(
+            lambda l: _DLL.botan_pk_op_kem_encrypt_shared_key_length(self.__obj, desired_key_len, l))
+
+    def encapsulated_key_length(self):
+        return _call_fn_returning_sz(
+            lambda l: _DLL.botan_pk_op_kem_encrypt_encapsulated_key_length(self.__obj, l))
+
+    def create_shared_key(self, rng, salt, desired_key_len):
+        shared_key_len = self.shared_key_length(desired_key_len)
+        shared_key_buf = create_string_buffer(shared_key_len)
+
+        encapsulated_key_len = self.encapsulated_key_length()
+        encapsulated_key_buf = create_string_buffer(encapsulated_key_len)
+
+        _DLL.botan_pk_op_kem_encrypt_create_shared_key(
+            self.__obj,
+            rng.handle_(),
+            salt,
+            len(salt),
+            c_size_t(desired_key_len),
+            shared_key_buf,
+            c_size_t(shared_key_len),
+            encapsulated_key_buf,
+            c_size_t(encapsulated_key_len)
+        )
+
+        shared_key = shared_key_buf.raw[:]
+        encapsulated_key = encapsulated_key_buf.raw[:]
+
+        return (shared_key, encapsulated_key)
+
+class KemDecrypt:
+    def __init__(self, key, params):
+        self.__obj = c_void_p(0)
+        _DLL.botan_pk_op_kem_decrypt_create(byref(self.__obj), key.handle_(), _ctype_str(params))
+
+    def __del__(self):
+        _DLL.botan_pk_op_kem_decrypt_destroy(self.__obj)
+
+    def shared_key_length(self, desired_key_len):
+        return _call_fn_returning_sz(
+            lambda l: _DLL.botan_pk_op_kem_decrypt_shared_key_length(self.__obj, desired_key_len, l))
+
+    def decrypt_shared_key(self, salt, desired_key_len, encapsulated_key):
+        shared_key_len = self.shared_key_length(desired_key_len)
+
+        return _call_fn_returning_vec(
+            shared_key_len,
+            lambda b, bl: _DLL.botan_pk_op_kem_decrypt_shared_key(
+                self.__obj,
+                salt,
+                len(salt),
+                encapsulated_key,
+                c_size_t(len(encapsulated_key)),
+                c_size_t(desired_key_len),
+                b,
+                bl)
+        )
 
 def _load_buf_or_file(filename, buf, file_fn, buf_fn):
     if filename is None and buf is None:

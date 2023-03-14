@@ -363,6 +363,32 @@ ofvkP1EDmpx50fHLawIDAQAB
         verify.update('message')
         self.assertTrue(verify.check_signature(sig))
 
+        salt = b'saltyseawater'
+        kem_e = botan.KemEncrypt(rsapub, 'KDF2(SHA-256)')
+        (shared_key, encap_key) = kem_e.create_shared_key(rng, salt, 32)
+        self.assertEqual(len(shared_key), 32)
+        self.assertEqual(len(encap_key), 1024//8)
+
+        kem_d = botan.KemDecrypt(rsapriv, 'KDF2(SHA-256)')
+        shared_key_d = kem_d.decrypt_shared_key(salt, 32, encap_key)
+        self.assertEqual(shared_key, shared_key_d)
+
+    def test_kyber(self):
+        rng = botan.RandomNumberGenerator()
+
+        kyber_priv = botan.PrivateKey.create('Kyber', 'Kyber-1024-r3', rng)
+        kyber_pub = kyber_priv.get_public_key()
+
+        salt = rng.get(16)
+        kem_e = botan.KemEncrypt(kyber_pub, 'KDF2(SHA-256)')
+        (shared_key, encap_key) = kem_e.create_shared_key(rng, salt, 32)
+        self.assertEqual(len(shared_key), 32)
+        self.assertEqual(len(encap_key), 1568)
+
+        kem_d = botan.KemDecrypt(kyber_priv, 'KDF2(SHA-256)')
+        shared_key_d = kem_d.decrypt_shared_key(salt, 32, encap_key)
+        self.assertEqual(shared_key, shared_key_d)
+
     def test_ecdsa(self):
         rng = botan.RandomNumberGenerator()
 

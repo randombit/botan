@@ -1654,6 +1654,75 @@ int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                               const uint8_t other_key[], size_t other_key_len,
                               const uint8_t salt[], size_t salt_len);
 
+/*
+* Key Encapsulation
+*/
+typedef struct botan_pk_op_kem_encrypt_struct* botan_pk_op_kem_encrypt_t;
+
+BOTAN_PUBLIC_API(3,0) int botan_pk_op_kem_encrypt_create(
+   botan_pk_op_kem_encrypt_t* op,
+   botan_pubkey_t key,
+   const char* kdf);
+
+/**
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_PUBLIC_API(3,0) int botan_pk_op_kem_encrypt_destroy(botan_pk_op_kem_encrypt_t op);
+
+BOTAN_PUBLIC_API(3,0)
+int botan_pk_op_kem_encrypt_shared_key_length(
+   botan_pk_op_kem_encrypt_t op,
+   size_t desired_shared_key_length,
+   size_t* output_shared_key_length);
+
+BOTAN_PUBLIC_API(3,0)
+int botan_pk_op_kem_encrypt_encapsulated_key_length(
+   botan_pk_op_kem_encrypt_t op,
+   size_t* output_encapsulated_key_length);
+
+BOTAN_PUBLIC_API(3,0) int botan_pk_op_kem_encrypt_create_shared_key(
+   botan_pk_op_kem_encrypt_t op,
+   botan_rng_t rng,
+   const uint8_t salt[],
+   size_t salt_len,
+   size_t desired_shared_key_len,
+   uint8_t shared_key[],
+   size_t* shared_key_len,
+   uint8_t encapsulated_key[],
+   size_t* encapsulated_key_len);
+
+typedef struct botan_pk_op_kem_decrypt_struct* botan_pk_op_kem_decrypt_t;
+
+BOTAN_PUBLIC_API(3,0) int botan_pk_op_kem_decrypt_create(
+   botan_pk_op_kem_decrypt_t* op,
+   botan_privkey_t key,
+   const char* kdf);
+
+/**
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_PUBLIC_API(3,0) int botan_pk_op_kem_decrypt_destroy(botan_pk_op_kem_decrypt_t op);
+
+BOTAN_PUBLIC_API(3,0)
+int botan_pk_op_kem_decrypt_shared_key_length(
+   botan_pk_op_kem_decrypt_t op,
+   size_t desired_shared_key_length,
+   size_t* output_shared_key_length);
+
+BOTAN_PUBLIC_API(3,0) int botan_pk_op_kem_decrypt_shared_key(
+   botan_pk_op_kem_decrypt_t op,
+   const uint8_t salt[],
+   size_t salt_len,
+   const uint8_t encapsulated_key[],
+   size_t encapsulated_key_len,
+   size_t desired_shared_key_len,
+   uint8_t shared_key[],
+   size_t* shared_key_len);
+
+/**
+* Signature Scheme Utility Functions
+*/
+
 BOTAN_PUBLIC_API(2,0) int botan_pkcs_hash_id(const char* hash_name, uint8_t pkcs_id[], size_t* pkcs_id_len);
 
 

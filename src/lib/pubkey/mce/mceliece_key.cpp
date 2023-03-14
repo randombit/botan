@@ -325,6 +325,18 @@ class MCE_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF
          KEM_Encryption_with_KDF(kdf), m_key(key) {}
 
    private:
+      size_t raw_kem_shared_key_length() const override
+         {
+         const size_t err_sz = (m_key.get_code_length() + 7) / 8;
+         const size_t ptext_sz = (m_key.get_message_word_bit_length() + 7) / 8;
+         return ptext_sz + err_sz;
+         }
+
+      size_t encapsulated_key_length() const override
+         {
+         return (m_key.get_code_length() + 7) / 8;
+         }
+
       void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                            secure_vector<uint8_t>& raw_shared_key,
                            RandomNumberGenerator& rng) override
@@ -353,6 +365,13 @@ class MCE_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF
          KEM_Decryption_with_KDF(kdf), m_key(key) {}
 
    private:
+      size_t raw_kem_shared_key_length() const override
+         {
+         const size_t err_sz = (m_key.get_code_length() + 7) / 8;
+         const size_t ptext_sz = (m_key.get_message_word_bit_length() + 7) / 8;
+         return ptext_sz + err_sz;
+         }
+
       secure_vector<uint8_t>
       raw_kem_decrypt(const uint8_t encap_key[], size_t len) override
          {
