@@ -2225,7 +2225,7 @@ class Speed final : public Command
 
             record_result(keygen_timer);
 
-            bench_pk_kem(key, mode.to_string(), provider, "Raw", msec);
+            bench_pk_kem(key, mode.to_string(), provider, "KDF2(SHA-256)", msec);
             }
          }
 #endif
