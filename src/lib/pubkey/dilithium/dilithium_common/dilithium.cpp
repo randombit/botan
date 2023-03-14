@@ -534,10 +534,14 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
       */
       bool is_valid_signature(const  uint8_t* sig, size_t sig_len) override
          {
+         const auto& mode = m_pub_key.m_public->mode();
+
          /* Compute CRH(H(rho, t1), msg) */
          const auto mu = m_shake.final_stdvec();
 
-         const auto& mode = m_pub_key.m_public->mode();
+         // Reset shake context for the next message
+         m_shake.update(mode.H(m_pub_key.m_public->raw_pk(), DilithiumModeConstants::SEEDBYTES));
+
          if(sig_len != mode.crypto_bytes())
             {
             return false;
