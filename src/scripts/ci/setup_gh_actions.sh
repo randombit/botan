@@ -24,7 +24,7 @@ if type -p "apt-get"; then
         sudo apt-get -qq install valgrind
 
     elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] ; then
-        sudo apt-get -qq install libboost-all-dev
+        sudo apt-get -qq install libboost-dev
 
     elif [ "$TARGET" = "clang" ]; then
         sudo apt-get -qq install clang
@@ -61,11 +61,11 @@ if type -p "apt-get"; then
 
     elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
         if [ "$TARGET" = "coverage" ]; then
-            sudo apt-get -qq install lcov python3-coverage gdb
+            sudo apt-get -qq install lcov python3-coverage
             pip install --user codecov
         fi
 
-        sudo apt-get -qq install softhsm2 libtspi-dev libboost-all-dev
+        sudo apt-get -qq install softhsm2 libtspi-dev libboost-dev
 
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
