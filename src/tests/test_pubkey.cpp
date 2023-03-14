@@ -153,6 +153,9 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
       result.test_eq("KAT signature valid", verifier->verify_message(message, signature), true);
 
       check_invalid_signatures(result, *verifier, message, signature);
+
+      result.test_eq("KAT signature valid (try 2)", verifier->verify_message(message, signature), true);
+
       verifiers.push_back(std::move(verifier));
       }
 

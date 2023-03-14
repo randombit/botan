@@ -121,8 +121,7 @@ class KYBER_Tests final : public Test
          Botan::Kyber_PrivateKey alice_priv_key(priv_key_bits, mode, Botan::KyberKeyEncoding::Full);
          auto dec = Botan::PK_KEM_Decryptor(alice_priv_key, Test::rng(), "Raw", "base");
          const auto key_alice = dec.decrypt(cipher_text, 0 /* no KDF */, std::vector<uint8_t>());
-
-         result.confirm("shared secrets are equal", key_alice == key_bob);
+         result.test_eq("shared secrets are equal", key_alice, key_bob);
 
          //
          // negative tests
@@ -139,9 +138,13 @@ class KYBER_Tests final : public Test
          // Invalid cipher_text from Alice
          Botan::secure_vector<uint8_t> reverse_cipher_text;
          std::copy(cipher_text.crbegin(), cipher_text.crend(), std::back_inserter(reverse_cipher_text));
-         const auto key_alice2 =
+         const auto key_alice_rev =
             dec.decrypt(reverse_cipher_text, 0, std::vector<uint8_t>());
-         result.confirm("shared secrets are not equal", key_alice != key_alice2);
+         result.confirm("shared secrets are not equal", key_alice != key_alice_rev);
+
+         // Try to decrypt the valid ciphertext again
+         const auto key_alice_try2 = dec.decrypt(cipher_text, 0 /* no KDF */, std::vector<uint8_t>());
+         result.test_eq("shared secrets are equal", key_alice_try2, key_bob);
 
          //
          // regression tests

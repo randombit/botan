@@ -68,15 +68,19 @@ class Dilithium_KAT_Tests : public Text_Based_Test
 
 
          Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode, Botan::DilithiumKeyEncoding::Raw);
-         auto verificator = Botan::PK_Verifier(pub_key,"");
-         verificator.update(ref_msg.data(), ref_msg.size());
+         auto verifier = Botan::PK_Verifier(pub_key,"");
+         verifier.update(ref_msg.data(), ref_msg.size());
          result.confirm("signature verifies",
-                        verificator.check_signature(signature.data(), signature.size()));
+                        verifier.check_signature(signature.data(), signature.size()));
 
          // test validating incorrect wrong signagture
          auto mutated_signature = Test::mutate_vec(signature);
          result.confirm("invalid signature rejected",
-                        !verificator.check_signature(mutated_signature.data(), mutated_signature.size()));
+                        !verifier.check_signature(mutated_signature.data(), mutated_signature.size()));
+
+         verifier.update(ref_msg.data(), ref_msg.size());
+         result.confirm("signature verifies",
+                        verifier.check_signature(signature.data(), signature.size()));
 
          return result;
          }
