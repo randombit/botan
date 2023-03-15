@@ -2,15 +2,65 @@
 FFI (C Binding)
 ========================================
 
-.. versionadded:: 1.11.14
+.. versionadded:: 2.0.0
 
 Botan's ffi module provides a C89 binding intended to be easily usable with other
 language's foreign function interface (FFI) libraries. For instance the included
 Python wrapper uses Python's ``ctypes`` module and the C89 API. This API is of
 course also useful for programs written directly in C.
 
-Code examples can be found in
-`the tests <https://github.com/randombit/botan/blob/master/src/tests/test_ffi.cpp>`_.
+Code examples can be found in `the tests
+<https://github.com/randombit/botan/blob/master/src/tests/test_ffi.cpp>`_ as
+well as the implementations of the various `language bindings
+<https://github.com/randombit/botan/wiki/Language-Bindings>`_. At the time of
+this writing, the Python and Rust bindings are probably the most comprehensive.
+
+Rules of Engagement
+---------------------
+
+Writing language bindings for C or C++ libraries is typically a tedious and
+bug-prone experience. This FFI layer was designed to make the experience, if not
+pleasant, at least straighforward.
+
+* All objects manipulated by the API are opaque structs. Each struct is tagged
+  with a 32-bit magic number which is unique to its type; accidentally passing
+  the wrong object type to a function will result in a
+  :cpp:enumerator:`BOTAN_FFI_ERROR_INVALID_OBJECT` error, instead of a crash or
+  memory corruption.
+
+* (Almost) all functions return an integer error code indicating success or
+  failure. The exception is a small handful of version query functions, which
+  are guaranteed to never fail. All functions returning errors use the same
+  set of error codes.
+
+* The set of types used is small and commonly supported: ``uint8_t`` arrays for
+  binary data, ``size_t`` for lengths, and NULL-terminated UTF-8 encoded
+  strings.
+
+* No ownership of pointers crosses the boundary. If the library is producing
+  output, it does so by either writing to a buffer that was provided by the
+  application, or calling a view callback.
+
+  In the first case, the application typically passes both an output buffer and
+  a pointer to a length field. On entry, the length field should be set to the
+  number of bytes available in the output buffer. If there is sufficient room,
+  the output is written to the buffer, the actual number of bytes written is
+  returned in the length field, and the function returns 0 (success). Otherwise,
+  the number of bytes required is placed in the length parameter, and then
+  :cpp:enumerator:`BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE` is returned.
+
+  In most cases, for this style of function, there is also a function which
+  allows querying the actual (or possibly upper bound) number of bytes in the
+  function's output. For example calling :cpp:func:`botan_hash_output_length`
+  allows the application to determine in advance the number of bytes that
+  :cpp:func:`botan_hash_final` will want to write.
+
+  In some situations, it is not possible to determine exactly what the output
+  size of the function will be in advance. Here the FFI layer uses what it terms
+  :ref:`view_functions`; callbacks that are allowed to view the entire output of
+  the function, but once the callback returns, no further access is allowed.
+  View functions are called with an opaque pointer provided by the application,
+  which allows passing arbitrary context information.
 
 Return Codes
 ---------------
@@ -59,6 +109,11 @@ The following enum values are defined in the FFI header:
    buffer length was insufficient to write the data. In that case, the output
    length parameter is set to the size that is required.
 
+.. cpp:enumerator:: BOTAN_FFI_ERROR_STRING_CONVERSION_ERROR = -11
+
+   A string view function which attempts to convert a string to a specified
+   charset, and fails, can use this function to indicate the error.
+
 .. cpp:enumerator:: BOTAN_FFI_ERROR_EXCEPTION_THROWN = -20
 
    An exception was thrown while processing this request, but no further
@@ -74,6 +129,14 @@ The following enum values are defined in the FFI header:
 .. cpp:enumerator:: BOTAN_FFI_ERROR_OUT_OF_MEMORY = -21
 
    Memory allocation failed
+
+.. cpp:enumerator:: BOTAN_FFI_ERROR_SYSTEM_ERROR = -22
+
+   A system call failed
+
+.. cpp:enumerator:: BOTAN_FFI_ERROR_INTERNAL_ERROR = -23
+
+   An internal bug was encountered (please open a ticket on github)
 
 .. cpp:enumerator:: BOTAN_FFI_ERROR_BAD_FLAG = -30
 
@@ -95,7 +158,12 @@ The following enum values are defined in the FFI header:
 
 .. cpp:enumerator:: BOTAN_FFI_ERROR_INVALID_KEY_LENGTH = -34
 
-   An invalid key length was provided with a call to ``x_set_key``.
+   An invalid key length was provided with a call to ``foo_set_key``.
+
+.. cpp:enumerator:: BOTAN_FFI_ERROR_INVALID_OBJECT_STATE = -35
+
+   An operation was invoked that makes sense for the object, but it is in the
+   wrong state to perform it.
 
 .. cpp:enumerator:: BOTAN_FFI_ERROR_NOT_IMPLEMENTED = -40
 
@@ -107,11 +175,26 @@ The following enum values are defined in the FFI header:
 
    This is used if an object provided did not match the function.  For example
    calling :cpp:func:`botan_hash_destroy` on a ``botan_rng_t`` object will cause
-   this return.
+   this error.
 
 .. cpp:enumerator:: BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100
 
    Something bad happened, but we are not sure why or how.
+
+Error values below -10000 are reserved for the application (these can be returned
+from view functions).
+
+Further information about the error that occured is available via
+
+.. cpp:function:: const char* botan_error_last_exception_message()
+
+   .. versionadded:: 3.0.0
+
+   Returns a static string stored in a thread local variable which contains
+   the last exception message thrown.
+
+   .. warning::
+      This string buffer is overwritten on the next call to the FFI layer
 
 Versioning
 ----------------------------------------
@@ -162,12 +245,57 @@ supported it.
 ============== ===================
 FFI Version    Supported Starting
 ============== ===================
+20230403       3.0.0
+20210220       2.18.0
 20191214       2.13.0
 20180713       2.8.0
 20170815       2.3.0
 20170327       2.1.0
 20150515       2.0.0
 ============== ===================
+
+.. _view_functions:
+
+View Functions
+----------------------------------------
+
+.. versionadded:: 3.0.0
+
+Starting in Botan 3.0, certain functions were added which produce a "view".
+That is instead of copying data to a user provided buffer, they instead invoke a
+callback, passing the data that was requested. This avoids an issue where in
+some cases it is not possible for the caller to know what the output length of
+the FFI function will be. In these cases, the best they can do is set a large
+length, invoke the function, and then accept that they may need to retry the
+(potentially expensive) operation.
+
+View functions avoid this by always providing the full data, and allowing
+the caller to allocate memory as necessary to copy out the result, without
+having to guess the length in advance.
+
+In all cases the pointer passed to the view function is deallocated after
+the view function returns, and should not be retained.
+
+The view functions return an integer value; if they return non-zero, then the
+overall FFI function will also return this integer. To avoid confusion when
+mapping the errors, any error returns should either match Botan's FFI error
+codes, or else use an integer value in the application reserved range.
+
+.. cpp:type:: void* botan_view_ctx
+
+   The application context, which is passed back to the view function.
+
+.. cpp:type:: int (*botan_view_bin_fn)(botan_view_ctx view_ctx, const uint8_t* data, size_t len)
+
+   A viewer of arbitrary binary data.
+
+.. cpp:type:: int (*botan_view_str_fn)(botan_view_ctx view_ctx, const char* str, size_t len)
+
+   A viewer of a null terminated C-style string. The length *includes* the null terminator byte.
+   The string should be UTF-8 encoded, but in certain circumstances may not be.
+   (Typically this would be due to a bug or oversight; please report the issue.)
+   :cpp:enumerator:`BOTAN_FFI_ERROR_STRING_CONVERSION_ERROR` is reserved to allow the FFI
+   call to indicate the problem, should it be unable to convert the data.
 
 Utility Functions
 ----------------------------------------
@@ -178,7 +306,7 @@ Utility Functions
    is unknown, returns the string "Unknown error". The return values are static
    constant strings and should not be freed.
 
-.. cpp:function:: int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len)
+.. cpp:function:: int botan_constant_time_compare(const uint8_t* x, const uint8_t* y, size_t len)
 
    Returns 0 if `x[0..len] == y[0..len]`, -1 otherwise.
 
@@ -209,6 +337,16 @@ Random Number Generators
    "user-threadsafe": serialized ``AutoSeeded_RNG``,
    "null": ``Null_RNG`` (always fails),
    "hwrnd" or "rdrand": ``Processor_RNG`` (if available)
+
+.. cpp:function:: int botan_rng_init_custom(botan_rng_t* rng,\
+                  const char* rng_name, void* context, \
+                  int(* get_cb)(void* context, uint8_t* out, size_t out_len), \
+                  int(* add_entropy_cb)(void* context, const uint8_t input[], size_t length), \
+                  void(* destroy_cb)(void* context));
+
+   .. versionadded:: 2.18.0
+
+   Create a new custom RNG object, which will invoke the provided callbacks.
 
 .. cpp:function:: int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
 
@@ -304,10 +442,11 @@ Hash Functions
 
    An opaque data type for a hash. Don't mess with it.
 
-.. cpp:function:: botan_hash_t botan_hash_init(const char* hash, uint32_t flags)
+.. cpp:function:: int botan_hash_init(botan_hash_t hash, const char* hash_name, uint32_t flags)
 
    Creates a hash of the given name, e.g., "SHA-384".
-   Returns null on failure. Flags should always be zero in this version of the API.
+
+   Flags should always be zero in this version of the API.
 
 .. cpp:function:: int botan_hash_destroy(botan_hash_t hash)
 
@@ -326,7 +465,7 @@ Hash Functions
    Reset the state of this object back to clean, as if no input has
    been supplied.
 
-.. cpp:function:: size_t botan_hash_output_length(botan_hash_t hash)
+.. cpp:function:: int botan_hash_output_length(botan_hash_t hash, size_t* output_length)
 
    Return the output length of the hash function.
 
@@ -346,10 +485,10 @@ Message Authentication Codes
     An opaque data type for a MAC. Don't mess with it, but do remember
     to set a random key first.
 
-.. cpp:function:: botan_mac_t botan_mac_init(const char* mac, uint32_t flags)
+.. cpp:function:: int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags)
 
    Creates a MAC of the given name, e.g., "HMAC(SHA-384)".
-   Returns null on failure. Flags should always be zero in this version of the API.
+   Flags should always be zero in this version of the API.
 
 .. cpp:function:: int botan_mac_destroy(botan_mac_t mac)
 
@@ -360,13 +499,17 @@ Message Authentication Codes
    Reset the state of this object back to clean, as if no key and input have
    been supplied.
 
-.. cpp:function:: size_t botan_mac_output_length(botan_mac_t mac)
+.. cpp:function:: int botan_mac_output_length(botan_mac_t mac, size_t* output_length)
 
    Return the output length of the MAC.
 
 .. cpp:function:: int botan_mac_set_key(botan_mac_t mac, const uint8_t* key, size_t key_len)
 
    Set the random key.
+
+.. cpp:function:: int botan_mac_set_nonce(botan_mac_t mac, const uint8_t* key, size_t key_len)
+
+   Set a nonce for the MAC. This is used for certain (relatively uncommon) MACs such as GMAC
 
 .. cpp:function:: int botan_mac_update(botan_mac_t mac, uint8_t buf[], size_t len)
 
@@ -385,7 +528,7 @@ Symmetric Ciphers
     An opaque data type for a symmetric cipher object. Don't mess with it, but do remember
     to set a random key first. And please use an AEAD.
 
-.. cpp:function:: botan_cipher_t botan_cipher_init(const char* cipher_name, uint32_t flags)
+.. cpp:function:: int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t flags)
 
     Create a cipher object from a name such as "AES-256/GCM" or "Serpent/OCB".
 
@@ -401,7 +544,7 @@ Symmetric Ciphers
 
 .. cpp:function:: int botan_cipher_is_authenticated(botan_cipher_t cipher)
 
-.. cpp:function:: size_t botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tag_len)
+.. cpp:function:: int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tag_len)
 
    Write the tag length of the cipher to ``tag_len``. This will be zero for non-authenticated
    ciphers.
@@ -411,9 +554,26 @@ Symmetric Ciphers
    Returns 1 if the nonce length is valid, or 0 otherwise. Returns -1 on error (such as
    the cipher object being invalid).
 
-.. cpp:function:: size_t botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl)
+.. cpp:function:: int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl)
 
    Return the default nonce length
+
+.. cpp:function:: int botan_cipher_get_update_granularity(botan_cipher_t cipher, size_t* ug)
+
+   Return the minimum update granularity, ie the size of a buffer that must be
+   passed to :cpp:func:`botan_cipher_update`
+
+.. cpp:function:: int botan_cipher_get_ideal_granularity(botan_cipher_t cipher, size_t* ug)
+
+   Return the ideal update granularity, ie the size of a buffer that must be
+   passed to :cpp:func:`botan_cipher_update` that maximizes performance.
+
+   .. note::
+
+      Using larger buffers than the value returned here is unlikely to hurt
+      (within reason). Typically the returned value is a small multiple of the
+      minimum granularity, with the multiplier depending on the algorithm and
+      hardware support.
 
 .. cpp:function:: int botan_cipher_set_associated_data(botan_cipher_t cipher, \
                                                const uint8_t* ad, size_t ad_len)
@@ -446,7 +606,7 @@ PBKDF
                           size_t iterations)
 
    Derive a key from a passphrase for a number of iterations
-   using the given PBKDF algorithm, e.g., "PBKDF2".
+   using the given PBKDF algorithm, e.g., "PBKDF2(SHA-512)".
 
 .. cpp:function:: int botan_pbkdf_timed(const char* pbkdf_algo, \
                                 uint8_t out[], size_t out_len, \
@@ -456,7 +616,7 @@ PBKDF
                                 size_t* out_iterations_used)
 
    Derive a key from a passphrase using the given PBKDF algorithm,
-   e.g., "PBKDF2". If *out_iterations_used* is zero, instead the
+   e.g., "PBKDF2(SHA-512)". If *out_iterations_used* is zero, instead the
    PBKDF is run until *milliseconds_to_run* milliseconds have passed.
    In this case, the number of iterations run will be written to
    *out_iterations_used*.
@@ -671,6 +831,10 @@ Public Key Creation, Import and Export
 
    An opaque data type for a private key. Don't mess with it.
 
+.. cpp:function:: int botan_privkey_destroy(botan_privkey_t key)
+
+   Destroy an object.
+
 .. cpp:function:: int botan_privkey_create(botan_privkey_t* key, \
                                    const char* algo_name, \
                                    const char* algo_params, \
@@ -705,15 +869,77 @@ Public Key Creation, Import and Export
    Load a private key. If the key is encrypted, ``password`` will be
    used to attempt decryption.
 
-.. cpp:function:: int botan_privkey_destroy(botan_privkey_t key)
-
-   Destroy the object.
-
 .. cpp:function:: int botan_privkey_export(botan_privkey_t key, \
                                    uint8_t out[], size_t* out_len, \
                                    uint32_t flags)
 
-   Export a public key. If flags is 1 then PEM format is used.
+   Export a private key. If flags is 1 then PEM format is used.
+
+.. cpp:function:: int botan_privkey_view_encrypted_der(botan_privkey_t key, \
+        botan_rng_t rng, \
+        const char* passphrase, \
+        const char* cipher_algo, \
+        const char* pbkdf_hash, \
+        size_t pbkdf_iterations, \
+        botan_view_ctx ctx, \
+        botan_view_bin_fn view)
+
+     View the encrypted DER private key. In this version the number of PKBDF2
+     iterations is specified.
+
+     Set cipher_algo and pbkdf_hash to NULL to select defaults.
+
+.. cpp:function:: int botan_privkey_view_encrypted_der_timed(botan_privkey_t key, \
+        botan_rng_t rng, \
+        const char* passphrase, \
+        const char* cipher_algo, \
+        const char* pbkdf_hash, \
+        size_t pbkdf_runtime_msec, \
+        botan_view_ctx ctx, \
+        botan_view_bin_fn view)
+
+     View the encrypted DER private key. In this version the desired PBKDF runtime
+     is specified in milliseconds.
+
+     Set cipher_algo and pbkdf_hash to NULL to select defaults.
+
+.. cpp:function:: int botan_privkey_view_encrypted_pem(botan_privkey_t key, \
+        botan_rng_t rng, \
+        const char* passphrase, \
+        const char* cipher_algo, \
+        const char* pbkdf_hash, \
+        size_t pbkdf_iterations, \
+        botan_view_ctx ctx, \
+        botan_view_str_fn view)
+
+     View the encrypted PEM private key. In this version the number of PKBDF2
+     iterations is specified.
+
+     Set cipher_algo and pbkdf_hash to NULL to select defaults.
+
+.. cpp:function:: int botan_privkey_view_encrypted_pem_timed(botan_privkey_t key, \
+        botan_rng_t rng, \
+        const char* passphrase, \
+        const char* cipher_algo, \
+        const char* pbkdf_hash, \
+        size_t pbkdf_runtime_msec, \
+        botan_view_ctx ctx, \
+        botan_view_str_fn view)
+
+     View the encrypted PEM private key. In this version the desired PBKDF runtime
+     is specified in milliseconds.
+
+     Set cipher_algo and pbkdf_hash to NULL to select defaults.
+
+.. cpp:function:: int botan_privkey_view_der(botan_privkey_t key, \
+      botan_view_ctx ctx, botan_view_bin_fn view)
+
+   View the unencrypted DER encoding of the private key
+
+.. cpp:function:: int botan_privkey_view_pem(botan_privkey_t key, \
+      botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the unencrypted PEM encoding of the private key
 
 .. cpp:function:: int botan_privkey_export_encrypted(botan_privkey_t key, \
                                              uint8_t out[], size_t* out_len, \
@@ -731,7 +957,7 @@ Public Key Creation, Import and Export
                                                         uint32_t pbkdf_msec_runtime, \
                                                         size_t* pbkdf_iterations_out, \
                                                         const char* cipher_algo, \
-                                                        const char* pbkdf_algo, \
+                                                        const char* pbkdf_hash, \
                                                         uint32_t flags);
 
     Encrypt a key, running the key derivation function for ``pbkdf_msec_runtime`` milliseconds.
@@ -746,7 +972,7 @@ Public Key Creation, Import and Export
                                                         const char* passphrase, \
                                                         size_t pbkdf_iterations, \
                                                         const char* cipher_algo, \
-                                                        const char* pbkdf_algo, \
+                                                        const char* pbkdf_hash, \
                                                         uint32_t flags);
 
    Encrypt a private key. The PBKDF function runs for the specified number of iterations.
@@ -769,6 +995,16 @@ Public Key Creation, Import and Export
 
 .. cpp:function:: int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
 
+.. cpp:function:: int botan_pubkey_view_der(botan_pubkey_t key, \
+      botan_view_ctx ctx, botan_view_bin_fn view)
+
+   View the DER encoding of the public key
+
+.. cpp:function:: int botan_pubkey_view_pem(botan_pubkey_t key, \
+      botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the PEM encoding of the public key
+
 .. cpp:function:: int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
 
 .. cpp:function:: int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estimate)
@@ -787,6 +1023,10 @@ Public Key Creation, Import and Export
 
 RSA specific functions
 ----------------------------------------
+
+.. note::
+   These functions are deprecated. Instead use :cpp:func:`botan_privkey_get_field`
+   and :cpp:func:`botan_pubkey_get_field`.
 
 .. cpp:function:: int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t rsa_key)
 
@@ -1004,23 +1244,94 @@ Key Agreement
 .. cpp:function:: int botan_pk_op_key_agreement_export_public(botan_privkey_t key, \
                                                       uint8_t out[], size_t* out_len)
 
+.. cpp:function:: int botan_pk_op_key_agreement_view_public(botan_privkey_t key, \
+      botan_view_ctx ctx, botan_view_bin_fn view)
+
 .. cpp:function:: int botan_pk_op_key_agreement(botan_pk_op_ka_t op, \
                                         uint8_t out[], size_t* out_len, \
                                         const uint8_t other_key[], size_t other_key_len, \
                                         const uint8_t salt[], size_t salt_len)
 
-.. cpp:function:: int botan_mceies_encrypt(botan_pubkey_t mce_key, \
-                                   botan_rng_t rng, \
-                                   const char* aead, \
-                                   const uint8_t pt[], size_t pt_len, \
-                                   const uint8_t ad[], size_t ad_len, \
-                                   uint8_t ct[], size_t* ct_len)
+Public Key Encapsulation
+----------------------------------------
 
-.. cpp:function:: int botan_mceies_decrypt(botan_privkey_t mce_key, \
-                                   const char* aead, \
-                                   const uint8_t ct[], size_t ct_len, \
-                                   const uint8_t ad[], size_t ad_len, \
-                                   uint8_t pt[], size_t* pt_len)
+.. versionadded:: 3.0.0
+
+.. cpp:type:: opaque* botan_pk_op_kem_encrypt_t
+
+   An opaque data type for a KEM operation. Don't mess with it.
+
+.. cpp:function:: int botan_pk_op_kem_encrypt_create(botan_pk_op_kem_encrypt_t* op, \
+                         botan_pubkey_t key, const char* kdf)
+
+   Create a KEM operation, encrypt version
+
+.. cpp:function:: int botan_pk_op_kem_encrypt_destroy(botan_pk_op_kem_encrypt_t op)
+
+   Destroy the operation, freeing memory
+
+.. cpp:function:: int botan_pk_op_kem_encrypt_shared_key_length( \
+       botan_pk_op_kem_encrypt_t op, \
+       size_t desired_shared_key_length, \
+       size_t* output_shared_key_length)
+
+   Return the output shared key length, assuming `desired_shared_key_length`
+   is provided.
+
+   .. note::
+
+      Normally this will just return `desired_shared_key_length` but may return
+      a different value if a "raw" KDF is used (returning the unhashed output),
+      or potentially depending on KDF limitations.
+
+.. cpp:function:: int botan_pk_op_kem_encrypt_encapsulated_key_length(botan_pk_op_kem_encrypt_t op, \
+        size_t* output_encapsulated_key_length)
+
+   Return the length of the encapsulated key
+
+.. cpp:function:: int botan_pk_op_kem_encrypt_create_shared_key(botan_pk_op_kem_encrypt_t op, \
+        botan_rng_t rng, \
+        const uint8_t salt[], \
+        size_t salt_len, \
+        size_t desired_shared_key_len, \
+        uint8_t shared_key[], \
+        size_t* shared_key_len, \
+        uint8_t encapsulated_key[], \
+        size_t* encapsulated_key_len)
+
+   Create a new encapsulated key. Use the length query functions beforehand to correctly
+   size the output buffers, otherwise an error will be returned.
+
+.. cpp:type:: opaque* botan_pk_op_kem_decrypt_t
+
+   An opaque data type for a KEM operation. Don't mess with it.
+
+.. cpp:function:: int botan_pk_op_kem_decrypt_create(botan_pk_op_kem_decrypt_t* op, \
+                         botan_pubkey_t key, const char* kdf)
+
+   Create a KEM operation, decrypt version
+
+.. cpp:function:: int botan_pk_op_kem_decrypt_shared_key_length( \
+       botan_pk_op_kem_decrypt_t op, \
+       size_t desired_shared_key_length, \
+       size_t* output_shared_key_length)
+
+   See :cpp:func:`botan_pk_op_kem_encrypt_shared_key_length`
+
+.. cpp:function:: int botan_pk_op_kem_decrypt_shared_key(botan_pk_op_kem_decrypt_t op, \
+        const uint8_t salt[], \
+        size_t salt_len, \
+        const uint8_t encapsulated_key[], \
+        size_t encapsulated_key_len, \
+        size_t desired_shared_key_len, \
+        uint8_t shared_key[], \
+        size_t* shared_key_len)
+
+   Decrypt an encapsulated key and return the shared secret
+
+.. cpp:function:: int botan_pk_op_kem_decrypt_destroy(botan_pk_op_kem_decrypt_t op)
+
+   Destroy the operation, freeing memory
 
 X.509 Certificates
 ----------------------------------------
@@ -1089,7 +1400,12 @@ X.509 Certificates
 .. cpp:function:: int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert, \
                                                   uint8_t out[], size_t* out_len)
 
-   Get the serialized representation of the public key included in this certificate
+   Get the serialized (DER) representation of the public key included in this certificate
+
+.. cpp:function:: int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, \
+      botan_view_ctx ctx, botan_view_bin_fn view)
+
+   View the serialized (DER) representation of the public key included in this certificate
 
 .. cpp:function:: int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
 
@@ -1111,6 +1427,11 @@ X.509 Certificates
 
    Format the certificate as a free-form string.
 
+.. cpp:function:: int botan_x509_cert_view_as_string(botan_x509_cert_t cert, \
+      botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the certificate as a free-form string.
+
 .. cpp:enum:: botan_x509_cert_key_constraints
 
    Certificate key usage constraints. Allowed values: `NO_CONSTRAINTS`,
@@ -1119,7 +1440,6 @@ X.509 Certificates
    `CRL_SIGN`, `ENCIPHER_ONLY`, `DECIPHER_ONLY`.
 
 .. cpp:function:: int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage)
-
 
 .. cpp:function:: int botan_x509_cert_verify(int* validation_result, \
                   botan_x509_cert_t cert, \
@@ -1175,7 +1495,7 @@ X.509 Certificates
 .. cpp:function:: const char* botan_x509_cert_validation_status(int code)
 
    Return a (statically allocated) string associated with the verification
-   result.
+   result, or NULL if the code is not known.
 
 X.509 Certificate Revocation Lists
 ----------------------------------------
@@ -1201,3 +1521,25 @@ X.509 Certificate Revocation Lists
 
    Check whether a given ``crl`` contains a given ``cert``.
    Return ``0`` when the certificate is revoked, ``-1`` otherwise.
+
+ZFEC (Forward Error Correction)
+----------------------------------------
+
+.. versionadded:: 3.0.0
+
+.. cpp:function:: int botan_zfec_encode(size_t K, size_t N, \
+                  const uint8_t *input, size_t size, uint8_t **outputs)
+
+  Perform forward error correction encoding. The input length must be a multiple
+  of `K` bytes. The `outputs` parameter must point to `N` output buffers,
+  each of length `size / K`.
+
+  Any `K` of the `N` output shares is sufficient to recover the original input.
+
+.. cpp:function:: int botan_zfec_decode(size_t K, size_t N, const size_t *indexes, \
+                  uint8_t *const*const inputs, size_t shareSize, uint8_t **outputs)
+
+  Decode some FEC shares. The indexes and inputs must be exactly K in length.
+  The `indexes` array specifies which shares are presented in `inputs`.
+  Each input must be of length `shareSize`. The output is written to the
+  `K` buffers in `outputs`, each buffer must be `shareSize` long.

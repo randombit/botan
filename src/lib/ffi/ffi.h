@@ -48,7 +48,8 @@ API follows a few simple rules:
 
   The big exception to this currently is the various functions which serialize
   public and private keys, where there are currently no function that can
-  estimate the serialized size.
+  estimate the serialized size. Here view functions are used; see the handbook
+  for further details.
 
  TODO:
  - Doxygen comments for all functions/params
@@ -2037,7 +2038,7 @@ typedef struct botan_srp6_server_session_struct* botan_srp6_server_session_t;
 * Initialize an SRP-6 server session object
 * @param srp6 SRP-6 server session object
 */
-BOTAN_PUBLIC_API(3, 0)
+BOTAN_PUBLIC_API(3,0)
 int botan_srp6_server_session_init(botan_srp6_server_session_t *srp6);
 
 /**
@@ -2045,7 +2046,7 @@ int botan_srp6_server_session_init(botan_srp6_server_session_t *srp6);
 * @param srp6 SRP-6 server session object
 * @return 0 if success, error if invalid object handle
 */
-BOTAN_PUBLIC_API(3, 0)
+BOTAN_PUBLIC_API(3,0)
 int botan_srp6_server_session_destroy(botan_srp6_server_session_t srp6);
 
 /**
@@ -2060,7 +2061,7 @@ int botan_srp6_server_session_destroy(botan_srp6_server_session_t srp6);
 * @param B_pub_len SRP-6 B value length
 * @return 0 on success, negative on failure
 */
-BOTAN_PUBLIC_API(3, 0)
+BOTAN_PUBLIC_API(3,0)
 int botan_srp6_server_session_step1(botan_srp6_server_session_t srp6,
                                     const uint8_t verifier[],
                                     size_t verifier_len, const char *group_id,
@@ -2076,7 +2077,7 @@ int botan_srp6_server_session_step1(botan_srp6_server_session_t srp6,
 * @param key_len symmetric key length
 * @return 0 on success, negative on failure
 */
-BOTAN_PUBLIC_API(3, 0)
+BOTAN_PUBLIC_API(3,0)
 int botan_srp6_server_session_step2(botan_srp6_server_session_t srp6,
                                     const uint8_t A[], size_t A_len,
                                     uint8_t key[], size_t *key_len);
@@ -2093,7 +2094,7 @@ int botan_srp6_server_session_step2(botan_srp6_server_session_t srp6,
 * @param verifier_len SRP-6 verifier value length
 * @return 0 on success, negative on failure
 */
-BOTAN_PUBLIC_API(3, 0)
+BOTAN_PUBLIC_API(3,0)
 int botan_generate_srp6_verifier(const char *identifier, const char *password,
                                  const uint8_t salt[], size_t salt_len,
                                  const char *group_id, const char *hash_id,
@@ -2116,7 +2117,7 @@ int botan_generate_srp6_verifier(const char *identifier, const char *password,
 * @param K_len symmetric key length
 * @return 0 on success, negative on failure
 */
-BOTAN_PUBLIC_API(3, 0)
+BOTAN_PUBLIC_API(3,0)
 int botan_srp6_client_agree(const char *username, const char *password,
                             const char *group_id, const char *hash_id,
                             const uint8_t salt[], size_t salt_len,
@@ -2140,7 +2141,7 @@ int botan_srp6_group_size(const char* group_id, size_t* group_p_bytes);
  * @param K the number of shares needed for recovery
  * @param N the number of shares generated
  * @param input the data to FEC
- * @param size the length in bytes of input
+ * @param size the length in bytes of input, which must be a multiple of K
  *
  * @param outputs An out parameter pointing to a fully allocated array of size
  *                [N][size / K].  For all n in range, an encoded block will be
@@ -2148,8 +2149,11 @@ int botan_srp6_group_size(const char* group_id, size_t* group_p_bytes);
  *
  * @return 0 on success, negative on failure
  */
-BOTAN_PUBLIC_API(3, 0)
-int botan_zfec_encode(size_t K, size_t N, const uint8_t *input, size_t size, uint8_t **outputs);
+BOTAN_PUBLIC_API(3,0)
+int botan_zfec_encode(size_t K, size_t N,
+                      const uint8_t *input,
+                      size_t size,
+                      uint8_t **outputs);
 
 /**
  * Decode some previously encoded shares using certain ZFEC parameters.
@@ -2158,7 +2162,7 @@ int botan_zfec_encode(size_t K, size_t N, const uint8_t *input, size_t size, uin
  * @param N the total number of shares
  *
  * @param indexes The index into the encoder's outputs for the corresponding
- *                element of the inputs array.
+ *                element of the inputs array. Must be of length K.
  *
  * @param inputs K previously encoded shares to decode
  * @param shareSize the length in bytes of each input
@@ -2169,8 +2173,12 @@ int botan_zfec_encode(size_t K, size_t N, const uint8_t *input, size_t size, uin
  *
  * @return 0 on success, negative on failure
  */
-BOTAN_PUBLIC_API(3, 0)
-int botan_zfec_decode(size_t K, size_t N, const size_t *indexes, uint8_t *const*const inputs, size_t shareSize, uint8_t **outputs);
+BOTAN_PUBLIC_API(3,0)
+int botan_zfec_decode(size_t K, size_t N,
+                      const size_t *indexes,
+                      uint8_t *const*const inputs,
+                      size_t shareSize,
+                      uint8_t **outputs);
 
 #ifdef __cplusplus
 }
