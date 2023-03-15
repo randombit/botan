@@ -7,6 +7,16 @@ Version 2.19.4, Not Yet Released
 * Fix a bug in SHAKE_Cipher which could cause incorrect output
   if set_key was called multiple times. (GH #3192)
 
+* Fix a bug in RSA-KEM encryption where the shared secret key
+  was incorrectly not padded to exactly the byte length of the
+  modulus. This would cause an incorrect shared key with ~1/256
+  probability. (GH #3380)
+
+* In RSA decryption and signature verification, reject bytestrings
+  which are longer than the public modulus. Previously, otherwise
+  valid signatures/ciphertexts with additional leading zero bytes
+  would also be accepted. (GH #3380)
+
 * Fix a bug in PKCS11 AttributeContainer where adding an attribute
   that already existed could cause incorrect references to the
   existing attributes. (GH #3185)
