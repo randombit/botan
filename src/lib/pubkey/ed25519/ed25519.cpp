@@ -87,6 +87,32 @@ bool ed25519_verify(const uint8_t* m, size_t mlen,
       return false;
       }
 
+   const uint64_t CURVE25519_ORDER[4] = {
+      0x1000000000000000,
+      0x0000000000000000,
+      0x14def9dea2f79cd6,
+      0x5812631a5cf5d3ed,
+   };
+
+   const uint64_t s[4] = {
+      load_le<uint64_t>(sig + 32, 3),
+      load_le<uint64_t>(sig + 32, 2),
+      load_le<uint64_t>(sig + 32, 1),
+      load_le<uint64_t>(sig + 32, 0)
+   };
+
+   // RFC 8032 adds the requirement that we verify that s < order in
+   // the signature; this did not exist in the original Ed25519 spec.
+   for(size_t i = 0; i != 4; ++i)
+      {
+      if(s[i] > CURVE25519_ORDER[i])
+         return false;
+      if(s[i] < CURVE25519_ORDER[i])
+         break;
+      if(i == 3) // here s == order
+         return false;
+      }
+
    sha.update(domain_sep, domain_sep_len);
    sha.update(sig, 32);
    sha.update(pk, 32);
