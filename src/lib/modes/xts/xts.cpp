@@ -58,7 +58,7 @@ size_t XTS_Mode::default_nonce_length() const
 
 bool XTS_Mode::valid_nonce_length(size_t n) const
    {
-   return cipher_block_size() == n;
+   return n <= cipher_block_size();
    }
 
 void XTS_Mode::key_schedule(const uint8_t key[], size_t length)
@@ -78,6 +78,7 @@ void XTS_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
       throw Invalid_IV_Length(name(), nonce_len);
 
    m_tweak.resize(update_granularity());
+   clear_mem(m_tweak.data(), m_tweak.size());
    copy_mem(m_tweak.data(), nonce, nonce_len);
    m_tweak_cipher->encrypt(m_tweak.data());
 
