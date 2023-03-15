@@ -353,6 +353,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature
    public:
       Dilithium_Signature_Operation(const Dilithium_PrivateKey& priv_key_dilithium, bool randomized) :
          m_priv_key(priv_key_dilithium),
+         m_matrix(Dilithium::PolynomialMatrix::generate_matrix(m_priv_key.m_private->rho(), m_priv_key.m_private->mode())),
          m_shake(DilithiumModeConstants::CRHBYTES * 8),
          m_randomized(randomized)
          {
@@ -366,19 +367,19 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override
          {
-         const auto& mode = m_priv_key.m_private->mode();
          const auto mu = m_shake.final_stdvec();
 
          // Get set up for the next message (if any)
          m_shake.update(m_priv_key.m_private->tr());
 
+         const auto& mode = m_priv_key.m_private->mode();
+
          const auto rhoprime = (m_randomized)
 	         ? rng.random_vec(DilithiumModeConstants::CRHBYTES)
 	         : mode.CRH(concat(m_priv_key.m_private->get_key(), mu));
 
+         /* Transform vectors */
          auto s1 = m_priv_key.m_private->s1();
-         /* Expand matrix and transform vectors */
-         auto matrix = Dilithium::PolynomialMatrix::generate_matrix(m_priv_key.m_private->rho(), mode);
          s1.ntt();
 
          auto s2 = m_priv_key.m_private->s2();
@@ -400,7 +401,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature
             z.ntt();
 
             /* Matrix-vector multiplication */
-            auto w1 = Dilithium::PolynomialVector::generate_polyvec_matrix_pointwise_montgomery(matrix.get_matrix(), z, mode);
+            auto w1 = Dilithium::PolynomialVector::generate_polyvec_matrix_pointwise_montgomery(m_matrix.get_matrix(), z, mode);
 
             w1.reduce();
             w1.invntt_tomont();
@@ -467,7 +468,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature
             return pack_sig(sm, z, h);
             }
 
-         throw Internal_Error("dilithium signature loop did not terminate");
+         throw Internal_Error("Dilithium signature loop did not terminate");
          }
 
       size_t signature_length() const override
@@ -519,6 +520,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature
          }
 
       const Dilithium_PrivateKey& m_priv_key;
+      const Dilithium::PolynomialMatrix m_matrix;
       SHAKE_256 m_shake;
       bool m_randomized;
    };
@@ -533,6 +535,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
    public:
       Dilithium_Verification_Operation(const Dilithium_PublicKey& pub_dilithium)
          : m_pub_key(pub_dilithium.m_public),
+           m_matrix(Dilithium::PolynomialMatrix::generate_matrix(m_pub_key->rho(), m_pub_key->mode())),
            m_pk_hash(m_pub_key->raw_pk_shake256()),
            m_shake(DilithiumModeConstants::CRHBYTES * 8)
          {
@@ -583,8 +586,6 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
             }
 
          /* Matrix-vector multiplication; compute Az - c2^dt1 */
-         auto matrix = Dilithium::PolynomialMatrix::generate_matrix(m_pub_key->rho(), mode);
-
          auto cp = Dilithium::Polynomial::poly_challenge(c.data(), mode);
          cp.ntt();
 
@@ -595,7 +596,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
 
          z.ntt();
 
-         auto w1 = Dilithium::PolynomialVector::generate_polyvec_matrix_pointwise_montgomery(matrix.get_matrix(), z, mode);
+         auto w1 = Dilithium::PolynomialVector::generate_polyvec_matrix_pointwise_montgomery(m_matrix.get_matrix(), z, mode);
          w1 -= t1;
          w1.reduce();
          w1.invntt_tomont();
@@ -617,6 +618,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
 
    private:
       std::shared_ptr<Dilithium_PublicKeyInternal> m_pub_key;
+      const Dilithium::PolynomialMatrix m_matrix;
       const std::vector<uint8_t> m_pk_hash;
       SHAKE_256 m_shake;
    };
