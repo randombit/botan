@@ -111,10 +111,10 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME
    {
    public:
 
-      ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey> key,
+      ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey>& key,
                                    const std::string& eme) :
          PK_Ops::Encryption_with_EME(eme),
-         m_key(std::move(key))
+         m_key(key)
          {
          const size_t powm_window = 4;
          m_monty_y_p = monty_precompute(m_key->group().monty_params_p(),

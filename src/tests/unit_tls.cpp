@@ -335,7 +335,7 @@ class TLS_Handshake_Test final
             std::vector<uint8_t> m_buf;
          };
 
-      class Test_Callbacks : public Botan::TLS::Callbacks
+      class Test_Callbacks final : public Botan::TLS::Callbacks
          {
          public:
             Test_Callbacks(Test::Result& results,
@@ -348,7 +348,12 @@ class TLS_Handshake_Test final
                m_recv(recv_buf)
                {}
 
-            ~Test_Callbacks()
+            Test_Callbacks(Test_Callbacks&&) = delete;
+            Test_Callbacks(const Test_Callbacks&) = delete;
+            Test_Callbacks& operator=(const Test_Callbacks&) = delete;
+            Test_Callbacks& operator=(Test_Callbacks&&) = delete;
+
+            ~Test_Callbacks() override
                {
                if(m_expected_handshake_alert.has_value())
                   {
@@ -858,7 +863,7 @@ class TLS_Unit_Tests final : public Test
          Test_Policy policy;
          Botan::TLS::Session_Manager_Noop noop_session_manager;
 
-         auto client_aborts = [&](std::exception_ptr ex, Botan::TLS::Alert expected_server_alert)
+         auto client_aborts = [&](const std::exception_ptr& ex, Botan::TLS::Alert expected_server_alert)
             {
             for(const auto version : versions)
                {
@@ -877,7 +882,7 @@ class TLS_Unit_Tests final : public Test
                }
             };
 
-         auto server_aborts = [&](std::exception_ptr ex, Botan::TLS::Alert expected_server_alert)
+         auto server_aborts = [&](const std::exception_ptr& ex, Botan::TLS::Alert expected_server_alert)
             {
             for(const auto version : versions)
                {
