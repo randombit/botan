@@ -376,6 +376,8 @@ class RSA_Private_Operation
 
       secure_vector<uint8_t> raw_op(const uint8_t input[], size_t input_len)
          {
+         if(input_len > public_modulus_bytes())
+            throw Invalid_Argument("RSA private op - input is too long");
          const BigInt input_bn(input, input_len);
          if(input_bn >= m_public->get_n())
             throw Invalid_Argument("RSA private op - input is too large");
@@ -578,6 +580,8 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
       secure_vector<uint8_t> raw_encrypt(const uint8_t input[], size_t input_len,
                                          RandomNumberGenerator&) override
          {
+         if(input_len > public_modulus_bytes())
+            throw Invalid_Argument("RSA encryption - input is too long");
          BigInt input_bn(input, input_len);
          return BigInt::encode_1363(public_op(input_bn), public_modulus_bytes());
          }
@@ -600,6 +604,8 @@ class RSA_Verify_Operation final : public PK_Ops::Verification_with_EMSA,
 
       secure_vector<uint8_t> verify_mr(const uint8_t input[], size_t input_len) override
          {
+         if(input_len > public_modulus_bytes())
+            throw Invalid_Argument("RSA verification - input is too long");
          BigInt input_bn(input, input_len);
          return BigInt::encode_locked(public_op(input_bn));
          }
@@ -623,8 +629,8 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
          const BigInt r = BigInt::random_integer(rng, 1, get_n());
          const BigInt c = public_op(r);
 
-         out_encapsulated_key = BigInt::encode_locked(c);
-         raw_shared_key = BigInt::encode_locked(r);
+         out_encapsulated_key = BigInt::encode_1363(c, public_modulus_bytes());
+         raw_shared_key = BigInt::encode_1363(r, public_modulus_bytes());
          }
    };
 
