@@ -65,7 +65,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @param data a contiguous data buffer containing the received record
        */
-       virtual void tls_record_received(uint64_t seq_no, const std::span<const uint8_t> data) = 0;
+       virtual void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) = 0;
 
        /**
        * Mandatory callback: alert received
