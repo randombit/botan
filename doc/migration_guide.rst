@@ -378,3 +378,17 @@ created) or otherwise if ``x`` was non-zero then it was taken as the private
 key. Now there are two constructors, one taking a random number generator and a
 group, which generates a new key, and a second taking a group and an integer,
 which loads an existing key.
+
+XMSS Signature Changes
+------------------------
+
+The logic to derive WOTS+ private keys from the seed contained in the XMSS
+private key has been updated according to the recommendations in
+NIST SP 800-208. While signatures created with old private keys are still valid using
+the old public key, new valid signatures cannot be created. To still support legacy
+private XMSS keys, they can be used by passing ``WOTS_Derivation_Method::Botan2x`` to
+the constructor of the ``XMSS_PrivateKey``.
+
+Private XMSS keys created this way use the old derivation logic and can therefore
+generate new valid signatures. It is recommended to use
+``WOTS_Derivation_Method::NIST_SP800_208`` (default) when creating new XMSS keys.
