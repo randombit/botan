@@ -209,6 +209,24 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       }
 #endif
 
+#if defined(BOTAN_HAS_STREEBOG)
+   if(algo_spec == "Streebog-256")
+      {
+      return std::make_unique<Streebog>(256);
+      }
+   if(algo_spec == "Streebog-512")
+      {
+      return std::make_unique<Streebog>(512);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SM3)
+   if(algo_spec == "SM3")
+      {
+      return std::make_unique<SM3>();
+      }
+#endif
+
    const SCAN_Name req(algo_spec);
 
 #if defined(BOTAN_HAS_SKEIN_512)
@@ -247,31 +265,6 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(req.algo_name() == "SHAKE-256" && req.arg_count() == 1)
       {
       return std::make_unique<SHAKE_256>(req.arg_as_integer(0));
-      }
-#endif
-
-#if defined(BOTAN_HAS_STREEBOG)
-   if(algo_spec == "Streebog-256")
-      {
-      return std::make_unique<Streebog>(256);
-      }
-   if(algo_spec == "Streebog-512")
-      {
-      return std::make_unique<Streebog>(512);
-      }
-#endif
-
-#if defined(BOTAN_HAS_SM3)
-   if(algo_spec == "SM3")
-      {
-      return std::make_unique<SM3>();
-      }
-#endif
-
-#if defined(BOTAN_HAS_WHIRLPOOL)
-   if(req.algo_name() == "Whirlpool")
-      {
-      return std::make_unique<Whirlpool>();
       }
 #endif
 

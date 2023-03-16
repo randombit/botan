@@ -38,6 +38,36 @@ namespace Botan {
 std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
                                                    const std::string& provider)
    {
+#if defined(BOTAN_HAS_SHAKE_CIPHER)
+   if(algo_spec == "SHAKE-128" || algo_spec == "SHAKE-128-XOF")
+      {
+      if(provider.empty() || provider == "base")
+         return std::make_unique<SHAKE_128_Cipher>();
+      }
+
+   if(algo_spec == "SHAKE-256" || algo_spec == "SHAKE-256-XOF")
+      {
+      if(provider.empty() || provider == "base")
+         return std::make_unique<SHAKE_256_Cipher>();
+      }
+#endif
+
+#if defined(BOTAN_HAS_CHACHA)
+   if(algo_spec == "ChaCha20")
+      {
+      if(provider.empty() || provider == "base")
+         return std::make_unique<ChaCha>(20);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SALSA20)
+   if(algo_spec == "Salsa20")
+      {
+      if(provider.empty() || provider == "base")
+         return std::make_unique<Salsa20>();
+      }
+#endif
+
    const SCAN_Name req(algo_spec);
 
 #if defined(BOTAN_HAS_CTR_BE)
@@ -60,34 +90,6 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
       {
       if(provider.empty() || provider == "base")
          return std::make_unique<ChaCha>(req.arg_as_integer(0, 20));
-      }
-
-   if(req.algo_name() == "ChaCha20")
-      {
-      if(provider.empty() || provider == "base")
-         return std::make_unique<ChaCha>(20);
-      }
-#endif
-
-#if defined(BOTAN_HAS_SALSA20)
-   if(req.algo_name() == "Salsa20")
-      {
-      if(provider.empty() || provider == "base")
-         return std::make_unique<Salsa20>();
-      }
-#endif
-
-#if defined(BOTAN_HAS_SHAKE_CIPHER)
-   if(req.algo_name() == "SHAKE-128" || req.algo_name() == "SHAKE-128-XOF")
-      {
-      if(provider.empty() || provider == "base")
-         return std::make_unique<SHAKE_128_Cipher>();
-      }
-
-   if(req.algo_name() == "SHAKE-256" || req.algo_name() == "SHAKE-256-XOF")
-      {
-      if(provider.empty() || provider == "base")
-         return std::make_unique<SHAKE_256_Cipher>();
       }
 #endif
 
