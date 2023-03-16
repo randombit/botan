@@ -250,13 +250,13 @@ class KyberConstants
          {
          return m_symmetric_primitives->KDF();
          }
-      std::unique_ptr<StreamCipher> XOF(const std::vector<uint8_t>& seed,
+      std::unique_ptr<StreamCipher> XOF(std::span<const uint8_t> seed,
                                         const std::tuple<uint8_t, uint8_t>& matrix_position) const
          {
          return m_symmetric_primitives->XOF(seed, matrix_position);
          }
 
-      secure_vector<uint8_t> PRF(const secure_vector<uint8_t>& seed, const uint8_t nonce, const size_t outlen) const
+      secure_vector<uint8_t> PRF(std::span<const uint8_t> seed, const uint8_t nonce, const size_t outlen) const
          {
          return m_symmetric_primitives->PRF(seed, nonce, outlen);
          }
@@ -317,7 +317,7 @@ class Polynomial
        * Given an array of uniformly random bytes, compute polynomial with coefficients
        * distributed according to a centered binomial distribution with parameter eta=2
        */
-      static Polynomial cbd2(const secure_vector<uint8_t>& buf)
+      static Polynomial cbd2(std::span<const uint8_t> buf)
          {
          Polynomial r;
 
@@ -346,7 +346,7 @@ class Polynomial
        *
        * This function is only needed for Kyber-512
        */
-      static Polynomial cbd3(const secure_vector<uint8_t>& buf)
+      static Polynomial cbd3(std::span<const uint8_t> buf)
          {
          Polynomial r;
 
@@ -380,7 +380,7 @@ class Polynomial
        * Sample a polynomial deterministically from a seed and a nonce, with output
        * polynomial close to centered binomial distribution with parameter eta=2.
        */
-      static Polynomial getnoise_eta2(const secure_vector<uint8_t>& seed, uint8_t nonce, const KyberConstants& mode)
+      static Polynomial getnoise_eta2(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode)
          {
          const auto eta2 = mode.eta2();
          BOTAN_ASSERT(eta2 == 2, "Invalid eta2 value");
@@ -393,7 +393,7 @@ class Polynomial
        * Sample a polynomial deterministically from a seed and a nonce, with output
        * polynomial close to centered binomial distribution with parameter mode.eta1()
        */
-      static Polynomial getnoise_eta1(const secure_vector<uint8_t>& seed, uint8_t nonce, const KyberConstants& mode)
+      static Polynomial getnoise_eta1(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode)
          {
          const auto eta1 = mode.eta1();
          BOTAN_ASSERT(eta1 == 2 || eta1 == 3, "Invalid eta1 value");
@@ -417,7 +417,7 @@ class Polynomial
          return r;
          }
 
-      template <typename Alloc> static Polynomial from_message(const std::vector<uint8_t, Alloc>& msg)
+      static Polynomial from_message(std::span<const uint8_t> msg)
          {
          BOTAN_ASSERT(msg.size() == KyberConstants::N / 8, "message length must be Kyber_N/8 bytes");
 
@@ -444,10 +444,8 @@ class Polynomial
             result[i] = 0;
             for(size_t j = 0; j < 8; ++j)
                {
-               const uint16_t t = (((static_cast<uint16_t>(this->m_coeffs[8 * i + j]) << 1) + KyberConstants::Q / 2) /
-                                   KyberConstants::Q) &
-                                  1;
-               result[i] |= t << j;
+               const uint16_t t = (((static_cast<uint16_t>(this->m_coeffs[8 * i + j]) << 1) + KyberConstants::Q / 2) / KyberConstants::Q);
+               result[i] |= (t & 1) << j;
                }
             }
 
@@ -524,7 +522,6 @@ class Polynomial
             public:
                XOF_Reader(std::unique_ptr<StreamCipher> xof) :
                   m_xof(std::move(xof)),
-                  m_buf(3*BUF_MULT),
                   m_buf_pos(m_buf.size())
                   {
                   }
@@ -537,20 +534,19 @@ class Polynomial
                      m_buf_pos = 0;
                      }
 
-                  std::array<uint8_t, 3> buf{0, 0, 0};
-
-                  buf[0] = m_buf[m_buf_pos];
-                  buf[1] = m_buf[m_buf_pos+1];
-                  buf[2] = m_buf[m_buf_pos+2];
+                  std::array<uint8_t, 3> buf{
+                     m_buf[m_buf_pos],
+                     m_buf[m_buf_pos+1],
+                     m_buf[m_buf_pos+2]
+                  };
 
                   m_buf_pos += 3;
 
                   return buf;
                   }
             private:
-               const size_t BUF_MULT = 50;
                std::unique_ptr<StreamCipher> m_xof;
-               secure_vector<uint8_t> m_buf;
+               std::array<uint8_t, 3 * 64> m_buf;
                size_t m_buf_pos;
             };
 
@@ -709,7 +705,7 @@ class PolynomialVector
          return r;
          }
 
-      static PolynomialVector getnoise_eta2(const secure_vector<uint8_t>& seed, uint8_t nonce, const KyberConstants& mode)
+      static PolynomialVector getnoise_eta2(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode)
          {
          PolynomialVector r(mode.k());
 
@@ -721,7 +717,7 @@ class PolynomialVector
          return r;
          }
 
-      static PolynomialVector getnoise_eta1(const secure_vector<uint8_t>& seed, uint8_t nonce, const KyberConstants& mode)
+      static PolynomialVector getnoise_eta1(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode)
          {
          PolynomialVector r(mode.k());
 
@@ -861,17 +857,18 @@ class Ciphertext
          {
          }
 
-      static Ciphertext from_bytes(secure_vector<uint8_t> buffer, const KyberConstants& mode)
+      static Ciphertext from_bytes(std::span<const uint8_t> buffer, const KyberConstants& mode)
          {
-         const auto expected_length = polynomial_vector_compressed_bytes(mode) + polynomial_compressed_bytes(mode);
+         const size_t pvb = polynomial_vector_compressed_bytes(mode);
+         const size_t pcb = polynomial_compressed_bytes(mode);
 
-         if(buffer.size() != expected_length)
+         if(buffer.size() != pvb + pcb)
             {
-            throw Invalid_Argument("unexpected length of ciphertext buffer");
+            throw Decoding_Error("Kyber: unexpected ciphertext length");
             }
 
-         secure_vector<uint8_t> pv(buffer.begin(), buffer.begin() + polynomial_vector_compressed_bytes(mode));
-         secure_vector<uint8_t> p(buffer.begin() + polynomial_vector_compressed_bytes(mode), buffer.end());
+         auto pv = buffer.subspan(0, pvb);
+         auto p = buffer.subspan(pvb);
 
          return Ciphertext(decompress_polynomial_vector(pv, mode), decompress_polynomial(p, mode), mode);
          }
@@ -1006,7 +1003,7 @@ class Ciphertext
          return r;
          }
 
-      static PolynomialVector decompress_polynomial_vector(const secure_vector<uint8_t>& buffer,
+      static PolynomialVector decompress_polynomial_vector(std::span<const uint8_t> buffer,
             const KyberConstants& mode)
          {
          BOTAN_ASSERT(buffer.size() == polynomial_vector_compressed_bytes(mode),
@@ -1061,7 +1058,7 @@ class Ciphertext
          return r;
          }
 
-      static Polynomial decompress_polynomial(const secure_vector<uint8_t>& buffer, const KyberConstants& mode)
+      static Polynomial decompress_polynomial(std::span<const uint8_t> buffer, const KyberConstants& mode)
          {
          BOTAN_ASSERT(buffer.size() == polynomial_compressed_bytes(mode), "unexpected length of compressed polynomial");
 
@@ -1182,8 +1179,8 @@ class Kyber_KEM_Cryptor
          {
          }
 
-      secure_vector<uint8_t> indcpa_enc(const secure_vector<uint8_t>& m,
-                                        const secure_vector<uint8_t>& coins,
+      secure_vector<uint8_t> indcpa_enc(std::span<const uint8_t> m,
+                                        std::span<const uint8_t> coins,
                                         const std::shared_ptr<Kyber_PublicKeyInternal>& pk)
          {
          auto sp = PolynomialVector::getnoise_eta1(coins, 0, m_mode);
@@ -1261,13 +1258,14 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
          G->update(H->process(m_key.public_key_bits_raw()));
          const auto g_out = G->final();
 
-         const auto middle = G->output_length() / 2;
-         const auto lower_g_out = secure_vector<uint8_t>(g_out.begin(), g_out.begin() + middle);
-         const auto upper_g_out = secure_vector<uint8_t>(g_out.begin() + middle, g_out.end());
+         BOTAN_ASSERT_EQUAL(g_out.size(), 64, "Expected output length of Kyber G");
+
+         const auto lower_g_out = std::span(g_out).subspan(0, 32);
+         const auto upper_g_out = std::span(g_out).subspan(32, 32);
 
          out_encapsulated_key = indcpa_enc(shared_secret, upper_g_out, m_key.m_public);
 
-         KDF->update(lower_g_out);
+         KDF->update(lower_g_out.data(), lower_g_out.size());
          KDF->update(H->process(out_encapsulated_key));
          out_shared_key = KDF->final();
          }
@@ -1307,9 +1305,10 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
 
          const auto g_out = G->final();
 
-         const auto middle = G->output_length() / 2;
-         const auto lower_g_out = secure_vector<uint8_t>(g_out.begin(), g_out.begin() + middle);
-         const auto upper_g_out = secure_vector<uint8_t>(g_out.begin() + middle, g_out.end());
+         BOTAN_ASSERT_EQUAL(g_out.size(), 64, "Expected output length of Kyber G");
+
+         const auto lower_g_out = std::span(g_out).subspan(0, 32);
+         const auto upper_g_out = std::span(g_out).subspan(32, 32);
 
          H->update(encap_key, len_encap_key);
 
@@ -1331,9 +1330,9 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
          }
 
    private:
-      secure_vector<uint8_t> indcpa_dec(const uint8_t* c, size_t c_len)
+      secure_vector<uint8_t> indcpa_dec(const uint8_t c[], size_t c_len)
          {
-         auto ct = Ciphertext::from_bytes(secure_vector<uint8_t>(c, c + c_len), m_mode);
+         auto ct = Ciphertext::from_bytes(std::span(c, c_len), m_mode);
 
          ct.b.ntt();
          auto mp = PolynomialVector::pointwise_acc_montgomery(m_key.m_private->polynomials(), ct.b);

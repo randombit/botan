@@ -43,22 +43,23 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
          return m_sha256->new_object();
          }
 
-      std::unique_ptr<StreamCipher> XOF(const std::vector<uint8_t>& seed,
+      std::unique_ptr<StreamCipher> XOF(std::span<const uint8_t> seed,
                                         const std::tuple<uint8_t, uint8_t>& matrix_position) const override
          {
          std::array<uint8_t, 12> iv = {std::get<0>(matrix_position), std::get<1>(matrix_position), 0};
 
          auto cipher = m_aes256_ctr->new_object();
-         cipher->set_key(seed);
+         cipher->set_key(seed.data(), seed.size());
          cipher->set_iv(iv.data(), iv.size());
 
          return cipher;
          }
 
-      secure_vector<uint8_t> PRF(const secure_vector<uint8_t>& seed, const uint8_t nonce,
+      secure_vector<uint8_t> PRF(std::span<const uint8_t> seed,
+                                 const uint8_t nonce,
                                  const size_t outlen) const override
          {
-         m_aes256_ctr->set_key(seed);
+         m_aes256_ctr->set_key(seed.data(), seed.size());
 
          const std::array<uint8_t, 12> iv = {nonce, 0};
          m_aes256_ctr->set_iv(iv.data(), iv.size());

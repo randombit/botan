@@ -45,12 +45,12 @@ class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives
          return m_shake256_256->new_object();
          }
 
-      std::unique_ptr<StreamCipher> XOF(const std::vector<uint8_t>& seed,
+      std::unique_ptr<StreamCipher> XOF(std::span<const uint8_t> seed,
                                         const std::tuple<uint8_t, uint8_t>& matrix_position) const override
          {
          std::vector<uint8_t> key;
          key.reserve(seed.size() + 2);
-         key.insert(key.end(), seed.cbegin(), seed.cend());
+         key.insert(key.end(), seed.begin(), seed.end());
          key.push_back(std::get<0>(matrix_position));
          key.push_back(std::get<1>(matrix_position));
 
@@ -60,11 +60,12 @@ class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives
          return cipher;
          }
 
-      secure_vector<uint8_t> PRF(const secure_vector<uint8_t>& seed, const uint8_t nonce,
+      secure_vector<uint8_t> PRF(std::span<const uint8_t> seed,
+                                 const uint8_t nonce,
                                  const size_t outlen) const override
          {
          SHAKE_256 kdf(outlen * 8);
-         kdf.update(seed);
+         kdf.update(seed.data(), seed.size());
          kdf.update(nonce);
          return kdf.final();
          }
