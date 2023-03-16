@@ -1108,12 +1108,18 @@ class Kyber_PublicKeyInternal
                               std::vector<uint8_t> seed)
          : m_mode(std::move(mode)),
            m_polynomials(PolynomialVector::from_bytes(polynomials, m_mode)),
-           m_seed(std::move(seed))
+           m_seed(std::move(seed)),
+           m_public_key_bits_raw(concat(m_polynomials.to_bytes<std::vector<uint8_t>>(), m_seed)),
+           m_H_public_key_bits_raw(unlock(m_mode.H()->process(m_public_key_bits_raw)))
          {
          }
 
       Kyber_PublicKeyInternal(KyberConstants mode, PolynomialVector polynomials, std::vector<uint8_t> seed)
-         : m_mode(std::move(mode)), m_polynomials(std::move(polynomials)), m_seed(std::move(seed))
+         : m_mode(std::move(mode)),
+           m_polynomials(std::move(polynomials)),
+           m_seed(std::move(seed)),
+           m_public_key_bits_raw(concat(m_polynomials.to_bytes<std::vector<uint8_t>>(), m_seed)),
+           m_H_public_key_bits_raw(unlock(m_mode.H()->process(m_public_key_bits_raw)))
          {
          }
 
@@ -1121,6 +1127,7 @@ class Kyber_PublicKeyInternal
          {
          return m_polynomials;
          }
+
       const std::vector<uint8_t>& seed() const
          {
          return m_seed;
@@ -1130,12 +1137,24 @@ class Kyber_PublicKeyInternal
          return m_mode;
          }
 
+      const std::vector<uint8_t>& public_key_bits_raw() const
+         {
+         return m_public_key_bits_raw;
+         }
+
+      const std::vector<uint8_t>& H_public_key_bits_raw() const
+         {
+         return m_H_public_key_bits_raw;
+         }
+
       Kyber_PublicKeyInternal() = delete;
 
    private:
-      KyberConstants m_mode;
+      const KyberConstants m_mode;
       PolynomialVector m_polynomials;
-      std::vector<uint8_t> m_seed;
+      const std::vector<uint8_t> m_seed;
+      const std::vector<uint8_t> m_public_key_bits_raw;
+      const std::vector<uint8_t> m_H_public_key_bits_raw;
    };
 
 class Kyber_PrivateKeyInternal
@@ -1255,7 +1274,7 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
 
          // Multitarget countermeasure for coins + contributory KEM
          G->update(shared_secret);
-         G->update(H->process(m_key.public_key_bits_raw()));
+         G->update(m_key.H_public_key_bits_raw());
          const auto g_out = G->final();
 
          BOTAN_ASSERT_EQUAL(g_out.size(), 64, "Expected output length of Kyber G");
@@ -1301,7 +1320,7 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
 
          // Multitarget countermeasure for coins + contributory KEM
          G->update(shared_secret);
-         G->update(H->process(m_key.public_key_bits_raw()));
+         G->update(m_key.H_public_key_bits_raw());
 
          const auto g_out = G->final();
 
@@ -1445,10 +1464,14 @@ std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const
    unreachable();
    }
 
-std::vector<uint8_t> Kyber_PublicKey::public_key_bits_raw() const
+const std::vector<uint8_t>& Kyber_PublicKey::public_key_bits_raw() const
    {
-   return concat(m_public->polynomials().to_bytes<std::vector<uint8_t>>(),
-                 m_public->seed());
+   return m_public->public_key_bits_raw();
+   }
+
+const std::vector<uint8_t>& Kyber_PublicKey::H_public_key_bits_raw() const
+   {
+   return m_public->H_public_key_bits_raw();
    }
 
 std::vector<uint8_t> Kyber_PublicKey::public_key_bits_der() const
@@ -1601,7 +1624,7 @@ secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits_raw() const
    {
    const auto pub_key = public_key_bits_raw();
    const auto pub_key_sv = secure_vector<uint8_t>(pub_key.begin(), pub_key.end());
-   const auto pub_key_hash = m_private->mode().H()->process(pub_key);
+   const auto pub_key_hash = H_public_key_bits_raw();
 
    return concat(m_private->polynomials().to_bytes<secure_vector<uint8_t>>(),
                  pub_key_sv, pub_key_hash,
