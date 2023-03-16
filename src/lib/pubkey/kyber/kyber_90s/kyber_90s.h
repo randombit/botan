@@ -22,19 +22,25 @@ namespace Botan {
 class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
    {
    public:
+      Kyber_90s_Symmetric_Primitives() :
+         m_sha512(HashFunction::create_or_throw("SHA-512")),
+         m_sha256(HashFunction::create_or_throw("SHA-256")),
+         m_aes256_ctr(StreamCipher::create_or_throw("CTR-BE(AES-256)"))
+         {}
+
       std::unique_ptr<HashFunction> G() const override
          {
-         return HashFunction::create_or_throw("SHA-512");
+         return m_sha512->new_object();
          }
 
       std::unique_ptr<HashFunction> H() const override
          {
-         return HashFunction::create_or_throw("SHA-256");
+         return m_sha256->new_object();
          }
 
       std::unique_ptr<HashFunction> KDF() const override
          {
-         return HashFunction::create_or_throw("SHA-256");
+         return m_sha256->new_object();
          }
 
       std::unique_ptr<StreamCipher> XOF(const std::vector<uint8_t>& seed,
@@ -42,7 +48,7 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
          {
          std::array<uint8_t, 12> iv = {std::get<0>(matrix_position), std::get<1>(matrix_position), 0};
 
-         auto cipher = StreamCipher::create_or_throw("CTR-BE(AES-256)");
+         auto cipher = m_aes256_ctr->new_object();
          cipher->set_key(seed);
          cipher->set_iv(iv.data(), iv.size());
 
@@ -52,17 +58,21 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
       secure_vector<uint8_t> PRF(const secure_vector<uint8_t>& seed, const uint8_t nonce,
                                  const size_t outlen) const override
          {
-         auto cipher = StreamCipher::create_or_throw("CTR-BE(AES-256)");
-         cipher->set_key(seed);
+         m_aes256_ctr->set_key(seed);
 
          const std::array<uint8_t, 12> iv = {nonce, 0};
-         cipher->set_iv(iv.data(), iv.size());
+         m_aes256_ctr->set_iv(iv.data(), iv.size());
 
          secure_vector<uint8_t> out(outlen);
-         cipher->encrypt(out);
+         m_aes256_ctr->write_keystream(out.data(), out.size());
 
          return out;
          }
+
+   private:
+      std::unique_ptr<HashFunction> m_sha512;
+      std::unique_ptr<HashFunction> m_sha256;
+      std::unique_ptr<StreamCipher> m_aes256_ctr;
    };
 
 } // namespace Botan

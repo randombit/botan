@@ -525,9 +525,9 @@ class Polynomial
          while(count < p.m_coeffs.size())
             {
             // TODO: this is called a lot and is likely a bottleneck
-            //       (cipher1() is virtual)
+            //       (write_keystream() is virtual)
             std::array<uint8_t, 3> buf{0, 0, 0};
-            xof->cipher1(buf.data(), buf.size());
+            xof->write_keystream(buf.data(), buf.size());
 
             const uint16_t val0 = ((buf[0] >> 0) | (static_cast<uint16_t>(buf[1]) << 8)) & 0xFFF;
             const uint16_t val1 = ((buf[1] >> 4) | (static_cast<uint16_t>(buf[2]) << 4)) & 0xFFF;

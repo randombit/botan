@@ -24,19 +24,25 @@ namespace Botan {
 class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives
    {
    public:
+      Kyber_Modern_Symmetric_Primitives() :
+         m_sha3_512(HashFunction::create_or_throw("SHA-3(512)")),
+         m_sha3_256(HashFunction::create_or_throw("SHA-3(256)")),
+         m_shake256_256(HashFunction::create_or_throw("SHAKE-256(256)"))
+         {}
+
       std::unique_ptr<HashFunction> G() const override
          {
-         return HashFunction::create_or_throw("SHA-3(512)");
+         return m_sha3_512->new_object();
          }
 
       std::unique_ptr<HashFunction> H() const override
          {
-         return HashFunction::create_or_throw("SHA-3(256)");
+         return m_sha3_256->new_object();
          }
 
       std::unique_ptr<HashFunction> KDF() const override
          {
-         return HashFunction::create_or_throw("SHAKE-256(256)");
+         return m_shake256_256->new_object();
          }
 
       std::unique_ptr<StreamCipher> XOF(const std::vector<uint8_t>& seed,
@@ -62,6 +68,11 @@ class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives
          kdf.update(nonce);
          return kdf.final();
          }
+
+   private:
+      std::unique_ptr<HashFunction> m_sha3_512;
+      std::unique_ptr<HashFunction> m_sha3_256;
+      std::unique_ptr<HashFunction> m_shake256_256;
    };
 
 } // namespace Botan
