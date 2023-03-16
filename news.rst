@@ -17,6 +17,13 @@ Version 2.19.4, Not Yet Released
   valid signatures/ciphertexts with additional leading zero bytes
   would also be accepted. (GH #3380)
 
+* Add support for short nonces in XTS (GH #3384 #3336)
+
+* Fix NIST keywrap which was incorrect when wrapping 64-bit keys
+  (GH #3384 #3340)
+
+* Fix nonce handling bug in EAX (GH #3382 #3335)
+
 * Fix a bug in PKCS11 AttributeContainer where adding an attribute
   that already existed could cause incorrect references to the
   existing attributes. (GH #3185)
