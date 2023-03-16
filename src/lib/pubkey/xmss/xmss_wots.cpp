@@ -159,13 +159,6 @@ XMSS_WOTS_PrivateKey::XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
       }
    }
 
-XMSS_WOTS_PrivateKey XMSS_WOTS_PrivateKey::from_legacy_key(XMSS_WOTS_Parameters params,
-                                                           std::span<const uint8_t> private_seed,
-                                                           XMSS_Address adrs,
-                                                           XMSS_Hash& hash)
-   {
-   return XMSS_WOTS_PrivateKey(params, private_seed, adrs, hash);
-   }
 
 // Constructor for legacy XMSS_PrivateKeys
 XMSS_WOTS_PrivateKey::XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,

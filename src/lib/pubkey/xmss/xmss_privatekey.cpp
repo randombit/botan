@@ -210,21 +210,19 @@ class XMSS_PrivateKey_Internal
       XMSS_Index_Registry& m_index_reg;
    };
 
-XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits)
-   : XMSS_PrivateKey(key_bits, false) {}
-
-XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits, bool is_legacy_key)
+XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits,
+                                 WOTS_Derivation_Method wots_derivation_method)
    : XMSS_PublicKey(key_bits)
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
          m_xmss_params, m_wots_params, key_bits))
-   , m_is_legacy_key(is_legacy_key) {}
+   , m_wots_derivation_method(wots_derivation_method) {}
 
-XMSS_PrivateKey::XMSS_PrivateKey(
-   XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
-   RandomNumberGenerator& rng)
+XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
+                                 RandomNumberGenerator& rng,
+                                 WOTS_Derivation_Method wots_derivation_method)
    : XMSS_PublicKey(xmss_algo_id, rng)
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(m_xmss_params, m_wots_params, rng))
-   , m_is_legacy_key(false)
+   , m_wots_derivation_method(wots_derivation_method)
    {
    XMSS_Address adrs;
    m_root = tree_hash(0,
@@ -237,12 +235,13 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                  secure_vector<uint8_t> wots_priv_seed,
                                  secure_vector<uint8_t> prf,
                                  secure_vector<uint8_t> root,
-                                 secure_vector<uint8_t> public_seed)
+                                 secure_vector<uint8_t> public_seed,
+                                 WOTS_Derivation_Method wots_derivation_method)
    : XMSS_PublicKey(xmss_algo_id, std::move(root), std::move(public_seed))
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
       m_xmss_params, m_wots_params,
       std::move(wots_priv_seed), std::move(prf)))
-   , m_is_legacy_key(false)
+   , m_wots_derivation_method(wots_derivation_method)
    {
    m_private->set_unused_leaf_index(idx_leaf);
    }
@@ -442,10 +441,15 @@ XMSS_WOTS_PublicKey XMSS_PrivateKey::wots_public_key_for(XMSS_Address& adrs, XMS
 
 XMSS_WOTS_PrivateKey XMSS_PrivateKey::wots_private_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const
    {
-   if(is_legacy_key())
-      return XMSS_WOTS_PrivateKey::from_legacy_key(m_private->wots_parameters(), m_private->private_seed(), adrs, hash);
-   else
-      return XMSS_WOTS_PrivateKey(m_private->wots_parameters(), m_public_seed, m_private->private_seed(), adrs, hash);
+   switch (wots_derivation_method())
+      {
+      case WOTS_Derivation_Method::NIST_SP800_208:
+         return XMSS_WOTS_PrivateKey(m_private->wots_parameters(), m_public_seed, m_private->private_seed(), adrs, hash);
+      case WOTS_Derivation_Method::Botan2x:
+         return XMSS_WOTS_PrivateKey(m_private->wots_parameters(), m_private->private_seed(), adrs, hash);
+      }
+
+      throw Invalid_State("WOTS derivation method is out of the enum's range");
    }
 
 secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const
@@ -476,11 +480,6 @@ const secure_vector<uint8_t>& XMSS_PrivateKey::prf_value() const
 secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
    {
    return m_private->serialize(raw_public_key());
-   }
-
-XMSS_PrivateKey XMSS_PrivateKey::from_legacy_key(std::span<const uint8_t> raw_key) 
-   {
-      return XMSS_PrivateKey(raw_key, true);
    }
 
 std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const

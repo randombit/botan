@@ -290,7 +290,7 @@ std::vector<Test::Result> xmss_legacy_private_key()
       "6B250DBD1599FBB09A7F148A7AEFEAB26ADB728A330DD3F616C8A736D1BF4EA17F2C3BF"
       "A5E22C249FA9D1E7DA08DB351709C4");
 
-   Botan::XMSS_PrivateKey secret_key = Botan::XMSS_PrivateKey::from_legacy_key(legacy_xmss_private_key);
+   Botan::XMSS_PrivateKey secret_key = Botan::XMSS_PrivateKey(legacy_xmss_private_key, Botan::WOTS_Derivation_Method::Botan2x);
    Botan::XMSS_PublicKey public_key(secret_key);
 
    const auto message = Botan::hex_decode("deadcafe");
