@@ -519,15 +519,48 @@ class Polynomial
        */
       static Polynomial sample_rej_uniform(std::unique_ptr<StreamCipher> xof)
          {
+         class XOF_Reader
+            {
+            public:
+               XOF_Reader(std::unique_ptr<StreamCipher> xof) :
+                  m_xof(std::move(xof)),
+                  m_buf(3*BUF_MULT),
+                  m_buf_pos(m_buf.size())
+                  {
+                  }
+
+               std::array<uint8_t, 3> next_3_bytes()
+                  {
+                  if(m_buf_pos == m_buf.size())
+                     {
+                     m_xof->write_keystream(m_buf.data(), m_buf.size());
+                     m_buf_pos = 0;
+                     }
+
+                  std::array<uint8_t, 3> buf{0, 0, 0};
+
+                  buf[0] = m_buf[m_buf_pos];
+                  buf[1] = m_buf[m_buf_pos+1];
+                  buf[2] = m_buf[m_buf_pos+2];
+
+                  m_buf_pos += 3;
+
+                  return buf;
+                  }
+            private:
+               const size_t BUF_MULT = 50;
+               std::unique_ptr<StreamCipher> m_xof;
+               secure_vector<uint8_t> m_buf;
+               size_t m_buf_pos;
+            };
+
+         auto xof_reader = XOF_Reader(std::move(xof));
          Polynomial p;
 
          size_t count = 0;
          while(count < p.m_coeffs.size())
             {
-            // TODO: this is called a lot and is likely a bottleneck
-            //       (write_keystream() is virtual)
-            std::array<uint8_t, 3> buf{0, 0, 0};
-            xof->write_keystream(buf.data(), buf.size());
+            auto buf = xof_reader.next_3_bytes();
 
             const uint16_t val0 = ((buf[0] >> 0) | (static_cast<uint16_t>(buf[1]) << 8)) & 0xFFF;
             const uint16_t val1 = ((buf[1] >> 4) | (static_cast<uint16_t>(buf[2]) << 4)) & 0xFFF;
