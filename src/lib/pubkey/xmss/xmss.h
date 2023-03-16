@@ -250,8 +250,31 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        **/
       secure_vector<uint8_t> raw_private_key() const;
 
+      /**
+       * Creates a legacy XMSS_PrivateKey from a byte sequence produced by
+       * raw_private_key() in the older Botan version. Since Botan 3.0, botan
+       * uses a new logic to derive WOTS+ private keys from the XMSS private key.
+       * Therefore, keys generated using the old version cannot create new valid
+       * signatures anymore. Using this function, legacy keys (i.e. keys created using
+       * the old derivation logic) can be created to use the legacy derivation function.
+       * 
+       * @param raw_key An XMSS private key serialized using raw_private_key().
+       * @return legacy XMSS_PrivateKey
+       */
+      static XMSS_PrivateKey from_legacy_key(std::span<const uint8_t> raw_key);
+
+      /**
+       * Checks if a key is a legacy key, i.e. was created using the from_legacy_key(...)
+       * function. 
+       * 
+       * @return true iff this XMSS_PrivateKey is a legacy key.
+       */
+      bool is_legacy_key() const { return m_is_legacy_key; }
+
    private:
       friend class XMSS_Signature_Operation;
+
+      XMSS_PrivateKey(std::span<const uint8_t> raw_key, bool is_legacy_key);
 
       size_t reserve_unused_leaf_index();
 
@@ -293,6 +316,9 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
                              XMSS_Hash& hash);
 
       std::shared_ptr<XMSS_PrivateKey_Internal> m_private;
+
+      /** Marks an XMSS_PrivateKey as legacy */
+      const bool m_is_legacy_key;
    };
 
 }

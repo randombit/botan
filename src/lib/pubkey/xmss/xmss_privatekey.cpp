@@ -210,17 +210,21 @@ class XMSS_PrivateKey_Internal
       XMSS_Index_Registry& m_index_reg;
    };
 
-
 XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits)
+   : XMSS_PrivateKey(key_bits, false) {}
+
+XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits, bool is_legacy_key)
    : XMSS_PublicKey(key_bits)
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
-         m_xmss_params, m_wots_params, key_bits)) {}
+         m_xmss_params, m_wots_params, key_bits))
+   , m_is_legacy_key(is_legacy_key) {}
 
 XMSS_PrivateKey::XMSS_PrivateKey(
    XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
    RandomNumberGenerator& rng)
    : XMSS_PublicKey(xmss_algo_id, rng)
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(m_xmss_params, m_wots_params, rng))
+   , m_is_legacy_key(false)
    {
    XMSS_Address adrs;
    m_root = tree_hash(0,
@@ -238,6 +242,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
       m_xmss_params, m_wots_params,
       std::move(wots_priv_seed), std::move(prf)))
+   , m_is_legacy_key(false)
    {
    m_private->set_unused_leaf_index(idx_leaf);
    }
@@ -437,7 +442,10 @@ XMSS_WOTS_PublicKey XMSS_PrivateKey::wots_public_key_for(XMSS_Address& adrs, XMS
 
 XMSS_WOTS_PrivateKey XMSS_PrivateKey::wots_private_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const
    {
-   return XMSS_WOTS_PrivateKey(m_private->wots_parameters(), m_public_seed, m_private->private_seed(), adrs, hash);
+   if(is_legacy_key())
+      return XMSS_WOTS_PrivateKey::from_legacy_key(m_private->wots_parameters(), m_private->private_seed(), adrs, hash);
+   else
+      return XMSS_WOTS_PrivateKey(m_private->wots_parameters(), m_public_seed, m_private->private_seed(), adrs, hash);
    }
 
 secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const
@@ -468,6 +476,11 @@ const secure_vector<uint8_t>& XMSS_PrivateKey::prf_value() const
 secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
    {
    return m_private->serialize(raw_public_key());
+   }
+
+XMSS_PrivateKey XMSS_PrivateKey::from_legacy_key(std::span<const uint8_t> raw_key) 
+   {
+      return XMSS_PrivateKey(raw_key, true);
    }
 
 std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const

@@ -159,4 +159,31 @@ XMSS_WOTS_PrivateKey::XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
       }
    }
 
+XMSS_WOTS_PrivateKey XMSS_WOTS_PrivateKey::from_legacy_key(XMSS_WOTS_Parameters params,
+                                                           std::span<const uint8_t> private_seed,
+                                                           XMSS_Address adrs,
+                                                           XMSS_Hash& hash)
+   {
+   return XMSS_WOTS_PrivateKey(params, private_seed, adrs, hash);
+   }
+
+// Constructor for legacy XMSS_PrivateKeys
+XMSS_WOTS_PrivateKey::XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
+                                           std::span<const uint8_t> private_seed,
+                                           XMSS_Address adrs,
+                                           XMSS_Hash& hash)
+   : XMSS_WOTS_Base(std::move(params))
+   {
+   m_key_data.resize(m_params.len());
+
+   secure_vector<uint8_t> r;
+   hash.prf(r, private_seed, adrs.bytes());
+
+   for(size_t i = 0; i < m_params.len(); ++i)
+      {
+      XMSS_Tools::concat<size_t>(m_key_data[i], i, 32);
+      hash.prf(m_key_data[i], r, m_key_data[i]);
+      }
+   }
+
 }
