@@ -825,7 +825,7 @@ class PolynomialMatrix
          return matrix;
          }
 
-      PolynomialVector pointwise_acc_montgomery(const PolynomialVector& vec, const bool with_mont = false)
+      PolynomialVector pointwise_acc_montgomery(const PolynomialVector& vec, const bool with_mont = false) const
          {
          PolynomialVector result(m_mat.size());
 
@@ -1197,29 +1197,32 @@ class Kyber_PrivateKeyInternal
 class Kyber_KEM_Cryptor
    {
    protected:
+      std::shared_ptr<Kyber_PublicKeyInternal> m_public_key;
       const KyberConstants& m_mode;
+      const PolynomialMatrix m_at;
 
    protected:
-      Kyber_KEM_Cryptor(const KyberConstants& mode) : m_mode(mode)
+      Kyber_KEM_Cryptor(std::shared_ptr<Kyber_PublicKeyInternal> public_key) :
+         m_public_key(std::move(public_key)),
+         m_mode(m_public_key->mode()),
+         m_at(PolynomialMatrix::generate(m_public_key->seed(), true, m_mode))
          {
          }
 
       secure_vector<uint8_t> indcpa_enc(std::span<const uint8_t> m,
-                                        std::span<const uint8_t> coins,
-                                        const std::shared_ptr<Kyber_PublicKeyInternal>& pk)
+                                        std::span<const uint8_t> coins)
          {
          auto sp = PolynomialVector::getnoise_eta1(coins, 0, m_mode);
          auto ep = PolynomialVector::getnoise_eta2(coins, m_mode.k(), m_mode);
          auto epp = Polynomial::getnoise_eta2(coins, 2 * m_mode.k(), m_mode);
 
          auto k = Polynomial::from_message(m);
-         auto at = PolynomialMatrix::generate(pk->seed(), true, m_mode);
 
          sp.ntt();
 
          // matrix-vector multiplication
-         auto bp = at.pointwise_acc_montgomery(sp);
-         auto v = PolynomialVector::pointwise_acc_montgomery(pk->polynomials(), sp);
+         auto bp = m_at.pointwise_acc_montgomery(sp);
+         auto v = PolynomialVector::pointwise_acc_montgomery(m_public_key->polynomials(), sp);
 
          bp.invntt_tomont();
          v.invntt_tomont();
@@ -1240,7 +1243,7 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
    public:
       Kyber_KEM_Encryptor(const Kyber_PublicKey& key, const std::string& kdf)
          : KEM_Encryption_with_KDF(kdf)
-         , Kyber_KEM_Cryptor(key.m_public->mode())
+         , Kyber_KEM_Cryptor(key.m_public)
          , m_key(key)
          {
          }
@@ -1288,7 +1291,7 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
          const auto lower_g_out = std::span(g_out).subspan(0, 32);
          const auto upper_g_out = std::span(g_out).subspan(32, 32);
 
-         out_encapsulated_key = indcpa_enc(shared_secret, upper_g_out, m_key.m_public);
+         out_encapsulated_key = indcpa_enc(shared_secret, upper_g_out);
 
          KDF->update(lower_g_out.data(), lower_g_out.size());
          KDF->update(H->process(out_encapsulated_key));
@@ -1305,7 +1308,7 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
    public:
       Kyber_KEM_Decryptor(const Kyber_PrivateKey& key, const std::string& kdf)
          : PK_Ops::KEM_Decryption_with_KDF(kdf)
-         , Kyber_KEM_Cryptor(key.m_private->mode())
+         , Kyber_KEM_Cryptor(key.m_public)
          , m_key(key)
          {
          }
@@ -1337,7 +1340,7 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
 
          H->update(encap_key, len_encap_key);
 
-         const auto cmp = indcpa_enc(shared_secret, upper_g_out, m_key.m_public);
+         const auto cmp = indcpa_enc(shared_secret, upper_g_out);
          BOTAN_ASSERT(len_encap_key == cmp.size(), "output of indcpa_enc has unexpected length");
 
          // Overwrite pre-k with z on re-encryption failure (constant time)
