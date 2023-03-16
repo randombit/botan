@@ -250,10 +250,10 @@ class KyberConstants
          {
          return m_symmetric_primitives->KDF();
          }
-      std::unique_ptr<StreamCipher> XOF(std::span<const uint8_t> seed,
-                                        const std::tuple<uint8_t, uint8_t>& matrix_position) const
+
+      std::unique_ptr<Kyber_XOF> XOF(std::span<const uint8_t> seed) const
          {
-         return m_symmetric_primitives->XOF(seed, matrix_position);
+         return m_symmetric_primitives->XOF(seed);
          }
 
       secure_vector<uint8_t> PRF(std::span<const uint8_t> seed, const uint8_t nonce, const size_t outlen) const
@@ -515,13 +515,14 @@ class Polynomial
        * Run rejection sampling on uniform random bytes to generate uniform
        * random integers mod q.
        */
-      static Polynomial sample_rej_uniform(std::unique_ptr<StreamCipher> xof)
+      static Polynomial sample_rej_uniform(Kyber_XOF& xof)
          {
          class XOF_Reader
             {
             public:
-               XOF_Reader(std::unique_ptr<StreamCipher> xof) :
-                  m_xof(std::move(xof)),
+               XOF_Reader(Kyber_XOF& xof) :
+                  m_xof(xof),
+                  m_buf(),
                   m_buf_pos(m_buf.size())
                   {
                   }
@@ -530,9 +531,11 @@ class Polynomial
                   {
                   if(m_buf_pos == m_buf.size())
                      {
-                     m_xof->write_keystream(m_buf.data(), m_buf.size());
+                     m_xof.write_output(m_buf);
                      m_buf_pos = 0;
                      }
+
+                  BOTAN_ASSERT_NOMSG(m_buf_pos + 3 <= m_buf.size());
 
                   std::array<uint8_t, 3> buf{
                      m_buf[m_buf_pos],
@@ -545,12 +548,12 @@ class Polynomial
                   return buf;
                   }
             private:
-               std::unique_ptr<StreamCipher> m_xof;
+               Kyber_XOF& m_xof;
                std::array<uint8_t, 3 * 64> m_buf;
                size_t m_buf_pos;
             };
 
-         auto xof_reader = XOF_Reader(std::move(xof));
+         auto xof_reader = XOF_Reader(xof);
          Polynomial p;
 
          size_t count = 0;
@@ -807,12 +810,15 @@ class PolynomialMatrix
 
          PolynomialMatrix matrix(mode);
 
+         auto xof = mode.XOF(seed);
+
          for(uint8_t i = 0; i < mode.k(); ++i)
             {
             for(uint8_t j = 0; j < mode.k(); ++j)
                {
                const auto pos = (transposed) ? std::tuple(i, j) : std::tuple(j, i);
-               matrix.m_mat[i].m_vec[j] = Polynomial::sample_rej_uniform(mode.XOF(seed, pos));
+               xof->set_position(pos);
+               matrix.m_mat[i].m_vec[j] = Polynomial::sample_rej_uniform(*xof);
                }
             }
 

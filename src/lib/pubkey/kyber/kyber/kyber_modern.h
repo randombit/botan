@@ -45,19 +45,38 @@ class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives
          return m_shake256_256->new_object();
          }
 
-      std::unique_ptr<StreamCipher> XOF(std::span<const uint8_t> seed,
-                                        const std::tuple<uint8_t, uint8_t>& matrix_position) const override
+      std::unique_ptr<Kyber_XOF> XOF(std::span<const uint8_t> seed) const override
          {
-         std::vector<uint8_t> key;
-         key.reserve(seed.size() + 2);
-         key.insert(key.end(), seed.begin(), seed.end());
-         key.push_back(std::get<0>(matrix_position));
-         key.push_back(std::get<1>(matrix_position));
+         class Kyber_Modern_XOF final : public Kyber_XOF
+            {
+            public:
+               Kyber_Modern_XOF(std::span<const uint8_t> seed) :
+                  m_cipher(std::make_unique<SHAKE_128_Cipher>())
+                  {
+                  m_key.reserve(seed.size() + 2);
+                  m_key.insert(m_key.end(), seed.begin(), seed.end());
+                  m_key.push_back(0);
+                  m_key.push_back(0);
+                  }
 
-         auto cipher = std::make_unique<SHAKE_128_Cipher>();
-         cipher->set_key(key);
+               void set_position(const std::tuple<uint8_t, uint8_t>& matrix_position) override
+                  {
+                  m_key[m_key.size() - 2] = std::get<0>(matrix_position);
+                  m_key[m_key.size() - 1] = std::get<1>(matrix_position);
+                  m_cipher->set_key(m_key);
+                  }
 
-         return cipher;
+               void write_output(std::span<uint8_t> out) override
+                  {
+                  m_cipher->write_keystream(out.data(), out.size());
+                  }
+
+            private:
+               std::unique_ptr<StreamCipher> m_cipher;
+               secure_vector<uint8_t> m_key;
+            };
+
+         return std::make_unique<Kyber_Modern_XOF>(seed);
          }
 
       secure_vector<uint8_t> PRF(std::span<const uint8_t> seed,

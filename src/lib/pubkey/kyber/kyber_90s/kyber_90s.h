@@ -43,16 +43,34 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
          return m_sha256->new_object();
          }
 
-      std::unique_ptr<StreamCipher> XOF(std::span<const uint8_t> seed,
-                                        const std::tuple<uint8_t, uint8_t>& matrix_position) const override
+      std::unique_ptr<Kyber_XOF> XOF(std::span<const uint8_t> seed) const override
          {
-         std::array<uint8_t, 12> iv = {std::get<0>(matrix_position), std::get<1>(matrix_position), 0};
+         class Kyber_90s_XOF final : public Kyber_XOF
+            {
+            public:
+               Kyber_90s_XOF(std::unique_ptr<StreamCipher> cipher,
+                             std::span<const uint8_t> seed) :
+                  m_cipher(std::move(cipher))
+                  {
+                  m_cipher->set_key(seed.data(), seed.size());
+                  }
 
-         auto cipher = m_aes256_ctr->new_object();
-         cipher->set_key(seed.data(), seed.size());
-         cipher->set_iv(iv.data(), iv.size());
+               void set_position(const std::tuple<uint8_t, uint8_t>& matrix_position) override
+                  {
+                  std::array<uint8_t, 12> iv = {std::get<0>(matrix_position), std::get<1>(matrix_position), 0};
+                  m_cipher->set_iv(iv.data(), iv.size());
+                  }
 
-         return cipher;
+               void write_output(std::span<uint8_t> out) override
+                  {
+                  m_cipher->write_keystream(out.data(), out.size());
+                  }
+
+            private:
+               std::unique_ptr<StreamCipher> m_cipher;
+            };
+
+         return std::make_unique<Kyber_90s_XOF>(m_aes256_ctr->new_object(), seed);
          }
 
       secure_vector<uint8_t> PRF(std::span<const uint8_t> seed,
