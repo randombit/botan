@@ -705,22 +705,6 @@ def main(args=None):
                          'BUILD_DIR_LINK_PATH=-L%s/lib' % (install_prefix)])
 
         if target in ['coverage']:
-            if not have_prog('lcov'):
-                print('Error: lcov not found in PATH (%s)' % (os.getenv('PATH')))
-                return 1
-
-            if not have_prog('gcov'):
-                print('Error: gcov not found in PATH (%s)' % (os.getenv('PATH')))
-                return 1
-
-            cov_file = os.path.join(build_dir, 'coverage.info')
-            raw_cov_file = os.path.join(build_dir, 'coverage.info.raw')
-
-            cmds.append(['lcov', '--capture', '--directory', build_dir,
-                         '--output-file', raw_cov_file])
-            cmds.append(['lcov', '--remove', raw_cov_file, '/usr/*', '--output-file', cov_file])
-            cmds.append(['lcov', '--list', cov_file])
-
             if have_prog('coverage'):
                 cmds.append(['coverage', 'run', '--branch',
                              '--rcfile', os.path.join(root_dir, 'src/configs/coverage.rc')] +
@@ -732,6 +716,13 @@ def main(args=None):
                              '>', os.path.join(build_dir, 'codecov_stdout.log')])
             else:
                 # Otherwise generate a local HTML report
+                cov_file = os.path.join(build_dir, 'coverage.info')
+                raw_cov_file = os.path.join(build_dir, 'coverage.info.raw')
+
+                cmds.append(['lcov', '--capture', '--directory', build_dir,
+                             '--output-file', raw_cov_file])
+                cmds.append(['lcov', '--remove', raw_cov_file, '/usr/*', '--output-file', cov_file])
+                cmds.append(['lcov', '--list', cov_file])
                 cmds.append(['genhtml', cov_file, '--output-directory', os.path.join(build_dir, 'lcov-out')])
 
         cmds.append(make_cmd + ['clean'])
