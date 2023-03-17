@@ -215,7 +215,7 @@ SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
    const BigInt vup = m_group.power_b_p(m_v, u, m_group.p_bits());
    const BigInt S = m_group.power_b_p(m_group.multiply_mod_p(A, vup), m_b, m_group.p_bits());
 
-   return BigInt::encode_1363(S, m_group.p_bytes());
+   return SymmetricKey(BigInt::encode_1363(S, m_group.p_bytes()));
    }
 
 }

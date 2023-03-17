@@ -726,7 +726,7 @@ SymmetricKey Channel_Impl_12::key_material_export(const std::string& label,
          salt += to_byte_vector(context);
          }
 
-      return prf->derive_key(length, master_secret, salt, to_byte_vector(label));
+      return SymmetricKey(prf->derive_key(length, master_secret, salt, to_byte_vector(label)));
       }
    else
       {

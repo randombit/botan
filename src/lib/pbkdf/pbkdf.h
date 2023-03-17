@@ -170,7 +170,7 @@ class BOTAN_PUBLIC_API(2,0) PBKDF
                              const uint8_t salt[], size_t salt_len,
                              size_t iterations) const
          {
-         return pbkdf_iterations(out_len, passphrase, salt, salt_len, iterations);
+         return OctetString(pbkdf_iterations(out_len, passphrase, salt, salt_len, iterations));
          }
 
       /**
@@ -186,7 +186,7 @@ class BOTAN_PUBLIC_API(2,0) PBKDF
                              const std::vector<uint8_t, Alloc>& salt,
                              size_t iterations) const
          {
-         return pbkdf_iterations(out_len, passphrase, salt.data(), salt.size(), iterations);
+         return OctetString(pbkdf_iterations(out_len, passphrase, salt.data(), salt.size(), iterations));
          }
 
       /**
@@ -204,7 +204,7 @@ class BOTAN_PUBLIC_API(2,0) PBKDF
                              std::chrono::milliseconds msec,
                              size_t& iterations) const
          {
-         return pbkdf_timed(out_len, passphrase, salt, salt_len, msec, iterations);
+         return OctetString(pbkdf_timed(out_len, passphrase, salt, salt_len, msec, iterations));
          }
 
       /**
@@ -222,7 +222,7 @@ class BOTAN_PUBLIC_API(2,0) PBKDF
                              std::chrono::milliseconds msec,
                              size_t& iterations) const
          {
-         return pbkdf_timed(out_len, passphrase, salt.data(), salt.size(), msec, iterations);
+         return OctetString(pbkdf_timed(out_len, passphrase, salt.data(), salt.size(), msec, iterations));
          }
    };
 

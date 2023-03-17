@@ -34,7 +34,7 @@ class HOTP_KAT_Tests final : public Text_Based_Test
          if(!hash_test)
             return {result};
 
-         const std::vector<uint8_t> key = vars.get_req_bin("Key");
+         const auto key = Botan::SymmetricKey(vars.get_req_bin("Key"));
          const uint32_t otp = static_cast<uint32_t>(vars.get_req_sz("OTP"));
          const uint64_t counter = vars.get_req_sz("Counter");
          const size_t digits = vars.get_req_sz("Digits");
@@ -85,7 +85,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test
          if(!hash_test)
             return {result};
 
-         const std::vector<uint8_t> key = vars.get_req_bin("Key");
+         const auto key = Botan::SymmetricKey(vars.get_req_bin("Key"));
          const uint32_t otp = static_cast<uint32_t>(vars.get_req_sz("OTP"));
          const size_t digits = vars.get_req_sz("Digits");
          const size_t timestep = vars.get_req_sz("Timestep");

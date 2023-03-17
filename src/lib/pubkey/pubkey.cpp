@@ -225,7 +225,7 @@ SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
                                           const uint8_t salt[],
                                           size_t salt_len) const
    {
-   return m_op->agree(key_len, in, in_len, salt, salt_len);
+   return SymmetricKey(m_op->agree(key_len, in, in_len, salt, salt_len));
    }
 
 static void check_der_format_supported(Signature_Format format, size_t parts)
