@@ -52,7 +52,7 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
                              std::span<const uint8_t> seed) :
                   m_cipher(std::move(cipher))
                   {
-                  m_cipher->set_key(seed.data(), seed.size());
+                  m_cipher->set_key(seed);
                   }
 
                void set_position(const std::tuple<uint8_t, uint8_t>& matrix_position) override
@@ -77,7 +77,7 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
                                  const uint8_t nonce,
                                  const size_t outlen) const override
          {
-         m_aes256_ctr->set_key(seed.data(), seed.size());
+         m_aes256_ctr->set_key(seed);
 
          const std::array<uint8_t, 12> iv = {nonce, 0};
          m_aes256_ctr->set_iv(iv.data(), iv.size());
