@@ -130,7 +130,7 @@ class KYBER_Tests final : public Test
          //
 
          // Broken cipher_text from Alice (wrong length)
-         result.test_throws("fail to read cipher_text", "unexpected length of ciphertext buffer", [&]
+         result.test_throws("fail to read cipher_text", "Kyber: unexpected ciphertext length", [&]
             {
             auto short_cipher_text = cipher_text;
             short_cipher_text.pop_back();
