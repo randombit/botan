@@ -8,6 +8,7 @@
 #include <botan/internal/camellia.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/prefetch.h>
 
 namespace Botan {
 
@@ -181,6 +182,8 @@ inline uint64_t FLINV(uint64_t v, uint64_t K)
 void encrypt(const uint8_t in[], uint8_t out[], size_t blocks,
              const secure_vector<uint64_t>& SK, const size_t rounds)
    {
+   prefetch_arrays(SBOX1, SBOX2, SBOX3, SBOX4);
+
    for(size_t i = 0; i < blocks; ++i)
       {
       uint64_t D1, D2;
@@ -222,6 +225,8 @@ void encrypt(const uint8_t in[], uint8_t out[], size_t blocks,
 void decrypt(const uint8_t in[], uint8_t out[], size_t blocks,
              const secure_vector<uint64_t>& SK, const size_t rounds)
    {
+   prefetch_arrays(SBOX1, SBOX2, SBOX3, SBOX4);
+
    for(size_t i = 0; i < blocks; ++i)
       {
       uint64_t D1, D2;

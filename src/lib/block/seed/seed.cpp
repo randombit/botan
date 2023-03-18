@@ -7,6 +7,7 @@
 
 #include <botan/internal/seed.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/prefetch.h>
 
 namespace Botan {
 
@@ -78,6 +79,8 @@ void SEED::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    assert_key_material_set();
 
+   prefetch_arrays(SEED_S0, SEED_S1);
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t B0 = load_be<uint32_t>(in, 0);
@@ -117,6 +120,8 @@ void SEED::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    assert_key_material_set();
+
+   prefetch_arrays(SEED_S0, SEED_S1);
 
    for(size_t i = 0; i != blocks; ++i)
       {
