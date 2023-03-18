@@ -46,8 +46,6 @@ std::string CPUID::to_string()
 
    CPUID_PRINT(sse2);
    CPUID_PRINT(ssse3);
-   CPUID_PRINT(sse41);
-   CPUID_PRINT(sse42);
    CPUID_PRINT(avx2);
 
    CPUID_PRINT(bmi2);
@@ -93,47 +91,24 @@ void CPUID::initialize()
    state() = CPUID_Data();
    }
 
-CPUID::CPUID_Data::CPUID_Data()
-   {
-   m_cache_line_size = 0;
-   m_processor_features = 0;
+namespace {
 
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || \
-    defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
-    defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-
-   m_processor_features = detect_cpu_features(&m_cache_line_size);
-
-#endif
-
-   m_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
-
-   if(m_cache_line_size == 0)
-      {
-      m_cache_line_size = OS::get_cache_line_size();
-      if(m_cache_line_size == 0)
-         m_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
-      }
-
-   m_endian_status = runtime_check_endian();
-   }
-
-//static
-CPUID::Endian_Status CPUID::CPUID_Data::runtime_check_endian()
+// Returns true if big-endian
+bool runtime_check_if_big_endian()
    {
    // Check runtime endian
    const uint32_t endian32 = 0x01234567;
    const uint8_t* e8 = reinterpret_cast<const uint8_t*>(&endian32);
 
-   CPUID::Endian_Status endian = CPUID::Endian_Status::Unknown;
+   bool is_big_endian = false;
 
    if(e8[0] == 0x01 && e8[1] == 0x23 && e8[2] == 0x45 && e8[3] == 0x67)
       {
-      endian = CPUID::Endian_Status::Big;
+      is_big_endian = true;
       }
    else if(e8[0] == 0x67 && e8[1] == 0x45 && e8[2] == 0x23 && e8[3] == 0x01)
       {
-      endian = CPUID::Endian_Status::Little;
+      is_big_endian = false;
       }
    else
       {
@@ -142,12 +117,32 @@ CPUID::Endian_Status CPUID::CPUID_Data::runtime_check_endian()
 
    // If we were compiled with a known endian, verify it matches at runtime
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   BOTAN_ASSERT(endian == CPUID::Endian_Status::Little, "Build and runtime endian match");
+   BOTAN_ASSERT(!is_big_endian, "Build and runtime endian match");
 #elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   BOTAN_ASSERT(endian == CPUID::Endian_Status::Big, "Build and runtime endian match");
+   BOTAN_ASSERT(is_big_endian, "Build and runtime endian match");
 #endif
 
-   return endian;
+   return is_big_endian;
+   }
+
+}
+
+CPUID::CPUID_Data::CPUID_Data()
+   {
+   m_processor_features = 0;
+
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || \
+    defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
+    defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+
+   m_processor_features = detect_cpu_features();
+
+#endif
+
+   m_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
+
+   if(runtime_check_if_big_endian())
+      m_processor_features |= CPUID::CPUID_IS_BIG_ENDIAN_BIT;
    }
 
 std::vector<CPUID::CPUID_bits>
@@ -158,10 +153,6 @@ CPUID::bit_from_string(const std::string& tok)
       return {CPUID::CPUID_SSE2_BIT};
    if(tok == "ssse3")
       return {CPUID::CPUID_SSSE3_BIT};
-   if(tok == "sse41")
-      return {CPUID::CPUID_SSE41_BIT};
-   if(tok == "sse42")
-      return {CPUID::CPUID_SSE42_BIT};
    // aes_ni is the string printed on the console when running "botan cpuid"
    if(tok == "aesni" || tok == "aes_ni")
       return {CPUID::CPUID_AESNI_BIT};

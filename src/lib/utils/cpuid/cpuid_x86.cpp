@@ -75,9 +75,9 @@ void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4])
 
 }
 
-uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
+uint32_t CPUID::CPUID_Data::detect_cpu_features()
    {
-   uint64_t features_detected = 0;
+   uint32_t features_detected = 0;
    uint32_t cpuid[4] = { 0 };
    bool has_os_ymm_support = false;
    bool has_os_zmm_support = false;
@@ -86,11 +86,6 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    invoke_cpuid(0, cpuid);
 
    const uint32_t max_supported_sublevel = cpuid[0];
-
-   const uint32_t INTEL_CPUID[3] = { 0x756E6547, 0x6C65746E, 0x49656E69 };
-   const uint32_t AMD_CPUID[3] = { 0x68747541, 0x444D4163, 0x69746E65 };
-   const bool is_intel = same_mem(cpuid + 1, INTEL_CPUID, 3);
-   const bool is_amd = same_mem(cpuid + 1, AMD_CPUID, 3);
 
    if(max_supported_sublevel >= 1)
       {
@@ -103,8 +98,6 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          SSE2 = (1ULL << 26),
          CLMUL = (1ULL << 33),
          SSSE3 = (1ULL << 41),
-         SSE41 = (1ULL << 51),
-         SSE42 = (1ULL << 52),
          AESNI = (1ULL << 57),
          OSXSAVE = (1ULL << 59),
          AVX = (1ULL << 60),
@@ -119,10 +112,6 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          features_detected |= CPUID::CPUID_CLMUL_BIT;
       if(flags0 & x86_CPUID_1_bits::SSSE3)
          features_detected |= CPUID::CPUID_SSSE3_BIT;
-      if(flags0 & x86_CPUID_1_bits::SSE41)
-         features_detected |= CPUID::CPUID_SSE41_BIT;
-      if(flags0 & x86_CPUID_1_bits::SSE42)
-         features_detected |= CPUID::CPUID_SSE42_BIT;
       if(flags0 & x86_CPUID_1_bits::AESNI)
          features_detected |= CPUID::CPUID_AESNI_BIT;
       if(flags0 & x86_CPUID_1_bits::RDRAND)
@@ -138,18 +127,6 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
             has_os_zmm_support = (xcr_flags & 0xE0) == 0xE0;
             }
          }
-      }
-
-   if(is_intel)
-      {
-      // Intel cache line size is in cpuid(1) output
-      *cache_line_size = 8 * get_byte<2>(cpuid[1]);
-      }
-   else if(is_amd)
-      {
-      // AMD puts it in vendor zone
-      invoke_cpuid(0x80000005, cpuid);
-      *cache_line_size = get_byte<3>(cpuid[2]);
       }
 
    if(max_supported_sublevel >= 7)
@@ -187,27 +164,13 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
       if(flags7 & x86_CPUID_7_bits::SHA)
          features_detected |= CPUID::CPUID_SHA_BIT;
 
-      if(flags7 & x86_CPUID_7_bits::BMI1)
+      /*
+      We only set the BMI bit if both BMI1 and BMI2 are supported, since
+      typically we want to use both extensions in the same code.
+      */
+      if((flags7 & x86_CPUID_7_bits::BMI1) && (flags7 & x86_CPUID_7_bits::BMI2))
          {
-         /*
-         We only set the BMI bit if both BMI1 and BMI2 are supported, since
-         typically we want to use both extensions in the same code.
-         */
-         if(flags7 & x86_CPUID_7_bits::BMI2)
-            {
-            features_detected |= CPUID::CPUID_BMI_BIT;
-
-            /*
-            Up until Zen3, AMD CPUs with BMI2 support had microcoded
-            pdep/pext, which works but is very slow.
-
-            TODO: check for Zen3/Zen4 here
-            */
-            if(is_intel)
-               {
-               features_detected |= CPUID::CPUID_FAST_PDEP_BIT;
-               }
-            }
+         features_detected |= CPUID::CPUID_BMI_BIT;
          }
 
       if((flags7 & x86_CPUID_7_bits::AVX512_F) && has_os_zmm_support)

@@ -13,11 +13,9 @@
 
 namespace Botan {
 
-uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
+uint32_t CPUID::CPUID_Data::detect_cpu_features()
    {
-   BOTAN_UNUSED(cache_line_size);
-
-   uint64_t detected_features = 0;
+   uint32_t detected_features = 0;
 
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    /*
