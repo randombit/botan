@@ -124,6 +124,7 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       *
       * @param ad the associated data
       */
+      BOTAN_DEPRECATED("Please use set_associated_data")
       void set_ad(std::span<const uint8_t> ad)
          {
          set_associated_data(ad);

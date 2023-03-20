@@ -62,7 +62,7 @@ class Cipher final : public Command
 #if defined(BOTAN_HAS_AEAD_MODES)
             if(Botan::AEAD_Mode* aead = dynamic_cast<Botan::AEAD_Mode*>(cipher.get()))
                {
-               aead->set_ad(ad);
+               aead->set_associated_data(ad);
                }
             else
 #endif

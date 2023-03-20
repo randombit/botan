@@ -72,7 +72,7 @@ class AEAD_Tests final : public Text_Based_Test
                                [&]() { enc->finish(garbage); });
             }
 
-         enc->set_ad(mutate_vec(ad));
+         enc->set_associated_data(mutate_vec(ad));
          enc->start(mutate_vec(nonce));
          enc->update(garbage);
 
@@ -87,13 +87,13 @@ class AEAD_Tests final : public Text_Based_Test
 
          try
             {
-            enc->set_ad(ad);
+            enc->set_associated_data(ad);
             }
          catch(Botan::Invalid_State&)
             {
             // ad after setting nonce rejected, in this case we need to reset
             enc->reset();
-            enc->set_ad(ad);
+            enc->set_associated_data(ad);
             enc->start(nonce);
             }
 
@@ -118,7 +118,7 @@ class AEAD_Tests final : public Text_Based_Test
                // reset state first
                enc->reset();
 
-               enc->set_ad(ad);
+               enc->set_associated_data(ad);
                enc->start(nonce);
 
                buf.assign(input.begin(), input.end());
@@ -152,7 +152,7 @@ class AEAD_Tests final : public Text_Based_Test
                // again reset state first
                enc->reset();
 
-               enc->set_ad(ad);
+               enc->set_associated_data(ad);
                enc->start(nonce);
 
                buf.assign(input.begin(), input.end());
@@ -184,7 +184,7 @@ class AEAD_Tests final : public Text_Based_Test
             }
 
          // Make sure we can set the AD after processing a message
-         enc->set_ad(ad);
+         enc->set_associated_data(ad);
          enc->clear();
          result.test_eq("key is not set", enc->has_keying_material(), false);
 
@@ -237,7 +237,7 @@ class AEAD_Tests final : public Text_Based_Test
          result.test_eq("key is not set", dec->has_keying_material(), false);
          dec->set_key(key);
          result.test_eq("key is set", dec->has_keying_material(), true);
-         dec->set_ad(mutate_vec(ad));
+         dec->set_associated_data(mutate_vec(ad));
 
          if(is_siv == false)
             {
@@ -262,13 +262,13 @@ class AEAD_Tests final : public Text_Based_Test
             try
                {
                dec->start(nonce);
-               dec->set_ad(ad);
+               dec->set_associated_data(ad);
                }
             catch(Botan::Invalid_State&)
                {
                // ad after setting nonce rejected, in this case we need to reset
                dec->reset();
-               dec->set_ad(ad);
+               dec->set_associated_data(ad);
                dec->start(nonce);
             }
 
@@ -283,7 +283,7 @@ class AEAD_Tests final : public Text_Based_Test
                // reset state first
                dec->reset();
 
-               dec->set_ad(ad);
+               dec->set_associated_data(ad);
                dec->start(nonce);
 
                buf.assign(input.begin(), input.end());
@@ -317,7 +317,7 @@ class AEAD_Tests final : public Text_Based_Test
                // again reset state first
                dec->reset();
 
-               dec->set_ad(ad);
+               dec->set_associated_data(ad);
                dec->start(nonce);
 
                buf.assign(input.begin(), input.end());
@@ -359,7 +359,7 @@ class AEAD_Tests final : public Text_Based_Test
 
          dec->reset();
 
-         dec->set_ad(ad);
+         dec->set_associated_data(ad);
          dec->start(nonce);
 
          try
@@ -383,7 +383,7 @@ class AEAD_Tests final : public Text_Based_Test
             std::vector<uint8_t> bad_nonce = mutate_vec(nonce);
 
             dec->reset();
-            dec->set_ad(ad);
+            dec->set_associated_data(ad);
             dec->start(bad_nonce);
 
             try
@@ -405,7 +405,7 @@ class AEAD_Tests final : public Text_Based_Test
          const std::vector<uint8_t> bad_ad = mutate_vec(ad, true);
 
          dec->reset();
-         dec->set_ad(bad_ad);
+         dec->set_associated_data(bad_ad);
 
          dec->start(nonce);
 
@@ -425,7 +425,7 @@ class AEAD_Tests final : public Text_Based_Test
             }
 
          // Make sure we can set the AD after processing a message
-         dec->set_ad(ad);
+         dec->set_associated_data(ad);
          dec->clear();
          result.test_eq("key is not set", dec->has_keying_material(), false);
 

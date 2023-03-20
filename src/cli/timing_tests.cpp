@@ -242,7 +242,7 @@ ticks Lucky13_Timing_Test::measure_critical_function(const std::vector<uint8_t>&
    Botan::secure_vector<uint8_t> key(16 + m_mac_keylen);
 
    m_dec.set_key(unlock(key));
-   m_dec.set_ad(unlock(aad));
+   m_dec.set_associated_data(aad);
    m_dec.start(unlock(iv));
 
    ticks start = get_ticks();

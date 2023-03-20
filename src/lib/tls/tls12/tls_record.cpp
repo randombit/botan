@@ -237,7 +237,7 @@ void write_record(secure_vector<uint8_t>& output,
 
    const size_t rec_size = ctext_size + cs.nonce_bytes_from_record();
 
-   aead.set_ad(aad);
+   aead.set_associated_data(aad);
 
    const std::vector<uint8_t> nonce = cs.aead_nonce(record_sequence, rng);
 
