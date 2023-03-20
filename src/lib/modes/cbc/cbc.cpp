@@ -135,7 +135,7 @@ size_t CBC_Encryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CBC_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
@@ -166,7 +166,7 @@ size_t CTS_Encryption::output_length(size_t input_length) const
    return input_length; // no ciphertext expansion in CTS
    }
 
-void CTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CTS_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
@@ -249,7 +249,7 @@ size_t CBC_Decryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CBC_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
@@ -286,7 +286,7 @@ size_t CTS_Decryption::minimum_final_size() const
    return block_size() + 1;
    }
 
-void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CTS_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");

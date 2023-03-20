@@ -164,7 +164,7 @@ void SIV_Mode::set_ctr_iv(secure_vector<uint8_t> V)
    ctr().set_iv(V.data(), V.size());
    }
 
-void SIV_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void SIV_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
@@ -182,7 +182,7 @@ void SIV_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
       }
    }
 
-void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void SIV_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 

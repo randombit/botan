@@ -102,10 +102,10 @@ class BOTAN_TEST_API OCB_Encryption final : public OCB_Mode
 
       size_t minimum_final_size() const override { return 0; }
 
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    private:
       void encrypt(uint8_t input[], size_t blocks);
       size_t process_msg(uint8_t buf[], size_t size) override;
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 class BOTAN_TEST_API OCB_Decryption final : public OCB_Mode
@@ -126,10 +126,10 @@ class BOTAN_TEST_API OCB_Decryption final : public OCB_Mode
 
       size_t minimum_final_size() const override { return tag_size(); }
 
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    private:
       void decrypt(uint8_t input[], size_t blocks);
       size_t process_msg(uint8_t buf[], size_t size) override;
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 }

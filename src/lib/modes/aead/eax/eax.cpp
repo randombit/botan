@@ -136,7 +136,7 @@ size_t EAX_Encryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void EAX_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void EAX_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(!m_nonce_mac.empty());
    update(buffer, offset);
@@ -164,7 +164,7 @@ size_t EAX_Decryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void EAX_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void EAX_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;

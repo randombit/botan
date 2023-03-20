@@ -28,7 +28,6 @@ class CommonCrypto_Cipher_Mode final : public Cipher_Mode
       std::string provider() const override { return "commoncrypto"; }
       std::string name() const override { return m_mode_name; }
 
-      void finish(secure_vector<uint8_t>& final_block, size_t offset0) override;
       size_t output_length(size_t input_length) const override;
       size_t update_granularity() const override;
       size_t ideal_granularity() const override;
@@ -45,6 +44,7 @@ class CommonCrypto_Cipher_Mode final : public Cipher_Mode
 
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
       size_t process_msg(uint8_t msg[], size_t msg_len) override;
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset0) override;
 
       const std::string m_mode_name;
       Cipher_Dir m_direction;
@@ -118,8 +118,8 @@ size_t CommonCrypto_Cipher_Mode::process_msg(uint8_t msg[], size_t msg_len)
    return outl;
    }
 
-void CommonCrypto_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
-                                      size_t offset)
+void CommonCrypto_Cipher_Mode::finish_msg(secure_vector<uint8_t>& buffer,
+                                          size_t offset)
    {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_nonce_set);

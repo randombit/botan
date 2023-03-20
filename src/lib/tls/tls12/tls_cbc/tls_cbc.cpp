@@ -198,7 +198,7 @@ size_t TLS_CBC_HMAC_AEAD_Encryption::output_length(size_t input_length) const
       (use_encrypt_then_mac() ? tag_size() : 0);
    }
 
-void TLS_CBC_HMAC_AEAD_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void TLS_CBC_HMAC_AEAD_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
 
@@ -377,7 +377,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, 
    // we do not need to clear the MAC since the connection is broken anyway
    }
 
-void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void TLS_CBC_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
    buffer.resize(offset);

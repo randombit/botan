@@ -81,14 +81,13 @@ class CBC_Encryption : public CBC_Mode
                      std::unique_ptr<BlockCipherModePaddingMethod> padding) :
          CBC_Mode(std::move(cipher), std::move(padding)) {}
 
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-
       size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override;
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -106,11 +105,12 @@ class CTS_Encryption final : public CBC_Encryption
 
       size_t output_length(size_t input_length) const override;
 
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-
       size_t minimum_final_size() const override;
 
       bool valid_nonce_length(size_t n) const override;
+
+   private:
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -129,8 +129,6 @@ class CBC_Decryption : public CBC_Mode
          m_tempbuf(ideal_granularity())
          {}
 
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-
       size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override;
@@ -139,6 +137,7 @@ class CBC_Decryption : public CBC_Mode
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       secure_vector<uint8_t> m_tempbuf;
    };
@@ -156,11 +155,12 @@ class CTS_Decryption final : public CBC_Decryption
          CBC_Decryption(std::move(cipher), nullptr)
          {}
 
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-
       size_t minimum_final_size() const override;
 
       bool valid_nonce_length(size_t n) const override;
+
+   private:
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 }

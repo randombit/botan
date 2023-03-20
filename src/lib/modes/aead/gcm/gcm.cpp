@@ -136,7 +136,7 @@ size_t GCM_Encryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void GCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void GCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
    const size_t sz = buffer.size() - offset;
@@ -158,7 +158,7 @@ size_t GCM_Decryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void GCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
    const size_t sz = buffer.size() - offset;

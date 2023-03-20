@@ -76,6 +76,11 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       */
       virtual size_t process_msg(uint8_t msg[], size_t msg_len) = 0;
 
+      /*
+      * Finishes a message
+      */
+      virtual void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) = 0;
+
    public:
       /**
       * Begin processing a message with a fresh nonce.
@@ -149,7 +154,29 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       *        minimum_final_size() bytes, and will be set to any final output
       * @param offset an offset into final_block to begin processing
       */
-      virtual void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) = 0;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0)
+         {
+         finish_msg(final_block, offset);
+         }
+
+      /**
+      * Complete procession of a message.
+      *
+      * Note: Using this overload with anything but a Botan::secure_vector<>
+      *       is copying the bytes in the in/out buffer.
+      *
+      * @param final_block in/out parameter which must be at least
+      *        minimum_final_size() bytes, and will be set to any final output
+      * @param offset an offset into final_block to begin processing
+      */
+      template<concepts::resizable_byte_buffer T>
+      void finish(T& final_block, size_t offset = 0)
+         {
+         Botan::secure_vector<uint8_t> tmp(final_block.begin(), final_block.end());
+         finish_msg(tmp, offset);
+         final_block.resize(tmp.size());
+         std::copy(tmp.begin(), tmp.end(), final_block.begin());
+         }
 
       /**
       * Returns the size of the output if this transform is used to process a

@@ -382,7 +382,7 @@ size_t OCB_Encryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void OCB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
@@ -473,7 +473,7 @@ size_t OCB_Decryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void OCB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());

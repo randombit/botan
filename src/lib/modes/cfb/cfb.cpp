@@ -171,7 +171,7 @@ size_t CFB_Encryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CFB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CFB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
    }
@@ -232,7 +232,7 @@ size_t CFB_Decryption::process_msg(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CFB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CFB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
    }
