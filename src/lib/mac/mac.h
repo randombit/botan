@@ -11,6 +11,7 @@
 #include <botan/buf_comp.h>
 #include <botan/sym_algo.h>
 #include <string>
+#include <span>
 #include <memory>
 
 namespace Botan {
@@ -59,20 +60,12 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * an empty string is an error. One MAC which *requires* a per-message
       * nonce be specified is GMAC.
       *
-      * @param nonce the message nonce bytes
-      * @param nonce_len the size of len in bytes
       * Default implementation simply rejects all non-empty nonces
       * since most hash/MAC algorithms do not support randomization
-      */
-      virtual void start_msg(const uint8_t nonce[], size_t nonce_len);
-
-      /**
-      * Begin processing a message with a nonce
       *
-      * @param nonce the per message nonce
+      * @param nonce the message nonce bytes
       */
-      template<typename Alloc>
-      void start(const std::vector<uint8_t, Alloc>& nonce)
+      void start(std::span<const uint8_t> nonce)
          {
          start_msg(nonce.data(), nonce.size());
          }
@@ -101,16 +94,9 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * @param length the length of param in
       * @return true if the MAC is valid, false otherwise
       */
-      virtual bool verify_mac(const uint8_t in[], size_t length);
-
-      /**
-      * Verify a MAC.
-      * @param in the MAC to verify as a byte array
-      * @return true if the MAC is valid, false otherwise
-      */
-      virtual bool verify_mac(const std::vector<uint8_t>& in)
+      bool verify_mac(const uint8_t in[], size_t length)
          {
-         return verify_mac(in.data(), in.size());
+         return verify_mac_result(in, length);
          }
 
       /**
@@ -118,9 +104,9 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * @param in the MAC to verify as a byte array
       * @return true if the MAC is valid, false otherwise
       */
-      virtual bool verify_mac(const secure_vector<uint8_t>& in)
+      bool verify_mac(std::span<const uint8_t> in)
          {
-         return verify_mac(in.data(), in.size());
+         return verify_mac_result(in.data(), in.size());
          }
 
       /**
@@ -149,6 +135,20 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * if a key is ever reused for two different messages.
       */
       virtual bool fresh_key_required_per_message() const { return false; }
+
+   protected:
+      /**
+      * Prepare for processing a message under the specified nonce
+      *
+      * If the MAC does not support nonces, it should not override the default
+      * implementation.
+      */
+      virtual void start_msg(const uint8_t nonce[], size_t nonce_len);
+
+      /**
+      * Verify the MACs final result
+      */
+      virtual bool verify_mac_result(const uint8_t in[], size_t length);
    };
 
 typedef MessageAuthenticationCode MAC;

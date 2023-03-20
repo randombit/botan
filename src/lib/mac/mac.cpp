@@ -151,7 +151,7 @@ void MessageAuthenticationCode::start_msg(const uint8_t nonce[], size_t nonce_le
 /*
 * Default (deterministic) MAC verification operation
 */
-bool MessageAuthenticationCode::verify_mac(const uint8_t mac[], size_t length)
+bool MessageAuthenticationCode::verify_mac_result(const uint8_t mac[], size_t length)
    {
    secure_vector<uint8_t> our_mac = final();
 
