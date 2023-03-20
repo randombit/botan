@@ -8,6 +8,7 @@
 #ifndef BOTAN_CIPHER_MODE_H_
 #define BOTAN_CIPHER_MODE_H_
 
+#include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/sym_algo.h>
 #include <botan/exceptn.h>
@@ -133,13 +134,11 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * @param buffer in/out parameter which will possibly be resized
       * @param offset an offset into blocks to begin processing
       */
-      void update(secure_vector<uint8_t>& buffer, size_t offset = 0)
+      template<concepts::resizable_byte_buffer T>
+      void update(T& buffer, size_t offset = 0)
          {
          BOTAN_ASSERT(buffer.size() >= offset, "Offset ok");
-         uint8_t* buf = buffer.data() + offset;
-         const size_t buf_size = buffer.size() - offset;
-
-         const size_t written = process(buf, buf_size);
+         const size_t written = process(std::span(buffer).subspan(offset));
          buffer.resize(offset + written);
          }
 
