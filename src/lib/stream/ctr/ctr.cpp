@@ -87,7 +87,7 @@ std::string CTR_BE::name() const
 
    }
 
-void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
+void CTR_BE::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length)
    {
    assert_key_material_set();
 
@@ -127,7 +127,7 @@ void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_pad_pos += length;
    }
 
-void CTR_BE::write_keystream(uint8_t out[], size_t length)
+void CTR_BE::generate_keystream(uint8_t out[], size_t length)
    {
    assert_key_material_set();
 
@@ -159,7 +159,7 @@ void CTR_BE::write_keystream(uint8_t out[], size_t length)
    BOTAN_ASSERT_NOMSG(m_pad_pos < m_pad.size());
    }
 
-void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
+void CTR_BE::set_iv_bytes(const uint8_t iv[], size_t iv_len)
    {
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
