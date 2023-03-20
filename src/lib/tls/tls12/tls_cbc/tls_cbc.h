@@ -25,8 +25,6 @@ namespace TLS {
 class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
    {
    public:
-      size_t process(uint8_t buf[], size_t sz) override final;
-
       std::string name() const override final;
 
       void set_associated_data(const uint8_t ad[], size_t ad_len) override;
@@ -82,6 +80,7 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
+      size_t process_msg(uint8_t buf[], size_t sz) override final;
 
       void key_schedule(const uint8_t key[], size_t length) override final;
 

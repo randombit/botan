@@ -78,11 +78,12 @@ class XTS_Encryption final : public XTS_Mode
       explicit XTS_Encryption(std::unique_ptr<BlockCipher> cipher) :
          XTS_Mode(std::move(cipher)) {}
 
-      size_t process(uint8_t buf[], size_t size) override;
-
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
+
+   private:
+      size_t process_msg(uint8_t buf[], size_t size) override;
    };
 
 /**
@@ -97,11 +98,12 @@ class XTS_Decryption final : public XTS_Mode
       explicit XTS_Decryption(std::unique_ptr<BlockCipher> cipher) :
          XTS_Mode(std::move(cipher)) {}
 
-      size_t process(uint8_t buf[], size_t size) override;
-
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
+
+   private:
+      size_t process_msg(uint8_t buf[], size_t size) override;
    };
 
 }

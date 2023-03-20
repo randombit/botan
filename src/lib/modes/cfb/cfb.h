@@ -78,9 +78,10 @@ class CFB_Encryption final : public CFB_Mode
       CFB_Encryption(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
          CFB_Mode(std::move(cipher), feedback_bits) {}
 
-      size_t process(uint8_t buf[], size_t size) override;
-
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+
+   private:
+      size_t process_msg(uint8_t buf[], size_t size) override;
    };
 
 /**
@@ -98,9 +99,10 @@ class CFB_Decryption final : public CFB_Mode
       CFB_Decryption(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
          CFB_Mode(std::move(cipher), feedback_bits) {}
 
-      size_t process(uint8_t buf[], size_t size) override;
-
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+
+   private:
+      size_t process_msg(uint8_t buf[], size_t size) override;
    };
 
 }

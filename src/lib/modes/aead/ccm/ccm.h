@@ -21,8 +21,6 @@ namespace Botan {
 class CCM_Mode : public AEAD_Mode
    {
    public:
-      size_t process(uint8_t buf[], size_t sz) override final;
-
       void set_associated_data(const uint8_t ad[], size_t ad_len) override final;
 
       bool associated_data_requires_key() const override final { return false; }
@@ -67,6 +65,7 @@ class CCM_Mode : public AEAD_Mode
       secure_vector<uint8_t> format_c0();
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
+      size_t process_msg(uint8_t buf[], size_t sz) override final;
 
       void key_schedule(const uint8_t key[], size_t length) override final;
 

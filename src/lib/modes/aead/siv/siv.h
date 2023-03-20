@@ -23,8 +23,6 @@ class MessageAuthenticationCode;
 class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
    {
    public:
-      size_t process(uint8_t buf[], size_t size) override final;
-
       /**
       * Sets the nth element of the vector of associated data
       * @param n index into the AD vector
@@ -76,6 +74,7 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
       secure_vector<uint8_t> S2V(const uint8_t text[], size_t text_len);
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
+      size_t process_msg(uint8_t buf[], size_t size) override final;
 
       void key_schedule(const uint8_t key[], size_t length) override final;
 

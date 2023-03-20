@@ -110,7 +110,7 @@ size_t CBC_Encryption::output_length(size_t input_length) const
       return round_up(input_length, block_size());
    }
 
-size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
+size_t CBC_Encryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
    const size_t BS = block_size();
@@ -221,7 +221,7 @@ size_t CBC_Decryption::minimum_final_size() const
    return block_size();
    }
 
-size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
+size_t CBC_Decryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_STATE_CHECK(state().empty() == false);
 

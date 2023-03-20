@@ -81,13 +81,14 @@ class CBC_Encryption : public CBC_Mode
                      std::unique_ptr<BlockCipherModePaddingMethod> padding) :
          CBC_Mode(std::move(cipher), std::move(padding)) {}
 
-      size_t process(uint8_t buf[], size_t size) override;
-
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override;
+
+   private:
+      size_t process_msg(uint8_t buf[], size_t size) override;
    };
 
 /**
@@ -128,8 +129,6 @@ class CBC_Decryption : public CBC_Mode
          m_tempbuf(ideal_granularity())
          {}
 
-      size_t process(uint8_t buf[], size_t size) override;
-
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
@@ -139,6 +138,8 @@ class CBC_Decryption : public CBC_Mode
       void reset() override;
 
    private:
+      size_t process_msg(uint8_t buf[], size_t size) override;
+
       secure_vector<uint8_t> m_tempbuf;
    };
 

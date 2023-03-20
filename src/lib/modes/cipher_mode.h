@@ -12,6 +12,7 @@
 #include <botan/sym_algo.h>
 #include <botan/exceptn.h>
 #include <string>
+#include <span>
 #include <vector>
 
 namespace Botan {
@@ -62,17 +63,24 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
                                                           Cipher_Dir direction,
                                                           const std::string& provider = "");
 
+   protected:
       /*
       * Prepare for processing a message under the specified nonce
       */
       virtual void start_msg(const uint8_t nonce[], size_t nonce_len) = 0;
 
+      /*
+      * Process message blocks
+      * Input must be a multiple of update_granularity.
+      */
+      virtual size_t process_msg(uint8_t msg[], size_t msg_len) = 0;
+
+   public:
       /**
       * Begin processing a message with a fresh nonce.
       * @param nonce the per message nonce
       */
-      template<typename Alloc>
-      void start(const std::vector<uint8_t, Alloc>& nonce)
+      void start(std::span<const uint8_t> nonce)
          {
          start_msg(nonce.data(), nonce.size());
          }
@@ -113,9 +121,12 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * mode requires the entire message be processed in one pass).
       *
       * @param msg the message to be processed
-      * @param msg_len length of the message in bytes
+      * @return bytes written in-place
       */
-      virtual size_t process(uint8_t msg[], size_t msg_len) = 0;
+      size_t process(std::span<uint8_t> msg)
+         { return this->process_msg(msg.data(), msg.size()); }
+      size_t process(uint8_t msg[], size_t msg_len)
+         { return this->process_msg(msg, msg_len); }
 
       /**
       * Process some data. Input must be in size update_granularity() uint8_t blocks.

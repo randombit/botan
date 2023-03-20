@@ -123,7 +123,7 @@ void TLS_CBC_HMAC_AEAD_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
       }
    }
 
-size_t TLS_CBC_HMAC_AEAD_Mode::process(uint8_t buf[], size_t sz)
+size_t TLS_CBC_HMAC_AEAD_Mode::process_msg(uint8_t buf[], size_t sz)
    {
    m_msg.insert(m_msg.end(), buf, buf + sz);
    return 0;

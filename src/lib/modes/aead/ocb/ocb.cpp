@@ -375,7 +375,7 @@ void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
       }
    }
 
-size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
+size_t OCB_Encryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid OCB input size");
    encrypt(buf, sz / block_size());
@@ -466,7 +466,7 @@ void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks)
       }
    }
 
-size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
+size_t OCB_Decryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid OCB input size");
    decrypt(buf, sz / block_size());

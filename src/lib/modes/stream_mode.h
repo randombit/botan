@@ -27,12 +27,6 @@ class Stream_Cipher_Mode final : public Cipher_Mode
       explicit Stream_Cipher_Mode(std::unique_ptr<StreamCipher> cipher) :
          m_cipher(std::move(cipher)) {}
 
-      size_t process(uint8_t buf[], size_t sz) override
-         {
-         m_cipher->cipher1(buf, sz);
-         return sz;
-         }
-
       void finish(secure_vector<uint8_t>& buf, size_t offset) override
          { return update(buf, offset); }
 
@@ -72,6 +66,12 @@ class Stream_Cipher_Mode final : public Cipher_Mode
             {
             m_cipher->set_iv(nonce, nonce_len);
             }
+         }
+
+      size_t process_msg(uint8_t buf[], size_t sz) override
+         {
+         m_cipher->cipher1(buf, sz);
+         return sz;
          }
 
       void key_schedule(const uint8_t key[], size_t length) override

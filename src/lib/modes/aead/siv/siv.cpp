@@ -116,7 +116,7 @@ void SIV_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    m_msg_buf.clear();
    }
 
-size_t SIV_Mode::process(uint8_t buf[], size_t sz)
+size_t SIV_Mode::process_msg(uint8_t buf[], size_t sz)
    {
    // all output is saved for processing in finish
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);

@@ -120,7 +120,7 @@ size_t XTS_Encryption::output_length(size_t input_length) const
    return input_length;
    }
 
-size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
+size_t XTS_Encryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher_block_size();
@@ -195,7 +195,7 @@ size_t XTS_Decryption::output_length(size_t input_length) const
    return input_length;
    }
 
-size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
+size_t XTS_Decryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher_block_size();
