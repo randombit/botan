@@ -86,8 +86,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * The message is encrypted/decrypted in place.
       * @param inout the plaintext / ciphertext
       */
-      template<typename Alloc>
-         void encipher(std::vector<uint8_t, Alloc>& inout)
+      void encipher(std::span<uint8_t> inout)
          { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
@@ -95,8 +94,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * The message is encrypted in place.
       * @param inout the plaintext / ciphertext
       */
-      template<typename Alloc>
-         void encrypt(std::vector<uint8_t, Alloc>& inout)
+      void encrypt(std::span<uint8_t> inout)
          { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
@@ -104,8 +102,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * The message is decrypted in place.
       * @param inout the plaintext / ciphertext
       */
-      template<typename Alloc>
-         void decrypt(std::vector<uint8_t, Alloc>& inout)
+      void decrypt(std::span<uint8_t> inout)
          { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
