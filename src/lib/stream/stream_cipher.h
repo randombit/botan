@@ -8,6 +8,7 @@
 #ifndef BOTAN_STREAM_CIPHER_H_
 #define BOTAN_STREAM_CIPHER_H_
 
+#include <botan/concepts.h>
 #include <botan/sym_algo.h>
 #include <string>
 #include <memory>
@@ -92,6 +93,19 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       */
       void write_keystream(std::span<uint8_t> out)
          { generate_keystream(out.data(), out.size()); }
+
+      /**
+      * Get @p bytes from the keystream
+      *
+      * @param bytes The number of bytes to be produced
+      */
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T keystream_bytes(size_t bytes)
+         {
+         T out(bytes);
+         write_keystream(out);
+         return out;
+         }
 
       /**
       * Encrypt or decrypt a message
