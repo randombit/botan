@@ -112,8 +112,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * Encrypt one or more blocks
       * @param block the input/output buffer (multiple of block_size())
       */
-      template<typename Alloc>
-      void encrypt(std::vector<uint8_t, Alloc>& block) const
+      void encrypt(std::span<uint8_t> block) const
          {
          return encrypt_n(block.data(), block.data(), block.size() / block_size());
          }
@@ -122,8 +121,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * Decrypt one or more blocks
       * @param block the input/output buffer (multiple of block_size())
       */
-      template<typename Alloc>
-      void decrypt(std::vector<uint8_t, Alloc>& block) const
+      void decrypt(std::span<uint8_t> block) const
          {
          return decrypt_n(block.data(), block.data(), block.size() / block_size());
          }
@@ -133,9 +131,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * @param in the input buffer (multiple of block_size())
       * @param out the output buffer (same size as in)
       */
-      template<typename Alloc, typename Alloc2>
-      void encrypt(const std::vector<uint8_t, Alloc>& in,
-                   std::vector<uint8_t, Alloc2>& out) const
+      void encrypt(std::span<const uint8_t> in, std::span<uint8_t> out) const
          {
          return encrypt_n(in.data(), out.data(), in.size() / block_size());
          }
@@ -145,9 +141,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * @param in the input buffer (multiple of block_size())
       * @param out the output buffer (same size as in)
       */
-      template<typename Alloc, typename Alloc2>
-      void decrypt(const std::vector<uint8_t, Alloc>& in,
-                   std::vector<uint8_t, Alloc2>& out) const
+      void decrypt(std::span<const uint8_t> in, std::span<uint8_t> out) const
          {
          return decrypt_n(in.data(), out.data(), in.size() / block_size());
          }
