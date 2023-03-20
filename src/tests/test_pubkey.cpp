@@ -656,7 +656,7 @@ void test_pbe_roundtrip(Test::Result& result,
       {
       Botan::DataSource_Memory data_src(
          Botan::PKCS8::PEM_encode(key, Test::rng(), passphrase,
-                                  std::chrono::milliseconds(10),
+                                  std::chrono::milliseconds(1),
                                   pbe_algo));
 
       auto loaded = Botan::PKCS8::load_key(data_src, passphrase);
@@ -674,7 +674,7 @@ void test_pbe_roundtrip(Test::Result& result,
       {
       Botan::DataSource_Memory data_src(
          Botan::PKCS8::BER_encode(key, Test::rng(), passphrase,
-                                  std::chrono::milliseconds(10),
+                                  std::chrono::milliseconds(1),
                                   pbe_algo));
 
       auto loaded = Botan::PKCS8::load_key(data_src, passphrase);

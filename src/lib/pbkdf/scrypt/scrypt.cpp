@@ -37,7 +37,8 @@ std::unique_ptr<PasswordHash> Scrypt_Family::default_params() const
 
 std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
                                                   std::chrono::milliseconds msec,
-                                                  size_t max_memory_usage_mb) const
+                                                  size_t max_memory_usage_mb,
+                                                  std::chrono::milliseconds tune_time) const
    {
    BOTAN_UNUSED(output_length);
 
@@ -53,14 +54,17 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    * Compute stime(8192,1,1) as baseline and extrapolate
    */
 
-   const size_t max_memory_usage = max_memory_usage_mb * 1024 * 1024;
+   // We include a bit of slop here (the + 512) to handle the fact that scrypt's
+   // memory consumption is modified by all three parameters, and otherwise we
+   // stop before hitting the desired target.
+
+   const size_t max_memory_usage = max_memory_usage_mb * 1024 * 1024 + 512;
    // Starting parameters
-   size_t N = 8192;
+   size_t N = 8*1024;
    size_t r = 1;
    size_t p = 1;
 
    Timer timer("Scrypt");
-   const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
 
    auto pwdhash = this->from_params(N, r, p);
 
@@ -85,7 +89,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
 
    // First move increase r by 8x if possible
 
-   if(max_memory_usage == 0 || scrypt_memory_usage(N, r, p)*8 < max_memory_usage)
+   if(max_memory_usage == 0 || scrypt_memory_usage(N, r*8, p) <= max_memory_usage)
       {
       if(target_nsec / est_nsec >= 5)
          {
@@ -96,7 +100,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
 
    // Now double N as many times as we can
 
-   while(max_memory_usage == 0 || scrypt_memory_usage(N, r, p)*2 < max_memory_usage)
+   while(max_memory_usage == 0 || scrypt_memory_usage(N*2, r, p) <= max_memory_usage)
       {
       if(target_nsec / est_nsec >= 2)
          {

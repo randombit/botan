@@ -118,7 +118,8 @@ class BOTAN_PUBLIC_API(2,8) RFC4880_S2K_Family final : public PasswordHashFamily
 
       std::unique_ptr<PasswordHash> tune(size_t output_len,
                                          std::chrono::milliseconds msec,
-                                         size_t max_mem) const override;
+                                         size_t max_mem,
+                                         std::chrono::milliseconds tune_msec) const override;
 
       /**
       * Return some default parameter set for this PBKDF that should be good

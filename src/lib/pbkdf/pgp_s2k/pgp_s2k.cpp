@@ -82,7 +82,7 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
    if(iterations == 0)
       {
       RFC4880_S2K_Family s2k_params(m_hash->new_object());
-      iterations = s2k_params.tune(output_len, msec, 0)->iterations();
+      iterations = s2k_params.tune(output_len, msec, 0, std::chrono::milliseconds(10))->iterations();
       }
 
    pgp_s2k(*m_hash, output_buf, output_len,
@@ -98,10 +98,12 @@ std::string RFC4880_S2K_Family::name() const
    return "OpenPGP-S2K(" + m_hash->name() + ")";
    }
 
-std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len, std::chrono::milliseconds msec, size_t /*max_memory_usage_mb*/) const
+std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(
+   size_t output_len,
+   std::chrono::milliseconds msec,
+   size_t /*max_memory_usage_mb*/,
+   std::chrono::milliseconds tune_time) const
    {
-   const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
-
    const size_t buf_size = 1024;
    std::vector<uint8_t> buffer(buf_size);
 
