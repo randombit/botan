@@ -12,6 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pk_ops_fwd.h>
 #include <string>
+#include <span>
 
 namespace Botan {
 
@@ -373,9 +374,8 @@ std::string BOTAN_PUBLIC_API(2,4)
    create_hex_fingerprint(const uint8_t bits[], size_t len,
                           const std::string& hash_name);
 
-template<typename Alloc>
-std::string create_hex_fingerprint(const std::vector<uint8_t, Alloc>& vec,
-                                   const std::string& hash_name)
+inline std::string create_hex_fingerprint(std::span<const uint8_t> vec,
+                                          const std::string& hash_name)
    {
    return create_hex_fingerprint(vec.data(), vec.size(), hash_name);
    }
