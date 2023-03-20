@@ -9,8 +9,11 @@
 #define BOTAN_KDF_BASE_H_
 
 #include <botan/secmem.h>
+#include <botan/concepts.h>
 #include <botan/exceptn.h>
 #include <string>
+#include <string_view>
+#include <span>
 
 namespace Botan {
 
@@ -79,15 +82,13 @@ class BOTAN_PUBLIC_API(2,0) KDF
       * @param label_len size of label in bytes
       * @return the derived key
       */
-      secure_vector<uint8_t> derive_key(size_t key_len,
-                                    const uint8_t secret[],
-                                    size_t secret_len,
-                                    const uint8_t salt[],
-                                    size_t salt_len,
-                                    const uint8_t label[] = nullptr,
-                                    size_t label_len = 0) const
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T derive_key(size_t key_len,
+                   const uint8_t secret[], size_t secret_len,
+                   const uint8_t salt[], size_t salt_len,
+                   const uint8_t label[] = nullptr, size_t label_len = 0) const
          {
-         secure_vector<uint8_t> key(key_len);
+         T key(key_len);
          kdf(key.data(), key.size(), secret, secret_len, salt, salt_len, label, label_len);
          return key;
          }
@@ -100,16 +101,17 @@ class BOTAN_PUBLIC_API(2,0) KDF
       * @param label purpose for the derived keying material
       * @return the derived key
       */
-      secure_vector<uint8_t> derive_key(size_t key_len,
-                                    const secure_vector<uint8_t>& secret,
-                                    const std::string& salt = "",
-                                    const std::string& label = "") const
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T derive_key(size_t key_len,
+                   std::span<const uint8_t> secret,
+                   std::string_view salt = "",
+                   std::string_view label = "") const
          {
-         return derive_key(key_len, secret.data(), secret.size(),
-                           cast_char_ptr_to_uint8(salt.data()),
-                           salt.length(),
-                           cast_char_ptr_to_uint8(label.data()),
-                           label.length());
+         return derive_key<T>(key_len, secret.data(), secret.size(),
+                              cast_char_ptr_to_uint8(salt.data()),
+                              salt.length(),
+                              cast_char_ptr_to_uint8(label.data()),
+                              label.length());
 
          }
 
@@ -121,16 +123,16 @@ class BOTAN_PUBLIC_API(2,0) KDF
       * @param label purpose for the derived keying material
       * @return the derived key
       */
-      template<typename Alloc, typename Alloc2, typename Alloc3>
-      secure_vector<uint8_t> derive_key(size_t key_len,
-                                     const std::vector<uint8_t, Alloc>& secret,
-                                     const std::vector<uint8_t, Alloc2>& salt,
-                                     const std::vector<uint8_t, Alloc3>& label) const
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T derive_key(size_t key_len,
+                   std::span<const uint8_t> secret,
+                   std::span<const uint8_t> salt,
+                   std::span<const uint8_t> label) const
          {
-         return derive_key(key_len,
-                           secret.data(), secret.size(),
-                           salt.data(), salt.size(),
-                           label.data(), label.size());
+         return derive_key<T>(key_len,
+                              secret.data(), secret.size(),
+                              salt.data(), salt.size(),
+                              label.data(), label.size());
          }
 
       /**
@@ -142,17 +144,17 @@ class BOTAN_PUBLIC_API(2,0) KDF
       * @param label purpose for the derived keying material
       * @return the derived key
       */
-      secure_vector<uint8_t> derive_key(size_t key_len,
-                                    const secure_vector<uint8_t>& secret,
-                                    const uint8_t salt[],
-                                    size_t salt_len,
-                                    const std::string& label = "") const
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T derive_key(size_t key_len,
+                   std::span<const uint8_t> secret,
+                   const uint8_t salt[], size_t salt_len,
+                   std::string_view label = "") const
          {
-         return derive_key(key_len,
-                           secret.data(), secret.size(),
-                           salt, salt_len,
-                           cast_char_ptr_to_uint8(label.data()),
-                           label.size());
+         return derive_key<T>(key_len,
+                              secret.data(), secret.size(),
+                              salt, salt_len,
+                              cast_char_ptr_to_uint8(label.data()),
+                              label.size());
          }
 
       /**
@@ -164,17 +166,17 @@ class BOTAN_PUBLIC_API(2,0) KDF
       * @param label purpose for the derived keying material
       * @return the derived key
       */
-      secure_vector<uint8_t> derive_key(size_t key_len,
-                                    const uint8_t secret[],
-                                    size_t secret_len,
-                                    const std::string& salt = "",
-                                    const std::string& label = "") const
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T derive_key(size_t key_len,
+                   const uint8_t secret[], size_t secret_len,
+                   std::string_view salt = "",
+                   std::string_view label = "") const
          {
-         return derive_key(key_len, secret, secret_len,
-                           cast_char_ptr_to_uint8(salt.data()),
-                           salt.length(),
-                           cast_char_ptr_to_uint8(label.data()),
-                           label.length());
+         return derive_key<T>(key_len, secret, secret_len,
+                              cast_char_ptr_to_uint8(salt.data()),
+                              salt.length(),
+                              cast_char_ptr_to_uint8(label.data()),
+                              label.length());
          }
 
       /**
