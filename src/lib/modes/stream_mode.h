@@ -31,9 +31,14 @@ class Stream_Cipher_Mode final : public Cipher_Mode
 
       size_t update_granularity() const override { return 1; }
 
-      // Return value is arbitrary as there is currently no way to
-      // query a StreamCipher as to its internal block size
-      size_t ideal_granularity() const override { return 64; }
+      size_t ideal_granularity() const override
+         {
+         const size_t buf_size = m_cipher->buffer_size();
+         BOTAN_ASSERT_NOMSG(buf_size > 0);
+         if(buf_size >= 256)
+            return buf_size;
+         return buf_size * (256 / buf_size);
+         }
 
       size_t minimum_final_size() const override { return 0; }
 

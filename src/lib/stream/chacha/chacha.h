@@ -48,6 +48,8 @@ class ChaCha final : public StreamCipher
       void seek(uint64_t offset) override;
 
       bool has_keying_material() const override;
+
+      size_t buffer_size() const override;
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;
 

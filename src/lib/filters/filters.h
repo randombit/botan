@@ -315,8 +315,8 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher_Filter final : public Keyed_Filter
       */
       StreamCipher_Filter(const std::string& cipher, const SymmetricKey& key);
    private:
-      secure_vector<uint8_t> m_buffer;
       std::unique_ptr<StreamCipher> m_cipher;
+      secure_vector<uint8_t> m_buffer;
    };
 #endif
 

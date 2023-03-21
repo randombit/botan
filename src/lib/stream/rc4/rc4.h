@@ -30,6 +30,8 @@ class RC4 final : public StreamCipher
 
       bool has_keying_material() const override;
 
+      size_t buffer_size() const override;
+
       /**
       * @param skip skip this many initial bytes in the keystream
       */

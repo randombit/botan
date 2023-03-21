@@ -289,6 +289,11 @@ bool ChaCha::has_keying_material() const
    return !m_state.empty();
    }
 
+size_t ChaCha::buffer_size() const
+   {
+   return 64;
+   }
+
 /*
 * ChaCha Key Schedule
 */

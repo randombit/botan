@@ -34,6 +34,11 @@ std::unique_ptr<StreamCipher> RC4::new_object() const
    return std::make_unique<RC4>(m_SKIP);
    }
 
+size_t RC4::buffer_size() const
+   {
+   return 256;
+   }
+
 Key_Length_Specification RC4::key_spec() const
    {
    return Key_Length_Specification(1, 256);

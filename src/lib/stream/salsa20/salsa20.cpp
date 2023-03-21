@@ -183,6 +183,11 @@ bool Salsa20::has_keying_material() const
    return !m_state.empty();
    }
 
+size_t Salsa20::buffer_size() const
+   {
+   return 64;
+   }
+
 /*
 * Salsa20 Key Schedule
 */

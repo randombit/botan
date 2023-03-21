@@ -33,6 +33,8 @@ class OFB final : public StreamCipher
 
       bool has_keying_material() const override;
 
+      size_t buffer_size() const override;
+
       /**
       * @param cipher the block cipher to use
       */
