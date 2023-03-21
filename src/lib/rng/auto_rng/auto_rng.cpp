@@ -96,15 +96,10 @@ size_t AutoSeeded_RNG::reseed(Entropy_Sources& srcs,
 
 void AutoSeeded_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in)
    {
-   std::array<uint8_t, 16> additional_input;
-   if(in.empty() && m_rng->accepts_input())
-      {
-      store_le(OS::get_system_timestamp_ns(), additional_input.data());
-      store_le(OS::get_high_resolution_clock(), additional_input.data() + 8);
-      in = additional_input;
-      }
-
-   m_rng->randomize_with_input(out, in);
+   if(in.empty())
+      { m_rng->randomize_with_ts_input(out); }
+   else
+      { m_rng->randomize_with_input(out, in); }
    }
 
 }
