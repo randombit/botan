@@ -8,6 +8,7 @@
 #ifndef BOTAN_STREAM_CIPHER_H_
 #define BOTAN_STREAM_CIPHER_H_
 
+#include <botan/concepts.h>
 #include <botan/sym_algo.h>
 #include <string>
 #include <memory>
@@ -56,7 +57,21 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param out the byte array to hold the output, i.e. the ciphertext
       * @param len the length of both in and out in bytes
       */
-      virtual void cipher(const uint8_t in[], uint8_t out[], size_t len) = 0;
+      void cipher(const uint8_t in[], uint8_t out[], size_t len)
+         { cipher_bytes(in, out, len); }
+
+      /**
+      * Encrypt or decrypt a message
+      * @param in the plaintext
+      * @param out the byte array to hold the output, i.e. the ciphertext
+      *            with at least the same size as @p in
+      */
+      void cipher(std::span<const uint8_t> in, std::span<uint8_t> out)
+         {
+         BOTAN_ARG_CHECK(in.size() <= out.size(),
+                         "Output buffer of stream cipher must be at least as long as input buffer");
+         cipher_bytes(in.data(), out.data(), in.size());
+         }
 
       /**
       * Write keystream bytes to a buffer
@@ -66,10 +81,30 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param out the byte array to hold the keystream
       * @param len the length of out in bytes
       */
-      virtual void write_keystream(uint8_t out[], size_t len)
+      void write_keystream(uint8_t out[], size_t len)
+         { generate_keystream(out, len); }
+
+      /**
+      * Fill a given buffer with keystream bytes
+      *
+      * The contents of @p out are ignored/overwritten
+      *
+      * @param out the byte array to hold the keystream
+      */
+      void write_keystream(std::span<uint8_t> out)
+         { generate_keystream(out.data(), out.size()); }
+
+      /**
+      * Get @p bytes from the keystream
+      *
+      * @param bytes The number of bytes to be produced
+      */
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T keystream_bytes(size_t bytes)
          {
-         clear_mem(out, len);
-         cipher1(out, len);
+         T out(bytes);
+         write_keystream(out);
+         return out;
          }
 
       /**
@@ -82,12 +117,19 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
          { cipher(buf, buf, len); }
 
       /**
+      * Encrypt or decrypt a message
+      * The message is encrypted/decrypted in place.
+      * @param buf the plaintext / ciphertext
+      */
+      void cipher1(std::span<uint8_t> buf)
+         { cipher(buf, buf); }
+
+      /**
       * Encrypt a message
       * The message is encrypted/decrypted in place.
       * @param inout the plaintext / ciphertext
       */
-      template<typename Alloc>
-         void encipher(std::vector<uint8_t, Alloc>& inout)
+      void encipher(std::span<uint8_t> inout)
          { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
@@ -95,8 +137,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * The message is encrypted in place.
       * @param inout the plaintext / ciphertext
       */
-      template<typename Alloc>
-         void encrypt(std::vector<uint8_t, Alloc>& inout)
+      void encrypt(std::span<uint8_t> inout)
          { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
@@ -104,8 +145,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * The message is decrypted in place.
       * @param inout the plaintext / ciphertext
       */
-      template<typename Alloc>
-         void decrypt(std::vector<uint8_t, Alloc>& inout)
+      void decrypt(std::span<uint8_t> inout)
          { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
@@ -113,7 +153,15 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      virtual void set_iv(const uint8_t iv[], size_t iv_len) = 0;
+      void set_iv(const uint8_t iv[], size_t iv_len)
+         { set_iv_bytes(iv, iv_len); }
+
+      /**
+      * Resync the cipher using the IV
+      * @param iv the initialization vector
+      */
+      void set_iv(std::span<const uint8_t> iv)
+         { set_iv_bytes(iv.data(), iv.size()); }
 
       /**
       * Return the default (preferred) nonce length
@@ -151,6 +199,26 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * might also return "sse2", "avx2" or some other arbitrary string.
       */
       virtual std::string provider() const { return "base"; }
+
+   protected:
+      /**
+      * Encrypt or decrypt a message
+      */
+      virtual void cipher_bytes(const uint8_t in[], uint8_t out[], size_t len) = 0;
+
+      /**
+      * Write keystream bytes to a buffer
+      */
+      virtual void generate_keystream(uint8_t out[], size_t len)
+         {
+         clear_mem(out, len);
+         cipher1(out, len);
+         }
+
+      /**
+      * Resync the cipher using the IV
+      */
+      virtual void set_iv_bytes(const uint8_t iv[], size_t iv_len) = 0;
    };
 
 }

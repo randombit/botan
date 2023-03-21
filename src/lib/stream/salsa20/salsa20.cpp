@@ -108,7 +108,7 @@ void Salsa20::salsa_core(uint8_t output[64], const uint32_t input[16], size_t ro
 /*
 * Combine cipher stream with message
 */
-void Salsa20::cipher(const uint8_t in[], uint8_t out[], size_t length)
+void Salsa20::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length)
    {
    assert_key_material_set();
 
@@ -200,7 +200,7 @@ void Salsa20::key_schedule(const uint8_t key[], size_t length)
 /*
 * Set the Salsa IV
 */
-void Salsa20::set_iv(const uint8_t iv[], size_t length)
+void Salsa20::set_iv_bytes(const uint8_t iv[], size_t length)
    {
    assert_key_material_set();
 

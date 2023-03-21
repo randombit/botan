@@ -191,7 +191,7 @@ void ChaCha::chacha(uint8_t output[],
 /*
 * Combine cipher stream with message
 */
-void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
+void ChaCha::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length)
    {
    assert_key_material_set();
 
@@ -214,7 +214,7 @@ void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_position += length;
    }
 
-void ChaCha::write_keystream(uint8_t out[], size_t length)
+void ChaCha::generate_keystream(uint8_t out[], size_t length)
    {
    assert_key_material_set();
 
@@ -325,7 +325,7 @@ bool ChaCha::valid_iv_length(size_t iv_len) const
    return (iv_len == 0 || iv_len == 8 || iv_len == 12 || iv_len == 24);
    }
 
-void ChaCha::set_iv(const uint8_t iv[], size_t length)
+void ChaCha::set_iv_bytes(const uint8_t iv[], size_t length)
    {
    assert_key_material_set();
 

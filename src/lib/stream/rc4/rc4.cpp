@@ -13,7 +13,7 @@ namespace Botan {
 /*
 * Combine cipher stream with message
 */
-void RC4::cipher(const uint8_t in[], uint8_t out[], size_t length)
+void RC4::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length)
    {
    assert_key_material_set();
 
@@ -39,7 +39,7 @@ Key_Length_Specification RC4::key_spec() const
    return Key_Length_Specification(1, 256);
    }
 
-void RC4::set_iv(const uint8_t* /*iv*/, size_t length)
+void RC4::set_iv_bytes(const uint8_t* /*iv*/, size_t length)
    {
    if(length > 0)
       throw Invalid_IV_Length("RC4", length);

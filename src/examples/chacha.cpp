@@ -13,12 +13,11 @@ int main() {
 
   // generate fresh nonce (IV)
   Botan::AutoSeeded_RNG rng;
-  std::vector<uint8_t> iv(8);
-  rng.randomize(iv.data(), iv.size());
+  const auto iv = rng.random_vec<std::vector<uint8_t>>(8);
 
   // set key and IV
   cipher->set_key(key);
-  cipher->set_iv(iv.data(), iv.size());
+  cipher->set_iv(iv);
   cipher->encipher(pt);
 
   std::cout << cipher->name() << " with iv " << Botan::hex_encode(iv) << ": "

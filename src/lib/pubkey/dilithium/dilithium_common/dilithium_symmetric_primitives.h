@@ -55,10 +55,7 @@ class Dilithium_Symmetric_Primitives
       secure_vector<uint8_t> ExpandMask(std::span<const uint8_t> seed,
                                         uint16_t nonce, size_t out_len) const
          {
-         auto xof = XOF(XofType::k256, seed, nonce);
-         secure_vector<uint8_t> buf(out_len);
-         xof->write_keystream(buf.data(), buf.size());
-         return buf;
+         return XOF(XofType::k256, seed, nonce)->keystream_bytes(out_len);
          }
 
       // Mode dependent function

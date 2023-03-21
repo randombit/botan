@@ -78,14 +78,8 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives
                                  const size_t outlen) const override
          {
          m_aes256_ctr->set_key(seed);
-
-         const std::array<uint8_t, 12> iv = {nonce, 0};
-         m_aes256_ctr->set_iv(iv.data(), iv.size());
-
-         secure_vector<uint8_t> out(outlen);
-         m_aes256_ctr->write_keystream(out.data(), out.size());
-
-         return out;
+         m_aes256_ctr->set_iv(std::array<uint8_t, 12>{nonce, 0});
+         return m_aes256_ctr->keystream_bytes(outlen);
          }
 
    private:

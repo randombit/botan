@@ -62,7 +62,7 @@ std::unique_ptr<StreamCipher> OFB::new_object() const
    return std::make_unique<OFB>(m_cipher->new_object());
    }
 
-void OFB::cipher(const uint8_t in[], uint8_t out[], size_t length)
+void OFB::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length)
    {
    while(length >= m_buffer.size() - m_buf_pos)
       {
@@ -77,7 +77,7 @@ void OFB::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_buf_pos += length;
    }
 
-void OFB::set_iv(const uint8_t iv[], size_t iv_len)
+void OFB::set_iv_bytes(const uint8_t iv[], size_t iv_len)
    {
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);

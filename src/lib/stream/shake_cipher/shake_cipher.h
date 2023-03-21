@@ -24,21 +24,10 @@ class SHAKE_Cipher : public StreamCipher
 
    public:
       /**
-      * Produce more XOF output
-      */
-      void cipher(const uint8_t in[], uint8_t out[], size_t length) override final;
-
-      void write_keystream(uint8_t out[], size_t length) override;
-
-      /**
       * Seeking is not supported, this function will throw
       */
       void seek(uint64_t offset) override final;
 
-      /**
-      * IV not supported, this function will throw unless iv_len == 0
-      */
-      void set_iv(const uint8_t iv[], size_t iv_len) override final;
 
       void clear() override final;
 
@@ -48,6 +37,16 @@ class SHAKE_Cipher : public StreamCipher
 
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override final;
+      /**
+      * Produce more XOF output
+      */
+      void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) override final;
+      void generate_keystream(uint8_t out[], size_t length) override;
+
+      /**
+      * IV not supported, this function will throw unless iv_len == 0
+      */
+      void set_iv_bytes(const uint8_t iv[], size_t iv_len) override final;
 
    protected:
       size_t m_shake_rate;
