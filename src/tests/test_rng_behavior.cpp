@@ -62,6 +62,7 @@ class Stateful_RNG_Tests : public Test
          results.push_back(test_prediction_resistance());
          results.push_back(test_randomize_with_ts_input());
          results.push_back(test_security_level());
+         results.push_back(test_input_output_edge_cases());
 
          /*
          * This test uses the library in both parent and child processes. But
@@ -413,6 +414,27 @@ class Stateful_RNG_Tests : public Test
          return result;
          }
 
+      Test::Result test_input_output_edge_cases()
+         {
+         Test::Result result(rng_name() + " randomize");
+
+         const std::vector<uint8_t> seed(128);
+         Fixed_Output_RNG fixed_output_rng(seed);
+
+         auto rng = make_rng(fixed_output_rng);
+
+         for(size_t i = 0; i != 4096; ++i)
+            {
+            std::vector<uint8_t> buf(i);
+            rng->randomize(buf.data(), buf.size());
+            rng->add_entropy(buf.data(), buf.size());
+
+            result.test_success("RNG accepted input and output length");
+            }
+
+         return result;
+         }
+
    };
 
 #endif
@@ -725,6 +747,15 @@ class AutoSeeded_RNG_Tests final : public Test
 
          rng.random_vec(16); // generate and discard output
          result.confirm("AutoSeeded_RNG can be reseeded", rng.is_seeded());
+
+         for(size_t i = 0; i != 4096; ++i)
+            {
+            std::vector<uint8_t> buf(i);
+            rng.randomize(buf.data(), buf.size());
+            rng.add_entropy(buf.data(), buf.size());
+
+            result.test_success("AutoSeeded_RNG accepted input and output length");
+            }
 
          rng.clear();
 
