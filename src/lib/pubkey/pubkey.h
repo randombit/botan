@@ -13,6 +13,8 @@
 #include <botan/symkey.h>
 #include <botan/asn1_obj.h>
 #include <string>
+#include <string_view>
+#include <span>
 
 namespace Botan {
 
@@ -45,9 +47,8 @@ class BOTAN_PUBLIC_API(2,0) PK_Encryptor
       * @param rng the random number source to use
       * @return encrypted message
       */
-      template<typename Alloc>
-      std::vector<uint8_t> encrypt(const std::vector<uint8_t, Alloc>& in,
-                                RandomNumberGenerator& rng) const
+      std::vector<uint8_t> encrypt(std::span<const uint8_t> in,
+                                   RandomNumberGenerator& rng) const
          {
          return enc(in.data(), in.size(), rng);
          }
@@ -98,8 +99,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Decryptor
       * @param in the ciphertext
       * @return decrypted message
       */
-      template<typename Alloc>
-      secure_vector<uint8_t> decrypt(const std::vector<uint8_t, Alloc>& in) const
+      secure_vector<uint8_t> decrypt(std::span<const uint8_t> in) const
          {
          return decrypt(in.data(), in.size());
          }
@@ -208,9 +208,8 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       * @param rng the rng to use
       * @return signature
       */
-      template<typename Alloc>
-         std::vector<uint8_t> sign_message(const std::vector<uint8_t, Alloc>& in,
-                                           RandomNumberGenerator& rng)
+      std::vector<uint8_t> sign_message(std::span<const uint8_t> in,
+                                        RandomNumberGenerator& rng)
          {
          return sign_message(in.data(), in.size(), rng);
          }
@@ -232,8 +231,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       * Add a message part.
       * @param in the message part to add
       */
-      template<typename Alloc>
-      void update(const std::vector<uint8_t, Alloc>& in)
+      void update(std::span<const uint8_t> in)
          {
          update(in.data(), in.size());
          }
@@ -242,7 +240,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       * Add a message part.
       * @param in the message part to add
       */
-      void update(const std::string& in)
+      void update(std::string_view in)
          {
          update(cast_char_ptr_to_uint8(in.data()), in.size());
          }
@@ -347,9 +345,8 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       * @param sig the signature
       * @return true if the signature is valid
       */
-      template<typename Alloc, typename Alloc2>
-      bool verify_message(const std::vector<uint8_t, Alloc>& msg,
-                          const std::vector<uint8_t, Alloc2>& sig)
+      bool verify_message(std::span<const uint8_t> msg,
+                          std::span<const uint8_t> sig)
          {
          return verify_message(msg.data(), msg.size(),
                                sig.data(), sig.size());
@@ -375,8 +372,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       * signature to be verified.
       * @param in the new message part
       */
-      template<typename Alloc>
-         void update(const std::vector<uint8_t, Alloc>& in)
+      void update(std::span<const uint8_t> in)
          {
          update(in.data(), in.size());
          }
@@ -385,7 +381,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       * Add a message part of the message corresponding to the
       * signature to be verified.
       */
-      void update(const std::string& in)
+      void update(std::string_view in)
          {
          update(cast_char_ptr_to_uint8(in.data()), in.size());
          }
@@ -405,8 +401,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       * @param sig the signature to be verified
       * @return true if the signature is valid, false otherwise
       */
-      template<typename Alloc>
-      bool check_signature(const std::vector<uint8_t, Alloc>& sig)
+      bool check_signature(std::span<const uint8_t> sig)
          {
          return check_signature(sig.data(), sig.size());
          }
@@ -481,9 +476,8 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
       * @param params_len the length of params in bytes
       */
       SymmetricKey derive_key(size_t key_len,
-                              const std::vector<uint8_t>& in,
-                              const uint8_t params[],
-                              size_t params_len) const
+                              std::span<const uint8_t> in,
+                              const uint8_t params[], size_t params_len) const
          {
          return derive_key(key_len, in.data(), in.size(),
                            params, params_len);
@@ -512,7 +506,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
       * @param params extra derivation params
       */
       SymmetricKey derive_key(size_t key_len,
-                              const std::vector<uint8_t>& in,
+                              const std::span<const uint8_t> in,
                               const std::string& params = "") const
          {
          return derive_key(key_len, in.data(), in.size(),
@@ -689,12 +683,11 @@ class BOTAN_PUBLIC_API(2,0) PK_KEM_Encryptor final
       * @param rng the RNG to use
       * @param salt a salt value used in the KDF
       */
-      template<typename Alloc>
-         void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                      secure_vector<uint8_t>& out_shared_key,
-                      size_t desired_shared_key_len,
-                      RandomNumberGenerator& rng,
-                      const std::vector<uint8_t, Alloc>& salt)
+      void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
+                   secure_vector<uint8_t>& out_shared_key,
+                   size_t desired_shared_key_len,
+                   RandomNumberGenerator& rng,
+                   std::span<const uint8_t> salt)
          {
          this->encrypt(out_encapsulated_key,
                        out_shared_key,
@@ -806,10 +799,9 @@ class BOTAN_PUBLIC_API(2,0) PK_KEM_Decryptor final
       * @param salt a salt value used in the KDF
       * @return the shared data encryption key
       */
-      template<typename Alloc1, typename Alloc2>
-         secure_vector<uint8_t> decrypt(const std::vector<uint8_t, Alloc1>& encap_key,
+      secure_vector<uint8_t> decrypt(std::span<const uint8_t> encap_key,
                                      size_t desired_shared_key_len,
-                                     const std::vector<uint8_t, Alloc2>& salt)
+                                     std::span<const uint8_t> salt)
          {
          return this->decrypt(encap_key.data(), encap_key.size(),
                               desired_shared_key_len,
