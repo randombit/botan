@@ -134,24 +134,21 @@ void Processor_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<cons
    // No way to provide entropy to processor-specific generator, ignore...
    BOTAN_UNUSED(in);
 
-   auto* out_ptr = out.data();
-   auto out_len = out.size();
-   while(out_len >= sizeof(hwrng_output))
+   while(out.size() >= sizeof(hwrng_output))
       {
       const hwrng_output r = read_hwrng();
-      store_le(r, out_ptr);
-      out_ptr += sizeof(hwrng_output);
-      out_len -= sizeof(hwrng_output);
+      store_le(r, out.data());
+      out = out.subspan(sizeof(hwrng_output));
       }
 
-   if(out_len > 0) // at most sizeof(hwrng_output)-1
+   if(!out.empty()) // at most sizeof(hwrng_output)-1
       {
       const hwrng_output r = read_hwrng();
       uint8_t hwrng_bytes[sizeof(hwrng_output)];
       store_le(r, hwrng_bytes);
 
-      for(size_t i = 0; i != out_len; ++i)
-         out_ptr[i] = hwrng_bytes[i];
+      for(size_t i = 0; i != out.size(); ++i)
+         out[i] = hwrng_bytes[i];
       }
    }
 

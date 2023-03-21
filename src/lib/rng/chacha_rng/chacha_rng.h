@@ -62,7 +62,7 @@ class BOTAN_PUBLIC_API(2,3) ChaCha_RNG final : public Stateful_RNG
       *
       * @param seed the seed material, should be at least 256 bits
       */
-      ChaCha_RNG(const secure_vector<uint8_t>& seed);
+      ChaCha_RNG(std::span<const uint8_t> seed);
 
       /**
       * Automatic reseeding from @p underlying_rng will take place after

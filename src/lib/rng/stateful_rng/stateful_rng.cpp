@@ -55,20 +55,17 @@ void Stateful_RNG::generate_batched_output(std::span<uint8_t> output, std::span<
       }
    else
       {
-      size_t output_length = output.size();
-      size_t output_offset = 0;
-      while(output_length > 0)
+      while(!output.empty())
          {
-         const size_t this_req = std::min(max_per_request, output_length);
+         const size_t this_req = std::min(max_per_request, output.size());
 
          reseed_check();
-         this->generate_output(output.subspan(output_offset, this_req), input);
+         this->generate_output(output.subspan(0, this_req), input);
 
          // only include the input for the first iteration
          input = {};
 
-         output_offset += this_req;
-         output_length -= this_req;
+         output = output.subspan(this_req);
          }
       }
    }

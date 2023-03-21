@@ -148,17 +148,14 @@ void HMAC_DRBG::generate_output(std::span<uint8_t> output, std::span<const uint8
       update(input);
       }
 
-   uint8_t* output_ptr = output.data();
-   size_t output_len = output.size();
-   while(output_len > 0)
+   while(!output.empty())
       {
-      const size_t to_copy = std::min(output_len, m_V.size());
-      m_mac->update(m_V.data(), m_V.size());
-      m_mac->final(m_V.data());
-      copy_mem(output_ptr, m_V.data(), to_copy);
+      const size_t to_copy = std::min(output.size(), m_V.size());
+      m_mac->update(m_V);
+      m_mac->final(m_V);
+      copy_mem(output.data(), m_V.data(), to_copy);
 
-      output_ptr += to_copy;
-      output_len -= to_copy;
+      output = output.subspan(to_copy);
       }
 
    update(input);
@@ -173,23 +170,23 @@ void HMAC_DRBG::update(std::span<const uint8_t> input)
    secure_vector<uint8_t> T(m_V.size());
    m_mac->update(m_V);
    m_mac->update(0x00);
-   m_mac->update(input.data(), input.size()); // TODO: pass span after merging GH #3294
-   m_mac->final(T.data());
+   m_mac->update(input);
+   m_mac->final(T);
    m_mac->set_key(T);
 
-   m_mac->update(m_V.data(), m_V.size());
-   m_mac->final(m_V.data());
+   m_mac->update(m_V);
+   m_mac->final(m_V);
 
    if(!input.empty())
       {
       m_mac->update(m_V);
       m_mac->update(0x01);
-      m_mac->update(input.data(), input.size()); // TODO: pass span after merging GH #3294
-      m_mac->final(T.data());
+      m_mac->update(input);
+      m_mac->final(T);
       m_mac->set_key(T);
 
-      m_mac->update(m_V.data(), m_V.size());
-      m_mac->final(m_V.data());
+      m_mac->update(m_V);
+      m_mac->final(m_V);
       }
    }
 

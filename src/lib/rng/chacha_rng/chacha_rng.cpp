@@ -16,12 +16,12 @@ ChaCha_RNG::ChaCha_RNG() : Stateful_RNG()
    clear();
    }
 
-ChaCha_RNG::ChaCha_RNG(const secure_vector<uint8_t>& seed) : Stateful_RNG()
+ChaCha_RNG::ChaCha_RNG(std::span<const uint8_t> seed) : Stateful_RNG()
    {
    m_hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
    m_chacha = StreamCipher::create_or_throw("ChaCha(20)");
    clear();
-   add_entropy(seed.data(), seed.size());
+   add_entropy(seed);
    }
 
 ChaCha_RNG::ChaCha_RNG(RandomNumberGenerator& underlying_rng,
@@ -67,16 +67,14 @@ void ChaCha_RNG::generate_output(std::span<uint8_t> output, std::span<const uint
       update(input);
       }
 
-   m_chacha->write_keystream(output.data(), output.size());
+   m_chacha->write_keystream(output);
    }
 
 void ChaCha_RNG::update(std::span<const uint8_t> input)
    {
-   m_hmac->update(input.data(), input.size()); // TODO: fix after GH #3294
+   m_hmac->update(input);
    m_chacha->set_key(m_hmac->final());
-
-   secure_vector<uint8_t> mac_key(m_hmac->output_length());
-   m_chacha->write_keystream(mac_key.data(), mac_key.size());
+   const auto mac_key = m_chacha->keystream_bytes(m_hmac->output_length());
    m_hmac->set_key(mac_key);
    }
 
