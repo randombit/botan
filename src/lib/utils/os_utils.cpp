@@ -411,9 +411,11 @@ size_t OS::get_memory_locking_limit()
       const size_t lockable_bytes = working_min - overhead;
       return std::min<size_t>(lockable_bytes, mlock_requested * 1024);
       }
+#else
+   // Not supported on this platform
+   BOTAN_UNUSED(max_locked_kb);
 #endif
 
-   // Not supported on this platform
    return 0;
    }
 
