@@ -158,7 +158,7 @@
 */
 
 /** How much to allocate for a buffer of no particular size */
-#define BOTAN_DEFAULT_BUFFER_SIZE 1024
+#define BOTAN_DEFAULT_BUFFER_SIZE 4096
 
 /**
 * Total maximum amount of RAM (in KiB) we will lock into memory, even
