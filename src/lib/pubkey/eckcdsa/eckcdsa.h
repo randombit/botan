@@ -1,5 +1,5 @@
 /*
-* ECKCDSA (ISO/IEC 14888-3:2006/Cor.2:2009)
+* ECKCDSA (ISO/IEC 14888-3:2018)
 * (C) 2016 René Korthaus, Sirrix AG
 *
 * Botan is released under the Simplified BSD License (see license.txt)

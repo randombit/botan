@@ -2,6 +2,7 @@
 * ECKCDSA (ISO/IEC 14888-3:2006/Cor.2:2009)
 * (C) 2016 René Korthaus, Sirrix AG
 * (C) 2018 Jack Lloyd
+* (C) 2023 Philippe Lieser - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -96,6 +97,38 @@ std::vector<uint8_t> eckcdsa_prefix(const PointGFp& point,
    }
 
 /**
+ * @brief Truncate hash output if needed.
+ *
+ * If the output length of the hash function exceeds the size of the group order,
+ * ISO/IEC 14888-3:2018 specifies a truncation of the hash output
+ * when calculating the witness R (the first part of the signature) and H.
+ *
+ * The truncation is specified as follows:
+ *
+ * R = I2BS(beta', BS2I(gamma, R) mod 2^beta')
+ * H = I2BS(beta', BS2I(gamma, H) mod 2^beta')
+ *
+ * where
+ * - gamma: the output bit-length of the hash-function
+ * - beta: the bit-length of the prime number q (i.e. the group order size)
+ * - beta' = 8 * ceil(beta / 8)
+ *
+ * This essentially means a truncation on the byte level
+ * happens from the low side of the hash.
+ *
+ * @param[in,out] digest The hash output to potentially truncate.
+ * @param[in] group_order_bytes Size of the group order.
+ */
+void truncate_hash_if_needed(secure_vector<uint8_t>& digest, size_t group_order_bytes)
+   {
+   if(digest.size() > group_order_bytes)
+      {
+      const size_t bytes_to_truncate = digest.size() - group_order_bytes;
+      digest.erase(digest.begin(), digest.begin() + bytes_to_truncate);
+      }
+   }
+
+/**
 * ECKCDSA signature operation
 */
 class ECKCDSA_Signature_Operation final : public PK_Ops::Signature
@@ -109,22 +142,6 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature
          m_hash(eckcdsa_signature_hash(padding)),
          m_prefix_used(false)
          {
-         /*
-         ECKCDSA does support hash truncation but for whatever reason uses the
-         opposite convention of DSA, ECDSA, ECGDSA, etc, cutting bits from
-         the low rather than the high side of the hash.
-
-         As a result it is not easily supported in this codebase, and since
-         ECKCDSA is quite obscure and mostly included for BSI compliance, we
-         simply prohibit creating signatures where the resulting signature will
-         not be accepted by other implementations of ECKCDSA
-
-         See https://github.com/randombit/botan/issues/2742 for further detail.
-         */
-
-         if(m_hash->output_length() > m_group.get_order_bytes())
-            throw Encoding_Error("ECKCDSA does not support the hash being larger than the group");
-
          m_prefix = eckcdsa_prefix(eckcdsa.public_point(),
                                    m_group.get_order_bytes(),
                                    m_hash->hash_block_size());
@@ -143,7 +160,8 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override
          {
          m_prefix_used = false;
-         const secure_vector<uint8_t> digest = m_hash->final();
+         secure_vector<uint8_t> digest = m_hash->final();
+         truncate_hash_if_needed(digest, m_group.get_order_bytes());
          return raw_sign(digest.data(), digest.size(), rng);
          }
 
@@ -185,6 +203,7 @@ ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    auto hash = m_hash->new_object();
    hash->update(to_be_hashed);
    secure_vector<uint8_t> c = hash->final();
+   truncate_hash_if_needed(c, m_group.get_order_bytes());
 
    const BigInt r(c.data(), c.size());
 
@@ -263,7 +282,8 @@ void ECKCDSA_Verification_Operation::update(const uint8_t msg[], size_t msg_len)
 bool ECKCDSA_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t sig_len)
    {
    m_prefix_used = false;
-   const secure_vector<uint8_t> digest = m_hash->final();
+   secure_vector<uint8_t> digest = m_hash->final();
+   truncate_hash_if_needed(digest, m_group.get_order_bytes());
    return verify(digest.data(), digest.size(), sig, sig_len);
    }
 
@@ -307,6 +327,7 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
    auto c_hash = m_hash->new_object();
    c_hash->update(c.data(), c.size());
    secure_vector<uint8_t> v = c_hash->final();
+   truncate_hash_if_needed(v, m_group.get_order_bytes());
 
    return (v == r);
    }
