@@ -146,7 +146,7 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       * the returned parameters will require, in mebibytes (2**20 bytes). It may
       * require some small amount above the request. Set to zero to place no
       * limit at all.
-      * @pram tuning_msec how long to run the tuning loop
+      * @param tuning_msec how long to run the tuning loop
       */
       virtual std::unique_ptr<PasswordHash> tune(size_t output_length,
                                                  std::chrono::milliseconds msec,
