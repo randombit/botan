@@ -1116,7 +1116,7 @@ class Kyber_PublicKeyInternal
            m_polynomials(PolynomialVector::from_bytes(polynomials, m_mode)),
            m_seed(std::move(seed)),
            m_public_key_bits_raw(concat(m_polynomials.to_bytes<std::vector<uint8_t>>(), m_seed)),
-           m_H_public_key_bits_raw(unlock(m_mode.H()->process(m_public_key_bits_raw)))
+           m_H_public_key_bits_raw(m_mode.H()->process<std::vector<uint8_t>>(m_public_key_bits_raw))
          {
          }
 
@@ -1125,7 +1125,7 @@ class Kyber_PublicKeyInternal
            m_polynomials(std::move(polynomials)),
            m_seed(std::move(seed)),
            m_public_key_bits_raw(concat(m_polynomials.to_bytes<std::vector<uint8_t>>(), m_seed)),
-           m_H_public_key_bits_raw(unlock(m_mode.H()->process(m_public_key_bits_raw)))
+           m_H_public_key_bits_raw(m_mode.H()->process<std::vector<uint8_t>>(m_public_key_bits_raw))
          {
          }
 

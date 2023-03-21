@@ -80,24 +80,12 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * final result as a container of your choice.
       * @return a contiguous container holding the result
       */
-      template<typename T>
-         requires(concepts::contiguous_container<T> &&
-                  concepts::resizable_container<T>)
-         T final()
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T final()
          {
          T output(output_length());
          final_result(output.data());
          return output;
-         }
-
-      /**
-      * Complete the computation and retrieve the
-      * final result.
-      * @return secure_vector holding the result
-      */
-      secure_vector<uint8_t> final()
-         {
-         return final<secure_vector<uint8_t>>();
          }
 
       std::vector<uint8_t> final_stdvec()
@@ -111,8 +99,8 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
          final_result(out.data());
          }
 
-      template<typename Alloc>
-         void final(std::vector<uint8_t, Alloc>& out)
+      template<concepts::resizable_byte_buffer T>
+      void final(T& out)
          {
          out.resize(output_length());
          final_result(out.data());
@@ -125,22 +113,11 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * @param length the length of the byte array
       * @result the result of the call to final()
       */
-      secure_vector<uint8_t> process(const uint8_t in[], size_t length)
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T process(const uint8_t in[], size_t length)
          {
-         add_data(in, length);
-         return final();
-         }
-
-      /**
-      * Update and finalize computation. Does the same as calling update()
-      * and final() consecutively.
-      * @param in the input to process
-      * @result the result of the call to final()
-      */
-      secure_vector<uint8_t> process(std::span<const uint8_t> in)
-         {
-         add_data(in.data(), in.size());
-         return final();
+         update(in, length);
+         return final<T>();
          }
 
       /**
@@ -149,25 +126,24 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * @param in the input to process as a string
       * @result the result of the call to final()
       */
-      secure_vector<uint8_t> process(std::string_view in)
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T process(std::string_view in)
          {
          update(in);
-         return final();
+         return final<T>();
          }
 
       /**
       * Update and finalize computation. Does the same as calling update()
       * and final() consecutively.
-      * @param in the input to process as a contiguous container or string-like
+      * @param in the input to process as a contiguous container
       * @result the result of the call to final()
       */
-      template<typename OutT, typename T>
-         requires(concepts::convertible_to<T, std::string_view> ||
-                  concepts::convertible_to<T, std::span<const uint8_t>>)
-      OutT process(T in)
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T process(std::span<const uint8_t> in)
          {
          update(in);
-         return final<OutT>();
+         return final<T>();
          }
 
       virtual ~Buffered_Computation() = default;
