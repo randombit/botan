@@ -57,14 +57,6 @@ class BOTAN_TEST_API CPUID final
       */
       static std::string to_string();
 
-      /**
-      * Return a best guess of the cache line size
-      */
-      static size_t cache_line_size()
-         {
-         return state().cache_line_size();
-         }
-
       static bool is_little_endian()
          {
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
@@ -72,7 +64,7 @@ class BOTAN_TEST_API CPUID final
 #elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
          return false;
 #else
-         return state().endian_status() == Endian_Status::Little;
+         return !has_cpuid_bit(CPUID_IS_BIG_ENDIAN_BIT);
 #endif
          }
 
@@ -83,61 +75,56 @@ class BOTAN_TEST_API CPUID final
 #elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
          return false;
 #else
-         return state().endian_status() == Endian_Status::Big;
+         return has_cpuid_bit(CPUID_IS_BIG_ENDIAN_BIT);
 #endif
          }
 
-      enum CPUID_bits : uint64_t {
+      enum CPUID_bits : uint32_t {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
          // These values have no relation to cpuid bitfields
 
          // SIMD instruction sets
-         CPUID_SSE2_BIT       = (1ULL << 0),
-         CPUID_SSSE3_BIT      = (1ULL << 1),
-         CPUID_SSE41_BIT      = (1ULL << 2),
-         CPUID_SSE42_BIT      = (1ULL << 3),
-         CPUID_AVX2_BIT       = (1ULL << 4),
-
-         // AVX-512 baseline profile:
-         // AVX-512 F, DQ, BW, VL, IFMA, VBMI, VBMI2, BITALG
-         CPUID_AVX512_BIT     = (1ULL << 11),
-
-         // Crypto-specific ISAs
-         CPUID_AESNI_BIT        = (1ULL << 16),
-         CPUID_CLMUL_BIT        = (1ULL << 17),
-         CPUID_RDRAND_BIT       = (1ULL << 18),
-         CPUID_RDSEED_BIT       = (1ULL << 19),
-         CPUID_SHA_BIT          = (1ULL << 20),
-         CPUID_AVX512_AES_BIT   = (1ULL << 21),
-         CPUID_AVX512_CLMUL_BIT = (1ULL << 22),
+         CPUID_SSE2_BIT          = (1U << 0),
+         CPUID_SSSE3_BIT         = (1U << 1),
+         CPUID_AVX2_BIT          = (1U << 2),
+         CPUID_AVX512_BIT        = (1U << 3),
 
          // Misc useful instructions
-         CPUID_RDTSC_BIT      = (1ULL << 48),
-         CPUID_ADX_BIT        = (1ULL << 49),
-         CPUID_BMI_BIT        = (1ULL << 51),
-         CPUID_FAST_PDEP_BIT  = (1ULL << 52),
+         CPUID_RDTSC_BIT         = (1U << 10),
+         CPUID_ADX_BIT           = (1U << 11),
+         CPUID_BMI_BIT           = (1U << 12),
+
+         // Crypto-specific ISAs
+         CPUID_AESNI_BIT         = (1U << 16),
+         CPUID_CLMUL_BIT         = (1U << 17),
+         CPUID_RDRAND_BIT        = (1U << 18),
+         CPUID_RDSEED_BIT        = (1U << 19),
+         CPUID_SHA_BIT           = (1U << 20),
+         CPUID_AVX512_AES_BIT    = (1U << 21),
+         CPUID_AVX512_CLMUL_BIT  = (1U << 22),
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-         CPUID_ALTIVEC_BIT    = (1ULL << 0),
-         CPUID_POWER_CRYPTO_BIT = (1ULL << 1),
-         CPUID_DARN_BIT       = (1ULL << 2),
+         CPUID_ALTIVEC_BIT       = (1U << 0),
+         CPUID_POWER_CRYPTO_BIT  = (1U << 1),
+         CPUID_DARN_BIT          = (1U << 2),
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
-         CPUID_ARM_NEON_BIT      = (1ULL << 0),
-         CPUID_ARM_SVE_BIT       = (1ULL << 1),
-         CPUID_ARM_AES_BIT       = (1ULL << 16),
-         CPUID_ARM_PMULL_BIT     = (1ULL << 17),
-         CPUID_ARM_SHA1_BIT      = (1ULL << 18),
-         CPUID_ARM_SHA2_BIT      = (1ULL << 19),
-         CPUID_ARM_SHA3_BIT      = (1ULL << 20),
-         CPUID_ARM_SHA2_512_BIT  = (1ULL << 21),
-         CPUID_ARM_SM3_BIT       = (1ULL << 22),
-         CPUID_ARM_SM4_BIT       = (1ULL << 23),
+         CPUID_ARM_NEON_BIT      = (1U << 0),
+         CPUID_ARM_SVE_BIT       = (1U << 1),
+         CPUID_ARM_AES_BIT       = (1U << 16),
+         CPUID_ARM_PMULL_BIT     = (1U << 17),
+         CPUID_ARM_SHA1_BIT      = (1U << 18),
+         CPUID_ARM_SHA2_BIT      = (1U << 19),
+         CPUID_ARM_SHA3_BIT      = (1U << 20),
+         CPUID_ARM_SHA2_512_BIT  = (1U << 21),
+         CPUID_ARM_SM3_BIT       = (1U << 22),
+         CPUID_ARM_SM4_BIT       = (1U << 23),
 #endif
 
-         CPUID_INITIALIZED_BIT = (1ULL << 63)
+         CPUID_IS_BIG_ENDIAN_BIT = (1U << 30),
+         CPUID_INITIALIZED_BIT   = (1U << 31)
       };
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
@@ -245,18 +232,6 @@ class BOTAN_TEST_API CPUID final
          { return has_cpuid_bit(CPUID_SSSE3_BIT); }
 
       /**
-      * Check if the processor supports SSE4.1
-      */
-      static bool has_sse41()
-         { return has_cpuid_bit(CPUID_SSE41_BIT); }
-
-      /**
-      * Check if the processor supports SSE4.2
-      */
-      static bool has_sse42()
-         { return has_cpuid_bit(CPUID_SSE42_BIT); }
-
-      /**
       * Check if the processor supports AVX2
       */
       static bool has_avx2()
@@ -287,12 +262,6 @@ class BOTAN_TEST_API CPUID final
       */
       static bool has_bmi2()
          { return has_cpuid_bit(CPUID_BMI_BIT); }
-
-      /**
-      * Check if the processor supports fast PDEP/PEXT from BMI2
-      */
-      static bool has_fast_pdep()
-         { return has_cpuid_bit(CPUID_FAST_PDEP_BIT); }
 
       /**
       * Check if the processor supports AES-NI
@@ -390,7 +359,7 @@ class BOTAN_TEST_API CPUID final
       */
       static void clear_cpuid_bit(CPUID_bits bit)
          {
-         state().clear_cpuid_bit(static_cast<uint64_t>(bit));
+         state().clear_cpuid_bit(static_cast<uint32_t>(bit));
          }
 
       /*
@@ -399,18 +368,12 @@ class BOTAN_TEST_API CPUID final
       */
       static bool has_cpuid_bit(CPUID_bits elem)
          {
-         const uint64_t elem64 = static_cast<uint64_t>(elem);
-         return state().has_bit(elem64);
+         const uint32_t elem32 = static_cast<uint32_t>(elem);
+         return state().has_bit(elem32);
          }
 
       static std::vector<CPUID::CPUID_bits> bit_from_string(const std::string& tok);
    private:
-      enum class Endian_Status : uint32_t {
-         Unknown = 0x00000000,
-         Big     = 0x01234567,
-         Little  = 0x67452301,
-      };
-
       struct CPUID_Data
          {
          public:
@@ -419,33 +382,25 @@ class BOTAN_TEST_API CPUID final
             CPUID_Data(const CPUID_Data& other) = default;
             CPUID_Data& operator=(const CPUID_Data& other) = default;
 
-            void clear_cpuid_bit(uint64_t bit)
+            void clear_cpuid_bit(uint32_t bit)
                {
                m_processor_features &= ~bit;
                }
 
-            bool has_bit(uint64_t bit) const
+            bool has_bit(uint32_t bit) const
                {
                return (m_processor_features & bit) == bit;
                }
 
-            uint64_t processor_features() const { return m_processor_features; }
-            Endian_Status endian_status() const { return m_endian_status; }
-            size_t cache_line_size() const { return m_cache_line_size; }
-
          private:
-            static Endian_Status runtime_check_endian();
-
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || \
     defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
     defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-            static uint64_t detect_cpu_features(size_t* cache_line_size);
+            static uint32_t detect_cpu_features();
 
 #endif
-            uint64_t m_processor_features;
-            size_t m_cache_line_size;
-            Endian_Status m_endian_status;
+            uint32_t m_processor_features;
          };
 
       static CPUID_Data& state()

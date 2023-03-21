@@ -36,6 +36,7 @@ loadstor.h
 mul128.h
 os_utils.h
 parsing.h
+prefetch.h
 rotate.h
 rounding.h
 safeint.h

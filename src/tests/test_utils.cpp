@@ -673,12 +673,6 @@ class CPUID_Tests final : public Test
             result.test_eq("If endian is big, it is not also little endian", Botan::CPUID::is_little_endian(), false);
             }
 
-         const size_t cache_line_size = Botan::CPUID::cache_line_size();
-
-         result.test_gte("Cache line size is >= 16", cache_line_size, 16);
-         result.test_lte("Cache line size is <= 256", cache_line_size, 256);
-         result.confirm("Cache line size is a power of 2", Botan::is_power_of_2(cache_line_size));
-
          const std::string cpuid_string = Botan::CPUID::to_string();
          result.test_success("CPUID::to_string doesn't crash");
 

@@ -19,7 +19,7 @@
 #include <botan/internal/aria.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/internal/cpuid.h>
+#include <botan/internal/prefetch.h>
 
 namespace Botan {
 
@@ -207,19 +207,7 @@ inline void ARIA_FE(uint32_t& T0, uint32_t& T1, uint32_t& T2, uint32_t& T3)
 void transform(const uint8_t in[], uint8_t out[], size_t blocks,
                const secure_vector<uint32_t>& KS)
    {
-   /*
-   * Hit every cache line of S1, S2, X1, X2
-   *
-   * The initializer of Z ensures Z == 0xFFFFFFFF for any cache line size
-   * size that is a power of 2 and <= 512
-   */
-   const size_t cache_line_size = CPUID::cache_line_size();
-
-   volatile uint32_t Z = 0x9C1DADCF;
-   for(size_t i = 0; i < 256; i += cache_line_size)
-      {
-      Z = Z | make_uint32(S1[i], S2[i], X1[i], X2[i]);
-      }
+   prefetch_arrays(S1, S2, X1, X2);
 
    const size_t ROUNDS = (KS.size() / 4) - 1;
 
@@ -227,8 +215,6 @@ void transform(const uint8_t in[], uint8_t out[], size_t blocks,
       {
       uint32_t t0, t1, t2, t3;
       load_be(in + 16*i, t0, t1, t2, t3);
-
-      t0 &= Z;
 
       for(size_t r = 0; r < ROUNDS; r += 2)
          {

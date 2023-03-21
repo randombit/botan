@@ -121,44 +121,6 @@ uint32_t OS::get_process_id()
 #endif
    }
 
-size_t OS::get_cache_line_size()
-   {
-#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
-   unsigned long cache_line_size_vl;
-   size_t size = sizeof(cache_line_size_vl);
-   if(::sysctlbyname("hw.cachelinesize", &cache_line_size_vl, &size, nullptr, 0) == 0)
-      return static_cast<size_t>(cache_line_size_vl);
-#endif
-
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(_SC_LEVEL1_DCACHE_LINESIZE)
-   const long res = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
-   if(res > 0)
-      return static_cast<size_t>(res);
-#endif
-
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
-
-   #if defined(AT_L1D_CACHEGEOMETRY)
-   // Cache line size is bottom 16 bits
-   const unsigned long dcache_info = OS::get_auxval(AT_L1D_CACHEGEOMETRY);
-   if(dcache_info != 0)
-      return static_cast<size_t>(dcache_info & 0xFFFF);
-   #endif
-
-   #if defined(AT_DCACHEBSIZE)
-   const unsigned long dcache_bsize = OS::get_auxval(AT_DCACHEBSIZE);
-   if(dcache_bsize != 0)
-      return static_cast<size_t>(dcache_bsize);
-   #endif
-
-#endif
-
-   // TODO: on Windows this is returned by GetLogicalProcessorInformation
-
-   // not available on this platform
-   return 0;
-   }
-
 unsigned long OS::get_auxval(unsigned long id)
    {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)

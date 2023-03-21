@@ -94,12 +94,6 @@ size_t get_memory_locking_limit();
 size_t system_page_size();
 
 /**
-* Return the cache line size of the current processor using some
-* OS specific interface, or 0 if not available on this platform.
-*/
-size_t get_cache_line_size();
-
-/**
 * Read the value of an environment variable, setting it to value_out if it
 * exists.  Returns false and sets value_out to empty string if no such variable
 * is set. If the process seems to be running in a privileged state (such as
