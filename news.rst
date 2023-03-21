@@ -10,7 +10,9 @@ Version 3.0.0, Not Yet Released
 Breaking Changes
 ----------------------------------------
 
-* Remove many deprecated headers (GH #2456)
+* Remove many deprecated headers. In particular all algorithm specific
+  headers (such as ``aes.h``) are no longer available; instead objects
+  must be created through the base class ``create`` functions. (GH #2456)
 
 * Removed most functions previously marked as deprecated.
 
