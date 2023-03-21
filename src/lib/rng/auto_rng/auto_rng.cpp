@@ -12,29 +12,50 @@
   #include <botan/system_rng.h>
 #endif
 
-#if !defined(BOTAN_AUTO_RNG_HMAC)
-#error "No hash function defined for AutoSeeded_RNG in build.h (try enabling sha2_32)"
-#endif
-
 namespace Botan {
+
+namespace {
+
+std::unique_ptr<MessageAuthenticationCode> auto_rng_hmac()
+   {
+   const std::string possible_auto_rng_hmacs[] = {
+      "HMAC(SHA-512)",
+      "HMAC(SHA-256)",
+   };
+
+   for(const auto& hmac: possible_auto_rng_hmacs)
+      {
+      if(auto mac = MessageAuthenticationCode::create_or_throw(hmac))
+         return mac;
+      }
+
+   // This shouldn't happen since this module has a dependency on sha2_32
+   throw Internal_Error("AutoSeeded_RNG: No usable HMAC hash found");
+   }
+
+}
 
 AutoSeeded_RNG::~AutoSeeded_RNG() = default;
 
 AutoSeeded_RNG::AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                                size_t reseed_interval)
    {
-   m_rng = std::make_unique<HMAC_DRBG>(MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
-                             underlying_rng,
-                             reseed_interval);
+   m_rng = std::make_unique<HMAC_DRBG>(
+      auto_rng_hmac(),
+      underlying_rng,
+      reseed_interval);
+
    force_reseed();
    }
 
 AutoSeeded_RNG::AutoSeeded_RNG(Entropy_Sources& entropy_sources,
                                size_t reseed_interval)
    {
-   m_rng = std::make_unique<HMAC_DRBG>(MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
-                             entropy_sources,
-                             reseed_interval);
+   m_rng = std::make_unique<HMAC_DRBG>(
+      auto_rng_hmac(),
+      entropy_sources,
+      reseed_interval);
+
    force_reseed();
    }
 
@@ -43,8 +64,11 @@ AutoSeeded_RNG::AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                                size_t reseed_interval)
    {
    m_rng = std::make_unique<HMAC_DRBG>(
-                  MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
-                  underlying_rng, entropy_sources, reseed_interval);
+      auto_rng_hmac(),
+      underlying_rng,
+      entropy_sources,
+      reseed_interval);
+
    force_reseed();
    }
 

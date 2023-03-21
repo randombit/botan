@@ -724,8 +724,7 @@ class AutoSeeded_RNG_Tests final : public Test
 
          Botan::AutoSeeded_RNG rng;
 
-         result.test_eq("AutoSeeded_RNG::name", rng.name(),
-                        std::string("HMAC_DRBG(") + BOTAN_AUTO_RNG_HMAC + ")");
+         result.confirm("AutoSeeded_RNG::name", rng.name().starts_with("HMAC_DRBG(HMAC(SHA-"));
 
          result.confirm("AutoSeeded_RNG starts seeded", rng.is_seeded());
          rng.random_vec(16); // generate and discard output
