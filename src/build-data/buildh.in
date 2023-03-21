@@ -223,26 +223,6 @@
 /** Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
 
-#if !defined(BOTAN_AUTO_RNG_HMAC)
-
-  #if defined(BOTAN_HAS_SHA2_64)
-    /** Controls how AutoSeeded_RNG is instantiated */
-    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-384)"
-  #elif defined(BOTAN_HAS_SHA2_32)
-    /** Controls how AutoSeeded_RNG is instantiated */
-    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-256)"
-  #elif defined(BOTAN_HAS_SHA3)
-    /** Controls how AutoSeeded_RNG is instantiated */
-    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-3(256))"
-  #elif defined(BOTAN_HAS_SHA1)
-    /** Controls how AutoSeeded_RNG is instantiated */
-    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-1)"
-  #endif
-
-  /* Otherwise, no hash found: leave BOTAN_AUTO_RNG_HMAC undefined */
-
-#endif
-
 /* Check for a common build problem */
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_64) && ((defined(_MSC_VER) && !defined(_WIN64)) || \
