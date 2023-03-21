@@ -17,8 +17,8 @@ import glob
 import os
 import sys
 
-# Assume this script is in botan/src/scripts
-botan_root = os.path.join(os.path.dirname(sys.argv[0]), "..", "..")
+# Assume this script is in botan/src/scripts/dev_tools
+botan_root = os.path.join(os.path.dirname(sys.argv[0]), "..", "..", "..")
 
 # locale
 sys.path.append(botan_root)

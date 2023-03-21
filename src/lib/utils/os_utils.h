@@ -27,9 +27,11 @@ namespace OS {
 
 /**
 * @return process ID assigned by the operating system.
+*
 * On Unix and Windows systems, this always returns a result
-* On IncludeOS it returns 0 since there is no process ID to speak of
-* in a unikernel.
+*
+* On systems where there is no processes to speak of (for example on baremetal
+* systems or within a unikernel), this function returns zero.
 */
 uint32_t BOTAN_TEST_API get_process_id();
 

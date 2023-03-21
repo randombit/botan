@@ -62,7 +62,7 @@ the desired end result. Over time further progress is made in each.
   do not want it to (see non-goals below). But we do want it to run on anything
   that someone is deploying new applications on. That includes both major
   platforms like Windows, Linux, Android and iOS, and also promising new systems
-  such as IncludeOS and Fuchsia.
+  such as Fuchsia.
 
 * Well documented. Ideally every public API would have some place in the manual
   describing its usage.

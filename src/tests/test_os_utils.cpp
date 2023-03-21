@@ -56,7 +56,7 @@ class OS_Utils_Tests final : public Test
 
          result.test_eq("PID same across calls", static_cast<size_t>(pid1), static_cast<size_t>(pid2));
 
-#if defined(BOTAN_TARGET_OS_IS_INCLUDEOS) || defined(BOTAN_TARGET_OS_IS_LLVM)
+#if defined(BOTAN_TARGET_OS_IS_LLVM) || defined(BOTAN_TARGET_OS_IS_NONE)
          result.test_eq("PID is expected to be zero on this platform", pid1, size_t(0));
 #else
          result.test_ne("PID is non-zero on systems with processes", pid1, 0);
