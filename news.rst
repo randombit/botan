@@ -39,7 +39,7 @@ Breaking Changes
   #3220)
 
 * Remove support for HP and Pathscale compilers, Google NaCL (GH #2455),
-  and IncludeOS.
+  and IncludeOS (GH #3406)
 
 * Remove deprecated ``Data_Store`` class (GH #2461)
 
