@@ -10,6 +10,7 @@ proc_fs
 clock_gettime
 getauxval
 
+explicit_bzero
 getrandom
 getentropy
 
