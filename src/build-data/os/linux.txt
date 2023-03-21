@@ -6,7 +6,6 @@ posix1
 posix_mlock
 
 dev_random
-proc_fs
 clock_gettime
 getauxval
 

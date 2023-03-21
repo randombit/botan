@@ -5,7 +5,6 @@ soname_suffix "so"
 posix1
 posix_mlock
 clock_gettime
-proc_fs
 dev_random
 arc4random
 explicit_bzero

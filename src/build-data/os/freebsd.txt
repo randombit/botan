@@ -13,6 +13,7 @@ explicit_bzero
 cap_enter
 elf_aux_info
 getentropy
+getrandom # since freebsd 12
 
 atomics
 sockets

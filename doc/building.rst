@@ -436,7 +436,7 @@ Botan uses compile-time flags to enable or disable use of certain operating
 specific functions. You can also override these at build time if desired.
 
 The default feature flags are given in the files in ``src/build-data/os`` in the
-``target_features`` block. For example Linux defines flags like ``proc_fs``,
+``target_features`` block. For example Linux defines flags like ``getrandom``,
 ``getauxval``, and ``sockets``.  The ``configure.py`` option
 ``--list-os-features`` will display all the feature flags for all operating
 system targets.
