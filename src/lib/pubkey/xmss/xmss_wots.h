@@ -128,6 +128,24 @@ class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base
                            XMSS_Hash& hash);
 
       /**
+       * Constructor for the old derivation logic.
+       * Creates a WOTS+ private key using the old key derivation logic, i.e.
+       * the logic WITHOUT the recommendations in NIST SP.800-208. It is used
+       * to support XMSS_PrivateKeys created before the derivation logic was
+       * updated.
+       *
+       * @param params       The WOTS parameters to use
+       * @param private_seed The private seed for the private key generation
+       * @param adrs         The address of the key to retrieve.
+       * @param hash         Instance of XMSS_Hash, that may only be used by the
+       *                     thread executing it.
+       **/
+      XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
+                           std::span<const uint8_t> private_seed,
+                           XMSS_Address adrs,
+                           XMSS_Hash& hash);
+
+      /**
        * Algorithm 5: "WOTS_sign"
        * Generates a signature from a private key and a message.
        *
@@ -148,6 +166,7 @@ class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base
                          std::span<const uint8_t> public_seed,
                          XMSS_Address& adrs,
                          XMSS_Hash& hash);
+
    };
 
 }
