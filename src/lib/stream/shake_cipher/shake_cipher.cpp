@@ -37,6 +37,11 @@ void SHAKE_Cipher::set_iv_bytes(const uint8_t /*iv*/[], size_t length)
       { throw Invalid_IV_Length(name(), length); }
    }
 
+size_t SHAKE_Cipher::buffer_size() const
+   {
+   return m_shake_rate;
+   }
+
 void SHAKE_Cipher::seek(uint64_t /*offset*/)
    {
    throw Not_Implemented("SHAKE_Cipher::seek");

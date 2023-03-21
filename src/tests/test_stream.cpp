@@ -59,6 +59,8 @@ class Stream_Cipher_Tests final : public Text_Based_Test
 
             result.confirm("default iv length is valid", cipher->valid_iv_length(cipher->default_iv_length()));
 
+            result.confirm("advertised buffer size is > 0", cipher->buffer_size() > 0);
+
             if(cipher->default_iv_length() == 0)
                {
                result.confirm("if default iv length is zero, no iv supported", nonce.empty());

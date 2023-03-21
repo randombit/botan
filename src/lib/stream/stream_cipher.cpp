@@ -143,4 +143,9 @@ std::vector<std::string> StreamCipher::providers(const std::string& algo_spec)
    return probe_providers_of<StreamCipher>(algo_spec);
    }
 
+size_t StreamCipher::default_iv_length() const
+   {
+   return 0;
+   }
+
 }

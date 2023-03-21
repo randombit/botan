@@ -27,6 +27,8 @@ class Salsa20 final : public StreamCipher
       bool has_keying_material() const override;
       void seek(uint64_t offset) override;
 
+      size_t buffer_size() const override;
+
       // For internal use only
       static void salsa_core(uint8_t output[64], const uint32_t input[16], size_t rounds);
 

@@ -149,6 +149,21 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
          { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
+      * Return the optimium buffer size to use with this cipher
+      *
+      * Most stream ciphers internally produce blocks of bytes.  This function
+      * returns that block size. Aligning buffer sizes to a multiple of this
+      * size may improve performance by reducing internal buffering overhead.
+      *
+      * Note the return value of this function may change for any particular
+      * algorithm due to changes in the implementation from release to release,
+      * or changes in the runtime environment (such as CPUID indicating
+      * availability of an optimized implementation). It is not intrinsic to
+      * the algorithm; it is just a suggestion for gaining best performance.
+      */
+      virtual size_t buffer_size() const = 0;
+
+      /**
       * Resync the cipher using the IV
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
@@ -166,8 +181,10 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       /**
       * Return the default (preferred) nonce length
       * If this function returns 0, then this cipher does not support nonces
+      *
+      * Default implementation returns 0
       */
-      virtual size_t default_iv_length() const { return 0; }
+      virtual size_t default_iv_length() const;
 
       /**
       * @param iv_len the length of the IV in bytes

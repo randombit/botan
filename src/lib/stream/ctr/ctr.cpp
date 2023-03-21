@@ -55,6 +55,11 @@ bool CTR_BE::valid_iv_length(size_t iv_len) const
    return (iv_len <= m_block_size);
    }
 
+size_t CTR_BE::buffer_size() const
+   {
+   return m_pad.size();
+   }
+
 Key_Length_Specification CTR_BE::key_spec() const
    {
    return m_cipher->key_spec();

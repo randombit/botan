@@ -29,6 +29,11 @@ bool OFB::has_keying_material() const
    return m_cipher->has_keying_material();
    }
 
+size_t OFB::buffer_size() const
+   {
+   return m_buffer.size(); // block size
+   }
+
 void OFB::key_schedule(const uint8_t key[], size_t key_len)
    {
    m_cipher->set_key(key, key_len);

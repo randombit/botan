@@ -35,6 +35,8 @@ class SHAKE_Cipher : public StreamCipher
 
       bool has_keying_material() const override final;
 
+      size_t buffer_size() const override final;
+
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override final;
       /**
