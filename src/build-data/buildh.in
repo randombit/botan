@@ -211,7 +211,6 @@
 /** Number of entropy bits polled for reseeding userspace RNGs like HMAC_DRBG */
 #define BOTAN_RNG_RESEED_POLL_BITS 256
 
-#define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
 
 /**
@@ -223,14 +222,6 @@
 
 /** Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
-
-/**
-* This directory will be monitored by ProcWalking_EntropySource and
-* the contents provided as entropy inputs to the RNG. May also be
-* usefully set to something like "/sys", depending on the system being
-* deployed to. Set to an empty string to disable.
-*/
-#define BOTAN_ENTROPY_PROC_FS_PATH "/proc"
 
 /*
 * These paramaters control how many bytes to read from the system
