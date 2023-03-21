@@ -9,7 +9,9 @@
 #define BOTAN_BASE32_CODEC_H_
 
 #include <botan/secmem.h>
+#include <span>
 #include <string>
+#include <string_view>
 
 namespace Botan {
 
@@ -46,8 +48,7 @@ std::string BOTAN_PUBLIC_API(2, 7) base32_encode(const uint8_t input[],
 * @param input some input
 * @return base32 representation of input
 */
-template <typename Alloc>
-std::string base32_encode(const std::vector<uint8_t, Alloc>& input)
+inline std::string base32_encode(std::span<const uint8_t> input)
    {
    return base32_encode(input.data(), input.size());
    }
@@ -97,7 +98,7 @@ size_t BOTAN_PUBLIC_API(2, 7) base32_decode(uint8_t output[],
 * @return number of bytes written to output
 */
 size_t BOTAN_PUBLIC_API(2, 7) base32_decode(uint8_t output[],
-      const std::string& input,
+      std::string_view input,
       bool ignore_ws = true);
 
 /**
@@ -119,7 +120,7 @@ secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 7) base32_decode(const char input[],
                    exception if whitespace is encountered
 * @return decoded base32 output
 */
-secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 7) base32_decode(const std::string& input,
+secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 7) base32_decode(std::string_view input,
       bool ignore_ws = true);
 
 } // namespace Botan
