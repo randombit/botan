@@ -8,6 +8,7 @@ Contents
    goals
    support
    building
+   sem_ver
    migration_guide
    api_ref/contents
    cli
