@@ -223,14 +223,6 @@
 /** Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
 
-/*
-* These paramaters control how many bytes to read from the system
-* PRNG, and how long to block if applicable. The timeout only applies
-* to reading /dev/urandom and company.
-*/
-#define BOTAN_SYSTEM_RNG_POLL_REQUEST 64
-#define BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS 20
-
 #if !defined(BOTAN_AUTO_RNG_HMAC)
 
   #if defined(BOTAN_HAS_SHA2_64)
