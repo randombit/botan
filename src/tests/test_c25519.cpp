@@ -88,7 +88,7 @@ class Curve25519_Roundtrip_Test final : public Test
 
             const std::string a_pass = "alice pass";
             const std::string b_pass = "bob pass";
-            const auto pbe_time = std::chrono::milliseconds(10);
+            const auto pbe_time = std::chrono::milliseconds(1);
             const std::string a_priv_pem = Botan::PKCS8::PEM_encode(a_priv_gen, Test::rng(), a_pass, pbe_time);
             const std::string b_priv_pem = Botan::PKCS8::PEM_encode(b_priv_gen, Test::rng(), b_pass, pbe_time);
 

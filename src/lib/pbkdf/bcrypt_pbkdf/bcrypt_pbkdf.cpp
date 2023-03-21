@@ -30,10 +30,10 @@ std::string Bcrypt_PBKDF_Family::name() const
 
 std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
                                                         std::chrono::milliseconds msec,
-                                                        size_t /*max_memory*/) const
+                                                        size_t /*max_memory*/,
+                                                        std::chrono::milliseconds tune_time) const
    {
    Timer timer("Bcrypt_PBKDF");
-   const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
 
    const size_t blocks = (output_length + 32 - 1) / 32;
 

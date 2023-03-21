@@ -90,6 +90,10 @@ class Pwdhash_Tests : public Test
             "Bcrypt-PBKDF"
          };
 
+         const auto run_time = std::chrono::milliseconds(3);
+         const auto tune_time = std::chrono::milliseconds(1);
+         const size_t max_mem = 32;
+
          for(const std::string& pwdhash : all_pwdhash)
             {
             Test::Result result("Pwdhash " + pwdhash);
@@ -102,7 +106,7 @@ class Pwdhash_Tests : public Test
                const std::vector<uint8_t> salt(8);
                const std::string password = "test";
 
-               auto tuned_pwhash = pwdhash_fam->tune(32, std::chrono::milliseconds(10));
+               auto tuned_pwhash = pwdhash_fam->tune(32, run_time, max_mem, tune_time);
 
                std::vector<uint8_t> output1(32);
                tuned_pwhash->derive_key(output1.data(), output1.size(),

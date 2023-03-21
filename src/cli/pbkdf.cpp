@@ -18,7 +18,7 @@ namespace Botan_CLI {
 class PBKDF_Tune final : public Command
    {
    public:
-      PBKDF_Tune() : Command("pbkdf_tune --algo=Scrypt --max-mem=256 --output-len=32 --check *times") {}
+      PBKDF_Tune() : Command("pbkdf_tune --algo=Scrypt --max-mem=256 --tune-msec=10 --output-len=32 --check *times") {}
 
       std::string group() const override
          {
@@ -33,12 +33,12 @@ class PBKDF_Tune final : public Command
       void go() override
          {
          const size_t output_len = get_arg_sz("output-len");
-         const std::string algo = get_arg("algo");
          const size_t max_mem = get_arg_sz("max-mem");
+         const auto tune_msec = std::chrono::milliseconds(get_arg_sz("tune-msec"));
+         const std::string algo = get_arg("algo");
          const bool check_time = flag_set("check");
 
-         std::unique_ptr<Botan::PasswordHashFamily> pwdhash_fam =
-            Botan::PasswordHashFamily::create(algo);
+         auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
 
          if(!pwdhash_fam)
             throw CLI_Error_Unsupported("Password hashing", algo);
@@ -63,7 +63,7 @@ class PBKDF_Tune final : public Command
                   throw CLI_Usage_Error("Unknown time value '" + time + "' for pbkdf_tune");
                   }
 
-               pwhash = pwdhash_fam->tune(output_len, std::chrono::milliseconds(msec), max_mem);
+               pwhash = pwdhash_fam->tune(output_len, std::chrono::milliseconds(msec), max_mem, tune_msec);
                }
 
             output() << "For " << time << " ms selected " << pwhash->to_string();

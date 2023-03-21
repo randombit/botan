@@ -433,7 +433,7 @@ def cli_pbkdf_tune_tests(_tmp_dir):
 
     expected = re.compile(r'For (default|[1-9][0-9]*) ms selected Scrypt\([0-9]+,[0-9]+,[0-9]+\) using [0-9]+ MiB')
 
-    output = test_cli("pbkdf_tune", ["--check", "1", "10", "50", "default"], None).split('\n')
+    output = test_cli("pbkdf_tune", ["--tune-msec=1", "--check", "1", "10", "50", "default"], None).split('\n')
 
     for line in output:
         if expected.match(line) is None:

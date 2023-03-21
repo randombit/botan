@@ -86,18 +86,18 @@ std::string Argon2_Family::name() const
 
 std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
                                                   std::chrono::milliseconds msec,
-                                                  size_t max_memory) const
+                                                  size_t max_memory,
+                                                  std::chrono::milliseconds tune_time) const
    {
    const size_t max_kib = (max_memory == 0) ? 256*1024 : max_memory*1024;
 
    // Tune with a large memory otherwise we measure cache vs RAM speeds and underestimate
    // costs for larger params. Default is 36 MiB, or use 128 for long times.
-   const size_t tune_M = (msec >= std::chrono::milliseconds(500) ? 128 : 36) * 1024;
+   const size_t tune_M = (msec >= std::chrono::milliseconds(200) ? 128 : 36) * 1024;
    const size_t p = 1;
    size_t t = 1;
 
    Timer timer("Argon2");
-   const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
 
    auto pwhash = this->from_params(tune_M, t, p);
 
@@ -139,7 +139,7 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
       est_nsec *= M_mult;
       }
 
-   if(est_nsec < target_nsec)
+   if(est_nsec < target_nsec / 2)
       {
       const uint64_t desired_cost_increase = (target_nsec + est_nsec - 1) / est_nsec;
       t *= static_cast<size_t>(desired_cost_increase);
