@@ -110,6 +110,12 @@ concept resizable_container =
       c.resize(s);
       };
 
+template <typename T>
+concept resizable_byte_buffer =
+   contiguous_container<T> &&
+   resizable_container<T> &&
+   std::same_as<typename T::value_type, uint8_t>;
+
 template<typename T>
 concept streamable = requires(std::ostream& os, T a)
    { os << a; };

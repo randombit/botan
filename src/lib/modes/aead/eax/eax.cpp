@@ -128,7 +128,7 @@ void EAX_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    m_cmac->update(2);
    }
 
-size_t EAX_Encryption::process(uint8_t buf[], size_t sz)
+size_t EAX_Encryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_STATE_CHECK(!m_nonce_mac.empty());
    m_ctr->cipher(buf, buf, sz);
@@ -136,7 +136,7 @@ size_t EAX_Encryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void EAX_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void EAX_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_STATE_CHECK(!m_nonce_mac.empty());
    update(buffer, offset);
@@ -156,7 +156,7 @@ void EAX_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    m_nonce_mac.clear();
    }
 
-size_t EAX_Decryption::process(uint8_t buf[], size_t sz)
+size_t EAX_Decryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_STATE_CHECK(!m_nonce_mac.empty());
    m_cmac->update(buf, sz);
@@ -164,7 +164,7 @@ size_t EAX_Decryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void EAX_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void EAX_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;

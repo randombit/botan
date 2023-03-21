@@ -8,10 +8,12 @@
 #ifndef BOTAN_CIPHER_MODE_H_
 #define BOTAN_CIPHER_MODE_H_
 
+#include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/sym_algo.h>
 #include <botan/exceptn.h>
 #include <string>
+#include <span>
 #include <vector>
 
 namespace Botan {
@@ -62,17 +64,29 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
                                                           Cipher_Dir direction,
                                                           const std::string& provider = "");
 
+   protected:
       /*
       * Prepare for processing a message under the specified nonce
       */
       virtual void start_msg(const uint8_t nonce[], size_t nonce_len) = 0;
 
+      /*
+      * Process message blocks
+      * Input must be a multiple of update_granularity.
+      */
+      virtual size_t process_msg(uint8_t msg[], size_t msg_len) = 0;
+
+      /*
+      * Finishes a message
+      */
+      virtual void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) = 0;
+
+   public:
       /**
       * Begin processing a message with a fresh nonce.
       * @param nonce the per message nonce
       */
-      template<typename Alloc>
-      void start(const std::vector<uint8_t, Alloc>& nonce)
+      void start(std::span<const uint8_t> nonce)
          {
          start_msg(nonce.data(), nonce.size());
          }
@@ -113,22 +127,23 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * mode requires the entire message be processed in one pass).
       *
       * @param msg the message to be processed
-      * @param msg_len length of the message in bytes
+      * @return bytes written in-place
       */
-      virtual size_t process(uint8_t msg[], size_t msg_len) = 0;
+      size_t process(std::span<uint8_t> msg)
+         { return this->process_msg(msg.data(), msg.size()); }
+      size_t process(uint8_t msg[], size_t msg_len)
+         { return this->process_msg(msg, msg_len); }
 
       /**
       * Process some data. Input must be in size update_granularity() uint8_t blocks.
       * @param buffer in/out parameter which will possibly be resized
       * @param offset an offset into blocks to begin processing
       */
-      void update(secure_vector<uint8_t>& buffer, size_t offset = 0)
+      template<concepts::resizable_byte_buffer T>
+      void update(T& buffer, size_t offset = 0)
          {
          BOTAN_ASSERT(buffer.size() >= offset, "Offset ok");
-         uint8_t* buf = buffer.data() + offset;
-         const size_t buf_size = buffer.size() - offset;
-
-         const size_t written = process(buf, buf_size);
+         const size_t written = process(std::span(buffer).subspan(offset));
          buffer.resize(offset + written);
          }
 
@@ -139,7 +154,29 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       *        minimum_final_size() bytes, and will be set to any final output
       * @param offset an offset into final_block to begin processing
       */
-      virtual void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) = 0;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0)
+         {
+         finish_msg(final_block, offset);
+         }
+
+      /**
+      * Complete procession of a message.
+      *
+      * Note: Using this overload with anything but a Botan::secure_vector<>
+      *       is copying the bytes in the in/out buffer.
+      *
+      * @param final_block in/out parameter which must be at least
+      *        minimum_final_size() bytes, and will be set to any final output
+      * @param offset an offset into final_block to begin processing
+      */
+      template<concepts::resizable_byte_buffer T>
+      void finish(T& final_block, size_t offset = 0)
+         {
+         Botan::secure_vector<uint8_t> tmp(final_block.begin(), final_block.end());
+         finish_msg(tmp, offset);
+         final_block.resize(tmp.size());
+         std::copy(tmp.begin(), tmp.end(), final_block.begin());
+         }
 
       /**
       * Returns the size of the output if this transform is used to process a

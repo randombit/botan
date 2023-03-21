@@ -125,7 +125,7 @@ void CFB_Mode::shift_register()
    m_keystream_pos = 0;
    }
 
-size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
+size_t CFB_Encryption::process_msg(uint8_t buf[], size_t sz)
    {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_state.empty() == false);
@@ -171,7 +171,7 @@ size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CFB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CFB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
    }
@@ -190,7 +190,7 @@ inline void xor_copy(uint8_t buf[], uint8_t key_buf[], size_t len)
 
 }
 
-size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
+size_t CFB_Decryption::process_msg(uint8_t buf[], size_t sz)
    {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_state.empty() == false);
@@ -232,7 +232,7 @@ size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CFB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CFB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
    }

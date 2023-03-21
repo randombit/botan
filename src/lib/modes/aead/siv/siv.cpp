@@ -116,7 +116,7 @@ void SIV_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    m_msg_buf.clear();
    }
 
-size_t SIV_Mode::process(uint8_t buf[], size_t sz)
+size_t SIV_Mode::process_msg(uint8_t buf[], size_t sz)
    {
    // all output is saved for processing in finish
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
@@ -164,7 +164,7 @@ void SIV_Mode::set_ctr_iv(secure_vector<uint8_t> V)
    ctr().set_iv(V.data(), V.size());
    }
 
-void SIV_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void SIV_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
@@ -182,7 +182,7 @@ void SIV_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
       }
    }
 
-void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void SIV_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 

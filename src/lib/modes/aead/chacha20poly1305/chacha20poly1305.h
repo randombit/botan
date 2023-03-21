@@ -77,9 +77,9 @@ class ChaCha20Poly1305_Encryption final : public ChaCha20Poly1305_Mode
 
       size_t minimum_final_size() const override { return 0; }
 
-      size_t process(uint8_t buf[], size_t size) override;
-
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+   private:
+      size_t process_msg(uint8_t buf[], size_t size) override;
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -96,9 +96,9 @@ class ChaCha20Poly1305_Decryption final : public ChaCha20Poly1305_Mode
 
       size_t minimum_final_size() const override { return tag_size(); }
 
-      size_t process(uint8_t buf[], size_t size) override;
-
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+   private:
+      size_t process_msg(uint8_t buf[], size_t size) override;
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 }

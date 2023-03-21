@@ -117,7 +117,7 @@ void CCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    m_msg_buf.clear();
    }
 
-size_t CCM_Mode::process(uint8_t buf[], size_t sz)
+size_t CCM_Mode::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_STATE_CHECK(!m_nonce.empty());
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
@@ -174,7 +174,7 @@ secure_vector<uint8_t> CCM_Mode::format_c0()
    return C;
    }
 
-void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
@@ -227,7 +227,7 @@ void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    reset();
    }
 
-void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 

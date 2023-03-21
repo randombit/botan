@@ -181,10 +181,7 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * @param  bytes number of random bytes to initialize the container with
       * @throws Exception if RNG or memory allocation fails
       */
-      template<typename T>
-      requires(concepts::contiguous_container<T> &&
-               concepts::resizable_container<T> &&
-               std::same_as<typename T::value_type, uint8_t>)
+      template<concepts::resizable_byte_buffer T>
       void random_vec(T& v, size_t bytes)
          {
          v.resize(bytes);
@@ -199,11 +196,8 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       * @return       a container of type T with @p bytes random bytes
       * @throws Exception if RNG or memory allocation fails
       */
-      template<typename T = secure_vector<uint8_t>>
-      requires(concepts::contiguous_container<T> &&
-               concepts::resizable_container<T> &&
-               concepts::default_initializable<T> &&
-               std::same_as<typename T::value_type, uint8_t>)
+      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      requires concepts::default_initializable<T>
       T random_vec(size_t bytes)
          {
          T result;

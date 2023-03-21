@@ -23,8 +23,6 @@ class MessageAuthenticationCode;
 class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
    {
    public:
-      size_t process(uint8_t buf[], size_t size) override final;
-
       /**
       * Sets the nth element of the vector of associated data
       * @param n index into the AD vector
@@ -76,6 +74,7 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode
       secure_vector<uint8_t> S2V(const uint8_t text[], size_t text_len);
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
+      size_t process_msg(uint8_t buf[], size_t size) override final;
 
       void key_schedule(const uint8_t key[], size_t length) override final;
 
@@ -100,12 +99,13 @@ class BOTAN_TEST_API SIV_Encryption final : public SIV_Mode
       explicit SIV_Encryption(std::unique_ptr<BlockCipher> cipher) :
          SIV_Mode(std::move(cipher)) {}
 
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-
       size_t output_length(size_t input_length) const override
          { return input_length + tag_size(); }
 
       size_t minimum_final_size() const override { return 0; }
+
+   private:
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -120,8 +120,6 @@ class BOTAN_TEST_API SIV_Decryption final : public SIV_Mode
       explicit SIV_Decryption(std::unique_ptr<BlockCipher> cipher) :
          SIV_Mode(std::move(cipher)) {}
 
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-
       size_t output_length(size_t input_length) const override
          {
          BOTAN_ASSERT(input_length >= tag_size(), "Sufficient input");
@@ -129,6 +127,9 @@ class BOTAN_TEST_API SIV_Decryption final : public SIV_Mode
          }
 
       size_t minimum_final_size() const override { return tag_size(); }
+
+   private:
+      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 }

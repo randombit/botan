@@ -128,7 +128,7 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    clear_mem(m_y0.data(), m_y0.size());
    }
 
-size_t GCM_Encryption::process(uint8_t buf[], size_t sz)
+size_t GCM_Encryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid buffer size");
    m_ctr->cipher(buf, buf, sz);
@@ -136,7 +136,7 @@ size_t GCM_Encryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void GCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void GCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
    const size_t sz = buffer.size() - offset;
@@ -150,7 +150,7 @@ void GCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    buffer += std::make_pair(mac, tag_size());
    }
 
-size_t GCM_Decryption::process(uint8_t buf[], size_t sz)
+size_t GCM_Decryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid buffer size");
    m_ghash->update(buf, sz);
@@ -158,7 +158,7 @@ size_t GCM_Decryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void GCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
    const size_t sz = buffer.size() - offset;

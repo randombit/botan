@@ -375,14 +375,14 @@ void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
       }
    }
 
-size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
+size_t OCB_Encryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid OCB input size");
    encrypt(buf, sz / block_size());
    return sz;
    }
 
-void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void OCB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
@@ -466,14 +466,14 @@ void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks)
       }
    }
 
-size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
+size_t OCB_Decryption::process_msg(uint8_t buf[], size_t sz)
    {
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid OCB input size");
    decrypt(buf, sz / block_size());
    return sz;
    }
 
-void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
+void OCB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
    {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
