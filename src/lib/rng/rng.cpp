@@ -9,19 +9,37 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/os_utils.h>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#endif
+
+#include <array>
+
 namespace Botan {
 
 void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output)
    {
    if(this->accepts_input())
       {
-      /*
-      Form additional input which is provided to the PRNG implementation
-      to paramaterize the KDF output.
-      */
-      uint8_t additional_input[16] = { 0 };
-      store_le(OS::get_system_timestamp_ns(), additional_input);
-      store_le(OS::get_high_resolution_clock(), additional_input + 8);
+      constexpr auto s_hd_clk = sizeof(decltype(OS::get_high_resolution_clock()));
+      constexpr auto s_sys_ts = sizeof(decltype(OS::get_system_timestamp_ns()));
+      constexpr auto s_pid    = sizeof(decltype(OS::get_process_id()));
+
+      std::array<uint8_t, s_hd_clk + s_sys_ts + s_pid> additional_input = {0};
+      auto s_additional_input = std::span(additional_input.begin(), additional_input.end());
+
+      store_le(OS::get_high_resolution_clock(), s_additional_input.data());
+      s_additional_input = s_additional_input.subspan(s_hd_clk);
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+      System_RNG system_rng;
+      system_rng.randomize(s_additional_input);
+#else
+      store_le(OS::get_system_timestamp_ns(), s_additional_input.data());
+      s_additional_input = s_additional_input.subspan(s_sys_ts);
+
+      store_le(OS::get_process_id(), s_additional_input.data());
+#endif
 
       this->fill_bytes_with_input(output, additional_input);
       }

@@ -8,10 +8,6 @@
 #include <botan/internal/os_utils.h>
 #include <botan/internal/loadstor.h>
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-#endif
-
 namespace Botan {
 
 void Stateful_RNG::clear()
