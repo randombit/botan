@@ -105,13 +105,13 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
          std::shared_ptr<Botan::TLS::Policy> policy,
          tcp::resolver::iterator endpoints)
          {
-         return std::make_shared<tls_proxy_session>(
-            io,
-            session_manager,
-            credentials,
-            policy,
-            endpoints
-            );
+         auto session = std::make_shared<tls_proxy_session>(io, endpoints);
+
+         // Defer the setup of the TLS server to make use of
+         // shared_from_this() which wouldn't work in the c'tor.
+         session->setup(session_manager, credentials, policy);
+
+         return session;
          }
 
       tcp::socket& client_socket()
@@ -134,29 +134,32 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
             Client socket is closed during write callback
             */
             m_server_socket.close();
-            m_tls.close();
+            m_tls->close();
             m_is_closed = true;
             }
          }
 
       tls_proxy_session(
          boost::asio::io_service& io,
-         std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
-         std::shared_ptr<Botan::Credentials_Manager> credentials,
-         std::shared_ptr<Botan::TLS::Policy> policy,
          tcp::resolver::iterator endpoints)
          : m_strand(io)
          , m_server_endpoints(endpoints)
          , m_client_socket(io)
          , m_server_socket(io)
-         , m_rng(cli_make_rng())
-         , m_tls(shared_from_this(),
-                 session_manager,
-                 credentials,
-                 policy,
-                 m_rng) {}
+         , m_rng(cli_make_rng()) {}
 
    private:
+      void setup(std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
+                 std::shared_ptr<Botan::Credentials_Manager> credentials,
+                 std::shared_ptr<Botan::TLS::Policy> policy)
+         {
+         m_tls = std::make_unique<Botan::TLS::Server>(shared_from_this(),
+                                                      session_manager,
+                                                      credentials,
+                                                      policy,
+                                                      m_rng);
+         }
+
       void client_read(const boost::system::error_code& error,
                        size_t bytes_transferred)
          {
@@ -169,11 +172,11 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
          try
             {
-            if(!m_tls.is_active())
+            if(!m_tls->is_active())
                {
                log_binary_message("From client", &m_c2p[0], bytes_transferred);
                }
-            m_tls.received_data(&m_c2p[0], bytes_transferred);
+            m_tls->received_data(&m_c2p[0], bytes_transferred);
             }
          catch(Botan::Exception& e)
             {
@@ -202,7 +205,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
          m_p2c.clear();
 
-         if(m_p2c_pending.empty() && m_tls.is_closed())
+         if(m_p2c_pending.empty() && m_tls->is_closed())
             {
             m_client_socket.close();
             }
@@ -294,7 +297,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
                {
                log_text_message("Server to client", &m_s2p[0], m_s2p.size());
                log_binary_message("Server to client", &m_s2p[0], m_s2p.size());
-               m_tls.send(&m_s2p[0], bytes_transferred);
+               m_tls->send(&m_s2p[0], bytes_transferred);
                }
             }
          catch(Botan::Exception& e)
@@ -338,7 +341,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
          {
          if(alert.type() == Botan::TLS::Alert::CloseNotify)
             {
-            m_tls.close();
+            m_tls->close();
             return;
             }
          }
@@ -351,7 +354,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
       tcp::socket m_server_socket;
 
       std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
-      Botan::TLS::Server m_tls;
+      std::unique_ptr<Botan::TLS::Server> m_tls;
       std::string m_hostname;
 
       std::vector<uint8_t> m_c2p;

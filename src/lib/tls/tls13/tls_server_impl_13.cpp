@@ -15,16 +15,16 @@
 
 namespace Botan::TLS {
 
-Server_Impl_13::Server_Impl_13(Callbacks& callbacks,
-                               Session_Manager& session_manager,
-                               Credentials_Manager& credentials_manager,
-                               const Policy& policy,
-                               RandomNumberGenerator& rng)
+Server_Impl_13::Server_Impl_13(std::shared_ptr<Callbacks> callbacks,
+                               std::shared_ptr<Session_Manager> session_manager,
+                               std::shared_ptr<Credentials_Manager> credentials_manager,
+                               std::shared_ptr<const Policy> policy,
+                               std::shared_ptr<RandomNumberGenerator> rng)
    : Channel_Impl_13(callbacks, session_manager, credentials_manager,
                      rng, policy, true /* is_server */)
    {
 #if defined(BOTAN_HAS_TLS_12)
-   if(policy.allow_tls12())
+   if(policy->allow_tls12())
       { expect_downgrade({}, {}); }
 #endif
 

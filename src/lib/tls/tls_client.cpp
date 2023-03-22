@@ -43,8 +43,8 @@ Client::Client(std::shared_ptr<Callbacks> callbacks,
    if(offer_version == Protocol_Version::TLS_V13)
       {
       m_impl = std::make_unique<Client_Impl_13>(
-                  *callbacks, *session_manager, *creds, *policy,
-                  *rng, std::move(info), std::move(next_protocols));
+                  callbacks, session_manager, creds, policy,
+                  rng, std::move(info), std::move(next_protocols));
 
       if(m_impl->expects_downgrade())
          { m_impl->set_io_buffer_size(io_buf_sz); }
@@ -59,8 +59,8 @@ Client::Client(std::shared_ptr<Callbacks> callbacks,
    else
 #endif
       m_impl = std::make_unique<Client_Impl_12>(
-                  *callbacks, *session_manager, *creds, *policy,
-                  *rng, std::move(info), offer_version.is_datagram_protocol(),
+                  callbacks, session_manager, creds, policy,
+                  rng, std::move(info), offer_version.is_datagram_protocol(),
                   std::move(next_protocols), io_buf_sz);
    }
 

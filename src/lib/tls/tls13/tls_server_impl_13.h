@@ -21,11 +21,11 @@ namespace Botan::TLS {
 class Server_Impl_13 : public Channel_Impl_13
    {
    public:
-      explicit Server_Impl_13(Callbacks& callbacks,
-                              Session_Manager& session_manager,
-                              Credentials_Manager& credentials_manager,
-                              const Policy& policy,
-                              RandomNumberGenerator& rng);
+      explicit Server_Impl_13(std::shared_ptr<Callbacks> callbacks,
+                              std::shared_ptr<Session_Manager> session_manager,
+                              std::shared_ptr<Credentials_Manager> credentials_manager,
+                              std::shared_ptr<const Policy> policy,
+                              std::shared_ptr<RandomNumberGenerator> rng);
 
       std::string application_protocol() const override;
       std::vector<X509_Certificate> peer_cert_chain() const override;

@@ -976,7 +976,6 @@ def cli_tls_http_server_tests(tmp_dir):
                                    '--port=%d' % (server_port), server_cert, priv_key],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-
     wait_time = 1.0
     time.sleep(wait_time)
 

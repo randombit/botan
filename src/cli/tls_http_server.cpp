@@ -182,7 +182,13 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          std::shared_ptr<Botan::Credentials_Manager> credentials,
          std::shared_ptr<Botan::TLS::Policy> policy)
          {
-         return std::make_shared<TLS_Asio_HTTP_Session>(io, session_manager, credentials, policy);
+         auto session = std::make_shared<TLS_Asio_HTTP_Session>(io);
+
+         // Defer the setup of the TLS server to make use of
+         // shared_from_this() which wouldn't work in the c'tor.
+         session->setup(session_manager, credentials, policy);
+
+         return session;
          }
 
       tcp::socket& client_socket()
@@ -198,19 +204,26 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
       void stop()
          {
-         m_tls.close();
+         m_tls->close();
          }
 
-      TLS_Asio_HTTP_Session(boost::asio::io_service& io,
-                            std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
-                            std::shared_ptr<Botan::Credentials_Manager> credentials,
-                            std::shared_ptr<Botan::TLS::Policy> policy)
+      TLS_Asio_HTTP_Session(boost::asio::io_service& io)
          : m_strand(io)
          , m_client_socket(io)
-         , m_rng(cli_make_rng())
-         , m_tls(shared_from_this(), session_manager, credentials, policy, m_rng) {}
+         , m_rng(cli_make_rng()) {}
 
    private:
+      void setup(std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
+                 std::shared_ptr<Botan::Credentials_Manager> credentials,
+                 std::shared_ptr<Botan::TLS::Policy> policy)
+         {
+         m_tls = std::make_unique<Botan::TLS::Server>(shared_from_this(),
+                                                      session_manager,
+                                                      credentials,
+                                                      policy,
+                                                      m_rng);
+         }
+
       void client_read(const boost::system::error_code& error,
                        size_t bytes_transferred)
          {
@@ -221,7 +234,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
          try
             {
-            m_tls.received_data(&m_c2s[0], bytes_transferred);
+            m_tls->received_data(&m_c2s[0], bytes_transferred);
             }
          catch(Botan::Exception& e)
             {
@@ -247,7 +260,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
          m_s2c.clear();
 
-         if(m_s2c_pending.empty() && m_tls.is_closed_for_writing())
+         if(m_s2c_pending.empty() && m_tls->is_closed_for_writing())
             {
             m_client_socket.close();
             }
@@ -314,8 +327,8 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
             }
 
          const std::string response_str = response.str();
-         m_tls.send(response_str);
-         m_tls.close();
+         m_tls->send(response_str);
+         m_tls->close();
          }
 
       void tls_emit_data(std::span<const uint8_t> buf) override
@@ -404,8 +417,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          {
          if(alert.type() == Botan::TLS::Alert::CloseNotify)
             {
-            m_tls.close();
-            return;
+            m_tls->close();
             }
          else
             {
@@ -418,7 +430,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
       tcp::socket m_client_socket;
 
       std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
-      Botan::TLS::Server m_tls;
+      std::unique_ptr<Botan::TLS::Server> m_tls;
       std::string m_chello_summary;
       std::string m_connection_summary;
       std::string m_session_summary;

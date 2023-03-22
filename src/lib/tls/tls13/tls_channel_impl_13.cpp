@@ -40,11 +40,11 @@ bool is_error_alert(const Botan::TLS::Alert& alert)
 
 namespace Botan::TLS {
 
-Channel_Impl_13::Channel_Impl_13(Callbacks& callbacks,
-                                 Session_Manager& session_manager,
-                                 Credentials_Manager& credentials_manager,
-                                 RandomNumberGenerator& rng,
-                                 const Policy& policy,
+Channel_Impl_13::Channel_Impl_13(std::shared_ptr<Callbacks> callbacks,
+                                 std::shared_ptr<Session_Manager> session_manager,
+                                 std::shared_ptr<Credentials_Manager> credentials_manager,
+                                 std::shared_ptr<RandomNumberGenerator> rng,
+                                 std::shared_ptr<const Policy> policy,
                                  bool is_server) :
    m_side(is_server ? Connection_Side::Server : Connection_Side::Client),
    m_callbacks(callbacks),
@@ -60,6 +60,11 @@ Channel_Impl_13::Channel_Impl_13(Callbacks& callbacks,
    m_first_message_sent(false),
    m_first_message_received(false)
    {
+   BOTAN_ASSERT_NONNULL(m_callbacks);
+   BOTAN_ASSERT_NONNULL(m_session_manager);
+   BOTAN_ASSERT_NONNULL(m_credentials_manager);
+   BOTAN_ASSERT_NONNULL(m_rng);
+   BOTAN_ASSERT_NONNULL(m_policy);
    }
 
 Channel_Impl_13::~Channel_Impl_13() = default;
@@ -454,11 +459,11 @@ void Channel_Impl_13::expect_downgrade(const Server_Information&       server_in
       server_info,
       next_protocols,
       Botan::TLS::Channel::IO_BUF_DEFAULT_SIZE,
-      callbacks(),
-      session_manager(),
-      credentials_manager(),
-      rng(),
-      policy(),
+      m_callbacks,
+      m_session_manager,
+      m_credentials_manager,
+      m_rng,
+      m_policy,
       false, // received_tls_13_error_alert
       false  // will_downgrade
       };

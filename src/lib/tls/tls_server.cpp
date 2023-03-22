@@ -38,7 +38,7 @@ Server::Server(std::shared_ptr<Callbacks> callbacks,
       {
 #if defined(BOTAN_HAS_TLS_13)
       m_impl = std::make_unique<Server_Impl_13>(
-         *callbacks, *session_manager, *creds, *policy, *rng);
+         callbacks, session_manager, creds, policy, rng);
 
       if(m_impl->expects_downgrade())
          { m_impl->set_io_buffer_size(io_buf_sz); }
@@ -49,7 +49,7 @@ Server::Server(std::shared_ptr<Callbacks> callbacks,
    else
       {
       m_impl = std::make_unique<Server_Impl_12>(
-         *callbacks, *session_manager, *creds, *policy, *rng, is_datagram, io_buf_sz);
+         callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
       }
    }
 

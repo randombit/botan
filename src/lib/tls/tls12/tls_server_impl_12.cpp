@@ -235,17 +235,18 @@ get_server_certs(const std::string& hostname,
 
 }
 
-Server_Impl_12::Server_Impl_12(Callbacks& callbacks,
-                               Session_Manager& session_manager,
-                               Credentials_Manager& creds,
-                               const Policy& policy,
-                               RandomNumberGenerator& rng,
+Server_Impl_12::Server_Impl_12(std::shared_ptr<Callbacks> callbacks,
+                               std::shared_ptr<Session_Manager> session_manager,
+                               std::shared_ptr<Credentials_Manager> creds,
+                               std::shared_ptr<const Policy> policy,
+                               std::shared_ptr<RandomNumberGenerator> rng,
                                bool is_datagram,
                                size_t io_buf_sz) :
    Channel_Impl_12(callbacks, session_manager, rng, policy,
-                  true, is_datagram, io_buf_sz),
+                   true, is_datagram, io_buf_sz),
    m_creds(creds)
    {
+   BOTAN_ASSERT_NONNULL(m_creds);
    }
 
 Server_Impl_12::Server_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info) :
@@ -432,7 +433,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
 
       try
          {
-         cookie_secret = m_creds.psk("tls-server", "dtls-cookie-secret", "");
+         cookie_secret = m_creds->psk("tls-server", "dtls-cookie-secret", "");
          }
       catch(...) {}
 
@@ -519,7 +520,7 @@ void Server_Impl_12::process_client_key_exchange_msg(Server_Handshake_State& pen
 
    pending_state.client_kex(new Client_Key_Exchange(contents, pending_state,
                                                     pending_state.server_rsa_kex_key(),
-                                                    m_creds, policy(), rng()));
+                                                    *m_creds, policy(), rng()));
 
    pending_state.compute_session_keys();
    }
@@ -561,7 +562,7 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
    try
       {
       const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
-      auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-server", sni_hostname);
+      auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
 
       callbacks().tls_verify_cert_chain(client_certs,
                                         {}, // ocsp
@@ -798,11 +799,11 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state)
    // RFC 8446 4.2.3
    //     TLS 1.2 implementations SHOULD also process this extension.
    const auto cert_signature_schemes = pending_state.client_hello()->certificate_signature_schemes();
-   cert_chains = get_server_certs(sni_hostname, cert_signature_schemes, m_creds);
+   cert_chains = get_server_certs(sni_hostname, cert_signature_schemes, *m_creds);
 
    if(!sni_hostname.empty() && cert_chains.empty())
       {
-      cert_chains = get_server_certs("", cert_signature_schemes, m_creds);
+      cert_chains = get_server_certs("", cert_signature_schemes, *m_creds);
 
       /*
       * Only send the unrecognized_name alert if we couldn't
@@ -870,7 +871,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state)
             }
          }
 
-      private_key = m_creds.private_key_for(
+      private_key = m_creds->private_key_for(
          pending_state.server_certs()->cert_chain()[0],
          "tls-server",
          sni_hostname);
@@ -887,10 +888,10 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state)
       {
       pending_state.server_kex(new Server_Key_Exchange(pending_state.handshake_io(),
                                                        pending_state, policy(),
-                                                       m_creds, rng(), private_key.get()));
+                                                       *m_creds, rng(), private_key.get()));
       }
 
-   auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-server", sni_hostname);
+   auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
 
    std::vector<X509_DN> client_auth_CAs;
 

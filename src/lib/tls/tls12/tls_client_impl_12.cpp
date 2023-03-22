@@ -61,12 +61,12 @@ class Client_Handshake_State_12 final : public Handshake_State
 /*
 * TLS 1.2 Client  Constructor
 */
-Client_Impl_12::Client_Impl_12(Callbacks& callbacks,
-                               Session_Manager& session_manager,
-                               Credentials_Manager& creds,
-                               const Policy& policy,
-                               RandomNumberGenerator& rng,
-                               const Server_Information& info,
+Client_Impl_12::Client_Impl_12(std::shared_ptr<Callbacks> callbacks,
+                               std::shared_ptr<Session_Manager> session_manager,
+                               std::shared_ptr<Credentials_Manager> creds,
+                               std::shared_ptr<const Policy> policy,
+                               std::shared_ptr<RandomNumberGenerator> rng,
+                               Server_Information info,
                                bool datagram,
                                const std::vector<std::string>& next_protocols,
                                size_t io_buf_sz) :
@@ -74,6 +74,7 @@ Client_Impl_12::Client_Impl_12(Callbacks& callbacks,
    m_creds(creds),
    m_info(info)
    {
+   BOTAN_ASSERT_NONNULL(m_creds);
    const auto version = datagram ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
    Handshake_State& state = create_handshake_state(version);
    send_client_hello(state, false, version, std::nullopt /* no a-priori session to resume */, next_protocols);
@@ -571,7 +572,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          {
          try
             {
-            auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-client", m_info.hostname());
+            auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
 
             callbacks().tls_verify_cert_chain(server_certs,
                                               {},
@@ -647,7 +648,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          {
          try
             {
-            auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-client", m_info.hostname());
+            auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
 
             std::vector<std::optional<OCSP::Response>> ocsp;
             if(state.server_cert_status() != nullptr)
@@ -677,11 +678,11 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          const auto& types = state.cert_req()->acceptable_cert_types();
 
          std::vector<X509_Certificate> client_certs =
-            m_creds.find_cert_chain(types,
-                                    {},
-                                    state.cert_req()->acceptable_CAs(),
-                                    "tls-client",
-                                    m_info.hostname());
+            m_creds->find_cert_chain(types,
+                                     {},
+                                     state.cert_req()->acceptable_CAs(),
+                                     "tls-client",
+                                     m_info.hostname());
 
          state.client_certs(new Certificate_12(state.handshake_io(),
                                                state.hash(),
@@ -692,7 +693,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          new Client_Key_Exchange(state.handshake_io(),
                                  state,
                                  policy(),
-                                 m_creds,
+                                 *m_creds,
                                  state.server_public_key.get(),
                                  m_info.hostname(),
                                  rng())
@@ -704,9 +705,9 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          !state.client_certs()->empty())
          {
          auto private_key =
-            m_creds.private_key_for(state.client_certs()->cert_chain()[0],
-                                    "tls-client",
-                                    m_info.hostname());
+            m_creds->private_key_for(state.client_certs()->cert_chain()[0],
+                                     "tls-client",
+                                     m_info.hostname());
 
          if(!private_key)
             throw TLS_Exception(Alert::InternalError, "Failed to get private key for signing");
