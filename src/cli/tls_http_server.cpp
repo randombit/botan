@@ -560,7 +560,7 @@ class TLS_HTTP_Server final : public Command
             {
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
             const std::string sessions_passphrase = get_passphrase_arg("Session DB passphrase", "session-db-pass");
-            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng(), sessions_db));
+            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng_as_shared(), sessions_db));
 #else
             throw CLI_Error_Unsupported("Sqlite3 support not available");
 #endif
@@ -568,7 +568,7 @@ class TLS_HTTP_Server final : public Command
 
          if(!session_mgr)
             {
-            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
+            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng_as_shared()));
             }
 
          boost::asio::io_service io;

@@ -562,7 +562,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
 
    public:
       RFC8448_Session_Manager()
-         : Session_Manager(Test::rng()) {}
+         : Session_Manager(Test::rng_as_shared()) {}
 
       const std::vector<Session_with_Handle>& all_sessions() const
          {

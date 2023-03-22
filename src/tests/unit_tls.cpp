@@ -957,13 +957,13 @@ class TLS_Unit_Tests final : public Test
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
          client_ses.reset(
-            new Botan::TLS::Session_Manager_SQLite("client pass", *rng, ":memory:", 5));
+            new Botan::TLS::Session_Manager_SQLite("client pass", rng, ":memory:", 5));
          server_ses.reset(
-            new Botan::TLS::Session_Manager_SQLite("server pass", *rng, ":memory:", 10));
+            new Botan::TLS::Session_Manager_SQLite("server pass", rng, ":memory:", 10));
 
 #else
-         client_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(*rng);
-         server_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(*rng);
+         client_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         server_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 #endif
 
          auto creds = create_creds(*rng);
@@ -1042,8 +1042,8 @@ class TLS_Unit_Tests final : public Test
                               results, client_ses, server_ses, creds_with_client_cert, "ECDH", "AES-256/GCM", "AEAD", true);
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-         client_ses.reset(new Botan::TLS::Session_Manager_In_Memory(*rng));
-         server_ses.reset(new Botan::TLS::Session_Manager_In_Memory(*rng));
+         client_ses.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
+         server_ses.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
 #endif
 
 #if defined(BOTAN_HAS_AEAD_OCB)
@@ -1192,7 +1192,7 @@ class DTLS_Reconnection_Test : public Test
          auto server_policy = std::make_shared<Datagram_PSK_Policy>();
          auto client_policy = std::make_shared<Datagram_PSK_Policy>();
          auto creds = std::make_shared<Credentials_PSK>();
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng());
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());
          auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
          std::vector<uint8_t> s2c, server_recv;

@@ -497,12 +497,12 @@ class TLS_Proxy final : public Command
 
          if(!sessions_db.empty())
             {
-            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng(), sessions_db));
+            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng_as_shared(), sessions_db));
             }
 #endif
          if(!session_mgr)
             {
-            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
+            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng_as_shared()));
             }
 
          tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, session_mgr, max_clients);

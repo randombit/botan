@@ -39,7 +39,8 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_Stateless : public Session_Manager
        * It is the responsibility of the calling application to set up its own
        * Credentials_Manager to provide a suitable key for this purpose.
        */
-      Session_Manager_Stateless(Credentials_Manager &credentials_manager, RandomNumberGenerator& rng);
+      Session_Manager_Stateless(std::shared_ptr<Credentials_Manager> credentials_manager,
+                                std::shared_ptr<RandomNumberGenerator> rng);
 
       std::optional<Session_Handle> establish(const Session& session,
                                               const std::optional<Session_ID>& id = std::nullopt,
@@ -60,7 +61,7 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_Stateless : public Session_Manager
       std::optional<SymmetricKey> get_ticket_key() noexcept;
 
    private:
-      Credentials_Manager& m_credentials_manager;
+      std::shared_ptr<Credentials_Manager> m_credentials_manager;
    };
 
 }

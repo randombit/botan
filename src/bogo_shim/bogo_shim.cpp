@@ -1736,7 +1736,7 @@ int main(int /*argc*/, char* argv[])
             {
             // The in-memory session manager stores sessions in volatile memory and
             // hands out Session_IDs (i.e. does not utilize session tickets)
-            return std::make_shared<Botan::TLS::Session_Manager_In_Memory>(*rng, 1024);
+            return std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng, 1024);
             }
          else
             {
@@ -1744,7 +1744,7 @@ int main(int /*argc*/, char* argv[])
             // servers) but can also fall back to stateful management when tickets
             // are not an option.
             return std::make_shared<Botan::TLS::Session_Manager_Hybrid>(
-               std::make_unique<Botan::TLS::Session_Manager_In_Memory>(*rng, 1024), *creds, *rng);
+               std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng, 1024), creds, rng);
             }
          }();
 

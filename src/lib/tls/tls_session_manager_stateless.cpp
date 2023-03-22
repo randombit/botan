@@ -16,9 +16,13 @@
 
 namespace Botan::TLS {
 
-Session_Manager_Stateless::Session_Manager_Stateless(Credentials_Manager& creds, RandomNumberGenerator& rng)
+Session_Manager_Stateless::Session_Manager_Stateless(std::shared_ptr<Credentials_Manager> creds,
+                                                     std::shared_ptr<RandomNumberGenerator> rng)
    : Session_Manager(rng)
-   , m_credentials_manager(creds) {}
+   , m_credentials_manager(creds)
+   {
+   BOTAN_ASSERT_NONNULL(m_credentials_manager);
+   }
 
 std::optional<Session_Handle> Session_Manager_Stateless::establish(
    const Session& session,
@@ -34,7 +38,7 @@ std::optional<Session_Handle> Session_Manager_Stateless::establish(
    if(!key.has_value())
       { return std::nullopt; }
 
-   return Session_Ticket{session.encrypt(key.value(), m_rng)};
+   return Session_Ticket{session.encrypt(key.value(), *m_rng)};
    }
 
 void Session_Manager_Stateless::store(const Session&, const Session_Handle&)
@@ -74,7 +78,7 @@ std::optional<SymmetricKey> Session_Manager_Stateless::get_ticket_key() noexcept
    {
    try
       {
-      auto key = m_credentials_manager.psk("tls-server", "session-ticket", "");
+      auto key = m_credentials_manager->psk("tls-server", "session-ticket", "");
       if(key.length() == 0)
          { return std::nullopt; }
       return key;

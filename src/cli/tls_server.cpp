@@ -161,7 +161,7 @@ class TLS_Server final : public Command
          m_is_tcp = (transport == "tcp");
 
          auto policy = load_tls_policy(get_arg("policy"));
-         auto session_manager = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng()); // TODO sqlite3
+         auto session_manager = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared()); // TODO sqlite3
          auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key);
          auto callbacks = std::make_shared<Callbacks>(*this);
 

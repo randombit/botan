@@ -14,8 +14,11 @@
 
 namespace Botan::TLS {
 
-Session_Manager::Session_Manager(RandomNumberGenerator& rng)
-   : m_rng(rng) {}
+Session_Manager::Session_Manager(std::shared_ptr<RandomNumberGenerator> rng)
+   : m_rng(rng)
+   {
+   BOTAN_ASSERT_NONNULL(m_rng);
+   }
 
 std::optional<Session_Handle> Session_Manager::establish(
    const Session& session,
@@ -32,7 +35,7 @@ std::optional<Session_Handle> Session_Manager::establish(
    //       Unfortuately clang does not agree, yet.
    lock_guard_type<recursive_mutex_type> lk(mutex());
 
-   Session_Handle handle(id.value_or(m_rng.random_vec<Session_ID>(32)));
+   Session_Handle handle(id.value_or(m_rng->random_vec<Session_ID>(32)));
    store(session, handle);
    return handle;
 }

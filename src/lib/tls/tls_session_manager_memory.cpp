@@ -14,8 +14,8 @@
 
 namespace Botan::TLS {
 
-Session_Manager_In_Memory::Session_Manager_In_Memory(RandomNumberGenerator& rng,
-      size_t max_sessions)
+Session_Manager_In_Memory::Session_Manager_In_Memory(std::shared_ptr<RandomNumberGenerator> rng,
+                                                     size_t max_sessions)
    : Session_Manager(rng)
    , m_max_sessions(max_sessions)
    {
@@ -42,7 +42,7 @@ void Session_Manager_In_Memory::store(const Session& session, const Session_Hand
 
    // Generate a random session ID if the peer did not provide one. Note that
    // this ID is just for internal use and won't be returned on ::find().
-   auto id = handle.id().value_or(m_rng.random_vec<Session_ID>(32));
+   auto id = handle.id().value_or(m_rng->random_vec<Session_ID>(32));
    m_sessions.emplace(id, Session_with_Handle{session, handle});
 
    if(m_fifo.has_value())

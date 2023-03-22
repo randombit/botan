@@ -210,7 +210,7 @@ class TLS_Client final : public Command
             {
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
             const std::string sessions_passphrase = get_passphrase_arg("Session DB passphrase", "session-db-pass");
-            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng(), sessions_db));
+            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng_as_shared(), sessions_db));
 #else
             error_output() << "Ignoring session DB file, sqlite not enabled\n";
 #endif
@@ -218,7 +218,7 @@ class TLS_Client final : public Command
 
          if(!session_mgr)
             {
-            session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng());
+            session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());
             }
 
          auto policy = load_tls_policy(get_arg("policy"));

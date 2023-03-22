@@ -143,7 +143,7 @@ int main() {
 
   // prepare all the parameters
   auto callbacks = std::make_shared<Callbacks>();
-  auto session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(*rng);
+  auto session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
   auto creds = std::make_shared<Client_Credentials>();
   auto policy = std::make_shared<Botan::TLS::Strict_Policy>();
 
