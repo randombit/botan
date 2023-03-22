@@ -31,7 +31,7 @@ class L_computer;
 class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
    {
    public:
-      void set_associated_data(const uint8_t ad[], size_t ad_len) override final;
+      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
 
       std::string name() const override final;
 

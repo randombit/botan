@@ -91,18 +91,20 @@ void CCM_Mode::key_schedule(const uint8_t key[], size_t length)
    m_cipher->set_key(key, length);
    }
 
-void CCM_Mode::set_associated_data(const uint8_t ad[], size_t length)
+void CCM_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad)
    {
+   BOTAN_ARG_CHECK(idx == 0, "CCM: cannot handle non-zero index in set_associated_data_n");
+
    m_ad_buf.clear();
 
-   if(length)
+   if(!ad.empty())
       {
       // FIXME: support larger AD using length encoding rules
-      BOTAN_ARG_CHECK(length < (0xFFFF - 0xFF), "Supported CCM AD length");
+      BOTAN_ARG_CHECK(ad.size() < (0xFFFF - 0xFF), "Supported CCM AD length");
 
-      m_ad_buf.push_back(get_byte<0>(static_cast<uint16_t>(length)));
-      m_ad_buf.push_back(get_byte<1>(static_cast<uint16_t>(length)));
-      m_ad_buf += std::make_pair(ad, length);
+      m_ad_buf.push_back(get_byte<0>(static_cast<uint16_t>(ad.size())));
+      m_ad_buf.push_back(get_byte<1>(static_cast<uint16_t>(ad.size())));
+      m_ad_buf.insert(m_ad_buf.end(), ad.begin(), ad.end());
       while(m_ad_buf.size() % CCM_BS)
          m_ad_buf.push_back(0); // pad with zeros to full block size
       }

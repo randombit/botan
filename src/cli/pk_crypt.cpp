@@ -80,7 +80,7 @@ class PK_Encrypt final : public Command
 
          const Botan::secure_vector<uint8_t> nonce = rng().random_vec(aead->default_nonce_length());
          aead->set_key(file_key);
-         aead->set_associated_data_vec(encrypted_key);
+         aead->set_associated_data(encrypted_key);
          aead->start(nonce);
 
          aead->finish(data);
@@ -202,7 +202,7 @@ class PK_Decrypt final : public Command
                                   rng());
 
          aead->set_key(file_key);
-         aead->set_associated_data_vec(encrypted_key);
+         aead->set_associated_data(encrypted_key);
          aead->start(nonce);
 
          try

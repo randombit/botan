@@ -138,7 +138,7 @@ class OCB_Wide_KAT_Tests final : public Text_Based_Test
          Botan::OCB_Encryption enc(std::make_unique<OCB_Wide_Test_Block_Cipher>(bs),
                                    std::min<size_t>(bs, 32));
          enc.set_key(key);
-         enc.set_ad(ad);
+         enc.set_associated_data(ad);
          enc.start(nonce);
          enc.finish(buf);
          result.test_eq("Ciphertext matches", buf, expected);
@@ -146,7 +146,7 @@ class OCB_Wide_KAT_Tests final : public Text_Based_Test
          Botan::OCB_Decryption dec(std::make_unique<OCB_Wide_Test_Block_Cipher>(bs),
                                    std::min<size_t>(bs, 32));
          dec.set_key(key);
-         dec.set_ad(ad);
+         dec.set_associated_data(ad);
          dec.start(nonce);
          dec.finish(buf);
          result.test_eq("Decryption correct", buf, input);

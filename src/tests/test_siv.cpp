@@ -48,7 +48,7 @@ class SIV_Tests final : public Text_Based_Test
          for(size_t i = 0; i != ad_list.size(); ++i)
             {
             std::vector<uint8_t> ad = Botan::hex_decode(ad_list[i]);
-            siv->set_associated_data_n(i, ad.data(), ad.size());
+            siv->set_associated_data_n(i, ad);
             }
 
          Botan::secure_vector<uint8_t> buf(input.begin(), input.end());

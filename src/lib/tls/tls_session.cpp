@@ -452,7 +452,7 @@ Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const
    BOTAN_ASSERT_NOMSG(aead->valid_nonce_length(TLS_SESSION_CRYPT_AEAD_NONCE_LEN));
    BOTAN_ASSERT_NOMSG(aead->tag_size() == TLS_SESSION_CRYPT_AEAD_TAG_SIZE);
    aead->set_key(aead_key);
-   aead->set_associated_data_vec(buf);
+   aead->set_associated_data(buf);
    aead->start(aead_nonce);
    aead->finish(bits, 0);
 

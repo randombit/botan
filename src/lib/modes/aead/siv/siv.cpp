@@ -91,7 +91,7 @@ size_t SIV_Mode::maximum_associated_data_inputs() const
    return block_size() * 8 - 2;
    }
 
-void SIV_Mode::set_associated_data_n(size_t n, const uint8_t ad[], size_t length)
+void SIV_Mode::set_associated_data_n(size_t n, std::span<const uint8_t> ad)
    {
    const size_t max_ads = maximum_associated_data_inputs();
    if(n > max_ads)
@@ -100,7 +100,7 @@ void SIV_Mode::set_associated_data_n(size_t n, const uint8_t ad[], size_t length
    if(n >= m_ad_macs.size())
       m_ad_macs.resize(n+1);
 
-   m_ad_macs[n] = m_mac->process(ad, length);
+   m_ad_macs[n] = m_mac->process(ad);
    }
 
 void SIV_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
