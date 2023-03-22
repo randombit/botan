@@ -612,7 +612,16 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
          pending_state.server_hello()->srtp_profile(),
          callbacks().tls_current_timestamp());
 
-      if(save_session({session_info, pending_state.server_hello()->session_id()}))
+      // Give the application a chance for a final veto before fully
+      // establishing the connection.
+      callbacks().tls_session_established([&]
+         {
+         Session_Summary summary(session_info, pending_state.is_a_resumption());
+         summary.set_session_id(pending_state.server_hello()->session_id());
+         return summary;
+         }());
+
+      if(callbacks().tls_should_persist_resumption_information(session_info))
          {
          auto handle = session_manager().establish(session_info, pending_state.server_hello()->session_id(), !pending_state.server_hello()->supports_session_ticket());
 
@@ -724,9 +733,22 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
    pending_state.compute_session_keys(session.session.master_secret());
    pending_state.set_resume_certs(session.session.peer_certs());
 
+   // Give the application a chance for a final veto before fully
+   // establishing the connection.
+   callbacks().tls_session_established([&]
+      {
+      Session_Summary summary(session.session, pending_state.is_a_resumption());
+      summary.set_session_id(pending_state.server_hello()->session_id());
+      if(auto ticket = session.handle.ticket())
+         {
+         summary.set_session_ticket(std::move(ticket.value()));
+         }
+      return summary;
+      }());
+
    auto new_handle = [&, this]() -> std::optional<Session_Handle>
       {
-      if(!save_session(session))
+      if(!callbacks().tls_should_persist_resumption_information(session.session))
          {
          session_manager().remove(session.handle);
          return std::nullopt;

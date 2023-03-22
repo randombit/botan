@@ -154,11 +154,6 @@ class Fuzzer_TLS_Server_Callbacks : public Botan::TLS::Callbacks
          // ignore alert
          }
 
-      bool tls_session_established(const Botan::TLS::Session_with_Handle&) override
-         {
-         return true; // cache it
-         }
-
       std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override
          {
          if(client_protos.size() > 1)

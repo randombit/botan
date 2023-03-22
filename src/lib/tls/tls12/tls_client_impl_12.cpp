@@ -797,17 +797,23 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
             { return std::nullopt; }
          }();
 
+      // Give the application a chance for a final veto before fully
+      // establishing the connection.
+      callbacks().tls_session_established([&]
+         {
+         Session_Summary summary(session_info, state.is_a_resumption());
+         summary.set_session_id(state.server_hello()->session_id());
+         if(auto nst = state.new_session_ticket())
+            {
+            summary.set_session_ticket(nst->ticket());
+            }
+         return summary;
+         }());
+
       if(handle.has_value())
          {
-         // TODO: This should be move outside the `if(handle.has_value())`
-         //       once we adapt
-         //       TLS::Callbacks::session_established(Session) to
-         //       something along the lines of
-         //       TLS::Callbacks::connection_established(Summary)
-         //
-         // This should be called for all successfully established sessions
-         // not only the ones providing a handle for resumption.
-         const bool should_save = save_session({session_info, handle.value()});
+         const bool should_save =
+            callbacks().tls_should_persist_resumption_information(session_info);
 
          // RFC 5077 3.3
          //    If the server successfully verifies the client's ticket, then it

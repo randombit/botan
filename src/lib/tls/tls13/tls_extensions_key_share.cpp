@@ -31,32 +31,6 @@ namespace Botan::TLS {
 
 namespace {
 
-[[maybe_unused]] constexpr bool is_x25519(const Group_Params group)
-   {
-   return group == Group_Params::X25519;
-   }
-
-[[maybe_unused]] constexpr bool is_ecdh(const Group_Params group)
-   {
-   return
-      group == Group_Params::SECP256R1      ||
-      group == Group_Params::SECP384R1      ||
-      group == Group_Params::SECP521R1      ||
-      group == Group_Params::BRAINPOOL256R1 ||
-      group == Group_Params::BRAINPOOL384R1 ||
-      group == Group_Params::BRAINPOOL512R1;
-   }
-
-[[maybe_unused]] constexpr bool is_dh(const Group_Params group)
-   {
-   return
-      group == Group_Params::FFDHE_2048 ||
-      group == Group_Params::FFDHE_3072 ||
-      group == Group_Params::FFDHE_4096 ||
-      group == Group_Params::FFDHE_6144 ||
-      group == Group_Params::FFDHE_8192;
-   }
-
 class Key_Share_Entry
    {
    public:

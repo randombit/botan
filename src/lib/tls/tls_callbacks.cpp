@@ -58,12 +58,21 @@ std::string TLS::Callbacks::tls_decode_group_param(Group_Params group_param)
    }
 
 
-bool TLS::Callbacks::tls_session_ticket_received(const Session& session)
+bool TLS::Callbacks::tls_should_persist_resumption_information(const Session& session)
    {
+   // RFC 5077 3.3
+   //    The ticket_lifetime_hint field contains a hint from the server about
+   //    how long the ticket should be stored. A value of zero is reserved to
+   //    indicate that the lifetime of the ticket is unspecified.
+   //
    // RFC 8446 4.6.1
    //    [A ticket_lifetime] of zero indicates that the ticket should be discarded
    //    immediately.
-   return session.lifetime_hint().count() > 0;
+   //
+   // By default we opt to keep all sessions, except for TLS 1.3 with a lifetime
+   // hint of zero.
+   return session.lifetime_hint().count() > 0 ||
+          session.version().is_pre_tls_13();
    }
 
 void TLS::Callbacks::tls_verify_cert_chain(

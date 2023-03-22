@@ -72,14 +72,12 @@ information about the connection.
      received before the handshake is complete are not authenticated and
      could have been inserted by a MITM attacker.
 
- .. cpp:function:: bool tls_session_established(const TLS::Session& session)
+ .. cpp:function:: void tls_session_established(const Botan::TLS::Session_Summary& session)
 
-     Mandatory. Called whenever a negotiation completes. This can happen more
-     than once on any connection, if renegotiation occurs. The *session* parameter
+     Optional - default implementation is a no-op
+     Called whenever a negotiation completes. This can happen more than once on
+     TLS 1.2 connections, if renegotiation occurs. The *session* parameter
      provides information about the session which was just established.
-
-     If this function returns false, the session will not be cached
-     for later resumption.
 
      If this function wishes to cancel the handshake, it can throw an
      exception which will send a close message to the counterparty and
@@ -195,7 +193,7 @@ information about the connection.
      Optional. Called by the server when a client hello includes a list of supported groups in the
      supported_groups extension and by the client when decoding the server key exchange including the selected curve identifier.
      The function should return the name of the DH group or elliptic curve the passed
-     TLS group identifier should be mapped to. Therefore this callback enables the use of custom 
+     TLS group identifier should be mapped to. Therefore this callback enables the use of custom
      elliptic curves or DH groups in TLS, if both client and server map the custom identifiers correctly.
      Please note that it is required to allow the group TLS identifier in
      in the used :cpp:class:`TLS::Policy`.

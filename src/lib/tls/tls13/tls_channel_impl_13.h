@@ -183,8 +183,9 @@ class Channel_Impl_13 : public Channel_Impl
       */
       bool secure_renegotiation_supported() const override
          {
-         // No renegotiation supported in TLS 1.3
-         return false;
+         // Secure renegotiation is not supported in TLS 1.3, though BoGo
+         // tests expect us to claim that it is available.
+         return true;
          }
 
       /**

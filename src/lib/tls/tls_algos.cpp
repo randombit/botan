@@ -39,6 +39,8 @@ std::string kex_method_to_string(Kex_Algo method)
          return "PSK";
       case Kex_Algo::ECDHE_PSK:
          return "ECDHE_PSK";
+      case Kex_Algo::DHE_PSK:
+         return "DHE_PSK";
       case Kex_Algo::UNDEFINED:
          return "UNDEFINED";
       }
@@ -62,6 +64,9 @@ Kex_Algo kex_method_from_string(const std::string& str)
 
    if(str == "ECDHE_PSK")
       return Kex_Algo::ECDHE_PSK;
+
+   if(str == "DHE_PSK")
+      return Kex_Algo::DHE_PSK;
 
    if(str == "UNDEFINED")
       return Kex_Algo::UNDEFINED;

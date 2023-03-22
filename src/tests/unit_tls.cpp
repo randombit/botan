@@ -282,13 +282,13 @@ class TLS_Handshake_Test final
 
       const Test::Result& results() const { return m_results; }
 
-      void set_custom_client_tls_session_established_callback(std::function<void(const Botan::TLS::Session&)> clbk)
+      void set_custom_client_tls_session_established_callback(std::function<void(const Botan::TLS::Session_Summary&)> clbk)
          {
          BOTAN_ASSERT_NONNULL(m_client_cb);
          m_client_cb->set_custom_tls_session_established_callback(std::move(clbk));
          }
 
-      void set_custom_server_tls_session_established_callback(std::function<void(const Botan::TLS::Session&)> clbk)
+      void set_custom_server_tls_session_established_callback(std::function<void(const Botan::TLS::Session_Summary&)> clbk)
          {
          BOTAN_ASSERT_NONNULL(m_server_cb);
          m_server_cb->set_custom_tls_session_established_callback(std::move(clbk));
@@ -437,27 +437,25 @@ class TLS_Handshake_Test final
                   }
                }
 
-            bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
+            void tls_session_established(const Botan::TLS::Session_Summary& session) override
                {
                const std::string session_report =
-                  "Session established " + session.session.version().to_string() + " " +
-                  session.session.ciphersuite().to_string() + " " +
-                  Botan::hex_encode(session.handle.opaque_handle().get());
+                  "Session established " + session.version().to_string() + " " +
+                  session.ciphersuite().to_string() + " " +
+                  Botan::hex_encode(session.session_id().get());
 
                m_results.test_note(session_report);
 
                if(m_session_established_callback)
                   {
-                  m_session_established_callback(session.session);
+                  m_session_established_callback(session);
                   }
 
-               if(session.session.version() != m_expected_version)
+               if(session.version() != m_expected_version)
                   {
                   m_results.test_failure("Expected " + m_expected_version.to_string() +
-                                         " negotiated " + session.session.version().to_string());
+                                         " negotiated " + session.version().to_string());
                   }
-
-               return true;
                }
 
             std::string tls_server_choose_app_protocol(const std::vector<std::string>& protos) override
@@ -476,7 +474,7 @@ class TLS_Handshake_Test final
                return Botan::TLS::Callbacks::tls_decode_group_param(group_param);
                }
 
-            void set_custom_tls_session_established_callback(std::function<void(const Botan::TLS::Session&)> clbk)
+            void set_custom_tls_session_established_callback(std::function<void(const Botan::TLS::Session_Summary&)> clbk)
                {
                m_session_established_callback = std::move(clbk);
                }
@@ -492,7 +490,7 @@ class TLS_Handshake_Test final
             std::vector<uint8_t>& m_outbound;
             std::vector<uint8_t>& m_recv;
 
-            std::function<void(const Botan::TLS::Session&)> m_session_established_callback;
+            std::function<void(const Botan::TLS::Session_Summary&)> m_session_established_callback;
             std::optional<Botan::TLS::Alert> m_expected_handshake_alert;
          };
 
@@ -871,7 +869,7 @@ class TLS_Unit_Tests final : public Test
                   "Client aborts in tls_session_established with " +
                   expected_server_alert.type_string() + ": " + version.to_string(),
                   version, creds, policy, policy, rng, noop_session_manager, noop_session_manager, false);
-               test.set_custom_client_tls_session_established_callback([=](const Botan::TLS::Session&)
+               test.set_custom_client_tls_session_established_callback([=](const auto&)
                   {
                   std::rethrow_exception(ex);
                   });
@@ -890,7 +888,7 @@ class TLS_Unit_Tests final : public Test
                   "Server aborts in tls_session_established with " +
                   expected_server_alert.type_string() + ": " + version.to_string(),
                   version, creds, policy, policy, rng, noop_session_manager, noop_session_manager, false);
-               test.set_custom_server_tls_session_established_callback([=](const Botan::TLS::Session&)
+               test.set_custom_server_tls_session_established_callback([=](const auto&)
                   {
                   std::rethrow_exception(ex);
                   });
@@ -1110,10 +1108,9 @@ class DTLS_Reconnection_Test : public Test
                   // ignore
                   }
 
-               bool tls_session_established(const Botan::TLS::Session_with_Handle& /*session*/) override
+               void tls_session_established(const Botan::TLS::Session_Summary& /*session*/) override
                   {
                   m_results.test_success("Established a session");
-                  return true;
                   }
 
             private:

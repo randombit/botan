@@ -27,13 +27,6 @@ public:
   void tls_alert(Botan::TLS::Alert alert) override {
     // handle a tls alert received from the tls server
   }
-
-  bool tls_session_established(const Botan::TLS::Session_with_Handle &session) override {
-    // the session with the tls server was established
-    // return false to prevent the session from being cached, true to
-    // cache the session in the configured session manager
-    return true;
-  }
 };
 
 /**

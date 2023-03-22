@@ -88,7 +88,7 @@ std::optional<Session_Ticket> Session_Handle::ticket() const
    }
 
 
-Ciphersuite Session_Summary::ciphersuite() const
+Ciphersuite Session_Base::ciphersuite() const
    {
    auto suite = Ciphersuite::by_id(m_ciphersuite);
    if (!suite.has_value())
@@ -98,6 +98,94 @@ Ciphersuite Session_Summary::ciphersuite() const
       }
    return suite.value();
    }
+
+
+Session_Summary::Session_Summary(const Session_Base& base,
+                                 bool was_resumption)
+   : Session_Base(base)
+   {
+   BOTAN_ARG_CHECK(version().is_pre_tls_13(),
+                   "Instantiated a TLS 1.2 session summary with an newer TLS version");
+
+   const auto cs = ciphersuite();
+   m_psk_used = cs.psk_ciphersuite();
+   m_kex_algo = cs.kex_algo();
+   m_was_resumption = was_resumption;
+   }
+
+#if defined(BOTAN_HAS_TLS_13)
+
+Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
+                                 Connection_Side side,
+                                 std::vector<X509_Certificate> peer_certs,
+                                 Server_Information server_info,
+                                 std::chrono::system_clock::time_point current_timestamp) :
+   Session_Base(
+      std::move(current_timestamp),
+      server_hello.selected_version(),
+      server_hello.ciphersuite(),
+      side,
+
+      // TODO: SRTP might become necessary when DTLS 1.3 is being implemented
+      0,
+
+      // RFC 8446 Appendix D
+      //    Because TLS 1.3 always hashes in the transcript up to the server
+      //    Finished, implementations which support both TLS 1.3 and earlier
+      //    versions SHOULD indicate the use of the Extended Master Secret
+      //    extension in their APIs whenever TLS 1.3 is used.
+      true,
+
+      // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
+      false,
+      std::move(peer_certs),
+      std::move(server_info))
+   {
+   BOTAN_ARG_CHECK(version().is_tls_13_or_later(),
+                   "Instantiated a TLS 1.3 session summary with an older TLS version");
+   set_session_id(server_hello.session_id());
+
+   // Currently, we use PSK exclusively for session resumption. Hence, a
+   // server hello with a PSK extension indicates a session resumption.
+   //
+   // TODO: once manually configured PSKs are implemented, this will need
+   //       extra consideration to tell PSK usage and resumption apart.
+   m_psk_used = server_hello.extensions().has<PSK>();
+   m_was_resumption = m_psk_used;
+
+   // In TLS 1.3 the key exchange algorithm is not negotiated in the ciphersuite
+   // anymore. This provides a compatible identifier for applications to use.
+   m_kex_algo = kex_method_to_string([&]
+      {
+      if(m_psk_used)
+         {
+         if(const auto keyshare = server_hello.extensions().get<Key_Share>())
+            {
+            const auto group = keyshare->selected_group();
+            if(is_dh(group))
+               { return Kex_Algo::DHE_PSK; }
+            else if(is_ecdh(group) || is_x25519(group))
+               { return Kex_Algo::ECDHE_PSK; }
+            }
+         else
+            { return Kex_Algo::PSK; }
+         }
+      else
+         {
+         const auto keyshare = server_hello.extensions().get<Key_Share>();
+         BOTAN_ASSERT_NONNULL(keyshare);
+         const auto group = keyshare->selected_group();
+         if(is_dh(group))
+            { return Kex_Algo::DH; }
+         else if(is_ecdh(group) || is_x25519(group))
+            { return Kex_Algo::ECDH; }
+         }
+
+      return Kex_Algo::UNDEFINED;
+      }());
+   }
+
+#endif
 
 
 Session::Session(const secure_vector<uint8_t>& master_secret,
@@ -111,7 +199,7 @@ Session::Session(const secure_vector<uint8_t>& master_secret,
                  uint16_t srtp_profile,
                  std::chrono::system_clock::time_point current_timestamp,
                  std::chrono::seconds lifetime_hint) :
-   Session_Summary(
+   Session_Base(
       current_timestamp,
       version,
       ciphersuite,
@@ -143,7 +231,7 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
                  const std::vector<X509_Certificate>& peer_certs,
                  const Server_Information& server_info,
                  std::chrono::system_clock::time_point current_timestamp) :
-   Session_Summary(
+   Session_Base(
       current_timestamp,
       version,
       ciphersuite,
@@ -181,7 +269,7 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
                  const Server_Hello_13& server_hello,
                  Callbacks& callbacks,
                  RandomNumberGenerator& rng) :
-   Session_Summary(
+   Session_Base(
       callbacks.tls_current_timestamp(),
       server_hello.selected_version(),
       server_hello.ciphersuite(),

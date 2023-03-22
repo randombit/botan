@@ -69,6 +69,19 @@ tls_record_received() / tls_emit_data()
 Those callbacks now take `std::span<const uint8_t>` instead of `const uint8_t*`
 with a `size_t` buffer length.
 
+tls_session_established()
+"""""""""""""""""""""""""
+
+This callback provides a summary of the just-negotiated connection. It used to
+have a bool return value letting an application decide to store or discard the
+connection's resumption information. This use case is now provided via:
+`tls_should_persist_resumption_information()` which might be called more than
+once for a single TLS 1.3 connection.
+
+`tls_session_established` is not a mandatory callback anymore but still allows
+applications to abort a connection given a summary of the negotiated
+characteristics. Note that this summary is not a persistable `Session` anymore.
+
 tls_verify_cert_chain()
 """""""""""""""""""""""
 

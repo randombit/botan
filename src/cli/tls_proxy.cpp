@@ -329,11 +329,9 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
          async_connect(m_server_socket, m_server_endpoints, onConnect);
          }
 
-      bool tls_session_established(const Botan::TLS::Session_with_Handle& session) override
+      void tls_session_established(const Botan::TLS::Session_Summary& session) override
          {
-         m_hostname = session.session.server_info().hostname();
-
-         return true;
+         m_hostname = session.server_info().hostname();
          }
 
       void tls_alert(Botan::TLS::Alert alert) override
