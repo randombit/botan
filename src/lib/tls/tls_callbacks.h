@@ -285,7 +285,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @return a private key of an algorithm usable for key agreement
        */
-      virtual std::unique_ptr<PK_Key_Agreement_Key> tls_generate_ephemeral_key(std::variant<TLS::Group_Params, DL_Group> group, RandomNumberGenerator& rng);
+      virtual std::unique_ptr<PK_Key_Agreement_Key> tls_generate_ephemeral_key(
+         const std::variant<TLS::Group_Params, DL_Group>& group,
+         RandomNumberGenerator& rng);
 
       /**
        * Agree on a shared secret with the peer's ephemeral public key for
@@ -311,11 +313,12 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @return the shared secret derived from public_value and private_key
        */
-      virtual secure_vector<uint8_t> tls_ephemeral_key_agreement(std::variant<TLS::Group_Params, DL_Group> group,
-                                                                 const PK_Key_Agreement_Key& private_key,
-                                                                 const std::vector<uint8_t>& public_value,
-                                                                 RandomNumberGenerator& rng,
-                                                                 const Policy& policy);
+      virtual secure_vector<uint8_t> tls_ephemeral_key_agreement(
+         const std::variant<TLS::Group_Params, DL_Group>& group,
+         const PK_Key_Agreement_Key& private_key,
+         const std::vector<uint8_t>& public_value,
+         RandomNumberGenerator& rng,
+         const Policy& policy);
 
        /**
        * Optional callback: inspect handshake message

@@ -160,7 +160,7 @@ bool is_dh_group(const std::variant<TLS::Group_Params, DL_Group>& group)
           is_dh(std::get<TLS::Group_Params>(group));
    }
 
-DL_Group get_dl_group(std::variant<TLS::Group_Params, DL_Group> group)
+DL_Group get_dl_group(const std::variant<TLS::Group_Params, DL_Group>& group)
    {
    BOTAN_ASSERT_NOMSG(is_dh_group(group));
 
@@ -169,20 +169,20 @@ DL_Group get_dl_group(std::variant<TLS::Group_Params, DL_Group> group)
    // groups.
    return std::visit(overloaded
       {
-      [](DL_Group dl_group) { return dl_group; },
+      [](const DL_Group& dl_group) { return dl_group; },
       [&](TLS::Group_Params group_param) { return DL_Group(group_param_to_string(group_param)); }
-      }, std::move(group));
+      }, group);
    }
 
 }
 
 std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key(
-   const std::variant<TLS::Group_Params, DL_Group> group,
+   const std::variant<TLS::Group_Params, DL_Group>& group,
    RandomNumberGenerator& rng)
    {
    if(is_dh_group(group))
       {
-      const DL_Group dl_group = get_dl_group(std::move(group));
+      const DL_Group dl_group = get_dl_group(group);
       return std::make_unique<DH_PrivateKey>(rng, dl_group);
       }
 
@@ -205,11 +205,12 @@ std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key
    throw TLS_Exception(Alert::DecodeError, "cannot create a key offering without a group definition");
    }
 
-secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(std::variant<TLS::Group_Params, DL_Group> group,
-                                                                   const PK_Key_Agreement_Key& private_key,
-                                                                   const std::vector<uint8_t>& public_value,
-                                                                   RandomNumberGenerator& rng,
-                                                                   const Policy& policy)
+secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
+   const std::variant<TLS::Group_Params, DL_Group>& group,
+   const PK_Key_Agreement_Key& private_key,
+   const std::vector<uint8_t>& public_value,
+   RandomNumberGenerator& rng,
+   const Policy& policy)
    {
    auto agree = [&](const PK_Key_Agreement_Key& sk, const auto& pk)
       {
@@ -221,7 +222,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(std::variant<
       {
       // TLS 1.2 allows specifying arbitrary DL_Group parameters in-lieu of
       // a standardized DH group identifier.
-      const auto dl_group = get_dl_group(std::move(group));
+      const auto dl_group = get_dl_group(group);
 
       auto Y = BigInt::decode(public_value);
 

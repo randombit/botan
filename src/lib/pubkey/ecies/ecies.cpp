@@ -297,7 +297,7 @@ std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[], size_t length, R
    // encryption
 
    m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
-   if(m_iv.size() == 0 && !m_cipher->valid_nonce_length(m_iv.size()))
+   if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size()))
       throw Invalid_Argument("ECIES with " + m_cipher->name() + " requires an IV be set");
 
    m_cipher->start(m_iv.bits_of());
@@ -402,7 +402,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       // decrypt data
 
       m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
-      if(m_iv.size() == 0 && !m_cipher->valid_nonce_length(m_iv.size()))
+      if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size()))
          throw Invalid_Argument("ECIES with " + m_cipher->name() + " requires an IV be set");
       m_cipher->start(m_iv.bits_of());
 

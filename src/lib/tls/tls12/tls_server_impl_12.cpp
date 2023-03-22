@@ -436,7 +436,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
          }
       catch(...) {}
 
-      if(cookie_secret.size() > 0)
+      if(!cookie_secret.empty())
          {
          const std::string client_identity = callbacks().tls_peer_network_identity();
          Hello_Verify_Request verify(pending_state.client_hello()->cookie_input_data(), client_identity, cookie_secret);
