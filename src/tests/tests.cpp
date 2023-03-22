@@ -800,7 +800,7 @@ std::vector<uint8_t> Test::read_binary_data_file(const std::string& path)
 // static member variables of Test
 
 Test_Options Test::m_opts;
-std::unique_ptr<Botan::RandomNumberGenerator> Test::m_test_rng;
+std::shared_ptr<Botan::RandomNumberGenerator> Test::m_test_rng;
 
 //static
 void Test::set_test_options(const Test_Options& opts)
@@ -809,9 +809,9 @@ void Test::set_test_options(const Test_Options& opts)
    }
 
 //static
-void Test::set_test_rng(std::unique_ptr<Botan::RandomNumberGenerator> rng)
+void Test::set_test_rng(std::shared_ptr<Botan::RandomNumberGenerator> rng)
    {
-   m_test_rng.reset(rng.release());
+   m_test_rng = rng;
    }
 
 //static
@@ -858,6 +858,16 @@ Botan::RandomNumberGenerator& Test::rng()
       throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
       }
    return *m_test_rng;
+   }
+
+//static
+std::shared_ptr<Botan::RandomNumberGenerator> Test::rng_as_shared()
+   {
+   if(!m_test_rng)
+      {
+      throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
+      }
+   return m_test_rng;
    }
 
 std::string Test::random_password()

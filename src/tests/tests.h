@@ -697,7 +697,7 @@ class Test
 
       static void set_test_options(const Test_Options& opts);
 
-      static void set_test_rng(std::unique_ptr<Botan::RandomNumberGenerator> rng);
+      static void set_test_rng(std::shared_ptr<Botan::RandomNumberGenerator> rng);
 
       static const Test_Options& options() { return m_opts; }
 
@@ -715,6 +715,7 @@ class Test
       static std::vector<uint8_t> read_binary_data_file(const std::string& path);
 
       static Botan::RandomNumberGenerator& rng();
+      static std::shared_ptr<Botan::RandomNumberGenerator> rng_as_shared();
       static std::string random_password();
       static uint64_t timestamp(); // nanoseconds arbitrary epoch
 
@@ -722,7 +723,7 @@ class Test
 
    private:
       static Test_Options m_opts;
-      static std::unique_ptr<Botan::RandomNumberGenerator> m_test_rng;
+      static std::shared_ptr<Botan::RandomNumberGenerator> m_test_rng;
 
       std::optional<CodeLocation> m_registration_location;  /// The source file location where the test was registered
    };
