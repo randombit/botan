@@ -225,35 +225,35 @@ class TLS_All_Policy final : public Botan::TLS::Policy
       bool allow_tls12() const override { return true; }
    };
 
-inline std::unique_ptr<Botan::TLS::Policy> load_tls_policy(const std::string policy_type)
+inline std::shared_ptr<Botan::TLS::Policy> load_tls_policy(const std::string policy_type)
    {
    if(policy_type == "default" || policy_type == "")
       {
-      return std::make_unique<Botan::TLS::Policy>();
+      return std::make_shared<Botan::TLS::Policy>();
       }
    else if(policy_type == "suiteb_128")
       {
-      return std::make_unique<Botan::TLS::NSA_Suite_B_128>();
+      return std::make_shared<Botan::TLS::NSA_Suite_B_128>();
       }
    else if(policy_type == "suiteb_192" || policy_type == "suiteb")
       {
-      return std::make_unique<Botan::TLS::NSA_Suite_B_192>();
+      return std::make_shared<Botan::TLS::NSA_Suite_B_192>();
       }
    else if(policy_type == "strict")
       {
-      return std::make_unique<Botan::TLS::Strict_Policy>();
+      return std::make_shared<Botan::TLS::Strict_Policy>();
       }
    else if(policy_type == "bsi")
       {
-      return std::make_unique<Botan::TLS::BSI_TR_02102_2>();
+      return std::make_shared<Botan::TLS::BSI_TR_02102_2>();
       }
    else if(policy_type == "datagram")
       {
-      return std::make_unique<Botan::TLS::Strict_Policy>();
+      return std::make_shared<Botan::TLS::Strict_Policy>();
       }
    else if(policy_type == "all" || policy_type == "everything")
       {
-      return std::make_unique<TLS_All_Policy>();
+      return std::make_shared<TLS_All_Policy>();
       }
 
    // if something we don't recognize, assume it's a file
@@ -262,7 +262,7 @@ inline std::unique_ptr<Botan::TLS::Policy> load_tls_policy(const std::string pol
       {
       throw Botan_CLI::CLI_Usage_Error("Unknown TLS policy: not a file or known short name");
       }
-   return std::make_unique<Botan::TLS::Text_Policy>(policy_stream);
+   return std::make_shared<Botan::TLS::Text_Policy>(policy_stream);
    }
 
 #endif

@@ -26,6 +26,7 @@
 #endif
 #endif
 
+#include <botan/tls_callbacks.h>
 #include <botan/tls_server.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_session_manager_memory.h>
@@ -42,7 +43,73 @@
 
 namespace Botan_CLI {
 
-class TLS_Server final : public Command, public Botan::TLS::Callbacks
+class TLS_Server;
+
+namespace {
+
+class Callbacks : public Botan::TLS::Callbacks
+   {
+   public:
+      Callbacks(TLS_Server& server_command)
+         : m_server_command(server_command) {}
+
+      std::ostream& output();
+      void send(std::span<const uint8_t> buffer);
+      void push_pending_output(std::string line);
+
+      void tls_session_established(const Botan::TLS::Session_Summary& session) override
+         {
+         output() << "Handshake complete, " << session.version().to_string()
+                  << " using " << session.ciphersuite().to_string() << std::endl;
+
+         if(const auto& session_id = session.session_id(); !session_id.empty())
+            {
+            output() << "Session ID " << Botan::hex_encode(session_id.get()) << std::endl;
+            }
+
+         if(const auto& session_ticket = session.session_ticket())
+            {
+            output() << "Session ticket " << Botan::hex_encode(session_ticket->get()) << std::endl;
+            }
+         }
+
+      void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> input) override
+         {
+         for(size_t i = 0; i != input.size(); ++i)
+            {
+            const char c = static_cast<char>(input[i]);
+            m_line_buf += c;
+            if(c == '\n')
+               {
+               push_pending_output(std::exchange(m_line_buf, {}));
+               }
+            }
+         }
+
+      void tls_emit_data(std::span<const uint8_t> buf) override
+         {
+         send(buf);
+         }
+
+      void tls_alert(Botan::TLS::Alert alert) override
+         {
+         output() << "Alert: " << alert.type_string() << std::endl;
+         }
+
+      std::string tls_server_choose_app_protocol(const std::vector<std::string>& /*client_protos*/) override
+         {
+         // we ignore whatever the client sends here
+         return "echo/0.1";
+         }
+
+   private:
+      TLS_Server& m_server_command;
+      std::string m_line_buf;
+   };
+
+}
+
+class TLS_Server final : public Command
    {
    public:
 #if defined(BOTAN_SO_SOCKETID)
@@ -94,10 +161,9 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          m_is_tcp = (transport == "tcp");
 
          auto policy = load_tls_policy(get_arg("policy"));
-
-         Botan::TLS::Session_Manager_In_Memory session_manager(rng()); // TODO sqlite3
-
-         Basic_Credentials_Manager creds(server_crt, server_key);
+         auto session_manager = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng()); // TODO sqlite3
+         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key);
+         auto callbacks = std::make_shared<Callbacks>(*this);
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
 
@@ -151,9 +217,9 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
             clients_served++;
 
             Botan::TLS::Server server(
-               *this,
-               session_manager,
-               creds,
+               *callbacks,
+               *session_manager,
+               *creds,
                *policy,
                rng(),
                m_is_tcp == false);
@@ -233,6 +299,54 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
 
          close_socket(server_fd);
          }
+
+   public:
+      using Command::output;
+      using Command::flag_set;
+
+      void send(std::span<const uint8_t> buf)
+         {
+         if(m_is_tcp)
+            {
+            ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
+
+            if(sent == -1)
+               {
+               error_output() << "Error writing to socket - " << err_to_string(errno) << std::endl;
+               }
+            else if(sent != static_cast<ssize_t>(buf.size()))
+               {
+               error_output() << "Packet of length " << buf.size() << " truncated to " << sent << std::endl;
+               }
+            }
+         else
+            {
+            while(!buf.empty())
+               {
+               ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
+
+               if(sent == -1)
+                  {
+                  if(errno == EINTR)
+                     {
+                     sent = 0;
+                     }
+                  else
+                     {
+                     throw CLI_Error("Socket write failed");
+                     }
+                  }
+
+               buf = buf.subspan(sent);
+               }
+            }
+         }
+
+      void push_pending_output(std::string line)
+         {
+         m_pending_output.emplace_back(std::move(line));
+         }
+
    private:
       socket_type make_server_socket(uint16_t port)
          {
@@ -280,92 +394,31 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          return fd;
          }
 
-      void tls_session_established(const Botan::TLS::Session_Summary& session) override
-         {
-         output() << "Handshake complete, " << session.version().to_string()
-                  << " using " << session.ciphersuite().to_string() << std::endl;
-
-         if(const auto& session_id = session.session_id(); !session_id.empty())
-            {
-            output() << "Session ID " << Botan::hex_encode(session_id.get()) << std::endl;
-            }
-
-         if(const auto& session_ticket = session.session_ticket())
-            {
-            output() << "Session ticket " << Botan::hex_encode(session_ticket->get()) << std::endl;
-            }
-         }
-
-      void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> input) override
-         {
-         for(size_t i = 0; i != input.size(); ++i)
-            {
-            const char c = static_cast<char>(input[i]);
-            m_line_buf += c;
-            if(c == '\n')
-               {
-               m_pending_output.push_back(m_line_buf);
-               m_line_buf.clear();
-               }
-            }
-         }
-
-      void tls_emit_data(std::span<const uint8_t> buf) override
-         {
-         if(m_is_tcp)
-            {
-            ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
-
-            if(sent == -1)
-               {
-               error_output() << "Error writing to socket - " << err_to_string(errno) << std::endl;
-               }
-            else if(sent != static_cast<ssize_t>(buf.size()))
-               {
-               error_output() << "Packet of length " << buf.size() << " truncated to " << sent << std::endl;
-               }
-            }
-         else
-            {
-            while(!buf.empty())
-               {
-               ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
-
-               if(sent == -1)
-                  {
-                  if(errno == EINTR)
-                     {
-                     sent = 0;
-                     }
-                  else
-                     {
-                     throw CLI_Error("Socket write failed");
-                     }
-                  }
-
-               buf = buf.subspan(sent);
-               }
-            }
-         }
-
-      void tls_alert(Botan::TLS::Alert alert) override
-         {
-         output() << "Alert: " << alert.type_string() << std::endl;
-         }
-
-      std::string tls_server_choose_app_protocol(const std::vector<std::string>& /*client_protos*/) override
-         {
-         // we ignore whatever the client sends here
-         return "echo/0.1";
-         }
-
       socket_type m_socket = invalid_socket();
       bool m_is_tcp = false;
       uint32_t m_socket_id = 0;
-      std::string m_line_buf;
       std::list<std::string> m_pending_output;
       Sandbox m_sandbox;
    };
+
+namespace {
+
+std::ostream& Callbacks::output()
+   {
+   return m_server_command.output();
+   }
+
+void Callbacks::send(std::span<const uint8_t> buffer)
+   {
+   m_server_command.send(buffer);
+   }
+
+void Callbacks::push_pending_output(std::string line)
+   {
+   m_server_command.push_pending_output(std::move(line));
+   }
+
+}
 
 BOTAN_REGISTER_COMMAND("tls_server", TLS_Server);
 
