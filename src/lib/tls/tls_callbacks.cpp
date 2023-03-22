@@ -3,6 +3,7 @@
 * (C) 2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
+*     2023 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,6 +18,7 @@
 #include <botan/ecdh.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_CURVE_25519)
   #include <botan/curve25519.h>
@@ -51,12 +53,6 @@ void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/, Connection_Si
 void TLS::Callbacks::tls_examine_extensions(const Extensions& /*unused*/, Connection_Side /*unused*/, Handshake_Type /*unused*/)
    {
    }
-
-std::string TLS::Callbacks::tls_decode_group_param(Group_Params group_param)
-   {
-   return group_param_to_string(group_param);
-   }
-
 
 bool TLS::Callbacks::tls_should_persist_resumption_information(const Session& session)
    {
@@ -156,87 +152,123 @@ bool TLS::Callbacks::tls_verify_message(
    return verifier.verify_message(msg, sig);
    }
 
-std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> TLS::Callbacks::tls_dh_agree(
-   const std::vector<uint8_t>& modulus,
-   const std::vector<uint8_t>& generator,
-   const std::vector<uint8_t>& peer_public_value,
-   const Policy& policy,
-   RandomNumberGenerator& rng)
+namespace {
+
+bool is_dh_group(const std::variant<TLS::Group_Params, DL_Group>& group)
    {
-   BigInt p = BigInt::decode(modulus);
-   BigInt g = BigInt::decode(generator);
-   BigInt Y = BigInt::decode(peer_public_value);
-
-   /*
-    * A basic check for key validity. As we do not know q here we
-    * cannot check that Y is in the right subgroup. However since
-    * our key is ephemeral there does not seem to be any
-    * advantage to bogus keys anyway.
-    */
-   if(Y <= 1 || Y >= p - 1)
-      throw TLS_Exception(Alert::IllegalParameter,
-                          "Server sent bad DH key for DHE exchange");
-
-   DL_Group group(p, g);
-
-   if(!group.verify_group(rng, false))
-      throw TLS_Exception(Alert::InsufficientSecurity,
-                          "DH group validation failed");
-
-   DH_PublicKey peer_key(group, Y);
-
-   policy.check_peer_key_acceptable(peer_key);
-
-   DH_PrivateKey priv_key(rng, group);
-   PK_Key_Agreement ka(priv_key, rng, "Raw");
-   secure_vector<uint8_t> dh_secret = CT::strip_leading_zeros(
-      ka.derive_key(0, peer_key.public_value()).bits_of());
-
-   return std::make_pair(dh_secret, priv_key.public_value());
+   return std::holds_alternative<DL_Group>(group) ||
+          is_dh(std::get<TLS::Group_Params>(group));
    }
 
-std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> TLS::Callbacks::tls_ecdh_agree(
-   const std::string& curve_name,
-   const std::vector<uint8_t>& peer_public_value,
-   const Policy& policy,
-   RandomNumberGenerator& rng,
-   bool compressed)
+DL_Group get_dl_group(std::variant<TLS::Group_Params, DL_Group> group)
    {
-   secure_vector<uint8_t> ecdh_secret;
-   std::vector<uint8_t> our_public_value;
+   BOTAN_ASSERT_NOMSG(is_dh_group(group));
 
-   if(curve_name == "x25519")
+   // TLS 1.2 allows specifying arbitrary DL_Group parameters in-lieu of
+   // a standardized DH group identifier. TLS 1.3 just offers pre-defined
+   // groups.
+   return std::visit(overloaded
       {
+      [](DL_Group dl_group) { return dl_group; },
+      [&](TLS::Group_Params group_param) { return DL_Group(group_param_to_string(group_param)); }
+      }, std::move(group));
+   }
+
+}
+
+std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key(
+   const std::variant<TLS::Group_Params, DL_Group> group,
+   RandomNumberGenerator& rng)
+   {
+   if(is_dh_group(group))
+      {
+      const DL_Group dl_group = get_dl_group(std::move(group));
+      return std::make_unique<DH_PrivateKey>(rng, dl_group);
+      }
+
+   BOTAN_ASSERT_NOMSG(std::holds_alternative<TLS::Group_Params>(group));
+   const auto group_params = std::get<TLS::Group_Params>(group);
+
+   if(is_ecdh(group_params))
+      {
+      const EC_Group ec_group(group_param_to_string(group_params));
+      return std::make_unique<ECDH_PrivateKey>(rng, ec_group);
+      }
+
 #if defined(BOTAN_HAS_CURVE_25519)
-      if(peer_public_value.size() != 32)
+   if(is_x25519(group_params))
+      {
+      return std::make_unique<X25519_PrivateKey>(rng);
+      }
+#endif
+
+   throw TLS_Exception(Alert::DecodeError, "cannot create a key offering without a group definition");
+   }
+
+secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(std::variant<TLS::Group_Params, DL_Group> group,
+                                                                   const PK_Key_Agreement_Key& private_key,
+                                                                   const std::vector<uint8_t>& public_value,
+                                                                   RandomNumberGenerator& rng,
+                                                                   const Policy& policy)
+   {
+   auto agree = [&](const PK_Key_Agreement_Key& sk, const auto& pk)
+      {
+      PK_Key_Agreement ka(sk, rng, "Raw");
+      return ka.derive_key(0, pk.public_value()).bits_of();
+      };
+
+   if(is_dh_group(group))
+      {
+      // TLS 1.2 allows specifying arbitrary DL_Group parameters in-lieu of
+      // a standardized DH group identifier.
+      const auto dl_group = get_dl_group(std::move(group));
+
+      auto Y = BigInt::decode(public_value);
+
+      /*
+       * A basic check for key validity. As we do not know q here we
+       * cannot check that Y is in the right subgroup. However since
+       * our key is ephemeral there does not seem to be any
+       * advantage to bogus keys anyway.
+       */
+      if(Y <= 1 || Y >= dl_group.get_p() - 1)
+         throw TLS_Exception(Alert::IllegalParameter,
+                             "Server sent bad DH key for DHE exchange");
+
+      DH_PublicKey peer_key(dl_group, Y);
+      policy.check_peer_key_acceptable(peer_key);
+
+      return agree(private_key, peer_key);
+      }
+
+   BOTAN_ASSERT_NOMSG(std::holds_alternative<TLS::Group_Params>(group));
+   const auto group_params = std::get<TLS::Group_Params>(group);
+
+   if(is_ecdh(group_params))
+      {
+      const EC_Group ec_group(group_param_to_string(group_params));
+      ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
+      policy.check_peer_key_acceptable(peer_key);
+
+      return agree(private_key, peer_key);
+      }
+
+#if defined(BOTAN_HAS_CURVE_25519)
+   if(is_x25519(group_params))
+      {
+      if(public_value.size() != 32)
          {
          throw TLS_Exception(Alert::HandshakeFailure, "Invalid X25519 key size");
          }
 
-      Curve25519_PublicKey peer_key(peer_public_value);
+      Curve25519_PublicKey peer_key(public_value);
       policy.check_peer_key_acceptable(peer_key);
-      Curve25519_PrivateKey priv_key(rng);
-      PK_Key_Agreement ka(priv_key, rng, "Raw");
-      ecdh_secret = ka.derive_key(0, peer_key.public_value()).bits_of();
 
-      // X25519 is always compressed but sent as "uncompressed" in TLS
-      our_public_value = priv_key.public_value();
-#else
-      throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
+      return agree(private_key, peer_key);
+      }
 #endif
-      }
-   else
-      {
-      EC_Group group(OID::from_string(curve_name));
-      ECDH_PublicKey peer_key(group, group.OS2ECP(peer_public_value));
-      policy.check_peer_key_acceptable(peer_key);
-      ECDH_PrivateKey priv_key(rng, group);
-      PK_Key_Agreement ka(priv_key, rng, "Raw");
-      ecdh_secret = ka.derive_key(0, peer_key.public_value()).bits_of();
-      our_public_value = priv_key.public_value(compressed ? EC_Point_Format::Compressed : EC_Point_Format::Uncompressed);
-      }
 
-   return std::make_pair(ecdh_secret, our_public_value);
+   throw TLS_Exception(Alert::IllegalParameter, "Did not recognize the key exchange group");
    }
 
 }

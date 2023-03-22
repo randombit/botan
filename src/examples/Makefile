@@ -47,7 +47,7 @@ clean:
 
 PKCS11_EXAMPLES = pkcs11_low_level pkcs11_module pkcs11_slot pkcs11_session pkcs11_objects pkcs11_rsa pkcs11_ecdsa pkcs11_ecdh pkcs11_rng pkcs11_token_management pkcs11_x509
 
-EXAMPLES = aes aes_cbc chacha check_key cmac dl_group ecdh ecdsa encrypt_with_pkcs8_key gmac hash hmac tls_client tls_custom_curves_client tls_custom_curves_server tls_proxy tls_stream_client xmss $(PKCS11_EXAMPLES)
+EXAMPLES = aes aes_cbc chacha check_key cmac dl_group ecdh ecdsa encrypt_with_pkcs8_key gmac hash hmac tls_client tls_custom_curves_client tls_proxy tls_stream_client xmss $(PKCS11_EXAMPLES)
 
 examples: $(addprefix build/, $(EXAMPLES))
 

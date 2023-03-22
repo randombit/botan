@@ -72,13 +72,16 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       BOTAN_ASSERT(group_param_is_dh(shared_group), "DH groups for the DH ciphersuites god");
 
-      const std::string group_name = state.callbacks().tls_decode_group_param(shared_group);
-      auto dh = std::make_unique<DH_PrivateKey>(rng, DL_Group(group_name));
+      m_kex_key = state.callbacks().tls_generate_ephemeral_key(shared_group, rng);
+      auto dh = dynamic_cast<DH_PrivateKey*>(m_kex_key.get());
+      if(!dh)
+         {
+         throw TLS_Exception(Alert::InternalError, "Application did not provide a Diffie-Hellman key");
+         }
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_int_field("p")), 2);
       append_tls_length_value(m_params, BigInt::encode(dh->get_int_field("g")), 2);
       append_tls_length_value(m_params, dh->public_value(), 2);
-      m_kex_key.reset(dh.release());
       }
    else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK)
       {
@@ -96,29 +99,27 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       if(shared_group == Group_Params::X25519)
          {
-#if defined(BOTAN_HAS_CURVE_25519)
-         auto x25519 = std::make_unique<X25519_PrivateKey>(rng);
-         ecdh_public_val = x25519->public_value();
-         m_kex_key.reset(x25519.release());
-#else
-         throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
-#endif
+         m_kex_key = state.callbacks().tls_generate_ephemeral_key(shared_group, rng);
+         if(!m_kex_key)
+            {
+            throw TLS_Exception(Alert::InternalError,
+                                "Application did not provide a X25519 key");
+            }
+         ecdh_public_val = m_kex_key->public_value();
          }
       else
          {
-         Group_Params curve = policy.choose_key_exchange_group(ec_groups, {});
-
-         const std::string curve_name = state.callbacks().tls_decode_group_param(curve);
-
-         EC_Group ec_group(curve_name);
-         auto ecdh = std::make_unique<ECDH_PrivateKey>(rng, ec_group);
+         m_kex_key = state.callbacks().tls_generate_ephemeral_key(shared_group, rng);
+         auto ecdh = dynamic_cast<ECDH_PrivateKey*>(m_kex_key.get());
+         if(!ecdh)
+            {
+            throw TLS_Exception(Alert::InternalError, "Application did not provide a EC-Diffie-Hellman key");
+            }
 
          // follow client's preference for point compression
          ecdh_public_val = ecdh->public_value(
             state.client_hello()->prefers_compressed_ec_points() ?
             EC_Point_Format::Compressed : EC_Point_Format::Uncompressed);
-
-         m_kex_key.reset(ecdh.release());
          }
 
       const uint16_t named_curve_id = static_cast<uint16_t>(shared_group);

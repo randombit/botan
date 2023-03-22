@@ -884,7 +884,7 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
    private:
       std::vector<uint8_t> serialize() const override;
 
-      std::unique_ptr<Private_Key> m_kex_key;
+      std::unique_ptr<PK_Key_Agreement_Key> m_kex_key;
 
       std::vector<uint8_t> m_params;
 

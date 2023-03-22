@@ -24,6 +24,7 @@
    #include <botan/internal/tls_reader.h>
 
    #include <botan/ec_group.h>
+   #include <botan/ecdh.h>
    #include <botan/hex.h>
    #include <botan/oids.h>
    #include <botan/pkcs10.h>
@@ -466,12 +467,35 @@ class TLS_Handshake_Test final
                return "test/3";
                }
 
-            std::string tls_decode_group_param(Botan::TLS::Group_Params group_param) override
+            std::unique_ptr<Botan::PK_Key_Agreement_Key> tls_generate_ephemeral_key(
+               const std::variant<Botan::TLS::Group_Params, Botan::DL_Group> group, Botan::RandomNumberGenerator& rng) override
                {
-               if(static_cast<uint16_t>(group_param) == 0xFEE1)
-                  return "secp112r1";
+               if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
+                  static_cast<uint16_t>(std::get<Botan::TLS::Group_Params>(group)) == 0xFEE1)
+                  {
+                  const Botan::EC_Group ec_group("secp112r1");
+                  return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
+                  }
 
-               return Botan::TLS::Callbacks::tls_decode_group_param(group_param);
+               return Botan::TLS::Callbacks::tls_generate_ephemeral_key(group, rng);
+               }
+
+            Botan::secure_vector<uint8_t> tls_ephemeral_key_agreement(std::variant<Botan::TLS::Group_Params, Botan::DL_Group> group,
+                                                                      const Botan::PK_Key_Agreement_Key& private_key,
+                                                                      const std::vector<uint8_t>& public_value,
+                                                                      Botan::RandomNumberGenerator& rng,
+                                                                      const Botan::TLS::Policy& policy) override
+               {
+               if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
+                  static_cast<uint16_t>(std::get<Botan::TLS::Group_Params>(group)) == 0xFEE1)
+                  {
+                  const Botan::EC_Group ec_group("secp112r1");
+                  Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
+                  Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
+                  return ka.derive_key(0, peer_key.public_value()).bits_of();
+                  }
+
+               return Botan::TLS::Callbacks::tls_ephemeral_key_agreement(group, private_key, public_value, rng, policy);
                }
 
             void set_custom_tls_session_established_callback(std::function<void(const Botan::TLS::Session_Summary&)> clbk)
