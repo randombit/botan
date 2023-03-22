@@ -27,15 +27,16 @@ class BOTAN_PUBLIC_API(2,0) System_RNG final : public RandomNumberGenerator
    public:
       std::string name() const override { return system_rng().name(); }
 
-      void randomize(uint8_t out[], size_t len) override { system_rng().randomize(out, len); }
-
-      void add_entropy(const uint8_t in[], size_t length) override { system_rng().add_entropy(in, length); }
-
       bool is_seeded() const override { return system_rng().is_seeded(); }
 
       bool accepts_input() const override { return system_rng().accepts_input(); }
 
       void clear() override { system_rng().clear(); }
+
+   protected:
+      void fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) override
+         { system_rng().randomize_with_input(out, in); }
+
    };
 
 }

@@ -405,3 +405,17 @@ the constructor of the ``XMSS_PrivateKey``.
 Private XMSS keys created this way use the old derivation logic and can therefore
 generate new valid signatures. It is recommended to use
 ``WOTS_Derivation_Method::NIST_SP800_208`` (default) when creating new XMSS keys.
+
+Random Number Generator
+-----------------------
+
+Fetching a large number of bytes via `randomize_with_input()` from a stateful
+RNG will now incorporate the provided "input" data in the first request to the
+underlying DRBG only. This applies to such DRBGs that pose a limit on the number
+of bytes per request (most notable ``HMAC_DRBG`` with a 64kB default). Botan 2.x
+(erroneously) applied the input to *all* underlying DRBG requests in such cases.
+
+Applications that rely on a static seed for deterministic RNG output might
+observe a different byte stream in such cases. As a workaround, users are
+advised to "mimick" the legacy behaviour by manually pulling from the RNG in
+"byte limit"-sized chunks and provide the "input" with each invocation.

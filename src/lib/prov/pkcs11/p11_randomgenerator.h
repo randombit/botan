@@ -51,14 +51,13 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RNG final : public Hardware_RNG
          return m_session.get().module();
          }
 
-      /// Calls `C_GenerateRandom` to generate random data
-      void randomize(uint8_t output[], std::size_t length) override;
-
-      /// Calls `C_SeedRandom` to add entropy to the random generation function of the token/middleware
-      void add_entropy(const uint8_t in[], std::size_t length) override;
-
       // C_SeedRandom may suceed
       bool accepts_input() const override { return true; }
+
+   private:
+      /// Calls `C_GenerateRandom` to generate random data
+      /// Calls `C_SeedRandom` to add entropy to the random generation function of the token/middleware
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override;
 
    private:
       const std::reference_wrapper<Session> m_session;

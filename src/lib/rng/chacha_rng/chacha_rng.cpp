@@ -16,12 +16,12 @@ ChaCha_RNG::ChaCha_RNG() : Stateful_RNG()
    clear();
    }
 
-ChaCha_RNG::ChaCha_RNG(const secure_vector<uint8_t>& seed) : Stateful_RNG()
+ChaCha_RNG::ChaCha_RNG(std::span<const uint8_t> seed) : Stateful_RNG()
    {
    m_hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
    m_chacha = StreamCipher::create_or_throw("ChaCha(20)");
    clear();
-   add_entropy(seed.data(), seed.size());
+   add_entropy(seed);
    }
 
 ChaCha_RNG::ChaCha_RNG(RandomNumberGenerator& underlying_rng,
@@ -58,24 +58,23 @@ void ChaCha_RNG::clear_state()
    m_chacha->set_key(m_hmac->final());
    }
 
-void ChaCha_RNG::generate_output(uint8_t output[], size_t output_len,
-                                 const uint8_t input[], size_t input_len)
+void ChaCha_RNG::generate_output(std::span<uint8_t> output, std::span<const uint8_t> input)
    {
-   if(input_len > 0)
+   BOTAN_ASSERT_NOMSG(!output.empty());
+
+   if(!input.empty())
       {
-      update(input, input_len);
+      update(input);
       }
 
-   m_chacha->write_keystream(output, output_len);
+   m_chacha->write_keystream(output);
    }
 
-void ChaCha_RNG::update(const uint8_t input[], size_t input_len)
+void ChaCha_RNG::update(std::span<const uint8_t> input)
    {
-   m_hmac->update(input, input_len);
+   m_hmac->update(input);
    m_chacha->set_key(m_hmac->final());
-
-   secure_vector<uint8_t> mac_key(m_hmac->output_length());
-   m_chacha->write_keystream(mac_key.data(), mac_key.size());
+   const auto mac_key = m_chacha->keystream_bytes(m_hmac->output_length());
    m_hmac->set_key(mac_key);
    }
 

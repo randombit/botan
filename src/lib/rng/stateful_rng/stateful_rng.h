@@ -72,7 +72,11 @@ class BOTAN_PUBLIC_API(2,0) Stateful_RNG : public RandomNumberGenerator
       * of the length of the input or the current seeded state of
       * the RNG.
       */
-      void initialize_with(const uint8_t input[], size_t length);
+      void initialize_with(std::span<const uint8_t> input);
+      void initialize_with(const uint8_t input[], size_t length)
+         {
+         this->initialize_with(std::span(input, length));
+         }
 
       bool is_seeded() const override final;
 
@@ -85,19 +89,6 @@ class BOTAN_PUBLIC_API(2,0) Stateful_RNG : public RandomNumberGenerator
 
       void reseed_from_rng(RandomNumberGenerator& rng,
                            size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS) override final;
-
-      void add_entropy(const uint8_t input[], size_t input_len) override final;
-
-      void randomize(uint8_t output[], size_t output_len) override final;
-
-      void randomize_with_input(uint8_t output[], size_t output_len,
-                                const uint8_t input[], size_t input_len) override final;
-
-      /**
-      * Overrides default implementation and also includes the current
-      * process ID and the reseed counter.
-      */
-      void randomize_with_ts_input(uint8_t output[], size_t output_len) override final;
 
       /**
       * Poll provided sources for up to poll_bits bits of entropy
@@ -132,14 +123,17 @@ class BOTAN_PUBLIC_API(2,0) Stateful_RNG : public RandomNumberGenerator
    protected:
       void reseed_check();
 
-      virtual void generate_output(uint8_t output[], size_t output_len,
-                                   const uint8_t input[], size_t input_len) = 0;
+      virtual void generate_output(std::span<uint8_t> output, std::span<const uint8_t> input) = 0;
 
-      virtual void update(const uint8_t input[], size_t input_len) = 0;
+      virtual void update(std::span<const uint8_t> input) = 0;
 
       virtual void clear_state() = 0;
 
    private:
+      void generate_batched_output(std::span<uint8_t> output, std::span<const uint8_t> input);
+
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override final;
+
       void reset_reseed_counter();
 
       mutable recursive_mutex_type m_mutex;

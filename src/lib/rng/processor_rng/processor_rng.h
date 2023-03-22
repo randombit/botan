@@ -32,19 +32,15 @@ class BOTAN_PUBLIC_API(2,15) Processor_RNG final : public Hardware_RNG
       bool accepts_input() const override { return false; }
       bool is_seeded() const override { return true; }
 
-      void randomize(uint8_t out[], size_t out_len) override;
-
-      /*
-      * No way to provide entropy to RDRAND generator, so add_entropy is ignored
-      */
-      void add_entropy(const uint8_t[], size_t) override;
-
       /*
       * No way to reseed processor provided generator, so reseed is ignored
       */
       size_t reseed(Entropy_Sources&, size_t, std::chrono::milliseconds) override;
 
       std::string name() const override;
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) override;
    };
 
 }

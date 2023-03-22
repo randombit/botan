@@ -42,19 +42,6 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          return 0;
          }
 
-      void randomize(uint8_t out[], size_t len) override
-         {
-         for(size_t j = 0; j != len; j++)
-            {
-            out[j] = random();
-            }
-         }
-
-      void add_entropy(const uint8_t b[], size_t s) override
-         {
-         m_buf.insert(m_buf.end(), b, b + s);
-         }
-
       std::string name() const override
          {
          return "Fixed_Output_RNG";
@@ -88,7 +75,16 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          : m_fallback(&fallback_rng) {}
 
       Fixed_Output_RNG() = default;
+
    protected:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override
+         {
+         m_buf.insert(m_buf.end(), input.begin(), input.end());
+
+         for(auto& o : output)
+            { o = random(); }
+         }
+
       uint8_t random()
          {
          if(m_buf.empty())
@@ -121,31 +117,7 @@ class Fixed_Output_Position_RNG final : public Fixed_Output_RNG
          return Fixed_Output_RNG::is_seeded() || Test::rng().is_seeded();
          }
 
-      void randomize(uint8_t out[], size_t len) override
-         {
-         ++m_requests;
-
-         if(m_requests == m_pos)
-            {
-            // return fixed output
-            for(size_t j = 0; j != len; j++)
-               {
-               out[j] = random();
-               }
-            }
-         else
-            {
-            // return random
-            Test::rng().randomize(out, len);
-            }
-         }
-
       bool accepts_input() const override { return false; }
-
-      void add_entropy(const uint8_t*, size_t) override
-         {
-         throw Test_Error("add_entropy() not supported by this RNG, test bug?");
-         }
 
       std::string name() const override
          {
@@ -161,6 +133,26 @@ class Fixed_Output_Position_RNG final : public Fixed_Output_RNG
          , m_pos(pos) {}
 
    private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override
+         {
+         if(!input.empty())
+            { throw Test_Error("add_entropy() not supported by this RNG, test bug?"); }
+
+         ++m_requests;
+
+         if(m_requests == m_pos)
+            {
+            // return fixed output
+            Fixed_Output_RNG::fill_bytes_with_input(output, input);
+            }
+         else
+            {
+            // return random
+            Test::rng().random_vec(output);
+            }
+         }
+
+   private:
       size_t m_pos = 0;
       size_t m_requests = 0;
    };
@@ -168,18 +160,7 @@ class Fixed_Output_Position_RNG final : public Fixed_Output_RNG
 class SeedCapturing_RNG final : public Botan::RandomNumberGenerator
    {
    public:
-      void randomize(uint8_t[], size_t) override
-         {
-         throw Test_Error("SeedCapturing_RNG has no output");
-         }
-
       bool accepts_input() const override { return true; }
-
-      void add_entropy(const uint8_t input[], size_t len) override
-         {
-         m_samples++;
-         m_seed.insert(m_seed.end(), input, input + len);
-         }
 
       void clear() override {}
       bool is_seeded() const override
@@ -199,6 +180,16 @@ class SeedCapturing_RNG final : public Botan::RandomNumberGenerator
       const std::vector<uint8_t>& seed_material() const
          {
          return m_seed;
+         }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override
+         {
+         if(!output.empty())
+            { throw Test_Error("SeedCapturing_RNG has no output"); }
+
+         m_samples++;
+         m_seed.insert(m_seed.end(), input.begin(), input.end());
          }
 
    private:
@@ -232,22 +223,22 @@ class Request_Counting_RNG final : public Botan::RandomNumberGenerator
          m_randomize_count = 0;
          }
 
-      void randomize(uint8_t out[], size_t out_len) override
+      std::string name() const override
+         {
+         return "Request_Counting_RNG";
+         }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override
          {
          /*
          The HMAC_DRBG and ChaCha reseed KATs assume this RNG type
          outputs all 0x80
          */
-         for(size_t i = 0; i != out_len; ++i)
-            out[i] = 0x80;
-         m_randomize_count++;
-         }
-
-      void add_entropy(const uint8_t[], size_t) override {}
-
-      std::string name() const override
-         {
-         return "Request_Counting_RNG";
+         for(auto& out : output)
+            out = 0x80;
+         if(!output.empty())
+            m_randomize_count++;
          }
 
    private:
@@ -268,21 +259,19 @@ class CTR_DRBG_AES256 final : public Botan::RandomNumberGenerator
 
       bool accepts_input() const override { return true; }
 
-      void add_entropy(const uint8_t seed_material[], size_t len) override;
-
       bool is_seeded() const override
          {
          return true;
          }
 
-      void randomize(uint8_t out[], size_t len) override;
-
-      CTR_DRBG_AES256(const std::vector<uint8_t>& seed);
+      CTR_DRBG_AES256(std::span<const uint8_t> seed);
 
    private:
-      void incr_V_into(uint8_t output[16]);
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override;
 
-      void update(const uint8_t provided_data[]);
+      void incr_V_into(std::span<uint8_t> output);
+
+      void update(std::span<const uint8_t> provided_data);
 
       uint64_t m_V0, m_V1;
       std::unique_ptr<Botan::BlockCipher> m_cipher;

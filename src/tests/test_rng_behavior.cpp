@@ -596,7 +596,68 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests
 
    };
 
+std::vector<Test::Result> hmac_drbg_multiple_requests()
+   {
+   auto null_rng = Botan::Null_RNG();
+   constexpr auto rng_max_output = 1024;
+   const auto seed = Botan::hex_decode("deadbeefbaadcafedeadbeefbaadcafedeadbeefbaadcafedeadbeefbaadcafe");
+
+   auto make_seeded_rng = [&](size_t reseed_interval)
+      {
+      auto rng = std::make_unique<Botan::HMAC_DRBG>(
+         Botan::MessageAuthenticationCode::create("HMAC(SHA-256)"),
+         null_rng, reseed_interval + 1 /* off by one */, rng_max_output);
+      rng->add_entropy(seed);
+      return rng;
+      };
+
+   return
+      {
+      Botan_Tests::CHECK("bulk and split output without input", [&](auto& result)
+         {
+         auto rng1 = make_seeded_rng(2);
+         auto rng2 = make_seeded_rng(2);
+
+         result.confirm("RNG 1 is seeded and ready to go", rng1->is_seeded());
+         result.confirm("RNG 2 is seeded and ready to go", rng2->is_seeded());
+
+         auto bulk = rng1->random_vec<std::vector<uint8_t>>(2*rng_max_output);
+
+         auto split1 = rng2->random_vec<std::vector<uint8_t>>(rng_max_output);
+         auto split2 = rng2->random_vec<std::vector<uint8_t>>(rng_max_output);
+         split1.insert(split1.end(), split2.begin(), split2.end());
+
+         result.test_eq("Output is equal, regardless bulk request", bulk, split1);
+
+         return result;
+         }),
+
+      Botan_Tests::CHECK("bulk and split output with input", [&](auto& result)
+         {
+         auto rng1 = make_seeded_rng(3);
+         auto rng2 = make_seeded_rng(3);
+
+         result.confirm("RNG 1 is seeded and ready to go", rng1->is_seeded());
+         result.confirm("RNG 2 is seeded and ready to go", rng2->is_seeded());
+
+         std::vector<uint8_t> bulk(3*rng_max_output);
+         rng1->randomize_with_input(bulk, seed);
+
+         std::vector<uint8_t> split(3*rng_max_output);
+         std::span<uint8_t> split_span(split);
+         rng2->randomize_with_input(split_span.subspan(0, rng_max_output), seed);
+         rng2->randomize_with_input(split_span.subspan(rng_max_output, rng_max_output), {});
+         rng2->randomize_with_input(split_span.subspan(2*rng_max_output), {});
+
+         result.test_eq("Output is equal, regardless bulk request", bulk, split);
+
+         return result;
+         })
+      };
+   }
+
 BOTAN_REGISTER_TEST("rng", "hmac_drbg_unit", HMAC_DRBG_Unit_Tests);
+BOTAN_REGISTER_TEST_FN("rng", "hmac_drbg_multi_requst", hmac_drbg_multiple_requests);
 
 #endif
 

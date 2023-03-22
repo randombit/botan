@@ -14,14 +14,17 @@ PKCS11_RNG::PKCS11_RNG(Session& session)
    : m_session(session)
    {}
 
-void PKCS11_RNG::randomize(uint8_t output[], std::size_t length)
+void PKCS11_RNG::fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input)
    {
-   module()->C_GenerateRandom(m_session.get().handle(), output, Ulong(length));
-   }
+   if(!input.empty())
+      {
+      module()->C_SeedRandom(m_session.get().handle(), const_cast<uint8_t*>(input.data()), Ulong(input.size()));
+      }
 
-void PKCS11_RNG::add_entropy(const uint8_t in[], std::size_t length)
-   {
-   module()->C_SeedRandom(m_session.get().handle(), const_cast<uint8_t*>(in), Ulong(length));
+   if(!output.empty())
+      {
+      module()->C_GenerateRandom(m_session.get().handle(), output.data(), Ulong(output.size()));
+      }
    }
 
 }

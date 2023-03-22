@@ -129,23 +129,25 @@ std::string Processor_RNG::name() const
 #endif
    }
 
-void Processor_RNG::randomize(uint8_t out[], size_t out_len)
+void Processor_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in)
    {
-   while(out_len >= sizeof(hwrng_output))
+   // No way to provide entropy to processor-specific generator, ignore...
+   BOTAN_UNUSED(in);
+
+   while(out.size() >= sizeof(hwrng_output))
       {
       const hwrng_output r = read_hwrng();
-      store_le(r, out);
-      out += sizeof(hwrng_output);
-      out_len -= sizeof(hwrng_output);
+      store_le(r, out.data());
+      out = out.subspan(sizeof(hwrng_output));
       }
 
-   if(out_len > 0) // at most sizeof(hwrng_output)-1
+   if(!out.empty()) // at most sizeof(hwrng_output)-1
       {
       const hwrng_output r = read_hwrng();
       uint8_t hwrng_bytes[sizeof(hwrng_output)];
       store_le(r, hwrng_bytes);
 
-      for(size_t i = 0; i != out_len; ++i)
+      for(size_t i = 0; i != out.size(); ++i)
          out[i] = hwrng_bytes[i];
       }
    }
@@ -154,11 +156,6 @@ Processor_RNG::Processor_RNG()
    {
    if(!Processor_RNG::available())
       throw Invalid_State("Current CPU does not support RNG instruction");
-   }
-
-void Processor_RNG::add_entropy(const uint8_t /*input*/[], size_t /*length*/)
-   {
-   /* no way to add entropy */
    }
 
 size_t Processor_RNG::reseed(Entropy_Sources& /*srcs*/, size_t /*poll_bits*/, std::chrono::milliseconds /*poll_timeout*/)

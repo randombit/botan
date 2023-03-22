@@ -104,32 +104,32 @@ int botan_rng_init_custom(botan_rng_t* rng_out, const char* rng_name, void* cont
          Custom_RNG& operator=(const Custom_RNG& other) = delete;
          Custom_RNG& operator=(Custom_RNG&& other) = delete;
 
-         void randomize(uint8_t output[], size_t length) override
+      protected:
+         void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override
             {
-            int rc = m_get_cb(m_context, output, length);
-            if(rc)
+            if(accepts_input() && !input.empty())
                {
-               throw Botan::Invalid_State("Failed to get random from C callback, rc=" + std::to_string(rc));
+               int rc = m_add_entropy_cb(m_context, input.data(), input.size());
+               if(rc)
+                  {
+                  throw Botan::Invalid_State("Failed to add entropy via C callback, rc=" + std::to_string(rc));
+                  }
+               }
+
+            if(!output.empty())
+               {
+               int rc = m_get_cb(m_context, output.data(), output.size());
+               if(rc)
+                  {
+                  throw Botan::Invalid_State("Failed to get random from C callback, rc=" + std::to_string(rc));
+                  }
                }
             }
 
+      public:
          bool accepts_input() const override
             {
             return m_add_entropy_cb != nullptr;
-            }
-
-         void add_entropy(const uint8_t input[], size_t length) override
-            {
-            if(m_add_entropy_cb == nullptr)
-               {
-               return;
-               }
-
-            int rc = m_add_entropy_cb(m_context, input, length);
-            if(rc)
-               {
-               throw Botan::Invalid_State("Failed to add entropy via C callback, rc=" + std::to_string(rc));
-               }
             }
 
          std::string name() const override

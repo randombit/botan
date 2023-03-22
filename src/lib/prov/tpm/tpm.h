@@ -82,19 +82,19 @@ class BOTAN_PUBLIC_API(2,0) TPM_RNG final : public Hardware_RNG
 
       bool accepts_input() const override { return true; }
 
-      void add_entropy(const uint8_t in[], size_t in_len) override
-         {
-         m_ctx.stir_random(in, in_len);
-         }
-
-      void randomize(uint8_t out[], size_t out_len) override
-         {
-         m_ctx.gen_random(out, out_len);
-         }
-
       std::string name() const override { return "TPM_RNG"; }
 
       bool is_seeded() const override { return true; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override
+         {
+         if(!input.empty())
+            { m_ctx.stir_random(input.data(), input.size()); }
+
+         if(!output.empty())
+            { m_ctx.gen_random(output.data(), output.size()); }
+         }
 
    private:
       TPM_Context& m_ctx;

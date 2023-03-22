@@ -45,25 +45,18 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 
       bool accepts_input() const override { return true; }
 
-      void add_entropy(const uint8_t data[], size_t len) override
-         {
-         for(size_t i = 0; i != len; ++i)
-            {
-            mix(data[i]);
-            }
-         }
-
       bool is_seeded() const override
          {
          return true;
          }
 
-      void randomize(uint8_t out[], size_t len) override
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override
          {
-         for(size_t i = 0; i != len; ++i)
-            {
-            out[i] = mix();
-            }
+         for(const auto byte : input)
+            { mix(byte); }
+
+         for(auto& byte : output)
+            { byte = mix(); }
          }
 
       Testsuite_RNG(const std::vector<uint8_t>& seed, uint64_t test_counter)
