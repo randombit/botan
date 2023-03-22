@@ -108,7 +108,7 @@ public:
 
 int main() {
   // prepare rng
-  Botan::AutoSeeded_RNG rng;
+  auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
 
   // prepare custom curve
 
@@ -134,7 +134,7 @@ int main() {
   // create EC_Group object to register the curve
   Botan::EC_Group testcurve1102(p, a, b, x, y, order, cofactor, oid);
 
-  if (!testcurve1102.verify_group(rng)) {
+  if (!testcurve1102.verify_group(*rng)) {
     // Warning: if verify_group returns false the curve parameters are insecure
   }
 
@@ -142,10 +142,10 @@ int main() {
   Botan::OID::register_oid(oid, "testcurve1102");
 
   // prepare all the parameters
-  Callbacks callbacks;
-  Botan::TLS::Session_Manager_In_Memory session_mgr(rng);
-  Client_Credentials creds;
-  Client_Policy policy;
+  auto callbacks = std::make_shared<Callbacks>();
+  auto session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(*rng);
+  auto creds = std::make_shared<Client_Credentials>();
+  auto policy = std::make_shared<Botan::TLS::Strict_Policy>();
 
   // open the tls connection
   Botan::TLS::Client client(callbacks, session_mgr, creds, policy, rng,

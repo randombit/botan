@@ -10,7 +10,6 @@
 
 #if defined(BOTAN_HAS_TLS)
   #include "test_rng.h"
-  #include "test_tls_utils.h"
 
   #include <botan/tls_alert.h>
   #include <botan/tls_policy.h>

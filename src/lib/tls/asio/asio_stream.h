@@ -60,10 +60,10 @@ class Stream
        * @param args Arguments to be forwarded to the construction of the next layer.
        */
       template <typename... Args>
-      explicit Stream(Context& context, Args&& ... args)
+      explicit Stream(std::shared_ptr<Context> context, Args&& ... args)
          : m_context(context)
          , m_nextLayer(std::forward<Args>(args)...)
-         , m_core(context)
+         , m_core(std::make_shared<StreamCore>(context))
          , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
@@ -79,10 +79,10 @@ class Stream
        *                lifetime of the stream.
        */
       template <typename Arg>
-      explicit Stream(Arg&& arg, Context& context)
+      explicit Stream(Arg&& arg, std::shared_ptr<Context> context)
          : m_context(context)
          , m_nextLayer(std::forward<Arg>(arg))
-         , m_core(context)
+         , m_core(std::make_shared<StreamCore>(context))
          , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
@@ -147,7 +147,7 @@ class Stream
        */
       void set_verify_callback(Context::Verify_Callback callback)
          {
-         m_context.set_verify_callback(std::move(callback));
+         m_context->set_verify_callback(std::move(callback));
          }
 
       /**
@@ -159,7 +159,7 @@ class Stream
       void set_verify_callback(Context::Verify_Callback callback, boost::system::error_code& ec)
          {
          BOTAN_UNUSED(ec);
-         m_context.set_verify_callback(std::move(callback));
+         m_context->set_verify_callback(std::move(callback));
          }
 
       //! @throws Not_Implemented
@@ -530,7 +530,7 @@ class Stream
                {
                // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
                // AsyncWriteOperation call the handler with the error_code set
-               consume_send_buffer(m_core.send_buffer.size());
+               consume_send_buffer(m_core->send_buffer.size());
                }
 
             detail::AsyncWriteOperation<completion_handler_t, Stream> op
@@ -579,7 +579,7 @@ class Stream
       //! explicitly check that the peer sent close_notify.
       bool shutdown_received() const
          {
-         return m_core.shutdown_received;
+         return m_core->shutdown_received;
          }
 
    protected:
@@ -596,7 +596,7 @@ class Stream
       class StreamCore : public TLS::Callbacks
          {
          public:
-            StreamCore(Botan::TLS::Context &context)
+            StreamCore(std::weak_ptr<Botan::TLS::Context> context)
                : shutdown_received(false)
                , m_context(context) {}
 
@@ -650,9 +650,11 @@ class Stream
                const std::string& hostname,
                const TLS::Policy& policy) override
                {
-               if(m_context.has_verify_callback())
+               auto ctx = m_context.lock();
+
+               if(ctx && ctx->has_verify_callback())
                   {
-                  m_context.get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
+                  ctx->get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
                   }
                else
                   {
@@ -665,14 +667,14 @@ class Stream
             boost::beast::flat_buffer send_buffer;
 
          private:
-            TLS::Context& m_context;
+            std::weak_ptr<TLS::Context> m_context;
          };
 
       const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
-      boost::asio::const_buffer send_buffer() const { return m_core.send_buffer.data(); }
+      boost::asio::const_buffer send_buffer() const { return m_core->send_buffer.data(); }
 
       //! @brief Check if decrypted data is available in the receive buffer
-      bool has_received_data() const { return m_core.receive_buffer.size() > 0; }
+      bool has_received_data() const { return m_core->receive_buffer.size() > 0; }
 
       //! @brief Copy decrypted data into the user-provided buffer
       template <typename MutableBufferSequence>
@@ -682,16 +684,16 @@ class Stream
          // the user's desired target buffer once a read is started, and reading directly into that buffer in tls_record
          // received. However, we need to deal with the case that the receive buffer provided by the caller is smaller
          // than the decrypted record, so this optimization might not be worth the additional complexity.
-         const auto copiedBytes = boost::asio::buffer_copy(buffers, m_core.receive_buffer.data());
-         m_core.receive_buffer.consume(copiedBytes);
+         const auto copiedBytes = boost::asio::buffer_copy(buffers, m_core->receive_buffer.data());
+         m_core->receive_buffer.consume(copiedBytes);
          return copiedBytes;
          }
 
       //! @brief Check if encrypted data is available in the send buffer
-      bool has_data_to_send() const { return m_core.send_buffer.size() > 0; }
+      bool has_data_to_send() const { return m_core->send_buffer.size() > 0; }
 
       //! @brief Mark bytes in the send buffer as consumed, removing them from the buffer
-      void consume_send_buffer(std::size_t bytesConsumed) { m_core.send_buffer.consume(bytesConsumed); }
+      void consume_send_buffer(std::size_t bytesConsumed) { m_core->send_buffer.consume(bytesConsumed); }
 
       /**
        * @brief Create the native handle.
@@ -716,21 +718,21 @@ class Stream
                   {
                   m_native_handle = std::unique_ptr<Client>(
                      new Client(m_core,
-                                m_context.m_session_manager,
-                                m_context.m_credentials_manager,
-                                m_context.m_policy,
-                                m_context.m_rng,
-                                m_context.m_server_info,
-                                m_context.m_policy.latest_supported_version(false /* no DTLS */)));
+                                m_context->m_session_manager,
+                                m_context->m_credentials_manager,
+                                m_context->m_policy,
+                                m_context->m_rng,
+                                m_context->m_server_info,
+                                m_context->m_policy->latest_supported_version(false /* no DTLS */)));
                   }
                else
                   {
                   m_native_handle = std::unique_ptr<Server>(
                      new Server(m_core,
-                                m_context.m_session_manager,
-                                m_context.m_credentials_manager,
-                                m_context.m_policy,
-                                m_context.m_rng,
+                                m_context->m_session_manager,
+                                m_context->m_credentials_manager,
+                                m_context->m_policy,
+                                m_context->m_rng,
                                 false /* no DTLS */));
                   }
                }, ec);
@@ -823,11 +825,11 @@ class Stream
             }
          }
 
-      Context&                  m_context;
-      StreamLayer               m_nextLayer;
+      std::shared_ptr<Context> m_context;
+      StreamLayer              m_nextLayer;
 
-      StreamCore                m_core;
-      std::unique_ptr<ChannelT> m_native_handle;
+      std::shared_ptr<StreamCore> m_core;
+      std::unique_ptr<ChannelT>   m_native_handle;
 
       // Buffer space used to read input intended for the core
       std::vector<uint8_t>              m_input_buffer_space;

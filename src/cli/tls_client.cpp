@@ -264,7 +264,7 @@ class TLS_Client final : public Command
 
          auto creds = std::make_shared<Basic_Credentials_Manager>(use_system_cert_store, trusted_CAs, client_crt_path, client_key_path);
 
-         Botan::TLS::Client client(*callbacks, *session_mgr, *creds, *policy, rng(),
+         Botan::TLS::Client client(callbacks, session_mgr, creds, policy, rng_as_shared(),
                                    Botan::TLS::Server_Information(hostname, port),
                                    version, protocols_to_offer);
 

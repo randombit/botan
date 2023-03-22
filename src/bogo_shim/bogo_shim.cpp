@@ -1728,23 +1728,23 @@ int main(int /*argc*/, char* argv[])
       const bool is_datagram = args->flag_set("dtls");
       const size_t buf_size = args->get_int_opt_or_else("read-size", 18*1024);
 
-      Botan::ChaCha_RNG rng(Botan::secure_vector<uint8_t>(64));
-      Shim_Credentials creds(*args);
-      auto session_manager = [&]() -> std::unique_ptr<Botan::TLS::Session_Manager>
+      auto rng = std::make_shared<Botan::ChaCha_RNG>(Botan::secure_vector<uint8_t>(64));
+      auto creds = std::make_shared<Shim_Credentials>(*args);
+      auto session_manager = [&]() -> std::shared_ptr<Botan::TLS::Session_Manager>
          {
          if(args->flag_set("no-ticket") || args->flag_set("on-resume-no-ticket"))
             {
             // The in-memory session manager stores sessions in volatile memory and
             // hands out Session_IDs (i.e. does not utilize session tickets)
-            return std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng, 1024);
+            return std::make_shared<Botan::TLS::Session_Manager_In_Memory>(*rng, 1024);
             }
          else
             {
             // The hybrid session manager prefers stateless tickets (when used in
             // servers) but can also fall back to stateful management when tickets
             // are not an option.
-            return std::make_unique<Botan::TLS::Session_Manager_Hybrid>(
-               std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng, 1024), creds, rng);
+            return std::make_shared<Botan::TLS::Session_Manager_Hybrid>(
+               std::make_unique<Botan::TLS::Session_Manager_In_Memory>(*rng, 1024), *creds, *rng);
             }
          }();
 
@@ -1761,24 +1761,24 @@ int main(int /*argc*/, char* argv[])
 
          shim_log("Connection " + std::to_string(i+1) + "/" + std::to_string(resume_count+1));
 
-         Shim_Policy policy(*args);
-         Shim_Callbacks callbacks(*args, socket, policy);
+         auto policy = std::make_shared<Shim_Policy>(*args);
+         auto callbacks = std::make_shared<Shim_Callbacks>(*args, socket, *policy);
 
          if(args->option_used("resumption-delay") && i > 0)
             {
             shim_log("skewing the clock by " + std::to_string(args->get_int_opt("resumption-delay")) + " seconds");
-            callbacks.set_clock_skew(std::chrono::seconds(args->get_int_opt("resumption-delay")));
+            callbacks->set_clock_skew(std::chrono::seconds(args->get_int_opt("resumption-delay")));
             }
 
          std::unique_ptr<Botan::TLS::Channel> chan;
 
          if(is_server)
             {
-            chan.reset(new Botan::TLS::Server(callbacks, *session_manager, creds, policy, rng, is_datagram));
+            chan.reset(new Botan::TLS::Server(callbacks, session_manager, creds, policy, rng, is_datagram));
             }
          else
             {
-            Botan::TLS::Protocol_Version offer_version = policy.latest_supported_version(is_datagram);
+            Botan::TLS::Protocol_Version offer_version = policy->latest_supported_version(is_datagram);
             shim_log("Offering " + offer_version.to_string());
 
             std::string host_name = args->get_string_opt_or_else("host-name", hostname);
@@ -1787,11 +1787,11 @@ int main(int /*argc*/, char* argv[])
 
             Botan::TLS::Server_Information server_info(host_name, port);
             const std::vector<std::string> next_protocols = args->get_alpn_string_vec_opt("advertise-alpn");
-            chan.reset(new Botan::TLS::Client(callbacks, *session_manager, creds, policy, rng,
+            chan.reset(new Botan::TLS::Client(callbacks, session_manager, creds, policy, rng,
                                               server_info, offer_version, next_protocols));
             }
 
-         callbacks.set_channel(chan.get());
+         callbacks->set_channel(chan.get());
 
          std::vector<uint8_t> buf(buf_size);
 
@@ -1871,7 +1871,7 @@ int main(int /*argc*/, char* argv[])
 
          if(args->flag_set("check-close-notify"))
             {
-            if(!callbacks.saw_close_notify())
+            if(!callbacks->saw_close_notify())
                throw Shim_Exception("Unexpected SSL_shutdown result: -1 != 1");
             }
 
@@ -1879,9 +1879,9 @@ int main(int /*argc*/, char* argv[])
             {
             const size_t exp = args->get_int_opt("expect-total-renegotiations");
 
-            if(exp != callbacks.sessions_established() - 1)
+            if(exp != callbacks->sessions_established() - 1)
                throw Shim_Exception("Unexpected number of renegotiations: saw " +
-                                    std::to_string(callbacks.sessions_established() - 1) +
+                                    std::to_string(callbacks->sessions_established() - 1) +
                                     " exp " + std::to_string(exp));
             }
          shim_log("End of resume loop");

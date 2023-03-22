@@ -178,9 +178,9 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
       static pointer create(
          boost::asio::io_service& io,
-         Botan::TLS::Session_Manager& session_manager,
-         Botan::Credentials_Manager& credentials,
-         Botan::TLS::Policy& policy)
+         std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
+         std::shared_ptr<Botan::Credentials_Manager> credentials,
+         std::shared_ptr<Botan::TLS::Policy> policy)
          {
          return std::make_shared<TLS_Asio_HTTP_Session>(io, session_manager, credentials, policy);
          }
@@ -202,13 +202,13 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          }
 
       TLS_Asio_HTTP_Session(boost::asio::io_service& io,
-                            Botan::TLS::Session_Manager& session_manager,
-                            Botan::Credentials_Manager& credentials,
-                            Botan::TLS::Policy& policy)
+                            std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
+                            std::shared_ptr<Botan::Credentials_Manager> credentials,
+                            std::shared_ptr<Botan::TLS::Policy> policy)
          : m_strand(io)
          , m_client_socket(io)
          , m_rng(cli_make_rng())
-         , m_tls(*this, session_manager, credentials, policy, *m_rng) {}
+         , m_tls(shared_from_this(), session_manager, credentials, policy, m_rng) {}
 
    private:
       void client_read(const boost::system::error_code& error,
@@ -436,9 +436,9 @@ class TLS_Asio_HTTP_Server final
 
       TLS_Asio_HTTP_Server(
          boost::asio::io_service& io, unsigned short port,
-         Botan::Credentials_Manager& creds,
-         Botan::TLS::Policy& policy,
-         Botan::TLS::Session_Manager& session_mgr,
+         std::shared_ptr<Botan::Credentials_Manager> creds,
+         std::shared_ptr<Botan::TLS::Policy> policy,
+         std::shared_ptr<Botan::TLS::Session_Manager> session_mgr,
          size_t max_clients)
          : m_acceptor(io, tcp::endpoint(tcp::v4(), port))
          , m_creds(creds)
@@ -492,9 +492,9 @@ class TLS_Asio_HTTP_Server final
 
       tcp::acceptor m_acceptor;
 
-      Botan::Credentials_Manager& m_creds;
-      Botan::TLS::Policy& m_policy;
-      Botan::TLS::Session_Manager& m_session_manager;
+      std::shared_ptr<Botan::Credentials_Manager> m_creds;
+      std::shared_ptr<Botan::TLS::Policy> m_policy;
+      std::shared_ptr<Botan::TLS::Session_Manager> m_session_manager;
       ServerStatus m_status;
    };
 
@@ -536,11 +536,11 @@ class TLS_HTTP_Server final : public Command
          const size_t num_threads = thread_count();
          const size_t max_clients = get_arg_sz("max-clients");
 
-         Basic_Credentials_Manager creds(server_crt, server_key);
+         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key);
 
          auto policy = load_tls_policy(get_arg("policy"));
 
-         std::unique_ptr<Botan::TLS::Session_Manager> session_mgr;
+         std::shared_ptr<Botan::TLS::Session_Manager> session_mgr;
 
          const std::string sessions_db = get_arg("session-db");
 
@@ -561,7 +561,7 @@ class TLS_HTTP_Server final : public Command
 
          boost::asio::io_service io;
 
-         TLS_Asio_HTTP_Server server(io, listen_port, creds, *policy, *session_mgr, max_clients);
+         TLS_Asio_HTTP_Server server(io, listen_port, creds, policy, session_mgr, max_clients);
 
          std::vector<std::shared_ptr<std::thread>> threads;
 

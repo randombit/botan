@@ -79,11 +79,11 @@ private:
 
 int main() {
   // prepare all the parameters
-  Callbacks callbacks;
-  Botan::AutoSeeded_RNG rng;
-  Botan::TLS::Session_Manager_In_Memory session_mgr(rng);
-  Server_Credentials creds;
-  Botan::TLS::Strict_Policy policy;
+  auto callbacks = std::make_shared<Callbacks>();
+  auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
+  auto session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(*rng);
+  auto creds = std::make_shared<Server_Credentials>();
+  auto policy = std::make_shared<Botan::TLS::Strict_Policy>();
 
   // accept tls connection from client
   Botan::TLS::Server server(callbacks, session_mgr, creds, policy, rng);

@@ -63,15 +63,19 @@ class Timeout_Exception : public std::runtime_error
 class Peer
    {
    public:
-      Peer(Botan::TLS::Policy& policy, net::io_context& ioc)
-         : m_credentials_manager(true, ""),
-           m_ctx(m_credentials_manager, m_rng, m_session_mgr, policy, Botan::TLS::Server_Information()),
-           m_timeout_timer(ioc) {}
+      Peer(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc)
+         : m_rng(std::make_shared<Botan::AutoSeeded_RNG>())
+         , m_credentials_manager(std::make_shared<Basic_Credentials_Manager>(true, ""))
+         , m_session_mgr(std::make_shared<Botan::TLS::Session_Manager_Noop>())
+         , m_ctx(std::make_shared<Botan::TLS::Context>(m_credentials_manager, m_rng, m_session_mgr, policy))
+         , m_timeout_timer(ioc) {}
 
-      Peer(Botan::TLS::Policy& policy, net::io_context& ioc, const std::string& server_cert, const std::string& server_key)
-         : m_credentials_manager(server_cert, server_key),
-           m_ctx(m_credentials_manager, m_rng, m_session_mgr, policy, Botan::TLS::Server_Information()),
-           m_timeout_timer(ioc) {}
+      Peer(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc, const std::string& server_cert, const std::string& server_key)
+         : m_rng(std::make_shared<Botan::AutoSeeded_RNG>())
+         , m_credentials_manager(std::make_shared<Basic_Credentials_Manager>(server_cert, server_key))
+         , m_session_mgr(std::make_shared<Botan::TLS::Session_Manager_Noop>())
+         , m_ctx(std::make_shared<Botan::TLS::Context>(m_credentials_manager, m_rng, m_session_mgr, policy))
+         , m_timeout_timer(ioc) {}
 
       virtual ~Peer()
          {
@@ -142,10 +146,10 @@ class Peer
          }
 
    protected:
-      Botan::AutoSeeded_RNG m_rng;
-      Basic_Credentials_Manager m_credentials_manager;
-      Botan::TLS::Session_Manager_Noop m_session_mgr;
-      Botan::TLS::Context m_ctx;
+      std::shared_ptr<Botan::AutoSeeded_RNG> m_rng;
+      std::shared_ptr<Basic_Credentials_Manager> m_credentials_manager;
+      std::shared_ptr<Botan::TLS::Session_Manager_Noop> m_session_mgr;
+      std::shared_ptr<Botan::TLS::Context> m_ctx;
       std::unique_ptr<ssl_stream> m_stream;
       net::system_timer m_timeout_timer;
       std::function<void(const std::string&)> m_on_timeout;
@@ -198,7 +202,7 @@ class Result_Wrapper
 class Server : public Peer, public std::enable_shared_from_this<Server>
    {
    public:
-      Server(Botan::TLS::Policy& policy, net::io_context& ioc, std::string test_name)
+      Server(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc, std::string test_name)
          : Peer(policy, ioc, server_cert(), server_key()),
            m_acceptor(ioc),
            m_result("Server (" + test_name + ")"),
@@ -364,10 +368,10 @@ class Client : public Peer
          const std::string&, const Botan::TLS::Policy&) {}
 
    public:
-      Client(Botan::TLS::Policy& policy, net::io_context& ioc)
+      Client(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc)
          : Peer(policy, ioc)
          {
-         m_ctx.set_verify_callback(accept_all);
+         m_ctx->set_verify_callback(accept_all);
          m_stream = std::unique_ptr<ssl_stream>(new ssl_stream(ioc, m_ctx));
          }
 
@@ -393,7 +397,9 @@ class Client : public Peer
 class TestBase
    {
    public:
-      TestBase(net::io_context& ioc, Botan::TLS::Policy& client_policy, Botan::TLS::Policy& server_policy,
+      TestBase(net::io_context& ioc,
+               std::shared_ptr<const Botan::TLS::Policy> client_policy,
+               std::shared_ptr<const Botan::TLS::Policy> server_policy,
                const std::string& name, const std::string& config_name)
          : m_name(name + " (" + config_name + ")"),
            m_client(std::make_shared<Client>(client_policy, ioc)),
@@ -483,8 +489,11 @@ class Synchronous_Test : public TestBase
 class Test_Conversation : public TestBase, public net::coroutine, public std::enable_shared_from_this<Test_Conversation>
    {
    public:
-      Test_Conversation(net::io_context& ioc, std::string config_name, Botan::TLS::Policy& client_policy,
-                        Botan::TLS::Policy& server_policy, std::string test_name="Test Conversation")
+      Test_Conversation(net::io_context& ioc,
+                        std::string config_name,
+                        std::shared_ptr<const Botan::TLS::Policy> client_policy,
+                        std::shared_ptr<const Botan::TLS::Policy> server_policy,
+                        std::string test_name="Test Conversation")
          : TestBase(ioc, client_policy, server_policy, test_name, config_name) {}
 
       void run(const error_code& ec)
@@ -536,8 +545,10 @@ class Test_Conversation : public TestBase, public net::coroutine, public std::en
 class Test_Conversation_Sync : public Synchronous_Test
    {
    public:
-      Test_Conversation_Sync(net::io_context& ioc, std::string config_name, Botan::TLS::Policy& client_policy,
-                             Botan::TLS::Policy& server_policy)
+      Test_Conversation_Sync(net::io_context& ioc,
+                             std::string config_name,
+                             std::shared_ptr<const Botan::TLS::Policy> client_policy,
+                             std::shared_ptr<const Botan::TLS::Policy> server_policy)
          : Synchronous_Test(ioc, client_policy, server_policy, "Test Conversation Sync", config_name) {}
 
       void run_synchronous_client() override
@@ -581,8 +592,10 @@ class Test_Conversation_Sync : public Synchronous_Test
 class Test_Eager_Close : public TestBase, public net::coroutine, public std::enable_shared_from_this<Test_Eager_Close>
    {
    public:
-      Test_Eager_Close(net::io_context& ioc, std::string config_name, Botan::TLS::Policy& client_policy,
-                       Botan::TLS::Policy& server_policy)
+      Test_Eager_Close(net::io_context& ioc,
+                       std::string config_name,
+                       std::shared_ptr<const Botan::TLS::Policy> client_policy,
+                       std::shared_ptr<const Botan::TLS::Policy> server_policy)
          : TestBase(ioc, client_policy, server_policy, "Test Eager Close", config_name) {}
 
       void run(const error_code& ec)
@@ -615,8 +628,10 @@ class Test_Eager_Close : public TestBase, public net::coroutine, public std::ena
 class Test_Eager_Close_Sync : public Synchronous_Test
    {
    public:
-      Test_Eager_Close_Sync(net::io_context& ioc, std::string config_name, Botan::TLS::Policy& client_policy,
-                            Botan::TLS::Policy& server_policy)
+      Test_Eager_Close_Sync(net::io_context& ioc,
+                            std::string config_name,
+                            std::shared_ptr<const Botan::TLS::Policy> client_policy,
+                            std::shared_ptr<const Botan::TLS::Policy> server_policy)
          : Synchronous_Test(ioc, client_policy, server_policy, "Test Eager Close Sync", config_name) {}
 
       void run_synchronous_client() override
@@ -648,8 +663,10 @@ class Test_Close_Without_Shutdown
      public std::enable_shared_from_this<Test_Close_Without_Shutdown>
    {
    public:
-      Test_Close_Without_Shutdown(net::io_context& ioc, std::string config_name, Botan::TLS::Policy& client_policy,
-                                  Botan::TLS::Policy& server_policy)
+      Test_Close_Without_Shutdown(net::io_context& ioc,
+                                  std::string config_name,
+                                  std::shared_ptr<const Botan::TLS::Policy> client_policy,
+                                  std::shared_ptr<const Botan::TLS::Policy> server_policy)
          : TestBase(ioc, client_policy, server_policy, "Test Close Without Shutdown", config_name) {}
 
       void run(const error_code& ec)
@@ -694,8 +711,10 @@ class Test_Close_Without_Shutdown
 class Test_Close_Without_Shutdown_Sync : public Synchronous_Test
    {
    public:
-      Test_Close_Without_Shutdown_Sync(net::io_context& ioc, std::string config_name, Botan::TLS::Policy& client_policy,
-                                       Botan::TLS::Policy& server_policy)
+      Test_Close_Without_Shutdown_Sync(net::io_context& ioc,
+                                       std::string config_name,
+                                       std::shared_ptr<const Botan::TLS::Policy> client_policy,
+                                       std::shared_ptr<const Botan::TLS::Policy> server_policy)
          : Synchronous_Test(ioc, client_policy, server_policy, "Test Close Without Shutdown Sync", config_name) {}
 
       void run_synchronous_client() override
@@ -724,8 +743,10 @@ class Test_No_Shutdown_Response : public TestBase, public net::coroutine,
    public std::enable_shared_from_this<Test_No_Shutdown_Response>
    {
    public:
-      Test_No_Shutdown_Response(net::io_context& ioc, std::string config_name, Botan::TLS::Policy& client_policy,
-                                Botan::TLS::Policy& server_policy)
+      Test_No_Shutdown_Response(net::io_context& ioc,
+                                std::string config_name,
+                                std::shared_ptr<const Botan::TLS::Policy> client_policy,
+                                std::shared_ptr<const Botan::TLS::Policy> server_policy)
          : TestBase(ioc, client_policy, server_policy, "Test No Shutdown Response", config_name) {}
 
       void run(const error_code& ec)
@@ -769,8 +790,10 @@ class Test_No_Shutdown_Response : public TestBase, public net::coroutine,
 class Test_No_Shutdown_Response_Sync : public Synchronous_Test
    {
    public:
-      Test_No_Shutdown_Response_Sync(net::io_context& ioc, std::string config_name, Botan::TLS::Policy& client_policy,
-                                     Botan::TLS::Policy& server_policy)
+      Test_No_Shutdown_Response_Sync(net::io_context& ioc,
+                                     std::string config_name,
+                                     std::shared_ptr<const Botan::TLS::Policy> client_policy,
+                                     std::shared_ptr<const Botan::TLS::Policy> server_policy)
          : Synchronous_Test(ioc, client_policy, server_policy, "Test No Shutdown Response Sync", config_name) {}
 
       void run_synchronous_client() override
@@ -802,8 +825,10 @@ class Test_No_Shutdown_Response_Sync : public Synchronous_Test
 class Test_Conversation_With_Move : public Test_Conversation
    {
    public:
-      Test_Conversation_With_Move(net::io_context& ioc, std::string config_name, Botan::TLS::Policy& client_policy,
-                                  Botan::TLS::Policy& server_policy)
+      Test_Conversation_With_Move(net::io_context& ioc,
+                                  std::string config_name,
+                                  std::shared_ptr<const Botan::TLS::Policy> client_policy,
+                                  std::shared_ptr<const Botan::TLS::Policy> server_policy)
          : Test_Conversation(ioc, std::move(config_name), client_policy, server_policy, "Test Conversation With Move")
          {
          m_server->move_before_accept();
@@ -816,13 +841,15 @@ struct SystemConfiguration
    {
    std::string name;
 
-   Botan::TLS::Text_Policy client_policy;
-   Botan::TLS::Text_Policy server_policy;
+   std::shared_ptr<Botan::TLS::Text_Policy> client_policy;
+   std::shared_ptr<Botan::TLS::Text_Policy> server_policy;
 
-   SystemConfiguration(std::string n, Botan::TLS::Text_Policy cp, Botan::TLS::Text_Policy sp)
+   SystemConfiguration(std::string n,
+                       std::string cp,
+                       std::string sp)
       : name(std::move(n))
-      , client_policy(std::move(cp))
-      , server_policy(std::move(sp))
+      , client_policy(std::make_shared<Botan::TLS::Text_Policy>(cp))
+      , server_policy(std::make_shared<Botan::TLS::Text_Policy>(sp))
       {}
 
    template<typename TestT>
@@ -860,21 +887,21 @@ std::vector<SystemConfiguration> get_configurations()
       {
       SystemConfiguration(
          "TLS 1.2 only",
-         Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=false"),
-         Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=false")),
+         "allow_tls12=true\nallow_tls13=false",
+         "allow_tls12=true\nallow_tls13=false"),
 #if defined(BOTAN_HAS_TLS_13)
       SystemConfiguration(
          "TLS 1.3 only",
-         Botan::TLS::Text_Policy("allow_tls12=false\nallow_tls13=true"),
-         Botan::TLS::Text_Policy("allow_tls12=false\nallow_tls13=true")),
+         "allow_tls12=false\nallow_tls13=true",
+         "allow_tls12=false\nallow_tls13=true"),
       SystemConfiguration(
          "TLS 1.x server, TLS 1.2 client",
-         Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=false"),
-         Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=true")),
+         "allow_tls12=true\nallow_tls13=false",
+         "allow_tls12=true\nallow_tls13=true"),
       SystemConfiguration(
          "TLS 1.2 server, TLS 1.x client",
-         Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=true"),
-         Botan::TLS::Text_Policy("allow_tls12=true\nallow_tls13=false")),
+         "allow_tls12=true\nallow_tls13=true",
+         "allow_tls12=true\nallow_tls13=false"),
 #endif
       };
    }

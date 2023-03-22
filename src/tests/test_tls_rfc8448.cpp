@@ -9,6 +9,8 @@
 #include "tests.h"
 #include <memory>
 #include <utility>
+#include <fstream>
+
 // Since RFC 8448 uses a specific set of cipher suites we can only run this
 // test if all of them are enabled.
 #if defined(BOTAN_HAS_TLS_13) && \
@@ -24,7 +26,6 @@
 
 #if defined(BOTAN_CAN_RUN_TEST_TLS_RFC8448)
    #include "test_rng.h"
-   #include "test_tls_utils.h"
 
    #include <botan/credentials_manager.h>
    #include <botan/rsa.h>
@@ -472,9 +473,23 @@ class Test_Credentials : public Botan::Credentials_Manager
 
 class RFC8448_Text_Policy : public Botan::TLS::Text_Policy
    {
+   private:
+      Botan::TLS::Text_Policy read_policy(const std::string& policy_file)
+         {
+         const std::string fspath = Test::data_file("tls-policy/" + policy_file + ".txt");
+
+         std::ifstream is(fspath.c_str());
+         if(!is.good())
+            {
+            throw Test_Error("Missing policy file " + fspath);
+            }
+
+         return Botan::TLS::Text_Policy(is);
+         }
+
    public:
-      RFC8448_Text_Policy(const Botan::TLS::Text_Policy& other)
-         : Text_Policy(other) {}
+      RFC8448_Text_Policy(const std::string& policy_file)
+         : Botan::TLS::Text_Policy(read_policy(policy_file)) {}
 
       std::vector<Botan::TLS::Signature_Scheme> allowed_signature_schemes() const override
          {
@@ -633,22 +648,23 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
 class TLS_Context
    {
    protected:
-      TLS_Context(std::unique_ptr<Botan::RandomNumberGenerator> rng_in,
-                  RFC8448_Text_Policy policy,
+      TLS_Context(std::shared_ptr<Botan::RandomNumberGenerator> rng_in,
+                  std::shared_ptr<const RFC8448_Text_Policy> policy,
                   Modify_Exts_Fn modify_exts_cb,
                   std::vector<MockSignature> mock_signatures,
                   uint64_t timestamp,
                   std::optional<std::pair<Session, Session_Ticket>> session_and_ticket,
                   bool use_alternative_server_certificate)
-         : m_callbacks(std::move(modify_exts_cb), std::move(mock_signatures), timestamp)
-         , m_creds(use_alternative_server_certificate)
+         : m_callbacks(std::make_shared<Test_TLS_13_Callbacks>(std::move(modify_exts_cb), std::move(mock_signatures), timestamp))
+         , m_creds(std::make_shared<Test_Credentials>(use_alternative_server_certificate))
          , m_rng(std::move(rng_in))
+         , m_session_mgr(std::make_shared<RFC8448_Session_Manager>())
          , m_policy(std::move(policy))
          {
          if(session_and_ticket.has_value())
             {
-            m_session_mgr.store(std::get<Session>(session_and_ticket.value()),
-                                std::get<Session_Ticket>(session_and_ticket.value()));
+            m_session_mgr->store(std::get<Session>(session_and_ticket.value()),
+                                 std::get<Session_Ticket>(session_and_ticket.value()));
             }
          }
 
@@ -663,15 +679,15 @@ class TLS_Context
 
       std::vector<uint8_t> pull_send_buffer()
          {
-         return m_callbacks.pull_send_buffer();
+         return m_callbacks->pull_send_buffer();
          }
 
       std::vector<uint8_t> pull_receive_buffer()
          {
-         return m_callbacks.pull_receive_buffer();
+         return m_callbacks->pull_receive_buffer();
          }
 
-      uint64_t last_received_seq_no() const { return m_callbacks.last_received_seq_no(); }
+      uint64_t last_received_seq_no() const { return m_callbacks->last_received_seq_no(); }
 
       /**
        * Checks that all of the listed callbacks were called at least once, no other
@@ -681,7 +697,7 @@ class TLS_Context
       void check_callback_invocations(Test::Result& result, const std::string& context,
                                       const std::vector<std::string>& callback_names)
          {
-         const auto& invokes = m_callbacks.callback_invocations();
+         const auto& invokes = m_callbacks->callback_invocations();
          for(const auto& cbn : callback_names)
             {
             result.confirm(cbn + " was invoked (Context: " + context + ")", invokes.contains(cbn) && invokes.at(cbn) > 0);
@@ -695,22 +711,22 @@ class TLS_Context
                            callback_names.cend(), invoke.first) != callback_names.cend());
             }
 
-         m_callbacks.reset_callback_invocation_counters();
+         m_callbacks->reset_callback_invocation_counters();
          }
 
       const std::vector<Session_with_Handle>& stored_sessions() const
          {
-         return m_session_mgr.all_sessions();
+         return m_session_mgr->all_sessions();
          }
 
       const std::vector<Botan::X509_Certificate>& certs_verified() const
          {
-         return m_callbacks.certificate_chain;
+         return m_callbacks->certificate_chain;
          }
 
       decltype(auto) observed_handshake_messages() const
          {
-         return m_callbacks.serialized_messages;
+         return m_callbacks->serialized_messages;
          }
 
       /**
@@ -719,25 +735,25 @@ class TLS_Context
       virtual void send(const std::vector<uint8_t>& data) = 0;
 
    protected:
-      Test_TLS_13_Callbacks m_callbacks;
-      Test_Credentials      m_creds;
+      std::shared_ptr<Test_TLS_13_Callbacks> m_callbacks;
+      std::shared_ptr<Test_Credentials>      m_creds;
 
-      std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
-      RFC8448_Session_Manager                       m_session_mgr;
-      RFC8448_Text_Policy                           m_policy;
+      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
+      std::shared_ptr<RFC8448_Session_Manager>      m_session_mgr;
+      std::shared_ptr<const RFC8448_Text_Policy>    m_policy;
    };
 
 class Client_Context : public TLS_Context
    {
    public:
-      Client_Context(std::unique_ptr<Botan::RandomNumberGenerator> rng_in,
-                     RFC8448_Text_Policy policy,
+      Client_Context(std::shared_ptr<Botan::RandomNumberGenerator> rng_in,
+                     std::shared_ptr<const RFC8448_Text_Policy> policy,
                      uint64_t timestamp,
                      Modify_Exts_Fn modify_exts_cb,
                      std::optional<std::pair<Session, Session_Ticket>> session_and_ticket = std::nullopt,
                      std::vector<MockSignature> mock_signatures = {})
          : TLS_Context(std::move(rng_in), std::move(policy), std::move(modify_exts_cb), std::move(mock_signatures), timestamp, std::move(session_and_ticket), false)
-         , client(m_callbacks, m_session_mgr, m_creds, m_policy, *m_rng,
+         , client(m_callbacks, m_session_mgr, m_creds, m_policy, m_rng,
                   Botan::TLS::Server_Information("server"),
                   Botan::TLS::Protocol_Version::TLS_V13)
          {}
@@ -753,8 +769,8 @@ class Client_Context : public TLS_Context
 class Server_Context : public TLS_Context
    {
    public:
-      Server_Context(std::unique_ptr<Botan::RandomNumberGenerator> rng,
-                     RFC8448_Text_Policy policy,
+      Server_Context(std::shared_ptr<Botan::RandomNumberGenerator> rng,
+                     std::shared_ptr<const RFC8448_Text_Policy> policy,
                      uint64_t timestamp,
                      Modify_Exts_Fn modify_exts_cb,
                      std::vector<MockSignature> mock_signatures,
@@ -766,7 +782,7 @@ class Server_Context : public TLS_Context
             timestamp,
             std::move(session_and_ticket),
             use_alternative_server_certificate)
-         , server(m_callbacks, m_session_mgr, m_creds, m_policy, *m_rng, false /* DTLS NYI */) {}
+         , server(m_callbacks, m_session_mgr, m_creds, m_policy, m_rng, false /* DTLS NYI */) {}
 
       void send(const std::vector<uint8_t>& data) override
          {
@@ -982,7 +998,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
 
       std::vector<Test::Result> simple_1_rtt(const VarMap& vars) override
          {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_shared<Botan_Tests::Fixed_Output_RNG>("");
 
          // 32 - for client hello random
          // 32 - for KeyShare (eph. x25519 key pair)
@@ -1007,7 +1023,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
          return {
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
+               ctx = std::make_unique<Client_Context>(rng, std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
 
                result.confirm("client not closed", !ctx->client.is_closed());
                ctx->check_callback_invocations(result, "client hello prepared",
@@ -1161,7 +1177,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
                ctx = std::make_unique<Client_Context>(std::move(rng),
-                                                      read_tls_policy("rfc8448_1rtt"),
+                                                      std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
                                                       vars.get_req_u64("CurrentTimestamp"),
                                                       add_extensions_and_sort,
                                                       std::pair{
@@ -1226,7 +1242,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
          return {
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_hrr_client"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
+               ctx = std::make_unique<Client_Context>(std::move(rng), std::make_shared<RFC8448_Text_Policy>("rfc8448_hrr_client"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
                result.confirm("client not closed", !ctx->client.is_closed());
 
                ctx->check_callback_invocations(result, "client hello prepared",
@@ -1334,7 +1350,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                {
 
                ctx = std::make_unique<Client_Context>(std::move(rng),
-                                                      read_tls_policy("rfc8448_1rtt"),
+                                                      std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
                                                       vars.get_req_u64("CurrentTimestamp"),
                                                       add_extensions_and_sort,
                                                       std::nullopt,
@@ -1432,7 +1448,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
          return {
             Botan_Tests::CHECK("Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Client_Context>(std::move(rng), read_tls_policy("rfc8448_compat_client"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
+               ctx = std::make_unique<Client_Context>(std::move(rng), std::make_shared<RFC8448_Text_Policy>("rfc8448_compat_client"), vars.get_req_u64("CurrentTimestamp"), add_extensions_and_sort);
 
                result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
 
@@ -1523,7 +1539,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
                   sort_server_extensions(exts, side, type);
                   };
 
-               ctx = std::make_unique<Server_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_early_data_and_sort, make_mock_signatures(vars), false, std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")), Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
+               ctx = std::make_unique<Server_Context>(std::move(rng), std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_early_data_and_sort, make_mock_signatures(vars), false, std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")), Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
                result.confirm("server not closed", !ctx->server.is_closed());
 
                ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
@@ -1668,7 +1684,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
                   sort_server_extensions(exts, side, type);
                   };
 
-               ctx = std::make_unique<Server_Context>(std::move(rng), read_tls_policy("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_cookie_and_sort, make_mock_signatures(vars), false, std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")), Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
+               ctx = std::make_unique<Server_Context>(std::move(rng), std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"), vars.get_req_u64("CurrentTimestamp"), add_cookie_and_sort, make_mock_signatures(vars), false, std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")), Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
                result.confirm("server not closed", !ctx->server.is_closed());
 
                ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
@@ -1734,7 +1750,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
                   sort_server_extensions(exts, side, type);
                   };
 
-               ctx = std::make_unique<Server_Context>(std::move(rng), read_tls_policy("rfc8448_hrr_server"), vars.get_req_u64("CurrentTimestamp"), add_cookie_and_sort, make_mock_signatures(vars));
+               ctx = std::make_unique<Server_Context>(std::move(rng), std::make_shared<RFC8448_Text_Policy>("rfc8448_hrr_server"), vars.get_req_u64("CurrentTimestamp"), add_cookie_and_sort, make_mock_signatures(vars));
                result.confirm("server not closed", !ctx->server.is_closed());
 
                ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
@@ -1850,7 +1866,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
             {
             Botan_Tests::CHECK("Receive Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Server_Context>(std::move(rng), read_tls_policy("rfc8448_client_auth_server"), vars.get_req_u64("CurrentTimestamp"), sort_server_extensions, make_mock_signatures(vars), true /* use alternative certificate */);
+               ctx = std::make_unique<Server_Context>(std::move(rng), std::make_shared<RFC8448_Text_Policy>("rfc8448_client_auth_server"), vars.get_req_u64("CurrentTimestamp"), sort_server_extensions, make_mock_signatures(vars), true /* use alternative certificate */);
                result.confirm("server not closed", !ctx->server.is_closed());
 
                ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
@@ -1961,7 +1977,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448
             {
             Botan_Tests::CHECK("Receive Client Hello", [&](Test::Result& result)
                {
-               ctx = std::make_unique<Server_Context>(std::move(rng), read_tls_policy("rfc8448_compat_server"), vars.get_req_u64("CurrentTimestamp"), sort_server_extensions, make_mock_signatures(vars));
+               ctx = std::make_unique<Server_Context>(std::move(rng), std::make_shared<RFC8448_Text_Policy>("rfc8448_compat_server"), vars.get_req_u64("CurrentTimestamp"), sort_server_extensions, make_mock_signatures(vars));
                result.confirm("server not closed", !ctx->server.is_closed());
 
                ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));

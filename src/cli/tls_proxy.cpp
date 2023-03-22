@@ -100,9 +100,9 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
       static pointer create(
          boost::asio::io_service& io,
-         Botan::TLS::Session_Manager& session_manager,
-         Botan::Credentials_Manager& credentials,
-         Botan::TLS::Policy& policy,
+         std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
+         std::shared_ptr<Botan::Credentials_Manager> credentials,
+         std::shared_ptr<Botan::TLS::Policy> policy,
          tcp::resolver::iterator endpoints)
          {
          return std::make_shared<tls_proxy_session>(
@@ -141,20 +141,20 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
       tls_proxy_session(
          boost::asio::io_service& io,
-         Botan::TLS::Session_Manager& session_manager,
-         Botan::Credentials_Manager& credentials,
-         Botan::TLS::Policy& policy,
+         std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
+         std::shared_ptr<Botan::Credentials_Manager> credentials,
+         std::shared_ptr<Botan::TLS::Policy> policy,
          tcp::resolver::iterator endpoints)
          : m_strand(io)
          , m_server_endpoints(endpoints)
          , m_client_socket(io)
          , m_server_socket(io)
          , m_rng(cli_make_rng())
-         , m_tls(*this,
+         , m_tls(shared_from_this(),
                  session_manager,
                  credentials,
                  policy,
-                 *m_rng) {}
+                 m_rng) {}
 
    private:
       void client_read(const boost::system::error_code& error,
@@ -373,9 +373,9 @@ class tls_proxy_server final
       tls_proxy_server(
          boost::asio::io_service& io, unsigned short port,
          tcp::resolver::iterator endpoints,
-         Botan::Credentials_Manager& creds,
-         Botan::TLS::Policy& policy,
-         Botan::TLS::Session_Manager& session_mgr,
+         std::shared_ptr<Botan::Credentials_Manager> creds,
+         std::shared_ptr<Botan::TLS::Policy> policy,
+         std::shared_ptr<Botan::TLS::Session_Manager> session_mgr,
          size_t max_clients)
          : m_acceptor(io, tcp::endpoint(tcp::v4(), port))
          , m_server_endpoints(endpoints)
@@ -432,9 +432,9 @@ class tls_proxy_server final
       tcp::acceptor m_acceptor;
       tcp::resolver::iterator m_server_endpoints;
 
-      Botan::Credentials_Manager& m_creds;
-      Botan::TLS::Policy& m_policy;
-      Botan::TLS::Session_Manager& m_session_manager;
+      std::shared_ptr<Botan::Credentials_Manager> m_creds;
+      std::shared_ptr<Botan::TLS::Policy> m_policy;
+      std::shared_ptr<Botan::TLS::Session_Manager> m_session_manager;
       ServerStatus m_status;
    };
 
@@ -477,7 +477,7 @@ class TLS_Proxy final : public Command
          const size_t num_threads = thread_count();
          const size_t max_clients = get_arg_sz("max-clients");
 
-         Basic_Credentials_Manager creds(server_crt, server_key);
+         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key);
 
          auto policy = load_tls_policy(get_arg("policy"));
 
@@ -486,7 +486,7 @@ class TLS_Proxy final : public Command
          tcp::resolver resolver(io);
          auto server_endpoint_iterator = resolver.resolve({ target, target_port });
 
-         std::unique_ptr<Botan::TLS::Session_Manager> session_mgr;
+         std::shared_ptr<Botan::TLS::Session_Manager> session_mgr;
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
          const std::string sessions_passphrase = get_passphrase_arg("Session DB passphrase", "session-db-pass");
@@ -502,7 +502,7 @@ class TLS_Proxy final : public Command
             session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
             }
 
-         tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, *policy, *session_mgr, max_clients);
+         tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, session_mgr, max_clients);
 
          std::vector<std::shared_ptr<std::thread>> threads;
 

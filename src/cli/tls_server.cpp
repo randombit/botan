@@ -217,11 +217,11 @@ class TLS_Server final : public Command
             clients_served++;
 
             Botan::TLS::Server server(
-               *callbacks,
-               *session_manager,
-               *creds,
-               *policy,
-               rng(),
+               callbacks,
+               session_manager,
+               creds,
+               policy,
+               rng_as_shared(),
                m_is_tcp == false);
 
             std::unique_ptr<std::ostream> dump_stream;
