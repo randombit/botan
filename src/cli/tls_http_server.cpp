@@ -417,7 +417,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
       tcp::socket m_client_socket;
 
-      std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
+      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
       Botan::TLS::Server m_tls;
       std::string m_chello_summary;
       std::string m_connection_summary;

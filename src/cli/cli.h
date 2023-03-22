@@ -28,7 +28,7 @@ namespace Botan_CLI {
 class Argument_Parser;
 
 /* Declared in cli_rng.cpp */
-std::unique_ptr<Botan::RandomNumberGenerator>
+std::shared_ptr<Botan::RandomNumberGenerator>
 cli_make_rng(const std::string& type = "", const std::string& hex_drbg_seed = "");
 
 class Command
@@ -187,6 +187,7 @@ class Command
          }
 
       Botan::RandomNumberGenerator& rng();
+      std::shared_ptr<Botan::RandomNumberGenerator> rng_as_shared();
 
    private:
       typedef std::function<std::unique_ptr<Command> ()> cmd_maker_fn;
@@ -201,7 +202,7 @@ class Command
       std::unique_ptr<std::ostream> m_output_stream;
       std::unique_ptr<std::ostream> m_error_output_stream;
 
-      std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
+      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
 
       // possibly set by calling set_return_code()
       int m_return_code = 0;

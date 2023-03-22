@@ -350,7 +350,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
       tcp::socket m_client_socket;
       tcp::socket m_server_socket;
 
-      std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
+      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
       Botan::TLS::Server m_tls;
       std::string m_hostname;
 
