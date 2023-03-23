@@ -2,6 +2,7 @@
 * TLS Server Proxy
 * (C) 2014,2015,2019 Jack Lloyd
 * (C) 2016 Matthias Gierlings
+* (C) 2023 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -54,6 +55,11 @@ void log_exception(const char* where, const std::exception& e)
 void log_error(const char* where, const boost::system::error_code& error)
    {
    std::cout << where << ' ' << error.message() << std::endl;
+   }
+
+void log_error(const char* msg)
+   {
+   std::cout << msg << std::endl;
    }
 
 void log_binary_message(const char* where, const uint8_t buf[], size_t buf_len)
@@ -135,6 +141,11 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
             */
             m_server_socket.close();
             m_tls->close();
+
+            // Need to explicitly destroy the TLS::Server object to break the
+            // circular ownership of shared_from_this() and the shared_ptr of
+            // this kept inside the TLS::Channel.
+            m_tls.reset();
             m_is_closed = true;
             }
          }
@@ -167,6 +178,12 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
             {
             log_error("Read failed", error);
             stop();
+            return;
+            }
+
+         if(m_is_closed)
+            {
+            log_error("Received client data after close");
             return;
             }
 
@@ -205,7 +222,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
          m_p2c.clear();
 
-         if(m_p2c_pending.empty() && m_tls->is_closed())
+         if(m_p2c_pending.empty() && (!m_tls || m_tls->is_closed()))
             {
             m_client_socket.close();
             }
@@ -409,25 +426,30 @@ class tls_proxy_server final
                    m_server_endpoints);
          }
 
+      void serve_one_session()
+         {
+         session::pointer new_session = make_session();
+
+         m_acceptor.async_accept(
+            new_session->client_socket(),
+            boost::bind(
+               &tls_proxy_server::handle_accept,
+               this,
+               new_session,
+               boost::asio::placeholders::error));
+         }
+
       void handle_accept(session::pointer new_session,
                          const boost::system::error_code& error)
          {
          if(!error)
             {
             new_session->start();
-            new_session = make_session();
-
             m_status.client_serviced();
 
-            if(m_status.should_exit() == false)
+            if(!m_status.should_exit())
                {
-               m_acceptor.async_accept(
-                  new_session->client_socket(),
-                  boost::bind(
-                     &tls_proxy_server::handle_accept,
-                     this,
-                     new_session,
-                     boost::asio::placeholders::error));
+               serve_one_session();
                }
             }
          }

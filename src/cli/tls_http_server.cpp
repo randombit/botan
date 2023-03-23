@@ -1,6 +1,7 @@
 /*
 * (C) 2014,2015,2017,2019 Jack Lloyd
 * (C) 2016 Matthias Gierlings
+* (C) 2023 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -48,6 +49,11 @@ namespace Botan_CLI {
 namespace {
 
 using boost::asio::ip::tcp;
+
+inline void log_error(const char* msg)
+   {
+   std::cout << msg << std::endl;
+   }
 
 inline void log_exception(const char* where, const std::exception& e)
    {
@@ -205,6 +211,11 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
       void stop()
          {
          m_tls->close();
+
+         // Need to explicitly destroy the TLS::Server object to break the
+         // circular ownership of shared_from_this() and the shared_ptr of
+         // this kept inside the TLS::Channel.
+         m_tls.reset();
          }
 
       TLS_Asio_HTTP_Session(boost::asio::io_service& io)
@@ -230,6 +241,12 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          if(error)
             {
             return stop();
+            }
+
+         if(!m_tls)
+            {
+            log_error("Received client data after close");
+            return;
             }
 
          try
@@ -260,7 +277,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
          m_s2c.clear();
 
-         if(m_s2c_pending.empty() && m_tls->is_closed_for_writing())
+         if(m_s2c_pending.empty() && (!m_tls || m_tls->is_closed_for_writing()))
             {
             m_client_socket.close();
             }
@@ -458,7 +475,17 @@ class TLS_Asio_HTTP_Server final
          , m_session_manager(session_mgr)
          , m_status(max_clients)
          {
-         session::pointer new_session = make_session();
+         serve_one_session();
+         }
+
+   private:
+      void serve_one_session()
+         {
+         auto new_session = session::create(
+                   GET_IO_SERVICE(m_acceptor),
+                   m_session_manager,
+                   m_creds,
+                   m_policy);;
 
          m_acceptor.async_accept(
             new_session->client_socket(),
@@ -469,35 +496,17 @@ class TLS_Asio_HTTP_Server final
                boost::asio::placeholders::error));
          }
 
-   private:
-      session::pointer make_session()
-         {
-         return session::create(
-                   GET_IO_SERVICE(m_acceptor),
-                   m_session_manager,
-                   m_creds,
-                   m_policy);
-         }
-
       void handle_accept(session::pointer new_session,
                          const boost::system::error_code& error)
          {
          if(!error)
             {
             new_session->start();
-            new_session = make_session();
-
             m_status.client_serviced();
 
-            if(m_status.should_exit() == false)
+            if(!m_status.should_exit())
                {
-               m_acceptor.async_accept(
-                  new_session->client_socket(),
-                  boost::bind(
-                     &TLS_Asio_HTTP_Server::handle_accept,
-                     this,
-                     new_session,
-                     boost::asio::placeholders::error));
+               serve_one_session();
                }
             }
          }
