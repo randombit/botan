@@ -154,7 +154,7 @@ class Dilithium_PublicKeyInternal
       Dilithium_PublicKeyInternal(DilithiumModeConstants mode)
          : m_mode(std::move(mode)) {}
 
-      Dilithium_PublicKeyInternal(DilithiumModeConstants mode, const std::vector<uint8_t>& raw_pk)
+      Dilithium_PublicKeyInternal(DilithiumModeConstants mode, std::span<const uint8_t> raw_pk)
          : m_mode(std::move(mode))
          {
          BOTAN_ASSERT_NOMSG(raw_pk.size() == m_mode.public_key_bytes());
@@ -239,7 +239,7 @@ class Dilithium_PrivateKeyInternal
          m_s1(std::move(s1)),
          m_s2(std::move(s2)) {}
 
-      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode, const secure_vector<uint8_t>& sk) :
+      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode, std::span<const uint8_t> sk) :
          Dilithium_PrivateKeyInternal(std::move(mode))
          {
          BOTAN_ASSERT_NOMSG(sk.size() == m_mode.private_key_bytes());
@@ -550,10 +550,10 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
       SHAKE_256 m_shake;
    };
 
-Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, const std::vector<uint8_t>& pk)
+Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> pk)
    : Dilithium_PublicKey(pk, DilithiumMode(alg_id.oid())) {}
 
-Dilithium_PublicKey::Dilithium_PublicKey(const std::vector<uint8_t>& pk, DilithiumMode m)
+Dilithium_PublicKey::Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode m)
    {
    DilithiumModeConstants mode(m);
    BOTAN_ARG_CHECK(pk.empty() || pk.size() == mode.public_key_bytes(),
@@ -660,11 +660,10 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, Dilithium
                                                               std::move(s1), std::move(s2), std::move(t0));
    }
 
-Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, const secure_vector<uint8_t>& sk)
+Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk)
    : Dilithium_PrivateKey(sk, DilithiumMode(alg_id.oid())) {}
 
-Dilithium_PrivateKey::Dilithium_PrivateKey(const secure_vector<uint8_t>& sk,
-                                           DilithiumMode m)
+Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode m)
    {
    DilithiumModeConstants mode(m);
    BOTAN_ARG_CHECK(sk.size() == mode.private_key_bytes(),

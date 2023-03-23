@@ -82,9 +82,9 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
          {
          return (op == PublicKeyOperation::Signature);
          }
-      Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, const std::vector<uint8_t>& pk);
+      Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> pk);
 
-      Dilithium_PublicKey(const std::vector<uint8_t>& pk, DilithiumMode mode);
+      Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode mode);
 
       std::unique_ptr<PK_Ops::Verification>
       create_verification_op(const std::string& params,
@@ -117,12 +117,12 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
       /**
        * Read an encoded private key.
        */
-      Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, const secure_vector<uint8_t>& sk);
+      Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk);
 
       /**
        * Read an encoded private key given the dilithium @p mode.
        */
-      Dilithium_PrivateKey(const secure_vector<uint8_t>& sk, DilithiumMode mode);
+      Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode mode);
 
       secure_vector<uint8_t> private_key_bits() const override;
 
