@@ -69,9 +69,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
        **/
       XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
                      secure_vector<uint8_t> root,
-                     secure_vector<uint8_t> public_seed)
-         : m_xmss_params(xmss_oid), m_wots_params(m_xmss_params.ots_oid()),
-           m_root(std::move(root)), m_public_seed(std::move(public_seed)) {}
+                     secure_vector<uint8_t> public_seed);
 
       std::string algo_name() const override
          {
@@ -274,7 +272,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        **/
       secure_vector<uint8_t> raw_private_key() const;
 
-      WOTS_Derivation_Method wots_derivation_method() const { return m_wots_derivation_method; }
+      WOTS_Derivation_Method wots_derivation_method() const;
 
    private:
       friend class XMSS_Signature_Operation;
@@ -319,8 +317,6 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
                              XMSS_Hash& hash);
 
       std::shared_ptr<XMSS_PrivateKey_Internal> m_private;
-
-      WOTS_Derivation_Method m_wots_derivation_method;
    };
 
 }
