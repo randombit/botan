@@ -405,7 +405,7 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("hash", ["--no-fsname", msg], "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")
 
     test_cli("keygen", ["--algo=XMSS", "--output=%s" % (priv_key)], "")
-    test_cli("hash", ["--no-fsname", priv_key], "FEE31DC8C5C586C234E806E66F4FD8FB8F34C8F3C778F47EDB136BB50E13BA3D")
+    test_cli("hash", ["--no-fsname", priv_key], "1F040283F0D7D2156B06B7BE03FA5861035FF3BCC059671DB288162C04A94CED")
 
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
     test_cli("fingerprint", ['--no-fsname', pub_key],
@@ -415,12 +415,12 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig1)], "")
     test_cli("verify", [pub_key, msg, sig1], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig1], "9DEBA79CE9FDC4966D7BA7B05ABEC54E3C11BB1C2C2732F7658820F2CAE47646")
-    test_cli("hash", ["--no-fsname", priv_key], "0D305D410466372CF945AAE98BD352C9B73AF1A19F0D1AF8273C4AFFF641035B")
+    test_cli("hash", ["--no-fsname", priv_key], "A71507087530C85E9CF971CF3A305890B07B51519C405A2B3D0037C64D5802B1")
 
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig2)], "")
     test_cli("verify", [pub_key, msg, sig2], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig2], "803EC5D6BECDFB9DC676EE2EDFEFE3D71EE924343A2ED9D2D7BFF0A9D97D704E")
-    test_cli("hash", ["--no-fsname", priv_key], "07F99D774AD2B47A073C9C452E5D73CA23E4D8B7FCFD4BDC926ABDA2CB4D3BF8")
+    test_cli("hash", ["--no-fsname", priv_key], "D581F5BFDA65669A825165C7A9CF17D6D5C5DF349004BCB7416DCD1A5C0349A0")
 
     # private key updates, public key is unchanged:
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key2, priv_key), "")

@@ -75,7 +75,8 @@ class Keypair:
         self.secret_seed = secret_portion[4:n+4]
         self.secret_prf = secret_portion[n+4:]
         self.public_seed = self.public_key[n+4:n*2+4]
-        self.secret_key = self.public_key + self.idx + self.secret_prf + self.secret_seed
+        wots_derivation_method = "\x02" # WOTS+ derivation as described in NIST SP.800-208
+        self.secret_key = self.public_key + self.idx + self.secret_prf + self.secret_seed + wots_derivation_method
 
     async def sign(self, message):
         with tempfile.NamedTemporaryFile() as msg_file, tempfile.NamedTemporaryFile() as key_file:

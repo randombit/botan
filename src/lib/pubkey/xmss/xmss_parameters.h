@@ -246,11 +246,17 @@ class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
          return sizeof(uint32_t) + 2 * element_size();
          }
 
-      size_t raw_private_key_size() const
+      size_t raw_legacy_private_key_size() const
          {
          return raw_public_key_size() +
                 sizeof(uint32_t) +
                 2 * element_size();
+         }
+
+      size_t raw_private_key_size() const
+         {
+         return raw_legacy_private_key_size()
+                + 1 /* identifier for WOTS+ key derivation method */;
          }
 
       bool operator==(const XMSS_Parameters& p) const

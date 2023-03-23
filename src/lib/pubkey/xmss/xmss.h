@@ -166,12 +166,12 @@ enum class WOTS_Derivation_Method
    /// the derivation as suggested in NIST SP.800-208.
    /// Private keys generated with Botan 2.x will need to stay with this mode,
    /// otherwise they won't be able to generate valid signatures any longer.
-   Botan2x,
+   Botan2x = 1,
 
    /// Derivation as specified in NIST SP.800-208 to avoid a multi-target attack
    /// on the WOTS+ key derivation suggested in RFC 8391. New private keys
    /// should use this mode.
-   NIST_SP800_208,
+   NIST_SP800_208 = 2,
    };
 
 /**
@@ -207,10 +207,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        * raw_private_key().
        *
        * @param raw_key An XMSS private key serialized using raw_private_key().
-       * @param wots_derivation_method The method used to derive WOTS+ private keys
        **/
-      XMSS_PrivateKey(std::span<const uint8_t> raw_key,
-                      WOTS_Derivation_Method wots_derivation_method = WOTS_Derivation_Method::NIST_SP800_208);
+      XMSS_PrivateKey(std::span<const uint8_t> raw_key);
 
       /**
        * Creates a new XMSS private key for the chosen XMSS signature method

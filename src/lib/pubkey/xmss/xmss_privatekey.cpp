@@ -42,7 +42,8 @@ secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits
 
    // The public part of the input key bits was already parsed, so we can
    // decide depending on the buffer length whether this must be BER decoded.
-   if(key_bits.size() == xmss_params.raw_private_key_size())
+   if(key_bits.size() == xmss_params.raw_private_key_size() ||
+      key_bits.size() == xmss_params.raw_legacy_private_key_size())
       { raw_key.assign(key_bits.begin(), key_bits.end()); }
    else
       {
@@ -85,11 +86,9 @@ class XMSS_PrivateKey_Internal
 
       XMSS_PrivateKey_Internal(const XMSS_Parameters& xmss_params,
                                const XMSS_WOTS_Parameters& wots_params,
-                               WOTS_Derivation_Method wots_derivation_method,
                                std::span<const uint8_t> key_bits)
          : m_xmss_params(xmss_params)
          , m_wots_params(wots_params)
-         , m_wots_derivation_method(wots_derivation_method)
          , m_hash(m_xmss_params)
          , m_index_reg(XMSS_Index_Registry::get_instance())
          {
@@ -105,7 +104,8 @@ class XMSS_PrivateKey_Internal
 
          const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits, xmss_params);
 
-         if(raw_key.size() != m_xmss_params.raw_private_key_size())
+         if(raw_key.size() != m_xmss_params.raw_private_key_size() &&
+            raw_key.size() != m_xmss_params.raw_legacy_private_key_size())
             {
             throw Decoding_Error("Invalid XMSS private key size");
             }
@@ -125,6 +125,13 @@ class XMSS_PrivateKey_Internal
          m_prf = s.take_secure_vector(m_xmss_params.element_size());
          m_private_seed = s.take_secure_vector(m_xmss_params.element_size());
          set_unused_leaf_index(unused_leaf);
+
+         // Legacy keys generated prior to Botan 3.x don't feature a
+         // WOTS+ key derivation method encoded in their private key.
+         m_wots_derivation_method = (s.empty())
+            ? WOTS_Derivation_Method::Botan2x
+            : static_cast<WOTS_Derivation_Method>(s.take(1).front());
+
          BOTAN_ASSERT_NOMSG(s.empty());
          }
 
@@ -132,11 +139,15 @@ class XMSS_PrivateKey_Internal
          std::vector<uint8_t> unused_index(4);
          store_be(static_cast<uint32_t>(unused_leaf_index()), unused_index.data());
 
+         std::vector<uint8_t> wots_derivation_method;
+         wots_derivation_method.push_back(static_cast<uint8_t>(m_wots_derivation_method));
+
          return concat_as<secure_vector<uint8_t>>(
             raw_public_key,
             unused_index,
             m_prf,
-            m_private_seed);
+            m_private_seed,
+            wots_derivation_method);
       }
 
       XMSS_Hash& hash() { return m_hash; }
@@ -209,11 +220,10 @@ class XMSS_PrivateKey_Internal
       XMSS_Index_Registry& m_index_reg;
    };
 
-XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits,
-                                 WOTS_Derivation_Method wots_derivation_method)
+XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits)
    : XMSS_PublicKey(key_bits)
    , m_private(std::make_shared<XMSS_PrivateKey_Internal>(
-         m_xmss_params, m_wots_params, wots_derivation_method, key_bits)) {}
+         m_xmss_params, m_wots_params, key_bits)) {}
 
 XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                  RandomNumberGenerator& rng,
