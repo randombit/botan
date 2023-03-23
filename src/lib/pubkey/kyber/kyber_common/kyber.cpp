@@ -403,16 +403,15 @@ class Polynomial
                 : Polynomial::cbd3(mode.PRF(seed, nonce, outlen));
          }
 
-      template <typename Alloc>
-      static Polynomial from_bytes(const std::vector<uint8_t, Alloc>& a, const size_t offset = 0)
+      static Polynomial from_bytes(std::span<const uint8_t> a)
          {
          Polynomial r;
          for(size_t i = 0; i < r.m_coeffs.size() / 2; ++i)
             {
             r.m_coeffs[2 * i] =
-               ((a[3 * i + 0 + offset] >> 0) | (static_cast<uint16_t>(a[3 * i + 1 + offset]) << 8)) & 0xFFF;
+               ((a[3 * i + 0] >> 0) | (static_cast<uint16_t>(a[3 * i + 1]) << 8)) & 0xFFF;
             r.m_coeffs[2 * i + 1] =
-               ((a[3 * i + 1 + offset] >> 4) | (static_cast<uint16_t>(a[3 * i + 2 + offset]) << 4)) & 0xFFF;
+               ((a[3 * i + 1] >> 4) | (static_cast<uint16_t>(a[3 * i + 2]) << 4)) & 0xFFF;
             }
          return r;
          }
@@ -679,14 +678,16 @@ class PolynomialVector
          {
          }
 
-      template <typename Alloc>
-      static PolynomialVector from_bytes(const std::vector<uint8_t, Alloc>& a, const KyberConstants& mode)
+      static PolynomialVector from_bytes(std::span<const uint8_t> a, const KyberConstants& mode)
          {
          BOTAN_ASSERT(a.size() == mode.polynomial_vector_byte_length(), "wrong byte length for frombytes");
 
          PolynomialVector r(mode.k());
          for(size_t i = 0; i < mode.k(); ++i)
-            { r.m_vec[i] = Polynomial::from_bytes(a, i * KyberConstants::kSerializedPolynomialByteLength); }
+            {
+            r.m_vec[i] = Polynomial::from_bytes(a.subspan(0, KyberConstants::kSerializedPolynomialByteLength));
+            a = a.subspan(KyberConstants::kSerializedPolynomialByteLength);
+            }
          return r;
          }
 
@@ -803,7 +804,7 @@ class PolynomialMatrix
    public:
       PolynomialMatrix() = delete;
 
-      static PolynomialMatrix generate(const std::vector<uint8_t>& seed, const bool transposed,
+      static PolynomialMatrix generate(std::span<const uint8_t> seed, const bool transposed,
                                        const KyberConstants& mode)
          {
          BOTAN_ASSERT(seed.size() == KyberConstants::kSymBytes, "unexpected seed size");
@@ -1110,7 +1111,7 @@ class Kyber_PublicKeyInternal
    {
    public:
       Kyber_PublicKeyInternal(KyberConstants mode,
-                              const std::vector<uint8_t>& polynomials,
+                              std::span<const uint8_t> polynomials,
                               std::vector<uint8_t> seed)
          : m_mode(std::move(mode)),
            m_polynomials(PolynomialVector::from_bytes(polynomials, m_mode)),
@@ -1401,7 +1402,7 @@ size_t Kyber_PublicKey::estimated_strength() const
    }
 
 std::shared_ptr<Kyber_PublicKeyInternal>
-Kyber_PublicKey::initialize_from_encoding(const std::vector<uint8_t>& pub_key, KyberMode m)
+Kyber_PublicKey::initialize_from_encoding(std::span<const uint8_t> pub_key, KyberMode m)
    {
    KyberConstants mode(m);
 
@@ -1410,28 +1411,21 @@ Kyber_PublicKey::initialize_from_encoding(const std::vector<uint8_t>& pub_key, K
       throw Invalid_Argument("kyber public key does not have the correct byte count");
       }
 
-   std::vector<uint8_t> poly_vec(pub_key.begin(), pub_key.end() - KyberConstants::kSeedLength);
-   std::vector<uint8_t> seed(pub_key.end() - KyberConstants::kSeedLength, pub_key.end());
+   BufferSlicer s(pub_key);
 
-   if(poly_vec.size() != mode.polynomial_vector_byte_length())
-      {
-      throw Invalid_Argument("kyber public key t-param does not have the correct byte count");
-      }
+   auto poly_vec = s.take(mode.polynomial_vector_byte_length());
+   auto seed = s.take_vector(KyberConstants::kSeedLength);
+   BOTAN_ASSERT_NOMSG(s.empty());
 
-   if(seed.size() != KyberConstants::kSeedLength)
-      {
-      throw Invalid_Argument("kyber public key rho-param does not have the correct byte count");
-      }
-
-   return std::make_shared<Kyber_PublicKeyInternal>(std::move(mode), std::move(poly_vec), std::move(seed));
+   return std::make_shared<Kyber_PublicKeyInternal>(std::move(mode), poly_vec, std::move(seed));
    }
 
 Kyber_PublicKey::Kyber_PublicKey(const AlgorithmIdentifier& alg_id,
-                                 const std::vector<uint8_t>& key_bits)
+                                 std::span<const uint8_t> key_bits)
    : Kyber_PublicKey(key_bits, KyberMode(alg_id.oid()))
    {}
 
-Kyber_PublicKey::Kyber_PublicKey(const std::vector<uint8_t>& pub_key, KyberMode m)
+Kyber_PublicKey::Kyber_PublicKey(std::span<const uint8_t> pub_key, KyberMode m)
    : m_public(initialize_from_encoding(pub_key, m))
    {}
 
@@ -1472,8 +1466,11 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m)
    auto seed = G->process(rng.random_vec(KyberConstants::kSymBytes));
 
    const auto middle = G->output_length() / 2;
-   std::vector<uint8_t> seed1(seed.begin(), seed.begin() + middle);
-   secure_vector<uint8_t> seed2(seed.begin() + middle, seed.end());
+
+   BufferSlicer s(seed);
+   auto seed1 = s.take_vector(middle);
+   auto seed2 = s.take(middle);
+   BOTAN_ASSERT_NOMSG(s.empty());
 
    auto a = PolynomialMatrix::generate(seed1, false, mode);
    auto skpv = PolynomialVector::getnoise_eta1(seed2, 0, mode);
@@ -1493,10 +1490,10 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m)
    }
 
 Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id,
-                                   const secure_vector<uint8_t>& key_bits) :
+                                   std::span<const uint8_t> key_bits) :
    Kyber_PrivateKey(key_bits, KyberMode(alg_id.oid())) {}
 
-Kyber_PrivateKey::Kyber_PrivateKey(const secure_vector<uint8_t>& sk, KyberMode m)
+Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m)
    {
    KyberConstants mode(m);
 
@@ -1505,17 +1502,17 @@ Kyber_PrivateKey::Kyber_PrivateKey(const secure_vector<uint8_t>& sk, KyberMode m
       throw Invalid_Argument("kyber private key does not have the correct byte count");
       }
 
-   const auto off_pub_key = mode.polynomial_vector_byte_length();
-   const auto pub_key_len = mode.public_key_byte_length();
+   BufferSlicer s(sk);
 
-   auto skpv = secure_vector<uint8_t>(sk.begin(), sk.begin() + off_pub_key);
-   auto pub_key = std::vector<uint8_t>(sk.begin() + off_pub_key, sk.begin() + off_pub_key + pub_key_len);
-   // skipping the public key hash
-   auto z = secure_vector<uint8_t>(sk.end() - KyberConstants::kZLength, sk.end());
+   auto skpv = PolynomialVector::from_bytes(s.take(mode.polynomial_vector_byte_length()), mode);
+   auto pub_key = s.take(mode.public_key_byte_length());
+   s.skip(KyberConstants::kPublicKeyHashLength);
+   auto z = s.take_secure_vector(KyberConstants::kZLength);
+
+   BOTAN_ASSERT_NOMSG(s.empty());
 
    m_public = initialize_from_encoding(pub_key, m);
-   m_private = std::make_shared<Kyber_PrivateKeyInternal>(std::move(mode),
-               PolynomialVector::from_bytes(skpv, mode), std::move(z));
+   m_private = std::make_shared<Kyber_PrivateKeyInternal>(std::move(mode), std::move(skpv), std::move(z));
 
    BOTAN_ASSERT(m_private && m_public, "reading private key encoding");
    }
@@ -1527,12 +1524,9 @@ std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const
    {
-   const auto pub_key = public_key_bits_raw();
-   const auto pub_key_sv = secure_vector<uint8_t>(pub_key.begin(), pub_key.end());
-   const auto pub_key_hash = H_public_key_bits_raw();
-
    return concat(m_private->polynomials().to_bytes<secure_vector<uint8_t>>(),
-                 pub_key_sv, pub_key_hash,
+                 public_key_bits_raw(),
+                 H_public_key_bits_raw(),
                  m_private->z());
    }
 

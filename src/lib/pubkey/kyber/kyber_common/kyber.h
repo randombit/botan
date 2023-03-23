@@ -19,6 +19,8 @@
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 
+#include <span>
+
 #if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER)
    static_assert(false, "botan module 'kyber_common' is useful only when enabling modules 'kyber', 'kyber_90s' or both");
 #endif
@@ -62,10 +64,10 @@ class Kyber_PrivateKeyInternal;
 class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
    {
    public:
-      Kyber_PublicKey(const std::vector<uint8_t>& pub_key, KyberMode mode);
+      Kyber_PublicKey(std::span<const uint8_t> pub_key, KyberMode mode);
 
       Kyber_PublicKey(const AlgorithmIdentifier& alg_id,
-                      const std::vector<uint8_t>& key_bits);
+                      std::span<const uint8_t> key_bits);
 
       Kyber_PublicKey(const Kyber_PublicKey& other);
 
@@ -101,7 +103,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
    protected:
       Kyber_PublicKey() {}
 
-      static std::shared_ptr<Kyber_PublicKeyInternal> initialize_from_encoding(const std::vector<uint8_t>& pub_key, KyberMode m);
+      static std::shared_ptr<Kyber_PublicKeyInternal> initialize_from_encoding(std::span<const uint8_t> pub_key, KyberMode m);
 
       const std::vector<uint8_t>& public_key_bits_raw() const;
       const std::vector<uint8_t>& H_public_key_bits_raw() const;
@@ -118,10 +120,10 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
    public:
       Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode);
 
-      Kyber_PrivateKey(const secure_vector<uint8_t>& sk, KyberMode mode);
+      Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode mode);
 
       Kyber_PrivateKey(const AlgorithmIdentifier& alg_id,
-                       const secure_vector<uint8_t>& key_bits);
+                       std::span<const uint8_t> key_bits);
 
       std::unique_ptr<Public_Key> public_key() const override;
 
