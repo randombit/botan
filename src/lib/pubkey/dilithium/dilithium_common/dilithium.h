@@ -48,13 +48,6 @@ class BOTAN_PUBLIC_API(3,0) DilithiumMode
       Mode m_mode;
    };
 
-enum class DilithiumKeyEncoding
-   {
-   Raw, // as implemented in the reference implementation
-   DER  // as described in draft-uni-qsckeys-dilithium/00
-        //   Sections 3.3 (private key), 3.6 (public key)
-   };
-
 class Dilithium_PublicKeyInternal;
 class Dilithium_PrivateKeyInternal;
 
@@ -89,21 +82,9 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
          {
          return (op == PublicKeyOperation::Signature);
          }
-
-      void set_binary_encoding(DilithiumKeyEncoding encoding)
-         {
-         m_key_encoding = encoding;
-         }
-
-      DilithiumKeyEncoding binary_encoding() const
-         {
-         return m_key_encoding;
-         }
-
       Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, const std::vector<uint8_t>& pk);
 
-      Dilithium_PublicKey(const std::vector<uint8_t>& pk,
-                          DilithiumMode mode, DilithiumKeyEncoding encoding);
+      Dilithium_PublicKey(const std::vector<uint8_t>& pk, DilithiumMode mode);
 
       std::unique_ptr<PK_Ops::Verification>
       create_verification_op(const std::string& params,
@@ -114,15 +95,12 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
                                      const std::string& provider) const override;
 
    protected:
-      Dilithium_PublicKey() : m_key_encoding(DilithiumKeyEncoding::Raw)
-         {
-         }
+      Dilithium_PublicKey() = default;
 
       friend class Dilithium_Verification_Operation;
       friend class Dilithium_Signature_Operation;
 
       std::shared_ptr<Dilithium_PublicKeyInternal> m_public;
-      DilithiumKeyEncoding m_key_encoding;
    };
 
 class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithium_PublicKey,
@@ -142,10 +120,9 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
       Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, const secure_vector<uint8_t>& sk);
 
       /**
-       * Read an encoded private key given the dilithium @p mode and @p encoding.
+       * Read an encoded private key given the dilithium @p mode.
        */
-      Dilithium_PrivateKey(const secure_vector<uint8_t>& sk,
-                           DilithiumMode mode, DilithiumKeyEncoding encoding);
+      Dilithium_PrivateKey(const secure_vector<uint8_t>& sk, DilithiumMode mode);
 
       secure_vector<uint8_t> private_key_bits() const override;
 

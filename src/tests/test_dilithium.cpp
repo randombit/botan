@@ -67,7 +67,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test
             result.test_eq("generated expected signature", signature, ref_sig);
 
 
-         Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode, Botan::DilithiumKeyEncoding::Raw);
+         Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode);
          auto verifier = Botan::PK_Verifier(pub_key,"");
          verifier.update(ref_msg.data(), ref_msg.size());
          result.confirm("signature verifies",
@@ -143,50 +143,42 @@ class DilithiumRoundtripTests final : public Test
          Botan::Dilithium_PublicKey pub_key = priv_key;
 
          const auto sig_before_codec = sign(priv_key, msgvec);
-         std::vector<Botan::DilithiumKeyEncoding> encodings{Botan::DilithiumKeyEncoding::Raw, Botan::DilithiumKeyEncoding::DER};
-         for(const auto encoding : encodings)
-            {
-            priv_key.set_binary_encoding(encoding);
-            const auto priv_key_encoded = priv_key.private_key_bits();
-            const auto pub_key_encoded = priv_key.public_key_bits();
 
-            Botan::Dilithium_PrivateKey priv_key_decoded(priv_key_encoded, mode, encoding);
-            Botan::Dilithium_PublicKey pub_key_decoded(pub_key_encoded, mode, encoding);
-
-            const auto sig_after_codec = sign(priv_key_decoded, msgvec);
-
-            result.confirm("Pubkey: before,   Sig: before", verify(pub_key, msgvec, sig_before_codec));
-            result.confirm("Pubkey: before,   Sig: after", verify(pub_key, msgvec, sig_after_codec));
-            result.confirm("Pubkey: after,    Sig: after", verify(pub_key_decoded, msgvec, sig_after_codec));
-            result.confirm("Pubkey: after,    Sig: before", verify(pub_key_decoded, msgvec, sig_before_codec));
-            result.confirm("Pubkey: recalc'ed Sig: before", verify(priv_key_decoded, msgvec, sig_before_codec));
-            result.confirm("Pubkey: recalc'ed Sig: after", verify(priv_key_decoded, msgvec, sig_after_codec));
-
-            auto tampered_msgvec = msgvec;
-            tampered_msgvec.front() = 'X';
-            result.confirm("Pubkey: before,   Broken Sig: before", !verify(pub_key, tampered_msgvec, sig_before_codec));
-            result.confirm("Pubkey: before,   Broken Sig: after", !verify(pub_key, tampered_msgvec, sig_after_codec));
-            result.confirm("Pubkey: after,    Broken Sig: after", !verify(pub_key_decoded, tampered_msgvec, sig_after_codec));
-            result.confirm("Pubkey: after,    Broken Sig: before", !verify(pub_key_decoded, tampered_msgvec, sig_before_codec));
-            result.confirm("Pubkey: recalc'ed Sig: before", !verify(priv_key_decoded, tampered_msgvec, sig_before_codec));
-            result.confirm("Pubkey: recalc'ed Sig: after", !verify(priv_key_decoded, tampered_msgvec, sig_after_codec));
-            }
-
-         // decoding via generic pk_algs.h
-         priv_key.set_binary_encoding(Botan::DilithiumKeyEncoding::Raw);
          const auto priv_key_encoded = priv_key.private_key_bits();
          const auto pub_key_encoded = priv_key.public_key_bits();
 
+         Botan::Dilithium_PrivateKey priv_key_decoded(priv_key_encoded, mode);
+         Botan::Dilithium_PublicKey pub_key_decoded(pub_key_encoded, mode);
+
+         const auto sig_after_codec = sign(priv_key_decoded, msgvec);
+
+         result.confirm("Pubkey: before,   Sig: before", verify(pub_key, msgvec, sig_before_codec));
+         result.confirm("Pubkey: before,   Sig: after", verify(pub_key, msgvec, sig_after_codec));
+         result.confirm("Pubkey: after,    Sig: after", verify(pub_key_decoded, msgvec, sig_after_codec));
+         result.confirm("Pubkey: after,    Sig: before", verify(pub_key_decoded, msgvec, sig_before_codec));
+         result.confirm("Pubkey: recalc'ed Sig: before", verify(priv_key_decoded, msgvec, sig_before_codec));
+         result.confirm("Pubkey: recalc'ed Sig: after", verify(priv_key_decoded, msgvec, sig_after_codec));
+
+         auto tampered_msgvec = msgvec;
+         tampered_msgvec.front() = 'X';
+         result.confirm("Pubkey: before,   Broken Sig: before", !verify(pub_key, tampered_msgvec, sig_before_codec));
+         result.confirm("Pubkey: before,   Broken Sig: after", !verify(pub_key, tampered_msgvec, sig_after_codec));
+         result.confirm("Pubkey: after,    Broken Sig: after", !verify(pub_key_decoded, tampered_msgvec, sig_after_codec));
+         result.confirm("Pubkey: after,    Broken Sig: before", !verify(pub_key_decoded, tampered_msgvec, sig_before_codec));
+         result.confirm("Pubkey: recalc'ed Sig: before", !verify(priv_key_decoded, tampered_msgvec, sig_before_codec));
+         result.confirm("Pubkey: recalc'ed Sig: after", !verify(priv_key_decoded, tampered_msgvec, sig_after_codec));
+
+         // decoding via generic pk_algs.h
          const auto generic_pubkey_decoded = Botan::load_public_key(pub_key.algorithm_identifier(), pub_key_encoded);
          const auto generic_privkey_decoded = Botan::load_private_key(priv_key.algorithm_identifier(), priv_key_encoded);
 
          result.test_not_null("generic pubkey", generic_pubkey_decoded);
          result.test_not_null("generic privkey", generic_privkey_decoded);
 
-         const auto sig_after_codec = sign(*generic_privkey_decoded, msgvec);
+         const auto sig_after_generic_codec = sign(*generic_privkey_decoded, msgvec);
 
          result.confirm("verification with generic public key", verify(*generic_pubkey_decoded, msgvec, sig_before_codec));
-         result.confirm("verification of signature with generic private key", verify(*generic_pubkey_decoded, msgvec, sig_after_codec));
+         result.confirm("verification of signature with generic private key", verify(*generic_pubkey_decoded, msgvec, sig_after_generic_codec));
          result.confirm("verification with generic private key", verify(*generic_privkey_decoded, msgvec, sig_before_codec));
 
          return result;
