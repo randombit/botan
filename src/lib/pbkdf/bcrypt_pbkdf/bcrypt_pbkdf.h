@@ -9,6 +9,7 @@
 
 #include <botan/pwdhash.h>
 
+// Use pwdhash.h
 BOTAN_FUTURE_INTERNAL_HEADER(bcrypt_pbkdf.h)
 
 namespace Botan {

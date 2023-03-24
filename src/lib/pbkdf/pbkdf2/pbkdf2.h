@@ -13,6 +13,7 @@
 #include <botan/pwdhash.h>
 #include <botan/mac.h>
 
+// Use pwdhash.h
 BOTAN_FUTURE_INTERNAL_HEADER(pbkdf2.h)
 
 namespace Botan {

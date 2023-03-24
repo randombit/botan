@@ -10,6 +10,7 @@
 
 #include <botan/pwdhash.h>
 
+// Use pwdhash.h
 BOTAN_FUTURE_INTERNAL_HEADER(scrypt.h)
 
 namespace Botan {

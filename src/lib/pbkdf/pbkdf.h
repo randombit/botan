@@ -11,6 +11,11 @@
 #include <botan/symkey.h>
 #include <chrono>
 
+/*
+* This entire interface is deprecated. Use the interface in pwdhash.h
+*/
+BOTAN_DEPRECATED_HEADER("pbkdf.h")
+
 namespace Botan {
 
 /**
