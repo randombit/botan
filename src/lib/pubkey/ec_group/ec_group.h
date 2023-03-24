@@ -13,6 +13,7 @@
 #include <botan/ec_point.h>
 #include <botan/asn1_obj.h>
 #include <memory>
+#include <span>
 #include <set>
 
 namespace Botan {
@@ -345,10 +346,9 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
 
       EC_Point OS2ECP(const uint8_t bits[], size_t len) const;
 
-      template<typename Alloc>
-      EC_Point OS2ECP(const std::vector<uint8_t, Alloc>& vec) const
+      EC_Point OS2ECP(std::span<const uint8_t> encoded_point) const
          {
-         return this->OS2ECP(vec.data(), vec.size());
+         return this->OS2ECP(encoded_point.data(), encoded_point.size());
          }
 
       bool initialized() const { return (m_data != nullptr); }

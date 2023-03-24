@@ -40,7 +40,7 @@ bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng,
    }
 
 SM2_PrivateKey::SM2_PrivateKey(const AlgorithmIdentifier& alg_id,
-                               const secure_vector<uint8_t>& key_bits) :
+                               std::span<const uint8_t> key_bits) :
    EC_PrivateKey(alg_id, key_bits)
    {
    m_da_inv = domain().inverse_mod_order(m_private_key + 1);

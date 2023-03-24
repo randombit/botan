@@ -9,6 +9,7 @@
 #define BOTAN_PBE_PKCS_V20_H_
 
 #include <botan/asn1_obj.h>
+#include <span>
 #include <chrono>
 
 namespace Botan {
@@ -25,7 +26,7 @@ class RandomNumberGenerator;
 * @param rng a random number generator
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
+pbes2_encrypt(std::span<const uint8_t> key_bits,
               const std::string& passphrase,
               std::chrono::milliseconds msec,
               const std::string& cipher,
@@ -44,7 +45,7 @@ pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
 * @param rng a random number generator
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
+pbes2_encrypt_msec(std::span<const uint8_t> key_bits,
                    const std::string& passphrase,
                    std::chrono::milliseconds msec,
                    size_t* out_iterations_if_nonnull,
@@ -62,7 +63,7 @@ pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
 * @param rng a random number generator
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-pbes2_encrypt_iter(const secure_vector<uint8_t>& key_bits,
+pbes2_encrypt_iter(std::span<const uint8_t> key_bits,
                    const std::string& passphrase,
                    size_t iterations,
                    const std::string& cipher,
@@ -76,7 +77,7 @@ pbes2_encrypt_iter(const secure_vector<uint8_t>& key_bits,
 * @param params the PBES2 parameters
 */
 secure_vector<uint8_t>
-pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
+pbes2_decrypt(std::span<const uint8_t> key_bits,
               const std::string& passphrase,
               const std::vector<uint8_t>& params);
 

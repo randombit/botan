@@ -27,6 +27,12 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       BER_Decoder(const uint8_t buf[], size_t len);
 
       /**
+      * Set up to BER decode the data in buf of length len
+      */
+      BER_Decoder(std::span<const uint8_t> buf) :
+         BER_Decoder(buf.data(), buf.size()) {}
+
+      /**
       * Set up to BER decode the data in vec
       */
       explicit BER_Decoder(const secure_vector<uint8_t>& vec);

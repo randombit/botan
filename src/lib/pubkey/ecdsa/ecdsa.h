@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(2,0) ECDSA_PublicKey : public virtual EC_PublicKey
       * @param key_bits DER encoded public key bits
       */
       ECDSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                      const std::vector<uint8_t>& key_bits) :
+                      std::span<const uint8_t> key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
 
       /**
@@ -99,7 +99,7 @@ class BOTAN_PUBLIC_API(2,0) ECDSA_PrivateKey final : public ECDSA_PublicKey,
       * @param key_bits ECPrivateKey bits
       */
       ECDSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                       const secure_vector<uint8_t>& key_bits) :
+                       std::span<const uint8_t> key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
 
       /**

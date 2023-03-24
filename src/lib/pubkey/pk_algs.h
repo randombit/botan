@@ -16,11 +16,11 @@ namespace Botan {
 
 BOTAN_PUBLIC_API(2,0) std::unique_ptr<Public_Key>
 load_public_key(const AlgorithmIdentifier& alg_id,
-                const std::vector<uint8_t>& key_bits);
+                std::span<const uint8_t> key_bits);
 
 BOTAN_PUBLIC_API(2,0) std::unique_ptr<Private_Key>
 load_private_key(const AlgorithmIdentifier& alg_id,
-                 const secure_vector<uint8_t>& key_bits);
+                 std::span<const uint8_t> key_bits);
 
 /**
 * Create a new key
