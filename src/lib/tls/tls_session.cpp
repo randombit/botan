@@ -121,7 +121,7 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                                  Server_Information server_info,
                                  std::chrono::system_clock::time_point current_timestamp) :
    Session_Base(
-      std::move(current_timestamp),
+      current_timestamp,
       server_hello.selected_version(),
       server_hello.ciphersuite(),
       side,

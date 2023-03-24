@@ -294,17 +294,19 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          }
 
       std::unique_ptr<PK_Key_Agreement_Key> tls_generate_ephemeral_key(
-               const std::variant<TLS::Group_Params, DL_Group> group, RandomNumberGenerator& rng) override
+         const std::variant<TLS::Group_Params, DL_Group>& group,
+         RandomNumberGenerator& rng) override
          {
          count_callback_invocation("tls_generate_ephemeral_key");
          return Callbacks::tls_generate_ephemeral_key(group, rng);
          }
 
-      secure_vector<uint8_t> tls_ephemeral_key_agreement(const std::variant<TLS::Group_Params, DL_Group> group,
-                                                         const PK_Key_Agreement_Key& private_key,
-                                                         const std::vector<uint8_t>& public_value,
-                                                         RandomNumberGenerator& rng,
-                                                         const Policy& policy) override
+      secure_vector<uint8_t> tls_ephemeral_key_agreement(
+         const std::variant<TLS::Group_Params, DL_Group>& group,
+         const PK_Key_Agreement_Key& private_key,
+         const std::vector<uint8_t>& public_value,
+         RandomNumberGenerator& rng,
+         const Policy& policy) override
          {
          count_callback_invocation("tls_ephemeral_key_agreement");
          return Callbacks::tls_ephemeral_key_agreement(group, private_key, public_value, rng, policy);

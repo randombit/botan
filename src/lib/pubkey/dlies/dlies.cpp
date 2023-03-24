@@ -69,7 +69,7 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length,
       SymmetricKey enc_key(secret_keys.data(), cipher_key_len);
       m_cipher->set_key(enc_key);
 
-      if(m_iv.size() == 0 && !m_cipher->valid_nonce_length(m_iv.size()))
+      if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size()))
          throw Invalid_Argument("DLIES with " + m_cipher->name() + " requires an IV be set");
       m_cipher->start(m_iv.bits_of());
       m_cipher->finish(ciphertext);
@@ -192,7 +192,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
             // the decryption can fail:
             // e.g. Invalid_Authentication_Tag is thrown if GCM is used and the message does not have a valid tag
 
-            if(m_iv.size() == 0 && !m_cipher->valid_nonce_length(m_iv.size()))
+            if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size()))
                throw Invalid_Argument("DLIES with " + m_cipher->name() + " requires an IV be set");
             m_cipher->start(m_iv.bits_of());
             m_cipher->finish(ciphertext);
