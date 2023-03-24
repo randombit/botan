@@ -1,5 +1,6 @@
 /*
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
+*     2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -7,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ASN1)
+   #include <botan/asn1_obj.h>
    #include <botan/oids.h>
 #endif
 
@@ -51,60 +53,66 @@ Test::Result test_OID_to_string()
    return result;
    }
 
-Test::Result test_add_have_OID()
+Test::Result test_oid_registration()
    {
    Test::Result result("OID add");
 
-   result.test_eq("there is no OID 'botan-test-oid1'", Botan::OIDS::str2oid_or_empty("botan-test-oid1").has_value(), false);
+   const std::string name = "botan-test-oid1";
+   const Botan::OID oid("1.3.6.1.4.1.25258.1000.1");
 
-   Botan::OIDS::add_oid(Botan::OID("1.2.345.6.666"), "botan-test-oid1");
+   result.test_eq("named OID not found", Botan::OID::from_name(name).has_value(), false);
 
-   result.test_eq("OID 'botan-test-oid1' added successfully", Botan::OIDS::str2oid_or_empty("botan-test-oid1").has_value(), true);
+   Botan::OID::register_oid(oid, name);
 
-   result.test_eq("name of OID '1.2.345.6.666' is 'botan-test-oid1'",
-                  Botan::OIDS::oid2str_or_throw(Botan::OID("1.2.345.6.666")), "botan-test-oid1");
+   result.test_eq("named OID found", Botan::OID::from_name(name).has_value(), true);
 
-   return result;
-   }
+   result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
 
-Test::Result test_add_have_OID_str()
-   {
-   Test::Result result("OID add string");
-
-   result.test_eq("there is no OID 'botan-test-oid2'", Botan::OIDS::str2oid_or_empty("botan-test-oid2").has_value(), false);
-
-   Botan::OIDS::add_oid(Botan::OID("1.2.345.6.777"), "botan-test-oid2");
-
-   result.test_eq("OID 'botan-test-oid2' added successfully", Botan::OIDS::str2oid_or_empty("botan-test-oid2").has_value(), true);
-
-   result.test_eq("name of OID '1.2.345.6.777' is 'botan-test-oid2'",
-                  Botan::OIDS::oid2str_or_throw(Botan::OID("1.2.345.6.777")), "botan-test-oid2");
    return result;
    }
 
 Test::Result test_add_and_lookup()
    {
-   Test::Result result("OID add and lookup");
+   Test::Result result("OID add with redundant entries");
 
-   result.test_eq("OIDS::oid2str_or_empty returns empty string for non-existent OID object",
-                  Botan::OIDS::oid2str_or_empty(Botan::OID("1.2.345.6.888")), std::string());
+   const std::string name = "botan-test-oid2";
+   const std::string name2 = "botan-test-oid2.2";
+   const std::string name3 = "botan-test-oid2.3";
+   const Botan::OID oid("1.3.6.1.4.1.25258.1001.1");
+   const Botan::OID oid2("1.3.6.1.4.1.25258.1001.2");
+   const Botan::OID oid3("1.3.6.1.4.1.25258.1001.3");
 
-   result.test_eq("OIDS::str2oid_or_empty returns empty OID for non-existent OID name",
-                  Botan::OIDS::str2oid_or_empty("botan-test-oid3").to_string(), Botan::OID().to_string());
+   result.test_eq("named OID not found", Botan::OID::from_name(name).has_value(), false);
 
-   // add oid -> string mapping
-   Botan::OIDS::add_oid2str(Botan::OID("1.2.345.6.888"), "botan-test-oid3");
-   result.test_eq("Lookup works after adding the OID",
-                  Botan::OIDS::oid2str_or_throw(Botan::OID("1.2.345.6.888")), "botan-test-oid3");
+   Botan::OID::register_oid(oid, name);
 
-   // still returns empty OID
-   result.test_eq("OIDS::str2oid_or_empty still returns empty OID without adding name mapping",
-                  Botan::OIDS::str2oid_or_empty("botan-test-oid3").to_string(), Botan::OID().to_string());
+   result.confirm("named OID found", Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
+   result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
 
-   // add string -> oid mapping
-   Botan::OIDS::add_str2oid(Botan::OID("1.2.345.6.888"), "botan-test-oid3");
-   result.test_eq("OIDS::str2oid_or_empty returns value after adding name mapping",
-                  Botan::OIDS::str2oid_or_empty("botan-test-oid3").to_string(), Botan::OID({1,2,345,6,888}).to_string());
+   // completely redundant, nothing happens:
+   Botan::OID::register_oid(oid, name);
+
+   /*
+   register a second OID to the same name; this is allowed but
+   the name will still map back to the original OID
+   */
+   Botan::OID::register_oid(oid2, name);
+
+   // name->oid map is unchanged:
+   result.confirm("named OID found after second insert", Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
+   result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
+   // now second OID maps back to the string as expected:
+   result.test_eq("name of OID matches expected", oid2.to_formatted_string(), name);
+
+   try
+      {
+      Botan::OID::register_oid(oid2, name2);
+      result.test_failure("Registration of second name to the same OID was accepted");
+      }
+   catch(Botan::Invalid_State&)
+      {
+      result.test_success("Registration of second name to the same OID fails");
+      }
 
    return result;
    }
@@ -119,8 +127,7 @@ class OID_Tests final : public Test
          std::vector<std::function<Test::Result()>> fns =
             {
             test_OID_to_string,
-            test_add_have_OID,
-            test_add_have_OID_str,
+            test_oid_registration,
             test_add_and_lookup,
             };
 

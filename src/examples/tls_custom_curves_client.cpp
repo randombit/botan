@@ -1,7 +1,6 @@
 #include <botan/auto_rng.h>
 #include <botan/certstor.h>
 #include <botan/ecdh.h>
-#include <botan/oids.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_client.h>
 #include <botan/tls_policy.h>
@@ -140,7 +139,7 @@ int main() {
   }
 
   // register name to specified oid
-  Botan::OIDS::add_oid(oid, "testcurve1102");
+  Botan::OID::register_oid(oid, "testcurve1102");
 
   // prepare all the parameters
   Callbacks callbacks;

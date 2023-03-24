@@ -26,7 +26,6 @@
    #include <botan/ec_group.h>
    #include <botan/ecdh.h>
    #include <botan/hex.h>
-   #include <botan/oids.h>
    #include <botan/pkcs10.h>
    #include <botan/rsa.h>
    #include <botan/ecdsa.h>
@@ -1082,11 +1081,10 @@ class TLS_Unit_Tests final : public Test
          const Botan::BigInt order("0xDB7C2ABF62E35E7628DFAC6561C5");
 
          const Botan::OID oid("1.3.132.0.6");
+         Botan::OID::register_oid(oid, "secp112r1");
 
          // Creating this object implicitly registers the curve for future use ...
          Botan::EC_Group reg_secp112r1(p, a, b, g_x, g_y, order, 1, oid);
-
-         Botan::OIDS::add_oid(oid, "secp112r1");
 
          test_modern_versions("AES-256/GCM secp112r1", results, *client_ses, *server_ses, *creds, "ECDH", "AES-256/GCM", "AEAD",
                               { { "groups", "0xFEE1" }, { "minimum_ecdh_group_size", "112" } });

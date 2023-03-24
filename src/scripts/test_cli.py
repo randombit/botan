@@ -861,6 +861,10 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
 
     test_cli("asn1print", "--pem -", expected, input_pem)
 
+    test_cli("oid_info", "RSA", "The string 'RSA' is associated with OID 1.2.840.113549.1.1.1")
+    test_cli("oid_info", "1.2.840.113549.1.1.1", "OID 1.2.840.113549.1.1.1 is associated with RSA")
+    test_cli("oid_info", "1.2.3.4", "OID 1.2.3.4 is not recognized")
+
 def cli_tls_socket_tests(tmp_dir):
     # pylint: disable=too-many-locals
     if not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):

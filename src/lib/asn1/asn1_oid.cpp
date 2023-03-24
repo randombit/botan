@@ -10,7 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/parsing.h>
-#include <botan/oids.h>
+#include <botan/internal/oid_map.h>
 #include <algorithm>
 #include <sstream>
 
@@ -41,12 +41,8 @@ std::vector<uint32_t> parse_oid_str(const std::string& oid)
             }
          }
 
-      if(elem.empty())
-         return std::vector<uint32_t>();
-      oid_elems.push_back(to_u32bit(elem));
-
-      if(oid_elems.size() < 2)
-         return std::vector<uint32_t>();
+      if(!elem.empty())
+         oid_elems.push_back(to_u32bit(elem));
 
       return oid_elems;
       }
@@ -59,12 +55,31 @@ std::vector<uint32_t> parse_oid_str(const std::string& oid)
 }
 
 //static
+void OID::register_oid(const OID& oid, const std::string& name)
+   {
+   OID_Map::global_registry().add_oid(oid, name);
+   }
+
+//static
+std::optional<OID> OID::from_name(const std::string& name)
+   {
+   if(name.empty())
+      throw Invalid_Argument("OID::from_name argument must be non-empty");
+
+   OID o = OID_Map::global_registry().str2oid(name);
+   if(o.has_value())
+      return std::optional(o);
+
+   return std::nullopt;
+   }
+
+//static
 OID OID::from_string(const std::string& str)
    {
    if(str.empty())
       throw Invalid_Argument("OID::from_string argument must be non-empty");
 
-   OID o = OIDS::str2oid_or_empty(str);
+   OID o = OID_Map::global_registry().str2oid(str);
    if(o.has_value())
       return o;
 
@@ -84,11 +99,10 @@ OID::OID(const std::string& oid_str)
    if(!oid_str.empty())
       {
       m_id = parse_oid_str(oid_str);
-
-      if(m_id.size() < 2 || m_id[0] > 2)
-         throw Decoding_Error("Invalid OID " + oid_str);
-      if((m_id[0] == 0 || m_id[0] == 1) && m_id[1] > 39)
-         throw Decoding_Error("Invalid OID " + oid_str);
+      if(m_id.size() < 2 || m_id[0] > 2 || (m_id[0] < 2 && m_id[1] > 39))
+         {
+         throw Decoding_Error("Invalid OID '" + oid_str + "'");
+         }
       }
    }
 
@@ -118,12 +132,12 @@ std::string OID::to_formatted_string() const
 
 std::string OID::human_name_or_empty() const
    {
-   return OIDS::oid2str_or_empty(*this);
+   return OID_Map::global_registry().oid2str(*this);
    }
 
 bool OID::registered_oid() const
    {
-   return !OIDS::oid2str_or_empty(*this).empty();
+   return !human_name_or_empty().empty();
    }
 
 /*
