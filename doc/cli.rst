@@ -104,15 +104,16 @@ Public Key Cryptography
   the passphrase passed as *pass-out*. The parameters *cipher*, *pbkdf*, and
   *pbkdf-ms* work similarly to ``keygen``.
 
-``sign --der-format --passphrase= --hash=SHA-256 --emsa= --provider= key file``
+``sign --der-format --passphrase= --hash=SHA-256 --padding= --provider= key file``
 
-  Sign the data in *file* using the PKCS #8 private key *key*. If *key* is
-  encrypted, the used passphrase must be passed as *pass-in*. *emsa* specifies
-  the signature scheme and *hash* the cryptographic hash function used in the
-  scheme.
+  Sign the data in *file* using the PKCS #8 private key *key* and cryptographic
+  hash *hash*. If *key* is encrypted, the used passphrase must be passed as
+  *pass-in*.
 
-    - For RSA signatures EMSA4 (RSA-PSS) is the default scheme.
-    - For ECDSA and DSA *emsa* defaults to EMSA1 (signing the hash directly)
+  The *padding* option can be used to control padding for algorithms that have
+  divergent methods; this mostly applies to RSA. For RSA, if the option is not
+  specified PSS signatures are used. You can select generating a PKCS #1 v1.5
+  formatted signature instead by providing ``--padding=PKCS1v15``.
 
   For ECDSA and DSA, the option ``--der-format`` outputs the signature as an
   ASN.1 encoded blob. Some other tools (including ``openssl``) default to this
@@ -120,11 +121,11 @@ Public Key Cryptography
 
   The signature is formatted for your screen using base64.
 
-``verify --der-format --hash=SHA-256 --emsa= pubkey file signature``
+``verify --der-format --hash=SHA-256 --padding= pubkey file signature``
   Verify the authenticity of the data in *file* with the provided signature
   *signature* and the public key *pubkey*. Similarly to the signing process,
-  *emsa* specifies the signature scheme and *hash* the cryptographic hash
-  function used in the scheme.
+  *padding* specifies the padding scheme and *hash* the cryptographic hash
+  function to use.
 
 ``gen_dl_group --pbits=1024 --qbits=0 --seed= --type=subgroup``
   Generate ANSI X9.42 encoded Diffie-Hellman group parameters.

@@ -1179,7 +1179,9 @@ Signature Generation
 
    Create a signature operator for the provided key. The padding string
    specifies what hash function and padding should be used, for example
-   "PKCS1v15(SHA-256)" or "EMSA1(SHA-384)".
+   "PKCS1v15(SHA-256)" for PKCS #1 v1.5 padding (used with RSA) or "SHA-384".
+   Generally speaking only RSA has special padding modes; for other algorithms
+   like ECDSA one just names the hash.
 
 .. cpp:function:: int botan_pk_op_sign_destroy(botan_pk_op_sign_t op)
 

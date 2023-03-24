@@ -21,6 +21,7 @@
 #include <botan/pubkey.h>
 #include <botan/internal/workfactor.h>
 #include <botan/data_src.h>
+#include <botan/hash.h>
 
 #include <sstream>
 #include <fstream>
@@ -132,39 +133,33 @@ BOTAN_REGISTER_COMMAND("keygen", PK_Keygen);
 
 namespace {
 
-std::string choose_sig_padding(const std::string& key, const std::string& emsa, const std::string& hash)
+std::string choose_sig_padding(const std::string& key, const std::string& padding, const std::string& hash)
    {
-   std::string emsa_or_default = [&]() -> std::string
+   if(key == "RSA")
       {
-      if(!emsa.empty())
-         {
-         return emsa;
-         }
-
-      if(key == "RSA")
-         {
-         return "EMSA4";
-         } // PSS
-      else if(key == "ECDSA" || key == "DSA")
-         {
-         return "EMSA1";
-         }
-      else if(key == "Ed25519")
-         {
-         return "";
-         }
+      std::ostringstream oss;
+      if(padding.empty())
+         oss << "PSS";
       else
-         {
-         return "EMSA1";
-         }
-      }();
+         oss << padding;
 
-   if(emsa_or_default.empty())
+      oss << "(" << hash << ")";
+      return oss.str();
+      }
+   else if(padding.empty())
       {
       return hash;
       }
-
-   return emsa_or_default + "(" + hash + ")";
+   else if(hash.empty())
+      {
+      return padding;
+      }
+   else
+      {
+      std::ostringstream oss;
+      oss << padding << "(" << hash << ")";
+      return oss.str();
+      }
    }
 
 }
@@ -241,7 +236,7 @@ load_private_key(const std::string& key_filename,
 class PK_Sign final : public Command
    {
    public:
-      PK_Sign() : Command("sign --der-format --passphrase= --hash=SHA-256 --emsa= --provider= key file") {}
+      PK_Sign() : Command("sign --der-format --passphrase= --hash=SHA-256 --padding= --provider= key file") {}
 
       std::string group() const override
          {
@@ -260,8 +255,13 @@ class PK_Sign final : public Command
 
          auto key = load_private_key(key_file, passphrase);
 
+         const std::string hash_fn = get_arg("hash");
+
+         if(!hash_fn.empty() && !Botan::HashFunction::create(hash_fn))
+            throw CLI_Error_Unsupported("hashing", hash_fn);
+
          const std::string sig_padding =
-            choose_sig_padding(key->algo_name(), get_arg("emsa"), get_arg("hash"));
+            choose_sig_padding(key->algo_name(), get_arg("padding"), hash_fn);
 
          auto format = Botan::Signature_Format::Standard;
 
@@ -303,7 +303,7 @@ BOTAN_REGISTER_COMMAND("sign", PK_Sign);
 class PK_Verify final : public Command
    {
    public:
-      PK_Verify() : Command("verify --der-format --hash=SHA-256 --emsa= pubkey file signature") {}
+      PK_Verify() : Command("verify --der-format --hash=SHA-256 --padding= pubkey file signature") {}
 
       std::string group() const override
          {
@@ -323,8 +323,13 @@ class PK_Verify final : public Command
             throw CLI_Error("Unable to load public key");
             }
 
+         const std::string hash_fn = get_arg("hash");
+
+         if(!hash_fn.empty() && !Botan::HashFunction::create(hash_fn))
+            throw CLI_Error_Unsupported("hashing", hash_fn);
+
          const std::string sig_padding =
-            choose_sig_padding(key->algo_name(), get_arg("emsa"), get_arg("hash"));
+            choose_sig_padding(key->algo_name(), get_arg("padding"), hash_fn);
 
          auto format = Botan::Signature_Format::Standard;
          if(flag_set("der-format"))
