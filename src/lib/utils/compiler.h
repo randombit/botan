@@ -161,8 +161,6 @@
 
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC)
   #define BOTAN_PARALLEL_SIMD_FOR _Pragma("GCC ivdep") for
-#elif defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-  #define BOTAN_PARALLEL_SIMD_FOR _Pragma("ivdep") for
 #else
   #define BOTAN_PARALLEL_SIMD_FOR for
 #endif
