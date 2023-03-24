@@ -70,36 +70,42 @@ Encryption
 
 Public Key Cryptography
 -------------------------------------
-``keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --provider= --der-out``
+``keygen --algo=RSA --params= --passphrase= --cipher= --pbkdf= --pbkdf-ms=300 --provider= --der-out``
   Generate a PKCS #8 *algo* private key. If *der-out* is passed, the pair is BER
   encoded.  Otherwise, PEM encoding is used. To protect the PKCS #8 formatted
-  key, it is recommended to encrypt it with a provided *passphrase*. *pbe* is
-  the name of the desired encryption algorithm, which uses *pbe-millis*
-  milliseconds to derive the encryption key from the passed
-  *passphrase*. Algorithm specific parameters, as the desired bit length of an
-  RSA key, can be passed with *params*.
+  key, it is recommended to encrypt it with a provided *passphrase*.
+
+  If a passphrase is used, *cipher* specifies the name of the desired encryption
+  algorithm (such as "AES-256/CBC", or leave empty to use a default), and
+  *pbkdf* can be used to specify the password hashing mechanism (either a hash
+  such as "SHA-256" to select PBKDF2, or "Scrypt").
+
+  The cipher mode must have an object identifier defined, this allows use of
+  ciphers such as AES, Twofish, Serpent, and SM4. Ciphers in CBC, GCM, and SIV
+  modes are supported. However most other implementations support only AES or
+  3DES in CBC mode.
+
+  If encryption is used, the parameter *pbkdf-ms* controls how long the password
+  hashing function will run to derive the encryption key from the passed
+  *passphrase*.
+
+  Algorithm specific parameters, as the desired bit length of an RSA key, can be
+  passed with *params*.
 
     - For RSA *params* specifies the bit length of the RSA modulus. It defaults to 3072.
     - For DH *params* specifies the DH parameters. It defaults to modp/ietf/2048.
     - For DSA *params* specifies the DSA parameters. It defaults to dsa/botan/2048.
     - For EC algorithms *params* specifies the elliptic curve. It defaults to secp256r1.
 
-  The default *pbe* algorithm is "PBES2(AES-256/CBC,SHA-256)".
+``pkcs8 --pass-in= --pub-out --der-out --pass-out= --cipher= --pbkdf= --pbkdf-ms=300 key``
 
-  With PBES2 scheme, you can select any CBC or GCM mode cipher which has an OID
-  defined (such as 3DES, Camellia, SM4, Twofish or Serpent). However most other
-  implementations support only AES or 3DES in CBC mode. You can also choose
-  Scrypt instead of PBKDF2, by using "Scrypt" instead of the name of a hash
-  function, for example "PBES2(AES-256/CBC,Scrypt)". Scrypt is also supported by
-  some other implementations including OpenSSL.
-
-``pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key``
   Open a PKCS #8 formatted key at *key*. If *key* is encrypted, the passphrase
   must be passed as *pass-in*. It is possible to (re)encrypt the read key with
-  the passphrase passed as *pass-out*. The parameters *pbe-millis* and *pbe*
-  work similarly to ``keygen``.
+  the passphrase passed as *pass-out*. The parameters *cipher*, *pbkdf*, and
+  *pbkdf-ms* work similarly to ``keygen``.
 
 ``sign --der-format --passphrase= --hash=SHA-256 --emsa= --provider= key file``
+
   Sign the data in *file* using the PKCS #8 private key *key*. If *key* is
   encrypted, the used passphrase must be passed as *pass-in*. *emsa* specifies
   the signature scheme and *hash* the cryptographic hash function used in the

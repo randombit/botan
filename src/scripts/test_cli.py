@@ -331,8 +331,8 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
     test_cli("pkcs8", "--pub-out --der-out --output=%s %s" % (pub_der_key, priv_key), "")
 
-    test_cli("pkcs8", "--pass-out=foof --der-out --output=%s %s" % (enc_der, priv_key), "")
-    test_cli("pkcs8", "--pass-out=foof --output=%s %s" % (enc_pem, priv_key), "")
+    test_cli("pkcs8", "--pass-out=foof --cipher=AES-128/CBC --der-out --output=%s %s" % (enc_der, priv_key), "")
+    test_cli("pkcs8", "--pass-out=foof --pbkdf=Scrypt --output=%s %s" % (enc_pem, priv_key), "")
 
     dec_pem = test_cli("pkcs8", ["--pass-in=foof", enc_pem], None)
     dec_der = test_cli("pkcs8", ["--pass-in=foof", enc_der], None)
