@@ -13,8 +13,6 @@
 
 #include <botan/dilithium.h>
 
-#include <botan/ber_dec.h>
-#include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/rng.h>
 #include <botan/exceptn.h>
@@ -111,13 +109,13 @@ std::string DilithiumMode::to_string() const
    unreachable();
    }
 
-class Dilithium_PublicKeyInternal : public ASN1_Object
+class Dilithium_PublicKeyInternal
    {
    public:
       Dilithium_PublicKeyInternal(DilithiumModeConstants mode)
          : m_mode(std::move(mode)) {}
 
-      Dilithium_PublicKeyInternal(DilithiumModeConstants mode, const std::vector<uint8_t>& raw_pk)
+      Dilithium_PublicKeyInternal(DilithiumModeConstants mode, std::span<const uint8_t> raw_pk)
          : m_mode(std::move(mode))
          {
          BOTAN_ASSERT_NOMSG(raw_pk.size() == m_mode.public_key_bytes());
@@ -153,31 +151,6 @@ class Dilithium_PublicKeyInternal : public ASN1_Object
       Dilithium_PublicKeyInternal& operator=(const Dilithium_PublicKeyInternal& other) = delete;
       Dilithium_PublicKeyInternal& operator=(Dilithium_PublicKeyInternal&& other) = delete;
 
-      ~Dilithium_PublicKeyInternal() override = default;
-
-      void encode_into(DER_Encoder& to) const override
-         {
-         // This encoding is based on draft-uni-qsckeys-dilithium-00 Section 3.6
-         // https://datatracker.ietf.org/doc/draft-uni-qsckeys-dilithium/00/
-         to.start_sequence()
-               .encode(m_rho, ASN1_Type::OctetString)
-               .encode(m_t1.polyvec_pack_t1(), ASN1_Type::OctetString)
-            .end_cons();
-         }
-
-      void decode_from(BER_Decoder& from) override
-         {
-         std::vector<uint8_t> t1;
-
-         from.start_sequence()
-               .decode(m_rho, ASN1_Type::OctetString)
-               .decode(t1, ASN1_Type::OctetString)
-            .end_cons();
-
-         m_t1 = Dilithium::PolynomialVector::unpack_t1(t1, m_mode);
-         m_raw_pk_shake256 = compute_raw_pk_shake256();
-         }
-
       std::vector<uint8_t> raw_pk() const
          { return concat_as<std::vector<uint8_t>>(m_rho, m_t1.polyvec_pack_t1()); }
 
@@ -206,7 +179,7 @@ class Dilithium_PublicKeyInternal : public ASN1_Object
       Dilithium::PolynomialVector m_t1;
    };
 
-class Dilithium_PrivateKeyInternal : public ASN1_Object
+class Dilithium_PrivateKeyInternal
    {
    public:
       Dilithium_PrivateKeyInternal(DilithiumModeConstants mode)
@@ -227,7 +200,7 @@ class Dilithium_PrivateKeyInternal : public ASN1_Object
          m_s1(std::move(s1)),
          m_s2(std::move(s2)) {}
 
-      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode, const secure_vector<uint8_t>& sk) :
+      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode, std::span<const uint8_t> sk) :
          Dilithium_PrivateKeyInternal(std::move(mode))
          {
          BOTAN_ASSERT_NOMSG(sk.size() == m_mode.private_key_bytes());
@@ -239,52 +212,6 @@ class Dilithium_PrivateKeyInternal : public ASN1_Object
          m_s1  = Dilithium::PolynomialVector::unpack_eta(s.take(m_mode.l() * m_mode.polyeta_packedbytes()), m_mode.l(), m_mode);
          m_s2  = Dilithium::PolynomialVector::unpack_eta(s.take(m_mode.k() * m_mode.polyeta_packedbytes()), m_mode.k(), m_mode);
          m_t0  = Dilithium::PolynomialVector::unpack_t0(s.take(m_mode.k() * DilithiumModeConstants::POLYT0_PACKEDBYTES), m_mode);
-         }
-
-      void encode_into(DER_Encoder& to) const override
-         {
-         // This encoding is based on draft-uni-qsckeys-dilithium-00 Section 3.3
-         // https://datatracker.ietf.org/doc/draft-uni-qsckeys-dilithium/00/
-         //
-         // Currently, we support the full encoding only. I.e. Sections 3.4 and 3.5
-         // are _not_ implemented. Neither for encoding nor for decoding.
-         to.start_sequence()
-               .encode(size_t(0) /* version info: NIST round 3 */)
-               .encode(m_rho, ASN1_Type::BitString)
-               .encode(m_key, ASN1_Type::BitString)
-               .encode(m_tr, ASN1_Type::BitString)
-               .encode(m_s1.polyvec_pack_eta(m_mode), ASN1_Type::BitString)
-               .encode(m_s2.polyvec_pack_eta(m_mode), ASN1_Type::BitString)
-               .encode(m_t0.polyvec_pack_t0(), ASN1_Type::BitString)
-               // we don't encode the public key into the private key
-            .end_cons();
-         }
-
-      void decode_from(BER_Decoder& from) override
-         {
-         secure_vector<uint8_t> s1, s2, t0;
-
-         from.start_sequence()
-               .decode_and_check(size_t(0) /* Dilithium-r3 */, "Unsupported Dilithium encoding version")
-               .decode(m_rho, ASN1_Type::BitString)
-               .decode(m_key, ASN1_Type::BitString)
-               .decode(m_tr, ASN1_Type::BitString)
-               .decode(s1, ASN1_Type::BitString)
-               .decode(s2, ASN1_Type::BitString)
-               .decode(t0, ASN1_Type::BitString)
-               // here might be the optional public key -- ignore for now
-            .end_cons();
-
-         if(m_rho.size() != DilithiumModeConstants::SEEDBYTES)
-            { throw Decoding_Error("rho has unexpected length"); }
-         if(m_key.size() != DilithiumModeConstants::SEEDBYTES)
-            { throw Decoding_Error("key has unexpected length"); }
-         if(m_tr.size() != DilithiumModeConstants::SEEDBYTES)
-            { throw Decoding_Error("tr has unexpected length"); }
-
-         m_s1 = Dilithium::PolynomialVector::unpack_eta(s1, m_mode.l(), m_mode);
-         m_s2 = Dilithium::PolynomialVector::unpack_eta(s2, m_mode.k(), m_mode);
-         m_t0 = Dilithium::PolynomialVector::unpack_t0(t0, m_mode);
          }
 
       secure_vector<uint8_t> raw_sk() const
@@ -584,28 +511,16 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification
       SHAKE_256 m_shake;
    };
 
-Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, const std::vector<uint8_t>& pk)
-   : Dilithium_PublicKey(pk, DilithiumMode(alg_id.oid()), DilithiumKeyEncoding::Raw) {}
+Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> pk)
+   : Dilithium_PublicKey(pk, DilithiumMode(alg_id.oid())) {}
 
-Dilithium_PublicKey::Dilithium_PublicKey(const std::vector<uint8_t>& pk, DilithiumMode m, DilithiumKeyEncoding encoding)
-   : m_key_encoding(encoding)
+Dilithium_PublicKey::Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode m)
    {
    DilithiumModeConstants mode(m);
-   switch(m_key_encoding)
-      {
-      case Botan::DilithiumKeyEncoding::Raw:
-         BOTAN_ARG_CHECK(pk.empty() || pk.size() == mode.public_key_bytes(),
-                        "dilithium public key does not have the correct byte count");
+   BOTAN_ARG_CHECK(pk.empty() || pk.size() == mode.public_key_bytes(),
+                  "dilithium public key does not have the correct byte count");
 
-         m_public = std::make_shared<Dilithium_PublicKeyInternal>(std::move(mode), pk);
-         break;
-
-      case Botan::DilithiumKeyEncoding::DER:
-         m_public = std::make_shared<Dilithium_PublicKeyInternal>(std::move(mode));
-         if(!pk.empty())
-            BER_Decoder(pk).decode(*m_public);
-         break;
-      }
+   m_public = std::make_shared<Dilithium_PublicKeyInternal>(std::move(mode), pk);
    }
 
 std::string Dilithium_PublicKey::algo_name() const
@@ -634,18 +549,7 @@ size_t Dilithium_PublicKey::estimated_strength() const
    }
 std::vector<uint8_t> Dilithium_PublicKey::public_key_bits() const
    {
-   switch(m_key_encoding)
-      {
-      case DilithiumKeyEncoding::Raw:
-         return m_public->raw_pk();
-
-      case DilithiumKeyEncoding::DER:
-         std::vector<uint8_t> out;
-         DER_Encoder(out).encode(*m_public);
-         return out;
-      }
-
-   unreachable();
+   return m_public->raw_pk();
    }
 
 bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const
@@ -717,44 +621,21 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, Dilithium
                                                               std::move(s1), std::move(s2), std::move(t0));
    }
 
-Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, const secure_vector<uint8_t>& sk)
-   : Dilithium_PrivateKey(sk, DilithiumMode(alg_id.oid()), DilithiumKeyEncoding::Raw) {}
+Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk)
+   : Dilithium_PrivateKey(sk, DilithiumMode(alg_id.oid())) {}
 
-Dilithium_PrivateKey::Dilithium_PrivateKey(const secure_vector<uint8_t>& sk,
-                                           DilithiumMode m, DilithiumKeyEncoding encoding)
+Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode m)
    {
    DilithiumModeConstants mode(m);
-
-   switch(encoding)
-      {
-      case Botan::DilithiumKeyEncoding::Raw:
-         BOTAN_ARG_CHECK(sk.size() == mode.private_key_bytes(),
-                         "dilithium private key does not have the correct byte count");
-         m_private = std::make_shared<Dilithium_PrivateKeyInternal>(std::move(mode), sk);
-         break;
-      case Botan::DilithiumKeyEncoding::DER:
-         m_private = std::make_shared<Dilithium_PrivateKeyInternal>(std::move(mode));
-         BER_Decoder(sk).decode(*m_private);
-         break;
-      }
-
+   BOTAN_ARG_CHECK(sk.size() == mode.private_key_bytes(),
+                     "dilithium private key does not have the correct byte count");
+   m_private = std::make_shared<Dilithium_PrivateKeyInternal>(std::move(mode), sk);
    m_public = std::make_shared<Dilithium_PublicKeyInternal>(m_private->mode(), m_private->rho(), m_private->s1(), m_private->s2());
    }
 
 secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const
    {
-   switch(m_key_encoding)
-      {
-      case DilithiumKeyEncoding::Raw:
-         return m_private->raw_sk();
-
-      case DilithiumKeyEncoding::DER:
-         secure_vector<uint8_t> out;
-         DER_Encoder(out).encode(*m_private);
-         return out;
-      }
-
-   unreachable();
+   return m_private->raw_sk();
    }
 
 std::unique_ptr<PK_Ops::Signature>
@@ -771,8 +652,6 @@ Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
 
 std::unique_ptr<Public_Key> Dilithium_PrivateKey::public_key() const
    {
-   auto public_key = std::make_unique<Dilithium_PublicKey>(*this);
-   public_key->set_binary_encoding(binary_encoding());
-   return public_key;
+   return std::make_unique<Dilithium_PublicKey>(*this);
    }
 }
