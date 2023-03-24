@@ -34,45 +34,6 @@
 namespace Botan {
 namespace {
 
-/**
- * Helper class to ease unmarshalling of concatenated fixed-length values
- */
-class BufferSlicer final
-   {
-   public:
-      BufferSlicer(std::span<const uint8_t> buffer) : m_remaining(buffer)
-         {}
-
-      template <typename ContainerT>
-      auto take_as(const size_t count)
-         {
-         const auto result = take(count);
-         return ContainerT(result.begin(), result.end());
-         }
-
-      auto take_vector(const size_t count) { return take_as<std::vector<uint8_t>>(count); }
-      auto take_secure_vector(const size_t count) { return take_as<secure_vector<uint8_t>>(count); }
-
-      std::span<const uint8_t> take(const size_t count)
-         {
-         BOTAN_STATE_CHECK(remaining() >= count);
-         auto result = m_remaining.first(count);
-         m_remaining = m_remaining.subspan(count);
-         return result;
-         }
-
-      void copy_into(std::span<uint8_t> sink)
-         {
-         const auto data = take(sink.size());
-         std::copy(data.begin(), data.end(), sink.begin());
-         }
-
-      size_t remaining() const { return m_remaining.size(); }
-
-   private:
-      std::span<const uint8_t> m_remaining;
-   };
-
 std::pair<Dilithium::PolynomialVector, Dilithium::PolynomialVector>
 calculate_t0_and_t1(const DilithiumModeConstants& mode,
                      const std::vector<uint8_t>& rho,
