@@ -198,7 +198,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
 * PKCS#5 v2.0 PBE Encryption
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
+pbes2_encrypt_shared(std::span<const uint8_t> key_bits,
                      const std::string& passphrase,
                      size_t* msec_in_iterations_out,
                      size_t iterations_if_msec_null,
@@ -231,7 +231,7 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
 
    enc->set_key(derived_key);
    enc->start(iv);
-   secure_vector<uint8_t> ctext = key_bits;
+   secure_vector<uint8_t> ctext(key_bits.begin(), key_bits.end());
    enc->finish(ctext);
 
    std::vector<uint8_t> encoded_iv;
@@ -252,7 +252,7 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
 }
 
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
+pbes2_encrypt(std::span<const uint8_t> key_bits,
               const std::string& passphrase,
               std::chrono::milliseconds msec,
               const std::string& cipher,
@@ -265,7 +265,7 @@ pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
    }
 
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
+pbes2_encrypt_msec(std::span<const uint8_t> key_bits,
                    const std::string& passphrase,
                    std::chrono::milliseconds msec,
                    size_t* out_iterations_if_nonnull,
@@ -284,7 +284,7 @@ pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
    }
 
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-pbes2_encrypt_iter(const secure_vector<uint8_t>& key_bits,
+pbes2_encrypt_iter(std::span<const uint8_t> key_bits,
                    const std::string& passphrase,
                    size_t pbkdf_iter,
                    const std::string& cipher,
@@ -295,7 +295,7 @@ pbes2_encrypt_iter(const secure_vector<uint8_t>& key_bits,
    }
 
 secure_vector<uint8_t>
-pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
+pbes2_decrypt(std::span<const uint8_t> key_bits,
               const std::string& passphrase,
               const std::vector<uint8_t>& params)
    {
@@ -323,7 +323,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
 
    dec->start(iv);
 
-   secure_vector<uint8_t> buf = key_bits;
+   secure_vector<uint8_t> buf(key_bits.begin(), key_bits.end());
    dec->finish(buf);
 
    return buf;

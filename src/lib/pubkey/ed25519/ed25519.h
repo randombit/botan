@@ -43,7 +43,7 @@ class BOTAN_PUBLIC_API(2,2) Ed25519_PublicKey : public virtual Public_Key
       * @param key_bits DER encoded public key bits
       */
       Ed25519_PublicKey(const AlgorithmIdentifier& alg_id,
-                        const std::vector<uint8_t>& key_bits);
+                        std::span<const uint8_t> key_bits);
 
       template<typename Alloc>
       Ed25519_PublicKey(const std::vector<uint8_t, Alloc>& pub) :
@@ -73,7 +73,7 @@ class BOTAN_PUBLIC_API(2,2) Ed25519_PrivateKey final : public Ed25519_PublicKey,
       * @param key_bits PKCS #8 structure
       */
       Ed25519_PrivateKey(const AlgorithmIdentifier& alg_id,
-                         const secure_vector<uint8_t>& key_bits);
+                         std::span<const uint8_t> key_bits);
 
       /**
       * Generate a private key.

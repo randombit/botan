@@ -48,9 +48,9 @@ bool Curve25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*stro
    }
 
 Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier& /*unused*/,
-                                           const std::vector<uint8_t>& key_bits)
+                                           std::span<const uint8_t> key_bits)
    {
-   m_public = key_bits;
+   m_public.assign(key_bits.begin(), key_bits.end());
 
    size_check(m_public.size(), "public key");
    }
@@ -78,7 +78,7 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
    }
 
 Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier& /*unused*/,
-                                             const secure_vector<uint8_t>& key_bits)
+                                             std::span<const uint8_t> key_bits)
    {
    BER_Decoder(key_bits).decode(m_private, ASN1_Type::OctetString).discard_remaining();
 

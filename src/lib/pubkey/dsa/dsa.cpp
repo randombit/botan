@@ -57,7 +57,7 @@ bool DSA_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const
    }
 
 DSA_PublicKey::DSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                             const std::vector<uint8_t>& key_bits)
+                             std::span<const uint8_t> key_bits)
    {
    m_public_key = std::make_shared<DL_PublicKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_57);
 
@@ -88,7 +88,7 @@ DSA_PrivateKey::DSA_PrivateKey(const DL_Group& group,
    }
 
 DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                               const secure_vector<uint8_t>& key_bits)
+                               std::span<const uint8_t> key_bits)
    {
    m_private_key = std::make_shared<DL_PrivateKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_57);
    m_public_key = m_private_key->public_key();

@@ -34,7 +34,7 @@ class BOTAN_PUBLIC_API(2,2) SM2_PublicKey : public virtual EC_PublicKey
       * @param key_bits DER encoded public key bits
       */
       SM2_PublicKey(const AlgorithmIdentifier& alg_id,
-                    const std::vector<uint8_t>& key_bits) :
+                    std::span<const uint8_t> key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
 
       /**
@@ -81,7 +81,7 @@ class BOTAN_PUBLIC_API(2,2) SM2_PrivateKey final :
       * @param key_bits ECPrivateKey bits
       */
       SM2_PrivateKey(const AlgorithmIdentifier& alg_id,
-                     const secure_vector<uint8_t>& key_bits);
+                     std::span<const uint8_t> key_bits);
 
       /**
       * Create a private key.

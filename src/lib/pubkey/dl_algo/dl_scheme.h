@@ -10,6 +10,7 @@
 #include <botan/bigint.h>
 #include <botan/dl_group.h>
 #include <memory>
+#include <span>
 
 namespace Botan {
 
@@ -23,7 +24,7 @@ class DL_PublicKey final
                    const BigInt& public_key);
 
       DL_PublicKey(const AlgorithmIdentifier& alg_id,
-                   const std::vector<uint8_t>& key_bits,
+                   std::span<const uint8_t> key_bits,
                    DL_Group_Format format);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const;
@@ -57,7 +58,7 @@ class DL_PrivateKey final
                     RandomNumberGenerator& rng);
 
       DL_PrivateKey(const AlgorithmIdentifier& alg_id,
-                    const secure_vector<uint8_t>& key_bits,
+                    std::span<const uint8_t> key_bits,
                     DL_Group_Format format);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const;
