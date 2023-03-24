@@ -1,3 +1,5 @@
+.. _env_vars:
+
 Environment Variables
 ======================
 

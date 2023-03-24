@@ -5,6 +5,7 @@ API Reference
 .. toctree::
    :maxdepth: 1
 
+   firstthings
    versions
    secmem
    rng
