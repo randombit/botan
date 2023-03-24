@@ -242,12 +242,14 @@ typedef PBKDF S2K;
 * @param provider the provider to use
 * @return pointer to newly allocated object of that type
 */
+BOTAN_DEPRECATED("Use PBKDF::create_or_throw")
 inline PBKDF* get_pbkdf(const std::string& algo_spec,
                         const std::string& provider = "")
    {
    return PBKDF::create_or_throw(algo_spec, provider).release();
    }
 
+BOTAN_DEPRECATED("Use PBKDF::create_or_throw")
 inline PBKDF* get_s2k(const std::string& algo_spec)
    {
    return get_pbkdf(algo_spec);
