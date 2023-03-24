@@ -294,7 +294,7 @@ std::vector<Test::Result> xmss_legacy_private_key()
       "6B250DBD1599FBB09A7F148A7AEFEAB26ADB728A330DD3F616C8A736D1BF4EA17F2C3BF"
       "A5E22C249FA9D1E7DA08DB351709C4");
 
-   Botan::XMSS_PrivateKey legacy_secret_key = Botan::XMSS_PrivateKey(legacy_xmss_private_key, Botan::WOTS_Derivation_Method::Botan2x);
+   Botan::XMSS_PrivateKey legacy_secret_key = Botan::XMSS_PrivateKey(legacy_xmss_private_key);
    Botan::XMSS_PublicKey public_key_from_secret_key(legacy_secret_key);
    Botan::XMSS_PublicKey legacy_public_key = Botan::XMSS_PublicKey(legacy_xmss_public_key);
 

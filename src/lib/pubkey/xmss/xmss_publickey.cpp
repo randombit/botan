@@ -18,6 +18,7 @@
 #include <botan/internal/xmss_verification_operation.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/loadstor.h>
 
 #include <iterator>
@@ -53,9 +54,11 @@ std::vector<uint8_t> extract_raw_public_key(std::span<const uint8_t> key_bits)
 
       // Smoke check the decoded key. Valid raw keys might be decodeable as BER
       // and they might be either a sole public key or a concatenation of public
-      // and private key.
+      // and private key (with the optional WOTS+ derivation identifier).
       XMSS_Parameters params(deserialize_xmss_oid(raw_key));
-      if(raw_key.size() != params.raw_public_key_size() && raw_key.size() != params.raw_private_key_size())
+      if(raw_key.size() != params.raw_public_key_size() &&
+         raw_key.size() != params.raw_private_key_size() &&
+         raw_key.size() != params.raw_legacy_private_key_size())
          { throw Decoding_Error("unpacked XMSS key does not have the correct length"); }
       }
    catch(Decoding_Error&)
@@ -89,19 +92,24 @@ XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits)
       throw Decoding_Error("Invalid XMSS public key size detected");
       }
 
-   // extract & copy root from raw key
-   m_root.clear();
-   m_root.reserve(m_xmss_params.element_size());
-   auto begin = m_raw_key.begin() + sizeof(uint32_t);
-   auto end = begin + m_xmss_params.element_size();
-   std::copy(begin, end, std::back_inserter(m_root));
+   BufferSlicer s(m_raw_key);
+   s.skip(4 /* algorithm ID -- already consumed by `deserialize_xmss_oid()` */);
 
-   // extract & copy public seed from raw key
-   begin = end;
-   end = begin + m_xmss_params.element_size();
-   m_public_seed.clear();
-   m_public_seed.reserve(m_xmss_params.element_size());
-   std::copy(begin, end, std::back_inserter(m_public_seed));
+   m_root = s.take_secure_vector(m_xmss_params.element_size());
+   m_public_seed = s.take_secure_vector(m_xmss_params.element_size());
+   }
+
+
+XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
+                               secure_vector<uint8_t> root,
+                               secure_vector<uint8_t> public_seed)
+   : m_xmss_params(xmss_oid)
+   , m_wots_params(m_xmss_params.ots_oid())
+   , m_root(std::move(root))
+   , m_public_seed(std::move(public_seed))
+   {
+   BOTAN_ARG_CHECK(m_root.size() == m_xmss_params.element_size(), "XMSS: unexpected byte length of root hash");
+   BOTAN_ARG_CHECK(m_public_seed.size() == m_xmss_params.element_size(), "XMSS: unexpected byte length of public seed");
    }
 
 std::unique_ptr<PK_Ops::Verification>

@@ -69,9 +69,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
        **/
       XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
                      secure_vector<uint8_t> root,
-                     secure_vector<uint8_t> public_seed)
-         : m_xmss_params(xmss_oid), m_wots_params(m_xmss_params.ots_oid()),
-           m_root(std::move(root)), m_public_seed(std::move(public_seed)) {}
+                     secure_vector<uint8_t> public_seed);
 
       std::string algo_name() const override
          {
@@ -168,12 +166,12 @@ enum class WOTS_Derivation_Method
    /// the derivation as suggested in NIST SP.800-208.
    /// Private keys generated with Botan 2.x will need to stay with this mode,
    /// otherwise they won't be able to generate valid signatures any longer.
-   Botan2x,
+   Botan2x = 1,
 
    /// Derivation as specified in NIST SP.800-208 to avoid a multi-target attack
    /// on the WOTS+ key derivation suggested in RFC 8391. New private keys
    /// should use this mode.
-   NIST_SP800_208,
+   NIST_SP800_208 = 2,
    };
 
 /**
@@ -209,10 +207,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        * raw_private_key().
        *
        * @param raw_key An XMSS private key serialized using raw_private_key().
-       * @param wots_derivation_method The method used to derive WOTS+ private keys
        **/
-      XMSS_PrivateKey(std::span<const uint8_t> raw_key,
-                      WOTS_Derivation_Method wots_derivation_method = WOTS_Derivation_Method::NIST_SP800_208);
+      XMSS_PrivateKey(std::span<const uint8_t> raw_key);
 
       /**
        * Creates a new XMSS private key for the chosen XMSS signature method
@@ -274,7 +270,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        **/
       secure_vector<uint8_t> raw_private_key() const;
 
-      WOTS_Derivation_Method wots_derivation_method() const { return m_wots_derivation_method; }
+      WOTS_Derivation_Method wots_derivation_method() const;
 
    private:
       friend class XMSS_Signature_Operation;
@@ -319,8 +315,6 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
                              XMSS_Hash& hash);
 
       std::shared_ptr<XMSS_PrivateKey_Internal> m_private;
-
-      WOTS_Derivation_Method m_wots_derivation_method;
    };
 
 }
