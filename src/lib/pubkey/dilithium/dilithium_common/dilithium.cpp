@@ -146,6 +146,8 @@ class Dilithium_PublicKeyInternal
          m_raw_pk_shake256 = compute_raw_pk_shake256();
          }
 
+      ~Dilithium_PublicKeyInternal() = default;
+
       Dilithium_PublicKeyInternal(const Dilithium_PublicKeyInternal&) = delete;
       Dilithium_PublicKeyInternal(Dilithium_PublicKeyInternal&&) = delete;
       Dilithium_PublicKeyInternal& operator=(const Dilithium_PublicKeyInternal& other) = delete;
