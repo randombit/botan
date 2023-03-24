@@ -65,15 +65,6 @@ uint32_t to_uint32(T v)
    return static_cast<uint32_t>(v);
    }
 
-#if 0
-bool is_srk_uuid(const UUID& uuid)
-   {
-   static const uint8_t srk[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
-   const std::vector<uint8_t>& b = uuid.binary_value();
-   return (b.size() == 16 && same_mem(b.data(), srk, 16));
-   }
-#endif
-
 #define TSPI_CHECK_SUCCESS(expr) do {   \
    TSS_RESULT res = expr;           \
    if(res != TSS_SUCCESS)           \

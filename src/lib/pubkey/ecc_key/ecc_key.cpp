@@ -45,10 +45,6 @@ EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
    m_public_key(pub_point),
    m_domain_encoding(default_encoding_for(m_domain_params))
    {
-#if 0
-   if(domain().get_curve() != public_point().get_curve())
-      throw Invalid_Argument("EC_PublicKey: curve mismatch in constructor");
-#endif
    }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
