@@ -36,8 +36,6 @@ enum class EC_Group_Source {
    ExternalSource,
 };
 
-class CurveGFp;
-
 class EC_Group_Data;
 class EC_Group_Data_Map;
 
