@@ -7,6 +7,8 @@ Encryption using a passphrase
 
 .. versionadded:: 1.8.6
 
+.. deprecated:: 3.0
+
 This is a set of simple routines that encrypt some data using a
 passphrase. There are defined in the header `cryptobox.h`, inside
 namespace `Botan::CryptoBox`.
