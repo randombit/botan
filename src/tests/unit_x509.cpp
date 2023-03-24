@@ -638,6 +638,25 @@ Test::Result test_x509_authority_info_access_extension()
    return result;
    }
 
+Test::Result test_parse_rsa_pss_cert()
+   {
+   Test::Result result("X509 RSA-PSS certificate");
+
+   // See https://github.com/randombit/botan/issues/3019 for background
+
+   try
+      {
+      Botan::X509_Certificate rsa_pss(Test::data_file("x509/misc/rsa_pss.pem"));
+      result.test_success("Was able to parse RSA-PSS certificate signed with ECDSA");
+      }
+   catch(Botan::Exception& e)
+      {
+      result.test_failure("Parsing failed", e.what());
+      }
+
+   return result;
+   }
+
 Test::Result test_verify_gost2012_cert()
    {
    Test::Result result("X509 GOST-2012 certificates");
@@ -1707,6 +1726,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_rsa_oaep());
          results.push_back(test_x509_authority_info_access_extension());
          results.push_back(test_verify_gost2012_cert());
+         results.push_back(test_parse_rsa_pss_cert());
 #endif
 
          results.push_back(test_x509_extension());

@@ -145,50 +145,6 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    data->m_subject_dn_bits = ASN1::put_in_sequence(data->m_subject_dn.get_bits());
    data->m_issuer_dn_bits = ASN1::put_in_sequence(data->m_issuer_dn.get_bits());
 
-   // validate_public_key_params(public_key.value);
-   AlgorithmIdentifier public_key_alg_id;
-   BER_Decoder(public_key).decode(public_key_alg_id).discard_remaining();
-
-   const std::vector<std::string> public_key_info =
-      split_on(public_key_alg_id.oid().human_name_or_empty(), '/');
-
-   if(!public_key_info.empty() && public_key_info[0] == "RSA")
-      {
-      // RFC4055: If PublicKeyAlgo = PSS or OAEP: limit the use of the public key exclusively to either RSASSA - PSS or RSAES - OAEP
-      if(public_key_info.size() >= 2)
-         {
-         if(public_key_info[1] == "EMSA4")
-            {
-            /*
-            When the RSA private key owner wishes to limit the use of the public
-            key exclusively to RSASSA-PSS, then the id-RSASSA-PSS object
-            identifier MUST be used in the algorithm field within the subject
-            public key information, and, if present, the parameters field MUST
-            contain RSASSA-PSS-params.
-
-            All parameters in the signature structure algorithm identifier MUST
-            match the parameters in the key structure algorithm identifier
-            except the saltLength field. The saltLength field in the signature parameters
-            MUST be greater or equal to that in the key parameters field.
-
-            ToDo: Allow salt length to be greater
-            */
-            if(public_key_alg_id != obj.signature_algorithm())
-               {
-               throw Decoding_Error("Algorithm identifier mismatch");
-               }
-            }
-         }
-      else
-         {
-         // oid = rsaEncryption -> parameters field MUST contain NULL
-         if(public_key_alg_id != AlgorithmIdentifier(public_key_alg_id.oid(), AlgorithmIdentifier::USE_NULL_PARAM))
-            {
-            throw Decoding_Error("RSA algorithm parameters field MUST contain NULL");
-            }
-         }
-      }
-
    data->m_subject_public_key_bits.assign(public_key.bits(), public_key.bits() + public_key.length());
 
    data->m_subject_public_key_bits_seq = ASN1::put_in_sequence(data->m_subject_public_key_bits);
