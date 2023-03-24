@@ -43,10 +43,6 @@ void OID_Map::add_oid(const OID& oid, const std::string& str)
       {
       m_str2oid.insert(std::make_pair(str, oid));
       }
-   else if(s2o->second != oid)
-      {
-      printf("IGNORING %s %s\n", oid_str.c_str(), str.c_str());
-      }
    }
 
 void OID_Map::add_str2oid(const OID& oid, const std::string& str)
