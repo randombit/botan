@@ -140,7 +140,7 @@ class DilithiumRoundtripTests final : public Test
          const std::vector<uint8_t> msgvec(msg.data(), msg.data() + msg.size());
 
          Botan::Dilithium_PrivateKey priv_key(Test::rng(), mode);
-         Botan::Dilithium_PublicKey pub_key = priv_key;
+         const Botan::Dilithium_PublicKey& pub_key = priv_key;
 
          const auto sig_before_codec = sign(priv_key, msgvec);
 
