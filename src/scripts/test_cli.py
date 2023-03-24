@@ -101,17 +101,17 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_st
 
     if stderr:
         if expected_stderr is None:
-            logging.error("Got output on stderr %s (stdout was %s) for command %s", stderr, stdout, cmdline)
+            logging.error("Got output on stderr %s (stdout was %s) for command %s", stderr, stdout, cmdline, stack_info=True)
         else:
             if stderr != expected_stderr:
-                logging.error("Got output on stderr %s which did not match expected value %s", stderr, expected_stderr)
+                logging.error("Got output on stderr %s which did not match expected value %s", stderr, expected_stderr, stack_info=True)
     else:
         if expected_stderr is not None:
-            logging.error('Expected output on stderr but got nothing')
+            logging.error('Expected output on stderr but got nothing', stack_info=True)
 
     if expected_output is not None:
         if stdout != expected_output:
-            logging.error("Got unexpected output running cmd %s %s", cmd, cmd_options)
+            logging.error("Got unexpected output running cmd %s %s", cmd, cmd_options, stack_info=True)
             logging.info("Output lengths %d vs expected %d", len(stdout), len(expected_output))
             logging.info("Got %s", stdout)
             logging.info("Exp %s", expected_output)
