@@ -8,20 +8,27 @@
 
 int main() {
   Botan::AutoSeeded_RNG rng;
-  // ec domain and
-  Botan::EC_Group domain("secp521r1");
-  std::string kdf = "KDF2(SHA-256)";
-  // generate ECDH keys
-  Botan::ECDH_PrivateKey keyA(rng, domain);
-  Botan::ECDH_PrivateKey keyB(rng, domain);
-  // Construct key agreements
-  Botan::PK_Key_Agreement ecdhA(keyA, rng, kdf);
-  Botan::PK_Key_Agreement ecdhB(keyB, rng, kdf);
-  // Agree on shared secret and derive symmetric key of 256 bit length
-  Botan::secure_vector<uint8_t> sA = ecdhA.derive_key(32, keyB.public_value()).bits_of();
-  Botan::secure_vector<uint8_t> sB = ecdhB.derive_key(32, keyA.public_value()).bits_of();
 
-  if (sA != sB)
+  // ec domain and KDF
+  Botan::EC_Group domain("secp521r1");
+  const std::string kdf = "KDF2(SHA-256)";
+
+  // the two parties generate ECDH keys
+  Botan::ECDH_PrivateKey key_a(rng, domain);
+  Botan::ECDH_PrivateKey key_b(rng, domain);
+
+  // now they exchange their public values
+  const auto key_apub = key_a.public_value();
+  const auto key_bpub = key_b.public_value();
+
+  // Construct key agreements and agree on a shared secret
+  Botan::PK_Key_Agreement ka_a(key_a, rng, kdf);
+  const auto sA = ka_a.derive_key(32, key_bpub).bits_of();
+
+  Botan::PK_Key_Agreement ka_b(key_b, rng, kdf);
+  const auto sB = ka_b.derive_key(32, key_apub).bits_of();
+
+  if(sA != sB)
     return 1;
 
   std::cout << "agreed key: " << std::endl << Botan::hex_encode(sA);

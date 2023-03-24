@@ -557,7 +557,7 @@ Botan implements the following encryption algorithms and padding schemes:
 Code Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The following Code sample reads a PKCS #8 keypair from the passed location and
-subsequently encrypts a fixed plaintext with the included public key, using EME1
+subsequently encrypts a fixed plaintext with the included public key, using OAEP
 with SHA-256. For the sake of completeness, the ciphertext is then decrypted using
 the private key.
 
@@ -916,21 +916,28 @@ Scheme (XMSS) using Winternitz One Time Signatures+ (WOTS+). The implementation
 is based on `RFC 8391 "XMSS: eXtended Merkle Signature Scheme"
 <https://tools.ietf.org/html/rfc8391>`_.
 
+.. warning::
+
+   XMSS is stateful, meaning the private key must be updated after
+   each signature. If the same private key is ever used to generate
+   two different signatures, then the scheme becomes insecure. For
+   this reason it can be challening to use XMSS securely.
+
 XMSS uses the Botan interfaces for public key cryptography.
 The following algorithms are implemented:
 
 1. XMSS-SHA2_10_256
-# XMSS-SHA2_16_256
-# XMSS-SHA2_20_256
-# XMSS-SHA2_10_512
-# XMSS-SHA2_16_512
-# XMSS-SHA2_20_512
-# XMSS-SHAKE_10_256
-# XMSS-SHAKE_16_256
-# XMSS-SHAKE_20_256
-# XMSS-SHAKE_10_512
-# XMSS-SHAKE_16_512
-# XMSS-SHAKE_20_512
+#. XMSS-SHA2_16_256
+#. XMSS-SHA2_20_256
+#. XMSS-SHA2_10_512
+#. XMSS-SHA2_16_512
+#. XMSS-SHA2_20_512
+#. XMSS-SHAKE_10_256
+#. XMSS-SHAKE_16_256
+#. XMSS-SHAKE_20_256
+#. XMSS-SHAKE_10_512
+#. XMSS-SHAKE_16_512
+#. XMSS-SHAKE_20_512
 
 The algorithm name contains the hash function name, tree height and digest
 width defined by the corresponding parameter set. Choosing `XMSS-SHA2_10_256`

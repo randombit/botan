@@ -60,9 +60,7 @@ class PBKDF_KAT_Tests final : public Text_Based_Test
          auto pwdhash = pwdhash_fam->from_params(iterations);
 
          std::vector<uint8_t> pwdhash_derived(outlen);
-         pwdhash->derive_key(pwdhash_derived.data(), pwdhash_derived.size(),
-                             passphrase.c_str(), passphrase.size(),
-                             salt.data(), salt.size());
+         pwdhash->hash(pwdhash_derived, passphrase, salt);
 
          result.test_eq("pwdhash derived key", pwdhash_derived, expected);
 
@@ -109,9 +107,7 @@ class Pwdhash_Tests : public Test
                auto tuned_pwhash = pwdhash_fam->tune(32, run_time, max_mem, tune_time);
 
                std::vector<uint8_t> output1(32);
-               tuned_pwhash->derive_key(output1.data(), output1.size(),
-                                        password.c_str(), password.size(),
-                                        salt.data(), salt.size());
+               tuned_pwhash->hash(output1, password, salt);
 
                std::unique_ptr<Botan::PasswordHash> pwhash;
 
@@ -127,18 +123,14 @@ class Pwdhash_Tests : public Test
                   }
 
                std::vector<uint8_t> output2(32);
-               pwhash->derive_key(output2.data(), output2.size(),
-                                  password.c_str(), password.size(),
-                                  salt.data(), salt.size());
+               pwhash->hash(output2, password, salt);
 
                result.test_eq("PasswordHash produced same output when run with same params",
                               output1, output2);
 
                auto default_pwhash = pwdhash_fam->default_params();
                std::vector<uint8_t> output3(32);
-               default_pwhash->derive_key(output3.data(), output3.size(),
-                                          password.c_str(), password.size(),
-                                          salt.data(), salt.size());
+               default_pwhash->hash(output3, password, salt);
 
                result.end_timer();
                }
@@ -183,10 +175,7 @@ class Bcrypt_PBKDF_KAT_Tests final : public Text_Based_Test
          auto pwdhash = pwdhash_fam->from_iterations(rounds);
 
          std::vector<uint8_t> derived(expected.size());
-         pwdhash->derive_key(derived.data(), derived.size(),
-                             reinterpret_cast<const char*>(passphrase.data()),
-                             passphrase.size(),
-                             salt.data(), salt.size());
+         pwdhash->hash(derived, passphrase, salt);
 
          result.test_eq("derived key", derived, expected);
 
@@ -230,9 +219,7 @@ class Scrypt_KAT_Tests final : public Text_Based_Test
          auto pwdhash = pwdhash_fam->from_params(N, R, P);
 
          std::vector<uint8_t> pwdhash_derived(expected.size());
-         pwdhash->derive_key(pwdhash_derived.data(), pwdhash_derived.size(),
-                             passphrase.c_str(), passphrase.size(),
-                             salt.data(), salt.size());
+         pwdhash->hash(pwdhash_derived, passphrase, salt);
 
          result.test_eq("pwdhash derived key", pwdhash_derived, expected);
 
@@ -275,13 +262,10 @@ class Argon2_KAT_Tests final : public Text_Based_Test
 
          auto pwdhash = pwdhash_fam->from_params(M, T, P);
 
+         const std::string passphrase_str(passphrase.begin(), passphrase.end());
+
          std::vector<uint8_t> pwdhash_derived(expected.size());
-         pwdhash->derive_key(pwdhash_derived.data(), pwdhash_derived.size(),
-                             reinterpret_cast<const char*>(passphrase.data()),
-                             passphrase.size(),
-                             salt.data(), salt.size(),
-                             ad.data(), ad.size(),
-                             key.data(), key.size());
+         pwdhash->hash(pwdhash_derived, passphrase_str, salt, ad, key);
 
          result.test_eq("pwdhash derived key", pwdhash_derived, expected);
 
