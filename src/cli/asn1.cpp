@@ -24,7 +24,7 @@ class ASN1_Printer final : public Command
 
       std::string group() const override
          {
-         return "codec";
+         return "asn1";
          }
 
       std::string description() const override
@@ -84,6 +84,50 @@ class ASN1_Printer final : public Command
 
 BOTAN_REGISTER_COMMAND("asn1print", ASN1_Printer);
 
+class OID_Info final : public Command
+   {
+   public:
+      OID_Info() : Command("oid_info oid") {}
+
+      std::string group() const override
+         {
+         return "asn1";
+         }
+
+      std::string description() const override
+         {
+         return "Provide information about an object identifier";
+         }
+
+      void go() override
+         {
+         const std::string oid_str = get_arg("oid");
+
+         if(oid_str.empty())
+            throw CLI_Usage_Error("Must provide non-empty OID string");
+
+         try
+            {
+            Botan::OID oid(oid_str);
+
+            std::string name = oid.human_name_or_empty();
+            if(name.empty())
+               output() << "OID " << oid_str << " is not recognized\n";
+            else
+               output() << "OID " << oid_str << " is associated with " << name << "\n";
+
+            return;
+            }
+         catch(Botan::Decoding_Error&) {}
+
+         // This throws if the string is not known
+         Botan::OID oid = Botan::OID::from_string(oid_str);
+         output() << "The string '" << oid_str << "' is associated with OID " << oid.to_string() << "\n";
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("oid_info", OID_Info);
+
 }
 
-#endif // BOTAN_HAS_ASN1 && BOTAN_HAS_PEM_CODEC
+#endif // BOTAN_HAS_ASN1

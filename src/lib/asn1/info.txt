@@ -20,5 +20,6 @@ ber_dec.h
 </header:public>
 
 <header:internal>
+oid_map.h
 pss_params.h
 </header:internal>

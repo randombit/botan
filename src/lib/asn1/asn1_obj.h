@@ -12,6 +12,8 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <unordered_map>
+#include <optional>
 
 namespace Botan {
 
@@ -233,12 +235,20 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       /**
       * Initialize an OID from a sequence of integer values
       */
-      explicit OID(std::initializer_list<uint32_t> init) : m_id(init) {}
+      explicit OID(std::initializer_list<uint32_t> init) : m_id(init)
+         {
+         BOTAN_ARG_CHECK(m_id.size() > 2 && m_id[0] <= 2 && (m_id[0] != 2 || m_id[1] <= 39),
+                         "Invalid OID");
+         }
 
       /**
       * Initialize an OID from a vector of integer values
       */
-      explicit OID(std::vector<uint32_t>&& init) : m_id(init) {}
+      explicit OID(std::vector<uint32_t>&& init) : m_id(init)
+         {
+         BOTAN_ARG_CHECK(m_id.size() > 2 && m_id[0] <= 2 && (m_id[0] != 2 || m_id[1] <= 39),
+                         "Invalid OID");
+         }
 
       /**
       * Construct an OID from a string.
@@ -246,6 +256,17 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       *        or any known OID name (for example "RSA" or "X509v3.SubjectKeyIdentifier")
       */
       static OID from_string(const std::string& str);
+
+      /**
+      * Construct an OID from a name
+      * @param name any known OID name (for example "RSA" or "X509v3.SubjectKeyIdentifier")
+      */
+      static std::optional<OID> from_name(const std::string& name);
+
+      /**
+      * Register a new OID in the internal table
+      */
+      static void register_oid(const OID& oid, const std::string& name);
 
       void encode_into(DER_Encoder&) const override;
       void decode_from(BER_Decoder&) override;
@@ -304,6 +325,9 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
          }
 
    private:
+      std::unordered_map<std::string, std::string> load_oid2str_map();
+      std::unordered_map<std::string, OID> load_str2oid_map();
+
       std::vector<uint32_t> m_id;
    };
 
