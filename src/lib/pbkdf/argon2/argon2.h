@@ -50,6 +50,10 @@ class BOTAN_PUBLIC_API(2,11) Argon2 final : public PasswordHash
       size_t t() const { return m_t; }
       size_t p() const { return m_p; }
 
+      bool supports_keyed_operation() const override { return true; }
+
+      bool supports_associated_data() const override { return true; }
+
       size_t iterations() const override { return t(); }
 
       size_t parallelism() const override { return p(); }

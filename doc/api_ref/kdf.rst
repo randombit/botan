@@ -4,12 +4,45 @@
 Key Derivation Functions (KDF)
 ========================================
 
-Key derivation functions are used to turn some amount of shared secret
-material into uniform random keys suitable for use with symmetric
-algorithms. An example of an input which is useful for a KDF is a
-shared secret created using Diffie-Hellman key agreement.
+Key derivation functions are used to turn some amount of shared secret material
+into uniform random keys suitable for use with symmetric algorithms. An example
+of an input which is useful for a KDF is a shared secret created using
+Diffie-Hellman key agreement.
+
+Typically a KDF is also used with a *salt* and a *label*. The *salt* should be
+some random information which is available to all of the parties that would need
+to use the KDF; this could be performed by setting the salt to some kind of
+session identifier, or by having one of the parties generate a random salt and
+including it in a message.
+
+The *label* is used to bind the KDF output to some specific context. For
+instance if you were using the KDF to derive a specific key referred to as the
+"message key" in the protocol description, you might use a label of "FooProtocol
+v2 MessageKey". This labeling ensures that if you accidentally use the same
+input key and salt in some other context, you still use different keys in the
+two contexts.
 
 .. cpp:class:: KDF
+
+  .. cpp:function:: std::unique_ptr<KDF> KDF::create(const std::string& algo)
+
+      Create a new KDF object. Returns nullptr if the named key derivation
+      function was not available
+
+  .. cpp:function:: std::unique_ptr<KDF> KDF::create_or_throw(const std::string& algo)
+
+      Create a new KDF object. Throws an exception if the named key derivation
+      function was not available
+
+  .. cpp:function:: template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>> \
+      T derive_key(size_t key_len, \
+                   std::span<const uint8_t> secret, \
+                   std::span<const uint8_t> salt, \
+                   std::span<const uint8_t> label) const
+
+      This version is parameterized to the output buffer type, so it can be used
+      to return a ``std::vector``, a ``secure_vector``, or anything else
+      satisfying the ``resizable_byte_buffer`` concept.
 
   .. cpp:function:: secure_vector<uint8_t> derive_key( \
                                     const uint8_t secret[], \
@@ -33,16 +66,16 @@ shared secret created using Diffie-Hellman key agreement.
      const std::string& salt) const
 
    All variations on the same theme. Deterministically creates a
-   uniform random value from *secret*, *salt*, and *label*.
+   uniform random value from *secret*, *salt*, and *label*, whose
+   meaning is described above.
 
-   Typically *label* is a fixed used to identity a protocol context,
-   for example "FooProtocol v1.0 key derivation", and *salt* is chosen
-   randomly or is some string associated with the current protocol
-   instance, for example a session identifier.
+Code Example
+------------
 
-You can create a :cpp:class:`KDF` using the static function
+An example demonstrating using the API to hash a secret using HKDF
 
-.. cpp:function:: std::unique_ptr<KDF> KDF::create(const std::string& algo)
+.. literalinclude:: /../src/examples/kdf.cpp
+   :language: cpp
 
 
 Available KDFs

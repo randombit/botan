@@ -22,11 +22,27 @@ specified with all parameters (say "Scrypt" with ``N`` = 8192, ``r`` = 64, and
 
 .. cpp:class:: PasswordHash
 
+   .. cpp:function:: void hash(std::span<uint8_t> out, \
+                               std::string_view password, \
+                               std::span<uint8> salt)
+
+      Derive a key from the specified *password* and *salt*, placing it into *out*.
+
+   .. cpp:function:: void hash(std::span<uint8_t> out, \
+                               std::string_view password, \
+                               std::span<const uint8> salt, \
+                               std::span<const uint8> ad, \
+                               std::span<const uint8> key)
+
+      Derive a key from the specified *password*, *salt*, associated data (*ad*), and
+      secret *key*, placing it into *out*. The *ad* and *key* are both allowed
+      to be empty. Currently non-empty AD/key is only supported with Argon2.
+
    .. cpp:function:: void derive_key(uint8_t out[], size_t out_len, \
                      const char* password, const size_t password_len, \
                      const uint8_t salt[], size_t salt_len) const
 
-      Derive a key from the specified password and salt, placing it into output.
+      Same functionality as the 3 argument variant of :cpp:func:`PasswordHash::hash`.
 
    .. cpp:function:: void derive_key(uint8_t out[], size_t out_len, \
                      const char* password, const size_t password_len, \
@@ -34,9 +50,7 @@ specified with all parameters (say "Scrypt" with ``N`` = 8192, ``r`` = 64, and
                      const uint8_t ad[], size_t ad_len, \
                      const uint8_t key[], size_t key_len) const
 
-      Derive a key from the specified password, salt, associated data, and
-      secret key, placing it into output. The ad and key are both allowed
-      to be empty. Currently non-empty AD/key is only supported with Argon2.
+       Same functionality as the 5 argument variant of :cpp:func:`PasswordHash::hash`.
 
    .. cpp:function:: std::string to_string() const
 
@@ -63,6 +77,16 @@ specified with all parameters (say "Scrypt" with ``N`` = 8192, ``r`` = 64, and
       and uses an effictively fixed amount of memory when running, this function
       returns 0.
 
+   .. cpp:function:: bool supports_keyed_operation() const
+
+      Returns true if this password hash supports supplying a secret key
+      to :cpp:func:`PasswordHash::hash`.
+
+   .. cpp:function:: bool supports_associated_data() const
+
+      Returns true if this password hash supports supplying associated data
+      to :cpp:func:`PasswordHash::hash`.
+
 The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
 
 .. cpp:class:: PasswordHashFamily
@@ -77,11 +101,23 @@ The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
       Create a default instance of the password hashing algorithm. Be warned the
       value returned here may change from release to release.
 
-   .. cpp:function:: std::unique_ptr<PasswordHash> tune(size_t output_len, std::chrono::milliseconds msec) const
+   .. cpp:function:: std::unique_ptr<PasswordHash> tune( \
+                     size_t output_len, \
+                     std::chrono::milliseconds msec, \
+                     size_t max_memory_usage_mb = 0, \
+                     std::chrono::milliseconds tuning_msec = std::chrono::milliseconds(10)) const
 
       Return a password hash instance tuned to run for approximately ``msec``
       milliseconds when producing an output of length ``output_len``. (Accuracy
       may vary, use the command line utility ``botan pbkdf_tune`` to check.)
+
+      The parameters will be selected to use at most *max_memory_usage_mb* megabytes
+      of memory, or if left as zero any size is allowed.
+
+      This function works by runing a short tuning loop to estimate the
+      performance of the algorithm, then scaling the parameters appropriately to
+      hit the target size. The length of time the tuning loop runs can be
+      controlled using the *tuning_msec* parameter.
 
    .. cpp:function:: std::unique_ptr<PasswordHash> from_params( \
          size_t i1, size_t i2 = 0, size_t i3 = 0) const
@@ -94,6 +130,14 @@ The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
 
       All unneeded parameters should be set to 0 or left blank.
 
+Code Example
+------------
+
+An example demonstrating using the API to hash a password using Argon2i:
+
+.. literalinclude:: /../src/examples/pwdhash.cpp
+   :language: cpp
+
 Available Schemes
 ----------------------
 
@@ -102,7 +146,7 @@ General Recommendations
 
 If you need wide interoperability use PBKDF2 with HMAC-SHA256 and at least 50K
 iterations. If you don't, use Argon2id with p=1, t=3 and M as large as you
-can reasonable set (say 1 gigabyte).
+can reasonably set (say 1 gigabyte).
 
 You can test how long a particular PBKDF takes to execute using the cli tool
 ``pbkdf_tune``::

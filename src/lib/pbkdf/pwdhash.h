@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+#include <span>
 
 namespace Botan {
 
@@ -57,6 +58,60 @@ class BOTAN_PUBLIC_API(2,8) PasswordHash
       * effort made towards being memory hard, this function returns 0.
       */
       virtual size_t total_memory_usage() const { return 0; }
+
+      /**
+      * Returns true if this password hash supports supplying a key
+      */
+      virtual bool supports_keyed_operation() const { return false; }
+
+      /**
+      * Returns true if this password hash supports supplying associated data
+      */
+      virtual bool supports_associated_data() const { return false; }
+
+      /**
+      * Hash a password into a bitstring
+      *
+      * @param out a span where the derived key will be placed
+      * @param password the password to derive the key from
+      * @param salt a randomly chosen salt
+      *
+      * This function is const, but is not thread safe. Different threads should
+      * either use unique objects, or serialize all access.
+      */
+      void hash(std::span<uint8_t> out,
+                std::string_view password,
+                std::span<const uint8_t> salt)
+         {
+         this->derive_key(out.data(), out.size(),
+                          password.data(), password.size(),
+                          salt.data(), salt.size());
+         }
+
+      /**
+      * Hash a password into a bitstring
+      *
+      * @param out a span where the derived key will be placed
+      * @param password the password to derive the key from
+      * @param salt a randomly chosen salt
+      * @param associated_data some additional data
+      * @param key a secret key
+      *
+      * This function is const, but is not thread safe. Different threads should
+      * either use unique objects, or serialize all access.
+      */
+      void hash(std::span<uint8_t> out,
+                std::string_view password,
+                std::span<const uint8_t> salt,
+                std::span<const uint8_t> associated_data,
+                std::span<const uint8_t> key)
+         {
+         this->derive_key(out.data(), out.size(),
+                          password.data(), password.size(),
+                          salt.data(), salt.size(),
+                          associated_data.data(), associated_data.size(),
+                          key.data(), key.size());
+         }
 
       /**
       * Derive a key from a password

@@ -20,11 +20,11 @@ int main(int argc, char *argv[]) {
   auto kp = Botan::PKCS8::load_key(in);
 
   // encrypt with pk
-  Botan::PK_Encryptor_EME enc(*kp, rng, "EME1(SHA-256)");
+  Botan::PK_Encryptor_EME enc(*kp, rng, "OAEP(SHA-256)");
   std::vector<uint8_t> ct = enc.encrypt(pt, rng);
 
   // decrypt with sk
-  Botan::PK_Decryptor_EME dec(*kp, rng, "EME1(SHA-256)");
+  Botan::PK_Decryptor_EME dec(*kp, rng, "OAEP(SHA-256)");
   Botan::secure_vector<uint8_t> pt2 = dec.decrypt(ct);
 
   std::cout << std::endl

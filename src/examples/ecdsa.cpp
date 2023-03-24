@@ -11,16 +11,17 @@ int main() {
   // Generate ECDSA keypair
   Botan::ECDSA_PrivateKey key(rng, Botan::EC_Group("secp521r1"));
 
-  std::string text("This is a tasty burger!");
-  std::vector<uint8_t> data(text.data(), text.data() + text.length());
+  const std::string message("This is a tasty burger!");
+
   // sign data
   Botan::PK_Signer signer(key, rng, "SHA-256");
-  signer.update(data);
+  signer.update(message);
   std::vector<uint8_t> signature = signer.signature(rng);
   std::cout << "Signature:" << std::endl << Botan::hex_encode(signature);
-  // verify signature
+
+  // now verify the signature
   Botan::PK_Verifier verifier(key, "SHA-256");
-  verifier.update(data);
+  verifier.update(message);
   std::cout << std::endl << "is " << (verifier.check_signature(signature) ? "valid" : "invalid");
   return 0;
 }
