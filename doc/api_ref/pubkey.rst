@@ -1,28 +1,142 @@
+=================================
 Public Key Cryptography
 =================================
 
-Public key cryptography (also called asymmetric cryptography) is a collection
-of techniques allowing for encryption, signatures, and key agreement.
+Public key cryptography is a collection of techniques allowing for encryption,
+signatures, and key agreement.
 
 Key Objects
 ----------------------------------------
 
-Public and private keys are represented by classes ``Public_Key`` and it's
-subclass ``Private_Key``. The use of inheritance here means that a
-``Private_Key`` can be converted into a reference to a public key.
+Public and private keys are represented by classes ``Public_Key`` and
+``Private_Key``. Both derive from ``Asymmetric_Key``.
 
-None of the functions on ``Public_Key`` and ``Private_Key`` itself are
-particularly useful for users of the library, because 'bare' public key
-operations are *very insecure*. The only purpose of these functions is to
-provide a clean interface that higher level operations can be built on. So
-really the only thing you need to know is that when a function takes a
-reference to a ``Public_Key``, it can take any public key or private key, and
-similarly for ``Private_Key``.
+Currently there is an inheritance relationship between ``Private_Key`` and
+``Public_Key``, so that a private key can also be used as the cooresponding
+public key. It is best to avoid relying on this, as this inheritance will be
+removed in a future major release.
 
-Types of ``Public_Key`` include ``RSA_PublicKey``, ``DSA_PublicKey``,
-``ECDSA_PublicKey``, ``ECKCDSA_PublicKey``, ``ECGDSA_PublicKey``, ``DH_PublicKey``, ``ECDH_PublicKey``,
-``Curve25519_PublicKey``, ``ElGamal_PublicKey``, ``McEliece_PublicKey``, ``XMSS_PublicKey``
-and ``GOST_3410_PublicKey``.  There are corresponding ``Private_Key`` classes for each of these algorithms.
+.. cpp:class:: Asymmetric_Key
+
+  .. cpp:function:: std::string algo_name()
+
+     Return a short string identifying the algorithm of this key,
+     eg "RSA" or "Dilithium".
+
+  .. cpp:function:: size_t estimated_strength() const
+
+     Return an estimate of the strength of this key, in terms of brute force
+     key search. For example if this function returns 128, then it is is
+     estimated to be roughly as difficult to crack as AES-128.
+
+  .. cpp:function:: OID object_identifier() const
+
+     Return an object identifier which can be used to identify this
+     type of key.
+
+  .. cpp:function:: bool supports_operation(PublicKeyOperation op) const
+
+     Check if this key could be used for the queried operation type.
+
+
+.. cpp:class:: Public_Key
+
+   .. cpp:function:: size_t key_length() const = 0;
+
+      Return an integer value that most accurately captures for the security
+      level of the key. For example for RSA this returns the length of the
+      public modules, while for ECDSA keys it returns the size of the elliptic
+      curve group.
+
+   .. cpp:function:: bool check_key(RandomNumberGenerator& rng, bool strong) const = 0;
+
+      Check if the key seems to be valid. If *strong* is set to true then more
+      expensive tests are performed.
+
+   .. cpp:function:: AlgorithmIdentifier algorithm_identifier() const = 0;
+
+      Return an X.509 algorithm identifier that can be used to identify the key.
+
+   .. cpp:function:: std::vector<uint8_t> public_key_bits() const = 0;
+
+   .. cpp:function:: std::vector<uint8_t> subject_public_key() const;
+
+      Return the X.509 SubjectPublicKeyInfo encoding of this key
+
+   .. cpp:function:: std::string fingerprint_public(const std::string& alg = "SHA-256") const;
+
+      Return a hashed fingerprint of this public key.
+
+Public Key Algorithms
+------------------------
+
+Botan includes a number of public key algorithms, some of which are in common
+use, others only used in specialized or niche applications.
+
+RSA
+~~~~~~
+
+Based on the difficulty of factoring. Usable for encryption, signatures, and key encapsulation.
+
+ECDSA
+~~~~~~
+
+Fast signature scheme based on elliptic curves.
+
+ECDH, DH, and X25519
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Key agreement schemes. DH uses arithmetic over finite fields and is slower and
+with larger keys. ECDH and X25519 use elliptic curves instead.
+
+Dilithium
+~~~~~~~~~~
+
+Post-quantum secure signature scheme based on lattice problems.
+
+Kyber
+~~~~~~~~~~~
+
+Post-quantum key encapsulation scheme based on lattices.
+
+Ed25519
+~~~~~~~~~~
+
+Signature scheme based on a specific elliptic curve.
+
+XMSS
+~~~~~~~~~
+
+A post-quantum secure signature scheme whose security is based (only) on the
+security of a hash function. Unfortunately XMSS is stateful, meaning the private
+key changes with each signature, and only a certain pre-specified number of
+signatures can be created. If the same state is ever used to generate two
+signatures, then the whole scheme becomes insecure, and signatures can be
+forged.
+
+McEliece
+~~~~~~~~~~
+
+Post-quantum secure key encapsulation scheme based on the hardness of certain
+decoding problems.
+
+ElGamal
+~~~~~~~~
+
+Encryption scheme based on the discrete logarithm problem. Generally unused
+except in PGP.
+
+DSA
+~~~~
+
+Finite field based signature scheme. A NIST standard but now quite obsolete.
+
+ECGDSA, ECKCDSA, SM2, GOST-34.10
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A set of signature schemes based on elliptic curves. All are national standards
+in their respective countries (Germany, South Korea, China, and Russia, resp),
+and are completely obscure and unused outside of that context.
 
 .. _creating_new_private_keys:
 
@@ -117,8 +231,9 @@ encrypted storage.
   PBE, a sensible default will be used.
 
   The currently supported PBE is PBES2 from PKCS5. Format is as follows:
-  ``PBE-PKCS5v20(CIPHER,PBKDF)``. Since 2.8.0, ``PBES2(CIPHER,PBKDF)`` also works.
-  Cipher can be any block cipher with /CBC or /GCM appended, for example
+  ``PBE-PKCS5v20(CIPHER,PBKDF)`` or ``PBES2(CIPHER,PBKDF)``.
+
+  Cipher can be any block cipher using CBC or GCM modes, for example
   "AES-128/CBC" or "Camellia-256/GCM". For best interop with other systems, use
   AES in CBC mode. The PBKDF can be either the name of a hash function (in which
   case PBKDF2 is used with that hash) or "Scrypt", which causes the scrypt
@@ -133,7 +248,7 @@ encrypted storage.
   For ciphers you can use anything which has an OID defined for CBC, GCM or SIV
   modes. Currently this includes AES, Camellia, Serpent, Twofish, and SM4. Most
   other libraries only support CBC mode for private key encryption. GCM has
-  been supported in PBES2 since 1.11.10. SIV has been supported since 2.8.
+  been supported in PBES2 since 2.0. SIV has been supported since 2.8.
 
 .. cpp:function:: std::string PKCS8::PEM_encode(const Private_Key& key, \
    RandomNumberGenerator& rng, const std::string& pass, const std::string& pbe_algo = "")
@@ -189,7 +304,7 @@ thrown.
 .. _serializing_public_keys:
 
 Serializing Public Keys
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 To import and export public keys, use:
 
@@ -197,20 +312,25 @@ To import and export public keys, use:
 
 .. cpp:function:: std::string X509::PEM_encode(const Public_Key& key)
 
-.. cpp:function:: Public_Key* X509::load_key(DataSource& in)
+.. cpp:function:: std::unique_ptr<Public_Key> X509::load_key(DataSource& in)
 
-.. cpp:function:: Public_Key* X509::load_key(const secure_vector<uint8_t>& buffer)
+.. cpp:function:: std::unique_ptr<Public_Key> X509::load_key(const secure_vector<uint8_t>& buffer)
 
-.. cpp:function:: Public_Key* X509::load_key(const std::string& filename)
+.. cpp:function:: std::unique_ptr<Public_Key> X509::load_key(const std::string& filename)
 
   These functions operate in the same way as the ones described in
   :ref:`serializing_private_keys`, except that no encryption option is
   available.
 
+.. note::
+
+   In versions prior to 3.0, these functions returned a raw pointer instead of a
+   ``unique_ptr``.
+
 .. _dl_group:
 
 DL_Group
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
 
 As described in :ref:`creating_new_private_keys`, a discrete logarithm group
 can be shared among many keys, even keys created by users who do not trust
@@ -272,7 +392,7 @@ You can reload a serialized group using
 .. cpp:function:: void DL_Group::PEM_decode(DataSource& source)
 
 Code Example
-"""""""""""""""""
+~~~~~~~~~~~~~~~
 The example below creates a new 2048 bit ``DL_Group``, prints the generated
 parameters and ANSI_X9_42 encodes the created group for further usage with DH.
 
@@ -283,7 +403,7 @@ parameters and ANSI_X9_42 encodes the created group for further usage with DH.
 .. _ec_group:
 
 EC_Group
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An ``EC_Group`` is initialized by passing the name of the
 group to be used to the constructor. These groups have
@@ -320,8 +440,8 @@ loaded key. If the key check fails a respective error is thrown.
 .. literalinclude:: /../src/examples/check_key.cpp
    :language: cpp
 
-Encryption
----------------------------------
+Public Key Encryption/Decrpytion
+----------------------------------
 
 Safe public key encryption requires the use of a padding scheme which hides
 the underlying mathematical properties of the algorithm.  Additionally, they
@@ -332,11 +452,11 @@ The primary interface for encryption is
 
 .. cpp:class:: PK_Encryptor
 
-   .. cpp:function:: secure_vector<uint8_t> encrypt( \
-         const uint8_t* in, size_t length, RandomNumberGenerator& rng) const
+   .. cpp:function:: std::vector<uint8_t> encrypt( \
+         const uint8_t in[], size_t length, RandomNumberGenerator& rng) const
 
-   .. cpp:function:: secure_vector<uint8_t> encrypt( \
-      const std::vector<uint8_t>& in, RandomNumberGenerator& rng) const
+   .. cpp:function:: std::vector<uint8_t> encrypt( \
+      std::span<const uint8_t> in, RandomNumberGenerator& rng) const
 
       These encrypt a message, returning the ciphertext.
 
@@ -346,33 +466,41 @@ The primary interface for encryption is
       bytes. If you call :cpp:func:`PK_Encryptor::encrypt` with a value larger
       than this the operation will fail with an exception.
 
-:cpp:class:`PK_Encryptor` is only an interface - to actually encrypt you have
-to create an implementation, of which there are currently three available in the
+   .. cpp:function:: size_t ciphertext_length(size_t ctext_len) const
+
+      Return an upper bound on the returned size of a ciphertext, if this
+      particular key/padding scheme is used to encrypt a message of the provided
+      length.
+
+:cpp:class:`PK_Encryptor` is only an interface - to actually encrypt you have to
+create an implementation, of which there are currently three available in the
 library, :cpp:class:`PK_Encryptor_EME`, :cpp:class:`DLIES_Encryptor` and
 :cpp:class:`ECIES_Encryptor`. DLIES is a hybrid encryption scheme (from
-IEEE 1363) that uses the DH key agreement technique in combination with a KDF, a
-MAC and a symmetric encryption algorithm to perform message encryption. ECIES is
-similar to DLIES, but uses ECDH for the key agreement. Normally, public key
-encryption is done using algorithms which support it directly, such as RSA or
-ElGamal; these use the EME class:
+IEEE 1363) that uses Diffie-Hellman key agreement technique in combination with
+a KDF, a MAC and a symmetric encryption algorithm to perform message
+encryption. ECIES is similar to DLIES, but uses ECDH for the key
+agreement. Normally, public key encryption is done using algorithms which
+support it directly, such as RSA or ElGamal; these use the EME class:
 
 .. cpp:class:: PK_Encryptor_EME
 
-   .. cpp:function:: PK_Encryptor_EME(const Public_Key& key, std::string eme)
+   .. cpp:function:: PK_Encryptor_EME(const Public_Key& key, std::string padding)
 
      With *key* being the key you want to encrypt messages to. The padding
-     method to use is specified in *eme*.
+     method to use is specified in *padding*.
 
-     The recommended values for *eme* is "EME1(SHA-1)" or "EME1(SHA-256)". If
-     you need compatibility with protocols using the PKCS #1 v1.5 standard,
-     you can also use "EME-PKCS1-v1_5".
+     If you are not sure what padding to use, use "OAEP(SHA-256)". If you need
+     compatibility with protocols using the PKCS #1 v1.5 standard, you can also
+     use "EME-PKCS1-v1_5".
 
 .. cpp:class:: DLIES_Encryptor
 
    Available in the header ``dlies.h``
 
    .. cpp:function:: DLIES_Encryptor(const DH_PrivateKey& own_priv_key, \
-         RandomNumberGenerator& rng, KDF* kdf, MessageAuthenticationCode* mac, \
+         RandomNumberGenerator& rng, \
+         std::unique_ptr<KDF> kdf, \
+         std::unique_ptr<MessageAuthenticationCode> mac, \
          size_t mac_key_len = 20)
 
       Where *kdf* is a key derivation function (see
@@ -381,11 +509,14 @@ ElGamal; these use the EME class:
       message with a stream of bytes provided by the KDF.
 
    .. cpp:function:: DLIES_Encryptor(const DH_PrivateKey& own_priv_key, \
-         RandomNumberGenerator& rng, KDF* kdf, Cipher_Mode* cipher, \
-         size_t cipher_key_len, MessageAuthenticationCode* mac, \
+         RandomNumberGenerator& rng, \
+         std::unique_ptr<KDF> kdf, \
+         std::unique_ptr<Cipher_Mode> cipher, \
+         size_t cipher_key_len, \
+         std::unique_ptr<MessageAuthenticationCode> mac, \
          size_t mac_key_len = 20)
 
-      Instead of XORing the message a block cipher can be specified.
+      Instead of XORing the message with KDF output, a cipher mode can be used
 
 .. cpp:class:: ECIES_Encryptor
 
@@ -414,7 +545,6 @@ The decryption classes are named :cpp:class:`PK_Decryptor`,
 :cpp:class:`ECIES_Decryptor`. They are created in the exact same way, except
 they take the private key, and the processing function is named ``decrypt``.
 
-
 Botan implements the following encryption algorithms and padding schemes:
 
 1. RSA
@@ -425,7 +555,7 @@ Botan implements the following encryption algorithms and padding schemes:
 #. SM2
 
 Code Example
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The following Code sample reads a PKCS #8 keypair from the passed location and
 subsequently encrypts a fixed plaintext with the included public key, using EME1
 with SHA-256. For the sake of completeness, the ciphertext is then decrypted using
@@ -435,7 +565,7 @@ the private key.
    :language: cpp
 
 
-Signatures
+Public Key Signature Schemes
 ---------------------------------
 
 Signature generation is performed using
@@ -443,100 +573,117 @@ Signature generation is performed using
 .. cpp:class:: PK_Signer
 
    .. cpp:function:: PK_Signer(const Private_Key& key, \
-      const std::string& emsa, \
+      const std::string& padding, \
       Signature_Format format = Siganture_Format::Standard)
 
      Constructs a new signer object for the private key *key* using the
-     signature format *emsa*. The key must support signature operations.  In
-     the current version of the library, this includes RSA, DSA, ECDSA, ECKCDSA,
-     ECGDSA, GOST 34.10-2001. Other signature schemes may be supported in the future.
+     hash/padding specified in *padding*. The key must support signature operations. In
+     the current version of the library, this includes RSA, ECDSA, Dilithium,
+     ECKCDSA, ECGDSA, GOST 34.10-2001, and SM2.
 
      .. note::
 
        Botan both supports non-deterministic and deterministic (as per RFC
-       6979) DSA and ECDSA signatures. Deterministic signatures are compatible
-       in the way that they can be verified with a non-deterministic implementation.
-       If the ``rfc6979`` module is enabled, deterministic DSA and ECDSA signatures
-       will be generated.
+       6979) DSA and ECDSA signatures. Either type of signature can be verified
+       by any other (EC)DSA library, regardless of which mode it prefers. If the
+       ``rfc6979`` module is enabled at build time, deterministic DSA and ECDSA
+       signatures will be created.
 
-     Currently available values for *emsa* include EMSA1, EMSA2, EMSA3, EMSA4,
-     and Raw. All of them, except Raw, take a parameter naming a message
-     digest function to hash the message with. The Raw encoding signs the
-     input directly; if the message is too big, the signing operation will
-     fail. Raw is not useful except in very specialized applications. Examples
-     are "EMSA1(SHA-1)" and "EMSA4(SHA-256)".
+     The proper value of *padding* depends on the algorithm. For many signature
+     schemes including ECDSA and DSA, simply naming a hash function like "SHA-256"
+     is all that is required.
 
-     For RSA, use EMSA4 (also called PSS) unless you need compatibility with
-     software that uses the older PKCS #1 v1.5 standard, in which case use
-     EMSA3 (also called "EMSA-PKCS1-v1_5"). For DSA, ECDSA, ECKCDSA, ECGDSA and
-     GOST 34.10-2001 you should use EMSA1.
+     For RSA, more complicated padding is required. The two most common schemes
+     for RSA signature padding are PSS and PKCS1v1.5, so you must specify both
+     the padding mechanism as well as a hash, for example "PSS(SHA-256)"
+     or "PKCS1v15(SHA-256)".
+
+     Certain newer signature schemes, especially post-quantum based ones, hardcode the
+     hash function associated with their signatures, and no configuration is
+     possible. There *padding* should be left blank, or may possibly be used to identify
+     some algorithm-specific option. For instance Dilithium may be parameterized with
+     "Randomized" or "Deterministic" to choose if the generated signature is randomized or
+     not. If left blank, a default is chosen.
+
+     Another available option, usable in certain specialized scenarios, is using
+     padding scheme "Raw", where the provided input is treated as if it was
+     already hashed, and directly signed with no other processing.
 
      The *format* defaults to ``Standard`` which is either the usual, or the
      only, available formatting method, depending on the algorithm. For certain
-     signature schemes including ECDSA, DSA ECGDSA and ECKCDSA you can also use
+     signature schemes including ECDSA, DSA, ECGDSA and ECKCDSA you can also use
      ``DerSequence``, which will format the signature as an ASN.1 SEQUENCE
-     value.
+     value. This formatting is used in protocols such as TLS and Bitcoin.
 
    .. cpp:function:: void update(const uint8_t* in, size_t length)
-   .. cpp:function:: void update(const std::vector<uint8_t>& in)
+   .. cpp:function:: void update(std::span<const uint8_t> in)
    .. cpp:function:: void update(uint8_t in)
 
-      These add more data to be included in the signature
-      computation. Typically, the input will be provided directly to a
-      hash function.
+      These add more data to be included in the signature computation. Typically, the
+      input will be provided directly to a hash function.
 
-   .. cpp:function:: secure_vector<uint8_t> signature(RandomNumberGenerator& rng)
+   .. cpp:function:: std::vector<uint8_t> signature(RandomNumberGenerator& rng)
 
-      Creates the signature and returns it
+      Creates the signature and returns it. The rng may or may not be used,
+      depending on the scheme.
 
-   .. cpp:function:: secure_vector<uint8_t> sign_message( \
+   .. cpp:function:: std::vector<uint8_t> sign_message( \
       const uint8_t* in, size_t length, RandomNumberGenerator& rng)
 
-   .. cpp:function:: secure_vector<uint8_t> sign_message( \
-      const std::vector<uint8_t>& in, RandomNumberGenerator& rng)
+   .. cpp:function:: std::vector<uint8_t> sign_message( \
+       std::span<const uint8_t> in, RandomNumberGenerator& rng)
 
-      These functions are equivalent to calling
-      :cpp:func:`PK_Signer::update` and then
-      :cpp:func:`PK_Signer::signature`. Any data previously provided
-      using ``update`` will be included.
+      These functions are equivalent to calling :cpp:func:`PK_Signer::update` and then
+      :cpp:func:`PK_Signer::signature`. Any data previously provided using ``update`` will
+      also be included in the signature.
+
+   .. cpp:function:: size_t signature_length() const
+
+      Return an upper bound on the length of the signatures returned by this object.
+
+   .. cpp:function:: AlgorithmIdentifier algorithm_identifier() const
+
+      Return an algorithm identifier appropriate to identify signatures generated
+      by this object in an X.509 structure.
+
+   .. cpp:function:: std::string hash_function() const
+
+      Return the hash function which is being used
 
 Signatures are verified using
 
 .. cpp:class:: PK_Verifier
 
    .. cpp:function:: PK_Verifier(const Public_Key& pub_key, \
-          const std::string& emsa, Signature_Format format = Signature_Format::Standard)
+          const std::string& padding, Signature_Format format = Signature_Format::Standard)
 
-      Construct a new verifier for signatures associated with public
-      key *pub_key*. The *emsa* and *format* should be the same as
-      that used by the signer.
+      Construct a new verifier for signatures associated with public key *pub_key*. The
+      *padding* and *format* should be the same as that used by the signer.
 
    .. cpp:function:: void update(const uint8_t* in, size_t length)
-   .. cpp:function:: void update(const std::vector<uint8_t>& in)
+   .. cpp:function:: void update(std::span<const uint8_t> in)
    .. cpp:function:: void update(uint8_t in)
 
       Add further message data that is purportedly associated with the
       signature that will be checked.
 
    .. cpp:function:: bool check_signature(const uint8_t* sig, size_t length)
-   .. cpp:function:: bool check_signature(const std::vector<uint8_t>& sig)
+   .. cpp:function:: bool check_signature(std::span<const uint8_t> sig)
 
-      Check to see if *sig* is a valid signature for the message data
-      that was written in. Return true if so. This function clears the
-      internal message state, so after this call you can call
-      :cpp:func:`PK_Verifier::update` to start verifying another
+      Check to see if *sig* is a valid signature for the message data that was written
+      in. Return true if so. This function clears the internal message state, so after
+      this call you can call :cpp:func:`PK_Verifier::update` to start verifying another
       message.
 
    .. cpp:function:: bool verify_message(const uint8_t* msg, size_t msg_length, \
                                          const uint8_t* sig, size_t sig_length)
 
-   .. cpp:function:: bool verify_message(const std::vector<uint8_t>& msg, \
-                                         const std::vector<uint8_t>& sig)
+   .. cpp:function:: bool verify_message(std::span<const uint8_t> msg, \
+                                         std::span<const uint8_t> sig)
 
-      These are equivalent to calling :cpp:func:`PK_Verifier::update`
-      on *msg* and then calling :cpp:func:`PK_Verifier::check_signature`
-      on *sig*.
-
+      These are equivalent to calling :cpp:func:`PK_Verifier::update` on *msg* and then
+      calling :cpp:func:`PK_Verifier::check_signature` on *sig*. Any data previously
+      provided to :cpp:func:`PK_Verifier::update` will also be included.
 
 Botan implements the following signature algorithms:
 
@@ -548,19 +695,21 @@ Botan implements the following signature algorithms:
 #. GOST 34.10-2001
 #. Ed25519
 #. SM2
+#. Dilithium
 
 Code Example
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following sample program below demonstrates the generation of a new ECDSA keypair over the curve secp512r1
-and a ECDSA signature using EMSA1 with SHA-256. Subsequently the computed signature is validated.
+The following sample program below demonstrates the generation of a new ECDSA keypair over
+the curve secp512r1 and a ECDSA signature using SHA-256. Subsequently the computed
+signature is validated.
 
 .. literalinclude:: /../src/examples/ecdsa.cpp
    :language: cpp
 
 
 Ed25519 Variants
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 Most signature schemes in Botan follow a hash-then-sign paradigm. That is, the
 entire message is digested to a fixed length representative using a collision
@@ -585,62 +734,124 @@ For best interop with other systems, prefer "Ed25519ph".
 Key Agreement
 ---------------------------------
 
-You can get a hold of a ``PK_Key_Agreement_Scheme`` object by calling
-``get_pk_kas`` with a key that is of a type that supports key
-agreement (such as a Diffie-Hellman key stored in a ``DH_PrivateKey``
-object), and the name of a key derivation function. This can be "Raw",
-meaning the output of the primitive itself is returned as the key, or
-"KDF1(hash)" or "KDF2(hash)" where "hash" is any string you happen to
-like (hopefully you like strings like "SHA-256" or "RIPEMD-160"), or
-"X9.42-PRF(keywrap)", which uses the PRF specified in ANSI X9.42. It
-takes the name or OID of the key wrap algorithm that will be used to
-encrypt a content encryption key.
+Key agreement is a scheme where two parties exchange public keys, after which it is
+possible for them to derive a secret key which is known only to the two of them.
 
-How key agreement works is that you trade public values with some
-other party, and then each of you runs a computation with the other's
-value and your key (this should return the same result to both
-parties). This computation can be called by using
-``derive_key`` with either a byte array/length pair, or a
-``secure_vector<uint8_t>`` than holds the public value of the other
-party. The last argument to either call is a number that specifies how
-long a key you want.
+There are different approaches possible for key agreement. In many protocols, both parties
+generate a new key, exchange public keys, and derive a secret, after which they throw away
+their private keys, using them only the once. However this requires the parties to both be
+online and able to communicate with each other.
 
-Depending on the KDF you're using, you *might not* get back a key
-of the size you requested. In particular "Raw" will return a number
-about the size of the Diffie-Hellman modulus, and KDF1 can only return
-a key that is the same size as the output of the hash. KDF2, on the
-other hand, will always give you a key exactly as long as you request,
-regardless of the underlying hash used with it. The key returned is a
-``SymmetricKey``, ready to pass to a block cipher, MAC, or other
-symmetric algorithm.
+In other protocols, one of the parties publishes their public key online in some way, and
+then it is possible for someone to send encrypted messages to that recipient by generating
+a new keypair, performing key exchange with the published public key, and then sending
+both the message along with their ephemeral public key. Then the recipient uses the
+provided public key along with their private key to complete the key exchange, recover the
+shared secret, and decrypt the message.
 
-The public value that should be used can be obtained by calling
-``public_data``, which exists for any key that is associated with a
-key agreement algorithm. It returns a ``secure_vector<uint8_t>``.
-
-"KDF2(SHA-256)" is by far the preferred algorithm for key derivation
-in new applications. The X9.42 algorithm may be useful in some
-circumstances, but unless you need X9.42 compatibility, KDF2 is easier
-to use.
-
-
-Botan implements the following key agreement methods:
+Typically the raw output of the key agreement function is not uniformily distributed,
+and may not be of an appropriate length to use as a key. To resolve these problems,
+key agreement will use a :ref:`key_derivation_function` on the shared secret to
+produce an output of the desired length.
 
 1. ECDH over GF(p) Weierstrass curves
 #. ECDH over x25519
 #. DH over prime fields
-#. McEliece
-#. Kyber
+
+.. cpp:class:: PK_Key_Agreement
+
+  .. cpp:function:: PK_Key_Agreement(const Private_Key& key, \
+                    RandomNumberGenerator& rng, \
+                    const std::string& kdf, \
+                    const std::string& provider = "")
+
+      Set up to perform key derivation using the given private key and specified KDF.
+
+  .. cpp:function:: SymmetricKey derive_key(size_t key_len, \
+                    const uint8_t in[], \
+                    size_t in_len, \
+                    const uint8_t params[], \
+                    size_t params_len) const
+
+  .. cpp:function:: SymmetricKey derive_key(size_t key_len, \
+                    std::span<const uint8_t> in, \
+                    const uint8_t params[], size_t params_len) const
+
+  .. cpp:function:: SymmetricKey derive_key(size_t key_len, \
+                    const uint8_t in[], size_t in_len, \
+                    const std::string& params = "") const
+
+  .. cpp:function:: SymmetricKey derive_key(size_t key_len, \
+                    const std::span<const uint8_t> in, \
+                    const std::string& params = "") const
+
+     Return a shared key. The *params* will be hashed along with the shared secret by the
+     KDF; this can be useful to bind the shared secret to a specific usage.
+
+     The *in* parameter must be the public key associated with the other party.
 
 Code Example
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The code below performs an unauthenticated ECDH key agreement using the secp521r elliptic curve and
-applies the key derivation function KDF2(SHA-256) with 256 bit output length to the computed shared secret.
+The code below performs an unauthenticated ECDH key agreement using the secp521r elliptic
+curve and applies the key derivation function KDF2(SHA-256) with 256 bit output length to
+the computed shared secret.
 
 .. literalinclude:: /../src/examples/ecdh.cpp
    :language: cpp
 
+Key Encapsulation
+-------------------
+
+Key encapsulation (KEM) is a variation on public key encryption which is commonly used by
+post-quantum secure schemes. Instead of choosing a random secret and encrypting it, as in
+typical public key encryption, a KEM encryption takes no inputs and produces two values,
+the shared secret and the encapulated key. The decryption operation takes in the
+encapulated key and returns the shared secret.
+
+.. cpp:class:: PK_KEM_Encryptor
+
+  .. cpp:function:: PK_KEM_Encryptor(const Public_Key& key, \
+                       const std::string& kdf = "", \
+                       const std::string& provider = "")
+
+     Create a KEM encryptor
+
+  .. cpp:function:: void encrypt(secure_vector<uint8_t>& out_encapsulated_key, \
+                   secure_vector<uint8_t>& out_shared_key, \
+                   size_t desired_shared_key_len, \
+                   RandomNumberGenerator& rng, \
+                   std::span<const uint8_t> salt)
+
+      Perform a key encapsulation operation
+
+.. cpp:class:: PK_KEM_Decryptor
+
+  .. cpp:function:: PK_KEM_Decryptor(const Public_Key& key, \
+                       const std::string& kdf = "", \
+                       const std::string& provider = "")
+
+     Create a KEM decryptor
+
+  .. cpp:function:: secure_vector<uint8> decrypt(std::span<const uint8> encapsulated_key, \
+                    size_t desired_shared_key_len, \
+                    std::span<const uint8_t> salt)
+
+      Perform a key decapsulation operation
+
+Botan implements the following KEM schemes:
+
+1. RSA
+#. Kyber
+#. McEliece
+
+Code Example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The code below demonstrates key encapsulation using the Kyber post-quantum scheme.
+
+.. literalinclude:: /../src/examples/kyber.cpp
+   :language: cpp
 
 .. _mceliece:
 
@@ -673,28 +884,6 @@ from the published public key. However it also means that in McEliece the
 plaintext is represented directly in the ciphertext, with only a small number of
 bit errors. Thus it is absolutely essential to only use McEliece with a CCA2
 secure scheme.
-
-One such scheme, KEM, is provided in Botan currently. It it a somewhat unusual
-scheme in that it outputs two values, a symmetric key for use with an AEAD, and
-an encrypted key. It does this by choosing a random plaintext (n - log2(n)*t
-bits) using ``McEliece_PublicKey::random_plaintext_element``. Then a random
-error mask is chosen and the message is coded and masked. The symmetric key is
-SHA-512(plaintext || error_mask). As long as the resulting key is used with a
-secure AEAD scheme (which can be used for transporting arbitrary amounts of
-data), CCA2 security is provided.
-
-In ``mcies.h`` there are functions for this combination:
-
-.. cpp:function:: secure_vector<uint8_t> mceies_encrypt(const McEliece_PublicKey& pubkey, \
-                  const secure_vector<uint8_t>& pt, \
-                  uint8_t ad[], size_t ad_len, \
-                  RandomNumberGenerator& rng, \
-                  const std::string& aead = "AES-256/OCB")
-
-.. cpp:function:: secure_vector<uint8_t> mceies_decrypt(const McEliece_PrivateKey& privkey, \
-                                                     const secure_vector<uint8_t>& ct, \
-                                                     uint8_t ad[], size_t ad_len, \
-                                                     const std::string& aead = "AES-256/OCB")
 
 For a given security level (SL) a McEliece key would use
 parameters n and t, and have the corresponding key sizes listed:
@@ -749,7 +938,7 @@ for instance will use the SHA2-256 hash function to generate a tree of height
 ten.
 
 Code Example
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following code snippet shows a minimum example on how to create an XMSS
 public/private key pair and how to use these keys to create and verify a

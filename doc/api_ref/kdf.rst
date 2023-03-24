@@ -1,7 +1,7 @@
 
 .. _key_derivation_function:
 
-Key Derivation Functions
+Key Derivation Functions (KDF)
 ========================================
 
 Key derivation functions are used to turn some amount of shared secret
