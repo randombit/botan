@@ -646,7 +646,11 @@ Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
       const std::string& provider) const
    {
    BOTAN_UNUSED(rng);
-   const bool randomized = (params != "Deterministic");
+
+   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
+                   "Unexpected parameters for signing with Dilithium");
+
+   const bool randomized = (params == "Randomized");
    if(provider.empty() || provider == "base")
       return std::make_unique<Dilithium_Signature_Operation>(*this, randomized);
    throw Provider_Not_Found(algo_name(), provider);
