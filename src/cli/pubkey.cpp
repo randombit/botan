@@ -22,6 +22,7 @@
 #include <botan/internal/workfactor.h>
 #include <botan/data_src.h>
 
+#include <sstream>
 #include <fstream>
 
 #if defined(BOTAN_HAS_DL_GROUP)
@@ -34,10 +35,41 @@
 
 namespace Botan_CLI {
 
+namespace {
+
+std::string pbe_string(const std::string& cipher,
+                       const std::string& pbkdf)
+   {
+   if(cipher.empty() && pbkdf.empty())
+      return ""; // just let the library choose a default
+
+   std::ostringstream oss;
+
+   oss << "PBES2(";
+
+   if(cipher.empty())
+      oss << "AES-256/CBC";
+   else
+      oss << cipher;
+
+   oss << ",";
+
+   if(pbkdf.empty())
+      oss << "SHA-512";
+   else
+      oss << pbkdf;
+
+   oss << ")";
+
+   return oss.str();
+   }
+
+}
+
 class PK_Keygen final : public Command
    {
    public:
-      PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --provider= --der-out") {}
+      PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --cipher= --pbkdf= --pbkdf-ms=300 --provider= --der-out") {}
 
       std::string group() const override
          {
@@ -66,8 +98,8 @@ class PK_Keygen final : public Command
          const std::string pass = get_passphrase_arg("Key passphrase", "passphrase");
          const bool der_out = flag_set("der-out");
 
-         const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
-         const std::string pbe = get_arg("pbe");
+         const std::chrono::milliseconds pbkdf_ms(get_arg_sz("pbkdf-ms"));
+         const std::string pbe = pbe_string(get_arg("cipher"), get_arg("pbkdf"));
 
          if(der_out)
             {
@@ -77,7 +109,7 @@ class PK_Keygen final : public Command
                }
             else
                {
-               write_output(Botan::PKCS8::BER_encode(*key, rng(), pass, pbe_millis, pbe));
+               write_output(Botan::PKCS8::BER_encode(*key, rng(), pass, pbkdf_ms, pbe));
                }
             }
          else
@@ -88,7 +120,7 @@ class PK_Keygen final : public Command
                }
             else
                {
-               output() << Botan::PKCS8::PEM_encode(*key, rng(), pass, pbe_millis, pbe);
+               output() << Botan::PKCS8::PEM_encode(*key, rng(), pass, pbkdf_ms, pbe);
                }
             }
          }
@@ -324,7 +356,7 @@ BOTAN_REGISTER_COMMAND("verify", PK_Verify);
 class PKCS8_Tool final : public Command
    {
    public:
-      PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key") {}
+      PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --der-out --pass-out= --cipher= --pbkdf= --pbkdf-ms=300 key") {}
 
       std::string group() const override
          {
@@ -353,8 +385,8 @@ class PKCS8_Tool final : public Command
             key = Botan::PKCS8::load_key(key_src, pass_in);
             }
 
-         const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
-         const std::string pbe = get_arg("pbe");
+         const std::chrono::milliseconds pbkdf_ms(get_arg_sz("pbkdf-ms"));
+         const std::string pbe = pbe_string(get_arg("cipher"), get_arg("pbkdf"));
          const bool der_out = flag_set("der-out");
 
          if(flag_set("pub-out"))
@@ -380,7 +412,7 @@ class PKCS8_Tool final : public Command
                   }
                else
                   {
-                  write_output(Botan::PKCS8::BER_encode(*key, rng(), pass_out, pbe_millis, pbe));
+                  write_output(Botan::PKCS8::BER_encode(*key, rng(), pass_out, pbkdf_ms, pbe));
                   }
                }
             else
@@ -391,7 +423,7 @@ class PKCS8_Tool final : public Command
                   }
                else
                   {
-                  output() << Botan::PKCS8::PEM_encode(*key, rng(), pass_out, pbe_millis, pbe);
+                  output() << Botan::PKCS8::PEM_encode(*key, rng(), pass_out, pbkdf_ms, pbe);
                   }
                }
             }
