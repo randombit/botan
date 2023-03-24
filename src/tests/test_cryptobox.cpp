@@ -36,6 +36,9 @@ class Cryptobox_KAT final : public Text_Based_Test
 
          Fixed_Output_RNG salt_rng(salt);
 
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED
+
          const std::string ciphertext =
             Botan::CryptoBox::encrypt(input.data(), input.size(), password, salt_rng);
 
@@ -60,6 +63,8 @@ class Cryptobox_KAT final : public Text_Based_Test
             {
             result.test_success("Rejected corrupted cryptobox message");
             }
+
+BOTAN_DIAGNOSTIC_POP
 
          return result;
          }
