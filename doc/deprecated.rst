@@ -56,6 +56,8 @@ in a future major release.
 
 - GOST 34.10 signature scheme
 
+- The utility functions in cryptobox.h
+
 - X9.42 KDF
 
 - The current McEliece implementation (in ``pubkey/mce``) will be
