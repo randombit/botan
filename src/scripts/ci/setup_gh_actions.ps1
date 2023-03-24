@@ -12,7 +12,7 @@ param(
 )
 
 choco install -y jom
-choco install -y sccache
+choco install -y sccache --version 0.4.0
 
 # find the sccache cache location and store it in the build job's environment
 $raw_cl = (sccache --stats-format json --show-stats | ConvertFrom-Json).cache_location
