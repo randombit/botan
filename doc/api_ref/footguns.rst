@@ -29,6 +29,12 @@ and doing so consistently *prior to static intialization* is not trivial, due to
 the previously mentioned fiasco. One option might be to use GCC's
 ``constructor`` function attribute.
 
+Another approach is to use the utility class ``Allocator_Initializer`` (declared
+in ``mem_ops.h``) as an associated ``static`` variable in your code. As long as
+the ``Allocator_Initializer`` is created *before* your static variables, that
+means the allocator is created before your object, and thus will be destroyed
+after your object is destroyed.
+
 Ideally a more satisfactory solution to this issue could be found, especially
 given the difficulty of disabling the pool at runtime.
 
@@ -38,10 +44,10 @@ Multithreaded Access
 It is perfectly safe to use the library from multiple threads.
 
 It is *not* safe to use the same object from multiple threads, without some form
-of locking.
+of external serialization or locking.
 
-There are a few exceptions to this rule, which use internal mutexes. This will
-be noted in the respective documentation for these types.
+There are a few exceptions to this rule, where the type itself maintains an
+internal mutexes. This will be noted in the respective documentation for that type.
 
 Use of `fork`
 ----------------------
