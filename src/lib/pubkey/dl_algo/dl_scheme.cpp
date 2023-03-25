@@ -90,7 +90,7 @@ DL_PrivateKey::DL_PrivateKey(const DL_Group& group,
                              const BigInt& private_key) :
    m_group(group),
    m_private_key(check_dl_private_key_input(private_key, m_group)),
-   m_public_key(m_group.power_g_p(m_private_key, m_group.p_bits()))
+   m_public_key(m_group.power_g_p(m_private_key, m_private_key.bits()))
    {
    }
 
@@ -98,7 +98,7 @@ DL_PrivateKey::DL_PrivateKey(const DL_Group& group,
                              RandomNumberGenerator& rng) :
    m_group(group),
    m_private_key(generate_private_dl_key(group, rng)),
-   m_public_key(m_group.power_g_p(m_private_key, m_group.p_bits()))
+   m_public_key(m_group.power_g_p(m_private_key, m_private_key.bits()))
    {
    }
 
