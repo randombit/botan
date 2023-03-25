@@ -608,11 +608,13 @@ def version_string():
 # Utilities
 #
 def const_time_compare(x, y):
-    len_x = len(x)
-    len_y = len(y)
+    xbits = _ctype_bits(x)
+    ybits = _ctype_bits(y)
+    len_x = len(xbits)
+    len_y = len(ybits)
     if len_x != len_y:
         return False
-    rc = _DLL.botan_constant_time_compare(_ctype_bits(x), _ctype_bits(y), c_size_t(len_x))
+    rc = _DLL.botan_constant_time_compare(xbits, ybits, c_size_t(len_x))
     return rc == 0
 
 #
@@ -637,7 +639,8 @@ class RandomNumberGenerator:
         _DLL.botan_rng_reseed_from_rng(self.__obj, source_rng.handle_(), bits)
 
     def add_entropy(self, seed):
-        _DLL.botan_rng_add_entropy(self.__obj, _ctype_bits(seed), len(seed))
+        seedbits = _ctype_bits(seed)
+        _DLL.botan_rng_add_entropy(self.__obj, seedbits, len(seedbits))
 
     def get(self, length):
         out = create_string_buffer(length)
@@ -749,7 +752,8 @@ class HashFunction:
         return self.__block_size
 
     def update(self, x):
-        _DLL.botan_hash_update(self.__obj, _ctype_bits(x), len(x))
+        bits = _ctype_bits(x)
+        _DLL.botan_hash_update(self.__obj, bits, len(bits))
 
     def final(self):
         out = create_string_buffer(self.output_length())
@@ -806,7 +810,8 @@ class MsgAuthCode:
         _DLL.botan_mac_set_nonce(self.__obj, nonce, len(nonce))
 
     def update(self, x):
-        _DLL.botan_mac_update(self.__obj, x, len(x))
+        bits = _ctype_bits(x)
+        _DLL.botan_mac_update(self.__obj, bits, len(bits))
 
     def final(self):
         out = create_string_buffer(self.output_length())
@@ -883,7 +888,8 @@ class SymmetricCipher:
     def _update(self, txt, final):
 
         inp = txt if txt else ''
-        inp_sz = c_size_t(len(inp))
+        bits = _ctype_bits(inp)
+        inp_sz = c_size_t(len(bits))
         inp_consumed = c_size_t(0)
         extra_bytes = 0
         if final and self._is_encrypt:
@@ -901,7 +907,7 @@ class SymmetricCipher:
 
         _DLL.botan_cipher_update(self.__obj, flags,
                                  out, out_sz, byref(out_written),
-                                 _ctype_bits(inp), inp_sz, byref(inp_consumed))
+                                 bits, inp_sz, byref(inp_consumed))
 
         # buffering not supported yet
         assert inp_consumed.value == inp_sz.value
@@ -965,10 +971,13 @@ def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=None):
 #
 def scrypt(out_len, password, salt, n=1024, r=8, p=8):
     out_buf = create_string_buffer(out_len)
+    passbits = _ctype_str(password)
+    saltbits = _ctype_bits(salt)
+
     _DLL.botan_pwdhash(_ctype_str("Scrypt"), n, r, p,
                        out_buf, out_len,
-                       _ctype_str(password), len(password),
-                       _ctype_bits(salt), len(salt))
+                       passbits, len(passbits),
+                       saltbits, len(saltbits))
 
     return out_buf.raw
 
@@ -995,7 +1004,8 @@ class PublicKey: # pylint: disable=invalid-name
     @classmethod
     def load(cls, val):
         obj = c_void_p(0)
-        _DLL.botan_pubkey_load(byref(obj), _ctype_bits(val), len(val))
+        bits = _ctype_bits(val)
+        _DLL.botan_pubkey_load(byref(obj), bits, len(bits))
         return PublicKey(obj)
 
     @classmethod
@@ -1118,7 +1128,8 @@ class PrivateKey:
     def load(cls, val, passphrase=""):
         obj = c_void_p(0)
         rng_obj = c_void_p(0) # unused in recent versions
-        _DLL.botan_privkey_load(byref(obj), rng_obj, _ctype_bits(val), len(val), _ctype_str(passphrase))
+        bits = _ctype_bits(val)
+        _DLL.botan_privkey_load(byref(obj), rng_obj, bits, len(bits), _ctype_str(passphrase))
         return PrivateKey(obj)
 
     @classmethod
@@ -1279,7 +1290,8 @@ class PKDecrypt:
         outbuf_sz = c_size_t(0)
         _DLL.botan_pk_op_decrypt_output_length(self.__obj, len(msg), byref(outbuf_sz))
         outbuf = create_string_buffer(outbuf_sz.value)
-        _DLL.botan_pk_op_decrypt(self.__obj, outbuf, byref(outbuf_sz), _ctype_bits(msg), len(msg))
+        bits = _ctype_bits(msg)
+        _DLL.botan_pk_op_decrypt(self.__obj, outbuf, byref(outbuf_sz), bits, len(bits))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
 class PKSign: # pylint: disable=invalid-name
@@ -1311,10 +1323,12 @@ class PKVerify:
         _DLL.botan_pk_op_verify_destroy(self.__obj)
 
     def update(self, msg):
-        _DLL.botan_pk_op_verify_update(self.__obj, _ctype_bits(msg), len(msg))
+        bits = _ctype_bits(msg)
+        _DLL.botan_pk_op_verify_update(self.__obj, bits, len(bits))
 
     def check_signature(self, signature):
-        rc = _DLL.botan_pk_op_verify_finish(self.__obj, _ctype_bits(signature), len(signature))
+        bits = _ctype_bits(signature)
+        rc = _DLL.botan_pk_op_verify_finish(self.__obj, bits, len(bits))
         if rc == 0:
             return True
         return False
@@ -1426,7 +1440,8 @@ def _load_buf_or_file(filename, buf, file_fn, buf_fn):
     if filename is not None:
         file_fn(byref(obj), _ctype_str(filename))
     elif buf is not None:
-        buf_fn(byref(obj), _ctype_bits(buf), len(buf))
+        bits = _ctype_bits(buf)
+        buf_fn(byref(obj), bits, len(bits))
 
     return obj
 
@@ -1852,12 +1867,14 @@ class FormatPreservingEncryptionFE1:
 
     def encrypt(self, msg, tweak):
         r = MPI(msg)
-        _DLL.botan_fpe_encrypt(self.__obj, r.handle_(), _ctype_bits(tweak), len(tweak))
+        bits = _ctype_bits(tweak)
+        _DLL.botan_fpe_encrypt(self.__obj, r.handle_(), bits, len(bits))
         return r
 
     def decrypt(self, msg, tweak):
         r = MPI(msg)
-        _DLL.botan_fpe_decrypt(self.__obj, r.handle_(), _ctype_bits(tweak), len(tweak))
+        bits = _ctype_bits(tweak)
+        _DLL.botan_fpe_decrypt(self.__obj, r.handle_(), bits, len(bits))
         return r
 
 class HOTP:

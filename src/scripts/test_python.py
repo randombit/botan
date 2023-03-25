@@ -122,12 +122,16 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(hmac.algo_name(), 'HMAC(SHA-256)')
         self.assertEqual(hmac.minimum_keylength(), 0)
         self.assertEqual(hmac.maximum_keylength(), 4096)
-        hmac.set_key(hex_decode('0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20'))
-        hmac.update(hex_decode('616263'))
 
         expected = hex_decode('A21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181')
-        produced = hmac.final()
 
+        hmac.set_key(hex_decode('0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20'))
+        hmac.update(hex_decode('616263'))
+        produced = hmac.final()
+        self.assertEqual(hex_encode(expected), hex_encode(produced))
+
+        hmac.update("abc")
+        produced = hmac.final()
         self.assertEqual(hex_encode(expected), hex_encode(produced))
 
     def test_gmac(self):
@@ -186,6 +190,14 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(hex_encode(h2), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
 
         self.assertEqual(hex_encode(sha256_2.final()), hex_encode(hash1))
+
+        sha256.update(hex_decode('C2AF5C5F28E38384295F2FC2AF'))
+        self.assertEqual(hex_encode(sha256.final()),
+                         "08bfce15fd2406114825ee6f770a06b1b00c129cb48fcddc54ef58b5de48bdf5")
+
+        sha256.update(r'¯\_(ツ)_/¯')
+        self.assertEqual(hex_encode(sha256.final()),
+                         "08bfce15fd2406114825ee6f770a06b1b00c129cb48fcddc54ef58b5de48bdf5")
 
     def test_cipher(self):
         for mode in ['AES-128/CTR-BE', 'Serpent/GCM', 'ChaCha20Poly1305', 'AES-128/CBC/PKCS7']:
