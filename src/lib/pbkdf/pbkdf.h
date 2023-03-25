@@ -252,7 +252,7 @@ inline PBKDF* get_pbkdf(const std::string& algo_spec,
 BOTAN_DEPRECATED("Use PBKDF::create_or_throw")
 inline PBKDF* get_s2k(const std::string& algo_spec)
    {
-   return PBKDF::create_or_throw(algo_spec, provider).release();
+   return PBKDF::create_or_throw(algo_spec).release();
    }
 
 
