@@ -1,0 +1,19 @@
+<defines>
+PAKE_OPAQUE -> 20230325
+</defines>
+
+<module_info>
+name -> "OPAQUE"
+brief -> "The OPAQUE password authenticated key exchange"
+</module_info>
+
+<header:internal>
+#opaque.h
+</header:internal>
+
+<requires>
+ec_group
+ec_h2c
+sha2_32
+sha2_64
+</requires>

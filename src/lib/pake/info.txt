@@ -1,0 +1,12 @@
+<defines>
+PAKE -> 20230325
+</defines>
+
+<module_info>
+name -> "PAKE"
+brief -> "Interface for password authenticated key exchange"
+</module_info>
+
+<header:public>
+pake.h
+</header:public>

@@ -1,0 +1,19 @@
+<defines>
+PAKE_AUGCPACE -> 20230325
+</defines>
+
+<module_info>
+name -> "AugCPace"
+brief -> "The AugCPace password authenticated key exchange"
+</module_info>
+
+<header:internal>
+#augcpace.h
+</header:internal>
+
+<requires>
+ec_group
+ec_h2c
+sha2_32
+sha2_64
+</requires>

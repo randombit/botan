@@ -1,0 +1,20 @@
+<defines>
+PAKE_CPACE -> 20230325
+</defines>
+
+<module_info>
+name -> "CPace"
+brief -> "The CPace password authenticated key exchange"
+</module_info>
+
+<header:internal>
+cpace.h
+</header:internal>
+
+<requires>
+ec_group
+ec_h2c
+sha2_32
+sha2_64
+#leb128
+</requires>
