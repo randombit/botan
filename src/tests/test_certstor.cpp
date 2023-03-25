@@ -253,9 +253,9 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
          }
 
       Botan::X509_Certificate same_dn_1 = Botan::X509_Certificate(
-         Test::data_file("x509/bsi/cert_path_common_14/cert_path_common_14_sub_ca.ca.pem.crt"));
+         Test::data_file("x509/bsi/common_14/common_14_sub_ca.ca.pem.crt"));
       Botan::X509_Certificate same_dn_2 = Botan::X509_Certificate(
-         Test::data_file("x509/bsi/cert_path_common_14/cert_path_common_14_wrong_sub_ca.ca.pem.crt"));
+         Test::data_file("x509/bsi/common_14/common_14_wrong_sub_ca.ca.pem.crt"));
 
       store.insert_cert(same_dn_1);
       store.insert_cert(same_dn_2);
