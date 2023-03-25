@@ -1,9 +1,8 @@
 ========================================
-Important Notes
+Footguns
 ========================================
 
-This section just notes a few important rules that you should be aware of in
-using the library.
+This section notes areas where certain usages can cause confusing bugs or problems.
 
 Static Objects
 ------------------
@@ -43,3 +42,13 @@ of locking.
 
 There are a few exceptions to this rule, which use internal mutexes. This will
 be noted in the respective documentation for these types.
+
+Use of `fork`
+----------------------
+
+If you use the `fork` syscall in your code, and attempt to use the library in
+both processes, likely bad things will happen due to internal locks. You can
+avoid this problem by either at build time disabling the features associated
+with these locks (namely ``locking_allocator`` and ``thread_utils``) or
+disabling them at runtime using :ref:`env_vars`, ideally at the very start of
+`main`.

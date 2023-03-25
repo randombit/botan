@@ -5,7 +5,7 @@ API Reference
 .. toctree::
    :maxdepth: 1
 
-   firstthings
+   footguns
    versions
    secmem
    rng
