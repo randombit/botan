@@ -8,7 +8,6 @@
 #include <botan/dh.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/blinding.h>
 
 namespace Botan {
 
@@ -111,18 +110,10 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
    public:
 
       DH_KA_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                      const std::string& kdf,
-                      RandomNumberGenerator& rng) :
+                      const std::string& kdf) :
          PK_Ops::Key_Agreement_with_KDF(kdf),
          m_key(key),
-         m_blinder(m_key->group().get_p(),
-                   rng,
-                   [](const BigInt& k) { return k; },
-                   [this](const BigInt& k)
-                      {
-                      const BigInt inv_k = inverse_mod(k, group().get_p());
-                      return powermod_x_p(inv_k);
-                      })
+         m_key_bits(m_key->private_key().bits())
          {}
 
       size_t agreed_value_size() const override { return group().p_bytes(); }
@@ -134,14 +125,9 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          return m_key->group();
          }
 
-      BigInt powermod_x_p(const BigInt& v) const
-         {
-         return group().power_b_p(v, m_key->private_key());
-         }
-
       std::shared_ptr<const DL_PrivateKey> m_key;
       std::shared_ptr<const Montgomery_Params> m_monty_p;
-      Blinder m_blinder;
+      const size_t m_key_bits;
    };
 
 secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_len)
@@ -151,9 +137,8 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
    if(v <= 1 || v >= group().get_p())
       throw Invalid_Argument("DH agreement - invalid key provided");
 
-   v = m_blinder.blind(v);
-   v = powermod_x_p(v);
-   v = m_blinder.unblind(v);
+   const BigInt& x = m_key->private_key();
+   v = group().power_b_p(v, x, m_key_bits);
 
    return BigInt::encode_1363(v, group().p_bytes());
    }
@@ -165,8 +150,10 @@ DH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                        const std::string& params,
                                        const std::string& provider) const
    {
+   BOTAN_UNUSED(rng);
+
    if(provider == "base" || provider.empty())
-      return std::make_unique<DH_KA_Operation>(this->m_private_key, params, rng);
+      return std::make_unique<DH_KA_Operation>(this->m_private_key, params);
    throw Provider_Not_Found(algo_name(), provider);
    }
 
