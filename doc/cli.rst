@@ -23,6 +23,13 @@ system, echo will be disabled while reading the passphrase.
 Most arguments that take a path to a file will also accept the literal ``-``
 to mean the file content should be read from STDIN instead.
 
+All options for the command line are displayed in the summary line,
+and in the help output. All options are, as the name suggests,
+optional, and the default values are shown. For example ``hash file``
+prints the SHA-256 of the file encoded as hex, while
+``hash --format=base64 --algo=SHA-384 file`` prints the base64 encoded
+SHA-384 hash of the same file.
+
 Hash Function
 ----------------
 ``hash --algo=SHA-256 --buf-size=4096 --no-fsname --format=hex *files``
