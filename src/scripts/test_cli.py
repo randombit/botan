@@ -1089,7 +1089,7 @@ def cli_tls_proxy_tests(tmp_dir):
     rc = tls_proxy.wait(5)
 
     if rc != 0:
-        logging.error('Unexpected return code %d', rc)
+        logging.error('Unexpected return code from tls_proxy %d', rc)
 
 def cli_trust_root_tests(tmp_dir):
     pem_file = os.path.join(tmp_dir, 'pems')
