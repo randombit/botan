@@ -27,7 +27,7 @@ class Encryption_with_EME : public Encryption
 
       ~Encryption_with_EME() = default;
    protected:
-      explicit Encryption_with_EME(const std::string& eme);
+      explicit Encryption_with_EME(std::string_view eme);
    private:
       virtual size_t max_ptext_input_bits() const = 0;
 
@@ -44,7 +44,7 @@ class Decryption_with_EME : public Decryption
 
       ~Decryption_with_EME() = default;
    protected:
-      explicit Decryption_with_EME(const std::string& eme);
+      explicit Decryption_with_EME(std::string_view eme);
    private:
       virtual secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t len) = 0;
       std::unique_ptr<EME> m_eme;
@@ -61,10 +61,10 @@ class Verification_with_Hash : public Verification
       std::string hash_function() const override final { return m_hash->name(); }
 
    protected:
-      explicit Verification_with_Hash(const std::string& hash);
+      explicit Verification_with_Hash(std::string_view hash);
 
       explicit Verification_with_Hash(const AlgorithmIdentifier& alg_id,
-                                      const std::string& pk_algo,
+                                      std::string_view pk_algo,
                                       bool allow_null_parameters = false);
 
       /*
@@ -88,7 +88,7 @@ class Signature_with_Hash : public Signature
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
    protected:
-      explicit Signature_with_Hash(const std::string& hash);
+      explicit Signature_with_Hash(std::string_view hash);
 
       ~Signature_with_Hash() = default;
 
@@ -113,7 +113,7 @@ class Key_Agreement_with_KDF : public Key_Agreement
                                 const uint8_t salt[], size_t salt_len) override;
 
    protected:
-      explicit Key_Agreement_with_KDF(const std::string& kdf);
+      explicit Key_Agreement_with_KDF(std::string_view kdf);
       ~Key_Agreement_with_KDF() = default;
    private:
       virtual secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) = 0;
@@ -139,7 +139,7 @@ class KEM_Encryption_with_KDF : public KEM_Encryption
 
       virtual size_t raw_kem_shared_key_length() const = 0;
 
-      explicit KEM_Encryption_with_KDF(const std::string& kdf);
+      explicit KEM_Encryption_with_KDF(std::string_view kdf);
       ~KEM_Encryption_with_KDF() = default;
    private:
       std::unique_ptr<KDF> m_kdf;
@@ -162,7 +162,7 @@ class KEM_Decryption_with_KDF : public KEM_Decryption
 
       virtual size_t raw_kem_shared_key_length() const = 0;
 
-      explicit KEM_Decryption_with_KDF(const std::string& kdf);
+      explicit KEM_Decryption_with_KDF(std::string_view kdf);
       ~KEM_Decryption_with_KDF() = default;
    private:
       std::unique_ptr<KDF> m_kdf;
