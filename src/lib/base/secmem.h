@@ -68,6 +68,12 @@ template<typename T> using secure_deque = std::deque<T, secure_allocator<T>>;
 template<typename T> using SecureVector = secure_vector<T>;
 
 template<typename T>
+secure_vector<T> lock(const std::vector<T>& in)
+   {
+   return secure_vector<T>(in.begin(), in.end());
+   }
+
+template<typename T>
 std::vector<T> unlock(const secure_vector<T>& in)
    {
    return std::vector<T>(in.begin(), in.end());
