@@ -34,8 +34,7 @@ uint32_t to_u32bit(const std::string& str)
       {
       if(chr < '0' || chr > '9')
          {
-         std::string chrAsString(1, chr);
-         throw Invalid_Argument("String contains non-digit char: " + chrAsString);
+         throw Invalid_Argument("to_u32bit invalid decimal string '" + str + "'");
          }
       }
 
@@ -56,13 +55,16 @@ uint32_t to_u32bit(const std::string& str)
 /*
 * Parse a SCAN-style algorithm name
 */
-std::vector<std::string> parse_algorithm_name(const std::string& namex)
+std::vector<std::string> parse_algorithm_name(std::string_view namex)
    {
    if(namex.find('(') == std::string::npos &&
       namex.find(')') == std::string::npos)
-      return std::vector<std::string>(1, namex);
+      {
+      return {std::string(namex)};
+      }
 
-   std::string name = namex, substring;
+   std::string name(namex);
+   std::string substring;
    std::vector<std::string> elems;
    size_t level = 0;
 
@@ -109,7 +111,7 @@ std::vector<std::string> parse_algorithm_name(const std::string& namex)
    return elems;
    }
 
-std::vector<std::string> split_on(const std::string& str, char delim)
+std::vector<std::string> split_on(std::string_view str, char delim)
    {
    std::vector<std::string> elems;
    if(str.empty()) return elems;
@@ -128,7 +130,11 @@ std::vector<std::string> split_on(const std::string& str, char delim)
       }
 
    if(substr.empty())
-      throw Invalid_Argument("Unable to split string: " + str);
+      {
+      std::ostringstream oss;
+      oss << "Unable to split string '" << str << "'";
+      throw Invalid_Argument(oss.str());
+      }
    elems.push_back(substr);
 
    return elems;
@@ -154,12 +160,16 @@ std::string string_join(const std::vector<std::string>& strs, char delim)
 /*
 * Convert a decimal-dotted string to binary IP
 */
-uint32_t string_to_ipv4(const std::string& str)
+uint32_t string_to_ipv4(std::string_view str)
    {
-   std::vector<std::string> parts = split_on(str, '.');
+   const auto parts = split_on(str, '.');
 
    if(parts.size() != 4)
-      throw Decoding_Error("Invalid IP string " + str);
+      {
+      std::ostringstream oss;
+      oss << "Invalid IPv4 string '" << str << "'";
+      throw Decoding_Error(oss.str());
+      }
 
    uint32_t ip = 0;
 
@@ -168,7 +178,11 @@ uint32_t string_to_ipv4(const std::string& str)
       uint32_t octet = to_u32bit(*part);
 
       if(octet > 255)
-         throw Decoding_Error("Invalid IP string " + str);
+         {
+         std::ostringstream oss;
+         oss << "Invalid IPv4 string '" << str << "'";
+         throw Decoding_Error(oss.str());
+         }
 
       ip = (ip << 8) | (octet & 0xFF);
       }
@@ -197,9 +211,9 @@ std::string ipv4_to_string(uint32_t ip)
    return str;
    }
 
-std::string tolower_string(const std::string& in)
+std::string tolower_string(std::string_view in)
    {
-   std::string s = in;
+   std::string s(in);
    for(size_t i = 0; i != s.size(); ++i)
       {
       const int cu = static_cast<unsigned char>(s[i]);
@@ -209,7 +223,7 @@ std::string tolower_string(const std::string& in)
    return s;
    }
 
-bool host_wildcard_match(const std::string& issued_, const std::string& host_)
+bool host_wildcard_match(std::string_view issued_, std::string_view host_)
    {
    const std::string issued = tolower_string(issued_);
    const std::string host = tolower_string(host_);

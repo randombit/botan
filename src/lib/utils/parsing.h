@@ -9,6 +9,7 @@
 #define BOTAN_PARSING_UTILS_H_
 
 #include <botan/types.h>
+#include <string_view>
 #include <string>
 #include <vector>
 #include <istream>
@@ -22,7 +23,7 @@ namespace Botan {
 * @return the name components
 */
 std::vector<std::string>
-parse_algorithm_name(const std::string& scan_name);
+parse_algorithm_name(std::string_view scan_name);
 
 /**
 * Split a string
@@ -31,7 +32,7 @@ parse_algorithm_name(const std::string& scan_name);
 * @return string split by delim
 */
 BOTAN_TEST_API std::vector<std::string> split_on(
-   const std::string& str, char delim);
+   std::string_view str, char delim);
 
 /**
 * Join a string
@@ -61,7 +62,7 @@ uint16_t to_uint16(const std::string& str);
 * @param ip_str the string representation
 * @return integer IPv4 address
 */
-uint32_t string_to_ipv4(const std::string& ip_str);
+uint32_t string_to_ipv4(std::string_view ip_str);
 
 /**
 * Convert an IPv4 address to a string
@@ -88,18 +89,16 @@ std::map<std::string, std::string> read_cfg(std::istream& is);
 * backslash. Backslash can also be escaped.
 */
 BOTAN_TEST_API
-std::map<std::string, std::string> read_kv(const std::string& kv);
+std::map<std::string, std::string> read_kv(std::string_view kv);
 
-std::string clean_ws(const std::string& s);
-
-std::string tolower_string(const std::string& s);
+std::string tolower_string(std::string_view s);
 
 /**
 * Check if the given hostname is a match for the specified wildcard
 */
 BOTAN_TEST_API
-bool host_wildcard_match(const std::string& wildcard,
-                         const std::string& host);
+bool host_wildcard_match(std::string_view wildcard,
+                         std::string_view host);
 
 
 }

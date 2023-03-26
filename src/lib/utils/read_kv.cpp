@@ -9,7 +9,7 @@
 
 namespace Botan {
 
-std::map<std::string, std::string> read_kv(const std::string& kv)
+std::map<std::string, std::string> read_kv(std::string_view kv)
    {
    std::map<std::string, std::string> m;
    if(kv.empty())
