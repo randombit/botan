@@ -19,7 +19,7 @@ namespace {
 class CommonCrypto_Cipher_Mode final : public Cipher_Mode
    {
    public:
-      CommonCrypto_Cipher_Mode(const std::string& name,
+      CommonCrypto_Cipher_Mode(std::string_view name,
                                Cipher_Dir direction,
                                const CommonCryptor_Opts& opts);
 
@@ -54,7 +54,7 @@ class CommonCrypto_Cipher_Mode final : public Cipher_Mode
       bool m_nonce_set;
    };
 
-CommonCrypto_Cipher_Mode::CommonCrypto_Cipher_Mode(const std::string& name,
+CommonCrypto_Cipher_Mode::CommonCrypto_Cipher_Mode(std::string_view name,
       Cipher_Dir direction, const CommonCryptor_Opts& opts) :
    m_mode_name(name),
    m_direction(direction),
@@ -239,9 +239,8 @@ void CommonCrypto_Cipher_Mode::key_schedule(const uint8_t key[], size_t length)
 }
 
 std::unique_ptr<Cipher_Mode>
-make_commoncrypto_cipher_mode(const std::string& name, Cipher_Dir direction)
+make_commoncrypto_cipher_mode(std::string_view name, Cipher_Dir direction)
    {
-
    try
       {
       CommonCryptor_Opts opts = commoncrypto_opts_from_algo(name);
