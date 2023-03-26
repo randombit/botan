@@ -321,7 +321,7 @@ class MCE_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF
    public:
 
       MCE_KEM_Encryptor(const McEliece_PublicKey& key,
-                        const std::string& kdf) :
+                        std::string_view kdf) :
          KEM_Encryption_with_KDF(kdf), m_key(key) {}
 
    private:
@@ -361,7 +361,7 @@ class MCE_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF
    public:
 
       MCE_KEM_Decryptor(const McEliece_PrivateKey& key,
-                        const std::string& kdf) :
+                        std::string_view kdf) :
          KEM_Decryption_with_KDF(kdf), m_key(key) {}
 
    private:
@@ -391,8 +391,8 @@ class MCE_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption>
-McEliece_PublicKey::create_kem_encryption_op(const std::string& params,
-                                             const std::string& provider) const
+McEliece_PublicKey::create_kem_encryption_op(std::string_view params,
+                                             std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<MCE_KEM_Encryptor>(*this, params);
@@ -401,8 +401,8 @@ McEliece_PublicKey::create_kem_encryption_op(const std::string& params,
 
 std::unique_ptr<PK_Ops::KEM_Decryption>
 McEliece_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& /*rng*/,
-                                              const std::string& params,
-                                              const std::string& provider) const
+                                              std::string_view params,
+                                              std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<MCE_KEM_Decryptor>(*this, params);

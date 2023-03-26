@@ -99,8 +99,8 @@ class BOTAN_PUBLIC_API(2,0) Curve25519_PrivateKey final : public Curve25519_Publ
 
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const override;
+                                 std::string_view params,
+                                 std::string_view provider) const override;
 
    private:
       secure_vector<uint8_t> m_private;

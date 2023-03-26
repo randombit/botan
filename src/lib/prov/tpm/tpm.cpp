@@ -389,9 +389,9 @@ class TPM_Signing_Operation final : public PK_Ops::Signature
    {
    public:
       TPM_Signing_Operation(const TPM_PrivateKey& key,
-                            const std::string& hash_name) :
+                            std::string_view hash_name) :
          m_key(key),
-         m_hash(HashFunction::create(hash_name)),
+         m_hash(HashFunction::create_or_throw(hash_name)),
          m_hash_id(pkcs_hash_id(hash_name))
          {
          }
@@ -463,8 +463,8 @@ class TPM_Signing_Operation final : public PK_Ops::Signature
 
 std::unique_ptr<PK_Ops::Signature>
 TPM_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                    const std::string& params,
-                                    const std::string& /*provider*/) const
+                                    std::string_view params,
+                                    std::string_view /*provider*/) const
    {
    return std::make_unique<TPM_Signing_Operation>(*this, params);
    }

@@ -9,8 +9,8 @@
 #include <botan/internal/p11_mechanism.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/parsing.h>
-
 #include <tuple>
+#include <sstream>
 
 namespace Botan::PKCS11 {
 
@@ -173,8 +173,9 @@ MechanismWrapper::MechanismWrapper(MechanismType mechanism_type)
    : m_mechanism( { static_cast<CK_MECHANISM_TYPE>(mechanism_type), nullptr, 0 }), m_parameters(nullptr)
    {}
 
-MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const std::string& padding)
+MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(std::string_view padding_view)
    {
+   const std::string padding(padding_view);
    auto mechanism_info_it = CryptMechanisms.find(padding);
    if(mechanism_info_it == CryptMechanisms.end())
       {
@@ -199,8 +200,9 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const std::string&
    return mech;
    }
 
-MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const std::string& padding)
+MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view padding_view)
    {
+   const std::string padding(padding_view);
    auto mechanism_info_it = SignMechanisms.find(padding);
    if(mechanism_info_it == SignMechanisms.end())
       {
@@ -222,8 +224,9 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const std::string& 
    return mech;
    }
 
-MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(const std::string& hash_spec)
+MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(std::string_view hash_spec_view)
    {
+   const std::string hash_spec(hash_spec_view);
    auto mechanism = EcdsaHash.find(hash_spec);
    if(mechanism != EcdsaHash.end())
       return MechanismWrapper(mechanism->second);
@@ -237,15 +240,21 @@ MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(const std::string& has
          return MechanismWrapper(mechanism->second);
       }
 
-   throw Lookup_Error("PKCS#11 ECDSA sign/verify does not support " + hash_spec);
+   std::ostringstream err;
+   err << "PKCS #11 ECDSA sign/verify does not support " << hash_spec;
+   throw Lookup_Error(err.str());
    }
 
-MechanismWrapper MechanismWrapper::create_ecdh_mechanism(const std::string& params)
+MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view params)
    {
    std::vector<std::string> param_parts = split_on(params, ',');
 
    if(param_parts.empty() || param_parts.size() > 2)
-      throw Invalid_Argument("PKCS #11 ECDH key derivation bad params " + params);
+      {
+      std::ostringstream err;
+      err << "PKCS #11 ECDH key derivation bad params " << params;
+      throw Invalid_Argument(err.str());
+      }
 
    const bool use_cofactor =
       (param_parts[0] == "Cofactor") ||

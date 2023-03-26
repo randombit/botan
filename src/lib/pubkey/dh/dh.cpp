@@ -111,7 +111,7 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
    public:
 
       DH_KA_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                      const std::string& kdf,
+                      std::string_view kdf,
                       RandomNumberGenerator& rng) :
          PK_Ops::Key_Agreement_with_KDF(kdf),
          m_key(key),
@@ -164,8 +164,8 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
 
 std::unique_ptr<PK_Ops::Key_Agreement>
 DH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
-                                       const std::string& params,
-                                       const std::string& provider) const
+                                       std::string_view params,
+                                       std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<DH_KA_Operation>(this->m_private_key, params, rng);

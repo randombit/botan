@@ -111,8 +111,8 @@ class BOTAN_PUBLIC_API(2,0) DH_PrivateKey final :
 
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const override;
+                                 std::string_view params,
+                                 std::string_view provider) const override;
 
    private:
       std::shared_ptr<const DL_PrivateKey> m_private_key;

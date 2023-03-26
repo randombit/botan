@@ -199,8 +199,8 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       */
       virtual std::unique_ptr<PK_Ops::Encryption>
          create_encryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const;
+                              std::string_view params,
+                              std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -212,8 +212,8 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(const std::string& params,
-                                  const std::string& provider) const;
+         create_kem_encryption_op(std::string_view params,
+                                  std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -224,8 +224,8 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const;
+         create_verification_op(std::string_view params,
+                                std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -241,7 +241,7 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       */
       virtual std::unique_ptr<PK_Ops::Verification>
          create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
-                                     const std::string& provider) const;
+                                     std::string_view provider) const;
    };
 
 /**
@@ -303,8 +303,8 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       */
       virtual std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const;
+                              std::string_view params,
+                              std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -320,8 +320,8 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       */
       virtual std::unique_ptr<PK_Ops::KEM_Decryption>
          create_kem_decryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
-                                  const std::string& provider) const;
+                                  std::string_view params,
+                                  std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -337,8 +337,8 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       */
       virtual std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const;
+                             std::string_view params,
+                             std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -354,8 +354,8 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       */
       virtual std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const;
+                                 std::string_view params,
+                                 std::string_view provider) const;
    };
 
 /**

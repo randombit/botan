@@ -176,8 +176,8 @@ class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey final : public Private_Key
 
       std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+                             std::string_view params,
+                             std::string_view provider) const override;
 
    private:
       TPM_Context& m_ctx;

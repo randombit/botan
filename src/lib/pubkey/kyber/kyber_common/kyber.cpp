@@ -1242,7 +1242,7 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
                                   protected Kyber_KEM_Cryptor
    {
    public:
-      Kyber_KEM_Encryptor(const Kyber_PublicKey& key, const std::string& kdf)
+      Kyber_KEM_Encryptor(const Kyber_PublicKey& key, std::string_view kdf)
          : KEM_Encryption_with_KDF(kdf)
          , Kyber_KEM_Cryptor(key.m_public)
          , m_key(key)
@@ -1307,7 +1307,7 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
                                   protected Kyber_KEM_Cryptor
    {
    public:
-      Kyber_KEM_Decryptor(const Kyber_PrivateKey& key, const std::string& kdf)
+      Kyber_KEM_Decryptor(const Kyber_PrivateKey& key, std::string_view kdf)
          : PK_Ops::KEM_Decryption_with_KDF(kdf)
          , Kyber_KEM_Cryptor(key.m_public)
          , m_key(key)
@@ -1532,8 +1532,8 @@ secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const
 
 std::unique_ptr<PK_Ops::KEM_Encryption>
 Kyber_PublicKey::create_kem_encryption_op(
-   const std::string& params,
-   const std::string& provider) const
+   std::string_view params,
+   std::string_view provider) const
    {
    if(provider.empty() || provider == "base")
       return std::make_unique<Kyber_KEM_Encryptor>(*this, params);
@@ -1541,8 +1541,8 @@ Kyber_PublicKey::create_kem_encryption_op(
    }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
-      const std::string& params,
-      const std::string& provider) const
+      std::string_view params,
+      std::string_view provider) const
    {
    BOTAN_UNUSED(rng);
    if(provider.empty() || provider == "base")

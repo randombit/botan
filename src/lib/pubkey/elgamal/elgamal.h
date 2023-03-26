@@ -58,8 +58,8 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PublicKey : public virtual Public_Key
 
       std::unique_ptr<PK_Ops::Encryption>
          create_encryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+                              std::string_view params,
+                              std::string_view provider) const override;
 
    private:
       friend class ElGamal_PrivateKey;
@@ -114,8 +114,8 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey final :
 
       std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+                              std::string_view params,
+                              std::string_view provider) const override;
    private:
       std::shared_ptr<const DL_PrivateKey> m_private_key;
    };

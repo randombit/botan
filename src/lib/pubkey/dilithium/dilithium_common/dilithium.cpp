@@ -560,8 +560,8 @@ bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const
    }
 
 std::unique_ptr<PK_Ops::Verification>
-Dilithium_PublicKey::create_verification_op(const std::string& params,
-                                            const std::string& provider) const
+Dilithium_PublicKey::create_verification_op(std::string_view params,
+                                            std::string_view provider) const
    {
    BOTAN_ARG_CHECK(params.empty() || params == "Pure",
                    "Unexpected parameters for verifying with Dilithium");
@@ -572,7 +572,7 @@ Dilithium_PublicKey::create_verification_op(const std::string& params,
 
 std::unique_ptr<PK_Ops::Verification>
 Dilithium_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
-                                                 const std::string& provider) const
+                                                 std::string_view provider) const
    {
    if(provider.empty() || provider == "base")
       {
@@ -642,8 +642,8 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const
 
 std::unique_ptr<PK_Ops::Signature>
 Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-      const std::string& params,
-      const std::string& provider) const
+      std::string_view params,
+      std::string_view provider) const
    {
    BOTAN_UNUSED(rng);
 

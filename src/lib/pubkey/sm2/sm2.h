@@ -55,13 +55,13 @@ class BOTAN_PUBLIC_API(2,2) SM2_PublicKey : public virtual EC_PublicKey
          { return domain().get_order().bytes(); }
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+         create_verification_op(std::string_view params,
+                                std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Encryption>
          create_encryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+                              std::string_view params,
+                              std::string_view provider) const override;
 
    protected:
       SM2_PublicKey() = default;
@@ -99,13 +99,13 @@ class BOTAN_PUBLIC_API(2,2) SM2_PrivateKey final :
 
       std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+                             std::string_view params,
+                             std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+                              std::string_view params,
+                              std::string_view provider) const override;
 
       const BigInt& get_da_inv() const { return m_da_inv; }
    private:
@@ -116,7 +116,7 @@ class HashFunction;
 
 std::vector<uint8_t>
 BOTAN_PUBLIC_API(2,5) sm2_compute_za(HashFunction& hash,
-                                     const std::string& user_id,
+                                     std::string_view user_id,
                                      const EC_Group& domain,
                                      const EC_Point& pubkey);
 

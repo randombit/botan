@@ -44,8 +44,10 @@ namespace {
 class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement
    {
    public:
-      PKCS11_ECDH_KA_Operation(const PKCS11_EC_PrivateKey& key, const std::string& params)
-         : PK_Ops::Key_Agreement(), m_key(key), m_mechanism(MechanismWrapper::create_ecdh_mechanism(params))
+      PKCS11_ECDH_KA_Operation(const PKCS11_EC_PrivateKey& key, std::string_view params)
+         : PK_Ops::Key_Agreement(),
+           m_key(key),
+           m_mechanism(MechanismWrapper::create_ecdh_mechanism(params))
          {}
 
       size_t agreed_value_size() const override { return m_key.domain().get_p_bytes(); }
@@ -100,8 +102,8 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement
 
 std::unique_ptr<PK_Ops::Key_Agreement>
 PKCS11_ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
-                                                const std::string& params,
-                                                const std::string& /*provider*/) const
+                                                std::string_view params,
+                                                std::string_view /*provider*/) const
    {
    return std::make_unique<PKCS11_ECDH_KA_Operation>(*this, params);
    }

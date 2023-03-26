@@ -104,8 +104,8 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PrivateKey final : public ECDH_PublicKey,
 
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const override;
+                                 std::string_view params,
+                                 std::string_view provider) const override;
    };
 
 }

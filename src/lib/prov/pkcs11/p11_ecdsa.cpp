@@ -61,7 +61,7 @@ namespace {
 class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
    {
    public:
-      PKCS11_ECDSA_Signature_Operation(const PKCS11_EC_PrivateKey& key, const std::string& hash)
+      PKCS11_ECDSA_Signature_Operation(const PKCS11_EC_PrivateKey& key, std::string_view hash)
          : PK_Ops::Signature(), m_key(key), m_order(key.domain().get_order()),
            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(hash)),
            m_hash(hash)
@@ -131,7 +131,7 @@ AlgorithmIdentifier PKCS11_ECDSA_Signature_Operation::algorithm_identifier() con
 class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
    {
    public:
-      PKCS11_ECDSA_Verification_Operation(const PKCS11_EC_PublicKey& key, const std::string& hash)
+      PKCS11_ECDSA_Verification_Operation(const PKCS11_EC_PublicKey& key, std::string_view hash)
          : PK_Ops::Verification(), m_key(key), m_order(key.domain().get_order()),
            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(hash)),
            m_hash(hash)
@@ -199,16 +199,16 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
 }
 
 std::unique_ptr<PK_Ops::Verification>
-PKCS11_ECDSA_PublicKey::create_verification_op(const std::string& params,
-                                               const std::string& /*provider*/) const
+PKCS11_ECDSA_PublicKey::create_verification_op(std::string_view params,
+                                               std::string_view /*provider*/) const
    {
    return std::make_unique<PKCS11_ECDSA_Verification_Operation>(*this, params);
    }
 
 std::unique_ptr<PK_Ops::Signature>
 PKCS11_ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                             const std::string& params,
-                                             const std::string& /*provider*/) const
+                                             std::string_view params,
+                                             std::string_view /*provider*/) const
    {
    return std::make_unique<PKCS11_ECDSA_Signature_Operation>(*this, params);
    }

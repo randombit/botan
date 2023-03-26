@@ -542,7 +542,7 @@ class RSA_Signature_Operation final : public PK_Ops::Signature,
       std::string hash_function() const override { return m_emsa->hash_function(); }
 
       RSA_Signature_Operation(const RSA_PrivateKey& rsa,
-                              const std::string& padding,
+                              std::string_view padding,
                               RandomNumberGenerator& rng) :
          RSA_Private_Operation(rsa, rng),
          m_emsa(EMSA::create_or_throw(padding))
@@ -578,7 +578,7 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
    {
    public:
 
-      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, const std::string& eme, RandomNumberGenerator& rng) :
+      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, std::string_view eme, RandomNumberGenerator& rng) :
          PK_Ops::Decryption_with_EME(eme),
          RSA_Private_Operation(rsa, rng)
          {
@@ -598,7 +598,7 @@ class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KD
    public:
 
       RSA_KEM_Decryption_Operation(const RSA_PrivateKey& key,
-                                   const std::string& kdf,
+                                   std::string_view kdf,
                                    RandomNumberGenerator& rng) :
          PK_Ops::KEM_Decryption_with_KDF(kdf),
          RSA_Private_Operation(key, rng)
@@ -652,7 +652,7 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
    {
    public:
 
-      RSA_Encryption_Operation(const RSA_PublicKey& rsa, const std::string& eme) :
+      RSA_Encryption_Operation(const RSA_PublicKey& rsa, std::string_view eme) :
          PK_Ops::Encryption_with_EME(eme),
          RSA_Public_Operation(rsa)
          {
@@ -686,7 +686,7 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
          return m_emsa->verify(message_repr, msg, public_modulus_bits() - 1);
          }
 
-      RSA_Verify_Operation(const RSA_PublicKey& rsa, const std::string& padding) :
+      RSA_Verify_Operation(const RSA_PublicKey& rsa, std::string_view padding) :
          RSA_Public_Operation(rsa),
          m_emsa(EMSA::create_or_throw(padding))
          {
@@ -712,7 +712,7 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
    public:
 
       RSA_KEM_Encryption_Operation(const RSA_PublicKey& key,
-                                   const std::string& kdf) :
+                                   std::string_view kdf) :
          PK_Ops::KEM_Encryption_with_KDF(kdf),
          RSA_Public_Operation(key) {}
 
@@ -743,8 +743,8 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
 
 std::unique_ptr<PK_Ops::Encryption>
 RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
-                                    const std::string& params,
-                                    const std::string& provider) const
+                                    std::string_view params,
+                                    std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Encryption_Operation>(*this, params);
@@ -752,8 +752,8 @@ RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
    }
 
 std::unique_ptr<PK_Ops::KEM_Encryption>
-RSA_PublicKey::create_kem_encryption_op(const std::string& params,
-                                        const std::string& provider) const
+RSA_PublicKey::create_kem_encryption_op(std::string_view params,
+                                        std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_KEM_Encryption_Operation>(*this, params);
@@ -761,8 +761,8 @@ RSA_PublicKey::create_kem_encryption_op(const std::string& params,
    }
 
 std::unique_ptr<PK_Ops::Verification>
-RSA_PublicKey::create_verification_op(const std::string& params,
-                                      const std::string& provider) const
+RSA_PublicKey::create_verification_op(std::string_view params,
+                                      std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Verify_Operation>(*this, params);
@@ -832,7 +832,7 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id)
 
 std::unique_ptr<PK_Ops::Verification>
 RSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
-                                           const std::string& provider) const
+                                           std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Verify_Operation>(*this, parse_rsa_signature_algorithm(alg_id));
@@ -842,8 +842,8 @@ RSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
 
 std::unique_ptr<PK_Ops::Decryption>
 RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                     const std::string& params,
-                                     const std::string& provider) const
+                                     std::string_view params,
+                                     std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Decryption_Operation>(*this, params, rng);
@@ -853,8 +853,8 @@ RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
 
 std::unique_ptr<PK_Ops::KEM_Decryption>
 RSA_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
-                                         const std::string& params,
-                                         const std::string& provider) const
+                                         std::string_view params,
+                                         std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_KEM_Decryption_Operation>(*this, params, rng);
@@ -864,8 +864,8 @@ RSA_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
 
 std::unique_ptr<PK_Ops::Signature>
 RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                    const std::string& params,
-                                    const std::string& provider) const
+                                    std::string_view params,
+                                    std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<RSA_Signature_Operation>(*this, params, rng);

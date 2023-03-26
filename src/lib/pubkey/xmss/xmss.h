@@ -119,12 +119,12 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
          }
 
       std::unique_ptr<PK_Ops::Verification>
-      create_verification_op(const std::string& params,
-                             const std::string& provider) const override;
+      create_verification_op(std::string_view params,
+                             std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Verification>
       create_x509_verification_op(const AlgorithmIdentifier& alg_id,
-                                  const std::string& provider) const override;
+                                  std::string_view provider) const override;
 
    protected:
       friend class XMSS_Verification_Operation;
@@ -255,8 +255,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
 
       std::unique_ptr<PK_Ops::Signature>
       create_signature_op(RandomNumberGenerator&,
-                          const std::string&,
-                          const std::string& provider) const override;
+                          std::string_view,
+                          std::string_view provider) const override;
 
       secure_vector<uint8_t> private_key_bits() const override;
 
