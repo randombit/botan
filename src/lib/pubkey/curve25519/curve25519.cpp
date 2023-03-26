@@ -97,6 +97,11 @@ secure_vector<uint8_t> Curve25519_PrivateKey::private_key_bits() const
    return DER_Encoder().encode(m_private, ASN1_Type::OctetString).get_contents();
    }
 
+secure_vector<uint8_t> Curve25519_PrivateKey::raw_private_key_bits() const
+   {
+   return secure_vector<uint8_t>(&m_private[0], &m_private[32]);
+   }
+
 bool Curve25519_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const
    {
    std::vector<uint8_t> public_point(32);

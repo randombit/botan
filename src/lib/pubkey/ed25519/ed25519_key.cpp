@@ -132,6 +132,11 @@ secure_vector<uint8_t> Ed25519_PrivateKey::private_key_bits() const
    return DER_Encoder().encode(bits, ASN1_Type::OctetString).get_contents();
    }
 
+secure_vector<uint8_t> Ed25519_PrivateKey::raw_private_key_bits() const
+   {
+   return secure_vector<uint8_t>(&m_private[0], &m_private[32]);
+   }
+
 bool Ed25519_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const
    {
    return true; // ???

@@ -93,6 +93,8 @@ class BOTAN_PUBLIC_API(2,0) Curve25519_PrivateKey final : public Curve25519_Publ
 
       secure_vector<uint8_t> private_key_bits() const override;
 
+      secure_vector<uint8_t> raw_private_key_bits() const;
+
       std::unique_ptr<Public_Key> public_key() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
