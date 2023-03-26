@@ -11,6 +11,7 @@
 #include <botan/internal/parsing.h>
 #include <botan/hash.h>
 #include <botan/rng.h>
+#include <sstream>
 
 #if defined(BOTAN_HAS_RAW_HASH_FN)
   #include <botan/internal/raw_hash.h>

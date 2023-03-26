@@ -13,10 +13,11 @@
 
 #include <botan/xmss_parameters.h>
 #include <botan/exceptn.h>
+#include <sstream>
 
 namespace Botan {
 
-XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(const std::string& param_set)
+XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(std::string_view param_set)
    {
    if(param_set == "XMSS-SHA2_10_256")
       { return XMSS_SHA2_10_256; }
@@ -60,10 +61,13 @@ XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(const std
       { return XMSS_SHAKE256_16_192; }
    if(param_set == "XMSS-SHAKE256_20_192")
       { return XMSS_SHAKE256_20_192; }
-   throw Lookup_Error("Unknown XMSS algorithm param '" + param_set + "'");
+
+   std::ostringstream err;
+   err << "Unknown XMSS algorithm param '" << param_set << "'";
+   throw Lookup_Error(err.str());
    }
 
-XMSS_Parameters::XMSS_Parameters(const std::string& param_set)
+XMSS_Parameters::XMSS_Parameters(std::string_view param_set)
    : XMSS_Parameters(XMSS_Parameters::xmss_id_from_string(param_set))
    {
    }

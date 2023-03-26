@@ -17,7 +17,7 @@
 
 namespace Botan {
 
-uint16_t to_uint16(const std::string& str)
+uint16_t to_uint16(std::string_view str)
    {
    const uint32_t x = to_u32bit(str);
 
@@ -27,8 +27,10 @@ uint16_t to_uint16(const std::string& str)
    return static_cast<uint16_t>(x);
    }
 
-uint32_t to_u32bit(const std::string& str)
+uint32_t to_u32bit(std::string_view str_view)
    {
+   const std::string str(str_view);
+
    // std::stoul is not strict enough. Ensure that str is digit only [0-9]*
    for(const char chr : str)
       {

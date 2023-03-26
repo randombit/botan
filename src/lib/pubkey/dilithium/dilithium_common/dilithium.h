@@ -34,7 +34,7 @@ class BOTAN_PUBLIC_API(3,0) DilithiumMode
    public:
       DilithiumMode(Mode mode) : m_mode(mode) {}
       explicit DilithiumMode(const OID& oid);
-      explicit DilithiumMode(const std::string& str);
+      explicit DilithiumMode(std::string_view str);
 
       OID object_identifier() const;
       std::string to_string() const;

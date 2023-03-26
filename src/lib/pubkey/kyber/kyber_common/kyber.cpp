@@ -43,12 +43,13 @@
 #include <optional>
 #include <vector>
 #include <limits>
+#include <sstream>
 
 namespace Botan {
 
 namespace {
 
-KyberMode::Mode kyber_mode_from_string(const std::string& str)
+KyberMode::Mode kyber_mode_from_string(std::string_view str)
    {
    if(str == "Kyber-512-90s-r3")
       return KyberMode::Kyber512_90s;
@@ -63,7 +64,9 @@ KyberMode::Mode kyber_mode_from_string(const std::string& str)
    if(str == "Kyber-1024-r3")
       return KyberMode::Kyber1024;
 
-   throw Invalid_Argument(str + " is not a valid Kyber mode name");
+   std::ostringstream err;
+   err << str << " is not a valid Kyber mode name";
+   throw Invalid_Argument(err.str());
    }
 
 }
@@ -74,7 +77,7 @@ KyberMode::KyberMode(Mode mode)
 KyberMode::KyberMode(const OID& oid)
    : m_mode(kyber_mode_from_string(oid.to_formatted_string())) {}
 
-KyberMode::KyberMode(const std::string& str)
+KyberMode::KyberMode(std::string_view str)
    : m_mode(kyber_mode_from_string(str)) {}
 
 OID KyberMode::object_identifier() const

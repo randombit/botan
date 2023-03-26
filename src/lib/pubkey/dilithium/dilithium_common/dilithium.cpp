@@ -23,6 +23,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/parsing.h>
 
+#include <sstream>
 #include <algorithm>
 #include <iterator>
 #include <array>
@@ -60,7 +61,7 @@ calculate_t0_and_t1(const DilithiumModeConstants& mode,
    return { std::move(t0), std::move(t1) };
    }
 
-DilithiumMode::Mode dilithium_mode_from_string(const std::string& str)
+DilithiumMode::Mode dilithium_mode_from_string(std::string_view str)
    {
    if(str == "Dilithium-4x4-r3")
       { return DilithiumMode::Dilithium4x4; }
@@ -75,7 +76,9 @@ DilithiumMode::Mode dilithium_mode_from_string(const std::string& str)
    if(str == "Dilithium-8x7-AES-r3")
       { return DilithiumMode::Dilithium8x7_AES; }
 
-   throw Invalid_Argument(str + " is not a valid Dilithium mode name");
+   std::ostringstream err;
+   err << str << " is not a valid Dilithium mode name";
+   throw Invalid_Argument(err.str());
    }
 
 }
@@ -83,7 +86,7 @@ DilithiumMode::Mode dilithium_mode_from_string(const std::string& str)
 DilithiumMode::DilithiumMode(const OID& oid)
    : m_mode(dilithium_mode_from_string(oid.to_formatted_string())) {}
 
-DilithiumMode::DilithiumMode(const std::string& str)
+DilithiumMode::DilithiumMode(std::string_view str)
    : m_mode(dilithium_mode_from_string(str)) {}
 
 OID DilithiumMode::object_identifier() const { return OID::from_string(to_string()); }

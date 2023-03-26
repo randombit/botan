@@ -7,6 +7,7 @@
 
 #include <botan/pk_algs.h>
 #include <botan/internal/parsing.h>
+#include <sstream>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -264,30 +265,8 @@ load_private_key(const AlgorithmIdentifier& alg_id,
    throw Decoding_Error("Unknown or unavailable public key algorithm " + alg_name);
    }
 
-#if defined(BOTAN_HAS_ECC_GROUP)
-
-namespace {
-
-std::string default_ec_group_for(const std::string& alg_name)
-   {
-   if(alg_name == "SM2" || alg_name == "SM2_Enc" || alg_name == "SM2_Sig")
-      return "sm2p256v1";
-   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256")
-      return "gost_256A";
-   if(alg_name == "GOST-34.10-2012-512")
-      return "gost_512A";
-   if(alg_name == "ECGDSA")
-      return "brainpool256r1";
-   return "secp256r1";
-
-   }
-
-}
-
-#endif
-
 BOTAN_PUBLIC_API(3,0) std::unique_ptr<Private_Key>
-create_ec_private_key(const std::string& alg_name,
+create_ec_private_key(std::string_view alg_name,
                       const EC_Group& ec_group,
                       RandomNumberGenerator& rng)
    {
@@ -329,10 +308,10 @@ create_ec_private_key(const std::string& alg_name,
 
 
 std::unique_ptr<Private_Key>
-create_private_key(const std::string& alg_name,
+create_private_key(std::string_view alg_name,
                    RandomNumberGenerator& rng,
-                   const std::string& params,
-                   const std::string& provider)
+                   std::string_view params,
+                   std::string_view provider)
    {
    /*
    * Default paramaters are chosen for work factor > 2**128 where possible
@@ -346,31 +325,53 @@ create_private_key(const std::string& alg_name,
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA")
       {
-      const size_t rsa_bits = (params.empty() ? 3072 : to_u32bit(params));
-      return std::make_unique<RSA_PrivateKey>(rng, rsa_bits);
+      const size_t modulus_bits = [&]() -> size_t
+         {
+         if(params.empty())
+            return 3072;
+         return to_u32bit(params);
+         }();
+
+      return std::make_unique<RSA_PrivateKey>(rng, modulus_bits);
       }
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece")
       {
-      std::vector<std::string> mce_param =
-         split_on(params.empty() ? "2960,57" : params, ',');
+      const auto [n, t] = [&]() -> std::pair<size_t, size_t>
+         {
+         if(params.empty())
+            return std::make_pair(2960, 57);
 
-      if(mce_param.size() != 2)
-         throw Invalid_Argument("create_private_key bad McEliece parameters " + params);
+         const auto mce_params = split_on(params, ',');
 
-      size_t mce_n = to_u32bit(mce_param[0]);
-      size_t mce_t = to_u32bit(mce_param[1]);
+         if(mce_params.size() != 2)
+            {
+            std::ostringstream err;
+            err << "create_private_key: invalid McEliece parameters " << params;
+            throw Invalid_Argument(err.str());
+            }
 
-      return std::make_unique<McEliece_PrivateKey>(rng, mce_n, mce_t);
+         const size_t mce_n = to_u32bit(mce_params[0]);
+         const size_t mce_t = to_u32bit(mce_params[1]);
+         return std::make_pair(mce_n, mce_t);
+         }();
+
+      return std::make_unique<McEliece_PrivateKey>(rng, n, t);
       }
 #endif
 
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    if(alg_name == "Kyber")
       {
-      const KyberMode mode(params.empty() ? "Kyber-1024-r3" : params);
+      const auto mode = [&]() -> KyberMode
+         {
+         if(params.empty())
+            return KyberMode::Kyber1024;
+         return KyberMode(params);
+         }();
+
       return std::make_unique<Kyber_PrivateKey>(rng, mode);
       }
 #endif
@@ -378,7 +379,13 @@ create_private_key(const std::string& alg_name,
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
    if(alg_name == "Dilithium" || alg_name == "Dilithium-")
       {
-      const DilithiumMode mode(params.empty() ? "Dilithium-6x5-r3" : params);
+      const auto mode = [&]() -> DilithiumMode
+         {
+         if(params.empty())
+            return DilithiumMode::Dilithium6x5;
+         return DilithiumMode(params);
+         }();
+
       return std::make_unique<Dilithium_PrivateKey>(rng, mode);
       }
 #endif
@@ -386,7 +393,14 @@ create_private_key(const std::string& alg_name,
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS")
       {
-      return std::make_unique<XMSS_PrivateKey>(XMSS_Parameters(params.empty() ? "XMSS-SHA2_10_512" : params).oid(), rng);
+      const auto xmss_oid = [&]() -> XMSS_Parameters::xmss_algorithm_t
+         {
+         if(params.empty())
+            return XMSS_Parameters::XMSS_SHA2_10_512;
+         return XMSS_Parameters(params).oid();
+         }();
+
+      return std::make_unique<XMSS_PrivateKey>(xmss_oid, rng);
       }
 #endif
 
@@ -411,7 +425,22 @@ create_private_key(const std::string& alg_name,
       alg_name == "GOST-34.10-2012-256" ||
       alg_name == "GOST-34.10-2012-512")
       {
-      const EC_Group ec_group(params.empty() ? default_ec_group_for(alg_name) : params);
+      const std::string group_id = [&]() -> std::string
+         {
+         if(!params.empty())
+            return std::string(params);
+         if(alg_name == "SM2" || alg_name == "SM2_Enc" || alg_name == "SM2_Sig")
+            return "sm2p256v1";
+         if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256")
+            return "gost_256A";
+         if(alg_name == "GOST-34.10-2012-512")
+            return "gost_512A";
+         if(alg_name == "ECGDSA")
+            return "brainpool256r1";
+         return "secp256r1";
+         }();
+
+      const EC_Group ec_group(group_id);
       return create_ec_private_key(alg_name, ec_group, rng);
       }
 #endif
@@ -420,8 +449,16 @@ create_private_key(const std::string& alg_name,
 #if defined(BOTAN_HAS_DL_GROUP)
    if(alg_name == "DH" || alg_name == "DSA" || alg_name == "ElGamal")
       {
-      std::string default_group = (alg_name == "DSA") ? "dsa/botan/2048" : "modp/ietf/2048";
-      DL_Group modp_group(params.empty() ? default_group : params);
+      const std::string group_id = [&]() -> std::string
+         {
+         if(!params.empty())
+            return std::string(params);
+         if(alg_name == "DSA")
+            return "dsa/botan/2048";
+         return "modp/ietf/2048";
+         }();
+
+      DL_Group modp_group(group_id);
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       if(alg_name == "DH")
@@ -446,7 +483,7 @@ create_private_key(const std::string& alg_name,
    }
 
 std::vector<std::string>
-probe_provider_private_key(const std::string& alg_name,
+probe_provider_private_key(std::string_view alg_name,
                            const std::vector<std::string>& possible)
    {
    std::vector<std::string> providers;

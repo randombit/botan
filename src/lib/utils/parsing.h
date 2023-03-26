@@ -44,18 +44,18 @@ std::string string_join(const std::vector<std::string>& strs,
                         char delim);
 
 /**
-* Convert a string to a number
+* Convert a decimal string to a number
 * @param str the string to convert
 * @return number value of the string
 */
-BOTAN_TEST_API uint32_t to_u32bit(const std::string& str);
+BOTAN_TEST_API uint32_t to_u32bit(std::string_view str);
 
 /**
-* Convert a string to a number
+* Convert a decimal string to a number
 * @param str the string to convert
 * @return number value of the string
 */
-uint16_t to_uint16(const std::string& str);
+uint16_t to_uint16(std::string_view str);
 
 /**
 * Convert a string representation of an IPv4 address to a number

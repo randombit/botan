@@ -48,10 +48,10 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
          WOTSP_SHAKE_256_192 = 0x00000007,
          };
 
-      explicit XMSS_WOTS_Parameters(const std::string& algo_name);
+      explicit XMSS_WOTS_Parameters(std::string_view algo_name);
       XMSS_WOTS_Parameters(ots_algorithm_t ots_spec);
 
-      static ots_algorithm_t xmss_wots_id_from_string(const std::string& param_set);
+      static ots_algorithm_t xmss_wots_id_from_string(std::string_view param_set);
 
       /**
        * Algorithm 1: convert input string to base.
@@ -168,9 +168,9 @@ class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
          XMSS_SHAKE256_20_192 = 0x00000015,
          };
 
-      static xmss_algorithm_t xmss_id_from_string(const std::string& algo_name);
+      static xmss_algorithm_t xmss_id_from_string(std::string_view algo_name);
 
-      explicit XMSS_Parameters(const std::string& algo_name);
+      explicit XMSS_Parameters(std::string_view algo_name);
       explicit XMSS_Parameters(xmss_algorithm_t oid);
 
       /**
