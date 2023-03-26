@@ -13,6 +13,7 @@
 #include <concepts>
 #include <type_traits>
 #include <ostream>
+#include <cstdint>
 
 namespace Botan::concepts {
 
