@@ -12,6 +12,8 @@
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
   #include <botan/internal/locking_allocator.h>
+#elif defined(BOTAN_HAS_EXTERNAL_ALLOCATOR)
+  #include <botan/external_allocator.h>
 #endif
 
 namespace Botan {
@@ -28,6 +30,9 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size)
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
    if(void* p = mlock_allocator::instance().allocate(elems, elem_size))
+      return p;
+#elif defined(BOTAN_HAS_EXTERNAL_ALLOCATOR)
+   if(void* p = external_allocator::instance().allocate(elems, elem_size))
       return p;
 #endif
 
@@ -51,6 +56,9 @@ void deallocate_memory(void* p, size_t elems, size_t elem_size)
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
    if(mlock_allocator::instance().deallocate(p, elems, elem_size))
       return;
+#elif defined(BOTAN_HAS_EXTERNAL_ALLOCATOR)
+   if(external_allocator::instance().deallocate(p, elems, elem_size))
+      return;
 #endif
 
    std::free(p); // NOLINT(*-no-malloc)
@@ -60,6 +68,8 @@ void initialize_allocator()
    {
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
    mlock_allocator::instance();
+#elif defined(BOTAN_HAS_EXTERNAL_ALLOCATOR)
+   external_allocator::instance();
 #endif
    }
 

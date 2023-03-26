@@ -1,0 +1,12 @@
+<defines>
+EXTERNAL_ALLOCATOR -> 20131128
+</defines>
+
+<module_info>
+name -> "External Allocator"
+brief -> "STL allocator using an external allocator"
+</module_info>
+
+<header:public>
+external_allocator.h
+</header:public>
