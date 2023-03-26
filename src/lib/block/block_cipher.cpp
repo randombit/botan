@@ -84,8 +84,8 @@
 namespace Botan {
 
 std::unique_ptr<BlockCipher>
-BlockCipher::create(const std::string& algo,
-                    const std::string& provider)
+BlockCipher::create(std::string_view algo,
+                    std::string_view provider)
    {
 #if defined(BOTAN_HAS_COMMONCRYPTO)
    if(provider.empty() || provider == "commoncrypto")
@@ -280,8 +280,8 @@ BlockCipher::create(const std::string& algo,
 
 //static
 std::unique_ptr<BlockCipher>
-BlockCipher::create_or_throw(const std::string& algo,
-                             const std::string& provider)
+BlockCipher::create_or_throw(std::string_view algo,
+                             std::string_view provider)
    {
    if(auto bc = BlockCipher::create(algo, provider))
       {

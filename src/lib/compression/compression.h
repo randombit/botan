@@ -25,7 +25,7 @@ class BOTAN_PUBLIC_API(2,0) Compression_Algorithm
       * algo combination cannot be found.
       */
       static std::unique_ptr<Compression_Algorithm>
-         create(const std::string& algo_spec);
+         create(std::string_view algo_spec);
 
       /**
       * Create an instance based on a name
@@ -33,7 +33,7 @@ class BOTAN_PUBLIC_API(2,0) Compression_Algorithm
       * Throws Lookup_Error if not found.
       */
       static std::unique_ptr<Compression_Algorithm>
-         create_or_throw(const std::string& algo_spec);
+         create_or_throw(std::string_view algo_spec);
 
       /**
       * Begin compressing. Most compression algorithms offer a tunable
@@ -86,7 +86,7 @@ class BOTAN_PUBLIC_API(2,0) Decompression_Algorithm
       * algo combination cannot be found.
       */
       static std::unique_ptr<Decompression_Algorithm>
-         create(const std::string& algo_spec);
+         create(std::string_view algo_spec);
 
       /**
       * Create an instance based on a name
@@ -94,7 +94,7 @@ class BOTAN_PUBLIC_API(2,0) Decompression_Algorithm
       * Throws Lookup_Error if not found.
       */
       static std::unique_ptr<Decompression_Algorithm>
-         create_or_throw(const std::string& algo_spec);
+         create_or_throw(std::string_view algo_spec);
 
       /**
       * Begin decompressing.
@@ -132,13 +132,13 @@ class BOTAN_PUBLIC_API(2,0) Decompression_Algorithm
    };
 
 BOTAN_DEPRECATED("Use Compression_Algorithm::create")
-inline Compression_Algorithm* make_compressor(const std::string& type)
+inline Compression_Algorithm* make_compressor(std::string_view type)
    {
    return Compression_Algorithm::create(type).release();
    }
 
 BOTAN_DEPRECATED("Use Decompression_Algorithm::create")
-inline Decompression_Algorithm* make_decompressor(const std::string& type)
+inline Decompression_Algorithm* make_decompressor(std::string_view type)
    {
    return Decompression_Algorithm::create(type).release();
    }
@@ -146,7 +146,7 @@ inline Decompression_Algorithm* make_decompressor(const std::string& type)
 /**
 * An error that occurred during compression (or decompression)
 */
-class BOTAN_PUBLIC_API(2,9) Compression_Error : public Exception
+class BOTAN_PUBLIC_API(2,9) Compression_Error final : public Exception
    {
    public:
 

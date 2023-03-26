@@ -31,7 +31,7 @@
 
 namespace Botan {
 
-std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
+std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec)
    {
    SCAN_Name req(algo_spec);
 
@@ -168,7 +168,7 @@ std::unique_ptr<EMSA> EMSA::create(const std::string& algo_spec)
    return nullptr;
    }
 
-std::unique_ptr<EMSA> EMSA::create_or_throw(const std::string& algo_spec)
+std::unique_ptr<EMSA> EMSA::create_or_throw(std::string_view algo_spec)
    {
    auto emsa = EMSA::create(algo_spec);
    if(emsa)

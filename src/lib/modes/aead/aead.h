@@ -31,9 +31,9 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       * @param provider optional specification for provider to use
       * @return an AEAD mode or a null pointer if not available
       */
-      static std::unique_ptr<AEAD_Mode> create(const std::string& algo,
+      static std::unique_ptr<AEAD_Mode> create(std::string_view algo,
                                                Cipher_Dir direction,
-                                               const std::string& provider = "");
+                                               std::string_view provider = "");
 
       /**
       * Create an AEAD mode, or throw
@@ -42,9 +42,9 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       * @param provider optional specification for provider to use
       * @return an AEAD mode, or throw an exception
       */
-      static std::unique_ptr<AEAD_Mode> create_or_throw(const std::string& algo,
+      static std::unique_ptr<AEAD_Mode> create_or_throw(std::string_view algo,
                                                         Cipher_Dir direction,
-                                                        const std::string& provider = "");
+                                                        std::string_view provider = "");
 
       /**
       * Set associated data that is not included in the ciphertext but
@@ -144,7 +144,8 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
 * @param name AEAD name
 * @param direction Cipher_Dir::Encryption or Cipher_Dir::Decryption
 */
-inline AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction)
+BOTAN_DEPRECATED("Use AEAD_Mode::create")
+inline AEAD_Mode* get_aead(std::string_view name, Cipher_Dir direction)
    {
    return AEAD_Mode::create(name, direction, "").release();
    }

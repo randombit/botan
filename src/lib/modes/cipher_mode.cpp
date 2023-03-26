@@ -37,9 +37,9 @@
 
 namespace Botan {
 
-std::unique_ptr<Cipher_Mode> Cipher_Mode::create_or_throw(const std::string& algo,
+std::unique_ptr<Cipher_Mode> Cipher_Mode::create_or_throw(std::string_view algo,
                                                           Cipher_Dir direction,
-                                                          const std::string& provider)
+                                                          std::string_view provider)
    {
    if(auto mode = Cipher_Mode::create(algo, direction, provider))
       return mode;
@@ -47,9 +47,9 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create_or_throw(const std::string& alg
    throw Lookup_Error("Cipher mode", algo, provider);
    }
 
-std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
+std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
                                                  Cipher_Dir direction,
-                                                 const std::string& provider)
+                                                 std::string_view provider)
    {
 #if defined(BOTAN_HAS_COMMONCRYPTO)
    if(provider.empty() || provider == "commoncrypto")

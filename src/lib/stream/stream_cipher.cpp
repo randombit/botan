@@ -35,8 +35,8 @@
 
 namespace Botan {
 
-std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
-                                                   const std::string& provider)
+std::unique_ptr<StreamCipher> StreamCipher::create(std::string_view algo_spec,
+                                                   std::string_view provider)
    {
 #if defined(BOTAN_HAS_SHAKE_CIPHER)
    if(algo_spec == "SHAKE-128" || algo_spec == "SHAKE-128-XOF")
@@ -128,8 +128,8 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
 
 //static
 std::unique_ptr<StreamCipher>
-StreamCipher::create_or_throw(const std::string& algo,
-                             const std::string& provider)
+StreamCipher::create_or_throw(std::string_view algo,
+                             std::string_view provider)
    {
    if(auto sc = StreamCipher::create(algo, provider))
       {

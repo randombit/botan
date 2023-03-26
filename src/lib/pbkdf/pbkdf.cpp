@@ -19,8 +19,8 @@
 
 namespace Botan {
 
-std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
-                                     const std::string& provider)
+std::unique_ptr<PBKDF> PBKDF::create(std::string_view algo_spec,
+                                     std::string_view provider)
    {
    const SCAN_Name req(algo_spec);
 
@@ -58,8 +58,8 @@ std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
 
 //static
 std::unique_ptr<PBKDF>
-PBKDF::create_or_throw(const std::string& algo,
-                             const std::string& provider)
+PBKDF::create_or_throw(std::string_view algo,
+                             std::string_view provider)
    {
    if(auto pbkdf = PBKDF::create(algo, provider))
       {

@@ -12,6 +12,7 @@
 #include <botan/secmem.h>
 #include <botan/sym_algo.h>
 #include <botan/exceptn.h>
+#include <string_view>
 #include <string>
 #include <span>
 #include <vector>
@@ -49,9 +50,9 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * @param provider optional specification for provider to use
       * @return an AEAD mode or a null pointer if not available
       */
-      static std::unique_ptr<Cipher_Mode> create(const std::string& algo,
+      static std::unique_ptr<Cipher_Mode> create(std::string_view algo,
                                                  Cipher_Dir direction,
-                                                 const std::string& provider = "");
+                                                 std::string_view provider = "");
 
       /**
       * Create an AEAD mode, or throw
@@ -60,9 +61,9 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * @param provider optional specification for provider to use
       * @return an AEAD mode, or throw an exception
       */
-      static std::unique_ptr<Cipher_Mode> create_or_throw(const std::string& algo,
+      static std::unique_ptr<Cipher_Mode> create_or_throw(std::string_view algo,
                                                           Cipher_Dir direction,
-                                                          const std::string& provider = "");
+                                                          std::string_view provider = "");
 
    protected:
       /*
@@ -256,9 +257,9 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
 * @param provider provider implementation to choose
 */
 BOTAN_DEPRECATED("Use Cipher_Mode::create")
-inline Cipher_Mode* get_cipher_mode(const std::string& algo_spec,
+inline Cipher_Mode* get_cipher_mode(std::string_view algo_spec,
                                     Cipher_Dir direction,
-                                    const std::string& provider = "")
+                                    std::string_view provider = "")
    {
    return Cipher_Mode::create(algo_spec, direction, provider).release();
    }

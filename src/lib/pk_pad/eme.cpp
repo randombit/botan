@@ -24,7 +24,7 @@
 
 namespace Botan {
 
-std::unique_ptr<EME> EME::create(const std::string& algo_spec)
+std::unique_ptr<EME> EME::create(std::string_view algo_spec)
    {
 #if defined(BOTAN_HAS_EME_RAW)
    if(algo_spec == "Raw")

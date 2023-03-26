@@ -46,8 +46,9 @@ void PasswordHash::derive_key(uint8_t out[], size_t out_len,
       throw Not_Implemented("PasswordHash " + this->to_string() + " does not support AD or key");
    }
 
-std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string& algo_spec,
-                                     const std::string& provider)
+std::unique_ptr<PasswordHashFamily>
+PasswordHashFamily::create(std::string_view algo_spec,
+                           std::string_view provider)
    {
    const SCAN_Name req(algo_spec);
 
@@ -114,8 +115,8 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
 
 //static
 std::unique_ptr<PasswordHashFamily>
-PasswordHashFamily::create_or_throw(const std::string& algo,
-                             const std::string& provider)
+PasswordHashFamily::create_or_throw(std::string_view algo,
+                                    std::string_view provider)
    {
    if(auto pbkdf = PasswordHashFamily::create(algo, provider))
       {

@@ -39,9 +39,9 @@
 
 namespace Botan {
 
-std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(const std::string& algo,
+std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(std::string_view algo,
                                                       Cipher_Dir dir,
-                                                      const std::string& provider)
+                                                      std::string_view provider)
    {
    if(auto aead = AEAD_Mode::create(algo, dir, provider))
       return aead;
@@ -49,9 +49,9 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(const std::string& algo,
    throw Lookup_Error("AEAD", algo, provider);
    }
 
-std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
+std::unique_ptr<AEAD_Mode> AEAD_Mode::create(std::string_view algo,
                                              Cipher_Dir dir,
-                                             const std::string& provider)
+                                             std::string_view provider)
    {
    BOTAN_UNUSED(provider);
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)

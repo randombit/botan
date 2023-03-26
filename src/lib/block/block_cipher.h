@@ -9,6 +9,7 @@
 #define BOTAN_BLOCK_CIPHER_H_
 
 #include <botan/sym_algo.h>
+#include <string_view>
 #include <string>
 #include <memory>
 #include <vector>
@@ -30,8 +31,8 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<BlockCipher>
-         create(const std::string& algo_spec,
-                const std::string& provider = "");
+         create(std::string_view algo_spec,
+                std::string_view provider = "");
 
       /**
       * Create an instance based on a name, or throw if the
@@ -39,8 +40,8 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * empty then best available is chosen.
       */
       static std::unique_ptr<BlockCipher>
-         create_or_throw(const std::string& algo_spec,
-                         const std::string& provider = "");
+         create_or_throw(std::string_view algo_spec,
+                         std::string_view provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available

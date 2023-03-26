@@ -167,8 +167,8 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       * @param provider provider implementation to choose
       * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<PasswordHashFamily> create(const std::string& algo_spec,
-                                                        const std::string& provider = "");
+      static std::unique_ptr<PasswordHashFamily> create(std::string_view algo_spec,
+                                                        std::string_view provider = "");
 
       /**
       * Create an instance based on a name, or throw if the
@@ -176,8 +176,8 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       * empty then best available is chosen.
       */
       static std::unique_ptr<PasswordHashFamily>
-         create_or_throw(const std::string& algo_spec,
-                         const std::string& provider = "");
+         create_or_throw(std::string_view algo_spec,
+                         std::string_view provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
