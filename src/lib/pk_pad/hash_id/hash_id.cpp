@@ -70,7 +70,7 @@ const uint8_t SM3_PKCS_ID[] = {
 /*
 * HashID as specified by PKCS
 */
-std::vector<uint8_t> pkcs_hash_id(const std::string& name)
+std::vector<uint8_t> pkcs_hash_id(std::string_view name)
    {
    // Special case for SSL/TLS RSA signatures
    if(name == "Parallel(MD5,SHA-1)")
@@ -129,13 +129,13 @@ std::vector<uint8_t> pkcs_hash_id(const std::string& name)
    if(name == "SM3")
       return std::vector<uint8_t>(SM3_PKCS_ID, SM3_PKCS_ID + sizeof(SM3_PKCS_ID));
 
-   throw Invalid_Argument("No PKCS #1 identifier for " + name);
+   throw Invalid_Argument("No PKCS #1 identifier for " + std::string(name));
    }
 
 /*
 * HashID as specified by IEEE 1363/X9.31
 */
-uint8_t ieee1363_hash_id(const std::string& name)
+uint8_t ieee1363_hash_id(std::string_view name)
    {
    if(name == "SHA-1")      return 0x33;
 
