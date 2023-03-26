@@ -115,6 +115,7 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
                       RandomNumberGenerator& rng) :
          PK_Ops::Key_Agreement_with_KDF(kdf),
          m_key(key),
+         m_key_bits(m_key->private_key().bits()),
          m_blinder(m_key->group().get_p(),
                    rng,
                    [](const BigInt& k) { return k; },
@@ -136,11 +137,12 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
 
       BigInt powermod_x_p(const BigInt& v) const
          {
-         return group().power_b_p(v, m_key->private_key());
+         return group().power_b_p(v, m_key->private_key(), m_key_bits);
          }
 
       std::shared_ptr<const DL_PrivateKey> m_key;
       std::shared_ptr<const Montgomery_Params> m_monty_p;
+      const size_t m_key_bits;
       Blinder m_blinder;
    };
 
