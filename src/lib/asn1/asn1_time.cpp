@@ -30,12 +30,12 @@ ASN1_Time::ASN1_Time(const std::chrono::system_clock::time_point& time)
    m_tag = (m_year >= 2050) ? ASN1_Type::GeneralizedTime : ASN1_Type::UtcTime;
    }
 
-ASN1_Time::ASN1_Time(const std::string& t_spec, ASN1_Type tag)
+ASN1_Time::ASN1_Time(std::string_view t_spec, ASN1_Type tag)
    {
    set_to(t_spec, tag);
    }
 
-ASN1_Time::ASN1_Time(const std::string& t_spec)
+ASN1_Time::ASN1_Time(std::string_view t_spec)
    {
    if(t_spec.size() == 13)
       set_to(t_spec, ASN1_Type::UtcTime);
@@ -147,7 +147,7 @@ int32_t ASN1_Time::cmp(const ASN1_Time& other) const
    return SAME_TIME;
    }
 
-void ASN1_Time::set_to(const std::string& t_spec, ASN1_Type spec_tag)
+void ASN1_Time::set_to(std::string_view t_spec, ASN1_Type spec_tag)
    {
    BOTAN_ARG_CHECK(spec_tag == ASN1_Type::UtcTime ||
                    spec_tag == ASN1_Type::GeneralizedTime,
@@ -189,7 +189,11 @@ void ASN1_Time::set_to(const std::string& t_spec, ASN1_Type spec_tag)
       }
 
    if(!passes_sanity_check())
-      throw Invalid_Argument("Time " + t_spec + " does not seem to be valid");
+      {
+      std::ostringstream err;
+      err << "Time " << t_spec << " does not seem to be valid";
+      throw Invalid_Argument(err.str());
+      }
    }
 
 /*

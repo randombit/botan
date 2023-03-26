@@ -23,7 +23,7 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& oid,
 /*
 * Create an AlgorithmIdentifier
 */
-AlgorithmIdentifier::AlgorithmIdentifier(const std::string& oid,
+AlgorithmIdentifier::AlgorithmIdentifier(std::string_view oid,
                                          const std::vector<uint8_t>& param) :
    AlgorithmIdentifier(OID::from_string(oid), param)
    {}
@@ -45,7 +45,7 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& oid,
 /*
 * Create an AlgorithmIdentifier
 */
-AlgorithmIdentifier::AlgorithmIdentifier(const std::string& oid,
+AlgorithmIdentifier::AlgorithmIdentifier(std::string_view oid,
                                          Encoding_Option option) :
    m_oid(OID::from_string(oid)),
    m_parameters()

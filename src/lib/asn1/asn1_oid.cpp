@@ -19,7 +19,7 @@ namespace Botan {
 namespace {
 
 // returns empty on invalid
-std::vector<uint32_t> parse_oid_str(const std::string& oid)
+std::vector<uint32_t> parse_oid_str(std::string_view oid)
    {
    try
       {
@@ -55,13 +55,13 @@ std::vector<uint32_t> parse_oid_str(const std::string& oid)
 }
 
 //static
-void OID::register_oid(const OID& oid, const std::string& name)
+void OID::register_oid(const OID& oid, std::string_view name)
    {
    OID_Map::global_registry().add_oid(oid, name);
    }
 
 //static
-std::optional<OID> OID::from_name(const std::string& name)
+std::optional<OID> OID::from_name(std::string_view name)
    {
    if(name.empty())
       throw Invalid_Argument("OID::from_name argument must be non-empty");
@@ -74,7 +74,7 @@ std::optional<OID> OID::from_name(const std::string& name)
    }
 
 //static
-OID OID::from_string(const std::string& str)
+OID OID::from_string(std::string_view str)
    {
    if(str.empty())
       throw Invalid_Argument("OID::from_string argument must be non-empty");
@@ -88,20 +88,24 @@ OID OID::from_string(const std::string& str)
    if(!raw.empty())
       return OID(std::move(raw));
 
-   throw Lookup_Error("No OID associated with name " + str);
+   std::ostringstream err;
+   err << "No OID associated with name " << str;
+   throw Lookup_Error(err.str());
    }
 
 /*
 * ASN.1 OID Constructor
 */
-OID::OID(const std::string& oid_str)
+OID::OID(std::string_view oid_str)
    {
    if(!oid_str.empty())
       {
       m_id = parse_oid_str(oid_str);
       if(m_id.size() < 2 || m_id[0] > 2 || (m_id[0] < 2 && m_id[1] > 39))
          {
-         throw Decoding_Error("Invalid OID '" + oid_str + "'");
+         std::ostringstream err;
+         err << "Invalid OID '" << oid_str << "'";
+         throw Decoding_Error(err.str());
          }
       }
    }

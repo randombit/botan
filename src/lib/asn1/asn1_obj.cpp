@@ -25,7 +25,7 @@ std::vector<uint8_t> ASN1_Object::BER_encode() const
 * Check a type invariant on BER data
 */
 void BER_Object::assert_is_a(ASN1_Type expected_type_tag, ASN1_Class expected_class_tag,
-                             const std::string& descr) const
+                             std::string_view descr) const
    {
    if(this->is_a(expected_type_tag, expected_class_tag) == false)
       {
