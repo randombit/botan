@@ -11,6 +11,7 @@
 #include <botan/secmem.h>
 #include <botan/asn1_obj.h>
 #include <botan/pk_ops_fwd.h>
+#include <string_view>
 #include <string>
 #include <span>
 
@@ -92,7 +93,7 @@ class BOTAN_PUBLIC_API(3,0) Asymmetric_Key
       * This is primarily used to implement the FFI botan_pubkey_get_field
       * and botan_privkey_get_field functions.
       */
-      virtual const BigInt& get_int_field(const std::string& field) const;
+      virtual const BigInt& get_int_field(std::string_view field) const;
 
       /**
       * Return true if this key could be used for the specified type

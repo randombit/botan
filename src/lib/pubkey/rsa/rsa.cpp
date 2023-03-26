@@ -104,7 +104,7 @@ std::shared_ptr<const RSA_Public_Data> RSA_PublicKey::public_data() const
    return m_public;
    }
 
-const BigInt& RSA_PublicKey::get_int_field(const std::string& field) const
+const BigInt& RSA_PublicKey::get_int_field(std::string_view field) const
    {
    if(field == "n")
       return m_public->get_n();
@@ -340,7 +340,7 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
                         std::move(d1), std::move(d2), std::move(c));
    }
 
-const BigInt& RSA_PrivateKey::get_int_field(const std::string& field) const
+const BigInt& RSA_PrivateKey::get_int_field(std::string_view field) const
    {
    if(field == "p")
       return m_private->get_p();

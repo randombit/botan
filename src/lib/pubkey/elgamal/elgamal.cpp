@@ -47,7 +47,7 @@ std::vector<uint8_t> ElGamal_PublicKey::public_key_bits() const
    return m_public_key->DER_encode();
    }
 
-const BigInt& ElGamal_PublicKey::get_int_field(const std::string& field) const
+const BigInt& ElGamal_PublicKey::get_int_field(std::string_view field) const
    {
    return m_public_key->get_int_field(algo_name(), field);
    }
@@ -83,7 +83,7 @@ std::unique_ptr<Public_Key> ElGamal_PrivateKey::public_key() const
    return std::unique_ptr<Public_Key>(new ElGamal_PublicKey(m_public_key));
    }
 
-const BigInt& ElGamal_PrivateKey::get_int_field(const std::string& field) const
+const BigInt& ElGamal_PrivateKey::get_int_field(std::string_view field) const
    {
    return m_private_key->get_int_field(algo_name(), field);
    }

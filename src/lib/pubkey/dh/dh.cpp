@@ -38,7 +38,7 @@ size_t DH_PublicKey::key_length() const
    return m_public_key->p_bits();
    }
 
-const BigInt& DH_PublicKey::get_int_field(const std::string& field) const
+const BigInt& DH_PublicKey::get_int_field(std::string_view field) const
    {
    return m_public_key->get_int_field(algo_name(), field);
    }
@@ -96,7 +96,7 @@ secure_vector<uint8_t> DH_PrivateKey::private_key_bits() const
    return m_private_key->DER_encode();
    }
 
-const BigInt& DH_PrivateKey::get_int_field(const std::string& field) const
+const BigInt& DH_PrivateKey::get_int_field(std::string_view field) const
    {
    return m_private_key->get_int_field(algo_name(), field);
    }

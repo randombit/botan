@@ -57,7 +57,7 @@ class BOTAN_PUBLIC_API(2,0) DSA_PublicKey : public virtual Public_Key
       size_t estimated_strength() const override;
       size_t key_length() const override;
 
-      const BigInt& get_int_field(const std::string& field) const override;
+      const BigInt& get_int_field(std::string_view field) const override;
 
       std::unique_ptr<PK_Ops::Verification>
          create_verification_op(std::string_view params,
@@ -115,7 +115,7 @@ class BOTAN_PUBLIC_API(2,0) DSA_PrivateKey final :
 
       secure_vector<uint8_t> private_key_bits() const override;
 
-      const BigInt& get_int_field(const std::string& field) const override;
+      const BigInt& get_int_field(std::string_view field) const override;
 
       std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,

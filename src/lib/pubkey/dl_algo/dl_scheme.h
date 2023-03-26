@@ -9,6 +9,7 @@
 
 #include <botan/bigint.h>
 #include <botan/dl_group.h>
+#include <string_view>
 #include <memory>
 #include <span>
 
@@ -35,8 +36,8 @@ class DL_PublicKey final
       // Return the binary representation of the integer public key
       std::vector<uint8_t> public_key_as_bytes() const;
 
-      const BigInt& get_int_field(const std::string& algo_name,
-                                  const std::string& field) const;
+      const BigInt& get_int_field(std::string_view algo_name,
+                                  std::string_view field) const;
 
       std::vector<uint8_t> DER_encode() const;
 
@@ -83,8 +84,8 @@ class DL_PrivateKey final
       */
       secure_vector<uint8_t> DER_encode() const;
 
-      const BigInt& get_int_field(const std::string& algo_name,
-                                  const std::string& field) const;
+      const BigInt& get_int_field(std::string_view algo_name,
+                                  std::string_view field) const;
    private:
       const DL_Group m_group;
       const BigInt m_private_key;

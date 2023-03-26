@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-const BigInt& Asymmetric_Key::get_int_field(const std::string& field) const
+const BigInt& Asymmetric_Key::get_int_field(std::string_view field) const
    {
    throw Unknown_PK_Field_Name(algo_name(), field);
    }
