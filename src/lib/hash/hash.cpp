@@ -327,7 +327,7 @@ HashFunction::create_or_throw(std::string_view algo,
    throw Lookup_Error("Hash", algo, provider);
    }
 
-std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
+std::vector<std::string> HashFunction::providers(std::string_view algo_spec)
    {
    return probe_providers_of<HashFunction>(algo_spec, {"base", "commoncrypto"});
    }

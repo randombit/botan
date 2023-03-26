@@ -125,7 +125,7 @@ PasswordHashFamily::create_or_throw(std::string_view algo,
    throw Lookup_Error("PasswordHashFamily", algo, provider);
    }
 
-std::vector<std::string> PasswordHashFamily::providers(const std::string& algo_spec)
+std::vector<std::string> PasswordHashFamily::providers(std::string_view algo_spec)
    {
    return probe_providers_of<PasswordHashFamily>(algo_spec);
    }

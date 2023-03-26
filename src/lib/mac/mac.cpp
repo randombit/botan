@@ -124,7 +124,7 @@ MessageAuthenticationCode::create(std::string_view algo_spec,
    }
 
 std::vector<std::string>
-MessageAuthenticationCode::providers(const std::string& algo_spec)
+MessageAuthenticationCode::providers(std::string_view algo_spec)
    {
    return probe_providers_of<MessageAuthenticationCode>(algo_spec);
    }

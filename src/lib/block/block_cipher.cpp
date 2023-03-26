@@ -290,7 +290,7 @@ BlockCipher::create_or_throw(std::string_view algo,
    throw Lookup_Error("Block cipher", algo, provider);
    }
 
-std::vector<std::string> BlockCipher::providers(const std::string& algo)
+std::vector<std::string> BlockCipher::providers(std::string_view algo)
    {
    return probe_providers_of<BlockCipher>(algo, { "base", "commoncrypto" });
    }

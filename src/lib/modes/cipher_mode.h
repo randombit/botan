@@ -41,7 +41,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * @return list of available providers for this algorithm, empty if not available
       * @param algo_spec algorithm name
       */
-      static std::vector<std::string> providers(const std::string& algo_spec);
+      static std::vector<std::string> providers(std::string_view algo_spec);
 
       /**
       * Create an AEAD mode

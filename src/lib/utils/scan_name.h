@@ -9,6 +9,7 @@
 #define BOTAN_SCAN_NAME_H_
 
 #include <botan/types.h>
+#include <string_view>
 #include <string>
 #include <vector>
 
@@ -103,7 +104,7 @@ class SCAN_Name final
 
 // This is unrelated but it is convenient to stash it here
 template<typename T>
-std::vector<std::string> probe_providers_of(const std::string& algo_spec,
+std::vector<std::string> probe_providers_of(std::string_view algo_spec,
                                             const std::vector<std::string>& possible = { "base" })
    {
    std::vector<std::string> providers;

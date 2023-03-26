@@ -169,7 +169,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
    }
 
 //static
-std::vector<std::string> Cipher_Mode::providers(const std::string& algo_spec)
+std::vector<std::string> Cipher_Mode::providers(std::string_view algo_spec)
    {
    const std::vector<std::string>& possible = { "base", "commoncrypto" };
    std::vector<std::string> providers;
