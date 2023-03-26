@@ -19,12 +19,12 @@ namespace Botan {
 
 namespace {
 
-bool known_pbes_cipher_mode(const std::string& mode)
+bool known_pbes_cipher_mode(std::string_view mode)
    {
    return (mode == "CBC" || mode == "GCM" || mode == "SIV");
    }
 
-secure_vector<uint8_t> derive_key(const std::string& passphrase,
+secure_vector<uint8_t> derive_key(std::string_view passphrase,
                                   const AlgorithmIdentifier& kdf_algo,
                                   size_t default_key_size)
    {
@@ -96,8 +96,8 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
                            kdf_algo.oid().to_string());
    }
 
-secure_vector<uint8_t> derive_key(const std::string& passphrase,
-                                  const std::string& digest,
+secure_vector<uint8_t> derive_key(std::string_view passphrase,
+                                  std::string_view digest,
                                   RandomNumberGenerator& rng,
                                   size_t* msec_in_iterations_out,
                                   size_t iterations_if_msec_null,
@@ -123,9 +123,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
          }
 
       secure_vector<uint8_t> key(key_length);
-      pwhash->derive_key(key.data(), key.size(),
-                         passphrase.c_str(), passphrase.size(),
-                         salt.data(), salt.size());
+      pwhash->hash(key, passphrase, salt);
 
       const size_t N = pwhash->memory_param();
       const size_t r = pwhash->iterations();
@@ -149,12 +147,12 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
       }
    else
       {
-      const std::string prf = "HMAC(" + digest + ")";
+      const std::string prf = "HMAC(" + std::string(digest) + ")";
       const std::string pbkdf_name = "PBKDF2(" + prf + ")";
 
       auto pwhash_fam = PasswordHashFamily::create(pbkdf_name);
       if(!pwhash_fam)
-         throw Invalid_Argument("Unknown password hash digest " + digest);
+         throw Invalid_Argument("Unknown password hash digest " + std::string(digest));
 
       std::unique_ptr<PasswordHash> pwhash;
 
@@ -169,9 +167,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
          }
 
       secure_vector<uint8_t> key(key_length);
-      pwhash->derive_key(key.data(), key.size(),
-                         passphrase.c_str(), passphrase.size(),
-                         salt.data(), salt.size());
+      pwhash->hash(key, passphrase, salt);
 
       std::vector<uint8_t> pbkdf2_params;
 
@@ -199,24 +195,21 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
 pbes2_encrypt_shared(std::span<const uint8_t> key_bits,
-                     const std::string& passphrase,
+                     std::string_view passphrase,
                      size_t* msec_in_iterations_out,
                      size_t iterations_if_msec_null,
-                     const std::string& cipher,
-                     const std::string& prf,
+                     std::string_view cipher,
+                     std::string_view prf,
                      RandomNumberGenerator& rng)
    {
-   const std::vector<std::string> cipher_spec = split_on(cipher, '/');
-   if(cipher_spec.size() != 2)
-      throw Encoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
-
-   if(!known_pbes_cipher_mode(cipher_spec[1]))
-      throw Encoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
-
    auto enc = Cipher_Mode::create(cipher, Cipher_Dir::Encryption);
 
-   if(!enc)
-      throw Decoding_Error("PBE-PKCS5 cannot encrypt no cipher " + cipher);
+   const std::vector<std::string> cipher_spec = split_on(cipher, '/');
+
+   if(cipher_spec.size() != 2 || !known_pbes_cipher_mode(cipher_spec[1]) || !enc)
+      {
+      throw Encoding_Error("PBE-PKCS5 v2.0: Invalid or unavailable cipher " + std::string(cipher));
+      }
 
    const size_t key_length = enc->key_spec().maximum_keylength();
 
@@ -253,10 +246,10 @@ pbes2_encrypt_shared(std::span<const uint8_t> key_bits,
 
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
 pbes2_encrypt(std::span<const uint8_t> key_bits,
-              const std::string& passphrase,
+              std::string_view passphrase,
               std::chrono::milliseconds msec,
-              const std::string& cipher,
-              const std::string& digest,
+              std::string_view cipher,
+              std::string_view digest,
               RandomNumberGenerator& rng)
    {
    size_t msec_in_iterations_out = static_cast<size_t>(msec.count());
@@ -266,11 +259,11 @@ pbes2_encrypt(std::span<const uint8_t> key_bits,
 
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
 pbes2_encrypt_msec(std::span<const uint8_t> key_bits,
-                   const std::string& passphrase,
+                   std::string_view passphrase,
                    std::chrono::milliseconds msec,
                    size_t* out_iterations_if_nonnull,
-                   const std::string& cipher,
-                   const std::string& digest,
+                   std::string_view cipher,
+                   std::string_view digest,
                    RandomNumberGenerator& rng)
    {
    size_t msec_in_iterations_out = static_cast<size_t>(msec.count());
@@ -285,10 +278,10 @@ pbes2_encrypt_msec(std::span<const uint8_t> key_bits,
 
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
 pbes2_encrypt_iter(std::span<const uint8_t> key_bits,
-                   const std::string& passphrase,
+                   std::string_view passphrase,
                    size_t pbkdf_iter,
-                   const std::string& cipher,
-                   const std::string& digest,
+                   std::string_view cipher,
+                   std::string_view digest,
                    RandomNumberGenerator& rng)
    {
    return pbes2_encrypt_shared(key_bits, passphrase, nullptr, pbkdf_iter, cipher, digest, rng);
@@ -296,7 +289,7 @@ pbes2_encrypt_iter(std::span<const uint8_t> key_bits,
 
 secure_vector<uint8_t>
 pbes2_decrypt(std::span<const uint8_t> key_bits,
-              const std::string& passphrase,
+              std::string_view passphrase,
               const std::vector<uint8_t>& params)
    {
    AlgorithmIdentifier kdf_algo, enc_algo;
