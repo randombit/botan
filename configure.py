@@ -584,9 +584,6 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
                               const=mod,
                               dest='disabled_modules')
 
-    mods_group.add_option('--with-everything', help=optparse.SUPPRESS_HELP,
-                          action='store_true', default=False)
-
     install_group = optparse.OptionGroup(parser, 'Installation options')
 
     install_group.add_option('--program-suffix', metavar='SUFFIX',
@@ -2487,15 +2484,9 @@ class ModulesChooser:
         if module.load_on == 'never':
             self._not_using_because['disabled as buggy'].add(modname)
         elif module.load_on == 'request':
-            if self._options.with_everything:
-                self._to_load.add(modname)
-            else:
-                self._not_using_because['by request only'].add(modname)
+            self._not_using_because['by request only'].add(modname)
         elif module.load_on == 'vendor':
-            if self._options.with_everything:
-                self._to_load.add(modname)
-            else:
-                self._not_using_because['requires external dependency'].add(modname)
+            self._not_using_because['requires external dependency'].add(modname)
         elif module.load_on == 'dep':
             self._maybe_dep.add(modname)
 
