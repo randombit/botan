@@ -126,7 +126,9 @@ class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
                                 public virtual Private_Key
    {
    public:
-      secure_vector<uint8_t> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const override final;
+
+      secure_vector<uint8_t> raw_private_key_bits() const override final;
 
       /**
       * Get the private key value of this key object.
@@ -138,7 +140,7 @@ class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
       EC_PrivateKey& operator=(const EC_PrivateKey& other) = default;
       ~EC_PrivateKey() = default;
 
-      const BigInt& get_int_field(std::string_view field) const override;
+      const BigInt& get_int_field(std::string_view field) const override final;
 
    protected:
       /*

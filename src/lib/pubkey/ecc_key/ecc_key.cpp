@@ -136,6 +136,11 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
                 "Generated public key point was on the curve");
    }
 
+secure_vector<uint8_t> EC_PrivateKey::raw_private_key_bits() const
+   {
+   return BigInt::encode_locked(m_private_key);
+   }
+
 secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()

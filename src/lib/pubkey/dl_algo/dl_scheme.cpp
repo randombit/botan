@@ -116,6 +116,11 @@ secure_vector<uint8_t> DL_PrivateKey::DER_encode() const
    return DER_Encoder().encode(m_private_key).get_contents();
    }
 
+secure_vector<uint8_t> DL_PrivateKey::raw_private_key_bits() const
+   {
+   return BigInt::encode_locked(m_private_key);
+   }
+
 bool DL_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
    return m_group.verify_group(rng, strong) &&

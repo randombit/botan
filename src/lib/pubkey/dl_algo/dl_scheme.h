@@ -84,6 +84,11 @@ class DL_PrivateKey final
       */
       secure_vector<uint8_t> DER_encode() const;
 
+      /**
+      * Return the raw serialization of the private key
+      */
+      secure_vector<uint8_t> raw_private_key_bits() const;
+
       const BigInt& get_int_field(std::string_view algo_name,
                                   std::string_view field) const;
    private:

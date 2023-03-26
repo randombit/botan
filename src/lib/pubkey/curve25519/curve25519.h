@@ -89,6 +89,9 @@ class BOTAN_PUBLIC_API(2,0) Curve25519_PrivateKey final : public Curve25519_Publ
 
       secure_vector<uint8_t> agree(const uint8_t w[], size_t w_len) const;
 
+      secure_vector<uint8_t> raw_private_key_bits() const override { return m_private; }
+
+      BOTAN_DEPRECATED("Use raw_private_key_bits")
       const secure_vector<uint8_t>& get_x() const { return m_private; }
 
       secure_vector<uint8_t> private_key_bits() const override;

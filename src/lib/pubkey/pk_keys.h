@@ -257,6 +257,15 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       virtual secure_vector<uint8_t> private_key_bits() const = 0;
 
       /**
+      * @return binary private key bits, with no additional encoding
+      *
+      * Note: some algorithms (for example RSA) do not have an obvious encoding
+      * for this value due to having many different values, and thus not implement
+      * this function. The default implementation throws Not_Implemented
+      */
+      virtual secure_vector<uint8_t> raw_private_key_bits() const;
+
+      /**
       * Allocate a new object for the public key associated with this
       * private key.
       *
