@@ -96,39 +96,33 @@ class CommonCrypto_HashFunction final : public HashFunction
 std::unique_ptr<HashFunction>
 make_commoncrypto_hash(const std::string& name)
    {
-#define MAKE_COMMONCRYPTO_HASH_3(name, hash, ctx)               \
-   std::unique_ptr<HashFunction>(                               \
-      new CommonCrypto_HashFunction<CC_ ## ctx ## _CTX >({      \
-            name,                                               \
-            CC_ ## hash ## _DIGEST_LENGTH,                      \
-            CC_ ## hash ## _BLOCK_BYTES,                        \
-            CC_ ## hash ## _Init,                               \
-            CC_ ## hash ## _Update,                             \
-            CC_ ## hash ## _Final                               \
-         }));
-
-#define MAKE_COMMONCRYPTO_HASH_2(name, id)      \
-   MAKE_COMMONCRYPTO_HASH_3(name, id, id)
-
-#define MAKE_COMMONCRYPTO_HASH_1(id)            \
-   MAKE_COMMONCRYPTO_HASH_2(#id, id)
+#define MAKE_COMMONCRYPTO_HASH(name, hash)                            \
+   std::make_unique<CommonCrypto_HashFunction<CC_ ## hash ## _CTX >>( \
+      name,                                                           \
+      CC_ ## hash ## _DIGEST_LENGTH,                                  \
+      CC_ ## hash ## _BLOCK_BYTES,                                    \
+      CC_ ## hash ## _Init,                                           \
+      CC_ ## hash ## _Update,                                         \
+      CC_ ## hash ## _Final                                           \
+      }));
 
 #if defined(BOTAN_HAS_SHA2_32)
    if(name == "SHA-224")
-      return MAKE_COMMONCRYPTO_HASH_3(name, SHA224, SHA256);
+      return MAKE_COMMONCRYPTO_HASH(name, SHA224);
    if(name == "SHA-256")
-      return MAKE_COMMONCRYPTO_HASH_2(name, SHA256);
+      return MAKE_COMMONCRYPTO_HASH(name, SHA256);
 #endif
+
 #if defined(BOTAN_HAS_SHA2_64)
    if(name == "SHA-384")
-      return MAKE_COMMONCRYPTO_HASH_3(name, SHA384, SHA512);
+      return MAKE_COMMONCRYPTO_HASH(name, SHA384);
    if(name == "SHA-512")
-      return MAKE_COMMONCRYPTO_HASH_2(name, SHA512);
+      return MAKE_COMMONCRYPTO_HASH(name, SHA512);
 #endif
 
 #if defined(BOTAN_HAS_SHA1)
    if(name == "SHA-1")
-      return MAKE_COMMONCRYPTO_HASH_2(name, SHA1);
+      return MAKE_COMMONCRYPTO_HASH(name, SHA1);
 #endif
 
    return nullptr;
