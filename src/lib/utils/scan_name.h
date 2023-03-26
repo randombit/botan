@@ -31,7 +31,7 @@ class SCAN_Name final
       * Create a SCAN_Name
       * @param algo_spec A SCAN-format name
       */
-      explicit SCAN_Name(const std::string& algo_spec);
+      explicit SCAN_Name(std::string_view algo_spec);
 
       /**
       * @return original input string
@@ -67,7 +67,7 @@ class SCAN_Name final
       * @param def_value the default value
       * @return ith argument or the default value
       */
-      std::string arg(size_t i, const std::string& def_value) const;
+      std::string arg(size_t i, std::string_view def_value) const;
 
       /**
       * @param i which argument

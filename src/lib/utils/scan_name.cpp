@@ -60,7 +60,7 @@ SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
    {
    }
 
-SCAN_Name::SCAN_Name(const std::string& algo_spec) :
+SCAN_Name::SCAN_Name(std::string_view algo_spec) :
    m_orig_algo_spec(algo_spec),
    m_alg_name(),
    m_args(),
@@ -73,7 +73,7 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec) :
    size_t level = 0;
    std::pair<size_t, std::string> accum = std::make_pair(level, "");
 
-   const std::string decoding_error = "Bad SCAN name '" + algo_spec + "': ";
+   const std::string decoding_error = "Bad SCAN name '" + m_orig_algo_spec + "': ";
 
    for(char c : algo_spec)
       {
@@ -134,10 +134,10 @@ std::string SCAN_Name::arg(size_t i) const
    return m_args[i];
    }
 
-std::string SCAN_Name::arg(size_t i, const std::string& def_value) const
+std::string SCAN_Name::arg(size_t i, std::string_view def_value) const
    {
    if(i >= arg_count())
-      return def_value;
+      return std::string(def_value);
    return m_args[i];
    }
 
