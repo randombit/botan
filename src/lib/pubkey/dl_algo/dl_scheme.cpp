@@ -127,8 +127,8 @@ std::shared_ptr<DL_PublicKey> DL_PrivateKey::public_key() const
    return std::make_shared<DL_PublicKey>(m_group, m_public_key);
    }
 
-const BigInt& DL_PublicKey::get_int_field(const std::string& algo,
-                                          const std::string& field) const
+const BigInt& DL_PublicKey::get_int_field(std::string_view algo,
+                                          std::string_view field) const
    {
    if(field == "p")
       return m_group.get_p();
@@ -142,8 +142,8 @@ const BigInt& DL_PublicKey::get_int_field(const std::string& algo,
       throw Unknown_PK_Field_Name(algo, field);
    }
 
-const BigInt& DL_PrivateKey::get_int_field(const std::string& algo,
-                                           const std::string& field) const
+const BigInt& DL_PrivateKey::get_int_field(std::string_view algo,
+                                           std::string_view field) const
    {
    if(field == "p")
       return m_group.get_p();

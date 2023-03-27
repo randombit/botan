@@ -28,7 +28,7 @@ class EME
       * @param algo_spec the name of the EME to create
       * @return pointer to newly allocated object of that type
       */
-      static std::unique_ptr<EME> create(const std::string& algo_spec);
+      static std::unique_ptr<EME> create(std::string_view algo_spec);
 
       /**
       * Return the maximum input size in bytes we can support

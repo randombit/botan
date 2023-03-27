@@ -31,7 +31,7 @@ class BOTAN_TEST_API EMSA
       * @param algo_spec the name of the EMSA to create
       * @return pointer to newly allocated object of that type, or nullptr
       */
-      static std::unique_ptr<EMSA> create(const std::string& algo_spec);
+      static std::unique_ptr<EMSA> create(std::string_view algo_spec);
 
       /**
       * Factory method for EMSA (message-encoding methods for signatures
@@ -39,7 +39,7 @@ class BOTAN_TEST_API EMSA
       * @param algo_spec the name of the EMSA to create
       * @return pointer to newly allocated object of that type, or throws
       */
-      static std::unique_ptr<EMSA> create_or_throw(const std::string& algo_spec);
+      static std::unique_ptr<EMSA> create_or_throw(std::string_view algo_spec);
 
       /**
       * Add more data to the signature computation

@@ -33,21 +33,21 @@ class MechanismWrapper final
       * Creates the CK_MECHANISM data for RSA encryption/decryption
       * @param padding supported paddings are Raw (X.509), EME-PKCS1-v1_5 (PKCS#1 v1.5) and OAEP (PKCS#1 OAEP)
       */
-      static MechanismWrapper create_rsa_crypt_mechanism(const std::string& padding);
+      static MechanismWrapper create_rsa_crypt_mechanism(std::string_view padding);
 
       /**
       * Creates the CK_MECHANISM data for RSA signature/verification
       * @param padding supported paddings are Raw (X.509), EMSA3 (PKCS#1 v1.5), EMSA4 (PKCS#1 PSS),
       * EMSA2 (ANSI X9.31) and ISO9796 (ISO/IEC 9796)
       */
-      static MechanismWrapper create_rsa_sign_mechanism(const std::string& padding);
+      static MechanismWrapper create_rsa_sign_mechanism(std::string_view padding);
 
       /**
       * Creates the CK_MECHANISM data for ECDSA signature/verification
       * @param hash the hash algorithm used to hash the data to sign.
       * supported hash functions are Raw and SHA-1 to SHA-512
       */
-      static MechanismWrapper create_ecdsa_mechanism(const std::string& hash);
+      static MechanismWrapper create_ecdsa_mechanism(std::string_view hash);
 
       /**
       * Creates the CK_MECHANISM data for ECDH key derivation (CKM_ECDH1_DERIVE or CKM_ECDH1_COFACTOR_DERIVE)
@@ -56,7 +56,7 @@ class MechanismWrapper final
       * Params can also include the string "Cofactor" if the cofactor
       * key derivation mechanism should be used, for example "SHA-512,Cofactor"
       */
-      static MechanismWrapper create_ecdh_mechanism(const std::string& params);
+      static MechanismWrapper create_ecdh_mechanism(std::string_view params);
 
       /**
       * Sets the salt for the ECDH mechanism parameters.

@@ -62,8 +62,8 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PublicKey : public virtual Public_Key
          }
 
       std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(const std::string& params,
-                                  const std::string& provider) const override;
+         create_kem_encryption_op(std::string_view params,
+                                  std::string_view provider) const override;
 
    protected:
       McEliece_PublicKey() : m_t(0), m_code_length(0) {}
@@ -129,8 +129,8 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_
 
       std::unique_ptr<PK_Ops::KEM_Decryption>
          create_kem_decryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
-                                  const std::string& provider) const override;
+                                  std::string_view params,
+                                  std::string_view provider) const override;
    private:
       std::vector<polyn_gf2m> m_g; // single element
       std::vector<polyn_gf2m> m_sqrtmod;

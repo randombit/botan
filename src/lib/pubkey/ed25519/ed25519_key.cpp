@@ -179,7 +179,7 @@ class Ed25519_Pure_Verify_Operation final : public PK_Ops::Verification
 class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification
    {
    public:
-      Ed25519_Hashed_Verify_Operation(const Ed25519_PublicKey& key, const std::string& hash, bool rfc8032) :
+      Ed25519_Hashed_Verify_Operation(const Ed25519_PublicKey& key, std::string_view hash, bool rfc8032) :
          m_key(key)
          {
          m_hash = HashFunction::create_or_throw(hash);
@@ -263,7 +263,7 @@ AlgorithmIdentifier Ed25519_Pure_Sign_Operation::algorithm_identifier() const
 class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
    {
    public:
-      Ed25519_Hashed_Sign_Operation(const Ed25519_PrivateKey& key, const std::string& hash, bool rfc8032) :
+      Ed25519_Hashed_Sign_Operation(const Ed25519_PrivateKey& key, std::string_view hash, bool rfc8032) :
          m_key(key)
          {
          m_hash = HashFunction::create_or_throw(hash);
@@ -307,8 +307,8 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
 }
 
 std::unique_ptr<PK_Ops::Verification>
-Ed25519_PublicKey::create_verification_op(const std::string& params,
-                                          const std::string& provider) const
+Ed25519_PublicKey::create_verification_op(std::string_view params,
+                                          std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       {
@@ -324,7 +324,7 @@ Ed25519_PublicKey::create_verification_op(const std::string& params,
 
 std::unique_ptr<PK_Ops::Verification>
 Ed25519_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
-                                               const std::string& provider) const
+                                               std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       {
@@ -338,8 +338,8 @@ Ed25519_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id
 
 std::unique_ptr<PK_Ops::Signature>
 Ed25519_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                        const std::string& params,
-                                        const std::string& provider) const
+                                        std::string_view params,
+                                        std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       {

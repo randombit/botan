@@ -94,12 +94,12 @@ class CommonCrypto_HashFunction final : public HashFunction
 }
 
 std::unique_ptr<HashFunction>
-make_commoncrypto_hash(const std::string& name)
+make_commoncrypto_hash(std::string_view name)
    {
 #define MAKE_COMMONCRYPTO_HASH_3(name, hash, ctx)               \
    std::unique_ptr<HashFunction>(                               \
       new CommonCrypto_HashFunction<CC_ ## ctx ## _CTX >({      \
-            name,                                               \
+            std::string(name),                                  \
             CC_ ## hash ## _DIGEST_LENGTH,                      \
             CC_ ## hash ## _BLOCK_BYTES,                        \
             CC_ ## hash ## _Init,                               \

@@ -55,7 +55,7 @@ SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng,
    }
 
 std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
-                                    const std::string& user_id,
+                                    std::string_view user_id,
                                     const EC_Group& domain,
                                     const EC_Point& pubkey)
    {
@@ -93,8 +93,8 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
    public:
 
       SM2_Signature_Operation(const SM2_PrivateKey& sm2,
-                              const std::string& ident,
-                              const std::string& hash) :
+                              std::string_view ident,
+                              std::string_view hash) :
          m_group(sm2.domain()),
          m_x(sm2.private_value()),
          m_da_inv(sm2.get_da_inv())
@@ -172,8 +172,8 @@ class SM2_Verification_Operation final : public PK_Ops::Verification
    {
    public:
       SM2_Verification_Operation(const SM2_PublicKey& sm2,
-                                 const std::string& ident,
-                                 const std::string& hash) :
+                                 std::string_view ident,
+                                 std::string_view hash) :
          m_group(sm2.domain()),
          m_gy_mul(m_group.get_base_point(), sm2.public_point())
          {
@@ -251,7 +251,7 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
    return (m_group.mod_order(R.get_affine_x() + e) == r);
    }
 
-void parse_sm2_param_string(const std::string& params,
+void parse_sm2_param_string(std::string_view params,
                             std::string& userid,
                             std::string& hash)
    {
@@ -283,8 +283,8 @@ void parse_sm2_param_string(const std::string& params,
 }
 
 std::unique_ptr<PK_Ops::Verification>
-SM2_PublicKey::create_verification_op(const std::string& params,
-                                      const std::string& provider) const
+SM2_PublicKey::create_verification_op(std::string_view params,
+                                      std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       {
@@ -298,8 +298,8 @@ SM2_PublicKey::create_verification_op(const std::string& params,
 
 std::unique_ptr<PK_Ops::Signature>
 SM2_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                    const std::string& params,
-                                    const std::string& provider) const
+                                    std::string_view params,
+                                    std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       {

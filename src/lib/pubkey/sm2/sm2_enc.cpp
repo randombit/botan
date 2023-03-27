@@ -12,6 +12,7 @@
 #include <botan/ber_dec.h>
 #include <botan/kdf.h>
 #include <botan/hash.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -22,13 +23,16 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
    public:
       SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key,
                                RandomNumberGenerator& rng,
-                               const std::string& kdf_hash) :
+                               std::string_view kdf_hash) :
          m_group(key.domain()),
          m_ws(EC_Point::WORKSPACE_SIZE),
          m_mul_public_point(key.public_point(), rng, m_ws)
          {
          m_hash = HashFunction::create_or_throw(kdf_hash);
-         m_kdf = KDF::create_or_throw("KDF2(" + kdf_hash + ")");
+
+         std::ostringstream kdf_name;
+         kdf_name << "KDF2(" << kdf_hash << ")";
+         m_kdf = KDF::create_or_throw(kdf_name.str());
          }
 
       size_t max_input_bits() const override
@@ -109,12 +113,15 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
    public:
       SM2_Decryption_Operation(const SM2_Encryption_PrivateKey& key,
                                RandomNumberGenerator& rng,
-                               const std::string& kdf_hash) :
+                               std::string_view kdf_hash) :
          m_key(key),
          m_rng(rng)
          {
          m_hash = HashFunction::create_or_throw(kdf_hash);
-         m_kdf = KDF::create_or_throw("KDF2(" + kdf_hash + ")");
+
+         std::ostringstream kdf_name;
+         kdf_name << "KDF2(" << kdf_hash << ")";
+         m_kdf = KDF::create_or_throw(kdf_name.str());
          }
 
       size_t plaintext_length(size_t ptext_len) const override
@@ -229,13 +236,15 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
 
 std::unique_ptr<PK_Ops::Encryption>
 SM2_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
-                                    const std::string& params,
-                                    const std::string& provider) const
+                                    std::string_view params,
+                                    std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       {
-      const std::string kdf_hash = (params.empty() ? "SM3" : params);
-      return std::make_unique<SM2_Encryption_Operation>(*this, rng, kdf_hash);
+      if(params.empty())
+         return std::make_unique<SM2_Encryption_Operation>(*this, rng, "SM3");
+      else
+         return std::make_unique<SM2_Encryption_Operation>(*this, rng, params);
       }
 
    throw Provider_Not_Found(algo_name(), provider);
@@ -243,13 +252,15 @@ SM2_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
 
 std::unique_ptr<PK_Ops::Decryption>
 SM2_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                     const std::string& params,
-                                     const std::string& provider) const
+                                     std::string_view params,
+                                     std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       {
-      const std::string kdf_hash = (params.empty() ? "SM3" : params);
-      return std::make_unique<SM2_Decryption_Operation>(*this, rng, kdf_hash);
+      if(params.empty())
+         return std::make_unique<SM2_Decryption_Operation>(*this, rng, "SM3");
+      else
+         return std::make_unique<SM2_Decryption_Operation>(*this, rng, params);
       }
 
    throw Provider_Not_Found(algo_name(), provider);

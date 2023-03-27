@@ -31,8 +31,8 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<MessageAuthenticationCode>
-         create(const std::string& algo_spec,
-                const std::string& provider = "");
+         create(std::string_view algo_spec,
+                std::string_view provider = "");
 
       /*
       * Create an instance based on a name
@@ -42,13 +42,13 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * Throws a Lookup_Error if algo/provider combination cannot be found
       */
       static std::unique_ptr<MessageAuthenticationCode>
-         create_or_throw(const std::string& algo_spec,
-                         const std::string& provider = "");
+         create_or_throw(std::string_view algo_spec,
+                         std::string_view provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
       */
-      static std::vector<std::string> providers(const std::string& algo_spec);
+      static std::vector<std::string> providers(std::string_view algo_spec);
 
       virtual ~MessageAuthenticationCode() = default;
 

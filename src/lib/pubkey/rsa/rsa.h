@@ -61,7 +61,7 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKey : public virtual Public_Key
       size_t key_length() const override;
       size_t estimated_strength() const override;
 
-      const BigInt& get_int_field(const std::string& field) const override;
+      const BigInt& get_int_field(std::string_view field) const override;
 
       bool supports_operation(PublicKeyOperation op) const override;
 
@@ -70,20 +70,20 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKey : public virtual Public_Key
 
       std::unique_ptr<PK_Ops::Encryption>
          create_encryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+                              std::string_view params,
+                              std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(const std::string& params,
-                                  const std::string& provider) const override;
+         create_kem_encryption_op(std::string_view params,
+                                  std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+         create_verification_op(std::string_view params,
+                                std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Verification>
          create_x509_verification_op(const AlgorithmIdentifier& alg_id,
-                                     const std::string& provider) const override;
+                                     std::string_view provider) const override;
 
    protected:
       RSA_PublicKey() = default;
@@ -135,7 +135,7 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RS
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
-      const BigInt& get_int_field(const std::string& field) const override;
+      const BigInt& get_int_field(std::string_view field) const override;
 
       /**
       * Get the first prime p.
@@ -166,18 +166,18 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RS
 
       std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+                              std::string_view params,
+                              std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::KEM_Decryption>
          create_kem_decryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
-                                  const std::string& provider) const override;
+                                  std::string_view params,
+                                  std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+                             std::string_view params,
+                             std::string_view provider) const override;
 
    private:
 

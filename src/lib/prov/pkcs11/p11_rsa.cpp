@@ -127,7 +127,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
    public:
 
       PKCS11_RSA_Decryption_Operation(const PKCS11_RSA_PrivateKey& key,
-                                      const std::string& padding,
+                                      std::string_view padding,
                                       RandomNumberGenerator& rng)
          : m_key(key),
            m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
@@ -179,7 +179,7 @@ class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryp
    {
    public:
       PKCS11_RSA_Decryption_Operation_Software_EME(const PKCS11_RSA_PrivateKey& key,
-                                                   const std::string& padding,
+                                                   std::string_view padding,
                                                    RandomNumberGenerator& rng)
          : PK_Ops::Decryption_with_EME(padding)
          , m_raw_decryptor(key, rng, "Raw")
@@ -205,8 +205,9 @@ class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption
    {
    public:
 
-      PKCS11_RSA_Encryption_Operation(const PKCS11_RSA_PublicKey& key, const std::string& padding)
-         : m_key(key), m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding))
+      PKCS11_RSA_Encryption_Operation(const PKCS11_RSA_PublicKey& key, std::string_view padding)
+         : m_key(key),
+           m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding))
          {
          m_bits = 8 * (key.get_n().bytes() - m_mechanism.padding_size()) - 1;
          }
@@ -238,8 +239,9 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature
    {
    public:
 
-      PKCS11_RSA_Signature_Operation(const PKCS11_RSA_PrivateKey& key, const std::string& padding)
-         : m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(padding))
+      PKCS11_RSA_Signature_Operation(const PKCS11_RSA_PrivateKey& key, std::string_view padding)
+         : m_key(key),
+           m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(padding))
          {}
 
       size_t signature_length() const override { return m_key.get_n().bytes(); }
@@ -371,8 +373,9 @@ class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification
    {
    public:
 
-      PKCS11_RSA_Verification_Operation(const PKCS11_RSA_PublicKey& key, const std::string& padding)
-         : m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(padding))
+      PKCS11_RSA_Verification_Operation(const PKCS11_RSA_PublicKey& key, std::string_view padding)
+         : m_key(key),
+           m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(padding))
          {}
 
       void update(const uint8_t msg[], size_t msg_len) override
@@ -438,23 +441,23 @@ std::string PKCS11_RSA_Verification_Operation::hash_function() const
 
 std::unique_ptr<PK_Ops::Encryption>
 PKCS11_RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
-                                           const std::string& params,
-                                           const std::string& /*provider*/) const
+                                           std::string_view params,
+                                           std::string_view /*provider*/) const
    {
    return std::make_unique<PKCS11_RSA_Encryption_Operation>(*this, params);
    }
 
 std::unique_ptr<PK_Ops::Verification>
-PKCS11_RSA_PublicKey::create_verification_op(const std::string& params,
-                                             const std::string& /*provider*/) const
+PKCS11_RSA_PublicKey::create_verification_op(std::string_view params,
+                                             std::string_view /*provider*/) const
    {
    return std::make_unique<PKCS11_RSA_Verification_Operation>(*this, params);
    }
 
 std::unique_ptr<PK_Ops::Decryption>
 PKCS11_RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                            const std::string& params,
-                                            const std::string& /*provider*/) const
+                                            std::string_view params,
+                                            std::string_view /*provider*/) const
    {
    if(params != "Raw" && m_use_software_padding)
       {
@@ -468,8 +471,8 @@ PKCS11_RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
 
 std::unique_ptr<PK_Ops::Signature>
 PKCS11_RSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                           const std::string& params,
-                                           const std::string& /*provider*/) const
+                                           std::string_view params,
+                                           std::string_view /*provider*/) const
    {
    return std::make_unique<PKCS11_RSA_Signature_Operation>(*this, params);
    }

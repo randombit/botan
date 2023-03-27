@@ -26,7 +26,7 @@ namespace Botan {
 
 //static
 std::unique_ptr<Compression_Algorithm>
-Compression_Algorithm::create(const std::string& name)
+Compression_Algorithm::create(std::string_view name)
    {
 #if defined(BOTAN_HAS_ZLIB)
    if(name == "Zlib" || name == "zlib")
@@ -53,7 +53,7 @@ Compression_Algorithm::create(const std::string& name)
 
 //static
 std::unique_ptr<Compression_Algorithm>
-Compression_Algorithm::create_or_throw(const std::string& algo)
+Compression_Algorithm::create_or_throw(std::string_view algo)
    {
    if(auto compressor = Compression_Algorithm::create(algo))
       {
@@ -64,7 +64,7 @@ Compression_Algorithm::create_or_throw(const std::string& algo)
 
 //static
 std::unique_ptr<Decompression_Algorithm>
-Decompression_Algorithm::create(const std::string& name)
+Decompression_Algorithm::create(std::string_view name)
    {
 #if defined(BOTAN_HAS_ZLIB)
    if(name == "Zlib" || name == "zlib")
@@ -91,7 +91,7 @@ Decompression_Algorithm::create(const std::string& name)
 
 //static
 std::unique_ptr<Decompression_Algorithm>
-Decompression_Algorithm::create_or_throw(const std::string& algo)
+Decompression_Algorithm::create_or_throw(std::string_view algo)
    {
    if(auto decompressor = Decompression_Algorithm::create(algo))
       {

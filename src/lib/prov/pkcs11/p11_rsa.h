@@ -85,12 +85,12 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PublicKey : public Object, public RSA_Pub
 
       std::unique_ptr<PK_Ops::Encryption>
          create_encryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+                              std::string_view params,
+                              std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+         create_verification_op(std::string_view params,
+                                std::string_view provider) const override;
    };
 
 /// Properties for importing a PKCS#11 RSA private key
@@ -214,13 +214,13 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
 
       std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+                              std::string_view params,
+                              std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+                             std::string_view params,
+                             std::string_view provider) const override;
 
    private:
       bool m_use_software_padding = false;

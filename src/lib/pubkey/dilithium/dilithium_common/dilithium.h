@@ -34,7 +34,7 @@ class BOTAN_PUBLIC_API(3,0) DilithiumMode
    public:
       DilithiumMode(Mode mode) : m_mode(mode) {}
       explicit DilithiumMode(const OID& oid);
-      explicit DilithiumMode(const std::string& str);
+      explicit DilithiumMode(std::string_view str);
 
       OID object_identifier() const;
       std::string to_string() const;
@@ -87,12 +87,12 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
       Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode mode);
 
       std::unique_ptr<PK_Ops::Verification>
-      create_verification_op(const std::string& params,
-                             const std::string& provider) const override;
+      create_verification_op(std::string_view params,
+                             std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Verification>
          create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
-                                     const std::string& provider) const override;
+                                     std::string_view provider) const override;
 
    protected:
       Dilithium_PublicKey() = default;
@@ -132,7 +132,7 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
        * strings as @p params. Default (i.e. empty @p params is "Randomized").
        */
       std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator&,
-            const std::string& params, const std::string& provider) const override;
+            std::string_view params, std::string_view provider) const override;
 
    private:
       friend class Dilithium_Signature_Operation;

@@ -5,6 +5,7 @@
 */
 
 #include <botan/exceptn.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -68,80 +69,110 @@ std::string to_string(ErrorType type)
    return "Unrecognized Botan error";
    }
 
-Exception::Exception(const std::string& msg) : m_msg(msg)
+namespace {
+
+/**
+* Simple formatter utility.
+*
+* Should be replaced with std::format once that's available
+* on all our supported compilers.
+*/
+template<typename... T>
+std::string simple_format(T... args)
+   {
+   std::ostringstream oss;
+   ((oss << args), ...);
+   return oss.str();
+   }
+
+}
+
+Exception::Exception(std::string_view msg) : m_msg(msg)
    {}
 
-Exception::Exception(const std::string& msg, const std::exception& e) :
-   m_msg(msg + " failed with " + std::string(e.what()))
+Exception::Exception(std::string_view msg, const std::exception& e) :
+   m_msg(simple_format(msg, " failed with ", e.what()))
    {}
 
-Exception::Exception(const char* prefix, const std::string& msg) :
-   m_msg(std::string(prefix) + " " + msg)
+Exception::Exception(const char* prefix, std::string_view msg) :
+   m_msg(simple_format(prefix, " ", msg))
    {}
 
-Invalid_Argument::Invalid_Argument(const std::string& msg) :
+Invalid_Argument::Invalid_Argument(std::string_view msg) :
    Exception(msg)
    {}
 
-Invalid_Argument::Invalid_Argument(const std::string& msg, const std::string& where) :
-   Exception(msg + " in " + where)
+Invalid_Argument::Invalid_Argument(std::string_view msg, std::string_view where) :
+   Exception(simple_format(msg, " in ", where))
    {}
 
-Invalid_Argument::Invalid_Argument(const std::string& msg, const std::exception& e) :
+Invalid_Argument::Invalid_Argument(std::string_view msg, const std::exception& e) :
    Exception(msg, e) {}
 
-Lookup_Error::Lookup_Error(const std::string& type,
-                           const std::string& algo,
-                           const std::string& provider) :
-   Exception("Unavailable " + type + " " + algo +
-             (provider.empty() ? std::string("") : (" for provider " + provider)))
+namespace {
+
+std::string format_lookup_error(std::string_view type,
+                                std::string_view algo,
+                                std::string_view provider)
+   {
+   std::ostringstream oss;
+   oss << "Unavailable " << type << " " << algo;
+   if(!provider.empty())
+      oss << " for provider " << provider;
+   return oss.str();
+   }
+
+}
+
+Lookup_Error::Lookup_Error(std::string_view type,
+                           std::string_view algo,
+                           std::string_view provider) :
+   Exception(format_lookup_error(type, algo, provider))
    {}
 
-Internal_Error::Internal_Error(const std::string& err) :
-   Exception("Internal error: " + err)
+Internal_Error::Internal_Error(std::string_view err) :
+   Exception("Internal error:", err)
    {}
 
-Unknown_PK_Field_Name::Unknown_PK_Field_Name(const std::string& algo_name,
-                                             const std::string& field_name) :
-   Invalid_Argument("Unknown field '" + field_name +
-                    "' for algorithm " + algo_name)
+Unknown_PK_Field_Name::Unknown_PK_Field_Name(std::string_view algo_name,
+                                             std::string_view field_name) :
+   Invalid_Argument(simple_format("Unknown field '", field_name,
+                                  "' for algorithm ", algo_name))
    {}
 
-Invalid_Key_Length::Invalid_Key_Length(const std::string& name, size_t length) :
-   Invalid_Argument(name + " cannot accept a key of length " +
-                    std::to_string(length))
+Invalid_Key_Length::Invalid_Key_Length(std::string_view name, size_t length) :
+   Invalid_Argument(simple_format(name, " cannot accept a key of length ", length))
    {}
 
-Invalid_IV_Length::Invalid_IV_Length(const std::string& mode, size_t bad_len) :
-   Invalid_Argument("IV length " + std::to_string(bad_len) +
-                    " is invalid for " + mode)
+Invalid_IV_Length::Invalid_IV_Length(std::string_view mode, size_t bad_len) :
+   Invalid_Argument(simple_format("IV length ", bad_len, " is invalid for ", mode))
    {}
 
-Key_Not_Set::Key_Not_Set(const std::string& algo) :
-   Invalid_State("Key not set in " + algo)
+Key_Not_Set::Key_Not_Set(std::string_view algo) :
+   Invalid_State(simple_format("Key not set in ", algo))
    {}
 
-PRNG_Unseeded::PRNG_Unseeded(const std::string& algo) :
-   Invalid_State("PRNG not seeded: " + algo)
+PRNG_Unseeded::PRNG_Unseeded(std::string_view algo) :
+   Invalid_State(simple_format("PRNG not seeded: ", algo))
    {}
 
-Algorithm_Not_Found::Algorithm_Not_Found(const std::string& name) :
-   Lookup_Error("Could not find any algorithm named \"" + name + "\"")
+Algorithm_Not_Found::Algorithm_Not_Found(std::string_view name) :
+   Lookup_Error(simple_format("Could not find any algorithm named \"", name, "\""))
    {}
 
-Provider_Not_Found::Provider_Not_Found(const std::string& algo, const std::string& provider) :
-   Lookup_Error("Could not find provider '" + provider + "' for " + algo)
+Provider_Not_Found::Provider_Not_Found(std::string_view algo, std::string_view provider) :
+   Lookup_Error(simple_format("Could not find provider '", provider, "' for ", algo))
    {}
 
-Invalid_Algorithm_Name::Invalid_Algorithm_Name(const std::string& name):
-   Invalid_Argument("Invalid algorithm name: " + name)
+Invalid_Algorithm_Name::Invalid_Algorithm_Name(std::string_view name):
+   Invalid_Argument(simple_format("Invalid algorithm name: ", name))
    {}
 
-Encoding_Error::Encoding_Error(const std::string& name) :
-   Exception("Encoding error: " + name)
+Encoding_Error::Encoding_Error(std::string_view name) :
+   Exception("Encoding error:", name)
    {}
 
-Decoding_Error::Decoding_Error(const std::string& name) :
+Decoding_Error::Decoding_Error(std::string_view name) :
    Exception(name)
    {}
 
@@ -149,23 +180,20 @@ Decoding_Error::Decoding_Error(const std::string& msg, const std::exception& e) 
    Exception(msg, e)
    {}
 
-Decoding_Error::Decoding_Error(const std::string& name, const char* exception_message) :
-   Exception(name + " failed with exception " + exception_message) {}
-
-Invalid_Authentication_Tag::Invalid_Authentication_Tag(const std::string& msg) :
-   Exception("Invalid authentication tag: " + msg)
+Invalid_Authentication_Tag::Invalid_Authentication_Tag(std::string_view msg) :
+   Exception("Invalid authentication tag:", msg)
    {}
 
-Stream_IO_Error::Stream_IO_Error(const std::string& err) :
-   Exception("I/O error: " + err)
+Stream_IO_Error::Stream_IO_Error(std::string_view err) :
+   Exception("I/O error:", err)
    {}
 
-System_Error::System_Error(const std::string& msg, int err_code) :
-   Exception(msg + " error code " + std::to_string(err_code)),
+System_Error::System_Error(std::string_view msg, int err_code) :
+   Exception(simple_format(msg, " error code ", err_code)),
    m_error_code(err_code)
    {}
 
-Not_Implemented::Not_Implemented(const std::string& err) :
+Not_Implemented::Not_Implemented(std::string_view err) :
    Exception("Not implemented", err)
    {}
 

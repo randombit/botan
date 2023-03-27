@@ -27,10 +27,10 @@ class RandomNumberGenerator;
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
 pbes2_encrypt(std::span<const uint8_t> key_bits,
-              const std::string& passphrase,
+              std::string_view passphrase,
               std::chrono::milliseconds msec,
-              const std::string& cipher,
-              const std::string& digest,
+              std::string_view cipher,
+              std::string_view digest,
               RandomNumberGenerator& rng);
 
 /**
@@ -46,11 +46,11 @@ pbes2_encrypt(std::span<const uint8_t> key_bits,
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
 pbes2_encrypt_msec(std::span<const uint8_t> key_bits,
-                   const std::string& passphrase,
+                   std::string_view passphrase,
                    std::chrono::milliseconds msec,
                    size_t* out_iterations_if_nonnull,
-                   const std::string& cipher,
-                   const std::string& digest,
+                   std::string_view cipher,
+                   std::string_view digest,
                    RandomNumberGenerator& rng);
 
 /**
@@ -64,10 +64,10 @@ pbes2_encrypt_msec(std::span<const uint8_t> key_bits,
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
 pbes2_encrypt_iter(std::span<const uint8_t> key_bits,
-                   const std::string& passphrase,
+                   std::string_view passphrase,
                    size_t iterations,
-                   const std::string& cipher,
-                   const std::string& digest,
+                   std::string_view cipher,
+                   std::string_view digest,
                    RandomNumberGenerator& rng);
 
 /**
@@ -78,7 +78,7 @@ pbes2_encrypt_iter(std::span<const uint8_t> key_bits,
 */
 secure_vector<uint8_t>
 pbes2_decrypt(std::span<const uint8_t> key_bits,
-              const std::string& passphrase,
+              std::string_view passphrase,
               const std::vector<uint8_t>& params);
 
 }

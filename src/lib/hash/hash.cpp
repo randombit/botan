@@ -99,8 +99,8 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
-                                                   const std::string& provider)
+std::unique_ptr<HashFunction> HashFunction::create(std::string_view algo_spec,
+                                                   std::string_view provider)
    {
 
 #if defined(BOTAN_HAS_COMMONCRYPTO)
@@ -317,8 +317,8 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
 
 //static
 std::unique_ptr<HashFunction>
-HashFunction::create_or_throw(const std::string& algo,
-                              const std::string& provider)
+HashFunction::create_or_throw(std::string_view algo,
+                              std::string_view provider)
    {
    if(auto hash = HashFunction::create(algo, provider))
       {
@@ -327,7 +327,7 @@ HashFunction::create_or_throw(const std::string& algo,
    throw Lookup_Error("Hash", algo, provider);
    }
 
-std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
+std::vector<std::string> HashFunction::providers(std::string_view algo_spec)
    {
    return probe_providers_of<HashFunction>(algo_spec, {"base", "commoncrypto"});
    }

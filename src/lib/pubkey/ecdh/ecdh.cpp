@@ -27,7 +27,7 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
 
-      ECDH_KA_Operation(const ECDH_PrivateKey& key, const std::string& kdf, RandomNumberGenerator& rng) :
+      ECDH_KA_Operation(const ECDH_PrivateKey& key, std::string_view kdf, RandomNumberGenerator& rng) :
          PK_Ops::Key_Agreement_with_KDF(kdf),
          m_group(key.domain()),
          m_rng(rng)
@@ -60,8 +60,8 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
 
 std::unique_ptr<PK_Ops::Key_Agreement>
 ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
-                                         const std::string& params,
-                                         const std::string& provider) const
+                                         std::string_view params,
+                                         std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<ECDH_KA_Operation>(*this, params, rng);

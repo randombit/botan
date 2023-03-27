@@ -9,7 +9,7 @@
 #define BOTAN_HASHID_H_
 
 #include <botan/secmem.h>
-#include <string>
+#include <string_view>
 
 namespace Botan {
 
@@ -20,14 +20,14 @@ namespace Botan {
 * @return uint8_t sequence identifying the hash
 * @throw Invalid_Argument if the hash has no known PKCS #1 hash id
 */
-std::vector<uint8_t> BOTAN_TEST_API pkcs_hash_id(const std::string& hash_name);
+std::vector<uint8_t> BOTAN_TEST_API pkcs_hash_id(std::string_view hash_name);
 
 /**
 * Return the IEEE 1363 hash identifier
 * @param hash_name the name of the hash function
 * @return uint8_t code identifying the hash, or 0 if not known
 */
-uint8_t ieee1363_hash_id(const std::string& hash_name);
+uint8_t ieee1363_hash_id(std::string_view hash_name);
 
 }
 

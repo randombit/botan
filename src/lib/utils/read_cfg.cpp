@@ -10,6 +10,8 @@
 
 namespace Botan {
 
+namespace {
+
 std::string clean_ws(const std::string& s)
    {
    const char* ws = " \t\n";
@@ -24,6 +26,8 @@ std::string clean_ws(const std::string& s)
    else
       return s.substr(start, start + end + 1);
    }
+
+}
 
 std::map<std::string, std::string> read_cfg(std::istream& is)
    {

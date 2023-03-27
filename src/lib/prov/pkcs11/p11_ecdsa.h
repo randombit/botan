@@ -54,8 +54,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_PublicKey final : public PKCS11_EC_Publ
       ECDSA_PublicKey export_key() const;
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+         create_verification_op(std::string_view params,
+                                std::string_view provider) const override;
    };
 
 /// Represents a PKCS#11 ECDSA private key
@@ -118,8 +118,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_Pri
 
       std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+                             std::string_view params,
+                             std::string_view provider) const override;
    };
 
 using PKCS11_ECDSA_KeyPair = std::pair<PKCS11_ECDSA_PublicKey, PKCS11_ECDSA_PrivateKey>;

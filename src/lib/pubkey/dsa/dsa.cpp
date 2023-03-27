@@ -34,7 +34,7 @@ size_t DSA_PublicKey::key_length() const
    return m_public_key->p_bits();
    }
 
-const BigInt& DSA_PublicKey::get_int_field(const std::string& field) const
+const BigInt& DSA_PublicKey::get_int_field(std::string_view field) const
    {
    return m_public_key->get_int_field(algo_name(), field);
    }
@@ -110,7 +110,7 @@ secure_vector<uint8_t> DSA_PrivateKey::private_key_bits() const
    return m_private_key->DER_encode();
    }
 
-const BigInt& DSA_PrivateKey::get_int_field(const std::string& field) const
+const BigInt& DSA_PrivateKey::get_int_field(std::string_view field) const
    {
    return m_private_key->get_int_field(algo_name(), field);
    }
@@ -130,7 +130,7 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
    {
    public:
       DSA_Signature_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                              const std::string& emsa,
+                              std::string_view emsa,
                               RandomNumberGenerator& rng) :
          PK_Ops::Signature_with_Hash(emsa),
          m_key(key)
@@ -215,7 +215,7 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
    {
    public:
       DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key,
-                                 const std::string& emsa) :
+                                 std::string_view emsa) :
          PK_Ops::Verification_with_Hash(emsa),
          m_key(key)
          {
@@ -268,8 +268,8 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 }
 
 std::unique_ptr<PK_Ops::Verification>
-DSA_PublicKey::create_verification_op(const std::string& params,
-                                      const std::string& provider) const
+DSA_PublicKey::create_verification_op(std::string_view params,
+                                      std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<DSA_Verification_Operation>(this->m_public_key, params);
@@ -278,7 +278,7 @@ DSA_PublicKey::create_verification_op(const std::string& params,
 
 std::unique_ptr<PK_Ops::Verification>
 DSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
-                                           const std::string& provider) const
+                                           std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<DSA_Verification_Operation>(this->m_public_key, signature_algorithm);
@@ -288,8 +288,8 @@ DSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_
 
 std::unique_ptr<PK_Ops::Signature>
 DSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                    const std::string& params,
-                                    const std::string& provider) const
+                                    std::string_view params,
+                                    std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<DSA_Signature_Operation>(this->m_private_key, params, rng);

@@ -23,6 +23,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/parsing.h>
 
+#include <sstream>
 #include <algorithm>
 #include <iterator>
 #include <array>
@@ -60,7 +61,7 @@ calculate_t0_and_t1(const DilithiumModeConstants& mode,
    return { std::move(t0), std::move(t1) };
    }
 
-DilithiumMode::Mode dilithium_mode_from_string(const std::string& str)
+DilithiumMode::Mode dilithium_mode_from_string(std::string_view str)
    {
    if(str == "Dilithium-4x4-r3")
       { return DilithiumMode::Dilithium4x4; }
@@ -75,7 +76,9 @@ DilithiumMode::Mode dilithium_mode_from_string(const std::string& str)
    if(str == "Dilithium-8x7-AES-r3")
       { return DilithiumMode::Dilithium8x7_AES; }
 
-   throw Invalid_Argument(str + " is not a valid Dilithium mode name");
+   std::ostringstream err;
+   err << str << " is not a valid Dilithium mode name";
+   throw Invalid_Argument(err.str());
    }
 
 }
@@ -83,7 +86,7 @@ DilithiumMode::Mode dilithium_mode_from_string(const std::string& str)
 DilithiumMode::DilithiumMode(const OID& oid)
    : m_mode(dilithium_mode_from_string(oid.to_formatted_string())) {}
 
-DilithiumMode::DilithiumMode(const std::string& str)
+DilithiumMode::DilithiumMode(std::string_view str)
    : m_mode(dilithium_mode_from_string(str)) {}
 
 OID DilithiumMode::object_identifier() const { return OID::from_string(to_string()); }
@@ -560,8 +563,8 @@ bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const
    }
 
 std::unique_ptr<PK_Ops::Verification>
-Dilithium_PublicKey::create_verification_op(const std::string& params,
-                                            const std::string& provider) const
+Dilithium_PublicKey::create_verification_op(std::string_view params,
+                                            std::string_view provider) const
    {
    BOTAN_ARG_CHECK(params.empty() || params == "Pure",
                    "Unexpected parameters for verifying with Dilithium");
@@ -572,7 +575,7 @@ Dilithium_PublicKey::create_verification_op(const std::string& params,
 
 std::unique_ptr<PK_Ops::Verification>
 Dilithium_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
-                                                 const std::string& provider) const
+                                                 std::string_view provider) const
    {
    if(provider.empty() || provider == "base")
       {
@@ -642,8 +645,8 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const
 
 std::unique_ptr<PK_Ops::Signature>
 Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-      const std::string& params,
-      const std::string& provider) const
+      std::string_view params,
+      std::string_view provider) const
    {
    BOTAN_UNUSED(rng);
 

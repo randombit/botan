@@ -65,7 +65,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_KA_Params
       * @param compression_type format of encoded keys (affects the secret derivation if single_hash_mode is used)
       * @param flags options, see documentation of ECIES_Flags
       */
-      ECIES_KA_Params(const EC_Group& domain, const std::string& kdf_spec, size_t length,
+      ECIES_KA_Params(const EC_Group& domain, std::string_view kdf_spec, size_t length,
                       EC_Point_Format compression_type, ECIES_Flags flags);
 
       ECIES_KA_Params(const ECIES_KA_Params&) = default;
@@ -133,8 +133,8 @@ class BOTAN_PUBLIC_API(2,0) ECIES_System_Params final : public ECIES_KA_Params
       * @param mac_spec name of the message authentication code
       * @param mac_key_len length of the key used for the message authentication code
       */
-      ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec, const std::string& dem_algo_spec,
-                          size_t dem_key_len, const std::string& mac_spec, size_t mac_key_len);
+      ECIES_System_Params(const EC_Group& domain, std::string_view kdf_spec, std::string_view dem_algo_spec,
+                          size_t dem_key_len, std::string_view mac_spec, size_t mac_key_len);
 
       /**
       * @param domain ec domain parameters of the involved ec keys
@@ -146,8 +146,8 @@ class BOTAN_PUBLIC_API(2,0) ECIES_System_Params final : public ECIES_KA_Params
       * @param compression_type format of encoded keys (affects the secret derivation if single_hash_mode is used)
       * @param flags options, see documentation of ECIES_Flags
       */
-      ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec, const std::string& dem_algo_spec,
-                          size_t dem_key_len, const std::string& mac_spec, size_t mac_key_len,
+      ECIES_System_Params(const EC_Group& domain, std::string_view kdf_spec, std::string_view dem_algo_spec,
+                          size_t dem_key_len, std::string_view mac_spec, size_t mac_key_len,
                           EC_Point_Format compression_type, ECIES_Flags flags);
 
       ECIES_System_Params(const ECIES_System_Params&) = default;
@@ -247,7 +247,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_Encryptor final : public PK_Encryptor
          }
 
       /// Set the label which is appended to the input for the message authentication code
-      inline void set_label(const std::string& label)
+      inline void set_label(std::string_view label)
          {
          m_label = std::vector<uint8_t>(label.begin(), label.end());
          }
@@ -292,7 +292,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_Decryptor final : public PK_Decryptor
          }
 
       /// Set the label which is appended to the input for the message authentication code
-      inline void set_label(const std::string& label)
+      inline void set_label(std::string_view label)
          {
          m_label = std::vector<uint8_t>(label.begin(), label.end());
          }

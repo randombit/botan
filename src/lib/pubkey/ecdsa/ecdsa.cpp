@@ -136,7 +136,7 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
    public:
 
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
-                                const std::string& padding,
+                                std::string_view padding,
                                 RandomNumberGenerator& rng) :
          PK_Ops::Signature_with_Hash(padding),
          m_group(ecdsa.domain()),
@@ -219,7 +219,7 @@ class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
    {
    public:
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa,
-                                   const std::string& padding) :
+                                   std::string_view padding) :
          PK_Ops::Verification_with_Hash(padding),
          m_group(ecdsa.domain()),
          m_gy_mul(m_group.get_base_point(), ecdsa.public_point())
@@ -275,8 +275,8 @@ bool ECDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 }
 
 std::unique_ptr<PK_Ops::Verification>
-ECDSA_PublicKey::create_verification_op(const std::string& params,
-                                        const std::string& provider) const
+ECDSA_PublicKey::create_verification_op(std::string_view params,
+                                        std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<ECDSA_Verification_Operation>(*this, params);
@@ -286,7 +286,7 @@ ECDSA_PublicKey::create_verification_op(const std::string& params,
 
 std::unique_ptr<PK_Ops::Verification>
 ECDSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
-                                             const std::string& provider) const
+                                             std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<ECDSA_Verification_Operation>(*this, signature_algorithm);
@@ -296,8 +296,8 @@ ECDSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signatur
 
 std::unique_ptr<PK_Ops::Signature>
 ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                      const std::string& params,
-                                      const std::string& provider) const
+                                      std::string_view params,
+                                      std::string_view provider) const
    {
    if(provider == "base" || provider.empty())
       return std::make_unique<ECDSA_Signature_Operation>(*this, params, rng);

@@ -42,7 +42,7 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode
 
       KyberMode(Mode mode);
       explicit KyberMode(const OID& oid);
-      explicit KyberMode(const std::string& str);
+      explicit KyberMode(std::string_view str);
 
       OID object_identifier() const;
       std::string to_string() const;
@@ -95,8 +95,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
          }
 
       std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
-            const std::string& params,
-            const std::string& provider) const override;
+            std::string_view params,
+            std::string_view provider) const override;
 
       KyberMode mode() const;
 
@@ -130,8 +130,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
       secure_vector<uint8_t> private_key_bits() const override;
 
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
-            const std::string& params,
-            const std::string& provider) const override;
+            std::string_view params,
+            std::string_view provider) const override;
 
    private:
       friend class Kyber_KEM_Decryptor;

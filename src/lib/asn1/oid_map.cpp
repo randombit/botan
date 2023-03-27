@@ -20,7 +20,7 @@ OID_Map& OID_Map::global_registry()
    return g_map;
    }
 
-void OID_Map::add_oid(const OID& oid, const std::string& str)
+void OID_Map::add_oid(const OID& oid, std::string_view str)
    {
    const std::string oid_str = oid.to_string();
 
@@ -37,7 +37,7 @@ void OID_Map::add_oid(const OID& oid, const std::string& str)
       throw Invalid_State("Cannot register two different names to a single OID");
       }
 
-   auto s2o = m_str2oid.find(str);
+   auto s2o = m_str2oid.find(std::string(str));
 
    if(s2o == m_str2oid.end())
       {
@@ -45,14 +45,14 @@ void OID_Map::add_oid(const OID& oid, const std::string& str)
       }
    }
 
-void OID_Map::add_str2oid(const OID& oid, const std::string& str)
+void OID_Map::add_str2oid(const OID& oid, std::string_view str)
    {
    lock_guard_type<mutex_type> lock(m_mutex);
-   if(!m_str2oid.contains(str))
+   if(!m_str2oid.contains(std::string(str)))
       m_str2oid.insert(std::make_pair(str, oid));
    }
 
-void OID_Map::add_oid2str(const OID& oid, const std::string& str)
+void OID_Map::add_oid2str(const OID& oid, std::string_view str)
    {
    const std::string oid_str = oid.to_string();
    lock_guard_type<mutex_type> lock(m_mutex);
@@ -73,10 +73,10 @@ std::string OID_Map::oid2str(const OID& oid)
    return "";
    }
 
-OID OID_Map::str2oid(const std::string& str)
+OID OID_Map::str2oid(std::string_view str)
    {
    lock_guard_type<mutex_type> lock(m_mutex);
-   auto i = m_str2oid.find(str);
+   auto i = m_str2oid.find(std::string(str));
    if(i != m_str2oid.end())
       return i->second;
 
