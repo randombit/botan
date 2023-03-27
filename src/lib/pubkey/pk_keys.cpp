@@ -77,6 +77,11 @@ secure_vector<uint8_t> Private_Key::private_key_info() const
       .get_contents();
    }
 
+secure_vector<uint8_t> Private_Key::raw_private_key_bits() const
+   {
+   throw Not_Implemented(algo_name() + " does not implement raw_private_key_bits");
+   }
+
 /*
 * Hash of the X.509 subjectPublicKey encoding
 */

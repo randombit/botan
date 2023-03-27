@@ -110,6 +110,8 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey final :
 
       secure_vector<uint8_t> private_key_bits() const override;
 
+      secure_vector<uint8_t> raw_private_key_bits() const override;
+
       const BigInt& get_int_field(std::string_view field) const override;
 
       std::unique_ptr<PK_Ops::Decryption>

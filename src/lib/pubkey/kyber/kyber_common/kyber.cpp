@@ -1523,6 +1523,11 @@ std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const
    return std::make_unique<Kyber_PublicKey>(*this);
    }
 
+secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const
+   {
+   return this->private_key_bits();
+   }
+
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const
    {
    return concat(m_private->polynomials().to_bytes<secure_vector<uint8_t>>(),

@@ -110,6 +110,11 @@ secure_vector<uint8_t> DSA_PrivateKey::private_key_bits() const
    return m_private_key->DER_encode();
    }
 
+secure_vector<uint8_t> DSA_PrivateKey::raw_private_key_bits() const
+   {
+   return m_private_key->raw_private_key_bits();
+   }
+
 const BigInt& DSA_PrivateKey::get_int_field(std::string_view field) const
    {
    return m_private_key->get_int_field(algo_name(), field);

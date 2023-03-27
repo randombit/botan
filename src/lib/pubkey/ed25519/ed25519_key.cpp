@@ -224,7 +224,8 @@ class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification
 class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature
    {
    public:
-      explicit Ed25519_Pure_Sign_Operation(const Ed25519_PrivateKey& key) : m_key(key)
+      explicit Ed25519_Pure_Sign_Operation(const Ed25519_PrivateKey& key) :
+         m_key(key.raw_private_key_bits())
          {
          }
 
@@ -236,7 +237,7 @@ class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature
       secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override
          {
          secure_vector<uint8_t> sig(64);
-         ed25519_sign(sig.data(), m_msg.data(), m_msg.size(), m_key.get_private_key().data(), nullptr, 0);
+         ed25519_sign(sig.data(), m_msg.data(), m_msg.size(), m_key.data(), nullptr, 0);
          m_msg.clear();
          return sig;
          }
@@ -249,7 +250,7 @@ class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature
 
    private:
       std::vector<uint8_t> m_msg;
-      const Ed25519_PrivateKey& m_key;
+      secure_vector<uint8_t> m_key;
    };
 
 AlgorithmIdentifier Ed25519_Pure_Sign_Operation::algorithm_identifier() const
@@ -264,7 +265,7 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
    {
    public:
       Ed25519_Hashed_Sign_Operation(const Ed25519_PrivateKey& key, std::string_view hash, bool rfc8032) :
-         m_key(key)
+         m_key(key.raw_private_key_bits())
          {
          m_hash = HashFunction::create_or_throw(hash);
 
@@ -291,7 +292,7 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
          m_hash->final(msg_hash.data());
          ed25519_sign(sig.data(),
                       msg_hash.data(), msg_hash.size(),
-                      m_key.get_private_key().data(),
+                      m_key.data(),
                       m_domain_sep.data(), m_domain_sep.size());
          return sig;
          }
@@ -300,7 +301,7 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
 
    private:
       std::unique_ptr<HashFunction> m_hash;
-      const Ed25519_PrivateKey& m_key;
+      secure_vector<uint8_t> m_key;
       std::vector<uint8_t> m_domain_sep;
    };
 

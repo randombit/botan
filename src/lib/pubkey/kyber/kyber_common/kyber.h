@@ -129,6 +129,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
 
       secure_vector<uint8_t> private_key_bits() const override;
 
+      secure_vector<uint8_t> raw_private_key_bits() const override;
+
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
             std::string_view params,
             std::string_view provider) const override;

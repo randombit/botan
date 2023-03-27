@@ -742,7 +742,7 @@ int botan_privkey_ed25519_get_privkey(botan_privkey_t key,
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       if(auto ed = dynamic_cast<const Botan::Ed25519_PrivateKey*>(&k))
          {
-         const Botan::secure_vector<uint8_t>& ed_key = ed->get_private_key();
+         const auto ed_key = ed->raw_private_key_bits();
          if(ed_key.size() != 64)
             return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
          Botan::copy_mem(output, ed_key.data(), ed_key.size());
@@ -826,7 +826,7 @@ int botan_privkey_x25519_get_privkey(botan_privkey_t key,
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       if(auto x25519 = dynamic_cast<const Botan::X25519_PrivateKey*>(&k))
          {
-         const Botan::secure_vector<uint8_t>& x25519_key = x25519->get_x();
+         const auto x25519_key = x25519->raw_private_key_bits();
          if(x25519_key.size() != 32)
             return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
          Botan::copy_mem(output, x25519_key.data(), x25519_key.size());

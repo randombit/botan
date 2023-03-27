@@ -636,6 +636,11 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, Dilithiu
    m_public = std::make_shared<Dilithium_PublicKeyInternal>(m_private->mode(), m_private->rho(), m_private->s1(), m_private->s2());
    }
 
+secure_vector<uint8_t> Dilithium_PrivateKey::raw_private_key_bits() const
+   {
+   return this->private_key_bits();
+   }
+
 secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const
    {
    return m_private->raw_sk();

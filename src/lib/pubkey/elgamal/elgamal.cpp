@@ -93,6 +93,11 @@ secure_vector<uint8_t> ElGamal_PrivateKey::private_key_bits() const
    return m_private_key->DER_encode();
    }
 
+secure_vector<uint8_t> ElGamal_PrivateKey::raw_private_key_bits() const
+   {
+   return m_private_key->raw_private_key_bits();
+   }
+
 bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng,
                                    bool strong) const
    {

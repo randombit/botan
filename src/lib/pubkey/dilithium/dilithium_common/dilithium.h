@@ -126,6 +126,8 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
 
       secure_vector<uint8_t> private_key_bits() const override;
 
+      secure_vector<uint8_t> raw_private_key_bits() const override;
+
       /**
        * Create a signature operation that produces a Dilithium signature either
        * with "Randomized" or "Deterministic" rhoprime. Pass either of those
