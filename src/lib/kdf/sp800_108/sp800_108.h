@@ -19,9 +19,9 @@ namespace Botan {
 class SP800_108_Counter final : public KDF
    {
    public:
-      std::string name() const override { return "SP800-108-Counter(" + m_prf->name() + ")"; }
+      std::string name() const override;
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_108_Counter>(m_prf->new_object()); }
+      std::unique_ptr<KDF> new_object() const override;
 
       /**
       * Derive a key using the SP800-108 KDF in Counter mode.
@@ -59,9 +59,9 @@ class SP800_108_Counter final : public KDF
 class SP800_108_Feedback final : public KDF
    {
    public:
-      std::string name() const override { return "SP800-108-Feedback(" + m_prf->name() + ")"; }
+      std::string name() const override;
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_108_Feedback>(m_prf->new_object()); }
+      std::unique_ptr<KDF> new_object() const override;
 
       /**
       * Derive a key using the SP800-108 KDF in Feedback mode.
@@ -96,9 +96,9 @@ class SP800_108_Feedback final : public KDF
 class SP800_108_Pipeline final : public KDF
    {
    public:
-      std::string name() const override { return "SP800-108-Pipeline(" + m_prf->name() + ")"; }
+      std::string name() const override;
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_108_Pipeline>(m_prf->new_object()); }
+      std::unique_ptr<KDF> new_object() const override;
 
       /**
       * Derive a key using the SP800-108 KDF in Double Pipeline mode.

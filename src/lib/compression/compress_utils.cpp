@@ -7,6 +7,7 @@
 
 #include <botan/internal/compress_utils.h>
 #include <botan/internal/safeint.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 #include <cstdlib>
 
@@ -195,7 +196,7 @@ void Stream_Decompression::finish(secure_vector<uint8_t>& buf, size_t offset)
       process(buf, offset, m_stream->finish_flag());
 
    if(m_stream.get())
-      throw Invalid_State(name() + " finished but not at stream end");
+      throw Invalid_State(fmt("{} finished but not at stream end", name()));
    }
 
 }

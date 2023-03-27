@@ -7,6 +7,7 @@
  */
 
 #include <botan/internal/trunc_hash.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -40,7 +41,7 @@ size_t Truncated_Hash::output_length() const
 
 std::string Truncated_Hash::name() const
    {
-   return "Truncated(" + m_hash->name() + "," + std::to_string(m_output_bits) +")";
+   return fmt("Truncated({},{})", m_hash->name(), m_output_bits);
    }
 
 std::unique_ptr<HashFunction> Truncated_Hash::new_object() const

@@ -7,6 +7,7 @@
 #include <botan/argon2.h>
 #include <botan/exceptn.h>
 #include <botan/internal/timer.h>
+#include <botan/internal/fmt.h>
 #include <algorithm>
 
 namespace Botan {
@@ -67,10 +68,9 @@ std::string argon2_family_name(uint8_t f)
 
 std::string Argon2::to_string() const
    {
-   return argon2_family_name(m_family) + "(" +
-      std::to_string(m_M) + "," +
-      std::to_string(m_t) + "," +
-      std::to_string(m_p) + ")";
+   return fmt("{}({},{},{})",
+              argon2_family_name(m_family),
+              m_M, m_t, m_p);
   }
 
 Argon2_Family::Argon2_Family(uint8_t family) : m_family(family)

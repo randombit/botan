@@ -10,6 +10,7 @@
 #include <botan/bigint.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/fmt.h>
 #include <algorithm>
 
 namespace Botan {
@@ -26,8 +27,9 @@ void encode_tag(std::vector<uint8_t>& encoded_tag,
    const uint32_t class_tag = static_cast<uint32_t>(class_tag_e);
 
    if((class_tag | 0xE0) != 0xE0)
-      throw Encoding_Error("DER_Encoder: Invalid class tag " +
-                           std::to_string(class_tag));
+      {
+      throw Encoding_Error(fmt("DER_Encoder: Invalid class tag {}", std::to_string(class_tag)));
+      }
 
    if(type_tag <= 30)
       {

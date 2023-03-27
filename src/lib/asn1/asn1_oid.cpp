@@ -11,6 +11,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/oid_map.h>
+#include <botan/internal/fmt.h>
 #include <algorithm>
 #include <sstream>
 
@@ -88,9 +89,7 @@ OID OID::from_string(std::string_view str)
    if(!raw.empty())
       return OID(std::move(raw));
 
-   std::ostringstream err;
-   err << "No OID associated with name " << str;
-   throw Lookup_Error(err.str());
+   throw Lookup_Error(fmt("No OID associated with name '{}'", str));
    }
 
 /*
@@ -103,9 +102,7 @@ OID::OID(std::string_view oid_str)
       m_id = parse_oid_str(oid_str);
       if(m_id.size() < 2 || m_id[0] > 2 || (m_id[0] < 2 && m_id[1] > 39))
          {
-         std::ostringstream err;
-         err << "Invalid OID '" << oid_str << "'";
-         throw Decoding_Error(err.str());
+         throw Decoding_Error(fmt("Invalid OID '{}'", oid_str));
          }
       }
    }
@@ -116,13 +113,7 @@ OID::OID(std::string_view oid_str)
 std::string OID::to_string() const
    {
    std::ostringstream out;
-   for(size_t i = 0; i != m_id.size(); ++i)
-      {
-      // avoid locale issues with integer formatting
-      out << std::to_string(m_id[i]);
-      if(i != m_id.size() - 1)
-         out << ".";
-      }
+   out << (*this);
    return out.str();
    }
 
@@ -154,6 +145,21 @@ bool operator<(const OID& a, const OID& b)
 
    return std::lexicographical_compare(oid1.begin(), oid1.end(),
                                        oid2.begin(), oid2.end());
+   }
+
+std::ostream& operator<<(std::ostream& out, const OID& oid)
+   {
+   const auto& val = oid.get_components();
+
+   for(size_t i = 0; i != val.size(); ++i)
+      {
+      // avoid locale issues with integer formatting
+      out << std::to_string(val[i]);
+      if(i != val.size() - 1)
+         out << ".";
+      }
+
+   return out;
    }
 
 /*

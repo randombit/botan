@@ -9,6 +9,7 @@
 #include <botan/data_src.h>
 #include <botan/base64.h>
 #include <botan/exceptn.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan::PEM_Code {
 
@@ -40,8 +41,8 @@ std::string linewrap(size_t width, const std::string& in)
 */
 std::string encode(const uint8_t der[], size_t length, const std::string& label, size_t width)
    {
-   const std::string PEM_HEADER = "-----BEGIN " + label + "-----\n";
-   const std::string PEM_TRAILER = "-----END " + label + "-----\n";
+   const std::string PEM_HEADER = fmt("-----BEGIN {}-----\n", label);
+   const std::string PEM_TRAILER = fmt("-----END {}-----\n", label);
 
    return (PEM_HEADER + linewrap(width, base64_encode(der, length)) + PEM_TRAILER);
    }
@@ -55,8 +56,11 @@ secure_vector<uint8_t> decode_check_label(DataSource& source,
    std::string label_got;
    secure_vector<uint8_t> ber = decode(source, label_got);
    if(label_got != label_want)
-      throw Decoding_Error("PEM: Label mismatch, wanted " + label_want +
-                           ", got " + label_got);
+      {
+      throw Decoding_Error(fmt("PEM: Label mismatch, wanted '{}' got '{}'",
+                               label_want, label_got));
+      }
+
    return ber;
    }
 
@@ -102,7 +106,7 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label)
 
    std::vector<char> b64;
 
-   const std::string PEM_TRAILER = "-----END " + label + "-----";
+   const std::string PEM_TRAILER = fmt("-----END {}-----", label);
    position = 0;
    while(position != PEM_TRAILER.length())
       {

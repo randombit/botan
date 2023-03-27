@@ -22,9 +22,9 @@ namespace Botan {
 class SP800_56A_Hash final : public KDF
    {
    public:
-      std::string name() const override { return "SP800-56A(" + m_hash->name() + ")"; }
+      std::string name() const override;
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56A_Hash>(m_hash->new_object()); }
+      std::unique_ptr<KDF> new_object() const override;
 
       /**
       * Derive a key using the SP800-56A KDF.
@@ -62,9 +62,9 @@ class SP800_56A_Hash final : public KDF
 class SP800_56A_HMAC final : public KDF
    {
    public:
-      std::string name() const override { return "SP800-56A(" + m_mac->name() + ")"; }
+      std::string name() const override;
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56A_HMAC>(m_mac->new_object()); }
+      std::unique_ptr<KDF> new_object() const override;
 
       /**
       * Derive a key using the SP800-56A KDF.

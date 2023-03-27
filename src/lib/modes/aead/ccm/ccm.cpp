@@ -8,6 +8,7 @@
 
 #include <botan/internal/ccm.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -26,10 +27,10 @@ CCM_Mode::CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t 
       throw Invalid_Argument(m_cipher->name() + " cannot be used with CCM mode");
 
    if(L < 2 || L > 8)
-      throw Invalid_Argument("Invalid CCM L value " + std::to_string(L));
+      throw Invalid_Argument(fmt("Invalid CCM L value {}", L));
 
    if(tag_size < 4 || tag_size > 16 || tag_size % 2 != 0)
-      throw Invalid_Argument("invalid CCM tag length " + std::to_string(tag_size));
+      throw Invalid_Argument(fmt("Invalid CCM tag length {}", tag_size));
    }
 
 void CCM_Mode::clear()
@@ -47,7 +48,7 @@ void CCM_Mode::reset()
 
 std::string CCM_Mode::name() const
    {
-   return (m_cipher->name() + "/CCM(" + std::to_string(tag_size()) + "," + std::to_string(L())) + ")";
+   return fmt("{}/CCM({},{})", m_cipher->name(), tag_size(), L());
    }
 
 bool CCM_Mode::valid_nonce_length(size_t n) const

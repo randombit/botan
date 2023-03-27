@@ -10,6 +10,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/cpuid.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -395,7 +396,7 @@ void ChaCha::clear()
 
 std::string ChaCha::name() const
    {
-   return "ChaCha(" + std::to_string(m_rounds) + ")";
+   return fmt("ChaCha({})", m_rounds);
    }
 
 void ChaCha::seek(uint64_t offset)

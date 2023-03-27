@@ -7,7 +7,7 @@
 */
 
 #include <botan/internal/sp800_56a.h>
-#include <botan/internal/scan_name.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -65,11 +65,20 @@ void SP800_56A_Hash::kdf(uint8_t key[], size_t key_len,
    SP800_56A_kdf(*m_hash, key, key_len, secret, secret_len, label, label_len);
    }
 
+std::string SP800_56A_Hash::name() const
+   {
+   return fmt("SP800-56A({})", m_hash->name());
+   }
+
+std::unique_ptr<KDF> SP800_56A_Hash::new_object() const
+   {
+   return std::make_unique<SP800_56A_Hash>(m_hash->new_object());
+   }
+
 SP800_56A_HMAC::SP800_56A_HMAC(std::unique_ptr<MessageAuthenticationCode> mac) : m_mac(std::move(mac))
    {
    // TODO: we need a MessageAuthenticationCode::is_hmac
-   const SCAN_Name req(m_mac->name());
-   if(req.algo_name() != "HMAC")
+   if(!m_mac->name().starts_with("HMAC("))
       {
       throw Algorithm_Not_Found("Only HMAC can be used with KDF SP800-56A");
       }
@@ -91,6 +100,14 @@ void SP800_56A_HMAC::kdf(uint8_t key[], size_t key_len,
    SP800_56A_kdf(*m_mac, key, key_len, secret, secret_len, label, label_len);
    }
 
+std::string SP800_56A_HMAC::name() const
+   {
+   return fmt("SP800-56A({})", m_mac->name());
+   }
 
+std::unique_ptr<KDF> SP800_56A_HMAC::new_object() const
+   {
+   return std::make_unique<SP800_56A_HMAC>(m_mac->new_object());
+   }
 
 }

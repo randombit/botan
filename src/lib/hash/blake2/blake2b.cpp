@@ -11,6 +11,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/fmt.h>
 #include <algorithm>
 
 namespace Botan {
@@ -201,7 +202,7 @@ Key_Length_Specification BLAKE2b::key_spec() const
 
 std::string BLAKE2b::name() const
    {
-   return "BLAKE2b(" + std::to_string(m_output_bits) + ")";
+   return fmt("BLAKE2b({})", m_output_bits);
    }
 
 std::unique_ptr<HashFunction> BLAKE2b::new_object() const

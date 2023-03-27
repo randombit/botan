@@ -19,9 +19,9 @@ namespace Botan {
 class TLS_12_PRF final : public KDF
    {
    public:
-      std::string name() const override { return "TLS-12-PRF(" + m_mac->name() + ")"; }
+      std::string name() const override;
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<TLS_12_PRF>(m_mac->new_object()); }
+      std::unique_ptr<KDF> new_object() const override;
 
       void kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,

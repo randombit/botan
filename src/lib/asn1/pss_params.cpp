@@ -7,6 +7,7 @@
 
 #include <botan/internal/pss_params.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/fmt.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 
@@ -20,7 +21,7 @@ PSS_Params PSS_Params::from_emsa_name(const std::string& emsa_name)
    if((scanner.algo_name() != "EMSA4" && scanner.algo_name() != "PSSR") ||
       scanner.arg_count() != 3)
       {
-      throw Invalid_Argument("PSS_Params::from_emsa_name unexpected param " + emsa_name);
+      throw Invalid_Argument(fmt("PSS_Params::from_emsa_name unexpected param '{}'", emsa_name));
       }
 
    const std::string hash_fn = scanner.arg(0);

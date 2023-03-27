@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/lion.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -101,9 +102,7 @@ void Lion::key_schedule(const uint8_t key[], size_t length)
 */
 std::string Lion::name() const
    {
-   return "Lion(" + m_hash->name() + "," +
-                    m_cipher->name() + "," +
-                    std::to_string(block_size()) + ")";
+   return fmt("Lion({},{},{})", m_hash->name(), m_cipher->name(), block_size());
    }
 
 std::unique_ptr<BlockCipher> Lion::new_object() const
@@ -133,10 +132,15 @@ Lion::Lion(std::unique_ptr<HashFunction> hash,
    m_cipher(std::move(cipher))
    {
    if(2*left_size() + 1 > m_block_size)
-      throw Invalid_Argument(name() + ": Chosen block size is too small");
+      {
+      throw Invalid_Argument(fmt("Block size {} is too small for {}", m_block_size, name()));
+      }
 
    if(!m_cipher->valid_keylength(left_size()))
-      throw Invalid_Argument(name() + ": This stream/hash combo is invalid");
+      {
+      throw Invalid_Argument(fmt("Lion does not support combining {} and {}",
+                                 m_cipher->name(), m_hash->name()));
+      }
    }
 
 }

@@ -8,6 +8,7 @@
 
 #include <botan/internal/streebog.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -29,15 +30,16 @@ Streebog::Streebog(size_t output_bits) :
    m_S(8)
    {
    if(output_bits != 256 && output_bits != 512)
-      throw Invalid_Argument("Streebog: Invalid output length " +
-                             std::to_string(output_bits));
+      {
+      throw Invalid_Argument(fmt("Streebog: Invalid output length {}", output_bits));
+      }
 
    clear();
    }
 
 std::string Streebog::name() const
    {
-   return "Streebog-" + std::to_string(m_output_bits);
+   return fmt("Streebog-{}", m_output_bits);
    }
 
 /*

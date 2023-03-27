@@ -32,17 +32,11 @@ class Comb4P final : public HashFunction
          return m_hash1->output_length() + m_hash2->output_length();
          }
 
-      std::unique_ptr<HashFunction> new_object() const override
-         {
-         return std::make_unique<Comb4P>(m_hash1->new_object(), m_hash2->new_object());
-         }
+      std::unique_ptr<HashFunction> new_object() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;
 
-      std::string name() const override
-         {
-         return "Comb4P(" + m_hash1->name() + "," + m_hash2->name() + ")";
-         }
+      std::string name() const override;
 
       void clear() override;
    private:

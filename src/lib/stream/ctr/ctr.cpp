@@ -9,6 +9,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -86,10 +87,9 @@ void CTR_BE::key_schedule(const uint8_t key[], size_t key_len)
 std::string CTR_BE::name() const
    {
    if(m_ctr_size == m_block_size)
-      return ("CTR-BE(" + m_cipher->name() + ")");
+      return fmt("CTR-BE({})", m_cipher->name());
    else
-      return ("CTR-BE(" + m_cipher->name() + "," + std::to_string(m_ctr_size) + ")");
-
+      return fmt("CTR-BE({},{})", m_cipher->name(), m_ctr_size);
    }
 
 void CTR_BE::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length)

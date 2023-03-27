@@ -8,6 +8,7 @@
 #include <botan/internal/siphash.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -141,7 +142,7 @@ void SipHash::clear()
 
 std::string SipHash::name() const
    {
-   return "SipHash(" + std::to_string(m_C) + "," + std::to_string(m_D) + ")";
+   return fmt("SipHash({},{})", m_C, m_D);
    }
 
 std::unique_ptr<MessageAuthenticationCode> SipHash::new_object() const

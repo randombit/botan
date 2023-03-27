@@ -9,6 +9,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/numthry.h>
 #include <botan/internal/divide.h>
+#include <botan/internal/fmt.h>
 #include <botan/reducer.h>
 #include <botan/mac.h>
 
@@ -97,7 +98,7 @@ void FPE_FE1::clear()
 
 std::string FPE_FE1::name() const
    {
-   return "FPE_FE1(" + m_mac->name() + "," + std::to_string(m_rounds) + ")";
+   return fmt("FPE_FE1({},{})", m_mac->name(), m_rounds);
    }
 
 Key_Length_Specification FPE_FE1::key_spec() const

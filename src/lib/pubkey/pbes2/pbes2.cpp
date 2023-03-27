@@ -12,6 +12,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/fmt.h>
 #include <botan/asn1_obj.h>
 #include <botan/rng.h>
 
@@ -52,14 +53,15 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
 
       const std::string prf = prf_algo.oid().human_name_or_empty();
       if(prf.empty() || !prf.starts_with("HMAC"))
-         throw Decoding_Error("Unknown PBES2 PRF " + prf_algo.oid().to_string());
-      auto pbkdf_fam = PasswordHashFamily::create_or_throw("PBKDF2(" + prf + ")");
+         {
+         throw Decoding_Error(fmt("Unknown PBES2 PRF {}", prf_algo.oid()));
+         }
+
+      auto pbkdf_fam = PasswordHashFamily::create_or_throw(fmt("PBKDF2({})", prf));
       auto pbkdf = pbkdf_fam->from_params(iterations);
 
       secure_vector<uint8_t> derived_key(key_length);
-      pbkdf->derive_key(derived_key.data(), derived_key.size(),
-                        passphrase.data(), passphrase.size(),
-                        salt.data(), salt.size());
+      pbkdf->hash(derived_key, passphrase, salt);
       return derived_key;
       }
    else if(kdf_algo.oid() == OID::from_string("Scrypt"))
@@ -85,15 +87,14 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
 
       auto pwdhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
       auto pwdhash = pwdhash_fam->from_params(N, r, p);
-      pwdhash->derive_key(derived_key.data(), derived_key.size(),
-                          passphrase.data(), passphrase.size(),
-                          salt.data(), salt.size());
+      pwdhash->hash(derived_key, passphrase, salt);
 
       return derived_key;
       }
    else
-      throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
-                           kdf_algo.oid().to_string());
+      {
+      throw Decoding_Error(fmt("PBE-PKCS5 v2.0: Unknown KDF algorithm {}", kdf_algo.oid()));
+      }
    }
 
 secure_vector<uint8_t> derive_key(std::string_view passphrase,
@@ -147,12 +148,14 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
       }
    else
       {
-      const std::string prf = "HMAC(" + std::string(digest) + ")";
-      const std::string pbkdf_name = "PBKDF2(" + prf + ")";
+      const std::string prf = fmt("HMAC({})", digest);
+      const std::string pbkdf_name = fmt("PBKDF2({})", prf);
 
       auto pwhash_fam = PasswordHashFamily::create(pbkdf_name);
       if(!pwhash_fam)
-         throw Invalid_Argument("Unknown password hash digest " + std::string(digest));
+         {
+         throw Invalid_Argument(fmt("Unknown password hash digest {}", digest));
+         }
 
       std::unique_ptr<PasswordHash> pwhash;
 
@@ -208,7 +211,7 @@ pbes2_encrypt_shared(std::span<const uint8_t> key_bits,
 
    if(cipher_spec.size() != 2 || !known_pbes_cipher_mode(cipher_spec[1]) || !enc)
       {
-      throw Encoding_Error("PBE-PKCS5 v2.0: Invalid or unavailable cipher " + std::string(cipher));
+      throw Encoding_Error(fmt("PBE-PKCS5 v2.0: Invalid or unavailable cipher '{}'", cipher));
       }
 
    const size_t key_length = enc->key_spec().maximum_keylength();
@@ -303,14 +306,18 @@ pbes2_decrypt(std::span<const uint8_t> key_bits,
    const std::string cipher = enc_algo.oid().human_name_or_empty();
    const auto cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2 || !known_pbes_cipher_mode(cipher_spec[1]))
-      throw Decoding_Error("PBE-PKCS5 v2.0: Unknown/invalid cipher OID " + enc_algo.oid().to_string());
+      {
+      throw Decoding_Error(fmt("PBE-PKCS5 v2.0: Unknown/invalid cipher OID {}", enc_algo.oid()));
+      }
 
    secure_vector<uint8_t> iv;
    BER_Decoder(enc_algo.parameters()).decode(iv, ASN1_Type::OctetString).verify_end();
 
    auto dec = Cipher_Mode::create(cipher, Cipher_Dir::Decryption);
    if(!dec)
-      throw Decoding_Error("PBE-PKCS5 cannot decrypt no cipher " + cipher);
+      {
+      throw Decoding_Error(fmt("PBE-PKCS5 cannot decrypt no cipher '{}'", cipher));
+      }
 
    dec->set_key(derive_key(passphrase, kdf_algo, dec->key_spec().maximum_keylength()));
 

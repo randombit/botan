@@ -11,7 +11,7 @@
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/charset.h>
-#include <sstream>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -162,9 +162,8 @@ bool Base32::check_bad_char(uint8_t bin, char input, bool ignore_ws)
       }
    else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
       {
-      std::ostringstream err;
-      err << "base32_decode: invalid character " << format_char_for_display(input);
-      throw Invalid_Argument(err.str());
+      throw Invalid_Argument(fmt("base32_decode: invalid character '{}'",
+                                 format_char_for_display(input)));
       }
    return false;
    }

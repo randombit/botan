@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/prf_tls.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -26,9 +27,8 @@ void P_hash(uint8_t out[], size_t out_len,
       }
    catch(Invalid_Key_Length&)
       {
-      throw Internal_Error("The premaster secret of " +
-                           std::to_string(secret_len) +
-                           " bytes is too long for the PRF");
+      throw Internal_Error(fmt("The premaster secret of {} bytes is too long for TLS-PRF",
+                               secret_len));
       }
 
    secure_vector<uint8_t> A(salt, salt + salt_len);
@@ -51,6 +51,16 @@ void P_hash(uint8_t out[], size_t out_len,
    }
 
 }
+
+std::string TLS_12_PRF::name() const
+   {
+   return fmt("TLS-12-PRF({})", m_mac->name());
+   }
+
+std::unique_ptr<KDF> TLS_12_PRF::new_object() const
+   {
+   return std::make_unique<TLS_12_PRF>(m_mac->new_object());
+   }
 
 void TLS_12_PRF::kdf(uint8_t key[], size_t key_len,
                      const uint8_t secret[], size_t secret_len,

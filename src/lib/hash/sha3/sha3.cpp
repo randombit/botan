@@ -8,8 +8,9 @@
 #include <botan/internal/sha3.h>
 #include <botan/internal/sha3_round.h>
 #include <botan/internal/loadstor.h>
-#include <botan/exceptn.h>
 #include <botan/internal/cpuid.h>
+#include <botan/internal/fmt.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -137,13 +138,14 @@ SHA_3::SHA_3(size_t output_bits) :
 
    if(output_bits != 224 && output_bits != 256 &&
       output_bits != 384 && output_bits != 512)
-      throw Invalid_Argument("SHA_3: Invalid output length " +
-                             std::to_string(output_bits));
+      {
+      throw Invalid_Argument(fmt("SHA_3: Invalid output length {}", output_bits));
+      }
    }
 
 std::string SHA_3::name() const
    {
-   return "SHA-3(" + std::to_string(m_output_bits) + ")";
+   return fmt("SHA-3({})", m_output_bits);
    }
 
 std::string SHA_3::provider() const

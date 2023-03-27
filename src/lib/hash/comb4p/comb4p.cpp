@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/comb4p.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -41,11 +42,22 @@ Comb4P::Comb4P(std::unique_ptr<HashFunction> h1, std::unique_ptr<HashFunction> h
       throw Invalid_Argument("Comb4P: Must use two distinct hashes");
 
    if(m_hash1->output_length() != m_hash2->output_length())
-      throw Invalid_Argument("Comb4P: Incompatible hashes " +
-                                  m_hash1->name() + " and " +
-                                  m_hash2->name());
+      {
+      throw Invalid_Argument(fmt("Comb4P: Incompatible hashes {} and {}",
+                                 m_hash1->name(), m_hash2->name()));
+      }
 
    clear();
+   }
+
+std::string Comb4P::name() const
+   {
+   return fmt("Comb4P({},{})", m_hash1->name(), m_hash2->name());
+   }
+
+std::unique_ptr<HashFunction> Comb4P::new_object() const
+   {
+   return std::make_unique<Comb4P>(m_hash1->new_object(), m_hash2->new_object());
    }
 
 size_t Comb4P::hash_block_size() const

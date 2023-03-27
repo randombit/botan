@@ -7,6 +7,7 @@
 
 #include <botan/internal/shake.h>
 #include <botan/internal/sha3.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -15,13 +16,14 @@ SHAKE_128::SHAKE_128(size_t output_bits) :
    m_output_bits(output_bits), m_S(25), m_S_pos(0)
    {
    if(output_bits % 8 != 0)
-      throw Invalid_Argument("SHAKE_128: Invalid output length " +
-                             std::to_string(output_bits));
+      {
+      throw Invalid_Argument(fmt("SHAKE_128: Invalid output length {}", output_bits));
+      }
    }
 
 std::string SHAKE_128::name() const
    {
-   return "SHAKE-128(" + std::to_string(m_output_bits) + ")";
+   return fmt("SHAKE-128({})", m_output_bits);
    }
 
 std::unique_ptr<HashFunction> SHAKE_128::new_object() const
@@ -56,13 +58,14 @@ SHAKE_256::SHAKE_256(size_t output_bits) :
    m_output_bits(output_bits), m_S(25), m_S_pos(0)
    {
    if(output_bits % 8 != 0)
-      throw Invalid_Argument("SHAKE_256: Invalid output length " +
-                             std::to_string(output_bits));
+      {
+      throw Invalid_Argument(fmt("SHAKE_256: Invalid output length {}", output_bits));
+      }
    }
 
 std::string SHAKE_256::name() const
    {
-   return "SHAKE-256(" + std::to_string(m_output_bits) + ")";
+   return fmt("SHAKE-256({})", m_output_bits);
    }
 
 std::unique_ptr<HashFunction> SHAKE_256::new_object() const

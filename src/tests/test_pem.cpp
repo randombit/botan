@@ -31,7 +31,7 @@ class PEM_Tests : public Test
          result.test_eq("PEM decoding label", label1, "BUNNY");
 
          result.test_throws("PEM decoding unexpected label",
-                            "PEM: Label mismatch, wanted FLOOFY, got BUNNY",
+                            "PEM: Label mismatch, wanted 'FLOOFY' got 'BUNNY'",
                             [pem1]() { Botan::PEM_Code::decode_check_label(pem1, "FLOOFY"); });
 
          const std::string malformed_pem1 = "---BEGIN BUNNY-----\n-----END BUNNY-----";

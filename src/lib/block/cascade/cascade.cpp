@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/cascade.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -45,7 +46,7 @@ void Cascade_Cipher::clear()
 
 std::string Cascade_Cipher::name() const
    {
-   return "Cascade(" + m_cipher1->name() + "," + m_cipher2->name() + ")";
+   return fmt("Cascade({},{})", m_cipher1->name(), m_cipher2->name());
    }
 
 bool Cascade_Cipher::has_keying_material() const

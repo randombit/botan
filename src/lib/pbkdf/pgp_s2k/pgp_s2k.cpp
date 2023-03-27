@@ -9,6 +9,7 @@
 #include <botan/pgp_s2k.h>
 #include <botan/exceptn.h>
 #include <botan/internal/timer.h>
+#include <botan/internal/fmt.h>
 #include <algorithm>
 
 namespace Botan {
@@ -95,7 +96,7 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
 
 std::string RFC4880_S2K_Family::name() const
    {
-   return "OpenPGP-S2K(" + m_hash->name() + ")";
+   return fmt("OpenPGP-S2K({})", m_hash->name());
    }
 
 std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(
@@ -147,7 +148,7 @@ RFC4880_S2K::RFC4880_S2K(std::unique_ptr<HashFunction> hash, size_t iterations) 
 
 std::string RFC4880_S2K::to_string() const
    {
-   return "OpenPGP-S2K(" + m_hash->name() + "," + std::to_string(m_iterations) + ")";
+   return fmt("OpenPGP-S2K({},{})", m_hash->name(), m_iterations);
    }
 
 void RFC4880_S2K::derive_key(uint8_t out[], size_t out_len,

@@ -9,6 +9,7 @@
 
 #include <botan/internal/parsing.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 #include <algorithm>
 #include <cctype>
@@ -133,9 +134,7 @@ std::vector<std::string> split_on(std::string_view str, char delim)
 
    if(substr.empty())
       {
-      std::ostringstream oss;
-      oss << "Unable to split string '" << str << "'";
-      throw Invalid_Argument(oss.str());
+      throw Invalid_Argument(fmt("Unable to split string '{}", str));
       }
    elems.push_back(substr);
 
@@ -168,9 +167,7 @@ uint32_t string_to_ipv4(std::string_view str)
 
    if(parts.size() != 4)
       {
-      std::ostringstream oss;
-      oss << "Invalid IPv4 string '" << str << "'";
-      throw Decoding_Error(oss.str());
+      throw Decoding_Error(fmt("Invalid IPv4 string '{}'", str));
       }
 
    uint32_t ip = 0;
@@ -181,9 +178,7 @@ uint32_t string_to_ipv4(std::string_view str)
 
       if(octet > 255)
          {
-         std::ostringstream oss;
-         oss << "Invalid IPv4 string '" << str << "'";
-         throw Decoding_Error(oss.str());
+         throw Decoding_Error(fmt("Invalid IPv4 string '{}'", str));
          }
 
       ip = (ip << 8) | (octet & 0xFF);

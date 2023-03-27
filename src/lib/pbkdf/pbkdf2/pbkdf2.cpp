@@ -9,6 +9,7 @@
 #include <botan/pbkdf2.h>
 #include <botan/exceptn.h>
 #include <botan/internal/timer.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -166,7 +167,7 @@ PKCS5_PBKDF2::pbkdf(uint8_t key[], size_t key_len,
 
 std::string PKCS5_PBKDF2::name() const
    {
-   return "PBKDF2(" + m_mac->name() + ")";
+   return fmt("PBKDF2({})", m_mac->name());
    }
 
 std::unique_ptr<PBKDF> PKCS5_PBKDF2::new_object() const
@@ -183,7 +184,7 @@ PBKDF2::PBKDF2(const MessageAuthenticationCode& prf, size_t olen, std::chrono::m
 
 std::string PBKDF2::to_string() const
    {
-   return "PBKDF2(" + m_prf->name() + "," + std::to_string(m_iterations) + ")";
+   return fmt("PBKDF2({},{})", m_prf->name(), m_iterations);
    }
 
 void PBKDF2::derive_key(uint8_t out[], size_t out_len,
@@ -196,7 +197,7 @@ void PBKDF2::derive_key(uint8_t out[], size_t out_len,
 
 std::string PBKDF2_Family::name() const
    {
-   return "PBKDF2(" + m_prf->name() + ")";
+   return fmt("PBKDF2({})", m_prf->name());
    }
 
 std::unique_ptr<PasswordHash> PBKDF2_Family::tune(

@@ -26,12 +26,9 @@ class HKDF final : public KDF
       explicit HKDF(std::unique_ptr<MessageAuthenticationCode> prf) :
          m_prf(std::move(prf)) {}
 
-      std::unique_ptr<KDF> new_object() const override
-         {
-         return std::make_unique<HKDF>(m_prf->new_object());
-         }
+      std::unique_ptr<KDF> new_object() const override;
 
-      std::string name() const override { return "HKDF(" + m_prf->name() + ")"; }
+      std::string name() const override;
 
       void kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,
@@ -54,12 +51,9 @@ class HKDF_Extract final : public KDF
       explicit HKDF_Extract(std::unique_ptr<MessageAuthenticationCode> prf) :
          m_prf(std::move(prf)) {}
 
-      std::unique_ptr<KDF> new_object() const override
-         {
-         return std::make_unique<HKDF_Extract>(m_prf->new_object());
-         }
+      std::unique_ptr<KDF> new_object() const override;
 
-      std::string name() const override { return "HKDF-Extract(" + m_prf->name() + ")"; }
+      std::string name() const override;
 
       void kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,
@@ -82,12 +76,9 @@ class HKDF_Expand final : public KDF
       explicit HKDF_Expand(std::unique_ptr<MessageAuthenticationCode> prf) :
          m_prf(std::move(prf)) {}
 
-      std::unique_ptr<KDF> new_object() const override
-         {
-         return std::make_unique<HKDF_Expand>(m_prf->new_object());
-         }
+      std::unique_ptr<KDF> new_object() const override;
 
-      std::string name() const override { return "HKDF-Expand(" + m_prf->name() + ")"; }
+      std::string name() const override;
 
       void kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,

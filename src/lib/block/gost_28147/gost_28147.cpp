@@ -9,6 +9,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -52,7 +53,7 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : m_name(n)
    else if(m_name == "R3411_CryptoPro")
       m_sboxes = GOST_R_3411_CRYPTOPRO_PARAMS;
    else
-      throw Invalid_Argument("GOST_28147_89_Params: Unknown " + m_name);
+      throw Invalid_Argument(fmt("GOST_28147_89_Params: Unknown sbox params '{}'", m_name));
    }
 
 /*
@@ -60,7 +61,7 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : m_name(n)
 */
 GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
    m_SBOX(1024),
-   m_name("GOST-28147-89(" + param.param_name() + ")")
+   m_name(fmt("GOST-28147-89({})", param.param_name()))
    {
    // Convert the parallel 4x4 sboxes into larger word-based sboxes
 

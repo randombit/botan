@@ -9,7 +9,7 @@
 #include <botan/rng.h>
 #include <botan/base64.h>
 #include <botan/internal/parsing.h>
-#include <sstream>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -53,21 +53,22 @@ std::string argon2_generate_pwhash(const char* password, size_t password_len,
                        password, password_len,
                        salt.data(), salt.size());
 
-   std::ostringstream oss;
+   const auto enc_salt = strip_padding(base64_encode(salt));
+   const auto enc_output = strip_padding(base64_encode(output));
 
-   if(y == 0)
-      oss << "$argon2d$";
-   else if(y == 1)
-      oss << "$argon2i$";
-   else
-      oss << "$argon2id$";
+   const std::string argon2_mode = [&]() -> std::string
+      {
+      if(y == 0)
+         return "d";
+      else if(y == 1)
+         return "i";
+      else
+         return "id";
+      }();
 
-   oss << "v=19$m=" << std::to_string(M)
-       << ",t=" << std::to_string(t)
-       << ",p=" << std::to_string(p) << "$";
-   oss << strip_padding(base64_encode(salt)) << "$" << strip_padding(base64_encode(output));
-
-   return oss.str();
+   return fmt("$argon2{}$v=19$m={},t={},p={}${}${}",
+              argon2_mode, M, t, p,
+              enc_salt, enc_output);
    }
 
 bool argon2_check_pwhash(const char* password, size_t password_len,

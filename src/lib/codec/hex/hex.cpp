@@ -10,7 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/charset.h>
 #include <botan/internal/ct_utils.h>
-#include <sstream>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -108,9 +108,8 @@ size_t hex_decode(uint8_t output[],
          if(bin == 0x80 && ignore_ws)
             continue;
 
-         std::ostringstream err;
-         err << "hex_decode: invalid character " << format_char_for_display(input[i]);
-         throw Invalid_Argument(err.str());
+         throw Invalid_Argument(fmt("hex_decode: invalid character '{}'",
+                                    format_char_for_display(input[i])));
          }
 
       if(top_nibble)

@@ -19,9 +19,9 @@ namespace Botan {
 class SP800_56C final : public KDF
    {
    public:
-      std::string name() const override { return "SP800-56C(" + m_prf->name() + ")"; }
+      std::string name() const override;
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56C>(m_prf->new_object(), m_exp->new_object()); }
+      std::unique_ptr<KDF> new_object() const override;
 
       /**
       * Derive a key using the SP800-56C KDF.

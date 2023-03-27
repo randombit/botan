@@ -9,6 +9,7 @@
 #include <botan/mac.h>
 #include <botan/hash.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_HKDF)
@@ -55,7 +56,7 @@ template<typename KDF_Type>
 std::unique_ptr<KDF>
 kdf_create_mac_or_hash(const std::string& nm)
    {
-   if(auto mac = MessageAuthenticationCode::create("HMAC(" + nm + ")"))
+   if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", nm)))
       return std::make_unique<KDF_Type>(std::move(mac));
 
    if(auto mac = MessageAuthenticationCode::create(nm))
@@ -195,7 +196,7 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec,
          if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
             return std::make_unique<SP800_56C>(std::move(mac), std::move(exp));
 
-         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
+         if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", req.arg(0))))
             return std::make_unique<SP800_56C>(std::move(mac), std::move(exp));
          }
       }

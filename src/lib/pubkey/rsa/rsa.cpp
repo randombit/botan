@@ -19,6 +19,7 @@
 #include <botan/internal/emsa.h>
 #include <botan/internal/pss_params.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/fmt.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
   #include <botan/internal/thread_pool.h>
@@ -290,10 +291,14 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
                                size_t bits, size_t exp)
    {
    if(bits < 1024)
-      throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
-                             std::to_string(bits) + " bits long");
+      {
+      throw Invalid_Argument(fmt("Cannot create an RSA key only {} bits long", bits));
+      }
+
    if(exp < 3 || exp % 2 == 0)
-      throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
+      {
+      throw Invalid_Argument("Invalid RSA encryption exponent");
+      }
 
    const size_t p_bits = (bits + 1) / 2;
    const size_t q_bits = bits - p_bits;
@@ -821,8 +826,7 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id)
          throw Decoding_Error("Unacceptable trailer field for PSS signatures");
          }
 
-      padding += "(" + hash_algo + ",MGF1," +
-         std::to_string(pss_params.salt_length()) + ")";
+      padding += fmt("({},MGF1,{})", hash_algo, pss_params.salt_length());
       }
 
    return padding;

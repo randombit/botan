@@ -7,7 +7,7 @@
 
 #include <botan/pk_algs.h>
 #include <botan/internal/parsing.h>
-#include <sstream>
+#include <botan/internal/fmt.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -171,7 +171,7 @@ load_public_key(const AlgorithmIdentifier& alg_id,
       return std::make_unique<Dilithium_PublicKey>(alg_id, key_bits);
 #endif
 
-   throw Decoding_Error("Unknown or unavailable public key algorithm " + alg_name);
+   throw Decoding_Error(fmt("Unknown or unavailable public key algorithm '{}'", alg_name));
    }
 
 std::unique_ptr<Private_Key>
@@ -262,7 +262,7 @@ load_private_key(const AlgorithmIdentifier& alg_id,
       return std::make_unique<Dilithium_PrivateKey>(alg_id, key_bits);
 #endif
 
-   throw Decoding_Error("Unknown or unavailable public key algorithm " + alg_name);
+   throw Decoding_Error(fmt("Unknown or unavailable public key algorithm '{}'", alg_name));
    }
 
 BOTAN_PUBLIC_API(3,0) std::unique_ptr<Private_Key>
@@ -342,9 +342,7 @@ create_private_key(std::string_view alg_name,
 
          if(mce_params.size() != 2)
             {
-            std::ostringstream err;
-            err << "create_private_key: invalid McEliece parameters " << params;
-            throw Invalid_Argument(err.str());
+            throw Invalid_Argument(fmt("create_private_key: invalid McEliece parameters '{}'", params));
             }
 
          const size_t mce_n = to_u32bit(mce_params[0]);

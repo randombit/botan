@@ -22,8 +22,8 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/fmt.h>
 
-#include <sstream>
 #include <algorithm>
 #include <iterator>
 #include <array>
@@ -76,9 +76,7 @@ DilithiumMode::Mode dilithium_mode_from_string(std::string_view str)
    if(str == "Dilithium-8x7-AES-r3")
       { return DilithiumMode::Dilithium8x7_AES; }
 
-   std::ostringstream err;
-   err << str << " is not a valid Dilithium mode name";
-   throw Invalid_Argument(err.str());
+   throw Invalid_Argument(fmt("'{}' is not a valid Dilithium mode name", str));
    }
 
 }
