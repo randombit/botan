@@ -325,13 +325,7 @@ create_private_key(std::string_view alg_name,
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA")
       {
-      const size_t modulus_bits = [&]() -> size_t
-         {
-         if(params.empty())
-            return 3072;
-         return to_u32bit(params);
-         }();
-
+      const size_t modulus_bits = params.empty() ? 3072 : to_u32bit(params);
       return std::make_unique<RSA_PrivateKey>(rng, modulus_bits);
       }
 #endif
@@ -342,7 +336,7 @@ create_private_key(std::string_view alg_name,
       const auto [n, t] = [&]() -> std::pair<size_t, size_t>
          {
          if(params.empty())
-            return std::make_pair(2960, 57);
+            return {2960, 57};
 
          const auto mce_params = split_on(params, ',');
 
@@ -355,7 +349,7 @@ create_private_key(std::string_view alg_name,
 
          const size_t mce_n = to_u32bit(mce_params[0]);
          const size_t mce_t = to_u32bit(mce_params[1]);
-         return std::make_pair(mce_n, mce_t);
+         return {mce_n, mce_t};
          }();
 
       return std::make_unique<McEliece_PrivateKey>(rng, n, t);

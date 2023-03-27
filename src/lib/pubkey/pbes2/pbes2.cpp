@@ -204,7 +204,7 @@ pbes2_encrypt_shared(std::span<const uint8_t> key_bits,
    {
    auto enc = Cipher_Mode::create(cipher, Cipher_Dir::Encryption);
 
-   const std::vector<std::string> cipher_spec = split_on(cipher, '/');
+   const auto cipher_spec = split_on(cipher, '/');
 
    if(cipher_spec.size() != 2 || !known_pbes_cipher_mode(cipher_spec[1]) || !enc)
       {
@@ -301,7 +301,7 @@ pbes2_decrypt(std::span<const uint8_t> key_bits,
       .end_cons();
 
    const std::string cipher = enc_algo.oid().human_name_or_empty();
-   const std::vector<std::string> cipher_spec = split_on(cipher, '/');
+   const auto cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2 || !known_pbes_cipher_mode(cipher_spec[1]))
       throw Decoding_Error("PBE-PKCS5 v2.0: Unknown/invalid cipher OID " + enc_algo.oid().to_string());
 
