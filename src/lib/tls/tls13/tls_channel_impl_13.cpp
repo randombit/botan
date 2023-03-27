@@ -324,9 +324,9 @@ void Channel_Impl_13::send_alert(const Alert& alert)
    //    This does not have any effect on its read side of the connection.
    if(is_close_notify_alert(alert) && m_can_write)
       {
-      BOTAN_ASSERT_NONNULL(m_cipher_state);
       m_can_write = false;
-      m_cipher_state->clear_write_keys();
+      if(m_cipher_state)
+         { m_cipher_state->clear_write_keys(); }
       }
 
    if(is_error_alert(alert))
