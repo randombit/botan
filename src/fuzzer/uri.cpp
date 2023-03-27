@@ -15,7 +15,7 @@ void fuzz(const uint8_t in[], size_t len)
 
    try
       {
-      Botan::URI::fromAny(std::string(reinterpret_cast<const char*>(in), len));
+      Botan::URI::from_any(std::string(reinterpret_cast<const char*>(in), len));
       }
    catch(Botan::Exception& e) { }
    }
