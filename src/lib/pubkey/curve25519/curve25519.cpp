@@ -7,6 +7,7 @@
 
 #include <botan/curve25519.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/fmt.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/rng.h>
@@ -24,7 +25,7 @@ namespace {
 void size_check(size_t size, const char* thing)
    {
    if(size != 32)
-      throw Decoding_Error("Invalid size " + std::to_string(size) + " for Curve25519 " + thing);
+      throw Decoding_Error(fmt("Invalid size {} for Curve2551 {}", size, thing));
    }
 
 secure_vector<uint8_t> curve25519(const secure_vector<uint8_t>& secret,

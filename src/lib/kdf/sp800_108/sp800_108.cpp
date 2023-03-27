@@ -7,10 +7,21 @@
 
 #include <botan/internal/sp800_108.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 #include <iterator>
 
 namespace Botan {
+
+std::string SP800_108_Counter::name() const
+   {
+   return fmt("SP800-108-Counter({})", m_prf->name());
+   }
+
+std::unique_ptr<KDF> SP800_108_Counter::new_object() const
+   {
+   return std::make_unique<SP800_108_Counter>(m_prf->new_object());
+   }
 
 void SP800_108_Counter::kdf(uint8_t key[], size_t key_len,
                               const uint8_t secret[], size_t secret_len,
@@ -55,6 +66,16 @@ void SP800_108_Counter::kdf(uint8_t key[], size_t key_len,
       ++counter;
       BOTAN_ASSERT(counter != 0, "No counter overflow");
       }
+   }
+
+std::string SP800_108_Feedback::name() const
+   {
+   return fmt("SP800-108-Feedback({})", m_prf->name());
+   }
+
+std::unique_ptr<KDF> SP800_108_Feedback::new_object() const
+   {
+   return std::make_unique<SP800_108_Feedback>(m_prf->new_object());
    }
 
 void SP800_108_Feedback::kdf(uint8_t key[], size_t key_len,
@@ -103,6 +124,16 @@ void SP800_108_Feedback::kdf(uint8_t key[], size_t key_len,
 
       BOTAN_ASSERT(counter != 0, "No overflow");
       }
+   }
+
+std::string SP800_108_Pipeline::name() const
+   {
+   return fmt("SP800-108-Pipeline({})", m_prf->name());
+   }
+
+std::unique_ptr<KDF> SP800_108_Pipeline::new_object() const
+   {
+   return std::make_unique<SP800_108_Pipeline>(m_prf->new_object());
    }
 
 void SP800_108_Pipeline::kdf(uint8_t key[], size_t key_len,

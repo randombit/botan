@@ -10,6 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/internal/charset.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -108,8 +109,8 @@ void ASN1_String::decode_from(BER_Decoder& source)
 
    if(!is_asn1_string_type(obj.type()))
       {
-      throw Decoding_Error("ASN1_String: Unknown string type " +
-                           std::to_string(static_cast<uint32_t>(obj.type())));
+      auto typ = static_cast<uint32_t>(obj.type());
+      throw Decoding_Error(fmt("ASN1_String: Unknown string type {}", typ));
       }
 
    m_tag = obj.type();

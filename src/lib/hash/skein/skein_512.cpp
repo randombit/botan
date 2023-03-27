@@ -7,6 +7,7 @@
 
 #include <botan/internal/skein_512.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 #include <algorithm>
 
@@ -27,10 +28,10 @@ Skein_512::Skein_512(size_t arg_output_bits,
 
 std::string Skein_512::name() const
    {
-   if(!m_personalization.empty())
-      return "Skein-512(" + std::to_string(m_output_bits) + "," +
-                            m_personalization + ")";
-   return "Skein-512(" + std::to_string(m_output_bits) + ")";
+   if(m_personalization.empty())
+      return fmt("Skein-512({})", m_output_bits);
+   else
+      return fmt("Skein-512({},{})", m_output_bits, m_personalization);
    }
 
 std::unique_ptr<HashFunction> Skein_512::new_object() const

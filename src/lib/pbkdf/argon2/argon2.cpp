@@ -6,9 +6,10 @@
 
 #include <botan/argon2.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
+#include <botan/internal/fmt.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
-#include <botan/internal/rotate.h>
 #include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
@@ -79,7 +80,7 @@ void extract_key(uint8_t output[], size_t output_len,
 
    if(output_len <= 64)
       {
-      auto blake2b = HashFunction::create_or_throw("BLAKE2b(" + std::to_string(output_len*8) + ")");
+      auto blake2b = HashFunction::create_or_throw(fmt("BLAKE2b({})", output_len*8));
       blake2b->update_le(static_cast<uint32_t>(output_len));
       for(size_t i = 0; i != 128; ++i)
          blake2b->update_le(sum[i]);
@@ -115,7 +116,7 @@ void extract_key(uint8_t output[], size_t output_len,
          }
       else
          {
-         auto blake2b_f = HashFunction::create_or_throw("BLAKE2b(" + std::to_string(output_len*8) + ")");
+         auto blake2b_f = HashFunction::create_or_throw(fmt("BLAKE2b({})", output_len*8));
          blake2b_f->update(T);
          blake2b_f->final(output);
          }

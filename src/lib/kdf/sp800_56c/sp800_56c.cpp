@@ -6,8 +6,19 @@
 */
 
 #include <botan/internal/sp800_56c.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
+
+std::string SP800_56C::name() const
+   {
+   return fmt("SP800-56C({})", m_prf->name());
+   }
+
+std::unique_ptr<KDF> SP800_56C::new_object() const
+   {
+   return std::make_unique<SP800_56C>(m_prf->new_object(), m_exp->new_object());
+   }
 
 void SP800_56C::kdf(uint8_t key[], size_t key_len,
                     const uint8_t secret[], size_t secret_len,

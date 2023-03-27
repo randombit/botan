@@ -7,8 +7,9 @@
 
 #include <botan/internal/keccak.h>
 #include <botan/internal/sha3.h>
-#include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/fmt.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -27,13 +28,14 @@ Keccak_1600::Keccak_1600(size_t output_bits) :
 
    if(output_bits != 224 && output_bits != 256 &&
       output_bits != 384 && output_bits != 512)
-      throw Invalid_Argument("Keccak_1600: Invalid output length " +
-                             std::to_string(output_bits));
+      {
+      throw Invalid_Argument(fmt("Keccak_1600: Invalid output length {}", output_bits));
+      }
    }
 
 std::string Keccak_1600::name() const
    {
-   return "Keccak-1600(" + std::to_string(m_output_bits) + ")";
+   return fmt("Keccak-1600({})", m_output_bits);
    }
 
 std::unique_ptr<HashFunction> Keccak_1600::new_object() const

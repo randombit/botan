@@ -6,13 +6,14 @@
 */
 
 #include <botan/internal/kdf1.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
 
 std::string KDF1::name() const
    {
-   return "KDF1(" + m_hash->name() + ")";
+   return fmt("KDF1({})", m_hash->name());
    }
 
 std::unique_ptr<KDF> KDF1::new_object() const

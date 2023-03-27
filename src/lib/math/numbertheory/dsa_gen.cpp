@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/primality.h>
+#include <botan/internal/fmt.h>
 #include <botan/numthry.h>
 #include <botan/hash.h>
 #include <botan/reducer.h>
@@ -53,14 +54,17 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
                          size_t offset)
    {
    if(!fips186_3_valid_size(pbits, qbits))
+      {
       throw Invalid_Argument(
-         "FIPS 186-3 does not allow DSA domain parameters of " +
-         std::to_string(pbits) + "/" + std::to_string(qbits) + " bits long");
+         fmt("FIPS 186-3 does not allow DSA domain parameters of {}/{} bits long",
+             pbits, qbits));
+      }
 
    if(seed_c.size() * 8 < qbits)
+      {
       throw Invalid_Argument(
-         "Generating a DSA parameter set with a " + std::to_string(qbits) +
-         " bit long q requires a seed at least as many bits long");
+         fmt("Generating a DSA parameter set with a {} bit long q requires a seed at least as many bits long", qbits));
+      }
 
    const std::string hash_name = hash_function_for(qbits);
    auto hash = HashFunction::create_or_throw(hash_name);

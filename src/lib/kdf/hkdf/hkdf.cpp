@@ -8,9 +8,20 @@
 
 #include <botan/internal/hkdf.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
+
+std::unique_ptr<KDF> HKDF::new_object() const
+   {
+   return std::make_unique<HKDF>(m_prf->new_object());
+   }
+
+std::string HKDF::name() const
+   {
+   return fmt("HKDF({})", m_prf->name());
+   }
 
 void HKDF::kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,
@@ -23,6 +34,16 @@ void HKDF::kdf(uint8_t key[], size_t key_len,
 
    extract.kdf(prk.data(), prk.size(), secret, secret_len, salt, salt_len, nullptr, 0);
    expand.kdf(key, key_len, prk.data(), prk.size(), nullptr, 0, label, label_len);
+   }
+
+std::unique_ptr<KDF> HKDF_Extract::new_object() const
+   {
+   return std::make_unique<HKDF_Extract>(m_prf->new_object());
+   }
+
+std::string HKDF_Extract::name() const
+   {
+   return fmt("HKDF-Extract({})", m_prf->name());
    }
 
 void HKDF_Extract::kdf(uint8_t key[], size_t key_len,
@@ -62,6 +83,16 @@ void HKDF_Extract::kdf(uint8_t key[], size_t key_len,
       m_prf->final(prk);
       copy_mem(&key[0], prk.data(), key_len);
       }
+   }
+
+std::unique_ptr<KDF> HKDF_Expand::new_object() const
+   {
+   return std::make_unique<HKDF_Expand>(m_prf->new_object());
+   }
+
+std::string HKDF_Expand::name() const
+   {
+   return fmt("HKDF-Expand({})", m_prf->name());
    }
 
 void HKDF_Expand::kdf(uint8_t key[], size_t key_len,
@@ -108,7 +139,7 @@ hkdf_expand_label(const std::string& hash_fn,
 
    const uint16_t length16 = static_cast<uint16_t>(length);
 
-   HKDF_Expand hkdf(MessageAuthenticationCode::create_or_throw("HMAC(" + hash_fn + ")"));
+   HKDF_Expand hkdf(MessageAuthenticationCode::create_or_throw(fmt("HMAC({})", hash_fn)));
 
    secure_vector<uint8_t> output(length16);
    std::vector<uint8_t> prefix(3 + label.size() + 1);

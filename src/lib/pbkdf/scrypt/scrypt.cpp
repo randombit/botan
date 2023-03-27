@@ -12,7 +12,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/timer.h>
-#include <sstream>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -157,12 +157,7 @@ Scrypt::Scrypt(size_t N, size_t r, size_t p) :
 
 std::string Scrypt::to_string() const
    {
-   std::ostringstream out;
-   out << "Scrypt("
-       << std::to_string(m_N) << ","
-       << std::to_string(m_r) << ","
-       << std::to_string(m_p) << ")";
-   return out.str();
+   return fmt("Scrypt({},{},{})", m_N, m_r, m_p);
    }
 
 size_t Scrypt::total_memory_usage() const

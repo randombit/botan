@@ -8,7 +8,7 @@
  **/
 
 #include <botan/internal/xmss_hash.h>
-
+#include <botan/internal/fmt.h>
 #include <botan/xmss_parameters.h>
 #include <botan/exceptn.h>
 
@@ -26,8 +26,8 @@ XMSS_Hash::XMSS_Hash(const XMSS_Parameters& params)
    {
    if(!m_hash || !m_msg_hash)
       {
-      throw Lookup_Error("XMSS cannot use hash " + params.hash_function_name() +
-                         " because it is unavailable");
+      throw Lookup_Error(fmt("XMSS cannot use hash {} because it is unavailable",
+                             params.hash_function_name()));
       }
 
    BOTAN_ASSERT(m_hash->output_length() > 0, "Hash output length of zero is invalid.");

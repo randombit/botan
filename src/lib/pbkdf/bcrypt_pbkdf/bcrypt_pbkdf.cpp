@@ -7,8 +7,9 @@
 #include <botan/bcrypt_pbkdf.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/blowfish.h>
-#include <botan/hash.h>
 #include <botan/internal/timer.h>
+#include <botan/internal/fmt.h>
+#include <botan/hash.h>
 
 namespace Botan {
 
@@ -20,7 +21,7 @@ Bcrypt_PBKDF::Bcrypt_PBKDF(size_t iterations) :
 
 std::string Bcrypt_PBKDF::to_string() const
    {
-   return "Bcrypt-PBKDF(" + std::to_string(m_iterations) + ")";
+   return fmt("Bcrypt-PBKDF({})", m_iterations);
    }
 
 std::string Bcrypt_PBKDF_Family::name() const

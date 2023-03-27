@@ -6,8 +6,9 @@
 */
 
 #include <botan/internal/cmac.h>
-#include <botan/exceptn.h>
 #include <botan/internal/poly_dbl.h>
+#include <botan/internal/fmt.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -99,7 +100,7 @@ void CMAC::clear()
 */
 std::string CMAC::name() const
    {
-   return "CMAC(" + m_cipher->name() + ")";
+   return fmt("CMAC({})", m_cipher->name());
    }
 
 /*
@@ -119,9 +120,8 @@ CMAC::CMAC(std::unique_ptr<BlockCipher> cipher) :
    {
    if(poly_double_supported_size(m_block_size) == false)
       {
-      throw Invalid_Argument("CMAC cannot use the " +
-                             std::to_string(m_block_size * 8) +
-                             " bit cipher " + m_cipher->name());
+      throw Invalid_Argument(fmt("CMAC cannot use the {} bit cipher {}",
+                                 m_block_size * 8, m_cipher->name()));
       }
 
    m_state.resize(output_length());

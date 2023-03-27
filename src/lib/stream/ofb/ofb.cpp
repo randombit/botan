@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/ofb.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -44,7 +45,7 @@ void OFB::key_schedule(const uint8_t key[], size_t key_len)
 
 std::string OFB::name() const
    {
-   return "OFB(" + m_cipher->name() + ")";
+   return fmt("OFB({})", m_cipher->name());
    }
 
 size_t OFB::default_iv_length() const

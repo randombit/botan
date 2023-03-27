@@ -32,6 +32,7 @@ codec_base.h
 ct_utils.h
 donna128.h
 filesystem.h
+fmt.h
 loadstor.h
 mul128.h
 os_utils.h

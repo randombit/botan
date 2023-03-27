@@ -6,7 +6,7 @@
 */
 
 #include <botan/version.h>
-#include <sstream>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -89,13 +89,8 @@ std::string runtime_version_check(uint32_t major,
    {
    if(major != version_major() || minor != version_minor() || patch != version_patch())
       {
-      std::ostringstream oss;
-      oss << "Warning: linked version (" << short_version_string() << ")"
-          << " does not match version built against "
-          << "(" << std::to_string(major)
-          << '.' << std::to_string(minor)
-          << '.' << std::to_string(patch) << ")\n";
-      return oss.str();
+      return fmt("Warning: linked version ({}) does not match version built against ({}.{}.{})\n",
+                 short_version_cstr(), major, minor, patch);
       }
 
    return "";

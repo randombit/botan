@@ -15,6 +15,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <optional>
+#include <iosfwd>
 
 namespace Botan {
 
@@ -331,6 +332,8 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
 
       std::vector<uint32_t> m_id;
    };
+
+std::ostream& operator<<(std::ostream& out, const OID& oid);
 
 /**
 * Compare two OIDs.

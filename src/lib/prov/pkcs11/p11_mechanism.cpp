@@ -9,8 +9,8 @@
 #include <botan/internal/p11_mechanism.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/fmt.h>
 #include <tuple>
-#include <sstream>
 
 namespace Botan::PKCS11 {
 
@@ -240,9 +240,7 @@ MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(std::string_view hash_
          return MechanismWrapper(mechanism->second);
       }
 
-   std::ostringstream err;
-   err << "PKCS #11 ECDSA sign/verify does not support " << hash_spec;
-   throw Lookup_Error(err.str());
+   throw Lookup_Error(fmt("PKCS #11 ECDSA sign/verify does not support {}", hash_spec));
    }
 
 MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view params)
@@ -251,9 +249,7 @@ MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view params
 
    if(param_parts.empty() || param_parts.size() > 2)
       {
-      std::ostringstream err;
-      err << "PKCS #11 ECDH key derivation bad params " << params;
-      throw Invalid_Argument(err.str());
+      throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
       }
 
    const bool use_cofactor =

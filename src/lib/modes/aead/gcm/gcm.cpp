@@ -10,6 +10,7 @@
 #include <botan/internal/ghash.h>
 #include <botan/block_cipher.h>
 #include <botan/internal/ctr.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -23,13 +24,15 @@ GCM_Mode::GCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
    if(cipher->block_size() != GCM_BS)
       throw Invalid_Argument("Invalid block cipher for GCM");
 
-   m_ctr = std::make_unique<CTR_BE>(std::move(cipher), 4);
-   m_ghash = std::make_unique<GHASH>();
-
    /* We allow any of the values 128, 120, 112, 104, or 96 bits as a tag size */
    /* 64 bit tag is still supported but deprecated and will be removed in the future */
    if(m_tag_size != 8 && (m_tag_size < 12 || m_tag_size > 16))
-      throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
+      {
+      throw Invalid_Argument(fmt("{} cannot use a tag of {} bytes", name(), m_tag_size));
+      }
+
+   m_ctr = std::make_unique<CTR_BE>(std::move(cipher), 4);
+   m_ghash = std::make_unique<GHASH>();
    }
 
 GCM_Mode::~GCM_Mode() = default;
@@ -48,7 +51,7 @@ void GCM_Mode::reset()
 
 std::string GCM_Mode::name() const
    {
-   return (m_cipher_name + "/GCM(" + std::to_string(tag_size()) + ")");
+   return fmt("{}/GCM({})", m_cipher_name, tag_size());
    }
 
 std::string GCM_Mode::provider() const

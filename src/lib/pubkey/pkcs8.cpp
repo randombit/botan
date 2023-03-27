@@ -12,6 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pem.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/fmt.h>
 #include <botan/pk_algs.h>
 
 #if defined(BOTAN_HAS_PKCS5_PBES2)
@@ -86,7 +87,9 @@ secure_vector<uint8_t> PKCS8_decode(
             key_data = PKCS8_extract(key_source, pbe_alg_id);
             }
          else
-            throw PKCS8_Exception("Unknown PEM label " + label);
+            {
+            throw PKCS8_Exception(fmt("Unknown PEM label '{}'", label));
+            }
          }
 
       if(key_data.empty())
@@ -102,7 +105,10 @@ secure_vector<uint8_t> PKCS8_decode(
       if(is_encrypted)
          {
          if(pbe_alg_id.oid().to_formatted_string() != "PBE-PKCS5v20")
-            throw PKCS8_Exception("Unknown PBE type " + pbe_alg_id.oid().to_string());
+            {
+            throw PKCS8_Exception(fmt("Unknown PBE type {}", pbe_alg_id.oid()));
+            }
+
 #if defined(BOTAN_HAS_PKCS5_PBES2)
          key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.parameters());
 #else
@@ -172,7 +178,7 @@ choose_pbe_params(std::string_view pbe_algo, std::string_view key_algo)
    if(request.arg_count() != 2 ||
       (request.algo_name() != "PBE-PKCS5v20" && request.algo_name() != "PBES2"))
       {
-      throw Invalid_Argument("Unsupported PBE " + std::string(pbe_algo));
+      throw Invalid_Argument(fmt("Unsupported PBE '{}'", pbe_algo));
       }
 
    return std::make_pair(request.arg(0), request.arg(1));
@@ -340,8 +346,9 @@ load_key(DataSource& source,
 
    const std::string alg_name = alg_id.oid().human_name_or_empty();
    if(alg_name.empty())
-      throw PKCS8_Exception("Unknown algorithm OID: " +
-                            alg_id.oid().to_string());
+      {
+      throw PKCS8_Exception(fmt("Unknown algorithm OID {}", alg_id.oid()));
+      }
 
    return load_private_key(alg_id, pkcs8_key);
    }

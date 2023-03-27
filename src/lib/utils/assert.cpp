@@ -6,7 +6,7 @@
 */
 
 #include <botan/exceptn.h>
-#include <botan/build.h>
+#include <botan/internal/fmt.h>
 #include <sstream>
 
 #if defined(BOTAN_TERMINATE_ON_ASSERTS)
@@ -20,18 +20,14 @@ void throw_invalid_argument(const char* message,
                             const char* func,
                             const char* file)
    {
-   std::ostringstream format;
-   format << message << " in " << func << ":" << file;
-   throw Invalid_Argument(format.str());
+   throw Invalid_Argument(fmt("{} in {}:{}", message, func, file));
    }
 
 void throw_invalid_state(const char* expr,
                          const char* func,
                          const char* file)
    {
-   std::ostringstream format;
-   format << "Invalid state: " << expr << " was false in " << func << ":" << file;
-   throw Invalid_State(format.str());
+   throw Invalid_State(fmt("Invalid state: expr {} was false in {}:{}", expr, func, file));
    }
 
 void assertion_failure(const char* expr_str,

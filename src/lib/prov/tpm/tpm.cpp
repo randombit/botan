@@ -12,7 +12,7 @@
 #include <botan/der_enc.h>
 #include <botan/internal/workfactor.h>
 #include <botan/internal/pk_ops.h>
-#include <sstream>
+#include <botan/internal/fmt.h>
 #include <limits>
 
 #include <tss/platform.h>
@@ -27,12 +27,13 @@ namespace {
 
 void tss_error(TSS_RESULT res, const char* expr, const char* file, int line)
    {
-   std::ostringstream err;
-   err << "TPM error " << Trspi_Error_String(res)
-       << " layer " << Trspi_Error_Layer(res)
-       << " in " << expr << " at " << file << ":" << line;
+   std::string err =
+      fmt("TPM error {} in layer {} executing {} at {}:{}",
+          Trspi_Error_String(res),
+          Trspi_Error_Layer(res),
+          expr, line, file);
 
-   throw TPM_Error(err.str());
+   throw TPM_Error(err);
    }
 
 TSS_FLAG bit_flag(size_t bits)

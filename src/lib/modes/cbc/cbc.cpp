@@ -10,6 +10,7 @@
 #include <botan/internal/cbc.h>
 #include <botan/internal/mode_pad.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -20,9 +21,11 @@ CBC_Mode::CBC_Mode(std::unique_ptr<BlockCipher> cipher,
    m_block_size(m_cipher->block_size())
    {
    if(m_padding && !m_padding->valid_blocksize(m_block_size))
-      throw Invalid_Argument("Padding " + m_padding->name() +
-                             " cannot be used with " +
-                             m_cipher->name() + "/CBC");
+      {
+      throw Invalid_Argument(
+         fmt("Padding {} cannot be used with {} in CBC mode",
+             m_padding->name(), m_cipher->name()));
+      }
    }
 
 void CBC_Mode::clear()
@@ -39,9 +42,9 @@ void CBC_Mode::reset()
 std::string CBC_Mode::name() const
    {
    if(m_padding)
-      return cipher().name() + "/CBC/" + padding().name();
+      return fmt("{}/CBC/{}", cipher().name(), padding().name());
    else
-      return cipher().name() + "/CBC/CTS";
+      return fmt("{}/CBC/CTS", cipher().name());
    }
 
 size_t CBC_Mode::update_granularity() const

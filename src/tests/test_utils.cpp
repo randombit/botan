@@ -17,6 +17,7 @@
 #include <botan/internal/cpuid.h>
 #include <botan/internal/charset.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/fmt.h>
 #include <botan/version.h>
 
 #if defined(BOTAN_HAS_POLY_DBL)
@@ -763,6 +764,32 @@ class UUID_Tests : public Test
    };
 
 BOTAN_REGISTER_TEST("utils", "uuid", UUID_Tests);
+
+class Formatter_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("Format utility");
+
+         /*
+         In a number of these tests, we are not strictly depending on the
+         behavior, for instance checking `fmt("{}") == "{}"` is more about
+         checking that we don't crash, rather than we return that precise string.
+         */
+
+         result.test_eq("test 1", Botan::fmt("hi"), "hi");
+         result.test_eq("test 2", Botan::fmt("ignored", 5), "ignored");
+         result.test_eq("test 3", Botan::fmt("answer is {}", 42), "answer is 42");
+         result.test_eq("test 4", Botan::fmt("{", 5), "{");
+         result.test_eq("test 4", Botan::fmt("{}"), "{}");
+         result.test_eq("test 5", Botan::fmt("{} == '{}'", 5, "five"), "5 == 'five'");
+
+         return {result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("utils", "fmt", Formatter_Tests);
 
 #endif
 

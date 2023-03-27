@@ -8,6 +8,7 @@
 
 #include <botan/internal/hmac.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -129,7 +130,7 @@ void HMAC::clear()
 */
 std::string HMAC::name() const
    {
-   return "HMAC(" + m_hash->name() + ")";
+   return fmt("HMAC({})", m_hash->name());
    }
 
 /*

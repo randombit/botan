@@ -7,6 +7,7 @@
 
 #include <botan/pk_keys.h>
 #include <botan/internal/pk_ops.h>
+#include <botan/internal/fmt.h>
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
@@ -26,7 +27,7 @@ OID Asymmetric_Key::object_identifier() const
       }
    catch(Lookup_Error&)
       {
-      throw Lookup_Error("PK algo " + algo_name() + " has no defined OIDs");
+      throw Lookup_Error(fmt("Public key algorithm {} has no defined OIDs", algo_name()));
       }
    }
 
@@ -97,28 +98,28 @@ Public_Key::create_encryption_op(RandomNumberGenerator& /*rng*/,
                                  std::string_view /*params*/,
                                  std::string_view /*provider*/) const
    {
-   throw Lookup_Error(algo_name() + " does not support encryption");
+   throw Lookup_Error(fmt("{} does not support encryption", algo_name()));
    }
 
 std::unique_ptr<PK_Ops::KEM_Encryption>
 Public_Key::create_kem_encryption_op(std::string_view /*params*/,
                                      std::string_view /*provider*/) const
    {
-   throw Lookup_Error(algo_name() + " does not support KEM encryption");
+   throw Lookup_Error(fmt("{} does not support KEM encryption", algo_name()));
    }
 
 std::unique_ptr<PK_Ops::Verification>
 Public_Key::create_verification_op(std::string_view /*params*/,
                                    std::string_view /*provider*/) const
    {
-   throw Lookup_Error(algo_name() + " does not support verification");
+   throw Lookup_Error(fmt("{} does not support verification", algo_name()));
    }
 
 std::unique_ptr<PK_Ops::Verification>
 Public_Key::create_x509_verification_op(const AlgorithmIdentifier& /*params*/,
                                         std::string_view /*provider*/) const
    {
-   throw Lookup_Error(algo_name() + " does not support X.509 verification");
+   throw Lookup_Error(fmt("{} does not support X.509 verification", algo_name()));
    }
 
 std::unique_ptr<PK_Ops::Decryption>
@@ -126,7 +127,7 @@ Private_Key::create_decryption_op(RandomNumberGenerator& /*rng*/,
                                   std::string_view /*params*/,
                                   std::string_view /*provider*/) const
    {
-   throw Lookup_Error(algo_name() + " does not support decryption");
+   throw Lookup_Error(fmt("{} does not support decryption", algo_name()));
    }
 
 std::unique_ptr<PK_Ops::KEM_Decryption>
@@ -134,7 +135,7 @@ Private_Key::create_kem_decryption_op(RandomNumberGenerator& /*rng*/,
                                       std::string_view /*params*/,
                                       std::string_view /*provider*/) const
    {
-   throw Lookup_Error(algo_name() + " does not support KEM decryption");
+   throw Lookup_Error(fmt("{} does not support KEM decryption", algo_name()));
    }
 
 std::unique_ptr<PK_Ops::Signature>
@@ -142,7 +143,7 @@ Private_Key::create_signature_op(RandomNumberGenerator& /*rng*/,
                                  std::string_view /*params*/,
                                  std::string_view /*provider*/) const
    {
-   throw Lookup_Error(algo_name() + " does not support signatures");
+   throw Lookup_Error(fmt("{} does not support signatures", algo_name()));
    }
 
 std::unique_ptr<PK_Ops::Key_Agreement>
@@ -150,7 +151,7 @@ Private_Key::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
                                      std::string_view /*params*/,
                                      std::string_view /*provider*/) const
    {
-   throw Lookup_Error(algo_name() + " does not support key agreement");
+   throw Lookup_Error(fmt("{} does not support key agreement", algo_name()));
    }
 
 }

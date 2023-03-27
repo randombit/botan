@@ -12,8 +12,8 @@
  **/
 
 #include <botan/xmss_parameters.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
-#include <sstream>
 
 namespace Botan {
 
@@ -62,9 +62,7 @@ XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(std::stri
    if(param_set == "XMSS-SHAKE256_20_192")
       { return XMSS_SHAKE256_20_192; }
 
-   std::ostringstream err;
-   err << "Unknown XMSS algorithm param '" << param_set << "'";
-   throw Lookup_Error(err.str());
+   throw Lookup_Error(fmt("Unknown XMSS algorithm param '{}'", param_set));
    }
 
 XMSS_Parameters::XMSS_Parameters(std::string_view param_set)

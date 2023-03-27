@@ -8,11 +8,11 @@
 #include <botan/sm2.h>
 #include <botan/internal/point_mul.h>
 #include <botan/internal/pk_ops.h>
+#include <botan/internal/fmt.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/kdf.h>
 #include <botan/hash.h>
-#include <sstream>
 
 namespace Botan {
 
@@ -30,9 +30,8 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
          {
          m_hash = HashFunction::create_or_throw(kdf_hash);
 
-         std::ostringstream kdf_name;
-         kdf_name << "KDF2(" << kdf_hash << ")";
-         m_kdf = KDF::create_or_throw(kdf_name.str());
+         const std::string kdf_name = fmt("KDF2({})", kdf_hash);
+         m_kdf = KDF::create_or_throw(kdf_name);
          }
 
       size_t max_input_bits() const override
@@ -119,9 +118,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
          {
          m_hash = HashFunction::create_or_throw(kdf_hash);
 
-         std::ostringstream kdf_name;
-         kdf_name << "KDF2(" << kdf_hash << ")";
-         m_kdf = KDF::create_or_throw(kdf_name.str());
+         const std::string kdf_name = fmt("KDF2({})", kdf_hash);
+         m_kdf = KDF::create_or_throw(kdf_name);
          }
 
       size_t plaintext_length(size_t ptext_len) const override

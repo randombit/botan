@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/cfb.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -16,8 +17,9 @@ CFB_Mode::CFB_Mode(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
    m_feedback_bytes(feedback_bits ? feedback_bits / 8 : m_block_size)
    {
    if(feedback_bits % 8 || feedback() > m_block_size)
-      throw Invalid_Argument(name() + ": feedback bits " +
-                                  std::to_string(feedback_bits) + " not supported");
+      {
+      throw Invalid_Argument(fmt("{} does not support feedback bits of {}", name(), feedback_bits));
+      }
    }
 
 void CFB_Mode::clear()
@@ -36,9 +38,9 @@ void CFB_Mode::reset()
 std::string CFB_Mode::name() const
    {
    if(feedback() == cipher().block_size())
-      return cipher().name() + "/CFB";
+      return fmt("{}/CFB", cipher().name());
    else
-      return cipher().name() + "/CFB(" + std::to_string(feedback()*8) + ")";
+      return fmt("{}/CFB({})", cipher().name(), feedback()*8);
    }
 
 size_t CFB_Mode::output_length(size_t input_length) const

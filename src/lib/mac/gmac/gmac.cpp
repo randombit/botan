@@ -8,6 +8,7 @@
 
 #include <botan/internal/gmac.h>
 #include <botan/internal/ghash.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 #include <botan/block_cipher.h>
 
@@ -42,7 +43,7 @@ Key_Length_Specification GMAC::key_spec() const
 
 std::string GMAC::name() const
    {
-   return "GMAC(" + m_cipher->name() + ")";
+   return fmt("GMAC({})", m_cipher->name());
    }
 
 size_t GMAC::output_length() const

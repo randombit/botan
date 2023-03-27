@@ -9,6 +9,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/fmt.h>
 #include <botan/hash.h>
 #include <botan/rng.h>
 #include <sstream>
@@ -150,12 +151,11 @@ PK_Ops::Verification_with_Hash::Verification_with_Hash(const AlgorithmIdentifier
    {
    const auto oid_info = split_on(alg_id.oid().to_formatted_string(), '/');
 
-   if(oid_info.empty() || oid_info.size() != 2 || oid_info[0] != pk_algo)
+   if(oid_info.size() != 2 || oid_info[0] != pk_algo)
       {
-      std::ostringstream oss;
-      oss << "Unexpected AlgorithmIdentifier OID " << alg_id.oid().to_string()
-          << " in association with " << pk_algo << " key";
-      throw Decoding_Error(oss.str());
+      throw Decoding_Error(
+         fmt("Unexpected AlgorithmIdentifier OID {} in association with {} key",
+             alg_id.oid(), pk_algo));
       }
 
    if(!alg_id.parameters_are_empty())
@@ -164,16 +164,12 @@ PK_Ops::Verification_with_Hash::Verification_with_Hash(const AlgorithmIdentifier
          {
          if(!allow_null_parameters)
             {
-            std::ostringstream oss;
-            oss << "Unexpected NULL AlgorithmIdentifier parameters for " << pk_algo;
-            throw Decoding_Error(oss.str());
+            throw Decoding_Error(fmt("Unexpected NULL AlgorithmIdentifier parameters for {}", pk_algo));
             }
          }
       else
          {
-         std::ostringstream oss;
-         oss << "Unexpected AlgorithmIdentifier parameters for " << pk_algo;
-         throw Decoding_Error(oss.str());
+         throw Decoding_Error(fmt("Unexpected AlgorithmIdentifier parameters for {}", pk_algo));
          }
       }
 

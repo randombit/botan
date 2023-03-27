@@ -11,6 +11,7 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/point_mul.h>
 #include <botan/internal/keypair.h>
+#include <botan/internal/fmt.h>
 #include <botan/reducer.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/parsing.h>
@@ -65,10 +66,10 @@ std::unique_ptr<HashFunction> eckcdsa_signature_hash(const AlgorithmIdentifier& 
    {
    const auto oid_info = split_on(alg_id.oid().to_formatted_string(), '/');
 
-   if(oid_info.empty() || oid_info.size() != 2 || oid_info[0] != "ECKCDSA")
+   if(oid_info.size() != 2 || oid_info[0] != "ECKCDSA")
       {
-      throw Decoding_Error("Unexpected AlgorithmIdentifier OID " + alg_id.oid().to_string()
-                           + " in association with ECKCDSA key");
+      throw Decoding_Error(
+         fmt("Unexpected AlgorithmIdentifier OID {} in association with ECKCDSA key", alg_id.oid()));
       }
 
    if(!alg_id.parameters_are_empty())

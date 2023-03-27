@@ -14,8 +14,8 @@
 
 #include <botan/internal/xmss_wots.h>
 #include <botan/internal/xmss_tools.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
-#include <sstream>
 #include <cmath>
 
 namespace Botan {
@@ -38,9 +38,7 @@ XMSS_WOTS_Parameters::xmss_wots_id_from_string(std::string_view param_set)
    if(param_set == "WOTSP-SHAKE_256_192")
       { return WOTSP_SHAKE_256_192; }
 
-   std::ostringstream err;
-   err << "Unknown XMSS-WOTS algorithm param '" << param_set << "'";
-   throw Invalid_Argument(err.str());
+   throw Lookup_Error(fmt("Unknown XMSS-WOTS algorithm param '{}'", param_set));
    }
 
 XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(std::string_view param_set)

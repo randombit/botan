@@ -19,9 +19,9 @@ namespace Botan {
 class KDF1_18033 final : public KDF
    {
    public:
-      std::string name() const override { return "KDF1-18033(" + m_hash->name() + ")"; }
+      std::string name() const override;
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<KDF1_18033>(m_hash->new_object()); }
+      std::unique_ptr<KDF> new_object() const override;
 
       void kdf(uint8_t key[], size_t key_len,
                const uint8_t secret[], size_t secret_len,
