@@ -603,9 +603,6 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, Dilithium
    BOTAN_ASSERT_NOMSG(rhoprime.size() == DilithiumModeConstants::CRHBYTES);
    BOTAN_ASSERT_NOMSG(key.size() == DilithiumModeConstants::SEEDBYTES);
 
-   /* Generate matrix */
-   auto matrix = Dilithium::PolynomialMatrix::generate_matrix(rho, mode);
-
    /* Sample short vectors s1 and s2 */
    Dilithium::PolynomialVector s1(mode.l());
    Dilithium::PolynomialVector::fill_polyvec_uniform_eta(s1, rhoprime, 0, mode);
