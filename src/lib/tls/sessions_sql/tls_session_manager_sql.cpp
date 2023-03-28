@@ -295,6 +295,9 @@ void Session_Manager_SQL::prune_session_cache()
    {
    // internal API: assuming that the lock is held already
 
+   if(m_max_sessions == 0)
+      return;
+
    auto remove_oldest = m_db->new_statement("DELETE FROM tls_sessions WHERE session_id NOT IN "
                                             "(SELECT session_id FROM tls_sessions ORDER BY session_start DESC LIMIT ?1)");
    remove_oldest->bind(1, m_max_sessions);
