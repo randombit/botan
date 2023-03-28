@@ -269,6 +269,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        */
       recursive_mutex_type& mutex() { return m_mutex; }
 
+   private:
+      std::vector<Session_with_Handle> find_and_filter(const Server_Information& info,
+                                                       Callbacks& callbacks,
+                                                       const Policy& policy);
+
    protected:
       std::shared_ptr<RandomNumberGenerator> m_rng;
 

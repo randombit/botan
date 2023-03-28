@@ -90,23 +90,11 @@ std::optional<Session> Session_Manager::retrieve(const Session_Handle& handle,
       }
    }
 
-std::vector<Session_with_Handle> Session_Manager::find(const Server_Information& info,
-                                                       Callbacks& callbacks,
-                                                       const Policy& policy)
+
+std::vector<Session_with_Handle> Session_Manager::find_and_filter(const Server_Information& info,
+                                                                  Callbacks& callbacks,
+                                                                  const Policy& policy)
    {
-   auto allow_reusing_tickets = policy.reuse_session_tickets();
-
-   // Session_Manager::find() must be an atomic getter if ticket reuse is not
-   // allowed. I.e. each ticket handed to concurrently requesting threads must
-   // be unique. In that case we must hold a lock while retrieving a ticket.
-   // Otherwise, no locking is required on this level.
-   std::optional<lock_guard_type<recursive_mutex_type>> lk;
-   if(!allow_reusing_tickets)
-      { lk.emplace(mutex()); }
-
-   const auto max_sessions = std::max(policy.maximum_session_tickets_per_client_hello(), size_t(1000));
-   auto sessions_and_handles = find_some(info, max_sessions);
-
    // A value of '0' means: No policy restrictions. Session ticket lifetimes as
    // communicated by the server apply regardless.
    const std::chrono::seconds policy_lifetime =
@@ -114,9 +102,23 @@ std::vector<Session_with_Handle> Session_Manager::find(const Server_Information&
          ? policy.session_ticket_lifetime()
          : std::chrono::seconds::max();
 
-   if(!sessions_and_handles.empty())
+   const size_t max_sessions_hint = std::max(policy.maximum_session_tickets_per_client_hello(), size_t(1));
+   const auto now = callbacks.tls_current_timestamp();
+
+   // An arbitrary number of loop iterations to perform before giving up
+   // to avoid a potential endless loop with a misbehaving session manager.
+   constexpr unsigned int max_attempts = 10;
+   std::vector<Session_with_Handle> sessions_and_handles;
+
+   // Query the session manager implementation for new sessions until at least
+   // one session passes the filter or no more sessions are found.
+   for(unsigned int attempt = 0; attempt < max_attempts && sessions_and_handles.empty(); ++attempt)
       {
-      const auto now = callbacks.tls_current_timestamp();
+      sessions_and_handles = find_some(info, max_sessions_hint);
+
+      // ... underlying implementation didn't find anything. Early exit.
+      if(sessions_and_handles.empty())
+         { break; }
 
       // TODO: C++20, use std::ranges::remove_if() once XCode and Android NDK caught up.
       sessions_and_handles.erase(
@@ -164,6 +166,25 @@ std::vector<Session_with_Handle> Session_Manager::find(const Server_Information&
             return expired;
             }), sessions_and_handles.end());
       }
+
+   return sessions_and_handles;
+   }
+
+std::vector<Session_with_Handle> Session_Manager::find(const Server_Information& info,
+                                                       Callbacks& callbacks,
+                                                       const Policy& policy)
+   {
+   auto allow_reusing_tickets = policy.reuse_session_tickets();
+
+   // Session_Manager::find() must be an atomic getter if ticket reuse is not
+   // allowed. I.e. each ticket handed to concurrently requesting threads must
+   // be unique. In that case we must hold a lock while retrieving a ticket.
+   // Otherwise, no locking is required on this level.
+   std::optional<lock_guard_type<recursive_mutex_type>> lk;
+   if(!allow_reusing_tickets)
+      { lk.emplace(mutex()); }
+
+   auto sessions_and_handles = find_and_filter(info, callbacks, policy);
 
    // std::vector::resize() cannot be used as the vector's members aren't
    // default constructible.

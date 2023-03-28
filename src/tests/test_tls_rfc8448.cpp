@@ -1032,6 +1032,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   "tls_inspect_handshake_msg_client_hello",
                   "tls_modify_extensions_client_hello",
                   "tls_generate_ephemeral_key",
+                  "tls_current_timestamp",
                   });
 
                result.test_eq("TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
@@ -1251,6 +1252,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   "tls_inspect_handshake_msg_client_hello",
                   "tls_modify_extensions_client_hello",
                   "tls_generate_ephemeral_key",
+                  "tls_current_timestamp",
                   });
 
                result.test_eq("TLS client hello (1)", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
@@ -1361,6 +1363,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   "tls_inspect_handshake_msg_client_hello",
                   "tls_modify_extensions_client_hello",
                   "tls_generate_ephemeral_key",
+                  "tls_current_timestamp",
                   });
 
                result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
@@ -1458,6 +1461,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448
                   "tls_inspect_handshake_msg_client_hello",
                   "tls_modify_extensions_client_hello",
                   "tls_generate_ephemeral_key",
+                  "tls_current_timestamp",
                   });
                }),
 
