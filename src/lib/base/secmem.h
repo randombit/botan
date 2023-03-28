@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <deque>
 #include <type_traits>
-#include <span>
 
 namespace Botan {
 
@@ -69,7 +68,7 @@ template<typename T> using secure_deque = std::deque<T, secure_allocator<T>>;
 template<typename T> using SecureVector = secure_vector<T>;
 
 template<typename T>
-secure_vector<T> lock(std::span<const T> in)
+secure_vector<T> lock(const std::vector<T>& in)
    {
    return secure_vector<T>(in.begin(), in.end());
    }
