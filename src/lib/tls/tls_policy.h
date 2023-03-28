@@ -252,7 +252,7 @@ class BOTAN_PUBLIC_API(2,0) Policy
 
       /**
       * Defines the maximum number of session tickets a client might
-      * offer in a single resumption attempt. 0 means 'no limit'.
+      * offer in a single resumption attempt. Must be greater than 0.
       *
       * TODO: Currently, the TLS 1.3 client implementation supports
       *       exactly one ticket per handshake. RFC 8446 allows for
