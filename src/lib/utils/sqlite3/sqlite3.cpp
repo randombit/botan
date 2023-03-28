@@ -12,11 +12,14 @@
 
 namespace Botan {
 
-Sqlite3_Database::Sqlite3_Database(const std::string& db_filename)
+Sqlite3_Database::Sqlite3_Database(const std::string& db_filename, std::optional<int> sqlite_open_flags)
    {
    // SQLITE_OPEN_FULLMUTEX ensures that the database object can be used
    // concurrently from multiple threads.
-   int open_flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX;
+   const int open_flags = sqlite_open_flags.value_or(
+                           SQLITE_OPEN_READWRITE |
+                           SQLITE_OPEN_CREATE    |
+                           SQLITE_OPEN_FULLMUTEX);
    int rc = ::sqlite3_open_v2(db_filename.c_str(), &m_db, open_flags, nullptr);
 
    if(rc)
