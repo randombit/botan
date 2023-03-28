@@ -163,7 +163,7 @@ void Session_Manager_SQL::initialize_existing_database(const std::string& passph
 void Session_Manager_SQL::store(const Session& session, const Session_Handle& handle)
    {
    std::optional<lock_guard_type<recursive_mutex_type>> lk;
-   if(!m_db->is_threadsafe())
+   if(!database_is_threadsafe())
       { lk.emplace(mutex()); }
 
    if(session.server_info().hostname().empty())
@@ -192,7 +192,7 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
 std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& handle)
    {
    std::optional<lock_guard_type<recursive_mutex_type>> lk;
-   if(!m_db->is_threadsafe())
+   if(!database_is_threadsafe())
       { lk.emplace(mutex()); }
 
    if(auto session_id = handle.id())
@@ -221,7 +221,7 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
 std::vector<Session_with_Handle> Session_Manager_SQL::find_all(const Server_Information& info)
    {
    std::optional<lock_guard_type<recursive_mutex_type>> lk;
-   if(!m_db->is_threadsafe())
+   if(!database_is_threadsafe())
       { lk.emplace(mutex()); }
 
    auto stmt = m_db->new_statement("SELECT session_id, session_ticket, session FROM tls_sessions"
