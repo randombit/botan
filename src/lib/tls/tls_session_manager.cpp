@@ -104,7 +104,8 @@ std::vector<Session_with_Handle> Session_Manager::find(const Server_Information&
    if(!allow_reusing_tickets)
       { lk.emplace(mutex()); }
 
-   auto sessions_and_handles = find_all(info);
+   const auto max_sessions = std::max(policy.maximum_session_tickets_per_client_hello(), size_t(1000));
+   auto sessions_and_handles = find_some(info, max_sessions);
 
    // A value of '0' means: No policy restrictions. Session ticket lifetimes as
    // communicated by the server apply regardless.

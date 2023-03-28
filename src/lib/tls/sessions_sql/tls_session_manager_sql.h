@@ -53,7 +53,8 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
 
    protected:
       std::optional<Session> retrieve_one(const Session_Handle& handle) override;
-      std::vector<Session_with_Handle> find_all(const Server_Information& info) override;
+      std::vector<Session_with_Handle> find_some(const Server_Information& info,
+                                                 const size_t max_sessions_hint) override;
 
       /**
        * Decides whether the underlying database is considered threadsafe in the

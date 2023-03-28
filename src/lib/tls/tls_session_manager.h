@@ -159,7 +159,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        * have been received in prior connections to that same server and stored
        * using Session_Manager::store().
        *
-       * The default implementation will invoke Session_Manager::find_all() and
+       * The default implementation will invoke Session_Manager::find_some() and
        * filter the result against a policy. Most notably an expiry check.
        * Expired sessions will be removed via Session_Manager::remove().
        *
@@ -174,7 +174,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        *
        * Applications that wish to implement their own Session_Manager may
        * override the default implementation to add further policy checks.
-       * Though, typically implementing Session_Manager::find_all() and
+       * Though, typically implementing Session_Manager::find_some() and
        * relying on the default implementation is enough.
        *
        * @param info       the info about the server we want to handshake with
@@ -254,11 +254,15 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        *
        * This is called for TLS clients only.
        *
-       * @param info the information about the server
+       * @param info               the information about the server
+       * @param max_sessions_hint  a non-binding guideline for an upper bound of
+       *                           sessions to return from this method
+       *                           (will be at least 1 but potentially more)
        * @return the found sessions along with their handles (containing either a
        *         session ID or a ticket)
        */
-      virtual std::vector<Session_with_Handle> find_all(const Server_Information& info) = 0;
+      virtual std::vector<Session_with_Handle> find_some(const Server_Information& info,
+                                                         const size_t max_sessions_hint) = 0;
 
       /**
        * Returns the base class' recursive mutex for reuse in derived classes

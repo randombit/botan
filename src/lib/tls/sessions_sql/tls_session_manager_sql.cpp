@@ -218,7 +218,8 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
    return std::nullopt;
    }
 
-std::vector<Session_with_Handle> Session_Manager_SQL::find_all(const Server_Information& info)
+std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Information& info,
+                                                                const size_t max_sessions_hint)
    {
    std::optional<lock_guard_type<recursive_mutex_type>> lk;
    if(!database_is_threadsafe())
@@ -226,10 +227,12 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_all(const Server_Info
 
    auto stmt = m_db->new_statement("SELECT session_id, session_ticket, session FROM tls_sessions"
                                    " WHERE hostname = ?1 AND hostport = ?2"
-                                   " ORDER BY session_start DESC");
+                                   " ORDER BY session_start DESC"
+                                   " LIMIT ?3");
 
    stmt->bind(1, info.hostname());
    stmt->bind(2, info.port());
+   stmt->bind(3, max_sessions_hint);
 
    std::vector<Session_with_Handle> found_sessions;
    while(stmt->step())

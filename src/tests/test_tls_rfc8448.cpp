@@ -599,7 +599,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager
             return itr->session;
          }
 
-      std::vector<Session_with_Handle> find_all(const Server_Information& info) override
+      std::vector<Session_with_Handle> find_some(const Server_Information& info, const size_t) override
          {
          std::vector<Session_with_Handle> found_sessions;
          for(const auto& [session, handle] : m_sessions)
