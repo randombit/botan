@@ -29,6 +29,9 @@ class BOTAN_PUBLIC_API(2,0) Sqlite3_Database final : public SQL_Database
       size_t rows_changed_by_last_statement() override;
 
       std::shared_ptr<Statement> new_statement(const std::string& sql) const override;
+
+      bool is_threadsafe() const override;
+
    private:
       class Sqlite3_Statement final : public Statement
          {

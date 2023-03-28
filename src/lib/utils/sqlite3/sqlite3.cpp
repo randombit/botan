@@ -14,7 +14,10 @@ namespace Botan {
 
 Sqlite3_Database::Sqlite3_Database(const std::string& db_filename)
    {
-   int rc = ::sqlite3_open(db_filename.c_str(), &m_db);
+   // SQLITE_OPEN_FULLMUTEX ensures that the database object can be used
+   // concurrently from multiple threads.
+   int open_flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX;
+   int rc = ::sqlite3_open_v2(db_filename.c_str(), &m_db, open_flags, nullptr);
 
    if(rc)
       {
@@ -69,6 +72,25 @@ size_t Sqlite3_Database::rows_changed_by_last_statement()
    const auto result = ::sqlite3_changes(m_db);
    BOTAN_ASSERT_NOMSG(result >= 0);
    return static_cast<size_t>(result);
+   }
+
+bool Sqlite3_Database::is_threadsafe() const
+   {
+   const int flag = sqlite3_threadsafe();
+
+   // `flag` can have three values:
+   //
+   // 0 - single threaded:  no locking is done inside the SQLite code
+   // 1 - serialized:       all SQLite database features can be used safely
+   //                       from multiple threads
+   // 2 - reduced locking:  application must ensure not to use a single
+   //                       database connection across threads
+   //
+   // https://www.sqlite.org/c3ref/threadsafe.html
+
+   // When opening the database connection we explicitly request
+   // SQLITE_OPEN_FULLMUTEX to ensure restrictive locking in SQLite.
+   return flag >= 1;
    }
 
 Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, const std::string& base_sql)
