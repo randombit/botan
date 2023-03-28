@@ -903,6 +903,18 @@ std::vector<Test::Result> test_session_manager_sqlite()
 
          result.test_is_eq("only one entry exists", mgr.remove_all(), size_t(1));
          }),
+
+      Botan_Tests::CHECK("session purging can be disabled", [&](auto& result)
+         {
+         Botan::TLS::Session_Manager_SQLite mgr("thetruthisoutthere", Test::rng_as_shared(), Test::temp_file_name("purging.sqlite"), 0 /* no pruning! */);
+
+         for(size_t i = 0; i < 25; ++i)
+            {
+            mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs), random_id());
+            }
+
+         result.test_is_eq("no entries were purged along the way", mgr.remove_all(), size_t(25));
+         }),
       };
 #else
    return {};
