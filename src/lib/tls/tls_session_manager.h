@@ -45,7 +45,7 @@ class Policy;
 class BOTAN_PUBLIC_API(3, 0) Session_Manager
    {
    public:
-      Session_Manager(RandomNumberGenerator& rng);
+      Session_Manager(std::shared_ptr<RandomNumberGenerator> rng);
 
       /**
        * @brief Save a new Session and assign a Session_Handle (TLS Server)
@@ -266,7 +266,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
       recursive_mutex_type& mutex() { return m_mutex; }
 
    protected:
-      RandomNumberGenerator& m_rng;
+      std::shared_ptr<RandomNumberGenerator> m_rng;
 
    private:
       recursive_mutex_type m_mutex;

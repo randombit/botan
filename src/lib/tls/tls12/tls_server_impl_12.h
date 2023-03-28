@@ -50,11 +50,11 @@ class Server_Impl_12 : public Channel_Impl_12
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-      explicit Server_Impl_12(Callbacks& callbacks,
-                              Session_Manager& session_manager,
-                              Credentials_Manager& creds,
-                              const Policy& policy,
-                              RandomNumberGenerator& rng,
+      explicit Server_Impl_12(std::shared_ptr<Callbacks> callbacks,
+                              std::shared_ptr<Session_Manager> session_manager,
+                              std::shared_ptr<Credentials_Manager> creds,
+                              std::shared_ptr<const Policy> policy,
+                              std::shared_ptr<RandomNumberGenerator> rng,
                               bool is_datagram = false,
                               size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
@@ -109,7 +109,7 @@ class Server_Impl_12 : public Channel_Impl_12
 
       std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
 
-      Credentials_Manager& m_creds;
+      std::shared_ptr<Credentials_Manager> m_creds;
       std::string m_next_protocol;
    };
 

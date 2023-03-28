@@ -51,12 +51,12 @@ class Client_Impl_12 : public Channel_Impl_12
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-      explicit Client_Impl_12(Callbacks& callbacks,
-                              Session_Manager& session_manager,
-                              Credentials_Manager& creds,
-                              const Policy& policy,
-                              RandomNumberGenerator& rng,
-                              const Server_Information& server_info = Server_Information(),
+      explicit Client_Impl_12(std::shared_ptr<Callbacks> callbacks,
+                              std::shared_ptr<Session_Manager> session_manager,
+                              std::shared_ptr<Credentials_Manager> creds,
+                              std::shared_ptr<const Policy> policy,
+                              std::shared_ptr<RandomNumberGenerator> rng,
+                              Server_Information server_info = Server_Information(),
                               bool datagram = false,
                               const std::vector<std::string>& next_protocols = {},
                               size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE
@@ -89,7 +89,7 @@ class Client_Impl_12 : public Channel_Impl_12
 
       std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
 
-      Credentials_Manager& m_creds;
+      std::shared_ptr<Credentials_Manager> m_creds;
       const Server_Information m_info;
       std::string m_application_protocol;
    };

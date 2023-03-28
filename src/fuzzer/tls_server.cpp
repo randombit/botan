@@ -189,11 +189,12 @@ void fuzz(const uint8_t in[], size_t len)
    if(len <= 1)
       return;
 
-   Botan::TLS::Session_Manager_Noop session_manager;
-   Fuzzer_TLS_Policy policy;
+
+   auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+   auto policy = std::make_shared<Fuzzer_TLS_Policy>();
    Botan::TLS::Server_Information info("server.name", 443);
-   Fuzzer_TLS_Server_Creds creds;
-   Fuzzer_TLS_Server_Callbacks callbacks;
+   auto creds = std::make_shared<Fuzzer_TLS_Server_Creds>();
+   auto callbacks = std::make_shared<Fuzzer_TLS_Server_Callbacks>();
 
    const bool is_datagram = in[0] & 1;
 
@@ -201,7 +202,7 @@ void fuzz(const uint8_t in[], size_t len)
                              session_manager,
                              creds,
                              policy,
-                             fuzzer_rng(),
+                             fuzzer_rng_as_shared(),
                              is_datagram);
 
    try

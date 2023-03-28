@@ -14,8 +14,8 @@
 namespace Botan::TLS {
 
 Session_Manager_Hybrid::Session_Manager_Hybrid(std::unique_ptr<Session_Manager> stateful,
-      Credentials_Manager& credentials_manager,
-      RandomNumberGenerator& rng,
+      std::shared_ptr<Credentials_Manager> credentials_manager,
+      std::shared_ptr<RandomNumberGenerator> rng,
       bool prefer_tickets)
    : Session_Manager(rng)
    , m_stateful(std::move(stateful))

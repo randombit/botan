@@ -51,8 +51,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
        *                       short database handles
        */
       Session_Manager_Hybrid(std::unique_ptr<Session_Manager> stateful_manager,
-                             Credentials_Manager& credentials_manager,
-                             RandomNumberGenerator& rng,
+                             std::shared_ptr<Credentials_Manager> credentials_manager,
+                             std::shared_ptr<RandomNumberGenerator> rng,
                              bool prefer_tickets = true);
 
       std::optional<Session_Handle> establish(const Session& session,

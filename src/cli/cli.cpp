@@ -245,12 +245,17 @@ void Command::do_read_file(std::istream& in,
 
 Botan::RandomNumberGenerator& Command::rng()
    {
+   return *rng_as_shared();
+   }
+
+std::shared_ptr<Botan::RandomNumberGenerator> Command::rng_as_shared()
+   {
    if(m_rng == nullptr)
       {
       m_rng = cli_make_rng(get_arg("rng-type"), get_arg("drbg-seed"));
       }
 
-   return *m_rng;
+   return m_rng;
    }
 
 std::string Command::get_passphrase_arg(const std::string& prompt, const std::string& opt_name)

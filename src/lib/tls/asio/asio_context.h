@@ -53,16 +53,16 @@ class Context
       using Verify_Callback =
          detail::fn_signature_helper<decltype(&Callbacks::tls_verify_cert_chain)>::type;
 
-      Context(Credentials_Manager&   credentials_manager,
-              RandomNumberGenerator& rng,
-              Session_Manager&       session_manager,
-              Policy&                policy,
-              Server_Information     server_info = Server_Information()) :
+      Context(std::shared_ptr<Credentials_Manager>   credentials_manager,
+              std::shared_ptr<RandomNumberGenerator> rng,
+              std::shared_ptr<Session_Manager>       session_manager,
+              std::shared_ptr<const Policy>          policy,
+              Server_Information                     server_info = Server_Information()) :
          m_credentials_manager(credentials_manager),
          m_rng(rng),
          m_session_manager(session_manager),
          m_policy(policy),
-         m_server_info(server_info)
+         m_server_info(std::move(server_info))
          {}
 
       virtual ~Context() = default;
@@ -96,18 +96,18 @@ class Context
          return m_verify_callback;
          }
 
-      void set_server_info(const Server_Information& server_info)
+      void set_server_info(Server_Information server_info)
          {
-         m_server_info = server_info;
+         m_server_info = std::move(server_info);
          }
 
    protected:
       template <class S, class C> friend class Stream;
 
-      Credentials_Manager&   m_credentials_manager;
-      RandomNumberGenerator& m_rng;
-      Session_Manager&       m_session_manager;
-      Policy&                m_policy;
+      std::shared_ptr<Credentials_Manager>   m_credentials_manager;
+      std::shared_ptr<RandomNumberGenerator> m_rng;
+      std::shared_ptr<Session_Manager>       m_session_manager;
+      std::shared_ptr<const Policy>          m_policy;
 
       Server_Information     m_server_info;
       Verify_Callback        m_verify_callback;

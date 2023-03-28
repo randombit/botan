@@ -186,11 +186,11 @@ class Channel_Impl
          std::vector<std::string> next_protocols;
          size_t io_buffer_size;
 
-         Callbacks& callbacks;
-         Session_Manager& session_manager;
-         Credentials_Manager& creds;
-         RandomNumberGenerator& rng;
-         const Policy& policy;
+         std::shared_ptr<Callbacks> callbacks;
+         std::shared_ptr<Session_Manager> session_manager;
+         std::shared_ptr<Credentials_Manager> creds;
+         std::shared_ptr<RandomNumberGenerator> rng;
+         std::shared_ptr<const Policy> policy;
 
          bool received_tls_13_error_alert;
          bool will_downgrade;

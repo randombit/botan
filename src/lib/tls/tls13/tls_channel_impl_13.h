@@ -109,11 +109,11 @@ class Channel_Impl_13 : public Channel_Impl
       * @param policy specifies other connection policy information
       * @param is_server whether this is a server session or not
       */
-      explicit Channel_Impl_13(Callbacks& callbacks,
-                               Session_Manager& session_manager,
-                               Credentials_Manager& credentials_manager,
-                               RandomNumberGenerator& rng,
-                               const Policy& policy,
+      explicit Channel_Impl_13(std::shared_ptr<Callbacks> callbacks,
+                               std::shared_ptr<Session_Manager> session_manager,
+                               std::shared_ptr<Credentials_Manager> credentials_manager,
+                               std::shared_ptr<RandomNumberGenerator> rng,
+                               std::shared_ptr<const Policy> policy,
                                bool is_server);
 
       explicit Channel_Impl_13(const Channel_Impl_13&) = delete;
@@ -255,11 +255,11 @@ class Channel_Impl_13 : public Channel_Impl
          return AggregatedPostHandshakeMessages(*this, m_handshake_layer);
          }
 
-      Callbacks& callbacks() const { return m_callbacks; }
-      Session_Manager& session_manager() { return m_session_manager; }
-      Credentials_Manager& credentials_manager() { return m_credentials_manager; }
-      RandomNumberGenerator& rng() { return m_rng; }
-      const Policy& policy() const { return m_policy; }
+      Callbacks& callbacks() const { return *m_callbacks; }
+      Session_Manager& session_manager() { return *m_session_manager; }
+      Credentials_Manager& credentials_manager() { return *m_credentials_manager; }
+      RandomNumberGenerator& rng() { return *m_rng; }
+      const Policy& policy() const { return *m_policy; }
 
    private:
       void send_record(Record_Type record_type, const std::vector<uint8_t>& record);
@@ -301,13 +301,13 @@ class Channel_Impl_13 : public Channel_Impl
                                   const uint16_t incoming_limit);
    private:
       /* callbacks */
-      Callbacks& m_callbacks;
+      std::shared_ptr<Callbacks> m_callbacks;
 
       /* external state */
-      Session_Manager& m_session_manager;
-      Credentials_Manager& m_credentials_manager;
-      RandomNumberGenerator& m_rng;
-      const Policy& m_policy;
+      std::shared_ptr<Session_Manager> m_session_manager;
+      std::shared_ptr<Credentials_Manager> m_credentials_manager;
+      std::shared_ptr<RandomNumberGenerator> m_rng;
+      std::shared_ptr<const Policy> m_policy;
 
       /* handshake state */
       Record_Layer m_record_layer;

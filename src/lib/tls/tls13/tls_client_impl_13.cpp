@@ -22,20 +22,20 @@
 
 namespace Botan::TLS {
 
-Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
-                               Session_Manager& session_manager,
-                               Credentials_Manager& creds,
-                               const Policy& policy,
-                               RandomNumberGenerator& rng,
-                               const Server_Information& info,
-                               const std::vector<std::string>& next_protocols) :
+Client_Impl_13::Client_Impl_13(std::shared_ptr<Callbacks> callbacks,
+                               std::shared_ptr<Session_Manager> session_manager,
+                               std::shared_ptr<Credentials_Manager> creds,
+                               std::shared_ptr<const Policy> policy,
+                               std::shared_ptr<RandomNumberGenerator> rng,
+                               Server_Information info,
+                               std::vector<std::string> next_protocols) :
    Channel_Impl_13(callbacks, session_manager, creds, rng, policy, false /* is_server */),
-   m_info(info),
+   m_info(std::move(info)),
    m_should_send_ccs(false)
    {
 #if defined(BOTAN_HAS_TLS_12)
-   if(policy.allow_tls12())
-      { expect_downgrade(info, next_protocols); }
+   if(policy->allow_tls12())
+      { expect_downgrade(m_info, next_protocols); }
 #endif
 
    if(auto session = find_session_for_resumption())
@@ -54,9 +54,9 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
       }
 
    auto msg = send_handshake_message(m_handshake_state.sending(Client_Hello_13(
-                             policy,
-                             callbacks,
-                             rng,
+                             *policy,
+                             *callbacks,
+                             *rng,
                              m_info.hostname(),
                              next_protocols,
                              m_resumed_session)));
@@ -70,7 +70,7 @@ Client_Impl_13::Client_Impl_13(Callbacks& callbacks,
    //    its second ClientHello or before its encrypted handshake flight.
    //
    // TODO: don't schedule ccs here when early data is used
-   if(policy.tls_13_middlebox_compatibility_mode())
+   if(policy->tls_13_middlebox_compatibility_mode())
       m_should_send_ccs = true;
 
    m_transitions.set_expected_next({

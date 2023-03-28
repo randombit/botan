@@ -105,7 +105,7 @@ class Timing_Test
          }
 
    private:
-      std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
+      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
    };
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_HAS_EME_RAW)

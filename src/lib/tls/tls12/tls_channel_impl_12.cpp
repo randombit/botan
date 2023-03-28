@@ -19,10 +19,10 @@
 
 namespace Botan::TLS {
 
-Channel_Impl_12::Channel_Impl_12(Callbacks& callbacks,
-                                 Session_Manager& session_manager,
-                                 RandomNumberGenerator& rng,
-                                 const Policy& policy,
+Channel_Impl_12::Channel_Impl_12(std::shared_ptr<Callbacks> callbacks,
+                                 std::shared_ptr<Session_Manager> session_manager,
+                                 std::shared_ptr<RandomNumberGenerator> rng,
+                                 std::shared_ptr<const Policy> policy,
                                  bool is_server,
                                  bool is_datagram,
                                  size_t reserved_io_buffer_size) :
@@ -34,6 +34,11 @@ Channel_Impl_12::Channel_Impl_12(Callbacks& callbacks,
    m_rng(rng),
    m_has_been_closed(false)
    {
+   BOTAN_ASSERT_NONNULL(m_callbacks);
+   BOTAN_ASSERT_NONNULL(m_session_manager);
+   BOTAN_ASSERT_NONNULL(m_rng);
+   BOTAN_ASSERT_NONNULL(m_policy);
+
    /* epoch 0 is plaintext, thus null cipher state */
    m_write_cipher_states[0] = nullptr;
    m_read_cipher_states[0] = nullptr;
@@ -130,9 +135,9 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
       io = std::make_unique<Datagram_Handshake_IO>(
                   std::bind(&Channel_Impl_12::send_record_under_epoch, this, _1, _2, _3),
                   sequence_numbers(),
-                  static_cast<uint16_t>(m_policy.dtls_default_mtu()),
-                  m_policy.dtls_initial_timeout(),
-                  m_policy.dtls_maximum_timeout());
+                  static_cast<uint16_t>(policy().dtls_default_mtu()),
+                  policy().dtls_initial_timeout(),
+                  policy().dtls_maximum_timeout());
       }
    else
       {
@@ -496,7 +501,7 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record)
           const auto& session_id = active->server_hello()->session_id();
           if(!session_id.empty())
              {
-             m_session_manager.remove(session_id);
+             session_manager().remove(session_id);
              }
           }
        }
@@ -537,7 +542,7 @@ void Channel_Impl_12::write_record(Connection_Cipher_State* cipher_state, uint16
       TLS::write_record(m_writebuf,
                         record_type,
                         record_version, next_seq,
-                        input, length, *cipher_state, m_rng);
+                        input, length, *cipher_state, rng());
       }
 
    callbacks().tls_emit_data(m_writebuf);
@@ -604,7 +609,7 @@ void Channel_Impl_12::send_alert(const Alert& alert)
          const auto& session_id = active->server_hello()->session_id();
          if(!session_id.empty())
             {
-            m_session_manager.remove(Session_ID(session_id));
+            session_manager().remove(Session_ID(session_id));
             }
       }
       reset_state();

@@ -33,7 +33,11 @@ public:
          boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
          http::request<http::string_body> req)
       : m_request(req),
-        m_ctx(m_credentials_mgr, m_rng, m_session_mgr, m_policy, Botan::TLS::Server_Information()),
+        m_ctx(std::make_shared<Botan::TLS::Context>(
+         std::make_shared<Credentials_Manager>(),
+         std::make_shared<Botan::AutoSeeded_RNG>(),
+         std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+         std::make_shared<Botan::TLS::Policy>())),
         m_stream(io_context, m_ctx) {
     boost::asio::async_connect(m_stream.lowest_layer(), endpoint_iterator,
                                boost::bind(&client::handle_connect, this, _::error));
@@ -80,12 +84,7 @@ private:
   http::response<http::string_body> m_response;
   boost::beast::flat_buffer m_reply;
 
-  Botan::TLS::Session_Manager_Noop m_session_mgr;
-  Botan::AutoSeeded_RNG m_rng;
-  Credentials_Manager m_credentials_mgr;
-  Botan::TLS::Policy m_policy;
-
-  Botan::TLS::Context m_ctx;
+  std::shared_ptr<Botan::TLS::Context> m_ctx;
   Botan::TLS::Stream<boost::asio::ip::tcp::socket> m_stream;
 };
 

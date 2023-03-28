@@ -45,7 +45,7 @@ static_assert(sizeof(TEST_DATA) == TEST_DATA_SIZE, "size of TEST_DATA must match
 class MockChannel
    {
    public:
-      MockChannel(Botan::TLS::Callbacks& core)
+      MockChannel(std::shared_ptr<Botan::TLS::Callbacks> core)
          : m_callbacks(core)
          , m_bytes_till_complete_record(TEST_DATA_SIZE)
          , m_active(false) {}
@@ -55,7 +55,7 @@ class MockChannel
          {
          if(m_bytes_till_complete_record <= data.size())
             {
-            m_callbacks.tls_record_received(0, TEST_DATA);
+            m_callbacks->tls_record_received(0, TEST_DATA);
             m_active = true;  // claim to be active once a full record has been received (for handshake test)
             return 0;
             }
@@ -63,12 +63,12 @@ class MockChannel
          return m_bytes_till_complete_record;
          }
 
-      void send(std::span<const uint8_t> buf) { m_callbacks.tls_emit_data(buf); }
+      void send(std::span<const uint8_t> buf) { m_callbacks->tls_emit_data(buf); }
 
       bool is_active() { return m_active; }
 
    protected:
-      Botan::TLS::Callbacks& m_callbacks;
+      std::shared_ptr<Botan::TLS::Callbacks> m_callbacks;
       std::size_t m_bytes_till_complete_record;  // number of bytes still to read before tls record is completed
       bool        m_active;
    };
@@ -81,7 +81,7 @@ class ThrowingMockChannel : public MockChannel
          return Botan::TLS::Alert::UnexpectedMessage;
          }
 
-      ThrowingMockChannel(Botan::TLS::Callbacks& core) : MockChannel(core)
+      ThrowingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(core)
          {
          }
 
@@ -111,7 +111,7 @@ class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel>
    {
    public:
       template <typename... Args>
-      AsioStream(Botan::TLS::Context& context, Args&& ... args)
+      AsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&& ... args)
          : Stream(context, args...)
          {
          m_native_handle = std::make_unique<MockChannel>(m_core);
@@ -124,7 +124,7 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
    {
    public:
       template <typename... Args>
-      ThrowingAsioStream(Botan::TLS::Context& context, Args&& ... args)
+      ThrowingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&& ... args)
          : Stream(context, args...)
          {
          m_native_handle = std::make_unique<ThrowingMockChannel>(m_core);
@@ -143,14 +143,13 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
  */
 class Asio_Stream_Tests final : public Test
    {
-      Botan::Credentials_Manager m_credentials_manager;
-      Botan::Null_RNG m_rng;
-      Botan::TLS::Session_Manager_Noop m_session_manager;
-      Botan::TLS::Default_Policy m_policy;
-
-      Botan::TLS::Context get_context()
+      std::shared_ptr<Botan::TLS::Context> get_context()
          {
-         return Botan::TLS::Context(m_credentials_manager, m_rng, m_session_manager, m_policy);
+         return std::make_shared<Botan::TLS::Context>(
+            std::make_shared<Botan::Credentials_Manager>(),
+            std::make_shared<Botan::Null_RNG>(),
+            std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+            std::make_shared<Botan::TLS::Default_Policy>());
          }
 
       // use memcmp to check if the data in a is a prefix of the data in b

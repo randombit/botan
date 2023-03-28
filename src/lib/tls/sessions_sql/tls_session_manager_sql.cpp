@@ -17,7 +17,7 @@ namespace Botan::TLS {
 
 Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                                          const std::string& passphrase,
-                                         RandomNumberGenerator& rng,
+                                         std::shared_ptr<RandomNumberGenerator> rng,
                                          size_t max_sessions) :
    Session_Manager(rng),
    m_db(std::move(db)),
@@ -101,8 +101,7 @@ void Session_Manager_SQL::create_with_latest_schema(const std::string& passphras
    // speeds up lookups on session_tickets when deleting
    m_db->create_table("CREATE INDEX tls_tickets ON tls_sessions (session_ticket)");
 
-   std::vector<uint8_t> salt;
-   m_rng.random_vec(salt, 16);
+   auto salt = m_rng->random_vec<std::vector<uint8_t>>(16);
 
    secure_vector<uint8_t> derived_key(32 + 2);
 
@@ -176,7 +175,7 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
 
    // Generate a random session ID if the peer did not provide one. Note that
    // this ID will not be returned on ::find(), as the ticket is preferred.
-   const auto id = handle.id().value_or(m_rng.random_vec<Session_ID>(32));
+   const auto id = handle.id().value_or(m_rng->random_vec<Session_ID>(32));
    const auto ticket = handle.ticket().value_or(Session_Ticket());
 
    stmt->bind(1, hex_encode(id.get()));
@@ -184,7 +183,7 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
    stmt->bind(3, session.start_time());
    stmt->bind(4, session.server_info().hostname());
    stmt->bind(5, session.server_info().port());
-   stmt->bind(6, session.encrypt(m_session_key, m_rng));
+   stmt->bind(6, session.encrypt(m_session_key, *m_rng));
 
    stmt->spin();
 

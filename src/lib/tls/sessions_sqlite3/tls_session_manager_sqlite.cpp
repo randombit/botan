@@ -13,7 +13,7 @@ namespace Botan {
 namespace TLS {
 
 Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
-                                               RandomNumberGenerator& rng,
+                                               std::shared_ptr<RandomNumberGenerator> rng,
                                                const std::string& db_filename,
                                                size_t max_sessions) :
    Session_Manager_SQL(std::make_shared<Sqlite3_Database>(db_filename),

@@ -24,15 +24,15 @@ namespace Botan::TLS {
 /*
 * TLS Server Constructor
 */
-Server::Server(Callbacks& callbacks,
-               Session_Manager& session_manager,
-               Credentials_Manager& creds,
-               const Policy& policy,
-               RandomNumberGenerator& rng,
+Server::Server(std::shared_ptr<Callbacks> callbacks,
+               std::shared_ptr<Session_Manager> session_manager,
+               std::shared_ptr<Credentials_Manager> creds,
+               std::shared_ptr<const Policy> policy,
+               std::shared_ptr<RandomNumberGenerator> rng,
                bool is_datagram,
                size_t io_buf_sz)
    {
-   const auto max_version = policy.latest_supported_version(is_datagram);
+   const auto max_version = policy->latest_supported_version(is_datagram);
 
    if(!max_version.is_pre_tls_13())
       {

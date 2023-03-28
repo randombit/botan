@@ -28,13 +28,13 @@
 
 namespace Botan_CLI {
 
-std::unique_ptr<Botan::RandomNumberGenerator>
+std::shared_ptr<Botan::RandomNumberGenerator>
 cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
    {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    if(rng_type == "system" || rng_type.empty())
       {
-      return std::make_unique<Botan::System_RNG>();
+      return std::make_shared<Botan::System_RNG>();
       }
 #endif
 
@@ -43,12 +43,12 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    if(rng_type == "auto" || rng_type == "entropy" || rng_type.empty())
       {
-      std::unique_ptr<Botan::RandomNumberGenerator> rng;
+      std::shared_ptr<Botan::RandomNumberGenerator> rng;
 
       if(rng_type == "entropy")
-         rng = std::make_unique<Botan::AutoSeeded_RNG>(Botan::Entropy_Sources::global_sources());
+         rng = std::make_shared<Botan::AutoSeeded_RNG>(Botan::Entropy_Sources::global_sources());
       else
-         rng = std::make_unique<Botan::AutoSeeded_RNG>();
+         rng = std::make_shared<Botan::AutoSeeded_RNG>();
 
       if(!drbg_seed.empty())
          rng->add_entropy(drbg_seed.data(), drbg_seed.size());
@@ -60,7 +60,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
    if(rng_type == "drbg" || (rng_type.empty() && drbg_seed.empty() == false))
       {
       auto mac = Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
-      auto rng = std::make_unique<Botan::HMAC_DRBG>(std::move(mac));
+      auto rng = std::make_shared<Botan::HMAC_DRBG>(std::move(mac));
       rng->add_entropy(drbg_seed.data(), drbg_seed.size());
 
       if(rng->is_seeded() == false)
@@ -76,7 +76,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
    if(rng_type == "rdrand" || rng_type == "cpu" || rng_type.empty())
       {
       if(Botan::Processor_RNG::available())
-         return std::make_unique<Botan::Processor_RNG>();
+         return std::make_shared<Botan::Processor_RNG>();
       else if(rng_type.empty() == false)
          throw CLI_Error("RNG instruction not supported on this processor");
       }
@@ -121,7 +121,7 @@ class RNG final : public Command
             }
 
          const std::string drbg_seed = get_arg("drbg-seed");
-         std::unique_ptr<Botan::RandomNumberGenerator> rng = cli_make_rng(type, drbg_seed);
+         auto rng = cli_make_rng(type, drbg_seed);
 
          for(const std::string& req : get_arg_list("bytes"))
             {

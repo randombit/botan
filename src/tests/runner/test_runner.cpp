@@ -139,9 +139,7 @@ bool Test_Runner::run(const Test_Options& opts)
 
    for(size_t i = 0; i != opts.test_runs(); ++i)
       {
-      auto rng = std::make_unique<Testsuite_RNG>(seed, i);
-
-      Botan_Tests::Test::set_test_rng(std::move(rng));
+      Botan_Tests::Test::set_test_rng(std::make_shared<Testsuite_RNG>(seed, i));
 
       for(const auto& reporter : m_reporters)
          {

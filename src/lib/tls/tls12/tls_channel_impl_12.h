@@ -60,10 +60,10 @@ class Channel_Impl_12 : public Channel_Impl
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-      explicit Channel_Impl_12(Callbacks& callbacks,
-                               Session_Manager& session_manager,
-                               RandomNumberGenerator& rng,
-                               const Policy& policy,
+      explicit Channel_Impl_12(std::shared_ptr<Callbacks> callbacks,
+                               std::shared_ptr<Session_Manager> session_manager,
+                               std::shared_ptr<RandomNumberGenerator> rng,
+                               std::shared_ptr<const Policy> policy,
                                bool is_server,
                                bool is_datagram,
                                size_t io_buf_sz = TLS::Channel::IO_BUF_DEFAULT_SIZE);
@@ -168,13 +168,13 @@ class Channel_Impl_12 : public Channel_Impl
       std::vector<uint8_t> secure_renegotiation_data_for_client_hello() const;
       std::vector<uint8_t> secure_renegotiation_data_for_server_hello() const;
 
-      RandomNumberGenerator& rng() { return m_rng; }
+      RandomNumberGenerator& rng() { return *m_rng; }
 
-      Session_Manager& session_manager() { return m_session_manager; }
+      Session_Manager& session_manager() { return *m_session_manager; }
 
-      const Policy& policy() const { return m_policy; }
+      const Policy& policy() const { return *m_policy; }
 
-      Callbacks& callbacks() const { return m_callbacks; }
+      Callbacks& callbacks() const { return *m_callbacks; }
 
       void reset_active_association_state();
 
@@ -222,12 +222,12 @@ class Channel_Impl_12 : public Channel_Impl
       const bool m_is_datagram;
 
       /* callbacks */
-      Callbacks& m_callbacks;
+      std::shared_ptr<Callbacks> m_callbacks;
 
       /* external state */
-      Session_Manager& m_session_manager;
-      const Policy& m_policy;
-      RandomNumberGenerator& m_rng;
+      std::shared_ptr<Session_Manager> m_session_manager;
+      std::shared_ptr<const Policy> m_policy;
+      std::shared_ptr<RandomNumberGenerator> m_rng;
 
       /* sequence number state */
       std::unique_ptr<Connection_Sequence_Numbers> m_sequence_numbers;

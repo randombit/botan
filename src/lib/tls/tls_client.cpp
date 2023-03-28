@@ -26,17 +26,17 @@ namespace Botan::TLS {
 /*
 * TLS Client Constructor
 */
-Client::Client(Callbacks& callbacks,
-               Session_Manager& session_manager,
-               Credentials_Manager& creds,
-               const Policy& policy,
-               RandomNumberGenerator& rng,
-               const Server_Information& info,
-               const Protocol_Version& offer_version,
-               const std::vector<std::string>& next_protocols,
+Client::Client(std::shared_ptr<Callbacks> callbacks,
+               std::shared_ptr<Session_Manager> session_manager,
+               std::shared_ptr<Credentials_Manager> creds,
+               std::shared_ptr<const Policy> policy,
+               std::shared_ptr<RandomNumberGenerator> rng,
+               Server_Information info,
+               Protocol_Version offer_version,
+               std::vector<std::string> next_protocols,
                size_t io_buf_sz)
    {
-   BOTAN_ARG_CHECK(policy.acceptable_protocol_version(offer_version),
+   BOTAN_ARG_CHECK(policy->acceptable_protocol_version(offer_version),
                    "Policy does not allow to offer requested protocol version");
 
 #if defined(BOTAN_HAS_TLS_13)
@@ -44,7 +44,7 @@ Client::Client(Callbacks& callbacks,
       {
       m_impl = std::make_unique<Client_Impl_13>(
                   callbacks, session_manager, creds, policy,
-                  rng, info, next_protocols);
+                  rng, std::move(info), std::move(next_protocols));
 
       if(m_impl->expects_downgrade())
          { m_impl->set_io_buffer_size(io_buf_sz); }
@@ -60,8 +60,8 @@ Client::Client(Callbacks& callbacks,
 #endif
       m_impl = std::make_unique<Client_Impl_12>(
                   callbacks, session_manager, creds, policy,
-                  rng, info, offer_version.is_datagram_protocol(),
-                  next_protocols, io_buf_sz);
+                  rng, std::move(info), offer_version.is_datagram_protocol(),
+                  std::move(next_protocols), io_buf_sz);
    }
 
 Client::~Client() = default;
