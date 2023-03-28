@@ -162,10 +162,9 @@ void Session_Manager_SQL::initialize_existing_database(const std::string& passph
 
 void Session_Manager_SQL::store(const Session& session, const Session_Handle& handle)
    {
-   // TODO: C++20 allows CTAD for template aliases (read: lock_guard_type), so
-   //       technically we should be able to omit the explicit mutex type.
-   //       Unfortuately clang does not agree, yet.
-   lock_guard_type<recursive_mutex_type> lk(mutex());
+   std::optional<lock_guard_type<recursive_mutex_type>> lk;
+   if(!m_db->is_threadsafe())
+      { lk.emplace(mutex()); }
 
    if(session.server_info().hostname().empty())
       { return; }
@@ -192,7 +191,9 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
 
 std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& handle)
    {
-   lock_guard_type<recursive_mutex_type> lk(mutex());
+   std::optional<lock_guard_type<recursive_mutex_type>> lk;
+   if(!m_db->is_threadsafe())
+      { lk.emplace(mutex()); }
 
    if(auto session_id = handle.id())
       {
@@ -219,7 +220,9 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
 
 std::vector<Session_with_Handle> Session_Manager_SQL::find_all(const Server_Information& info)
    {
-   lock_guard_type<recursive_mutex_type> lk(mutex());
+   std::optional<lock_guard_type<recursive_mutex_type>> lk;
+   if(!m_db->is_threadsafe())
+      { lk.emplace(mutex()); }
 
    auto stmt = m_db->new_statement("SELECT session_id, session_ticket, session FROM tls_sessions"
                                    " WHERE hostname = ?1 AND hostport = ?2"
@@ -260,6 +263,8 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_all(const Server_Info
 
 size_t Session_Manager_SQL::remove(const Session_Handle& handle)
    {
+   // The number of deleted rows is taken globally from the database connection,
+   // therefore we need to serialize this implementation.
    lock_guard_type<recursive_mutex_type> lk(mutex());
 
    if(const auto id = handle.id())
@@ -285,6 +290,8 @@ size_t Session_Manager_SQL::remove(const Session_Handle& handle)
 
 size_t Session_Manager_SQL::remove_all()
    {
+   // The number of deleted rows is taken globally from the database connection,
+   // therefore we need to serialize this implementation.
    lock_guard_type<recursive_mutex_type> lk(mutex());
 
    m_db->exec("DELETE FROM tls_sessions");
@@ -293,7 +300,7 @@ size_t Session_Manager_SQL::remove_all()
 
 void Session_Manager_SQL::prune_session_cache()
    {
-   // internal API: assuming that the lock is held already
+   // internal API: assuming that the lock is held already if needed
 
    if(m_max_sessions == 0)
       return;
