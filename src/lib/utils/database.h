@@ -84,6 +84,8 @@ class BOTAN_PUBLIC_API(2,0) SQL_Database
 
       virtual size_t exec(const std::string& sql) { return new_statement(sql)->spin(); }
 
+      virtual bool is_threadsafe() const { return false; }
+
       virtual ~SQL_Database() = default;
 };
 

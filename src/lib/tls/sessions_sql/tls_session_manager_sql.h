@@ -55,6 +55,13 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
       std::optional<Session> retrieve_one(const Session_Handle& handle) override;
       std::vector<Session_with_Handle> find_all(const Server_Information& info) override;
 
+      /**
+       * Decides whether the underlying database is considered threadsafe in the
+       * context the Session_Manager is used. If this returns `false`, accesses
+       * to the database are serialized with the base class' recursive mutex.
+       */
+      virtual bool database_is_threadsafe() const { return m_db->is_threadsafe(); }
+
    private:
 
       // Database Schema Revision history
