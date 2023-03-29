@@ -305,7 +305,7 @@ class FFI_RNG_Test final : public FFI_Test
             }
 
          uint8_t system_rng_buf[4096];
-         TEST_FFI_OK(botan_system_rng_get(system_rng_buf, sizeof(system_rng_buf)));
+         TEST_FFI_OK(botan_system_rng_get, (system_rng_buf, sizeof(system_rng_buf)));
 
          size_t cb_counter = 0;
 
