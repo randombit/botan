@@ -93,7 +93,7 @@ class Session_Manager_Policy : public Botan::TLS::Policy
       size_t maximum_session_tickets_per_client_hello() const override { return session_limit; }
 
    public:
-      size_t session_limit = 0; /// no limit
+      size_t session_limit = 1000; // basically 'no limit'
       bool allow_session_reuse = true;
    };
 
@@ -1039,8 +1039,8 @@ std::vector<Test::Result> tls_session_manager_expiry()
          plcy.session_limit = 3;
          result.test_is_eq("find three", mgr->find(server_info, cbs, plcy).size(), size_t(plcy.session_limit));
 
-         plcy.session_limit = 0;
-         result.test_is_eq("unlimited", mgr->find(server_info, cbs, plcy).size(), size_t(5));
+         plcy.session_limit = 10;
+         result.test_is_eq("find all five", mgr->find(server_info, cbs, plcy).size(), size_t(5));
          }),
 
 #if defined(BOTAN_HAS_TLS_13)

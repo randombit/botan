@@ -65,8 +65,11 @@ std::optional<Session> Session_Manager_In_Memory::retrieve_one(const Session_Han
    return std::nullopt;
    }
 
-std::vector<Session_with_Handle> Session_Manager_In_Memory::find_all(const Server_Information& info)
+std::vector<Session_with_Handle> Session_Manager_In_Memory::find_some(const Server_Information& info,
+                                                                      const size_t max_sessions_hint)
    {
+   BOTAN_UNUSED(max_sessions_hint);
+
    lock_guard_type<recursive_mutex_type> lk(mutex());
 
    std::vector<Session_with_Handle> found_sessions;
