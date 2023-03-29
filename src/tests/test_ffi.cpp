@@ -304,6 +304,9 @@ class FFI_RNG_Test final : public FFI_Test
             TEST_FFI_OK(botan_rng_add_entropy, (rng, not_really_entropy, 32));
             }
 
+         uint8_t system_rng_buf[4096];
+         TEST_FFI_OK(botan_system_rng_get(system_rng_buf, sizeof(system_rng_buf)));
+
          size_t cb_counter = 0;
 
          auto custom_get_cb = +[](void* context, uint8_t* out, size_t out_len) -> int
