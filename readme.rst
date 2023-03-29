@@ -26,6 +26,9 @@ New releases are announced on the `botan-announce mailing list
 If you think you have found a security issue, see the `security page
 <https://botan.randombit.net/security.html>`_ for contact information.
 
+Releases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The latest release is
 `2.19.3 <https://botan.randombit.net/releases/Botan-2.19.3.tar.xz>`_
 `(sig) <https://botan.randombit.net/releases/Botan-2.19.3.tar.xz.asc>`_,
@@ -33,7 +36,7 @@ released on 2022-11-16.
 
 A release candidate for 3.0, `3.0.0-rc1
 <https://botan.randombit.net/releases/Botan-3.0.0-rc1.tar.xz>`_ `(sig)
-<https://botan.randombit.net/releases/Botan-3.0.0-rc1.tar.xz.asc>`_, released on
+<https://botan.randombit.net/releases/Botan-3.0.0-rc1.tar.xz.asc>`_, was released on
 2023-03-28. Please test it with your application and report issues.
 
 All releases are signed with a `PGP key <https://botan.randombit.net/pgpkey.txt>`_.
