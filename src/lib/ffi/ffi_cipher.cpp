@@ -14,15 +14,20 @@ using namespace Botan_FFI;
 
 struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C>
    {
-   explicit botan_cipher_struct(std::unique_ptr<Botan::Cipher_Mode> x, size_t update_size) :
-      botan_struct(std::move(x)),
-      m_update_size(update_size)
+   public:
+      explicit botan_cipher_struct(std::unique_ptr<Botan::Cipher_Mode> x, size_t update_size) :
+         botan_struct(std::move(x)),
+         m_update_size(update_size)
          {
          m_buf.reserve(m_update_size);
          }
 
-   Botan::secure_vector<uint8_t> m_buf;
-   size_t m_update_size;
+      Botan::secure_vector<uint8_t>& buf() { return m_buf; }
+      size_t update_size() const { return m_update_size; }
+
+   private:
+      Botan::secure_vector<uint8_t> m_buf;
+      size_t m_update_size;
    };
 
 namespace {
@@ -157,7 +162,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
 
       using namespace Botan;
       Cipher_Mode& cipher = safe_get(cipher_obj);
-      secure_vector<uint8_t>& mbuf = cipher_obj->m_buf;
+      secure_vector<uint8_t>& mbuf = cipher_obj->buf();
 
       const bool final_input = (flags & BOTAN_CIPHER_UPDATE_FLAG_FINAL);
 
@@ -202,7 +207,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
          return -1;
          }
 
-      const size_t ud = cipher_obj->m_update_size;
+      const size_t ud = cipher_obj->update_size();
 
       mbuf.resize(ud);
       size_t taken = 0, written = 0;
@@ -258,7 +263,7 @@ int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl)
 
 int botan_cipher_get_update_granularity(botan_cipher_t cipher, size_t* ug)
    {
-   return BOTAN_FFI_VISIT(cipher, [=](const auto& /*c*/) { *ug = cipher->m_update_size; });
+   return BOTAN_FFI_VISIT(cipher, [=](const auto& /*c*/) { *ug = cipher->update_size(); });
    }
 
 int botan_cipher_get_ideal_update_granularity(botan_cipher_t cipher, size_t* ug)

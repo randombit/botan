@@ -273,8 +273,6 @@ class KyberConstants
 class Polynomial
    {
    public:
-      std::array<int16_t, KyberConstants::N> m_coeffs;
-
       /**
        * Applies conditional subtraction of q to each coefficient of the polynomial.
        */
@@ -302,7 +300,7 @@ class Polynomial
 
          T r(KyberConstants::kSerializedPolynomialByteLength);
 
-         for(size_t i = 0; i < m_coeffs.size() / 2; ++i)
+         for(size_t i = 0; i < size() / 2; ++i)
             {
             const uint16_t t0 = m_coeffs[2 * i];
             const uint16_t t1 = m_coeffs[2 * i + 1];
@@ -322,9 +320,9 @@ class Polynomial
          {
          Polynomial r;
 
-         BOTAN_ASSERT(buf.size() == (2 * r.m_coeffs.size() / 4), "wrong input buffer size for cbd2");
+         BOTAN_ASSERT(buf.size() == (2 * r.size() / 4), "wrong input buffer size for cbd2");
 
-         for(size_t i = 0; i < r.m_coeffs.size() / 8; ++i)
+         for(size_t i = 0; i < r.size() / 8; ++i)
             {
             uint32_t t = load_le<uint32_t>(buf.data(), i);
             uint32_t d = t & 0x55555555;
@@ -351,7 +349,7 @@ class Polynomial
          {
          Polynomial r;
 
-         BOTAN_ASSERT(buf.size() == (3 * r.m_coeffs.size() / 4), "wrong input buffer size for cbd3");
+         BOTAN_ASSERT(buf.size() == (3 * r.size() / 4), "wrong input buffer size for cbd3");
 
          // Note: load_le<> does not support loading a 3-byte value
          const auto load_le24 = [](const uint8_t in[], const size_t off)
@@ -360,7 +358,7 @@ class Polynomial
             return make_uint32(0, in[off3 + 2], in[off3 + 1], in[off3]);
             };
 
-         for(size_t i = 0; i < r.m_coeffs.size() / 4; ++i)
+         for(size_t i = 0; i < r.size() / 4; ++i)
             {
             uint32_t t = load_le24(buf.data(), i);
             uint32_t d = t & 0x00249249;
@@ -407,7 +405,7 @@ class Polynomial
       static Polynomial from_bytes(std::span<const uint8_t> a)
          {
          Polynomial r;
-         for(size_t i = 0; i < r.m_coeffs.size() / 2; ++i)
+         for(size_t i = 0; i < r.size() / 2; ++i)
             {
             r.m_coeffs[2 * i] =
                ((a[3 * i + 0] >> 0) | (static_cast<uint16_t>(a[3 * i + 1]) << 8)) & 0xFFF;
@@ -422,7 +420,7 @@ class Polynomial
          BOTAN_ASSERT(msg.size() == KyberConstants::N / 8, "message length must be Kyber_N/8 bytes");
 
          Polynomial r;
-         for(size_t i = 0; i < r.m_coeffs.size() / 8; ++i)
+         for(size_t i = 0; i < r.size() / 8; ++i)
             {
             for(size_t j = 0; j < 8; ++j)
                {
@@ -435,11 +433,11 @@ class Polynomial
 
       template <typename T = secure_vector<uint8_t>> T to_message()
          {
-         T result(m_coeffs.size() / 8);
+         T result(size() / 8);
 
          this->csubq();
 
-         for(size_t i = 0; i < m_coeffs.size() / 8; ++i)
+         for(size_t i = 0; i < size() / 8; ++i)
             {
             result[i] = 0;
             for(size_t j = 0; j < 8; ++j)
@@ -458,7 +456,7 @@ class Polynomial
        */
       Polynomial& operator+=(const Polynomial& other)
          {
-         for(size_t i = 0; i < this->m_coeffs.size(); ++i)
+         for(size_t i = 0; i < this->size(); ++i)
             {
             BOTAN_DEBUG_ASSERT(static_cast<int32_t>(this->m_coeffs[i]) + other.m_coeffs[i] <= std::numeric_limits<int16_t>::max());
             this->m_coeffs[i] = this->m_coeffs[i] + other.m_coeffs[i];
@@ -472,7 +470,7 @@ class Polynomial
        */
       Polynomial& operator-=(const Polynomial& other)
          {
-         for(size_t i = 0; i < this->m_coeffs.size(); ++i)
+         for(size_t i = 0; i < this->size(); ++i)
             {
             BOTAN_DEBUG_ASSERT(static_cast<int32_t>(other.m_coeffs[i]) - this->m_coeffs[i] >= std::numeric_limits<int16_t>::min());
             this->m_coeffs[i] = other.m_coeffs[i] - this->m_coeffs[i];
@@ -501,7 +499,7 @@ class Polynomial
 
          Polynomial r;
 
-         for(size_t i = 0; i < r.m_coeffs.size() / 4; ++i)
+         for(size_t i = 0; i < r.size() / 4; ++i)
             {
             basemul(&r.m_coeffs[4 * i], &a.m_coeffs[4 * i], &b.m_coeffs[4 * i], KyberConstants::zetas[64 + i]);
             basemul(&r.m_coeffs[4 * i + 2], &a.m_coeffs[4 * i + 2], &b.m_coeffs[4 * i + 2],
@@ -557,7 +555,7 @@ class Polynomial
          Polynomial p;
 
          size_t count = 0;
-         while(count < p.m_coeffs.size())
+         while(count < p.size())
             {
             auto buf = xof_reader.next_3_bytes();
 
@@ -566,7 +564,7 @@ class Polynomial
 
             if(val0 < KyberConstants::Q)
                { p.m_coeffs[count++] = val0; }
-            if(count < p.m_coeffs.size() && val1 < KyberConstants::Q)
+            if(count < p.size() && val1 < KyberConstants::Q)
                { p.m_coeffs[count++] = val1; }
             }
 
@@ -590,9 +588,9 @@ class Polynomial
        */
       void ntt()
          {
-         for(size_t len = m_coeffs.size() / 2, k = 0; len >= 2; len /= 2)
+         for(size_t len = size() / 2, k = 0; len >= 2; len /= 2)
             {
-            for(size_t start = 0, j = 0; start < m_coeffs.size(); start = j + len)
+            for(size_t start = 0, j = 0; start < size(); start = j + len)
                {
                const auto zeta = KyberConstants::zetas[++k];
                for(j = start; j < start + len; ++j)
@@ -613,9 +611,9 @@ class Polynomial
        */
       void invntt_tomont()
          {
-         for(size_t len = 2, k = 0; len <= m_coeffs.size() / 2; len *= 2)
+         for(size_t len = 2, k = 0; len <= size() / 2; len *= 2)
             {
-            for(size_t start = 0, j = 0; start < m_coeffs.size(); start = j + len)
+            for(size_t start = 0, j = 0; start < size(); start = j + len)
                {
                const auto zeta = KyberConstants::zetas_inv[k++];
                for(j = start; j < start + len; ++j)
@@ -629,6 +627,18 @@ class Polynomial
 
          for(auto& c : m_coeffs)
             { c = fqmul(c, KyberConstants::zetas_inv[127]); }
+         }
+
+      size_t size() const { return m_coeffs.size(); }
+
+      int16_t operator[](size_t idx) const
+         {
+         return m_coeffs[idx];
+         }
+
+      int16_t& operator[](size_t idx)
+         {
+         return m_coeffs[idx];
          }
 
    private:
@@ -666,13 +676,12 @@ class Polynomial
          t >>= 16;
          return static_cast<int16_t>(t);
          }
+
+      std::array<int16_t, KyberConstants::N> m_coeffs;
    };
 
 class PolynomialVector
    {
-   public:
-      std::vector<Polynomial> m_vec;
-
    public:
       PolynomialVector() = delete;
       explicit PolynomialVector(const size_t k) : m_vec(k)
@@ -769,6 +778,11 @@ class PolynomialVector
          return *this;
          }
 
+      Polynomial& operator[](size_t idx)
+         {
+         return m_vec[idx];
+         }
+
       /**
        * Applies Barrett reduction to each coefficient of each element of a vector of polynomials.
        */
@@ -795,13 +809,13 @@ class PolynomialVector
          for(auto& v : m_vec)
             { v.ntt(); }
          }
+
+   private:
+      std::vector<Polynomial> m_vec;
    };
 
 class PolynomialMatrix
    {
-   private:
-      std::vector<PolynomialVector> m_mat;
-
    public:
       PolynomialMatrix() = delete;
 
@@ -820,7 +834,7 @@ class PolynomialMatrix
                {
                const auto pos = (transposed) ? std::tuple(i, j) : std::tuple(j, i);
                xof->set_position(pos);
-               matrix.m_mat[i].m_vec[j] = Polynomial::sample_rej_uniform(*xof);
+               matrix.m_mat[i][j] = Polynomial::sample_rej_uniform(*xof);
                }
             }
 
@@ -833,10 +847,10 @@ class PolynomialMatrix
 
          for(size_t i = 0; i < m_mat.size(); ++i)
             {
-            result.m_vec[i] = PolynomialVector::pointwise_acc_montgomery(m_mat[i], vec);
+            result[i] = PolynomialVector::pointwise_acc_montgomery(m_mat[i], vec);
             if(with_mont)
                {
-               result.m_vec[i].tomont();
+               result[i].tomont();
                }
             }
 
@@ -847,21 +861,17 @@ class PolynomialMatrix
       explicit PolynomialMatrix(const KyberConstants& mode) : m_mat(mode.k(), PolynomialVector(mode.k()))
          {
          }
+
+   private:
+      std::vector<PolynomialVector> m_mat;
    };
 
 class Ciphertext
    {
-   protected:
-      KyberConstants m_mode;
-
-   public:
-      PolynomialVector b;
-      Polynomial v;
-
    public:
       Ciphertext() = delete;
-      Ciphertext(PolynomialVector b_, const Polynomial& v_, KyberConstants mode)
-         : m_mode(std::move(mode)), b(std::move(b_)), v(v_)
+      Ciphertext(PolynomialVector b, const Polynomial& v, KyberConstants mode)
+         : m_mode(std::move(mode)), m_b(std::move(b)), m_v(v)
          {
          }
 
@@ -883,11 +893,22 @@ class Ciphertext
 
       secure_vector<uint8_t> to_bytes()
          {
-         auto ct = compress(b, m_mode);
-         const auto p = compress(v, m_mode);
+         auto ct = compress(m_b, m_mode);
+         const auto p = compress(m_v, m_mode);
          ct.insert(ct.end(), p.begin(), p.end());
 
          return ct;
+         }
+
+      secure_vector<uint8_t> indcpa_decrypt(const PolynomialVector& polynomials)
+         {
+         m_b.ntt();
+         auto mp = PolynomialVector::pointwise_acc_montgomery(polynomials, m_b);
+         mp.invntt_tomont();
+
+         mp -= m_v;
+         mp.reduce();
+         return mp.to_message();
          }
 
    private:
@@ -919,7 +940,7 @@ class Ciphertext
                   {
                   for(size_t k = 0; k < 4; ++k)
                      t[k] =
-                        (((static_cast<uint32_t>(pv.m_vec[i].m_coeffs[4 * j + k]) << 10) + KyberConstants::Q / 2) /
+                        (((static_cast<uint32_t>(pv[i][4 * j + k]) << 10) + KyberConstants::Q / 2) /
                          KyberConstants::Q) &
                         0x3ff;
 
@@ -942,7 +963,7 @@ class Ciphertext
                   {
                   for(size_t k = 0; k < 8; ++k)
                      t[k] =
-                        (((static_cast<uint32_t>(pv.m_vec[i].m_coeffs[8 * j + k]) << 11) + KyberConstants::Q / 2) /
+                        (((static_cast<uint32_t>(pv[i][8 * j + k]) << 11) + KyberConstants::Q / 2) /
                          KyberConstants::Q) &
                         0x7ff;
 
@@ -975,10 +996,10 @@ class Ciphertext
          if(mode.k() == 2 || mode.k() == 3)
             {
             size_t offset = 0;
-            for(size_t i = 0; i < p.m_coeffs.size() / 8; ++i)
+            for(size_t i = 0; i < p.size() / 8; ++i)
                {
                for(size_t j = 0; j < 8; ++j)
-                  t[j] = (((static_cast<uint16_t>(p.m_coeffs[8 * i + j]) << 4) + KyberConstants::Q / 2) /
+                  t[j] = (((static_cast<uint16_t>(p[8 * i + j]) << 4) + KyberConstants::Q / 2) /
                           KyberConstants::Q) &
                          15;
 
@@ -992,10 +1013,10 @@ class Ciphertext
          else if(mode.k() == 4)
             {
             size_t offset = 0;
-            for(size_t i = 0; i < p.m_coeffs.size() / 8; ++i)
+            for(size_t i = 0; i < p.size() / 8; ++i)
                {
                for(size_t j = 0; j < 8; ++j)
-                  t[j] = (((static_cast<uint32_t>(p.m_coeffs[8 * i + j]) << 5) + KyberConstants::Q / 2) /
+                  t[j] = (((static_cast<uint32_t>(p[8 * i + j]) << 5) + KyberConstants::Q / 2) /
                           KyberConstants::Q) &
                          31;
 
@@ -1038,7 +1059,7 @@ class Ciphertext
                   a += 11;
 
                   for(size_t k = 0; k < 8; ++k)
-                     r.m_vec[i].m_coeffs[8 * j + k] =
+                     r[i][8 * j + k] =
                         (static_cast<uint32_t>(t[k] & 0x7FF) * KyberConstants::Q + 1024) >> 11;
                   }
                }
@@ -1057,7 +1078,7 @@ class Ciphertext
                   a += 5;
 
                   for(size_t k = 0; k < 4; ++k)
-                     r.m_vec[i].m_coeffs[4 * j + k] =
+                     r[i][4 * j + k] =
                         (static_cast<uint32_t>(t[k] & 0x3FF) * KyberConstants::Q + 512) >> 10;
                   }
                }
@@ -1089,21 +1110,26 @@ class Ciphertext
                a += 5;
 
                for(size_t j = 0; j < 8; ++j)
-                  { r.m_coeffs[8 * i + j] = (static_cast<uint32_t>(t[j] & 31) * KyberConstants::Q + 16) >> 5; }
+                  { r[8 * i + j] = (static_cast<uint32_t>(t[j] & 31) * KyberConstants::Q + 16) >> 5; }
                }
             }
          else
             {
             for(size_t i = 0; i < KyberConstants::N / 2; ++i)
                {
-               r.m_coeffs[2 * i + 0] = ((static_cast<uint16_t>(a[0] & 15) * KyberConstants::Q) + 8) >> 4;
-               r.m_coeffs[2 * i + 1] = ((static_cast<uint16_t>(a[0] >> 4) * KyberConstants::Q) + 8) >> 4;
+               r[2 * i + 0] = ((static_cast<uint16_t>(a[0] & 15) * KyberConstants::Q) + 8) >> 4;
+               r[2 * i + 1] = ((static_cast<uint16_t>(a[0] >> 4) * KyberConstants::Q) + 8) >> 4;
                a += 1;
                }
             }
 
          return r;
          }
+
+   private:
+      KyberConstants m_mode;
+      PolynomialVector m_b;
+      Polynomial m_v;
    };
 
 } // anonymous namespace
@@ -1131,7 +1157,7 @@ class Kyber_PublicKeyInternal
          {
          }
 
-      PolynomialVector& polynomials()
+      const PolynomialVector& polynomials() const
          {
          return m_polynomials;
          }
@@ -1199,12 +1225,7 @@ class Kyber_PrivateKeyInternal
 class Kyber_KEM_Cryptor
    {
    protected:
-      std::shared_ptr<Kyber_PublicKeyInternal> m_public_key;
-      const KyberConstants& m_mode;
-      const PolynomialMatrix m_at;
-
-   protected:
-      Kyber_KEM_Cryptor(std::shared_ptr<Kyber_PublicKeyInternal> public_key) :
+      Kyber_KEM_Cryptor(std::shared_ptr<const Kyber_PublicKeyInternal> public_key) :
          m_public_key(std::move(public_key)),
          m_mode(m_public_key->mode()),
          m_at(PolynomialMatrix::generate(m_public_key->seed(), true, m_mode))
@@ -1237,6 +1258,13 @@ class Kyber_KEM_Cryptor
 
          return Ciphertext(std::move(bp), v, m_mode).to_bytes();
          }
+
+      const KyberConstants& mode() const { return m_mode; }
+
+   private:
+      std::shared_ptr<const Kyber_PublicKeyInternal> m_public_key;
+      const KyberConstants& m_mode;
+      const PolynomialMatrix m_at;
    };
 
 class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
@@ -1276,9 +1304,9 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
                            RandomNumberGenerator& rng) override
          {
          // naming from kyber spec
-         auto H = m_mode.H();
-         auto G = m_mode.G();
-         auto KDF = m_mode.KDF();
+         auto H = mode().H();
+         auto G = mode().G();
+         auto KDF = mode().KDF();
 
          H->update(rng.random_vec(KyberConstants::kSymBytes));
          const auto shared_secret = H->final();
@@ -1323,9 +1351,9 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
       secure_vector<uint8_t> raw_kem_decrypt(const uint8_t encap_key[], size_t len_encap_key) override
          {
          // naming from kyber spec
-         auto H = m_mode.H();
-         auto G = m_mode.G();
-         auto KDF = m_mode.KDF();
+         auto H = mode().H();
+         auto G = mode().G();
+         auto KDF = mode().KDF();
 
          const auto shared_secret = indcpa_dec(encap_key, len_encap_key);
 
@@ -1362,15 +1390,8 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
    private:
       secure_vector<uint8_t> indcpa_dec(const uint8_t c[], size_t c_len)
          {
-         auto ct = Ciphertext::from_bytes(std::span(c, c_len), m_mode);
-
-         ct.b.ntt();
-         auto mp = PolynomialVector::pointwise_acc_montgomery(m_key.m_private->polynomials(), ct.b);
-         mp.invntt_tomont();
-
-         mp -= ct.v;
-         mp.reduce();
-         return mp.to_message();
+         auto ct = Ciphertext::from_bytes(std::span(c, c_len), mode());
+         return ct.indcpa_decrypt(m_key.m_private->polynomials());
          }
 
    private:

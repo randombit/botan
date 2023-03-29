@@ -22,6 +22,7 @@ enabled_checks = [
     'clang-analyzer-*',
     'cppcoreguidelines-*',
     'hicpp-*',
+#    'misc-*',
     'modernize-*',
     'performance-*',
     'portability-*',
@@ -49,6 +50,9 @@ disabled_needs_work = [
     'cppcoreguidelines-prefer-member-initializer',
     'cppcoreguidelines-slicing', # private->public key slicing
     'hicpp-explicit-conversions',
+    'misc-const-correctness', # pretty noisy
+    'misc-misplaced-const',
+    'misc-confusable-identifiers',
     'modernize-avoid-bind', # used a lot in pkcs11
     'modernize-pass-by-value',
     'readability-convert-member-functions-to-static',
@@ -85,6 +89,7 @@ disabled_not_interested = [
     'hicpp-no-assembler',
     'hicpp-vararg', # idiocy
     'hicpp-signed-bitwise', # impossible to avoid in C/C++, int promotion rules :/
+    'misc-no-recursion',
     'modernize-loop-convert', # sometimes very ugly
     'modernize-raw-string-literal', # usually less readable
     'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
