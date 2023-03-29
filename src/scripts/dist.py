@@ -193,7 +193,7 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
                     elif suffix.find('beta') >= 0:
                         release_type = 'beta'
                     elif suffix.find('rc') >= 0:
-                        release_type = 'release candidate'
+                        release_type = 'rc'
 
             if line == 'release_vc_rev = None\n':
                 yield 'release_vc_rev = \'git:%s\'\n' % (rev_id)
