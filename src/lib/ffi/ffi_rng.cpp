@@ -171,6 +171,14 @@ int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
    return BOTAN_FFI_VISIT(rng, [=](auto& r) { r.randomize(out, out_len); });
    }
 
+int botan_system_rng_get(uint8_t* out, size_t out_len)
+   {
+   return ffi_guard_thunk(__func__, [=]() -> int {
+   Botan::system_rng().randomize(out, out_len);
+   return BOTAN_FFI_SUCCESS;
+   });
+   }
+
 int botan_rng_reseed(botan_rng_t rng, size_t bits)
    {
    return BOTAN_FFI_VISIT(rng, [=](auto& r) { r.reseed_from_rng(Botan::system_rng(), bits); });
