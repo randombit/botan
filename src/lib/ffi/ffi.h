@@ -264,6 +264,14 @@ BOTAN_PUBLIC_API(3,0) int botan_rng_init_custom(botan_rng_t* rng_out, const char
 BOTAN_PUBLIC_API(2,0) int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len);
 
 /**
+* Get random bytes from system random number generator
+* @param out output buffer of size out_len
+* @param out_len number of requested bytes
+* @return 0 on success, negative on failure
+*/
+BOTAN_PUBLIC_API(2,0) int botan_system_rng_get(uint8_t* out, size_t out_len);
+
+/**
 * Reseed a random number generator
 * Uses the System_RNG as a seed generator.
 *
