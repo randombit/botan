@@ -131,7 +131,7 @@ BOTAN_PUBLIC_API(2,8) const char* botan_error_description(int err);
 * this thread calls any other Botan FFI function and must be copied
 * to persistent storage first.
 */
-BOTAN_PUBLIC_API(3,0) const char* botan_error_last_exception_message();
+BOTAN_PUBLIC_API(3,0) const char* botan_error_last_exception_message(void);
 
 /**
 * Return the version of the currently supported FFI API. This is
