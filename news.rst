@@ -99,6 +99,8 @@ New APIs
 * ``SymmetricAlgorithm::has_keying_material`` allows checking if a key has
   already been set on an object (GH #3295)
 
+* Many new functions in the C89 interface; see the API reference for more details.
+
 Implementation Improvements
 ----------------------------------------
 
