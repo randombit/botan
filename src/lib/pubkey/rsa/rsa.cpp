@@ -84,7 +84,16 @@ class RSA_Private_Data final
       const BigInt& get_d2() const { return m_d2; }
       const BigInt& get_c() const { return m_c; }
 
-   //private:
+      const Modular_Reducer& mod_p() const { return m_mod_p; }
+      const Modular_Reducer& mod_q() const { return m_mod_q; }
+
+      const std::shared_ptr<const Montgomery_Params>& monty_p() const { return m_monty_p; }
+      const std::shared_ptr<const Montgomery_Params>& monty_q() const { return m_monty_q; }
+
+      size_t p_bits() const { return m_p_bits; }
+      size_t q_bits() const { return m_q_bits; }
+
+   private:
       BigInt m_d;
       BigInt m_p;
       BigInt m_q;
@@ -428,8 +437,8 @@ class RSA_Private_Operation
                    [this](const BigInt& k) { return m_public->public_op(k); },
                    [this](const BigInt& k) { return inverse_mod(k, m_public->get_n()); }),
          m_blinding_bits(64),
-         m_max_d1_bits(m_private->m_p_bits + m_blinding_bits),
-         m_max_d2_bits(m_private->m_q_bits + m_blinding_bits)
+         m_max_d1_bits(m_private->p_bits() + m_blinding_bits),
+         m_max_d2_bits(m_private->q_bits() + m_blinding_bits)
          {
          }
 
@@ -479,7 +488,7 @@ class RSA_Private_Operation
          auto future_j1 = Thread_Pool::global_instance().run([this, &m, &d1_mask]() {
 #endif
             const BigInt masked_d1 = m_private->get_d1() + (d1_mask * (m_private->get_p() - 1));
-            auto powm_d1_p = monty_precompute(m_private->m_monty_p, m_private->m_mod_p.reduce(m), powm_window);
+            auto powm_d1_p = monty_precompute(m_private->monty_p(), m_private->mod_p().reduce(m), powm_window);
             BigInt j1 = monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
 
 #if defined(BOTAN_RSA_USE_ASYNC)
@@ -489,7 +498,7 @@ class RSA_Private_Operation
 
          const BigInt d2_mask(m_blinder.rng(), m_blinding_bits);
          const BigInt masked_d2 = m_private->get_d2() + (d2_mask * (m_private->get_q() - 1));
-         auto powm_d2_q = monty_precompute(m_private->m_monty_q, m_private->m_mod_q.reduce(m), powm_window);
+         auto powm_d2_q = monty_precompute(m_private->monty_q(), m_private->mod_q().reduce(m), powm_window);
          const BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
 
 #if defined(BOTAN_RSA_USE_ASYNC)
@@ -509,7 +518,7 @@ class RSA_Private_Operation
          * this may still underflow if p and q are imbalanced in size.
          */
 
-         j1 = m_private->m_mod_p.multiply(m_private->m_mod_p.reduce((m_private->get_p() + j1) - j2), m_private->get_c());
+         j1 = m_private->mod_p().multiply(m_private->mod_p().reduce((m_private->get_p() + j1) - j2), m_private->get_c());
          return j1*m_private->get_q() + j2;
          }
 
@@ -649,6 +658,7 @@ class RSA_Public_Operation
 
       const BigInt& get_n() const { return m_public->get_n(); }
 
+   private:
       std::shared_ptr<const RSA_Public_Data> m_public;
    };
 

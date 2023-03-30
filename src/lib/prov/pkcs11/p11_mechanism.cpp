@@ -28,48 +28,64 @@ const std::map<MechanismType, PSS_Params> PssOptions =
       { MechanismType::Sha512RsaPkcsPss, PSS_Params(64, MechanismType::Sha512, MGF::Mgf1Sha512) }
    };
 
-struct MechanismData
+class MechanismData
    {
-   explicit MechanismData(MechanismType _type)
-      : type(_type)
-      {}
+   public:
+      explicit MechanismData(MechanismType type) : m_type(type) {}
 
-   MechanismData(const MechanismData& other) = default;
-   MechanismData(MechanismData&& other) = default;
+      MechanismData(const MechanismData& other) = default;
+      MechanismData(MechanismData&& other) = default;
 
-   MechanismData& operator=(const MechanismData& other) = default;
-   MechanismData& operator=(MechanismData&& other) = default;
+      MechanismData& operator=(const MechanismData& other) = default;
+      MechanismData& operator=(MechanismData&& other) = default;
 
-   virtual ~MechanismData() = default;
+      virtual ~MechanismData() = default;
 
-   // the mechanism to perform
-   MechanismType type;
+      MechanismType type() const { return m_type; }
+
+   private:
+      // the mechanism to perform
+      MechanismType m_type;
    };
 
-struct RSA_SignMechanism final : public MechanismData
+class RSA_SignMechanism final : public MechanismData
    {
-   explicit RSA_SignMechanism(MechanismType _type)
-      : MechanismData(_type), hash(static_cast<MechanismType>(0)), mgf(static_cast<MGF>(0)), salt_size(0)
-      {
-      auto pss_option = PssOptions.find(type);
-      if(pss_option != PssOptions.end())
+   public:
+      explicit RSA_SignMechanism(MechanismType typ) :
+         MechanismData(typ),
+         m_hash(static_cast<MechanismType>(0)),
+         m_mgf(static_cast<MGF>(0)),
+         m_salt_size(0)
          {
-         hash = std::get<1>(pss_option->second);
-         mgf = std::get<2>(pss_option->second);
-         salt_size = std::get<0>(pss_option->second);
+         auto pss_option = PssOptions.find(type());
+         if(pss_option != PssOptions.end())
+            {
+            m_hash = std::get<1>(pss_option->second);
+            m_mgf = std::get<2>(pss_option->second);
+            m_salt_size = std::get<0>(pss_option->second);
+            }
          }
-      }
 
-   // hash algorithm used in the PSS encoding; if the signature mechanism does not include message hashing,
-   // then this value must be the mechanism used by the application to generate the message hash;
-   // if the signature mechanism includes hashing, then this value must match the hash algorithm indicated by the signature mechanism
-   MechanismType hash;
+      MechanismType hash() const { return m_hash; }
+      MGF mgf() const { return m_mgf; }
+      size_t salt_size() const { return m_salt_size; }
 
-   // mask generation function to use on the encoded block
-   MGF mgf;
+   private:
 
-   // length, in bytes, of the salt value used in the PSS encoding; typical values are the length of the message hash and zero
-   size_t salt_size;
+      /*
+      hash algorithm used in the PSS encoding; if the signature
+      mechanism does not include message hashing, then this value must
+      be the mechanism used by the application to generate the message
+      hash; if the signature mechanism includes hashing, then this
+      value must match the hash algorithm indicated by the signature mechanism
+      */
+      MechanismType m_hash;
+
+      // mask generation function to use on the encoded block
+      MGF m_mgf;
+
+      // length, in bytes, of the salt value used in the PSS encoding; typical values are the length of the message hash and zero
+      size_t m_salt_size;
    };
 
 // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_sign_mechanism`
@@ -116,22 +132,34 @@ const std::map<std::string, RSA_SignMechanism> SignMechanisms =
 
 struct RSA_CryptMechanism final : public MechanismData
    {
-   RSA_CryptMechanism(MechanismType _type, size_t _padding_size, MechanismType _hash, MGF _mgf)
-      : MechanismData(_type), hash(_hash), mgf(_mgf), padding_size(_padding_size)
+   public:
+      RSA_CryptMechanism(MechanismType typ,
+                         size_t padding_size,
+                         MechanismType hash,
+                         MGF mgf) :
+         MechanismData(typ),
+         m_hash(hash),
+         m_mgf(mgf),
+         m_padding_size(padding_size)
       {}
 
-   RSA_CryptMechanism(MechanismType _type, size_t _padding_size)
-      : RSA_CryptMechanism(_type, _padding_size, static_cast<MechanismType>(0), static_cast<MGF>(0))
-      {}
+      RSA_CryptMechanism(MechanismType typ, size_t padding_size) :
+         RSA_CryptMechanism(typ, padding_size, static_cast<MechanismType>(0), static_cast<MGF>(0))
+         {}
 
-   // mechanism ID of the message digest algorithm used to calculate the digest of the encoding parameter
-   MechanismType hash;
+      MechanismType hash() const { return m_hash; }
+      MGF mgf() const { return m_mgf; }
+      size_t padding_size() const { return m_padding_size; }
 
-   // mask generation function to use on the encoded block
-   MGF mgf;
+   private:
+      // mechanism ID of the message digest algorithm used to calculate the digest of the encoding parameter
+      MechanismType m_hash;
 
-   // number of bytes required for the padding
-   size_t padding_size;
+      // mask generation function to use on the encoded block
+      MGF m_mgf;
+
+      // number of bytes required for the padding
+      size_t m_padding_size;
    };
 
 // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_crypt_mechanism`
@@ -184,19 +212,19 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(std::string_view p
       }
    RSA_CryptMechanism mechanism_info = mechanism_info_it->second;
 
-   MechanismWrapper mech(mechanism_info.type);
-   if(mechanism_info.type == MechanismType::RsaPkcsOaep)
+   MechanismWrapper mech(mechanism_info.type());
+   if(mechanism_info.type() == MechanismType::RsaPkcsOaep)
       {
       mech.m_parameters = std::make_shared<MechanismParameters>();
-      mech.m_parameters->oaep_params.hashAlg = static_cast<CK_MECHANISM_TYPE>(mechanism_info.hash);
-      mech.m_parameters->oaep_params.mgf = static_cast<CK_RSA_PKCS_MGF_TYPE>(mechanism_info.mgf);
+      mech.m_parameters->oaep_params.hashAlg = static_cast<CK_MECHANISM_TYPE>(mechanism_info.hash());
+      mech.m_parameters->oaep_params.mgf = static_cast<CK_RSA_PKCS_MGF_TYPE>(mechanism_info.mgf());
       mech.m_parameters->oaep_params.source = CKZ_DATA_SPECIFIED;
       mech.m_parameters->oaep_params.pSourceData = nullptr;
       mech.m_parameters->oaep_params.ulSourceDataLen = 0;
       mech.m_mechanism.pParameter = mech.m_parameters.get();
       mech.m_mechanism.ulParameterLen = sizeof(RsaPkcsOaepParams);
       }
-   mech.m_padding_size = mechanism_info.padding_size;
+   mech.m_padding_size = mechanism_info.padding_size();
    return mech;
    }
 
@@ -211,13 +239,13 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view pa
       }
    RSA_SignMechanism mechanism_info = mechanism_info_it->second;
 
-   MechanismWrapper mech(mechanism_info.type);
-   if(PssOptions.find(mechanism_info.type) != PssOptions.end())
+   MechanismWrapper mech(mechanism_info.type());
+   if(PssOptions.find(mechanism_info.type()) != PssOptions.end())
       {
       mech.m_parameters = std::make_shared<MechanismParameters>();
-      mech.m_parameters->pss_params.hashAlg = static_cast<CK_MECHANISM_TYPE>(mechanism_info.hash);
-      mech.m_parameters->pss_params.mgf = static_cast<CK_RSA_PKCS_MGF_TYPE>(mechanism_info.mgf);
-      mech.m_parameters->pss_params.sLen = static_cast<Ulong>(mechanism_info.salt_size);
+      mech.m_parameters->pss_params.hashAlg = static_cast<CK_MECHANISM_TYPE>(mechanism_info.hash());
+      mech.m_parameters->pss_params.mgf = static_cast<CK_RSA_PKCS_MGF_TYPE>(mechanism_info.mgf());
+      mech.m_parameters->pss_params.sLen = static_cast<Ulong>(mechanism_info.salt_size());
       mech.m_mechanism.pParameter = mech.m_parameters.get();
       mech.m_mechanism.ulParameterLen = sizeof(RsaPkcsPssParams);
       }
