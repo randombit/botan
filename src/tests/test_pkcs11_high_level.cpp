@@ -14,6 +14,7 @@
 #include <vector>
 #include <memory>
 #include <numeric>
+#include <sstream>
 
 #if defined(BOTAN_HAS_PKCS11)
    #include <botan/p11.h>
@@ -843,7 +844,12 @@ Test::Result test_rsa_encrypt_decrypt()
          }
       catch(Botan::PKCS11::PKCS11_ReturnError& e)
          {
-         result.test_failure("PKCS11 RSA decrypt " + padding, e.what());
+         std::ostringstream err;
+         err << "PKCS11 RSA decrypt " << padding;
+         if(blinding)
+            err << " with userspace blinding";
+
+         result.test_failure(err.str(), e.what());
          }
 
       result.test_eq("RSA PKCS11 encrypt and decrypt: " + padding, decrypted, plaintext);
