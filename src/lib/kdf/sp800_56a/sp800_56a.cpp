@@ -55,12 +55,10 @@ void SP800_56A_Hash::kdf(uint8_t key[], size_t key_len,
                          const uint8_t salt[], size_t salt_len,
                          const uint8_t label[], size_t label_len) const
    {
-   /*
-   * TODO: should we reject a non-empty salt with an exception?
-   * Ignoring the salt seems quite dangerous to applications which
-   * don't expect it.
-   */
-   BOTAN_UNUSED(salt, salt_len);
+   BOTAN_UNUSED(salt);
+
+   if(salt_len > 0)
+      throw Invalid_Argument("SP800_56A_Hash does not support a non-empty salt");
 
    SP800_56A_kdf(*m_hash, key, key_len, secret, secret_len, label, label_len);
    }
