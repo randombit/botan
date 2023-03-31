@@ -3,11 +3,12 @@
 """
 Automatically generate declarations for the FFI layer
 
-(C) 2019 Jack Lloyd
+(C) 2019, 2023 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
+import traceback
 from pycparser import c_ast, parse_file
 
 ffi_header = 'src/lib/ffi/ffi.h'
@@ -16,6 +17,14 @@ def to_ctype(typ, is_ptr):
 
     if typ.startswith('botan_') and typ.endswith('_t'):
         return 'c_void_p'
+
+    if typ == 'botan_view_ctx':
+        return 'c_void_p'
+
+    if typ == 'botan_view_bin_fn':
+        return 'VIEW_BIN_CALLBACK'
+    if typ == 'botan_view_str_fn':
+        return 'VIEW_STR_CALLBACK'
 
     if is_ptr is False:
         if typ == 'uint32':
@@ -50,9 +59,24 @@ def to_ctype(typ, is_ptr):
 
     raise Exception("Unknown type %s/%d" % (typ, is_ptr))
 
-GROUP = None
-
 class FuncDefVisitor(c_ast.NodeVisitor):
+    def __init__(self):
+        self.fn_decls = []
+
+    def emit_decls(self):
+        decls = ''
+        for (fn_name, fn_args) in self.fn_decls:
+            decl = "    ffi_api(dll.%s," % (fn_name)
+            if len(fn_args) > 4:
+                decl += "\n            "
+            else:
+                decl += ' '
+
+            decl += '[' + ', '.join(fn_args) + '])\n'
+
+            decls += decl
+        return decls
+
     def visit_FuncDecl(self, node):
 
         if not isinstance(node.type, c_ast.TypeDecl):
@@ -66,48 +90,50 @@ class FuncDefVisitor(c_ast.NodeVisitor):
         # all functions returning ints:
         fn_name = node.type.declname
 
-        fn_group = fn_name.split('_')[1]
-        if fn_group == 'privkey':
-            fn_group = 'pubkey' # hack
-
-        global GROUP
-
-        if fn_group != GROUP:
-            if fn_group in ['rng', 'hash', 'mac', 'cipher', 'block', 'mp', 'pubkey', 'pk', 'x509', 'hotp', 'totp', 'fpe']:
-                print("\n    # ", fn_group.upper())
-            else:
-                print("")
-            GROUP = fn_group
-
+        ignored = [
+            'botan_view_bin_fn',
+            'botan_view_str_fn',
+            'botan_same_mem', # deprecated
+            'botan_mceies_encrypt', # dead
+            'botan_mceies_decrypt', # dead
+            'botan_rng_init_custom', # fixme
+        ]
+        if fn_name in ignored:
+            return
 
         fn_args = []
 
-        for param in node.args.params:
+        try:
+            for param in node.args.params:
 
-            is_ptr = False
-            typ = None
-            if isinstance(param.type, c_ast.PtrDecl):
-                is_ptr = True
-                typ = param.type.type.type.names[0]
-            elif isinstance(param.type, c_ast.ArrayDecl):
-                is_ptr = True
-                typ = param.type.type.type.names[0]
-            else:
-                typ = param.type.type.names[0]
+                is_ptr = False
+                typ = None
 
-            ctype = to_ctype(typ, is_ptr)
-            fn_args.append(ctype)
+                if isinstance(param.type, c_ast.PtrDecl):
+                    is_ptr = True
 
-        decl = "    ffi_api(dll.%s," % (fn_name)
-        if len(fn_args) > 4:
-            decl += "\n            "
-        else:
-            decl += ' '
+                    if isinstance(param.type.type, c_ast.PtrDecl):
+                        typ = param.type.type.type.type.names[0]
+                    else:
+                        typ = param.type.type.type.names[0]
+                elif isinstance(param.type, c_ast.ArrayDecl):
+                    is_ptr = True
+                    typ = param.type.type.type.names[0]
+                else:
+                    typ = param.type.type.names[0]
 
-        decl += '[' + ', '.join(fn_args) + '])'
+                ctype = to_ctype(typ, is_ptr)
+                fn_args.append(ctype)
 
-        print(decl)
+            self.fn_decls.append((fn_name, fn_args))
+        except Exception as e:
+            print(traceback.format_exc())
+            print("FAILED for '%s': %s" % (fn_name, e))
 
-ast = parse_file(ffi_header, use_cpp=True, cpp_args=['-Ibuild/include', '-std=c89', '-DBOTAN_DLL='])
+ast = parse_file(ffi_header, use_cpp=True, cpp_args=['-Ibuild/include', '-std=c89', '-DBOTAN_DLL=', '-DBOTAN_NO_DEPRECATED_WARNINGS'])
+#print(ast)
 v = FuncDefVisitor()
 v.visit(ast)
+
+#print("\n".join(v.fn_decls))
+print(v.emit_decls())
