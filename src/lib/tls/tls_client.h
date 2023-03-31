@@ -56,14 +56,14 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-     Client(std::shared_ptr<Callbacks> callbacks,
-            std::shared_ptr<Session_Manager> session_manager,
-            std::shared_ptr<Credentials_Manager> creds,
-            std::shared_ptr<const Policy> policy,
-            std::shared_ptr<RandomNumberGenerator> rng,
+     Client(const std::shared_ptr<Callbacks>& callbacks,
+            const std::shared_ptr<Session_Manager>& session_manager,
+            const std::shared_ptr<Credentials_Manager>& creds,
+            const std::shared_ptr<const Policy>& policy,
+            const std::shared_ptr<RandomNumberGenerator>& rng,
             Server_Information server_info = Server_Information(),
             Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
-            std::vector<std::string> next_protocols = {},
+            const std::vector<std::string>& next_protocols = {},
             size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
          );
 

@@ -15,11 +15,11 @@
 
 namespace Botan::TLS {
 
-Server_Impl_13::Server_Impl_13(std::shared_ptr<Callbacks> callbacks,
-                               std::shared_ptr<Session_Manager> session_manager,
-                               std::shared_ptr<Credentials_Manager> credentials_manager,
-                               std::shared_ptr<const Policy> policy,
-                               std::shared_ptr<RandomNumberGenerator> rng)
+Server_Impl_13::Server_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
+                               const std::shared_ptr<Session_Manager>& session_manager,
+                               const std::shared_ptr<Credentials_Manager>& credentials_manager,
+                               const std::shared_ptr<const Policy>& policy,
+                               const std::shared_ptr<RandomNumberGenerator>& rng)
    : Channel_Impl_13(callbacks, session_manager, credentials_manager,
                      rng, policy, true /* is_server */)
    {

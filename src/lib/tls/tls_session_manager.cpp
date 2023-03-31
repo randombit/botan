@@ -14,7 +14,7 @@
 
 namespace Botan::TLS {
 
-Session_Manager::Session_Manager(std::shared_ptr<RandomNumberGenerator> rng)
+Session_Manager::Session_Manager(const std::shared_ptr<RandomNumberGenerator>& rng)
    : m_rng(rng)
    {
    BOTAN_ASSERT_NONNULL(m_rng);

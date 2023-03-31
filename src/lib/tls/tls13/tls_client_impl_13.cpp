@@ -22,13 +22,13 @@
 
 namespace Botan::TLS {
 
-Client_Impl_13::Client_Impl_13(std::shared_ptr<Callbacks> callbacks,
-                               std::shared_ptr<Session_Manager> session_manager,
-                               std::shared_ptr<Credentials_Manager> creds,
-                               std::shared_ptr<const Policy> policy,
-                               std::shared_ptr<RandomNumberGenerator> rng,
+Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
+                               const std::shared_ptr<Session_Manager>& session_manager,
+                               const std::shared_ptr<Credentials_Manager>& creds,
+                               const std::shared_ptr<const Policy>& policy,
+                               const std::shared_ptr<RandomNumberGenerator>& rng,
                                Server_Information info,
-                               std::vector<std::string> next_protocols) :
+                               const std::vector<std::string>& next_protocols) :
    Channel_Impl_13(callbacks, session_manager, creds, rng, policy, false /* is_server */),
    m_info(std::move(info)),
    m_should_send_ccs(false)

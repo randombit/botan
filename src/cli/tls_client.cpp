@@ -370,7 +370,7 @@ class TLS_Client final : public Command
       using Command::output;
       using Command::flag_set;
 
-      void send(std::span<const uint8_t> buf)
+      void send(std::span<const uint8_t> buf) const
          {
          while(!buf.empty())
             {

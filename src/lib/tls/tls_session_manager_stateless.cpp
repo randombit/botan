@@ -16,8 +16,9 @@
 
 namespace Botan::TLS {
 
-Session_Manager_Stateless::Session_Manager_Stateless(std::shared_ptr<Credentials_Manager> creds,
-                                                     std::shared_ptr<RandomNumberGenerator> rng)
+Session_Manager_Stateless::Session_Manager_Stateless(
+   const std::shared_ptr<Credentials_Manager>& creds,
+   const std::shared_ptr<RandomNumberGenerator>& rng)
    : Session_Manager(rng)
    , m_credentials_manager(creds)
    {

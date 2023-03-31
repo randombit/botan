@@ -24,11 +24,11 @@ namespace Botan::TLS {
 /*
 * TLS Server Constructor
 */
-Server::Server(std::shared_ptr<Callbacks> callbacks,
-               std::shared_ptr<Session_Manager> session_manager,
-               std::shared_ptr<Credentials_Manager> creds,
-               std::shared_ptr<const Policy> policy,
-               std::shared_ptr<RandomNumberGenerator> rng,
+Server::Server(const std::shared_ptr<Callbacks>& callbacks,
+               const std::shared_ptr<Session_Manager>& session_manager,
+               const std::shared_ptr<Credentials_Manager>& creds,
+               const std::shared_ptr<const Policy>& policy,
+               const std::shared_ptr<RandomNumberGenerator>& rng,
                bool is_datagram,
                size_t io_buf_sz)
    {

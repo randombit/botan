@@ -109,11 +109,11 @@ class Channel_Impl_13 : public Channel_Impl
       * @param policy specifies other connection policy information
       * @param is_server whether this is a server session or not
       */
-      explicit Channel_Impl_13(std::shared_ptr<Callbacks> callbacks,
-                               std::shared_ptr<Session_Manager> session_manager,
-                               std::shared_ptr<Credentials_Manager> credentials_manager,
-                               std::shared_ptr<RandomNumberGenerator> rng,
-                               std::shared_ptr<const Policy> policy,
+      explicit Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
+                               const std::shared_ptr<Session_Manager>& session_manager,
+                               const std::shared_ptr<Credentials_Manager>& credentials_manager,
+                               const std::shared_ptr<RandomNumberGenerator>& rng,
+                               const std::shared_ptr<const Policy>& policy,
                                bool is_server);
 
       explicit Channel_Impl_13(const Channel_Impl_13&) = delete;

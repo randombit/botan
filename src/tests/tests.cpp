@@ -811,7 +811,7 @@ void Test::set_test_options(const Test_Options& opts)
 //static
 void Test::set_test_rng(std::shared_ptr<Botan::RandomNumberGenerator> rng)
    {
-   m_test_rng = rng;
+   m_test_rng = std::move(rng);
    }
 
 //static

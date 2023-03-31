@@ -14,8 +14,9 @@
 
 namespace Botan::TLS {
 
-Session_Manager_In_Memory::Session_Manager_In_Memory(std::shared_ptr<RandomNumberGenerator> rng,
-                                                     size_t max_sessions)
+Session_Manager_In_Memory::Session_Manager_In_Memory(
+   const std::shared_ptr<RandomNumberGenerator>& rng,
+   size_t max_sessions)
    : Session_Manager(rng)
    , m_max_sessions(max_sessions)
    {
