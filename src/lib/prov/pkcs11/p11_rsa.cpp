@@ -147,19 +147,26 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
 
          std::vector<uint8_t> encrypted_data(ciphertext, ciphertext + ciphertext_len);
 
+         const size_t modulus_bytes = (m_key.get_n().bits() + 7) / 8;
+
          // blind for RSA/RAW decryption
-         if(! m_mechanism.padding_size())
+         const bool use_blinding = !m_mechanism.padding_size();
+
+         if(use_blinding)
             {
-            encrypted_data = BigInt::encode(m_blinder.blind(BigInt::decode(encrypted_data)));
+            const BigInt blinded = m_blinder.blind(BigInt::decode(encrypted_data));
+            // SoftHSM at least requires raw RSA inputs be == the modulus size
+            encrypted_data = unlock(BigInt::encode_1363(blinded, modulus_bytes));
             }
 
          secure_vector<uint8_t> decrypted_data;
          m_key.module()->C_Decrypt(m_key.session().handle(), encrypted_data, decrypted_data);
 
          // Unblind for RSA/RAW decryption
-         if(!m_mechanism.padding_size())
+         if(use_blinding)
             {
-            decrypted_data = BigInt::encode_1363(m_blinder.unblind(BigInt::decode(decrypted_data)), m_key.get_n().bits() / 8 );
+            const BigInt unblinded = m_blinder.unblind(BigInt::decode(decrypted_data));
+            decrypted_data = BigInt::encode_1363(unblinded, modulus_bytes);
             }
 
          valid_mask = 0xFF;
