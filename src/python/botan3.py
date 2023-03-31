@@ -2043,6 +2043,9 @@ def zfec_decode(k, n, indexes, inputs):
         from the provided shares (in `inputs`)
     """
 
+    if len(inputs) < k:
+        raise BotanException('Insufficient inputs for zfec decoding')
+
     p_size_t = c_size_t * len(indexes)
     c_indexes = p_size_t(*[c_size_t(index) for index in indexes])
     p_p_nbytes = c_char_p * n
