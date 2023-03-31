@@ -71,7 +71,7 @@ std::pair<BigInt,SymmetricKey> BOTAN_PUBLIC_API(2,11)
 * @param hash_id specifies a secure hash function
 */
 BigInt BOTAN_PUBLIC_API(2,0)
-   generate_srp6_verifier(const std::string& identifier,
+   srp6_generate_verifier(const std::string& identifier,
                           const std::string& password,
                           const std::vector<uint8_t>& salt,
                           const std::string& group_id,
@@ -86,7 +86,7 @@ BigInt BOTAN_PUBLIC_API(2,0)
 * @param hash_id specifies a secure hash function
 */
 BigInt BOTAN_PUBLIC_API(2,11)
-   generate_srp6_verifier(const std::string& identifier,
+   srp6_generate_verifier(const std::string& identifier,
                           const std::string& password,
                           const std::vector<uint8_t>& salt,
                           const DL_Group& group,

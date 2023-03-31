@@ -61,7 +61,7 @@ class SRP6_KAT_Tests final : public Text_Based_Test
 
          Botan::DL_Group group(group_id);
 
-         const Botan::BigInt v = Botan::generate_srp6_verifier(username, password, salt, group_id, hash);
+         const Botan::BigInt v = Botan::srp6_generate_verifier(username, password, salt, group_id, hash);
          result.test_eq("SRP verifier", v, exp_v);
 
          Botan::SRP6_Server_Session server;
@@ -120,7 +120,7 @@ class SRP6_RT_Tests final : public Test
                Test::rng().random_vec(salt, 16);
 
                const Botan::BigInt verifier =
-                  Botan::generate_srp6_verifier(username, password, salt, group_id, hash_id);
+                  Botan::srp6_generate_verifier(username, password, salt, group_id, hash_id);
 
                Botan::SRP6_Server_Session server;
 

@@ -2103,7 +2103,7 @@ int botan_srp6_server_session_step2(botan_srp6_server_session_t srp6,
 * @return 0 on success, negative on failure
 */
 BOTAN_PUBLIC_API(3,0)
-int botan_generate_srp6_verifier(const char *identifier, const char *password,
+int botan_srp6_generate_verifier(const char *identifier, const char *password,
                                  const uint8_t salt[], size_t salt_len,
                                  const char *group_id, const char *hash_id,
                                  uint8_t verifier[], size_t *verifier_len);

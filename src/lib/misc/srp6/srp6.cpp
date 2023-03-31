@@ -137,17 +137,17 @@ srp6_client_agree(const std::string& identifier,
    return std::make_pair(A, Sk);
    }
 
-BigInt generate_srp6_verifier(const std::string& identifier,
+BigInt srp6_generate_verifier(const std::string& identifier,
                               const std::string& password,
                               const std::vector<uint8_t>& salt,
                               const std::string& group_id,
                               const std::string& hash_id)
    {
    DL_Group group(group_id);
-   return generate_srp6_verifier(identifier, password, salt, group, hash_id);
+   return srp6_generate_verifier(identifier, password, salt, group, hash_id);
    }
 
-BigInt generate_srp6_verifier(const std::string& identifier,
+BigInt srp6_generate_verifier(const std::string& identifier,
                               const std::string& password,
                               const std::vector<uint8_t>& salt,
                               const DL_Group& group,
