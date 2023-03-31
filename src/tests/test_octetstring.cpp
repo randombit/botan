@@ -86,7 +86,7 @@ Test::Result test_xor()
    xor_result ^= os2;
    result.test_eq("OctetString XOR operations works as expected", xor_result, os2);
 
-   xor_result = os2 ^ os2;
+   xor_result = os2 ^ os2; // NOLINT(*-redundant-expression)
    result.test_eq("OctetString XOR operations works as expected", xor_result, os1);
 
    Botan::OctetString os3("0123456789ABCDEF");
