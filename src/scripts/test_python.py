@@ -771,7 +771,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         # Test successful authentication
         server = botan.Srp6ServerSession(group)
         salt = rng.get(24)
-        verifier = botan.generate_srp6_verifier(identity, password, salt, group, hash_fn)
+        verifier = botan.srp6_generate_verifier(identity, password, salt, group, hash_fn)
         b = server.step1(verifier, hash_fn, rng)
         (a, key_c) = botan.srp6_client_agree(identity, password, group, hash_fn, salt, b, rng)
         key_s = server.step2(a)

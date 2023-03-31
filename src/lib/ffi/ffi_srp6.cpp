@@ -130,7 +130,7 @@ int botan_srp6_server_session_step2(botan_srp6_server_session_t srp6,
 #endif
    }
 
-int botan_generate_srp6_verifier(const char* username, const char* password,
+int botan_srp6_generate_verifier(const char* username, const char* password,
                                  const uint8_t salt[], size_t salt_len,
                                  const char* group_id, const char* hash_id,
                                  uint8_t verifier[], size_t* verifier_len)
@@ -145,7 +145,7 @@ int botan_generate_srp6_verifier(const char* username, const char* password,
       try
          {
          std::vector<uint8_t> salt_vec(salt, salt + salt_len);
-         auto verifier_bn = Botan::generate_srp6_verifier(
+         auto verifier_bn = Botan::srp6_generate_verifier(
             username, password, salt_vec, group_id, hash_id);
          return write_vec_output(verifier, verifier_len,
                                  Botan::BigInt::encode(verifier_bn));
