@@ -96,6 +96,10 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKey : public virtual Public_Key
 /**
 * RSA Private Key
 */
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RSA_PublicKey
    {
    public:
@@ -185,6 +189,8 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RS
 
       std::shared_ptr<const RSA_Private_Data> m_private;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 }
 

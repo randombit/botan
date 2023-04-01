@@ -267,7 +267,7 @@ class Certificate_Store_MacOS_Impl
          m_keychains(nullptr)
          {
 BOTAN_DIAGNOSTIC_PUSH
-BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED
+BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
          // macOS 12.0 deprecates 'Custom keychain management', though the API still works.
          // Ideas for a replacement can be found in the discussion of GH #3122:
          //   https://github.com/randombit/botan/pull/3122

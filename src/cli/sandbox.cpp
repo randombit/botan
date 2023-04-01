@@ -111,7 +111,7 @@ bool Sandbox::init()
 #elif defined(BOTAN_TARGET_OS_HAS_SANDBOX_PROC)
 
   BOTAN_DIAGNOSTIC_PUSH
-  BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED
+  BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
    if (::sandbox_init(kSBXProfileNoWriteExceptTemporary, SANDBOX_NAMED, nullptr) < 0)
    {
        return false;

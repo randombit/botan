@@ -60,6 +60,9 @@ class BOTAN_PUBLIC_API(2,0) Curve25519_PublicKey : public virtual Public_Key
       std::vector<uint8_t> m_public;
    };
 
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) Curve25519_PrivateKey final : public Curve25519_PublicKey,
                                         public virtual Private_Key,
                                         public virtual PK_Key_Agreement_Key
@@ -108,6 +111,8 @@ class BOTAN_PUBLIC_API(2,0) Curve25519_PrivateKey final : public Curve25519_Publ
    private:
       secure_vector<uint8_t> m_private;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 typedef Curve25519_PublicKey X25519_PublicKey;
 typedef Curve25519_PrivateKey X25519_PrivateKey;

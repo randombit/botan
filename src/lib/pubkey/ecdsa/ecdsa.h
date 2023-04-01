@@ -88,6 +88,10 @@ class BOTAN_PUBLIC_API(2,0) ECDSA_PublicKey : public virtual EC_PublicKey
 /**
 * This class represents ECDSA Private Keys
 */
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) ECDSA_PrivateKey final : public ECDSA_PublicKey,
                                    public EC_PrivateKey
    {
@@ -122,6 +126,8 @@ class BOTAN_PUBLIC_API(2,0) ECDSA_PrivateKey final : public ECDSA_PublicKey,
                              std::string_view params,
                              std::string_view provider) const override;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 }
 

@@ -63,6 +63,9 @@ class BOTAN_PUBLIC_API(2,2) Ed25519_PublicKey : public virtual Public_Key
       std::vector<uint8_t> m_public;
    };
 
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,2) Ed25519_PrivateKey final : public Ed25519_PublicKey,
                                      public virtual Private_Key
    {
@@ -106,6 +109,8 @@ class BOTAN_PUBLIC_API(2,2) Ed25519_PrivateKey final : public Ed25519_PublicKey,
    private:
       secure_vector<uint8_t> m_private;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 void ed25519_gen_keypair(uint8_t pk[32], uint8_t sk[64], const uint8_t seed[32]);
 
