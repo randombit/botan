@@ -39,7 +39,7 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
       */
       Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                           const std::string& passphrase,
-                          std::shared_ptr<RandomNumberGenerator> rng,
+                          const std::shared_ptr<RandomNumberGenerator>& rng,
                           size_t max_sessions = 1000);
 
       Session_Manager_SQL(const Session_Manager_SQL&) = delete;

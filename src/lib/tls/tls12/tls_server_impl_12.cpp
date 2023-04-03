@@ -235,11 +235,11 @@ get_server_certs(const std::string& hostname,
 
 }
 
-Server_Impl_12::Server_Impl_12(std::shared_ptr<Callbacks> callbacks,
-                               std::shared_ptr<Session_Manager> session_manager,
-                               std::shared_ptr<Credentials_Manager> creds,
-                               std::shared_ptr<const Policy> policy,
-                               std::shared_ptr<RandomNumberGenerator> rng,
+Server_Impl_12::Server_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
+                               const std::shared_ptr<Session_Manager>& session_manager,
+                               const std::shared_ptr<Credentials_Manager>& creds,
+                               const std::shared_ptr<const Policy>& policy,
+                               const std::shared_ptr<RandomNumberGenerator>& rng,
                                bool is_datagram,
                                size_t io_buf_sz) :
    Channel_Impl_12(callbacks, session_manager, rng, policy,

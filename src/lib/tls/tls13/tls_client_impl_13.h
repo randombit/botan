@@ -45,13 +45,13 @@ class Client_Impl_13 : public Channel_Impl_13
       *
       * @param next_protocols specifies protocols to advertise with ALPN
       */
-      explicit Client_Impl_13(std::shared_ptr<Callbacks> callbacks,
-                              std::shared_ptr<Session_Manager> session_manager,
-                              std::shared_ptr<Credentials_Manager> creds,
-                              std::shared_ptr<const Policy> policy,
-                              std::shared_ptr<RandomNumberGenerator> rng,
+      explicit Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
+                              const std::shared_ptr<Session_Manager>& session_manager,
+                              const std::shared_ptr<Credentials_Manager>& creds,
+                              const std::shared_ptr<const Policy>& policy,
+                              const std::shared_ptr<RandomNumberGenerator>& rng,
                               Server_Information server_info = Server_Information(),
-                              std::vector<std::string> next_protocols = {});
+                              const std::vector<std::string>& next_protocols = {});
 
       /**
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension

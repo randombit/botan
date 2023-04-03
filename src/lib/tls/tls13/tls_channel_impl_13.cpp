@@ -40,11 +40,11 @@ bool is_error_alert(const Botan::TLS::Alert& alert)
 
 namespace Botan::TLS {
 
-Channel_Impl_13::Channel_Impl_13(std::shared_ptr<Callbacks> callbacks,
-                                 std::shared_ptr<Session_Manager> session_manager,
-                                 std::shared_ptr<Credentials_Manager> credentials_manager,
-                                 std::shared_ptr<RandomNumberGenerator> rng,
-                                 std::shared_ptr<const Policy> policy,
+Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
+                                 const std::shared_ptr<Session_Manager>& session_manager,
+                                 const std::shared_ptr<Credentials_Manager>& credentials_manager,
+                                 const std::shared_ptr<RandomNumberGenerator>& rng,
+                                 const std::shared_ptr<const Policy>& policy,
                                  bool is_server) :
    m_side(is_server ? Connection_Side::Server : Connection_Side::Client),
    m_callbacks(callbacks),

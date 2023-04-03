@@ -253,12 +253,12 @@ class TLS_Handshake_Test final
    public:
       TLS_Handshake_Test(const std::string& test_descr,
                          Botan::TLS::Protocol_Version offer_version,
-                         std::shared_ptr<Credentials_Manager_Test> creds,
-                         std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                         std::shared_ptr<const Botan::TLS::Policy> server_policy,
-                         std::shared_ptr<Botan::RandomNumberGenerator> rng,
-                         std::shared_ptr<Botan::TLS::Session_Manager> client_sessions,
-                         std::shared_ptr<Botan::TLS::Session_Manager> server_sessions,
+                         const std::shared_ptr<Credentials_Manager_Test>& creds,
+                         const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                         const std::shared_ptr<const Botan::TLS::Policy>& server_policy,
+                         const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
+                         const std::shared_ptr<Botan::TLS::Session_Manager>& client_sessions,
+                         const std::shared_ptr<Botan::TLS::Session_Manager>& server_sessions,
                          bool expect_client_auth) :
          m_offer_version(offer_version),
          m_results(test_descr),
@@ -271,11 +271,10 @@ class TLS_Handshake_Test final
          m_server_cb = std::make_shared<Test_Callbacks>(m_results, offer_version, m_s2c, m_server_recv);
          m_client_cb = std::make_shared<Test_Callbacks>(m_results, offer_version, m_c2s, m_client_recv);
 
-         m_server = std::make_unique<Botan::TLS::Server>(
-                                   m_server_cb, server_sessions, m_creds, server_policy, m_rng,
-                                   offer_version.is_datagram_protocol()
-            );
+         bool is_dtls = offer_version.is_datagram_protocol();
 
+         m_server = std::make_unique<Botan::TLS::Server>(
+            m_server_cb, server_sessions, m_creds, server_policy, m_rng, is_dtls);
          }
 
       void go();
@@ -750,11 +749,11 @@ class TLS_Unit_Tests final : public Test
    private:
       static void test_with_policy(const std::string& test_descr,
                                    std::vector<Test::Result>& results,
-                                   std::shared_ptr<Botan::TLS::Session_Manager> client_ses,
-                                   std::shared_ptr<Botan::TLS::Session_Manager> server_ses,
-                                   std::shared_ptr<Credentials_Manager_Test> creds,
+                                   const std::shared_ptr<Botan::TLS::Session_Manager>& client_ses,
+                                   const std::shared_ptr<Botan::TLS::Session_Manager>& server_ses,
+                                   const std::shared_ptr<Credentials_Manager_Test>& creds,
                                    const std::vector<Botan::TLS::Protocol_Version>& versions,
-                                   std::shared_ptr<const Botan::TLS::Policy> policy,
+                                   const std::shared_ptr<const Botan::TLS::Policy>& policy,
                                    bool client_auth = false)
          {
          auto rng = Test::rng_as_shared();
@@ -785,9 +784,9 @@ class TLS_Unit_Tests final : public Test
       static void test_all_versions(
          const std::string& test_descr,
          std::vector<Test::Result>& results,
-         std::shared_ptr<Botan::TLS::Session_Manager> client_ses,
-         std::shared_ptr<Botan::TLS::Session_Manager> server_ses,
-         std::shared_ptr<Credentials_Manager_Test> creds,
+         const std::shared_ptr<Botan::TLS::Session_Manager>& client_ses,
+         const std::shared_ptr<Botan::TLS::Session_Manager>& server_ses,
+         const std::shared_ptr<Credentials_Manager_Test>& creds,
          const std::string& kex_policy,
          const std::string& cipher_policy,
          const std::string& mac_policy,
@@ -820,9 +819,9 @@ class TLS_Unit_Tests final : public Test
       static void test_modern_versions(
          const std::string& test_descr,
          std::vector<Test::Result>& results,
-         std::shared_ptr<Botan::TLS::Session_Manager> client_ses,
-         std::shared_ptr<Botan::TLS::Session_Manager> server_ses,
-         std::shared_ptr<Credentials_Manager_Test> creds,
+         const std::shared_ptr<Botan::TLS::Session_Manager>& client_ses,
+         const std::shared_ptr<Botan::TLS::Session_Manager>& server_ses,
+         const std::shared_ptr<Credentials_Manager_Test>& creds,
          const std::string& kex_policy,
          const std::string& cipher_policy,
          const std::string& mac_policy = "AEAD",
@@ -836,9 +835,9 @@ class TLS_Unit_Tests final : public Test
       static void test_modern_versions(
          const std::string& test_descr,
          std::vector<Test::Result>& results,
-         std::shared_ptr<Botan::TLS::Session_Manager> client_ses,
-         std::shared_ptr<Botan::TLS::Session_Manager> server_ses,
-         std::shared_ptr<Credentials_Manager_Test> creds,
+         const std::shared_ptr<Botan::TLS::Session_Manager>& client_ses,
+         const std::shared_ptr<Botan::TLS::Session_Manager>& server_ses,
+         const std::shared_ptr<Credentials_Manager_Test>& creds,
          const std::string& kex_policy,
          const std::string& cipher_policy,
          const std::string& mac_policy,

@@ -22,7 +22,7 @@ enabled_checks = [
     'clang-analyzer-*',
     'cppcoreguidelines-*',
     'hicpp-*',
-#    'misc-*',
+    'misc-*',
     'modernize-*',
     'performance-*',
     'portability-*',

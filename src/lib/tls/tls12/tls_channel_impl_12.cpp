@@ -19,10 +19,10 @@
 
 namespace Botan::TLS {
 
-Channel_Impl_12::Channel_Impl_12(std::shared_ptr<Callbacks> callbacks,
-                                 std::shared_ptr<Session_Manager> session_manager,
-                                 std::shared_ptr<RandomNumberGenerator> rng,
-                                 std::shared_ptr<const Policy> policy,
+Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
+                                 const std::shared_ptr<Session_Manager>& session_manager,
+                                 const std::shared_ptr<RandomNumberGenerator>& rng,
+                                 const std::shared_ptr<const Policy>& policy,
                                  bool is_server,
                                  bool is_datagram,
                                  size_t reserved_io_buffer_size) :

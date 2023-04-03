@@ -74,7 +74,7 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
 class Client_Hello_Internal
    {
    public:
-      Client_Hello_Internal() : comp_methods({0}) {}
+      Client_Hello_Internal() : m_comp_methods({0}) {}
 
       Client_Hello_Internal(const std::vector<uint8_t>& buf)
          {
@@ -86,25 +86,25 @@ class Client_Hello_Internal
          const uint8_t major_version = reader.get_byte();
          const uint8_t minor_version = reader.get_byte();
 
-         legacy_version = Protocol_Version(major_version, minor_version);
-         random = reader.get_fixed<uint8_t>(32);
-         session_id = Session_ID(reader.get_range<uint8_t>(1, 0, 32));
+         m_legacy_version = Protocol_Version(major_version, minor_version);
+         m_random = reader.get_fixed<uint8_t>(32);
+         m_session_id = Session_ID(reader.get_range<uint8_t>(1, 0, 32));
 
-         if(legacy_version.is_datagram_protocol())
+         if(m_legacy_version.is_datagram_protocol())
             {
             auto sha256 = HashFunction::create_or_throw("SHA-256");
             sha256->update(reader.get_data_read_so_far());
 
-            hello_cookie = reader.get_range<uint8_t>(1, 0, 255);
+            m_hello_cookie = reader.get_range<uint8_t>(1, 0, 255);
 
             sha256->update(reader.get_remaining());
-            cookie_input_bits = sha256->final_stdvec();
+            m_cookie_input_bits = sha256->final_stdvec();
             }
 
-         suites = reader.get_range_vector<uint16_t>(2, 1, 32767);
-         comp_methods = reader.get_range_vector<uint8_t>(1, 1, 255);
+         m_suites = reader.get_range_vector<uint16_t>(2, 1, 32767);
+         m_comp_methods = reader.get_range_vector<uint8_t>(1, 1, 255);
 
-         extensions.deserialize(reader, Connection_Side::Client, Handshake_Type::ClientHello);
+         m_extensions.deserialize(reader, Connection_Side::Client, Handshake_Type::ClientHello);
          }
 
       /**
@@ -133,12 +133,12 @@ class Client_Hello_Internal
          //    TLS 1.3 ClientHellos are identified as having a legacy_version of
          //    0x0303 and a supported_versions extension present with 0x0304 as
          //    the highest version indicated therein.
-         if(!extensions.has<Supported_Versions>() ||
-            !extensions.get<Supported_Versions>()->supports(Protocol_Version::TLS_V13))
+         if(!extensions().has<Supported_Versions>() ||
+            !extensions().get<Supported_Versions>()->supports(Protocol_Version::TLS_V13))
             {
             // The exact legacy_version is ignored we just inspect it to
             // distinguish TLS and DTLS.
-            return (legacy_version.is_datagram_protocol())
+            return (m_legacy_version.is_datagram_protocol())
                ? Protocol_Version::DTLS_V12
                : Protocol_Version::TLS_V12;
             }
@@ -148,16 +148,28 @@ class Client_Hello_Internal
          return Protocol_Version::TLS_V13;
          }
 
-   public:
-      Protocol_Version legacy_version;
-      Session_ID session_id;
-      std::vector<uint8_t> random;
-      std::vector<uint16_t> suites;
-      std::vector<uint8_t> comp_methods;
-      Extensions extensions;
+      Protocol_Version legacy_version() const { return m_legacy_version; }
+      const Session_ID& session_id() const { return m_session_id; }
+      const std::vector<uint8_t>& random() const { return m_random; }
+      const std::vector<uint16_t>& ciphersuites() const { return m_suites; }
+      const std::vector<uint8_t>& comp_methods() const { return m_comp_methods; }
 
-      std::vector<uint8_t> hello_cookie; // DTLS only
-      std::vector<uint8_t> cookie_input_bits; // DTLS only
+      const std::vector<uint8_t>& hello_cookie() const { return m_hello_cookie; }
+      const std::vector<uint8_t>& hello_cookie_input_bits() const { return m_cookie_input_bits; }
+
+      const Extensions& extensions() const { return m_extensions; }
+      Extensions& extensions() { return m_extensions; }
+
+   public:
+      Protocol_Version m_legacy_version;
+      Session_ID m_session_id;
+      std::vector<uint8_t> m_random;
+      std::vector<uint16_t> m_suites;
+      std::vector<uint8_t> m_comp_methods;
+      Extensions m_extensions;
+
+      std::vector<uint8_t> m_hello_cookie; // DTLS only
+      std::vector<uint8_t> m_cookie_input_bits; // DTLS only
    };
 
 
@@ -185,44 +197,44 @@ Handshake_Type Client_Hello::type() const
 
 Protocol_Version Client_Hello::legacy_version() const
    {
-   return m_data->legacy_version;
+   return m_data->legacy_version();
    }
 
 const std::vector<uint8_t>& Client_Hello::random() const
    {
-   return m_data->random;
+   return m_data->random();
    }
 
 const Session_ID& Client_Hello::session_id() const
    {
-   return m_data->session_id;
+   return m_data->session_id();
    }
 
 const std::vector<uint8_t>& Client_Hello::compression_methods() const
    {
-   return m_data->comp_methods;
+   return m_data->comp_methods();
    }
 
 const std::vector<uint16_t>& Client_Hello::ciphersuites() const
    {
-   return m_data->suites;
+   return m_data->ciphersuites();
    }
 
 std::set<Extension_Code> Client_Hello::extension_types() const
    {
-   return m_data->extensions.extension_types();
+   return m_data->extensions().extension_types();
    }
 
 const Extensions& Client_Hello::extensions() const
    {
-   return m_data->extensions;
+   return m_data->extensions();
    }
 
 void Client_Hello_12::update_hello_cookie(const Hello_Verify_Request& hello_verify)
    {
-   BOTAN_STATE_CHECK(m_data->legacy_version.is_datagram_protocol());
+   BOTAN_STATE_CHECK(m_data->legacy_version().is_datagram_protocol());
 
-   m_data->hello_cookie = hello_verify.cookie();
+   m_data->m_hello_cookie = hello_verify.cookie();
    }
 
 /*
@@ -233,17 +245,17 @@ std::vector<uint8_t> Client_Hello::serialize() const
    std::vector<uint8_t> buf;
    buf.reserve(1024); // working around GCC warning
 
-   buf.push_back(m_data->legacy_version.major_version());
-   buf.push_back(m_data->legacy_version.minor_version());
-   buf += m_data->random;
+   buf.push_back(m_data->legacy_version().major_version());
+   buf.push_back(m_data->legacy_version().minor_version());
+   buf += m_data->random();
 
-   append_tls_length_value(buf, m_data->session_id.get(), 1);
+   append_tls_length_value(buf, m_data->session_id().get(), 1);
 
-   if(m_data->legacy_version.is_datagram_protocol())
-      { append_tls_length_value(buf, m_data->hello_cookie, 1); }
+   if(m_data->legacy_version().is_datagram_protocol())
+      { append_tls_length_value(buf, m_data->hello_cookie(), 1); }
 
-   append_tls_length_value(buf, m_data->suites, 2);
-   append_tls_length_value(buf, m_data->comp_methods, 1);
+   append_tls_length_value(buf, m_data->ciphersuites(), 2);
+   append_tls_length_value(buf, m_data->comp_methods(), 1);
 
    /*
    * May not want to send extensions at all in some cases. If so,
@@ -251,16 +263,16 @@ std::vector<uint8_t> Client_Hello::serialize() const
    * renegotiating with a modern server)
    */
 
-   buf += m_data->extensions.serialize(Connection_Side::Client);
+   buf += m_data->extensions().serialize(Connection_Side::Client);
 
    return buf;
    }
 
 std::vector<uint8_t> Client_Hello::cookie_input_data() const
    {
-   BOTAN_STATE_CHECK(!m_data->cookie_input_bits.empty());
+   BOTAN_STATE_CHECK(!m_data->hello_cookie_input_bits().empty());
 
-   return m_data->cookie_input_bits;
+   return m_data->hello_cookie_input_bits();
    }
 
 /*
@@ -268,12 +280,12 @@ std::vector<uint8_t> Client_Hello::cookie_input_data() const
 */
 bool Client_Hello::offered_suite(uint16_t ciphersuite) const
    {
-   return std::find(m_data->suites.cbegin(), m_data->suites.cend(), ciphersuite) != m_data->suites.cend();
+   return std::find(m_data->ciphersuites().cbegin(), m_data->ciphersuites().cend(), ciphersuite) != m_data->ciphersuites().cend();
    }
 
 std::vector<Signature_Scheme> Client_Hello::signature_schemes() const
    {
-   if(Signature_Algorithms* sigs = m_data->extensions.get<Signature_Algorithms>())
+   if(Signature_Algorithms* sigs = m_data->extensions().get<Signature_Algorithms>())
       { return sigs->supported_schemes(); }
    return {};
    }
@@ -284,7 +296,7 @@ std::vector<Signature_Scheme> Client_Hello::certificate_signature_schemes() cons
    //   If no "signature_algorithms_cert" extension is present, then the
    //   "signature_algorithms" extension also applies to signatures appearing
    //   in certificates.
-   if(Signature_Algorithms_Cert* sigs = m_data->extensions.get<Signature_Algorithms_Cert>())
+   if(Signature_Algorithms_Cert* sigs = m_data->extensions().get<Signature_Algorithms_Cert>())
       { return sigs->supported_schemes(); }
    else
       { return signature_schemes(); }
@@ -292,59 +304,59 @@ std::vector<Signature_Scheme> Client_Hello::certificate_signature_schemes() cons
 
 std::vector<Group_Params> Client_Hello::supported_ecc_curves() const
    {
-   if(Supported_Groups* groups = m_data->extensions.get<Supported_Groups>())
+   if(Supported_Groups* groups = m_data->extensions().get<Supported_Groups>())
       { return groups->ec_groups(); }
    return {};
    }
 
 std::vector<Group_Params> Client_Hello::supported_dh_groups() const
    {
-   if(Supported_Groups* groups = m_data->extensions.get<Supported_Groups>())
+   if(Supported_Groups* groups = m_data->extensions().get<Supported_Groups>())
       { return groups->dh_groups(); }
    return std::vector<Group_Params>();
    }
 
 bool Client_Hello_12::prefers_compressed_ec_points() const
    {
-   if(Supported_Point_Formats* ecc_formats = m_data->extensions.get<Supported_Point_Formats>())
+   if(Supported_Point_Formats* ecc_formats = m_data->extensions().get<Supported_Point_Formats>())
       { return ecc_formats->prefers_compressed(); }
    return false;
    }
 
 std::string Client_Hello::sni_hostname() const
    {
-   if(Server_Name_Indicator* sni = m_data->extensions.get<Server_Name_Indicator>())
+   if(Server_Name_Indicator* sni = m_data->extensions().get<Server_Name_Indicator>())
       { return sni->host_name(); }
    return "";
    }
 
 bool Client_Hello_12::secure_renegotiation() const
    {
-   return m_data->extensions.has<Renegotiation_Extension>();
+   return m_data->extensions().has<Renegotiation_Extension>();
    }
 
 std::vector<uint8_t> Client_Hello_12::renegotiation_info() const
    {
-   if(Renegotiation_Extension* reneg = m_data->extensions.get<Renegotiation_Extension>())
+   if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>())
       { return reneg->renegotiation_info(); }
    return {};
    }
 
 std::vector<Protocol_Version> Client_Hello::supported_versions() const
    {
-   if(Supported_Versions* versions = m_data->extensions.get<Supported_Versions>())
+   if(Supported_Versions* versions = m_data->extensions().get<Supported_Versions>())
       { return versions->versions(); }
    return {};
    }
 
 bool Client_Hello_12::supports_session_ticket() const
    {
-   return m_data->extensions.has<Session_Ticket_Extension>();
+   return m_data->extensions().has<Session_Ticket_Extension>();
    }
 
 Session_Ticket Client_Hello_12::session_ticket() const
    {
-   if(auto* ticket = m_data->extensions.get<Session_Ticket_Extension>())
+   if(auto* ticket = m_data->extensions().get<Session_Ticket_Extension>())
       { return ticket->contents(); }
    return {};
    }
@@ -365,46 +377,46 @@ std::optional<Session_Handle> Client_Hello_12::session_handle() const
 
 bool Client_Hello::supports_alpn() const
    {
-   return m_data->extensions.has<Application_Layer_Protocol_Notification>();
+   return m_data->extensions().has<Application_Layer_Protocol_Notification>();
    }
 
 bool Client_Hello_12::supports_extended_master_secret() const
    {
-   return m_data->extensions.has<Extended_Master_Secret>();
+   return m_data->extensions().has<Extended_Master_Secret>();
    }
 
 bool Client_Hello_12::supports_cert_status_message() const
    {
-   return m_data->extensions.has<Certificate_Status_Request>();
+   return m_data->extensions().has<Certificate_Status_Request>();
    }
 
 bool Client_Hello_12::supports_encrypt_then_mac() const
    {
-   return m_data->extensions.has<Encrypt_then_MAC>();
+   return m_data->extensions().has<Encrypt_then_MAC>();
    }
 
 bool Client_Hello::sent_signature_algorithms() const
    {
-   return m_data->extensions.has<Signature_Algorithms>();
+   return m_data->extensions().has<Signature_Algorithms>();
    }
 
 std::vector<std::string> Client_Hello::next_protocols() const
    {
-   if(auto alpn = m_data->extensions.get<Application_Layer_Protocol_Notification>())
+   if(auto alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>())
       { return alpn->protocols(); }
    return {};
    }
 
 std::vector<uint16_t> Client_Hello::srtp_profiles() const
    {
-   if(SRTP_Protection_Profiles* srtp = m_data->extensions.get<SRTP_Protection_Profiles>())
+   if(SRTP_Protection_Profiles* srtp = m_data->extensions().get<SRTP_Protection_Profiles>())
       { return srtp->profiles(); }
    return {};
    }
 
 const std::vector<uint8_t>& Client_Hello::cookie() const
    {
-   return m_data->hello_cookie;
+   return m_data->hello_cookie();
    }
 
 /*
@@ -438,7 +450,7 @@ Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data)
    {
    if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
       {
-      if(Renegotiation_Extension* reneg = m_data->extensions.get<Renegotiation_Extension>())
+      if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>())
          {
          if(!reneg->renegotiation_info().empty())
             throw TLS_Exception(Alert::HandshakeFailure,
@@ -447,7 +459,7 @@ Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data)
       else
          {
          // add fake extension
-         m_data->extensions.add(new Renegotiation_Extension());
+         m_data->extensions().add(new Renegotiation_Extension());
          }
       }
    }
@@ -469,12 +481,12 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  const Client_Hello_12::Settings& client_settings,
                                  const std::vector<std::string>& next_protocols)
    {
-   m_data->legacy_version = client_settings.protocol_version();
-   m_data->random = make_hello_random(rng, cb, policy);
-   m_data->suites = policy.ciphersuite_list(client_settings.protocol_version());
+   m_data->m_legacy_version = client_settings.protocol_version();
+   m_data->m_random = make_hello_random(rng, cb, policy);
+   m_data->m_suites = policy.ciphersuite_list(client_settings.protocol_version());
 
-   if(!policy.acceptable_protocol_version(m_data->legacy_version))
-      throw Internal_Error("Offering " + m_data->legacy_version.to_string() +
+   if(!policy.acceptable_protocol_version(m_data->legacy_version()))
+      throw Internal_Error("Offering " + m_data->legacy_version().to_string() +
                            " but our own policy does not accept it");
 
    /*
@@ -483,47 +495,47 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    */
 
    // EMS must always be used with TLS 1.2, regardless of the policy used.
-   m_data->extensions.add(new Extended_Master_Secret);
+   m_data->extensions().add(new Extended_Master_Secret);
 
    if(policy.negotiate_encrypt_then_mac())
-      { m_data->extensions.add(new Encrypt_then_MAC); }
+      { m_data->extensions().add(new Encrypt_then_MAC); }
 
-   m_data->extensions.add(new Session_Ticket_Extension());
+   m_data->extensions().add(new Session_Ticket_Extension());
 
-   m_data->extensions.add(new Renegotiation_Extension(reneg_info));
+   m_data->extensions().add(new Renegotiation_Extension(reneg_info));
 
-   m_data->extensions.add(new Supported_Versions(m_data->legacy_version, policy));
+   m_data->extensions().add(new Supported_Versions(m_data->legacy_version(), policy));
 
    if(!client_settings.hostname().empty())
-      { m_data->extensions.add(new Server_Name_Indicator(client_settings.hostname())); }
+      { m_data->extensions().add(new Server_Name_Indicator(client_settings.hostname())); }
 
    if(policy.support_cert_status_message())
-      m_data->extensions.add(new Certificate_Status_Request({}, {}));
+      m_data->extensions().add(new Certificate_Status_Request({}, {}));
 
    auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
    if(!supported_groups->ec_groups().empty())
       {
-      m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+      m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
-   m_data->extensions.add(supported_groups.release());
+   m_data->extensions().add(supported_groups.release());
 
-   m_data->extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   m_data->extensions().add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
    if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes())
       {
       // RFC 8446 4.2.3
       //    TLS 1.2 implementations SHOULD also process this extension.
       //    Implementations which have the same policy in both cases MAY omit
       //    the "signature_algorithms_cert" extension.
-      m_data->extensions.add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
+      m_data->extensions().add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
       }
 
    if(reneg_info.empty() && !next_protocols.empty())
-      { m_data->extensions.add(new Application_Layer_Protocol_Notification(next_protocols)); }
+      { m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocols)); }
 
-   if(m_data->legacy_version.is_datagram_protocol())
-      { m_data->extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles())); }
+   if(m_data->legacy_version().is_datagram_protocol())
+      { m_data->extensions().add(new SRTP_Protection_Profiles(policy.srtp_profiles())); }
 
-   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
+   cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
    hash.update(io.send(*this));
    }
@@ -540,23 +552,23 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  const Session_with_Handle& session,
                                  const std::vector<std::string>& next_protocols)
    {
-   m_data->legacy_version = session.session.version();
-   m_data->random = make_hello_random(rng, cb, policy);
+   m_data->m_legacy_version = session.session.version();
+   m_data->m_random = make_hello_random(rng, cb, policy);
 
    // RFC 5077 3.4
    //    When presenting a ticket, the client MAY generate and include a
    //    Session ID in the TLS ClientHello. [...] If a ticket is presented by
    //    the client, the server MUST NOT attempt to use the Session ID in the
    //    ClientHello for stateful session resumption.
-   m_data->session_id = session.handle.id().value_or(Session_ID(make_hello_random(rng, cb, policy)));
-   m_data->suites = policy.ciphersuite_list(m_data->legacy_version);
+   m_data->m_session_id = session.handle.id().value_or(Session_ID(make_hello_random(rng, cb, policy)));
+   m_data->m_suites = policy.ciphersuite_list(m_data->legacy_version());
 
    if(!policy.acceptable_protocol_version(session.session.version()))
-      throw Internal_Error("Offering " + m_data->legacy_version.to_string() +
+      throw Internal_Error("Offering " + m_data->legacy_version().to_string() +
                            " but our own policy does not accept it");
 
-   if(!value_exists(m_data->suites, session.session.ciphersuite_code()))
-      { m_data->suites.push_back(session.session.ciphersuite_code()); }
+   if(!value_exists(m_data->ciphersuites(), session.session.ciphersuite_code()))
+      { m_data->m_suites.push_back(session.session.ciphersuite_code()); }
 
    /*
    * As EMS must always be used with TLS 1.2, add it even if it wasn't used
@@ -564,44 +576,44 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    * RFC it should reject our resume attempt and upgrade us to a new session
    * with the EMS protection.
    */
-   m_data->extensions.add(new Extended_Master_Secret);
+   m_data->extensions().add(new Extended_Master_Secret);
 
    if(session.session.supports_encrypt_then_mac())
-      { m_data->extensions.add(new Encrypt_then_MAC); }
+      { m_data->extensions().add(new Encrypt_then_MAC); }
 
    if(session.handle.is_ticket())
-      { m_data->extensions.add(new Session_Ticket_Extension(session.handle.ticket().value())); }
+      { m_data->extensions().add(new Session_Ticket_Extension(session.handle.ticket().value())); }
 
-   m_data->extensions.add(new Renegotiation_Extension(reneg_info));
+   m_data->extensions().add(new Renegotiation_Extension(reneg_info));
 
-   m_data->extensions.add(new Server_Name_Indicator(session.session.server_info().hostname()));
+   m_data->extensions().add(new Server_Name_Indicator(session.session.server_info().hostname()));
 
    if(policy.support_cert_status_message())
-      m_data->extensions.add(new Certificate_Status_Request({}, {}));
+      m_data->extensions().add(new Certificate_Status_Request({}, {}));
 
    auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
 
    if(!supported_groups->ec_groups().empty())
       {
-      m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+      m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
 
-   m_data->extensions.add(supported_groups.release());
+   m_data->extensions().add(supported_groups.release());
 
-   m_data->extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   m_data->extensions().add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
    if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes())
       {
       // RFC 8446 4.2.3
       //    TLS 1.2 implementations SHOULD also process this extension.
       //    Implementations which have the same policy in both cases MAY omit
       //    the "signature_algorithms_cert" extension.
-      m_data->extensions.add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
+      m_data->extensions().add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
       }
 
    if(reneg_info.empty() && !next_protocols.empty())
-      { m_data->extensions.add(new Application_Layer_Protocol_Notification(next_protocols)); }
+      { m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocols)); }
 
-   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
+   cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
    hash.update(io.send(*this));
    }
@@ -611,7 +623,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
 Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data)
    : Client_Hello(std::move(data))
    {
-   const auto& exts = m_data->extensions;
+   const auto& exts = m_data->extensions();
 
    // RFC 8446 4.1.2
    //    TLS 1.3 ClientHellos are identified as having a legacy_version of
@@ -625,7 +637,7 @@ Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data)
    // RFC 8446 4.2.1
    //    Servers MAY abort the handshake upon receiving a ClientHello with
    //    legacy_version 0x0304 or later.
-   if(m_data->legacy_version.is_tls_13_or_later())
+   if(m_data->legacy_version().is_tls_13_or_later())
       {
       throw TLS_Exception(Alert::DecodeError,
                           "TLS 1.3 Client Hello has invalid legacy_version");
@@ -636,7 +648,7 @@ Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data)
    //    exactly one byte, set to zero, [...].  If a TLS 1.3 ClientHello is
    //    received with any other value in this field, the server MUST abort the
    //    handshake with an "illegal_parameter" alert.
-   if(m_data->comp_methods.size() != 1 || m_data->comp_methods.front() != 0)
+   if(m_data->comp_methods().size() != 1 || m_data->comp_methods().front() != 0)
       {
       throw TLS_Exception(Alert::IllegalParameter,
                           "Client did not offer NULL compression");
@@ -764,14 +776,14 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    //    "supported_versions" extension (Section 4.2.1) and the
    //    legacy_version field MUST be set to 0x0303, which is the version
    //    number for TLS 1.2.
-   m_data->legacy_version = Protocol_Version::TLS_V12;
-   m_data->random = make_hello_random(rng, cb, policy);
-   m_data->suites = policy.ciphersuite_list(Protocol_Version::TLS_V13);
+   m_data->m_legacy_version = Protocol_Version::TLS_V12;
+   m_data->m_random = make_hello_random(rng, cb, policy);
+   m_data->m_suites = policy.ciphersuite_list(Protocol_Version::TLS_V13);
 
    if(policy.allow_tls12())  // Note: DTLS 1.3 is NYI, hence dtls_12 is not checked
       {
       const auto legacy_suites = policy.ciphersuite_list(Protocol_Version::TLS_V12);
-      m_data->suites.insert(m_data->suites.end(), legacy_suites.cbegin(), legacy_suites.cend());
+      m_data->m_suites.insert(m_data->m_suites.end(), legacy_suites.cbegin(), legacy_suites.cend());
       }
 
    if(policy.tls_13_middlebox_compatibility_mode())
@@ -783,72 +795,72 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       //
       // Note: we won't ever offer a TLS 1.2 session. In such a case we would
       //       have instantiated a TLS 1.2 client in the first place.
-      m_data->session_id = Session_ID(make_hello_random(rng, cb, policy));
+      m_data->m_session_id = Session_ID(make_hello_random(rng, cb, policy));
       }
 
    if(!hostname.empty())
-      m_data->extensions.add(new Server_Name_Indicator(hostname));
+      m_data->extensions().add(new Server_Name_Indicator(hostname));
 
-   m_data->extensions.add(new Supported_Groups(policy.key_exchange_groups()));
+   m_data->extensions().add(new Supported_Groups(policy.key_exchange_groups()));
 
-   m_data->extensions.add(new Key_Share(policy, cb, rng));
+   m_data->extensions().add(new Key_Share(policy, cb, rng));
 
-   m_data->extensions.add(new Supported_Versions(Protocol_Version::TLS_V13, policy));
+   m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13, policy));
 
-   m_data->extensions.add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   m_data->extensions().add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
    if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes())
       {
       // RFC 8446 4.2.3
       //    Implementations which have the same policy in both cases MAY omit
       //    the "signature_algorithms_cert" extension.
-      m_data->extensions.add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
+      m_data->extensions().add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
       }
 
    // TODO: Support for PSK-only mode without a key exchange.
    //       This should be configurable in TLS::Policy and should allow no PSK
    //       support at all (e.g. to disable support for session resumption).
-   m_data->extensions.add(new PSK_Key_Exchange_Modes({PSK_Key_Exchange_Mode::PSK_DHE_KE}));
+   m_data->extensions().add(new PSK_Key_Exchange_Modes({PSK_Key_Exchange_Mode::PSK_DHE_KE}));
 
    if(policy.support_cert_status_message())
-      m_data->extensions.add(new Certificate_Status_Request({}, {}));
+      m_data->extensions().add(new Certificate_Status_Request({}, {}));
 
    // We currently support "record_size_limit" for TLS 1.3 exclusively. Hence,
    // when TLS 1.2 is advertised as a supported protocol, we must not offer this
    // extension.
    if(policy.record_size_limit().has_value() && !policy.allow_tls12())
-      m_data->extensions.add(new Record_Size_Limit(policy.record_size_limit().value()));
+      m_data->extensions().add(new Record_Size_Limit(policy.record_size_limit().value()));
 
    if(!next_protocols.empty())
-      m_data->extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
+      m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocols));
 
    if(policy.allow_tls12())
       {
-      m_data->extensions.add(new Renegotiation_Extension());
-      m_data->extensions.add(new Session_Ticket_Extension());
+      m_data->extensions().add(new Renegotiation_Extension());
+      m_data->extensions().add(new Session_Ticket_Extension());
 
       // EMS must always be used with TLS 1.2, regardless of the policy
-      m_data->extensions.add(new Extended_Master_Secret);
+      m_data->extensions().add(new Extended_Master_Secret);
 
       if(policy.negotiate_encrypt_then_mac())
-         m_data->extensions.add(new Encrypt_then_MAC);
+         m_data->extensions().add(new Encrypt_then_MAC);
 
-      if(m_data->extensions.has<Supported_Groups>() && !m_data->extensions.get<Supported_Groups>()->ec_groups().empty())
-         m_data->extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+      if(m_data->extensions().has<Supported_Groups>() && !m_data->extensions().get<Supported_Groups>()->ec_groups().empty())
+         m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
 
    if(session.has_value())
       {
-      m_data->extensions.add(new PSK(session.value(), cb));
+      m_data->extensions().add(new PSK(session.value(), cb));
       }
 
-   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
+   cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
-   if(m_data->extensions.has<PSK>())
+   if(m_data->extensions().has<PSK>())
       {
       // RFC 8446 4.2.11
       //    The "pre_shared_key" extension MUST be the last extension in the
       //    ClientHello (this facilitates implementation [...]).
-      if(m_data->extensions.all().back()->type() != Extension_Code::PresharedKey)
+      if(m_data->extensions().all().back()->type() != Extension_Code::PresharedKey)
          {
          throw TLS_Exception(Alert::InternalError,
                              "Application modified extensions of Client Hello, PSK is not last anymore");
@@ -875,14 +887,14 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
                             Callbacks& cb,
                             RandomNumberGenerator& rng)
    {
-   BOTAN_STATE_CHECK(m_data->extensions.has<Supported_Groups>());
-   BOTAN_STATE_CHECK(m_data->extensions.has<Key_Share>());
+   BOTAN_STATE_CHECK(m_data->extensions().has<Supported_Groups>());
+   BOTAN_STATE_CHECK(m_data->extensions().has<Key_Share>());
 
    auto hrr_ks = hrr.extensions().get<Key_Share>();
-   const auto& supported_groups = m_data->extensions.get<Supported_Groups>()->groups();
+   const auto& supported_groups = m_data->extensions().get<Supported_Groups>()->groups();
 
    if(hrr.extensions().has<Key_Share>())
-      m_data->extensions.get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, cb, rng);
+      m_data->extensions().get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, cb, rng);
 
    // RFC 8446 4.2.2
    //    When sending the new ClientHello, the client MUST copy
@@ -894,17 +906,17 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    //    connections.
    if(hrr.extensions().has<Cookie>())
       {
-      BOTAN_STATE_CHECK(!m_data->extensions.has<Cookie>());
-      m_data->extensions.add(new Cookie(hrr.extensions().get<Cookie>()->get_cookie()));
+      BOTAN_STATE_CHECK(!m_data->extensions().has<Cookie>());
+      m_data->extensions().add(new Cookie(hrr.extensions().get<Cookie>()->get_cookie()));
       }
 
    // Note: the consumer of the TLS implementation won't be able to distinguish
    //       invocations to this callback due to the first Client_Hello or the
    //       retried Client_Hello after receiving a Hello_Retry_Request. We assume
    //       that the user keeps and detects this state themselves.
-   cb.tls_modify_extensions(m_data->extensions, Connection_Side::Client, type());
+   cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
-   auto psk = m_data->extensions.get<PSK>();
+   auto psk = m_data->extensions().get<PSK>();
    if(psk)
       {
       // Cipher suite should always be a known suite as this is checked upstream
@@ -931,10 +943,10 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch)
    //    to its ClientHello with a HelloRetryRequest. In that case, the client
    //    MUST send the same ClientHello without modification, except as follows:
 
-   if(m_data->session_id != new_ch.m_data->session_id ||
-      m_data->random != new_ch.m_data->random ||
-      m_data->suites != new_ch.m_data->suites ||
-      m_data->comp_methods != new_ch.m_data->comp_methods)
+   if(m_data->session_id() != new_ch.m_data->session_id() ||
+      m_data->random() != new_ch.m_data->random() ||
+      m_data->ciphersuites() != new_ch.m_data->ciphersuites() ||
+      m_data->comp_methods() != new_ch.m_data->comp_methods())
       {
       throw TLS_Exception(Alert::IllegalParameter, "Client Hello core values changed after Hello Retry Request");
       }
@@ -1026,7 +1038,7 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch)
 
 void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths)
    {
-   auto psk = m_data->extensions.get<PSK>();
+   auto psk = m_data->extensions().get<PSK>();
    if(!psk || psk->empty())
       return;
 
@@ -1050,7 +1062,7 @@ std::optional<Protocol_Version> Client_Hello_13::highest_supported_version(const
    //    which versions of TLS it supports and by the server to indicate which
    //    version it is using. The extension contains a list of supported
    //    versions in preference order, with the most preferred version first.
-   const auto supvers = m_data->extensions.get<Supported_Versions>();
+   const auto supvers = m_data->extensions().get<Supported_Versions>();
    BOTAN_ASSERT_NONNULL(supvers);
 
    std::optional<Protocol_Version> result;

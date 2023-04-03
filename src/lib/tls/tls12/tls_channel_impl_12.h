@@ -60,10 +60,10 @@ class Channel_Impl_12 : public Channel_Impl
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-      explicit Channel_Impl_12(std::shared_ptr<Callbacks> callbacks,
-                               std::shared_ptr<Session_Manager> session_manager,
-                               std::shared_ptr<RandomNumberGenerator> rng,
-                               std::shared_ptr<const Policy> policy,
+      explicit Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
+                               const std::shared_ptr<Session_Manager>& session_manager,
+                               const std::shared_ptr<RandomNumberGenerator>& rng,
+                               const std::shared_ptr<const Policy>& policy,
                                bool is_server,
                                bool is_datagram,
                                size_t io_buf_sz = TLS::Channel::IO_BUF_DEFAULT_SIZE);

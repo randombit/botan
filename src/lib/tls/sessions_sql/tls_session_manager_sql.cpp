@@ -17,7 +17,7 @@ namespace Botan::TLS {
 
 Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                                          const std::string& passphrase,
-                                         std::shared_ptr<RandomNumberGenerator> rng,
+                                         const std::shared_ptr<RandomNumberGenerator>& rng,
                                          size_t max_sessions) :
    Session_Manager(rng),
    m_db(std::move(db)),
