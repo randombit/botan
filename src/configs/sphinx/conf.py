@@ -3,8 +3,11 @@
 
 import sys
 import re
+import json
+import os
 
-#import sphinx
+from docutils import nodes
+from docutils.parsers.rst import Directive
 
 def check_for_tag(tag):
     # Nasty hack :(
@@ -39,6 +42,18 @@ def parse_version_file(version_path):
             results[key] = val
     return results
 
+
+def read_config(config):
+    try:
+        f = open(config, encoding='utf8')
+        cfg = json.load(f)
+        f.close()
+    except OSError as ex:
+        raise Exception('Failed to load build config %s - is build dir correct?' % (config)) from ex
+
+    return cfg
+
+
 version_info = parse_version_file('../../build-data/version.txt')
 
 version_major = version_info['release_major']
@@ -48,7 +63,7 @@ version_suffix = version_info['release_suffix']
 
 is_website_build = check_for_tag('website')
 
-needs_sphinx = '1.2'
+needs_sphinx = '4.0'
 
 templates_path = ['templates']
 
@@ -59,7 +74,7 @@ source_encoding = 'utf-8-sig'
 master_doc = 'contents'
 
 project = u'botan'
-copyright = u'2000-2022, The Botan Authors'
+copyright = u'2000-2023, The Botan Authors'
 
 version = '%d.%d' % (version_major, version_minor)
 release = '%d.%d.%d%s' % (version_major, version_minor, version_patch, version_suffix)
@@ -93,6 +108,40 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+extensions = []
+
+breathe_projects = {}
+breathe_default_project = None
+
+class MockBreatheDirective(Directive):
+    has_content = True
+
+    @staticmethod
+    def register(app):
+        directives = [
+            "doxygenindex", "autodoxygenindex", "doxygenfunction", "doxygenstruct",
+            "doxygenclass", "doxygeninterface", "doxygenvariable", "doxygendefine",
+            "doxygenconcept", "doxygenenum", "doxygenenumvalue", "doxygentypedef",
+            "doxygenunion", "doxygennamespace", "doxygengroup", "doxygenfile",
+            "autodoxygenfile", "doxygenpage"]
+        for d in directives:
+            app.add_directive(d, MockBreatheDirective)
+
+    def run(self):
+        txt = '[Missing Breathe Content: %s]' % (self.content[0] if len(self.content) > 0 else '-')
+        return [nodes.paragraph(text=txt)]
+
+def setup(app):
+    global breathe_projects, breathe_default_project # pylint: disable=global-statement
+
+    build_dir = os.path.normpath(os.path.join(app.outdir, '../..'))
+    cfg = read_config(os.path.join(build_dir, 'build_config.json'))
+    if bool(cfg['with_breathe']):
+        breathe_projects = {'botan': os.path.join(build_dir, 'docs/doxygen/xml')}
+        breathe_default_project = 'botan'
+        app.setup_extension('breathe')
+    else:
+        MockBreatheDirective.register(app)
 
 # -- Options for HTML output ---------------------------------------------------
 
