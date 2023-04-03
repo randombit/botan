@@ -141,7 +141,7 @@ TREEVIEW_WIDTH         = 250
 GENERATE_LATEX = NO
 GENERATE_MAN = NO
 GENERATE_RTF = NO
-GENERATE_XML = NO
+GENERATE_XML = %{generate_doxygen_xml}
 
 #---------------------------------------------------------------------------
 # Configuration options related to the preprocessor
