@@ -76,7 +76,7 @@ if type -p "apt-get"; then
         echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
 
     elif [ "$TARGET" = "docs" ]; then
-        sudo apt-get -qq install doxygen python-docutils python3-sphinx
+        sudo apt-get -qq install doxygen python3-docutils python3-sphinx python3-breathe
     fi
 else
     export HOMEBREW_NO_AUTO_UPDATE=1
