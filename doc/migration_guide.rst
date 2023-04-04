@@ -26,12 +26,25 @@ algorithm headers (such as ``aes.h``) have been removed. Instead you should
 create objects via the factory methods (in the case of AES,
 ``BlockCipher::create``) which works in both 2.x and 3.0
 
+Build Artifacts
+---------------
+
+For consistency with other platforms the DLL is now suffixed with the library's
+major version on Windows as well.
+
 TLS
 ---
 
 Starting with Botan 3.0 TLS 1.3 is supported.
 This development required a number of backward-incompatible changes to
 accomodate the protocol differences to TLS 1.2, which is still supported.
+
+Build modules
+^^^^^^^^^^^^^
+
+The build module ``tls`` is now internal and contains common TLS helpers. Users
+have to explicitly enable ``tls12`` and/or ``tls13``. Note that for Botan 3.0 it
+is not (yet) possible to exclusively enable TLS 1.3 at build time.
 
 Removed Functionality
 ^^^^^^^^^^^^^^^^^^^^^
