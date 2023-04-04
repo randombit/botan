@@ -13,118 +13,6 @@ operations such as authenticated encryption.
    modes or MACs), or in the very rare situation where ECB is required,
    eg for compatibility with an existing system.
 
-.. cpp:class:: BlockCipher
-
-  .. cpp:function:: static std::unique_ptr<BlockCipher> create(const std::string& algo_spec, \
-                                                               const std::string& provider = "")
-
-      Create a new block cipher object, or else return null.
-
-  .. cpp:function:: static std::unique_ptr<BlockCipher> create_or_throw(const std::string& algo_spec, \
-                                                                        const std::string& provider = "")
-
-      Like ``create``, except instead of returning null an exception is thrown
-      if the cipher is not known.
-
-  .. cpp:function:: void set_key(const uint8_t* key, size_t length)
-
-      This sets the key to the value specified. Most algorithms only accept keys
-      of certain lengths. If you attempt to call ``set_key`` with a key length
-      that is not supported, the exception ``Invalid_Key_Length`` will be
-      thrown.
-
-      In all cases, ``set_key`` must be called on an object before any data
-      processing (encryption, decryption, etc) is done by that object. If this
-      is not done, an exception will be thrown.
-      thrown.
-
-  .. cpp:function:: bool valid_keylength(size_t length) const
-
-     This function returns true if and only if *length* is a valid keylength for
-     this algorithm.
-
-  .. cpp:function:: size_t minimum_keylength() const
-
-     Return the smallest key length (in bytes) that is acceptable for the
-     algorithm.
-
-  .. cpp:function:: size_t maximum_keylength() const
-
-     Return the largest key length (in bytes) that is acceptable for the
-     algorithm.
-
-  .. cpp:function:: std::string name() const
-
-      Return a human readable name for this algorithm. This is guaranteed to round-trip with
-      ``create`` and ``create_or_throw`` calls, ie create("Foo")->name() == "Foo"
-
-  .. cpp:function:: void clear()
-
-     Zero out the key. The key must be reset before the cipher object can be used.
-
-  .. cpp:function:: std::unique_ptr<BlockCipher> new_object() const
-
-     Return a newly allocated BlockCipher object of the same type as this one.
-     The new object is unkeyed.
-
-  .. cpp:function:: size_t block_size() const
-
-      Return the size (in *bytes*) of the cipher.
-
-  .. cpp:function:: size_t parallelism() const
-
-     Return the parallelism underlying this implementation of the cipher. This
-     value can vary across versions and machines. A return value of N means that
-     encrypting or decrypting with N blocks can operate in parallel.
-
-  .. cpp:function:: size_t parallel_bytes() const
-
-     Returns ``parallelism`` multiplied by the block size as well as a small
-     fudge factor. That's because even ciphers that have no implicit parallelism
-     typically see a small speedup for being called with several blocks due to
-     caching effects.
-
-  .. cpp:function:: std::string provider() const
-
-     Return the provider type. Default value is "base" but can be any arbitrary string.
-     Other example values are "sse2", "avx2", "openssl".
-
-  .. cpp:function:: void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-
-     Encrypt *blocks* blocks of data, taking the input from the array *in* and
-     placing the ciphertext into *out*. The two pointers may be identical, but
-     should not overlap ranges.
-
-  .. cpp:function:: void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-
-     Decrypt *blocks* blocks of data, taking the input from the array *in* and
-     placing the plaintext into *out*. The two pointers may be identical, but
-     should not overlap ranges.
-
-  .. cpp:function:: void encrypt(const uint8_t in[], uint8_t out[]) const
-
-     Encrypt a single block. Equivalent to :cpp:func:`encrypt_n`\ (in, out, 1).
-
-  .. cpp:function:: void encrypt(uint8_t block[]) const
-
-     Encrypt a single block. Equivalent to :cpp:func:`encrypt_n`\ (block, block, 1)
-
-  .. cpp:function:: void decrypt(const uint8_t in[], uint8_t out[]) const
-
-     Decrypt a single block. Equivalent to :cpp:func:`decrypt_n`\ (in, out, 1)
-
-  .. cpp:function:: void decrypt(uint8_t block[]) const
-
-     Decrypt a single block. Equivalent to :cpp:func:`decrypt_n`\ (block, block, 1)
-
-  .. cpp:function:: template<typename Alloc> void encrypt(std::vector<uint8_t, Alloc>& block) const
-
-     Assumes ``block`` is of a multiple of the block size.
-
-  .. cpp:function:: template<typename Alloc> void decrypt(std::vector<uint8_t, Alloc>& block) const
-
-     Assumes ``block`` is of a multiple of the block size.
-
 Code Example
 -----------------
 
@@ -133,6 +21,14 @@ block of plaintext with AES-256 using two different keys.
 
 .. literalinclude:: /../src/examples/aes.cpp
    :language: cpp
+
+API Overview
+------------
+
+.. container:: toggle
+
+   .. doxygenclass:: Botan::BlockCipher
+      :members: create,create_or_throw,set_key,minimum_keylength,maximum_keylength,encrypt,decrypt,encrypt_n,decrypt_n
 
 Available Ciphers
 ---------------------
