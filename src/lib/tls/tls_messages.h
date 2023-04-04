@@ -452,8 +452,6 @@ class BOTAN_UNSTABLE_API Hello_Retry_Request final : public Server_Hello_13
       Handshake_Type wire_type() const override { return Handshake_Type::ServerHello; }
    };
 
-#endif // BOTAN_HAS_TLS_13
-
 class BOTAN_UNSTABLE_API Encrypted_Extensions final : public Handshake_Message
    {
    public:
@@ -469,6 +467,8 @@ class BOTAN_UNSTABLE_API Encrypted_Extensions final : public Handshake_Message
    private:
       Extensions m_extensions;
    };
+
+#endif // BOTAN_HAS_TLS_13
 
 /**
 * Client Key Exchange Message
@@ -527,6 +527,8 @@ class BOTAN_UNSTABLE_API Certificate_12 final : public Handshake_Message
    private:
       std::vector<X509_Certificate> m_certs;
    };
+
+#if defined(BOTAN_HAS_TLS_13)
 
 class Certificate_Request_13;
 
@@ -614,6 +616,8 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
       std::vector<Certificate_Entry> m_entries;
       Connection_Side                m_side;
    };
+
+#endif // BOTAN_HAS_TLS_13
 
 /**
 * Certificate Status (RFC 6066)
@@ -997,6 +1001,8 @@ class BOTAN_UNSTABLE_API Change_Cipher_Spec final : public Handshake_Message
          { return std::vector<uint8_t>(1, 1); }
    };
 
+#if defined(BOTAN_HAS_TLS_13)
+
 class BOTAN_UNSTABLE_API Key_Update final : public Handshake_Message
    {
    public:
@@ -1012,8 +1018,6 @@ class BOTAN_UNSTABLE_API Key_Update final : public Handshake_Message
    private:
       bool m_update_requested;
    };
-
-#if defined(BOTAN_HAS_TLS_13)
 
 namespace {
 template <typename T>
