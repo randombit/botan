@@ -4,7 +4,8 @@ TLS -> 20201128
 
 <module_info>
 name -> "Transport Layer Security"
-brief -> "TLS protocol implementation"
+brief -> "Common functionality for TLS"
+type -> "Internal"
 </module_info>
 
 <header:public>
@@ -54,6 +55,5 @@ rng
 rsa
 sha2_32
 sha2_64
-tls12
 x509
 </requires>

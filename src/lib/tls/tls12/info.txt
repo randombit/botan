@@ -4,6 +4,7 @@ TLS_12 -> 20210608
 
 <module_info>
 name -> "TLS 1.2"
+brief -> "TLS 1.2 protocol implementation"
 </module_info>
 
 <header:public>

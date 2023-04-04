@@ -4,6 +4,7 @@ TLS_13 -> 20210721
 
 <module_info>
 name -> "TLS 1.3"
+brief -> "TLS 1.3 protocol implementation"
 </module_info>
 
 <header:public>
@@ -24,4 +25,5 @@ tls_transcript_hash_13.h
 <requires>
 hkdf
 tls
+tls12
 </requires>
