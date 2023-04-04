@@ -24,6 +24,10 @@ namespace PKCS11 {
 class Session;
 
 /// Represents a PKCS#11 ECDSA public key
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_PublicKey final : public PKCS11_EC_PublicKey, public virtual ECDSA_PublicKey
    {
    public:
@@ -57,6 +61,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_PublicKey final : public PKCS11_EC_Publ
          create_verification_op(std::string_view params,
                                 std::string_view provider) const override;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 /// Represents a PKCS#11 ECDSA private key
 class BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_PrivateKey

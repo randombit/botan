@@ -73,6 +73,9 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PublicKey : public virtual Public_Key
       size_t m_code_length;
    };
 
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_PublicKey,
                                       public virtual Private_Key
    {
@@ -140,6 +143,8 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_
       size_t m_codimension;
       size_t m_dimension;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 /**
 * Estimate work factor for McEliece

@@ -103,6 +103,9 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
       std::shared_ptr<Dilithium_PublicKeyInternal> m_public;
    };
 
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithium_PublicKey,
    public virtual Botan::Private_Key
    {
@@ -141,6 +144,8 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
 
       std::shared_ptr<Dilithium_PrivateKeyInternal> m_private;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 } // namespace Botan
 

@@ -184,6 +184,10 @@ enum class WOTS_Derivation_Method
  *     Release: May 2018.
  *     https://datatracker.ietf.org/doc/rfc8391/
  **/
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKey,
    public virtual Private_Key
    {
@@ -316,6 +320,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
 
       std::shared_ptr<XMSS_PrivateKey_Internal> m_private;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 }
 

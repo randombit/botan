@@ -75,6 +75,10 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PublicKey : public virtual Public_Key
 /**
 * ElGamal Private Key
 */
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey final :
    public ElGamal_PublicKey,
    public virtual Private_Key
@@ -121,6 +125,8 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey final :
    private:
       std::shared_ptr<const DL_PrivateKey> m_private_key;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 }
 

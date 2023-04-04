@@ -80,6 +80,10 @@ class BOTAN_PUBLIC_API(2,0) DSA_PublicKey : public virtual Public_Key
 /**
 * DSA Private Key
 */
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) DSA_PrivateKey final :
    public DSA_PublicKey,
    public virtual Private_Key
@@ -125,6 +129,8 @@ class BOTAN_PUBLIC_API(2,0) DSA_PrivateKey final :
    private:
       std::shared_ptr<const DL_PrivateKey> m_private_key;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 }
 

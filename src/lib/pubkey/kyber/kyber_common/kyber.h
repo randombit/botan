@@ -115,6 +115,9 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key
       std::shared_ptr<Kyber_PublicKeyInternal> m_public;
    };
 
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_PublicKey, public virtual Private_Key
    {
    public:
@@ -140,6 +143,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
 
       std::shared_ptr<Kyber_PrivateKeyInternal> m_private;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 } // namespace Botan
 
