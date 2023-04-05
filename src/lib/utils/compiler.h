@@ -64,15 +64,6 @@
 #endif
 
 /*
-* Define BOTAN_FUNC_ISA
-*/
-#if defined(__GNUC__) || defined(__clang__)
-  #define BOTAN_FUNC_ISA(isa) __attribute__ ((target(isa)))
-#else
-  #define BOTAN_FUNC_ISA(isa)
-#endif
-
-/*
 * Define BOTAN_COMPILER_HAS_BUILTIN
 */
 #if defined(__has_builtin)
@@ -82,15 +73,31 @@
 #endif
 
 /*
+* Define BOTAN_COMPILER_HAS_ATTRIBUTE
+*/
+#if defined(__has_attribute)
+  #define BOTAN_COMPILER_HAS_ATTRIBUTE(x) __has_attribute(x)
+  #define BOTAN_COMPILER_ATTRIBUTE(x) __attribute__((x))
+#else
+  #define BOTAN_COMPILER_HAS_ATTRIBUTE(x) 0
+  #define BOTAN_COMPILER_ATTRIBUTE(x) /**/
+#endif
+
+/*
+* Define BOTAN_FUNC_ISA
+*/
+#if BOTAN_COMPILER_HAS_ATTRIBUTE(target)
+  #define BOTAN_FUNC_ISA(isa) BOTAN_COMPILER_ATTRIBUTE(target(isa))
+#else
+  #define BOTAN_FUNC_ISA(isa)
+#endif
+
+/*
 * Define BOTAN_MALLOC_FN
 */
-#if defined(__ibmxl__)
-  /* XLC pretends to be both Clang and GCC, but is neither */
-  #define BOTAN_MALLOC_FN __attribute__ ((malloc))
-#elif defined(__clang__)
-  #define BOTAN_MALLOC_FN __attribute__ ((malloc, alloc_size(1,2)))
-#elif defined(__GNUC__)
-  #define BOTAN_MALLOC_FN __attribute__ ((malloc))
+
+#if BOTAN_COMPILER_HAS_ATTRIBUTE(malloc)
+  #define BOTAN_MALLOC_FN BOTAN_COMPILER_ATTRIBUTE(malloc)
 #elif defined(_MSC_VER)
   #define BOTAN_MALLOC_FN __declspec(restrict)
 #else
@@ -104,8 +111,8 @@
 
   #if defined(__cplusplus)
     #define BOTAN_DEPRECATED(msg) [[deprecated(msg)]]
-  #elif defined(__clang__) || defined(__GNUC__)
-    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
+  #elif BOTAN_COMPILER_HAS_ATTRIBUTE(deprecated)
+    #define BOTAN_DEPRECATED(msg) BOTAN_COMPILER_ATTRIBUTE(deprecated(msg))
   #elif defined(_MSC_VER)
     #define BOTAN_DEPRECATED(msg) __declspec(deprecated(msg))
   #endif
@@ -142,8 +149,8 @@
 */
 #if !defined(BOTAN_FORCE_INLINE)
 
-  #if defined (__clang__) || defined (__GNUC__)
-    #define BOTAN_FORCE_INLINE __attribute__ ((__always_inline__)) inline
+  #if BOTAN_COMPILER_HAS_ATTRIBUTE(always_inline)
+    #define BOTAN_FORCE_INLINE inline BOTAN_COMPILER_ATTRIBUTE(always_inline)
 
   #elif defined (_MSC_VER)
     #define BOTAN_FORCE_INLINE __forceinline
