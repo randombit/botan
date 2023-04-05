@@ -66,10 +66,15 @@ mlock_allocator::~mlock_allocator()
       }
    }
 
+namespace {
+
+BOTAN_EARLY_INIT(101) mlock_allocator g_mlock_allocator;
+
+}
+
 mlock_allocator& mlock_allocator::instance()
    {
-   static mlock_allocator mlock;
-   return mlock;
+   return g_mlock_allocator;
    }
 
 }

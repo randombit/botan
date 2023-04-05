@@ -29,11 +29,11 @@ class mlock_allocator final
 
       mlock_allocator& operator=(const mlock_allocator&) = delete;
 
-   private:
       mlock_allocator();
 
       ~mlock_allocator();
 
+   private:
       std::unique_ptr<Memory_Pool> m_pool;
       std::vector<void*> m_locked_pages;
    };
