@@ -213,7 +213,7 @@ uint16_t choose_ciphersuite(
    }
 
 std::map<std::string, std::vector<X509_Certificate>>
-get_server_certs(const std::string& hostname,
+get_server_certs(std::string_view hostname,
                  const std::vector<Signature_Scheme>& cert_sig_schemes,
                  Credentials_Manager& creds)
    {
@@ -224,7 +224,7 @@ get_server_certs(const std::string& hostname,
    for(size_t i = 0; cert_types[i]; ++i)
       {
       const std::vector<X509_Certificate> certs =
-         creds.cert_chain_single_type(cert_types[i], to_algorithm_identifiers(cert_sig_schemes), "tls-server", hostname);
+         creds.cert_chain_single_type(cert_types[i], to_algorithm_identifiers(cert_sig_schemes), "tls-server", std::string(hostname));
 
       if(!certs.empty())
          cert_chains[cert_types[i]] = certs;

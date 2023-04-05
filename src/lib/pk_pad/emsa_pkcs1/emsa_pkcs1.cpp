@@ -93,7 +93,7 @@ EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw()
    // m_hash_id, m_hash_name left empty
    }
 
-EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw(const std::string& hash_algo)
+EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw(std::string_view hash_algo)
    {
    std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo));
    m_hash_id = pkcs_hash_id(hash_algo);

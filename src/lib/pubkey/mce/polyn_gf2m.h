@@ -14,7 +14,6 @@
 
 #include <botan/secmem.h>
 #include <utility>
-#include <string>
 
 namespace Botan {
 
@@ -103,8 +102,6 @@ class polyn_gf2m
          {
          m_coeff[i] ^= v;
          }
-
-      std::string to_string() const;
 
       void encode(uint32_t min_numo_coeffs, uint8_t* mem, uint32_t mem_len) const;
 

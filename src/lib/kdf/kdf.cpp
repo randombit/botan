@@ -54,7 +54,7 @@ namespace {
 
 template<typename KDF_Type>
 std::unique_ptr<KDF>
-kdf_create_mac_or_hash(const std::string& nm)
+kdf_create_mac_or_hash(std::string_view nm)
    {
    if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", nm)))
       return std::make_unique<KDF_Type>(std::move(mac));

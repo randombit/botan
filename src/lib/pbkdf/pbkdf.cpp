@@ -74,7 +74,7 @@ std::vector<std::string> PBKDF::providers(std::string_view algo_spec)
    }
 
 void PBKDF::pbkdf_timed(uint8_t out[], size_t out_len,
-                        const std::string& passphrase,
+                        std::string_view passphrase,
                         const uint8_t salt[], size_t salt_len,
                         std::chrono::milliseconds msec,
                         size_t& iterations) const
@@ -83,7 +83,7 @@ void PBKDF::pbkdf_timed(uint8_t out[], size_t out_len,
    }
 
 void PBKDF::pbkdf_iterations(uint8_t out[], size_t out_len,
-                             const std::string& passphrase,
+                             std::string_view passphrase,
                              const uint8_t salt[], size_t salt_len,
                              size_t iterations) const
    {
@@ -97,7 +97,7 @@ void PBKDF::pbkdf_iterations(uint8_t out[], size_t out_len,
    }
 
 secure_vector<uint8_t> PBKDF::pbkdf_iterations(size_t out_len,
-                                            const std::string& passphrase,
+                                            std::string_view passphrase,
                                             const uint8_t salt[], size_t salt_len,
                                             size_t iterations) const
    {
@@ -107,7 +107,7 @@ secure_vector<uint8_t> PBKDF::pbkdf_iterations(size_t out_len,
    }
 
 secure_vector<uint8_t> PBKDF::pbkdf_timed(size_t out_len,
-                                       const std::string& passphrase,
+                                       std::string_view passphrase,
                                        const uint8_t salt[], size_t salt_len,
                                        std::chrono::milliseconds msec,
                                        size_t& iterations) const

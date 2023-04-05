@@ -418,8 +418,8 @@ Ticket_Nonce Cipher_State::next_ticket_nonce()
    return retval;
    }
 
-secure_vector<uint8_t> Cipher_State::export_key(const std::string& label,
-      const std::string& context,
+secure_vector<uint8_t> Cipher_State::export_key(std::string_view label,
+      std::string_view context,
       size_t length) const
    {
    BOTAN_ASSERT_NOMSG(can_export_keys());
@@ -433,14 +433,14 @@ secure_vector<uint8_t> Cipher_State::export_key(const std::string& label,
 
 namespace {
 
-std::unique_ptr<MessageAuthenticationCode> create_hmac(const std::string& hash)
+std::unique_ptr<MessageAuthenticationCode> create_hmac(std::string_view hash)
    {
    return std::make_unique<HMAC>(HashFunction::create_or_throw(hash));
    }
 
 }
 
-Cipher_State::Cipher_State(Connection_Side whoami, const std::string& hash_function)
+Cipher_State::Cipher_State(Connection_Side whoami, std::string_view hash_function)
    : m_state(State::Uninitialized)
    , m_connection_side(whoami)
    , m_extract(std::make_unique<HKDF_Extract>(create_hmac(hash_function)))
@@ -563,7 +563,7 @@ secure_vector<uint8_t> Cipher_State::hkdf_extract(secure_vector<uint8_t>&& ikm) 
 
 secure_vector<uint8_t> Cipher_State::hkdf_expand_label(
    const secure_vector<uint8_t>& secret,
-   const std::string&            label,
+   std::string_view            label,
    const std::vector<uint8_t>&   context,
    const size_t                  length) const
    {
@@ -600,7 +600,7 @@ secure_vector<uint8_t> Cipher_State::hkdf_expand_label(
 
 secure_vector<uint8_t> Cipher_State::derive_secret(
    const secure_vector<uint8_t>& secret,
-   const std::string&            label,
+   std::string_view            label,
    const Transcript_Hash&        messages_hash) const
    {
    return hkdf_expand_label(secret, label, messages_hash, m_hash->output_length());

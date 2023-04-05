@@ -173,7 +173,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
           const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
           const std::vector<Certificate_Store*>& trusted_roots,
           Usage_Type usage,
-          const std::string& hostname,
+          std::string_view hostname,
           const TLS::Policy& policy);
 
        /**
@@ -230,7 +230,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @param key the private key of the signer
        * @param rng a random number generator
-       * @param emsa the encoding method to be applied to the message
+       * @param padding the encoding method to be applied to the message
        * @param format the signature format
        * @param msg the input data for the signature
        *
@@ -239,7 +239,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        virtual std::vector<uint8_t> tls_sign_message(
           const Private_Key& key,
           RandomNumberGenerator& rng,
-          const std::string& emsa,
+          std::string_view padding,
           Signature_Format format,
           const std::vector<uint8_t>& msg);
 
@@ -250,7 +250,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * Override to provide a different approach, e.g. using an external device.
        *
        * @param key the public key of the signer
-       * @param emsa the encoding method to be applied to the message
+       * @param padding the encoding method to be applied to the message
        * @param format the signature format
        * @param msg the input data for the signature
        * @param sig the signature to be checked
@@ -259,7 +259,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        */
        virtual bool tls_verify_message(
           const Public_Key& key,
-          const std::string& emsa,
+          std::string_view padding,
           Signature_Format format,
           const std::vector<uint8_t>& msg,
           const std::vector<uint8_t>& sig);

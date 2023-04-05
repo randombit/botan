@@ -11,7 +11,7 @@ namespace Botan {
 
 Encrypted_PSK_Database_SQL::Encrypted_PSK_Database_SQL(const secure_vector<uint8_t>& master_key,
                                                        std::shared_ptr<SQL_Database> db,
-                                                       const std::string& table_name) :
+                                                       std::string_view table_name) :
    Encrypted_PSK_Database(master_key),
    m_db(std::move(db)),
    m_table_name(table_name)
@@ -23,14 +23,14 @@ Encrypted_PSK_Database_SQL::Encrypted_PSK_Database_SQL(const secure_vector<uint8
 
 Encrypted_PSK_Database_SQL::~Encrypted_PSK_Database_SQL() = default;
 
-void Encrypted_PSK_Database_SQL::kv_del(const std::string& name)
+void Encrypted_PSK_Database_SQL::kv_del(std::string_view name)
    {
    auto stmt = m_db->new_statement("delete from " + m_table_name + " where psk_name=?1");
    stmt->bind(1, name);
    stmt->spin();
    }
 
-void Encrypted_PSK_Database_SQL::kv_set(const std::string& name, const std::string& value)
+void Encrypted_PSK_Database_SQL::kv_set(std::string_view name, std::string_view value)
    {
    auto stmt = m_db->new_statement("insert or replace into " + m_table_name + " values(?1, ?2)");
 
@@ -40,7 +40,7 @@ void Encrypted_PSK_Database_SQL::kv_set(const std::string& name, const std::stri
    stmt->spin();
    }
 
-std::string Encrypted_PSK_Database_SQL::kv_get(const std::string& name) const
+std::string Encrypted_PSK_Database_SQL::kv_get(std::string_view name) const
    {
    auto stmt = m_db->new_statement("select psk_value from " + m_table_name +
                                    " where psk_name = ?1");

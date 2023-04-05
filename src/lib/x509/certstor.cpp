@@ -179,7 +179,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate&
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
+Certificate_Store_In_Memory::Certificate_Store_In_Memory(std::string_view dir)
    {
    if(dir.empty())
       return;
@@ -188,7 +188,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
 
    if(maybe_certs.empty())
       {
-      maybe_certs.push_back(dir);
+      maybe_certs.push_back(std::string(dir));
       }
 
    for(auto&& cert_file : maybe_certs)

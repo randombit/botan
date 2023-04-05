@@ -227,7 +227,7 @@ TPM_PrivateKey::TPM_PrivateKey(TPM_Context& ctx, size_t bits,
    }
 
 // reference a registered TPM key
-TPM_PrivateKey::TPM_PrivateKey(TPM_Context& ctx, const std::string& uuid_str,
+TPM_PrivateKey::TPM_PrivateKey(TPM_Context& ctx, std::string_view uuid_str,
                                TPM_Storage_Type storage_type) :
    m_ctx(ctx),
    m_uuid(uuid_str),

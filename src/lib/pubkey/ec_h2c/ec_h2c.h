@@ -9,7 +9,7 @@
 
 #include <botan/types.h>
 #include <botan/ec_point.h>
-#include <string>
+#include <string_view>
 
 namespace Botan {
 
@@ -18,7 +18,7 @@ class EC_Group;
 /**
 * expand_message_xmd
 */
-void BOTAN_TEST_API expand_message_xmd(const std::string& hash_fn,
+void BOTAN_TEST_API expand_message_xmd(std::string_view hash_fn,
                                        uint8_t output[],
                                        size_t output_len,
                                        const uint8_t input[],
@@ -35,7 +35,7 @@ void BOTAN_TEST_API expand_message_xmd(const std::string& hash_fn,
 * which excludes certain groups including secp256k1
 */
 EC_Point hash_to_curve_sswu(const EC_Group& group,
-                            const std::string& hash_fn,
+                            std::string_view hash_fn,
                             const uint8_t input[],
                             size_t input_len,
                             const uint8_t domain_sep[],

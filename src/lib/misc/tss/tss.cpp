@@ -82,7 +82,7 @@ uint8_t gfp_mul(uint8_t x, uint8_t y)
    return RTSS_EXP[(RTSS_LOG[x] + RTSS_LOG[y]) % 255];
    }
 
-uint8_t rtss_hash_id(const std::string& hash_name)
+uint8_t rtss_hash_id(std::string_view hash_name)
    {
    if(hash_name == "None")
       return 0;
@@ -108,7 +108,7 @@ std::unique_ptr<HashFunction> get_rtss_hash_by_id(uint8_t id)
 
 }
 
-RTSS_Share::RTSS_Share(const std::string& hex_input)
+RTSS_Share::RTSS_Share(std::string_view hex_input)
    {
    m_contents = hex_decode_locked(hex_input);
    }
@@ -150,7 +150,7 @@ std::vector<RTSS_Share>
 RTSS_Share::split(uint8_t M, uint8_t N,
                   const uint8_t S[], uint16_t S_len,
                   const std::vector<uint8_t>& identifier,
-                  const std::string& hash_fn,
+                  std::string_view hash_fn,
                   RandomNumberGenerator& rng)
    {
    if(M <= 1 || N <= 1 || M > N || N >= 255)

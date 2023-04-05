@@ -11,6 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
 #include <botan/internal/emsa.h>
+#include <botan/internal/fmt.h>
 #include <algorithm>
 #include <sstream>
 
@@ -35,7 +36,7 @@ void X509_Object::load_data(DataSource& in)
          if(got_label != PEM_label())
             {
             bool is_alternate = false;
-            for(const std::string& alt_label : alternate_PEM_labels())
+            for(std::string_view alt_label : alternate_PEM_labels())
                {
                if(got_label == alt_label)
                   {
@@ -164,8 +165,8 @@ namespace {
 
 std::string x509_signature_padding_for(
    const std::string& algo_name,
-   const std::string& hash_fn,
-   const std::string& user_specified_padding)
+   std::string_view hash_fn,
+   std::string_view user_specified_padding)
    {
    if(algo_name == "DSA" ||
       algo_name == "ECDSA" ||
@@ -178,7 +179,7 @@ std::string x509_signature_padding_for(
       BOTAN_ARG_CHECK(user_specified_padding.empty() || user_specified_padding == "EMSA1",
                       "Invalid padding scheme for DSA-like scheme");
 
-      return hash_fn.empty() ? "SHA-256" : hash_fn;
+      return hash_fn.empty() ? "SHA-256" : std::string(hash_fn);
       }
    else if(algo_name == "RSA")
       {
@@ -189,23 +190,23 @@ std::string x509_signature_padding_for(
          if(hash_fn.empty())
             return "EMSA3(SHA-256)";
          else
-            return "EMSA3(" + hash_fn + ")";
+            return fmt("EMSA3({})", hash_fn);
          }
       else
          {
          if(hash_fn.empty())
-            return user_specified_padding + "(SHA-256)";
+            return fmt("{}(SHA-256)", user_specified_padding);
          else
-            return user_specified_padding + "(" + hash_fn + ")";
+            return fmt("{}({})", user_specified_padding, hash_fn);
          }
       }
    else if(algo_name == "Ed25519")
       {
-      return user_specified_padding.empty() ? "Pure" : user_specified_padding;
+      return user_specified_padding.empty() ? "Pure" : std::string(user_specified_padding);
       }
    else if(algo_name.starts_with("Dilithium-"))
       {
-      return user_specified_padding.empty() ? "Randomized" : user_specified_padding;
+      return user_specified_padding.empty() ? "Randomized" : std::string(user_specified_padding);
       }
    else
       {
@@ -213,11 +214,11 @@ std::string x509_signature_padding_for(
       }
    }
 
-std::string format_padding_error_message(const std::string& key_name,
-                                         const std::string& signer_hash_fn,
-                                         const std::string& user_hash_fn,
-                                         const std::string& chosen_padding,
-                                         const std::string& user_specified_padding)
+std::string format_padding_error_message(std::string_view key_name,
+                                         std::string_view signer_hash_fn,
+                                         std::string_view user_hash_fn,
+                                         std::string_view chosen_padding,
+                                         std::string_view user_specified_padding)
    {
    std::ostringstream oss;
 
@@ -243,8 +244,8 @@ std::string format_padding_error_message(const std::string& key_name,
 std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(
    const Private_Key& key,
    RandomNumberGenerator& rng,
-   const std::string& hash_fn,
-   const std::string& user_specified_padding)
+   std::string_view hash_fn,
+   std::string_view user_specified_padding)
    {
    const Signature_Format format = key.default_x509_signature_format();
 

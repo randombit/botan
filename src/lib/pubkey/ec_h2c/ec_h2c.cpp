@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/ec_h2c.h>
+#include <botan/internal/fmt.h>
 #include <botan/ec_group.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
@@ -12,7 +13,7 @@
 
 namespace Botan {
 
-void expand_message_xmd(const std::string& hash_fn,
+void expand_message_xmd(std::string_view hash_fn,
                         uint8_t output[],
                         size_t output_len,
                         const uint8_t input[],
@@ -26,7 +27,7 @@ void expand_message_xmd(const std::string& hash_fn,
    auto hash = HashFunction::create_or_throw(hash_fn);
    const size_t block_size = hash->hash_block_size();
    if(block_size == 0)
-      throw Invalid_Argument("expand_message_xmd cannot be used with " + hash_fn);
+      throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash_fn));
 
    const size_t hash_output_size = hash->output_length();
    if(output_len > 255*hash_output_size || output_len > 0xFFFF)
@@ -78,7 +79,7 @@ namespace {
 std::vector<BigInt>
 hash_to_field(const EC_Group& group,
               const Modular_Reducer& mod_p,
-              const std::string& hash_fn,
+              std::string_view hash_fn,
               uint8_t count,
               const uint8_t input[], size_t input_len,
               const uint8_t domain_sep[], size_t domain_sep_len)
@@ -182,7 +183,7 @@ EC_Point map_to_curve_sswu(const EC_Group& group, const Modular_Reducer& mod_p, 
 }
 
 EC_Point hash_to_curve_sswu(const EC_Group& group,
-                            const std::string& hash_fn,
+                            std::string_view hash_fn,
                             const uint8_t input[],
                             size_t input_len,
                             const uint8_t domain_sep[],

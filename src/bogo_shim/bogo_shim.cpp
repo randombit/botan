@@ -19,15 +19,15 @@
 #include <botan/tls_session_manager_hybrid.h>
 #include <botan/data_src.h>
 #include <botan/pkcs8.h>
-#include <botan/internal/loadstor.h>
 #include <botan/ocsp.h>
 #include <botan/chacha_rng.h>
 #include <botan/base64.h>
 #include <botan/hex.h>
-#include <botan/internal/parsing.h>
 #include <botan/mem_ops.h>
-#include <botan/internal/os_utils.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/fmt.h>
 
 #include <iostream>
 #include <vector>
@@ -302,7 +302,7 @@ std::string map_to_bogo_error(const std::string& e)
 class Shim_Exception final : public std::exception
    {
    public:
-      Shim_Exception(const std::string& msg, int rc = 1) :
+      Shim_Exception(std::string_view msg, int rc = 1) :
          m_msg(msg), m_rc(rc) {}
 
       const char* what() const noexcept override { return m_msg.c_str(); }
@@ -1437,7 +1437,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          }
 
       bool tls_verify_message(const Botan::Public_Key& key,
-                              const std::string& emsa,
+                              std::string_view padding,
                               Botan::Signature_Format format,
                               const std::vector<uint8_t>& msg,
                               const std::vector<uint8_t>& sig) override
@@ -1450,19 +1450,19 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             if(!scheme.is_available())
                shim_exit_with_error(std::string("Unsupported signature scheme provided by BoGo: ") + scheme.to_string());
 
-            const std::string exp_emsa = scheme.padding_string();
-            if(emsa != exp_emsa)
-               shim_exit_with_error("Unexpected signature scheme got " + emsa + " expected " + exp_emsa);
+            const std::string exp_padding = scheme.padding_string();
+            if(padding != exp_padding)
+               shim_exit_with_error(Botan::fmt("Unexpected signature scheme got {} expected {}", padding, exp_padding));
             }
 
-         return Botan::TLS::Callbacks::tls_verify_message(key, emsa, format, msg, sig);
+         return Botan::TLS::Callbacks::tls_verify_message(key, padding, format, msg, sig);
          }
 
       void tls_verify_cert_chain(const std::vector<Botan::X509_Certificate>& /*cert_chain*/,
                                  const std::vector<std::optional<Botan::OCSP::Response>>& /*ocsp_responses*/,
                                  const std::vector<Botan::Certificate_Store*>& /*trusted_roots*/,
                                  Botan::Usage_Type /*usage*/,
-                                 const std::string& /*hostname*/,
+                                 std::string_view /*hostname*/,
                                  const Botan::TLS::Policy& /*policy*/) override
          {
          if(m_args.flag_set("enable-ocsp-stapling") &&

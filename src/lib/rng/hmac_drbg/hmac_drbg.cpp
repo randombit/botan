@@ -6,6 +6,7 @@
 */
 
 #include <botan/hmac_drbg.h>
+#include <botan/internal/fmt.h>
 #include <algorithm>
 
 namespace Botan {
@@ -108,9 +109,9 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf) :
    clear();
    }
 
-HMAC_DRBG::HMAC_DRBG(const std::string& hmac_hash) :
+HMAC_DRBG::HMAC_DRBG(std::string_view hmac_hash) :
    Stateful_RNG(),
-   m_mac(MessageAuthenticationCode::create_or_throw("HMAC(" + hmac_hash + ")")),
+   m_mac(MessageAuthenticationCode::create_or_throw(fmt("HMAC({})", hmac_hash))),
    m_max_number_of_bytes_per_request(64 * 1024),
    m_security_level(hmac_drbg_security_level(m_mac->output_length()))
    {
@@ -132,7 +133,7 @@ void HMAC_DRBG::clear_state()
 
 std::string HMAC_DRBG::name() const
    {
-   return "HMAC_DRBG(" + m_mac->name() + ")";
+   return fmt("HMAC_DRBG({})", m_mac->name());
    }
 
 /*

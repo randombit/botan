@@ -4,7 +4,7 @@ PSK_DB -> 20171119
 
 <module_info>
 name -> "PSK Database"
-brief -> "Interface for a generic pre-shared key) database"
+brief -> "Interface for a generic pre-shared key database"
 </module_info>
 
 <requires>

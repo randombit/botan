@@ -10,7 +10,7 @@
 namespace Botan {
 
 //static
-std::shared_ptr<DL_Group_Data> DL_Group::DL_group_info(const std::string& name)
+std::shared_ptr<DL_Group_Data> DL_Group::DL_group_info(std::string_view name)
    {
    /* TLS FFDHE groups */
 

@@ -33,7 +33,7 @@ OID Asymmetric_Key::object_identifier() const
 
 std::string create_hex_fingerprint(const uint8_t bits[],
                                    size_t bits_len,
-                                   const std::string& hash_name)
+                                   std::string_view hash_name)
    {
    auto hash_fn = HashFunction::create_or_throw(hash_name);
    const std::string hex_hash = hex_encode(hash_fn->process(bits, bits_len));
@@ -85,7 +85,7 @@ secure_vector<uint8_t> Private_Key::raw_private_key_bits() const
 /*
 * Hash of the X.509 subjectPublicKey encoding
 */
-std::string Public_Key::fingerprint_public(const std::string& hash_algo) const
+std::string Public_Key::fingerprint_public(std::string_view hash_algo) const
    {
    return create_hex_fingerprint(subject_public_key(), hash_algo);
    }
@@ -93,7 +93,7 @@ std::string Public_Key::fingerprint_public(const std::string& hash_algo) const
 /*
 * Hash of the PKCS #8 encoding for this key object
 */
-std::string Private_Key::fingerprint_private(const std::string& hash_algo) const
+std::string Private_Key::fingerprint_private(std::string_view hash_algo) const
    {
    return create_hex_fingerprint(private_key_bits(), hash_algo);
    }

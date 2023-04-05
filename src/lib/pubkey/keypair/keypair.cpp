@@ -17,7 +17,7 @@ namespace Botan::KeyPair {
 bool encryption_consistency_check(RandomNumberGenerator& rng,
                                   const Private_Key& private_key,
                                   const Public_Key& public_key,
-                                  const std::string& padding)
+                                  std::string_view padding)
    {
    PK_Encryptor_EME encryptor(public_key, rng, padding);
    PK_Decryptor_EME decryptor(private_key, rng, padding);
@@ -47,7 +47,7 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
 bool signature_consistency_check(RandomNumberGenerator& rng,
                                  const Private_Key& private_key,
                                  const Public_Key& public_key,
-                                 const std::string& padding)
+                                 std::string_view padding)
    {
    PK_Signer signer(private_key, rng, padding);
    PK_Verifier verifier(public_key, padding);

@@ -143,19 +143,19 @@ class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
       /**
       * Choose a padding scheme different from the default for the key used.
       */
-      void set_padding_scheme(const std::string& scheme);
+      void set_padding_scheme(std::string_view scheme);
 
       /**
       * Set the notBefore of the certificate.
       * @param time the notBefore value of the certificate
       */
-      void not_before(const std::string& time);
+      void not_before(std::string_view time);
 
       /**
       * Set the notAfter of the certificate.
       * @param time the notAfter value of the certificate
       */
-      void not_after(const std::string& time);
+      void not_after(std::string_view time);
 
       /**
       * Add the key constraints of the KeyUsage extension.
@@ -173,7 +173,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
       * Add constraints to the ExtendedKeyUsage extension.
       * @param name the name to look up the oid to add
       */
-      void add_ex_constraint(const std::string& name);
+      void add_ex_constraint(std::string_view name);
 
       /**
       * Construct a new options object
@@ -181,7 +181,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
       * parameter would be "common_name/country/organization/organizational_unit".
       * @param expire_time the expiration time (from the current clock in seconds)
       */
-      X509_Cert_Options(const std::string& opts = "",
+      X509_Cert_Options(std::string_view opts = "",
                         uint32_t expire_time = 365 * 24 * 60 * 60);
    };
 
@@ -199,7 +199,7 @@ namespace X509 {
 BOTAN_PUBLIC_API(2,0) X509_Certificate
 create_self_signed_cert(const X509_Cert_Options& opts,
                         const Private_Key& key,
-                        const std::string& hash_fn,
+                        std::string_view hash_fn,
                         RandomNumberGenerator& rng);
 
 /**
@@ -212,7 +212,7 @@ create_self_signed_cert(const X509_Cert_Options& opts,
 */
 BOTAN_PUBLIC_API(2,0) PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
                                          const Private_Key& key,
-                                         const std::string& hash_fn,
+                                         std::string_view hash_fn,
                                          RandomNumberGenerator& rng);
 
 }

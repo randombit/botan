@@ -35,7 +35,7 @@ bool is_space(char c)
 /*
 * X.500 String Comparison
 */
-bool x500_name_cmp(const std::string& name1, const std::string& name2)
+bool x500_name_cmp(std::string_view name1, std::string_view name2)
    {
    auto p1 = name1.begin();
    auto p2 = name2.begin();
@@ -78,8 +78,8 @@ bool x500_name_cmp(const std::string& name1, const std::string& name2)
 /*
 * Add an attribute to a X509_DN
 */
-void X509_DN::add_attribute(const std::string& type,
-                            const std::string& str)
+void X509_DN::add_attribute(std::string_view type,
+                            std::string_view str)
    {
    add_attribute(OID::from_string(type), str);
    }
@@ -122,7 +122,7 @@ std::multimap<std::string, std::string> X509_DN::contents() const
    return retval;
    }
 
-bool X509_DN::has_field(const std::string& attr) const
+bool X509_DN::has_field(std::string_view attr) const
    {
    try
       {
@@ -146,7 +146,7 @@ bool X509_DN::has_field(const OID& oid) const
    return false;
    }
 
-std::string X509_DN::get_first_attribute(const std::string& attr) const
+std::string X509_DN::get_first_attribute(std::string_view attr) const
    {
    const OID oid = OID::from_string(deref_info_field(attr));
    return get_first_attribute(oid).value();
@@ -168,7 +168,7 @@ ASN1_String X509_DN::get_first_attribute(const OID& oid) const
 /*
 * Get a single attribute type
 */
-std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
+std::vector<std::string> X509_DN::get_attribute(std::string_view attr) const
    {
    const OID oid = OID::from_string(deref_info_field(attr));
 
@@ -188,7 +188,7 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
 /*
 * Deref aliases in a subject/issuer info request
 */
-std::string X509_DN::deref_info_field(const std::string& info)
+std::string X509_DN::deref_info_field(std::string_view info)
    {
    if(info == "Name" || info == "CommonName" || info == "CN") return "X520.CommonName";
    if(info == "SerialNumber" || info == "SN")                 return "X520.SerialNumber";
@@ -199,7 +199,7 @@ std::string X509_DN::deref_info_field(const std::string& info)
    if(info == "Locality" || info == "L")                      return "X520.Locality";
    if(info == "State" || info == "Province" || info == "ST")  return "X520.State";
    if(info == "Email")                                        return "RFC822";
-   return info;
+   return std::string(info);
    }
 
 /*

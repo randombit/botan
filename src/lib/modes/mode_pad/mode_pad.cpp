@@ -16,7 +16,7 @@ namespace Botan {
 * Get a block cipher padding method by name
 */
 std::unique_ptr<BlockCipherModePaddingMethod>
-BlockCipherModePaddingMethod::create(const std::string& algo_spec)
+BlockCipherModePaddingMethod::create(std::string_view algo_spec)
    {
    if(algo_spec == "NoPadding")
       return std::make_unique<Null_Padding>();

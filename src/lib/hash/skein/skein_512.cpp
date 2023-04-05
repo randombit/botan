@@ -14,7 +14,7 @@
 namespace Botan {
 
 Skein_512::Skein_512(size_t arg_output_bits,
-                     const std::string& arg_personalization) :
+                     std::string_view arg_personalization) :
    m_personalization(arg_personalization),
    m_output_bits(arg_output_bits),
    m_threefish(std::make_unique<Threefish_512>()),

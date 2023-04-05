@@ -54,8 +54,8 @@ class BOTAN_TEST_API SocketUDP
 * not available on this platform.
 */
 std::unique_ptr<SocketUDP>
-BOTAN_TEST_API open_socket_udp(const std::string& hostname,
-                               const std::string& service,
+BOTAN_TEST_API open_socket_udp(std::string_view hostname,
+                               std::string_view service,
                                std::chrono::microseconds timeout);
 
 /**
@@ -63,7 +63,7 @@ BOTAN_TEST_API open_socket_udp(const std::string& hostname,
 * not available on this platform.
 */
 std::unique_ptr<SocketUDP>
-BOTAN_TEST_API open_socket_udp(const std::string& uri,
+BOTAN_TEST_API open_socket_udp(std::string_view uri,
                                std::chrono::microseconds timeout);
 
 

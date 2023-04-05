@@ -113,12 +113,12 @@ std::vector<std::string> Policy::allowed_signature_methods() const
       };
    }
 
-bool Policy::allowed_signature_method(const std::string& sig_method) const
+bool Policy::allowed_signature_method(std::string_view sig_method) const
    {
    return value_exists(allowed_signature_methods(), sig_method);
    }
 
-bool Policy::allowed_signature_hash(const std::string& sig_hash) const
+bool Policy::allowed_signature_hash(std::string_view sig_hash) const
    {
    return value_exists(allowed_signature_hashes(), sig_hash);
    }

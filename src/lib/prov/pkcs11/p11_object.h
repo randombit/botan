@@ -71,7 +71,7 @@ class BOTAN_PUBLIC_API(2,0) AttributeContainer
       * @param attribute attribute type
       * @param value string value to add
       */
-      void add_string(AttributeType attribute, const std::string& value);
+      void add_string(AttributeType attribute, std::string_view value);
 
       /**
       * Add a binary attribute (e.g. CKA_ID / AttributeType::Id).
@@ -189,7 +189,7 @@ class BOTAN_PUBLIC_API(2,0) StorageObjectProperties : public ObjectProperties
       StorageObjectProperties(ObjectClass object_class);
 
       /// @param label description of the object (RFC2279 string)
-      inline void set_label(const std::string& label)
+      inline void set_label(std::string_view label)
          {
          add_string(AttributeType::Label, label);
          }
@@ -235,7 +235,7 @@ class BOTAN_PUBLIC_API(2,0) DataObjectProperties final : public StorageObjectPro
       DataObjectProperties();
 
       /// @param value description of the application that manages the object (RFC2279 string)
-      inline void set_application(const std::string& value)
+      inline void set_application(std::string_view value)
          {
          add_string(AttributeType::Application, value);
          }
@@ -658,7 +658,7 @@ class BOTAN_PUBLIC_API(2,0) Object
 
       /// Searches for all objects of the given type using the label (`CKA_LABEL`)
       template<typename T>
-      static std::vector<T> search(Session& session, const std::string& label);
+      static std::vector<T> search(Session& session, std::string_view label);
 
       /// Searches for all objects of the given type using the id (`CKA_ID`)
       template<typename T>
@@ -666,7 +666,7 @@ class BOTAN_PUBLIC_API(2,0) Object
 
       /// Searches for all objects of the given type using the label (`CKA_LABEL`) and id (`CKA_ID`)
       template<typename T>
-      static std::vector<T> search(Session& session, const std::string& label, const std::vector<uint8_t>& id);
+      static std::vector<T> search(Session& session, std::string_view label, const std::vector<uint8_t>& id);
 
       /// Searches for all objects of the given type
       template<typename T>
@@ -736,7 +736,7 @@ std::vector<T> Object::search(Session& session, const std::vector<Attribute>& se
    }
 
 template<typename T>
-std::vector<T> Object::search(Session& session, const std::string& label)
+std::vector<T> Object::search(Session& session, std::string_view label)
    {
    AttributeContainer search_template(T::Class);
    search_template.add_string(AttributeType::Label, label);
@@ -752,7 +752,7 @@ std::vector<T> Object::search(Session& session, const std::vector<uint8_t>& id)
    }
 
 template<typename T>
-std::vector<T> Object::search(Session& session, const std::string& label, const std::vector<uint8_t>& id)
+std::vector<T> Object::search(Session& session, std::string_view label, const std::vector<uint8_t>& id)
    {
    AttributeContainer search_template(T::Class);
    search_template.add_string(AttributeType::Label, label);

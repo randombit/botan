@@ -119,7 +119,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        */
       virtual std::optional<std::pair<Session, uint16_t>>
             choose_from_offered_tickets(const std::vector<Ticket>& tickets,
-                                        const std::string& hash_function,
+                                        std::string_view hash_function,
                                         Callbacks& callbacks,
                                         const Policy& policy);
 #endif

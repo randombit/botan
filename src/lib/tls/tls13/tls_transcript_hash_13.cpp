@@ -16,7 +16,7 @@
 
 namespace Botan::TLS {
 
-Transcript_Hash_State::Transcript_Hash_State(const std::string &algo_spec)
+Transcript_Hash_State::Transcript_Hash_State(std::string_view algo_spec)
    {
    set_algorithm(algo_spec);
    }
@@ -31,7 +31,7 @@ Transcript_Hash_State::Transcript_Hash_State(const Transcript_Hash_State& other)
 
 
 Transcript_Hash_State Transcript_Hash_State::recreate_after_hello_retry_request(
-                                          const std::string& algo_spec,
+                                          std::string_view algo_spec,
                                           const Transcript_Hash_State& prev_transcript_hash_state)
    {
    // make sure that we have seen exactly 'client_hello' and 'hello_retry_request'
@@ -210,7 +210,7 @@ const Transcript_Hash& Transcript_Hash_State::truncated() const
    return m_truncated;
    }
 
-void Transcript_Hash_State::set_algorithm(const std::string& algo_spec)
+void Transcript_Hash_State::set_algorithm(std::string_view algo_spec)
    {
    BOTAN_STATE_CHECK(m_hash == nullptr || m_hash->name() == algo_spec);
    if(m_hash != nullptr)

@@ -89,7 +89,7 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_Memory final : public Certifica
       * Attempt to parse all files in dir (including subdirectories)
       * as certificates. Ignores errors.
       */
-      explicit Certificate_Store_In_Memory(const std::string& dir);
+      explicit Certificate_Store_In_Memory(std::string_view dir);
 
       /**
       * Adds given certificate to the store.

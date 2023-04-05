@@ -38,7 +38,7 @@ const size_t CRYPTOBOX_HEADER_LEN = VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTP
 }
 
 std::string encrypt(const uint8_t input[], size_t input_len,
-                    const std::string& passphrase,
+                    std::string_view passphrase,
                     RandomNumberGenerator& rng)
    {
    /*
@@ -93,7 +93,7 @@ std::string encrypt(const uint8_t input[], size_t input_len,
 
 secure_vector<uint8_t>
 decrypt_bin(const uint8_t input[], size_t input_len,
-            const std::string& passphrase)
+            std::string_view passphrase)
    {
    DataSource_Memory input_src(input, input_len);
    secure_vector<uint8_t> ciphertext =
@@ -155,8 +155,8 @@ decrypt_bin(const uint8_t input[], size_t input_len,
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
-secure_vector<uint8_t> decrypt_bin(const std::string& input,
-                                   const std::string& passphrase)
+secure_vector<uint8_t> decrypt_bin(std::string_view input,
+                                   std::string_view passphrase)
    {
    return decrypt_bin(cast_char_ptr_to_uint8(input.data()),
                       input.size(),
@@ -164,7 +164,7 @@ secure_vector<uint8_t> decrypt_bin(const std::string& input,
    }
 
 std::string decrypt(const uint8_t input[], size_t input_len,
-                    const std::string& passphrase)
+                    std::string_view passphrase)
    {
    const secure_vector<uint8_t> bin = decrypt_bin(input, input_len, passphrase);
 
@@ -172,8 +172,8 @@ std::string decrypt(const uint8_t input[], size_t input_len,
                       bin.size());
    }
 
-std::string decrypt(const std::string& input,
-                    const std::string& passphrase)
+std::string decrypt(std::string_view input,
+                    std::string_view passphrase)
    {
    return decrypt(cast_char_ptr_to_uint8(input.data()),
                   input.size(), passphrase);

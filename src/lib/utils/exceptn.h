@@ -198,7 +198,9 @@ class BOTAN_PUBLIC_API(2,0) Decoding_Error : public Exception
    public:
       explicit Decoding_Error(std::string_view name);
 
-      Decoding_Error(const std::string& msg, const std::exception& e);
+      Decoding_Error(std::string_view category, std::string_view err);
+
+      Decoding_Error(std::string_view msg, const std::exception& e);
 
       ErrorType error_type() const noexcept override { return ErrorType::DecodingFailure; }
    };

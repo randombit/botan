@@ -31,7 +31,7 @@ namespace CryptoBox {
 */
 BOTAN_DEPRECATED("CryptoBox interface is deprecated")
 BOTAN_PUBLIC_API(2,0) std::string encrypt(const uint8_t input[], size_t input_len,
-                              const std::string& passphrase,
+                              std::string_view passphrase,
                               RandomNumberGenerator& rng);
 
 
@@ -45,7 +45,7 @@ BOTAN_DEPRECATED("CryptoBox interface is deprecated")
 BOTAN_PUBLIC_API(2,3)
 secure_vector<uint8_t>
 decrypt_bin(const uint8_t input[], size_t input_len,
-            const std::string& passphrase);
+            std::string_view passphrase);
 
 /**
 * Decrypt a message encrypted with CryptoBox::encrypt
@@ -55,8 +55,8 @@ decrypt_bin(const uint8_t input[], size_t input_len,
 BOTAN_DEPRECATED("CryptoBox interface is deprecated")
 BOTAN_PUBLIC_API(2,3)
 secure_vector<uint8_t>
-decrypt_bin(const std::string& input,
-            const std::string& passphrase);
+decrypt_bin(std::string_view input,
+            std::string_view passphrase);
 
 /**
 * Decrypt a message encrypted with CryptoBox::encrypt
@@ -67,7 +67,7 @@ decrypt_bin(const std::string& input,
 BOTAN_DEPRECATED("CryptoBox interface is deprecated")
 BOTAN_PUBLIC_API(2,0)
 std::string decrypt(const uint8_t input[], size_t input_len,
-                    const std::string& passphrase);
+                    std::string_view passphrase);
 
 /**
 * Decrypt a message encrypted with CryptoBox::encrypt
@@ -76,8 +76,8 @@ std::string decrypt(const uint8_t input[], size_t input_len,
 */
 BOTAN_DEPRECATED("CryptoBox interface is deprecated")
 BOTAN_PUBLIC_API(2,0)
-std::string decrypt(const std::string& input,
-                    const std::string& passphrase);
+std::string decrypt(std::string_view input,
+                    std::string_view passphrase);
 
 }
 

@@ -24,7 +24,7 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 /*
 * Create an OctetString from a hex string
 */
-OctetString::OctetString(const std::string& hex_string)
+OctetString::OctetString(std::string_view hex_string)
    {
    if(!hex_string.empty())
       {

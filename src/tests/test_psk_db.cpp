@@ -40,12 +40,12 @@ class Test_Map_PSK_Db : public Botan::Encrypted_PSK_Database
             }
          }
 
-      void kv_set(const std::string& index, const std::string& value) override
+      void kv_set(std::string_view index, std::string_view value) override
          {
-         m_vals[index] = value;
+         m_vals.insert_or_assign(std::string(index), std::string(value));
          }
 
-      std::string kv_get(const std::string& index) const override
+      std::string kv_get(std::string_view index) const override
          {
          auto i = m_vals.find(index);
          if(i == m_vals.end())
@@ -53,7 +53,7 @@ class Test_Map_PSK_Db : public Botan::Encrypted_PSK_Database
          return i->second;
          }
 
-      void kv_del(const std::string& index) override
+      void kv_del(std::string_view index) override
          {
          auto i = m_vals.find(index);
          if(i != m_vals.end())
@@ -75,7 +75,7 @@ class Test_Map_PSK_Db : public Botan::Encrypted_PSK_Database
          }
 
    private:
-      std::map<std::string, std::string> m_vals;
+      std::map<std::string, std::string, std::less<>> m_vals;
    };
 
 }

@@ -76,7 +76,7 @@ void TLS::Callbacks::tls_verify_cert_chain(
    const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
    const std::vector<Certificate_Store*>& trusted_roots,
    Usage_Type usage,
-   const std::string& hostname,
+   std::string_view hostname,
    const TLS::Policy& policy)
    {
    if(cert_chain.empty())
@@ -131,23 +131,23 @@ std::vector<std::vector<uint8_t>> TLS::Callbacks::tls_provide_cert_chain_status(
 std::vector<uint8_t> TLS::Callbacks::tls_sign_message(
    const Private_Key& key,
    RandomNumberGenerator& rng,
-   const std::string& emsa,
+   std::string_view padding,
    Signature_Format format,
    const std::vector<uint8_t>& msg)
    {
-   PK_Signer signer(key, rng, emsa, format);
+   PK_Signer signer(key, rng, padding, format);
 
    return signer.sign_message(msg, rng);
    }
 
 bool TLS::Callbacks::tls_verify_message(
    const Public_Key& key,
-   const std::string& emsa,
+   std::string_view padding,
    Signature_Format format,
    const std::vector<uint8_t>& msg,
    const std::vector<uint8_t>& sig)
    {
-   PK_Verifier verifier(key, emsa, format);
+   PK_Verifier verifier(key, padding, format);
 
    return verifier.verify_message(msg, sig);
    }

@@ -153,7 +153,7 @@ Signature_Scheme choose_signature_scheme(
 Certificate_Verify_13::Certificate_Verify_13(
       const Certificate_13& certificate_msg,
       const std::vector<Signature_Scheme>& peer_allowed_schemes,
-      const std::string& hostname,
+      std::string_view hostname,
       const Transcript_Hash& hash,
       Connection_Side whoami,
       Credentials_Manager& creds_mgr,
@@ -167,7 +167,7 @@ Certificate_Verify_13::Certificate_Verify_13(
    const auto private_key = creds_mgr.private_key_for(
       certificate_msg.leaf(),
       m_side == Connection_Side::Client ? "tls-client" : "tls-server",
-      hostname);
+      std::string(hostname));
 
    if(!private_key)
       { throw TLS_Exception(Alert::InternalError, "Application did not provide a private key for its certificate"); }

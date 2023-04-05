@@ -27,7 +27,7 @@ class Skein_512 final : public HashFunction
       * hash output
       */
       Skein_512(size_t output_bits = 512,
-                const std::string& personalization = "");
+                std::string_view personalization = "");
 
       size_t hash_block_size() const override { return 64; }
       size_t output_length() const override { return m_output_bits / 8; }

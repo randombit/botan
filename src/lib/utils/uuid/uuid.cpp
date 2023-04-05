@@ -8,6 +8,7 @@
 #include <botan/uuid.h>
 #include <botan/rng.h>
 #include <botan/hex.h>
+#include <botan/internal/fmt.h>
 #include <sstream>
 
 namespace Botan {
@@ -34,7 +35,7 @@ UUID::UUID(const std::vector<uint8_t>& blob)
    m_uuid = blob;
    }
 
-UUID::UUID(const std::string& uuid_str)
+UUID::UUID(std::string_view uuid_str)
    {
    if(uuid_str.size() != 36 ||
       uuid_str[8] != '-' ||
@@ -42,7 +43,7 @@ UUID::UUID(const std::string& uuid_str)
       uuid_str[18] != '-' ||
       uuid_str[23] != '-')
       {
-      throw Invalid_Argument("Bad UUID '" + uuid_str + "'");
+      throw Invalid_Argument(fmt("Bad UUID '{}'", uuid_str));
       }
 
    std::string just_hex;
@@ -58,7 +59,7 @@ UUID::UUID(const std::string& uuid_str)
 
    if(m_uuid.size() != 16)
       {
-      throw Invalid_Argument("Bad UUID '" + uuid_str + "'");
+      throw Invalid_Argument(fmt("Bad UUID '{}'", uuid_str));
       }
    }
 

@@ -94,9 +94,9 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @warning Support for PEM in this function is deprecated. Use
       * EC_Group_from_PEM
       */
-      explicit EC_Group(const std::string& pem_or_oid);
+      explicit EC_Group(std::string_view pem_or_oid);
 
-      static EC_Group EC_Group_from_PEM(const std::string& pem);
+      static EC_Group EC_Group_from_PEM(std::string_view pem);
 
       /**
       * Create an uninitialized EC_Group
@@ -310,7 +310,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param random_oracle if the mapped point must be uniform (use
                "true" here unless you know what you are doing)
       */
-      EC_Point hash_to_curve(const std::string& hash_fn,
+      EC_Point hash_to_curve(std::string_view hash_fn,
                              const uint8_t input[],
                              size_t input_len,
                              const uint8_t domain_sep[],
@@ -329,10 +329,10 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param random_oracle if the mapped point must be uniform (use
                "true" here unless you know what you are doing)
       */
-      EC_Point hash_to_curve(const std::string& hash_fn,
+      EC_Point hash_to_curve(std::string_view hash_fn,
                              const uint8_t input[],
                              size_t input_len,
-                             const std::string& domain_sep,
+                             std::string_view domain_sep,
                              bool random_oracle = true) const;
 
       /**

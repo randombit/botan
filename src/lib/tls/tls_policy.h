@@ -87,8 +87,8 @@ class BOTAN_PUBLIC_API(2,0) Policy
       */
       virtual bool require_cert_revocation_info() const;
 
-      bool allowed_signature_method(const std::string& sig_method) const;
-      bool allowed_signature_hash(const std::string& hash) const;
+      bool allowed_signature_method(std::string_view sig_method) const;
+      bool allowed_signature_hash(std::string_view hash) const;
 
       /**
       * Return list of ECC curves and FFDHE groups we are willing to
@@ -681,9 +681,9 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       std::vector<uint16_t> srtp_profiles() const override;
 
-      void set(const std::string& k, const std::string& v);
+      void set(const std::string& key, const std::string& value);
 
-      explicit Text_Policy(const std::string& s);
+      explicit Text_Policy(std::string_view s);
 
       explicit Text_Policy(std::istream& in);
 
@@ -692,7 +692,7 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       std::vector<std::string> get_list(const std::string& key,
                                         const std::vector<std::string>& def) const;
 
-      std::vector<Group_Params> read_group_list(const std::string &group_str) const;
+      std::vector<Group_Params> read_group_list(std::string_view group_str) const;
 
       size_t get_len(const std::string& key, size_t def) const;
 
@@ -702,7 +702,7 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       std::string get_str(const std::string& key, const std::string& def = "") const;
 
-      bool set_value(const std::string& key, const std::string& val, bool overwrite);
+      bool set_value(const std::string& key, std::string_view val, bool overwrite);
 
    private:
       std::map<std::string, std::string> m_kv;

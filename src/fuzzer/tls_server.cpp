@@ -167,7 +167,7 @@ class Fuzzer_TLS_Server_Callbacks : public Botan::TLS::Callbacks
          const std::vector<std::optional<Botan::OCSP::Response>>& ocsp_responses,
          const std::vector<Botan::Certificate_Store*>& trusted_roots,
          Botan::Usage_Type usage,
-         const std::string& hostname,
+         std::string_view hostname,
          const Botan::TLS::Policy& policy) override
          {
          try

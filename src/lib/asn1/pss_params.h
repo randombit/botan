@@ -16,9 +16,9 @@ namespace Botan {
 class PSS_Params final : public ASN1_Object
    {
    public:
-      static PSS_Params from_emsa_name(const std::string& emsa_name);
+      static PSS_Params from_emsa_name(std::string_view emsa_name);
 
-      PSS_Params(const std::string& hash_fn, size_t salt_len);
+      PSS_Params(std::string_view hash_fn, size_t salt_len);
 
       PSS_Params(const uint8_t der[], size_t der_len);
 

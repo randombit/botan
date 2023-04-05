@@ -102,9 +102,9 @@ class HKDF_Expand final : public KDF
 */
 secure_vector<uint8_t>
 BOTAN_TEST_API hkdf_expand_label(
-   const std::string& hash_fn,
+   std::string_view hash_fn,
    const uint8_t secret[], size_t secret_len,
-   const std::string& label,
+   std::string_view label,
    const uint8_t hash_val[], size_t hash_val_len,
    size_t length);
 

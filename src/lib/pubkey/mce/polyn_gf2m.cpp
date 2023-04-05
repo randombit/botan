@@ -97,20 +97,6 @@ polyn_gf2m::polyn_gf2m(int d, const std::shared_ptr<GF2m_Field>& sp_field)
    {
    }
 
-std::string polyn_gf2m::to_string() const
-   {
-   int d = get_degree();
-   std::string result;
-   for(int i = 0; i <= d; i ++)
-      {
-      result += std::to_string(this->m_coeff[i]);
-      if(i != d)
-         {
-         result += ", ";
-         }
-      }
-   return result;
-   }
 /**
 * doesn't save coefficients:
 */

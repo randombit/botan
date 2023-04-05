@@ -16,7 +16,7 @@
 namespace Botan::TLS {
 
 Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
-                                         const std::string& passphrase,
+                                         std::string_view passphrase,
                                          const std::shared_ptr<RandomNumberGenerator>& rng,
                                          size_t max_sessions) :
    Session_Manager(rng),
@@ -26,7 +26,7 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
    create_or_migrate_and_open(passphrase);
    }
 
-void Session_Manager_SQL::create_or_migrate_and_open(const std::string& passphrase)
+void Session_Manager_SQL::create_or_migrate_and_open(std::string_view passphrase)
    {
    switch(detect_schema_revision())
       {
@@ -75,7 +75,7 @@ Session_Manager_SQL::Schema_Revision Session_Manager_SQL::detect_schema_revision
       }
    }
 
-void Session_Manager_SQL::create_with_latest_schema(const std::string& passphrase, Schema_Revision rev)
+void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase, Schema_Revision rev)
    {
    m_db->create_table(
       "CREATE TABLE tls_sessions "
@@ -130,7 +130,7 @@ void Session_Manager_SQL::create_with_latest_schema(const std::string& passphras
    stmt->spin();
    }
 
-void Session_Manager_SQL::initialize_existing_database(const std::string& passphrase)
+void Session_Manager_SQL::initialize_existing_database(std::string_view passphrase)
    {
    auto stmt = m_db->new_statement("SELECT * FROM tls_sessions_metadata");
    if(!stmt->step())

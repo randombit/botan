@@ -216,7 +216,7 @@ BER_Decoder& BER_Decoder::verify_end()
 /*
 * Verify that no bytes remain in the source
 */
-BER_Decoder& BER_Decoder::verify_end(const std::string& err)
+BER_Decoder& BER_Decoder::verify_end(std::string_view err)
    {
    if(!m_source->end_of_data() || m_pushed.is_set())
       throw Decoding_Error(err);

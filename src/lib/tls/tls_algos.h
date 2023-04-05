@@ -75,7 +75,7 @@ enum class Auth_Method {
 };
 
 std::string BOTAN_TEST_API auth_method_to_string(Auth_Method method);
-Auth_Method BOTAN_TEST_API auth_method_from_string(const std::string& str);
+Auth_Method BOTAN_TEST_API auth_method_from_string(std::string_view str);
 
 /*
 * Matches with wire encoding
@@ -126,7 +126,7 @@ constexpr bool is_dh(const Group_Params group)
    }
 
 std::string group_param_to_string(Group_Params group);
-Group_Params group_param_from_string(const std::string& group_name);
+Group_Params group_param_from_string(std::string_view group_name);
 bool group_param_is_dh(Group_Params group);
 
 enum class Kex_Algo {
@@ -142,7 +142,7 @@ enum class Kex_Algo {
 };
 
 std::string BOTAN_TEST_API kex_method_to_string(Kex_Algo method);
-Kex_Algo BOTAN_TEST_API kex_method_from_string(const std::string& str);
+Kex_Algo BOTAN_TEST_API kex_method_from_string(std::string_view str);
 
 inline bool key_exchange_is_psk(Kex_Algo m)
    {

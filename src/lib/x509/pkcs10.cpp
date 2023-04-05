@@ -47,7 +47,7 @@ PKCS10_Request::PKCS10_Request(const std::vector<uint8_t>& vec)
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-PKCS10_Request::PKCS10_Request(const std::string& fsname)
+PKCS10_Request::PKCS10_Request(std::string_view fsname)
    {
    DataSource_Stream src(fsname, true);
    load_data(src);
@@ -58,10 +58,10 @@ PKCS10_Request::PKCS10_Request(const std::string& fsname)
 PKCS10_Request PKCS10_Request::create(const Private_Key& key,
                                       const X509_DN& subject_dn,
                                       const Extensions& extensions,
-                                      const std::string& hash_fn,
+                                      std::string_view hash_fn,
                                       RandomNumberGenerator& rng,
-                                      const std::string& padding_scheme,
-                                      const std::string& challenge)
+                                      std::string_view padding_scheme,
+                                      std::string_view challenge)
    {
    auto signer = choose_sig_format(key, rng, hash_fn, padding_scheme);
    const AlgorithmIdentifier sig_algo = signer->algorithm_identifier();
@@ -166,7 +166,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
       data->m_alt_name = ext->get_alt_name();
       }
 
-   for(const std::string& email : pkcs9_email)
+   for(const auto& email : pkcs9_email)
       {
       data->m_alt_name.add_attribute("RFC882", email);
       }

@@ -263,7 +263,7 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
 
 Response online_check(const X509_Certificate& issuer,
                       const BigInt& subject_serial,
-                      const std::string& ocsp_responder,
+                      std::string_view ocsp_responder,
                       std::chrono::milliseconds timeout)
    {
    if(ocsp_responder.empty())

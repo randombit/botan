@@ -345,8 +345,8 @@ bool Channel_Impl_13::is_active() const
       && m_can_write;  // close() hasn't been called
    }
 
-SymmetricKey Channel_Impl_13::key_material_export(const std::string& label,
-      const std::string& context,
+SymmetricKey Channel_Impl_13::key_material_export(std::string_view label,
+      std::string_view context,
       size_t length) const
    {
    BOTAN_STATE_CHECK(!is_downgrading());

@@ -24,7 +24,7 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2,0) TPM_Error final : public Exception
    {
    public:
-      TPM_Error(const std::string& err) : Exception(err) {}
+      TPM_Error(std::string_view err) : Exception(err) {}
       ErrorType error_type() const noexcept override { return ErrorType::TPMError; }
    };
 
@@ -119,10 +119,10 @@ class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey final : public Private_Key
 
       // reference an existing TPM key using URL syntax from GnuTLS
       // "tpmkey:uuid=79f07ca9-73ac-478a-9093-11ca6702e774;storage=user"
-      //TPM_PrivateKey(TPM_Context& ctx, const std::string& tpm_url);
+      //TPM_PrivateKey(TPM_Context& ctx, std::string_view tpm_url);
 
       TPM_PrivateKey(TPM_Context& ctx,
-                     const std::string& uuid,
+                     std::string_view uuid,
                      TPM_Storage_Type storage_type);
 
       TPM_PrivateKey(TPM_Context& ctx,

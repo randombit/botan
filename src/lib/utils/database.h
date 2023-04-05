@@ -23,12 +23,12 @@ class BOTAN_PUBLIC_API(2,0) SQL_Database
       class BOTAN_PUBLIC_API(2,0) SQL_DB_Error final : public Exception
          {
          public:
-            explicit SQL_DB_Error(const std::string& what) :
+            explicit SQL_DB_Error(std::string_view what) :
                Exception("SQL database", what),
                m_rc(0)
                {}
 
-            SQL_DB_Error(const std::string& what, int rc) :
+            SQL_DB_Error(std::string_view what, int rc) :
                Exception("SQL database", what),
                m_rc(rc)
                {}
@@ -44,7 +44,7 @@ class BOTAN_PUBLIC_API(2,0) SQL_Database
          {
          public:
             /* Bind statement parameters */
-            virtual void bind(int column, const std::string& str) = 0;
+            virtual void bind(int column, std::string_view str) = 0;
 
             virtual void bind(int column, size_t i) = 0;
 
@@ -74,15 +74,15 @@ class BOTAN_PUBLIC_API(2,0) SQL_Database
       * Create a new statement for execution.
       * Use ?1, ?2, ?3, etc for parameters to set later with bind
       */
-      virtual std::shared_ptr<Statement> new_statement(const std::string& base_sql) const = 0;
+      virtual std::shared_ptr<Statement> new_statement(std::string_view base_sql) const = 0;
 
-      virtual size_t row_count(const std::string& table_name) = 0;
+      virtual size_t row_count(std::string_view table_name) = 0;
 
-      virtual void create_table(const std::string& table_schema) = 0;
+      virtual void create_table(std::string_view table_schema) = 0;
 
       virtual size_t rows_changed_by_last_statement() = 0;
 
-      virtual size_t exec(const std::string& sql) { return new_statement(sql)->spin(); }
+      virtual size_t exec(std::string_view sql) { return new_statement(sql)->spin(); }
 
       virtual bool is_threadsafe() const { return false; }
 

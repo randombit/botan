@@ -8,6 +8,7 @@
 
 #include <botan/filters.h>
 #include <botan/exceptn.h>
+#include <botan/internal/fmt.h>
 
 #if defined(BOTAN_HAS_COMPRESSION)
   #include <botan/compression.h>
@@ -17,14 +18,14 @@ namespace Botan {
 
 #if defined(BOTAN_HAS_COMPRESSION)
 
-Compression_Filter::Compression_Filter(const std::string& type, size_t level, size_t bs) :
+Compression_Filter::Compression_Filter(std::string_view type, size_t level, size_t bs) :
    m_comp(Compression_Algorithm::create(type)),
    m_buffersize(std::max<size_t>(bs, 256)),
    m_level(level)
    {
    if(!m_comp)
       {
-      throw Invalid_Argument("Compression type '" + type + "' not found");
+      throw Invalid_Argument(fmt("Compression type '{}' not found", type));
       }
    }
 
@@ -71,13 +72,13 @@ void Compression_Filter::end_msg()
    send(m_buffer);
    }
 
-Decompression_Filter::Decompression_Filter(const std::string& type, size_t bs) :
+Decompression_Filter::Decompression_Filter(std::string_view type, size_t bs) :
    m_comp(Decompression_Algorithm::create(type)),
    m_buffersize(std::max<size_t>(bs, 256))
    {
    if(!m_comp)
       {
-      throw Invalid_Argument("Compression type '" + type + "' not found");
+      throw Invalid_Argument(fmt("Compression type '{}' not found", type));
       }
    }
 

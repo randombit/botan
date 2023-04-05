@@ -37,7 +37,7 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       * @param name the IANA name for the desired ciphersuite
       * @return ciphersuite object or std::nullopt if it is unknown to the library
       */
-      static std::optional<Ciphersuite> from_name(const std::string& name);
+      static std::optional<Ciphersuite> from_name(std::string_view name);
 
       /**
       * Returns true iff this suite is a known SCSV

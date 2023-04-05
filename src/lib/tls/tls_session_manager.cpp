@@ -219,7 +219,7 @@ std::vector<Session_with_Handle> Session_Manager::find(const Server_Information&
 
 std::optional<std::pair<Session, uint16_t>>
       Session_Manager::choose_from_offered_tickets(const std::vector<Ticket>& tickets,
-                                                   const std::string& hash_function,
+                                                   std::string_view hash_function,
                                                    Callbacks& callbacks,
                                                    const Policy& policy)
    {

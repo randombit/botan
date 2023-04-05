@@ -79,7 +79,7 @@ int botan_rng_init_custom(botan_rng_t* rng_out, const char* rng_name, void* cont
    class Custom_RNG : public Botan::RandomNumberGenerator
       {
       public:
-         Custom_RNG(const std::string& name, void* context,
+         Custom_RNG(std::string_view name, void* context,
                     int(* get_cb)(void* context, uint8_t* out, size_t out_len),
                     int(* add_entropy_cb)(void* context, const uint8_t input[], size_t length),
                     void(* destroy_cb)(void* context)) :

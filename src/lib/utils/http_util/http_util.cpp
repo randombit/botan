@@ -8,10 +8,11 @@
 
 #include <botan/internal/http_util.h>
 #include <botan/internal/parsing.h>
-#include <botan/hex.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/socket.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/fmt.h>
+#include <botan/hex.h>
 #include <sstream>
 
 namespace Botan::HTTP {
@@ -22,9 +23,9 @@ namespace {
 * Connect to a host, write some bytes, then read until the server
 * closes the socket.
 */
-std::string http_transact(const std::string& hostname,
-                          const std::string& service,
-                          const std::string& message,
+std::string http_transact(std::string_view hostname,
+                          std::string_view service,
+                          std::string_view message,
                           std::chrono::milliseconds timeout)
    {
    std::unique_ptr<OS::Socket> socket;
@@ -39,7 +40,7 @@ std::string http_transact(const std::string& hostname,
       }
    catch(std::exception& e)
       {
-      throw HTTP_Error("HTTP connection to " + hostname + " failed: " + e.what());
+      throw HTTP_Error(fmt("HTTP connection to {} failed: {}", hostname, e.what()));
       }
 
    // Blocks until entire message has been written
@@ -82,7 +83,7 @@ bool needs_url_encoding(char c)
 
 }
 
-std::string url_encode(const std::string& in)
+std::string url_encode(std::string_view in)
    {
    std::ostringstream out;
 
@@ -108,9 +109,9 @@ std::ostream& operator<<(std::ostream& o, const Response& resp)
    }
 
 Response http_sync(const http_exch_fn& http_transact,
-                   const std::string& verb,
-                   const std::string& url,
-                   const std::string& content_type,
+                   std::string_view verb,
+                   std::string_view url,
+                   std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    size_t allowable_redirects)
    {
@@ -119,7 +120,7 @@ Response http_sync(const http_exch_fn& http_transact,
 
    const auto protocol_host_sep = url.find("://");
    if(protocol_host_sep == std::string::npos)
-      throw HTTP_Error("Invalid URL '" + url + "'");
+      throw HTTP_Error(fmt("Invalid URL '{}'", url));
 
    const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
 
@@ -191,7 +192,7 @@ Response http_sync(const http_exch_fn& http_transact,
       {
       auto sep = header_line.find(": ");
       if(sep == std::string::npos || sep > header_line.size() - 2)
-         throw HTTP_Error("Invalid HTTP header " + header_line);
+         throw HTTP_Error(fmt("Invalid HTTP header '{}'", header_line));
       const std::string key = header_line.substr(0, sep);
 
       if(sep + 2 < header_line.size() - 1)
@@ -222,22 +223,22 @@ Response http_sync(const http_exch_fn& http_transact,
    if(!header_size.empty())
       {
       if(resp_body.size() != to_u32bit(header_size))
-         throw HTTP_Error("Content-Length disagreement, header says " +
-                          header_size + " got " + std::to_string(resp_body.size()));
+         throw HTTP_Error(fmt("Content-Length disagreement, header says {} got {}",
+                              header_size, resp_body.size()));
       }
 
    return Response(status_code, status_message, resp_body, headers);
    }
 
-Response http_sync(const std::string& verb,
-                   const std::string& url,
-                   const std::string& content_type,
+Response http_sync(std::string_view verb,
+                   std::string_view url,
+                   std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    size_t allowable_redirects,
                    std::chrono::milliseconds timeout)
    {
    auto transact_with_timeout =
-      [timeout](const std::string& hostname, const std::string& service, const std::string& message)
+      [timeout](std::string_view hostname, std::string_view service, std::string_view message)
       {
       return http_transact(hostname, service, message, timeout);
       };
@@ -251,15 +252,15 @@ Response http_sync(const std::string& verb,
       allowable_redirects);
    }
 
-Response GET_sync(const std::string& url,
+Response GET_sync(std::string_view url,
                   size_t allowable_redirects,
                   std::chrono::milliseconds timeout)
    {
    return http_sync("GET", url, "", std::vector<uint8_t>(), allowable_redirects, timeout);
    }
 
-Response POST_sync(const std::string& url,
-                   const std::string& content_type,
+Response POST_sync(std::string_view url,
+                   std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    size_t allowable_redirects,
                    std::chrono::milliseconds timeout)

@@ -24,9 +24,9 @@ void AttributeContainer::add_class(ObjectClass object_class)
                  static_cast<Ulong>(sizeof(ObjectClass)));
    }
 
-void AttributeContainer::add_string(AttributeType attribute, const std::string& value)
+void AttributeContainer::add_string(AttributeType attribute, std::string_view value)
    {
-   m_strings.push_back(value);
+   m_strings.push_back(std::string(value));
    add_attribute(attribute, reinterpret_cast<const uint8_t*>(m_strings.back().data()), static_cast<Ulong>(value.size()));
    }
 
@@ -51,7 +51,7 @@ void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* v
       if(existing_attribute.type == static_cast< CK_ATTRIBUTE_TYPE >(attribute))
          {
          // remove old entries
-         m_strings.remove_if([ &existing_attribute ](const std::string& data)
+         m_strings.remove_if([ &existing_attribute ](std::string_view data)
             {
             return data.data() == existing_attribute.pValue;
             });

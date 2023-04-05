@@ -72,7 +72,7 @@ std::string argon2_generate_pwhash(const char* password, size_t password_len,
    }
 
 bool argon2_check_pwhash(const char* password, size_t password_len,
-                         const std::string& input_hash)
+                         std::string_view input_hash)
    {
    const std::vector<std::string> parts = split_on(input_hash, '$');
 
@@ -107,7 +107,7 @@ bool argon2_check_pwhash(const char* password, size_t password_len,
       if(param.size() != 2)
          return false;
 
-      const std::string& key = param[0];
+      std::string_view key = param[0];
       const size_t val = to_u32bit(param[1]);
       if(key == "m")
          M = val;

@@ -29,7 +29,7 @@ std::string BOTAN_PUBLIC_API(2,11)
 * @param hash the stored hash to check against
 */
 bool BOTAN_PUBLIC_API(2,11) argon2_check_pwhash(const char* password, size_t password_len,
-                                                const std::string& hash);
+                                                std::string_view hash);
 
 }
 

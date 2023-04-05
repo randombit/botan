@@ -9,6 +9,7 @@
 #include <botan/hash.h>
 #include <botan/dl_group.h>
 #include <botan/numthry.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -26,8 +27,8 @@ BigInt hash_seq(HashFunction& hash_fn,
    }
 
 BigInt compute_x(HashFunction& hash_fn,
-                 const std::string& identifier,
-                 const std::string& password,
+                 std::string_view identifier,
+                 std::string_view password,
                  const std::vector<uint8_t>& salt)
    {
    hash_fn.update(identifier);
@@ -70,10 +71,10 @@ std::string srp6_group_identifier(const BigInt& N, const BigInt& g)
    }
 
 std::pair<BigInt, SymmetricKey>
-srp6_client_agree(const std::string& identifier,
-                  const std::string& password,
-                  const std::string& group_id,
-                  const std::string& hash_id,
+srp6_client_agree(std::string_view identifier,
+                  std::string_view password,
+                  std::string_view group_id,
+                  std::string_view hash_id,
                   const std::vector<uint8_t>& salt,
                   const BigInt& B,
                   RandomNumberGenerator& rng)
@@ -85,10 +86,10 @@ srp6_client_agree(const std::string& identifier,
    }
 
 std::pair<BigInt, SymmetricKey>
-srp6_client_agree(const std::string& identifier,
-                  const std::string& password,
+srp6_client_agree(std::string_view identifier,
+                  std::string_view password,
                   const DL_Group& group,
-                  const std::string& hash_id,
+                  std::string_view hash_id,
                   const std::vector<uint8_t>& salt,
                   const BigInt& B,
                   const size_t a_bits,
@@ -106,8 +107,8 @@ srp6_client_agree(const std::string& identifier,
 
    auto hash_fn = HashFunction::create_or_throw(hash_id);
    if(8*hash_fn->output_length() >= group.p_bits())
-      throw Invalid_Argument("Hash function " + hash_id +
-                             " too large for SRP6 with this group");
+      throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group",
+                                 hash_fn->name()));
 
    const BigInt k = hash_seq(*hash_fn, p_bytes, p, g);
 
@@ -137,34 +138,34 @@ srp6_client_agree(const std::string& identifier,
    return std::make_pair(A, Sk);
    }
 
-BigInt srp6_generate_verifier(const std::string& identifier,
-                              const std::string& password,
+BigInt srp6_generate_verifier(std::string_view identifier,
+                              std::string_view password,
                               const std::vector<uint8_t>& salt,
-                              const std::string& group_id,
-                              const std::string& hash_id)
+                              std::string_view group_id,
+                              std::string_view hash_id)
    {
    DL_Group group(group_id);
    return srp6_generate_verifier(identifier, password, salt, group, hash_id);
    }
 
-BigInt srp6_generate_verifier(const std::string& identifier,
-                              const std::string& password,
+BigInt srp6_generate_verifier(std::string_view identifier,
+                              std::string_view password,
                               const std::vector<uint8_t>& salt,
                               const DL_Group& group,
-                              const std::string& hash_id)
+                              std::string_view hash_id)
    {
    auto hash_fn = HashFunction::create_or_throw(hash_id);
    if(8*hash_fn->output_length() >= group.p_bits())
-      throw Invalid_Argument("Hash function " + hash_id +
-                             " too large for SRP6 with this group");
+      throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group",
+                                 hash_fn->name()));
 
    const BigInt x = compute_x(*hash_fn, identifier, password, salt);
    return group.power_g_p(x, hash_fn->output_length() * 8);
    }
 
 BigInt SRP6_Server_Session::step1(const BigInt& v,
-                                  const std::string& group_id,
-                                  const std::string& hash_id,
+                                  std::string_view group_id,
+                                  std::string_view hash_id,
                                   RandomNumberGenerator& rng)
    {
    DL_Group group(group_id);
@@ -174,7 +175,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 
 BigInt SRP6_Server_Session::step1(const BigInt& v,
                                   const DL_Group& group,
-                                  const std::string& hash_id,
+                                  std::string_view hash_id,
                                   size_t b_bits,
                                   RandomNumberGenerator& rng)
    {
@@ -190,9 +191,9 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
    m_hash_id = hash_id;
 
    auto hash_fn = HashFunction::create_or_throw(hash_id);
-   if(8*hash_fn->output_length() >= m_group.p_bits())
-      throw Invalid_Argument("Hash function " + hash_id +
-                             " too large for SRP6 with this group");
+   if(8*hash_fn->output_length() >= group.p_bits())
+      throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group",
+                                 hash_fn->name()));
 
    const BigInt k = hash_seq(*hash_fn, m_group.p_bytes(), p, g);
    m_B = group.mod_p(v*k + group.power_g_p(m_b, b_bits));
@@ -207,8 +208,8 @@ SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
 
    auto hash_fn = HashFunction::create_or_throw(m_hash_id);
    if(8*hash_fn->output_length() >= m_group.p_bits())
-      throw Invalid_Argument("Hash function " + m_hash_id +
-                             " too large for SRP6 with this group");
+      throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group",
+                                 hash_fn->name()));
 
    const BigInt u = hash_seq(*hash_fn, m_group.p_bytes(), A, m_B);
 

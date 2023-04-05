@@ -31,7 +31,7 @@ std::set<std::string> Encrypted_PSK_Database::list_names() const
 
    std::set<std::string> names;
 
-   for(const std::string& enc_name : encrypted_names)
+   for(const auto& enc_name : encrypted_names)
       {
       try
          {
@@ -50,7 +50,7 @@ std::set<std::string> Encrypted_PSK_Database::list_names() const
    return names;
    }
 
-void Encrypted_PSK_Database::remove(const std::string& name)
+void Encrypted_PSK_Database::remove(std::string_view name)
    {
    const std::vector<uint8_t> wrapped_name =
       nist_key_wrap_padded(cast_char_ptr_to_uint8(name.data()),
@@ -60,7 +60,7 @@ void Encrypted_PSK_Database::remove(const std::string& name)
    this->kv_del(base64_encode(wrapped_name));
    }
 
-secure_vector<uint8_t> Encrypted_PSK_Database::get(const std::string& name) const
+secure_vector<uint8_t> Encrypted_PSK_Database::get(std::string_view name) const
    {
    const std::vector<uint8_t> wrapped_name =
       nist_key_wrap_padded(cast_char_ptr_to_uint8(name.data()),
@@ -80,7 +80,7 @@ secure_vector<uint8_t> Encrypted_PSK_Database::get(const std::string& name) cons
    return nist_key_unwrap_padded(val.data(), val.size(), *wrap_cipher);
    }
 
-void Encrypted_PSK_Database::set(const std::string& name, const uint8_t val[], size_t len)
+void Encrypted_PSK_Database::set(std::string_view name, const uint8_t val[], size_t len)
    {
    /*
    * Both as a basic precaution wrt key seperation, and specifically to prevent

@@ -191,8 +191,8 @@ class BOTAN_TEST_API Cipher_State
        * @param length    the length of the desired key in bytes
        * @return          key of length bytes
        */
-      secure_vector<uint8_t> export_key(const std::string& label,
-                                        const std::string& context,
+      secure_vector<uint8_t> export_key(std::string_view label,
+                                        std::string_view context,
                                         size_t length) const;
 
       /**
@@ -268,7 +268,7 @@ class BOTAN_TEST_API Cipher_State
        * @param whoami         whether we play the Server or Client
        * @param hash_function  the negotiated hash function to be used
        */
-      Cipher_State(Connection_Side whoami, const std::string& hash_function);
+      Cipher_State(Connection_Side whoami, std::string_view hash_function);
 
       void advance_with_psk(PSK_Type type, secure_vector<uint8_t>&& psk);
       void advance_without_psk();
@@ -288,7 +288,7 @@ class BOTAN_TEST_API Cipher_State
        */
       secure_vector<uint8_t> hkdf_expand_label(
          const secure_vector<uint8_t>& secret,
-         const std::string&            label,
+         std::string_view            label,
          const std::vector<uint8_t>&   context,
          const size_t                  length) const;
 
@@ -297,7 +297,7 @@ class BOTAN_TEST_API Cipher_State
        */
       secure_vector<uint8_t> derive_secret(
          const secure_vector<uint8_t>& secret,
-         const std::string&            label,
+         std::string_view            label,
          const Transcript_Hash&        messages_hash) const;
 
       std::vector<uint8_t> empty_hash() const;

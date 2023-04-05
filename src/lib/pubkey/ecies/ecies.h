@@ -108,7 +108,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_KA_Params
          return m_compression_mode;
          }
 
-      const std::string& kdf_spec() const
+      const std::string kdf_spec() const
          {
          return m_kdf_spec;
          }

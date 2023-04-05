@@ -9,6 +9,7 @@
 #include <botan/der_enc.h>
 #include <botan/data_src.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/fmt.h>
 #include <sstream>
 
 namespace Botan {
@@ -177,11 +178,11 @@ std::string asn1_tag_to_string(ASN1_Type type)
 /*
 * BER Decoding Exceptions
 */
-BER_Decoding_Error::BER_Decoding_Error(const std::string& str) :
-   Decoding_Error("BER: " + str) {}
+BER_Decoding_Error::BER_Decoding_Error(std::string_view str) :
+   Decoding_Error(fmt("BER: {}", str)) {}
 
-BER_Bad_Tag::BER_Bad_Tag(const std::string& str, uint32_t tagging) :
-   BER_Decoding_Error(str + ": " + std::to_string(tagging)) {}
+BER_Bad_Tag::BER_Bad_Tag(std::string_view str, uint32_t tagging) :
+   BER_Decoding_Error(fmt("{}: {}", str, tagging)) {}
 
 namespace ASN1 {
 

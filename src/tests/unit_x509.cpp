@@ -1558,7 +1558,7 @@ Test::Result test_hashes(const Botan::Private_Key& key,
 
       const Botan::X509_CA ca(issuer_cert, key, hash_fn, Test::rng());
       const Botan::PKCS10_Request req =
-         Botan::X509::create_cert_req(a.subject, key, hash_fn, Test::rng());
+         Botan::X509::create_cert_req(Botan::X509_Cert_Options(a.subject), key, hash_fn, Test::rng());
       const Botan::X509_Certificate subject_cert =
          ca.sign_request(req, Test::rng(), from_date(-1, 01, 01), from_date(2, 01, 01));
 

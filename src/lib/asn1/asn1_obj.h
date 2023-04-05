@@ -204,7 +204,7 @@ bool maybe_BER(DataSource& src);
 class BOTAN_PUBLIC_API(2,0) BER_Decoding_Error : public Decoding_Error
    {
    public:
-      explicit BER_Decoding_Error(const std::string&);
+      explicit BER_Decoding_Error(std::string_view);
    };
 
 /**
@@ -213,7 +213,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoding_Error : public Decoding_Error
 class BOTAN_PUBLIC_API(2,0) BER_Bad_Tag final : public BER_Decoding_Error
    {
    public:
-      BER_Bad_Tag(const std::string& msg, uint32_t tagging);
+      BER_Bad_Tag(std::string_view msg, uint32_t tagging);
    };
 
 /**

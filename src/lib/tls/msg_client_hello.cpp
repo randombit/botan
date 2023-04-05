@@ -767,7 +767,7 @@ Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data)
 Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  Callbacks& cb,
                                  RandomNumberGenerator& rng,
-                                 const std::string& hostname,
+                                 std::string_view hostname,
                                  const std::vector<std::string>& next_protocols,
                                  std::optional<Session_with_Handle>& session)
    {

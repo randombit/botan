@@ -92,7 +92,7 @@ const X509_Certificate& Certificate_13::leaf() const
 void Certificate_13::verify(Callbacks& callbacks,
                             const Policy& policy,
                             Credentials_Manager& creds,
-                            const std::string& hostname,
+                            std::string_view hostname,
                             bool use_ocsp) const
    {
    std::vector<X509_Certificate> certs;
@@ -126,7 +126,7 @@ void Certificate_13::verify(Callbacks& callbacks,
 
    const auto trusted_CAs = creds.trusted_certificate_authorities(
                                      m_side == Connection_Side::Client ? "tls-client" : "tls-server",
-                                     hostname);
+                                     std::string(hostname));
 
    const auto usage = (m_side == Connection_Side::Client) ? Usage_Type::TLS_CLIENT_AUTH : Usage_Type::TLS_SERVER_AUTH;
    callbacks.tls_verify_cert_chain(certs, ocsp_responses, trusted_CAs, usage, hostname, policy);
@@ -174,7 +174,7 @@ void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
  * Create a Client Certificate message
  */
 Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
-                               const std::string& hostname,
+                               std::string_view hostname,
                                Credentials_Manager& credentials_manager,
                                Callbacks& callbacks) :
    m_request_context(cert_request.context()),
@@ -185,7 +185,7 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
                     to_algorithm_identifiers(cert_request.certificate_signature_schemes()),
                     cert_request.acceptable_CAs(),
                     "tls-client",
-                    hostname),
+                    std::string(hostname)),
                  cert_request.extensions().get<Certificate_Status_Request>(),
                  callbacks);
    }

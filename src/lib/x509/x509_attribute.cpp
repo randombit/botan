@@ -22,7 +22,7 @@ Attribute::Attribute(const OID& attr_oid, const std::vector<uint8_t>& attr_value
 /*
 * Create an Attribute
 */
-Attribute::Attribute(const std::string& attr_oid,
+Attribute::Attribute(std::string_view attr_oid,
                      const std::vector<uint8_t>& attr_value) :
    m_oid(OID::from_string(attr_oid)),
    m_parameters(attr_value)

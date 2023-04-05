@@ -15,6 +15,7 @@
 #include <botan/pkix_enums.h>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <iosfwd>
 #include <map>
 #include <set>
@@ -72,20 +73,20 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
       std::multimap<OID, std::string> get_attributes() const;
       std::multimap<std::string, std::string> contents() const;
 
-      bool has_field(const std::string& attr) const;
-      std::vector<std::string> get_attribute(const std::string& attr) const;
-      std::string get_first_attribute(const std::string& attr) const;
+      bool has_field(std::string_view attr) const;
+      std::vector<std::string> get_attribute(std::string_view attr) const;
+      std::string get_first_attribute(std::string_view attr) const;
 
-      void add_attribute(const std::string& key, const std::string& val);
+      void add_attribute(std::string_view key, std::string_view val);
 
-      void add_attribute(const OID& oid, const std::string& val)
+      void add_attribute(const OID& oid, std::string_view val)
          {
          add_attribute(oid, ASN1_String(val));
          }
 
       void add_attribute(const OID& oid, const ASN1_String& val);
 
-      static std::string deref_info_field(const std::string& key);
+      static std::string deref_info_field(std::string_view key);
 
       /**
       * Lookup upper bounds in characters for the length of distinguished name fields
@@ -124,15 +125,15 @@ class BOTAN_PUBLIC_API(2,0) AlternativeName final : public ASN1_Object
 
       std::multimap<std::string, std::string> contents() const;
 
-      bool has_field(const std::string& attr) const;
-      std::vector<std::string> get_attribute(const std::string& attr) const;
+      bool has_field(std::string_view attr) const;
+      std::vector<std::string> get_attribute(std::string_view attr) const;
 
-      std::string get_first_attribute(const std::string& attr) const;
+      std::string get_first_attribute(std::string_view attr) const;
 
-      void add_attribute(const std::string& type, const std::string& value);
-      void add_othername(const OID& oid, const std::string& value, ASN1_Type type);
+      void add_attribute(std::string_view type, std::string_view value);
+      void add_othername(const OID& oid, std::string_view value, ASN1_Type type);
 
-      const std::multimap<std::string, std::string>& get_attributes() const
+      const std::multimap<std::string, std::string, std::less<>>& get_attributes() const
          {
          return m_alt_info;
          }
@@ -146,12 +147,12 @@ class BOTAN_PUBLIC_API(2,0) AlternativeName final : public ASN1_Object
 
       bool has_items() const;
 
-      AlternativeName(const std::string& email_addr = "",
-                      const std::string& uri = "",
-                      const std::string& dns = "",
-                      const std::string& ip_address = "");
+      AlternativeName(std::string_view email_addr = "",
+                      std::string_view uri = "",
+                      std::string_view dns = "",
+                      std::string_view ip_address = "");
    private:
-      std::multimap<std::string, std::string> m_alt_info;
+      std::multimap<std::string, std::string, std::less<>> m_alt_info;
       std::multimap<OID, ASN1_String> m_othernames;
    };
 
@@ -166,7 +167,7 @@ class BOTAN_PUBLIC_API(2,0) Attribute final : public ASN1_Object
 
       Attribute() = default;
       Attribute(const OID& oid, const std::vector<uint8_t>& params);
-      Attribute(const std::string& oid_str, const std::vector<uint8_t>& params);
+      Attribute(std::string_view oid_str, const std::vector<uint8_t>& params);
 
       const OID& oid() const { return m_oid; }
       const std::vector<uint8_t>& parameters() const { return m_parameters; }

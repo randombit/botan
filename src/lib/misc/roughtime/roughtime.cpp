@@ -249,9 +249,9 @@ Nonce nonce_from_blind(const std::vector<uint8_t>& previous_response,
    return ret;
    }
 
-Chain::Chain(const std::string& str)
+Chain::Chain(std::string_view str)
    {
-   std::stringstream ss(str);
+   std::istringstream ss{std::string(str)}; // FIXME C++23 avoid copy
    const std::string ERROR_MESSAGE = "Line does not have 4 space separated fields";
    for(std::string s; std::getline(ss, s);)
       {
@@ -361,7 +361,7 @@ std::string Chain::to_string() const
    return s;
    }
 
-std::vector<uint8_t> online_request(const std::string& uri,
+std::vector<uint8_t> online_request(std::string_view uri,
                                     const Nonce& nonce,
                                     std::chrono::milliseconds timeout)
    {
@@ -391,10 +391,11 @@ std::vector<uint8_t> online_request(const std::string& uri,
    return buffer;
    }
 
-std::vector<Server_Information> servers_from_str(const std::string& str)
+std::vector<Server_Information> servers_from_str(std::string_view str)
    {
    std::vector<Server_Information> servers;
-   std::stringstream ss(str);
+   std::istringstream ss{std::string(str)}; // FIXME C++23 avoid copy
+
    const std::string ERROR_MESSAGE = "Line does not have at least 5 space separated fields";
    for(std::string s; std::getline(ss, s);)
       {

@@ -276,7 +276,7 @@ class BOTAN_PUBLIC_API(2,0) Response final
 BOTAN_PUBLIC_API(3,0)
 Response online_check(const X509_Certificate& issuer,
                       const BigInt& subject_serial,
-                      const std::string& ocsp_responder,
+                      std::string_view ocsp_responder,
                       std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
 /**

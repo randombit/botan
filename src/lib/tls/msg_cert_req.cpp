@@ -37,14 +37,14 @@ std::string cert_type_code_to_name(uint8_t code)
       }
    }
 
-uint8_t cert_type_name_to_code(const std::string& name)
+uint8_t cert_type_name_to_code(std::string_view name)
    {
    if(name == "RSA")
       return 1;
    if(name == "ECDSA")
       return 64;
 
-   throw Invalid_Argument("Unknown/unhandled TLS cert type " + name);
+   throw Invalid_Argument(fmt("Unknown/unhandled TLS cert type {}", name));
    }
 
 }

@@ -205,7 +205,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode_Filter final : public Keyed_Filter,
 * decrypting filter
 * @return pointer to the encryption or decryption filter
 */
-inline Keyed_Filter* get_cipher(const std::string& algo_spec,
+inline Keyed_Filter* get_cipher(std::string_view algo_spec,
                                 Cipher_Dir direction)
    {
    auto c = Cipher_Mode::create_or_throw(algo_spec, direction);
@@ -221,7 +221,7 @@ inline Keyed_Filter* get_cipher(const std::string& algo_spec,
 * or decrypting filter
 * @return pointer to the encryption or decryption filter
 */
-inline Keyed_Filter* get_cipher(const std::string& algo_spec,
+inline Keyed_Filter* get_cipher(std::string_view algo_spec,
                                 const SymmetricKey& key,
                                 Cipher_Dir direction)
    {
@@ -240,7 +240,7 @@ inline Keyed_Filter* get_cipher(const std::string& algo_spec,
 * or decrypting filter
 * @return pointer to newly allocated encryption or decryption filter
 */
-inline Keyed_Filter* get_cipher(const std::string& algo_spec,
+inline Keyed_Filter* get_cipher(std::string_view algo_spec,
                                 const SymmetricKey& key,
                                 const InitializationVector& iv,
                                 Cipher_Dir direction)
@@ -306,14 +306,14 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher_Filter final : public Keyed_Filter
       * Construct a stream cipher filter.
       * @param cipher the name of the desired cipher
       */
-      explicit StreamCipher_Filter(const std::string& cipher);
+      explicit StreamCipher_Filter(std::string_view cipher);
 
       /**
       * Construct a stream cipher filter.
       * @param cipher the name of the desired cipher
       * @param key the key to use inside this filter
       */
-      StreamCipher_Filter(const std::string& cipher, const SymmetricKey& key);
+      StreamCipher_Filter(std::string_view cipher, const SymmetricKey& key);
    private:
       std::unique_ptr<StreamCipher> m_cipher;
       secure_vector<uint8_t> m_buffer;
@@ -352,7 +352,7 @@ class BOTAN_PUBLIC_API(2,0) Hash_Filter final : public Filter
       * hash. Otherwise, specify a smaller value here so that the
       * output of the hash algorithm will be cut off.
       */
-      Hash_Filter(const std::string& request, size_t len = 0);
+      Hash_Filter(std::string_view request, size_t len = 0);
 
    private:
       std::unique_ptr<HashFunction> m_hash;
@@ -422,7 +422,7 @@ class BOTAN_PUBLIC_API(2,0) MAC_Filter final : public Keyed_Filter
       * MAC. Otherwise, specify a smaller value here so that the
       * output of the MAC will be cut off.
       */
-      MAC_Filter(const std::string& mac, size_t len = 0);
+      MAC_Filter(std::string_view mac, size_t len = 0);
 
       /**
       * Construct a MAC filter.
@@ -433,7 +433,7 @@ class BOTAN_PUBLIC_API(2,0) MAC_Filter final : public Keyed_Filter
       * MAC. Otherwise, specify a smaller value here so that the
       * output of the MAC will be cut off.
       */
-      MAC_Filter(const std::string& mac, const SymmetricKey& key,
+      MAC_Filter(std::string_view mac, const SymmetricKey& key,
                  size_t len = 0);
    private:
       std::unique_ptr<MessageAuthenticationCode> m_mac;
@@ -460,7 +460,7 @@ class BOTAN_PUBLIC_API(2,0) Compression_Filter final : public Filter
 
       std::string name() const override;
 
-      Compression_Filter(const std::string& type,
+      Compression_Filter(std::string_view type,
                          size_t compression_level,
                          size_t buffer_size = 4096);
 
@@ -483,7 +483,7 @@ class BOTAN_PUBLIC_API(2,0) Decompression_Filter final : public Filter
 
       std::string name() const override;
 
-      Decompression_Filter(const std::string& type,
+      Decompression_Filter(std::string_view type,
                            size_t buffer_size = 4096);
 
       ~Decompression_Filter();

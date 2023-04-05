@@ -12,7 +12,7 @@ namespace Botan {
 
 namespace {
 
-std::string clean_ws(const std::string& s)
+std::string clean_ws(std::string_view s)
    {
    const char* ws = " \t\n";
    auto start = s.find_first_not_of(ws);
@@ -22,9 +22,9 @@ std::string clean_ws(const std::string& s)
       return "";
 
    if(end == std::string::npos)
-      return s.substr(start, end);
+      return std::string(s.substr(start, end));
    else
-      return s.substr(start, start + end + 1);
+      return std::string(s.substr(start, start + end + 1));
    }
 
 }

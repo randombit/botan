@@ -1,4 +1,4 @@
-/*
+ /*
 * (C) 2019 Nuno Goncalves <nunojpg@gmail.com>
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -7,10 +7,10 @@
 #ifndef BOTAN_URI_H_
 #define BOTAN_URI_H_
 
+#include <botan/types.h>
 #include <cstdint>
+#include <string_view>
 #include <string>
-
-#include <botan/build.h>
 
 namespace Botan {
 
@@ -23,12 +23,12 @@ struct BOTAN_TEST_API URI
       IPv6,
       Domain,
       };
-   static URI fromAny(const std::string& uri);
-   static URI fromIPv4(const std::string& uri);
-   static URI fromIPv6(const std::string& uri);
-   static URI fromDomain(const std::string& uri);
+   static URI fromAny(std::string_view uri);
+   static URI fromIPv4(std::string_view uri);
+   static URI fromIPv6(std::string_view uri);
+   static URI fromDomain(std::string_view uri);
    URI() = default;
-   URI(Type xtype, const std::string& xhost, unsigned short xport)
+   URI(Type xtype, std::string_view xhost, unsigned short xport)
       : type { xtype }
       , host { xhost }
       , port { xport }

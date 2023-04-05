@@ -114,14 +114,14 @@ inline void scrypt(uint8_t output[], size_t output_len,
 */
 BOTAN_DEPRECATED("Use PasswordHashFamily+PasswordHash")
 inline void scrypt(uint8_t output[], size_t output_len,
-                   const std::string& password,
+                   std::string_view password,
                    const uint8_t salt[], size_t salt_len,
                    size_t N, size_t r, size_t p)
    {
    auto pwdhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
    auto pwdhash = pwdhash_fam->from_params(N, r, p);
    pwdhash->derive_key(output, output_len,
-                       password.c_str(), password.size(),
+                       password.data(), password.size(),
                        salt, salt_len);
    }
 

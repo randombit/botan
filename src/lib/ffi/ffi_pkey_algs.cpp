@@ -101,7 +101,7 @@ int pubkey_load_ec(std::unique_ptr<ECPublicKey_t>& key,
 #endif
 
 Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
-                               const std::string& field)
+                               std::string_view field)
    {
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
    // Not currently handled by get_int_field
@@ -125,7 +125,7 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
    }
 
 Botan::BigInt privkey_get_field(const Botan::Private_Key& key,
-                                const std::string& field)
+                                std::string_view field)
    {
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
    // Not currently handled by get_int_field

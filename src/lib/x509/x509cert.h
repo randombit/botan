@@ -118,7 +118,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * "RFC822" (Email in SAN) or "PKCS9.EmailAddress" (Email in DN).
       * @return value(s) of the specified parameter
       */
-      std::vector<std::string> subject_info(const std::string& name) const;
+      std::vector<std::string> subject_info(std::string_view name) const;
 
       /**
       * Get a value for a specific subject_info parameter name.
@@ -126,7 +126,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * "X509.Certificate.v2.key_id" or "X509v3.AuthorityKeyIdentifier".
       * @return value(s) of the specified parameter
       */
-      std::vector<std::string> issuer_info(const std::string& name) const;
+      std::vector<std::string> issuer_info(std::string_view name) const;
 
       /**
       * Raw issuer DN bits
@@ -217,7 +217,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * To check if a certain extended key constraint is set in the certificate
       * use @see X509_Certificate#has_ex_constraint.
       */
-      bool allowed_extended_usage(const std::string& usage) const;
+      bool allowed_extended_usage(std::string_view usage) const;
 
       /**
       * Returns true if the specified usage is set in the extended key usage extension,
@@ -246,7 +246,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * Returns true if and only if OID @param ex_constraint is
       * included in the extended key extension.
       */
-      bool has_ex_constraint(const std::string& ex_constraint) const;
+      bool has_ex_constraint(std::string_view ex_constraint) const;
 
       /**
       * Returns true if and only if OID @param ex_constraint is
@@ -265,7 +265,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * Check whenever a given X509 Extension is marked critical in this
       * certificate.
       */
-      bool is_critical(const std::string& ex_name) const;
+      bool is_critical(std::string_view ex_name) const;
 
       /**
       * Get the key constraints as defined in the KeyUsage extension of this
@@ -347,14 +347,14 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * @return a fingerprint of the certificate
       * @param hash_name hash function used to calculate the fingerprint
       */
-      std::string fingerprint(const std::string& hash_name = "SHA-1") const;
+      std::string fingerprint(std::string_view hash_name = "SHA-1") const;
 
       /**
       * Check if a certain DNS name matches up with the information in
       * the cert
       * @param name DNS name to match
       */
-      bool matches_dns_name(const std::string& name) const;
+      bool matches_dns_name(std::string_view name) const;
 
       /**
       * Check to certificates for equality.
@@ -382,7 +382,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * encoded certificate.
       * @param filename the name of the certificate file
       */
-      explicit X509_Certificate(const std::string& filename);
+      explicit X509_Certificate(std::string_view filename);
 #endif
 
       /**

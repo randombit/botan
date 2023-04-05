@@ -90,7 +90,7 @@ class BOTAN_PUBLIC_API(2,0) Subject_Key_ID final : public Certificate_Extension
       explicit Subject_Key_ID(const std::vector<uint8_t>& k) : m_key_id(k) {}
 
       Subject_Key_ID(const std::vector<uint8_t>& public_key,
-                     const std::string& hash_fn);
+                     std::string_view hash_fn);
 
       std::unique_ptr<Certificate_Extension> copy() const override
          { return std::make_unique<Subject_Key_ID>(m_key_id); }
@@ -297,7 +297,7 @@ class BOTAN_PUBLIC_API(2,0) Authority_Information_Access final : public Certific
 
       Authority_Information_Access() = default;
 
-      explicit Authority_Information_Access(const std::string& ocsp, const std::vector<std::string>& ca_issuers = std::vector<std::string>()) :
+      explicit Authority_Information_Access(std::string_view ocsp, const std::vector<std::string>& ca_issuers = std::vector<std::string>()) :
          m_ocsp_responder(ocsp), m_ca_issuers(ca_issuers) {}
 
       std::string ocsp_responder() const { return m_ocsp_responder; }

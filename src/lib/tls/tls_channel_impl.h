@@ -112,8 +112,8 @@ class Channel_Impl
       * @param length the length of the desired key in bytes
       * @return key of length bytes
       */
-      virtual SymmetricKey key_material_export(const std::string& label,
-                                       const std::string& context,
+      virtual SymmetricKey key_material_export(std::string_view label,
+                                       std::string_view context,
                                        size_t length) const = 0;
 
       /**

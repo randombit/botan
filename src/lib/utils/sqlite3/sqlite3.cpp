@@ -8,11 +8,12 @@
 #include <botan/sqlite3.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/fmt.h>
 #include <sqlite3.h>
 
 namespace Botan {
 
-Sqlite3_Database::Sqlite3_Database(const std::string& db_filename, std::optional<int> sqlite_open_flags)
+Sqlite3_Database::Sqlite3_Database(std::string_view db_filename, std::optional<int> sqlite_open_flags)
    {
    // SQLITE_OPEN_FULLMUTEX ensures that the database object can be used
    // concurrently from multiple threads.
@@ -20,7 +21,7 @@ Sqlite3_Database::Sqlite3_Database(const std::string& db_filename, std::optional
                            SQLITE_OPEN_READWRITE |
                            SQLITE_OPEN_CREATE    |
                            SQLITE_OPEN_FULLMUTEX);
-   int rc = ::sqlite3_open_v2(db_filename.c_str(), &m_db, open_flags, nullptr);
+   int rc = ::sqlite3_open_v2(std::string(db_filename).c_str(), &m_db, open_flags, nullptr);
 
    if(rc)
       {
@@ -38,25 +39,25 @@ Sqlite3_Database::~Sqlite3_Database()
    m_db = nullptr;
    }
 
-std::shared_ptr<SQL_Database::Statement> Sqlite3_Database::new_statement(const std::string& base_sql) const
+std::shared_ptr<SQL_Database::Statement> Sqlite3_Database::new_statement(std::string_view base_sql) const
    {
    return std::make_shared<Sqlite3_Statement>(m_db, base_sql);
    }
 
-size_t Sqlite3_Database::row_count(const std::string& table_name)
+size_t Sqlite3_Database::row_count(std::string_view table_name)
    {
-   auto stmt = new_statement("select count(*) from " + table_name);
+   auto stmt = new_statement(fmt("select count(*) from {}", table_name));
 
    if(stmt->step())
       return stmt->get_size_t(0);
    else
-      throw SQL_DB_Error("Querying size of table " + table_name + " failed");
+      throw SQL_DB_Error(fmt("Querying size of table '{}' failed", table_name));
    }
 
-void Sqlite3_Database::create_table(const std::string& table_schema)
+void Sqlite3_Database::create_table(std::string_view table_schema)
    {
    char* errmsg = nullptr;
-   int rc = ::sqlite3_exec(m_db, table_schema.c_str(), nullptr, nullptr, &errmsg);
+   int rc = ::sqlite3_exec(m_db, std::string(table_schema).c_str(), nullptr, nullptr, &errmsg);
 
    if(rc != SQLITE_OK)
       {
@@ -96,17 +97,17 @@ bool Sqlite3_Database::is_threadsafe() const
    return flag >= 1;
    }
 
-Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, const std::string& base_sql)
+Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, std::string_view base_sql)
    {
-   int rc = ::sqlite3_prepare_v2(db, base_sql.c_str(), -1, &m_stmt, nullptr);
+   int rc = ::sqlite3_prepare_v2(db, base_sql.data(), static_cast<int>(base_sql.size()), &m_stmt, nullptr);
 
    if(rc != SQLITE_OK)
-      throw SQL_DB_Error("sqlite3_prepare failed on " + base_sql, rc);
+      throw SQL_DB_Error(fmt("sqlite3_prepare failed on '{}' with err {}", base_sql, rc), rc);
    }
 
-void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::string& val)
+void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::string_view val)
    {
-   int rc = ::sqlite3_bind_text(m_stmt, column, val.c_str(), -1, SQLITE_TRANSIENT);
+   int rc = ::sqlite3_bind_text(m_stmt, column, val.data(), static_cast<int>(val.size()), SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }

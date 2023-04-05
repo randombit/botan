@@ -32,9 +32,9 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQL : public Certificate_Store
       * @param table_prefix optional prefix for db table names
       */
       explicit Certificate_Store_In_SQL(const std::shared_ptr<SQL_Database> db,
-                                        const std::string& passwd,
+                                        std::string_view passwd,
                                         RandomNumberGenerator& rng,
-                                        const std::string& table_prefix = "");
+                                        std::string_view table_prefix = "");
 
       /**
       * Returns the first certificate with matching subject DN and optional key ID.

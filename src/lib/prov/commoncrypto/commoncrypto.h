@@ -26,20 +26,16 @@ typedef int32_t CCCryptorStatus;
 class BOTAN_PUBLIC_API(2, 0) CommonCrypto_Error final : public Exception
    {
    public:
-      CommonCrypto_Error(const std::string& what) :
-         Exception(what + " failed."),
-         m_rc(0) {}
+      CommonCrypto_Error(std::string_view what);
 
-      CommonCrypto_Error(const std::string& what, int32_t status) :
-         Exception(what + std::string(" failed. Status: ") + ccryptorstatus_to_string(status)),
-         m_rc(status) {}
+      CommonCrypto_Error(std::string_view what, int32_t status);
 
       ErrorType error_type() const noexcept override { return ErrorType::CommonCryptoError; }
 
       int error_code() const noexcept override { return m_rc; }
 
    private:
-      std::string ccryptorstatus_to_string(CCCryptorStatus status);
+      static std::string ccryptorstatus_to_string(CCCryptorStatus status);
 
       int32_t m_rc;
    };

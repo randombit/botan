@@ -16,6 +16,8 @@
 #include <botan/pem.h>
 #include <botan/internal/workfactor.h>
 #include <botan/internal/monty_exp.h>
+#include <botan/internal/fmt.h>
+#include <string_view>
 
 namespace Botan {
 
@@ -100,10 +102,10 @@ class DL_Group_Data final
 
       bool q_is_set() const { return m_q_bits > 0; }
 
-      void assert_q_is_set(const std::string& function) const
+      void assert_q_is_set(std::string_view function) const
          {
          if(q_is_set() == false)
-            throw Invalid_State("DL_Group::" + function + " q is not set for this group");
+            throw Invalid_State(fmt("DL_Group::{}: q is not set for this group", function));
          }
 
       DL_Group_Source source() const { return m_source; }
@@ -187,7 +189,7 @@ DL_Group::load_DL_group_info(const char* p_str,
 
 namespace {
 
-DL_Group_Format pem_label_to_dl_format(const std::string& label)
+DL_Group_Format pem_label_to_dl_format(std::string_view label)
    {
    if(label == "DH PARAMETERS")
       return DL_Group_Format::PKCS_3;
@@ -196,7 +198,7 @@ DL_Group_Format pem_label_to_dl_format(const std::string& label)
    else if(label == "X942 DH PARAMETERS" || label == "X9.42 DH PARAMETERS")
       return DL_Group_Format::ANSI_X9_42;
    else
-      throw Decoding_Error("DL_Group: Invalid PEM label " + label);
+      throw Decoding_Error(fmt("DL_Group: Unknown PEM label '{}'", label));
    }
 
 }
@@ -204,7 +206,7 @@ DL_Group_Format pem_label_to_dl_format(const std::string& label)
 /*
 * DL_Group Constructor
 */
-DL_Group::DL_Group(const std::string& str)
+DL_Group::DL_Group(std::string_view str)
    {
    // Either a name or a PEM block, try name first
    m_data = DL_group_info(str);
@@ -223,7 +225,7 @@ DL_Group::DL_Group(const std::string& str)
       }
 
    if(m_data == nullptr)
-      throw Invalid_Argument("DL_Group: Unknown group " + str);
+      throw Invalid_Argument(fmt("DL_Group: Unknown group '{}'", str));
    }
 
 namespace {
@@ -259,7 +261,10 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
                    PrimeType type, size_t pbits, size_t qbits)
    {
    if(pbits < 1024)
-      throw Invalid_Argument("DL_Group: prime size " + std::to_string(pbits) + " is too small");
+      throw Invalid_Argument(fmt("DL_Group: requested prime size {} is too small", pbits));
+
+   if(qbits >= pbits)
+      throw Invalid_Argument(fmt("DL_Group: requested q size {} is too big for p {}", qbits, pbits));
 
    if(type == Strong)
       {
@@ -680,7 +685,7 @@ void DL_Group::BER_decode(const std::vector<uint8_t>& ber, DL_Group_Format forma
    }
 
 //static
-DL_Group DL_Group::DL_Group_from_PEM(const std::string& pem)
+DL_Group DL_Group::DL_Group_from_PEM(std::string_view pem)
    {
    std::string label;
    const std::vector<uint8_t> ber = unlock(PEM_Code::decode(pem, label));

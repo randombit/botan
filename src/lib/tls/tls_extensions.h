@@ -126,7 +126,7 @@ class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension
 
       Extension_Code type() const override { return static_type(); }
 
-      explicit Server_Name_Indicator(const std::string& host_name) :
+      explicit Server_Name_Indicator(std::string_view host_name) :
          m_sni_host_name(host_name) {}
 
       Server_Name_Indicator(TLS_Data_Reader& reader,
@@ -184,13 +184,13 @@ class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public 
 
       const std::vector<std::string>& protocols() const { return m_protocols; }
 
-      const std::string& single_protocol() const;
+      const std::string single_protocol() const;
 
       /**
       * Single protocol, used by server
       */
-      explicit Application_Layer_Protocol_Notification(const std::string& protocol) :
-         m_protocols(1, protocol) {}
+      explicit Application_Layer_Protocol_Notification(std::string_view protocol) :
+         m_protocols(1, std::string(protocol)) {}
 
       /**
       * List of protocols, used by client

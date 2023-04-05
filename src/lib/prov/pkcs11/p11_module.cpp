@@ -11,7 +11,7 @@
 
 namespace Botan::PKCS11 {
 
-Module::Module(const std::string& file_path, C_InitializeArgs init_args)
+Module::Module(std::string_view file_path, C_InitializeArgs init_args)
    : m_file_path(file_path)
    {
    if(file_path.empty())

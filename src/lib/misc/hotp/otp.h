@@ -24,7 +24,7 @@ class BOTAN_PUBLIC_API(2,2) HOTP final
       * @param hash_algo the hash algorithm to use, should be SHA-1 or SHA-256
       * @param digits the number of digits in the OTP (must be 6, 7, or 8)
       */
-      HOTP(const SymmetricKey& key, const std::string& hash_algo = "SHA-1", size_t digits = 6) :
+      HOTP(const SymmetricKey& key, std::string_view hash_algo = "SHA-1", size_t digits = 6) :
          HOTP(key.begin(), key.size(), hash_algo, digits) {}
 
       /**
@@ -34,7 +34,7 @@ class BOTAN_PUBLIC_API(2,2) HOTP final
       * @param digits the number of digits in the OTP (must be 6, 7, or 8)
       */
       HOTP(const uint8_t key[], size_t key_len,
-           const std::string& hash_algo = "SHA-1",
+           std::string_view hash_algo = "SHA-1",
            size_t digits = 6);
 
       /**
@@ -72,7 +72,7 @@ class BOTAN_PUBLIC_API(2,2) TOTP final
       * @param time_step granularity of OTP in seconds
       */
       TOTP(const SymmetricKey& key,
-           const std::string& hash_algo = "SHA-1",
+           std::string_view hash_algo = "SHA-1",
            size_t digits = 6, size_t time_step = 30) :
          TOTP(key.begin(), key.size(), hash_algo, digits, time_step) {}
 
@@ -84,7 +84,7 @@ class BOTAN_PUBLIC_API(2,2) TOTP final
       * @param time_step granularity of OTP in seconds
       */
       TOTP(const uint8_t key[], size_t key_len,
-           const std::string& hash_algo = "SHA-1",
+           std::string_view hash_algo = "SHA-1",
            size_t digits = 6,
            size_t time_step = 30);
 

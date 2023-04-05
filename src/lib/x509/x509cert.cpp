@@ -95,7 +95,7 @@ X509_Certificate::X509_Certificate(const uint8_t data[], size_t len)
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-X509_Certificate::X509_Certificate(const std::string& fsname)
+X509_Certificate::X509_Certificate(std::string_view fsname)
    {
    DataSource_Stream src(fsname, true);
    load_data(src);
@@ -482,7 +482,7 @@ bool X509_Certificate::allowed_usage(Key_Constraints usage) const
    return constraints().includes(usage);
    }
 
-bool X509_Certificate::allowed_extended_usage(const std::string& usage) const
+bool X509_Certificate::allowed_extended_usage(std::string_view usage) const
    {
    return allowed_extended_usage(OID::from_string(usage));
    }
@@ -535,7 +535,7 @@ bool X509_Certificate::allowed_usage(Usage_Type usage) const
    return false;
    }
 
-bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const
+bool X509_Certificate::has_ex_constraint(std::string_view ex_constraint) const
    {
    return has_ex_constraint(OID::from_string(ex_constraint));
    }
@@ -549,7 +549,7 @@ bool X509_Certificate::has_ex_constraint(const OID& usage) const
 /*
 * Return if a certificate extension is marked critical
 */
-bool X509_Certificate::is_critical(const std::string& ex_name) const
+bool X509_Certificate::is_critical(std::string_view ex_name) const
    {
    return v3_extensions().critical_extension_set(OID::from_string(ex_name));
    }
@@ -586,7 +586,7 @@ const AlternativeName& X509_Certificate::issuer_alt_name() const
 * Return information about the subject
 */
 std::vector<std::string>
-X509_Certificate::subject_info(const std::string& req) const
+X509_Certificate::subject_info(std::string_view req) const
    {
    if(req == "Email")
       return this->subject_info("RFC822");
@@ -604,7 +604,7 @@ X509_Certificate::subject_info(const std::string& req) const
 * Return information about the issuer
 */
 std::vector<std::string>
-X509_Certificate::issuer_info(const std::string& req) const
+X509_Certificate::issuer_info(std::string_view req) const
    {
    if(issuer_dn().has_field(req))
       return issuer_dn().get_attribute(req);
@@ -649,7 +649,7 @@ std::vector<uint8_t> X509_Certificate::raw_subject_dn_sha256() const
    return data().m_subject_dn_bits_sha256;
    }
 
-std::string X509_Certificate::fingerprint(const std::string& hash_name) const
+std::string X509_Certificate::fingerprint(std::string_view hash_name) const
    {
    /*
    * The SHA-1 and SHA-256 fingerprints are precomputed since these
@@ -668,7 +668,7 @@ std::string X509_Certificate::fingerprint(const std::string& hash_name) const
       return create_hex_fingerprint(this->BER_encode(), hash_name);
    }
 
-bool X509_Certificate::matches_dns_name(const std::string& name) const
+bool X509_Certificate::matches_dns_name(std::string_view name) const
    {
    if(name.empty())
       return false;

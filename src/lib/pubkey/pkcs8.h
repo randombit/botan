@@ -28,8 +28,8 @@ class RandomNumberGenerator;
 class BOTAN_PUBLIC_API(2,0) PKCS8_Exception final : public Decoding_Error
    {
    public:
-      explicit PKCS8_Exception(const std::string& error) :
-         Decoding_Error("PKCS #8: " + error) {}
+      explicit PKCS8_Exception(std::string_view error) :
+         Decoding_Error("PKCS #8", error) {}
    };
 
 /**

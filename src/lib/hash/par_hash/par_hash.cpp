@@ -6,7 +6,7 @@
 */
 
 #include <botan/internal/par_hash.h>
-#include <botan/internal/parsing.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -38,13 +38,20 @@ size_t Parallel::output_length() const
 
 std::string Parallel::name() const
    {
-   std::vector<std::string> names;
-   names.reserve(m_hashes.size());
+   std::ostringstream name;
 
-   for(auto&& hash : m_hashes)
-      names.push_back(hash->name());
+   name << "Parallel(";
 
-   return "Parallel(" + string_join(names, ',') + ")";
+   for(size_t i = 0; i != m_hashes.size(); ++i)
+      {
+      if(i != 0)
+         name << ",";
+      name << m_hashes[i]->name();
+      }
+
+   name << ")";
+
+   return name.str();
    }
 
 std::unique_ptr<HashFunction> Parallel::new_object() const

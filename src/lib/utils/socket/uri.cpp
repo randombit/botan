@@ -26,36 +26,33 @@ constexpr bool isdigit(char ch)
    return ch >= '0' && ch <= '9';
    }
 
-bool isDomain(const std::string& domain)
+bool isDomain(std::string_view domain)
    {
-#if defined(__GLIBCXX__) && (__GLIBCXX__ < 20160726)
-   // GCC 4.8 does not support regex
-   BOTAN_UNUSED(domain);
-   return true;
-#else
+   std::string domain_str(domain);
    std::regex re(
       R"(^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$)");
    std::cmatch m;
-   return std::regex_match(domain.c_str(), m, re);
-#endif
+   return std::regex_match(domain_str.c_str(), m, re);
    }
 
-bool isIPv4(const std::string& ip)
+bool isIPv4(std::string_view ip)
    {
+   std::string ip_str(ip);
    sockaddr_storage inaddr;
-   return !!inet_pton(AF_INET, ip.c_str(), &inaddr);
+   return !!inet_pton(AF_INET, ip_str.c_str(), &inaddr);
    }
 
-bool isIPv6(const std::string& ip)
+bool isIPv6(std::string_view ip)
    {
+   std::string ip_str(ip);
    sockaddr_storage in6addr;
-   return !!inet_pton(AF_INET6, ip.c_str(), &in6addr);
+   return !!inet_pton(AF_INET6, ip_str.c_str(), &in6addr);
    }
 }
 
 namespace Botan {
 
-URI URI::fromDomain(const std::string& uri)
+URI URI::fromDomain(std::string_view uri)
    {
    unsigned port = 0;
    const auto port_pos = uri.find(':');
@@ -78,7 +75,7 @@ URI URI::fromDomain(const std::string& uri)
    return {Type::Domain, domain, uint16_t(port)};
    }
 
-URI URI::fromIPv4(const std::string& uri)
+URI URI::fromIPv4(std::string_view uri)
    {
    unsigned port = 0;
    const auto port_pos = uri.find(':');
@@ -99,7 +96,7 @@ URI URI::fromIPv4(const std::string& uri)
    return { Type::IPv4, ip, uint16_t(port) };
    }
 
-URI URI::fromIPv6(const std::string& uri)
+URI URI::fromIPv6(std::string_view uri)
    {
    unsigned port = 0;
    const auto port_pos = uri.find(']');
@@ -126,7 +123,7 @@ URI URI::fromIPv6(const std::string& uri)
    return { Type::IPv6, ip, uint16_t(port) };
    }
 
-URI URI::fromAny(const std::string& uri)
+URI URI::fromAny(std::string_view uri)
    {
 
    bool colon_seen=false;
@@ -178,10 +175,10 @@ std::string URI::to_string() const
 
 namespace Botan {
 
-URI URI::fromDomain(const std::string&) {throw Not_Implemented("No socket support enabled in build");}
-URI URI::fromIPv4(const std::string&) {throw Not_Implemented("No socket support enabled in build");}
-URI URI::fromIPv6(const std::string&) {throw Not_Implemented("No socket support enabled in build");}
-URI URI::fromAny(const std::string&) {throw Not_Implemented("No socket support enabled in build");}
+URI URI::fromDomain(std::string_view) {throw Not_Implemented("No socket support enabled in build");}
+URI URI::fromIPv4(std::string_view) {throw Not_Implemented("No socket support enabled in build");}
+URI URI::fromIPv6(std::string_view) {throw Not_Implemented("No socket support enabled in build");}
+URI URI::fromAny(std::string_view) {throw Not_Implemented("No socket support enabled in build");}
 
 }
 

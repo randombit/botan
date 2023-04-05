@@ -9,13 +9,13 @@
 #ifndef BOTAN_TLS_TRANSCRIPT_HASH_13_H_
 #define BOTAN_TLS_TRANSCRIPT_HASH_13_H_
 
+#include <botan/hash.h>
+#include <botan/tls_magic.h>
+
 #include <memory>
 #include <string>
 #include <vector>
 #include <span>
-
-#include <botan/hash.h>
-#include <botan/tls_magic.h>
 
 namespace Botan::TLS {
 
@@ -29,7 +29,7 @@ class BOTAN_TEST_API Transcript_Hash_State
    {
    public:
       Transcript_Hash_State() = default;
-      Transcript_Hash_State(const std::string &algo_spec);
+      Transcript_Hash_State(std::string_view algo_spec);
       ~Transcript_Hash_State() = default;
 
       /**
@@ -42,7 +42,7 @@ class BOTAN_TEST_API Transcript_Hash_State
        * the previously used object in client and server implementations.
        */
       static Transcript_Hash_State recreate_after_hello_retry_request(
-                        const std::string& algo_spec,
+                        std::string_view algo_spec,
                         const Transcript_Hash_State& prev_transcript_hash_state);
 
       Transcript_Hash_State& operator=(const Transcript_Hash_State&) = delete;
@@ -76,7 +76,7 @@ class BOTAN_TEST_API Transcript_Hash_State
        */
       const Transcript_Hash& truncated() const;
 
-      void set_algorithm(const std::string& algo_spec);
+      void set_algorithm(std::string_view algo_spec);
 
       Transcript_Hash_State clone() const;
 

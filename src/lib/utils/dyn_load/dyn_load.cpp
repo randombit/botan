@@ -6,7 +6,9 @@
 */
 
 #include <botan/internal/dyn_load.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
+#include <sstream>
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
   #include <dlfcn.h>
@@ -20,20 +22,23 @@ namespace Botan {
 
 namespace {
 
-void raise_runtime_loader_exception(const std::string& lib_name,
+void raise_runtime_loader_exception(std::string_view lib_name,
                                     const char* msg)
    {
-   const std::string ex_msg =
-      "Failed to load " + lib_name + ": " +
-      (msg ? msg : "Unknown error");
+   std::ostringstream err;
+   err << "Failed to load " << lib_name << ": ";
+   if(msg)
+      err << msg;
+   else
+      err << "Unknown error";
 
-   throw System_Error(ex_msg, 0);
+   throw System_Error(err.str(), 0);
    }
 
 }
 
 Dynamically_Loaded_Library::Dynamically_Loaded_Library(
-   const std::string& library) :
+   std::string_view library) :
    m_lib_name(library), m_lib(nullptr)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
@@ -73,8 +78,10 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
 #endif
 
    if(!addr)
-      throw Invalid_Argument("Failed to resolve symbol " + symbol +
-                             " in " + m_lib_name);
+      {
+      throw Invalid_Argument(fmt("Failed to resolve symbol {} in {}",
+                                 symbol, m_lib_name));
+      }
 
    return addr;
    }

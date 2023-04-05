@@ -7,6 +7,7 @@
 #include <botan/ec_group.h>
 #include <botan/tls_algos.h>
 #include <botan/exceptn.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan::TLS {
 
@@ -48,7 +49,7 @@ std::string kex_method_to_string(Kex_Algo method)
    throw Invalid_State("kex_method_to_string unknown enum value");
    }
 
-Kex_Algo kex_method_from_string(const std::string& str)
+Kex_Algo kex_method_from_string(std::string_view str)
    {
    if(str == "RSA")
       return Kex_Algo::STATIC_RSA;
@@ -71,7 +72,7 @@ Kex_Algo kex_method_from_string(const std::string& str)
    if(str == "UNDEFINED")
       return Kex_Algo::UNDEFINED;
 
-   throw Invalid_Argument("Unknown kex method " + str);
+   throw Invalid_Argument(fmt("Unknown kex method '{}'", str));
    }
 
 std::string auth_method_to_string(Auth_Method method)
@@ -91,7 +92,7 @@ std::string auth_method_to_string(Auth_Method method)
     throw Invalid_State("auth_method_to_string unknown enum value");
    }
 
-Auth_Method auth_method_from_string(const std::string& str)
+Auth_Method auth_method_from_string(std::string_view str)
    {
    if(str == "RSA")
       return Auth_Method::RSA;
@@ -102,7 +103,7 @@ Auth_Method auth_method_from_string(const std::string& str)
    if(str == "UNDEFINED")
       return Auth_Method::UNDEFINED;
 
-   throw Invalid_Argument("Bad signature method " + str);
+   throw Invalid_Argument(fmt("Unknown TLS signature method '{}'", str));
    }
 
 bool group_param_is_dh(Group_Params group)
@@ -111,7 +112,7 @@ bool group_param_is_dh(Group_Params group)
    return (group_id >= 256 && group_id < 512);
    }
 
-Group_Params group_param_from_string(const std::string& group_name)
+Group_Params group_param_from_string(std::string_view group_name)
    {
    if(group_name == "secp256r1")
       return Group_Params::SECP256R1;

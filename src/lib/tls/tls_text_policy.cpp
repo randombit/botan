@@ -219,7 +219,7 @@ size_t Text_Policy::new_session_tickets_upon_handshake_success() const
 std::vector<uint16_t> Text_Policy::srtp_profiles() const
    {
    std::vector<uint16_t> r;
-   for(const std::string& p : get_list("srtp_profiles", std::vector<std::string>()))
+   for(auto p : get_list("srtp_profiles", std::vector<std::string>()))
       {
       r.push_back(to_uint16(p));
       }
@@ -236,14 +236,14 @@ bool Text_Policy::hash_hello_random() const
    return get_bool("hash_hello_random", Policy::hash_hello_random());
    }
 
-void Text_Policy::set(const std::string& k, const std::string& v)
+void Text_Policy::set(const std::string& key, const std::string& value)
    {
-   m_kv[k] = v;
+   m_kv[key] = value;
    }
 
-Text_Policy::Text_Policy(const std::string& s)
+Text_Policy::Text_Policy(std::string_view s)
    {
-   std::istringstream iss(s);
+   std::istringstream iss{std::string(s)}; // FIXME C++23 avoid copy
    m_kv = read_cfg(iss);
    }
 
@@ -265,10 +265,10 @@ Text_Policy::get_list(const std::string& key,
    }
 
 std::vector<Group_Params>
-Text_Policy::read_group_list(const std::string &group_str) const
+Text_Policy::read_group_list(std::string_view group_str) const
 {
    std::vector<Group_Params> groups;
-   for(const std::string& group_name : split_on(group_str, ' '))
+   for(const auto& group_name : split_on(group_str, ' '))
       {
       Group_Params group_id = group_param_from_string(group_name);
 
@@ -372,7 +372,7 @@ std::string Text_Policy::get_str(const std::string& key, const std::string& def)
    return i->second;
    }
 
-bool Text_Policy::set_value(const std::string& key, const std::string& val, bool overwrite)
+bool Text_Policy::set_value(const std::string& key, std::string_view val, bool overwrite)
    {
    auto i = m_kv.find(key);
 

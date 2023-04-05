@@ -10,8 +10,18 @@
 #include <botan/cipher_mode.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
+
+CommonCrypto_Error::CommonCrypto_Error(std::string_view what) :
+   Exception(what),
+   m_rc(0) {}
+
+CommonCrypto_Error::CommonCrypto_Error(std::string_view what, int32_t status) :
+   Exception(fmt("CommonCrypto op {} failed with err {} ({})",
+                 what, status, ccryptorstatus_to_string(status))),
+   m_rc(status) {}
 
 std::string CommonCrypto_Error::ccryptorstatus_to_string(CCCryptorStatus status)
    {
