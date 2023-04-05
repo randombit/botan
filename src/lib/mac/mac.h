@@ -56,7 +56,7 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * Prepare for processing a message under the specified nonce
       *
       * Most MACs neither require nor support a nonce; for these algorithms
-      * calling `start_msg` is optional and calling it with anything other than
+      * calling start() is optional and calling it with anything other than
       * an empty string is an error. One MAC which *requires* a per-message
       * nonce be specified is GMAC.
       *
@@ -66,48 +66,25 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * @param nonce the message nonce bytes
       */
       void start(std::span<const uint8_t> nonce)
-         {
-         start_msg(nonce.data(), nonce.size());
-         }
-
-      /**
-      * Begin processing a message.
-      * @param nonce the per message nonce
-      * @param nonce_len length of nonce
-      */
+         { start_msg(nonce.data(), nonce.size()); }
       void start(const uint8_t nonce[], size_t nonce_len)
-         {
-         start_msg(nonce, nonce_len);
-         }
-
-      /**
-      * Begin processing a message.
-      */
+         { start_msg(nonce, nonce_len); }
       void start()
-         {
-         return start_msg(nullptr, 0);
-         }
+         { return start_msg(nullptr, 0); }
 
       /**
       * Verify a MAC.
-      * @param in the MAC to verify as a byte array
-      * @param length the length of param in
+      *
+      * Finalize the current MAC computation and compare the result to the
+      * passed @p mac.
+      *
+      * @param mac the MAC to verify as a byte array
       * @return true if the MAC is valid, false otherwise
       */
+      bool verify_mac(std::span<const uint8_t> mac)
+         { return verify_mac_result(mac.data(), mac.size()); }
       bool verify_mac(const uint8_t in[], size_t length)
-         {
-         return verify_mac_result(in, length);
-         }
-
-      /**
-      * Verify a MAC.
-      * @param in the MAC to verify as a byte array
-      * @return true if the MAC is valid, false otherwise
-      */
-      bool verify_mac(std::span<const uint8_t> in)
-         {
-         return verify_mac_result(in.data(), in.size());
-         }
+         { return verify_mac_result(in, length); }
 
       /**
       * @return new object representing the same algorithm as *this
