@@ -12,10 +12,7 @@ Documentation
 
 Most of the API references are now powered by `Breathe
 <https://github.com/breathe-doc/breathe>`_. Without Breathe the documentation
-will lack almost all API details and will be much less helpful. Additionally,
-the Sphinx extension `togglebutton
-<https://pypi.org/project/sphinx-togglebutton/>`_ must be installed to
-successfully build the documentation.
+will lack almost all API details and will be much less helpful.
 
 Headers
 --------

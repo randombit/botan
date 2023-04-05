@@ -108,7 +108,11 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
-extensions = []
+# Pull the embedded 3rd party extensions directory into the $PYTHONPATH
+extensions_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "extensions"))
+sys.path.append(extensions_path)
+
+extensions = ['togglebutton']
 
 breathe_projects = {}
 breathe_default_project = None
