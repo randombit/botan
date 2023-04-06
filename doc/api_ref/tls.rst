@@ -51,175 +51,20 @@ TLS servers and clients share an interface called `TLS::Channel`. A
 TLS channel (either client or server object) has these methods
 available:
 
-.. cpp:class:: TLS::Channel
-
-   .. cpp:function:: size_t received_data(const uint8_t buf[], size_t buf_size)
-   .. cpp:function:: size_t received_data(const std::vector<uint8_t>& buf)
-
-     This function is used to provide data sent by the counterparty
-     (eg data that you read off the socket layer). Depending on the
-     current protocol state and the amount of data provided this may
-     result in one or more callback functions that were provided to
-     the constructor being called.
-
-     The return value of ``received_data`` specifies how many more
-     bytes of input are needed to make any progress, unless the end of
-     the data fell exactly on a message boundary, in which case it
-     will return 0 instead.
-
-   .. cpp:function:: void send(const uint8_t buf[], size_t buf_size)
-   .. cpp:function:: void send(const std::string& str)
-   .. cpp:function:: void send(const std::vector<uint8_t>& vec)
-
-     Create one or more new TLS application records containing the
-     provided data and send them. This will eventually result in at
-     least one call to the ``output_fn`` callback before ``send``
-     returns.
-
-     If the current TLS connection state is unable to transmit new
-     application records (for example because a handshake has not
-     yet completed or the connection has already ended due to an
-     error) an exception will be thrown.
-
-   .. cpp:function:: void close()
-
-     A close notification is sent to the counterparty, and the
-     internal state is cleared.
-
-   .. cpp:function:: void send_alert(const Alert& alert)
-
-     Some other alert is sent to the counterparty. If the alert is
-     fatal, the internal state is cleared.
-
-   .. cpp:function:: bool is_active()
-
-     Returns true if and only if a handshake has been completed on
-     this connection and the connection has not been subsequently
-     closed.
-
-   .. cpp:function:: bool is_closed()
-
-      Returns true if and only if either a close notification or a
-      fatal alert message have been either sent or received.
-
-   .. cpp:function:: bool timeout_check()
-
-      This function does nothing unless the channel represents a DTLS
-      connection and a handshake is actively in progress. In this case
-      it will check the current timeout state and potentially initiate
-      retransmission of handshake packets. Returns true if a timeout
-      condition occurred.
-
-   .. cpp:function:: void renegotiate(bool force_full_renegotiation = false)
-
-      Initiates a renegotiation. The counterparty is allowed by the
-      protocol to ignore this request. If a successful renegotiation
-      occurs, the *handshake_cb* callback will be called again.
-
-      If *force_full_renegotiation* is false, then the client will
-      attempt to simply renew the current session - this will refresh
-      the symmetric keys but will not change the session master
-      secret. Otherwise it will initiate a completely new session.
-
-      For a server, if *force_full_renegotiation* is false, then a
-      session resumption will be allowed if the client attempts
-      it. Otherwise the server will prevent resumption and force the
-      creation of a new session.
-
-   .. cpp:function:: std::vector<X509_Certificate> peer_cert_chain()
-
-      Returns the certificate chain of the counterparty. When acting
-      as a client, this value will be non-empty. Acting as a server,
-      this value will ordinarily be empty, unless the server requested
-      a certificate and the client responded with one.
-
-   .. cpp:function:: SymmetricKey key_material_export( \
-          const std::string& label, \
-          const std::string& context, \
-          size_t length)
-
-      Returns an exported key of *length* bytes derived from *label*,
-      *context*, and the session's master secret and client and server
-      random values. This key will be unique to this connection, and
-      as long as the session master secret remains secure an attacker
-      should not be able to guess the key.
-
-      Per :rfc:`5705`, *label* should begin with "EXPERIMENTAL" unless
-      the label has been standardized in an RFC.
+.. doxygenclass:: Botan::TLS::Channel
+    :members: received_data,send,close,is_active,is_closed,is_closed_for_reading,is_closed_for_writing,timeout_check,peer_cert_chain,key_material_export,update_traffic_keys,renegotiate
 
 .. _tls_client:
 
 TLS Clients
 ----------------------------------------
 
-.. cpp:class:: TLS::Client
-
-   .. cpp:function:: Client( \
-         Callbacks& callbacks, \
-         Session_Manager& session_manager, \
-         Credentials_Manager& creds, \
-         const Policy& policy, \
-         RandomNumberGenerator& rng, \
-         const Server_Information& server_info = Server_Information(), \
-         const Protocol_Version offer_version = Protocol_Version::latest_tls_version(), \
-         const std::vector<std::string>& next_protocols = std::vector<std::string>(), \
-         size_t reserved_io_buffer_size = 16*1024 \
-         )
-
-   Initialize a new TLS client. The constructor will immediately
-   initiate a new session.
-
-   The *callbacks* parameter specifies the various application callbacks
-   which pertain to this particular client connection.
-
-   The *session_manager* is an interface for storing TLS sessions,
-   which allows for session resumption upon reconnecting to a server.
-   In the absence of a need for persistent sessions, use
-   :cpp:class:`TLS::Session_Manager_In_Memory` which caches
-   connections for the lifetime of a single process. See
-   :ref:`tls_session_managers` for more about session managers.
-
-   The *credentials_manager* is an interface that will be called to
-   retrieve any certificates, private keys, or pre-shared keys; see
-   :doc:`credentials_manager` for more information.
-
-   Use the optional *server_info* to specify the DNS name of the
-   server you are attempting to connect to, if you know it. This helps
-   the server select what certificate to use and helps the client
-   validate the connection.
-
-   Note that the server name indicator name must be a FQDN.  IP
-   addresses are not allowed by RFC 6066 and may lead to interoperability
-   problems.
-
-   Use the optional *offer_version* to control the version of TLS you
-   wish the client to offer. Normally, you'll want to offer the most
-   recent version of (D)TLS that is available, however some broken
-   servers are intolerant of certain versions being offered, and for
-   classes of applications that have to deal with such servers
-   (typically web browsers) it may be necessary to implement a version
-   backdown strategy if the initial attempt fails.
-
-   .. warning::
-
-     Implementing such a backdown strategy allows an attacker to
-     downgrade your connection to the weakest protocol that both you
-     and the server support.
-
-   Setting *offer_version* is also used to offer DTLS instead of TLS;
-   use :cpp:func:`TLS::Protocol_Version::latest_dtls_version`.
-
-   Optionally, the client will advertise *app_protocols* to the
-   server using the ALPN extension.
-
-   The optional *reserved_io_buffer_size* specifies how many bytes to
-   pre-allocate in the I/O buffers. Use this if you want to control
-   how much memory the channel uses initially (the buffers will be
-   resized as needed to process inputs). Otherwise some reasonable
-   default is used.
+.. doxygenclass:: Botan::TLS::Client
+    :members: Client
 
 Code Example
 ^^^^^^^^^^^^
+
 A minimal example of a TLS client is provided below.
 The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
 
@@ -231,36 +76,12 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
 TLS Servers
 ----------------------------------------
 
-.. cpp:class:: TLS::Server
-
-   .. cpp:function:: Server( \
-         Callbacks& callbacks, \
-         Session_Manager& session_manager, \
-         Credentials_Manager& creds, \
-         const Policy& policy, \
-         RandomNumberGenerator& rng, \
-         bool is_datagram = false, \
-         size_t reserved_io_buffer_size = 16*1024 \
-         )
-
-The first 5 arguments as well as the final argument
-*reserved_io_buffer_size*, are treated similarly to the :ref:`client
-<tls_client>`.
-
-If a client sends the ALPN extension, the ``callbacks`` function
-``tls_server_choose_app_protocol`` will be called and the result
-sent back to the client. If the empty string is returned, the server
-will not send an ALPN response. The function can also throw an exception
-to abort the handshake entirely, the ALPN specification says that if this
-occurs the alert should be of type `NO_APPLICATION_PROTOCOL`.
-
-The optional argument *is_datagram* specifies if this is a TLS or DTLS
-server; unlike clients, which know what type of protocol (TLS vs DTLS)
-they are negotiating from the start via the *offer_version*, servers
-would not until they actually received a client hello.
+.. doxygenclass:: Botan::TLS::Server
+    :members: Server
 
 Code Example
 ^^^^^^^^^^^^
+
 A minimal example of a TLS server is provided below.
 The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
 
