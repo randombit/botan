@@ -165,6 +165,8 @@ Applications must now provide a `std::shared_ptr<>` to the requested private key
 object instead of a raw pointer to better communicate the implementation's
 life-time expectations of this private key object.
 
+.. _session_handling_with_tls_13:
+
 Session and Ticket Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

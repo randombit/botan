@@ -98,9 +98,10 @@ the end point retains some information about an established session
 and then reuse that information to bootstrap a new session in way that
 is much cheaper computationally than a full handshake.
 
-Every time your handshake callback is called, a new session has been
-established, and a ``TLS::Session`` is included that provides
-information about that session:
+Every time the
+``TLS::Callbacks::tls_should_persist_resumption_information()`` is
+called, a new session has been established, and a ``TLS::Session_Summary`` is
+included that provides information about that session:
 
 .. note::
 
@@ -108,99 +109,42 @@ information about that session:
    to change even across minor releases. In the event of such a change, old
    sessions will no longer be able to be resumed.
 
-.. cpp:class:: TLS::Session
+API Overview
+^^^^^^^^^^^^
 
-   .. cpp:function:: Protocol_Version version() const
+.. container:: toggle
 
-       Returns the :cpp:class:`protocol version <TLS::Protocol_Version>`
-       that was negotiated
-
-   .. cpp:function:: Ciphersuite ciphersite() const
-
-       Returns the :cpp:class:`ciphersuite <TLS::Ciphersuite>` that
-       was negotiated.
-
-   .. cpp:function:: Server_Information server_info() const
-
-       Returns information that identifies the server side of the
-       connection.  This is useful for the client in that it
-       identifies what was originally passed to the constructor. For
-       the server, it includes the name the client specified in the
-       server name indicator extension.
-
-   .. cpp:function:: std::vector<X509_Certificate> peer_certs() const
-
-       Returns the certificate chain of the peer
-
-   .. cpp:function:: bool secure_renegotiation() const
-
-      Returns ``true`` if the connection was negotiated with the
-      correct extensions to prevent the renegotiation attack.
-
-   .. cpp:function:: std::vector<uint8_t> encrypt(const SymmetricKey& key, \
-                                               RandomNumberGenerator& rng)
-
-      Encrypts a session using a symmetric key *key* and returns a raw
-      binary value that can later be passed to ``decrypt``. The key
-      may be of any length. The format is described in
-      :ref:`tls_session_encryption`.
-
-   .. cpp:function:: static Session decrypt(const uint8_t ciphertext[], \
-                                            size_t length, \
-                                            const SymmetricKey& key)
-
-      Decrypts a session that was encrypted previously with ``encrypt`` and
-      ``key``, or throws an exception if decryption fails.
-
-   .. cpp:function:: secure_vector<uint8_t> DER_encode() const
-
-       Returns a serialized version of the session.
-
-       .. warning:: The return value of ``DER_encode`` contains the
-                    master secret for the session, and an attacker who
-                    recovers it could recover plaintext of previous
-                    sessions or impersonate one side to the other.
+    .. doxygenclass:: Botan::TLS::Session
+        :members: version,ciphersuite,server_info,peer_certs,encrypt,decrypt
 
 .. _tls_session_managers:
 
 TLS Session Managers
 ----------------------------------------
 
-You may want sessions stored in a specific format or storage type. To
-do so, implement the ``TLS::Session_Manager`` interface and pass your
-implementation to the ``TLS::Client`` or ``TLS::Server`` constructor.
+Session managers keep track of sessions for later resumption. Botan provides a
+number of implementations that should suffice for most typical applications.
+When used in a TLS server, the manager may keep sessions as persistent state
+(e.g. in a database) or pass the entire encrypted session information to the
+client as a ticket.
 
-.. cpp:class:: TLS::Session_Mananger
+Though, you may want sessions stored in a specific format or storage type. To do
+so, implement the at least the pure-virtual methods ``TLS::Session_Manager`` and
+pass your implementation to the ``TLS::Client`` or ``TLS::Server`` constructor.
+Some methods in the base class have default implementations that your derived
+class will most likely take advantage of.
 
- .. cpp:function:: void save(const Session& session)
+Note that the ``TLS::Session_Manager`` faced a major overhaul to properly
+accomodate the fairly different needs of TLS 1.2 and TLS 1.3. See the
+:ref:`migration guide <session_handling_with_tls_13>` for further info.
 
-     Save a new *session*. It is possible that this sessions session
-     ID will replicate a session ID already stored, in which case the
-     new session information should overwrite the previous information.
+Below is an overview of the pure-virtual methods that a custom implementation
+will need to provide:
 
- .. cpp:function:: void remove_entry(const std::vector<uint8_t>& session_id)
+.. container:: toggle
 
-      Remove the session identified by *session_id*. Future attempts
-      at resumption should fail for this session.
-
- .. cpp:function:: bool load_from_session_id(const std::vector<uint8_t>& session_id, \
-                                             Session& session)
-
-      Attempt to resume a session identified by *session_id*. If
-      located, *session* is set to the session data previously passed
-      to *save*, and ``true`` is returned. Otherwise *session* is not
-      modified and ``false`` is returned.
-
- .. cpp:function:: bool load_from_server_info(const Server_Information& server, \
-                                              Session& session)
-
-      Attempt to resume a session with a known server.
-
- .. cpp:function:: std::chrono::seconds session_lifetime() const
-
-      Returns the expected maximum lifetime of a session when using
-      this session manager. Will return 0 if the lifetime is unknown
-      or has no explicit expiration policy.
+    .. doxygenclass:: Botan::TLS::Session_Manager
+        :members: store,remove,remove_all,retrieve_one,find_some
 
 .. _tls_session_manager_inmem:
 
@@ -211,24 +155,17 @@ The ``TLS::Session_Manager_In_Memory`` implementation saves sessions
 in memory, with an upper bound on the maximum number of sessions and
 the lifetime of a session.
 
+For TLS clients that don't require sessions to outlive their process, this
+manager is a good choice. Note, however, that this implementation will never
+emit stateless session tickets. When used in a TLS server, sessions will have to
+be kept in the server's memory. Consider using it as part of a
+:ref:`hybrid session manager <tls_session_mgr_hybrid>` in this case.
+
 It is safe to share a single object across many threads as it uses a
 lock internally.
 
-.. cpp:class:: TLS::Session_Managers_In_Memory
-
- .. cpp:function:: Session_Manager_In_Memory(RandomNumberGenerator& rng, \
-                                             size_t max_sessions = 1000, \
-                                             std::chrono::seconds session_lifetime = 7200)
-
-    Limits the maximum number of saved sessions to *max_sessions*, and
-    expires all sessions older than *session_lifetime*.
-
-Noop Session Mananger
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``TLS::Session_Manager_Noop`` implementation does not save
-sessions at all, and thus session resumption always fails. Its
-constructor has no arguments.
+.. doxygenclass:: Botan::TLS::Session_Manager_In_Memory
+    :members: Session_Manager_In_Memory
 
 SQLite3 Session Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -243,20 +180,55 @@ and stored in two tables, named ``tls_sessions`` (which holds the
 actual session information) and ``tls_sessions_metadata`` (which holds
 the PBKDF information).
 
+For TLS clients that want to persist sessions to disk so that they outlive a
+single process runtime, this manager is a good choice. Note, however, that this
+implementation will never emit stateless session tickets. When used in a TLS
+server, sessions will have to be kept on the server's disk. Consider using it
+as part of a :ref:`hybrid session manager <tls_session_mgr_hybrid>` in this
+case.
+
 .. warning:: The hostnames associated with the saved sessions are
              stored in the database in plaintext. This may be a
              serious privacy risk in some applications.
 
-.. cpp:class:: TLS::Session_Manager_SQLite
+.. doxygenclass:: Botan::TLS::Session_Manager_SQLite
+    :members: Session_Manager_SQLite
 
- .. cpp:function:: Session_Manager_SQLite( \
-       const std::string& passphrase, \
-       RandomNumberGenerator& rng, \
-       const std::string& db_filename, \
-       size_t max_sessions = 1000, \
-       std::chrono::seconds session_lifetime = 7200)
+Stateless Session Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   Uses the sqlite3 database named by *db_filename*.
+This session manager will never persist any sessions. Instead it will always
+symmetrically encrypt the session information to create a session ticket that
+may be passed to a client.
+
+This manager should be used in TLS servers only. It will never produce any state
+that would need to be managed on the server.
+
+.. doxygenclass:: Botan::TLS::Session_Manager_Stateless
+    :members: Session_Manager_Stateless
+
+.. _tls_session_mgr_hybrid:
+
+Hybrid Session Manager
+^^^^^^^^^^^^^^^^^^^^^^
+
+The hybrid session manager combines the stateless session manager with a
+stateful fallback. If a client signals no support for stateless session tickets,
+the hybrid manager will keep state on the server. Note that TLS clients don't
+benefit from this extra complexity: They must always persist sessions if they
+wish to resume later. Note that TLS 1.3 clients support stateless session
+tickets by default.
+
+.. doxygenclass:: Botan::TLS::Session_Manager_Hybrid
+    :members: Session_Manager_Hybrid
+
+Noop Session Mananger
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``TLS::Session_Manager_Noop`` implementation does not save
+sessions at all, and thus session resumption always fails. Its
+constructor has no arguments.
+
 
 TLS Policies
 ----------------------------------------

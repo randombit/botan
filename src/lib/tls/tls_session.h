@@ -215,6 +215,11 @@ class BOTAN_PUBLIC_API(3,0) Session_Base
 
       /**
        * Get information about the TLS server
+       *
+       * Returns information that identifies the server side of the connection.
+       * This is useful for the client in that it identifies what was originally
+       * passed to the constructor. For the server, it includes the name the
+       * client specified in the server name indicator extension.
        */
       const Server_Information& server_info() const { return m_server_info; }
 
@@ -365,27 +370,29 @@ class BOTAN_PUBLIC_API(3,0) Session final : public Session_Base
 
       /**
       * Encrypt a session (useful for serialization or session tickets)
+      *
+      * Encrypts a session using a symmetric key @p key and returns a raw binary
+      * value that can later be passed to decrypt(). The key may be of any
+      * length.
       */
       std::vector<uint8_t> encrypt(const SymmetricKey& key,
-                                RandomNumberGenerator& rng) const;
+                                   RandomNumberGenerator& rng) const;
 
       /**
-      * Decrypt a session created by encrypt
+      * Decrypt a session created by encrypt()
+      *
+      * Decrypts a session that was encrypted previously with encrypt() and
+      * @p key, or throws an exception if decryption fails.
+      *
       * @param ctext the ciphertext returned by encrypt
-      * @param ctext_size the size of ctext in bytes
       * @param key the same key used by the encrypting side
+      * @returns the decrypted and deserialized Session object
       */
+      static Session decrypt(std::span<const uint8_t> ctext, const SymmetricKey& key);
       static inline Session decrypt(const uint8_t ctext[],
                                     size_t ctext_size,
                                     const SymmetricKey& key)
          { return Session::decrypt(std::span(ctext, ctext_size), key); }
-
-      /**
-      * Decrypt a session created by encrypt
-      * @param ctext the ciphertext returned by encrypt
-      * @param key the same key used by the encrypting side
-      */
-      static Session decrypt(std::span<const uint8_t> ctext, const SymmetricKey& key);
 
       /**
       * Encode this session data for storage
