@@ -43,9 +43,9 @@ X509_CRL::X509_CRL(DataSource& src)
    load_data(src);
    }
 
-X509_CRL::X509_CRL(const std::vector<uint8_t>& vec)
+X509_CRL::X509_CRL(std::span<const uint8_t> vec)
    {
-   DataSource_Memory src(vec.data(), vec.size());
+   DataSource_Memory src(vec);
    load_data(src);
    }
 

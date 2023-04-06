@@ -67,7 +67,7 @@ std::string http_transact(const std::string& hostname,
    return oss.str();
    }
 
-bool needs_url_encoding(char c)
+inline bool needs_url_encoding(char c)
    {
    if(c >= 'A' && c <= 'Z')
       return false;
