@@ -7,6 +7,16 @@ This guide attempts to be, but is not, complete. If you run into a problem while
 converting code that does not seem to be described here, please open an issue on
 Github.
 
+Documentation
+-------------
+
+Most of the API references are now powered by `Breathe
+<https://github.com/breathe-doc/breathe>`_. Without Breathe the documentation
+will lack almost all API details and will be much less helpful. Additionally,
+the Sphinx extension `togglebutton
+<https://pypi.org/project/sphinx-togglebutton/>`_ must be installed to
+successfully build the documentation.
+
 Headers
 --------
 

@@ -151,6 +151,9 @@ Other Improvements
 * Fix bugs in GMAC and SipHash where they would require a fresh key be
   provided for each message. (GH #2908)
 
+* The documentation now requires Breathe and sphinx-togglebutton to generate the
+  API references in the Sphinx documentation. (GH #3377)
+
 Version 2.19.3, 2022-11-16
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
