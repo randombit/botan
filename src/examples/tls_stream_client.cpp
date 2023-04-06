@@ -3,7 +3,7 @@
 #include <botan/asio_stream.h>
 #include <botan/auto_rng.h>
 #include <botan/certstor_system.h>
-#include <botan/tls_session_manager_noop.h>
+#include <botan/tls.h>
 
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
