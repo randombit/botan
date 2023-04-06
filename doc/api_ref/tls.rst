@@ -1,17 +1,13 @@
 Transport Layer Security (TLS)
 ========================================
 
-.. versionadded:: 1.11.0
+Botan has client and server implementations of the TLS protocol version 1.2 and
+1.3. There is also support for DTLS (v1.2), a variant of TLS adapted for
+operation on datagram transports such as UDP and SCTP. DTLS support should be
+considered as beta quality and further testing is invited.
 
-Botan has client and server implementations of various versions of the
-TLS protocol, including TLS v1.0, TLS v1.1, and TLS v1.2. As of
-version 1.11.13, support for the insecure SSLv3 protocol has been
-removed.
-
-There is also support for DTLS (v1.0 and v1.2), a variant of TLS
-adapted for operation on datagram transports such as UDP and
-SCTP. DTLS support should be considered as beta quality and further
-testing is invited.
+As of version 1.11.13, support for the insecure SSLv3 protocol has been removed.
+Additionally, with Botan 3.0.0 support for (D)TLS 1.0 and 1.1 was also removed.
 
 The TLS implementation does not know anything about sockets or the
 network layer. Instead, it calls a user provided callback (hereafter
@@ -30,170 +26,23 @@ abstraction. This makes the library completely agnostic to how you
 write your network layer, be it blocking sockets, libevent, asio, a
 message queue, lwIP on RTOS, some carrier pigeons, etc.
 
-Starting in 1.11.31, the application callbacks are encapsulated as the class
-``TLS::Callbacks`` with the following members. The first four (``tls_emit_data``,
-``tls_record_received``, ``tls_alert``, and ``tls_session_established``) are
-mandatory for using TLS, all others are optional and provide additional
-information about the connection.
+Additionally, Botan offers a :ref:`higher-level TLS stream abstraction
+<tls_stream>` that is designed as a de-facto drop-in replacement for ASIO's
+``ssl_stream``.
 
- .. cpp:function:: void tls_emit_data(const uint8_t data[], size_t data_len)
+Application Callbacks
+---------------------
 
-    Mandatory. The TLS stack requests that all bytes of *data* be queued up to send to the
-    counterparty. After this function returns, the buffer containing *data* will
-    be overwritten, so a copy of the input must be made if the callback
-    cannot send the data immediately.
+The application callbacks are encapsulated as the class ``TLS::Callbacks``.
+Below is an overview of the most important and mandatory callbacks. Others are
+optional and provide hooks for applications to gather information of the
+established connection or even customize the TLS stack's behavior.
 
-    As an example you could ``send`` to perform a blocking write on a socket,
-    or append the data to a queue managed by your application, and initiate
-    an asynchronous write.
+.. container:: toggle
 
-    For TLS all writes must occur *in the order requested*.
-    For DTLS this ordering is not strictly required, but is still recommended.
-
- .. cpp:function:: void tls_record_received(uint64_t rec_no, const uint8_t data[], size_t data_len)
-
-    Mandatory. Called once for each application_data record which is received, with the
-    matching (TLS level) record sequence number.
-
-    Currently empty records are ignored and do not instigate a callback,
-    but this may change in a future release.
-
-     As with ``tls_emit_data``, the array will be overwritten sometime after
-     the callback returns, so a copy should be made if needed.
-
-     For TLS the record number will always increase.
-
-     For DTLS, it is possible to receive records with the `rec_no` field out of
-     order, or with gaps, corresponding to reordered or lost datagrams.
-
- .. cpp:function:: void tls_alert(Alert alert)
-
-     Mandatory. Called when an alert is received from the peer. Note that alerts
-     received before the handshake is complete are not authenticated and
-     could have been inserted by a MITM attacker.
-
- .. cpp:function:: void tls_session_established(const Botan::TLS::Session_Summary& session)
-
-     Optional - default implementation is a no-op
-     Called whenever a negotiation completes. This can happen more than once on
-     TLS 1.2 connections, if renegotiation occurs. The *session* parameter
-     provides information about the session which was just established.
-
-     If this function wishes to cancel the handshake, it can throw an
-     exception which will send a close message to the counterparty and
-     reset the connection state.
-
- .. cpp:function:: void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain, \
-                   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses, \
-                   const std::vector<Certificate_Store*>& trusted_roots, \
-                   Usage_Type usage, \
-                   const std::string& hostname, \
-                   const Policy& policy)
-
-     Optional - default implementation should work for many users.
-     It can be overridden for implementing extra validation routines
-     such as public key pinning.
-
-     Verifies the certificate chain in *cert_chain*, assuming the leaf
-     certificate is the first element. Throws an exception if any
-     error makes this certificate chain unacceptable.
-
-     If usage is `Usage_Type::TLS_SERVER_AUTH`, then *hostname* should
-     match the information in the server certificate. If usage is
-     `TLS_CLIENT_AUTH`, then *hostname* specifies the host the client
-     is authenticating against (from SNI); the callback can use this for
-     any special site specific auth logic.
-
-     The `ocsp_responses` is a possibly empty list of OCSP responses provided by
-     the server. In the current implementation of TLS OCSP stapling, only a
-     single OCSP response can be returned. A existing TLS extension allows the
-     server to send multiple OCSP responses, this extension may be supported in
-     the future in which case more than one OCSP response may be given during
-     this callback.
-
-     The `trusted_roots` parameter was returned by a call from the associated
-     `Credentials_Manager`.
-
-     The `policy` provided is the policy for the TLS session which is
-     being authenticated using this certificate chain. It can be consulted
-     for values such as allowable signature methods and key sizes.
-
- .. cpp:function:: std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
-
-     Called by default `tls_verify_cert_chain` to set timeout for online OCSP requests
-     on the certificate chain. Return 0 to disable OCSP. Current default is 0.
-
- .. cpp:function:: std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos)
-
-     Optional. Called by the server when a client includes a list of protocols in the ALPN extension.
-     The server then choose which protocol to use, or "" to disable sending any ALPN response.
-     The default implementation returns the empty string all of the time, effectively disabling
-     ALPN responses. The server may also throw an exception to reject the connection; this is
-     recommended when the client sends a list of protocols and the server does not understand
-     any of them.
-
-     .. warning::
-
-        The ALPN RFC requires that if the server does not understand any of the
-        protocols offered by the client, it should close the connection using an
-        alert. Carrying on the connection (for example by ignoring ALPN when the
-        server does not understand the protocol list) can expose applications to
-        cross-protocol attacks.
-
- .. cpp:function:: void tls_session_activated()
-
-    Optional. By default does nothing. This is called when the session is
-    activated, that is once it is possible to send or receive data on the
-    channel.  In particular it is possible for an implementation of this
-    function to perform an initial write on the channel.
-
- .. cpp:function:: std::vector<uint8_t> tls_provide_cert_status(const std::vector<X509_Certificate>& chain, \
-                                                           const Certificate_Status_Request& csr)
-
-     Optional. This can return a cached OCSP response. This is only
-     used on the server side, and only if the client requests OCSP
-     stapling.
-
- .. cpp:function:: std::string tls_peer_network_identity()
-
-     Optional. Return a string that identifies the peer in some unique way
-     (for example, by formatting the remote IP and port into a string).
-     This is currently used to bind DTLS cookies to the network identity.
-
- .. cpp:function:: void tls_inspect_handshake_msg(const Handshake_Message&)
-
-     This callback is optional, and can be used to inspect all handshake messages
-     while the session establishment occurs.
-
- .. cpp:function:: void tls_modify_extensions(Extensions& extn, Connection_Side which_side)
-
-     This callback is optional, and can be used to modify extensions before they
-     are sent to the peer. For example this enables adding a custom extension,
-     or replacing or removing an extension set by the library.
-
- .. cpp:function:: void tls_examine_extensions(const Extensions& extn, Connection_Side which_side)
-
-     This callback is optional, and can be used to examine extensions sent by
-     the peer.
-
- .. cpp:function:: void tls_log_error(const char* msg)
-
-     Optional logging for an error message. (Not currently used)
-
- .. cpp:function:: void tls_log_debug(const char* msg)
-
-     Optional logging for an debug message. (Not currently used)
-
- .. cpp:function:: void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t len)
-
-     Optional logging for an debug value. (Not currently used)
-
-Versions from 1.11.0 to 1.11.30 did not have ``TLS::Callbacks`` and instead
-used independent std::functions to pass the various callback functions.
-This interface is currently still included but is deprecated and will be removed
-in a future release. For the documentation for this interface, please check
-the docs for 1.11.30. This version of the manual only documents the new interface
-added in 1.11.31.
+    .. doxygenclass:: Botan::TLS::Callbacks
+       :members:
+       :membergroups: Mandatory Informational
 
 TLS Channels
 ----------------------------------------
@@ -1028,6 +877,8 @@ Client Code Example
 
 .. literalinclude:: /../src/examples/tls_custom_curves_client.cpp
    :language: cpp
+
+.. _tls_stream:
 
 TLS Stream
 ----------------------------------------
