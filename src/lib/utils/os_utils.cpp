@@ -448,7 +448,7 @@ bool OS::read_env_variable(std::string& value_out, const std::string& name)
 size_t OS::read_env_variable_sz(const std::string& name, size_t def)
    {
    std::string value;
-   if(read_env_variable(value, name))
+   if(read_env_variable(value, name) && !value.empty())
       {
       try
          {
