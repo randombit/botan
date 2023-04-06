@@ -248,47 +248,10 @@ policy settings from a file.
 TLS Ciphersuites
 ----------------------------------------
 
-.. cpp:class:: TLS::Ciphersuite
+.. container:: toggle
 
- .. cpp:function:: uint16_t ciphersuite_code() const
-
-     Return the numerical code for this ciphersuite
-
- .. cpp:function:: std::string to_string() const
-
-     Return the full name of ciphersuite (for example
-     "RSA_WITH_RC4_128_SHA" or "ECDHE_RSA_WITH_AES_128_GCM_SHA256")
-
- .. cpp:function:: std::string kex_algo() const
-
-     Return the key exchange algorithm of this ciphersuite
-
- .. cpp:function:: std::string sig_algo() const
-
-     Return the signature algorithm of this ciphersuite
-
- .. cpp:function:: std::string cipher_algo() const
-
-     Return the cipher algorithm of this ciphersuite
-
- .. cpp:function:: std::string mac_algo() const
-
-     Return the authentication algorithm of this ciphersuite
-
- .. cpp:function:: bool acceptable_ciphersuite(const Ciphersuite& suite) const
-
-     Return true if ciphersuite is accepted by the policy.
-
-     Allows an application to reject any ciphersuites, which are
-     undesirable for whatever reason without having to reimplement
-     :cpp:func:`TLS::Ciphersuite::ciphersuite_list`
-
- .. cpp:function:: std::vector<uint16_t> ciphersuite_list(Protocol_Version version, bool have_srp) const
-
-     Return allowed ciphersuites in order of preference
-
-     Allows an application to have full control over ciphersuites
-     by returning desired ciphersuites in preference order.
+    .. doxygenclass:: Botan::TLS::Ciphersuite
+        :members: by_id,from_name,ciphersuite_code,to_string,kex_algo,sig_algo,cipher_algo,mac_algo,prf_algo
 
 .. _tls_alerts:
 
