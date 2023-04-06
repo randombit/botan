@@ -258,27 +258,10 @@ TLS Ciphersuites
 TLS Alerts
 ----------------------------------------
 
-A ``TLS::Alert`` is passed to every invocation of a channel's *alert_cb*.
+.. container:: toggle
 
-.. cpp:class:: TLS::Alert
-
-  .. cpp:function:: is_valid() const
-
-       Return true if this alert is not a null alert
-
-  .. cpp:function:: is_fatal() const
-
-       Return true if this alert is fatal. A fatal alert causes the
-       connection to be immediately disconnected. Otherwise, the alert
-       is a warning and the connection remains valid.
-
-  .. cpp:function:: Type type() const
-
-       Returns the type of the alert as an enum
-
-  .. cpp:function:: std::string type_string()
-
-       Returns the type of the alert as a string
+    .. doxygenclass:: Botan::TLS::Alert
+        :members: is_valid,is_fatal,type,type_string
 
 TLS Protocol Version
 ----------------------------------------
