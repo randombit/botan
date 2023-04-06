@@ -269,38 +269,12 @@ TLS Protocol Version
 TLS has several different versions with slightly different behaviors.
 The ``TLS::Protocol_Version`` class represents a specific version:
 
-.. cpp:class:: TLS::Protocol_Version
+.. container:: toggle
 
- .. cpp:enum:: Version_Code
+    .. doxygenenum:: Botan::TLS::Version_Code
 
-     ``TLS_V10``, ``TLS_V11``, ``TLS_V12``, ``DTLS_V10``, ``DTLS_V12``
-
- .. cpp:function:: Protocol_Version(Version_Code named_version)
-
-      Create a specific version
-
- .. cpp:function:: uint8_t major_version() const
-
-      Returns major number of the protocol version
-
- .. cpp:function:: uint8_t minor_version() const
-
-      Returns minor number of the protocol version
-
- .. cpp:function:: std::string to_string() const
-
-      Returns string description of the version, for instance "TLS
-      v1.1" or "DTLS v1.0".
-
- .. cpp:function:: static Protocol_Version latest_tls_version()
-
-      Returns the latest version of the TLS protocol known to the library
-      (currently TLS v1.2)
-
- .. cpp:function:: static Protocol_Version latest_dtls_version()
-
-      Returns the latest version of the DTLS protocol known to the
-      library (currently DTLS v1.2)
+    .. doxygenclass:: Botan::TLS::Protocol_Version
+        :members: latest_tls_version,latest_dtls_version,known_version,major_version,minor_version,to_string,is_pre_tls_13,is_tls_13_or_later
 
 TLS Custom Key Exchange Mechanisms
 ----------------------------------------
