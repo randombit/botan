@@ -55,7 +55,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       * @param tbs the tbs bits to be signed
       * @return signed X509 object
       */
-      static std::vector<uint8_t> make_signed(PK_Signer* signer,
+      static std::vector<uint8_t> make_signed(PK_Signer& signer,
                                               RandomNumberGenerator& rng,
                                               const AlgorithmIdentifier& alg_id,
                                               const secure_vector<uint8_t>& tbs);
@@ -105,9 +105,9 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       virtual ~X509_Object() = default;
 
       /**
-      * Choose the default signature format for a certain public key signature
-      * scheme.
-      * @param sig_algo will be set to the chosen algorithm
+      * Choose and return a signature scheme appropriate for X.509 signing
+      * using the provided parameters.
+      *
       * @param key will be the key to choose a padding scheme for
       * @param rng the random generator to use
       * @param hash_fn is the desired hash function
@@ -115,8 +115,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       * @return a PK_Signer object for generating signatures
       */
       static std::unique_ptr<PK_Signer>
-         choose_sig_format(AlgorithmIdentifier& sig_algo,
-                           const Private_Key& key,
+         choose_sig_format(const Private_Key& key,
                            RandomNumberGenerator& rng,
                            const std::string& hash_fn,
                            const std::string& padding_algo);

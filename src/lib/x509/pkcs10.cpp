@@ -63,8 +63,8 @@ PKCS10_Request PKCS10_Request::create(const Private_Key& key,
                                       const std::string& padding_scheme,
                                       const std::string& challenge)
    {
-   AlgorithmIdentifier sig_algo;
-   auto signer = choose_sig_format(sig_algo, key, rng, hash_fn, padding_scheme);
+   auto signer = choose_sig_format(key, rng, hash_fn, padding_scheme);
+   const AlgorithmIdentifier sig_algo = signer->algorithm_identifier();
 
    const size_t PKCS10_VERSION = 0;
 
@@ -91,7 +91,7 @@ PKCS10_Request PKCS10_Request::create(const Private_Key& key,
    tbs_req.end_explicit().end_cons();
 
    const std::vector<uint8_t> req =
-      X509_Object::make_signed(signer.get(), rng, sig_algo,
+      X509_Object::make_signed(*signer.get(), rng, sig_algo,
                                tbs_req.get_contents());
 
    return PKCS10_Request(req);

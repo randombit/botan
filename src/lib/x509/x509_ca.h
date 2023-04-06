@@ -22,11 +22,32 @@ class PKCS10_Request;
 class PK_Signer;
 
 /**
-* This class represents X.509 Certificate Authorities (CAs).
+* An interface capable of creating new X.509 certificates
 */
 class BOTAN_PUBLIC_API(2,0) X509_CA final
    {
    public:
+      /**
+      * Return the algorithm identifier used to identify signatures that
+      * this CA will create.
+      */
+      const AlgorithmIdentifier algorithm_identifier() const { return m_ca_sig_algo; }
+
+      /**
+      * Return the CA's certificate
+      */
+      const X509_Certificate& ca_certificate() const { return m_ca_cert; }
+
+      /**
+      * Return the hash function the CA is using to sign with
+      */
+      const std::string& hash_function() const { return m_hash_fn; }
+
+      /**
+      * Return the signature object this CA uses to sign with
+      */
+      PK_Signer& signature_op() { return *m_signer.get(); }
+
       /**
       * Sign a PKCS#10 Request.
       * @param req the request to sign
@@ -54,12 +75,6 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
                                     const BigInt& serial_number,
                                     const X509_Time& not_before,
                                     const X509_Time& not_after) const;
-
-      /**
-      * Get the certificate of this CA.
-      * @return CA certificate
-      */
-      X509_Certificate ca_certificate() const;
 
       /**
       * Create a new and empty CRL for this CA.
@@ -112,6 +127,17 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
                           uint32_t next_update = 604800) const;
 
       /**
+      * Return the set of extensions that will be used for a certificate.
+      *
+      * This is a helper method that is used internally. It is also exposed
+      * so you can call it directly and then modify the extensions before
+      * creating a certificate using X509_CA::make_cert.
+      */
+      static Extensions choose_extensions(const PKCS10_Request& req,
+                                          const X509_Certificate& ca_certificate,
+                                          const std::string& hash_fn);
+
+      /**
       * Interface for creating new certificates
       * @param signer a signing object
       * @param rng a random number generator
@@ -124,7 +150,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       * @param extensions an optional list of certificate extensions
       * @returns newly minted certificate
       */
-      static X509_Certificate make_cert(PK_Signer* signer,
+      static X509_Certificate make_cert(PK_Signer& signer,
                                         RandomNumberGenerator& rng,
                                         const AlgorithmIdentifier& sig_algo,
                                         const std::vector<uint8_t>& pub_key,
@@ -148,7 +174,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       * @param extensions an optional list of certificate extensions
       * @returns newly minted certificate
       */
-      static X509_Certificate make_cert(PK_Signer* signer,
+      static X509_Certificate make_cert(PK_Signer& signer,
                                         RandomNumberGenerator& rng,
                                         const BigInt& serial_number,
                                         const AlgorithmIdentifier& sig_algo,
@@ -161,6 +187,9 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
 
       /**
       * Create a new CA object with custom padding option
+      *
+      * This is mostly useful for creating RSA-PSS certificates
+      *
       * @param ca_certificate the certificate of the CA
       * @param key the private key of the CA
       * @param hash_fn name of a hash function to use for signing

@@ -28,17 +28,16 @@ X509_CA::X509_CA(const X509_Certificate& cert,
    if(!m_ca_cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
-   m_signer = X509_Object::choose_sig_format(m_ca_sig_algo, key, rng, hash_fn, padding_method);
+   m_signer = X509_Object::choose_sig_format(key, rng, hash_fn, padding_method);
+   m_ca_sig_algo = m_signer->algorithm_identifier();
    m_hash_fn = m_signer->hash_function();
    }
 
 X509_CA::~X509_CA() = default;
 
-namespace {
-
-Extensions choose_extensions(const PKCS10_Request& req,
-                             const X509_Certificate& ca_cert,
-                             const std::string& hash_fn)
+Extensions X509_CA::choose_extensions(const PKCS10_Request& req,
+                                      const X509_Certificate& ca_cert,
+                                      const std::string& hash_fn)
    {
    const auto constraints =
       req.is_CA() ? Key_Constraints::ca_constraints() : req.constraints();
@@ -70,8 +69,6 @@ Extensions choose_extensions(const PKCS10_Request& req,
    return extensions;
    }
 
-}
-
 X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        RandomNumberGenerator& rng,
                                        const BigInt& serial_number,
@@ -80,10 +77,10 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    {
    auto extensions = choose_extensions(req, m_ca_cert, m_hash_fn);
 
-   return make_cert(m_signer.get(), rng, serial_number,
-                    m_ca_sig_algo, req.raw_public_key(),
+   return make_cert(*m_signer.get(), rng, serial_number,
+                    algorithm_identifier(), req.raw_public_key(),
                     not_before, not_after,
-                    m_ca_cert.subject_dn(), req.subject_dn(),
+                    ca_certificate().subject_dn(), req.subject_dn(),
                     extensions);
    }
 
@@ -97,14 +94,14 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    {
    auto extensions = choose_extensions(req, m_ca_cert, m_hash_fn);
 
-   return make_cert(m_signer.get(), rng, m_ca_sig_algo,
+   return make_cert(*m_signer.get(), rng, algorithm_identifier(),
                     req.raw_public_key(),
                     not_before, not_after,
-                    m_ca_cert.subject_dn(), req.subject_dn(),
+                    ca_certificate().subject_dn(), req.subject_dn(),
                     extensions);
    }
 
-X509_Certificate X509_CA::make_cert(PK_Signer* signer,
+X509_Certificate X509_CA::make_cert(PK_Signer& signer,
                                     RandomNumberGenerator& rng,
                                     const AlgorithmIdentifier& sig_algo,
                                     const std::vector<uint8_t>& pub_key,
@@ -124,7 +121,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
 /*
 * Create a new certificate
 */
-X509_Certificate X509_CA::make_cert(PK_Signer* signer,
+X509_Certificate X509_CA::make_cert(PK_Signer& signer,
                                     RandomNumberGenerator& rng,
                                     const BigInt& serial_no,
                                     const AlgorithmIdentifier& sig_algo,
@@ -235,7 +232,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
 
    // clang-format off
    const std::vector<uint8_t> crl = X509_Object::make_signed(
-      m_signer.get(), rng, m_ca_sig_algo,
+      *m_signer.get(), rng, m_ca_sig_algo,
       DER_Encoder().start_sequence()
          .encode(X509_CRL_VERSION-1)
          .encode(m_ca_sig_algo)
@@ -258,14 +255,6 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    // clang-format on
 
    return X509_CRL(crl);
-   }
-
-/*
-* Return the CA's certificate
-*/
-X509_Certificate X509_CA::ca_certificate() const
-   {
-   return m_ca_cert;
    }
 
 }
