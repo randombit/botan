@@ -279,32 +279,39 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 TLS Custom Key Exchange Mechanisms
 ----------------------------------------
 
-Applications can override the ephemeral key exchange mechanism used in TLS.
-This is not necessary for typical applications and might pose a serious security risk.
-Though, it allows the usage of custom groups or curves, offloading of cryptographic calculations to
-special hardware or the addition of entirely different algorithms (e.g. for post-quantum resilience).
+Applications can override the ephemeral key exchange mechanism used in TLS. This
+is not necessary for typical applications and might pose a serious security
+risk. Though, it allows the usage of custom groups or curves, offloading of
+cryptographic calculations to special hardware or the addition of entirely
+different algorithms (e.g. for post-quantum resilience).
 
-From a technical point of view, the supported_groups TLS extension is used in the client hello to
-advertise a list of supported elliptic curves and DH groups. The server subsequently selects one of
-the groups, which is supported by both endpoints. Groups are represented by their TLS identifier.
-This two-byte identifier is standardized for commonly used groups and curves. In addition, the standard
-reserves the identifiers 0xFE00 to 0xFEFF for custom groups, curves or other algorithms.
+From a technical point of view, the supported_groups TLS extension is used in
+the client hello to advertise a list of supported elliptic curves and DH groups.
+The server subsequently selects one of the groups, which is supported by both
+endpoints. Groups are represented by their TLS identifier. This two-byte
+identifier is standardized for commonly used groups and curves. In addition, the
+standard reserves the identifiers 0xFE00 to 0xFEFF for custom groups, curves or
+other algorithms.
 
-To use custom curves with the Botan :cpp:class:`TLS::Client` or :cpp:class:`TLS::Server` the following
-additional adjustments have to be implemented as shown in the following code examples.
+To use custom curves with the Botan :cpp:class:`TLS::Client` or
+:cpp:class:`TLS::Server` the following additional adjustments have to be
+implemented as shown in the following code examples.
 
 1. Registration of the custom curve
-2. Implementation TLS callbacks ``tls_generate_ephemeral_key`` and ``tls_ephemeral_key_agreement``
+2. Implementation TLS callbacks ``tls_generate_ephemeral_key`` and
+   ``tls_ephemeral_key_agreement``
 3. Adjustment of the TLS policy by allowing the custom curve
 
-Below is a code example for a TLS client using a custom curve.
-For servers, it works exactly the same.
+Below is a code example for a TLS client using a custom curve. For servers, it
+works exactly the same.
 
 Client Code Example
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: /../src/examples/tls_custom_curves_client.cpp
-   :language: cpp
+.. container:: toggle
+
+    .. literalinclude:: /../src/examples/tls_custom_curves_client.cpp
+       :language: cpp
 
 .. _tls_stream:
 
