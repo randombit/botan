@@ -95,13 +95,21 @@
 /*
 * Define BOTAN_MALLOC_FN
 */
-
 #if BOTAN_COMPILER_HAS_ATTRIBUTE(malloc)
   #define BOTAN_MALLOC_FN BOTAN_COMPILER_ATTRIBUTE(malloc)
 #elif defined(_MSC_VER)
   #define BOTAN_MALLOC_FN __declspec(restrict)
 #else
   #define BOTAN_MALLOC_FN
+#endif
+
+/*
+* Define BOTAN_EARLY_INIT
+*/
+#if BOTAN_COMPILER_HAS_ATTRIBUTE(init_priority)
+  #define BOTAN_EARLY_INIT(prio) BOTAN_COMPILER_ATTRIBUTE(init_priority(prio))
+#else
+  #define BOTAN_EARLY_INIT(prio) /**/
 #endif
 
 /*
