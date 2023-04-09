@@ -53,13 +53,13 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
                                          const std::string& hash_fn,
                                          RandomNumberGenerator& rng)
    {
-   AlgorithmIdentifier sig_algo;
+   const std::vector<uint8_t> pub_key = X509::BER_encode(key);
+   auto signer = X509_Object::choose_sig_format(key, rng, hash_fn, opts.padding_scheme);
+   const AlgorithmIdentifier sig_algo = signer->algorithm_identifier();
+   BOTAN_ASSERT_NOMSG(sig_algo.oid().has_value());
+
    X509_DN subject_dn;
    AlternativeName subject_alt;
-
-   const std::vector<uint8_t> pub_key = X509::BER_encode(key);
-   auto signer = X509_Object::choose_sig_format(sig_algo, key, rng, hash_fn, opts.padding_scheme);
-   BOTAN_ASSERT_NOMSG(sig_algo.oid().has_value());
    load_info(opts, subject_dn, subject_alt);
 
    Extensions extensions = opts.extensions;
@@ -90,7 +90,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    extensions.add_new(
       std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
 
-   return X509_CA::make_cert(signer.get(), rng, sig_algo, pub_key,
+   return X509_CA::make_cert(*signer.get(), rng, sig_algo, pub_key,
                              opts.start, opts.end,
                              subject_dn, subject_dn,
                              extensions);

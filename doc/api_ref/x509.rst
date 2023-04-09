@@ -601,17 +601,14 @@ for signing, e.g., `SHA-256`. ``rng`` is queried for random during signing.
 There is an alternative constructor that lets you set additional options, namely
 the padding scheme that will be used by the X509_CA object to sign certificates
 and certificate revocation lists. If the padding is not set explicitly, the CA
-will use the padding scheme that was used when signing the CA certificate.
+will use some default. The only time you need this alternate interface is
+for creating RSA-PSS certificates.
 
 .. cpp:function:: X509_CA::X509_CA(const X509_Certificate& cert, \
                                    const Private_Key& key, \
-                                   const std::map<std::string,std::string>& opts, \
                                    const std::string& hash_fn, \
+                                   const std::string& padding_fn, \
                                    RandomNumberGenerator& rng)
-
-The only option valid at this moment is "padding". The supported padding schemes
-can be found in src/lib/pubkey/padding.cpp. Some alternative names for the
-padding schemes are understood, as well.
 
 Requests for new certificates are supplied to a CA in the form of PKCS
 #10 certificate requests (called a ``PKCS10_Request`` object in
@@ -626,6 +623,27 @@ new certificate:
                          RandomNumberGenerator& rng, \
                          const X509_Time& not_before, \
                          const X509_Time& not_after)
+
+If you need more control over the signing process, you can use the methods
+
+.. cpp:function:: static X509_Certificate X509_CA::make_cert(PK_Signer& signer, \
+                                        RandomNumberGenerator& rng, \
+                                        const BigInt& serial_number, \
+                                        const AlgorithmIdentifier& sig_algo, \
+                                        const std::vector<uint8_t>& pub_key, \
+                                        const X509_Time& not_before, \
+                                        const X509_Time& not_after, \
+                                        const X509_DN& issuer_dn, \
+                                        const X509_DN& subject_dn, \
+                                        const Extensions& extensions)
+
+.. cpp:function:: static Extensions X509_CA::choose_extensions(const PKCS10_Request& req, \
+                                          const X509_Certificate& ca_certificate, \
+                                          const std::string& hash_fn)
+
+   Returns the extensions that would be created by sign_request if it was used.
+   You can call this and then modify the extensions list before invoking
+   :cpp:func:`X509_CA::make_cert`
 
 Generating CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

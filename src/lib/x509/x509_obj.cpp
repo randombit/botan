@@ -142,12 +142,12 @@ X509_Object::verify_signature(const Public_Key& pub_key) const
 /*
 * Apply the X.509 SIGNED macro
 */
-std::vector<uint8_t> X509_Object::make_signed(PK_Signer* signer,
+std::vector<uint8_t> X509_Object::make_signed(PK_Signer& signer,
                                             RandomNumberGenerator& rng,
                                             const AlgorithmIdentifier& algo,
                                             const secure_vector<uint8_t>& tbs_bits)
    {
-   const std::vector<uint8_t> signature = signer->sign_message(tbs_bits, rng);
+   const std::vector<uint8_t> signature = signer.sign_message(tbs_bits, rng);
 
    std::vector<uint8_t> output;
    DER_Encoder(output)
@@ -240,11 +240,11 @@ std::string format_padding_error_message(const std::string& key_name,
 /*
 * Choose a signing format for the key
 */
-std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(AlgorithmIdentifier& sig_algo,
-                                                          const Private_Key& key,
-                                                          RandomNumberGenerator& rng,
-                                                          const std::string& hash_fn,
-                                                          const std::string& user_specified_padding)
+std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(
+   const Private_Key& key,
+   RandomNumberGenerator& rng,
+   const std::string& hash_fn,
+   const std::string& user_specified_padding)
    {
    const Signature_Format format = key.default_x509_signature_format();
 
@@ -253,7 +253,6 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(AlgorithmIdentifier& s
       try
          {
          auto pk_signer = std::make_unique<PK_Signer>(key, rng, user_specified_padding, format);
-         sig_algo = pk_signer->algorithm_identifier();
          if(!hash_fn.empty() && pk_signer->hash_function() != hash_fn)
             {
             throw Invalid_Argument(
@@ -271,7 +270,6 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(AlgorithmIdentifier& s
    try
       {
       auto pk_signer = std::make_unique<PK_Signer>(key, rng, padding, format);
-      sig_algo = pk_signer->algorithm_identifier();
       if(!hash_fn.empty() && pk_signer->hash_function() != hash_fn)
          {
          throw Invalid_Argument(
