@@ -2380,8 +2380,6 @@ class ModulesChooser:
         for modname in disabled_modules:
             if modname not in modules:
                 logging.warning("Disabled module not found: %s", modname)
-            if not modules[modname].is_public():
-                logging.error("Module '%s' is meant for internal use only", modname)
 
     def _handle_by_module_policy(self, modname, module, usable):
         if self._module_policy is not None:
