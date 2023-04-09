@@ -240,9 +240,9 @@ class TLS_Client final : public Command
 
          if(tls_version != "default") {
             if(tls_version == "1.2") {
-               version = Botan::TLS::Protocol_Version::TLS_V12;
+               version = use_tcp ? Botan::TLS::Protocol_Version::TLS_V12 : Botan::TLS::Protocol_Version::DTLS_V12;
             } else if (tls_version == "1.3") {
-               version = Botan::TLS::Protocol_Version::TLS_V13;
+               version = use_tcp ? Botan::TLS::Protocol_Version::TLS_V13 : Botan::TLS::Protocol_Version::DTLS_V13;
             } else {
                error_output() << "Unknown TLS protocol version " << tls_version << '\n';
             }
