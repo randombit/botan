@@ -70,6 +70,10 @@ class BOTAN_PUBLIC_API(2,2) SM2_PublicKey : public virtual EC_PublicKey
 /**
 * This class represents SM2 private keys
 */
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,2) SM2_PrivateKey final :
    public SM2_PublicKey, public EC_PrivateKey
    {
@@ -111,6 +115,8 @@ class BOTAN_PUBLIC_API(2,2) SM2_PrivateKey final :
    private:
       BigInt m_da_inv;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 class HashFunction;
 

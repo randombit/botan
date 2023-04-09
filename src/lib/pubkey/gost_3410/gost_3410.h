@@ -75,6 +75,10 @@ class BOTAN_PUBLIC_API(2,0) GOST_3410_PublicKey : public virtual EC_PublicKey
 /**
 * GOST-34.10 Private Key
 */
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) GOST_3410_PrivateKey final :
    public GOST_3410_PublicKey, public EC_PrivateKey
    {
@@ -108,6 +112,8 @@ class BOTAN_PUBLIC_API(2,0) GOST_3410_PrivateKey final :
                              std::string_view params,
                              std::string_view provider) const override;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 }
 

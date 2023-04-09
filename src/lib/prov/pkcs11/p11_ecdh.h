@@ -60,6 +60,10 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDH_PublicKey : public PKCS11_EC_PublicKey
    };
 
 /// Represents a PKCS#11 ECDH private key
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) PKCS11_ECDH_PrivateKey final : public virtual PKCS11_EC_PrivateKey, public virtual PK_Key_Agreement_Key
    {
    public:
@@ -120,6 +124,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDH_PrivateKey final : public virtual PKCS11
                                  std::string_view params,
                                  std::string_view provider) const override;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 using PKCS11_ECDH_KeyPair = std::pair<PKCS11_ECDH_PublicKey, PKCS11_ECDH_PrivateKey>;
 

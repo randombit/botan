@@ -153,7 +153,7 @@ decrypt_bin(const uint8_t input[], size_t input_len,
    }
 
 BOTAN_DIAGNOSTIC_PUSH
-BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED
+BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
 secure_vector<uint8_t> decrypt_bin(const std::string& input,
                                    const std::string& passphrase)

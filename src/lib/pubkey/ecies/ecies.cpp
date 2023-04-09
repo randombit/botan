@@ -19,6 +19,10 @@ namespace {
 /**
 * Private key type for ECIES_ECDH_KA_Operation
 */
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class ECIES_PrivateKey final : public EC_PrivateKey, public PK_Key_Agreement_Key
    {
    public:
@@ -58,6 +62,8 @@ class ECIES_PrivateKey final : public EC_PrivateKey, public PK_Key_Agreement_Key
    private:
       ECDH_PrivateKey m_key;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 /**
 * Implements ECDH key agreement without using the cofactor mode

@@ -122,6 +122,10 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
 /**
 * This abstract class represents ECC private keys
 */
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
                                 public virtual Private_Key
    {
@@ -173,6 +177,8 @@ class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
 
       BigInt m_private_key;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 }
 

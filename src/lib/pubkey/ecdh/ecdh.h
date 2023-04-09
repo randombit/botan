@@ -68,6 +68,10 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PublicKey : public virtual EC_PublicKey
 /**
 * This class represents ECDH Private Keys.
 */
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) ECDH_PrivateKey final : public ECDH_PublicKey,
                                   public EC_PrivateKey,
                                   public PK_Key_Agreement_Key
@@ -107,6 +111,8 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PrivateKey final : public ECDH_PublicKey,
                                  std::string_view params,
                                  std::string_view provider) const override;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 }
 

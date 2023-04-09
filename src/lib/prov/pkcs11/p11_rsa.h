@@ -170,6 +170,10 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKeyGenerationProperties final : public Pr
    };
 
 /// Represents a PKCS#11 RSA private key
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
    public Object, public Private_Key, public RSA_PublicKey
    {
@@ -225,6 +229,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
    private:
       bool m_use_software_padding = false;
    };
+
+BOTAN_DIAGNOSTIC_POP
 
 using PKCS11_RSA_KeyPair = std::pair<PKCS11_RSA_PublicKey, PKCS11_RSA_PrivateKey>;
 
