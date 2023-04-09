@@ -16,6 +16,7 @@
 
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
+#include <botan/internal/tls_channel_impl.h>
 
 namespace Botan::TLS {
 

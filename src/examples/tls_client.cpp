@@ -1,10 +1,7 @@
 #include <botan/auto_rng.h>
 #include <botan/certstor.h>
 #include <botan/certstor_system.h>
-#include <botan/tls_callbacks.h>
-#include <botan/tls_client.h>
-#include <botan/tls_policy.h>
-#include <botan/tls_session_manager_memory.h>
+#include <botan/tls.h>
 
 /**
  * @brief Callbacks invoked by TLS::Channel.

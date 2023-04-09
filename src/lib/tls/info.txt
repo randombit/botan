@@ -10,6 +10,7 @@ type -> "Internal"
 
 <header:public>
 credentials_manager.h
+tls.h
 tls_alert.h
 tls_algos.h
 tls_callbacks.h
@@ -21,9 +22,9 @@ tls_extensions.h
 tls_handshake_msg.h
 tls_magic.h
 tls_messages.h
-tls_server_info.h
 tls_policy.h
 tls_server.h
+tls_server_info.h
 tls_session.h
 tls_session_manager.h
 tls_session_manager_noop.h

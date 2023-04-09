@@ -12,6 +12,7 @@
 #include <botan/tls_algos.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
+#include <botan/internal/tls_channel_impl.h>
 #include <botan/aead.h>
 #include <vector>
 #include <chrono>
