@@ -372,7 +372,7 @@ class BOTAN_TEST_API CPUID final
          return state().has_bit(elem32);
          }
 
-      static std::vector<CPUID::CPUID_bits> bit_from_string(const std::string& tok);
+      static std::vector<CPUID::CPUID_bits> bit_from_string(std::string_view tok);
    private:
       struct CPUID_Data
          {

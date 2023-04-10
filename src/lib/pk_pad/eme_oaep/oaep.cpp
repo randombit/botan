@@ -150,7 +150,7 @@ size_t OAEP::maximum_input_size(size_t keybits) const
    }
 
 OAEP::OAEP(std::unique_ptr<HashFunction> hash,
-           const std::string& P) :
+           std::string_view P) :
    m_mgf1_hash(std::move(hash))
    {
    m_Phash = m_mgf1_hash->process(P);
@@ -158,7 +158,7 @@ OAEP::OAEP(std::unique_ptr<HashFunction> hash,
 
 OAEP::OAEP(std::unique_ptr<HashFunction> hash,
            std::unique_ptr<HashFunction> mgf1_hash,
-           const std::string& P) :
+           std::string_view P) :
    m_mgf1_hash(std::move(mgf1_hash))
    {
    auto phash = std::move(hash);

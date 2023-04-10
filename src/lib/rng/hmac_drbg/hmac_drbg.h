@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
       /**
       * Constructor taking a string for the hash
       */
-      explicit HMAC_DRBG(const std::string& hmac_hash);
+      explicit HMAC_DRBG(std::string_view hmac_hash);
 
       /**
       * Initialize an HMAC_DRBG instance with the given MAC as PRF (normally HMAC)

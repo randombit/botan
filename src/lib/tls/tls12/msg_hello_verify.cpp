@@ -29,7 +29,7 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& buf)
    }
 
 Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& client_hello_bits,
-                                           const std::string& client_identity,
+                                           std::string_view client_identity,
                                            const SymmetricKey& secret_key)
    {
    auto hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");

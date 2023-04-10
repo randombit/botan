@@ -9,6 +9,7 @@
 #include <botan/hex.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/internal/fmt.h>
 #include <iomanip>
 #include <sstream>
 #include <cctype>
@@ -146,17 +147,18 @@ void ASN1_Formatter::decode(std::ostream& output,
          OID oid;
          data.decode(oid);
 
-         std::string out = oid.human_name_or_empty();
-         if(out.empty())
+         const std::string name = oid.human_name_or_empty();
+         const std::string oid_str = oid.to_string();
+
+         if(name.empty())
             {
-            out = oid.to_string();
+            output << format(type_tag, class_tag, level, length, oid_str);
             }
          else
             {
-            out += " [" + oid.to_string() + "]";
+            output << format(type_tag, class_tag, level, length,
+                             fmt("{} [{}]", name, oid_str));
             }
-
-         output << format(type_tag, class_tag, level, length, out);
          }
       else if(type_tag == ASN1_Type::Integer || type_tag == ASN1_Type::Enumerated)
          {
@@ -270,7 +272,7 @@ std::string ASN1_Pretty_Printer::format(ASN1_Type type_tag,
                                         ASN1_Class class_tag,
                                         size_t level,
                                         size_t length,
-                                        const std::string& value) const
+                                        std::string_view value) const
    {
    bool should_skip = false;
 

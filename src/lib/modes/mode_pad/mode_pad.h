@@ -30,7 +30,7 @@ class BOTAN_TEST_API BlockCipherModePaddingMethod
       * Get a block cipher padding mode by name (eg "NoPadding" or "PKCS7")
       * @param algo_spec block cipher padding mode name
       */
-      static std::unique_ptr<BlockCipherModePaddingMethod> create(const std::string& algo_spec);
+      static std::unique_ptr<BlockCipherModePaddingMethod> create(std::string_view algo_spec);
 
       /**
       * Add padding bytes to buffer.

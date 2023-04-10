@@ -31,7 +31,7 @@ class BOTAN_PUBLIC_API(2,0) Entropy_Source
       * or socket instance), so try to share them among multiple RNGs, or just
       * use the preconfigured global list accessed by Entropy_Sources::global_sources()
       */
-      static std::unique_ptr<Entropy_Source> create(const std::string& type);
+      static std::unique_ptr<Entropy_Source> create(std::string_view type);
 
       /**
       * @return name identifying this entropy source
@@ -69,7 +69,7 @@ class BOTAN_PUBLIC_API(2,0) Entropy_Sources final
       /**
       * Poll just a single named source. Ordinally only used for testing
       */
-      size_t poll_just(RandomNumberGenerator& rng, const std::string& src);
+      size_t poll_just(RandomNumberGenerator& rng, std::string_view src);
 
       Entropy_Sources() = default;
       explicit Entropy_Sources(const std::vector<std::string>& sources);

@@ -15,7 +15,7 @@ class ASN1_Parser final : public Botan::ASN1_Formatter
 
    protected:
       std::string format(Botan::ASN1_Type, Botan::ASN1_Class, size_t, size_t,
-                         const std::string&) const override
+                         std::string_view) const override
          {
          return "";
          }

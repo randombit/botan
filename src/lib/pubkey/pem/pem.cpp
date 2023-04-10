@@ -15,7 +15,7 @@ namespace Botan::PEM_Code {
 
 namespace {
 
-std::string linewrap(size_t width, const std::string& in)
+std::string linewrap(size_t width, std::string_view in)
    {
    std::string out;
    for(size_t i = 0; i != in.size(); ++i)
@@ -39,7 +39,7 @@ std::string linewrap(size_t width, const std::string& in)
 /*
 * PEM encode BER/DER-encoded objects
 */
-std::string encode(const uint8_t der[], size_t length, const std::string& label, size_t width)
+std::string encode(const uint8_t der[], size_t length, std::string_view label, size_t width)
    {
    const std::string PEM_HEADER = fmt("-----BEGIN {}-----\n", label);
    const std::string PEM_TRAILER = fmt("-----END {}-----\n", label);
@@ -51,7 +51,7 @@ std::string encode(const uint8_t der[], size_t length, const std::string& label,
 * Decode PEM down to raw BER/DER
 */
 secure_vector<uint8_t> decode_check_label(DataSource& source,
-                                          const std::string& label_want)
+                                          std::string_view label_want)
    {
    std::string label_got;
    secure_vector<uint8_t> ber = decode(source, label_got);
@@ -125,14 +125,14 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label)
    return base64_decode(b64.data(), b64.size());
    }
 
-secure_vector<uint8_t> decode_check_label(const std::string& pem,
-                                          const std::string& label_want)
+secure_vector<uint8_t> decode_check_label(std::string_view pem,
+                                          std::string_view label_want)
    {
    DataSource_Memory src(pem);
    return decode_check_label(src, label_want);
    }
 
-secure_vector<uint8_t> decode(const std::string& pem, std::string& label)
+secure_vector<uint8_t> decode(std::string_view pem, std::string& label)
    {
    DataSource_Memory src(pem);
    return decode(src, label);
@@ -141,10 +141,10 @@ secure_vector<uint8_t> decode(const std::string& pem, std::string& label)
 /*
 * Search for a PEM signature
 */
-bool matches(DataSource& source, const std::string& extra,
+bool matches(DataSource& source, std::string_view extra,
              size_t search_range)
    {
-   const std::string PEM_HEADER = "-----BEGIN " + extra;
+   const std::string PEM_HEADER = fmt("-----BEGIN {}", extra);
 
    secure_vector<uint8_t> search_buf(search_range);
    const size_t got = source.peek(search_buf.data(), search_buf.size(), 0);

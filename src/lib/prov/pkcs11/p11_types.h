@@ -33,7 +33,7 @@ class BOTAN_PUBLIC_API(2,0) Module final
       * @param file_path the path to the PKCS#11 shared library
       * @param init_args flags to use for `C_Initialize`
       */
-      Module(const std::string& file_path, C_InitializeArgs init_args = { nullptr, nullptr, nullptr, nullptr, static_cast< CK_FLAGS >(Flag::OsLockingOk), nullptr });
+      Module(std::string_view file_path, C_InitializeArgs init_args = { nullptr, nullptr, nullptr, nullptr, static_cast< CK_FLAGS >(Flag::OsLockingOk), nullptr });
 
       Module(Module&& other) noexcept;
       Module& operator=(Module&& other) = delete;
@@ -119,7 +119,7 @@ class BOTAN_PUBLIC_API(2,0) Slot final
       * @param label the label for the token (must not exceed 32 bytes according to PKCS#11)
       * @param so_pin the PIN of the security officer
       */
-      void initialize(const std::string& label, const secure_string& so_pin) const;
+      void initialize(std::string_view label, const secure_string& so_pin) const;
 
    private:
       const std::reference_wrapper<Module> m_module;

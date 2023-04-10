@@ -19,7 +19,7 @@ namespace Botan_FFI {
 class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception
    {
    public:
-      FFI_Error(const std::string& what, int err_code) :
+      FFI_Error(std::string_view what, int err_code) :
          Exception("FFI error", what),
          m_err_code(err_code)
          {}
@@ -154,7 +154,7 @@ inline int invoke_view_callback(botan_view_bin_fn view,
 
 inline int invoke_view_callback(botan_view_str_fn view,
                                 botan_view_ctx ctx,
-                                const std::string& str)
+                                std::string_view str)
    {
    return view(ctx, str.data(), str.size() + 1);
    }
@@ -216,14 +216,14 @@ int write_vec_output(uint8_t out[], size_t* out_len, const std::vector<uint8_t, 
    return write_output(out, out_len, buf.data(), buf.size());
    }
 
-inline int write_str_output(uint8_t out[], size_t* out_len, const std::string& str)
+inline int write_str_output(uint8_t out[], size_t* out_len, std::string_view str)
    {
    return write_output(out, out_len,
                        Botan::cast_char_ptr_to_uint8(str.data()),
                        str.size() + 1);
    }
 
-inline int write_str_output(char out[], size_t* out_len, const std::string& str)
+inline int write_str_output(char out[], size_t* out_len, std::string_view str)
    {
    return write_str_output(Botan::cast_char_ptr_to_uint8(out), out_len, str);
    }

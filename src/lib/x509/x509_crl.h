@@ -159,7 +159,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
       * Construct a CRL from a file containing the DER or PEM encoded CRL.
       * @param filename the name of the CRL file
       */
-      X509_CRL(const std::string& filename);
+      X509_CRL(std::string_view filename);
 #endif
 
       /**

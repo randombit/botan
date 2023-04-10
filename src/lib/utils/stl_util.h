@@ -21,7 +21,7 @@
 
 namespace Botan {
 
-inline std::vector<uint8_t> to_byte_vector(const std::string& s)
+inline std::vector<uint8_t> to_byte_vector(std::string_view s)
    {
    return std::vector<uint8_t>(s.cbegin(), s.cend());
    }
@@ -100,9 +100,9 @@ void multimap_insert(std::multimap<K, V>& multimap,
 /**
 * Existence check for values
 */
-template<typename T>
+template<typename T, typename OT>
 bool value_exists(const std::vector<T>& vec,
-                  const T& val)
+                  const OT& val)
    {
    for(size_t i = 0; i != vec.size(); ++i)
       if(vec[i] == val)

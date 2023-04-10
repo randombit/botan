@@ -411,7 +411,7 @@ void Subject_Key_ID::decode_inner(const std::vector<uint8_t>& in)
 /*
 * Subject_Key_ID Constructor
 */
-Subject_Key_ID::Subject_Key_ID(const std::vector<uint8_t>& pub_key, const std::string& hash_name)
+Subject_Key_ID::Subject_Key_ID(const std::vector<uint8_t>& pub_key, std::string_view hash_name)
    {
    auto hash = HashFunction::create_or_throw(hash_name);
 

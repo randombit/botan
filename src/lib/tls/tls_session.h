@@ -354,7 +354,7 @@ class BOTAN_PUBLIC_API(3,0) Session final : public Session_Base
       * Load a session from PEM representation (created by PEM_encode)
       * @param pem PEM representation
       */
-      explicit Session(const std::string& pem);
+      explicit Session(std::string_view pem);
 
       /**
       * Encode this session data for storage

@@ -647,7 +647,7 @@ class Stream
                const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
                const std::vector<Certificate_Store*>& trusted_roots,
                Usage_Type usage,
-               const std::string& hostname,
+               std::string_view hostname,
                const TLS::Policy& policy) override
                {
                auto ctx = m_context.lock();

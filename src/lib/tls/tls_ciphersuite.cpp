@@ -108,7 +108,7 @@ std::optional<Ciphersuite> Ciphersuite::by_id(uint16_t suite)
    return std::nullopt; // some unknown ciphersuite
    }
 
-std::optional<Ciphersuite> Ciphersuite::from_name(const std::string& name)
+std::optional<Ciphersuite> Ciphersuite::from_name(std::string_view name)
    {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
 
@@ -123,12 +123,12 @@ std::optional<Ciphersuite> Ciphersuite::from_name(const std::string& name)
 
 namespace {
 
-bool have_hash(const std::string& prf)
+bool have_hash(std::string_view prf)
    {
    return (!HashFunction::providers(prf).empty());
    }
 
-bool have_cipher(const std::string& cipher)
+bool have_cipher(std::string_view cipher)
    {
    return (!BlockCipher::providers(cipher).empty()) ||
       (!StreamCipher::providers(cipher).empty());

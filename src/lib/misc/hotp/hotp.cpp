@@ -12,7 +12,7 @@
 namespace Botan {
 
 HOTP::HOTP(const uint8_t key[], size_t key_len,
-           const std::string& hash_algo, size_t digits)
+           std::string_view hash_algo, size_t digits)
    {
    BOTAN_ARG_CHECK(digits == 6 || digits == 7 || digits == 8, "Invalid HOTP digits");
 

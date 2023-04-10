@@ -412,11 +412,12 @@ Test::Result test_c_init_token()
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(true);
 
    const std::string label = "Botan PKCS#11 tests";
+   std::string_view label_view(label);
 
    auto sec_vec_binder = std::bind(
-                            static_cast< bool (LowLevel::*)(SlotId, const secure_vector<uint8_t>&, const std::string&, ReturnValue*) const>
+                            static_cast< bool (LowLevel::*)(SlotId, const secure_vector<uint8_t>&, std::string_view, ReturnValue*) const>
                             (&LowLevel::C_InitToken<secure_allocator<uint8_t>>), *p11_low_level.get(), slot_vec.at(0), SO_PIN(),
-                            std::ref(label), std::placeholders::_1);
+                            std::ref(label_view), std::placeholders::_1);
 
    return test_function("C_InitToken", sec_vec_binder);
    }

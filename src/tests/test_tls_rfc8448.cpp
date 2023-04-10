@@ -211,7 +211,7 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
          const std::vector<std::optional<Botan::OCSP::Response>>&,
          const std::vector<Botan::Certificate_Store*>&,
          Botan::Usage_Type,
-         const std::string&,
+         std::string_view,
          const Botan::TLS::Policy&) override
          {
          count_callback_invocation("tls_verify_cert_chain");
@@ -234,7 +234,7 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
       std::vector<uint8_t> tls_sign_message(
          const Private_Key& key,
          RandomNumberGenerator& rng,
-         const std::string& emsa,
+         std::string_view padding,
          Signature_Format format,
          const std::vector<uint8_t>& msg) override
          {
@@ -248,9 +248,9 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
                throw Test_Error("TLS implementation selected unexpected signature format for RSA");
                }
 
-            if(emsa != "PSSR(SHA-256,MGF1,32)")
+            if(padding != "PSSR(SHA-256,MGF1,32)")
                {
-               throw Test_Error("TLS implementation selected unexpected padding for RSA: " + emsa);
+               throw Test_Error("TLS implementation selected unexpected padding for RSA: " + std::string(padding));
                }
             }
          else if(key.algo_name() == "ECDSA")
@@ -260,9 +260,9 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
                throw Test_Error("TLS implementation selected unexpected signature format for ECDSA");
                }
 
-            if(emsa != "SHA-256")
+            if(padding != "SHA-256")
                {
-               throw Test_Error("TLS implementation selected unexpected padding for ECDSA: " + emsa);
+               throw Test_Error("TLS implementation selected unexpected padding for ECDSA: " + std::string(padding));
                }
             }
          else
@@ -285,13 +285,13 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks
 
       bool tls_verify_message(
          const Public_Key& key,
-         const std::string& emsa,
+         std::string_view padding,
          Signature_Format format,
          const std::vector<uint8_t>& msg,
          const std::vector<uint8_t>& sig) override
          {
          count_callback_invocation("tls_verify_message");
-         return Callbacks::tls_verify_message(key, emsa, format, msg, sig);
+         return Callbacks::tls_verify_message(key, padding, format, msg, sig);
          }
 
       std::unique_ptr<PK_Key_Agreement_Key> tls_generate_ephemeral_key(

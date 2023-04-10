@@ -25,10 +25,10 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQLite final : public Certifica
       * @param rng used for encrypting keys
       * @param table_prefix optional prefix for db table names
       */
-      Certificate_Store_In_SQLite(const std::string& db_path,
-                                  const std::string& passwd,
+      Certificate_Store_In_SQLite(std::string_view db_path,
+                                  std::string_view passwd,
                                   RandomNumberGenerator& rng,
-                                  const std::string& table_prefix = "");
+                                  std::string_view table_prefix = "");
    };
 }
 #endif

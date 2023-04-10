@@ -22,18 +22,18 @@ namespace OIDS {
 * @param name the name to be associated with the oid
 */
 BOTAN_DEPRECATED("Use OID::register_oid")
-inline void add_oid(const OID& oid, const std::string& name)
+inline void add_oid(const OID& oid, std::string_view name)
    {
    OID::register_oid(oid, name);
    }
 
 BOTAN_DEPRECATED("Use OID::register_oid")
 BOTAN_UNSTABLE_API
-void add_oid2str(const OID& oid, const std::string& name);
+void add_oid2str(const OID& oid, std::string_view name);
 
 BOTAN_DEPRECATED("Use OID::register_oid")
 BOTAN_UNSTABLE_API
-void add_str2oid(const OID& oid, const std::string& name);
+void add_str2oid(const OID& oid, std::string_view name);
 
 BOTAN_DEPRECATED("Use OID::register_oid")
 inline void add_oidstr(const char* oidstr, const char* name)
@@ -59,7 +59,7 @@ inline std::string oid2str_or_empty(const OID& oid)
 * @return OID associated with the specified name
 */
 BOTAN_DEPRECATED("Use OID::from_name")
-inline OID str2oid_or_empty(const std::string& name)
+inline OID str2oid_or_empty(std::string_view name)
    {
    return OID::from_name(name).value_or(OID());
    }
@@ -80,7 +80,7 @@ inline std::string lookup(const OID& oid)
    }
 
 BOTAN_DEPRECATED("Use OID::from_name")
-inline OID lookup(const std::string& name)
+inline OID lookup(std::string_view name)
    {
    return OID::from_name(name).value_or(OID());
    }

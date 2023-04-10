@@ -16,26 +16,19 @@ namespace Botan {
 class BOTAN_TEST_API Timer final
    {
    public:
-      Timer(const std::string& name,
-            const std::string& provider,
-            const std::string& doing,
+      Timer(std::string_view name,
+            std::string_view provider,
+            std::string_view doing,
             uint64_t event_mult,
             size_t buf_size,
             double clock_cycle_ratio,
-            uint64_t clock_speed)
-         : m_name(name + ((provider.empty() || provider == "base") ? "" : " [" + provider + "]"))
-         , m_doing(doing)
-         , m_buf_size(buf_size)
-         , m_event_mult(event_mult)
-         , m_clock_cycle_ratio(clock_cycle_ratio)
-         , m_clock_speed(clock_speed)
-         {}
+            uint64_t clock_speed);
 
-      Timer(const std::string& name) :
+      Timer(std::string_view name) :
          Timer(name, "", "", 1, 0, 0.0, 0)
          {}
 
-      Timer(const std::string& name, size_t buf_size) :
+      Timer(std::string_view name, size_t buf_size) :
          Timer(name, "", "", buf_size, buf_size, 0.0, 0)
          {}
 
@@ -48,6 +41,7 @@ class BOTAN_TEST_API Timer final
 
       bool under(std::chrono::milliseconds msec)
          {
+
          return (milliseconds() < msec.count());
          }
 
@@ -121,12 +115,12 @@ class BOTAN_TEST_API Timer final
          return m_event_count * m_event_mult;
          }
 
-      const std::string& get_name() const
+      const std::string get_name() const
          {
          return m_name;
          }
 
-      const std::string& doing() const
+      const std::string doing() const
          {
          return m_doing;
          }
@@ -151,7 +145,7 @@ class BOTAN_TEST_API Timer final
          return events() > 0 ? seconds() / events() : 0.0;
          }
 
-      void set_custom_msg(const std::string& s)
+      void set_custom_msg(std::string_view s)
          {
          m_custom_msg = s;
          }

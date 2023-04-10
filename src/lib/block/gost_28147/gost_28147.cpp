@@ -26,7 +26,7 @@ uint8_t GOST_28147_89_Params::sbox_pair(size_t row, size_t col) const
    return (x >> 4) | (y << 4);
    }
 
-GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : m_name(n)
+GOST_28147_89_Params::GOST_28147_89_Params(std::string_view n) : m_name(n)
    {
    // Encoded in the packed fromat from RFC 4357
 

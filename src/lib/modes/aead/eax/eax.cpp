@@ -9,6 +9,7 @@
 #include <botan/internal/eax.h>
 #include <botan/internal/cmac.h>
 #include <botan/internal/ctr.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -42,7 +43,7 @@ EAX_Mode::EAX_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
    m_cmac(std::make_unique<CMAC>(m_cipher->new_object()))
    {
    if(m_tag_size < 8 || m_tag_size > m_cmac->output_length())
-      throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(tag_size));
+      throw Invalid_Argument(fmt("Tag size {} is not allowed for {}", tag_size, name()));
    }
 
 void EAX_Mode::clear()

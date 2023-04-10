@@ -37,12 +37,12 @@ class SCAN_Name final
       /**
       * @return original input string
       */
-      const std::string& to_string() const { return m_orig_algo_spec; }
+      const std::string to_string() const { return m_orig_algo_spec; }
 
       /**
       * @return algorithm name
       */
-      const std::string& algo_name() const { return m_alg_name; }
+      const std::string algo_name() const { return m_alg_name; }
 
       /**
       * @return number of arguments

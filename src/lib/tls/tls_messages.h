@@ -63,7 +63,7 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message
       explicit Hello_Verify_Request(const std::vector<uint8_t>& buf);
 
       Hello_Verify_Request(const std::vector<uint8_t>& client_hello_bits,
-                           const std::string& client_identity,
+                           std::string_view client_identity,
                            const SymmetricKey& secret_key);
 
    private:
@@ -154,12 +154,12 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello
          {
          public:
             Settings(const Protocol_Version version,
-                     const std::string& hostname = ""):
+                     std::string_view hostname = ""):
                m_new_session_version(version),
                m_hostname(hostname) {}
 
             const Protocol_Version protocol_version() const { return m_new_session_version; }
-            const std::string& hostname() const { return m_hostname; }
+            const std::string hostname() const { return m_hostname; }
 
          private:
             const Protocol_Version m_new_session_version;
@@ -229,7 +229,7 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello
       Client_Hello_13(const Policy& policy,
                       Callbacks& cb,
                       RandomNumberGenerator& rng,
-                      const std::string& hostname,
+                      std::string_view hostname,
                       const std::vector<std::string>& next_protocols,
                       std::optional<Session_with_Handle>& session);
 
@@ -344,7 +344,7 @@ class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello
                       const std::vector<uint8_t>& secure_reneg_info,
                       const Client_Hello_12& client_hello,
                       const Settings& settings,
-                      const std::string& next_protocol);
+                      std::string_view next_protocol);
 
       Server_Hello_12(Handshake_IO& io,
                       Handshake_Hash& hash,
@@ -355,7 +355,7 @@ class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello
                       const Client_Hello_12& client_hello,
                       const Session& resumed_session,
                       bool offer_session_ticket,
-                      const std::string& next_protocol);
+                      std::string_view next_protocol);
 
       explicit Server_Hello_12(const std::vector<uint8_t> &buf);
 
@@ -486,7 +486,7 @@ class BOTAN_UNSTABLE_API Client_Key_Exchange final : public Handshake_Message
                           const Policy& policy,
                           Credentials_Manager& creds,
                           const Public_Key* server_public_key,
-                          const std::string& hostname,
+                          std::string_view hostname,
                           RandomNumberGenerator& rng);
 
       Client_Key_Exchange(const std::vector<uint8_t>& buf,
@@ -561,7 +561,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
        * ... in response to a Certificate Request message.
        */
       Certificate_13(const Certificate_Request_13& cert_request,
-                     const std::string& hostname,
+                     std::string_view hostname,
                      Credentials_Manager& credentials_manager,
                      Callbacks& callbacks);
 
@@ -601,7 +601,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message
       void verify(Callbacks& callbacks,
                   const Policy& policy,
                   Credentials_Manager& creds,
-                  const std::string& hostname,
+                  std::string_view hostname,
                   bool use_ocsp) const;
 
       std::vector<uint8_t> serialize() const override;
@@ -780,7 +780,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
       Certificate_Verify_13(
             const Certificate_13& certificate_message,
             const std::vector<Signature_Scheme>& peer_allowed_schemes,
-            const std::string& hostname,
+            std::string_view hostname,
             const Transcript_Hash& hash,
             Connection_Side whoami,
             Credentials_Manager& creds_mgr,

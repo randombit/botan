@@ -16,9 +16,9 @@
 namespace Botan {
 
 Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database> db,
-                                                   const std::string& passwd,
+                                                   std::string_view passwd,
                                                    RandomNumberGenerator& rng,
-                                                   const std::string& table_prefix) :
+                                                   std::string_view table_prefix) :
    m_rng(rng),
    m_database(std::move(db)),
    m_prefix(table_prefix),

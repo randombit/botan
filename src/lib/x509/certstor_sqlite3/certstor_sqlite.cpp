@@ -10,10 +10,10 @@
 
 namespace Botan {
 
-Certificate_Store_In_SQLite::Certificate_Store_In_SQLite(const std::string& db_path,
-                                                         const std::string& passwd,
+Certificate_Store_In_SQLite::Certificate_Store_In_SQLite(std::string_view db_path,
+                                                         std::string_view passwd,
                                                          RandomNumberGenerator& rng,
-                                                         const std::string& table_prefix) :
+                                                         std::string_view table_prefix) :
    Certificate_Store_In_SQL(std::make_shared<Sqlite3_Database>(db_path), passwd, rng, table_prefix)
    {}
 }

@@ -87,7 +87,7 @@ class Processor_RNG_EntropySource final : public Entropy_Source
 
 }
 
-std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
+std::unique_ptr<Entropy_Source> Entropy_Source::create(std::string_view name)
    {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    if(name == "system_rng")
@@ -171,7 +171,7 @@ size_t Entropy_Sources::poll(RandomNumberGenerator& rng,
    return bits_collected;
    }
 
-size_t Entropy_Sources::poll_just(RandomNumberGenerator& rng, const std::string& the_src)
+size_t Entropy_Sources::poll_just(RandomNumberGenerator& rng, std::string_view the_src)
    {
    for(auto& src : m_srcs)
       {

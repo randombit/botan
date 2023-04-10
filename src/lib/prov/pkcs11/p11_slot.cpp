@@ -49,7 +49,7 @@ TokenInfo Slot::get_token_info() const
    return token_info;
    }
 
-void Slot::initialize(const std::string& label, const secure_string& so_pin) const
+void Slot::initialize(std::string_view label, const secure_string& so_pin) const
    {
    m_module.get()->C_InitToken(m_slot_id, so_pin, label);
    }

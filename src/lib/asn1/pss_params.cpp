@@ -14,7 +14,7 @@
 namespace Botan {
 
 //static
-PSS_Params PSS_Params::from_emsa_name(const std::string& emsa_name)
+PSS_Params PSS_Params::from_emsa_name(std::string_view emsa_name)
    {
    SCAN_Name scanner(emsa_name);
 
@@ -30,7 +30,7 @@ PSS_Params PSS_Params::from_emsa_name(const std::string& emsa_name)
    return PSS_Params(hash_fn, salt_len);
    }
 
-PSS_Params::PSS_Params(const std::string& hash_fn, size_t salt_len) :
+PSS_Params::PSS_Params(std::string_view hash_fn, size_t salt_len) :
    m_hash(hash_fn, AlgorithmIdentifier::USE_NULL_PARAM),
    m_mgf("MGF1", m_hash.BER_encode()),
    m_mgf_hash(m_hash),

@@ -698,8 +698,8 @@ bool Channel_Impl_12::secure_renegotiation_supported() const
    return false;
    }
 
-SymmetricKey Channel_Impl_12::key_material_export(const std::string& label,
-      const std::string& context,
+SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
+      std::string_view context,
       size_t length) const
    {
    if(auto active = active_state())

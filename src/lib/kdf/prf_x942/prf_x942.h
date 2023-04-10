@@ -28,7 +28,7 @@ class X942_PRF final : public KDF
                const uint8_t salt[], size_t salt_len,
                const uint8_t label[], size_t label_len) const override;
 
-      explicit X942_PRF(const std::string& oid) : m_key_wrap_oid(OID::from_string(oid)) {}
+      explicit X942_PRF(std::string_view oid) : m_key_wrap_oid(OID::from_string(oid)) {}
 
       explicit X942_PRF(const OID& oid) : m_key_wrap_oid(oid) {}
    private:

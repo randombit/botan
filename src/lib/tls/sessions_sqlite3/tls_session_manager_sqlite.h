@@ -37,9 +37,9 @@ Session_Manager_SQLite final : public Session_Manager_SQL
       * @param max_sessions a hint on the maximum number of sessions
       *        to keep in memory at any one time. (If zero, don't cap)
       */
-      Session_Manager_SQLite(const std::string& passphrase,
+      Session_Manager_SQLite(std::string_view passphrase,
                              std::shared_ptr<RandomNumberGenerator> rng,
-                             const std::string& db_filename,
+                             std::string_view db_filename,
                              size_t max_sessions = 1000);
 };
 

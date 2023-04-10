@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/fmt.h>
 #include <string>
 #include <vector>
 #include <span>
@@ -31,7 +32,7 @@ class TLS_Data_Reader final
       void assert_done() const
          {
          if(has_remaining())
-            throw decode_error("Extra bytes at end of message");
+            throw_decode_error("Extra bytes at end of message");
          }
 
       size_t read_so_far() const { return m_offset; }
@@ -166,7 +167,7 @@ class TLS_Data_Reader final
          else if(len_bytes == 3)
             return get_uint24_t();
 
-         throw decode_error("Bad length size");
+         throw_decode_error("Bad length size");
          }
 
       size_t get_num_elems(size_t len_bytes,
@@ -177,12 +178,12 @@ class TLS_Data_Reader final
          const size_t byte_length = get_length_field(len_bytes);
 
          if(byte_length % T_size != 0)
-            throw decode_error("Size isn't multiple of T");
+            throw_decode_error("Size isn't multiple of T");
 
          const size_t num_elems = byte_length / T_size;
 
          if(num_elems < min_elems || num_elems > max_elems)
-            throw decode_error("Length field outside parameters");
+            throw_decode_error("Length field outside parameters");
 
          return num_elems;
          }
@@ -190,15 +191,15 @@ class TLS_Data_Reader final
       void assert_at_least(size_t n) const
          {
          if(m_buf.size() - m_offset < n)
-            throw decode_error("Expected " + std::to_string(n) +
+            throw_decode_error("Expected " + std::to_string(n) +
                                " bytes remaining, only " +
                                std::to_string(m_buf.size()-m_offset) +
                                " left");
          }
 
-      Decoding_Error decode_error(const std::string& why) const
+      [[noreturn]] void throw_decode_error(std::string_view why) const
          {
-         return Decoding_Error("Invalid " + std::string(m_typename) + ": " + why);
+         throw Decoding_Error(fmt("Invalid {}: {}", m_typename, why));
          }
 
       const char* m_typename;
@@ -244,7 +245,7 @@ void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
 
 template<typename Alloc>
 void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
-                             const std::string& str,
+                             std::string_view str,
                              size_t tag_size)
    {
    append_tls_length_value(buf,

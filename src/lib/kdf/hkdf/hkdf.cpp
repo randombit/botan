@@ -127,9 +127,9 @@ void HKDF_Expand::kdf(uint8_t key[], size_t key_len,
    }
 
 secure_vector<uint8_t>
-hkdf_expand_label(const std::string& hash_fn,
+hkdf_expand_label(std::string_view hash_fn,
                   const uint8_t secret[], size_t secret_len,
-                  const std::string& label,
+                  std::string_view label,
                   const uint8_t hash_val[], size_t hash_val_len,
                   size_t length)
    {

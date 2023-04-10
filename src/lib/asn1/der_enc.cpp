@@ -391,7 +391,7 @@ DER_Encoder& DER_Encoder::encode(const ASN1_Object& obj)
 * Write the encoding of the byte(s)
 */
 DER_Encoder& DER_Encoder::add_object(ASN1_Type type_tag, ASN1_Class class_tag,
-                                     const std::string& rep_str)
+                                     std::string_view rep_str)
    {
    const uint8_t* rep = cast_char_ptr_to_uint8(rep_str.data());
    const size_t rep_len = rep_str.size();

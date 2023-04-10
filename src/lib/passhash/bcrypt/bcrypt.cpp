@@ -11,6 +11,7 @@
 #include <botan/base64.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -86,15 +87,19 @@ std::string bcrypt_base64_encode(const uint8_t input[], size_t length)
    return b64;
    }
 
-std::vector<uint8_t> bcrypt_base64_decode(std::string input)
+std::vector<uint8_t> bcrypt_base64_decode(std::string_view input)
    {
+   std::string translated;
    for(size_t i = 0; i != input.size(); ++i)
-      input[i] = bcrypt_encoding_to_base64(static_cast<uint8_t>(input[i]));
+      {
+      char c = bcrypt_encoding_to_base64(static_cast<uint8_t>(input[i]));
+      translated.push_back(c);
+      }
 
-   return unlock(base64_decode(input));
+   return unlock(base64_decode(translated));
    }
 
-std::string make_bcrypt(const std::string& pass,
+std::string make_bcrypt(std::string_view pass,
                         const std::vector<uint8_t>& salt,
                         uint16_t work_factor,
                         char version)
@@ -116,9 +121,14 @@ std::string make_bcrypt(const std::string& pass,
 
    Blowfish blowfish;
 
+   secure_vector<uint8_t> pass_with_trailing_null(pass.size() + 1);
+   copy_mem(pass_with_trailing_null.data(),
+            cast_char_ptr_to_uint8(pass.data()),
+            pass.length());
+
    // Include the trailing NULL byte, so we need c_str() not data()
-   blowfish.salted_set_key(cast_char_ptr_to_uint8(pass.c_str()),
-                           pass.length() + 1,
+   blowfish.salted_set_key(pass_with_trailing_null.data(),
+                           pass_with_trailing_null.size(),
                            salt.data(),
                            salt.size(),
                            work_factor);
@@ -134,14 +144,15 @@ std::string make_bcrypt(const std::string& pass,
    if(work_factor_str.length() == 1)
       work_factor_str = "0" + work_factor_str;
 
-   return "$2" + std::string(1, version) + "$" + work_factor_str +
-          "$" + salt_b64.substr(0, 22) +
-          bcrypt_base64_encode(ctext.data(), ctext.size() - 1);
+   return fmt("$2{}${}${}{}",
+              version, work_factor_str,
+              salt_b64.substr(0, 22),
+              bcrypt_base64_encode(ctext.data(), ctext.size() - 1));
    }
 
 }
 
-std::string generate_bcrypt(const std::string& pass,
+std::string generate_bcrypt(std::string_view pass,
                             RandomNumberGenerator& rng,
                             uint16_t work_factor,
                             char version)
@@ -159,7 +170,7 @@ std::string generate_bcrypt(const std::string& pass,
    return make_bcrypt(pass, salt, work_factor, version);
    }
 
-bool check_bcrypt(const std::string& pass, const std::string& hash)
+bool check_bcrypt(std::string_view pass, std::string_view hash)
    {
    if(hash.size() != 60 ||
       hash[0] != '$' || hash[1] != '2' || hash[3] != '$' || hash[6] != '$')

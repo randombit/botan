@@ -253,7 +253,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
                                  const std::vector<uint8_t>& reneg_info,
                                  const Client_Hello_12& client_hello,
                                  const Server_Hello_12::Settings& server_settings,
-                                 const std::string& next_protocol) :
+                                 std::string_view next_protocol) :
    Server_Hello(std::make_unique<Server_Hello_Internal>(
                    server_settings.protocol_version(),
                    server_settings.session_id(),
@@ -337,7 +337,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
                                  const Client_Hello_12& client_hello,
                                  const Session& resumed_session,
                                  bool offer_session_ticket,
-                                 const std::string& next_protocol) :
+                                 std::string_view next_protocol) :
    Server_Hello(std::make_unique<Server_Hello_Internal>(
                    resumed_session.version(),
                    client_hello.session_id(),

@@ -152,7 +152,7 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       /**
        * @return Hash of the subject public key
        */
-      std::string fingerprint_public(const std::string& alg = "SHA-256") const;
+      std::string fingerprint_public(std::string_view alg = "SHA-256") const;
 
       // Internal or non-public declarations follow
 
@@ -296,7 +296,7 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       /**
        * @return Hash of the PKCS #8 encoding for this key object
        */
-      std::string fingerprint_private(const std::string& alg) const;
+      std::string fingerprint_private(std::string_view alg) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -382,10 +382,10 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement_Key : public virtual Private_Key
 
 std::string BOTAN_PUBLIC_API(2,4)
    create_hex_fingerprint(const uint8_t bits[], size_t len,
-                          const std::string& hash_name);
+                          std::string_view hash_name);
 
 inline std::string create_hex_fingerprint(std::span<const uint8_t> vec,
-                                          const std::string& hash_name)
+                                          std::string_view hash_name)
    {
    return create_hex_fingerprint(vec.data(), vec.size(), hash_name);
    }

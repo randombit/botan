@@ -50,7 +50,7 @@ namespace X509 {
 */
 X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
                                          const Private_Key& key,
-                                         const std::string& hash_fn,
+                                         std::string_view hash_fn,
                                          RandomNumberGenerator& rng)
    {
    const std::vector<uint8_t> pub_key = X509::BER_encode(key);
@@ -101,7 +101,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 */
 PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
                                const Private_Key& key,
-                               const std::string& hash_fn,
+                               std::string_view hash_fn,
                                RandomNumberGenerator& rng)
    {
    X509_DN subject_dn;

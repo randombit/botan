@@ -8,6 +8,7 @@
 
 #include <botan/internal/xts.h>
 #include <botan/internal/poly_dbl.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -19,7 +20,7 @@ XTS_Mode::XTS_Mode(std::unique_ptr<BlockCipher> cipher) :
    {
    if(poly_double_supported_size(m_cipher_block_size) == false)
       {
-      throw Invalid_Argument("Cannot use " + m_cipher->name() + " with XTS");
+      throw Invalid_Argument(fmt("Cannot use {} with XTS", m_cipher->name()));
       }
 
    m_tweak_cipher = m_cipher->new_object();

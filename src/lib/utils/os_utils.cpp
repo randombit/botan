@@ -419,7 +419,7 @@ size_t OS::get_memory_locking_limit()
    return 0;
    }
 
-bool OS::read_env_variable(std::string& value_out, const std::string& name)
+bool OS::read_env_variable(std::string& value_out, std::string_view name_view)
    {
    value_out = "";
 
@@ -427,6 +427,7 @@ bool OS::read_env_variable(std::string& value_out, const std::string& name)
       return false;
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   const std::string name(name_view);
    char val[128] = { 0 };
    size_t req_size = 0;
    if(getenv_s(&req_size, val, sizeof(val), name.c_str()) == 0)
@@ -435,6 +436,7 @@ bool OS::read_env_variable(std::string& value_out, const std::string& name)
       return true;
       }
 #else
+   const std::string name(name_view);
    if(const char* val = std::getenv(name.c_str()))
       {
       value_out = val;
@@ -445,7 +447,7 @@ bool OS::read_env_variable(std::string& value_out, const std::string& name)
    return false;
    }
 
-size_t OS::read_env_variable_sz(const std::string& name, size_t def)
+size_t OS::read_env_variable_sz(std::string_view name, size_t def)
    {
    std::string value;
    if(read_env_variable(value, name) && !value.empty())

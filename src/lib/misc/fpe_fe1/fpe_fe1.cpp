@@ -60,7 +60,7 @@ void factor(BigInt n, BigInt& a, BigInt& b)
 FPE_FE1::FPE_FE1(const BigInt& n,
                  size_t rounds,
                  bool compat_mode,
-                 const std::string& mac_algo) :
+                 std::string_view mac_algo) :
    m_rounds(rounds)
    {
    if(m_rounds < 3)

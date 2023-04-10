@@ -30,10 +30,10 @@ class RandomNumberGenerator;
 * @return (A,K) the client public key and the shared secret key
 */
 std::pair<BigInt,SymmetricKey>
-BOTAN_PUBLIC_API(2,0) srp6_client_agree(const std::string& username,
-                            const std::string& password,
-                            const std::string& group_id,
-                            const std::string& hash_id,
+BOTAN_PUBLIC_API(2,0) srp6_client_agree(std::string_view username,
+                            std::string_view password,
+                            std::string_view group_id,
+                            std::string_view hash_id,
                             const std::vector<uint8_t>& salt,
                             const BigInt& B,
                             RandomNumberGenerator& rng);
@@ -53,10 +53,10 @@ BOTAN_PUBLIC_API(2,0) srp6_client_agree(const std::string& username,
 * @return (A,K) the client public key and the shared secret key
 */
 std::pair<BigInt,SymmetricKey> BOTAN_PUBLIC_API(2,11)
-   srp6_client_agree(const std::string& username,
-                     const std::string& password,
+   srp6_client_agree(std::string_view username,
+                     std::string_view password,
                      const DL_Group& group,
-                     const std::string& hash_id,
+                     std::string_view hash_id,
                      const std::vector<uint8_t>& salt,
                      const BigInt& B,
                      size_t a_bits,
@@ -71,11 +71,11 @@ std::pair<BigInt,SymmetricKey> BOTAN_PUBLIC_API(2,11)
 * @param hash_id specifies a secure hash function
 */
 BigInt BOTAN_PUBLIC_API(2,0)
-   srp6_generate_verifier(const std::string& identifier,
-                          const std::string& password,
+   srp6_generate_verifier(std::string_view identifier,
+                          std::string_view password,
                           const std::vector<uint8_t>& salt,
-                          const std::string& group_id,
-                          const std::string& hash_id);
+                          std::string_view group_id,
+                          std::string_view hash_id);
 
 /**
 * Generate a new SRP-6 verifier
@@ -86,11 +86,11 @@ BigInt BOTAN_PUBLIC_API(2,0)
 * @param hash_id specifies a secure hash function
 */
 BigInt BOTAN_PUBLIC_API(2,11)
-   srp6_generate_verifier(const std::string& identifier,
-                          const std::string& password,
+   srp6_generate_verifier(std::string_view identifier,
+                          std::string_view password,
                           const std::vector<uint8_t>& salt,
                           const DL_Group& group,
-                          const std::string& hash_id);
+                          std::string_view hash_id);
 
 /**
 * Return the group id for this SRP param set, or else thrown an
@@ -116,8 +116,8 @@ class BOTAN_PUBLIC_API(2,0) SRP6_Server_Session final
       * @return SRP-6 B value
       */
       BigInt step1(const BigInt& v,
-                   const std::string& group_id,
-                   const std::string& hash_id,
+                   std::string_view group_id,
+                   std::string_view hash_id,
                    RandomNumberGenerator& rng);
 
       /**
@@ -133,7 +133,7 @@ class BOTAN_PUBLIC_API(2,0) SRP6_Server_Session final
       */
       BigInt step1(const BigInt& v,
                    const DL_Group& group,
-                   const std::string& hash_id,
+                   std::string_view hash_id,
                    const size_t b_bits,
                    RandomNumberGenerator& rng);
 

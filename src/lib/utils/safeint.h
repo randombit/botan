@@ -9,8 +9,10 @@
 #define BOTAN_UTILS_SAFE_INT_H_
 
 #include <botan/exceptn.h>
+#include <botan/internal/fmt.h>
 #include <optional>
-#include <string>
+#include <string_view>
+
 #if defined(_MSC_VER)
 #include <intsafe.h>
 #endif
@@ -20,8 +22,8 @@ namespace Botan {
 class Integer_Overflow_Detected final : public Exception
    {
    public:
-      Integer_Overflow_Detected(const std::string& file, int line) :
-         Exception("Integer overflow detected at " + file + ":" + std::to_string(line))
+      Integer_Overflow_Detected(std::string_view file, int line) :
+         Exception(fmt("Integer overflow detected at {}:{}", file, line))
          {}
 
       ErrorType error_type() const noexcept override { return ErrorType::InternalError; }

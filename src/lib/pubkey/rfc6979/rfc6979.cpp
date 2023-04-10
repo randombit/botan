@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(const std::string& hash,
+RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(std::string_view hash,
                                                  const BigInt& order,
                                                  const BigInt& x) :
    m_order(order),
@@ -49,7 +49,7 @@ const BigInt& RFC6979_Nonce_Generator::nonce_for(const BigInt& m)
 BigInt generate_rfc6979_nonce(const BigInt& x,
                               const BigInt& q,
                               const BigInt& h,
-                              const std::string& hash)
+                              std::string_view hash)
    {
    RFC6979_Nonce_Generator gen(hash, q, x);
    BigInt k = gen.nonce_for(h);

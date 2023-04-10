@@ -41,7 +41,7 @@ class BOTAN_PUBLIC_API(2,0) DataSink_Stream final : public DataSink
       * @param name identifier
       */
       DataSink_Stream(std::ostream& stream,
-                      const std::string& name = "<std::ostream>");
+                      std::string_view name = "<std::ostream>");
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
@@ -51,7 +51,7 @@ class BOTAN_PUBLIC_API(2,0) DataSink_Stream final : public DataSink
       * @param use_binary indicates whether to treat the file
       * as a binary file or not
       */
-      DataSink_Stream(const std::string& pathname,
+      DataSink_Stream(std::string_view pathname,
                       bool use_binary = false);
 #endif
 

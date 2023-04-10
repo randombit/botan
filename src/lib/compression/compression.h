@@ -157,12 +157,7 @@ class BOTAN_PUBLIC_API(2,9) Compression_Error final : public Exception
       * @param rc the error return code from the compression API. The
       * interpretation of this value will depend on the library.
       */
-     Compression_Error(const char* func_name, ErrorType type, int rc) :
-        Exception("Compression API " + std::string(func_name) +
-                  " failed with return code " + std::to_string(rc)),
-        m_type(type),
-        m_rc(rc)
-         {}
+      Compression_Error(const char* func_name, ErrorType type, int rc);
 
       ErrorType error_type() const noexcept override { return m_type; }
 

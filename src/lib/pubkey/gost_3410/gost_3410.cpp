@@ -10,6 +10,7 @@
 #include <botan/gost_3410.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/point_mul.h>
+#include <botan/internal/fmt.h>
 #include <botan/reducer.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -45,7 +46,7 @@ std::string GOST_3410_PublicKey::algo_name() const
    const size_t p_bits = domain().get_p_bits();
 
    if(p_bits == 256 || p_bits == 512)
-      return "GOST-34.10-2012-" + std::to_string(p_bits);
+      return fmt("GOST-34.10-2012-{}", p_bits);
    else
       throw Encoding_Error("GOST-34.10-2012 is not defined for parameters of this size");
    }
@@ -74,8 +75,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
    const size_t p_bits = m_domain_params.get_p_bits();
    if(p_bits != 256 && p_bits != 512)
-      throw Decoding_Error("GOST-34.10-2012 is not defined for parameters of size " +
-                           std::to_string(p_bits));
+      throw Decoding_Error(fmt("GOST-34.10-2012 is not defined for parameters of size {}", p_bits));
 
    secure_vector<uint8_t> bits;
    BER_Decoder(key_bits).decode(bits, ASN1_Type::OctetString);
@@ -108,8 +108,9 @@ GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng,
    {
    const size_t p_bits = m_domain_params.get_p_bits();
    if(p_bits != 256 && p_bits != 512)
-      throw Decoding_Error("GOST-34.10-2012 is not defined for parameters of size " +
-                           std::to_string(p_bits));
+      {
+      throw Decoding_Error(fmt("GOST-34.10-2012 is not defined for parameters of size {}", p_bits));
+      }
    }
 
 std::unique_ptr<Public_Key> GOST_3410_PrivateKey::public_key() const
@@ -217,11 +218,8 @@ std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id)
    if(oid_str == "GOST-34.10-2012-256/SHA-256")
       return "SHA-256";
 
-   throw Decoding_Error("Unknown OID (" + alg_id.oid().to_string() +
-                        ") for GOST 34.10 signatures");
+   throw Decoding_Error(fmt("Unknown OID ({}) for GOST 34.10 signatures", alg_id.oid()));
    }
-
-
 
 /**
 * GOST-34.10 verification operation

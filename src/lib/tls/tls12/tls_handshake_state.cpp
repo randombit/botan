@@ -322,8 +322,8 @@ namespace {
 
 bool supported_algos_include(
    const std::vector<Signature_Scheme>& schemes,
-   const std::string& key_type,
-   const std::string& hash_type)
+   std::string_view key_type,
+   std::string_view hash_type)
    {
    for(Signature_Scheme scheme : schemes)
       {

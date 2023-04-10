@@ -146,7 +146,7 @@ CPUID::CPUID_Data::CPUID_Data()
    }
 
 std::vector<CPUID::CPUID_bits>
-CPUID::bit_from_string(const std::string& tok)
+CPUID::bit_from_string(std::string_view tok)
    {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    if(tok == "sse2" || tok == "simd")

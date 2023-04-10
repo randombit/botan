@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/socket.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <chrono>
@@ -43,8 +44,8 @@ namespace {
 class Asio_Socket final : public OS::Socket
    {
    public:
-      Asio_Socket(const std::string& hostname,
-                  const std::string& service,
+      Asio_Socket(std::string_view hostname,
+                  std::string_view service,
                   std::chrono::milliseconds timeout) :
          m_timeout(timeout), m_timer(m_io), m_tcp(m_io)
          {
@@ -52,7 +53,7 @@ class Asio_Socket final : public OS::Socket
          check_timeout();
 
          boost::asio::ip::tcp::resolver resolver(m_io);
-         boost::asio::ip::tcp::resolver::query query(hostname, service);
+         boost::asio::ip::tcp::resolver::query query(std::string{hostname}, std::string{service});
          boost::asio::ip::tcp::resolver::iterator dns_iter = resolver.resolve(query);
 
          boost::system::error_code ec = boost::asio::error::would_block;
@@ -70,7 +71,7 @@ class Asio_Socket final : public OS::Socket
          if(ec)
             throw boost::system::system_error(ec);
          if(m_tcp.is_open() == false)
-            throw System_Error("Connection to host " + hostname + " failed");
+            throw System_Error(fmt("Connection to host {} failed", hostname));
          }
 
       void write(const uint8_t buf[], size_t len) override
@@ -196,8 +197,8 @@ class BSD_Socket final : public OS::Socket
 #endif
 
    public:
-      BSD_Socket(const std::string& hostname,
-                 const std::string& service,
+      BSD_Socket(std::string_view hostname,
+                 std::string_view service,
                  std::chrono::microseconds timeout) : m_timeout(timeout)
          {
          socket_init();
@@ -210,11 +211,14 @@ class BSD_Socket final : public OS::Socket
          hints.ai_socktype = SOCK_STREAM;
          addrinfo* res;
 
-         int rc = ::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res);
+         const std::string hostname_str(hostname);
+         const std::string service_str(service);
+
+         int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, &res);
 
          if(rc != 0)
             {
-            throw System_Error("Name resolution failed for " + hostname, rc);
+            throw System_Error(fmt("Name resolution failed for {}", hostname), rc);
             }
 
          for(addrinfo* rp = res; (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next)
@@ -275,8 +279,9 @@ class BSD_Socket final : public OS::Socket
 
          if(m_socket == invalid_socket())
             {
-            throw System_Error("Connecting to " + hostname +
-                                " for service " + service + " failed", errno);
+            throw System_Error(fmt("Connecting to {} for service {} failed with errno {}",
+                                   hostname, service, errno),
+                               errno);
             }
          }
 
@@ -354,8 +359,8 @@ class BSD_Socket final : public OS::Socket
 }
 
 std::unique_ptr<OS::Socket>
-OS::open_socket(const std::string& hostname,
-                const std::string& service,
+OS::open_socket(std::string_view hostname,
+                std::string_view service,
                 std::chrono::milliseconds timeout)
    {
 #if defined(BOTAN_HAS_BOOST_ASIO)

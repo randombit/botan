@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(2,5) FPE_FE1 final : public SymmetricAlgorithm
       FPE_FE1(const BigInt& n,
               size_t rounds = 5,
               bool compat_mode = false,
-              const std::string& mac_algo = "HMAC(SHA-256)");
+              std::string_view mac_algo = "HMAC(SHA-256)");
 
       ~FPE_FE1();
 

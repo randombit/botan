@@ -42,7 +42,7 @@ class BOTAN_UNSTABLE_API UUID final
       /**
       * Decode a UUID string
       */
-      UUID(const std::string& uuid_str);
+      UUID(std::string_view uuid_str);
 
       /**
       * Convert the UUID to a string

@@ -29,11 +29,11 @@ namespace {
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
 
-std::vector<std::string> impl_readdir(const std::string& dir_path)
+std::vector<std::string> impl_readdir(std::string_view dir_path)
    {
    std::vector<std::string> out;
    std::deque<std::string> dir_list;
-   dir_list.push_back(dir_path);
+   dir_list.push_back(std::string(dir_path));
 
    while(!dir_list.empty())
       {
@@ -72,11 +72,11 @@ std::vector<std::string> impl_readdir(const std::string& dir_path)
 
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
 
-std::vector<std::string> impl_win32(const std::string& dir_path)
+std::vector<std::string> impl_win32(std::string_view dir_path)
    {
    std::vector<std::string> out;
    std::deque<std::string> dir_list;
-   dir_list.push_back(dir_path);
+   dir_list.push_back(std::string(dir_path));
 
    while(!dir_list.empty())
       {
@@ -127,7 +127,7 @@ bool has_filesystem_impl()
 #endif
    }
 
-std::vector<std::string> get_files_recursive(const std::string& dir)
+std::vector<std::string> get_files_recursive(std::string_view dir)
    {
    std::vector<std::string> files;
 

@@ -27,7 +27,7 @@ class RawHashFunction : public HashFunction
          RawHashFunction(hash->name(), hash->output_length())
          {}
 
-      RawHashFunction(const std::string& name, size_t output_length) :
+      RawHashFunction(std::string_view name, size_t output_length) :
          m_name(name), m_output_length(output_length) {}
 
       void add_data(const uint8_t input[], size_t length) override;

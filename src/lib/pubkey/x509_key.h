@@ -50,7 +50,7 @@ BOTAN_PUBLIC_API(3,0) std::unique_ptr<Public_Key> load_key(DataSource& source);
 * @param filename pathname to the file to load
 * @return new public key object
 */
-inline std::unique_ptr<Public_Key> load_key(const std::string& filename)
+inline std::unique_ptr<Public_Key> load_key(std::string_view filename)
    {
    DataSource_Stream source(filename, true);
    return X509::load_key(source);

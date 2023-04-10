@@ -26,7 +26,7 @@ class OAEP final : public EME
       * @param hash function to use for hashing (takes ownership)
       * @param P an optional label. Normally empty.
       */
-      OAEP(std::unique_ptr<HashFunction> hash, const std::string& P = "");
+      OAEP(std::unique_ptr<HashFunction> hash, std::string_view P = "");
 
       /**
       * @param hash function to use for hashing (takes ownership)
@@ -35,7 +35,7 @@ class OAEP final : public EME
       */
       OAEP(std::unique_ptr<HashFunction> hash,
            std::unique_ptr<HashFunction> mgf1_hash,
-           const std::string& P = "");
+           std::string_view P = "");
    private:
       secure_vector<uint8_t> pad(const uint8_t in[],
                               size_t in_length,

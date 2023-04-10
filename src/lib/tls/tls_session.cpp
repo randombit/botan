@@ -276,7 +276,7 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
       Connection_Side::Server,
       0, true, false,  // see constructor above for rationales
       peer_certs,
-      client_hello.sni_hostname()),
+      Server_Information(client_hello.sni_hostname())),
    m_master_secret(std::move(session_psk)),
    m_early_data_allowed(max_early_data_bytes.has_value()),
    m_max_early_data_bytes(max_early_data_bytes.value_or(0)),
@@ -289,7 +289,7 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
 
 #endif
 
-Session::Session(const std::string& pem)
+Session::Session(std::string_view pem)
    : Session(PEM_Code::decode_check_label(pem, "TLS SESSION")) {}
 
 Session::Session(std::span<const uint8_t> ber_data)

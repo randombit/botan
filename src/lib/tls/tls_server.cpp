@@ -96,8 +96,8 @@ std::vector<X509_Certificate> Server::peer_cert_chain() const
    return m_impl->peer_cert_chain();
    }
 
-SymmetricKey Server::key_material_export(const std::string& label,
-      const std::string& context,
+SymmetricKey Server::key_material_export(std::string_view label,
+      std::string_view context,
       size_t length) const
    {
    return m_impl->key_material_export(label, context, length);

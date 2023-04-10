@@ -30,7 +30,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                          const Policy& policy,
                                          Credentials_Manager& creds,
                                          const Public_Key* server_public_key,
-                                         const std::string& hostname,
+                                         std::string_view hostname,
                                          RandomNumberGenerator& rng)
    {
    const Kex_Algo kex_algo = state.ciphersuite().kex_method();
@@ -46,11 +46,11 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          }
 
       const std::string psk_identity =
-         creds.psk_identity("tls-client", hostname, identity_hint);
+         creds.psk_identity("tls-client", std::string(hostname), identity_hint);
 
       append_tls_length_value(m_key_material, psk_identity, 2);
 
-      SymmetricKey psk = creds.psk("tls-client", hostname, psk_identity);
+      SymmetricKey psk = creds.psk("tls-client", std::string(hostname), psk_identity);
 
       std::vector<uint8_t> zeros(psk.length());
 
@@ -68,11 +68,11 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          std::string identity_hint = reader.get_string(2, 0, 65535);
 
          const std::string psk_identity =
-            creds.psk_identity("tls-client", hostname, identity_hint);
+            creds.psk_identity("tls-client", std::string(hostname), identity_hint);
 
          append_tls_length_value(m_key_material, psk_identity, 2);
 
-         psk = creds.psk("tls-client", hostname, psk_identity);
+         psk = creds.psk("tls-client", std::string(hostname), psk_identity);
          }
 
       if(kex_algo == Kex_Algo::DH)

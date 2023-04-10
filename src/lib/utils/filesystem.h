@@ -26,7 +26,7 @@ class No_Filesystem_Access final : public Exception
 
 BOTAN_TEST_API bool has_filesystem_impl();
 
-BOTAN_TEST_API std::vector<std::string> get_files_recursive(const std::string& dir);
+BOTAN_TEST_API std::vector<std::string> get_files_recursive(std::string_view dir);
 
 }
 

@@ -191,7 +191,7 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
          }
 
       DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag,
-                              const std::string& str);
+                              std::string_view str);
 
       DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag,
                               uint8_t val);

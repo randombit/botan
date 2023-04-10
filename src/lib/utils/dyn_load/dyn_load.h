@@ -28,7 +28,7 @@ class BOTAN_TEST_API Dynamically_Loaded_Library final
       * qualified pathnames can help prevent code injection attacks (eg
       * via manipulation of LD_LIBRARY_PATH on Linux)
       */
-      Dynamically_Loaded_Library(const std::string& lib_name);
+      Dynamically_Loaded_Library(std::string_view lib_name);
 
       /**
       * Unload the DLL

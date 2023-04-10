@@ -201,7 +201,7 @@ class BOTAN_PUBLIC_API(2,0) KDF
 * Prefer KDF::create
 */
 BOTAN_DEPRECATED("Use KDF::create")
-inline KDF* get_kdf(const std::string& algo_spec)
+inline KDF* get_kdf(std::string_view algo_spec)
    {
    auto kdf = KDF::create(algo_spec);
    if(kdf)

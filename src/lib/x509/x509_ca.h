@@ -135,7 +135,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       */
       static Extensions choose_extensions(const PKCS10_Request& req,
                                           const X509_Certificate& ca_certificate,
-                                          const std::string& hash_fn);
+                                          std::string_view hash_fn);
 
       /**
       * Interface for creating new certificates
@@ -198,8 +198,8 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       */
       X509_CA(const X509_Certificate& ca_certificate,
               const Private_Key& key,
-              const std::string& hash_fn,
-              const std::string& padding_method,
+              std::string_view hash_fn,
+              std::string_view padding_method,
               RandomNumberGenerator& rng);
 
       /**
@@ -211,7 +211,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       */
       X509_CA(const X509_Certificate& ca_certificate,
               const Private_Key& key,
-              const std::string& hash_fn,
+              std::string_view hash_fn,
               RandomNumberGenerator& rng) :
          X509_CA(ca_certificate,
                  key,
@@ -231,7 +231,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       X509_CA(const X509_Certificate& ca_certificate,
               const Private_Key& key,
               const std::map<std::string,std::string>& opts,
-              const std::string& hash_fn,
+              std::string_view hash_fn,
               RandomNumberGenerator& rng) :
          X509_CA(ca_certificate, key, hash_fn, opts.at("padding"), rng) {}
 

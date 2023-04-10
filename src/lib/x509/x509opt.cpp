@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * Set when the certificate should become valid
 */
-void X509_Cert_Options::not_before(const std::string& time_string)
+void X509_Cert_Options::not_before(std::string_view time_string)
    {
    start = X509_Time(time_string);
    }
@@ -22,7 +22,7 @@ void X509_Cert_Options::not_before(const std::string& time_string)
 /*
 * Set when the certificate should expire
 */
-void X509_Cert_Options::not_after(const std::string& time_string)
+void X509_Cert_Options::not_after(std::string_view time_string)
    {
    end = X509_Time(time_string);
    }
@@ -46,7 +46,7 @@ void X509_Cert_Options::add_ex_constraint(const OID& oid)
 /*
 * Set key constraint information
 */
-void X509_Cert_Options::add_ex_constraint(const std::string& oid_str)
+void X509_Cert_Options::add_ex_constraint(std::string_view oid_str)
    {
    ex_constraints.push_back(OID::from_string(oid_str));
    }
@@ -60,7 +60,7 @@ void X509_Cert_Options::CA_key(size_t limit)
    path_limit = limit;
    }
 
-void X509_Cert_Options::set_padding_scheme(const std::string& scheme)
+void X509_Cert_Options::set_padding_scheme(std::string_view scheme)
    {
       padding_scheme = scheme;
    }
@@ -68,7 +68,7 @@ void X509_Cert_Options::set_padding_scheme(const std::string& scheme)
 /*
 * Initialize the certificate options
 */
-X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
+X509_Cert_Options::X509_Cert_Options(std::string_view initial_opts,
                                      uint32_t expiration_time)
    {
    is_CA = false;
@@ -87,8 +87,7 @@ X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
    std::vector<std::string> parsed = split_on(initial_opts, '/');
 
    if(parsed.size() > 4)
-      throw Invalid_Argument("X.509 cert options: Too many names: "
-                             + initial_opts);
+      throw Invalid_Argument("X.509 cert options: Too many names");
 
    if(!parsed.empty()) common_name  = parsed[0];
    if(parsed.size() >= 2) country      = parsed[1];

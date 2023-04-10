@@ -8,6 +8,7 @@
 
 #include <botan/data_src.h>
 #include <botan/exceptn.h>
+#include <botan/internal/fmt.h>
 #include <algorithm>
 #include <istream>
 
@@ -95,7 +96,7 @@ bool DataSource_Memory::end_of_data() const
 /*
 * DataSource_Memory Constructor
 */
-DataSource_Memory::DataSource_Memory(const std::string& in) :
+DataSource_Memory::DataSource_Memory(std::string_view in) :
    m_source(cast_char_ptr_to_uint8(in.data()),
             cast_char_ptr_to_uint8(in.data()) + in.length()),
    m_offset(0)
@@ -180,16 +181,16 @@ std::string DataSource_Stream::id() const
 /*
 * DataSource_Stream Constructor
 */
-DataSource_Stream::DataSource_Stream(const std::string& path,
+DataSource_Stream::DataSource_Stream(std::string_view path,
                                      bool use_binary) :
    m_identifier(path),
-   m_source_memory(std::make_unique<std::ifstream>(path, use_binary ? std::ios::binary : std::ios::in)),
+   m_source_memory(std::make_unique<std::ifstream>(std::string(path), use_binary ? std::ios::binary : std::ios::in)),
    m_source(*m_source_memory),
    m_total_read(0)
    {
    if(!m_source.good())
       {
-      throw Stream_IO_Error("DataSource: Failure opening file " + path);
+      throw Stream_IO_Error(fmt("DataSource: Failure opening file '{}'", path));
       }
    }
 
@@ -199,7 +200,7 @@ DataSource_Stream::DataSource_Stream(const std::string& path,
 * DataSource_Stream Constructor
 */
 DataSource_Stream::DataSource_Stream(std::istream& in,
-                                     const std::string& name) :
+                                     std::string_view name) :
    m_identifier(name),
    m_source(in),
    m_total_read(0)

@@ -11,6 +11,7 @@
 #include <botan/ec_group.h>
 #include <botan/internal/point_mul.h>
 #include <botan/internal/primality.h>
+#include <botan/internal/fmt.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/pem.h>
@@ -430,7 +431,7 @@ EC_Group::EC_Group(const OID& domain_oid)
       throw Invalid_Argument("Unknown EC_Group " + domain_oid.to_string());
    }
 
-EC_Group::EC_Group(const std::string& str)
+EC_Group::EC_Group(std::string_view str)
    {
    if(str.empty())
       return; // no initialization / uninitialized
@@ -456,11 +457,11 @@ EC_Group::EC_Group(const std::string& str)
       }
 
    if(m_data == nullptr)
-      throw Invalid_Argument("Unknown ECC group '" + str + "'");
+      throw Invalid_Argument(fmt("Unknown ECC group '{}'", str));
    }
 
 //static
-EC_Group EC_Group::EC_Group_from_PEM(const std::string& pem)
+EC_Group EC_Group::EC_Group_from_PEM(std::string_view pem)
    {
    const auto ber = PEM_Code::decode_check_label(pem, "EC PARAMETERS");
    return EC_Group(ber.data(), ber.size());
@@ -659,21 +660,21 @@ EC_Point EC_Group::zero_point() const
    return EC_Point(data().curve());
    }
 
-EC_Point EC_Group::hash_to_curve(const std::string& hash_fn,
+EC_Point EC_Group::hash_to_curve(std::string_view hash_fn,
                                  const uint8_t input[],
                                  size_t input_len,
-                                 const std::string& domain,
+                                 std::string_view domain,
                                  bool random_oracle) const
    {
    return this->hash_to_curve(hash_fn,
                               input,
                               input_len,
-                              reinterpret_cast<const uint8_t*>(domain.c_str()),
+                              reinterpret_cast<const uint8_t*>(domain.data()),
                               domain.size(),
                               random_oracle);
    }
 
-EC_Point EC_Group::hash_to_curve(const std::string& hash_fn,
+EC_Point EC_Group::hash_to_curve(std::string_view hash_fn,
                                  const uint8_t input[],
                                  size_t input_len,
                                  const uint8_t domain_sep[],

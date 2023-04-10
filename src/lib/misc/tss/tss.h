@@ -49,7 +49,7 @@ class BOTAN_PUBLIC_API(2,0) RTSS_Share final
          split(uint8_t M, uint8_t N,
                const uint8_t secret[], uint16_t secret_len,
                const std::vector<uint8_t>& identifier,
-               const std::string& hash_fn,
+               std::string_view hash_fn,
                RandomNumberGenerator& rng);
 
       /**
@@ -63,7 +63,7 @@ class BOTAN_PUBLIC_API(2,0) RTSS_Share final
       /**
       * @param hex_input the share encoded in hexadecimal
       */
-      explicit RTSS_Share(const std::string& hex_input);
+      explicit RTSS_Share(std::string_view hex_input);
 
       /**
       * @param data the shared data

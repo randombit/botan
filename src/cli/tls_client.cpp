@@ -50,7 +50,7 @@ class Callbacks : public Botan::TLS::Callbacks
          const std::vector<std::optional<Botan::OCSP::Response>>& ocsp,
          const std::vector<Botan::Certificate_Store*>& trusted_roots,
          Botan::Usage_Type usage,
-         const std::string& hostname,
+         std::string_view hostname,
          const Botan::TLS::Policy& policy) override
          {
          if(cert_chain.empty())
@@ -145,12 +145,12 @@ class Callbacks : public Botan::TLS::Callbacks
       std::vector<uint8_t> tls_sign_message(
          const Botan::Private_Key& key,
          Botan::RandomNumberGenerator& rng,
-         const std::string& emsa,
+         const std::string_view padding,
          Botan::Signature_Format format,
          const std::vector<uint8_t>& msg) override
          {
          output() << "Performing client authentication\n";
-         return Botan::TLS::Callbacks::tls_sign_message(key, rng, emsa, format, msg);
+         return Botan::TLS::Callbacks::tls_sign_message(key, rng, padding, format, msg);
          }
 
    private:

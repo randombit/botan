@@ -8,6 +8,7 @@
 
 #include <botan/internal/socket_udp.h>
 #include <botan/internal/uri.h>
+#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <chrono>
@@ -43,8 +44,8 @@ namespace {
 class Asio_SocketUDP final : public OS::SocketUDP
    {
    public:
-      Asio_SocketUDP(const std::string& hostname,
-                     const std::string& service,
+      Asio_SocketUDP(std::string_view hostname,
+                     std::string_view service,
                      std::chrono::microseconds timeout) :
          m_timeout(timeout), m_timer(m_io), m_udp(m_io)
          {
@@ -52,7 +53,7 @@ class Asio_SocketUDP final : public OS::SocketUDP
          check_timeout();
 
          boost::asio::ip::udp::resolver resolver(m_io);
-         boost::asio::ip::udp::resolver::query query(hostname, service);
+         boost::asio::ip::udp::resolver::query query(std::string{hostname}, std::string{service});
          boost::asio::ip::udp::resolver::iterator dns_iter = resolver.resolve(query);
 
          boost::system::error_code ec = boost::asio::error::would_block;
@@ -70,7 +71,7 @@ class Asio_SocketUDP final : public OS::SocketUDP
          if(ec)
             { throw boost::system::system_error(ec); }
          if(m_udp.is_open() == false)
-            { throw System_Error("Connection to host " + hostname + " failed"); }
+            { throw System_Error(fmt("Connection to host {} failed", hostname)); }
          }
 
       void write(const uint8_t buf[], size_t len) override
@@ -139,8 +140,8 @@ class Asio_SocketUDP final : public OS::SocketUDP
 class BSD_SocketUDP final : public OS::SocketUDP
    {
    public:
-      BSD_SocketUDP(const std::string& hostname,
-                    const std::string& service,
+      BSD_SocketUDP(std::string_view hostname,
+                    std::string_view service,
                     std::chrono::microseconds timeout) : m_timeout(timeout)
          {
          socket_init();
@@ -153,11 +154,14 @@ class BSD_SocketUDP final : public OS::SocketUDP
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = SOCK_DGRAM;
 
-         int rc = ::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res);
+         const std::string hostname_str(hostname);
+         const std::string service_str(service);
+
+         int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, &res);
 
          if(rc != 0)
             {
-            throw System_Error("Name resolution failed for " + hostname, rc);
+            throw System_Error(fmt("Name resolution failed for {}", hostname), rc);
             }
 
          for(addrinfo* rp = res; (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next)
@@ -182,8 +186,9 @@ class BSD_SocketUDP final : public OS::SocketUDP
 
          if(m_socket == invalid_socket())
             {
-            throw System_Error("Connecting to " + hostname +
-                               " for service " + service + " failed", errno);
+            throw System_Error(fmt("Connecting to {} for service {} failed with errno {}",
+                                   hostname, service, errno),
+                               errno);
             }
          }
 
@@ -320,8 +325,8 @@ class BSD_SocketUDP final : public OS::SocketUDP
 }
 
 std::unique_ptr<OS::SocketUDP>
-OS::open_socket_udp(const std::string& hostname,
-                    const std::string& service,
+OS::open_socket_udp(std::string_view hostname,
+                    std::string_view service,
                     std::chrono::microseconds timeout)
    {
 #if defined(BOTAN_HAS_BOOST_ASIO)
@@ -337,7 +342,7 @@ OS::open_socket_udp(const std::string& hostname,
    }
 
 std::unique_ptr<OS::SocketUDP>
-OS::open_socket_udp(const std::string& uri_string,
+OS::open_socket_udp(std::string_view uri_string,
                     std::chrono::microseconds timeout)
    {
    const auto uri = URI::fromAny(uri_string);

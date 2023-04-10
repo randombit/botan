@@ -101,7 +101,7 @@ size_t system_page_size();
 * is set. If the process seems to be running in a privileged state (such as
 * setuid) then always returns false and does not examine the environment.
 */
-bool read_env_variable(std::string& value_out, const std::string& var_name);
+bool read_env_variable(std::string& value_out, std::string_view var_name);
 
 /**
 * Read the value of an environment variable and convert it to an
@@ -110,7 +110,7 @@ bool read_env_variable(std::string& value_out, const std::string& var_name);
 * If the process seems to be running in a privileged state (such as setuid)
 * then always returns nullptr, similiar to glibc's secure_getenv.
 */
-size_t read_env_variable_sz(const std::string& var_name, size_t def_value = 0);
+size_t read_env_variable_sz(std::string_view var_name, size_t def_value = 0);
 
 /**
 * Request count pages of RAM which are locked into memory using mlock,

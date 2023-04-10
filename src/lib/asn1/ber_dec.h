@@ -104,7 +104,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       * Verify the stream is concluded, throws otherwise.
       * Returns (*this)
       */
-      BER_Decoder& verify_end(const std::string& err_msg);
+      BER_Decoder& verify_end(std::string_view err_msg);
 
       /**
       * Discard any data that remains unread
@@ -298,7 +298,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
 
       template<typename T>
          BER_Decoder& decode_and_check(const T& expected,
-                                       const std::string& error_msg)
+                                       std::string_view error_msg)
          {
          T actual;
          decode(actual);

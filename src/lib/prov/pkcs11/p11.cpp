@@ -42,7 +42,7 @@ bool LowLevel::handle_return_value(const CK_RV function_result, ReturnValue* ret
    return static_cast< ReturnValue >(function_result) == ReturnValue::OK;
    }
 
-void initialize_token(Slot& slot, const std::string& label, const secure_string& so_pin, const secure_string& pin)
+void initialize_token(Slot& slot, std::string_view label, const secure_string& so_pin, const secure_string& pin)
    {
    slot.initialize(label, so_pin);
    set_pin(slot, so_pin, pin);

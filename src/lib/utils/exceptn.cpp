@@ -156,7 +156,11 @@ Decoding_Error::Decoding_Error(std::string_view name) :
    Exception(name)
    {}
 
-Decoding_Error::Decoding_Error(const std::string& msg, const std::exception& e) :
+Decoding_Error::Decoding_Error(std::string_view category, std::string_view err) :
+   Exception(fmt("{}: {}", category, err))
+   {}
+
+Decoding_Error::Decoding_Error(std::string_view msg, const std::exception& e) :
    Exception(msg, e)
    {}
 

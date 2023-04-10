@@ -38,7 +38,7 @@ std::vector<std::vector<uint8_t>> decode_all_certificates(DataSource& source)
    }
 }
 
-Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file, bool ignore_non_ca)
+Flatfile_Certificate_Store::Flatfile_Certificate_Store(std::string_view file, bool ignore_non_ca)
    {
    if(file.empty())
       {

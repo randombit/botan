@@ -55,7 +55,7 @@ class BOTAN_PUBLIC_API(2,2) OpenPGP_S2K final : public PBKDF
          }
 
       size_t pbkdf(uint8_t output_buf[], size_t output_len,
-                   const std::string& passphrase,
+                   std::string_view passphrase,
                    const uint8_t salt[], size_t salt_len,
                    size_t iterations,
                    std::chrono::milliseconds msec) const override;

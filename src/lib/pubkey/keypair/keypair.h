@@ -27,7 +27,7 @@ bool
 encryption_consistency_check(RandomNumberGenerator& rng,
                              const Private_Key& private_key,
                              const Public_Key& public_key,
-                             const std::string& padding);
+                             std::string_view padding);
 
 /**
 * Tests whether the key is consistent for signatures; whether a
@@ -42,7 +42,7 @@ bool
 signature_consistency_check(RandomNumberGenerator& rng,
                             const Private_Key& private_key,
                             const Public_Key& public_key,
-                            const std::string& padding);
+                            std::string_view padding);
 
 /**
 * Tests whether the key is consistent for encryption; whether
@@ -55,7 +55,7 @@ signature_consistency_check(RandomNumberGenerator& rng,
 inline bool
 encryption_consistency_check(RandomNumberGenerator& rng,
                              const Private_Key& key,
-                             const std::string& padding)
+                             std::string_view padding)
    {
    return encryption_consistency_check(rng, key, key, padding);
    }
@@ -71,7 +71,7 @@ encryption_consistency_check(RandomNumberGenerator& rng,
 inline bool
 signature_consistency_check(RandomNumberGenerator& rng,
                             const Private_Key& key,
-                            const std::string& padding)
+                            std::string_view padding)
    {
    return signature_consistency_check(rng, key, key, padding);
    }
