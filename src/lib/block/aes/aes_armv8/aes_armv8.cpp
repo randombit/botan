@@ -54,7 +54,11 @@ namespace Botan {
 /*
 * AES-128 Encryption
 */
+#if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+BOTAN_FUNC_ISA("crypto")
+#else
 BOTAN_FUNC_ISA("+crypto")
+#endif
 void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_EK.data());
@@ -119,7 +123,11 @@ void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 /*
 * AES-128 Decryption
 */
+#if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+BOTAN_FUNC_ISA("crypto")
+#else
 BOTAN_FUNC_ISA("+crypto")
+#endif
 void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_DK.data());
@@ -184,7 +192,11 @@ void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 /*
 * AES-192 Encryption
 */
+#if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+BOTAN_FUNC_ISA("crypto")
+#else
 BOTAN_FUNC_ISA("+crypto")
+#endif
 void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_EK.data());
@@ -255,7 +267,11 @@ void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 /*
 * AES-192 Decryption
 */
+#if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+BOTAN_FUNC_ISA("crypto")
+#else
 BOTAN_FUNC_ISA("+crypto")
+#endif
 void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_DK.data());
@@ -326,7 +342,11 @@ void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 /*
 * AES-256 Encryption
 */
+#if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+BOTAN_FUNC_ISA("crypto")
+#else
 BOTAN_FUNC_ISA("+crypto")
+#endif
 void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_EK.data());
@@ -403,7 +423,11 @@ void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 /*
 * AES-256 Decryption
 */
+#if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+BOTAN_FUNC_ISA("crypto")
+#else
 BOTAN_FUNC_ISA("+crypto")
+#endif
 void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_DK.data());

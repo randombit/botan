@@ -18,7 +18,11 @@ namespace Botan {
 * SHA-256 using CPU instructions in ARMv8
 */
 //static
+#if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+BOTAN_FUNC_ISA("crypto")
+#else
 BOTAN_FUNC_ISA("+crypto")
+#endif
 void SHA_256::compress_digest_armv8(secure_vector<uint32_t>& digest, const uint8_t input8[], size_t blocks)
    {
    alignas(64) static const uint32_t K[] = {

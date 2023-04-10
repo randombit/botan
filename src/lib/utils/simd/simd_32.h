@@ -37,10 +37,19 @@
   #define BOTAN_CLMUL_ISA "pclmul"
 #elif defined(BOTAN_SIMD_USE_NEON)
   #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
-    #define BOTAN_SIMD_ISA "+simd"
-    #define BOTAN_CLMUL_ISA "+crypto"
+      #if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+        #define BOTAN_SIMD_ISA "neon"
+        #define BOTAN_CLMUL_ISA "crypto"
+      #else
+        #define BOTAN_SIMD_ISA "+simd"
+        #define BOTAN_CLMUL_ISA "+crypto"
+      #endif
   #else
-    #define BOTAN_SIMD_ISA "fpu=neon"
+    #if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+      #define BOTAN_SIMD_ISA "neon"
+    #else
+      #define BOTAN_SIMD_ISA "fpu=neon"
+    #endif
   #endif
   #define BOTAN_VPERM_ISA BOTAN_SIMD_ISA
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
