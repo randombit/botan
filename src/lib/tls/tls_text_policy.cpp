@@ -219,7 +219,7 @@ size_t Text_Policy::new_session_tickets_upon_handshake_success() const
 std::vector<uint16_t> Text_Policy::srtp_profiles() const
    {
    std::vector<uint16_t> r;
-   for(auto p : get_list("srtp_profiles", std::vector<std::string>()))
+   for(const auto& p : get_list("srtp_profiles", std::vector<std::string>()))
       {
       r.push_back(to_uint16(p));
       }

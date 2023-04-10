@@ -31,10 +31,11 @@ enabled_checks = [
 
 # these checks are ignored for cli/tests
 disabled_checks_non_lib = [
+    'cert-err58-cpp',
     'cppcoreguidelines-macro-usage',
+    'misc-non-private-member-variables-in-classes',
     'performance-inefficient-string-concatenation',
     'performance-no-automatic-move',
-    'cert-err58-cpp',
 ]
 
 # these might be worth being clean for

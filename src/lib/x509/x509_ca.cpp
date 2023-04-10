@@ -77,7 +77,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    {
    auto extensions = choose_extensions(req, m_ca_cert, m_hash_fn);
 
-   return make_cert(*m_signer.get(), rng, serial_number,
+   return make_cert(*m_signer, rng, serial_number,
                     algorithm_identifier(), req.raw_public_key(),
                     not_before, not_after,
                     ca_certificate().subject_dn(), req.subject_dn(),
@@ -94,7 +94,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    {
    auto extensions = choose_extensions(req, m_ca_cert, m_hash_fn);
 
-   return make_cert(*m_signer.get(), rng, algorithm_identifier(),
+   return make_cert(*m_signer, rng, algorithm_identifier(),
                     req.raw_public_key(),
                     not_before, not_after,
                     ca_certificate().subject_dn(), req.subject_dn(),
@@ -232,7 +232,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
 
    // clang-format off
    const std::vector<uint8_t> crl = X509_Object::make_signed(
-      *m_signer.get(), rng, m_ca_sig_algo,
+      *m_signer, rng, m_ca_sig_algo,
       DER_Encoder().start_sequence()
          .encode(X509_CRL_VERSION-1)
          .encode(m_ca_sig_algo)

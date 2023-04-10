@@ -91,7 +91,7 @@ PKCS10_Request PKCS10_Request::create(const Private_Key& key,
    tbs_req.end_explicit().end_cons();
 
    const std::vector<uint8_t> req =
-      X509_Object::make_signed(*signer.get(), rng, sig_algo,
+      X509_Object::make_signed(*signer, rng, sig_algo,
                                tbs_req.get_contents());
 
    return PKCS10_Request(req);

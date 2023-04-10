@@ -90,7 +90,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    extensions.add_new(
       std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
 
-   return X509_CA::make_cert(*signer.get(), rng, sig_algo, pub_key,
+   return X509_CA::make_cert(*signer, rng, sig_algo, pub_key,
                              opts.start, opts.end,
                              subject_dn, subject_dn,
                              extensions);

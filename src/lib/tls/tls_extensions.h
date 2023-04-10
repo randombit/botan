@@ -184,7 +184,7 @@ class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public 
 
       const std::vector<std::string>& protocols() const { return m_protocols; }
 
-      const std::string single_protocol() const;
+      std::string single_protocol() const;
 
       /**
       * Single protocol, used by server

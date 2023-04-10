@@ -363,7 +363,7 @@ Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification
       }
    }
 
-const std::string Application_Layer_Protocol_Notification::single_protocol() const
+std::string Application_Layer_Protocol_Notification::single_protocol() const
    {
    BOTAN_STATE_CHECK(m_protocols.size() == 1);
    return m_protocols.front();
