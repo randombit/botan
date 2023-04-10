@@ -2,7 +2,7 @@
 release_major = 3
 release_minor = 0
 release_patch = 0
-release_suffix = '-rc1'
+release_suffix = ''
 release_so_abi_rev = 0
 
 # These are set by the distribution script
