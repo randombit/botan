@@ -266,6 +266,26 @@ inline void ARIA_ROL128(const uint32_t X[4], const uint32_t Y[4], uint32_t KS[4]
    KS[3] = (X[3]) ^ ((Y[(Q+3)%4])>>R) ^ ((Y[(Q+2)%4])<<(32-R));
    }
 
+void aria_ks_dk_transform(uint32_t& K0, uint32_t& K1, uint32_t& K2, uint32_t& K3)
+   {
+   K0 = rotr<8>(K0) ^ rotr<16>(K0) ^ rotr<24>(K0);
+   K1 = rotr<8>(K1) ^ rotr<16>(K1) ^ rotr<24>(K1);
+   K2 = rotr<8>(K2) ^ rotr<16>(K2) ^ rotr<24>(K2);
+   K3 = rotr<8>(K3) ^ rotr<16>(K3) ^ rotr<24>(K3);
+
+   K1 ^= K2; K2 ^= K3;
+   K0 ^= K1; K3 ^= K1;
+   K2 ^= K0; K1 ^= K2;
+
+   K1 = ((K1 << 8) & 0xFF00FF00) | ((K1 >> 8) & 0x00FF00FF);
+   K2 = rotr<16>(K2);
+   K3 = reverse_bytes(K3);
+
+   K1 ^= K2; K2 ^= K3;
+   K0 ^= K1; K3 ^= K1;
+   K2 ^= K0; K1 ^= K2;
+   }
+
 /*
 * ARIA Key Schedule
 */
@@ -381,24 +401,7 @@ void key_schedule(secure_vector<uint32_t>& ERK,
 
    for(size_t i = 4; i != DRK.size() - 4; i += 4)
       {
-      for(size_t j = 0; j != 4; ++j)
-         {
-         DRK[i+j] = rotr<8>(DRK[i+j]) ^
-                    rotr<16>(DRK[i+j]) ^
-                    rotr<24>(DRK[i+j]);
-         }
-
-      DRK[i+1] ^= DRK[i+2]; DRK[i+2] ^= DRK[i+3];
-      DRK[i+0] ^= DRK[i+1]; DRK[i+3] ^= DRK[i+1];
-      DRK[i+2] ^= DRK[i+0]; DRK[i+1] ^= DRK[i+2];
-
-      DRK[i+1] = ((DRK[i+1] << 8) & 0xFF00FF00) | ((DRK[i+1] >> 8) & 0x00FF00FF);
-      DRK[i+2] = rotr<16>(DRK[i+2]);
-      DRK[i+3] = reverse_bytes(DRK[i+3]);
-
-      DRK[i+1] ^= DRK[i+2]; DRK[i+2] ^= DRK[i+3];
-      DRK[i+0] ^= DRK[i+1]; DRK[i+3] ^= DRK[i+1];
-      DRK[i+2] ^= DRK[i+0]; DRK[i+1] ^= DRK[i+2];
+      aria_ks_dk_transform(DRK[i+0], DRK[i+1], DRK[i+2], DRK[i+3]);
       }
    }
 
