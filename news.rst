@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.0.0, Not Yet Released
+Version 3.0.0, 2023-04-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Botan is now a C++20 codebase; compiler requirements have been
