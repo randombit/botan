@@ -404,10 +404,12 @@ class Test_TLS_Ciphersuites : public Test
 
                if(ciphersuite->cbc_ciphersuite() == false)
                   {
+                  result.test_eq("Expected AEAD ciphersuite", ciphersuite->aead_ciphersuite(), true);
                   result.test_eq("Expected MAC name for AEAD ciphersuites", ciphersuite->mac_algo(), "AEAD");
                   }
                else
                   {
+                  result.test_eq("Did not expect AEAD ciphersuite", ciphersuite->aead_ciphersuite(), false);
                   result.test_eq("MAC algo and PRF algo same for CBC suites", ciphersuite->prf_algo(), ciphersuite->mac_algo());
                   }
 

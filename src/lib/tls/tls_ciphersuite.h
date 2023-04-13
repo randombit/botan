@@ -77,6 +77,11 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
        */
       bool cbc_ciphersuite() const;
 
+      /**
+       * @return true if this suite uses a AEAD cipher
+       */
+      bool aead_ciphersuite() const;
+
       bool signature_used() const;
 
       /**

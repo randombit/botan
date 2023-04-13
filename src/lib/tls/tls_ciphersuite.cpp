@@ -91,6 +91,11 @@ bool Ciphersuite::cbc_ciphersuite() const
    return (mac_algo() != "AEAD");
    }
 
+bool Ciphersuite::aead_ciphersuite() const
+   {
+   return (mac_algo() == "AEAD");
+   }
+
 bool Ciphersuite::signature_used() const
    {
    return auth_method() != Auth_Method::IMPLICIT;

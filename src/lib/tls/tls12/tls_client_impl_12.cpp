@@ -324,11 +324,22 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
                              "Server replied with ciphersuite we didn't send");
          }
 
-      if(const auto suite = Ciphersuite::by_id(state.server_hello()->ciphersuite());
-         !suite || !suite->usable_in_version(state.server_hello()->legacy_version()))
+      const auto suite = Ciphersuite::by_id(state.server_hello()->ciphersuite());
+      if(!suite || !suite->usable_in_version(state.server_hello()->legacy_version()))
          {
          throw TLS_Exception(Alert::HandshakeFailure,
                              "Server replied using a ciphersuite not allowed in version it offered");
+         }
+
+      // RFC 7366 3.:
+      //   If a server receives an encrypt-then-MAC request extension from a client
+      //   and then selects a stream or Authenticated Encryption with Associated
+      //   Data (AEAD) ciphersuite, it MUST NOT send an encrypt-then-MAC
+      //   response extension back to the client.
+      if(suite->aead_ciphersuite() && state.server_hello()->supports_encrypt_then_mac())
+         {
+         throw TLS_Exception(Alert::IllegalParameter,
+                             "Server replied using an AEAD ciphersuite and an encrypt-then-MAC response extension");
          }
 
       if(Ciphersuite::is_scsv(state.server_hello()->ciphersuite()))
