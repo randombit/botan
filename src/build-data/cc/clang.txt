@@ -34,16 +34,16 @@ visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
 
 <so_link_commands>
-macos         -> "$(CXX) -dynamiclib -fPIC -install_name $(INSTALLED_LIB_DIR)/{soname_abi} -current_version {macos_so_current_ver} -compatibility_version {macos_so_compat_ver}"
+macos         -> "{cxx} -dynamiclib -fPIC -install_name {libdir}/{soname_abi} -current_version {macos_so_current_ver} -compatibility_version {macos_so_compat_ver}"
 
 # The default works for GNU ld and several other Unix linkers
-default       -> "$(CXX) -shared -fPIC -Wl,-soname,{soname_abi}"
+default       -> "{cxx} -shared -fPIC -Wl,-soname,{soname_abi}"
 
-mingw         -> "$(CXX) -shared -Wl,--out-implib,{shared_lib_name}.a"
+mingw         -> "{cxx} -shared -Wl,--out-implib,{shared_lib_name}.a"
 </so_link_commands>
 
 <binary_link_commands>
-default       -> "$(LINKER)"
+default       -> "{linker}"
 llvm          -> "llvm-link"
 emscripten    -> "em++"
 </binary_link_commands>
