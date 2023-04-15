@@ -2538,6 +2538,9 @@ def choose_link_method(options):
         # required in order to successfully create symlinks. So only try to use
         # symlinks on Windows if explicitly requested.
 
+        # Hardlinks only work if the source and build dirs are on the same filesystem,
+        # so there we only use it if requested.
+
         # MinGW declares itself as 'Windows'
         host_is_windows = python_platform_identifier() in ['windows', 'cygwin']
 
@@ -2548,7 +2551,7 @@ def choose_link_method(options):
             else:
                 yield 'symlink'
 
-        if 'link' in os.__dict__:
+        if 'link' in os.__dict__ and req == 'hardlink':
             yield 'hardlink'
 
         yield 'copy'
