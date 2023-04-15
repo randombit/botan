@@ -12,7 +12,7 @@ ar_command CC
 ar_options "-xar -o"
 
 <so_link_commands>
-default -> "$(CXX) -G -h{soname_abi}"
+default -> "{cxx} -G -h{soname_abi}"
 </so_link_commands>
 
 <mach_abi_linking>

@@ -20,5 +20,5 @@ rdrand  -> "-march=core-avx-i"
 </isa_flags>
 
 <so_link_commands>
-default -> "$(CXX) -fPIC -shared -Wl,-soname,{soname_abi}"
+default -> "{cxx} -fPIC -shared -Wl,-soname,{soname_abi}"
 </so_link_commands>

@@ -1516,7 +1516,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             if s in self.binary_link_commands:
                 return self.binary_link_commands[s]
 
-        return '$(LINKER)'
+        return '{linker}'
 
 class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def __init__(self, infofile):
@@ -1708,7 +1708,7 @@ def process_template_string(template_text, variables, template_source):
             self.cond_pattern = re.compile('%{(if|unless) ([a-z][a-z_0-9]+)}')
             self.for_pattern = re.compile('(.*)%{for ([a-z][a-z_0-9]+)}')
             self.omitlast_pattern = re.compile('(.*)%{omitlast ([^}]*)}(.*)', re.DOTALL)
-            self.join_pattern = re.compile('(.*)%{join ([a-z][a-z_0-9]+)}')
+            self.join_pattern = re.compile('%{join ([a-z][a-z_0-9]+)}')
 
         def substitute(self, template):
             # pylint: disable=too-many-locals
@@ -1723,6 +1723,12 @@ def process_template_string(template_text, variables, template_source):
 
                 raise KeyError(v)
 
+            def insert_join(match):
+                var = match.group(1)
+                if var in self.vals:
+                    return ' '.join(self.vals.get(var))
+                raise KeyError(v)
+
             lines = template.splitlines()
 
             output = ""
@@ -1730,7 +1736,6 @@ def process_template_string(template_text, variables, template_source):
 
             while idx < len(lines):
                 cond_match = self.cond_pattern.match(lines[idx])
-                join_match = self.join_pattern.match(lines[idx])
                 for_match = self.for_pattern.match(lines[idx])
 
                 if cond_match:
@@ -1751,11 +1756,6 @@ def process_template_string(template_text, variables, template_source):
                         if include_cond:
                             output += lines[idx] + "\n"
                         idx += 1
-                elif join_match:
-                    join_var = join_match.group(2)
-                    join_str = ' '
-                    join_line = '%%{join %s}' % (join_var)
-                    output += lines[idx].replace(join_line, join_str.join(self.vals[join_var])) + "\n"
                 elif for_match:
                     for_prefix = for_match.group(1)
                     output += for_prefix
@@ -1797,7 +1797,7 @@ def process_template_string(template_text, variables, template_source):
                     output += lines[idx] + "\n"
                 idx += 1
 
-            return self.value_pattern.sub(insert_value, output) + '\n'
+            return self.join_pattern.sub(insert_join, self.value_pattern.sub(insert_value, output)) + '\n'
 
     try:
         return SimpleTemplate(variables).substitute(template_text)
@@ -2122,6 +2122,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'doc_stamp_file': normalize_source_path(os.path.join(build_paths.build_dir, 'doc.stamp')),
         'makefile_path': os.path.join(build_paths.build_dir, '..', 'Makefile'),
+        'ninja_build_path': os.path.join(build_paths.build_dir, '..', 'build.ninja'),
 
         'build_static_lib': options.build_static_lib,
         'build_shared_lib': options.build_shared_lib,
@@ -2159,7 +2160,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'cxx': choose_cxx_exe(),
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
-        'linker': cc.linker_name or '$(CXX)',
+        'linker': cc.linker_name or choose_cxx_exe(),
         'make_supports_phony': osinfo.basename != 'windows',
 
         'sanitizer_types' : sorted(cc.sanitizer_types),
@@ -2256,6 +2257,9 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             variables['soname_patch'] = osinfo.soname_pattern_patch.format(**variables)
 
         variables['lib_link_cmd'] = variables['lib_link_cmd'].format(**variables)
+
+    for var in ['exe_link_cmd']:
+        variables[var] = variables[var].format(**variables)
 
     lib_targets = []
     if options.build_static_lib:

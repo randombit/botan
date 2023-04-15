@@ -14,7 +14,7 @@ altivec -> "-qaltivec"
 </isa_flags>
 
 <so_link_commands>
-default -> "$(CXX) -qmkshrobj"
+default -> "{cxx} -qmkshrobj"
 </so_link_commands>
 
 <sanitizers>
