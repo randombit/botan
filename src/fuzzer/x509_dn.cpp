@@ -5,6 +5,7 @@
 */
 
 #include "fuzzers.h"
+
 #include <botan/pkix_types.h>
 #include <botan/ber_dec.h>
 #include <botan/hex.h>

@@ -10,6 +10,7 @@
  */
 
 #include <botan/internal/mce_internal.h>
+
 #include <botan/mceliece.h>
 #include <botan/internal/code_based_util.h>
 #include <botan/internal/bit_ops.h>

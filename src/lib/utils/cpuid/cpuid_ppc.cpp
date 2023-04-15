@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/cpuid.h>
+
 #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)

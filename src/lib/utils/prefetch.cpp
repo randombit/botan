@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/prefetch.h>
+
 #include <botan/internal/bit_ops.h>
 #include <new>
 

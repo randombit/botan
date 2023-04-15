@@ -6,6 +6,7 @@
 */
 
 #include <botan/base64.h>
+
 #include <botan/internal/codec_base.h>
 #include <botan/exceptn.h>
 #include <botan/internal/rounding.h>

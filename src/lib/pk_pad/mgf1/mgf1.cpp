@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/mgf1.h>
+
 #include <botan/hash.h>
 #include <algorithm>
 

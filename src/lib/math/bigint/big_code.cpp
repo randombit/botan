@@ -6,6 +6,7 @@
 */
 
 #include <botan/bigint.h>
+
 #include <botan/internal/divide.h>
 #include <botan/hex.h>
 

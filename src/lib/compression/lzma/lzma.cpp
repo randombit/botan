@@ -9,6 +9,7 @@
 */
 
 #include <botan/lzma.h>
+
 #include <botan/internal/compress_utils.h>
 #include <botan/exceptn.h>
 #include <lzma.h>

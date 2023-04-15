@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/crc32.h>
+
 #include <botan/internal/loadstor.h>
 
 namespace Botan {

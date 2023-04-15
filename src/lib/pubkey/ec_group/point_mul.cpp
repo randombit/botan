@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/point_mul.h>
+
 #include <botan/rng.h>
 #include <botan/reducer.h>
 #include <botan/internal/rounding.h>

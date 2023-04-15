@@ -6,6 +6,7 @@
 */
 
 #include <botan/credentials_manager.h>
+
 #include <botan/pkix_types.h>
 
 namespace Botan {

@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/shacal2.h>
+
 #include <botan/internal/simd_32.h>
 
 namespace Botan {

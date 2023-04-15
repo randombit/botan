@@ -7,6 +7,7 @@
 */
 
 #include <botan/ffi.h>
+
 #include <botan/hash.h>
 #include <botan/pem.h>
 #include <botan/internal/ffi_util.h>

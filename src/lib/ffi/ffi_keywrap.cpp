@@ -6,6 +6,7 @@
 */
 
 #include <botan/ffi.h>
+
 #include <botan/internal/ffi_util.h>
 
 #if defined(BOTAN_HAS_NIST_KEYWRAP)

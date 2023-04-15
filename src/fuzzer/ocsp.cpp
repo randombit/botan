@@ -5,6 +5,7 @@
 */
 
 #include "fuzzers.h"
+
 #include <botan/ocsp.h>
 
 void fuzz(const uint8_t in[], size_t len)

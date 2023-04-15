@@ -6,6 +6,7 @@
 */
 
 #include <botan/dl_group.h>
+
 #include <botan/numthry.h>
 #include <botan/reducer.h>
 #include <botan/internal/primality.h>

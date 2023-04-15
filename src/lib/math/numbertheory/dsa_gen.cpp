@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/primality.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/numthry.h>
 #include <botan/hash.h>

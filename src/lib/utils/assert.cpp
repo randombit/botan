@@ -5,6 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/assert.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <sstream>

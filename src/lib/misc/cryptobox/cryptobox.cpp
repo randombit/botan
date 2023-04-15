@@ -6,6 +6,7 @@
 */
 
 #include <botan/cryptobox.h>
+
 #include <botan/cipher_mode.h>
 #include <botan/mac.h>
 #include <botan/rng.h>

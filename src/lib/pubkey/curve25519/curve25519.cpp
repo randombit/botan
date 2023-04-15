@@ -6,6 +6,7 @@
 */
 
 #include <botan/curve25519.h>
+
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/fmt.h>
 #include <botan/ber_dec.h>

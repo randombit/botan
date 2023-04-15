@@ -6,6 +6,7 @@
 */
 
 #include <botan/bcrypt.h>
+
 #include <botan/rng.h>
 #include <botan/internal/blowfish.h>
 #include <botan/base64.h>

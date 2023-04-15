@@ -6,6 +6,7 @@
 */
 
 #include <botan/certstor_sqlite.h>
+
 #include <botan/sqlite3.h>
 
 namespace Botan {

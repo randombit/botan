@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/sha2_32.h>
+
 #include <botan/internal/sha2_32_f.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>

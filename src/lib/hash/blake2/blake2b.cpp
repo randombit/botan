@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/blake2b.h>
+
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>

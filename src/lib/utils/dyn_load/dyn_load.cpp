@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/dyn_load.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 #include <sstream>

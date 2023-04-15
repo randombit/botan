@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/mode_pad.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/ct_utils.h>
 

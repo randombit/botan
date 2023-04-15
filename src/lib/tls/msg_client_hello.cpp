@@ -10,8 +10,9 @@
 */
 
 
-#include <botan/tls_exceptn.h>
 #include <botan/tls_messages.h>
+
+#include <botan/tls_exceptn.h>
 #include <botan/tls_callbacks.h>
 #include <botan/rng.h>
 #include <botan/hash.h>

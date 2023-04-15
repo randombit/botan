@@ -5,6 +5,7 @@
 */
 
 #include <botan/psk_db.h>
+
 #include <botan/database.h>
 
 namespace Botan {

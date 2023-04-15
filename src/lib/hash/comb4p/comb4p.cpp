@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/comb4p.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 

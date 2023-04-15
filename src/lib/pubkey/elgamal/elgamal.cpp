@@ -6,6 +6,7 @@
 */
 
 #include <botan/elgamal.h>
+
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/monty_exp.h>

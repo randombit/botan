@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/aes.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/cpuid.h>
 #include <botan/internal/rotate.h>

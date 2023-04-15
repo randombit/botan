@@ -7,6 +7,7 @@
  */
 
 #include <botan/internal/trunc_hash.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 

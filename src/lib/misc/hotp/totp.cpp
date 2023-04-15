@@ -6,6 +6,7 @@
 */
 
 #include <botan/otp.h>
+
 #include <botan/internal/calendar.h>
 
 namespace Botan {

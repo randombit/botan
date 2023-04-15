@@ -17,6 +17,7 @@
  **/
 
 #include <botan/xmss.h>
+
 #include <botan/internal/xmss_signature_operation.h>
 #include <botan/internal/xmss_index_registry.h>
 #include <botan/internal/xmss_common_ops.h>

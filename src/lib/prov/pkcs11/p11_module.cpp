@@ -7,6 +7,7 @@
 */
 
 #include <botan/p11_types.h>
+
 #include <botan/internal/dyn_load.h>
 
 namespace Botan::PKCS11 {

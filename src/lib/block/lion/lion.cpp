@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/lion.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 

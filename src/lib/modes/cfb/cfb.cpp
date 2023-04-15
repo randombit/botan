@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/cfb.h>
+
 #include <botan/internal/fmt.h>
 
 namespace Botan {

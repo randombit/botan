@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/keccak.h>
+
 #include <botan/internal/sha3.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/fmt.h>

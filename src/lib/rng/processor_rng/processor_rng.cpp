@@ -5,6 +5,7 @@
 */
 
 #include <botan/processor_rng.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/cpuid.h>
 

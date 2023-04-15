@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/gost_28147.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>

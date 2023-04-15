@@ -6,6 +6,7 @@
 */
 
 #include <botan/filters.h>
+
 #include <botan/base64.h>
 #include <botan/exceptn.h>
 #include <algorithm>

@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/raw_hash.h>
+
 #include <botan/exceptn.h>
 
 namespace Botan {

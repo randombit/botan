@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/streebog.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>

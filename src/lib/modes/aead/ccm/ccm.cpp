@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/ccm.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/fmt.h>
 

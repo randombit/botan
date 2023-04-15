@@ -5,6 +5,7 @@
 */
 
 #include <botan/sodium.h>
+
 #include <botan/internal/salsa20.h>
 #include <botan/internal/loadstor.h>
 

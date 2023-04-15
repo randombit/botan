@@ -5,6 +5,7 @@
 */
 
 #include <botan/sodium.h>
+
 #include <botan/internal/chacha.h>
 #include <botan/mem_ops.h>
 #include <botan/system_rng.h>

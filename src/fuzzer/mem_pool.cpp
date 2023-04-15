@@ -5,6 +5,7 @@
 */
 
 #include "fuzzers.h"
+
 #include <botan/internal/mem_pool.h>
 #include <botan/internal/bit_ops.h>
 #include <vector>

@@ -4,8 +4,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/ec_group.h>
 #include <botan/tls_algos.h>
+
+#include <botan/ec_group.h>
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 

@@ -7,6 +7,7 @@
 */
 
 #include <botan/tls_session_manager_noop.h>
+
 #include <botan/rng.h>
 
 namespace Botan::TLS {

@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/emsa_pkcs1.h>
+
 #include <botan/internal/hash_id.h>
 #include <botan/exceptn.h>
 

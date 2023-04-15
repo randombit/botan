@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/socket.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>

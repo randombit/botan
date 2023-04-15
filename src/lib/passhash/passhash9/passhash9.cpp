@@ -6,6 +6,7 @@
 */
 
 #include <botan/passhash9.h>
+
 #include <botan/rng.h>
 #include <botan/internal/loadstor.h>
 #include <botan/pbkdf2.h>

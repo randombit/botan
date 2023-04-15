@@ -9,6 +9,7 @@
 */
 
 #include <botan/ed25519.h>
+
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/ed25519_internal.h>
 #include <botan/hash.h>

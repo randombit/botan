@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/hash_id.h>
+
 #include <botan/exceptn.h>
 
 namespace Botan {

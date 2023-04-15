@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/blowfish.h>
+
 #include <botan/internal/loadstor.h>
 
 namespace Botan {

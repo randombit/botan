@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/mem_pool.h>
+
 #include <botan/mem_ops.h>
 #include <algorithm>
 

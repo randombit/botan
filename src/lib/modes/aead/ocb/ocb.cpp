@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/ocb.h>
+
 #include <botan/block_cipher.h>
 #include <botan/internal/poly_dbl.h>
 #include <botan/internal/bit_ops.h>

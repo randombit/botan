@@ -17,6 +17,7 @@
 */
 
 #include <botan/internal/aria.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/prefetch.h>

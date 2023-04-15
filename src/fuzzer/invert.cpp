@@ -4,6 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 #include "fuzzers.h"
+
 #include <botan/numthry.h>
 
 namespace {

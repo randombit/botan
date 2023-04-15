@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/ec_h2c.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/ec_group.h>
 #include <botan/numthry.h>

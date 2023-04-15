@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/serpent.h>
+
 #include <botan/internal/simd_avx2.h>
 #include <botan/internal/serpent_sbox.h>
 

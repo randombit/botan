@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/mp_core.h>
+
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {
