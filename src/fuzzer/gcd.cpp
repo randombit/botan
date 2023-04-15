@@ -5,6 +5,7 @@
 */
 
 #include "fuzzers.h"
+
 #include <botan/numthry.h>
 
 namespace {

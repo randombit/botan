@@ -9,6 +9,7 @@
 */
 
 #include <botan/internal/poly1305.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mul128.h>
 #include <botan/internal/donna128.h>

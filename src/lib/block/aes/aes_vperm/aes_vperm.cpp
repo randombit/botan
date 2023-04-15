@@ -11,6 +11,7 @@
 */
 
 #include <botan/internal/aes.h>
+
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/simd_32.h>
 

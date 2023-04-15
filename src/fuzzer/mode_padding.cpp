@@ -5,6 +5,7 @@
 */
 
 #include "fuzzers.h"
+
 #include <botan/internal/mode_pad.h>
 #include <botan/internal/tls_cbc.h>
 

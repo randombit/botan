@@ -7,6 +7,7 @@
 */
 
 #include <botan/pipe.h>
+
 #include <botan/filter.h>
 #include <botan/internal/out_buf.h>
 

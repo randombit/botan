@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/eax.h>
+
 #include <botan/internal/cmac.h>
 #include <botan/internal/ctr.h>
 #include <botan/internal/fmt.h>

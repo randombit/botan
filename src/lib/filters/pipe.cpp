@@ -6,6 +6,7 @@
 */
 
 #include <botan/pipe.h>
+
 #include <botan/internal/out_buf.h>
 #include <botan/internal/secqueue.h>
 #include <botan/internal/fmt.h>

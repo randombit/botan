@@ -8,6 +8,7 @@
 */
 
 #include <botan/gost_3410.h>
+
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/point_mul.h>
 #include <botan/internal/fmt.h>

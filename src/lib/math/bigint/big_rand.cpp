@@ -6,6 +6,7 @@
 */
 
 #include <botan/bigint.h>
+
 #include <botan/rng.h>
 #include <botan/internal/rounding.h>
 

@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/rc4.h>
+
 #include <botan/exceptn.h>
 
 namespace Botan {

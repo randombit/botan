@@ -7,6 +7,7 @@
  */
 
 #include <botan/internal/gmac.h>
+
 #include <botan/internal/ghash.h>
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>

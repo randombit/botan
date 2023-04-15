@@ -5,6 +5,7 @@
 */
 
 #include <botan/sodium.h>
+
 #include <botan/mac.h>
 #include <botan/hash.h>
 

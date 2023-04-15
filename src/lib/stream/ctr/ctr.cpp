@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/ctr.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/bit_ops.h>

@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_session_manager_sql.h>
+
 #include <botan/database.h>
 #include <botan/pwdhash.h>
 #include <botan/hex.h>

@@ -6,6 +6,7 @@
 */
 
 #include <botan/zfec.h>
+
 #include <botan/internal/simd_32.h>
 
 #if defined(BOTAN_SIMD_USE_SSE2)

@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/chacha20poly1305.h>
+
 #include <botan/internal/loadstor.h>
 
 namespace Botan {

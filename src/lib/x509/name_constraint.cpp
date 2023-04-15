@@ -6,6 +6,7 @@
 */
 
 #include <botan/pkix_types.h>
+
 #include <botan/ber_dec.h>
 #include <botan/internal/loadstor.h>
 #include <botan/x509cert.h>

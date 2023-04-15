@@ -8,16 +8,17 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <functional>
-#include <iterator>
-
 #include <botan/tls_extensions.h>
+
 #include <botan/internal/tls_reader.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_callbacks.h>
 #include <botan/rng.h>
 #include <botan/internal/stl_util.h>
+
+#include <functional>
+#include <iterator>
 
 #if defined(BOTAN_HAS_CURVE_25519)
    #include <botan/curve25519.h>

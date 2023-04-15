@@ -6,6 +6,7 @@
 */
 
 #include <botan/pkix_enums.h>
+
 #include <botan/pk_keys.h>
 #include <botan/internal/parsing.h>
 #include <vector>

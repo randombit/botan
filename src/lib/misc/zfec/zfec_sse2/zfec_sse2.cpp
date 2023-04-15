@@ -5,6 +5,7 @@
 */
 
 #include <botan/zfec.h>
+
 #include <botan/internal/simd_32.h>
 #include <immintrin.h>
 

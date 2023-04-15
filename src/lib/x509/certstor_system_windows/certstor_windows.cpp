@@ -7,11 +7,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/ber_dec.h>
 #include <botan/certstor_windows.h>
+
+#include <botan/ber_dec.h>
 #include <botan/hash.h>
 #include <botan/pkix_types.h>
-
 #include <array>
 #include <functional>
 #include <vector>

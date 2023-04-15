@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/cascade.h>
+
 #include <botan/internal/fmt.h>
 
 namespace Botan {

@@ -8,6 +8,7 @@
 */
 
 #include <botan/ec_point.h>
+
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>

@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/shake.h>
+
 #include <botan/internal/sha3.h>
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>

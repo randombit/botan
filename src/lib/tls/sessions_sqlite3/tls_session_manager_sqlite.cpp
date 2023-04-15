@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_session_manager_sqlite.h>
+
 #include <botan/sqlite3.h>
 
 namespace Botan {

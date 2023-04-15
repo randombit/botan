@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/xts.h>
+
 #include <botan/internal/poly_dbl.h>
 #include <botan/internal/fmt.h>
 

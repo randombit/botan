@@ -7,6 +7,7 @@
 */
 
 #include <botan/p11_ecc_key.h>
+
 #include <botan/pk_keys.h>
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)

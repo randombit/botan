@@ -5,6 +5,7 @@
 */
 
 #include "fuzzers.h"
+
 #include <botan/x509_crl.h>
 #include <botan/data_src.h>
 

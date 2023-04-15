@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/adler32.h>
+
 #include <botan/internal/loadstor.h>
 
 namespace Botan {

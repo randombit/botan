@@ -6,6 +6,7 @@
 */
 
 #include <botan/exceptn.h>
+
 #include <botan/internal/filesystem.h>
 #include <algorithm>
 #include <deque>

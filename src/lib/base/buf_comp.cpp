@@ -5,6 +5,7 @@
 */
 
 #include <botan/buf_comp.h>
+
 #include <botan/internal/loadstor.h>
 
 namespace Botan {

@@ -6,6 +6,7 @@
 */
 
 #include <botan/filters.h>
+
 #include <botan/mem_ops.h>
 #include <botan/internal/rounding.h>
 #include <botan/exceptn.h>

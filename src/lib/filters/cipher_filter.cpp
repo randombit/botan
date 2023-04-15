@@ -6,6 +6,7 @@
 */
 
 #include <botan/filters.h>
+
 #include <botan/internal/rounding.h>
 
 namespace Botan {

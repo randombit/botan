@@ -9,6 +9,7 @@
 */
 
 #include <botan/internal/gf2m_small_m.h>
+
 #include <botan/exceptn.h>
 #include <string>
 

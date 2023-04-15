@@ -5,6 +5,7 @@
 */
 
 #include <botan/exceptn.h>
+
 #include <botan/internal/fmt.h>
 
 namespace Botan {

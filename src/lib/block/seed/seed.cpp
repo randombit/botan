@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/seed.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/prefetch.h>
 

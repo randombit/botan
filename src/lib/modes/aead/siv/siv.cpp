@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/siv.h>
+
 #include <botan/block_cipher.h>
 #include <botan/internal/cmac.h>
 #include <botan/internal/poly_dbl.h>

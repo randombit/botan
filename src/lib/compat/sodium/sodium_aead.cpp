@@ -5,6 +5,7 @@
 */
 
 #include <botan/sodium.h>
+
 #include <botan/aead.h>
 
 namespace Botan {

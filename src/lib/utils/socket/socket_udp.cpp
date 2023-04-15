@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/socket_udp.h>
+
 #include <botan/internal/uri.h>
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>

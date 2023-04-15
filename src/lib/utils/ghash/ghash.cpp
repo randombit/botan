@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/ghash.h>
+
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/cpuid.h>

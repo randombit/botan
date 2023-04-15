@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/aes.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/simd_32.h>
 #include <wmmintrin.h>

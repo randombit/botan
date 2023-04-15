@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/http_util.h>
+
 #include <botan/internal/parsing.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/socket.h>

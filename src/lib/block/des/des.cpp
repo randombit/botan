@@ -9,6 +9,7 @@
 */
 
 #include <botan/internal/des.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 

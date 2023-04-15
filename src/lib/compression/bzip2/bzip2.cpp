@@ -8,6 +8,7 @@
 */
 
 #include <botan/bzip2.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/compress_utils.h>
 

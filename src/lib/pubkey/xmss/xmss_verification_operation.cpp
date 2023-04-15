@@ -9,6 +9,7 @@
  **/
 
 #include <botan/internal/xmss_verification_operation.h>
+
 #include <botan/internal/xmss_common_ops.h>
 #include <botan/internal/xmss_tools.h>
 #include <array>

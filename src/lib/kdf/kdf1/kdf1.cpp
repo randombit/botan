@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/kdf1.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 

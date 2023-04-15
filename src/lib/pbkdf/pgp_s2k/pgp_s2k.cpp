@@ -7,6 +7,7 @@
 */
 
 #include <botan/pgp_s2k.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/timer.h>
 #include <botan/internal/fmt.h>

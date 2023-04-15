@@ -5,6 +5,7 @@
 */
 
 #include <botan/sym_algo.h>
+
 #include <botan/exceptn.h>
 
 namespace Botan {

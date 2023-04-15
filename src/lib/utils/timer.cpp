@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/timer.h>
+
 #include <botan/internal/os_utils.h>
 #include <algorithm>
 #include <sstream>

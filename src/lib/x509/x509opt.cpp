@@ -6,6 +6,7 @@
 */
 
 #include <botan/x509self.h>
+
 #include <botan/internal/parsing.h>
 #include <chrono>
 

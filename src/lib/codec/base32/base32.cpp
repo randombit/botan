@@ -7,6 +7,7 @@
 */
 
 #include <botan/base32.h>
+
 #include <botan/internal/codec_base.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>

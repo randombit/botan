@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/uri.h>
+
 #include <botan/exceptn.h>
 
 #include <regex>

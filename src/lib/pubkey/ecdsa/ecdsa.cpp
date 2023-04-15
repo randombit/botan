@@ -9,6 +9,7 @@
 */
 
 #include <botan/ecdsa.h>
+
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/point_mul.h>
 #include <botan/internal/keypair.h>

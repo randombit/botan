@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_alert.h>
+
 #include <botan/tls_exceptn.h>
 
 namespace Botan::TLS {

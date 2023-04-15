@@ -8,6 +8,7 @@
 #define BOTAN_FUZZER_MP_HELPERS_H_
 
 #include "fuzzers.h"
+
 #include <botan/internal/mp_core.h>
 
 #if BOTAN_MP_WORD_BITS == 64

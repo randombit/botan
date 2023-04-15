@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/idea.h>
+
 #include <botan/internal/ct_utils.h>
 #include <emmintrin.h>
 

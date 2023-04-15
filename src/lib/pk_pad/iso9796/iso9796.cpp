@@ -6,6 +6,7 @@
  */
 
 #include <botan/internal/iso9796.h>
+
 #include <botan/rng.h>
 #include <botan/exceptn.h>
 #include <botan/internal/mgf1.h>

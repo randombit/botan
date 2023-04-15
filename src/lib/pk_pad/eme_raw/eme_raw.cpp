@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/eme_raw.h>
+
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 

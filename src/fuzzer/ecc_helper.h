@@ -8,6 +8,7 @@
 #define ECC_HELPERS_H_
 
 #include "fuzzers.h"
+
 #include <botan/ec_group.h>
 #include <botan/reducer.h>
 #include <botan/numthry.h>

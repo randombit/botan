@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/sp800_56c.h>
+
 #include <botan/internal/fmt.h>
 
 namespace Botan {

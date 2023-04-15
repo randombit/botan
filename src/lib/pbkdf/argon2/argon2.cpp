@@ -5,6 +5,7 @@
 */
 
 #include <botan/argon2.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/fmt.h>

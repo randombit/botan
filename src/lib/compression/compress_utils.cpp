@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/compress_utils.h>
+
 #include <botan/internal/safeint.h>
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>

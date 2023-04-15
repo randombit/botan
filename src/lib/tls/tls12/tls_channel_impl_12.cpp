@@ -6,10 +6,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/tls_channel_impl_12.h>
+
 #include <botan/tls_policy.h>
 #include <botan/tls_messages.h>
 #include <botan/kdf.h>
-#include <botan/internal/tls_channel_impl_12.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>
