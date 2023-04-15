@@ -1727,7 +1727,7 @@ def process_template_string(template_text, variables, template_source):
                 var = match.group(1)
                 if var in self.vals:
                     return ' '.join(self.vals.get(var))
-                raise KeyError(v)
+                raise KeyError(var)
 
             lines = template.splitlines()
 
