@@ -181,8 +181,8 @@ On macOS
 
 A build on macOS works much like that on any other Unix-like system.
 
-To build a universal binary for macOS, for older macOs releases, 
-you need to set some additional build flags. 
+To build a universal binary for macOS, for older macOs releases,
+you need to set some additional build flags.
 Do this with the `configure.py` flag `--cc-abi-flags`::
 
   --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
@@ -209,8 +209,17 @@ shell), and run::
    $ nmake check
    $ nmake install
 
-Botan supports the nmake replacement `Jom <https://wiki.qt.io/Jom>`_
-which enables you to run multiple build jobs in parallel.
+Micosoft's ``nmake`` does not support building multiple jobs in parallel, which
+is unfortunate when building on modern multicore machines. It is possible to use
+the (somewhat unmaintained) `Jom <https://wiki.qt.io/Jom>`_ build tool, which is
+a ``nmake`` compatible build system that supports parallel builds. Alternately,
+starting in Botan 3.2, there is additionally support for using the ``ninja``
+build tool as an alternative to ``nmake``::
+
+   $ python3 configure.py --cc=msvc --os=windows --build-tool=ninja
+   $ ninja
+   $ ninja check
+   $ ninja install
 
 For MinGW, use::
 
@@ -226,6 +235,17 @@ compiler to look for both include files and library files in
 place where they will be in the default compiler search paths (consult
 your documentation and/or local expert for details).
 
+Ninja Support
+---------------
+
+Starting in Botan 3.2, there is additionally support for the
+`ninja <https://ninja-build.org>`_ build system.
+
+This is particularly useful on Windows as there the default build tool ``nmake``
+does not support parallel jobs. The ``ninja`` based build also works on Unix and
+macOs systems.
+
+Support for ``ninja`` is still new and there are probably some rough edges.
 
 For iOS using XCode
 -------------------------

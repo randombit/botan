@@ -1,5 +1,7 @@
 /Makefile
 CMakeLists.txt*
+build.ninja
+.ninja_log
 libbotan*.so.*
 *.a
 *.so

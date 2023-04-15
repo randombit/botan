@@ -56,7 +56,7 @@ jobs:
           arch: ${{ matrix.arch }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='msvc' --make-tool='jom' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='msvc' --make-tool='ninja' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   linux:
     name: "Linux"
@@ -147,7 +147,7 @@ jobs:
           - target: sanitizer
             compiler: msvc
             host_os: windows-2022
-            make_tool: jom
+            make_tool: ninja
           - target: sanitizer
             compiler: clang
             host_os: ubuntu-22.04

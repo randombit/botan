@@ -42,7 +42,7 @@
                 "problemMatcher": "$gcc"
             },
             "windows": {
-                "command": "jom",
+                "command": "ninja",
                 "problemMatcher": "$msCompile"
             },
             "presentation": {
