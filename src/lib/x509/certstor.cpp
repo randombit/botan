@@ -7,6 +7,7 @@
 */
 
 #include <botan/certstor.h>
+
 #include <botan/pkix_types.h>
 #include <botan/internal/filesystem.h>
 #include <botan/hash.h>

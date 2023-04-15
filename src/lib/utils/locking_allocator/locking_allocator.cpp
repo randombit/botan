@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/locking_allocator.h>
+
 #include <botan/internal/os_utils.h>
 #include <botan/internal/mem_pool.h>
 #include <botan/internal/safeint.h>

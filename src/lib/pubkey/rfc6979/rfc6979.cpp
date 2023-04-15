@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/rfc6979.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/hmac_drbg.h>
 #include <botan/mac.h>

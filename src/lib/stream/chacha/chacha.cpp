@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/chacha.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>

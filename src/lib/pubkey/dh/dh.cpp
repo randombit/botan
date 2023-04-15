@@ -6,6 +6,7 @@
 */
 
 #include <botan/dh.h>
+
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/blinding.h>

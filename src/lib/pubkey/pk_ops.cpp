@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/pk_ops_impl.h>
+
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/parsing.h>

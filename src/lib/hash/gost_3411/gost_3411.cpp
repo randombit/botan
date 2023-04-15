@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/gost_3411.h>
+
 #include <botan/internal/loadstor.h>
 
 namespace Botan {

@@ -10,6 +10,7 @@
 */
 
 #include <botan/internal/aes.h>
+
 #include <botan/internal/cpuid.h>
 
 #include <altivec.h>

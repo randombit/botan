@@ -6,11 +6,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/tls_record_layer_13.h>
+
 #include <botan/tls_version.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
-
-#include <botan/internal/tls_record_layer_13.h>
 #include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_reader.h>
 

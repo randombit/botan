@@ -5,6 +5,7 @@
 */
 
 #include <botan/sodium.h>
+
 #include <botan/stream_cipher.h>
 
 namespace Botan {

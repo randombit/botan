@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/threefish_512.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/cpuid.h>

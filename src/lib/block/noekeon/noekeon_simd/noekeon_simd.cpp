@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/noekeon.h>
+
 #include <botan/internal/simd_32.h>
 
 namespace Botan {

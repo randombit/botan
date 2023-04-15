@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/os_utils.h>
+
 #include <botan/internal/cpuid.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>

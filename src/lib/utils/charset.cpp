@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/charset.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
 #include <sstream>

@@ -6,14 +6,15 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <algorithm>
-#include <array>
+#include <botan/certstor_macos.h>
 
 #include <botan/ber_dec.h>
-#include <botan/certstor_macos.h>
 #include <botan/data_src.h>
 #include <botan/exceptn.h>
 #include <botan/pkix_types.h>
+
+#include <algorithm>
+#include <array>
 
 #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 #include <CoreFoundation/CoreFoundation.h>

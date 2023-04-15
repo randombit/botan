@@ -9,6 +9,7 @@
 */
 
 #include <botan/internal/aes.h>
+
 #include <botan/internal/loadstor.h>
 #include <arm_neon.h>
 

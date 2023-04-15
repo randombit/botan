@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/serpent.h>
+
 #include <botan/internal/simd_32.h>
 #include <botan/internal/serpent_sbox.h>
 

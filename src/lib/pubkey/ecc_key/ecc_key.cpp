@@ -8,6 +8,7 @@
 */
 
 #include <botan/ecc_key.h>
+
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>

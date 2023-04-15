@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/sha3.h>
+
 #include <botan/internal/sha3_round.h>
 
 namespace Botan {

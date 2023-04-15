@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/commoncrypto.h>
+
 #include <botan/hash.h>
 #include <unordered_map>
 

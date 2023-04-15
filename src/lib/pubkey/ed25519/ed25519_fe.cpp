@@ -9,6 +9,7 @@
 */
 
 #include <botan/internal/ed25519_fe.h>
+
 #include <botan/internal/ed25519_internal.h>
 
 namespace Botan {

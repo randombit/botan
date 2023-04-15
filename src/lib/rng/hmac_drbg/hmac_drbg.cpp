@@ -6,6 +6,7 @@
 */
 
 #include <botan/hmac_drbg.h>
+
 #include <botan/internal/fmt.h>
 #include <algorithm>
 

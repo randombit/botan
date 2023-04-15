@@ -8,6 +8,7 @@
  */
 
 #include <botan/mceliece.h>
+
 #include <botan/internal/bit_ops.h>
 #include <cmath>
 

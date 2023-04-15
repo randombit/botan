@@ -6,6 +6,7 @@
 */
 
 #include <botan/version.h>
+
 #include <botan/internal/fmt.h>
 
 namespace Botan {

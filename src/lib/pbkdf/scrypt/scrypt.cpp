@@ -6,6 +6,7 @@
 */
 
 #include <botan/scrypt.h>
+
 #include <botan/pbkdf2.h>
 #include <botan/exceptn.h>
 #include <botan/internal/salsa20.h>

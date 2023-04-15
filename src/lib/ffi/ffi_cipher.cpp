@@ -5,6 +5,7 @@
 */
 
 #include <botan/ffi.h>
+
 #include <botan/internal/ffi_util.h>
 #include <botan/aead.h>
 

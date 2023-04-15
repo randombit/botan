@@ -6,6 +6,7 @@
 */
 
 #include <botan/uuid.h>
+
 #include <botan/rng.h>
 #include <botan/hex.h>
 #include <botan/internal/fmt.h>

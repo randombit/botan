@@ -5,6 +5,7 @@
 */
 
 #include <botan/base58.h>
+
 #include <botan/exceptn.h>
 #include <botan/bigint.h>
 #include <botan/internal/divide.h>

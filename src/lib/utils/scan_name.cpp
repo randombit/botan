@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/scan_name.h>
+
 #include <botan/internal/parsing.h>
 #include <botan/exceptn.h>
 

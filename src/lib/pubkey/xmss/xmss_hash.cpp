@@ -8,6 +8,7 @@
  **/
 
 #include <botan/internal/xmss_hash.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/xmss_parameters.h>
 #include <botan/exceptn.h>

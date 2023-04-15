@@ -8,6 +8,7 @@
 */
 
 #include <botan/data_snk.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <ostream>

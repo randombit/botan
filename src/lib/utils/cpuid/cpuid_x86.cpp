@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/cpuid.h>
+
 #include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>
 

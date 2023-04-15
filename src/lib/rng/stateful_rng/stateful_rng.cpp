@@ -5,6 +5,7 @@
 */
 
 #include <botan/stateful_rng.h>
+
 #include <botan/internal/os_utils.h>
 #include <botan/internal/loadstor.h>
 

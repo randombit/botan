@@ -12,6 +12,7 @@
  **/
 
 #include <botan/xmss_parameters.h>
+
 #include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
 

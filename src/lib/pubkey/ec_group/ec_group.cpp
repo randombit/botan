@@ -9,6 +9,7 @@
 */
 
 #include <botan/ec_group.h>
+
 #include <botan/internal/point_mul.h>
 #include <botan/internal/primality.h>
 #include <botan/internal/fmt.h>

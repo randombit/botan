@@ -5,6 +5,7 @@
 */
 
 #include <botan/aead.h>
+
 #include <botan/internal/scan_name.h>
 #include <botan/internal/parsing.h>
 #include <sstream>

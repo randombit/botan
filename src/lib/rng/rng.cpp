@@ -5,6 +5,7 @@
 */
 
 #include <botan/rng.h>
+
 #include <botan/entropy_src.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/os_utils.h>

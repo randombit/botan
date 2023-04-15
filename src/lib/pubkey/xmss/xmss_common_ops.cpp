@@ -7,6 +7,7 @@
  **/
 
 #include <botan/internal/xmss_common_ops.h>
+
 #include <botan/internal/xmss_hash.h>
 
 namespace Botan {

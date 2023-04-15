@@ -5,6 +5,7 @@
 */
 
 #include "fuzzers.h"
+
 #include <botan/numthry.h>
 #include <botan/reducer.h>
 #include <botan/internal/divide.h>

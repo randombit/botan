@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/whrlpool.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 

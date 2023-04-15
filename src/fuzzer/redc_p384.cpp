@@ -5,6 +5,7 @@
 */
 
 #include "fuzzers.h"
+
 #include <botan/reducer.h>
 #include <botan/internal/curve_nistp.h>
 

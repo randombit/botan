@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/chacha.h>
+
 #include <botan/internal/simd_32.h>
 
 namespace Botan {

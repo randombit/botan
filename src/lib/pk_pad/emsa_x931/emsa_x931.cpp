@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/emsa_x931.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/hash_id.h>
 

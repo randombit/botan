@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/siphash.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/fmt.h>

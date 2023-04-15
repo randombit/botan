@@ -7,6 +7,7 @@
 */
 
 #include <botan/ecgdsa.h>
+
 #include <botan/internal/keypair.h>
 #include <botan/reducer.h>
 #include <botan/internal/pk_ops_impl.h>

@@ -9,6 +9,7 @@
 */
 
 #include <botan/zfec.h>
+
 #include <botan/exceptn.h>
 #include <botan/internal/cpuid.h>
 #include <botan/mem_ops.h>

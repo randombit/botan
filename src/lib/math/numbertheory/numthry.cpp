@@ -7,6 +7,7 @@
 */
 
 #include <botan/numthry.h>
+
 #include <botan/reducer.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/divide.h>

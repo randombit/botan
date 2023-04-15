@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/tls_handshake_hash.h>
+
 #include <botan/hash.h>
 
 namespace Botan::TLS {

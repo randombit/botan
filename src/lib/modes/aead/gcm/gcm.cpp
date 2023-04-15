@@ -7,6 +7,7 @@
 */
 
 #include <botan/internal/gcm.h>
+
 #include <botan/internal/ghash.h>
 #include <botan/block_cipher.h>
 #include <botan/internal/ctr.h>

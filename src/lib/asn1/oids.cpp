@@ -6,6 +6,7 @@
 */
 
 #include <botan/oids.h>
+
 #include <botan/internal/oid_map.h>
 
 namespace Botan {

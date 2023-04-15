@@ -6,6 +6,7 @@
 */
 
 #include <botan/entropy_src.h>
+
 #include <botan/rng.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)

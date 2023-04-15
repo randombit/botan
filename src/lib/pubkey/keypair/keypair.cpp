@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/keypair.h>
+
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 

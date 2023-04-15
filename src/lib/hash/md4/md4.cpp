@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/md4.h>
+
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/bit_ops.h>

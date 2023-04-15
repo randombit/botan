@@ -7,6 +7,7 @@
 */
 
 #include <botan/curve_gfp.h>
+
 #include <botan/internal/curve_nistp.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>

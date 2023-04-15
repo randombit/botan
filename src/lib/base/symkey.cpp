@@ -6,6 +6,7 @@
 */
 
 #include <botan/symkey.h>
+
 #include <botan/rng.h>
 #include <botan/hex.h>
 #include <algorithm>
