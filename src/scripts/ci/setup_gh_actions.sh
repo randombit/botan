@@ -62,7 +62,8 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
         if [ "$TARGET" = "coverage" ]; then
             sudo apt-get -qq install lcov python3-coverage
-            pip install --user codecov
+            sudo curl --silent https://uploader.codecov.io/latest/linux/codecov -o /usr/local/bin/codecov
+            sudo chmod 755 /usr/local/bin/codecov
         fi
 
         sudo apt-get -qq install softhsm2 libtspi-dev libboost-dev
