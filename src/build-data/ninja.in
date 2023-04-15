@@ -1,0 +1,62 @@
+ninja_required_version = 1.3
+
+CXX            = %{cxx}
+LINKER         = %{linker}
+PYTHON_EXE     = %{python_exe}
+
+isa_flags =
+
+rule compile_obj
+  command = %{cxx} ${BUILD_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
+
+ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
+LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
+LANG_EXE_FLAGS = %{cc_lang_binary_linker_flags}
+CXXFLAGS       = %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT
+WARN_FLAGS     = %{cc_warning_flags}
+BUILD_FLAGS    = ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} ${WARN_FLAGS}
+
+LIB_FLAGS      = %{lib_flags}
+LDFLAGS        = %{ldflags}
+
+EXE_LINK_CMD   = %{exe_link_cmd}
+
+LIB_LINKS_TO        = %{external_link_cmd} %{link_to}
+BUILD_DIR_LINK_PATH = %{build_dir_link_path}
+EXE_LINKS_TO        = %{link_to_botan} ${LIB_LINKS_TO} %{extra_libs}
+
+
+SCRIPTS_DIR    = %{scripts_dir}
+INSTALLED_LIB_DIR = %{libdir}
+
+CLI           = %{cli_exe}
+TEST          = %{test_exe}
+LIBRARIES     = %{library_targets}
+
+%{if build_static_lib}
+
+rule link_static
+  command = %{ar_command} %{ar_options} %{ar_output_to}$out $in
+
+build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
+
+%{endif}
+
+rule link_cli
+  command = %{exe_link_cmd} %{cc_sysroot} %{cxx_abi_flags} $in %{build_dir_link_path} %{cc_lang_binary_linker_flags} %{ldflags} %{external_link_cmd} %{link_to_botan} ${link_to} %{extra_libs} %{output_to_exe}$out
+
+build %{cli_exe}: link_cli %{join cli_objs} | %{out_dir}/%{static_lib_name}
+
+# Executable targets
+%{for lib_build_info}
+build %{obj}: compile_obj %{src}
+  isa_flags = %{isa_flags}
+%{endfor}
+
+%{for cli_build_info}
+build %{obj}: compile_obj %{src}
+%{endfor}
+
+%{for test_build_info}
+build %{obj}: compile_obj %{src}
+%{endfor}

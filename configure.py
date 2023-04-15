@@ -519,6 +519,9 @@ def process_command_line(args):
     build_group.add_option('--build-targets', default=None, dest="build_targets", action='append',
                            help="build specific targets and tools (%s)" % ', '.join(ACCEPTABLE_BUILD_TARGETS))
 
+    build_group.add_option('--build-tool', default='make',
+                           help="specify the build tool (make, ninja)")
+
     build_group.add_option('--with-pkg-config', action='store_true', default=None,
                            help=optparse.SUPPRESS_HELP)
     build_group.add_option('--without-pkg-config', dest='with_pkg_config', action='store_false',
@@ -3152,6 +3155,9 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         if options.build_fuzzers == 'klee' and options.os != 'llvm':
             raise UserError('Building for KLEE requires targeting LLVM')
 
+    if options.build_tool not in ['make', 'ninja']:
+        raise UserError("Unknown --build-tool option (possibly values: make, ninja)")
+
     if options.build_static_lib is False and options.build_shared_lib is False:
         raise UserError('With both --disable-static-library and --disable-shared-library, nothing to do')
 
@@ -3351,7 +3357,10 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
     if options.with_compilation_database:
         write_template(in_build_dir('compile_commands.json'), in_build_data('compile_commands.json.in'))
 
-    write_template(template_vars['makefile_path'], in_build_data('makefile.in'))
+    if options.build_tool == 'make':
+        write_template(template_vars['makefile_path'], in_build_data('makefile.in'))
+    elif options.build_tool == 'ninja':
+        write_template(template_vars['ninja_build_path'], in_build_data('ninja.in'))
 
     if options.with_doxygen:
         for module_name, info in info_modules.items():
