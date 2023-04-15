@@ -490,10 +490,6 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-valgrind', help='use valgrind API',
                            dest='with_valgrind', action='store_true', default=False)
 
-    # Cmake option is hidden as it should not be used by end users
-    build_group.add_option('--with-cmake', action='store_true',
-                           default=False, help=optparse.SUPPRESS_HELP)
-
     build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
                            help='Disable essential checks for testing')
 
@@ -1973,9 +1969,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         quoted_args = [arg if ' ' not in arg else '\'' + arg + '\'' for arg in sys.argv[1:]]
         return ' '.join([main_executable] + quoted_args)
 
-    def cmake_escape(s):
-        return s.replace('(', '\\(').replace(')', '\\)')
-
     def sysroot_option():
         if options.with_sysroot_dir == '':
             return ''
@@ -2174,10 +2167,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'cc_compile_opt_flags': cc.cc_compile_flags(options, False, True),
         'cc_compile_debug_flags': cc.cc_compile_flags(options, True, False),
 
-        # These are for CMake
-        'cxx_abi_opt_flags': cc.mach_abi_link_flags(options, False),
-        'cxx_abi_debug_flags': cc.mach_abi_link_flags(options, True),
-
         'dash_o': cc.output_to_object,
         'dash_c': cc.compile_flags,
 
@@ -2206,11 +2195,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'link_to': ' '.join(
             [(cc.add_lib_option % lib) for lib in link_to('libs')] +
             [cc.add_framework_option + fw for fw in link_to('frameworks')]
-        ),
-
-        'cmake_link_to': ' '.join(
-            link_to('libs') +
-            [('"' + cc.add_framework_option + fw + '"') for fw in link_to('frameworks')]
         ),
 
         'fuzzer_lib': (cc.add_lib_option % options.fuzzer_lib) if options.fuzzer_lib else '',
@@ -2251,7 +2235,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         variables['cxx_abi_flags'] = ''
 
     variables['lib_flags'] = cc.gen_lib_flags(options, variables)
-    variables['cmake_lib_flags'] = cmake_escape(variables['lib_flags'])
 
     if options.with_pkg_config:
         variables['botan_pkgconfig'] = os.path.join(build_paths.build_dir, 'botan-%d.pc' % (Version.major()))
@@ -3319,11 +3302,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
     if options.with_compilation_database:
         write_template(in_build_dir('compile_commands.json'), in_build_data('compile_commands.json.in'))
 
-    if options.with_cmake:
-        logging.warning("CMake build is only for development: use make for production builds")
-        write_template('CMakeLists.txt', in_build_data('cmake.in'))
-    else:
-        write_template(template_vars['makefile_path'], in_build_data('makefile.in'))
+    write_template(template_vars['makefile_path'], in_build_data('makefile.in'))
 
     if options.with_doxygen:
         for module_name, info in info_modules.items():
