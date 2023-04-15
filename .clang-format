@@ -1,0 +1,55 @@
+Language: Cpp
+Standard: c++20
+
+BasedOnStyle: Chromium
+
+ColumnLimit: 120
+AccessModifierOffset: -3
+IndentWidth: 3
+ContinuationIndentWidth: 3
+ConstructorInitializerIndentWidth: 6
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+QualifierAlignment: Left
+
+IncludeBlocks: Preserve
+IncludeCategories:
+  - Regex:           '^<botan/internal/.*\.h>'
+    Priority:        3
+    CaseSensitive:   false
+  - Regex:           '^<botan/.*\.h>'
+    Priority:        2
+    CaseSensitive:   false
+  - Regex:           '^<.*'
+    Priority:        4
+    CaseSensitive:   false
+  - Regex:           '^<.*\.h>'
+    Priority:        3
+    CaseSensitive:   false
+  - Regex:           '.*'
+    Priority:        1
+    CaseSensitive:   false
+
+AttributeMacros: ['BOTAN_FUNC_ISA']
+
+BinPackArguments: false
+BreakStringLiterals: false
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+EmptyLineBeforeAccessModifier: Always
+
+BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterComma
+AllowShortBlocksOnASingleLine: true
+SpaceBeforeParens: Never
+AllowShortFunctionsOnASingleLine: All
+IndentPPDirectives: BeforeHash
+FixNamespaceComments: true
+SeparateDefinitionBlocks: Always
+KeepEmptyLinesAtTheStartOfBlocks: false
+IndentAccessModifiers: true
+ReflowComments: false
+RequiresClausePosition: OwnLine
+IndentRequiresClause: true
