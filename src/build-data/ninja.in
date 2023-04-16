@@ -45,7 +45,14 @@ build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
 rule link_cli
   command = %{exe_link_cmd} %{cc_sysroot} %{cxx_abi_flags} $in %{build_dir_link_path} %{cc_lang_binary_linker_flags} %{ldflags} %{external_link_cmd} ${EXE_LINKS_TO} %{output_to_exe}$out
 
+rule link_tests
+  command = %{exe_link_cmd} %{cc_sysroot} %{cxx_abi_flags} $in %{build_dir_link_path} %{cc_lang_binary_linker_flags} %{ldflags} %{external_link_cmd} ${EXE_LINKS_TO} %{output_to_exe}$out
+
+
 build %{cli_exe}: link_cli %{join cli_objs} | %{out_dir}/%{static_lib_name}
+
+build %{test_exe}: link_tests %{join test_objs} | %{out_dir}/%{static_lib_name}
+
 
 # Executable targets
 %{for lib_build_info}
