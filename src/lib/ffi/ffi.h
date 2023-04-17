@@ -1895,6 +1895,29 @@ BOTAN_PUBLIC_API(2,13) int botan_x509_cert_verify_with_crl(
    const char* hostname,
    uint64_t reference_time);
 
+
+typedef struct botan_x509_certstore_struct* botan_x509_certstore_t;
+
+BOTAN_PUBLIC_API(2,19) int botan_x509_certstore_load_file(botan_x509_certstore_t* certstore_obj, const char* certstore_path);
+
+BOTAN_PUBLIC_API(2,19) int botan_x509_certstore_load_system(botan_x509_certstore_t* certstore_obj);
+
+BOTAN_PUBLIC_API(2,19) int botan_x509_certstore_destroy(botan_x509_certstore_t crl);
+
+BOTAN_PUBLIC_API(2,19)
+int botan_x509_cert_verify_with_certstore_crl(
+   int* result_code,
+   botan_x509_cert_t cert,
+   const botan_x509_cert_t* intermediates,
+   size_t intermediates_len,
+   const botan_x509_certstore_t store,
+   const botan_x509_crl_t* crls,
+   size_t crls_len,
+   size_t required_strength,
+   const char* hostname_cstr,
+   uint64_t reference_time);
+
+
 /**
  * Key wrapping as per RFC 3394
  */
