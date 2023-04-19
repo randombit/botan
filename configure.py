@@ -1545,7 +1545,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'use_stack_protector': 'true',
                 'cli_exe_name': 'botan',
                 'lib_prefix': 'lib',
-                'library_name': 'botan{suffix}-{major}',
+                'library_name': 'botan-{major}{suffix}',
                 'shared_lib_symlinks': 'yes',
                 'default_compiler': 'gcc',
                 'uses_pkg_config': 'yes',
