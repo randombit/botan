@@ -711,19 +711,20 @@ def main(args=None):
                              '--rcfile', os.path.join(root_dir, 'src/configs/coverage.rc')] +
                             python_tests)
 
-            if have_prog('codecov'):
-                # If codecov exists assume we are in CI and report to codecov.io
-                cmds.append(['indir:%s' % root_dir, 'codecov', '--required', '--gcov-root', build_dir,
-                             '>', os.path.join(build_dir, 'codecov_stdout.log')])
+            cov_file = os.path.join(build_dir, 'coverage.lcov')
+            raw_cov_file = os.path.join(build_dir, 'coverage.raw.lcov')
+
+            cmds.append(['lcov', '--capture', '--directory', build_dir,
+                         '--output-file', raw_cov_file])
+            cmds.append(['lcov', '--remove', raw_cov_file, '/usr/*', '--output-file', cov_file])
+            cmds.append(['lcov', '--list', cov_file])
+            cmds.append([os.path.join(root_dir, 'src/scripts/rewrite_lcov.py'), cov_file])
+
+            if have_prog('coveralls'):
+                # If coveralls command exists, assume we are in CI and report to coveralls.io
+                cmds.append(['coveralls', '--format=lcov', '--file=%s' % (cov_file)])
             else:
                 # Otherwise generate a local HTML report
-                cov_file = os.path.join(build_dir, 'coverage.info')
-                raw_cov_file = os.path.join(build_dir, 'coverage.info.raw')
-
-                cmds.append(['lcov', '--capture', '--directory', build_dir,
-                             '--output-file', raw_cov_file])
-                cmds.append(['lcov', '--remove', raw_cov_file, '/usr/*', '--output-file', cov_file])
-                cmds.append(['lcov', '--list', cov_file])
                 cmds.append(['genhtml', cov_file, '--output-directory', os.path.join(build_dir, 'lcov-out')])
 
         cmds.append(make_cmd + ['clean'])
