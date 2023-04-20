@@ -812,7 +812,7 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<X509_Certificate>>& ce
             ee_extras.find_all_certs(issuer_dn, auth_key_id);
 
          // if we could not find any issuers, the current path ends here
-         if(trusted_issuers.size() + misc_issuers.size() == 0)
+         if(trusted_issuers.empty() && misc_issuers.empty())
             {
             stats.push_back(Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
             continue;

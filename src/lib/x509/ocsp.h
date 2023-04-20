@@ -134,11 +134,6 @@ class BOTAN_PUBLIC_API(2,0) Response final
    {
    public:
       /**
-      * Creates an empty OCSP response.
-      */
-      Response() = default;
-
-      /**
       * Create a fake OCSP response from a given status code.
       * @param status the status code the check functions will return
       */
@@ -241,14 +236,10 @@ class BOTAN_PUBLIC_API(2,0) Response final
       std::optional<Certificate_Status_Code> dummy_status() const { return m_dummy_response_status; }
 
    private:
-      bool is_issued_by(const X509_Certificate& candidate) const
-         {
-         return (!m_signer_name.empty() && candidate.subject_dn() == m_signer_name) ||
-                (!m_key_hash.empty() && candidate.subject_public_key_bitstring_sha1() == m_key_hash);
-         }
+      bool is_issued_by(const X509_Certificate& candidate) const;
 
    private:
-      Response_Status_Code m_status;
+      Response_Status_Code m_status = Response_Status_Code::Internal_Error;
       std::vector<uint8_t> m_response_bits;
       X509_Time m_produced_at;
       X509_DN m_signer_name;

@@ -152,6 +152,27 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
    response_outer.end_cons();
    }
 
+bool Response::is_issued_by(const X509_Certificate& candidate) const
+   {
+   // If the signer is set and not equal to the cert, then not issued by this cert
+   if(!m_signer_name.empty() && candidate.subject_dn() != m_signer_name)
+      return false;
+
+   // Likewise for the public key hash
+   if(!m_key_hash.empty() && candidate.subject_public_key_bitstring_sha1() != m_key_hash)
+      return false;
+
+   // If we compared something above and didn't already return then
+   // they were equal, in which case accept.
+   if(!m_key_hash.empty() || !m_signer_name.empty())
+      return true;
+
+   if(m_key_hash.empty() && m_signer_name.empty() && !m_dummy_response_status.has_value())
+      return true;
+
+   return false;
+   }
+
 Certificate_Status_Code Response::verify_signature(const X509_Certificate& issuer) const
    {
    if(m_dummy_response_status)

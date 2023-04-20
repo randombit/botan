@@ -110,9 +110,7 @@ void Certificate_13::verify(Callbacks& callbacks,
             }
          else
             {
-            // Note: The make_optional instead of simply nullopt is necessary to work around a GCC <= 10.0 bug
-            //       see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=80635
-            ocsp_responses.push_back(std::make_optional<OCSP::Response>());
+            ocsp_responses.push_back(std::nullopt);
             }
          }
       }
@@ -124,8 +122,9 @@ void Certificate_13::verify(Callbacks& callbacks,
                           "Certificate usage constraints do not allow signing");
       }
 
+   // Note that m_side represents the sender, so the usages here are swapped
    const auto trusted_CAs = creds.trusted_certificate_authorities(
-                                     m_side == Connection_Side::Client ? "tls-client" : "tls-server",
+                                     m_side == Connection_Side::Client ? "tls-server" : "tls-client",
                                      std::string(hostname));
 
    const auto usage = (m_side == Connection_Side::Client) ? Usage_Type::TLS_CLIENT_AUTH : Usage_Type::TLS_SERVER_AUTH;
