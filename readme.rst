@@ -30,9 +30,9 @@ If you think you have found a security issue, see the `security page
     :target: https://github.com/randombit/botan/actions/workflows/ci.yml
     :alt: GitHub Actions results
 
-.. image:: https://codecov.io/github/randombit/botan/coverage.svg?branch=master
-    :target: https://codecov.io/github/randombit/botan
-    :alt: Code coverage report
+.. image:: https://coveralls.io/repos/github/randombit/botan/badge.svg?branch=master
+    :target: https://coveralls.io/github/randombit/botan
+    :alt: Coverage report
 
 .. image:: https://oss-fuzz-build-logs.storage.googleapis.com/badges/botan.svg
     :target: https://oss-fuzz.com/coverage-report/job/libfuzzer_asan_botan/latest
