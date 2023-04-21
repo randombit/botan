@@ -1567,7 +1567,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 raise InternalError("Invalid soname_patterns in %s" % (self.infofile))
         else:
             if lex.soname_suffix:
-                self.soname_pattern_base = "libbotan{lib_suffix}-{version_major}.%s" % (lex.soname_suffix)
+                self.soname_pattern_base = "{lib_prefix}{libname}.%s" % (lex.soname_suffix)
                 self.soname_pattern_abi = self.soname_pattern_base + ".{abi_rev}"
                 self.soname_pattern_patch = self.soname_pattern_abi + ".{version_minor}.{version_patch}"
             else:
