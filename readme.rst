@@ -30,7 +30,7 @@ If you think you have found a security issue, see the `security page
     :target: https://github.com/randombit/botan/actions/workflows/ci.yml
     :alt: GitHub Actions results
 
-.. image:: https://coveralls.io/repos/github/randombit/botan/badge.svg?branch=master
+.. image:: https://img.shields.io/coverallsCoverage/github/randombit/botan?branch=master
     :target: https://coveralls.io/github/randombit/botan
     :alt: Coverage report
 
