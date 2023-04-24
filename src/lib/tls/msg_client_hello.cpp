@@ -463,6 +463,23 @@ Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data)
          m_data->extensions().add(new Renegotiation_Extension());
          }
       }
+   // RFC 8446 4.2.3
+   //    The client MUST NOT include these extensions [Supported Elliptic Curves Extension
+   //    and Supported Point Formats Extension] in the ClientHello message if it does not
+   //    propose any ECC cipher suites.
+   if(m_data->extensions().has<Supported_Groups>() || m_data->extensions().has<Supported_Point_Formats>())
+      {
+      if (!std::ranges::any_of(m_data->ciphersuites(), [](uint16_t cipherSuiteCode) {
+         std::optional<Ciphersuite> cs = Ciphersuite::by_id(cipherSuiteCode);
+         // true for ECC cipher suites or TLS 1.3 cipher suites
+         return cs.has_value() && (cs->ecc_ciphersuite() ||
+                                   cs->auth_method() == Auth_Method::UNDEFINED ||
+                                   cs->kex_method() == Kex_Algo::UNDEFINED); }))
+         {
+         throw TLS_Exception(Alert::HandshakeFailure,
+                             "Client sent elliptic curves extension, but no ECC cipher suite was proposed");
+         }
+      }
    }
 
 // Note: This delegates to the Client_Hello_12 constructor to take advantage
@@ -513,12 +530,21 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(policy.support_cert_status_message())
       m_data->extensions().add(new Certificate_Status_Request({}, {}));
 
-   auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
-   if(!supported_groups->ec_groups().empty())
+   // RFC 8446 4.2.3
+   //    The client MUST NOT include these extensions [Supported Elliptic Curves Extension
+   //    and Supported Point Formats Extension] in the ClientHello message if it does not
+   //    propose any ECC cipher suites.
+   if (std::ranges::any_of(m_data->ciphersuites(), [](uint16_t cipherSuiteCode) {
+      std::optional<Ciphersuite> cs = Ciphersuite::by_id(cipherSuiteCode);
+      return cs.has_value() && (cs->ecc_ciphersuite()); }))
       {
-      m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+      auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
+      if(!supported_groups->ec_groups().empty())
+         {
+         m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+         }
+      m_data->extensions().add(supported_groups.release());
       }
-   m_data->extensions().add(supported_groups.release());
 
    m_data->extensions().add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
    if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes())
