@@ -1270,6 +1270,21 @@ class Shim_Credentials final : public Botan::Credentials_Manager
             }
          }
 
+      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& type,
+                                                                             const std::string& context) override
+         {
+         if(m_args.flag_set("server") && type != "tls-server")
+            { throw Shim_Exception("TLS server implementation asked for unexpected trusted CA type: " + type); }
+         if(!m_args.flag_set("server") && type != "tls-client")
+            { throw Shim_Exception("TLS client implementation asked for unexpected trusted CA type: " + type); }
+
+         const auto expected_hostname = m_args.get_string_opt_or_else("host-name", "none");
+         if(expected_hostname != "none" && expected_hostname != context)
+            { throw Shim_Exception("Unexpected host name in trusted CA request: " + context); }
+
+         return Botan::Credentials_Manager::trusted_certificate_authorities(type, context);
+         }
+
       std::string psk_identity(const std::string& /*type*/,
                                const std::string& /*context*/,
                                const std::string& /*identity_hint*/) override
