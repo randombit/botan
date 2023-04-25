@@ -147,6 +147,14 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
          .decode_optional(extensions, ASN1_Type(1),
                           ASN1_Class::ContextSpecific | ASN1_Class::Constructed);
+
+      const bool has_signer = !m_signer_name.empty();
+      const bool has_key_hash = !m_key_hash.empty();
+
+      if(has_signer && has_key_hash)
+         throw Decoding_Error("OCSP response includes both byName and byKey in responderID field");
+      if(!has_signer && !has_key_hash)
+         throw Decoding_Error("OCSP response contains neither byName nor byKey in responderID field");
       }
 
    response_outer.end_cons();
@@ -154,21 +162,15 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
 bool Response::is_issued_by(const X509_Certificate& candidate) const
    {
-   // If the signer is set and not equal to the cert, then not issued by this cert
-   if(!m_signer_name.empty() && candidate.subject_dn() != m_signer_name)
-      return false;
+   if(!m_signer_name.empty())
+      {
+      return (candidate.subject_dn() == m_signer_name);
+      }
 
-   // Likewise for the public key hash
-   if(!m_key_hash.empty() && candidate.subject_public_key_bitstring_sha1() != m_key_hash)
-      return false;
-
-   // If we compared something above and didn't already return then
-   // they were equal, in which case accept.
-   if(!m_key_hash.empty() || !m_signer_name.empty())
-      return true;
-
-   if(m_key_hash.empty() && m_signer_name.empty() && !m_dummy_response_status.has_value())
-      return true;
+   if(!m_key_hash.empty())
+      {
+      return (candidate.subject_public_key_bitstring_sha1() == m_key_hash);
+      }
 
    return false;
    }
