@@ -63,7 +63,7 @@ sha    -> ""
 </isa_flags>
 
 <lib_flags>
-debug -> "/Fd%{build_dir}/%{libname}%{lib_suffix}.pdb"
+debug -> "/Fd%{build_dir}/%{libname}.pdb"
 </lib_flags>
 
 <so_link_commands>
