@@ -108,7 +108,7 @@ Test::Result test_buffered_computation_convenience_api()
    check(result, out_strong_type, 6);
 
    // test resizing of final out param
-   out_vec.resize(0);
+   out_vec.clear();
    t.final(out_vec);
    out_vec.resize(t.output_length()*2);
    t.final(out_vec);
