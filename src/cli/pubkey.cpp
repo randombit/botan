@@ -36,41 +36,10 @@
 
 namespace Botan_CLI {
 
-namespace {
-
-std::string pbe_string(const std::string& cipher,
-                       const std::string& pbkdf)
-   {
-   if(cipher.empty() && pbkdf.empty())
-      return ""; // just let the library choose a default
-
-   std::ostringstream oss;
-
-   oss << "PBES2(";
-
-   if(cipher.empty())
-      oss << "AES-256/CBC";
-   else
-      oss << cipher;
-
-   oss << ",";
-
-   if(pbkdf.empty())
-      oss << "SHA-512";
-   else
-      oss << pbkdf;
-
-   oss << ")";
-
-   return oss.str();
-   }
-
-}
-
 class PK_Keygen final : public Command
    {
    public:
-      PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --cipher= --pbkdf= --pbkdf-ms=300 --provider= --der-out") {}
+      PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --cipher= --pbkdf= --pbkdf-ms=300 --pbkdf-iter= --provider= --der-out") {}
 
       std::string group() const override
          {
@@ -100,7 +69,6 @@ class PK_Keygen final : public Command
          const bool der_out = flag_set("der-out");
 
          const std::chrono::milliseconds pbkdf_ms(get_arg_sz("pbkdf-ms"));
-         const std::string pbe = pbe_string(get_arg("cipher"), get_arg("pbkdf"));
 
          if(der_out)
             {
@@ -110,7 +78,14 @@ class PK_Keygen final : public Command
                }
             else
                {
-               write_output(Botan::PKCS8::BER_encode(*key, rng(), pass, pbkdf_ms, pbe));
+               if(get_arg("pbkdf-iter").empty())
+                  {
+                  write_output(Botan::PKCS8::BER_encode_encrypted_pbkdf_msec(*key, rng(), pass, pbkdf_ms, nullptr, get_arg("cipher"), get_arg("pbkdf")));
+                  }
+               else
+                  {
+                  write_output(Botan::PKCS8::BER_encode_encrypted_pbkdf_iter(*key, rng(), pass, get_arg_sz("pbkdf-iter"), get_arg("cipher"), get_arg("pbkdf")));
+                  }
                }
             }
          else
@@ -121,7 +96,14 @@ class PK_Keygen final : public Command
                }
             else
                {
-               output() << Botan::PKCS8::PEM_encode(*key, rng(), pass, pbkdf_ms, pbe);
+               if(get_arg("pbkdf-iter").empty())
+                  {
+                  output() << Botan::PKCS8::PEM_encode_encrypted_pbkdf_msec(*key, rng(), pass, pbkdf_ms, nullptr, get_arg("cipher"), get_arg("pbkdf"));
+                  }
+               else
+                  {
+                  output() << Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(*key, rng(), pass, get_arg_sz("pbkdf-iter"), get_arg("cipher"), get_arg("pbkdf"));
+                  }
                }
             }
          }
@@ -361,7 +343,7 @@ BOTAN_REGISTER_COMMAND("verify", PK_Verify);
 class PKCS8_Tool final : public Command
    {
    public:
-      PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --der-out --pass-out= --cipher= --pbkdf= --pbkdf-ms=300 key") {}
+      PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --der-out --pass-out= --cipher= --pbkdf= --pbkdf-ms=300 --pbkdf-iter= key") {}
 
       std::string group() const override
          {
@@ -391,7 +373,6 @@ class PKCS8_Tool final : public Command
             }
 
          const std::chrono::milliseconds pbkdf_ms(get_arg_sz("pbkdf-ms"));
-         const std::string pbe = pbe_string(get_arg("cipher"), get_arg("pbkdf"));
          const bool der_out = flag_set("der-out");
 
          if(flag_set("pub-out"))
@@ -417,7 +398,14 @@ class PKCS8_Tool final : public Command
                   }
                else
                   {
-                  write_output(Botan::PKCS8::BER_encode(*key, rng(), pass_out, pbkdf_ms, pbe));
+                  if(get_arg("pbkdf-iter").empty())
+                     {
+                     write_output(Botan::PKCS8::BER_encode_encrypted_pbkdf_msec(*key, rng(), pass_out, pbkdf_ms, nullptr, get_arg("cipher"), get_arg("pbkdf")));
+                     }
+                  else
+                     {
+                     write_output(Botan::PKCS8::BER_encode_encrypted_pbkdf_iter(*key, rng(), pass_out, get_arg_sz("pbkdf-iter"), get_arg("cipher"), get_arg("pbkdf")));
+                     }
                   }
                }
             else
@@ -428,7 +416,14 @@ class PKCS8_Tool final : public Command
                   }
                else
                   {
-                  output() << Botan::PKCS8::PEM_encode(*key, rng(), pass_out, pbkdf_ms, pbe);
+                  if(get_arg("pbkdf-iter").empty())
+                     {
+                     output() << Botan::PKCS8::PEM_encode_encrypted_pbkdf_msec(*key, rng(), pass_out, pbkdf_ms, nullptr, get_arg("cipher"), get_arg("pbkdf"));
+                     }
+                  else
+                     {
+                     output() << Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(*key, rng(), pass_out, get_arg_sz("pbkdf-iter"), get_arg("cipher"), get_arg("pbkdf"));
+                     }
                   }
                }
             }
