@@ -77,21 +77,13 @@ inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size)
          ws.get_word_vector().resize(cap_size);
    }
 
-inline word all_zeros(const word x[], size_t len)
-   {
-   word z = 0;
-   for(size_t i = 0; i != len; ++i)
-      z |= x[i];
-   return CT::Mask<word>::is_zero(z).value();
-   }
-
 }
 
 void EC_Point::add_affine(const word x_words[], size_t x_size,
                           const word y_words[], size_t y_size,
                           std::vector<BigInt>& ws_bn)
    {
-   if(all_zeros(x_words, x_size) & all_zeros(y_words, y_size))
+   if((CT::all_zeros(x_words, x_size) & CT::all_zeros(y_words, y_size)).is_set())
       {
       return;
       }
@@ -175,7 +167,7 @@ void EC_Point::add(const word x_words[], size_t x_size,
                    const word z_words[], size_t z_size,
                    std::vector<BigInt>& ws_bn)
    {
-   if(all_zeros(x_words, x_size) & all_zeros(z_words, z_size))
+   if((CT::all_zeros(x_words, x_size) & CT::all_zeros(z_words, z_size)).is_set())
       return;
 
    if(is_zero())
