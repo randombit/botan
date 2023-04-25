@@ -16,6 +16,7 @@
 #include <botan/tls_callbacks.h>
 #include <botan/rng.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/ct_utils.h>
 
 #include <functional>
 #include <iterator>
@@ -106,7 +107,18 @@ class Key_Share_Entry
          BOTAN_ASSERT_NOMSG(m_private_key != nullptr);
          BOTAN_ASSERT_NOMSG(m_group == received.m_group);
 
-         return cb.tls_ephemeral_key_agreement(m_group, *m_private_key, received.m_key_exchange, rng, policy);
+         auto shared_secret = cb.tls_ephemeral_key_agreement(m_group, *m_private_key, received.m_key_exchange, rng, policy);
+
+         // RFC 8422 - 5.11.
+         //   With X25519 and X448, a receiving party MUST check whether the
+         //   computed premaster secret is the all-zero value and abort the
+         //   handshake if so, as described in Section 6 of [RFC7748].
+         if(m_group == Named_Group::X25519 && CT::all_zeros(shared_secret.data(), shared_secret.size()).is_set())
+            {
+            throw TLS_Exception(Alert::DecryptError, "Bad X25519 key exchange");
+            }
+
+         return shared_secret;
          }
 
       void erase()
