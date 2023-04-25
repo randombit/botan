@@ -112,7 +112,7 @@ secure_vector<size_t> binary_matrix::row_reduced_echelon_form()
          failcnt++;
          if(!max)
             {
-            perm.resize(0);
+            perm.clear();
             }
          i--;
          }

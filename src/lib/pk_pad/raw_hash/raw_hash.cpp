@@ -19,7 +19,7 @@ void RawHashFunction::final_result(uint8_t out[])
    {
    if(m_output_length > 0 && m_bits.size() != m_output_length)
       {
-      m_bits.resize(0);
+      m_bits.clear();
       throw Invalid_Argument("Raw padding was configured to use a " +
                              std::to_string(m_output_length) +
                              " byte hash but instead was used for a " +
@@ -27,12 +27,12 @@ void RawHashFunction::final_result(uint8_t out[])
       }
 
    copy_mem(out, m_bits.data(), m_bits.size());
-   m_bits.resize(0);
+   m_bits.clear();
    }
 
 void RawHashFunction::clear()
    {
-   m_bits.resize(0);
+   m_bits.clear();
    }
 
 std::unique_ptr<HashFunction> RawHashFunction::copy_state() const
