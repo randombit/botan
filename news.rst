@@ -1,6 +1,21 @@
 Release Notes
 ========================================
 
+Version 3.0.1, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix bugs related to ``--library-suffix`` option. (GH #3511)
+
+* Improve cli handling of PBKDF configuration (GH #3518)
+
+* Switch to using coveralls.io for coverage report (GH #3512)
+
+* Due to problems that arise if the build directory and source
+  directory are on different filesystems, now hardlinks are only
+  used during the build if explicitly requested. (GH #3504)
+
+* Remove the (undocumented, unsupported) support for CMake (GH #3501)
+
 Version 3.0.0, 2023-04-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
