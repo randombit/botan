@@ -1,5 +1,7 @@
 macro_name MSVC
 
+minimum_supported_version 19.30
+
 binary_name cl
 linker_name link
 

@@ -2,6 +2,8 @@ macro_name GCC
 
 binary_name g++
 
+minimum_supported_version 11.0
+
 lang_flags "-std=c++20 -D_REENTRANT"
 
 # This should only contain flags which are included in GCC 11
