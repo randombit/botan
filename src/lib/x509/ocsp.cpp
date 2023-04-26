@@ -147,9 +147,32 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
          .decode_optional(extensions, ASN1_Type(1),
                           ASN1_Class::ContextSpecific | ASN1_Class::Constructed);
+
+      const bool has_signer = !m_signer_name.empty();
+      const bool has_key_hash = !m_key_hash.empty();
+
+      if(has_signer && has_key_hash)
+         throw Decoding_Error("OCSP response includes both byName and byKey in responderID field");
+      if(!has_signer && !has_key_hash)
+         throw Decoding_Error("OCSP response contains neither byName nor byKey in responderID field");
       }
 
    response_outer.end_cons();
+   }
+
+bool Response::is_issued_by(const X509_Certificate& candidate) const
+   {
+   if(!m_signer_name.empty())
+      {
+      return (candidate.subject_dn() == m_signer_name);
+      }
+
+   if(!m_key_hash.empty())
+      {
+      return (candidate.subject_public_key_bitstring_sha1() == m_key_hash);
+      }
+
+   return false;
    }
 
 Certificate_Status_Code Response::verify_signature(const X509_Certificate& issuer) const
