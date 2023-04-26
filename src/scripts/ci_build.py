@@ -71,13 +71,16 @@ def build_targets(target, target_os):
         yield 'shared'
         yield 'static'
 
-    yield 'cli'
-    yield 'tests'
+    if target not in ['examples']:
+        yield 'cli'
+        yield 'tests'
 
     if target in ['coverage']:
         yield 'bogo_shim'
     if target in ['sanitizer'] and target_os not in ['windows']:
         yield 'bogo_shim'
+    if target in ['examples']:
+        yield 'examples'
 
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                     root_dir, build_dir, test_results_dir, pkcs11_lib, use_gdb,
@@ -91,7 +94,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target_os not in ['linux', 'osx', 'windows', 'freebsd']:
         print('Error unknown OS %s' % (target_os))
-        return (None, None, None, None)
+        return (None, None, None)
 
     if is_cross_target:
         if target_os == 'osx':
@@ -394,7 +397,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         else:
             run_test_command = test_prefix + test_cmd
 
-    return flags, run_test_command, make_prefix, install_prefix
+    return flags, run_test_command, make_prefix
 
 def run_cmd(cmd, root_dir, build_dir):
     """
@@ -614,7 +617,7 @@ def main(args=None):
         if options.test_results_dir:
             os.makedirs(options.test_results_dir)
 
-        config_flags, run_test_command, make_prefix, install_prefix = determine_flags(
+        config_flags, run_test_command, make_prefix = determine_flags(
             target, options.os, options.cpu, options.cc, options.cc_bin,
             options.compiler_cache, root_dir, build_dir, options.test_results_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
@@ -643,6 +646,9 @@ def main(args=None):
 
             if target in ['coverage', 'fuzzers']:
                 make_targets += ['fuzzer_corpus_zip', 'fuzzers']
+
+            if target in ['examples']:
+                make_targets += ['examples']
 
             if target in ['coverage', 'sanitizer'] and options.os not in ['windows']:
                 make_targets += ['bogo_shim']
@@ -698,12 +704,6 @@ def main(args=None):
             build_config = os.path.join(build_dir, 'build', 'build_config.json')
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), build_config])
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_headers.py'), build_config])
-
-        if target in ['examples']:
-            cmds.append(make_cmd + ['install'])
-            cmds.append([options.make_tool, '-C', os.path.join(root_dir, 'src/examples'),
-                         'INCLUDES=-I %s/include/botan-3' % (install_prefix),
-                         'BUILD_DIR_LINK_PATH=-L%s/lib' % (install_prefix)])
 
         if target in ['coverage']:
             if have_prog('coverage'):
