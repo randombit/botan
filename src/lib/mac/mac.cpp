@@ -25,6 +25,11 @@
   #include <botan/hash.h>
 #endif
 
+#if defined(BOTAN_HAS_KMAC)
+   #include <botan/internal/kmac.h>
+   #include <botan/hash.h>
+#endif
+
 #if defined(BOTAN_HAS_POLY1305)
   #include <botan/internal/poly1305.h>
 #endif
@@ -118,6 +123,19 @@ MessageAuthenticationCode::create(std::string_view algo_spec,
       }
 #endif
 
+#if defined(BOTAN_HAS_KMAC)
+   if(req.algo_name() == "KMAC256")
+      {
+      if(provider.empty() || provider == "base")
+         {
+         if(req.arg_count() != 1)
+            {
+            throw Invalid_Argument("invalid algorithm specification for KMAC: need exactly one argument for output bit length");
+            }
+         return std::make_unique<KMAC256>(req.arg_as_integer(0));
+         }
+      }
+#endif
    BOTAN_UNUSED(req);
    BOTAN_UNUSED(provider);
 

@@ -1,0 +1,7 @@
+<defines>
+KECCAK_FIPS -> 20230215
+</defines>
+
+<module_info>
+name -> "Keccak-FIPS"
+</module_info>

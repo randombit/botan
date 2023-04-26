@@ -1,17 +1,17 @@
 /*
-* SHA-3
+* Keccak-FIPS
 * (C) 2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/sha3.h>
+#include <botan/internal/keccak_fips.h>
 
-#include <botan/internal/sha3_round.h>
+#include <botan/internal/keccak_fips_round.h>
 
 namespace Botan {
 
-void SHA_3::permute_bmi2(uint64_t A[25])
+void Keccak_FIPS_generic::permute_bmi2(uint64_t A[25])
    {
    static const uint64_t RC[24] = {
       0x0000000000000001, 0x0000000000008082, 0x800000000000808A,
@@ -28,8 +28,8 @@ void SHA_3::permute_bmi2(uint64_t A[25])
 
    for(size_t i = 0; i != 24; i += 2)
       {
-      SHA3_round(T, A, RC[i+0]);
-      SHA3_round(A, T, RC[i+1]);
+      Keccak_FIPS_round(T, A, RC[i+0]);
+      Keccak_FIPS_round(A, T, RC[i+1]);
       }
    }
 

@@ -170,7 +170,7 @@ PREDEFINED             = BOTAN_HAS_AES_ARMV8 \
                          BOTAN_HAS_SHA2_64_BMI2 \
                          BOTAN_HAS_SHA2_X86 \
                          BOTAN_HAS_SHA2_ARMV8 \
-                         BOTAN_HAS_SHA3_BMI2 \
+                         BOTAN_HAS_KECCAK_FIPS_BMI2 \
                          BOTAN_HAS_SHACAL2_SIMD \
                          BOTAN_HAS_SHACAL2_AVX2 \
                          BOTAN_HAS_SHACAL2_ARMV8 \

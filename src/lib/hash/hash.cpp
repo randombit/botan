@@ -30,6 +30,10 @@
   #include <botan/internal/keccak.h>
 #endif
 
+#if defined(BOTAN_HAS_KECCAK_FIPS)
+  #include <botan/internal/keccak_fips.h>
+#endif
+
 #if defined(BOTAN_HAS_MD4)
   #include <botan/internal/md4.h>
 #endif
@@ -248,6 +252,18 @@ std::unique_ptr<HashFunction> HashFunction::create(std::string_view algo_spec,
    if(req.algo_name() == "Keccak-1600")
       {
       return std::make_unique<Keccak_1600>(req.arg_as_integer(0, 512));
+      }
+#endif
+
+
+#if defined(BOTAN_HAS_KECCAK_FIPS)
+   if(req.algo_name() == "Keccak-FIPS[512]")
+      {
+      return std::make_unique<Keccak_FIPS_512>(req.arg_as_integer(0, 512));
+      }
+   if(req.algo_name() == "Keccak-FIPS[256]")
+      {
+      return std::make_unique<Keccak_FIPS_256>(req.arg_as_integer(0, 512));
       }
 #endif
 

@@ -59,7 +59,7 @@ void SHAKE_Cipher::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length
       in += (m_shake_rate - m_buf_pos);
       out += (m_shake_rate - m_buf_pos);
 
-      SHA_3::permute(m_state.data());
+      Keccak_FIPS_generic::permute(m_state.data());
       copy_out_le(m_buffer.data(), m_shake_rate, m_state.data());
 
       m_buf_pos = 0;
@@ -118,8 +118,8 @@ void SHAKE_Cipher::key_schedule(const uint8_t key[], size_t length)
    m_buffer.resize(m_shake_rate);
    zeroise(m_state);
 
-   const size_t S_pos = SHA_3::absorb(SHAKE_BITRATE, m_state, 0, key, length);
-   SHA_3::finish(SHAKE_BITRATE, m_state, S_pos, 0x1F, 0x80);
+   const size_t S_pos = Keccak_FIPS_generic::absorb(SHAKE_BITRATE, m_state, 0, key, length);
+   Keccak_FIPS_generic::finish(SHAKE_BITRATE, m_state, S_pos, 0xF,4);
    copy_out_le(m_buffer.data(), m_buffer.size(), m_state.data());
    m_buf_pos = 0;
    }
