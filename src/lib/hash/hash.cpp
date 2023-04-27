@@ -255,18 +255,6 @@ std::unique_ptr<HashFunction> HashFunction::create(std::string_view algo_spec,
       }
 #endif
 
-
-#if defined(BOTAN_HAS_KECCAK_FIPS)
-   if(req.algo_name() == "Keccak-FIPS[512]")
-      {
-      return std::make_unique<Keccak_FIPS_512>(req.arg_as_integer(0, 512));
-      }
-   if(req.algo_name() == "Keccak-FIPS[256]")
-      {
-      return std::make_unique<Keccak_FIPS_256>(req.arg_as_integer(0, 512));
-      }
-#endif
-
 #if defined(BOTAN_HAS_SHA3)
    if(req.algo_name() == "SHA-3")
       {
