@@ -13,15 +13,18 @@
 class Callbacks : public Botan::TLS::Callbacks {
 public:
   void tls_emit_data(std::span<const uint8_t> data) override {
+    BOTAN_UNUSED(data);
     // send data to tls server, e.g., using BSD sockets or boost asio
   }
 
   void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) override {
+    BOTAN_UNUSED(seq_no, data);
     // process full TLS record received by tls server, e.g.,
     // by passing it to the application
   }
 
   void tls_alert(Botan::TLS::Alert alert) override {
+    BOTAN_UNUSED(alert);
     // handle a tls alert received from the tls server
   }
 
@@ -68,27 +71,10 @@ class Client_Credentials : public Botan::Credentials_Manager {
 public:
   std::vector<Botan::Certificate_Store *>
   trusted_certificate_authorities(const std::string &type, const std::string &context) override {
+    BOTAN_UNUSED(type, context);
     // return a list of certificates of CAs we trust for tls server certificates,
     // e.g., all the certificates in the local directory "cas"
     return {&m_cert_store};
-  }
-
-  std::vector<Botan::X509_Certificate> cert_chain(const std::vector<std::string> &cert_key_types,
-                                                  const std::vector<Botan::AlgorithmIdentifier> &cert_signature_schemes,
-                                                  const std::string &type,
-                                                  const std::string &context) override {
-    // when using tls client authentication (optional), return
-    // a certificate chain being sent to the tls server,
-    // else an empty list
-    return {};
-  }
-
-  std::shared_ptr<Botan::Private_Key>
-  private_key_for(const Botan::X509_Certificate &cert, const std::string &type,
-                  const std::string &context) override {
-    // when returning a chain in cert_chain(), return the private key
-    // associated with the leaf certificate here
-    return nullptr;
   }
 
 private:

@@ -556,12 +556,13 @@ Botan implements the following encryption algorithms and padding schemes:
 
 Code Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The following Code sample reads a PKCS #8 keypair from the passed location and
 subsequently encrypts a fixed plaintext with the included public key, using OAEP
 with SHA-256. For the sake of completeness, the ciphertext is then decrypted using
 the private key.
 
-.. literalinclude:: /../src/examples/encrypt_with_pkcs8_key.cpp
+.. literalinclude:: /../src/examples/rsa_encrypt.cpp
    :language: cpp
 
 

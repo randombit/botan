@@ -241,6 +241,15 @@ class BuildPaths: # pylint: disable=too-many-instance-attributes
         self.cli_headers = normalize_source_paths(find_headers_in(source_paths.src_dir, 'cli'))
         self.test_sources = normalize_source_paths(find_sources_in(source_paths.src_dir, 'tests'))
 
+        if 'examples' in options.build_targets:
+            self.example_sources = normalize_source_paths(find_sources_in(source_paths.src_dir, 'examples'))
+            self.example_output_dir = os.path.join(self.build_dir, 'examples')
+            self.example_obj_dir = os.path.join(self.build_dir, 'obj', 'examples')
+        else:
+            self.example_sources = None
+            self.example_output_dir = None
+            self.example_obj_dir = None
+
         if options.build_fuzzers:
             self.fuzzer_sources = list(find_sources_in(source_paths.src_dir, 'fuzzer'))
             self.fuzzer_output_dir = os.path.join(self.build_dir, 'fuzzer')
@@ -263,8 +272,9 @@ class BuildPaths: # pylint: disable=too-many-instance-attributes
         if self.doc_output_dir_doxygen:
             out += [self.doc_output_dir_doxygen, self.doc_module_info]
         if self.fuzzer_output_dir:
-            out += [self.fuzzobj_dir]
-            out += [self.fuzzer_output_dir]
+            out += [self.fuzzobj_dir, self.fuzzer_output_dir]
+        if self.example_output_dir:
+            out += [self.example_obj_dir, self.example_output_dir]
         return out
 
     def format_include_paths(self, cc, external_includes):
@@ -286,9 +296,11 @@ class BuildPaths: # pylint: disable=too-many-instance-attributes
             return (self.test_sources, self.testobj_dir)
         if typ == 'fuzzer':
             return (self.fuzzer_sources, self.fuzzobj_dir)
+        if typ == 'examples':
+            return (self.example_sources, self.example_obj_dir)
         raise InternalError("Unknown src info type '%s'" % (typ))
 
-ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim"]
+ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim", "examples"]
 
 def process_command_line(args): # pylint: disable=too-many-locals,too-many-statements
     """
@@ -1884,9 +1896,13 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
                 'isa_flags': _isa_specific_flags(src)
                 }
 
-            if target_type == 'fuzzer':
-                fuzz_basename = os.path.basename(obj_file).replace('.' + osinfo.obj_suffix, '')
-                info['exe'] = os.path.join(build_paths.fuzzer_output_dir, fuzz_basename)
+            if target_type in ['fuzzer', 'examples']:
+                exe_basename = os.path.basename(obj_file).replace('.' + osinfo.obj_suffix, '')
+
+                if target_type == 'fuzzer':
+                    info['exe'] = os.path.join(build_paths.fuzzer_output_dir, exe_basename)
+                else:
+                    info['exe'] = os.path.join(build_paths.example_output_dir, exe_basename)
 
             output.append(info)
 
@@ -1894,11 +1910,13 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
     out = {}
 
-    targets = ['lib', 'cli', 'test', 'fuzzer']
+    targets = ['lib', 'cli', 'test', 'fuzzer', 'examples']
 
     out['isa_build_info'] = []
 
     fuzzer_bin = []
+    example_bin = []
+
     for t in targets:
         src_list, src_dir = build_paths.src_info(t)
 
@@ -1920,12 +1938,15 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
             if t == 'fuzzer':
                 fuzzer_bin = [b['exe'] for b in build_info]
+            elif t == 'examples':
+                example_bin = [b['exe'] for b in build_info]
 
         out[src_key] = src_list if src_list else []
         out[obj_key] = objects
         out[build_key] = build_info
 
     out['fuzzer_bin'] = ' '.join(fuzzer_bin)
+    out['example_bin'] = ' '.join(example_bin)
     out['cli_headers'] = build_paths.cli_headers
 
     return out
@@ -2019,6 +2040,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             yield 'fuzzers'
         if 'bogo_shim' in options.build_targets:
             yield 'bogo_shim'
+        if 'examples' in options.build_targets:
+            yield 'examples'
 
     def install_targets(options):
         yield 'libs'
@@ -2132,6 +2155,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'build_shared_lib': options.build_shared_lib,
 
         'build_fuzzers': options.build_fuzzers,
+        'build_examples': 'examples' in options.build_targets,
 
         'build_coverage' : options.with_coverage_info or options.with_coverage,
 

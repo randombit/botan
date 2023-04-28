@@ -95,6 +95,14 @@ fuzzer_corpus_zip: fuzzer_corpus
 
 %{endif}
 
+%{if build_examples}
+
+EXAMPLES = %{example_bin}
+
+examples: $(LIBRARIES) $(EXAMPLES)
+
+%{endif}
+
 %{if build_bogo_shim}
 
 bogo_shim: %{out_dir}/botan_bogo_shim
@@ -142,6 +150,14 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 %{endfor}
 
 %{for fuzzer_build_info}
+%{obj}: %{src}
+	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+
+%{exe}: %{obj} $(LIBRARIES)
+	$(EXE_LINK_CMD) $(ABI_FLAGS) %{obj} $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
+%{endfor}
+
+%{for examples_build_info}
 %{obj}: %{src}
 	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 
