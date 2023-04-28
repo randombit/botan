@@ -92,7 +92,7 @@ char lookup_base64_char(uint8_t x)
    {
    BOTAN_DEBUG_ASSERT(x < 64);
 
-   const auto in_az = CT::Mask<uint8_t>::is_within_range(x, 26, 51);
+   const auto in_AZ = CT::Mask<uint8_t>::is_lt(x, 26);
    const auto in_09 = CT::Mask<uint8_t>::is_within_range(x, 52, 61);
    const auto eq_plus = CT::Mask<uint8_t>::is_equal(x, 62);
    const auto eq_slash = CT::Mask<uint8_t>::is_equal(x, 63);
@@ -103,8 +103,8 @@ char lookup_base64_char(uint8_t x)
    const char c_plus = '+';
    const char c_slash = '/';
 
-   char ret = c_AZ;
-   ret = in_az.select(c_az, ret);
+   char ret = c_az;
+   ret = in_AZ.select(c_AZ, ret);
    ret = in_09.select(c_09, ret);
    ret = eq_plus.select(c_plus, ret);
    ret = eq_slash.select(c_slash, ret);
