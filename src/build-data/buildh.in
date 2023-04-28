@@ -89,6 +89,10 @@
 
 #define BOTAN_BUILD_COMPILER_IS_%{cc_macro}
 
+%{if cxx_supports_gcc_inline_asm}
+#define BOTAN_USE_GCC_INLINE_ASM
+%{endif}
+
 %{for sanitizer_types}
 #define BOTAN_HAS_SANITIZER_%{i|upper}
 %{endfor}

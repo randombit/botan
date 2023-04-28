@@ -12,15 +12,6 @@
 #ifndef BOTAN_UTIL_COMPILER_FLAGS_H_
 #define BOTAN_UTIL_COMPILER_FLAGS_H_
 
-/* Should we use GCC-style inline assembler? */
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || \
-   defined(BOTAN_BUILD_COMPILER_IS_CLANG) || \
-   defined(BOTAN_BUILD_COMPILER_IS_XLC) || \
-   defined(BOTAN_BUILD_COMPILER_IS_SUN_STUDIO)
-
-  #define BOTAN_USE_GCC_INLINE_ASM
-#endif
-
 /**
 * Used to annotate API exports which are public and supported.
 * These APIs will not be broken/removed unless strictly required for

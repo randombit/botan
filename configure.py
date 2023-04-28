@@ -1223,6 +1223,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'ar_options': '',
                 'ar_output_to': '',
                 'werror_flags': '',
+                'supports_gcc_inline_asm': 'no',
             })
 
         self.add_framework_option = lex.add_framework_option
@@ -1261,6 +1262,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.size_optimization_flags = lex.size_optimization_flags
         self.so_link_commands = lex.so_link_commands
         self.stack_protector_flags = lex.stack_protector_flags
+        self.supports_gcc_inline_asm = lex.supports_gcc_inline_asm == 'yes'
         self.visibility_attribute = lex.visibility_attribute
         self.visibility_build_flags = lex.visibility_build_flags
         self.warning_flags = lex.warning_flags
@@ -2164,6 +2166,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
         'linker': cc.linker_name or choose_cxx_exe(),
         'make_supports_phony': osinfo.basename != 'windows',
+
+        'cxx_supports_gcc_inline_asm': cc.supports_gcc_inline_asm,
 
         'sanitizer_types' : sorted(cc.sanitizer_types),
 
