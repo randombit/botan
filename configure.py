@@ -1194,6 +1194,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'binary_name': None,
                 'linker_name': None,
                 'macro_name': None,
+                'minimum_supported_version': None,
                 'output_to_object': '-o ',
                 'output_to_exe': '-o ',
                 'add_include_dir_option': '-I',
@@ -1264,6 +1265,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.visibility_build_flags = lex.visibility_build_flags
         self.warning_flags = lex.warning_flags
         self.werror_flags = lex.werror_flags
+        self.minimum_supported_version = lex.minimum_supported_version
 
     def cross_check(self, os_info, arch_info, all_isas):
 
@@ -3186,8 +3188,10 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
 
     unknown_pattern = r'UNKNOWN 0 0'
 
-    if ccinfo.basename not in version_patterns:
-        logging.info("No compiler version detection available for %s", ccinfo.basename)
+    cxx = ccinfo.basename
+
+    if cxx not in version_patterns:
+        logging.info("No compiler version detection available for %s", cxx)
         return "0.0"
 
     detect_version_source = os.path.join(source_paths.build_data_dir, "detect_version.cpp")
@@ -3195,19 +3199,28 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
     cc_output = run_compiler_preproc(options, ccinfo, detect_version_source, "0.0")
 
     if re.search(unknown_pattern, cc_output) is not None:
-        logging.warning('Failed to get version for %s from macro check', ccinfo.basename)
+        logging.warning('Failed to get version for %s from macro check', cxx)
         return "0.0"
 
-    match = re.search(version_patterns[ccinfo.basename], cc_output, flags=re.MULTILINE)
+    match = re.search(version_patterns[cxx], cc_output, flags=re.MULTILINE)
     if match is None:
         logging.warning("Tried to get %s version, but output '%s' is unexpected",
-                        ccinfo.basename, cc_output)
+                        cxx, cc_output)
         return "0.0"
 
     major_version = int(match.group(1), 0)
     minor_version = int(match.group(2), 0)
     cc_version = "%d.%d" % (major_version, minor_version)
-    logging.info('Auto-detected compiler version %s', cc_version)
+    logging.info('Auto-detected compiler version %s %s', cxx, cc_version)
+
+    if ccinfo.minimum_supported_version:
+        # compare as floats
+        min_ver = float(ccinfo.minimum_supported_version)
+        our_ver = float(cc_version)
+
+        if our_ver < min_ver:
+            logging.error("This version of Botan requires at least %s %s",
+                          cxx, ccinfo.minimum_supported_version)
 
     return cc_version
 

@@ -35,24 +35,28 @@
 
    Wikipedia has a mapping table from Apple Clang version to underlying
    LLVM version: https://en.wikipedia.org/wiki/Xcode
+
+   We omit any mapping logic for versions before XCode 13 since we no longer
+   support those versions. The only reason to detect them is so we can tell that
+   the version of Clang is too old and stop configuration immediately.
    */
 
-   #if __clang_major__ == 11 && __clang_minor__ >= 4
-     CLANG 9 0
-   #elif __clang_major__ == 12
-      #if __clang_minor__ < 5
-         CLANG 10 0
-      #else
-         CLANG 11 0
-      #endif
+   #if __clang_major__ < 13
+      CLANG __clang_major__ 0
    #elif __clang_major__ == 13
       #if __clang_minor__ < 3
          CLANG 12 0
       #else
          CLANG 13 0
       #endif
-   #elif __clang_major__ >= 14
-     CLANG 14 0
+   #elif __clang_major__ == 14
+      #if __clang_minor__ < 3
+         CLANG 14 0
+      #else
+         CLANG 15 0
+      #endif
+   #elif __clang_major__ >= 15
+      CLANG 15 0
    #endif
 
 #elif defined(__clang__)
