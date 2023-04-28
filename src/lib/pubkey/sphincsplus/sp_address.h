@@ -23,6 +23,8 @@ enum class Sphincs_Address_Type : uint32_t
       HashTree = 2,
       ForsTree = 3,
       ForsTreeRootsCompression = 4,
+      WotsKeyGeneration = 5,
+      ForsKeyGeneration = 6
    };
 
 

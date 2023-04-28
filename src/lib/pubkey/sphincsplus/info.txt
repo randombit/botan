@@ -15,6 +15,7 @@ sp_parameters.h
 sp_fors.h
 sp_address.h
 sp_hash.h
+sp_types.h
 </header:internal>
 
 <requires>
