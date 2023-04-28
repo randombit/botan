@@ -9,6 +9,8 @@ lang_flags "-std=c++20"
 warning_flags "-w1"
 shared_flags "-fPIC"
 
+supports_gcc_inline_asm yes
+
 <isa_flags>
 sse2    -> "-msse2"
 ssse3   -> "-mssse3"

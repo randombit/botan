@@ -9,6 +9,8 @@ lang_flags "-std=c++20"
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
 
+supports_gcc_inline_asm yes
+
 <isa_flags>
 altivec -> "-qaltivec"
 </isa_flags>
