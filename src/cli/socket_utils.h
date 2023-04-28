@@ -8,7 +8,7 @@
 #ifndef BOTAN_CLI_SOCKET_UTILS_H_
 #define BOTAN_CLI_SOCKET_UTILS_H_
 
-#include <botan/build.h>
+#include <botan/types.h>
 #include "cli_exceptions.h"
 
 #if defined(BOTAN_TARGET_OS_HAS_WINSOCK2)

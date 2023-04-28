@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include <botan/build.h>
+#include <botan/types.h>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 

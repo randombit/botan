@@ -5,12 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-/* This header is included in both C++ and C (via ffi.h) and should only
-   contain macro definitions. Avoid C++ style // comments in this file.
-*/
-
 #ifndef BOTAN_UTIL_COMPILER_FLAGS_H_
 #define BOTAN_UTIL_COMPILER_FLAGS_H_
+
+#include <botan/build.h>
 
 /* Should we use GCC-style inline assembler? */
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC) || \
@@ -117,13 +115,7 @@
 */
 #if !defined(BOTAN_NO_DEPRECATED_WARNINGS) && !defined(BOTAN_AMALGAMATION_H_)
 
-  #if defined(__cplusplus)
-    #define BOTAN_DEPRECATED(msg) [[deprecated(msg)]]
-  #elif BOTAN_COMPILER_HAS_ATTRIBUTE(deprecated)
-    #define BOTAN_DEPRECATED(msg) BOTAN_COMPILER_ATTRIBUTE(deprecated(msg))
-  #elif defined(_MSC_VER)
-    #define BOTAN_DEPRECATED(msg) __declspec(deprecated(msg))
-  #endif
+  #define BOTAN_DEPRECATED(msg) [[deprecated(msg)]]
 
   #if !defined(BOTAN_IS_BEING_BUILT)
     #if defined(__clang__)

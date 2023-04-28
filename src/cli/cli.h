@@ -7,7 +7,7 @@
 #ifndef BOTAN_CLI_H_
 #define BOTAN_CLI_H_
 
-#include <botan/build.h>
+#include <botan/types.h>
 #include <functional>
 #include <ostream>
 #include <optional>
