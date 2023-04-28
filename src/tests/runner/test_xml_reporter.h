@@ -8,7 +8,7 @@
 #ifndef BOTAN_TEST_XML_REPORTER_H_
 #define BOTAN_TEST_XML_REPORTER_H_
 
-#include <botan/build.h>
+#include <botan/types.h>
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 #include "test_reporter.h"

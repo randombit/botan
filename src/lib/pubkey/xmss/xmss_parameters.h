@@ -11,7 +11,7 @@
 #include <string>
 #include <map>
 
-#include <botan/build.h>
+#include <botan/types.h>
 #include <botan/secmem.h>
 
 namespace Botan {

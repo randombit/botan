@@ -8,7 +8,7 @@
 #ifndef BOTAN_TESTS_H_
 #define BOTAN_TESTS_H_
 
-#include <botan/build.h>
+#include <botan/types.h>
 #include <botan/rng.h>
 #include <botan/hex.h>
 #include <botan/symkey.h>

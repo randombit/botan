@@ -236,6 +236,4 @@
     #error "Trying to compile Botan configured as x86_32 with non-x86_32 compiler."
 #endif
 
-#include <botan/compiler.h>
-
 #endif

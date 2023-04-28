@@ -10,7 +10,7 @@
 #ifndef BOTAN_SERPENT_FUNCS_H_
 #define BOTAN_SERPENT_FUNCS_H_
 
-#include <botan/build.h>
+#include <botan/types.h>
 
 namespace Botan::Serpent_F {
 

@@ -7,7 +7,7 @@
 #ifndef BOTAN_BASE58_CODEC_H_
 #define BOTAN_BASE58_CODEC_H_
 
-#include <botan/build.h>
+#include <botan/types.h>
 
 #include <span>
 #include <string>

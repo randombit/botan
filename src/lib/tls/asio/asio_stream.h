@@ -9,7 +9,7 @@
 #ifndef BOTAN_ASIO_STREAM_H_
 #define BOTAN_ASIO_STREAM_H_
 
-#include <botan/build.h>
+#include <botan/types.h>
 
 // first version to be compatible with Networking TS (N4656) and boost::beast
 #include <boost/version.hpp>

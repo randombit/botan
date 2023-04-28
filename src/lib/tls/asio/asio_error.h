@@ -9,7 +9,7 @@
 #ifndef BOTAN_ASIO_ERROR_H_
 #define BOTAN_ASIO_ERROR_H_
 
-#include <botan/build.h>
+#include <botan/types.h>
 
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600

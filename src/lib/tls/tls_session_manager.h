@@ -9,7 +9,7 @@
 #ifndef BOTAN_TLS_SESSION_MANAGER_H_
 #define BOTAN_TLS_SESSION_MANAGER_H_
 
-#include <botan/build.h>
+#include <botan/types.h>
 #include <botan/tls_session.h>
 #include <botan/mutex.h>
 

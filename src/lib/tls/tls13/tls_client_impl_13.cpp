@@ -15,7 +15,7 @@
 #include <botan/internal/tls_cipher_state.h>
 #include <botan/tls_client.h>
 #include <botan/tls_messages.h>
-#include <botan/build.h>
+#include <botan/types.h>
 
 #include <iterator>
 #include <utility>
