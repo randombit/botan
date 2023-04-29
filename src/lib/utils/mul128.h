@@ -12,11 +12,6 @@
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
   #include <intrin.h>
-  #if defined(_M_ARM64)
-  #pragma intrinsic(__umulh)
-  #else
-  #pragma intrinsic(_umul128)
-  #endif
 #endif
 
 namespace Botan {
@@ -24,12 +19,8 @@ namespace Botan {
 #if defined(__SIZEOF_INT128__) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
    #define BOTAN_TARGET_HAS_NATIVE_UINT128
 
-   // Prefer TI mode over __int128 as GCC rejects the latter in pendantic mode
-   #if defined(__GNUG__)
-     typedef unsigned int uint128_t __attribute__((mode(TI)));
-   #else
-     typedef unsigned __int128 uint128_t;
-   #endif
+   // GCC complains if this isn't marked with __extension__
+   __extension__ typedef unsigned __int128 uint128_t;
 #endif
 
 /**
@@ -43,13 +34,12 @@ inline void mul64x64_128(uint64_t a, uint64_t b, uint64_t* lo, uint64_t* hi)
    *hi = (r >> 64) & 0xFFFFFFFFFFFFFFFF;
    *lo = (r      ) & 0xFFFFFFFFFFFFFFFF;
 
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
-    #if defined(_M_ARM64)
+#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
+    *lo = _umul128(a, b, hi);
+
+#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
     *lo = a * b;
     *hi = __umulh(a, b);
-    #else
-    *lo = _umul128(a, b, hi);
-    #endif
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
    asm("mulq %3"
