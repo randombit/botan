@@ -23,3 +23,8 @@ library. The variables and their behavior are described here.
   will print the text message of the exception to stderr. This is primarily
   intended for debugging.
 
+* ``BOTAN_CLEAR_CPUID``: this variable can be set to a comma-separated list of
+  CPUID fields to ignore. For example setting ``BOTAN_CLEAR_CPUID=avx2,avx512``
+  will cause AVX2 and AVX-512 codepaths to be avoided. Note that disabling basic
+  features (notably NEON or SSE2/SSSE3) can cause other higher level features
+  like AES-NI to also become disabled.
