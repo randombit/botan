@@ -19,7 +19,7 @@ Under ``src`` there are directories
 * ``scripts`` contains misc scripts: install, distribution, various
   codegen things. Scripts controlling CI go under ``scripts/ci``.
 * ``configs`` contains configuration files for emacs, astyle, pylint, etc
-* ``python/botan2.py`` is the Python ctypes wrapper
+* ``python/botan3.py`` is the Python ctypes wrapper
 
 Under ``doc`` one finds the sources of this documentation
 
@@ -98,7 +98,7 @@ FFI Additions
 ----------------
 
 If adding a new function declaration to ``ffi.h``, the same PR must
-also add the same declaration in the Python binding ``botan2.py``, in
+also add the same declaration in the Python binding ``botan3.py``, in
 addition the new API functionality must be exposed to Python and a
 test written in Python.
 
@@ -129,7 +129,7 @@ for 3.x, and not requiring huge blocks of version dependent code). As running
 this program successfully is required for a working build, making it as portable
 as possible is considered key.
 
-The python wrapper botan2.py targets CPython 3.x, and latest PyPy. Note that
+The python wrapper botan3.py targets CPython 3.x, and latest PyPy. Note that
 a single file is used to avoid dealing with any of Python's various crazy module
 distribution issues.
 

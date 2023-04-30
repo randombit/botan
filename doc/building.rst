@@ -527,7 +527,7 @@ Building the Python wrappers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Python wrappers for Botan use ctypes and the C89 API so no special
-build step is required, just import botan2.py
+build step is required, just import botan3.py
 
 See :doc:`Python Bindings <api_ref/python>` for more information about
 the Python bindings.
@@ -889,7 +889,7 @@ Skip installing Python module.
 ``--with-python-versions=N.M``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Where to install botan2.py. By default this is chosen to be the
+Where to install botan3.py. By default this is chosen to be the
 version of Python that is running ``configure.py``.
 
 ``--with-valgrind``
