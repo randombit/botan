@@ -11,7 +11,7 @@
 #include <botan/internal/rotate.h>
 #include <botan/internal/serpent_sbox.h>
 
-#if defined(BOTAN_HAS_SERPENT_SIMD) || defined(BOTAN_HAS_SERPENT_AVX2)
+#if defined(BOTAN_HAS_SERPENT_SIMD) || defined(BOTAN_HAS_SERPENT_AVX2) || defined(BOTAN_HAS_SERPENT_AVX512)
   #include <botan/internal/cpuid.h>
 #endif
 
@@ -25,6 +25,19 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    using namespace Botan::Serpent_F;
 
    assert_key_material_set();
+
+#if defined(BOTAN_HAS_SERPENT_AVX512)
+   if(CPUID::has_avx512())
+      {
+      while(blocks >= 16)
+         {
+         avx512_encrypt_16(in, out);
+         in += 16 * BLOCK_SIZE;
+         out += 16 * BLOCK_SIZE;
+         blocks -= 16;
+         }
+      }
+#endif
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
    if(CPUID::has_avx2())
@@ -104,6 +117,19 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    using namespace Botan::Serpent_F;
 
    assert_key_material_set();
+
+#if defined(BOTAN_HAS_SERPENT_AVX512)
+   if(CPUID::has_avx512())
+      {
+      while(blocks >= 16)
+         {
+         avx512_decrypt_16(in, out);
+         in += 16 * BLOCK_SIZE;
+         out += 16 * BLOCK_SIZE;
+         blocks -= 16;
+         }
+      }
+#endif
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
    if(CPUID::has_avx2())
@@ -252,6 +278,13 @@ void Serpent::clear()
 
 std::string Serpent::provider() const
    {
+#if defined(BOTAN_HAS_SERPENT_AVX512)
+   if(CPUID::has_avx512())
+      {
+      return "avx512";
+      }
+#endif
+
 #if defined(BOTAN_HAS_SERPENT_AVX2)
    if(CPUID::has_avx2())
       {

@@ -11,6 +11,7 @@
 #define BOTAN_SERPENT_FUNCS_H_
 
 #include <botan/types.h>
+#include <botan/internal/rotate.h>
 
 namespace Botan::Serpent_F {
 

@@ -33,13 +33,18 @@ class Serpent final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
    private:
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
-      void simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const;
-      void simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const;
+      void simd_encrypt_4(const uint8_t in[16*4], uint8_t out[16*4]) const;
+      void simd_decrypt_4(const uint8_t in[16*4], uint8_t out[16*4]) const;
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
-      void avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const;
-      void avx2_decrypt_8(const uint8_t in[128], uint8_t out[128]) const;
+      void avx2_encrypt_8(const uint8_t in[16*8], uint8_t out[16*8]) const;
+      void avx2_decrypt_8(const uint8_t in[16*8], uint8_t out[16*8]) const;
+#endif
+
+#if defined(BOTAN_HAS_SERPENT_AVX512)
+      void avx512_encrypt_16(const uint8_t in[16*16], uint8_t out[16*16]) const;
+      void avx512_decrypt_16(const uint8_t in[16*16], uint8_t out[16*16]) const;
 #endif
 
       void key_schedule(const uint8_t key[], size_t length) override;
