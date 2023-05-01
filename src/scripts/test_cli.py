@@ -22,6 +22,7 @@ import ssl
 import subprocess
 import sys
 import tempfile
+import traceback
 import threading
 import time
 from multiprocessing.pool import ThreadPool
@@ -64,7 +65,14 @@ def setup_logging(options):
 def random_port_number():
     return random.randint(1024, 65535)
 
-def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_stderr=None, use_drbg=True):
+
+def test_cli(cmd, cmd_options,
+             expected_output=None,
+             cmd_input=None,
+             expected_stderr=None,
+             use_drbg=True,
+             extra_env=None):
+    # pylint: disable=too-many-locals
     global TESTS_RUN
 
     TESTS_RUN += 1
@@ -90,7 +98,13 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_st
     stderr = None
 
     if cmd_input is None:
-        proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc_env = None
+        if extra_env:
+            proc_env = os.environ
+            for (k,v) in extra_env.items():
+                proc_env[k] = v
+
+        proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=proc_env)
         (stdout, stderr) = proc.communicate()
     else:
         proc = subprocess.Popen(cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -769,6 +783,16 @@ def cli_cpuid_tests(_tmp_dir):
         if flag != '' and flag_re.match(flag) is None:
             logging.error('Unexpected CPUID flag name "%s"', flag)
 
+        env = {'BOTAN_CLEAR_CPUID': flag}
+        cpuid_output = test_cli("cpuid", [], None, None, None, True, env)
+        mod_flags = cpuid_output[13:].split(' ')
+
+        for f in mod_flags:
+            if f == flag:
+                logging.error('Clearing CPUID %s did not disable it', flag)
+            if f not in flags:
+                logging.error('Clearing CPUID %s caused flag %s to appear', flag, f)
+
 def cli_cc_enc_tests(_tmp_dir):
     test_cli("cc_encrypt", ["8028028028028029", "pass"], "4308989841607208")
     test_cli("cc_decrypt", ["4308989841607208", "pass"], "8028028028028027")
@@ -1367,6 +1391,7 @@ def run_test(fn_name, fn):
     try:
         fn(tmp_dir)
     except Exception as e: # pylint: disable=broad-except
+        logging.info(traceback.format_exc())
         logging.error("Test %s threw exception: %s", fn_name, e)
 
     shutil.rmtree(tmp_dir)

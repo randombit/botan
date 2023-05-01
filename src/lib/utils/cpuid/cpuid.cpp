@@ -144,6 +144,19 @@ CPUID::CPUID_Data::CPUID_Data()
 
    if(runtime_check_if_big_endian())
       m_processor_features |= CPUID::CPUID_IS_BIG_ENDIAN_BIT;
+
+   std::string clear_cpuid_env;
+   if(OS::read_env_variable(clear_cpuid_env, "BOTAN_CLEAR_CPUID"))
+      {
+      for(const auto& cpuid : split_on(clear_cpuid_env, ','))
+         {
+         for(auto& bit: CPUID::bit_from_string(cpuid))
+            {
+            const uint32_t cleared = ~static_cast<uint32_t>(bit);
+            m_processor_features &= cleared;
+            }
+         }
+      }
    }
 
 std::vector<CPUID::CPUID_bits>
