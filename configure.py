@@ -1813,7 +1813,13 @@ def process_template_string(template_text, variables, template_source):
                     output += lines[idx] + "\n"
                 idx += 1
 
-            return self.join_pattern.sub(insert_join, self.value_pattern.sub(insert_value, output)) + '\n'
+            output = self.join_pattern.sub(insert_join, self.value_pattern.sub(insert_value, output))
+
+            # Prevent newlines being added if the template was not a multiline string
+            if len(lines) == 1 and not template.endswith('\n'):
+                return output.rstrip('\n')
+
+            return output
 
     try:
         return SimpleTemplate(variables).substitute(template_text)
@@ -2064,7 +2070,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         if options.compiler_cache is None:
             return cxx
         else:
-            return '%s %s' % (options.compiler_cache, cxx)
+            return '%s %s' % (normalize_source_path(options.compiler_cache), cxx)
 
     def extra_libs(libs, cc):
         if libs is None:
@@ -2102,7 +2108,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'internal_headers': sorted([os.path.basename(h) for h in build_paths.internal_headers]),
         'external_headers':  sorted([os.path.basename(h) for h in build_paths.external_headers]),
 
-        'abs_root_dir': os.path.dirname(os.path.realpath(__file__)),
+        'abs_root_dir': normalize_source_path(os.path.dirname(os.path.realpath(__file__))),
 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
