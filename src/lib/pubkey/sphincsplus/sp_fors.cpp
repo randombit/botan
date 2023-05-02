@@ -12,7 +12,6 @@
 #include <botan/sp_parameters.h>
 #include <botan/internal/sp_address.h>
 #include <botan/internal/sp_fors.h>
-#include <botan/internal/thread_pool.h>
 #include <botan/internal/mgf1.h>
 
 #include <botan/hash.h>

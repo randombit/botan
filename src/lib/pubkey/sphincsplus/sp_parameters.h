@@ -45,7 +45,7 @@ class Sphincs_Parameters
    public:
       static Sphincs_Parameters create(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash)
          {
-         // See "Table 3" in SPHINCS+ specification (NIST R3 submission, page 36)
+         // See "Table 3" in SPHINCS+ specification (NIST R3.1 submission, page 39)
          switch(set)
             {
             case Sphincs_Parameter_Set::Sphincs128Small:
