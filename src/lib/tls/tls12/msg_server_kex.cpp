@@ -71,7 +71,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          throw TLS_Exception(Alert::HandshakeFailure,
                "Could not agree on a DH group with the client");
 
-      BOTAN_ASSERT(group_param_is_dh(m_shared_group.value()), "DH groups for the DH ciphersuites god");
+      BOTAN_ASSERT(group_param_is_dh(m_shared_group.value()), "DH ciphersuite is using a finite field group");
 
       // Note: TLS 1.2 allows defining and using arbitrary DH groups (additional
       //       to the named and standardized ones). This API doesn't allow the
