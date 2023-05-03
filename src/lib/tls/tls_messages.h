@@ -873,6 +873,12 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
       // Only valid for certain kex types
       const PK_Key_Agreement_Key& server_kex_key() const;
 
+      /**
+       * @returns the agreed upon KEX group or std::nullopt if the KEX type does
+       *          not depend on a group
+       */
+      const std::optional<Group_Params>& shared_group() const { return m_shared_group; }
+
       Server_Key_Exchange(Handshake_IO& io,
                           Handshake_State& state,
                           const Policy& policy,
@@ -889,6 +895,7 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
       std::vector<uint8_t> serialize() const override;
 
       std::unique_ptr<PK_Key_Agreement_Key> m_kex_key;
+      std::optional<Group_Params> m_shared_group;
 
       std::vector<uint8_t> m_params;
 

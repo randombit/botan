@@ -51,7 +51,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       {
       const std::vector<Group_Params> dh_groups = state.client_hello()->supported_dh_groups();
 
-      Group_Params shared_group = Group_Params::NONE;
+      m_shared_group = Group_Params::NONE;
 
       /*
       If the client does not send any DH groups in the supported groups
@@ -60,20 +60,20 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       if(dh_groups.empty())
          {
-         shared_group = policy.default_dh_group();
+         m_shared_group = policy.default_dh_group();
          }
       else
          {
-         shared_group = policy.choose_key_exchange_group(dh_groups, {});
+         m_shared_group = policy.choose_key_exchange_group(dh_groups, {});
          }
 
-      if(shared_group == Group_Params::NONE)
+      if(m_shared_group.value() == Group_Params::NONE)
          throw TLS_Exception(Alert::HandshakeFailure,
                "Could not agree on a DH group with the client");
 
-      BOTAN_ASSERT(group_param_is_dh(shared_group), "DH groups for the DH ciphersuites god");
+      BOTAN_ASSERT(group_param_is_dh(m_shared_group.value()), "DH groups for the DH ciphersuites god");
 
-      m_kex_key = state.callbacks().tls_generate_ephemeral_key(shared_group, rng);
+      m_kex_key = state.callbacks().tls_generate_ephemeral_key(m_shared_group.value(), rng);
       auto dh = dynamic_cast<DH_PrivateKey*>(m_kex_key.get());
       if(!dh)
          {
@@ -91,16 +91,16 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       if(ec_groups.empty())
          throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
 
-      Group_Params shared_group = policy.choose_key_exchange_group(ec_groups, {});
+      m_shared_group = policy.choose_key_exchange_group(ec_groups, {});
 
-      if(shared_group == Group_Params::NONE)
+      if(m_shared_group.value() == Group_Params::NONE)
          throw TLS_Exception(Alert::HandshakeFailure, "No shared ECC group with client");
 
       std::vector<uint8_t> ecdh_public_val;
 
-      if(shared_group == Group_Params::X25519)
+      if(m_shared_group.value() == Group_Params::X25519)
          {
-         m_kex_key = state.callbacks().tls_generate_ephemeral_key(shared_group, rng);
+         m_kex_key = state.callbacks().tls_generate_ephemeral_key(m_shared_group.value(), rng);
          if(!m_kex_key)
             {
             throw TLS_Exception(Alert::InternalError,
@@ -110,7 +110,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          }
       else
          {
-         m_kex_key = state.callbacks().tls_generate_ephemeral_key(shared_group, rng);
+         m_kex_key = state.callbacks().tls_generate_ephemeral_key(m_shared_group.value(), rng);
          auto ecdh = dynamic_cast<ECDH_PrivateKey*>(m_kex_key.get());
          if(!ecdh)
             {
@@ -123,7 +123,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
             EC_Point_Format::Compressed : EC_Point_Format::Uncompressed);
          }
 
-      const uint16_t named_curve_id = static_cast<uint16_t>(shared_group);
+      const uint16_t named_curve_id = static_cast<uint16_t>(m_shared_group.value());
       m_params.push_back(3); // named curve
       m_params.push_back(get_byte<0>(named_curve_id));
       m_params.push_back(get_byte<1>(named_curve_id));
