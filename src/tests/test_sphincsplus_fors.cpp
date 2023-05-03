@@ -68,9 +68,13 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test
          const auto sig_ref = Botan::ForsSignature(vars.get_req_bin("Signature"));
          result.test_is_eq("Signature result", sig, sig_ref);
 
-
-         // TODO: validate that fors_public_key_from_signature results in the same
-         //       public key.
+         auto pk_from_sig = Botan::fors_public_key_from_signature(vars.get_req_bin("Msg"),
+                                                                                 sig_ref,
+                                                                                 public_seed,
+                                                                                 address,
+                                                                                 params,
+                                                                                 hashes);
+         result.test_is_eq("Public key from signature", pk_from_sig, pk_ref);
 
          return result;
          }
