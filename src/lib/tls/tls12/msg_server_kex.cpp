@@ -258,7 +258,7 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
 #endif
    }
 
-const Private_Key& Server_Key_Exchange::server_kex_key() const
+const PK_Key_Agreement_Key& Server_Key_Exchange::server_kex_key() const
    {
    BOTAN_ASSERT_NONNULL(m_kex_key);
    return *m_kex_key;

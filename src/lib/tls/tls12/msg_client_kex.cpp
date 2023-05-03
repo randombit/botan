@@ -289,18 +289,11 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
               kex_algo == Kex_Algo::ECDH ||
               kex_algo == Kex_Algo::ECDHE_PSK)
          {
-         const Private_Key& private_key = state.server_kex()->server_kex_key();
-
-         const PK_Key_Agreement_Key* ka_key =
-            dynamic_cast<const PK_Key_Agreement_Key*>(&private_key);
-
-         if(!ka_key)
-            throw Internal_Error("Expected key agreement key type but got " +
-                                 private_key.algo_name());
+         const PK_Key_Agreement_Key& ka_key = state.server_kex()->server_kex_key();
 
          std::vector<uint8_t> client_pubkey;
 
-         if(ka_key->algo_name() == "DH")
+         if(ka_key.algo_name() == "DH")
             {
             client_pubkey = reader.get_range<uint8_t>(2, 0, 65535);
             }
@@ -311,11 +304,11 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
 
          try
             {
-            PK_Key_Agreement ka(*ka_key, rng, "Raw");
+            PK_Key_Agreement ka(ka_key, rng, "Raw");
 
             secure_vector<uint8_t> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
 
-            if(ka_key->algo_name() == "DH")
+            if(ka_key.algo_name() == "DH")
                shared_secret = CT::strip_leading_zeros(shared_secret);
 
             if(kex_algo == Kex_Algo::ECDHE_PSK)
@@ -338,7 +331,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             * failure condition, randomize the pre-master output and carry on,
             * allowing the protocol to fail later in the finished checks.
             */
-            rng.random_vec(m_pre_master, ka_key->public_value().size());
+            rng.random_vec(m_pre_master, ka_key.public_value().size());
             }
 
          reader.assert_done();

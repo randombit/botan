@@ -871,7 +871,7 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
                   const Policy& policy) const;
 
       // Only valid for certain kex types
-      const Private_Key& server_kex_key() const;
+      const PK_Key_Agreement_Key& server_kex_key() const;
 
       Server_Key_Exchange(Handshake_IO& io,
                           Handshake_State& state,
