@@ -291,22 +291,21 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
          {
          const PK_Key_Agreement_Key& ka_key = state.server_kex()->server_kex_key();
 
-         std::vector<uint8_t> client_pubkey;
+         const std::vector<uint8_t> client_pubkey =
+            (ka_key.algo_name() == "DH") ? reader.get_range<uint8_t>(2, 0, 65535)
+                                         : reader.get_range<uint8_t>(1, 1, 255);
 
-         if(ka_key.algo_name() == "DH")
-            {
-            client_pubkey = reader.get_range<uint8_t>(2, 0, 65535);
-            }
-         else
-            {
-            client_pubkey = reader.get_range<uint8_t>(1, 1, 255);
-            }
+         const auto shared_group = state.server_kex()->shared_group();
+         BOTAN_STATE_CHECK(shared_group && shared_group.value() != Group_Params::NONE);
 
          try
             {
-            PK_Key_Agreement ka(ka_key, rng, "Raw");
-
-            secure_vector<uint8_t> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
+            auto shared_secret =
+               state.callbacks().tls_ephemeral_key_agreement(shared_group.value(),
+                                                             ka_key,
+                                                             client_pubkey,
+                                                             rng,
+                                                             policy);
 
             if(ka_key.algo_name() == "DH")
                shared_secret = CT::strip_leading_zeros(shared_secret);
