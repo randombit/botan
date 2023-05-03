@@ -73,6 +73,14 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       BOTAN_ASSERT(group_param_is_dh(m_shared_group.value()), "DH groups for the DH ciphersuites god");
 
+      // Note: TLS 1.2 allows defining and using arbitrary DH groups (additional
+      //       to the named and standardized ones). This API doesn't allow the
+      //       server to make use of that at the moment. TLS 1.3 does not
+      //       provide this flexibility!
+      //
+      // A possible implementation strategy in case one would ever need that:
+      // `Policy::default_dh_group()` could return a `std::variant<Group_Params,
+      // DL_Group>`, allowing it to define arbitrary groups.
       m_kex_key = state.callbacks().tls_generate_ephemeral_key(m_shared_group.value(), rng);
       auto dh = dynamic_cast<DH_PrivateKey*>(m_kex_key.get());
       if(!dh)
