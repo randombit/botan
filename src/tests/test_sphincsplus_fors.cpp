@@ -54,10 +54,11 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test
          auto hash = Botan::HashFunction::create_or_throw(params.hash_name());
 
          Botan::Sphincs_Hash_Functions hashes(params);
+         Botan::Sphincs_Address address = read_address(vars.get_req_bin("Address"));
          auto [ pk, sig ] = Botan::fors_sign(vars.get_req_bin("Msg"),
                                              secret_seed,
                                              public_seed,
-                                             read_address(vars.get_req_bin("Address")),
+                                             address,
                                              params,
                                              hashes);
 
@@ -66,6 +67,7 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test
 
          const auto sig_ref = Botan::ForsSignature(vars.get_req_bin("Signature"));
          result.test_is_eq("Signature result", sig, sig_ref);
+
 
          // TODO: validate that fors_public_key_from_signature results in the same
          //       public key.

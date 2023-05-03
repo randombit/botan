@@ -49,19 +49,19 @@ class Sphincs_Parameters
          switch(set)
             {
             case Sphincs_Parameter_Set::Sphincs128Small:
-               return Sphincs_Parameters(set, hash, 16, 64, 8, 15, 10, 16);
+               return Sphincs_Parameters(set, hash, 16, 63, 7, 12, 14, 16);
             case Sphincs_Parameter_Set::Sphincs128Fast:
-               return Sphincs_Parameters(set, hash, 16, 60, 20, 9, 30, 16);
+               return Sphincs_Parameters(set, hash, 16, 66, 22, 6, 33, 16);
 
             case Sphincs_Parameter_Set::Sphincs192Small:
-               return Sphincs_Parameters(set, hash, 24, 64, 8, 16, 14, 16);
+               return Sphincs_Parameters(set, hash, 24, 63, 7, 14, 17, 16);
             case Sphincs_Parameter_Set::Sphincs192Fast:
                return Sphincs_Parameters(set, hash, 24, 66, 22, 8, 33, 16);
 
             case Sphincs_Parameter_Set::Sphincs256Small:
                return Sphincs_Parameters(set, hash, 32, 64, 8, 14, 22, 16);
             case Sphincs_Parameter_Set::Sphincs256Fast:
-               return Sphincs_Parameters(set, hash, 32, 68, 17, 10, 30, 16);
+               return Sphincs_Parameters(set, hash, 32, 68, 17, 9, 35, 16);
             }
 
          Botan::unreachable();
