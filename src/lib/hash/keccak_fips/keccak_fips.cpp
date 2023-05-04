@@ -17,7 +17,7 @@
 namespace Botan {
 
 //static
-void Keccak_FIPS_generic::permute(uint64_t A[25])
+void Keccak_FIPS::permute(uint64_t A[25])
    {
 #if defined(BOTAN_HAS_KECCKAK_FIPS_BMI2)
    if(CPUID::has_bmi2())
@@ -48,7 +48,7 @@ void Keccak_FIPS_generic::permute(uint64_t A[25])
 
 //static
 
-size_t Keccak_FIPS_generic::absorb(size_t bitrate,
+size_t Keccak_FIPS::absorb(size_t bitrate,
                      secure_vector<uint64_t>& S, size_t S_pos,
                      const uint8_t input[], size_t length)
    {
@@ -86,7 +86,7 @@ size_t Keccak_FIPS_generic::absorb(size_t bitrate,
 
       if(S_pos == bitrate / 8)
          {
-         Keccak_FIPS_generic::permute(S.data());
+         Keccak_FIPS::permute(S.data());
          S_pos = 0;
          }
       }
@@ -96,7 +96,7 @@ size_t Keccak_FIPS_generic::absorb(size_t bitrate,
 
 //static
 
-void Keccak_FIPS_generic::finish(size_t bitrate,
+void Keccak_FIPS::finish(size_t bitrate,
                                  secure_vector<uint64_t>& S, size_t S_pos, uint64_t custom_padd, uint8_t custom_padd_bit_len)
    {
    BOTAN_ARG_CHECK(bitrate % 64 == 0, "Keccak-FIPS bitrate must be multiple of 64");
@@ -105,12 +105,12 @@ void Keccak_FIPS_generic::finish(size_t bitrate,
    S[S_pos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (S_pos % 8));
    // final bit of the padding of the last block
    S[(bitrate / 64) - 1] ^= static_cast<uint64_t>(0x80) << 56;
-   Keccak_FIPS_generic::permute(S.data());
+   Keccak_FIPS::permute(S.data());
    }
 
 //static
 
-void Keccak_FIPS_generic::expand(size_t bitrate,
+void Keccak_FIPS::expand(size_t bitrate,
                    secure_vector<uint64_t>& S,
                    uint8_t output[], size_t output_length)
    {
@@ -129,13 +129,13 @@ void Keccak_FIPS_generic::expand(size_t bitrate,
 
       if(output_length > 0)
          {
-         Keccak_FIPS_generic::permute(S.data());
+         Keccak_FIPS::permute(S.data());
          }
       }
    }
 
 
-Keccak_FIPS_generic::Keccak_FIPS_generic(std::string const& base_name, size_t output_bits, size_t capacity,
+Keccak_FIPS::Keccak_FIPS(std::string const& base_name, size_t output_bits, size_t capacity,
       uint64_t custom_padd,
       uint8_t custom_padd_bit_len) :
    m_output_bits(output_bits),
@@ -150,18 +150,18 @@ Keccak_FIPS_generic::Keccak_FIPS_generic(std::string const& base_name, size_t ou
    // We only support the parameters for Keccak-FIPS in this constructor
 
    if(output_bits > 1600 )
-      throw Invalid_Argument("Keccak_FIPS_generic: Invalid output length " +
+      throw Invalid_Argument("Keccak_FIPS: Invalid output length " +
                              std::to_string(output_bits));
    }
 
 
-std::string Keccak_FIPS_generic::name() const
+std::string Keccak_FIPS::name() const
    {
    return m_base_name + "(" + std::to_string(m_output_bits) + ")";
    }
 
 
-std::string Keccak_FIPS_generic::provider() const
+std::string Keccak_FIPS::provider() const
    {
 #if defined(BOTAN_HAS_KECCKAK_FIPS_BMI2)
    if(CPUID::has_bmi2())
@@ -174,35 +174,35 @@ std::string Keccak_FIPS_generic::provider() const
    }
 
 
-std::unique_ptr<HashFunction> Keccak_FIPS_generic::copy_state() const
+std::unique_ptr<HashFunction> Keccak_FIPS::copy_state() const
    {
-   return std::make_unique<Keccak_FIPS_generic>(*this);
+   return std::make_unique<Keccak_FIPS>(*this);
    }
 
 
-std::unique_ptr<HashFunction> Keccak_FIPS_generic::new_object() const
+std::unique_ptr<HashFunction> Keccak_FIPS::new_object() const
    {
-   return std::make_unique<Keccak_FIPS_generic>(m_base_name, m_output_bits, m_capacity, m_custom_padd,
+   return std::make_unique<Keccak_FIPS>(m_base_name, m_output_bits, m_capacity, m_custom_padd,
           m_custom_padd_bit_len);
    }
 
 
-void Keccak_FIPS_generic::clear()
+void Keccak_FIPS::clear()
    {
    zeroise(m_S);
    m_S_pos = 0;
    }
 
 
-void Keccak_FIPS_generic::add_data(const uint8_t input[], size_t length)
+void Keccak_FIPS::add_data(const uint8_t input[], size_t length)
    {
-   m_S_pos = Keccak_FIPS_generic::absorb(m_bitrate, m_S, m_S_pos, input, length);
+   m_S_pos = Keccak_FIPS::absorb(m_bitrate, m_S, m_S_pos, input, length);
    }
 
 
-void Keccak_FIPS_generic::final_result(uint8_t output[])
+void Keccak_FIPS::final_result(uint8_t output[])
    {
-   Keccak_FIPS_generic::finish(m_bitrate, m_S, m_S_pos, m_custom_padd, m_custom_padd_bit_len);
+   Keccak_FIPS::finish(m_bitrate, m_S, m_S_pos, m_custom_padd, m_custom_padd_bit_len);
 
    /*
    * We never have to run the permutation again because we only support
@@ -213,20 +213,20 @@ void Keccak_FIPS_generic::final_result(uint8_t output[])
    clear();
    }
 
-    Keccak_FIPS_generic::~Keccak_FIPS_generic()
+    Keccak_FIPS::~Keccak_FIPS()
     {
 
     }
 
 Keccak_FIPS_512::Keccak_FIPS_512(size_t output_bits)
-   :Keccak_FIPS_generic("Keccak_FIPS[512]", output_bits, 512, 0, 0)
+   :Keccak_FIPS("Keccak_FIPS[512]", output_bits, 512, 0, 0)
    {
 
    }
 
 
 Keccak_FIPS_256::Keccak_FIPS_256(size_t output_bits)
-   :Keccak_FIPS_generic("Keccak_FIPS[256]", output_bits, 256, 0, 0)
+   :Keccak_FIPS("Keccak_FIPS[256]", output_bits, 256, 0, 0)
    {
 
    }

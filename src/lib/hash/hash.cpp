@@ -30,10 +30,6 @@
   #include <botan/internal/keccak.h>
 #endif
 
-#if defined(BOTAN_HAS_KECCAK_FIPS)
-  #include <botan/internal/keccak_fips.h>
-#endif
-
 #if defined(BOTAN_HAS_MD4)
   #include <botan/internal/md4.h>
 #endif

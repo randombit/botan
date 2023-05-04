@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-void Keccak_FIPS_generic::permute_bmi2(uint64_t A[25])
+void Keccak_FIPS::permute_bmi2(uint64_t A[25])
    {
    static const uint64_t RC[24] = {
       0x0000000000000001, 0x0000000000008082, 0x800000000000808A,

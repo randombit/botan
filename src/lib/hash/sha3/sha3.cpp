@@ -11,7 +11,7 @@
 namespace Botan {
 
 SHA_3::SHA_3(size_t output_bits) :
-    Keccak_FIPS_generic("SHA-3", output_bits, 2*output_bits, 2, 2) 
+    Keccak_FIPS("SHA-3", output_bits, 2*output_bits, 2, 2) 
    {
    // We only support the parameters for SHA-3 in this constructor
 

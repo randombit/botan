@@ -19,9 +19,8 @@ namespace Botan {
 /**
 * SHA-3
 */
-# if 1
 
-class SHA_3 : public Keccak_FIPS_generic
+class SHA_3 : public Keccak_FIPS
    {
    public:
 
@@ -32,7 +31,6 @@ class SHA_3 : public Keccak_FIPS_generic
       explicit SHA_3(size_t output_bits);
    };
 
-#endif 
 /**
 * SHA-3-224
 */

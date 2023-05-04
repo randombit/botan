@@ -9,7 +9,6 @@
 #include "botan/exceptn.h"
 #include "botan/assert.h"
 #include <botan/internal/kmac.h>
-#include <botan/internal/keccak_fips.h>
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
@@ -32,8 +31,6 @@ namespace Botan {
 */
 
 // regarding the interface see https://github.com/randombit/botan/issues/3262
-//
-//
 
 namespace {
 
@@ -159,7 +156,7 @@ size_t KMAC256::output_length() const
 
 Key_Length_Specification KMAC256::key_spec() const
    {
-   // KMAC support key lengths from zero up to 2²⁰⁴⁰ (2^(2040)) bits
+   // KMAC supports key lengths from zero up to 2²⁰⁴⁰ (2^(2040)) bits
    // https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf#page=28
    return Key_Length_Specification(0, std::numeric_limits<size_t>::max());
    }
@@ -186,12 +183,9 @@ void KMAC256::start_msg(const uint8_t nonce[], size_t nonce_len)
    m_hash.update(newX_head);
    }
 
-/**
-* @param hash the hash to use for KMAC256ing
-*/
 KMAC256::KMAC256(uint32_t output_bit_length)
    :m_output_bit_length(output_bit_length),
-    m_hash(Keccak_FIPS_generic("Keccak_FIPS_generic(tailpadding=00)", output_bit_length, 512, 00, 2)),
+    m_hash("Keccak_FIPS(tailpadding=00)", output_bit_length, 512, 00, 2),
     m_pad_byte_length(136)
    {
    // ensure valid output length
