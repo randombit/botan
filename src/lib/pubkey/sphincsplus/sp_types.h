@@ -14,6 +14,7 @@
 
 namespace Botan {
 
+using SphincsHashedMessage = Strong<std::vector<uint8_t>, struct SphincsHashedMessage_>;
 using SphincsPublicSeed = Strong<std::vector<uint8_t>, struct SphincsPublicSeed_>;
 using SphincsSecretSeed = Strong<secure_vector<uint8_t>, struct SphincsSecretSeed_>;
 using SphincsSecretPRF = Strong<secure_vector<uint8_t>, struct SphincsSecretPRF_>;
@@ -22,8 +23,8 @@ using ForsPublicKey = Strong<std::vector<uint8_t>, struct ForsPublicKey_>;
 using ForsSignature = Strong<std::vector<uint8_t>, struct ForsSignature_>;
 using ForsIndices = Strong<std::vector<uint32_t>, struct ForsIndices_>;
 
-using SphincsTreeRoot = Strong<std::vector<uint8_t>, struct SphincsTreeRoot_>;
-using SphincsAuthPath = Strong<std::vector<uint8_t>, struct SphincsAuthPath_>;
+using SphincsTreeRootSpan = Strong<std::span<uint8_t>, struct SphincsTreeRootSpan_>; // TODO:
+using SphincsAuthPathSpan = Strong<std::span<uint8_t>, struct SphincsAuthPathSpan_>; //  how to use?
 
 }
 

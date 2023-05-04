@@ -29,7 +29,7 @@ class Sphincs_Hash_Functions;
  * FORS (Forest of Random Subsets). It is meant to be used inside SPHINCS+
  * and does not aim to be applicable for other use cases.
  */
-BOTAN_TEST_API std::pair<ForsPublicKey, ForsSignature> fors_sign(std::span<const uint8_t> message, // TODO: replace by a strong type once we know what exactly will be signed
+BOTAN_TEST_API std::pair<ForsPublicKey, ForsSignature> fors_sign(const SphincsHashedMessage& hashed_message,
                                                                  const SphincsSecretSeed& secret_seed,
                                                                  const SphincsPublicSeed& public_seed,
                                                                  const Sphincs_Address& address,
@@ -41,7 +41,7 @@ BOTAN_TEST_API std::pair<ForsPublicKey, ForsSignature> fors_sign(std::span<const
  * @p message. This is tailored for the use case in the SPHINCS+ implementation
  * and is not meant for general usability.
  */
-BOTAN_TEST_API ForsPublicKey fors_public_key_from_signature(std::span<const uint8_t> message,  // TODO: replace by a strong type once we know what exactly will be signed
+BOTAN_TEST_API ForsPublicKey fors_public_key_from_signature(const SphincsHashedMessage& hashed_message,
                                                             const ForsSignature& signature,
                                                             const SphincsPublicSeed& public_seed,
                                                             const Sphincs_Address& address,
