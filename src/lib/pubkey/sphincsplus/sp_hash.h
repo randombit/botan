@@ -28,43 +28,39 @@ class StreamCipher;
  * A collection of pseudorandom hash functions required for SPHINCS+
  * computations.
  **/
-class Sphincs_Hash_Functions final
+class Sphincs_Hash_Functions
    {
    public:
-      Sphincs_Hash_Functions(const Sphincs_Parameters& sphincs_params);
-      ~Sphincs_Hash_Functions();
+      virtual ~Sphincs_Hash_Functions() = default;
+
+      static std::unique_ptr<Sphincs_Hash_Functions> create(const Sphincs_Parameters& sphincs_params);
 
    public:
-      void PRF(std::span<uint8_t> out,
-               const SphincsPublicSeed& pub_seed,
-               const SphincsSecretSeed& sk_seed,
-               const Sphincs_Address& address);
+      virtual void PRF(std::span<uint8_t> out,
+                       const SphincsPublicSeed& pub_seed,
+                       const SphincsSecretSeed& sk_seed,
+                       const Sphincs_Address& address) = 0;
 
-      void PRF_msg(std::span<uint8_t> out,
-                   const SphincsSecretPRF& sk_prf,
-                   const SphincsOptionalRandomness& opt_rand,
-                   std::span<const uint8_t> in);
+      virtual void PRF_msg(std::span<uint8_t> out,
+                           const SphincsSecretPRF& sk_prf,
+                           const SphincsOptionalRandomness& opt_rand,
+                           std::span<const uint8_t> in) = 0;
 
-      void F(std::span<uint8_t> out,
-             const SphincsPublicSeed& pub_seed,
-             const Sphincs_Address& address,
-             std::span<const uint8_t> in1);
+      virtual void F(std::span<uint8_t> out,
+                     const SphincsPublicSeed& pub_seed,
+                     const Sphincs_Address& address,
+                     std::span<const uint8_t> in1) = 0;
 
-      void H(std::span<uint8_t> out,
-             const SphincsPublicSeed& pub_seed,
-             const Sphincs_Address& address,
-             std::span<const uint8_t> in1,
-             std::span<const uint8_t> in2);
+      virtual void H(std::span<uint8_t> out,
+                     const SphincsPublicSeed& pub_seed,
+                     const Sphincs_Address& address,
+                     std::span<const uint8_t> in1,
+                     std::span<const uint8_t> in2) = 0;
 
-   private:
-      /**
-       * "tweaks" the hash function and returns a reference to m_hash.
-       */
-      HashFunction& T(const SphincsPublicSeed& pub_seed,
-                      const Sphincs_Address& address);
-
-   private:
-      std::unique_ptr<HashFunction> m_hash;
+      virtual void T(std::span<uint8_t> out,
+                     const SphincsPublicSeed& pub_seed,
+                     const Sphincs_Address& address,
+                     std::span<const uint8_t> in) = 0;
    };
 
 

@@ -63,8 +63,9 @@ void fors_gen_leafx1(std::span<uint8_t> out,
    // Storing the intermediate output in the out memory
    hashes.PRF(out, public_seed, secret_seed, fors_leaf_address);
 
+   //std::vector<uint8_t> empty;
    fors_leaf_address.set_type(Sphincs_Address_Type::ForsTree);
-   hashes.F(out, public_seed, fors_leaf_address, out);
+   hashes.T(out, public_seed, fors_leaf_address, out);
    }
 
 
@@ -309,7 +310,7 @@ ForsPublicKey fors_public_key_from_signature(const SphincsHashedMessage& hashed_
    // Reconstruct the public key the signature creates with the hash of the concatenation of all roots
    // Only if the signature is valid, the pk is the correct FORS pk.
    ForsPublicKey pk(params.n());
-   hashes.F(pk, public_seed, fors_pk_addr, roots);
+   hashes.T(pk, public_seed, fors_pk_addr, roots);
 
    return pk;
    }

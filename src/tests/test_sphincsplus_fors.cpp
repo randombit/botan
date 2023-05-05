@@ -55,14 +55,14 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test
 
          auto hash = Botan::HashFunction::create_or_throw(params.hash_name());
 
-         Botan::Sphincs_Hash_Functions hashes(params);
+         auto hashes = Botan::Sphincs_Hash_Functions::create(params);
          Botan::Sphincs_Address address = read_address(vars.get_req_bin("Address"));
          auto [ pk, sig ] = Botan::fors_sign(hashed_message,
                                              secret_seed,
                                              public_seed,
                                              address,
                                              params,
-                                             hashes);
+                                             *hashes);
 
          const auto pk_ref = Botan::ForsPublicKey(vars.get_req_bin("PublicKey"));
          result.test_is_eq("Derived public key", pk, pk_ref);
@@ -71,12 +71,16 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test
          result.test_is_eq("Signature result", sig, sig_ref);
 
          auto pk_from_sig = Botan::fors_public_key_from_signature(hashed_message,
-                                                                                 sig_ref,
-                                                                                 public_seed,
-                                                                                 address,
-                                                                                 params,
-                                                                                 hashes);
+                                                                  sig_ref,
+                                                                  public_seed,
+                                                                  address,
+                                                                  params,
+                                                                  *hashes);
          result.test_is_eq("Public key from signature", pk_from_sig, pk_ref);
+
+         if(result.tests_failed() > 0){
+            int x = 0; // Dummy
+         }
 
          return result;
          }

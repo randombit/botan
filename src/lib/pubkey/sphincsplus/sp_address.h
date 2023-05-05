@@ -138,6 +138,8 @@ class BOTAN_TEST_API Sphincs_Address
          return result;
          }
 
+
+
       void apply_to_hash(HashFunction& hash) const
          {
          for(auto element : m_address)
@@ -145,6 +147,8 @@ class BOTAN_TEST_API Sphincs_Address
             hash.update_be(element);
             }
          }
+
+
 
       std::array<uint8_t, 32> to_bytes() const
          {
@@ -155,6 +159,31 @@ class BOTAN_TEST_API Sphincs_Address
             }
          return result;
          }
+
+      std::array<uint8_t, 22> to_bytes_compressed() const
+         {
+         const std::array<uint8_t, 32> all_bytes = to_bytes();
+         std::array<uint8_t, 22> bytes;
+         size_t idx = 0;
+         for(size_t byte_idx : std::vector<size_t>{3, 8, 9, 10, 11, 12, 13, 14, 15,
+                                                   19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31})
+            {
+            bytes[idx] = all_bytes.at(byte_idx);
+            idx++;
+            }
+         return bytes;
+         }
+
+      // Apply ADRS^c to hash TODO: Improve?
+      void apply_to_hash_compressed(HashFunction& hash) const
+         {
+         const auto bytes = to_bytes_compressed();
+         for(auto b : bytes)
+            {
+            hash.update(b);
+            }
+         }
+
 
    private:
       std::array<uint32_t, 8> m_address;
