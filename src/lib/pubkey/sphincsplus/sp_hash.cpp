@@ -9,9 +9,7 @@
 #include "botan/hash.h"
 #include <botan/exceptn.h>
 #include <botan/sp_parameters.h>
-#include <botan/stream_cipher.h>
 #include <botan/assert.h>
-#include <botan/internal/shake_cipher.h>
 #include <botan/internal/sp_hash.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/mgf1.h>
@@ -104,27 +102,26 @@ class Shake_Hash_Functions : public Sphincs_Hash_Functions
 class Sha2_Hash_Functions : public Sphincs_Hash_Functions
    {
    private:
+      //TODO: Integrate with padded versions for sha2
       void tweak_hash(const SphincsPublicSeed& pub_seed,
                       const Sphincs_Address& address)
          {
-         // TODO: It might be worthwhile to pre-calculate the hash state with
-         //       pub_seed already applied. (That's what the ref impl does, too.)
-         m_hash.update(pub_seed);
-         address.apply_to_hash(m_hash);
+         m_sha_256.update(pub_seed);
+         address.apply_to_hash(m_sha_256);
          }
 
    public:
-      Sha2_Hash_Functions(const Sphincs_Parameters& sphincs_params) : m_hash(),
-      m_sphincs_params(sphincs_params)
+      Sha2_Hash_Functions(const Sphincs_Parameters& sphincs_params)
+         : m_sphincs_params(sphincs_params)
          {
          if(sphincs_params.n() == 16)
             {
-            m_h_hash = std::make_unique<SHA_256>();
+            m_sha_x = std::make_unique<SHA_256>();
             m_pk_block_size_h = 64;
             }
          else
             {
-            m_h_hash = std::make_unique<SHA_512>();
+            m_sha_x = std::make_unique<SHA_512>();
             m_pk_block_size_h = 128;
             }
 
@@ -137,10 +134,10 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
          {
          std::vector<uint8_t> padded_pub_seed(pub_seed.get());
          padded_pub_seed.resize(m_pk_block_size_256, 0);
-         m_hash.update(padded_pub_seed);
-         address.apply_to_hash_compressed(m_hash);
-         m_hash.update(sk_seed);
-         std::vector out_full = m_hash.final();
+         m_sha_256.update(padded_pub_seed);
+         address.apply_to_hash_compressed(m_sha_256);
+         m_sha_256.update(sk_seed);
+         std::vector out_full = m_sha_256.final();
          std::copy(out_full.begin(), out_full.begin() + m_sphincs_params.n(), out.begin());
          }
 
@@ -159,12 +156,12 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
          {
          std::vector<uint8_t> padded_pub_seed(pub_seed.get());
          padded_pub_seed.resize(m_pk_block_size_256, 0);
-         m_hash.update(padded_pub_seed);
+         m_sha_256.update(padded_pub_seed);
 
-         address.apply_to_hash_compressed(m_hash);
-         m_hash.update(in1);
+         address.apply_to_hash_compressed(m_sha_256);
+         m_sha_256.update(in1);
 
-         std::vector out_full = m_hash.final();
+         std::vector out_full = m_sha_256.final();
          std::copy(out_full.begin(), out_full.begin() + m_sphincs_params.n(), out.begin());
          }
 
@@ -176,13 +173,13 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
          {
          std::vector<uint8_t> padded_pub_seed(pub_seed.get());
          padded_pub_seed.resize(m_pk_block_size_h, 0);
-         m_h_hash->update(padded_pub_seed);
+         m_sha_x->update(padded_pub_seed);
 
-         address.apply_to_hash_compressed(*m_h_hash);
-         m_h_hash->update(in1);
-         m_h_hash->update(in2);
+         address.apply_to_hash_compressed(*m_sha_x);
+         m_sha_x->update(in1);
+         m_sha_x->update(in2);
 
-         std::vector out_full = m_h_hash->final();
+         std::vector out_full = m_sha_x->final();
          std::copy(out_full.begin(), out_full.begin() + m_sphincs_params.n(), out.begin());
          }
 
@@ -194,19 +191,19 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
          // TODO: Precompute padded public seed
          std::vector<uint8_t> padded_pub_seed(pub_seed.get());
          padded_pub_seed.resize(m_pk_block_size_h, 0);
-         m_h_hash->update(padded_pub_seed);
+         m_sha_x->update(padded_pub_seed);
 
-         address.apply_to_hash_compressed(*m_h_hash);
-         m_h_hash->update(in);
+         address.apply_to_hash_compressed(*m_sha_x);
+         m_sha_x->update(in);
 
-         std::vector out_full = m_h_hash->final();
+         std::vector out_full = m_sha_x->final();
          std::copy(out_full.begin(), out_full.begin() + m_sphincs_params.n(), out.begin());
          }
 
    private:
       //SHAKE_256 m_hash;
-      SHA_256 m_hash;
-      std::unique_ptr<HashFunction> m_h_hash;
+      SHA_256 m_sha_256;
+      std::unique_ptr<HashFunction> m_sha_x;
       size_t m_pk_block_size_h;
       const Sphincs_Parameters& m_sphincs_params;
 
@@ -250,6 +247,8 @@ std::unique_ptr<Sphincs_Hash_Functions> Sphincs_Hash_Functions::create(const Sph
       case Sphincs_Hash_Type::Shake256:
          return std::make_unique<Shake_Hash_Functions>(sphincs_params);
       }
+
+   Botan::unreachable();
    }
 
 // void Sphincs_Hash_Functions::PRF(std::span<uint8_t> out,

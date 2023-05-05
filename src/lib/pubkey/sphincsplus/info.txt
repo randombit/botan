@@ -20,4 +20,9 @@ sp_types.h
 
 <requires>
 hash
+shake
+sha2_32
+sha2_64
+mgf1
+stream
 </requires>

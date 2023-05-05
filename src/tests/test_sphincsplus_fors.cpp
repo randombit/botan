@@ -16,6 +16,8 @@
 #include <botan/hash.h>
 #include <botan/hex.h>
 
+#include <iostream>
+
 #include <botan/internal/sp_fors.h>
 #include <botan/internal/loadstor.h>
 
@@ -70,13 +72,16 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test
          const auto sig_ref = Botan::ForsSignature(vars.get_req_bin("Signature"));
          result.test_is_eq("Signature result", sig, sig_ref);
 
+         std::cout << Botan::hex_encode(pk) << std::endl;
+         std::cout << Botan::hex_encode(pk_ref) << std::endl;
+
          auto pk_from_sig = Botan::fors_public_key_from_signature(hashed_message,
-                                                                  sig_ref,
+                                                                  sig,
                                                                   public_seed,
                                                                   address,
                                                                   params,
                                                                   *hashes);
-         result.test_is_eq("Public key from signature", pk_from_sig, pk_ref);
+         result.test_is_eq("Public key from signature", pk_from_sig, pk);
 
          if(result.tests_failed() > 0){
             int x = 0; // Dummy
