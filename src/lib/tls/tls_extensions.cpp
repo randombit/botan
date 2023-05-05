@@ -486,6 +486,7 @@ Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
    if(len + 1 != extension_size)
       throw Decoding_Error("Inconsistent length field in supported point formats list");
 
+   bool includes_uncompressed = false;
    for(size_t i = 0; i != len; ++i)
       {
       uint8_t format = reader.get_byte();
@@ -499,11 +500,28 @@ Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
       else if(static_cast<ECPointFormat>(format) == ANSIX962_COMPRESSED_PRIME)
          {
          m_prefers_compressed = true;
-         reader.discard_next(len-i-1);
-         return;
+         std::vector<uint8_t> remaining_formats = reader.get_fixed<uint8_t>(len-i-1);
+         includes_uncompressed = std::any_of(std::begin(remaining_formats),
+                                             std::end(remaining_formats), [](uint8_t remaining_format)
+            {
+            return static_cast<ECPointFormat>(remaining_format) == UNCOMPRESSED;
+            });
+         break;
          }
 
       // ignore ANSIX962_COMPRESSED_CHAR2, we don't support these curves
+      }
+
+   // RFC 4492 5.1.:
+   //   If the Supported Point Formats Extension is indeed sent, it MUST contain the value 0 (uncompressed)
+   //   as one of the items in the list of point formats.
+   // Note:
+   //   RFC 8422 5.1.2. explicitly requires this check,
+   //   but only if the Supported Groups extension was sent.
+   if(!includes_uncompressed)
+      {
+      throw TLS_Exception(Alert::IllegalParameter,
+                          "Supported Point Formats Extension must contain the uncompressed point format");
       }
    }
 
