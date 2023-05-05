@@ -63,9 +63,8 @@ void fors_gen_leafx1(std::span<uint8_t> out,
    // Storing the intermediate output in the out memory
    hashes.PRF(out, public_seed, secret_seed, fors_leaf_address);
 
-   //std::vector<uint8_t> empty;
    fors_leaf_address.set_type(Sphincs_Address_Type::ForsTree);
-   hashes.T(out, public_seed, fors_leaf_address, out);
+   hashes.F(out, public_seed, fors_leaf_address, out);
    }
 
 
@@ -129,7 +128,6 @@ void compute_root_spec(std::span<uint8_t> out,
    idx_offset /= 2;
    tree_address.set_tree_height(tree_height).set_tree_index(leaf_idx + idx_offset);
    hashes.H(out, public_seed, tree_address, left_buffer, right_buffer);
-   //hashes.F(out, public_seed, tree_address, buffer);
    }
 
 void
@@ -262,7 +260,7 @@ std::pair<ForsPublicKey, ForsSignature> fors_sign(const SphincsHashedMessage& ha
 
    // Compute the public key by the hash of the concatenation of all roots
    ForsPublicKey pk(params.n());
-   hashes.F(std::span(pk), public_seed, fors_pk_addr, std::span(roots));
+   hashes.T(pk, public_seed, fors_pk_addr, roots);
 
    return std::make_pair(std::move(pk), std::move(signature));
    }
