@@ -64,7 +64,7 @@ void fors_gen_leafx1(std::span<uint8_t> out,
    hashes.PRF(out, public_seed, secret_seed, fors_leaf_address);
 
    fors_leaf_address.set_type(Sphincs_Address_Type::ForsTree);
-   hashes.F(out, public_seed, fors_leaf_address, out);
+   hashes.T(out, public_seed, fors_leaf_address, out);
    }
 
 
@@ -114,12 +114,12 @@ void compute_root_spec(std::span<uint8_t> out,
       // side. This logic already prepares the buffer for the next operation in the next tree layer.
       if (leaf_idx & 1)
          {
-            hashes.H(right_buffer, public_seed, tree_address, left_buffer, right_buffer);
+            hashes.T(right_buffer, public_seed, tree_address, left_buffer, right_buffer);
             std::copy(auth_path_location.begin(), auth_path_location.end(), left_buffer.begin());
          }
       else
          {
-         hashes.H(left_buffer, public_seed, tree_address, left_buffer, right_buffer);
+         hashes.T(left_buffer, public_seed, tree_address, left_buffer, right_buffer);
          std::copy(auth_path_location.begin(), auth_path_location.end(), right_buffer.begin());
          }
       }
@@ -127,7 +127,7 @@ void compute_root_spec(std::span<uint8_t> out,
    leaf_idx /= 2;
    idx_offset /= 2;
    tree_address.set_tree_height(tree_height).set_tree_index(leaf_idx + idx_offset);
-   hashes.H(out, public_seed, tree_address, left_buffer, right_buffer);
+   hashes.T(out, public_seed, tree_address, left_buffer, right_buffer);
    }
 
 void
@@ -208,7 +208,7 @@ treehashSpec(std::span<uint8_t> out_root,
          tree_address.set_tree_height(h + 1);
          tree_address.set_tree_index(internal_idx/2 + internal_idx_offset);
 
-         hashes.H(current_node, pub_seed, tree_address, stack_location, current_node);
+         hashes.T(current_node, pub_seed, tree_address, stack_location, current_node);
          }
       }
       std::copy(stack.begin(), stack.begin() + params.n(), out_root.begin());
@@ -297,7 +297,7 @@ ForsPublicKey fors_public_key_from_signature(const SphincsHashedMessage& hashed_
          .set_tree_height(0)
          .set_tree_index(indices.get().at(i) + idx_offset);
       auto signature_location = std::span(signature).subspan(i * params.n() * (params.a() + 1), params.n());
-      hashes.F(leaf, public_seed, fors_tree_addr, signature_location);
+      hashes.T(leaf, public_seed, fors_tree_addr, signature_location);
 
       // Reconstruct the subtree's root using the authentication path
       auto auth_path_location = std::span<const uint8_t>(signature).subspan(params.n() * (i  * (params.a() + 1) + 1), params.n() * params.a());

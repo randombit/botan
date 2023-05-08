@@ -61,23 +61,6 @@ class Sphincs_Hash_Functions
          T(out, pub_seed, address, sk_seed);
          }
 
-      void F(std::span<uint8_t> out,
-             const SphincsPublicSeed& pub_seed,
-             const Sphincs_Address& address,
-             std::span<const uint8_t> in1)
-         {
-         T(out, pub_seed, address, in1);
-         }
-
-      void H(std::span<uint8_t> out,
-             const SphincsPublicSeed& pub_seed,
-             const Sphincs_Address& address,
-             std::span<const uint8_t> in1,
-             std::span<const uint8_t> in2)
-         {
-         T(out, pub_seed, address, in1, in2);
-         }
-
    protected:
       /**
        * Prepare the underlying hash function for hashing any given input

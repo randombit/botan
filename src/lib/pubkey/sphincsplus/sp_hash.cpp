@@ -75,13 +75,14 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
          // Depending on the input length we decide to use SHA-256 (Function F in the spec)
          // or SHA-X (Function T_l and H in the spec).
          auto& hash = (input_length > m_sphincs_params.n()) ? *m_sha_x : *m_sha_256;
+         const auto& padding = (input_length > m_sphincs_params.n()) ? m_padding_x : m_padding_256;
 
          // TODO: Pre-Compute Hash state after Hash(pub_seed || padding) and
          //       reuse instead of re-calculating this hash application for
          //       every invoctation. Change Sphincs_Hash_Functions::create()
          //       interface to take pub_seed to allow doing that.
          hash.update(pub_seed);
-         hash.update(m_padding);
+         hash.update(padding);
 
          address.apply_to_hash_compressed(hash);
 
@@ -91,17 +92,18 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
    public:
       Sha2_Hash_Functions(const Sphincs_Parameters& sphincs_params)
          : m_sphincs_params(sphincs_params)
+         , m_padding_256(64 - sphincs_params.n(), '\0')
          {
          if(sphincs_params.n() == 16)
             {
             m_sha_x = std::make_unique<Truncated_Hash>(std::make_unique<SHA_256>(), sphincs_params.n() * 8);
-            m_padding = std::vector<uint8_t> (64 - sphincs_params.n(), '\0');
+            m_padding_x = m_padding_256;
             }
          else
             {
             BOTAN_ASSERT_NOMSG(sphincs_params.n() <= 128);
             m_sha_x = std::make_unique<Truncated_Hash>(std::make_unique<SHA_512>(), sphincs_params.n() * 8);
-            m_padding = std::vector<uint8_t> (128 - sphincs_params.n(), '\0');
+            m_padding_x = std::vector<uint8_t> (128 - sphincs_params.n(), '\0');
             }
 
          if (m_sphincs_params.n() < 32)
@@ -125,10 +127,11 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
 
 
    private:
+      const Sphincs_Parameters& m_sphincs_params;
       std::unique_ptr<HashFunction> m_sha_256;
       std::unique_ptr<HashFunction> m_sha_x;
-      const Sphincs_Parameters& m_sphincs_params;
-      std::vector<uint8_t> m_padding;
+      std::vector<uint8_t> m_padding_256;
+      std::vector<uint8_t> m_padding_x;
    };
 
 

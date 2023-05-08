@@ -138,18 +138,6 @@ class BOTAN_TEST_API Sphincs_Address
          return result;
          }
 
-
-
-      void apply_to_hash(HashFunction& hash) const
-         {
-         for(auto element : m_address)
-            {
-            hash.update_be(element);
-            }
-         }
-
-
-
       std::array<uint8_t, 32> to_bytes() const
          {
          std::array<uint8_t, 32> result;
@@ -160,28 +148,31 @@ class BOTAN_TEST_API Sphincs_Address
          return result;
          }
 
-      std::array<uint8_t, 22> to_bytes_compressed() const
+      /**
+       * Apply verbatim (big endian) address to the @p hash without compression.
+       */
+      void apply_to_hash(HashFunction& hash) const
          {
-         const std::array<uint8_t, 32> all_bytes = to_bytes();
-         std::array<uint8_t, 22> bytes;
-         size_t idx = 0;
-         for(size_t byte_idx : std::vector<size_t>{3, 8, 9, 10, 11, 12, 13, 14, 15,
-                                                   19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31})
+         for(auto element : m_address)
             {
-            bytes[idx] = all_bytes.at(byte_idx);
-            idx++;
+            hash.update_be(element);
             }
-         return bytes;
          }
 
-      // Apply ADRS^c to hash TODO: Improve?
+      /**
+       * Apply address in compressed form to the @p hash.
+       */
       void apply_to_hash_compressed(HashFunction& hash) const
          {
-         const auto bytes = to_bytes_compressed();
-         for(auto b : bytes)
-            {
-            hash.update(b);
-            }
+         // TODO: Maybe collect the address bits in a std::array<uint8_t, 22>
+         //       first and apply it to the hash in bulk.
+         hash.update(static_cast<uint8_t>(m_address[layer_offset]));
+         hash.update_be(m_address[tree_offset + 1]);
+         hash.update_be(m_address[tree_offset + 2]);
+         hash.update(static_cast<uint8_t>(m_address[type_offset]));
+         hash.update_be(m_address[keypair_offset]);
+         hash.update_be(m_address[chain_offset /* or tree_height_offset */]);
+         hash.update_be(m_address[hash_offset /* or tree_index_offset */]);
          }
 
 
