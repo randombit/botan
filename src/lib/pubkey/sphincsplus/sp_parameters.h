@@ -15,6 +15,7 @@
 #include <botan/strong_type.h>
 #include <botan/internal/sp_address.h>
 
+#include <cmath>
 #include <memory>
 
 namespace Botan {
@@ -112,11 +113,37 @@ class Sphincs_Parameters
        */
       size_t w() const { return m_w; }
 
+      /**
+       * @returns the base 2 logarithm of the Winternitz parameter for WOTS+ signatures
+       */
+      size_t log_w() const { return m_log_w; }
+
+      /**
+       * @returns the len1 parameter for WOTS+ signatures
+       */
+      size_t wots_len_1() const { return m_wots_len1; }
+
+      /**
+       * @returns the len2 parameter for WOTS+ signatures
+       */
+      size_t wots_len_2() const { return m_wots_len2; }
+
+      /**
+       * @returns the len parameter for WOTS+ signatures
+       */
+      size_t wots_len() const { return m_wots_len; }
+
    private:
       Sphincs_Parameters(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash_type,
                         size_t n, size_t h, size_t d, size_t a, size_t k, size_t w)
          : m_set(set), m_hash_type(hash_type)
-         , m_n(n), m_h(h), m_d(d), m_a(a), m_k(k), m_w(w) {}
+         , m_n(n), m_h(h), m_d(d), m_a(a), m_k(k), m_w(w)
+         {
+            m_log_w = floor(log2(m_w));
+            m_wots_len1 = (m_n * 8) / m_log_w;
+            m_wots_len2 = std::floor(log2(m_wots_len1 * (m_w - 1))) / m_log_w + 1;
+            m_wots_len = m_wots_len1 + m_wots_len2;
+         }
 
    private:
       Sphincs_Parameter_Set m_set;
@@ -127,6 +154,10 @@ class Sphincs_Parameters
       size_t m_a;
       size_t m_k;
       size_t m_w;
+      size_t m_log_w;
+      size_t m_wots_len1;
+      size_t m_wots_len2;
+      size_t m_wots_len;
    };
 
 }
