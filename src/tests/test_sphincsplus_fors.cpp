@@ -5,10 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "botan/assert.h"
-#include "botan/internal/sp_address.h"
-#include "botan/internal/sp_hash.h"
-#include "botan/sp_parameters.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_SPHINCS_PLUS)
@@ -16,10 +12,12 @@
 #include <botan/hash.h>
 #include <botan/hex.h>
 
-#include <iostream>
-
 #include <botan/internal/sp_fors.h>
 #include <botan/internal/loadstor.h>
+#include <botan/assert.h>
+#include <botan/internal/sp_address.h>
+#include <botan/internal/sp_hash.h>
+#include <botan/sp_parameters.h>
 
 namespace Botan_Tests {
 
@@ -71,9 +69,6 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test
 
          const auto sig_ref = Botan::ForsSignature(vars.get_req_bin("Signature"));
          result.test_is_eq("Signature result", sig, sig_ref);
-
-         std::cout << Botan::hex_encode(pk) << std::endl;
-         std::cout << Botan::hex_encode(pk_ref) << std::endl;
 
          auto pk_from_sig = Botan::fors_public_key_from_signature(hashed_message,
                                                                   sig,
