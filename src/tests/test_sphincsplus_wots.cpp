@@ -83,10 +83,11 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
 
 
         result.test_is_eq("WOTS+ public key from signature", wots_pk_from_sig, wots_pk_ref);
-        print_hex(wots_pk_from_sig.data(), wots_pk_from_sig.size());
+
 
          if(result.tests_failed() > 0){
             int x = 0; // Dummy
+            print_hex(wots_pk_from_sig.data(), wots_pk_from_sig.size());
          }
 
          return result;

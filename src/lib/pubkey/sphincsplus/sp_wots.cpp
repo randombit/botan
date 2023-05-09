@@ -12,14 +12,14 @@
 namespace Botan
 {
 
-WotsChainValue gen_chain(/*std::span<uint8_t> out,*/
-                         const WotsChainKey in,
+void gen_chain(std::span<uint8_t> out,
+                         std::span<const uint8_t> wots_chain_key,
                          uint8_t start, uint8_t steps,
                          const SphincsPublicSeed& public_seed, Sphincs_Address& addr,
                          Sphincs_Hash_Functions& hashes, const Sphincs_Parameters& params)
 {
    /* Initialize out with the value at position 'start'. */
-   WotsChainValue out(in.get());
+   std::copy(wots_chain_key.begin(), wots_chain_key.end(), out.begin());
 
    /* Iterate 'steps' calls to the hash function. */
    for (uint8_t i = start; i < (start+steps) && i < params.w(); i++)
@@ -28,8 +28,6 @@ WotsChainValue gen_chain(/*std::span<uint8_t> out,*/
 
       hashes.T(out, public_seed, addr, out);
       }
-
-    return out;
 }
 
 /**
@@ -107,21 +105,18 @@ WotsPublicKey wots_public_key_from_signature(const SphincsHashedMessage& hashed_
    {
    WotsBaseWChunks msg(hashed_message);
    WotsBaseWChunks lengths = chain_lengths(msg, params);
-   WotsPublicKey pk;
+   WotsPublicKey pk(params.wots_len() * params.n());
 
-   lengths = chain_lengths(msg, params);
    for (uint32_t i = 0; i < params.wots_len(); i++)
       {
       address.set_chain(i);
-      WotsChainKey sig_location = WotsChainKey(std::vector<uint8_t>(signature.begin() + i*params.n(), signature.begin() + (i+1)*params.n()));
-      auto pk_element = gen_chain(sig_location,
+      auto pk_location = std::span(pk).subspan(i*params.n(), params.n());
+      auto sig_location = std::span(signature).subspan(i*params.n(), params.n());
+      gen_chain(pk_location, sig_location,
               lengths.get().at(i), params.w() - 1 - lengths.get().at(i), public_seed, address, hashes, params);
-      pk.get().insert(pk.end(), pk_element.begin(), pk_element.end());
-      //pk.get().emplace_back(gen_chain(sig_location,
-      //   lengths.get().at(i), params.w() - 1 - lengths.get().at(i), public_seed, address, hashes, params).g);
       }
 
-    return pk;
+   return pk;
    }
 
 std::pair<WotsPublicKey, WotsSignature> wots_sign(const SphincsHashedMessage& hashed_message,
