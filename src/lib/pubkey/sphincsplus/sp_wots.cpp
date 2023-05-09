@@ -119,18 +119,94 @@ WotsPublicKey wots_public_key_from_signature(const SphincsHashedMessage& hashed_
    return pk;
    }
 
-std::pair<WotsPublicKey, WotsSignature> wots_sign(const SphincsHashedMessage& hashed_message,
-                                                                 const SphincsSecretSeed& secret_seed,
-                                                                 const SphincsPublicSeed& public_seed,
-                                                                 const Sphincs_Address& address,
-                                                                 const Sphincs_Parameters& params,
-                                                                 Sphincs_Hash_Functions& hash)
+//wots_gen_leafx1
+void wots_sign( std::span<uint8_t> sig_out,
+                std::span<uint8_t> pk_out,
+                const SphincsHashedMessage& hashed_message,
+                const SphincsSecretSeed& secret_seed,
+                const SphincsPublicSeed& public_seed,
+                uint32_t leaf_idx,
+                uint32_t sign_leaf_idx,
+                std::vector<uint8_t>& wots_steps,
+                Sphincs_Address& leaf_addr,
+                Sphincs_Address& pk_addr,
+                const Sphincs_Parameters& params,
+                Sphincs_Hash_Functions& hashes)
    {
 
    //TODO
+   std::vector<uint8_t> wots_sig;
+   //unsigned int k;
+   std::vector<uint8_t> pk_buffer(params.wots_bytes());
+   //unsigned char *buffer;
+
+   uint32_t wots_k_mask;
+
+
+    if (leaf_idx == sign_leaf_idx) {
+        /* We're traversing the leaf that's signing; generate the WOTS */
+        /* signature */
+        wots_k_mask = 0;
+    } else {
+        /* Nope, we're just generating pk's; turn off the signature logic */
+        wots_k_mask = (uint32_t)~0;
+    }
+
+    leaf_addr.set_keypair(leaf_idx);
+    pk_addr.set_keypair(leaf_idx);
+
+    //buffer = pk_buffer;
+    for(uint32_t i = 0; i < params.wots_len(); i++)
+       {
+       uint32_t wots_k = wots_steps[i] | wots_k_mask; /* Set wots_k to */
+       /* the step if we're generating a signature, ~0 if we're not */
+
+       /* Start with the secret seed */
+       leaf_addr.set_chain(i);
+       leaf_addr.set_hash(0);
+       leaf_addr.set_type(Sphincs_Address_Type::WotsKeyGeneration);
+
+       auto buffer = std::span(pk_buffer).subspan(i * params.n(), params.n());
+       //prf_addr(buffer, ctx, leaf_addr);
+
+       hashes.PRF(buffer, public_seed, secret_seed, leaf_addr);
+
+       leaf_addr.set_type(Sphincs_Address_Type::WotsHash);
+
+       /* Iterate down the WOTS chain */
+       for (size_t k=0;; k++)
+          {
+          /* Check if this is the value that needs to be saved as a */
+          /* part of the WOTS signature */
+          if (k == wots_k)
+             {
+             auto sig_location = sig_out.subspan(i * params.n(), params.n());
+             std::copy(buffer.begin(), buffer.end(), sig_location.begin());
+             //memcpy( info->wots_sig + i * SPX_N, buffer, SPX_N );
+             }
+
+          /* Check if we hit the top of the chain */
+          if (k == params.w() - 1) break;
+
+          /* Iterate one step on the chain */
+          leaf_addr.set_hash(k);
+
+          hashes.T(buffer, public_seed, leaf_addr, buffer);
+          }
+       }
+
+    /* Do the final thash to generate the public keys */
+    //thash(dest, pk_buffer, SPX_WOTS_LEN, ctx, pk_addr);
+    hashes.T(pk_out, public_seed, pk_addr, pk_buffer);
+
 
    }
 
+   // Include in info: sig_out, sign_leaf_idx, wots_steps, Sphincs_Address& leaf_addr, Sphincs_Address& pk_addr
+   // template <typename T>
+   // treehash(..., std::function<..., T>, T info)
+   // treehash<struct fors_info>(..., fi)
+   // treehash<struct wots_info>(..., )
 
 
 }

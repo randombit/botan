@@ -133,6 +133,11 @@ class Sphincs_Parameters
        */
       size_t wots_len() const { return m_wots_len; }
 
+      /**
+       * @returns the byte length of a WOTS+ signature
+       */
+      size_t wots_bytes() const { return m_wots_bytes; }
+
    private:
       Sphincs_Parameters(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash_type,
                         size_t n, size_t h, size_t d, size_t a, size_t k, size_t w)
@@ -143,6 +148,7 @@ class Sphincs_Parameters
             m_wots_len1 = (m_n * 8) / m_log_w;
             m_wots_len2 = std::floor(log2(m_wots_len1 * (m_w - 1))) / m_log_w + 1;
             m_wots_len = m_wots_len1 + m_wots_len2;
+            m_wots_bytes = m_wots_len * m_n;
          }
 
    private:
@@ -158,6 +164,7 @@ class Sphincs_Parameters
       size_t m_wots_len1;
       size_t m_wots_len2;
       size_t m_wots_len;
+      size_t m_wots_bytes;
    };
 
 }

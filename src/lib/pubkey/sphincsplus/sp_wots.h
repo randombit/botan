@@ -32,12 +32,18 @@ class Sphincs_Hash_Functions;
  * WOTS+ (Winternitz OTS). It is meant to be used inside SPHINCS+
  * and does not aim to be applicable for other use cases.
  */
-BOTAN_TEST_API std::pair<WotsPublicKey, WotsSignature> wots_sign(const SphincsHashedMessage& hashed_message,
-                                                                 const SphincsSecretSeed& secret_seed,
-                                                                 const SphincsPublicSeed& public_seed,
-                                                                 const Sphincs_Address& address,
-                                                                 const Sphincs_Parameters& params,
-                                                                 Sphincs_Hash_Functions& hash);
+BOTAN_TEST_API void wots_sign( std::span<uint8_t> sig_out,
+                               std::span<uint8_t> pk_out,
+                               const SphincsHashedMessage& hashed_message,
+                               const SphincsSecretSeed& secret_seed,
+                               const SphincsPublicSeed& public_seed,
+                               uint32_t leaf_idx,
+                               uint32_t sign_leaf_idx,
+                               std::vector<uint8_t>& wots_steps,
+                               Sphincs_Address& leaf_addr,
+                               Sphincs_Address& pk_addr,
+                               const Sphincs_Parameters& params,
+                               Sphincs_Hash_Functions& hashes);
 
 //TODO: Do we need this interface?
 BOTAN_TEST_API WotsPublicKey wots_calc_public_key(const SphincsSecretSeed& secret_seed,
@@ -57,6 +63,8 @@ BOTAN_TEST_API WotsPublicKey wots_public_key_from_signature(const SphincsHashedM
                                                             Sphincs_Address& address,
                                                             const Sphincs_Parameters& params,
                                                             Sphincs_Hash_Functions& hashes);
+
+BOTAN_TEST_API WotsBaseWChunks chain_lengths(const WotsBaseWChunks msg, const Sphincs_Parameters& params);
 
 //BOTAN_TEST_API ForsIndices fors_message_to_indices(std::span<const uint8_t> message, const Sphincs_Parameters& params);
 
