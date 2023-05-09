@@ -54,9 +54,9 @@ BOTAN_TEST_API WotsPublicKey wots_calc_public_key(const SphincsSecretSeed& secre
 BOTAN_TEST_API WotsPublicKey wots_public_key_from_signature(const SphincsHashedMessage& hashed_message,
                                                             const WotsSignature& signature,
                                                             const SphincsPublicSeed& public_seed,
-                                                            const Sphincs_Address& address,
+                                                            Sphincs_Address& address,
                                                             const Sphincs_Parameters& params,
-                                                            Sphincs_Hash_Functions& hash);
+                                                            Sphincs_Hash_Functions& hashes);
 
 //BOTAN_TEST_API ForsIndices fors_message_to_indices(std::span<const uint8_t> message, const Sphincs_Parameters& params);
 

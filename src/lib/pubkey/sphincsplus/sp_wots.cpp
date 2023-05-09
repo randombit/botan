@@ -12,10 +12,11 @@
 namespace Botan
 {
 
-WotsChainValue gen_chain(const WotsChainKey in,
-                      uint8_t start, uint8_t steps,
-                      const SphincsPublicSeed& public_seed, Sphincs_Address& addr,
-                      Sphincs_Hash_Functions& hashes, const Sphincs_Parameters& params)
+WotsChainValue gen_chain(/*std::span<uint8_t> out,*/
+                         const WotsChainKey in,
+                         uint8_t start, uint8_t steps,
+                         const SphincsPublicSeed& public_seed, Sphincs_Address& addr,
+                         Sphincs_Hash_Functions& hashes, const Sphincs_Parameters& params)
 {
    /* Initialize out with the value at position 'start'. */
    WotsChainValue out(in.get());
@@ -75,11 +76,12 @@ WotsBaseWChunks wots_checksum(const WotsBaseWChunks& msg_base_w, const Sphincs_P
       csum += params.w() - 1 - msg_base_w.get().at(i);
       }
 
-   /* Convert checksum to base_w. */
+   /* Convert checksum to base_w. 10010 0000 0000 */
    csum = csum << ((8 - ((params.wots_len_2() * params.log_w()) % 8)) % 8);
    store_be(csum, csum_bytes.data());
    //ull_to_bytes(csum_bytes, csum_bytes.size(), csum);
-   csum_bytes.resize(csum_bytes_size); // TODO: Validate
+   //csum_bytes.resize(csum_bytes_size); // TODO: Validate
+   csum_bytes = std::vector<uint8_t>(csum_bytes.end() - csum_bytes_size, csum_bytes.end());
    return base_w(params.wots_len_2(), WotsBaseWChunks(csum_bytes), params);
    }
 
@@ -97,30 +99,27 @@ WotsBaseWChunks chain_lengths(const WotsBaseWChunks msg, const Sphincs_Parameter
  * Takes a WOTS signature and an n-byte message, computes a WOTS public key.
  */
 WotsPublicKey wots_public_key_from_signature(const SphincsHashedMessage& hashed_message,
-                               const WotsSignature& signature,
-                               const SphincsPublicSeed& public_seed,
-                               Sphincs_Address& address,
-                               const Sphincs_Parameters& params,
-                               Sphincs_Hash_Functions& hashes)
+                                             const WotsSignature& signature,
+                                             const SphincsPublicSeed& public_seed,
+                                             Sphincs_Address& address,
+                                             const Sphincs_Parameters& params,
+                                             Sphincs_Hash_Functions& hashes)
    {
    WotsBaseWChunks msg(hashed_message);
    WotsBaseWChunks lengths = chain_lengths(msg, params);
-   //unsigned int lengths[params.wots_len()];
-   uint32_t i;
-   WotsPublicKey pk(params.wots_len() * params.n());
+   WotsPublicKey pk;
 
    lengths = chain_lengths(msg, params);
-    // len(pk) = params.wots_len() * n
-   for (i = 0; i < params.wots_len(); i++)
-       {
-       //set_chain_addr(addr, i);
-       address.set_chain(i);
-       //WotsChainKey chain_key =
-       WotsChainKey sig_location = WotsChainKey(std::vector<uint8_t>(signature.begin() + i*params.n(), signature.begin() + (i+1)*params.n()));
-       auto pk_element = gen_chain(sig_location,
-               lengths.get().at(i), params.w() - 1 - lengths.get().at(i), public_seed, address, hashes, params);
-        pk.get().insert(pk_element.begin() + i*params.n(), pk_element.begin(), pk_element.end());
-       }
+   for (uint32_t i = 0; i < params.wots_len(); i++)
+      {
+      address.set_chain(i);
+      WotsChainKey sig_location = WotsChainKey(std::vector<uint8_t>(signature.begin() + i*params.n(), signature.begin() + (i+1)*params.n()));
+      auto pk_element = gen_chain(sig_location,
+              lengths.get().at(i), params.w() - 1 - lengths.get().at(i), public_seed, address, hashes, params);
+      pk.get().insert(pk.end(), pk_element.begin(), pk_element.end());
+      //pk.get().emplace_back(gen_chain(sig_location,
+      //   lengths.get().at(i), params.w() - 1 - lengths.get().at(i), public_seed, address, hashes, params).g);
+      }
 
     return pk;
    }
