@@ -15,8 +15,11 @@
 namespace Botan {
 
 /**
- * Wrapper class to truncate underlying hash function output to a given
- * number of bits. Unwanted least significant bits are cut off.
+ * Wrapper class to truncate underlying hash function output to a given number
+ * of bits. The leading bits are retained. Since the HashFunction interface is
+ * defined to return bytes, if the desired truncation length is not a multiple
+ * of 8, then the final byte of the output will have some number of trailing
+ * bits always set to zero.
  */
 class Truncated_Hash final : public HashFunction
    {
