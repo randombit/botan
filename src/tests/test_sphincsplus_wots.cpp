@@ -51,7 +51,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
    public:
       SPHINCS_Plus_WOTS_Test()
          : Text_Based_Test("pubkey/sphincsplus_wots.vec", "SphincsParameterSet,Address,SecretSeed,PublicSeed,HashedWotsPk,WotsPk,Msg,WotsSig")
-      {} // TODO
+      {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) final
          {
@@ -79,37 +79,41 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
                                                                                       params,
                                                                                 *hashes);
 
-        const auto wots_pk_ref = Botan::WotsPublicKey(vars.get_req_bin("WotsPk"));
+         const auto wots_pk_ref = Botan::WotsPublicKey(vars.get_req_bin("WotsPk"));
 
-        std::vector<uint8_t> sig_out(params.n() * params.wots_len());
-        std::vector<uint8_t> hashed_pk_out(params.n());
+         std::vector<uint8_t> sig_out(params.n() * params.wots_len());
+         std::vector<uint8_t> hashed_pk_out(params.n());
 
-        auto wots_steps = Botan::chain_lengths(Botan::WotsBaseWChunks(hashed_message.get()), params);
+         auto wots_steps = Botan::chain_lengths(Botan::WotsBaseWChunks(hashed_message.get()), params);
 
-        auto leaf_addr = Botan::Sphincs_Address::as_subtree_from(address);
-        auto pk_addr = Botan::Sphincs_Address::as_subtree_from(address);
+         auto leaf_addr = Botan::Sphincs_Address::as_subtree_from(address);
+         auto pk_addr = Botan::Sphincs_Address::as_subtree_from(address);
 
-        //set_type(&info.pk_addr[0], SPX_ADDR_TYPE_WOTSPK);
-        pk_addr.set_type(Botan::Sphincs_Address_Type::WotsPublicKeyCompression);
+         pk_addr.set_type(Botan::Sphincs_Address_Type::WotsPublicKeyCompression);
 
-        wots_sign(sig_out,
-                hashed_pk_out,
-                hashed_message,
-                secret_seed,
-                public_seed,
-                0,
-                0,
-                wots_steps.get(),
-                leaf_addr,
-                pk_addr,
-                params,
-                *hashes);
+         wots_sign(sig_out,
+                  hashed_pk_out,
+                  //pk_out,
+                  hashed_message,
+                  secret_seed,
+                  public_seed,
+                  0,
+                  0,
+                  wots_steps.get(),
+                  leaf_addr,
+                  pk_addr,
+                  params,
+                  *hashes);
 
 
-        result.test_is_eq("WOTS+ public key from signature", wots_pk_from_sig, wots_pk_ref);
 
-        result.test_is_eq("WOTS+ signature generation", sig_out, wots_sig_ref.get());
 
+         result.test_is_eq("WOTS+ signature generation", sig_out, wots_sig_ref.get());
+
+         auto hashed_pk_ref = vars.get_req_bin("HashedWotsPk");
+         result.test_is_eq("WOTS+ public key generation", hashed_pk_out, hashed_pk_ref);
+
+         result.test_is_eq("WOTS+ public key from signature", wots_pk_from_sig, wots_pk_ref);
 
          if(result.tests_failed() > 0){
             int x = 0; // Dummy
