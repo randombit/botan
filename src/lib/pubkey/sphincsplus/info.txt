@@ -17,6 +17,8 @@ sp_address.h
 sp_hash.h
 sp_types.h
 sp_wots.h
+sp_treehash.h
+sp_xmss.h
 </header:internal>
 
 <requires>

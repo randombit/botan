@@ -3,6 +3,8 @@
  * (C) 2023 Jack Lloyd
  *     2023 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
  *
+ * Parts of this file have been adapted from https://github.com/sphincs/sphincsplus
+ *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 

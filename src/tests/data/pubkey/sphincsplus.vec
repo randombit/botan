@@ -1,0 +1,11 @@
+# This test data was generated using customly written tests using the
+# reference implementation of SPHINCS+ Round 3.1 (https://github.com/sphincs/sphincsplus/)
+#
+
+# === Shake ===
+
+SphincsParameterSet = SPHINCS+_128_FAST_SHAKE256
+SecretSeed = 7C9935A0B07694AA0C6D10E4DB6B1ADD
+PublicSeed = B505D7CFAD1B497499323C8686325E47
+Root = AFBC007BA1E2B4A138F03AA9A6195AC8
+

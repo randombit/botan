@@ -121,7 +121,7 @@ void wots_gen_leaf_spec(std::span<uint8_t> sig_out,
                         const SphincsPublicSeed& public_seed,
                         uint32_t leaf_idx,
                         uint32_t sign_leaf_idx,
-                        std::vector<uint8_t>& wots_steps,
+                        WotsBaseWChunks& wots_steps,
                         Sphincs_Address& leaf_addr,
                         Sphincs_Address& pk_addr,
                         const Sphincs_Parameters& params,
@@ -146,7 +146,7 @@ void wots_gen_leaf_spec(std::span<uint8_t> sig_out,
 
    for(uint32_t i = 0; i < params.wots_len(); i++)
       {
-      uint32_t wots_k = wots_steps[i] | wots_k_mask; /* Set wots_k to */
+      uint32_t wots_k = wots_steps.get().at(i) | wots_k_mask; /* Set wots_k to */
       /* the step if we're generating a signature, ~0 if we're not */
 
       /* Start with the secret seed */

@@ -114,6 +114,11 @@ class Sphincs_Parameters
       size_t w() const { return m_w; }
 
       /**
+       * @returns the Tree height of an XMSS tree
+       */
+      size_t tree_height() const { return m_tree_height; }
+
+      /**
        * @returns the base 2 logarithm of the Winternitz parameter for WOTS+ signatures
        */
       size_t log_w() const { return m_log_w; }
@@ -144,6 +149,7 @@ class Sphincs_Parameters
          : m_set(set), m_hash_type(hash_type)
          , m_n(n), m_h(h), m_d(d), m_a(a), m_k(k), m_w(w)
          {
+            m_tree_height = m_h / m_d;
             m_log_w = floor(log2(m_w));
             m_wots_len1 = (m_n * 8) / m_log_w;
             m_wots_len2 = std::floor(log2(m_wots_len1 * (m_w - 1))) / m_log_w + 1;
@@ -160,6 +166,7 @@ class Sphincs_Parameters
       size_t m_a;
       size_t m_k;
       size_t m_w;
+      size_t m_tree_height;
       size_t m_log_w;
       size_t m_wots_len1;
       size_t m_wots_len2;

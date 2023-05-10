@@ -37,15 +37,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
          return Botan::Sphincs_Address(adrs);
          }
 
-    // Temp - delete me
-    static void print_hex(unsigned char *data, size_t len) {
-        char buf[3];
-        for (size_t i = 0; i < len; i++) {
-            sprintf(buf, "%02x", data[i]);
-            printf("%s", buf);
-        }
-        printf("\n");
-    }
+
 
 
    public:
@@ -97,7 +89,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
                   public_seed,
                   0,
                   0,
-                  wots_steps.get(),
+                  wots_steps,
                   leaf_addr,
                   pk_addr,
                   params,
@@ -112,11 +104,6 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
          result.test_is_eq("WOTS+ public key generation", hashed_pk_out, hashed_pk_ref);
 
          result.test_is_eq("WOTS+ public key from signature", wots_pk_from_sig, wots_pk_ref);
-
-         if(result.tests_failed() > 0){
-            int x = 0; // Dummy
-            print_hex(wots_pk_from_sig.data(), wots_pk_from_sig.size());
-         }
 
          return result;
          }
