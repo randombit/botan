@@ -32,9 +32,8 @@ class Sphincs_Hash_Functions;
  * WOTS+ (Winternitz OTS). It is meant to be used inside SPHINCS+
  * and does not aim to be applicable for other use cases.
  */
-BOTAN_TEST_API void wots_sign( std::span<uint8_t> sig_out,
+BOTAN_TEST_API void wots_gen_leaf_spec( std::span<uint8_t> sig_out,
                                std::span<uint8_t> pk_out,
-                               const SphincsHashedMessage& hashed_message,
                                const SphincsSecretSeed& secret_seed,
                                const SphincsPublicSeed& public_seed,
                                uint32_t leaf_idx,
@@ -44,13 +43,6 @@ BOTAN_TEST_API void wots_sign( std::span<uint8_t> sig_out,
                                Sphincs_Address& pk_addr,
                                const Sphincs_Parameters& params,
                                Sphincs_Hash_Functions& hashes);
-
-//TODO: Do we need this interface?
-BOTAN_TEST_API WotsPublicKey wots_calc_public_key(const SphincsSecretSeed& secret_seed,
-                                                                 const SphincsPublicSeed& public_seed,
-                                                                 const Sphincs_Address& address,
-                                                                 const Sphincs_Parameters& params,
-                                                                 Sphincs_Hash_Functions& hash);
 
 /**
  * Reconstructs the WOTS public key from a given WOTS @p signature and
@@ -64,9 +56,10 @@ BOTAN_TEST_API WotsPublicKey wots_public_key_from_signature(const SphincsHashedM
                                                             const Sphincs_Parameters& params,
                                                             Sphincs_Hash_Functions& hashes);
 
-BOTAN_TEST_API WotsBaseWChunks chain_lengths(const WotsBaseWChunks msg, const Sphincs_Parameters& params);
-
-//BOTAN_TEST_API ForsIndices fors_message_to_indices(std::span<const uint8_t> message, const Sphincs_Parameters& params);
+/**
+ * Given a @p msg construct the lengths (amount of hashes for signature) for each WOTS+ chain, including the checksum.
+ */
+BOTAN_TEST_API WotsBaseWChunks chain_lengths(const SphincsHashedMessage& msg, const Sphincs_Parameters& params);
 
 }
 

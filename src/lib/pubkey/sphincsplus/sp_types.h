@@ -25,12 +25,6 @@ using ForsIndices = Strong<std::vector<uint32_t>, struct ForsIndices_>;
 using WotsPublicKey = Strong<std::vector<uint8_t>, struct WotsPublicKey_>;
 using WotsSignature = Strong<std::vector<uint8_t>, struct WotsSignature_>;
 using WotsBaseWChunks = Strong<std::vector<uint8_t>, struct WotsBaseWChunks_>;
-using WotsChainValue = Strong<std::vector<uint8_t>, struct WotsChainValue_>;
-using WotsChainKey = Strong<std::vector<uint8_t>, struct WotsChainKey_>;
-
-using SphincsTreeRootSpan = Strong<std::span<uint8_t>, struct SphincsTreeRootSpan_>; // TODO:
-using SphincsAuthPathSpan = Strong<std::span<uint8_t>, struct SphincsAuthPathSpan_>; //  how to use?
-
 }
 
 #endif

@@ -84,17 +84,15 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
          std::vector<uint8_t> sig_out(params.n() * params.wots_len());
          std::vector<uint8_t> hashed_pk_out(params.n());
 
-         auto wots_steps = Botan::chain_lengths(Botan::WotsBaseWChunks(hashed_message.get()), params);
+         auto wots_steps = Botan::chain_lengths(hashed_message, params);
 
          auto leaf_addr = Botan::Sphincs_Address::as_subtree_from(address);
          auto pk_addr = Botan::Sphincs_Address::as_subtree_from(address);
 
          pk_addr.set_type(Botan::Sphincs_Address_Type::WotsPublicKeyCompression);
 
-         wots_sign(sig_out,
+         wots_gen_leaf_spec(sig_out,
                   hashed_pk_out,
-                  //pk_out,
-                  hashed_message,
                   secret_seed,
                   public_seed,
                   0,

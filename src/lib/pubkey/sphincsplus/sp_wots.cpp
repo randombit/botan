@@ -36,7 +36,7 @@ void gen_chain(std::span<uint8_t> out,
  * This only works when log_w is a divisor of 8.
  */
 WotsBaseWChunks base_w(const uint32_t out_len,
-                       const WotsBaseWChunks& input, const Sphincs_Parameters& params)
+                       const std::vector<uint8_t>& input, const Sphincs_Parameters& params)
 {
    WotsBaseWChunks output(out_len);
    size_t in = 0;
@@ -48,7 +48,7 @@ WotsBaseWChunks base_w(const uint32_t out_len,
        {
        if (bits == 0)
            {
-           total = input.get().at(in);
+           total = input.at(in);
            in++;
            bits += 8;
            }
@@ -66,7 +66,6 @@ WotsBaseWChunks wots_checksum(const WotsBaseWChunks& msg_base_w, const Sphincs_P
 
    size_t csum_bytes_size = (params.wots_len_2() * params.log_w() + 7) / 8;
    std::vector<uint8_t> csum_bytes(4);
-   //unsigned char csum_bytes[(params.wots_len_2() * params.log_w() + 7) / 8];
 
    /* Compute checksum. */
    for (uint8_t i = 0; i < params.wots_len_1(); i++)
@@ -74,19 +73,17 @@ WotsBaseWChunks wots_checksum(const WotsBaseWChunks& msg_base_w, const Sphincs_P
       csum += params.w() - 1 - msg_base_w.get().at(i);
       }
 
-   /* Convert checksum to base_w. 10010 0000 0000 */
+   /* Convert checksum to base_w. */
    csum = csum << ((8 - ((params.wots_len_2() * params.log_w()) % 8)) % 8);
    store_be(csum, csum_bytes.data());
-   //ull_to_bytes(csum_bytes, csum_bytes.size(), csum);
-   //csum_bytes.resize(csum_bytes_size); // TODO: Validate
    csum_bytes = std::vector<uint8_t>(csum_bytes.end() - csum_bytes_size, csum_bytes.end());
-   return base_w(params.wots_len_2(), WotsBaseWChunks(csum_bytes), params);
+   return base_w(params.wots_len_2(), csum_bytes, params);
    }
 
 /* Takes a message and derives the matching chain lengths. */
-WotsBaseWChunks chain_lengths(const WotsBaseWChunks msg, const Sphincs_Parameters& params)
+WotsBaseWChunks chain_lengths(const SphincsHashedMessage& msg, const Sphincs_Parameters& params)
    {
-   WotsBaseWChunks lengths_msg = base_w(params.wots_len_1(), msg, params);
+   WotsBaseWChunks lengths_msg = base_w(params.wots_len_1(), msg.get(), params);
    WotsBaseWChunks lengths_checksum = wots_checksum(lengths_msg, params);
 
    lengths_msg.get().insert(lengths_msg.end(), lengths_checksum.begin(), lengths_checksum.end() ); //lengths_msg || lengths_checksum
@@ -103,8 +100,7 @@ WotsPublicKey wots_public_key_from_signature(const SphincsHashedMessage& hashed_
                                              const Sphincs_Parameters& params,
                                              Sphincs_Hash_Functions& hashes)
    {
-   WotsBaseWChunks msg(hashed_message);
-   WotsBaseWChunks lengths = chain_lengths(msg, params);
+   WotsBaseWChunks lengths = chain_lengths(hashed_message, params);
    WotsPublicKey pk(params.wots_len() * params.n());
 
    for (uint32_t i = 0; i < params.wots_len(); i++)
@@ -119,26 +115,20 @@ WotsPublicKey wots_public_key_from_signature(const SphincsHashedMessage& hashed_
    return pk;
    }
 
-//wots_gen_leafx1
-void wots_sign( std::span<uint8_t> sig_out,
-                std::span<uint8_t> pk_out,
-                const SphincsHashedMessage& hashed_message,
-                const SphincsSecretSeed& secret_seed,
-                const SphincsPublicSeed& public_seed,
-                uint32_t leaf_idx,
-                uint32_t sign_leaf_idx,
-                std::vector<uint8_t>& wots_steps,
-                Sphincs_Address& leaf_addr,
-                Sphincs_Address& pk_addr,
-                const Sphincs_Parameters& params,
-                Sphincs_Hash_Functions& hashes)
+void wots_gen_leaf_spec(std::span<uint8_t> sig_out,
+                        std::span<uint8_t> pk_out,
+                        const SphincsSecretSeed& secret_seed,
+                        const SphincsPublicSeed& public_seed,
+                        uint32_t leaf_idx,
+                        uint32_t sign_leaf_idx,
+                        std::vector<uint8_t>& wots_steps,
+                        Sphincs_Address& leaf_addr,
+                        Sphincs_Address& pk_addr,
+                        const Sphincs_Parameters& params,
+                        Sphincs_Hash_Functions& hashes)
    {
-
-   //TODO
    std::vector<uint8_t> wots_sig;
-   //unsigned int k;
    std::vector<uint8_t> pk_buffer(params.wots_bytes());
-   //unsigned char *buffer;
 
    uint32_t wots_k_mask;
 
@@ -148,13 +138,12 @@ void wots_sign( std::span<uint8_t> sig_out,
       wots_k_mask = 0;
    } else {
       /* Nope, we're just generating pk's; turn off the signature logic */
-      wots_k_mask = (uint32_t)~0;
+      wots_k_mask = static_cast<uint32_t>(~0);
    }
 
    leaf_addr.set_keypair(leaf_idx);
    pk_addr.set_keypair(leaf_idx);
 
-    //buffer = pk_buffer;
    for(uint32_t i = 0; i < params.wots_len(); i++)
       {
       uint32_t wots_k = wots_steps[i] | wots_k_mask; /* Set wots_k to */
@@ -166,7 +155,6 @@ void wots_sign( std::span<uint8_t> sig_out,
       leaf_addr.set_type(Sphincs_Address_Type::WotsKeyGeneration);
 
       auto buffer = std::span(pk_buffer).subspan(i * params.n(), params.n());
-      //prf_addr(buffer, ctx, leaf_addr);
 
       hashes.PRF(buffer, public_seed, secret_seed, leaf_addr);
 
@@ -181,7 +169,6 @@ void wots_sign( std::span<uint8_t> sig_out,
             {
             auto sig_location = sig_out.subspan(i * params.n(), params.n());
             std::copy(buffer.begin(), buffer.end(), sig_location.begin());
-            //memcpy( info->wots_sig + i * SPX_N, buffer, SPX_N );
             }
 
          /* Check if we hit the top of the chain */
@@ -197,12 +184,5 @@ void wots_sign( std::span<uint8_t> sig_out,
    /* Do the final thash to generate the public keys */
    hashes.T(pk_out, public_seed, pk_addr, pk_buffer);
    }
-
-   // Include in info: sig_out, sign_leaf_idx, wots_steps, Sphincs_Address& leaf_addr, Sphincs_Address& pk_addr
-   // template <typename T>
-   // treehash(..., std::function<..., T>, T info)
-   // treehash<struct fors_info>(..., fi)
-   // treehash<struct wots_info>(..., )
-
 
 }
