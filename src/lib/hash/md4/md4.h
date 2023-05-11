@@ -8,6 +8,7 @@
 #ifndef BOTAN_MD4_H_
 #define BOTAN_MD4_H_
 
+#include <botan/hash.h>
 #include <botan/internal/mdx_hash.h>
 
 namespace Botan {
@@ -15,27 +16,26 @@ namespace Botan {
 /**
 * MD4
 */
-class MD4 final : public MDx_HashFunction
+class MD4 final : public HashFunction
    {
    public:
+      MD4() {}
+
       std::string name() const override { return "MD4"; }
       size_t output_length() const override { return 16; }
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<MD4>(); }
+      size_t hash_block_size() const override { return 64; }
+      std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
-
-      MD4() : MDx_HashFunction(64, false, true), m_digest(4)
-         { clear(); }
-
    private:
-      void compress_n(const uint8_t input[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t output[]) override;
 
-      /**
-      * The digest value
-      */
-      secure_vector<uint32_t> m_digest;
+      static void compress_n(uint32_t digest[4], const uint8_t input[], size_t blocks);
+      static void init(uint32_t digest[4]);
+
+      MD_Hash<MD_Endian::Little, uint32_t, 4, MD4::init, MD4::compress_n> m_md;
    };
 
 }

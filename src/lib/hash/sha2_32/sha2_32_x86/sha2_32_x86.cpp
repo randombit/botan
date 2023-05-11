@@ -13,7 +13,7 @@ namespace Botan {
 
 // called from sha2_32.cpp
 BOTAN_FUNC_ISA("sha,sse4.1,ssse3")
-void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
+void SHA_256::compress_digest_x86(uint32_t digest[8], const uint8_t input[], size_t blocks)
    {
    alignas(64) static const uint32_t K[] = {
       0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,

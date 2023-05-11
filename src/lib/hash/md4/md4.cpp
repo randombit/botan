@@ -13,11 +13,6 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> MD4::copy_state() const
-   {
-   return std::make_unique<MD4>(*this);
-   }
-
 namespace {
 
 inline void FF4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
@@ -82,9 +77,9 @@ inline void HH4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
 /*
 * MD4 Compression Function
 */
-void MD4::compress_n(const uint8_t input[], size_t blocks)
+void MD4::compress_n(uint32_t digest[4], const uint8_t input[], size_t blocks)
    {
-   uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3];
+   uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3];
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -120,33 +115,47 @@ void MD4::compress_n(const uint8_t input[], size_t blocks)
       HH4(A, B, C, D, M01, M09, M05, M13);
       HH4(A, B, C, D, M03, M11, M07, M15);
 
-      A = (m_digest[0] += A);
-      B = (m_digest[1] += B);
-      C = (m_digest[2] += C);
-      D = (m_digest[3] += D);
+      A = (digest[0] += A);
+      B = (digest[1] += B);
+      C = (digest[2] += C);
+      D = (digest[3] += D);
 
-      input += hash_block_size();
+      input += 64;
       }
    }
 
-/*
-* Copy out the digest
-*/
-void MD4::copy_out(uint8_t output[])
+void MD4::init(uint32_t digest[4])
    {
-   copy_out_vec_le(output, output_length(), m_digest);
+   const uint32_t MD4_IV[4] = {
+      0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476
+   };
+
+   copy_mem(digest, MD4_IV, 4);
    }
 
-/*
-* Clear memory of sensitive data
-*/
+void MD4::add_data(const uint8_t input[], size_t length)
+   {
+   m_md.add_data(input, length);
+   }
+
+void MD4::final_result(uint8_t output[])
+   {
+   m_md.final_result(output);
+   }
+
 void MD4::clear()
    {
-   MDx_HashFunction::clear();
-   m_digest[0] = 0x67452301;
-   m_digest[1] = 0xEFCDAB89;
-   m_digest[2] = 0x98BADCFE;
-   m_digest[3] = 0x10325476;
+   m_md.clear();
+   }
+
+std::unique_ptr<HashFunction> MD4::new_object() const
+   {
+   return std::make_unique<MD4>();
+   }
+
+std::unique_ptr<HashFunction> MD4::copy_state() const
+   {
+   return std::make_unique<MD4>(*this);
    }
 
 }

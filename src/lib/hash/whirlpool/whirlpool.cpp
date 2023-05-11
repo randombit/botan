@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/whrlpool.h>
+#include <botan/internal/whirlpool.h>
 
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
@@ -85,7 +85,7 @@ alignas(256) const uint64_t WHIRL_S[256] = {
 /*
 * Whirlpool Compression Function
 */
-void Whirlpool::compress_n(const uint8_t in[], size_t blocks)
+void Whirlpool::compress_n(uint64_t digest[8], const uint8_t in[], size_t blocks)
    {
    static const uint64_t RC[10] = {
       0x1823C6E887B8014F, 0x36A6D2F5796F9152,
@@ -95,17 +95,29 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks)
       0xFBEE7C66DD17479E, 0xCA2DBF07AD5A8333
    };
 
+   uint64_t M[8];
+
    for(size_t i = 0; i != blocks; ++i)
       {
-      load_be(m_M.data(), in, m_M.size());
+      load_be(M, in, 8);
 
-      uint64_t K0, K1, K2, K3, K4, K5, K6, K7;
-      K0 = m_digest[0]; K1 = m_digest[1]; K2 = m_digest[2]; K3 = m_digest[3];
-      K4 = m_digest[4]; K5 = m_digest[5]; K6 = m_digest[6]; K7 = m_digest[7];
+      uint64_t K0 = digest[0];
+      uint64_t K1 = digest[1];
+      uint64_t K2 = digest[2];
+      uint64_t K3 = digest[3];
+      uint64_t K4 = digest[4];
+      uint64_t K5 = digest[5];
+      uint64_t K6 = digest[6];
+      uint64_t K7 = digest[7];
 
-      uint64_t B0, B1, B2, B3, B4, B5, B6, B7;
-      B0 = K0 ^ m_M[0]; B1 = K1 ^ m_M[1]; B2 = K2 ^ m_M[2]; B3 = K3 ^ m_M[3];
-      B4 = K4 ^ m_M[4]; B5 = K5 ^ m_M[5]; B6 = K6 ^ m_M[6]; B7 = K7 ^ m_M[7];
+      uint64_t B0 = K0 ^ M[0];
+      uint64_t B1 = K1 ^ M[1];
+      uint64_t B2 = K2 ^ M[2];
+      uint64_t B3 = K3 ^ M[3];
+      uint64_t B4 = K4 ^ M[4];
+      uint64_t B5 = K5 ^ M[5];
+      uint64_t B6 = K6 ^ M[6];
+      uint64_t B7 = K7 ^ M[7];
 
       for(size_t j = 0; j != 10; ++j)
          {
@@ -248,40 +260,47 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks)
          B4 = T4; B5 = T5; B6 = T6; B7 = T7;
          }
 
-      m_digest[0] ^= B0 ^ m_M[0];
-      m_digest[1] ^= B1 ^ m_M[1];
-      m_digest[2] ^= B2 ^ m_M[2];
-      m_digest[3] ^= B3 ^ m_M[3];
-      m_digest[4] ^= B4 ^ m_M[4];
-      m_digest[5] ^= B5 ^ m_M[5];
-      m_digest[6] ^= B6 ^ m_M[6];
-      m_digest[7] ^= B7 ^ m_M[7];
+      digest[0] ^= B0 ^ M[0];
+      digest[1] ^= B1 ^ M[1];
+      digest[2] ^= B2 ^ M[2];
+      digest[3] ^= B3 ^ M[3];
+      digest[4] ^= B4 ^ M[4];
+      digest[5] ^= B5 ^ M[5];
+      digest[6] ^= B6 ^ M[6];
+      digest[7] ^= B7 ^ M[7];
 
-      in += hash_block_size();
+      in += 64;
       }
    }
 
-/*
-* Copy out the digest
-*/
-void Whirlpool::copy_out(uint8_t output[])
+void Whirlpool::init(uint64_t digest[8])
    {
-   copy_out_vec_be(output, output_length(), m_digest);
+   clear_mem(digest, 8);
+   }
+
+void Whirlpool::add_data(const uint8_t input[], size_t length)
+   {
+   m_md.add_data(input, length);
+   }
+
+void Whirlpool::final_result(uint8_t output[])
+   {
+   m_md.final_result(output);
+   }
+
+void Whirlpool::clear()
+   {
+   m_md.clear();
+   }
+
+std::unique_ptr<HashFunction> Whirlpool::new_object() const
+   {
+   return std::make_unique<Whirlpool>();
    }
 
 std::unique_ptr<HashFunction> Whirlpool::copy_state() const
    {
    return std::make_unique<Whirlpool>(*this);
-   }
-
-/*
-* Clear memory of sensitive data
-*/
-void Whirlpool::clear()
-   {
-   MDx_HashFunction::clear();
-   zeroise(m_M);
-   zeroise(m_digest);
    }
 
 }

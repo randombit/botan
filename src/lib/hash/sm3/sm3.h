@@ -8,6 +8,7 @@
 #ifndef BOTAN_SM3_H_
 #define BOTAN_SM3_H_
 
+#include <botan/hash.h>
 #include <botan/internal/mdx_hash.h>
 
 namespace Botan {
@@ -15,26 +16,27 @@ namespace Botan {
 /**
 * SM3
 */
-class SM3 final : public MDx_HashFunction
+class SM3 final : public HashFunction
    {
    public:
+      SM3() {}
+
       std::string name() const override { return "SM3"; }
       size_t output_length() const override { return 32; }
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SM3>(); }
+      size_t hash_block_size() const override { return 64; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
-
-      SM3() : MDx_HashFunction(64, true, true), m_digest(32)
-         { clear(); }
    private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t output[]) override;
 
-      /**
-      * The digest value
-      */
-      secure_vector<uint32_t> m_digest;
+      static void compress_n(uint32_t digest[8], const uint8_t input[], size_t blocks);
+      static void init(uint32_t digest[8]);
+
+      MD_Hash<MD_Endian::Big, uint32_t, 8, SM3::init, SM3::compress_n> m_md;
    };
 
 }

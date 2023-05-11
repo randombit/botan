@@ -15,42 +15,11 @@
 
 namespace Botan {
 
-namespace {
-
-std::string sha512_provider()
-   {
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has_bmi2())
-      {
-      return "bmi2";
-      }
-#endif
-
-   return "base";
-   }
-
-}
-
-std::unique_ptr<HashFunction> SHA_384::copy_state() const
-   {
-   return std::make_unique<SHA_384>(*this);
-   }
-
-std::unique_ptr<HashFunction> SHA_512::copy_state() const
-   {
-   return std::make_unique<SHA_512>(*this);
-   }
-
-std::unique_ptr<HashFunction> SHA_512_256::copy_state() const
-   {
-   return std::make_unique<SHA_512_256>(*this);
-   }
-
 /*
 * SHA-{384,512} Compression Function
 */
 //static
-void SHA_512::compress_digest(secure_vector<uint64_t>& digest,
+void SHA_512::compress_digest(uint64_t digest[8],
                               const uint8_t input[], size_t blocks)
    {
 #if defined(BOTAN_HAS_SHA2_64_BMI2)
@@ -177,16 +146,57 @@ void SHA_512::compress_digest(secure_vector<uint64_t>& digest,
       }
    }
 
-#undef SHA2_64_F
+namespace {
 
-std::string SHA_512_256::provider() const
+std::string sha512_provider()
    {
-   return sha512_provider();
+#if defined(BOTAN_HAS_SHA2_64_BMI2)
+   if(CPUID::has_bmi2())
+      {
+      return "bmi2";
+      }
+#endif
+
+   return "base";
    }
 
-std::string SHA_384::provider() const
+}
+
+void SHA_512::init(uint64_t digest[8])
    {
-   return sha512_provider();
+   const uint64_t SHA_512_IV[8] = {
+      0x6A09E667F3BCC908, 0xBB67AE8584CAA73B,
+      0x3C6EF372FE94F82B, 0xA54FF53A5F1D36F1,
+      0x510E527FADE682D1, 0x9B05688C2B3E6C1F,
+      0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179
+   };
+
+   copy_mem(digest, SHA_512_IV, 8);
+   }
+
+std::unique_ptr<HashFunction> SHA_512::copy_state() const
+   {
+   return std::make_unique<SHA_512>(*this);
+   }
+
+std::unique_ptr<HashFunction> SHA_512::new_object() const
+   {
+   return std::make_unique<SHA_512>();
+   }
+
+void SHA_512::add_data(const uint8_t input[], size_t length)
+   {
+   m_md.add_data(input, length);
+   }
+
+void SHA_512::final_result(uint8_t output[])
+   {
+   m_md.final_result(output);
+   }
+
+void SHA_512::clear()
+   {
+   m_md.clear();
    }
 
 std::string SHA_512::provider() const
@@ -194,73 +204,90 @@ std::string SHA_512::provider() const
    return sha512_provider();
    }
 
-void SHA_512_256::compress_n(const uint8_t input[], size_t blocks)
+
+void SHA_384::init(uint64_t digest[8])
    {
-   SHA_512::compress_digest(m_digest, input, blocks);
+   const uint64_t SHA_384_IV[8] = {
+      0xCBBB9D5DC1059ED8, 0x629A292A367CD507,
+      0x9159015A3070DD17, 0x152FECD8F70E5939,
+      0x67332667FFC00B31, 0x8EB44A8768581511,
+      0xDB0C2E0D64F98FA7, 0x47B5481DBEFA4FA4,
+   };
+
+   copy_mem(digest, SHA_384_IV, 8);
    }
 
-void SHA_384::compress_n(const uint8_t input[], size_t blocks)
+std::unique_ptr<HashFunction> SHA_384::copy_state() const
    {
-   SHA_512::compress_digest(m_digest, input, blocks);
+   return std::make_unique<SHA_384>(*this);
    }
 
-void SHA_512::compress_n(const uint8_t input[], size_t blocks)
+std::unique_ptr<HashFunction> SHA_384::new_object() const
    {
-   SHA_512::compress_digest(m_digest, input, blocks);
+   return std::make_unique<SHA_384>();
    }
 
-void SHA_512_256::copy_out(uint8_t output[])
+void SHA_384::add_data(const uint8_t input[], size_t length)
    {
-   copy_out_vec_be(output, output_length(), m_digest);
+   m_md.add_data(input, length);
    }
 
-void SHA_384::copy_out(uint8_t output[])
+void SHA_384::final_result(uint8_t output[])
    {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
-
-void SHA_512::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
-
-void SHA_512_256::clear()
-   {
-   MDx_HashFunction::clear();
-   m_digest[0] = 0x22312194FC2BF72C;
-   m_digest[1] = 0x9F555FA3C84C64C2;
-   m_digest[2] = 0x2393B86B6F53B151;
-   m_digest[3] = 0x963877195940EABD;
-   m_digest[4] = 0x96283EE2A88EFFE3;
-   m_digest[5] = 0xBE5E1E2553863992;
-   m_digest[6] = 0x2B0199FC2C85B8AA;
-   m_digest[7] = 0x0EB72DDC81C52CA2;
+   m_md.final_result(output);
    }
 
 void SHA_384::clear()
    {
-   MDx_HashFunction::clear();
-   m_digest[0] = 0xCBBB9D5DC1059ED8;
-   m_digest[1] = 0x629A292A367CD507;
-   m_digest[2] = 0x9159015A3070DD17;
-   m_digest[3] = 0x152FECD8F70E5939;
-   m_digest[4] = 0x67332667FFC00B31;
-   m_digest[5] = 0x8EB44A8768581511;
-   m_digest[6] = 0xDB0C2E0D64F98FA7;
-   m_digest[7] = 0x47B5481DBEFA4FA4;
+   m_md.clear();
    }
 
-void SHA_512::clear()
+std::string SHA_384::provider() const
    {
-   MDx_HashFunction::clear();
-   m_digest[0] = 0x6A09E667F3BCC908;
-   m_digest[1] = 0xBB67AE8584CAA73B;
-   m_digest[2] = 0x3C6EF372FE94F82B;
-   m_digest[3] = 0xA54FF53A5F1D36F1;
-   m_digest[4] = 0x510E527FADE682D1;
-   m_digest[5] = 0x9B05688C2B3E6C1F;
-   m_digest[6] = 0x1F83D9ABFB41BD6B;
-   m_digest[7] = 0x5BE0CD19137E2179;
+   return sha512_provider();
+   }
+
+
+void SHA_512_256::init(uint64_t digest[8])
+   {
+   const uint64_t SHA_512_256_IV[8] = {
+      0x22312194FC2BF72C, 0x9F555FA3C84C64C2,
+      0x2393B86B6F53B151, 0x963877195940EABD,
+      0x96283EE2A88EFFE3, 0xBE5E1E2553863992,
+      0x2B0199FC2C85B8AA, 0x0EB72DDC81C52CA2,
+   };
+
+   copy_mem(digest, SHA_512_256_IV, 8);
+   }
+
+std::unique_ptr<HashFunction> SHA_512_256::copy_state() const
+   {
+   return std::make_unique<SHA_512_256>(*this);
+   }
+
+std::unique_ptr<HashFunction> SHA_512_256::new_object() const
+   {
+   return std::make_unique<SHA_512_256>();
+   }
+
+void SHA_512_256::add_data(const uint8_t input[], size_t length)
+   {
+   m_md.add_data(input, length);
+   }
+
+void SHA_512_256::final_result(uint8_t output[])
+   {
+   m_md.final_result(output);
+   }
+
+void SHA_512_256::clear()
+   {
+   m_md.clear();
+   }
+
+std::string SHA_512_256::provider() const
+   {
+   return sha512_provider();
    }
 
 }

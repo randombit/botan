@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-void SHA_512::compress_digest_bmi2(secure_vector<uint64_t>& digest,
+void SHA_512::compress_digest_bmi2(uint64_t digest[8],
                                    const uint8_t input[], size_t blocks)
    {
    uint64_t A = digest[0], B = digest[1], C = digest[2],

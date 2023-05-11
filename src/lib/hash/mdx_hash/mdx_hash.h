@@ -1,62 +1,120 @@
 /*
-* MDx Hash Function
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2023 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_MDX_BASE_H_
-#define BOTAN_MDX_BASE_H_
+#ifndef BOTAN_MDX_HELPER_H_
+#define BOTAN_MDX_HELPER_H_
 
-#include <botan/hash.h>
+#include <botan/internal/bit_ops.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 
-/**
-* MDx Hash Function Base Class
-*/
-class MDx_HashFunction : public HashFunction
+enum class MD_Endian {
+   Little,
+   Big,
+};
+
+template<MD_Endian ENDIAN,
+         typename DIGEST_T,
+         size_t DIGEST_ELEM,
+         void init_fn(DIGEST_T[DIGEST_ELEM]),
+         void compress_fn(DIGEST_T[DIGEST_ELEM], const uint8_t[], size_t),
+         size_t BLOCK_BYTES = 64,
+         size_t DIGEST_LENGTH = DIGEST_ELEM * sizeof(DIGEST_T),
+         size_t CTR_BYTES = 8>
+class MD_Hash final
    {
    public:
-      /**
-      * @param block_length is the number of bytes per block, which must
-      *        be a power of 2 and at least 8.
-      * @param big_byte_endian specifies if the hash uses big-endian bytes
-      * @param big_bit_endian specifies if the hash uses big-endian bits
-      * @param counter_size specifies the size of the counter var in bytes
-      */
-      MDx_HashFunction(size_t block_length,
-                       bool big_byte_endian,
-                       bool big_bit_endian,
-                       uint8_t counter_size = 8);
+      static_assert(BLOCK_BYTES >= 64 && is_power_of_2(BLOCK_BYTES));
+      static_assert(CTR_BYTES >= 8 && is_power_of_2(CTR_BYTES));
+      static_assert(CTR_BYTES < BLOCK_BYTES);
+      static_assert(DIGEST_LENGTH >= 16 && DIGEST_LENGTH <= DIGEST_ELEM * sizeof(DIGEST_T));
 
-      size_t hash_block_size() const override final { return m_buffer.size(); }
-   protected:
-      void add_data(const uint8_t input[], size_t length) override final;
-      void final_result(uint8_t output[]) override final;
+      static const size_t BLOCK_BITS = ceil_log2(BLOCK_BYTES);
 
-      /**
-      * Run the hash's compression function over a set of blocks
-      * @param blocks the input
-      * @param block_n the number of blocks
-      */
-      virtual void compress_n(const uint8_t blocks[], size_t block_n) = 0;
+      MD_Hash() :
+         m_count(0),
+         m_position(0)
+         {
+         clear_mem(m_buffer, BLOCK_BYTES);
+         init_fn(m_digest);
+         }
 
-      void clear() override;
+      void add_data(const uint8_t input[], size_t length)
+         {
+         m_count += length;
 
-      /**
-      * Copy the output to the buffer
-      * @param buffer to put the output into
-      */
-      virtual void copy_out(uint8_t buffer[]) = 0;
+         if(m_position > 0)
+            {
+            const size_t take = std::min(length, BLOCK_BYTES - m_position);
+
+            copy_mem(&m_buffer[m_position], input, take);
+
+            if(m_position + take == BLOCK_BYTES)
+               {
+               compress_fn(m_digest, m_buffer, 1);
+               input += (BLOCK_BYTES - m_position);
+               length -= (BLOCK_BYTES - m_position);
+               m_position = 0;
+               }
+            }
+
+         const size_t full_blocks = length / BLOCK_BYTES;
+         const size_t remaining   = length % BLOCK_BYTES;
+
+         if(full_blocks > 0)
+            {
+            compress_fn(m_digest, input, full_blocks);
+            }
+
+         copy_mem(&m_buffer[m_position], input + full_blocks * BLOCK_BYTES, remaining);
+         m_position += remaining;
+         }
+
+      void final_result(uint8_t output[])
+         {
+         BOTAN_ASSERT_NOMSG(m_position < BLOCK_BYTES);
+         clear_mem(&m_buffer[m_position], BLOCK_BYTES - m_position);
+         m_buffer[m_position] = 0x80;
+
+         if(m_position >= BLOCK_BYTES - CTR_BYTES)
+            {
+            compress_fn(m_digest, m_buffer, 1);
+            clear_mem(m_buffer, BLOCK_BYTES);
+            }
+
+         const uint64_t bit_count = m_count * 8;
+
+         if constexpr(ENDIAN == MD_Endian::Big)
+            store_be(bit_count, &m_buffer[BLOCK_BYTES - 8]);
+         else
+            store_le(bit_count, &m_buffer[BLOCK_BYTES - 8]);
+
+         compress_fn(m_digest, m_buffer, 1);
+
+         if constexpr(ENDIAN == MD_Endian::Big)
+            copy_out_be(output, DIGEST_LENGTH, m_digest);
+         else
+            copy_out_le(output, DIGEST_LENGTH, m_digest);
+
+         clear();
+         }
+
+      void clear()
+         {
+         init_fn(m_digest);
+         clear_mem(m_buffer, BLOCK_BYTES);
+         m_count = 0;
+         m_position = 0;
+         }
+
    private:
-      const uint8_t m_pad_char;
-      const uint8_t m_counter_size;
-      const uint8_t m_block_bits;
-      const bool m_count_big_endian;
-
+      uint8_t m_buffer[BLOCK_BYTES];
+      DIGEST_T m_digest[DIGEST_ELEM];
       uint64_t m_count;
-      secure_vector<uint8_t> m_buffer;
       size_t m_position;
    };
 

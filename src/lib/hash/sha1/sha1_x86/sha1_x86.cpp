@@ -18,18 +18,16 @@
 namespace Botan {
 
 BOTAN_FUNC_ISA("sha,ssse3,sse4.1")
-void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest,
+void SHA_1::sha1_compress_x86(uint32_t digest[5],
                                 const uint8_t input[],
                                 size_t blocks)
    {
    const __m128i MASK = _mm_set_epi64x(0x0001020304050607, 0x08090a0b0c0d0e0f);
    const __m128i* input_mm = reinterpret_cast<const __m128i*>(input);
 
-   uint32_t* state = digest.data();
-
    // Load initial values
-   __m128i ABCD = _mm_loadu_si128(reinterpret_cast<__m128i*>(state));
-   __m128i E0 = _mm_set_epi32(state[4], 0, 0, 0);
+   __m128i ABCD = _mm_loadu_si128(reinterpret_cast<__m128i*>(digest));
+   __m128i E0 = _mm_set_epi32(digest[4], 0, 0, 0);
    ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
 
    while (blocks)
@@ -207,8 +205,8 @@ void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest,
 
    // Save state
    ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
-   _mm_storeu_si128(reinterpret_cast<__m128i*>(state), ABCD);
-   state[4] = _mm_extract_epi32(E0, 3);
+   _mm_storeu_si128(reinterpret_cast<__m128i*>(digest), ABCD);
+   digest[4] = _mm_extract_epi32(E0, 3);
    }
 
 }

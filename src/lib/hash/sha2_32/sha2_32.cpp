@@ -1,4 +1,4 @@
-/*
+ /*
 * SHA-{224,256}
 * (C) 1999-2010,2017 Jack Lloyd
 *     2007 FlexSecure GmbH
@@ -16,50 +16,10 @@
 
 namespace Botan {
 
-namespace {
-
-std::string sha256_provider()
-   {
-#if defined(BOTAN_HAS_SHA2_32_X86)
-   if(CPUID::has_intel_sha())
-      {
-      return "shani";
-      }
-#endif
-
-#if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
-   if(CPUID::has_bmi2())
-      {
-      return "bmi2";
-      }
-#endif
-
-#if defined(BOTAN_HAS_SHA2_32_ARMV8)
-   if(CPUID::has_arm_sha2())
-      {
-      return "armv8";
-      }
-#endif
-
-   return "base";
-   }
-
-}
-
-std::unique_ptr<HashFunction> SHA_224::copy_state() const
-   {
-   return std::make_unique<SHA_224>(*this);
-   }
-
-std::unique_ptr<HashFunction> SHA_256::copy_state() const
-   {
-   return std::make_unique<SHA_256>(*this);
-   }
-
 /*
 * SHA-224 / SHA-256 compression function
 */
-void SHA_256::compress_digest(secure_vector<uint32_t>& digest,
+void SHA_256::compress_digest(uint32_t digest[8],
                               const uint8_t input[], size_t blocks)
    {
 #if defined(BOTAN_HAS_SHA2_32_X86)
@@ -187,6 +147,106 @@ void SHA_256::compress_digest(secure_vector<uint32_t>& digest,
       }
    }
 
+void SHA_224::add_data(const uint8_t input[], size_t length)
+   {
+   m_md.add_data(input, length);
+   }
+
+void SHA_224::final_result(uint8_t output[])
+   {
+   m_md.final_result(output);
+   }
+
+void SHA_224::clear()
+   {
+   m_md.clear();
+   }
+
+void SHA_224::init(uint32_t digest[8])
+   {
+   const uint32_t SHA_224_IV[8] = {
+      0xC1059ED8, 0x367CD507, 0x3070DD17, 0xF70E5939,
+      0xFFC00B31, 0x68581511, 0x64F98FA7, 0xBEFA4FA4
+   };
+
+   copy_mem(digest, SHA_224_IV, 8);
+   }
+
+void SHA_256::add_data(const uint8_t input[], size_t length)
+   {
+   m_md.add_data(input, length);
+   }
+
+void SHA_256::final_result(uint8_t output[])
+   {
+   m_md.final_result(output);
+   }
+
+void SHA_256::clear()
+   {
+   m_md.clear();
+   }
+
+void SHA_256::init(uint32_t digest[8])
+   {
+   const uint32_t SHA_256_IV[8] = {
+      0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
+      0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19
+   };
+
+   copy_mem(digest, SHA_256_IV, 8);
+   }
+
+namespace {
+
+std::string sha256_provider()
+   {
+#if defined(BOTAN_HAS_SHA2_32_X86)
+   if(CPUID::has_intel_sha())
+      {
+      return "shani";
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
+   if(CPUID::has_bmi2())
+      {
+      return "bmi2";
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32_ARMV8)
+   if(CPUID::has_arm_sha2())
+      {
+      return "armv8";
+      }
+#endif
+
+   return "base";
+   }
+
+}
+
+std::unique_ptr<HashFunction> SHA_224::new_object() const
+   {
+   return std::make_unique<SHA_224>();
+   }
+
+std::unique_ptr<HashFunction> SHA_224::copy_state() const
+   {
+   return std::make_unique<SHA_224>(*this);
+   }
+
+std::unique_ptr<HashFunction> SHA_256::new_object() const
+   {
+   return std::make_unique<SHA_256>();
+   }
+
+std::unique_ptr<HashFunction> SHA_256::copy_state() const
+   {
+   return std::make_unique<SHA_256>(*this);
+   }
+
 std::string SHA_224::provider() const
    {
    return sha256_provider();
@@ -195,70 +255,6 @@ std::string SHA_224::provider() const
 std::string SHA_256::provider() const
    {
    return sha256_provider();
-   }
-
-/*
-* SHA-224 compression function
-*/
-void SHA_224::compress_n(const uint8_t input[], size_t blocks)
-   {
-   SHA_256::compress_digest(m_digest, input, blocks);
-   }
-
-/*
-* Copy out the digest
-*/
-void SHA_224::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
-
-/*
-* Clear memory of sensitive data
-*/
-void SHA_224::clear()
-   {
-   MDx_HashFunction::clear();
-   m_digest[0] = 0xC1059ED8;
-   m_digest[1] = 0x367CD507;
-   m_digest[2] = 0x3070DD17;
-   m_digest[3] = 0xF70E5939;
-   m_digest[4] = 0xFFC00B31;
-   m_digest[5] = 0x68581511;
-   m_digest[6] = 0x64F98FA7;
-   m_digest[7] = 0xBEFA4FA4;
-   }
-
-/*
-* SHA-256 compression function
-*/
-void SHA_256::compress_n(const uint8_t input[], size_t blocks)
-   {
-   SHA_256::compress_digest(m_digest, input, blocks);
-   }
-
-/*
-* Copy out the digest
-*/
-void SHA_256::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
-
-/*
-* Clear memory of sensitive data
-*/
-void SHA_256::clear()
-   {
-   MDx_HashFunction::clear();
-   m_digest[0] = 0x6A09E667;
-   m_digest[1] = 0xBB67AE85;
-   m_digest[2] = 0x3C6EF372;
-   m_digest[3] = 0xA54FF53A;
-   m_digest[4] = 0x510E527F;
-   m_digest[5] = 0x9B05688C;
-   m_digest[6] = 0x1F83D9AB;
-   m_digest[7] = 0x5BE0CD19;
    }
 
 }

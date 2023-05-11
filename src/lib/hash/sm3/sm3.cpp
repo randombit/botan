@@ -14,17 +14,7 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> SM3::copy_state() const
-   {
-   return std::make_unique<SM3>(*this);
-   }
-
 namespace {
-
-const uint32_t SM3_IV[] = {
-   0x7380166fUL, 0x4914b2b9UL, 0x172442d7UL, 0xda8a0600UL,
-   0xa96f30bcUL, 0x163138aaUL, 0xe38dee4dUL, 0xb0fb0e4eUL
-};
 
 inline uint32_t P0(uint32_t X)
    {
@@ -76,10 +66,10 @@ inline uint32_t SM3_E(uint32_t W0, uint32_t W7, uint32_t W13, uint32_t W3, uint3
 /*
 * SM3 Compression Function
 */
-void SM3::compress_n(const uint8_t input[], size_t blocks)
+void SM3::compress_n(uint32_t digest[8], const uint8_t input[], size_t blocks)
    {
-   uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3],
-            E = m_digest[4], F = m_digest[5], G = m_digest[6], H = m_digest[7];
+   uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3],
+            E = digest[4], F = digest[5], G = digest[6], H = digest[7];
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -217,34 +207,52 @@ void SM3::compress_n(const uint8_t input[], size_t blocks)
       R2(C, D, A, B, G, H, E, F, 0x9EA1E762, W14, W14 ^ W02);
       R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W15, W15 ^ W03);
 
-      A = (m_digest[0] ^= A);
-      B = (m_digest[1] ^= B);
-      C = (m_digest[2] ^= C);
-      D = (m_digest[3] ^= D);
-      E = (m_digest[4] ^= E);
-      F = (m_digest[5] ^= F);
-      G = (m_digest[6] ^= G);
-      H = (m_digest[7] ^= H);
+      A = (digest[0] ^= A);
+      B = (digest[1] ^= B);
+      C = (digest[2] ^= C);
+      D = (digest[3] ^= D);
+      E = (digest[4] ^= E);
+      F = (digest[5] ^= F);
+      G = (digest[6] ^= G);
+      H = (digest[7] ^= H);
 
-      input += hash_block_size();
+      input += 64;
       }
    }
 
-/*
-* Copy out the digest
-*/
-void SM3::copy_out(uint8_t output[])
+void SM3::init(uint32_t digest[8])
    {
-   copy_out_vec_be(output, output_length(), m_digest);
+   const uint32_t SM3_IV[8] = {
+      0x7380166f, 0x4914b2b9, 0x172442d7, 0xda8a0600,
+      0xa96f30bc, 0x163138aa, 0xe38dee4d, 0xb0fb0e4e
+   };
+
+   copy_mem(digest, SM3_IV, 8);
    }
 
-/*
-* Clear memory of sensitive data
-*/
+void SM3::add_data(const uint8_t input[], size_t length)
+   {
+   m_md.add_data(input, length);
+   }
+
+void SM3::final_result(uint8_t output[])
+   {
+   m_md.final_result(output);
+   }
+
 void SM3::clear()
    {
-   MDx_HashFunction::clear();
-   std::copy(std::begin(SM3_IV), std::end(SM3_IV), m_digest.begin());
+   m_md.clear();
+   }
+
+std::unique_ptr<HashFunction> SM3::new_object() const
+   {
+   return std::make_unique<SM3>();
+   }
+
+std::unique_ptr<HashFunction> SM3::copy_state() const
+   {
+   return std::make_unique<SM3>(*this);
    }
 
 }

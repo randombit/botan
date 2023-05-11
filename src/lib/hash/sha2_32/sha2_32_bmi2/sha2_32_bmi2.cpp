@@ -20,7 +20,7 @@ flags, GCC and Clang use the BMI2 instructions without further help.
 
 Likely instruction scheduling could be improved by using inline asm.
 */
-void SHA_256::compress_digest_x86_bmi2(secure_vector<uint32_t>& digest,
+void SHA_256::compress_digest_x86_bmi2(uint32_t digest[8],
                                        const uint8_t input[],
                                        size_t blocks)
    {

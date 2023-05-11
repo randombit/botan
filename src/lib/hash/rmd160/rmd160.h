@@ -8,6 +8,7 @@
 #ifndef BOTAN_RIPEMD_160_H_
 #define BOTAN_RIPEMD_160_H_
 
+#include <botan/hash.h>
 #include <botan/internal/mdx_hash.h>
 
 namespace Botan {
@@ -15,23 +16,27 @@ namespace Botan {
 /**
 * RIPEMD-160
 */
-class RIPEMD_160 final : public MDx_HashFunction
+class RIPEMD_160 final : public HashFunction
    {
    public:
+      RIPEMD_160() {}
+
       std::string name() const override { return "RIPEMD-160"; }
       size_t output_length() const override { return 20; }
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<RIPEMD_160>(); }
+      size_t hash_block_size() const override { return 64; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
-
-      RIPEMD_160() : MDx_HashFunction(64, false, true), m_M(16), m_digest(5)
-         { clear(); }
    private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t output[]) override;
 
-      secure_vector<uint32_t> m_M, m_digest;
+      static void compress_n(uint32_t digest[5], const uint8_t input[], size_t blocks);
+      static void init(uint32_t digest[5]);
+
+      MD_Hash<MD_Endian::Little, uint32_t, 5, RIPEMD_160::init, RIPEMD_160::compress_n> m_md;
    };
 
 }

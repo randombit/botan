@@ -117,7 +117,7 @@ inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 */
 //static
 BOTAN_FUNC_ISA("sse2")
-void SHA_1::sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
+void SHA_1::sse2_compress_n(uint32_t digest[5], const uint8_t input[], size_t blocks)
    {
    using namespace SHA1_SSE2_F;
 

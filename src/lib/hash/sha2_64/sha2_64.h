@@ -8,42 +8,24 @@
 #ifndef BOTAN_SHA_64BIT_H_
 #define BOTAN_SHA_64BIT_H_
 
+#include <botan/hash.h>
 #include <botan/internal/mdx_hash.h>
 
 namespace Botan {
 
 /**
-* SHA-384
-*/
-class SHA_384 final : public MDx_HashFunction
-   {
-   public:
-      std::string name() const override { return "SHA-384"; }
-      size_t output_length() const override { return 48; }
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_384>(); }
-      std::unique_ptr<HashFunction> copy_state() const override;
-      std::string provider() const override;
-
-      void clear() override;
-
-      SHA_384() : MDx_HashFunction(128, true, true, 16), m_digest(8)
-         { clear(); }
-   private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
-
-      secure_vector<uint64_t> m_digest;
-   };
-
-/**
 * SHA-512
 */
-class SHA_512 final : public MDx_HashFunction
+class SHA_512 final : public HashFunction
    {
    public:
+      SHA_512() {}
+
       std::string name() const override { return "SHA-512"; }
       size_t output_length() const override { return 64; }
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_512>(); }
+      size_t hash_block_size() const override { return 128; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
       std::string provider() const override;
 
@@ -52,47 +34,79 @@ class SHA_512 final : public MDx_HashFunction
       /*
       * Perform a SHA-512 compression. For internal use
       */
-      static void compress_digest(secure_vector<uint64_t>& digest,
+      static void compress_digest(uint64_t digest[8],
                                   const uint8_t input[],
                                   size_t blocks);
-
-      SHA_512() : MDx_HashFunction(128, true, true, 16), m_digest(8)
-         { clear(); }
    private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t output[]) override;
+
+      static void init(uint64_t digest[8]);
 
       static const uint64_t K[80];
 
 #if defined(BOTAN_HAS_SHA2_64_BMI2)
-      static void compress_digest_bmi2(secure_vector<uint64_t>& digest,
+      static void compress_digest_bmi2(uint64_t digest[8],
                                        const uint8_t input[],
                                        size_t blocks);
 #endif
 
-      secure_vector<uint64_t> m_digest;
+      MD_Hash<MD_Endian::Big, uint64_t, 16,
+              SHA_512::init, SHA_512::compress_digest, 128, 64, 16> m_md;
+   };
+
+/**
+* SHA-384
+*/
+class SHA_384 final : public HashFunction
+   {
+   public:
+      SHA_384() {}
+
+      std::string name() const override { return "SHA-384"; }
+      size_t output_length() const override { return 48; }
+      size_t hash_block_size() const override { return 128; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
+      std::unique_ptr<HashFunction> copy_state() const override;
+      std::string provider() const override;
+
+      void clear() override;
+   private:
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t output[]) override;
+
+      static void init(uint64_t digest[8]);
+
+      MD_Hash<MD_Endian::Big, uint64_t, 16,
+              SHA_384::init, SHA_512::compress_digest, 128, 48, 16> m_md;
    };
 
 /**
 * SHA-512/256
 */
-class SHA_512_256 final : public MDx_HashFunction
+class SHA_512_256 final : public HashFunction
    {
    public:
+      SHA_512_256() {}
+
       std::string name() const override { return "SHA-512-256"; }
       size_t output_length() const override { return 32; }
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_512_256>(); }
+      size_t hash_block_size() const override { return 128; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
       std::string provider() const override;
 
       void clear() override;
-
-      SHA_512_256() : MDx_HashFunction(128, true, true, 16), m_digest(8) { clear(); }
    private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t output[]) override;
 
-      secure_vector<uint64_t> m_digest;
+      static void init(uint64_t digest[8]);
+
+      MD_Hash<MD_Endian::Big, uint64_t, 16,
+              SHA_512_256::init, SHA_512::compress_digest, 128, 32, 16> m_md;
    };
 
 }
