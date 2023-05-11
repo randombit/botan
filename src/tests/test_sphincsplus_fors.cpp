@@ -57,12 +57,16 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test
 
          auto hashes = Botan::Sphincs_Hash_Functions::create(params);
          Botan::Sphincs_Address address = read_address(vars.get_req_bin("Address"));
-         auto [ pk, sig ] = Botan::fors_sign(hashed_message,
-                                             secret_seed,
-                                             public_seed,
-                                             address,
-                                             params,
-                                             *hashes);
+
+         Botan::ForsSignature sig(params.fors_signature_bytes());
+
+         auto pk = Botan::fors_sign(sig,
+                                    hashed_message,
+                                    secret_seed,
+                                    public_seed,
+                                    address,
+                                    params,
+                                    *hashes);
 
          const auto pk_ref = Botan::SphincsXmssRootNode(vars.get_req_bin("PublicKey"));
          result.test_is_eq("Derived public key", pk, pk_ref);

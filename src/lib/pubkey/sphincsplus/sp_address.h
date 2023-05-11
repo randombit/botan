@@ -107,12 +107,14 @@ class BOTAN_TEST_API Sphincs_Address
          return *this;
          }
 
-      void copy_subtree_from(const Sphincs_Address& other)
+      Sphincs_Address& copy_subtree_from(const Sphincs_Address& other)
          {
          m_address[0] = other.m_address[0];
          m_address[1] = other.m_address[1];
          m_address[2] = other.m_address[2];
          m_address[3] = other.m_address[3];
+
+         return *this;
          }
 
       static Sphincs_Address as_subtree_from(const Sphincs_Address& other)
@@ -122,13 +124,15 @@ class BOTAN_TEST_API Sphincs_Address
          return result;
          }
 
-      void copy_keypair_from(const Sphincs_Address other)
+      Sphincs_Address& copy_keypair_from(const Sphincs_Address other)
          {
          m_address[0] = other.m_address[0];
          m_address[1] = other.m_address[1];
          m_address[2] = other.m_address[2];
          m_address[3] = other.m_address[3];
          m_address[5] = other.m_address[5];
+
+         return *this;
          }
 
       static Sphincs_Address as_keypair_from(const Sphincs_Address& other)

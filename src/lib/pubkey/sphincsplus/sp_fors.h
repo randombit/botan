@@ -31,12 +31,13 @@ class Sphincs_Hash_Functions;
  * FORS (Forest of Random Subsets). It is meant to be used inside SPHINCS+
  * and does not aim to be applicable for other use cases.
  */
-BOTAN_TEST_API std::pair<SphincsXmssRootNode, ForsSignature> fors_sign(const SphincsHashedMessage& hashed_message,
-                                                                 const SphincsSecretSeed& secret_seed,
-                                                                 const SphincsPublicSeed& public_seed,
-                                                                 const Sphincs_Address& address,
-                                                                 const Sphincs_Parameters& params,
-                                                                 Sphincs_Hash_Functions& hash);
+BOTAN_TEST_API SphincsXmssRootNode fors_sign(std::span<uint8_t> sig_out,
+                                             const SphincsHashedMessage& hashed_message,
+                                             const SphincsSecretSeed& secret_seed,
+                                             const SphincsPublicSeed& public_seed,
+                                             const Sphincs_Address& address,
+                                             const Sphincs_Parameters& params,
+                                             Sphincs_Hash_Functions& hashes);
 
 /**
  * Reconstructs the FORS public key from a given FORS @p signature and

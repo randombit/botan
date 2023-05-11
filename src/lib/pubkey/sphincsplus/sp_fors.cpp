@@ -121,13 +121,16 @@ void compute_root_spec(std::span<uint8_t> out,
    hashes.T(out, public_seed, tree_address, left_buffer, right_buffer);
    }
 
-std::pair<SphincsXmssRootNode, ForsSignature> fors_sign(const SphincsHashedMessage& hashed_message,
-                                                  const SphincsSecretSeed& secret_seed,
-                                                  const SphincsPublicSeed& public_seed,
-                                                  const Sphincs_Address& address,
-                                                  const Sphincs_Parameters& params,
-                                                  Sphincs_Hash_Functions& hashes)
+SphincsXmssRootNode fors_sign(std::span<uint8_t> sig_out,
+                              const SphincsHashedMessage& hashed_message,
+                              const SphincsSecretSeed& secret_seed,
+                              const SphincsPublicSeed& public_seed,
+                              const Sphincs_Address& address,
+                              const Sphincs_Parameters& params,
+                              Sphincs_Hash_Functions& hashes)
    {
+   BOTAN_ASSERT_NOMSG(sig_out.size() == params.fors_signature_bytes());
+
    const auto indices = fors_message_to_indices(hashed_message, params);
 
    auto fors_tree_addr =
@@ -138,7 +141,8 @@ std::pair<SphincsXmssRootNode, ForsSignature> fors_sign(const SphincsHashedMessa
       Sphincs_Address::as_keypair_from(address)
          .set_type(Sphincs_Address::ForsTreeRootsCompression);
 
-   ForsSignature signature((params.a() + 1) * params.k() * params.n());
+   //ForsSignature signature((params.a() + 1) * params.k() * params.n());
+   //params.fors_signature_bytes();
 
    std::vector<uint8_t> roots(params.k() * params.n());
 
@@ -154,12 +158,12 @@ std::pair<SphincsXmssRootNode, ForsSignature> fors_sign(const SphincsHashedMessa
          .set_tree_index(indices.get().at(i) + idx_offset)
          .set_type(Sphincs_Address_Type::ForsKeyGeneration);
 
-      auto sig_location = std::span(signature).subspan(i * params.n() * (params.a() + 1), params.n());
+      auto sig_location = sig_out.subspan(i * params.n() * (params.a() + 1), params.n());
       hashes.PRF(sig_location, public_seed, secret_seed, fors_tree_addr);
 
       // Compute the authentication path and root for this leaf node
       fors_tree_addr.set_type(Sphincs_Address_Type::ForsTree);
-      auto auth_path_location = std::span(signature).subspan(params.n() * (i  * (params.a() + 1) + 1), params.n() * params.a());
+      auto auth_path_location = sig_out.subspan(params.n() * (i  * (params.a() + 1) + 1), params.n() * params.a());
       auto roots_location = std::span(roots).subspan(i * params.n(), params.n());
 
       auto gen_leaf_bound = std::bind(fors_gen_leaf_spec, std::placeholders::_1, std::ref(params), std::ref(secret_seed), std::ref(public_seed),
@@ -170,18 +174,18 @@ std::pair<SphincsXmssRootNode, ForsSignature> fors_sign(const SphincsHashedMessa
       }
 
    // Compute the public key by the hash of the concatenation of all roots
-   SphincsXmssRootNode pk(params.n());
-   hashes.T(pk, public_seed, fors_pk_addr, roots);
+   SphincsXmssRootNode fors_pk(params.n());
+   hashes.T(fors_pk, public_seed, fors_pk_addr, roots);
 
-   return std::make_pair(std::move(pk), std::move(signature));
+   return fors_pk;
    }
 
 SphincsXmssRootNode fors_public_key_from_signature(const SphincsHashedMessage& hashed_message,
-                                             const ForsSignature& signature,
-                                             const SphincsPublicSeed& public_seed,
-                                             const Sphincs_Address& address,
-                                             const Sphincs_Parameters& params,
-                                             Sphincs_Hash_Functions& hashes)
+                                                   const ForsSignature& signature,
+                                                   const SphincsPublicSeed& public_seed,
+                                                   const Sphincs_Address& address,
+                                                   const Sphincs_Parameters& params,
+                                                   Sphincs_Hash_Functions& hashes)
    {
    const auto indices = fors_message_to_indices(hashed_message, params);
 

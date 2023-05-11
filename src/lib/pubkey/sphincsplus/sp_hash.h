@@ -40,7 +40,7 @@ class Sphincs_Hash_Functions
 
       virtual std::pair<uint64_t, uint32_t>
       H_msg(std::span<uint8_t> out_message_hash,
-            const std::span<uint8_t> r,
+            const std::span<const uint8_t> r,
             const SphincsPublicSeed& pub_seed,
             const std::vector<uint8_t>& root,
             const std::vector<uint8_t>& message) = 0;
