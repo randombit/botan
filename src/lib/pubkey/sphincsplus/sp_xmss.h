@@ -31,7 +31,7 @@ void xmss_sign(std::span<uint8_t> out_sig,
                const SphincsPublicSeed& public_seed,
                const SphincsSecretSeed& secret_seed,
                Sphincs_Address& wots_addr, Sphincs_Address& tree_addr,
-               uint32_t idx_leaf, Sphincs_Parameters& params, Sphincs_Hash_Functions& hashes);
+               uint32_t idx_leaf, const Sphincs_Parameters& params, Sphincs_Hash_Functions& hashes);
 
 
 /* Compute root node of the top-most subtree. */

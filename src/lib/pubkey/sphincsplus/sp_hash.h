@@ -37,7 +37,25 @@ class Sphincs_Hash_Functions
       static std::unique_ptr<Sphincs_Hash_Functions> create(const Sphincs_Parameters& sphincs_params);
 
    public:
-      virtual void PRF_msg(std::span<uint8_t> out,
+
+      virtual std::pair<uint64_t, uint32_t>
+      H_msg(std::span<uint8_t> out_message_hash,
+            const std::span<uint8_t> r,
+            const SphincsPublicSeed& pub_seed,
+            const std::vector<uint8_t>& root,
+            const std::vector<uint8_t>& message) = 0;
+
+      /**
+       * Using SK.PRF, the optional randomness, and a message, computes the message random R,
+       * and the tree and leaf indices.
+       *
+       * @param out_message_hash output location for the message hash
+       * @param sk_prf SK.PRF
+       * @param opt_rand optional randomness
+       * @param msg message
+       * @return (tree index, leaf index)
+       */
+      virtual void PRF_msg(std::span<uint8_t> out_r,
                            const SphincsSecretPRF& sk_prf,
                            const SphincsOptionalRandomness& opt_rand,
                            std::span<const uint8_t> in) = 0;

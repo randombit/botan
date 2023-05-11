@@ -139,7 +139,7 @@ std::pair<ForsPublicKey, ForsSignature> fors_sign(const SphincsHashedMessage& ha
       Sphincs_Address::as_keypair_from(address)
          .set_type(Sphincs_Address::ForsTreeRootsCompression);
 
-   ForsSignature signature((params.a() + 1) * params.k()* params.n());
+   ForsSignature signature((params.a() + 1) * params.k() * params.n());
 
    std::vector<uint8_t> roots(params.k() * params.n());
 

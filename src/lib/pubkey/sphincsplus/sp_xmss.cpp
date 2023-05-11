@@ -1,12 +1,12 @@
 /*
- * Sphincs+ XMSS logic
- * (C) 2023 Jack Lloyd
- *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
- *
- * Botan is released under the Simplified BSD License (see license.txt)
- **/
+* Sphincs+ XMSS logic
+* (C) 2023 Jack Lloyd
+*     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+**/
 
- #include <botan/internal/sp_xmss.h>
+#include <botan/internal/sp_xmss.h>
 
 namespace Botan
 {
@@ -17,7 +17,7 @@ namespace Botan
                const SphincsPublicSeed& public_seed,
                const SphincsSecretSeed& secret_seed,
                Sphincs_Address& wots_addr, Sphincs_Address& tree_addr,
-               uint32_t idx_leaf, Sphincs_Parameters& params, Sphincs_Hash_Functions& hashes)
+               uint32_t idx_leaf, const Sphincs_Parameters& params, Sphincs_Hash_Functions& hashes)
         {
         auto auth_path_location = out_sig.subspan(params.wots_bytes(), out_sig.size() - params.wots_bytes());
 

@@ -143,6 +143,37 @@ class Sphincs_Parameters
        */
       size_t wots_bytes() const { return m_wots_bytes; }
 
+      /**
+       * @returns the byte length of a FORS signature
+       */
+      size_t fors_signature_bytes() const { return m_fors_signature_bytes; }
+
+      /**
+       * @returns the byte length of the FORS input message
+       */
+      size_t fors_message_bytes() const { return m_fors_message_bytes; }
+
+      /**
+       * @returns the byte length of a Sphincs+ signature
+       */
+      size_t sphincs_signature_bytes() const { return m_sp_sig_bytes; }
+
+      /**
+       * @returns the byte length of the tree index output of H_msg
+       */
+      size_t tree_digest_bytes() const { return m_tree_digest_bytes; }
+
+      /**
+       * @returns the byte length of the leaf index output of H_msg
+       */
+      size_t leaf_digest_bytes() const { return m_leaf_digest_bytes; }
+
+      /**
+       * @returns the byte length of the output of H_msg. Corresponds to
+       *          m in the specification of M_msg with Shake in section 7.2.1
+       */
+      size_t h_msg_digest_bytes() const { return m_h_msg_digest_bytes; }
+
    private:
       Sphincs_Parameters(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash_type,
                         size_t n, size_t h, size_t d, size_t a, size_t k, size_t w)
@@ -150,11 +181,20 @@ class Sphincs_Parameters
          , m_n(n), m_h(h), m_d(d), m_a(a), m_k(k), m_w(w)
          {
             m_tree_height = m_h / m_d;
-            m_log_w = floor(log2(m_w));
+            m_log_w = std::floor(log2(m_w));
             m_wots_len1 = (m_n * 8) / m_log_w;
             m_wots_len2 = std::floor(log2(m_wots_len1 * (m_w - 1))) / m_log_w + 1;
             m_wots_len = m_wots_len1 + m_wots_len2;
             m_wots_bytes = m_wots_len * m_n;
+            m_fors_signature_bytes = (m_a + 1) * m_k * m_n;
+            m_fors_message_bytes = std::ceil((m_a * m_k) / 8.0f);
+            m_sp_sig_bytes = m_n + m_fors_signature_bytes + m_d * m_wots_bytes + m_h * m_n;
+
+            m_tree_digest_bytes = std::ceil((m_tree_height * (m_d - 1)) / 8.0f);
+            m_leaf_digest_bytes = std::ceil(m_tree_height / 8.0f);
+            m_h_msg_digest_bytes = m_fors_message_bytes + m_tree_digest_bytes + m_leaf_digest_bytes;
+
+
          }
 
    private:
@@ -172,6 +212,13 @@ class Sphincs_Parameters
       size_t m_wots_len2;
       size_t m_wots_len;
       size_t m_wots_bytes;
+      size_t m_fors_message_bytes;
+      size_t m_fors_signature_bytes;
+      size_t m_sp_sig_bytes;
+
+      size_t m_tree_digest_bytes;
+      size_t m_leaf_digest_bytes;
+      size_t m_h_msg_digest_bytes;
    };
 
 }
