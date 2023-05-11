@@ -15,7 +15,7 @@
 namespace Botan
 {
 
-/// @returns sig = signature || message
+/// @returns sig = message_signature || message
 std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
                                       const secure_vector<uint8_t>& sk_seed_vec,
                                       const secure_vector<uint8_t>& sk_prf_vec,
@@ -24,17 +24,14 @@ std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
                                       const std::vector<uint8_t>& pk_root,
                                       const Sphincs_Parameters& params)
    {
-   //unsigned char optrand[SPX_N];
-   SphincsSecretSeed sk_seed(sk_seed_vec);
-   SphincsPublicSeed pub_seed(pub_seed_vec);
-   SphincsSecretPRF sk_prf(sk_prf_vec);
-   SphincsOptionalRandomness opt_rand(opt_rand_vec);
+   const SphincsSecretSeed sk_seed(sk_seed_vec);
+   const SphincsPublicSeed pub_seed(pub_seed_vec);
+   const SphincsSecretPRF sk_prf(sk_prf_vec);
+   const SphincsOptionalRandomness opt_rand(opt_rand_vec);
 
    std::vector<uint8_t> sphincs_sig(params.sphincs_signature_bytes() + message.size());
 
-   //SphincsHashedMessage hashed_message(params.fors_signature_bytes());
-   std::vector<uint8_t> root(params.n());
-   std::vector<uint8_t> mhash(params.fors_message_bytes());
+   SphincsHashedMessage mhash(params.fors_message_bytes());
 
    Sphincs_Address wots_addr;
    Sphincs_Address tree_addr;
@@ -48,7 +45,6 @@ std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
    auto msg_random_location = std::span(sphincs_sig).subspan(0, params.n());
 
    hashes->PRF_msg(msg_random_location, sk_prf, opt_rand, message);
-   //gen_message_random(sig, sk_prf, opt_rand, m, mlen, &ctx);
 
    /* Derive the message digest and leaf index from R, PK and M. */
    auto [tree_idx, leaf_idx] = hashes->H_msg(mhash,
@@ -63,9 +59,8 @@ std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
    auto fors_sig_location = std::span(sphincs_sig).subspan(msg_random_location.size(), params.fors_signature_bytes());
 
    // TODO: Without copy
-   auto [fors_pk, fors_sig] = fors_sign(SphincsHashedMessage(mhash), sk_seed, pub_seed, wots_addr, params, *hashes);
+   auto [current_xmss_root, fors_sig] = fors_sign(mhash, sk_seed, pub_seed, wots_addr, params, *hashes);
 
-   std::copy(fors_pk.begin(), fors_pk.end(), root.begin());
    std::copy(fors_sig.begin(), fors_sig.end(), fors_sig_location.begin());
 
    for (size_t i = 0; i < params.d(); i++)
@@ -78,7 +73,7 @@ std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
                                                                     i * (params.wots_bytes() + params.tree_height() * params.n()),
                                                               params.wots_bytes() + params.tree_height() * params.n());
 
-      xmss_sign(xmss_sig_location, root, SphincsHashedMessage(root), pub_seed, sk_seed, wots_addr, tree_addr, leaf_idx, params, *hashes);
+      current_xmss_root = xmss_sign(xmss_sig_location, current_xmss_root, pub_seed, sk_seed, wots_addr, tree_addr, leaf_idx, params, *hashes);
 
       /* Update the indices for the next layer. */
       leaf_idx = (tree_idx & ((1 << params.tree_height()) - 1));
@@ -90,7 +85,6 @@ std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
 
    return sphincs_sig;
 
-   //*siglen = SPX_BYTES;
    }
 
 

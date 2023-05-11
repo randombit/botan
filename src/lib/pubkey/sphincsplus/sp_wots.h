@@ -51,7 +51,7 @@ BOTAN_TEST_API void wots_gen_leaf_spec( std::span<uint8_t> sig_out,
  * @p message. This is tailored for the use case in the SPHINCS+ implementation
  * and is not meant for general usability.
  */
-BOTAN_TEST_API WotsPublicKey wots_public_key_from_signature(const SphincsHashedMessage& hashed_message,
+BOTAN_TEST_API WotsPublicKey wots_public_key_from_signature(const SphincsXmssRootNode& hashed_message,
                                                             const WotsSignature& signature,
                                                             const SphincsPublicSeed& public_seed,
                                                             Sphincs_Address& address,
@@ -61,7 +61,7 @@ BOTAN_TEST_API WotsPublicKey wots_public_key_from_signature(const SphincsHashedM
 /**
  * Given a @p msg construct the lengths (amount of hashes for signature) for each WOTS+ chain, including the checksum.
  */
-BOTAN_TEST_API WotsBaseWChunks chain_lengths(const SphincsHashedMessage& msg, const Sphincs_Parameters& params);
+BOTAN_TEST_API WotsBaseWChunks chain_lengths(const SphincsXmssRootNode& msg, const Sphincs_Parameters& params);
 
 }
 

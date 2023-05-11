@@ -64,7 +64,7 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test
                                              params,
                                              *hashes);
 
-         const auto pk_ref = Botan::ForsPublicKey(vars.get_req_bin("PublicKey"));
+         const auto pk_ref = Botan::SphincsXmssRootNode(vars.get_req_bin("PublicKey"));
          result.test_is_eq("Derived public key", pk, pk_ref);
 
          const auto sig_ref = Botan::ForsSignature(vars.get_req_bin("Signature"));

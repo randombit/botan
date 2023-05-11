@@ -6,7 +6,6 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-
 #include <botan/internal/sp_hash.h>
 #include <botan/internal/sp_types.h>
 #include <botan/sp_parameters.h>
@@ -122,7 +121,7 @@ void compute_root_spec(std::span<uint8_t> out,
    hashes.T(out, public_seed, tree_address, left_buffer, right_buffer);
    }
 
-std::pair<ForsPublicKey, ForsSignature> fors_sign(const SphincsHashedMessage& hashed_message,
+std::pair<SphincsXmssRootNode, ForsSignature> fors_sign(const SphincsHashedMessage& hashed_message,
                                                   const SphincsSecretSeed& secret_seed,
                                                   const SphincsPublicSeed& public_seed,
                                                   const Sphincs_Address& address,
@@ -171,13 +170,13 @@ std::pair<ForsPublicKey, ForsSignature> fors_sign(const SphincsHashedMessage& ha
       }
 
    // Compute the public key by the hash of the concatenation of all roots
-   ForsPublicKey pk(params.n());
+   SphincsXmssRootNode pk(params.n());
    hashes.T(pk, public_seed, fors_pk_addr, roots);
 
    return std::make_pair(std::move(pk), std::move(signature));
    }
 
-ForsPublicKey fors_public_key_from_signature(const SphincsHashedMessage& hashed_message,
+SphincsXmssRootNode fors_public_key_from_signature(const SphincsHashedMessage& hashed_message,
                                              const ForsSignature& signature,
                                              const SphincsPublicSeed& public_seed,
                                              const Sphincs_Address& address,
@@ -219,7 +218,7 @@ ForsPublicKey fors_public_key_from_signature(const SphincsHashedMessage& hashed_
 
    // Reconstruct the public key the signature creates with the hash of the concatenation of all roots
    // Only if the signature is valid, the pk is the correct FORS pk.
-   ForsPublicKey pk(params.n());
+   SphincsXmssRootNode pk(params.n());
    hashes.T(pk, public_seed, fors_pk_addr, roots);
 
    return pk;

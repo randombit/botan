@@ -16,7 +16,7 @@
 
 namespace Botan {
 
-// TODO: Implement me
+
 
 // Temporary sign function without class
 std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
@@ -26,6 +26,8 @@ std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
                                       const std::vector<uint8_t>& opt_rand_vec,
                                       const std::vector<uint8_t>& pk_root,
                                       const Sphincs_Parameters& params);
+
+// TODO: Verification
 
 }
 

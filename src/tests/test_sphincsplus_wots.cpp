@@ -54,7 +54,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
          const auto secret_seed = Botan::SphincsSecretSeed(vars.get_req_bin("SecretSeed"));
          const auto public_seed = Botan::SphincsPublicSeed(vars.get_req_bin("PublicSeed"));
 
-         const auto hashed_message = Botan::SphincsHashedMessage(vars.get_req_bin("Msg"));
+         const auto root_to_sign = Botan::SphincsXmssRootNode(vars.get_req_bin("Msg"));
 
          Botan::Sphincs_Address address = read_address(vars.get_req_bin("Address"));
 
@@ -64,7 +64,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
 
          auto hashes = Botan::Sphincs_Hash_Functions::create(params);
 
-         Botan::WotsPublicKey wots_pk_from_sig = Botan::wots_public_key_from_signature(hashed_message,
+         Botan::WotsPublicKey wots_pk_from_sig = Botan::wots_public_key_from_signature(root_to_sign,
                                                                             wots_sig_ref,
                                                                                       public_seed,
                                                                                       address,
@@ -76,7 +76,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
          std::vector<uint8_t> sig_out(params.n() * params.wots_len());
          std::vector<uint8_t> hashed_pk_out(params.n());
 
-         auto wots_steps = Botan::chain_lengths(hashed_message, params);
+         auto wots_steps = Botan::chain_lengths(root_to_sign, params);
 
          auto leaf_addr = Botan::Sphincs_Address::as_subtree_from(address);
          auto pk_addr = Botan::Sphincs_Address::as_subtree_from(address);

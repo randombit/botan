@@ -14,9 +14,7 @@
 
 #include <botan/internal/loadstor.h>
 #include <botan/assert.h>
-#include <botan/internal/sp_address.h>
 #include <botan/internal/sp_hash.h>
-#include <botan/internal/sp_xmss.h>
 #include <botan/sp_parameters.h>
 #include <botan/sphincsplus.h>
 #include <botan/secmem.h>
@@ -27,31 +25,22 @@ namespace Botan_Tests {
 class SPHINCS_Plus_Test final : public Text_Based_Test
    {
    private:
-      static Botan::Sphincs_Address read_address(std::span<const uint8_t> address_buffer)
+      /// @returns (secret_seed, sk_prf, public_seed, sphincs_root)
+      std::tuple<Botan::secure_vector<uint8_t>, Botan::secure_vector<uint8_t>, std::vector<uint8_t>, std::vector<uint8_t>>
+      parse_sk(std::vector<uint8_t> sk, Botan::Sphincs_Parameters& params)
          {
-         BOTAN_ASSERT_NOMSG(address_buffer.size() == 32);
+         BOTAN_ASSERT_NOMSG(sk.size() == 4 * params.n());
+         Botan::secure_vector<uint8_t> secret_seed(sk.begin(), sk.begin() + params.n());
+         Botan::secure_vector<uint8_t> sk_prf(sk.begin() + params.n(), sk.begin() + 2*params.n());
+         std::vector<uint8_t> public_seed(sk.begin() + 2*params.n(), sk.begin() + 3*params.n());
+         std::vector<uint8_t> sphincs_root(sk.begin() + 3*params.n(), sk.end());
 
-         std::array<uint32_t, 8> adrs;
-         for(size_t i = 0; i < 8; ++i)
-            {
-            adrs[i] = Botan::load_be<uint32_t>(address_buffer.data(), i);
-            }
-
-         return Botan::Sphincs_Address(adrs);
+         return std::make_tuple(secret_seed, sk_prf, public_seed, sphincs_root);
          }
-
-      void print_hex(unsigned char *data, size_t len) {
-         char buf[3];
-         for (size_t i = 0; i < len; i++) {
-            sprintf(buf, "%02x", data[i]);
-            printf("%s", buf);
-         }
-         printf("\n");
-      }
 
    public:
       SPHINCS_Plus_Test()
-         : Text_Based_Test("pubkey/sphincsplus.vec", "SphincsParameterSet,SecretSeed,PublicSeed,Root,Msg,SkPrf,OptRand,Signature")
+         : Text_Based_Test("pubkey/sphincsplus.vec", "SphincsParameterSet,sk,Msg,OptRand,Signature")
       {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) final
@@ -59,39 +48,24 @@ class SPHINCS_Plus_Test final : public Text_Based_Test
          Test::Result result("SPHINCS+ ");
 
          auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
-
-         const auto secret_seed = Botan::SphincsSecretSeed(vars.get_req_bin("SecretSeed"));
-         const auto public_seed = Botan::SphincsPublicSeed(vars.get_req_bin("PublicSeed"));
-
          auto hashes = Botan::Sphincs_Hash_Functions::create(params);
 
-         std::vector<uint8_t> out_root(params.n());
-
-         Botan::xmss_gen_root(out_root, params, public_seed, secret_seed, *hashes);
-         const std::vector<uint8_t> root_ref = vars.get_req_bin("Root");
-         result.test_is_eq("Sphincs+ root", out_root, root_ref);
+         auto [secret_seed, sk_prf, public_seed, root_ref] = parse_sk(vars.get_req_bin("sk"), params);
 
          const std::vector<uint8_t> msg = vars.get_req_bin("Msg");
-         Botan::secure_vector<uint8_t> sk_prf = Botan::lock(vars.get_req_bin("SkPrf"));
 
          const std::vector<uint8_t> sig_ref = vars.get_req_bin("Signature");
          const std::vector<uint8_t> opt_rand = vars.get_req_bin("OptRand");
 
          auto sig = Botan::sphincsplus_sign(msg,
-                                                      secret_seed.get(),
-                                                       sk_prf,
-                                                     public_seed.get(),
-                                                     opt_rand,
-                                                          root_ref,
-                                                                   params);
+                                            secret_seed,
+                                            sk_prf,
+                                            public_seed,
+                                            opt_rand,
+                                            root_ref,
+                                            params);
 
-         result.test_is_eq("Sphincs+ Signature", sig, sig_ref);
-
-         if(result.tests_failed()){
-            print_hex(sig.data(), sig.size());
-            int breakpoint_dummy;
-         }
-
+         result.test_is_eq("signature creation", sig, sig_ref);
 
          return result;
          }

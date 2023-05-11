@@ -81,7 +81,7 @@ WotsBaseWChunks wots_checksum(const WotsBaseWChunks& msg_base_w, const Sphincs_P
    }
 
 /* Takes a message and derives the matching chain lengths. */
-WotsBaseWChunks chain_lengths(const SphincsHashedMessage& msg, const Sphincs_Parameters& params)
+WotsBaseWChunks chain_lengths(const SphincsXmssRootNode& msg, const Sphincs_Parameters& params)
    {
    WotsBaseWChunks lengths_msg = base_w(params.wots_len_1(), msg.get(), params);
    WotsBaseWChunks lengths_checksum = wots_checksum(lengths_msg, params);
@@ -93,7 +93,7 @@ WotsBaseWChunks chain_lengths(const SphincsHashedMessage& msg, const Sphincs_Par
 /**
  * Takes a WOTS signature and an n-byte message, computes a WOTS public key.
  */
-WotsPublicKey wots_public_key_from_signature(const SphincsHashedMessage& hashed_message,
+WotsPublicKey wots_public_key_from_signature(const SphincsXmssRootNode& hashed_message,
                                              const WotsSignature& signature,
                                              const SphincsPublicSeed& public_seed,
                                              Sphincs_Address& address,

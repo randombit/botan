@@ -25,19 +25,22 @@ namespace Botan {
 * authentication path are stored in @p out_sig, the new root of the Merkle tree
 * is stored in @p out_root.
 */
-void xmss_sign(std::span<uint8_t> out_sig,
-               std::span<uint8_t> out_root,
-               const SphincsHashedMessage& root,
-               const SphincsPublicSeed& public_seed,
-               const SphincsSecretSeed& secret_seed,
-               Sphincs_Address& wots_addr, Sphincs_Address& tree_addr,
-               uint32_t idx_leaf, const Sphincs_Parameters& params, Sphincs_Hash_Functions& hashes);
+SphincsXmssRootNode xmss_sign(std::span<uint8_t> out_sig,
+                              const SphincsXmssRootNode& root,
+                              const SphincsPublicSeed& public_seed,
+                              const SphincsSecretSeed& secret_seed,
+                              Sphincs_Address& wots_addr,
+                              Sphincs_Address& tree_addr,
+                              uint32_t idx_leaf,
+                              const Sphincs_Parameters& params,
+                              Sphincs_Hash_Functions& hashes);
 
 
 /* Compute root node of the top-most subtree. */
-void xmss_gen_root(std::span<uint8_t> out_root,
-                   Sphincs_Parameters& params, SphincsPublicSeed public_seed, SphincsSecretSeed secret_seed,
-                   Sphincs_Hash_Functions& hashes);
+SphincsXmssRootNode xmss_gen_root(const Sphincs_Parameters& params,
+                                  const SphincsPublicSeed& public_seed,
+                                  const SphincsSecretSeed& secret_seed,
+                                  Sphincs_Hash_Functions& hashes);
 
 }
 #endif
