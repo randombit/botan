@@ -38,6 +38,8 @@ iso9796
 # pubkey
 dlies
 dh
+#dilithium // not (yet) recommended
+#dilithium_aes // not (yet) recommended
 rsa
 dsa
 ecdsa
@@ -45,8 +47,8 @@ ecgdsa
 ecies
 eckcdsa
 ecdh
-kyber
-kyber_90s
+#kyber // not (yet) recommended
+#kyber_90s // not (yet) recommended
 xmss
 
 # rng
@@ -73,10 +75,12 @@ sha2_64_bmi2
 sha3_bmi2
 
 # entropy sources
+getentropy
 rdseed
 win32_stats
 
 # pbkdf
+argon2_avx2
 argon2_ssse3
 
 # rng
@@ -134,7 +138,7 @@ salsa20
 #shake_cipher # not recommended, but needed for kyber
 
 # kdf
-hkdf
+#hkdf // needed for tls 1.3
 kdf1
 kdf2
 prf_x942
@@ -153,6 +157,7 @@ sm2
 # pk_pad
 #eme_pkcs1 // needed for tls
 #emsa_pkcs1 // needed for tls
+#eme_raw // allows custom paddings
 emsa_raw
 emsa_x931
 
