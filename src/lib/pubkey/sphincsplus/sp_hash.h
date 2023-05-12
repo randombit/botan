@@ -40,10 +40,10 @@ class Sphincs_Hash_Functions
 
       virtual std::pair<uint64_t, uint32_t>
       H_msg(std::span<uint8_t> out_message_hash,
-            const std::span<const uint8_t> r,
+            const SphincsMessageRandomness& r,
             const SphincsPublicSeed& pub_seed,
-            const std::vector<uint8_t>& root,
-            const std::vector<uint8_t>& message) = 0;
+            const SphincsXmssRootNode& root,
+            std::span<const uint8_t> message) = 0;
 
       /**
        * Using SK.PRF, the optional randomness, and a message, computes the message random R,
@@ -55,10 +55,9 @@ class Sphincs_Hash_Functions
        * @param msg message
        * @return (tree index, leaf index)
        */
-      virtual void PRF_msg(std::span<uint8_t> out_r,
-                           const SphincsSecretPRF& sk_prf,
-                           const SphincsOptionalRandomness& opt_rand,
-                           std::span<const uint8_t> in) = 0;
+      virtual SphincsMessageRandomness PRF_msg(const SphincsSecretPRF& sk_prf,
+                                               const SphincsOptionalRandomness& opt_rand,
+                                               std::span<const uint8_t> msg) = 0;
 
       template<typename... BufferTs> // TODO: contiguous_container
       void T(std::span<uint8_t> out,
@@ -78,6 +77,8 @@ class Sphincs_Hash_Functions
          {
          T(out, pub_seed, address, sk_seed);
          }
+
+      virtual std::string msg_hash_function_name() const = 0;
 
    protected:
       /**

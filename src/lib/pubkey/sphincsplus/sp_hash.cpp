@@ -56,10 +56,10 @@ class Shake_Hash_Functions : public Sphincs_Hash_Functions
       // TODO: Some logic to base class
       std::pair<uint64_t, uint32_t>
       H_msg(std::span<uint8_t> out_message_hash,
-            const std::span<const uint8_t> r,
+            const SphincsMessageRandomness& r,
             const SphincsPublicSeed& pub_seed,
-            const std::vector<uint8_t>& root,
-            const std::vector<uint8_t>& message) override
+            const SphincsXmssRootNode& root,
+            std::span<const uint8_t> message) override
          {
          m_h_msg_hash.update(r);
          m_h_msg_hash.update(pub_seed);
@@ -90,15 +90,19 @@ class Shake_Hash_Functions : public Sphincs_Hash_Functions
          return std::make_pair(tree_idx, leaf_idx);
          }
 
-      void PRF_msg(std::span<uint8_t> out_r,
-                   const SphincsSecretPRF& sk_prf,
-                   const SphincsOptionalRandomness& opt_rand,
-                   std::span<const uint8_t> in) override
+      SphincsMessageRandomness PRF_msg(const SphincsSecretPRF& sk_prf,
+                                       const SphincsOptionalRandomness& opt_rand,
+                                       std::span<const uint8_t> in) override
          {
          m_hash.update(sk_prf);
          m_hash.update(opt_rand);
          m_hash.update(in);
-         m_hash.final(out_r);
+         return m_hash.final<SphincsMessageRandomness>();
+         }
+
+      std::string msg_hash_function_name() const override
+         {
+         return m_h_msg_hash.name();
          }
 
    private:
@@ -164,21 +168,25 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
 
       std::pair<uint64_t, uint32_t>
       H_msg(std::span<uint8_t> out_message_hash,
-            const std::span<const uint8_t> r,
+            const SphincsMessageRandomness& r,
             const SphincsPublicSeed& pub_seed,
-            const std::vector<uint8_t>& root,
-            const std::vector<uint8_t>& message) override
+            const SphincsXmssRootNode& root,
+            std::span<const uint8_t> message) override
          {
          throw Not_Implemented("H_msg to be implemented for SHA-2");
          }
 
-      void PRF_msg(std::span<uint8_t> out_r,
-                   const SphincsSecretPRF& sk_prf,
-                   const SphincsOptionalRandomness& opt_rand,
-                   std::span<const uint8_t> in) override
+      SphincsMessageRandomness PRF_msg(const SphincsSecretPRF& sk_prf,
+                                       const SphincsOptionalRandomness& opt_rand,
+                                       std::span<const uint8_t> in) override
          {
          // TODO
          throw Not_Implemented("PRF_msg to be implemented for SHA-2");
+         }
+
+      std::string msg_hash_function_name() const override
+         {
+         throw Not_Implemented("msg_hash_function_name to be implemented for SHA-2");
          }
 
 

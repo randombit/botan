@@ -10,6 +10,7 @@
 #define BOTAN_SP_PARAMS_H_
 
 #include <botan/assert.h>
+#include <botan/asn1_obj.h>
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
@@ -39,41 +40,30 @@ enum class Sphincs_Parameter_Set
 
 class Sphincs_Parameters
    {
-   private:
-      static Sphincs_Hash_Type hash_from_name(std::string_view name);
-      static Sphincs_Parameter_Set set_from_name(std::string_view name);
-
    public:
-      static Sphincs_Parameters create(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash)
-         {
-         // See "Table 3" in SPHINCS+ specification (NIST R3.1 submission, page 39)
-         switch(set)
-            {
-            case Sphincs_Parameter_Set::Sphincs128Small:
-               return Sphincs_Parameters(set, hash, 16, 63, 7, 12, 14, 16);
-            case Sphincs_Parameter_Set::Sphincs128Fast:
-               return Sphincs_Parameters(set, hash, 16, 66, 22, 6, 33, 16);
+      static Sphincs_Parameters create(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash);
+      static Sphincs_Parameters create(std::string_view name);
+      static Sphincs_Parameters create(const OID& oid);
 
-            case Sphincs_Parameter_Set::Sphincs192Small:
-               return Sphincs_Parameters(set, hash, 24, 63, 7, 14, 17, 16);
-            case Sphincs_Parameter_Set::Sphincs192Fast:
-               return Sphincs_Parameters(set, hash, 24, 66, 22, 8, 33, 16);
+      /**
+       * @returns the OID of the algorithm specified by those parameters
+       */
+      OID object_identifier() const;
 
-            case Sphincs_Parameter_Set::Sphincs256Small:
-               return Sphincs_Parameters(set, hash, 32, 64, 8, 14, 22, 16);
-            case Sphincs_Parameter_Set::Sphincs256Fast:
-               return Sphincs_Parameters(set, hash, 32, 68, 17, 9, 35, 16);
-            }
+      /**
+       * @returns the algorithm identifier of those parameters
+       */
+      AlgorithmIdentifier algorithm_identifier() const;
 
-         Botan::unreachable();
-         }
-
-      static Sphincs_Parameters create(std::string_view name)
-         {
-         return Sphincs_Parameters::create(set_from_name(name), hash_from_name(name));
-         }
-
+      /**
+       * @returns the hash type used by those parameters
+       */
       Sphincs_Hash_Type hash_type() const { return m_hash_type; }
+
+      /**
+       * @returns a string representation of this parameter set
+       */
+      std::string to_string() const;
 
       /**
        * @returns the algorithm specifier of the hash function to be used
@@ -159,6 +149,16 @@ class Sphincs_Parameters
       size_t sphincs_signature_bytes() const { return m_sp_sig_bytes; }
 
       /**
+       * @returns the byte length of an encoded public key for this parameter set
+       */
+      size_t public_key_bytes() const { return m_n * 2; }
+
+      /**
+       * @returns the byte length of an encoded private key for this parameter set
+       */
+      size_t private_key_bytes() const { return m_n * 2 + public_key_bytes(); }
+
+      /**
        * @returns the byte length of the tree index output of H_msg
        */
       size_t tree_digest_bytes() const { return m_tree_digest_bytes; }
@@ -176,26 +176,7 @@ class Sphincs_Parameters
 
    private:
       Sphincs_Parameters(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash_type,
-                        size_t n, size_t h, size_t d, size_t a, size_t k, size_t w)
-         : m_set(set), m_hash_type(hash_type)
-         , m_n(n), m_h(h), m_d(d), m_a(a), m_k(k), m_w(w)
-         {
-            m_tree_height = m_h / m_d;
-            m_log_w = std::floor(log2(m_w));
-            m_wots_len1 = (m_n * 8) / m_log_w;
-            m_wots_len2 = std::floor(log2(m_wots_len1 * (m_w - 1))) / m_log_w + 1;
-            m_wots_len = m_wots_len1 + m_wots_len2;
-            m_wots_bytes = m_wots_len * m_n;
-            m_fors_signature_bytes = (m_a + 1) * m_k * m_n;
-            m_fors_message_bytes = std::ceil((m_a * m_k) / 8.0f);
-            m_sp_sig_bytes = m_n + m_fors_signature_bytes + m_d * m_wots_bytes + m_h * m_n;
-
-            m_tree_digest_bytes = std::ceil((m_tree_height * (m_d - 1)) / 8.0f);
-            m_leaf_digest_bytes = std::ceil(m_tree_height / 8.0f);
-            m_h_msg_digest_bytes = m_fors_message_bytes + m_tree_digest_bytes + m_leaf_digest_bytes;
-
-
-         }
+                        size_t n, size_t h, size_t d, size_t a, size_t k, size_t w);
 
    private:
       Sphincs_Parameter_Set m_set;

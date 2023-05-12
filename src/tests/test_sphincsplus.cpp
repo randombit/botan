@@ -38,6 +38,16 @@ class SPHINCS_Plus_Test final : public Text_Based_Test
          return std::make_tuple(secret_seed, sk_prf, public_seed, sphincs_root);
          }
 
+      std::pair<std::vector<uint8_t>, std::vector<uint8_t>>
+      parse_signature_with_message(std::vector<uint8_t> sig_with_msg, size_t msg_size, Botan::Sphincs_Parameters& params)
+         {
+         BOTAN_ASSERT_NOMSG(sig_with_msg.size() == params.sphincs_signature_bytes() + msg_size);
+         std::vector<uint8_t> signature(sig_with_msg.begin(), sig_with_msg.begin() + params.sphincs_signature_bytes());
+         std::vector<uint8_t> message(sig_with_msg.begin() + params.sphincs_signature_bytes(), sig_with_msg.end());
+
+         return std::make_pair(signature, message);
+         }
+
    public:
       SPHINCS_Plus_Test()
          : Text_Based_Test("pubkey/sphincsplus.vec", "SphincsParameterSet,sk,Msg,OptRand,Signature")
@@ -64,8 +74,11 @@ class SPHINCS_Plus_Test final : public Text_Based_Test
                                             opt_rand,
                                             root_ref,
                                             params);
-
          result.test_is_eq("signature creation", sig, sig_ref);
+
+         auto [sig_raw, msg_from_sig] = parse_signature_with_message(sig_ref, msg.size(), params);
+         bool verify_result = Botan::sphincsplus_verify(msg, sig_raw, public_seed, root_ref, params);
+         result.test_is_eq("verification of a vaild signature", verify_result, true);
 
          return result;
          }

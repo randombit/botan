@@ -95,4 +95,66 @@ treehash_spec(std::span<uint8_t> out_root,
       std::copy(stack.begin(), stack.begin() + params.n(), out_root.begin());
    }
 
+void compute_root_spec(std::span<uint8_t> out,
+                       const Sphincs_Parameters& params,
+                       const SphincsPublicSeed& public_seed,
+                       Sphincs_Hash_Functions& hashes,
+                       const std::vector<uint8_t> leaf, // Leaf
+                       uint32_t leaf_idx, uint32_t idx_offset,
+                       std::span<const uint8_t> auth_path,
+                       uint32_t tree_height,
+                       Sphincs_Address& tree_address)
+   {
+   BOTAN_ASSERT_NOMSG(out.size() == params.n());
+   BOTAN_ASSERT_NOMSG(auth_path.size() == params.n() * tree_height);
+
+   // Input for the hash function. Format: [left tree node] || [right tree node]
+   std::vector<uint8_t> buffer(2 * params.n());
+   auto left_buffer = std::span(buffer).subspan(0, params.n());
+   auto right_buffer = std::span(buffer).subspan(params.n(), params.n());
+
+   auto auth_path_location = std::span(auth_path).subspan(0, params.n());
+
+   // The leaf is put in the left or right buffer, depending on its indexes parity.
+   // Same for the first node of the authentication path
+   if(leaf_idx % 2 == 0)
+      {
+      std::copy(leaf.begin(), leaf.end(),left_buffer.begin());
+      std::copy(auth_path_location.begin(), auth_path_location.end(), right_buffer.begin());
+      }
+   else
+      {
+      std::copy(leaf.begin(), leaf.end(),right_buffer.begin());
+      std::copy(auth_path_location.begin(), auth_path_location.end(), left_buffer.begin());
+      }
+
+   for (uint32_t i = 0; i < tree_height - 1; i++)
+      {
+      leaf_idx /= 2;
+      idx_offset /= 2;
+      tree_address.set_tree_height(i+1).set_tree_index(leaf_idx + idx_offset);
+
+      auth_path_location = std::span(auth_path).subspan( (i+1) * params.n(), params.n() );
+
+      // Perform the hash operation. Depending on node's index in the current layer the output is either written
+      // to the left or right part of the buffer. The next node of the authentication path is written at the other
+      // side. This logic already prepares the buffer for the next operation in the next tree layer.
+      if (leaf_idx & 1)
+         {
+            hashes.T(right_buffer, public_seed, tree_address, left_buffer, right_buffer);
+            std::copy(auth_path_location.begin(), auth_path_location.end(), left_buffer.begin());
+         }
+      else
+         {
+         hashes.T(left_buffer, public_seed, tree_address, left_buffer, right_buffer);
+         std::copy(auth_path_location.begin(), auth_path_location.end(), right_buffer.begin());
+         }
+      }
+   // The last hash iteration is performed outside the loop since no further nodes must be prepared at this point.
+   leaf_idx /= 2;
+   idx_offset /= 2;
+   tree_address.set_tree_height(tree_height).set_tree_index(leaf_idx + idx_offset);
+   hashes.T(out, public_seed, tree_address, left_buffer, right_buffer);
+   }
+
 }

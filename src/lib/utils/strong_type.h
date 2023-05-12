@@ -68,6 +68,10 @@ class Strong_Adapter<T> : public Strong_Base<T>
       requires(concepts::resizable_container<T>)
          : Strong_Adapter(T(size)) {}
 
+      template<typename InputIt>
+      Strong_Adapter(InputIt begin, InputIt end)
+         : Strong_Adapter(T(begin, end)) {}
+
       // Disambiguates the usage of string literals, otherwise:
       // Strong_Adapter(std::span<>) and Strong_Adapter(const char*)
       // would be ambiguous.
