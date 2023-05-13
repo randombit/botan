@@ -1432,6 +1432,46 @@ BOTAN_FFI_EXPORT(2, 8) int botan_privkey_x25519_get_privkey(botan_privkey_t key,
 BOTAN_FFI_EXPORT(2, 8) int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t pubkey[32]);
 
 /*
+* Algorithm specific key operations: Kyber
+*/
+
+BOTAN_FFI_EXPORT(3,1) int botan_privkey_load_kyber512(botan_privkey_t* key,
+                                                    const uint8_t privkey[1632]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_pubkey_load_kyber512(botan_pubkey_t* key,
+                                                   const uint8_t pubkey[800]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_privkey_kyber512_get_privkey(botan_privkey_t key,
+                                                           uint8_t output[1632]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_pubkey_kyber512_get_pubkey(botan_pubkey_t key,
+                                                         uint8_t pubkey[800]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_privkey_load_kyber768(botan_privkey_t* key,
+                                                    const uint8_t privkey[2400]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_pubkey_load_kyber768(botan_pubkey_t* key,
+                                                   const uint8_t pubkey[1184]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_privkey_kyber768_get_privkey(botan_privkey_t key,
+                                                           uint8_t output[2400]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_pubkey_kyber768_get_pubkey(botan_pubkey_t key,
+                                                         uint8_t pubkey[1184]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_privkey_load_kyber1024(botan_privkey_t* key,
+                                                    const uint8_t privkey[3186]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_pubkey_load_kyber1024(botan_pubkey_t* key,
+                                                   const uint8_t pubkey[1568]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_privkey_kyber1024_get_privkey(botan_privkey_t key,
+                                                           uint8_t output[3186]);
+
+BOTAN_FFI_EXPORT(3,1) int botan_pubkey_kyber1024_get_pubkey(botan_pubkey_t key,
+                                                         uint8_t pubkey[1568]);
+
+/*
 * Algorithm specific key operations: ECDSA and ECDH
 */
 BOTAN_FFI_EXPORT(2, 2)

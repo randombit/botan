@@ -63,6 +63,10 @@
    #include <botan/dh.h>
 #endif
 
+#if defined(BOTAN_HAS_KYBER)
+   #include <botan/kyber.h>
+#endif
+
 namespace {
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
@@ -712,6 +716,256 @@ int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t output[32]) {
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
+
+/*
+* Algorithm specific key operations: Kyber
+*/
+
+int botan_privkey_load_kyber512(botan_privkey_t* key,
+                                const uint8_t privkey[1632])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 1632);
+      auto kyber512 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber512);
+      *key = new botan_privkey_struct(std::move(kyber512));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, privkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_load_kyber512(botan_pubkey_t* key,
+                               const uint8_t pubkey[800])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 800);
+      auto kyber512 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber512);
+      *key = new botan_pubkey_struct(std::move(kyber512));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_kyber512_get_privkey(botan_privkey_t key,
+                                       uint8_t output[1632])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto kyber512 = dynamic_cast<const Botan::Kyber_PrivateKey*>(&k))
+         {
+         const auto kyber512_key = kyber512->raw_private_key_bits();
+         if(kyber512_key.size() != 1632)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(output, kyber512_key.data(), kyber512_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_kyber512_get_pubkey(botan_pubkey_t key,
+                                     uint8_t pubkey[800])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto kyber512 = dynamic_cast<const Botan::Kyber_PublicKey*>(&k))
+         {
+         const std::vector<uint8_t>& kyber512_key = kyber512->public_key_bits();
+         if(kyber512_key.size() != 800)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(pubkey, kyber512_key.data(), kyber512_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_load_kyber768(botan_privkey_t* key,
+                                const uint8_t privkey[2400])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 2400);
+      auto kyber768 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber768);
+      *key = new botan_privkey_struct(std::move(kyber768));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, privkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_load_kyber768(botan_pubkey_t* key,
+                               const uint8_t pubkey[1184])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 1184);
+      auto kyber768 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber768);
+      *key = new botan_pubkey_struct(std::move(kyber768));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_kyber768_get_privkey(botan_privkey_t key,
+                                       uint8_t output[2400])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto kyber768 = dynamic_cast<const Botan::Kyber_PrivateKey*>(&k))
+         {
+         const auto kyber768_key = kyber768->raw_private_key_bits();
+         if(kyber768_key.size() != 2400)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(output, kyber768_key.data(), kyber768_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_kyber768_get_pubkey(botan_pubkey_t key,
+                                     uint8_t pubkey[1184])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto kyber768 = dynamic_cast<const Botan::Kyber_PublicKey*>(&k))
+         {
+         const std::vector<uint8_t>& kyber768_key = kyber768->public_key_bits();
+         if(kyber768_key.size() != 1184)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(pubkey, kyber768_key.data(), kyber768_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_load_kyber1024(botan_privkey_t* key,
+                                const uint8_t privkey[3186])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 3186);
+      auto kyber1024 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber1024);
+      *key = new botan_privkey_struct(std::move(kyber1024));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, privkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_load_kyber1024(botan_pubkey_t* key,
+                               const uint8_t pubkey[1568])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 1568);
+      auto kyber1024 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber1024);
+      *key = new botan_pubkey_struct(std::move(kyber1024));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_kyber1024_get_privkey(botan_privkey_t key,
+                                       uint8_t output[3186])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto kyber1024 = dynamic_cast<const Botan::Kyber_PrivateKey*>(&k))
+         {
+         const auto kyber1024_key = kyber1024->raw_private_key_bits();
+         if(kyber1024_key.size() != 3186)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(output, kyber1024_key.data(), kyber1024_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_kyber1024_get_pubkey(botan_pubkey_t key,
+                                     uint8_t pubkey[1568])
+   {
+#if defined(BOTAN_HAS_KYBER)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto kyber1024 = dynamic_cast<const Botan::Kyber_PublicKey*>(&k))
+         {
+         const std::vector<uint8_t>& kyber1024_key = kyber1024->public_key_bits();
+         if(kyber1024_key.size() != 1568)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(pubkey, kyber1024_key.data(), kyber1024_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
 
 int botan_pubkey_view_ec_public_point(const botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
