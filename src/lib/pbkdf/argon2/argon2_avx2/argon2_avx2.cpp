@@ -92,8 +92,8 @@ class SIMD_4x64 final
       template<size_t ROT>
       BOTAN_FUNC_ISA("avx2")
       SIMD_4x64 rotr() const
+         requires (ROT > 0 && ROT < 64)
          {
-         static_assert(ROT > 0 && ROT < 64, "Invalid rotation constant");
 
          if constexpr(ROT == 16)
             {

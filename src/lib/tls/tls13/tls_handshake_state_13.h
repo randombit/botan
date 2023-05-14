@@ -121,19 +121,15 @@ class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Ba
 
       template<typename MsgT>
       std::reference_wrapper<MsgT> sending(MsgT msg)
+         requires (std::is_constructible_v<Outbound_Message_T, MsgT>)
          {
-         static_assert(std::is_constructible_v<Outbound_Message_T, MsgT>,
-                       "Cannot send handshake message of type MsgT");
-
          return std::reference_wrapper<decltype(msg)>(store(std::move(msg), false));
          }
 
       template<typename... MsgTs>
       decltype(auto) sending(std::variant<MsgTs...> message)
+         requires (is_generalizable_to<Outbound_Message_T>(message))
          {
-         static_assert(is_generalizable_to<Outbound_Message_T>(message),
-                       "Cannot send handshake message of types MsgTs...");
-
          return std::visit([&](auto msg) -> as_wrapped_references_t<std::variant<MsgTs...>>
             {
             return sending(std::move(msg));
