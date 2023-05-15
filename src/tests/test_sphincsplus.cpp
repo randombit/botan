@@ -54,7 +54,7 @@ class SPHINCS_Plus_Test final : public Text_Based_Test
 
    public:
       SPHINCS_Plus_Test()
-         : Text_Based_Test("pubkey/sphincsplus.vec", "SphincsParameterSet,seed,pk,sk,msg,sm,opt_rand")
+         : Text_Based_Test("pubkey/sphincsplus.vec", "SphincsParameterSet,seed,pk,sk,msg,sm")
       {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) final

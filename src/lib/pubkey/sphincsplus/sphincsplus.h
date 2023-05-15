@@ -30,11 +30,7 @@ class BOTAN_PUBLIC_API(3,1) SphincsPlus_PublicKey : public virtual Public_Key
 
       ~SphincsPlus_PublicKey();
 
-      size_t key_length() const override
-         {
-         // TODO
-         return 0;
-         }
+      size_t key_length() const override;
 
 
       std::string algo_name() const override
@@ -92,26 +88,6 @@ class BOTAN_PUBLIC_API(3,1) SphincsPlus_PrivateKey : public virtual SphincsPlus_
    private:
       std::shared_ptr<SphincsPlus_PrivateKeyInternal> m_private;
    };
-
-
-
-
-// Temporary sign function without class
-std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
-                                      const secure_vector<uint8_t>& sk_seed_vec,
-                                      const secure_vector<uint8_t>& sk_prf_vec,
-                                      const std::vector<uint8_t>& pub_seed_vec,
-                                      const std::vector<uint8_t>& opt_rand_vec,
-                                      const std::vector<uint8_t>& pk_root,
-                                      const Sphincs_Parameters& params);
-
-bool sphincsplus_verify(const std::vector<uint8_t>& message,
-                        const std::vector<uint8_t>& sig,
-                        const std::vector<uint8_t>& pub_seed_vec,
-                        const std::vector<uint8_t>& pk_root_vec,
-                        const Sphincs_Parameters& params);
-
-// TODO: Verification
 
 }
 

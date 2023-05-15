@@ -127,8 +127,8 @@ void wots_gen_leaf_spec(std::span<uint8_t> sig_out,
                         const Sphincs_Parameters& params,
                         Sphincs_Hash_Functions& hashes)
    {
-   std::vector<uint8_t> wots_sig;
-   std::vector<uint8_t> pk_buffer(params.wots_bytes());
+   secure_vector<uint8_t> wots_sig;
+   secure_vector<uint8_t> pk_buffer(params.wots_bytes());
 
    uint32_t wots_k_mask;
 

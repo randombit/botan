@@ -26,7 +26,7 @@ treehash_spec(std::span<uint8_t> out_root,
    const uint32_t max_idx = uint32_t((1 << tree_height) - 1);
 
    std::vector<uint8_t> stack(tree_height * params.n());
-   std::vector<uint8_t> current_node(params.n()); // Current logical node
+   secure_vector<uint8_t> current_node(params.n()); // Current logical node
 
    // Traverse the tree from the left-most leaf, matching siblings and up until
    // the root (Post-order traversal). Collect the adjacent nodes (A) to build

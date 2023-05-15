@@ -24,7 +24,7 @@ using SphincsXmssRootNode = Strong<std::vector<uint8_t>, struct SphincsXmssRootN
 using ForsSignature = Strong<std::vector<uint8_t>, struct ForsSignature_>;
 using ForsIndices = Strong<std::vector<uint32_t>, struct ForsIndices_>;
 using WotsPublicKey = Strong<std::vector<uint8_t>, struct WotsPublicKey_>;
-using WotsSignature = Strong<std::vector<uint8_t>, struct WotsSignature_>;
+using WotsSignature = Strong<secure_vector<uint8_t>, struct WotsSignature_>;
 using WotsBaseWChunks = Strong<std::vector<uint8_t>, struct WotsBaseWChunks_>;
 
 }

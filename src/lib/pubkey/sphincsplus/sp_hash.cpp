@@ -54,13 +54,13 @@ class Shake_Hash_Functions : public Sphincs_Hash_Functions
          }
 
       // TODO: Some logic to base class
-      std::pair<uint64_t, uint32_t>
-      H_msg(std::span<uint8_t> out_message_hash,
-            const SphincsMessageRandomness& r,
+      std::tuple<SphincsHashedMessage, uint64_t, uint32_t>
+      H_msg(const SphincsMessageRandomness& r,
             const SphincsPublicSeed& pub_seed,
             const SphincsXmssRootNode& root,
             std::span<const uint8_t> message) override
          {
+         SphincsHashedMessage out_message_hash(m_sphincs_params.fors_message_bytes());
          m_h_msg_hash.update(r);
          m_h_msg_hash.update(pub_seed);
          m_h_msg_hash.update(root);
@@ -87,7 +87,7 @@ class Shake_Hash_Functions : public Sphincs_Hash_Functions
          uint32_t leaf_idx = load_be<uint32_t>(leaf_idx_bytes.data(), 0);
          leaf_idx &= (~static_cast<uint32_t>(0)) >> (32 - leaf_idx_bits);
 
-         return std::make_pair(tree_idx, leaf_idx);
+         return std::tuple(out_message_hash, tree_idx, leaf_idx);
          }
 
       SphincsMessageRandomness PRF_msg(const SphincsSecretPRF& sk_prf,
@@ -166,9 +166,8 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
 
          }
 
-      std::pair<uint64_t, uint32_t>
-      H_msg(std::span<uint8_t> out_message_hash,
-            const SphincsMessageRandomness& r,
+      std::tuple<SphincsHashedMessage, uint64_t, uint32_t>
+      H_msg(const SphincsMessageRandomness& r,
             const SphincsPublicSeed& pub_seed,
             const SphincsXmssRootNode& root,
             std::span<const uint8_t> message) override

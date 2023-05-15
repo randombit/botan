@@ -98,6 +98,11 @@ SphincsPlus_PublicKey::SphincsPlus_PublicKey(const AlgorithmIdentifier& alg_id,
 
 SphincsPlus_PublicKey::~SphincsPlus_PublicKey() = default;
 
+size_t SphincsPlus_PublicKey::key_length() const
+   {
+   return 2*m_public->parameters().n();
+   }
+
 
 size_t SphincsPlus_PublicKey::estimated_strength() const
    {
@@ -117,7 +122,7 @@ OID SphincsPlus_PublicKey::object_identifier() const
 bool SphincsPlus_PublicKey::check_key(RandomNumberGenerator& rng,
                                       bool strong) const
    {
-   //TODO
+   //TODO ???
    return true;
    }
 
@@ -150,13 +155,80 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification
       bool is_valid_signature(const  uint8_t* sig, size_t sig_len) override
          {
             std::vector<uint8_t> signature(sig, sig+sig_len);
-            auto is_valid = sphincsplus_verify(m_msg_buffer,
-                                               signature,
-                                               m_public->seed().get(),
-                                               m_public->root().get(),
-                                               m_public->parameters());
+
+            WotsPublicKey wots_pk(m_public->parameters().wots_bytes());
+            std::vector<uint8_t> leaf(m_public->parameters().n());
+
+            Sphincs_Address wots_addr;
+            Sphincs_Address tree_addr;
+            Sphincs_Address wots_pk_addr;
+
+            if(signature.size() != m_public->parameters().sphincs_signature_bytes())
+               {
+               return false;
+               }
+
+            /* This hook allows the hash function instantiation to do whatever
+               preparation or computation it needs, based on the public seed. */
+            wots_addr.set_type(Sphincs_Address_Type::WotsHash);
+            tree_addr.set_type(Sphincs_Address_Type::HashTree);
+            wots_pk_addr.set_type(Sphincs_Address_Type::WotsPublicKeyCompression);
+
+            /* Derive the message digest and leaf index from R || PK || M. */
+            /* The additional SPX_N is a result of the hash domain separator. */
+            SphincsMessageRandomness msg_random(signature.begin(), signature.begin() + m_public->parameters().n());
+            //SphincsHashedMessage mhash(m_public->parameters().fors_message_bytes());
+
+            auto [mhash, tree_idx, leaf_idx] = m_hashes->H_msg(msg_random, m_public->seed(), m_public->root(), m_msg_buffer);
+
+            /* Layer correctly defaults to 0, so no need to set_layer_addr */
+            wots_addr.set_tree(tree_idx).set_keypair(leaf_idx);
+
+            // TODO: Possible optimization: get rid of copy
+            ForsSignature fors_sig(std::vector(signature.begin() + m_public->parameters().n(), signature.begin() + m_public->parameters().n() + m_public->parameters().fors_signature_bytes()));
+
+            auto root = fors_public_key_from_signature(mhash, fors_sig, m_public->seed(), wots_addr, m_public->parameters(), *m_hashes);
+
+            /* For each subtree.. */
+            for (size_t i = 0; i < m_public->parameters().d(); i++)
+               {
+               tree_addr.set_layer(i);
+               tree_addr.set_tree(tree_idx);
+
+               wots_addr.copy_subtree_from(tree_addr);
+               wots_addr.set_keypair(leaf_idx);
+
+               wots_pk_addr.copy_keypair_from(wots_addr);
+
+               /* The WOTS public key is only correct if the signature was correct. */
+               /* Initially, root is the FORS pk, but on subsequent iterations it is
+                  the root of the subtree below the currently processed subtree. */
+               auto wots_sig_location = std::span(signature).subspan(m_public->parameters().n() + m_public->parameters().fors_signature_bytes() +
+                                                               i * (m_public->parameters().wots_bytes() + m_public->parameters().tree_height() * m_public->parameters().n()),
+                                                               m_public->parameters().wots_bytes());
+
+               // TODO: Possible optimization: Without copying
+               auto sig_wots_chunk = WotsSignature(wots_sig_location.begin(), wots_sig_location.end());
+               wots_pk = wots_public_key_from_signature(root, sig_wots_chunk, m_public->seed(), wots_addr, m_public->parameters(), *m_hashes);
+
+               /* Compute the leaf node using the WOTS public key. */
+               m_hashes->T(leaf, m_public->seed(), wots_pk_addr, wots_pk);
+
+               /* Compute the root node of this subtree. */
+               auto auth_path_location = std::span(signature).subspan(m_public->parameters().n() + m_public->parameters().fors_signature_bytes() +
+                                                               i * (m_public->parameters().wots_bytes() + m_public->parameters().tree_height() * m_public->parameters().n()) + m_public->parameters().wots_bytes(),
+                                                               m_public->parameters().tree_height() * m_public->parameters().n());
+
+               compute_root_spec(root, m_public->parameters(), m_public->seed(), *m_hashes, leaf, leaf_idx, 0, auth_path_location, m_public->parameters().tree_height(), tree_addr);
+
+               /* Update the indices for the next layer. */
+               leaf_idx = (tree_idx & ((1 << m_public->parameters().tree_height())-1));
+               tree_idx = tree_idx >> m_public->parameters().tree_height();
+               }
             m_msg_buffer.clear();
-            return is_valid;
+
+            /* Check if the root node equals the root node in the public key. */
+            return root == m_public->root();
          }
 
       std::string hash_function() const override { return m_hashes->msg_hash_function_name(); }
@@ -284,17 +356,56 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override
          {
-         auto sig = sphincsplus_sign(m_msg_buffer,
-                                    m_private->seed().get(),
-                                    m_private->prf().get(),
-                                    m_public->seed().get(),
-                                    (m_randomized) ? unlock(rng.random_vec(m_public->parameters().n())) : m_public->seed().get(),
-                                    m_public->root().get(),
-                                    m_public->parameters());
+            secure_vector<uint8_t> sphincs_sig(m_public->parameters().sphincs_signature_bytes());
 
-         m_msg_buffer.clear();
+            /* Compute the digest randomization value (R of spec). */
+            auto msg_random_location = std::span(sphincs_sig).subspan(0, m_public->parameters().n());
 
-         return lock(sig);
+            SphincsOptionalRandomness opt_rand(m_public->seed());
+            if(m_randomized) {
+               opt_rand = rng.random_vec<SphincsOptionalRandomness>(m_public->parameters().n());
+            }
+
+            const auto msg_random = m_hashes->PRF_msg(m_private->prf(), opt_rand, m_msg_buffer);
+            std::copy(msg_random.begin(), msg_random.end(), msg_random_location.begin());
+
+            /* Derive the message digest and leaf index from R, PK and M. */
+            auto [mhash, tree_idx, leaf_idx] = m_hashes->H_msg(msg_random,
+                                                      m_public->seed(),
+                                                      m_public->root(),
+                                                      m_msg_buffer);
+
+            Sphincs_Address wots_addr;
+            wots_addr.set_tree(tree_idx).set_keypair(leaf_idx).set_type(Sphincs_Address_Type::WotsHash);
+
+            Sphincs_Address tree_addr;
+            tree_addr.set_type(Sphincs_Address_Type::HashTree);
+
+            /* Sign the message hash using FORS. */
+            auto fors_sig_location = std::span(sphincs_sig).subspan(msg_random_location.size(), m_public->parameters().fors_signature_bytes());
+
+            auto current_xmss_root = fors_sign(fors_sig_location, mhash, m_private->seed(), m_public->seed(), wots_addr, m_public->parameters(), *m_hashes);
+
+            for (size_t i = 0; i < m_public->parameters().d(); i++)
+               {
+               tree_addr.set_layer(i).set_tree(tree_idx);
+               wots_addr.copy_subtree_from(tree_addr).set_keypair(leaf_idx);
+
+               auto xmss_sig_location = std::span(sphincs_sig).subspan(msg_random_location.size() + fors_sig_location.size() +
+                                                                     i * (m_public->parameters().wots_bytes() + m_public->parameters().tree_height() * m_public->parameters().n()),
+                                                                     m_public->parameters().wots_bytes() + m_public->parameters().tree_height() * m_public->parameters().n());
+
+               current_xmss_root = xmss_sign(xmss_sig_location, current_xmss_root, m_public->seed(), m_private->seed(), wots_addr, tree_addr, leaf_idx, m_public->parameters(), *m_hashes);
+
+               /* Update the indices for the next layer. */
+               leaf_idx = (tree_idx & ((1 << m_public->parameters().tree_height()) - 1));
+               tree_idx = tree_idx >> m_public->parameters().tree_height();
+               }
+
+            m_msg_buffer.clear();
+
+            return sphincs_sig;
+
          }
 
       size_t signature_length() const override
@@ -335,159 +446,6 @@ std::unique_ptr<PK_Ops::Signature>
    if(provider.empty() || provider == "base") // ? ?
       return std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
    throw Provider_Not_Found(algo_name(), provider);
-   }
-
-
-
-/// @returns sig = message_signature || message
-std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
-                                      const secure_vector<uint8_t>& sk_seed_vec,
-                                      const secure_vector<uint8_t>& sk_prf_vec,
-                                      const std::vector<uint8_t>& pub_seed_vec,
-                                      const std::vector<uint8_t>& opt_rand_vec,
-                                      const std::vector<uint8_t>& pk_root_vec,
-                                      const Sphincs_Parameters& params)
-   {
-   const SphincsSecretSeed sk_seed(sk_seed_vec);
-   const SphincsPublicSeed pub_seed(pub_seed_vec);
-   const SphincsSecretPRF sk_prf(sk_prf_vec);
-   const SphincsXmssRootNode pk_root(pk_root_vec);
-   const SphincsOptionalRandomness opt_rand(opt_rand_vec);
-
-   std::vector<uint8_t> sphincs_sig(params.sphincs_signature_bytes());
-
-   SphincsHashedMessage mhash(params.fors_message_bytes());
-
-   auto hashes = Botan::Sphincs_Hash_Functions::create(params);
-
-   /* Compute the digest randomization value (R of spec). */
-   auto msg_random_location = std::span(sphincs_sig).subspan(0, params.n());
-
-   const auto msg_random = hashes->PRF_msg(sk_prf, opt_rand, message);
-   std::copy(msg_random.begin(), msg_random.end(), msg_random_location.begin());
-
-   /* Derive the message digest and leaf index from R, PK and M. */
-   auto [tree_idx, leaf_idx] = hashes->H_msg(mhash,
-                                             msg_random,
-                                             pub_seed,
-                                             pk_root,
-                                             message);
-
-   Sphincs_Address wots_addr;
-   wots_addr.set_tree(tree_idx).set_keypair(leaf_idx).set_type(Sphincs_Address_Type::WotsHash);
-
-   Sphincs_Address tree_addr;
-   tree_addr.set_type(Sphincs_Address_Type::HashTree);
-
-   /* Sign the message hash using FORS. */
-   auto fors_sig_location = std::span(sphincs_sig).subspan(msg_random_location.size(), params.fors_signature_bytes());
-
-   auto current_xmss_root = fors_sign(fors_sig_location, mhash, sk_seed, pub_seed, wots_addr, params, *hashes);
-
-   for (size_t i = 0; i < params.d(); i++)
-      {
-      tree_addr.set_layer(i).set_tree(tree_idx);
-      wots_addr.copy_subtree_from(tree_addr).set_keypair(leaf_idx);
-
-      auto xmss_sig_location = std::span(sphincs_sig).subspan(msg_random_location.size() + fors_sig_location.size() +
-                                                              i * (params.wots_bytes() + params.tree_height() * params.n()),
-                                                              params.wots_bytes() + params.tree_height() * params.n());
-
-      current_xmss_root = xmss_sign(xmss_sig_location, current_xmss_root, pub_seed, sk_seed, wots_addr, tree_addr, leaf_idx, params, *hashes);
-
-      /* Update the indices for the next layer. */
-      leaf_idx = (tree_idx & ((1 << params.tree_height()) - 1));
-      tree_idx = tree_idx >> params.tree_height();
-      }
-
-   return sphincs_sig;
-   }
-
-/// @returns true iff the signature is valid for the given message
-bool sphincsplus_verify(const std::vector<uint8_t>& message,
-                        const std::vector<uint8_t>& sig,
-                        const std::vector<uint8_t>& pub_seed_vec,
-                        const std::vector<uint8_t>& pk_root_vec,
-                        const Sphincs_Parameters& params)
-   {
-   const SphincsPublicSeed pub_seed(pub_seed_vec);
-   const SphincsXmssRootNode pk_root(pk_root_vec);
-
-   WotsPublicKey wots_pk(params.wots_bytes());
-   std::vector<uint8_t> leaf(params.n());
-
-   Sphincs_Address wots_addr;
-   Sphincs_Address tree_addr;
-   Sphincs_Address wots_pk_addr;
-
-   if(sig.size() != params.sphincs_signature_bytes())
-      {
-      return false;
-      }
-
-   auto hashes = Botan::Sphincs_Hash_Functions::create(params);
-
-   /* This hook allows the hash function instantiation to do whatever
-      preparation or computation it needs, based on the public seed. */
-   wots_addr.set_type(Sphincs_Address_Type::WotsHash);
-   tree_addr.set_type(Sphincs_Address_Type::HashTree);
-   wots_pk_addr.set_type(Sphincs_Address_Type::WotsPublicKeyCompression);
-
-   /* Derive the message digest and leaf index from R || PK || M. */
-   /* The additional SPX_N is a result of the hash domain separator. */
-   SphincsMessageRandomness msg_random(sig.begin(), sig.begin() + params.n());
-   SphincsHashedMessage mhash(params.fors_message_bytes());
-
-   // TODO: Adept types for H_msg
-   auto [tree_idx, leaf_idx] = hashes->H_msg(mhash, msg_random, pub_seed, pk_root, message);
-
-   /* Layer correctly defaults to 0, so no need to set_layer_addr */
-   wots_addr.set_tree(tree_idx).set_keypair(leaf_idx);
-
-   // TODO: Optimize (no copy)
-   ForsSignature fors_sig(std::vector(sig.begin() + params.n(), sig.begin() + params.n() + params.fors_signature_bytes()));
-
-   auto root = fors_public_key_from_signature(mhash, fors_sig, pub_seed, wots_addr, params, *hashes);
-
-   /* For each subtree.. */
-   for (size_t i = 0; i < params.d(); i++) {
-      tree_addr.set_layer(i);
-      tree_addr.set_tree(tree_idx);
-
-      wots_addr.copy_subtree_from(tree_addr);
-      wots_addr.set_keypair(leaf_idx);
-
-      wots_pk_addr.copy_keypair_from(wots_addr);
-
-      /* The WOTS public key is only correct if the signature was correct. */
-      /* Initially, root is the FORS pk, but on subsequent iterations it is
-         the root of the subtree below the currently processed subtree. */
-      auto wots_sig_location = std::span(sig).subspan(params.n() + params.fors_signature_bytes() +
-                                                      i * (params.wots_bytes() + params.tree_height() * params.n()),
-                                                      params.wots_bytes());
-
-      // TODO: Without copying
-      auto sig_wots_chunk = WotsSignature(std::vector(wots_sig_location.begin(), wots_sig_location.end()));
-      wots_pk = wots_public_key_from_signature(root, sig_wots_chunk, pub_seed, wots_addr, params, *hashes);
-
-      /* Compute the leaf node using the WOTS public key. */
-      hashes->T(leaf, pub_seed, wots_pk_addr, wots_pk);
-
-      /* Compute the root node of this subtree. */
-      auto auth_path_location = std::span(sig).subspan(params.n() + params.fors_signature_bytes() +
-                                                      i * (params.wots_bytes() + params.tree_height() * params.n()) + params.wots_bytes(),
-                                                      params.tree_height() * params.n());
-      // TODO: compute_root(..., auth_path_location)
-      compute_root_spec(root, params, pub_seed, *hashes, leaf, leaf_idx, 0, auth_path_location, params.tree_height(), tree_addr);
-
-      /* Update the indices for the next layer. */
-
-      leaf_idx = (tree_idx & ((1 << params.tree_height())-1));
-      tree_idx = tree_idx >> params.tree_height();
-   }
-
-   /* Check if the root node equals the root node in the public key. */
-   return root == pk_root;
    }
 
 }

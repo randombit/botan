@@ -38,9 +38,8 @@ class Sphincs_Hash_Functions
 
    public:
 
-      virtual std::pair<uint64_t, uint32_t>
-      H_msg(std::span<uint8_t> out_message_hash,
-            const SphincsMessageRandomness& r,
+      virtual std::tuple<SphincsHashedMessage, uint64_t, uint32_t>
+      H_msg(const SphincsMessageRandomness& r,
             const SphincsPublicSeed& pub_seed,
             const SphincsXmssRootNode& root,
             std::span<const uint8_t> message) = 0;
