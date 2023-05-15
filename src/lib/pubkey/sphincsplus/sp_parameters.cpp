@@ -101,9 +101,9 @@ const char* as_string(Sphincs_Parameter_Set set)
 }
 
 Sphincs_Parameters::Sphincs_Parameters(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash_type,
-                        size_t n, size_t h, size_t d, size_t a, size_t k, size_t w)
+                        size_t n, size_t h, size_t d, size_t a, size_t k, size_t w, size_t bitsec)
    : m_set(set), m_hash_type(hash_type)
-   , m_n(n), m_h(h), m_d(d), m_a(a), m_k(k), m_w(w)
+   , m_n(n), m_h(h), m_d(d), m_a(a), m_k(k), m_w(w), m_bitsec(bitsec)
    {
    m_tree_height = m_h / m_d;
    m_log_w = std::floor(log2(m_w));
@@ -127,19 +127,19 @@ Sphincs_Parameters Sphincs_Parameters::create(Sphincs_Parameter_Set set, Sphincs
    switch(set)
       {
       case Sphincs_Parameter_Set::Sphincs128Small:
-         return Sphincs_Parameters(set, hash, 16, 63, 7, 12, 14, 16);
+         return Sphincs_Parameters(set, hash, 16, 63, 7, 12, 14, 16, 133);
       case Sphincs_Parameter_Set::Sphincs128Fast:
-         return Sphincs_Parameters(set, hash, 16, 66, 22, 6, 33, 16);
+         return Sphincs_Parameters(set, hash, 16, 66, 22, 6, 33, 16, 128);
 
       case Sphincs_Parameter_Set::Sphincs192Small:
-         return Sphincs_Parameters(set, hash, 24, 63, 7, 14, 17, 16);
+         return Sphincs_Parameters(set, hash, 24, 63, 7, 14, 17, 16, 193);
       case Sphincs_Parameter_Set::Sphincs192Fast:
-         return Sphincs_Parameters(set, hash, 24, 66, 22, 8, 33, 16);
+         return Sphincs_Parameters(set, hash, 24, 66, 22, 8, 33, 16, 194);
 
       case Sphincs_Parameter_Set::Sphincs256Small:
-         return Sphincs_Parameters(set, hash, 32, 64, 8, 14, 22, 16);
+         return Sphincs_Parameters(set, hash, 32, 64, 8, 14, 22, 16, 255);
       case Sphincs_Parameter_Set::Sphincs256Fast:
-         return Sphincs_Parameters(set, hash, 32, 68, 17, 9, 35, 16);
+         return Sphincs_Parameters(set, hash, 32, 68, 17, 9, 35, 16, 255);
       }
 
    Botan::unreachable();
@@ -172,7 +172,7 @@ std::string Sphincs_Parameters::to_string() const
 
 Sphincs_Parameters Sphincs_Parameters::create(const OID& oid)
    {
-   return Sphincs_Parameters::create(oid.to_string());
+   return Sphincs_Parameters::create(oid.to_formatted_string());
    }
 
 OID Sphincs_Parameters::object_identifier() const

@@ -14,6 +14,8 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
 
+#include <botan/rng.h>
+
 namespace Botan
 {
 
@@ -99,7 +101,7 @@ SphincsPlus_PublicKey::~SphincsPlus_PublicKey() = default;
 
 size_t SphincsPlus_PublicKey::estimated_strength() const
    {
-
+   return m_public->parameters().bitsec();
    }
 
 AlgorithmIdentifier SphincsPlus_PublicKey::algorithm_identifier() const
@@ -115,48 +117,90 @@ OID SphincsPlus_PublicKey::object_identifier() const
 bool SphincsPlus_PublicKey::check_key(RandomNumberGenerator& rng,
                                       bool strong) const
    {
-
+   //TODO
+   return true;
    }
 
 std::vector<uint8_t> SphincsPlus_PublicKey::public_key_bits() const
    {
-
+   return m_public->key_bits();
    }
 
+class SphincsPlus_Verification_Operation final : public PK_Ops::Verification
+   {
+   public:
+      SphincsPlus_Verification_Operation(const SphincsPlus_PublicKeyInternal& pub_key)
+         : m_public(std::make_shared<SphincsPlus_PublicKeyInternal>(pub_key))
+         , m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters())) {}
+
+      /*
+      * Add more data to the message currently being signed
+      * @param msg the message
+      * @param msg_len the length of msg in bytes
+      */
+      void update(const uint8_t msg[], size_t msg_len) override
+         {
+         m_msg_buffer.insert(m_msg_buffer.end(), msg, msg + msg_len);
+         }
+
+      /*
+      * Perform a verification operation
+      * @param rng a random number generator
+      */
+      bool is_valid_signature(const  uint8_t* sig, size_t sig_len) override
+         {
+            std::vector<uint8_t> signature(sig, sig+sig_len);
+            auto is_valid = sphincsplus_verify(m_msg_buffer,
+                                               signature,
+                                               m_public->seed().get(),
+                                               m_public->root().get(),
+                                               m_public->parameters());
+            m_msg_buffer.clear();
+            return is_valid;
+         }
+
+      std::string hash_function() const override { return m_hashes->msg_hash_function_name(); }
+
+   private:
+      std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;
+      std::unique_ptr<Sphincs_Hash_Functions> m_hashes;
+      std::vector<uint8_t> m_msg_buffer;
+   };
+
 std::unique_ptr<PK_Ops::Verification>
-   SphincsPlus_PublicKey::create_verification_op(std::string_view params,
+   SphincsPlus_PublicKey::create_verification_op(std::string_view /*params*/,
                                                  std::string_view provider) const
    {
-
+   if(provider.empty() || provider == "base")
+      return std::make_unique<SphincsPlus_Verification_Operation>(*m_public);
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Verification>
    SphincsPlus_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
                                                       std::string_view provider) const
    {
-
+   // TODO
+   BOTAN_UNUSED(signature_algorithm);
+   std::string_view params = "";
+   return create_verification_op(params, provider);
    }
 
 bool SphincsPlus_PublicKey::supports_operation(PublicKeyOperation op) const
    {
-
-   }
-
-SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(std::span<const uint8_t> private_key, Sphincs_Parameter_Set type, Sphincs_Hash_Type hash)
-   {
-
+   // TODO
+   return true;
    }
 
 namespace {
 
-std::span<const uint8_t> slice_off_public_key(const OID& oid, std::span<const uint8_t> key_bits)
+std::span<const uint8_t> slice_off_public_key(const Sphincs_Parameters& params, std::span<const uint8_t> key_bits)
    {
    // Note: We need to transiently instantiate the `Sphincs_Parameters` object
    //       to know the size of the public/private key. That's slightly
    //       inefficient but was the best we could do. Once we get rid of the
    //       PublicKey-PrivateKey inheritance, we might want to reconsider this
    //       control flow.
-   const auto params = Sphincs_Parameters::create(oid);
    if(key_bits.size() != params.private_key_bytes())
       {
       throw Decoding_Error("Sphincs Private Key doesn't have the expected length");
@@ -165,7 +209,23 @@ std::span<const uint8_t> slice_off_public_key(const OID& oid, std::span<const ui
    return key_bits.subspan(params.private_key_bytes() - params.public_key_bytes());
    }
 
+std::span<const uint8_t> slice_off_public_key(const OID& oid, std::span<const uint8_t> key_bits)
+   {
+      const auto params = Sphincs_Parameters::create(oid);
+      return slice_off_public_key(params, key_bits);
+   }
+
+std::span<const uint8_t> slice_off_public_key(const Sphincs_Parameter_Set type, const Sphincs_Hash_Type hash, std::span<const uint8_t> key_bits)
+   {
+      const auto params = Sphincs_Parameters::create(type, hash);
+      return slice_off_public_key(params, key_bits);
+   }
+
 }
+
+SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(std::span<const uint8_t> private_key, Sphincs_Parameter_Set type, Sphincs_Hash_Type hash)
+   : SphincsPlus_PrivateKey(Sphincs_Parameters::create(type, hash).algorithm_identifier(), private_key)
+   {}
 
 SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits)
    : SphincsPlus_PublicKey(alg_id, slice_off_public_key(alg_id.oid(), key_bits))
@@ -178,11 +238,22 @@ SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(const AlgorithmIdentifier& alg_id
    }
 
 SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(RandomNumberGenerator& rng, Sphincs_Parameter_Set type, Sphincs_Hash_Type hash)
+   : SphincsPlus_PrivateKey(rng, Sphincs_Parameters::create(type, hash))
+   {}
+
+SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(RandomNumberGenerator& rng, Sphincs_Parameters params)
    {
-   // TODO
+   auto sk_seed = rng.random_vec<SphincsSecretSeed>(params.n());
+   auto sk_prf = rng.random_vec<SphincsSecretPRF>(params.n());
 
+   m_private = std::make_shared<SphincsPlus_PrivateKeyInternal>(sk_seed, sk_prf);
+
+   SphincsPublicSeed pub_seed(rng.random_vec(params.n()));
+   auto hashes = Sphincs_Hash_Functions::create(params);
+   auto root = xmss_gen_root(params, pub_seed, m_private->seed(), *hashes);
+
+   m_public = std::make_shared<SphincsPlus_PublicKeyInternal>(std::move(params), pub_seed, root);
    }
-
 
 SphincsPlus_PrivateKey::~SphincsPlus_PrivateKey() = default;
 
@@ -201,10 +272,10 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature
    {
    public:
       SphincsPlus_Signature_Operation(std::shared_ptr<SphincsPlus_PrivateKeyInternal> private_key,
-                                      std::shared_ptr<SphincsPlus_PublicKeyInternal> public_key)
+                                      std::shared_ptr<SphincsPlus_PublicKeyInternal> public_key, bool randomized)
       : m_private(std::move(private_key))
       , m_public(std::move(public_key))
-      , m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters())) {}
+      , m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters())), m_randomized(randomized) {}
 
       void update(const uint8_t msg[], size_t msg_len) override
          {
@@ -213,7 +284,17 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override
          {
+         auto sig = sphincsplus_sign(m_msg_buffer,
+                                    m_private->seed().get(),
+                                    m_private->prf().get(),
+                                    m_public->seed().get(),
+                                    (m_randomized) ? unlock(rng.random_vec(m_public->parameters().n())) : m_public->seed().get(),
+                                    m_public->root().get(),
+                                    m_public->parameters());
 
+         m_msg_buffer.clear();
+
+         return lock(sig);
          }
 
       size_t signature_length() const override
@@ -236,6 +317,7 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature
       std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;
       std::unique_ptr<Sphincs_Hash_Functions> m_hashes;
       std::vector<uint8_t> m_msg_buffer;
+      bool m_randomized;
    };
 
 
@@ -244,7 +326,15 @@ std::unique_ptr<PK_Ops::Signature>
                                                std::string_view params,
                                                std::string_view provider) const
    {
+   BOTAN_UNUSED(rng);
 
+   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
+                   "Unexpected parameters for signing with SPHINCS+");
+
+   const bool randomized = (params == "Randomized");
+   if(provider.empty() || provider == "base") // ? ?
+      return std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 
@@ -272,7 +362,9 @@ std::vector<uint8_t> sphincsplus_sign(const std::vector<uint8_t>& message,
 
    /* Compute the digest randomization value (R of spec). */
    auto msg_random_location = std::span(sphincs_sig).subspan(0, params.n());
+
    const auto msg_random = hashes->PRF_msg(sk_prf, opt_rand, message);
+   std::copy(msg_random.begin(), msg_random.end(), msg_random_location.begin());
 
    /* Derive the message digest and leaf index from R, PK and M. */
    auto [tree_idx, leaf_idx] = hashes->H_msg(mhash,

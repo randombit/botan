@@ -6,6 +6,7 @@
 */
 
 #include "tests.h"
+#include "test_rng.h"
 
 #if defined(BOTAN_HAS_SPHINCS_PLUS) && defined (BOTAN_HAS_SHA2_32)
 
@@ -18,6 +19,9 @@
 #include <botan/sp_parameters.h>
 #include <botan/sphincsplus.h>
 #include <botan/secmem.h>
+#include <botan/pubkey.h>
+#include <botan/pk_algs.h>
+#include <botan/hash.h>
 
 
 namespace Botan_Tests {
@@ -50,7 +54,7 @@ class SPHINCS_Plus_Test final : public Text_Based_Test
 
    public:
       SPHINCS_Plus_Test()
-         : Text_Based_Test("pubkey/sphincsplus.vec", "SphincsParameterSet,sk,Msg,OptRand,Signature")
+         : Text_Based_Test("pubkey/sphincsplus.vec", "SphincsParameterSet,seed,pk,sk,msg,sm,opt_rand")
       {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) final
@@ -58,27 +62,50 @@ class SPHINCS_Plus_Test final : public Text_Based_Test
          Test::Result result("SPHINCS+ ");
 
          auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
-         auto hashes = Botan::Sphincs_Hash_Functions::create(params);
 
-         auto [secret_seed, sk_prf, public_seed, root_ref] = parse_sk(vars.get_req_bin("sk"), params);
+         const std::vector<uint8_t> seed_ref = vars.get_req_bin("seed");
+         const std::vector<uint8_t> msg_ref = vars.get_req_bin("msg");
+         const std::vector<uint8_t> pk_ref = vars.get_req_bin("pk");
+         const std::vector<uint8_t> sk_ref = vars.get_req_bin("sk");
+         const std::vector<uint8_t> sig_msg_ref = vars.get_req_bin("sm");
 
-         const std::vector<uint8_t> msg = vars.get_req_bin("Msg");
+         const std::vector<uint8_t> sig_ref(sig_msg_ref.begin(), sig_msg_ref.end() - msg_ref.size());
 
-         const std::vector<uint8_t> sig_ref = vars.get_req_bin("Signature");
-         const std::vector<uint8_t> opt_rand = vars.get_req_bin("OptRand");
+         auto [sk_seed, sk_prf, pk_seed, pk_root] = parse_sk(sk_ref, params);
 
-         auto sig = Botan::sphincsplus_sign(msg,
-                                            secret_seed,
-                                            sk_prf,
-                                            public_seed,
-                                            opt_rand,
-                                            root_ref,
-                                            params);
-         result.test_is_eq("signature creation", sig, sig_ref);
+         /*
+          * To get the optional randomness from the given seed (from KAT), we need to create the
+          * CTR_DRBG_AES256 rng and simulate the first call creating (sk_seed || sk_prf || pk_seed).
+          * The next rng call in the reference implementation creates the optional randomness.
+          */
+         auto kat_rng = CTR_DRBG_AES256(seed_ref);
+         kat_rng.random_vec<std::vector<uint8_t>>(3*params.n());
+         std::vector<uint8_t> opt_rand = kat_rng.random_vec<std::vector<uint8_t>>(1*params.n());
 
-         auto [sig_raw, msg_from_sig] = parse_signature_with_message(sig_ref, msg.size(), params);
-         bool verify_result = Botan::sphincsplus_verify(msg, sig_raw, public_seed, root_ref, params);
-         result.test_is_eq("verification of a vaild signature", verify_result, true);
+         Fixed_Output_RNG fixed_rng;
+         auto add_entropy = [&](auto v)
+            { fixed_rng.add_entropy(v.data(), v.size()); };
+
+         // The order of the RNG values is dependent on the order they are pulled
+         // from the RNG in the production implementation.
+         auto random_input(sk_ref);
+         add_entropy(sk_seed);
+         add_entropy(sk_prf);
+         add_entropy(pk_seed);
+         add_entropy(opt_rand);
+
+         Botan::SphincsPlus_PrivateKey priv_key(fixed_rng, params);
+
+         const std::string param = "Randomized";
+
+         auto signer = Botan::PK_Signer(priv_key, fixed_rng, param);
+         auto signature = signer.sign_message(msg_ref.data(), msg_ref.size(), fixed_rng);
+
+         result.test_is_eq("signature creation", signature, sig_ref);
+
+         Botan::PK_Verifier verifier(*priv_key.public_key(), params.algorithm_identifier());
+         bool verify_success = verifier.verify_message(msg_ref.data(), msg_ref.size(), signature.data(), signature.size());
+         result.test_is_eq("verification of valid signature", verify_success, true);
 
          return result;
          }

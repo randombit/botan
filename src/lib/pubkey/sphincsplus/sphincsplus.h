@@ -30,6 +30,13 @@ class BOTAN_PUBLIC_API(3,1) SphincsPlus_PublicKey : public virtual Public_Key
 
       ~SphincsPlus_PublicKey();
 
+      size_t key_length() const override
+         {
+         // TODO
+         return 0;
+         }
+
+
       std::string algo_name() const override
          {
          return "SPHINCS+";
@@ -58,6 +65,8 @@ class BOTAN_PUBLIC_API(3,1) SphincsPlus_PublicKey : public virtual Public_Key
       bool supports_operation(PublicKeyOperation op) const override;
 
    protected:
+      SphincsPlus_PublicKey() = default;
+
       std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;
    };
 
@@ -68,6 +77,7 @@ class BOTAN_PUBLIC_API(3,1) SphincsPlus_PrivateKey : public virtual SphincsPlus_
       SphincsPlus_PrivateKey(std::span<const uint8_t> private_key, Sphincs_Parameter_Set type, Sphincs_Hash_Type hash);
       SphincsPlus_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
       SphincsPlus_PrivateKey(RandomNumberGenerator& rng, Sphincs_Parameter_Set type, Sphincs_Hash_Type hash);
+      SphincsPlus_PrivateKey(RandomNumberGenerator& rng, Sphincs_Parameters params);
 
       ~SphincsPlus_PrivateKey();
       secure_vector<uint8_t> private_key_bits() const override;

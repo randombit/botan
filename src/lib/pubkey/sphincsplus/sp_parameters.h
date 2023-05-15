@@ -1,7 +1,7 @@
 /*
  * SPHINCS+ Parameters
  * (C) 2023 Jack Lloyd
- *     2023 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
+ *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -51,7 +51,7 @@ class Sphincs_Parameters
       OID object_identifier() const;
 
       /**
-       * @returns the algorithm identifier of those parameters
+       * @returns the algorithm specifier for the selected parameter set
        */
       AlgorithmIdentifier algorithm_identifier() const;
 
@@ -102,6 +102,12 @@ class Sphincs_Parameters
        * @returns the Winternitz parameter for WOTS+ signatures
        */
       size_t w() const { return m_w; }
+
+      /**
+       * @returns the bit security given by Table 3 (NIST R3.1 submission, page 39) for the
+       *          selected parameter set
+       */
+      size_t bitsec() const { return m_bitsec; }
 
       /**
        * @returns the Tree height of an XMSS tree
@@ -176,7 +182,7 @@ class Sphincs_Parameters
 
    private:
       Sphincs_Parameters(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash_type,
-                        size_t n, size_t h, size_t d, size_t a, size_t k, size_t w);
+                        size_t n, size_t h, size_t d, size_t a, size_t k, size_t w, size_t bitsec);
 
    private:
       Sphincs_Parameter_Set m_set;
@@ -187,6 +193,7 @@ class Sphincs_Parameters
       size_t m_a;
       size_t m_k;
       size_t m_w;
+      size_t m_bitsec;
       size_t m_tree_height;
       size_t m_log_w;
       size_t m_wots_len1;
@@ -200,6 +207,7 @@ class Sphincs_Parameters
       size_t m_tree_digest_bytes;
       size_t m_leaf_digest_bytes;
       size_t m_h_msg_digest_bytes;
+
    };
 
 }
