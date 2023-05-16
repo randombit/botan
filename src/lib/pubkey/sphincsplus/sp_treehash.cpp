@@ -113,7 +113,7 @@ void compute_root_spec(std::span<uint8_t> out,
    auto left_buffer = std::span(buffer).subspan(0, params.n());
    auto right_buffer = std::span(buffer).subspan(params.n(), params.n());
 
-   auto auth_path_location = std::span(auth_path).subspan(0, params.n());
+   auto auth_path_location = auth_path.subspan(0, params.n());
 
    // The leaf is put in the left or right buffer, depending on its indexes parity.
    // Same for the first node of the authentication path
@@ -134,7 +134,7 @@ void compute_root_spec(std::span<uint8_t> out,
       idx_offset /= 2;
       tree_address.set_tree_height(i+1).set_tree_index(leaf_idx + idx_offset);
 
-      auth_path_location = std::span(auth_path).subspan( (i+1) * params.n(), params.n() );
+      auth_path_location = auth_path.subspan( (i+1) * params.n(), params.n() );
 
       // Perform the hash operation. Depending on node's index in the current layer the output is either written
       // to the left or right part of the buffer. The next node of the authentication path is written at the other

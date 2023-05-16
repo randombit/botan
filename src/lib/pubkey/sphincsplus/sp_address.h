@@ -43,9 +43,10 @@ class BOTAN_TEST_API Sphincs_Address
    public:
       using enum Sphincs_Address_Type;
 
-      Sphincs_Address()
+      Sphincs_Address(Sphincs_Address_Type type)
          {
          m_address.fill(0);
+         set_type(type);
          }
 
       Sphincs_Address(std::array<uint32_t, 8> address)
@@ -109,35 +110,35 @@ class BOTAN_TEST_API Sphincs_Address
 
       Sphincs_Address& copy_subtree_from(const Sphincs_Address& other)
          {
-         m_address[0] = other.m_address[0];
-         m_address[1] = other.m_address[1];
-         m_address[2] = other.m_address[2];
-         m_address[3] = other.m_address[3];
+         m_address[layer_offset]    = other.m_address[layer_offset];
+         m_address[tree_offset + 0] = other.m_address[tree_offset + 0];
+         m_address[tree_offset + 1] = other.m_address[tree_offset + 1];
+         m_address[tree_offset + 2] = other.m_address[tree_offset + 2];
 
          return *this;
          }
 
       static Sphincs_Address as_subtree_from(const Sphincs_Address& other)
          {
-         Sphincs_Address result;
+         auto result = Sphincs_Address({0,0,0,0,0,0,0,0});
          result.copy_subtree_from(other);
          return result;
          }
 
       Sphincs_Address& copy_keypair_from(const Sphincs_Address other)
          {
-         m_address[0] = other.m_address[0];
-         m_address[1] = other.m_address[1];
-         m_address[2] = other.m_address[2];
-         m_address[3] = other.m_address[3];
-         m_address[5] = other.m_address[5];
+         m_address[layer_offset]    = other.m_address[layer_offset];
+         m_address[tree_offset + 0] = other.m_address[tree_offset + 0];
+         m_address[tree_offset + 1] = other.m_address[tree_offset + 1];
+         m_address[tree_offset + 2] = other.m_address[tree_offset + 2];
+         m_address[keypair_offset]  = other.m_address[keypair_offset];
 
          return *this;
          }
 
       static Sphincs_Address as_keypair_from(const Sphincs_Address& other)
          {
-         Sphincs_Address result;
+         Sphincs_Address result({0,0,0,0,0,0,0,0});
          result.copy_keypair_from(other);
          return result;
          }

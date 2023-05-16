@@ -65,8 +65,8 @@ SphincsXmssRootNode xmss_gen_root(const Sphincs_Parameters& params,
    std::vector<uint8_t> dummy_sig(params.xmss_tree_height() * params.n() + params.wots_bytes());
    SphincsXmssRootNode dummy_root(params.n());
 
-   Sphincs_Address top_tree_addr;
-   Sphincs_Address wots_addr;
+   Sphincs_Address top_tree_addr(Sphincs_Address_Type::HashTree);
+   Sphincs_Address wots_addr(Sphincs_Address_Type::WotsPublicKeyCompression);
 
    top_tree_addr.set_layer(params.d() - 1);
    wots_addr.set_layer(params.d() - 1);
