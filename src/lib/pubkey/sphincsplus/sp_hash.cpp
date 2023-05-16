@@ -6,8 +6,8 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#include "botan/assert.h"
-#include "botan/hash.h"
+#include <botan/assert.h>
+#include <botan/hash.h>
 #include <botan/exceptn.h>
 #include <botan/sp_parameters.h>
 #include <botan/assert.h>
@@ -18,6 +18,8 @@
 #include <botan/internal/trunc_hash.h>
 #include <botan/internal/sha2_32.h>
 #include <botan/internal/sha2_64.h>
+#include <botan/internal/hmac.h>
+#include <botan/internal/mgf1.h>
 
 #include <cstdint>
 #include <memory>
@@ -45,49 +47,26 @@ class Shake_Hash_Functions : public Sphincs_Hash_Functions
          return m_hash;
          }
 
-   public:
-      Shake_Hash_Functions(const Sphincs_Parameters& sphincs_params)
-      : m_hash(sphincs_params.n() * 8)
-      , m_h_msg_hash(8 * sphincs_params.h_msg_digest_bytes())
-      , m_sphincs_params(sphincs_params)
+      std::vector<uint8_t> H_msg_digest(const SphincsMessageRandomness& r,
+                                        const SphincsPublicSeed& pub_seed,
+                                        const SphincsXmssRootNode& root,
+                                        std::span<const uint8_t> message) override
          {
-         }
-
-      // TODO: Some logic to base class
-      std::tuple<SphincsHashedMessage, uint64_t, uint32_t>
-      H_msg(const SphincsMessageRandomness& r,
-            const SphincsPublicSeed& pub_seed,
-            const SphincsXmssRootNode& root,
-            std::span<const uint8_t> message) override
-         {
-         SphincsHashedMessage out_message_hash(m_sphincs_params.fors_message_bytes());
          m_h_msg_hash.update(r);
          m_h_msg_hash.update(pub_seed);
          m_h_msg_hash.update(root);
          m_h_msg_hash.update(message);
 
-         std::vector<uint8_t> digest = m_h_msg_hash.final_stdvec();
-         std::copy(digest.begin(), digest.begin() + m_sphincs_params.fors_message_bytes(),
-                   out_message_hash.begin());
+         return m_h_msg_hash.final_stdvec();
+         }
 
-         auto tree_bytes_loc = std::span(digest).subspan(m_sphincs_params.fors_message_bytes(),
-                                                         m_sphincs_params.tree_digest_bytes());
-
-         const uint64_t tree_idx_bits = m_sphincs_params.tree_height() * (m_sphincs_params.d() - 1);
-         std::vector<uint8_t> tree_idx_bytes(8 - m_sphincs_params.tree_digest_bytes(), 0);
-         tree_idx_bytes.insert(tree_idx_bytes.end(), tree_bytes_loc.begin(), tree_bytes_loc.end());
-         uint64_t tree_idx = load_be<uint64_t>(tree_idx_bytes.data(), 0);
-         tree_idx &= (~static_cast<uint64_t>(0)) >> (64 - tree_idx_bits);
-
-         const uint32_t leaf_idx_bits = m_sphincs_params.tree_height();
-         auto leaf_idx_loc = std::span(digest).subspan(m_sphincs_params.fors_message_bytes() + m_sphincs_params.tree_digest_bytes(),
-                                                       m_sphincs_params.tree_digest_bytes());
-         std::vector<uint8_t> leaf_idx_bytes(4 - m_sphincs_params.leaf_digest_bytes(), 0);
-         leaf_idx_bytes.insert(leaf_idx_bytes.end(), leaf_idx_loc.begin(), leaf_idx_loc.end());
-         uint32_t leaf_idx = load_be<uint32_t>(leaf_idx_bytes.data(), 0);
-         leaf_idx &= (~static_cast<uint32_t>(0)) >> (32 - leaf_idx_bits);
-
-         return std::tuple(out_message_hash, tree_idx, leaf_idx);
+   public:
+      Shake_Hash_Functions(const Sphincs_Parameters& sphincs_params)
+      : Sphincs_Hash_Functions(sphincs_params)
+      , m_hash(sphincs_params.n() * 8)
+      , m_h_msg_hash(8 * sphincs_params.h_msg_digest_bytes())
+      , m_sphincs_params(sphincs_params)
+         {
          }
 
       SphincsMessageRandomness PRF_msg(const SphincsSecretPRF& sk_prf,
@@ -138,20 +117,42 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
          return hash;
          }
 
+      std::vector<uint8_t> H_msg_digest(const SphincsMessageRandomness& r,
+                                        const SphincsPublicSeed& pub_seed,
+                                        const SphincsXmssRootNode& root,
+                                        std::span<const uint8_t> message) override
+         {
+         m_sha_x_full->update(r);
+         m_sha_x_full->update(pub_seed);
+         m_sha_x_full->update(root);
+         m_sha_x_full->update(message);
+
+         auto r_pk_buffer = m_sha_x_full->final();
+         std::vector<uint8_t> mgf1_input = concat_as<std::vector<uint8_t>>(r, pub_seed, r_pk_buffer);
+
+         std::vector<uint8_t> digest(m_sphincs_params.h_msg_digest_bytes());
+         mgf1_mask(*m_sha_x_full, mgf1_input.data(), mgf1_input.size(), digest.data(), digest.size());
+
+         return digest;
+         }
+
    public:
       Sha2_Hash_Functions(const Sphincs_Parameters& sphincs_params)
-         : m_sphincs_params(sphincs_params)
+         : Sphincs_Hash_Functions(sphincs_params)
+         , m_sphincs_params(sphincs_params)
          , m_padding_256(64 - sphincs_params.n(), '\0')
          {
          if(sphincs_params.n() == 16)
             {
             m_sha_x = std::make_unique<Truncated_Hash>(std::make_unique<SHA_256>(), sphincs_params.n() * 8);
+            m_sha_x_full = std::make_unique<SHA_256>();
             m_padding_x = m_padding_256;
             }
          else
             {
             BOTAN_ASSERT_NOMSG(sphincs_params.n() <= 128);
             m_sha_x = std::make_unique<Truncated_Hash>(std::make_unique<SHA_512>(), sphincs_params.n() * 8);
+            m_sha_x_full = std::make_unique<SHA_512>();
             m_padding_x = std::vector<uint8_t> (128 - sphincs_params.n(), '\0');
             }
 
@@ -166,21 +167,23 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
 
          }
 
-      std::tuple<SphincsHashedMessage, uint64_t, uint32_t>
-      H_msg(const SphincsMessageRandomness& r,
-            const SphincsPublicSeed& pub_seed,
-            const SphincsXmssRootNode& root,
-            std::span<const uint8_t> message) override
-         {
-         throw Not_Implemented("H_msg to be implemented for SHA-2");
-         }
-
       SphincsMessageRandomness PRF_msg(const SphincsSecretPRF& sk_prf,
                                        const SphincsOptionalRandomness& opt_rand,
                                        std::span<const uint8_t> in) override
          {
-         // TODO
-         throw Not_Implemented("PRF_msg to be implemented for SHA-2");
+         // TODO: To verify/test
+         //std::unique_ptr<HashFunction> hash = m_sha_x->clone();
+         // TODO: Ready for bigger instances
+         HMAC hmac_sha_x(m_sha_x_full->new_object());
+         hmac_sha_x.set_key(sk_prf);
+         hmac_sha_x.update(opt_rand);
+         hmac_sha_x.update(in);
+
+         auto hmac_digest = hmac_sha_x.final();
+
+         return SphincsMessageRandomness(hmac_digest.begin(), hmac_digest.begin() + m_sphincs_params.n());
+
+         //throw Not_Implemented("PRF_msg to be implemented for SHA-2");
          }
 
       std::string msg_hash_function_name() const override
@@ -193,12 +196,17 @@ class Sha2_Hash_Functions : public Sphincs_Hash_Functions
       const Sphincs_Parameters& m_sphincs_params;
       std::unique_ptr<HashFunction> m_sha_256;
       std::unique_ptr<HashFunction> m_sha_x;
+      /// Non truncated SHA-X hash
+      std::unique_ptr<HashFunction> m_sha_x_full;
       std::vector<uint8_t> m_padding_256;
       std::vector<uint8_t> m_padding_x;
    };
 
 
 }
+
+Sphincs_Hash_Functions::Sphincs_Hash_Functions(const Sphincs_Parameters& sphincs_params)
+: m_sphincs_params(sphincs_params) {}
 
 std::unique_ptr<Sphincs_Hash_Functions> Sphincs_Hash_Functions::create(const Sphincs_Parameters& sphincs_params)
    {
@@ -213,6 +221,39 @@ std::unique_ptr<Sphincs_Hash_Functions> Sphincs_Hash_Functions::create(const Sph
       }
 
    Botan::unreachable();
+   }
+
+std::tuple<SphincsHashedMessage, uint64_t, uint32_t>
+   Sphincs_Hash_Functions::H_msg(const SphincsMessageRandomness& r,
+                                 const SphincsPublicSeed& pub_seed,
+                                 const SphincsXmssRootNode& root,
+                                 std::span<const uint8_t> message)
+   {
+   auto digest = H_msg_digest(r, pub_seed, root, message);
+
+   SphincsHashedMessage out_message_hash(m_sphincs_params.fors_message_bytes());
+
+   std::copy(digest.begin(), digest.begin() + m_sphincs_params.fors_message_bytes(),
+               out_message_hash.begin());
+
+   auto tree_bytes_loc = std::span(digest).subspan(m_sphincs_params.fors_message_bytes(),
+                                                   m_sphincs_params.tree_digest_bytes());
+
+   const uint64_t tree_idx_bits = m_sphincs_params.tree_height() * (m_sphincs_params.d() - 1);
+   std::vector<uint8_t> tree_idx_bytes(8 - m_sphincs_params.tree_digest_bytes(), 0);
+   tree_idx_bytes.insert(tree_idx_bytes.end(), tree_bytes_loc.begin(), tree_bytes_loc.end());
+   uint64_t tree_idx = load_be<uint64_t>(tree_idx_bytes.data(), 0);
+   tree_idx &= (~static_cast<uint64_t>(0)) >> (64 - tree_idx_bits);
+
+   const uint32_t leaf_idx_bits = m_sphincs_params.tree_height();
+   auto leaf_idx_loc = std::span(digest).subspan(m_sphincs_params.fors_message_bytes() + m_sphincs_params.tree_digest_bytes(),
+                                                   m_sphincs_params.tree_digest_bytes());
+   std::vector<uint8_t> leaf_idx_bytes(4 - m_sphincs_params.leaf_digest_bytes(), 0);
+   leaf_idx_bytes.insert(leaf_idx_bytes.end(), leaf_idx_loc.begin(), leaf_idx_loc.end());
+   uint32_t leaf_idx = load_be<uint32_t>(leaf_idx_bytes.data(), 0);
+   leaf_idx &= (~static_cast<uint32_t>(0)) >> (32 - leaf_idx_bits);
+
+   return std::tuple(out_message_hash, tree_idx, leaf_idx);
    }
 
 }

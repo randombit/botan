@@ -98,7 +98,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test
 
 
 
-         result.test_is_eq("WOTS+ signature generation", sig_out, wots_sig_ref.get());
+         result.test_is_eq("WOTS+ signature generation", sig_out, unlock(wots_sig_ref.get()));
 
          auto hashed_pk_ref = vars.get_req_bin("HashedWotsPk");
          result.test_is_eq("WOTS+ public key generation", hashed_pk_out, hashed_pk_ref);

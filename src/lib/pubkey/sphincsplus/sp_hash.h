@@ -38,11 +38,11 @@ class Sphincs_Hash_Functions
 
    public:
 
-      virtual std::tuple<SphincsHashedMessage, uint64_t, uint32_t>
+      std::tuple<SphincsHashedMessage, uint64_t, uint32_t>
       H_msg(const SphincsMessageRandomness& r,
             const SphincsPublicSeed& pub_seed,
             const SphincsXmssRootNode& root,
-            std::span<const uint8_t> message) = 0;
+            std::span<const uint8_t> message);
 
       /**
        * Using SK.PRF, the optional randomness, and a message, computes the message random R,
@@ -58,7 +58,7 @@ class Sphincs_Hash_Functions
                                                const SphincsOptionalRandomness& opt_rand,
                                                std::span<const uint8_t> msg) = 0;
 
-      template<typename... BufferTs> // TODO: contiguous_container
+      template<typename... BufferTs>
       void T(std::span<uint8_t> out,
              const SphincsPublicSeed& pub_seed,
              const Sphincs_Address& address,
@@ -80,6 +80,8 @@ class Sphincs_Hash_Functions
       virtual std::string msg_hash_function_name() const = 0;
 
    protected:
+      Sphincs_Hash_Functions(const Sphincs_Parameters& sphincs_params);
+
       /**
        * Prepare the underlying hash function for hashing any given input
        * depending on the expected input length.
@@ -97,6 +99,13 @@ class Sphincs_Hash_Functions
       virtual HashFunction& tweak_hash(const SphincsPublicSeed& pub_seed,
                                        const Sphincs_Address& address,
                                        size_t input_length) = 0;
+
+      virtual std::vector<uint8_t> H_msg_digest(const SphincsMessageRandomness& r,
+                                                const SphincsPublicSeed& pub_seed,
+                                                const SphincsXmssRootNode& root,
+                                                std::span<const uint8_t> message) = 0;
+
+      const Sphincs_Parameters m_sphincs_params;
    };
 
 }

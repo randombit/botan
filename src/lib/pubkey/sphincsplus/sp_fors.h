@@ -45,11 +45,11 @@ BOTAN_TEST_API SphincsXmssRootNode fors_sign(std::span<uint8_t> sig_out,
  * and is not meant for general usability.
  */
 BOTAN_TEST_API SphincsXmssRootNode fors_public_key_from_signature(const SphincsHashedMessage& hashed_message,
-                                                            const ForsSignature& signature,
-                                                            const SphincsPublicSeed& public_seed,
-                                                            const Sphincs_Address& address,
-                                                            const Sphincs_Parameters& params,
-                                                            Sphincs_Hash_Functions& hash);
+                                                                  const ForsSignature& signature,
+                                                                  const SphincsPublicSeed& public_seed,
+                                                                  const Sphincs_Address& address,
+                                                                  const Sphincs_Parameters& params,
+                                                                  Sphincs_Hash_Functions& hash);
 
 BOTAN_TEST_API ForsIndices fors_message_to_indices(std::span<const uint8_t> message, const Sphincs_Parameters& params);
 
