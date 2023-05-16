@@ -4,7 +4,7 @@
 
 # === Shake ===
 
-SphincsParameterSet = SPHINCS+_128_FAST_SHAKE256
+SphincsParameterSet = SphincsPlus-shake-128f-r3.1
 Address = 0000000d00000000000000000000000e00000000000000000000000000000000
 SecretSeed = 0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a
 PublicSeed = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b

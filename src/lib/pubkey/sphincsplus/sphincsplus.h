@@ -1,5 +1,8 @@
 /*
- * SPHINCS+
+ * SPHINCS+ Hash based signature scheme
+ * Based on the creative commons (CC0 1.0) reference implementation by the
+ * designers (https://github.com/sphincs/sphincsplus/)
+ *
  * (C) 2023 Jack Lloyd
  *     2023 Fabian Albert, René Meusel, Rohde & Schwarz Cybersecurity
  *

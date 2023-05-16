@@ -65,7 +65,7 @@ std::vector<Test::Result> test_sphincsplus_address()
           .set_tree_index(1073741824);
 
          auto subtree1 = Botan::Sphincs_Address::as_subtree_from(a);
-         Botan::Sphincs_Address subtree2(Botan::Sphincs_Address::ForsTree);
+         Botan::Sphincs_Address subtree2({0,0,0,0,0,0,0,0});
          subtree2.copy_subtree_from(a);
 
          result.test_is_eq("SHA-256(subtree1)", sha256(subtree1), Botan::hex_decode("f192c8f8e946aa16d16eafe88bd4eabcc88a305b69bb7c0bb49e65bd122bb973"));
@@ -82,7 +82,7 @@ std::vector<Test::Result> test_sphincsplus_address()
           .set_hash(1073741824);
 
          auto keypair1 = Botan::Sphincs_Address::as_keypair_from(a);
-         Botan::Sphincs_Address keypair2(Botan::Sphincs_Address::ForsTree);
+         Botan::Sphincs_Address keypair2({0,0,0,0,0,0,0,0});
          keypair2.copy_keypair_from(a);
 
          result.test_is_eq("SHA-256(keypair1)", sha256(keypair1), Botan::hex_decode("1cdd4835a6057306678e7d8cb903c140aba1d4805a8a1f75b11f1129bb22d08c"));
