@@ -100,9 +100,8 @@ SphincsPlus_PublicKey::~SphincsPlus_PublicKey() = default;
 
 size_t SphincsPlus_PublicKey::key_length() const
    {
-   return 2*m_public->parameters().n();
+   return m_public->parameters().n() * 8;
    }
-
 
 size_t SphincsPlus_PublicKey::estimated_strength() const
    {
@@ -111,18 +110,17 @@ size_t SphincsPlus_PublicKey::estimated_strength() const
 
 AlgorithmIdentifier SphincsPlus_PublicKey::algorithm_identifier() const
    {
-   m_public->parameters().algorithm_identifier();
+   return m_public->parameters().algorithm_identifier();
    }
 
 OID SphincsPlus_PublicKey::object_identifier() const
    {
-   m_public->parameters().object_identifier();
+   return m_public->parameters().object_identifier();
    }
 
-bool SphincsPlus_PublicKey::check_key(RandomNumberGenerator& rng,
-                                      bool strong) const
+bool SphincsPlus_PublicKey::check_key(RandomNumberGenerator&, bool) const
    {
-   //TODO ???
+   // Nothing to check. It's literally just hashes. :-)
    return true;
    }
 
@@ -134,8 +132,8 @@ std::vector<uint8_t> SphincsPlus_PublicKey::public_key_bits() const
 class SphincsPlus_Verification_Operation final : public PK_Ops::Verification
    {
    public:
-      SphincsPlus_Verification_Operation(const SphincsPlus_PublicKeyInternal& pub_key)
-         : m_public(std::make_shared<SphincsPlus_PublicKeyInternal>(pub_key))
+      SphincsPlus_Verification_Operation(std::shared_ptr<SphincsPlus_PublicKeyInternal> pub_key)
+         : m_public(std::move(pub_key))
          , m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters())) {}
 
       /*
@@ -154,19 +152,20 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification
       */
       bool is_valid_signature(const  uint8_t* sig, size_t sig_len) override
          {
+            if(sig_len != m_public->parameters().sphincs_signature_bytes())
+               {
+               return false;
+               }
+
             std::vector<uint8_t> signature(sig, sig+sig_len);
 
             WotsPublicKey wots_pk(m_public->parameters().wots_bytes());
             std::vector<uint8_t> leaf(m_public->parameters().n());
 
+            // TODO: Have a constructor that takes the `Sphincs_Address_Type`?
             Sphincs_Address wots_addr;
             Sphincs_Address tree_addr;
             Sphincs_Address wots_pk_addr;
-
-            if(signature.size() != m_public->parameters().sphincs_signature_bytes())
-               {
-               return false;
-               }
 
             /* This hook allows the hash function instantiation to do whatever
                preparation or computation it needs, based on the public seed. */
@@ -204,7 +203,7 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification
                /* Initially, root is the FORS pk, but on subsequent iterations it is
                   the root of the subtree below the currently processed subtree. */
                auto wots_sig_location = std::span(signature).subspan(m_public->parameters().n() + m_public->parameters().fors_signature_bytes() +
-                                                               i * (m_public->parameters().wots_bytes() + m_public->parameters().tree_height() * m_public->parameters().n()),
+                                                               i * (m_public->parameters().wots_bytes() + m_public->parameters().xmss_tree_height() * m_public->parameters().n()),
                                                                m_public->parameters().wots_bytes());
 
                // TODO: Possible optimization: Without copying
@@ -216,14 +215,14 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification
 
                /* Compute the root node of this subtree. */
                auto auth_path_location = std::span(signature).subspan(m_public->parameters().n() + m_public->parameters().fors_signature_bytes() +
-                                                               i * (m_public->parameters().wots_bytes() + m_public->parameters().tree_height() * m_public->parameters().n()) + m_public->parameters().wots_bytes(),
-                                                               m_public->parameters().tree_height() * m_public->parameters().n());
+                                                               i * (m_public->parameters().wots_bytes() + m_public->parameters().xmss_tree_height() * m_public->parameters().n()) + m_public->parameters().wots_bytes(),
+                                                               m_public->parameters().xmss_tree_height() * m_public->parameters().n());
 
-               compute_root_spec(root, m_public->parameters(), m_public->seed(), *m_hashes, leaf, leaf_idx, 0, auth_path_location, m_public->parameters().tree_height(), tree_addr);
+               compute_root_spec(root, m_public->parameters(), m_public->seed(), *m_hashes, leaf, leaf_idx, 0, auth_path_location, m_public->parameters().xmss_tree_height(), tree_addr);
 
                /* Update the indices for the next layer. */
-               leaf_idx = (tree_idx & ((1 << m_public->parameters().tree_height())-1));
-               tree_idx = tree_idx >> m_public->parameters().tree_height();
+               leaf_idx = (tree_idx & ((1 << m_public->parameters().xmss_tree_height())-1));
+               tree_idx = tree_idx >> m_public->parameters().xmss_tree_height();
                }
             m_msg_buffer.clear();
 
@@ -244,7 +243,7 @@ std::unique_ptr<PK_Ops::Verification>
                                                  std::string_view provider) const
    {
    if(provider.empty() || provider == "base")
-      return std::make_unique<SphincsPlus_Verification_Operation>(*m_public);
+      return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -252,16 +251,18 @@ std::unique_ptr<PK_Ops::Verification>
    SphincsPlus_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
                                                       std::string_view provider) const
    {
-   // TODO
-   BOTAN_UNUSED(signature_algorithm);
-   std::string_view params = "";
-   return create_verification_op(params, provider);
+   if(provider.empty() || provider == "base")
+      {
+      if(signature_algorithm != this->algorithm_identifier())
+         throw Decoding_Error("Unexpected AlgorithmIdentifier for SPHINCS+ signature");
+      return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
+      }
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 bool SphincsPlus_PublicKey::supports_operation(PublicKeyOperation op) const
    {
-   // TODO
-   return true;
+   return op == PublicKeyOperation::Signature;
    }
 
 namespace {
@@ -392,14 +393,14 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature
                wots_addr.copy_subtree_from(tree_addr).set_keypair(leaf_idx);
 
                auto xmss_sig_location = std::span(sphincs_sig).subspan(msg_random_location.size() + fors_sig_location.size() +
-                                                                     i * (m_public->parameters().wots_bytes() + m_public->parameters().tree_height() * m_public->parameters().n()),
-                                                                     m_public->parameters().wots_bytes() + m_public->parameters().tree_height() * m_public->parameters().n());
+                                                                     i * (m_public->parameters().xmss_signature_bytes()),
+                                                                     m_public->parameters().xmss_signature_bytes());
 
                current_xmss_root = xmss_sign(xmss_sig_location, current_xmss_root, m_public->seed(), m_private->seed(), wots_addr, tree_addr, leaf_idx, m_public->parameters(), *m_hashes);
 
                /* Update the indices for the next layer. */
-               leaf_idx = (tree_idx & ((1 << m_public->parameters().tree_height()) - 1));
-               tree_idx = tree_idx >> m_public->parameters().tree_height();
+               leaf_idx = (tree_idx & ((1 << m_public->parameters().xmss_tree_height()) - 1));
+               tree_idx = tree_idx >> m_public->parameters().xmss_tree_height();
                }
 
             m_msg_buffer.clear();

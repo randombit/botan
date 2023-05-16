@@ -239,13 +239,13 @@ std::tuple<SphincsHashedMessage, uint64_t, uint32_t>
    auto tree_bytes_loc = std::span(digest).subspan(m_sphincs_params.fors_message_bytes(),
                                                    m_sphincs_params.tree_digest_bytes());
 
-   const uint64_t tree_idx_bits = m_sphincs_params.tree_height() * (m_sphincs_params.d() - 1);
+   const uint64_t tree_idx_bits = m_sphincs_params.xmss_tree_height() * (m_sphincs_params.d() - 1);
    std::vector<uint8_t> tree_idx_bytes(8 - m_sphincs_params.tree_digest_bytes(), 0);
    tree_idx_bytes.insert(tree_idx_bytes.end(), tree_bytes_loc.begin(), tree_bytes_loc.end());
    uint64_t tree_idx = load_be<uint64_t>(tree_idx_bytes.data(), 0);
    tree_idx &= (~static_cast<uint64_t>(0)) >> (64 - tree_idx_bits);
 
-   const uint32_t leaf_idx_bits = m_sphincs_params.tree_height();
+   const uint32_t leaf_idx_bits = m_sphincs_params.xmss_tree_height();
    auto leaf_idx_loc = std::span(digest).subspan(m_sphincs_params.fors_message_bytes() + m_sphincs_params.tree_digest_bytes(),
                                                    m_sphincs_params.tree_digest_bytes());
    std::vector<uint8_t> leaf_idx_bytes(4 - m_sphincs_params.leaf_digest_bytes(), 0);

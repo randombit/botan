@@ -110,9 +110,14 @@ class Sphincs_Parameters
       size_t bitsec() const { return m_bitsec; }
 
       /**
-       * @returns the Tree height of an XMSS tree
+       * @returns the tree height of an XMSS tree
        */
-      size_t tree_height() const { return m_tree_height; }
+      size_t xmss_tree_height() const { return m_xmss_tree_height; }
+
+      /**
+       * @returns the byte length of a single xmss signature
+       */
+      size_t xmss_signature_bytes() const { return m_xmss_sig_bytes; }
 
       /**
        * @returns the base 2 logarithm of the Winternitz parameter for WOTS+ signatures
@@ -142,7 +147,7 @@ class Sphincs_Parameters
       /**
        * @returns the byte length of a FORS signature
        */
-      size_t fors_signature_bytes() const { return m_fors_signature_bytes; }
+      size_t fors_signature_bytes() const { return m_fors_sig_bytes; }
 
       /**
        * @returns the byte length of the FORS input message
@@ -176,7 +181,7 @@ class Sphincs_Parameters
 
       /**
        * @returns the byte length of the output of H_msg. Corresponds to
-       *          m in the specification of M_msg with Shake in section 7.2.1
+       *          m in the specification of H_msg in Section 7.2
        */
       size_t h_msg_digest_bytes() const { return m_h_msg_digest_bytes; }
 
@@ -194,15 +199,16 @@ class Sphincs_Parameters
       size_t m_k;
       size_t m_w;
       size_t m_bitsec;
-      size_t m_tree_height;
       size_t m_log_w;
       size_t m_wots_len1;
       size_t m_wots_len2;
       size_t m_wots_len;
       size_t m_wots_bytes;
       size_t m_fors_message_bytes;
-      size_t m_fors_signature_bytes;
+      size_t m_fors_sig_bytes;
       size_t m_sp_sig_bytes;
+      size_t m_xmss_tree_height;
+      size_t m_xmss_sig_bytes;
 
       size_t m_tree_digest_bytes;
       size_t m_leaf_digest_bytes;

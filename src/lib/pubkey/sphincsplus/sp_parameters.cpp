@@ -105,18 +105,37 @@ Sphincs_Parameters::Sphincs_Parameters(Sphincs_Parameter_Set set, Sphincs_Hash_T
    : m_set(set), m_hash_type(hash_type)
    , m_n(n), m_h(h), m_d(d), m_a(a), m_k(k), m_w(w), m_bitsec(bitsec)
    {
-   m_tree_height = m_h / m_d;
-   m_log_w = std::floor(log2(m_w));
-   m_wots_len1 = (m_n * 8) / m_log_w;
-   m_wots_len2 = std::floor(log2(m_wots_len1 * (m_w - 1))) / m_log_w + 1;
-   m_wots_len = m_wots_len1 + m_wots_len2;
-   m_wots_bytes = m_wots_len * m_n;
-   m_fors_signature_bytes = (m_a + 1) * m_k * m_n;
-   m_fors_message_bytes = std::ceil((m_a * m_k) / 8.0f);
-   m_sp_sig_bytes = m_n + m_fors_signature_bytes + m_d * m_wots_bytes + m_h * m_n;
+   BOTAN_ARG_CHECK(w == 4 || w == 16 || w == 256, "Winternitz parameter must be one of 4, 16, 256");
+   BOTAN_ARG_CHECK(n == 16 || n == 24 || n == 32, "n must be one of 16, 24, 32");
+   BOTAN_ARG_CHECK(m_d > 0, "d must be greater than zero");
 
-   m_tree_digest_bytes = std::ceil((m_tree_height * (m_d - 1)) / 8.0f);
-   m_leaf_digest_bytes = std::ceil(m_tree_height / 8.0f);
+   m_xmss_tree_height = m_h / m_d;
+   m_log_w = std::floor(log2(m_w));
+
+   // # Winternitz blocks of the message
+   m_wots_len1 = (m_n * 8) / m_log_w;
+
+   // # Winternitz blocks of the checksum
+   m_wots_len2 = std::floor(log2(m_wots_len1 * (m_w - 1))) / m_log_w + 1;
+
+   // # Winternitz blocks in the signature
+   m_wots_len = m_wots_len1 + m_wots_len2;
+
+   // byte length of WOTS+ signature as well as public key
+   m_wots_bytes = m_wots_len * m_n;
+
+   m_fors_sig_bytes = (m_a + 1) * m_k * m_n;
+
+   // byte length of the FORS input message
+   m_fors_message_bytes = std::ceil((m_a * m_k) / 8.0f);
+
+   m_xmss_sig_bytes = m_wots_bytes + m_xmss_tree_height * m_n;
+   m_sp_sig_bytes = m_n /* random */ +
+                    m_fors_sig_bytes +
+                    m_xmss_sig_bytes * m_d /* height of XMSS Hypertree */;
+
+   m_tree_digest_bytes = std::ceil((m_xmss_tree_height * (m_d - 1)) / 8.0f);
+   m_leaf_digest_bytes = std::ceil(m_xmss_tree_height / 8.0f);
    m_h_msg_digest_bytes = m_fors_message_bytes + m_tree_digest_bytes + m_leaf_digest_bytes;
    }
 

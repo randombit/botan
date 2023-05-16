@@ -48,7 +48,7 @@ SphincsXmssRootNode xmss_sign(std::span<uint8_t> out_sig,
    treehash_spec(next_root, auth_path_location, params,
                hashes, public_seed,
                idx_leaf,
-               0, params.tree_height(), wots_gen_leaf,
+               0, params.xmss_tree_height(), wots_gen_leaf,
                tree_addr);
 
    return next_root;
@@ -62,7 +62,7 @@ SphincsXmssRootNode xmss_gen_root(const Sphincs_Parameters& params,
    /* We do not need the a sig/auth path in key generation, but it simplifies the
          code to have just one treehash routine that computes both root and path
          in one function. */
-   std::vector<uint8_t> dummy_sig(params.tree_height() * params.n() + params.wots_bytes());
+   std::vector<uint8_t> dummy_sig(params.xmss_tree_height() * params.n() + params.wots_bytes());
    SphincsXmssRootNode dummy_root(params.n());
 
    Sphincs_Address top_tree_addr;

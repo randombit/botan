@@ -33,30 +33,6 @@ namespace Botan_Tests {
  */
 class SPHINCS_Plus_Test final : public Text_Based_Test
    {
-   private:
-      /// @returns (secret_seed, sk_prf, public_seed, sphincs_root)
-      std::tuple<Botan::secure_vector<uint8_t>, Botan::secure_vector<uint8_t>, std::vector<uint8_t>, std::vector<uint8_t>>
-      parse_sk(std::vector<uint8_t> sk, Botan::Sphincs_Parameters& params)
-         {
-         BOTAN_ASSERT_NOMSG(sk.size() == 4 * params.n());
-         Botan::secure_vector<uint8_t> secret_seed(sk.begin(), sk.begin() + params.n());
-         Botan::secure_vector<uint8_t> sk_prf(sk.begin() + params.n(), sk.begin() + 2*params.n());
-         std::vector<uint8_t> public_seed(sk.begin() + 2*params.n(), sk.begin() + 3*params.n());
-         std::vector<uint8_t> sphincs_root(sk.begin() + 3*params.n(), sk.end());
-
-         return std::make_tuple(secret_seed, sk_prf, public_seed, sphincs_root);
-         }
-
-      std::pair<std::vector<uint8_t>, std::vector<uint8_t>>
-      parse_signature_with_message(std::vector<uint8_t> sig_with_msg, size_t msg_size, Botan::Sphincs_Parameters& params)
-         {
-         BOTAN_ASSERT_NOMSG(sig_with_msg.size() == params.sphincs_signature_bytes() + msg_size);
-         std::vector<uint8_t> signature(sig_with_msg.begin(), sig_with_msg.begin() + params.sphincs_signature_bytes());
-         std::vector<uint8_t> message(sig_with_msg.begin() + params.sphincs_signature_bytes(), sig_with_msg.end());
-
-         return std::make_pair(signature, message);
-         }
-
    public:
       SPHINCS_Plus_Test()
          : Text_Based_Test("pubkey/sphincsplus.vec", "SphincsParameterSet,seed,pk,sk,msg,sm")
@@ -76,35 +52,24 @@ class SPHINCS_Plus_Test final : public Text_Based_Test
 
          const std::vector<uint8_t> sig_ref(sig_msg_ref.begin(), sig_msg_ref.end() - msg_ref.size());
 
-         auto [sk_seed, sk_prf, pk_seed, pk_root] = parse_sk(sk_ref, params);
-
          /*
-          * To get the optional randomness from the given seed (from KAT), we
-          * need to create the CTR_DRBG_AES256 rng and simulate the first call
-          * creating (sk_seed || sk_prf || pk_seed). The next rng call in the
-          * reference implementation creates the optional randomness.
+          * To get sk_seed || sk_prf || pk_seed and opt_rand from the given seed
+          * (from KAT), we create a CTR_DRBG_AES256 rng and "simulate" the
+          * invocation-pattern in the reference. We feed the created randomness
+          * to the fixed output rng, to allow for our (slightly different)
+          * invocation-pattern.
           */
          auto kat_rng = CTR_DRBG_AES256(seed_ref);
-         kat_rng.random_vec<std::vector<uint8_t>>(3*params.n());
-         std::vector<uint8_t> opt_rand = kat_rng.random_vec<std::vector<uint8_t>>(1*params.n());
-
          Fixed_Output_RNG fixed_rng;
-         auto add_entropy = [&](auto v)
-            { fixed_rng.add_entropy(v.data(), v.size()); };
-
-         // The order of the RNG values is dependent on the order they are pulled
-         // from the RNG in the production implementation.
-         auto random_input(sk_ref);
-         add_entropy(sk_seed);
-         add_entropy(sk_prf);
-         add_entropy(pk_seed);
-         add_entropy(opt_rand);
+         fixed_rng.add_entropy(kat_rng.random_vec<std::vector<uint8_t>>(3*params.n()));
+         fixed_rng.add_entropy(kat_rng.random_vec<std::vector<uint8_t>>(1*params.n()));
 
          Botan::SphincsPlus_PrivateKey priv_key(fixed_rng, params);
 
-         const std::string param = "Randomized";
+         result.test_is_eq("public key bits", priv_key.public_key_bits(), pk_ref);
+         result.test_is_eq("private key bits", unlock(priv_key.private_key_bits()), sk_ref);
 
-         auto signer = Botan::PK_Signer(priv_key, fixed_rng, param);
+         auto signer = Botan::PK_Signer(priv_key, fixed_rng, "Randomized"); // TODO: No KAT for 'deterministic'?
          auto signature = signer.sign_message(msg_ref.data(), msg_ref.size(), fixed_rng);
 
          result.test_is_eq("signature creation", signature, sig_ref);
