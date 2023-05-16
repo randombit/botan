@@ -99,7 +99,7 @@ void compute_root_spec(std::span<uint8_t> out,
                        const Sphincs_Parameters& params,
                        const SphincsPublicSeed& public_seed,
                        Sphincs_Hash_Functions& hashes,
-                       const std::vector<uint8_t> leaf, // Leaf
+                       const std::vector<uint8_t>& leaf, // Leaf
                        uint32_t leaf_idx, uint32_t idx_offset,
                        std::span<const uint8_t> auth_path,
                        uint32_t tree_height,

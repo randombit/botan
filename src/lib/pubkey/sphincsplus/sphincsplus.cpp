@@ -152,18 +152,15 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification
       */
       bool is_valid_signature(const uint8_t* sig, size_t sig_len) override
          {
-         if(sig_len != m_public->parameters().sphincs_signature_bytes())
+         const auto& p = m_public->parameters();
+         if(sig_len != p.sphincs_signature_bytes())
             {
             return false;
             }
 
-         const auto& p = m_public->parameters();
-
          BufferSlicer s(std::span(sig, sig_len));
          const auto msg_random = s.take_as<SphincsMessageRandomness>(p.n());
          const auto fors_sig = s.take_as<ForsSignature>(p.fors_signature_bytes());
-
-         WotsPublicKey wots_pk(m_public->parameters().wots_bytes());
 
          /* This hook allows the hash function instantiation to do whatever
             preparation or computation it needs, based on the public seed. */
@@ -178,10 +175,10 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification
          /* Layer correctly defaults to 0, so no need to set_layer_addr */
          wots_addr.set_tree(tree_idx).set_keypair(leaf_idx);
 
-         auto root = fors_public_key_from_signature(mhash, fors_sig, m_public->seed(), wots_addr, m_public->parameters(), *m_hashes);
+         auto root = fors_public_key_from_signature(mhash, fors_sig, m_public->seed(), wots_addr, p, *m_hashes);
 
          /* For each subtree.. */
-         for (size_t i = 0; i < m_public->parameters().d(); i++)
+         for (size_t i = 0; i < p.d(); i++)
             {
             tree_addr.set_layer(i);
             tree_addr.set_tree(tree_idx);
@@ -192,19 +189,18 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification
             wots_pk_addr.copy_keypair_from(wots_addr);
 
             const auto wots_signature = s.take_as<WotsSignature>(p.wots_bytes());
-
-            wots_pk = wots_public_key_from_signature(root, wots_signature, m_public->seed(), wots_addr, m_public->parameters(), *m_hashes);
+            const auto wots_pk = wots_public_key_from_signature(root, wots_signature, m_public->seed(), wots_addr, p, *m_hashes);
 
             /* Compute the leaf node using the WOTS public key. */
             const auto leaf = m_hashes->T(m_public->seed(), wots_pk_addr, wots_pk);
 
             /* Compute the root node of this subtree. */
-            const auto xmss_auth_path = s.take(m_public->parameters().xmss_tree_height() * m_public->parameters().n());
-            compute_root_spec(root, m_public->parameters(), m_public->seed(), *m_hashes, leaf, leaf_idx, 0, xmss_auth_path, m_public->parameters().xmss_tree_height(), tree_addr);
+            const auto xmss_auth_path = s.take(p.xmss_tree_height() * p.n());
+            compute_root_spec(root, p, m_public->seed(), *m_hashes, leaf, leaf_idx, 0, xmss_auth_path, p.xmss_tree_height(), tree_addr);
 
             /* Update the indices for the next layer. */
-            leaf_idx = (tree_idx & ((1 << m_public->parameters().xmss_tree_height())-1));
-            tree_idx = tree_idx >> m_public->parameters().xmss_tree_height();
+            leaf_idx = (tree_idx & ((1 << p.xmss_tree_height())-1));
+            tree_idx = tree_idx >> p.xmss_tree_height();
             }
 
          m_msg_buffer.clear();
