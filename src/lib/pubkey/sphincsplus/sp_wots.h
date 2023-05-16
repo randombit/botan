@@ -34,17 +34,17 @@ class Sphincs_Hash_Functions;
  * WOTS+ (Winternitz OTS). It is meant to be used inside SPHINCS+
  * and does not aim to be applicable for other use cases.
  */
-BOTAN_TEST_API void wots_gen_leaf_spec( std::span<uint8_t> sig_out,
-                               std::span<uint8_t> pk_out,
-                               const SphincsSecretSeed& secret_seed,
-                               const SphincsPublicSeed& public_seed,
-                               uint32_t leaf_idx,
-                               uint32_t sign_leaf_idx,
-                               const WotsBaseWChunks& wots_steps,
-                               Sphincs_Address& leaf_addr,
-                               Sphincs_Address& pk_addr,
-                               const Sphincs_Parameters& params,
-                               Sphincs_Hash_Functions& hashes);
+BOTAN_TEST_API void wots_gen_leaf_spec(std::span<uint8_t> sig_out,
+                                       std::span<uint8_t> pk_out,
+                                       const SphincsSecretSeed& secret_seed,
+                                       const SphincsPublicSeed& public_seed,
+                                       uint32_t leaf_idx,
+                                       uint32_t sign_leaf_idx,
+                                       const WotsBaseWChunks& wots_steps,
+                                       Sphincs_Address& leaf_addr,
+                                       Sphincs_Address& pk_addr,
+                                       const Sphincs_Parameters& params,
+                                       Sphincs_Hash_Functions& hashes);
 
 /**
  * Reconstructs the WOTS public key from a given WOTS @p signature and

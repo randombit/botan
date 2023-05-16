@@ -13,10 +13,10 @@ namespace Botan
 {
 
 void gen_chain(std::span<uint8_t> out,
-                         std::span<const uint8_t> wots_chain_key,
-                         uint8_t start, uint8_t steps,
-                         const SphincsPublicSeed& public_seed, Sphincs_Address& addr,
-                         Sphincs_Hash_Functions& hashes, const Sphincs_Parameters& params)
+               std::span<const uint8_t> wots_chain_key,
+               uint8_t start, uint8_t steps,
+               const SphincsPublicSeed& public_seed, Sphincs_Address& addr,
+               Sphincs_Hash_Functions& hashes, const Sphincs_Parameters& params)
 {
    /* Initialize out with the value at position 'start'. */
    std::copy(wots_chain_key.begin(), wots_chain_key.end(), out.begin());

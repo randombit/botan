@@ -69,6 +69,16 @@ class Sphincs_Hash_Functions
          hash.final(out);
          }
 
+      template<typename OutT = std::vector<uint8_t>, typename... BufferTs>
+      OutT T(const SphincsPublicSeed& pub_seed,
+             const Sphincs_Address& address,
+             BufferTs&&... in)
+         {
+         OutT t(m_sphincs_params.n());
+         T(t, pub_seed, address, std::forward<BufferTs>(in)...);
+         return t;
+         }
+
       void PRF(std::span<uint8_t> out,
                const SphincsPublicSeed& pub_seed,
                const SphincsSecretSeed& sk_seed,

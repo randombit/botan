@@ -111,10 +111,7 @@ SphincsXmssRootNode fors_sign(std::span<uint8_t> sig_out,
       }
 
    // Compute the public key by the hash of the concatenation of all roots
-   SphincsXmssRootNode fors_pk(params.n());
-   hashes.T(fors_pk, public_seed, fors_pk_addr, roots);
-
-   return fors_pk;
+   return hashes.T<SphincsXmssRootNode>(public_seed, fors_pk_addr, roots);
    }
 
 SphincsXmssRootNode fors_public_key_from_signature(const SphincsHashedMessage& hashed_message,
@@ -136,8 +133,6 @@ SphincsXmssRootNode fors_public_key_from_signature(const SphincsHashedMessage& h
 
    std::vector<uint8_t> roots(params.k() * params.n());
 
-   std::vector<uint8_t> leaf(params.n());
-
    // For each of the k FORS subtrees: Reconstruct the subtree's root node by using the
    // leaf and the authentication path offered in the FORS signature.
    for(size_t i = 0; i < params.k(); ++i)
@@ -149,7 +144,7 @@ SphincsXmssRootNode fors_public_key_from_signature(const SphincsHashedMessage& h
          .set_tree_height(0)
          .set_tree_index(indices.get().at(i) + idx_offset);
       auto signature_location = std::span(signature).subspan(i * params.n() * (params.a() + 1), params.n());
-      hashes.T(leaf, public_seed, fors_tree_addr, signature_location);
+      const auto leaf = hashes.T(public_seed, fors_tree_addr, signature_location);
 
       // Reconstruct the subtree's root using the authentication path
       auto auth_path_location = std::span<const uint8_t>(signature).subspan(params.n() * (i  * (params.a() + 1) + 1), params.n() * params.a());
@@ -159,10 +154,7 @@ SphincsXmssRootNode fors_public_key_from_signature(const SphincsHashedMessage& h
 
    // Reconstruct the public key the signature creates with the hash of the concatenation of all roots
    // Only if the signature is valid, the pk is the correct FORS pk.
-   SphincsXmssRootNode pk(params.n());
-   hashes.T(pk, public_seed, fors_pk_addr, roots);
-
-   return pk;
+   return hashes.T<SphincsXmssRootNode>(public_seed, fors_pk_addr, roots);
    }
 
 }
