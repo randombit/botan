@@ -35,8 +35,8 @@ struct is_array<std::array<T,N>>:std::true_type{};
 
 template<typename T>
 T impl_from_little_endian(const uint8_t* t, const size_t i)
+   requires (sizeof(T) <= sizeof(int64_t))
    {
-   static_assert(sizeof(T) <= sizeof(int64_t));
    return T(static_cast<int64_t>(t[i]) << i * 8) + (i == 0 ? T(0) : impl_from_little_endian<T>(t, i - 1));
    }
 

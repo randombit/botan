@@ -218,9 +218,8 @@ constexpr bool is_generalizable_to(const std::variant<SpecialTs...>&) noexcept
  */
 template<typename GeneralVariantT, typename SpecialT>
 constexpr GeneralVariantT generalize_to(SpecialT&& specific) noexcept
+   requires (std::is_constructible_v<GeneralVariantT, std::decay_t<SpecialT>>)
    {
-   static_assert(std::is_constructible_v<GeneralVariantT, std::decay_t<SpecialT>>,
-                 "Desired general type must be implicitly constructible by the specific type");
    return std::forward<SpecialT>(specific);
    }
 

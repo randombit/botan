@@ -80,8 +80,8 @@ class SIMD_16x32 final
       template<size_t ROT>
       BOTAN_AVX512_FN
       SIMD_16x32 rotl() const
+         requires (ROT > 0 && ROT < 32)
          {
-         static_assert(ROT > 0 && ROT < 32, "Invalid rotation constant");
          return SIMD_16x32(_mm512_rol_epi32(m_avx512, ROT));
          }
 

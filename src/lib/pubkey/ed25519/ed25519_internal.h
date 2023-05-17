@@ -30,8 +30,8 @@ inline uint64_t load_4(const uint8_t* in)
 
 template<size_t S, int64_t MUL=1>
 inline void carry(int64_t& h0, int64_t& h1)
+   requires (S > 0 && S < 64)
    {
-   static_assert(S > 0 && S < 64, "Shift in range");
 
    const int64_t X1 = (static_cast<int64_t>(1) << S);
    const int64_t X2 = (static_cast<int64_t>(1) << (S - 1));
@@ -42,9 +42,8 @@ inline void carry(int64_t& h0, int64_t& h1)
 
 template<size_t S>
 inline void carry0(int64_t& h0, int64_t& h1)
+   requires (S > 0 && S < 64)
    {
-   static_assert(S > 0 && S < 64, "Shift in range");
-
    const int64_t X1 = (static_cast<int64_t>(1) << S);
    int64_t c = h0 >> S;
    h1 += c;
@@ -53,8 +52,8 @@ inline void carry0(int64_t& h0, int64_t& h1)
 
 template<size_t S>
 inline void carry0(int32_t& h0, int32_t& h1)
+   requires (S > 0 && S < 32)
    {
-   static_assert(S > 0 && S < 32, "Shift in range");
 
    const int32_t X1 = (static_cast<int64_t>(1) << S);
    int32_t c = h0 >> S;
