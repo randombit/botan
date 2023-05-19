@@ -61,26 +61,26 @@ inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 /*
 * SHA-1 Compression Function
 */
-void SHA_1::compress_n(uint32_t digest[5], const uint8_t input[], size_t blocks)
+void SHA_1::compress_n(SHA_1::digest_type& digest, const uint8_t input[], size_t blocks)
    {
 #if defined(BOTAN_HAS_SHA1_X86_SHA_NI)
    if(CPUID::has_intel_sha())
       {
-      return SHA_1::sha1_compress_x86(digest, input, blocks);
+      return SHA_1::sha1_compress_x86(digest.data(), input, blocks);
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA1_ARMV8)
    if(CPUID::has_arm_sha1())
       {
-      return SHA_1::sha1_armv8_compress_n(digest, input, blocks);
+      return SHA_1::sha1_armv8_compress_n(digest.data(), input, blocks);
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA1_SSE2)
    if(CPUID::has_sse2())
       {
-      return SHA_1::sse2_compress_n(digest, input, blocks);
+      return SHA_1::sse2_compress_n(digest.data(), input, blocks);
       }
 #endif
 
@@ -164,12 +164,12 @@ void SHA_1::compress_n(uint32_t digest[5], const uint8_t input[], size_t blocks)
       }
    }
 
-void SHA_1::init(uint32_t digest[5])
+void SHA_1::init(SHA_1::digest_type& digest)
    {
    static const uint32_t SHA1_INIT[] = {
       0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 };
 
-   copy_mem(digest, SHA1_INIT, 5);
+   copy_mem(digest.data(), SHA1_INIT, 5);
    }
 
 void SHA_1::clear()

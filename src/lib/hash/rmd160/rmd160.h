@@ -33,10 +33,18 @@ class RIPEMD_160 final : public HashFunction
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t output[]) override;
 
-      static void compress_n(uint32_t digest[5], const uint8_t input[], size_t blocks);
-      static void init(uint32_t digest[5]);
+   public:
+      using digest_type = std::array<uint32_t, 5>;
+      static constexpr MD_Endian ENDIAN = MD_Endian::Little;
+      static constexpr size_t BLOCK_BYTES = 64;
+      static constexpr size_t FINAL_DIGEST_BYTES = sizeof(digest_type);
+      static constexpr size_t CTR_BYTES = 8;
 
-      MD_Hash<MD_Endian::Little, uint32_t, 5, RIPEMD_160::init, RIPEMD_160::compress_n> m_md;
+      static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks);
+      static void init(digest_type& digest);
+
+   private:
+      MD_Hash<RIPEMD_160> m_md;
    };
 
 }

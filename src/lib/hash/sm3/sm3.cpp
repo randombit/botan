@@ -66,7 +66,7 @@ inline uint32_t SM3_E(uint32_t W0, uint32_t W7, uint32_t W13, uint32_t W3, uint3
 /*
 * SM3 Compression Function
 */
-void SM3::compress_n(uint32_t digest[8], const uint8_t input[], size_t blocks)
+void SM3::compress_n(SM3::digest_type& digest, const uint8_t input[], size_t blocks)
    {
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3],
             E = digest[4], F = digest[5], G = digest[6], H = digest[7];
@@ -220,14 +220,14 @@ void SM3::compress_n(uint32_t digest[8], const uint8_t input[], size_t blocks)
       }
    }
 
-void SM3::init(uint32_t digest[8])
+void SM3::init(SM3::digest_type& digest)
    {
    const uint32_t SM3_IV[8] = {
       0x7380166f, 0x4914b2b9, 0x172442d7, 0xda8a0600,
       0xa96f30bc, 0x163138aa, 0xe38dee4d, 0xb0fb0e4e
    };
 
-   copy_mem(digest, SM3_IV, 8);
+   copy_mem(digest.data(), SM3_IV, 8);
    }
 
 void SM3::add_data(const uint8_t input[], size_t length)

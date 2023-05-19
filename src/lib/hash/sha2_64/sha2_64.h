@@ -31,18 +31,24 @@ class SHA_512 final : public HashFunction
 
       void clear() override;
 
-      /*
-      * Perform a SHA-512 compression. For internal use
-      */
-      static void compress_digest(uint64_t digest[8],
-                                  const uint8_t input[],
-                                  size_t blocks);
    private:
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t output[]) override;
 
-      static void init(uint64_t digest[8]);
+   public:
+      using digest_type = std::array<uint64_t, 16>;
+      static constexpr MD_Endian ENDIAN = MD_Endian::Big;
+      static constexpr size_t BLOCK_BYTES = 128;
+      static constexpr size_t FINAL_DIGEST_BYTES = 64;
+      static constexpr size_t CTR_BYTES = 16;
 
+      /*
+      * Perform a SHA-512 compression. For internal use
+      */
+      static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks);
+      static void init(digest_type& digest);
+
+   private:
       static const uint64_t K[80];
 
 #if defined(BOTAN_HAS_SHA2_64_BMI2)
@@ -51,8 +57,7 @@ class SHA_512 final : public HashFunction
                                        size_t blocks);
 #endif
 
-      MD_Hash<MD_Endian::Big, uint64_t, 16,
-              SHA_512::init, SHA_512::compress_digest, 128, 64, 16> m_md;
+      MD_Hash<SHA_512> m_md;
    };
 
 /**
@@ -76,10 +81,22 @@ class SHA_384 final : public HashFunction
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t output[]) override;
 
-      static void init(uint64_t digest[8]);
+   public:
+      using digest_type = std::array<uint64_t, 16>;
+      static constexpr MD_Endian ENDIAN = MD_Endian::Big;
+      static constexpr size_t BLOCK_BYTES = 128;
+      static constexpr size_t FINAL_DIGEST_BYTES = 48;
+      static constexpr size_t CTR_BYTES = 16;
 
-      MD_Hash<MD_Endian::Big, uint64_t, 16,
-              SHA_384::init, SHA_512::compress_digest, 128, 48, 16> m_md;
+      /*
+      * Perform a SHA-512 compression. For internal use
+      */
+      static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks)
+         { SHA_512::compress_n(digest, input, blocks); }
+      static void init(digest_type& digest);
+
+   private:
+      MD_Hash<SHA_384> m_md;
    };
 
 /**
@@ -103,10 +120,22 @@ class SHA_512_256 final : public HashFunction
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t output[]) override;
 
-      static void init(uint64_t digest[8]);
+   public:
+      using digest_type = std::array<uint64_t, 16>;
+      static constexpr MD_Endian ENDIAN = MD_Endian::Big;
+      static constexpr size_t BLOCK_BYTES = 128;
+      static constexpr size_t FINAL_DIGEST_BYTES = 32;
+      static constexpr size_t CTR_BYTES = 16;
 
-      MD_Hash<MD_Endian::Big, uint64_t, 16,
-              SHA_512_256::init, SHA_512::compress_digest, 128, 32, 16> m_md;
+      /*
+      * Perform a SHA-512 compression. For internal use
+      */
+      static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks)
+         { SHA_512::compress_n(digest, input, blocks); }
+      static void init(digest_type& digest);
+
+   private:
+      MD_Hash<SHA_512_256> m_md;
    };
 
 }

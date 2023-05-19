@@ -80,7 +80,7 @@ inline void F5(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
 /*
 * RIPEMD-160 Compression Function
 */
-void RIPEMD_160::compress_n(uint32_t digest[5], const uint8_t input[], size_t blocks)
+void RIPEMD_160::compress_n(RIPEMD_160::digest_type& digest, const uint8_t input[], size_t blocks)
    {
    const uint32_t MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
                   MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0xA953FD4E,
@@ -195,13 +195,13 @@ void RIPEMD_160::compress_n(uint32_t digest[5], const uint8_t input[], size_t bl
       }
    }
 
-void RIPEMD_160::init(uint32_t digest[5])
+void RIPEMD_160::init(RIPEMD_160::digest_type& digest)
    {
    const uint32_t RIPEMD_160_IV[5] = {
       0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0
    };
 
-   copy_mem(digest, RIPEMD_160_IV, 5);
+   copy_mem(digest.data(), RIPEMD_160_IV, 5);
    }
 
 void RIPEMD_160::add_data(const uint8_t input[], size_t length)

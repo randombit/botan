@@ -6,6 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "sha2_32.h"
 #include <botan/internal/sha2_32.h>
 
 #include <botan/internal/sha2_32_f.h>
@@ -19,27 +20,27 @@ namespace Botan {
 /*
 * SHA-224 / SHA-256 compression function
 */
-void SHA_256::compress_digest(uint32_t digest[8],
-                              const uint8_t input[], size_t blocks)
+void SHA_256::compress_n(SHA_256::digest_type& digest,
+                         const uint8_t input[], size_t blocks)
    {
 #if defined(BOTAN_HAS_SHA2_32_X86)
    if(CPUID::has_intel_sha())
       {
-      return SHA_256::compress_digest_x86(digest, input, blocks);
+      return SHA_256::compress_digest_x86(digest.data(), input, blocks);
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
    if(CPUID::has_bmi2())
       {
-      return SHA_256::compress_digest_x86_bmi2(digest, input, blocks);
+      return SHA_256::compress_digest_x86_bmi2(digest.data(), input, blocks);
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32_ARMV8)
    if(CPUID::has_arm_sha2())
       {
-      return SHA_256::compress_digest_armv8(digest, input, blocks);
+      return SHA_256::compress_digest_armv8(digest.data(), input, blocks);
       }
 #endif
 
@@ -162,14 +163,14 @@ void SHA_224::clear()
    m_md.clear();
    }
 
-void SHA_224::init(uint32_t digest[8])
+void SHA_224::init(SHA_224::digest_type& digest)
    {
    const uint32_t SHA_224_IV[8] = {
       0xC1059ED8, 0x367CD507, 0x3070DD17, 0xF70E5939,
       0xFFC00B31, 0x68581511, 0x64F98FA7, 0xBEFA4FA4
    };
 
-   copy_mem(digest, SHA_224_IV, 8);
+   copy_mem(digest.data(), SHA_224_IV, 8);
    }
 
 void SHA_256::add_data(const uint8_t input[], size_t length)
@@ -187,14 +188,14 @@ void SHA_256::clear()
    m_md.clear();
    }
 
-void SHA_256::init(uint32_t digest[8])
+void SHA_256::init(SHA_256::digest_type& digest)
    {
    const uint32_t SHA_256_IV[8] = {
       0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
       0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19
    };
 
-   copy_mem(digest, SHA_256_IV, 8);
+   copy_mem(digest.data(), SHA_256_IV, 8);
    }
 
 namespace {

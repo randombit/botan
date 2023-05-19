@@ -77,7 +77,7 @@ inline void HH4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
 /*
 * MD4 Compression Function
 */
-void MD4::compress_n(uint32_t digest[4], const uint8_t input[], size_t blocks)
+void MD4::compress_n(MD4::digest_type& digest, const uint8_t input[], size_t blocks)
    {
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3];
 
@@ -124,13 +124,13 @@ void MD4::compress_n(uint32_t digest[4], const uint8_t input[], size_t blocks)
       }
    }
 
-void MD4::init(uint32_t digest[4])
+void MD4::init(MD4::digest_type& digest)
    {
    const uint32_t MD4_IV[4] = {
       0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476
    };
 
-   copy_mem(digest, MD4_IV, 4);
+   copy_mem(digest.data(), MD4_IV, 4);
    }
 
 void MD4::add_data(const uint8_t input[], size_t length)

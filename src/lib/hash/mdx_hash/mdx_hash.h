@@ -17,30 +17,42 @@ enum class MD_Endian {
    Big,
 };
 
-template<MD_Endian ENDIAN,
-         typename DIGEST_T,
-         size_t DIGEST_ELEM,
-         void init_fn(DIGEST_T[DIGEST_ELEM]),
-         void compress_fn(DIGEST_T[DIGEST_ELEM], const uint8_t[], size_t),
-         size_t BLOCK_BYTES = 64,
-         size_t DIGEST_LENGTH = DIGEST_ELEM * sizeof(DIGEST_T),
-         size_t CTR_BYTES = 8>
+template <typename T>
+concept mdx_hash_implementation =
+    requires(typename T::digest_type digest, uint8_t input[], size_t blocks, MD_Endian endian) {
+        typename T::digest_type;
+        T::ENDIAN;
+        T::BLOCK_BYTES;
+        T::FINAL_DIGEST_BYTES;
+        T::CTR_BYTES;
+        T::init(digest);
+        T::compress_n(digest, input, blocks);
+    } &&
+    T::BLOCK_BYTES >= 64 && is_power_of_2(T::BLOCK_BYTES) &&
+    T::CTR_BYTES >= 8 && is_power_of_2(T::CTR_BYTES) &&
+    T::CTR_BYTES < T::BLOCK_BYTES &&
+    T::FINAL_DIGEST_BYTES >= 16 && T::FINAL_DIGEST_BYTES <= sizeof(typename T::digest_type);
+
+template<mdx_hash_implementation HashImplT>
 class MD_Hash final
    {
-   public:
-      static_assert(BLOCK_BYTES >= 64 && is_power_of_2(BLOCK_BYTES));
-      static_assert(CTR_BYTES >= 8 && is_power_of_2(CTR_BYTES));
-      static_assert(CTR_BYTES < BLOCK_BYTES);
-      static_assert(DIGEST_LENGTH >= 16 && DIGEST_LENGTH <= DIGEST_ELEM * sizeof(DIGEST_T));
+   private:
+      // TODO: remove those aliases. I introduced them to keep the diff lean.
+      using digest_type = typename HashImplT::digest_type;
+      static constexpr MD_Endian ENDIAN = HashImplT::ENDIAN;
+      static constexpr size_t BLOCK_BYTES = HashImplT::BLOCK_BYTES;
+      static constexpr size_t CTR_BYTES = HashImplT::CTR_BYTES;
+      static constexpr size_t FINAL_DIGEST_BYTES = HashImplT::FINAL_DIGEST_BYTES;
 
-      static const size_t BLOCK_BITS = ceil_log2(BLOCK_BYTES);
+   public:
+      static const size_t BLOCK_BITS = ceil_log2(HashImplT::BLOCK_BYTES);
 
       MD_Hash() :
          m_count(0),
          m_position(0)
          {
          clear_mem(m_buffer, BLOCK_BYTES);
-         init_fn(m_digest);
+         HashImplT::init(m_digest);
          }
 
       void add_data(const uint8_t input[], size_t length)
@@ -55,7 +67,7 @@ class MD_Hash final
 
             if(m_position + take == BLOCK_BYTES)
                {
-               compress_fn(m_digest, m_buffer, 1);
+               HashImplT::compress_n(m_digest, m_buffer, 1);
                input += (BLOCK_BYTES - m_position);
                length -= (BLOCK_BYTES - m_position);
                m_position = 0;
@@ -67,7 +79,7 @@ class MD_Hash final
 
          if(full_blocks > 0)
             {
-            compress_fn(m_digest, input, full_blocks);
+            HashImplT::compress_n(m_digest, input, full_blocks);
             }
 
          copy_mem(&m_buffer[m_position], input + full_blocks * BLOCK_BYTES, remaining);
@@ -82,7 +94,7 @@ class MD_Hash final
 
          if(m_position >= BLOCK_BYTES - CTR_BYTES)
             {
-            compress_fn(m_digest, m_buffer, 1);
+            HashImplT::compress_n(m_digest, m_buffer, 1);
             clear_mem(m_buffer, BLOCK_BYTES);
             }
 
@@ -93,19 +105,19 @@ class MD_Hash final
          else
             store_le(bit_count, &m_buffer[BLOCK_BYTES - 8]);
 
-         compress_fn(m_digest, m_buffer, 1);
+         HashImplT::compress_n(m_digest, m_buffer, 1);
 
          if constexpr(ENDIAN == MD_Endian::Big)
-            copy_out_be(output, DIGEST_LENGTH, m_digest);
+            copy_out_be(output, FINAL_DIGEST_BYTES, m_digest.data());
          else
-            copy_out_le(output, DIGEST_LENGTH, m_digest);
+            copy_out_le(output, FINAL_DIGEST_BYTES, m_digest.data());
 
          clear();
          }
 
       void clear()
          {
-         init_fn(m_digest);
+         HashImplT::init(m_digest);
          clear_mem(m_buffer, BLOCK_BYTES);
          m_count = 0;
          m_position = 0;
@@ -113,7 +125,7 @@ class MD_Hash final
 
    private:
       uint8_t m_buffer[BLOCK_BYTES];
-      DIGEST_T m_digest[DIGEST_ELEM];
+      digest_type m_digest;
       uint64_t m_count;
       size_t m_position;
    };

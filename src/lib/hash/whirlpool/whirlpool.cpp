@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "whirlpool.h"
 #include <botan/internal/whirlpool.h>
 
 #include <botan/internal/loadstor.h>
@@ -85,7 +86,7 @@ alignas(256) const uint64_t WHIRL_S[256] = {
 /*
 * Whirlpool Compression Function
 */
-void Whirlpool::compress_n(uint64_t digest[8], const uint8_t in[], size_t blocks)
+void Whirlpool::compress_n(Whirlpool::digest_type& digest, const uint8_t in[], size_t blocks)
    {
    static const uint64_t RC[10] = {
       0x1823C6E887B8014F, 0x36A6D2F5796F9152,
@@ -273,9 +274,9 @@ void Whirlpool::compress_n(uint64_t digest[8], const uint8_t in[], size_t blocks
       }
    }
 
-void Whirlpool::init(uint64_t digest[8])
+void Whirlpool::init(Whirlpool::digest_type& digest)
    {
-   clear_mem(digest, 8);
+   clear_mem(digest.data(), 8);
    }
 
 void Whirlpool::add_data(const uint8_t input[], size_t length)

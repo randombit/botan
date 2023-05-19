@@ -33,10 +33,18 @@ class MD5 final : public HashFunction
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t output[]) override;
 
-      static void compress_n(uint32_t digest[4], const uint8_t input[], size_t blocks);
-      static void init(uint32_t digest[4]);
+   public:
+      using digest_type = std::array<uint32_t, 4>;
+      static constexpr MD_Endian ENDIAN = MD_Endian::Little;
+      static constexpr size_t BLOCK_BYTES = 64;
+      static constexpr size_t FINAL_DIGEST_BYTES = sizeof(digest_type);
+      static constexpr size_t CTR_BYTES = 8;
 
-      MD_Hash<MD_Endian::Little, uint32_t, 4, MD5::init, MD5::compress_n> m_md;
+      static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks);
+      static void init(digest_type& digest);
+
+   private:
+      MD_Hash<MD5> m_md;
    };
 
 }

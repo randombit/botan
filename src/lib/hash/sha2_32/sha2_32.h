@@ -32,18 +32,24 @@ class SHA_256 final : public HashFunction
 
       std::string provider() const override;
 
-      /*
-      * Perform a SHA-256 compression. For internal use
-      */
-      static void compress_digest(uint32_t digest[8],
-                                  const uint8_t input[],
-                                  size_t blocks);
-
    private:
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t output[]) override;
 
-      static void init(uint32_t digest[8]);
+   public:
+      using digest_type = std::array<uint32_t, 8>;
+      static constexpr MD_Endian ENDIAN = MD_Endian::Big;
+      static constexpr size_t BLOCK_BYTES = 64;
+      static constexpr size_t FINAL_DIGEST_BYTES = sizeof(digest_type);
+      static constexpr size_t CTR_BYTES = 8;
+
+      /*
+      * Perform a SHA-256 compression. For internal use
+      */
+      static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks);
+      static void init(digest_type& digest);
+
+   private:
 
 #if defined(BOTAN_HAS_SHA2_32_ARMV8)
       static void compress_digest_armv8(uint32_t digest[8],
@@ -63,7 +69,7 @@ class SHA_256 final : public HashFunction
                                       size_t blocks);
 #endif
 
-      MD_Hash<MD_Endian::Big, uint32_t, 8, SHA_256::init, SHA_256::compress_digest> m_md;
+      MD_Hash<SHA_256> m_md;
    };
 
 /**
@@ -87,9 +93,22 @@ class SHA_224 final : public HashFunction
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t output[]) override;
 
-      static void init(uint32_t digest[8]);
+   public:
+      static constexpr MD_Endian ENDIAN = MD_Endian::Big;
+      static constexpr size_t BLOCK_BYTES = 64;
+      static constexpr size_t FINAL_DIGEST_BYTES = 28;
+      static constexpr size_t CTR_BYTES = 8;
+      using digest_type = std::array<uint32_t, 8>;
 
-      MD_Hash<MD_Endian::Big, uint32_t, 8, SHA_224::init, SHA_256::compress_digest, 64, 28> m_md;
+      /*
+      * Perform a SHA-256 compression. For internal use
+      */
+      static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks)
+         { SHA_256::compress_n(digest, input, blocks); }
+      static void init(digest_type& digest);
+
+   private:
+      MD_Hash<SHA_224> m_md;
    };
 
 }

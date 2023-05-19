@@ -19,13 +19,13 @@ namespace Botan {
 * SHA-{384,512} Compression Function
 */
 //static
-void SHA_512::compress_digest(uint64_t digest[8],
-                              const uint8_t input[], size_t blocks)
+void SHA_512::compress_n(SHA_512::digest_type& digest,
+                         const uint8_t input[], size_t blocks)
    {
 #if defined(BOTAN_HAS_SHA2_64_BMI2)
    if(CPUID::has_bmi2())
       {
-      return compress_digest_bmi2(digest, input, blocks);
+      return compress_digest_bmi2(digest.data(), input, blocks);
       }
 #endif
 
@@ -162,7 +162,7 @@ std::string sha512_provider()
 
 }
 
-void SHA_512::init(uint64_t digest[8])
+void SHA_512::init(SHA_512::digest_type& digest)
    {
    const uint64_t SHA_512_IV[8] = {
       0x6A09E667F3BCC908, 0xBB67AE8584CAA73B,
@@ -171,7 +171,7 @@ void SHA_512::init(uint64_t digest[8])
       0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179
    };
 
-   copy_mem(digest, SHA_512_IV, 8);
+   copy_mem(digest.data(), SHA_512_IV, 8);
    }
 
 std::unique_ptr<HashFunction> SHA_512::copy_state() const
@@ -205,7 +205,7 @@ std::string SHA_512::provider() const
    }
 
 
-void SHA_384::init(uint64_t digest[8])
+void SHA_384::init(SHA_512::digest_type& digest)
    {
    const uint64_t SHA_384_IV[8] = {
       0xCBBB9D5DC1059ED8, 0x629A292A367CD507,
@@ -214,7 +214,7 @@ void SHA_384::init(uint64_t digest[8])
       0xDB0C2E0D64F98FA7, 0x47B5481DBEFA4FA4,
    };
 
-   copy_mem(digest, SHA_384_IV, 8);
+   copy_mem(digest.data(), SHA_384_IV, 8);
    }
 
 std::unique_ptr<HashFunction> SHA_384::copy_state() const
@@ -248,7 +248,7 @@ std::string SHA_384::provider() const
    }
 
 
-void SHA_512_256::init(uint64_t digest[8])
+void SHA_512_256::init(SHA_512::digest_type& digest)
    {
    const uint64_t SHA_512_256_IV[8] = {
       0x22312194FC2BF72C, 0x9F555FA3C84C64C2,
@@ -257,7 +257,7 @@ void SHA_512_256::init(uint64_t digest[8])
       0x2B0199FC2C85B8AA, 0x0EB72DDC81C52CA2,
    };
 
-   copy_mem(digest, SHA_512_256_IV, 8);
+   copy_mem(digest.data(), SHA_512_256_IV, 8);
    }
 
 std::unique_ptr<HashFunction> SHA_512_256::copy_state() const
