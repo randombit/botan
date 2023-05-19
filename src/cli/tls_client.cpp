@@ -3,6 +3,7 @@
 *     2016 Matthias Gierlings
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
+*     2023 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -166,7 +167,7 @@ class TLS_Client final : public Command
          : Command("tls_client host --port=443 --print-certs --policy=default "
                    "--skip-system-cert-store --trusted-cas= --tls-version=default "
                    "--session-db= --session-db-pass= --next-protocols= --type=tcp "
-                   "--client-cert= --client-cert-key= --debug")
+                   "--client-cert= --client-cert-key= --psk= --psk-identity= --debug")
          {
          init_sockets();
          }
@@ -262,7 +263,16 @@ class TLS_Client final : public Command
          const auto client_crt_path = get_arg_maybe("client-cert");
          const auto client_key_path = get_arg_maybe("client-cert-key");
 
-         auto creds = std::make_shared<Basic_Credentials_Manager>(use_system_cert_store, trusted_CAs, client_crt_path, client_key_path);
+         const auto psk = [this]() -> std::optional<Botan::SymmetricKey> {
+            auto psk_hex = get_arg_maybe("psk");
+            if(psk_hex)
+               return Botan::SymmetricKey(Botan::hex_decode_locked(psk_hex.value()));
+            else
+               return {};
+         }();
+         const std::optional<std::string> psk_identity = get_arg_maybe("psk-identity");
+
+         auto creds = std::make_shared<Basic_Credentials_Manager>(use_system_cert_store, trusted_CAs, client_crt_path, client_key_path, psk, psk_identity);
 
          Botan::TLS::Client client(callbacks, session_mgr, creds, policy, rng_as_shared(),
                                    Botan::TLS::Server_Information(hostname, port),

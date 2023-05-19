@@ -1,5 +1,6 @@
 /*
 * (C) 2014,2015,2019 Jack Lloyd
+*     2023           René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -65,7 +66,11 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
       Basic_Credentials_Manager(bool use_system_store,
                                 std::string ca_path,
                                 std::optional<std::string> client_crt = std::nullopt,
-                                std::optional<std::string> client_key = std::nullopt)
+                                std::optional<std::string> client_key = std::nullopt,
+                                std::optional<Botan::SymmetricKey> psk = std::nullopt,
+                                std::optional<std::string> psk_identity = std::nullopt)
+         : m_psk(std::move(psk))
+         , m_psk_identity(std::move(psk_identity))
          {
          if(ca_path.empty() == false)
             {
@@ -90,7 +95,11 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
          }
 
       Basic_Credentials_Manager(const std::string& server_crt,
-                                const std::string& server_key)
+                                const std::string& server_key,
+                                std::optional<Botan::SymmetricKey> psk = std::nullopt,
+                                std::optional<std::string> psk_identity = std::nullopt)
+         : m_psk(std::move(psk))
+         , m_psk_identity(std::move(psk_identity))
          {
          load_credentials(server_crt, server_key);
          }
@@ -172,6 +181,25 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
          return nullptr;
          }
 
+      std::string psk_identity(const std::string& type,
+                               const std::string& context,
+                               const std::string& identity_hint) override
+         {
+         return (m_psk_identity && (type == "tls-client" || type == "tls-server"))
+            ? m_psk_identity.value()
+            : Botan::Credentials_Manager::psk_identity(type, context, identity_hint);
+         }
+
+      Botan::SymmetricKey psk(const std::string& type,
+                              const std::string& context,
+                              const std::string& identity) override
+         {
+         return (m_psk && m_psk_identity && identity == m_psk_identity.value() &&
+                 (type == "tls-client" || type == "tls-server"))
+            ? m_psk.value()
+            : Botan::Credentials_Manager::psk(type, context, identity);
+         }
+
    private:
       struct Certificate_Info
          {
@@ -181,6 +209,8 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
 
       std::vector<Certificate_Info> m_creds;
       std::vector<std::shared_ptr<Botan::Certificate_Store>> m_certstores;
+      std::optional<Botan::SymmetricKey> m_psk;
+      std::optional<std::string> m_psk_identity;
    };
 
 class TLS_All_Policy final : public Botan::TLS::Policy

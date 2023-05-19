@@ -890,18 +890,22 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
     test_cli("oid_info", "1.2.3.4", "OID 1.2.3.4 is not recognized")
 
 def cli_tls_socket_tests(tmp_dir):
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-statements
     if not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
         return
 
     client_msg = b'Client message %d with extra stuff to test record_size_limit: %s\n' % (random.randint(0, 2**128), b'oO' * 64)
     server_port = random_port_number()
 
+    psk = "FEEDFACECAFEBEEF"
+    psk_identity = "test-psk"
+
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
     crt_req = os.path.join(tmp_dir, 'crt.req')
     server_cert = os.path.join(tmp_dir, 'server.crt')
-    tls_policy = os.path.join(tmp_dir, 'test_policy.txt')
+    tls_client_policy = os.path.join(tmp_dir, 'test_client_policy.txt')
+    tls_server_policy = os.path.join(tmp_dir, 'test_server_policy.txt')
 
     test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
 
@@ -916,34 +920,59 @@ def cli_tls_socket_tests(tmp_dir):
 
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
-    tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--max-clients=2',
-                                   '--port=%d' % (server_port), server_cert, priv_key],
+    class TestConfig:
+        def __init__(self, name, protocol_version, policy, **kwargs):
+            self.name = name
+            self.protocol_version = protocol_version
+            self.policy = policy
+            self.stdout_regex = kwargs.get("stdout_regex")
+            self.psk = kwargs.get("psk")
+            self.psk_identity = kwargs.get("psk_identity")
+
+    configs = [
+        TestConfig("TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\n"),
+        TestConfig("TLS 1.2", "1.2", "allow_tls12=true\nallow_tls13=false\n"),
+
+        # At the moment, TLS 1.2 does not implement record_size_limit.
+        # Therefore, clients can offer it only with TLS 1.2 being disabled.
+        # Otherwise, a server negotiating TLS 1.2 and using the record_size_limit
+        # would not work for us.
+        #
+        # TODO: Remove this crutch after implementing record_size_limit for TLS 1.2
+        #       and extend the test to use it for both TLS 1.2 and 1.3.
+        TestConfig("Record size limit", "1.3", "allow_tls12=false\nallow_tls13=true\nrecord_size_limit=64\n"),
+
+        # At the moment, TLS 1.3 does not implement externally provided PSKs.
+        # TODO: Once implemented, add a test that exercises PSK mode for TLS 1.3
+        TestConfig("PSK", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_methods=ECDHE_PSK\n",
+                   psk=psk, psk_identity=psk_identity,
+                   stdout_regex=r'TLS v1.2 using ECDHE_PSK_.*'),
+    ]
+
+    with open(tls_server_policy, 'w', encoding='utf8') as f:
+        f.write('key_exchange_methods = ECDH DH ECDHE_PSK')
+
+    tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--max-clients=%d' % (len(configs)),
+                                   '--port=%d' % (server_port), '--policy=%s' % (tls_server_policy),
+                                   '--psk=%s' % (psk), '--psk-identity=%s' % (psk_identity),
+                                   server_cert, priv_key],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     wait_time = 1.0
 
     time.sleep(wait_time)
 
-    for tls_version in ['1.2', '1.3']:
-        with open(tls_policy, 'w', encoding='utf8') as f:
-            # At the moment, TLS 1.2 does not implement record_size_limit.
-            # Therefore, clients can offer it only with TLS 1.2 being disabled.
-            # Otherwise, a server negotiating TLS 1.2 and using the record_size_limit
-            # would not work for us.
-            #
-            # TODO: Remove this crutch after implementing record_size_limit for TLS 1.2
-            #       and extend the test to use it for both TLS 1.2 and 1.3.
-            if tls_version == '1.3':
-                f.write("allow_tls12=false\n")
-                f.write("allow_tls13=true\n")
-                f.write("record_size_limit=64\n")
-            else:
-                f.write("allow_tls12=true\n")
-                f.write("allow_tls13=true\n")
+    for tls_config in configs:
+        with open(tls_client_policy, 'w', encoding='utf8') as f:
+            f.write(tls_config.policy)
 
-        tls_client = subprocess.Popen([CLI_PATH, 'tls_client', 'localhost',
-                                       '--port=%d' % (server_port), '--trusted-cas=%s' % (ca_cert),
-                                       '--tls-version=%s' % (tls_version), '--policy=%s' % (tls_policy)],
+        tls_client_cmd = [CLI_PATH, 'tls_client', 'localhost',
+                          '--port=%d' % (server_port), '--trusted-cas=%s' % (ca_cert),
+                          '--tls-version=%s' % (tls_config.protocol_version), '--policy=%s' % tls_client_policy]
+        if tls_config.psk and tls_config.psk_identity:
+            tls_client_cmd += ['--psk=%s' % tls_config.psk, '--psk-identity=%s' % tls_config.psk_identity]
+
+        tls_client = subprocess.Popen(tls_client_cmd,
                                       stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         time.sleep(wait_time)
@@ -960,13 +989,19 @@ def cli_tls_socket_tests(tmp_dir):
         (stdout, stderr) = tls_client.communicate()
 
         if stderr:
-            logging.error("Got unexpected stderr output %s", stderr)
+            logging.error("Got unexpected stderr output (%s) %s", tls_config.name, stderr)
 
         if b'Handshake complete' not in stdout:
-            logging.error('Failed to complete handshake: %s', stdout)
+            logging.error('Failed to complete handshake (%s): %s', tls_config.name, stdout)
 
         if client_msg not in stdout:
-            logging.error("Missing client message from stdout %s", stdout)
+            logging.error("Missing client message from stdout (%s): %s", tls_config.name, stdout)
+
+        if tls_config.stdout_regex:
+            match = re.search(tls_config.stdout_regex, stdout.decode('utf-8'))
+            if not match:
+                logging.error("Client log did not match expected regex (%s): %s", tls_config.name, tls_config.stdout_regex)
+                logging.error("Client said (stdout): %s", stdout)
 
     (srv_stdout, srv_stderr) = tls_server.communicate(None, 5)
     if srv_stderr:

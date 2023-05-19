@@ -2,6 +2,7 @@
 * TLS echo server using BSD sockets
 * (C) 2014 Jack Lloyd
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
+*     2023 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -113,9 +114,9 @@ class TLS_Server final : public Command
    {
    public:
 #if defined(BOTAN_SO_SOCKETID)
-      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0")
+      TLS_Server() : Command("tls_server cert key --port=443 --psk= --psk-identity=  --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0")
 #else
-      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=default --dump-traces= --max-clients=0")
+      TLS_Server() : Command("tls_server cert key --port=443 --psk= --psk-identity=  --type=tcp --policy=default --dump-traces= --max-clients=0")
 #endif
          {
          init_sockets();
@@ -149,6 +150,14 @@ class TLS_Server final : public Command
          const size_t max_clients = get_arg_sz("max-clients");
          const std::string transport = get_arg("type");
          const std::string dump_traces_to = get_arg("dump-traces");
+         const auto psk = [this]() -> std::optional<Botan::SymmetricKey> {
+            auto psk_hex = get_arg_maybe("psk");
+            if(psk_hex)
+               return Botan::SymmetricKey(Botan::hex_decode_locked(psk_hex.value()));
+            else
+               return {};
+         }();
+         const std::optional<std::string> psk_identity = get_arg_maybe("psk-identity");
 #if defined(BOTAN_SO_SOCKETID)
          m_socket_id = static_cast<uint32_t>(get_arg_sz("socket-id"));
 #endif
@@ -162,7 +171,7 @@ class TLS_Server final : public Command
 
          auto policy = load_tls_policy(get_arg("policy"));
          auto session_manager = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared()); // TODO sqlite3
-         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key);
+         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key, psk, psk_identity);
          auto callbacks = std::make_shared<Callbacks>(*this);
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
