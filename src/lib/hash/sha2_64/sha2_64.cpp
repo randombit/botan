@@ -19,8 +19,8 @@ namespace Botan {
 * SHA-{384,512} Compression Function
 */
 //static
-void SHA_512::compress_n(SHA_512::digest_type& digest,
-                         const uint8_t input[], size_t blocks)
+void SHA_512_Impl::compress_n(SHA_512_Impl::digest_type& digest,
+                              const uint8_t input[], size_t blocks)
    {
 #if defined(BOTAN_HAS_SHA2_64_BMI2)
    if(CPUID::has_bmi2())
@@ -162,7 +162,7 @@ std::string sha512_provider()
 
 }
 
-void SHA_512::init(SHA_512::digest_type& digest)
+void SHA_512_Impl::init(SHA_512_Impl::digest_type& digest)
    {
    const uint64_t SHA_512_IV[8] = {
       0x6A09E667F3BCC908, 0xBB67AE8584CAA73B,
@@ -174,38 +174,13 @@ void SHA_512::init(SHA_512::digest_type& digest)
    copy_mem(digest.data(), SHA_512_IV, 8);
    }
 
-std::unique_ptr<HashFunction> SHA_512::copy_state() const
-   {
-   return std::make_unique<SHA_512>(*this);
-   }
-
-std::unique_ptr<HashFunction> SHA_512::new_object() const
-   {
-   return std::make_unique<SHA_512>();
-   }
-
-void SHA_512::add_data(const uint8_t input[], size_t length)
-   {
-   m_md.add_data(input, length);
-   }
-
-void SHA_512::final_result(uint8_t output[])
-   {
-   m_md.final_result(output);
-   }
-
-void SHA_512::clear()
-   {
-   m_md.clear();
-   }
-
 std::string SHA_512::provider() const
    {
    return sha512_provider();
    }
 
 
-void SHA_384::init(SHA_512::digest_type& digest)
+void SHA_384_Impl::init(SHA_384_Impl::digest_type& digest)
    {
    const uint64_t SHA_384_IV[8] = {
       0xCBBB9D5DC1059ED8, 0x629A292A367CD507,
@@ -217,38 +192,13 @@ void SHA_384::init(SHA_512::digest_type& digest)
    copy_mem(digest.data(), SHA_384_IV, 8);
    }
 
-std::unique_ptr<HashFunction> SHA_384::copy_state() const
-   {
-   return std::make_unique<SHA_384>(*this);
-   }
-
-std::unique_ptr<HashFunction> SHA_384::new_object() const
-   {
-   return std::make_unique<SHA_384>();
-   }
-
-void SHA_384::add_data(const uint8_t input[], size_t length)
-   {
-   m_md.add_data(input, length);
-   }
-
-void SHA_384::final_result(uint8_t output[])
-   {
-   m_md.final_result(output);
-   }
-
-void SHA_384::clear()
-   {
-   m_md.clear();
-   }
-
 std::string SHA_384::provider() const
    {
    return sha512_provider();
    }
 
 
-void SHA_512_256::init(SHA_512::digest_type& digest)
+void SHA_512_256_Impl::init(SHA_512_256_Impl::digest_type& digest)
    {
    const uint64_t SHA_512_256_IV[8] = {
       0x22312194FC2BF72C, 0x9F555FA3C84C64C2,
@@ -258,31 +208,6 @@ void SHA_512_256::init(SHA_512::digest_type& digest)
    };
 
    copy_mem(digest.data(), SHA_512_256_IV, 8);
-   }
-
-std::unique_ptr<HashFunction> SHA_512_256::copy_state() const
-   {
-   return std::make_unique<SHA_512_256>(*this);
-   }
-
-std::unique_ptr<HashFunction> SHA_512_256::new_object() const
-   {
-   return std::make_unique<SHA_512_256>();
-   }
-
-void SHA_512_256::add_data(const uint8_t input[], size_t length)
-   {
-   m_md.add_data(input, length);
-   }
-
-void SHA_512_256::final_result(uint8_t output[])
-   {
-   m_md.final_result(output);
-   }
-
-void SHA_512_256::clear()
-   {
-   m_md.clear();
    }
 
 std::string SHA_512_256::provider() const

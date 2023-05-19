@@ -7,8 +7,12 @@
 #ifndef BOTAN_MDX_HELPER_H_
 #define BOTAN_MDX_HELPER_H_
 
+#include <botan/hash.h>
+
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
+#include <cstdint>
+#include <memory>
 
 namespace Botan {
 
@@ -21,6 +25,7 @@ template <typename T>
 concept mdx_hash_implementation =
     requires(typename T::digest_type digest, uint8_t input[], size_t blocks, MD_Endian endian) {
         typename T::digest_type;
+        T::NAME;
         T::ENDIAN;
         T::BLOCK_BYTES;
         T::FINAL_DIGEST_BYTES;
@@ -128,6 +133,28 @@ class MD_Hash final
       digest_type m_digest;
       uint64_t m_count;
       size_t m_position;
+   };
+
+
+template<typename DerivedT, mdx_hash_implementation HashImplT>
+class MD_Hash_Adapter : public HashFunction
+   {
+   public:
+      std::string name() const override { return HashImplT::NAME; }
+      size_t output_length() const override { return HashImplT::FINAL_DIGEST_BYTES; }
+      size_t hash_block_size() const override { return HashImplT::BLOCK_BYTES; }
+
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<DerivedT>(); }
+      std::unique_ptr<HashFunction> copy_state() const override { return std::make_unique<DerivedT>(*dynamic_cast<const DerivedT*>(this)); }
+
+      void clear() override { m_md.clear(); }
+
+   private:
+      void add_data(const uint8_t input[], size_t length) override { m_md.add_data(input, length); }
+      void final_result(uint8_t output[]) override { m_md.final_result(output); }
+
+   private:
+      MD_Hash<HashImplT> m_md;
    };
 
 }

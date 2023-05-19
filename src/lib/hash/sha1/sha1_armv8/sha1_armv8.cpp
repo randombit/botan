@@ -17,7 +17,7 @@ namespace Botan {
 */
 //static
 BOTAN_FUNC_ISA("+crypto")
-void SHA_1::sha1_armv8_compress_n(uint32_t digest[5], const uint8_t input8[], size_t blocks)
+void SHA_1_Impl::sha1_armv8_compress_n(uint32_t digest[5], const uint8_t input8[], size_t blocks)
    {
    uint32x4_t ABCD;
    uint32_t E0;

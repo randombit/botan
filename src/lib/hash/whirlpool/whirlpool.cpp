@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "whirlpool.h"
 #include <botan/internal/whirlpool.h>
 
 #include <botan/internal/loadstor.h>
@@ -86,7 +85,7 @@ alignas(256) const uint64_t WHIRL_S[256] = {
 /*
 * Whirlpool Compression Function
 */
-void Whirlpool::compress_n(Whirlpool::digest_type& digest, const uint8_t in[], size_t blocks)
+void Whirlpool_Impl::compress_n(Whirlpool_Impl::digest_type& digest, const uint8_t in[], size_t blocks)
    {
    static const uint64_t RC[10] = {
       0x1823C6E887B8014F, 0x36A6D2F5796F9152,
@@ -274,34 +273,9 @@ void Whirlpool::compress_n(Whirlpool::digest_type& digest, const uint8_t in[], s
       }
    }
 
-void Whirlpool::init(Whirlpool::digest_type& digest)
+void Whirlpool_Impl::init(Whirlpool_Impl::digest_type& digest)
    {
    clear_mem(digest.data(), 8);
-   }
-
-void Whirlpool::add_data(const uint8_t input[], size_t length)
-   {
-   m_md.add_data(input, length);
-   }
-
-void Whirlpool::final_result(uint8_t output[])
-   {
-   m_md.final_result(output);
-   }
-
-void Whirlpool::clear()
-   {
-   m_md.clear();
-   }
-
-std::unique_ptr<HashFunction> Whirlpool::new_object() const
-   {
-   return std::make_unique<Whirlpool>();
-   }
-
-std::unique_ptr<HashFunction> Whirlpool::copy_state() const
-   {
-   return std::make_unique<Whirlpool>(*this);
    }
 
 }

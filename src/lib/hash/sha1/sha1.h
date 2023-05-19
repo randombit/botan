@@ -16,26 +16,11 @@ namespace Botan {
 /**
 * NIST's SHA-1
 */
-class SHA_1 final : public HashFunction
+class SHA_1_Impl final
    {
    public:
-      SHA_1() {}
-
-      std::string name() const override { return "SHA-1"; }
-      size_t output_length() const override { return 20; }
-      size_t hash_block_size() const override { return 64; }
-      std::unique_ptr<HashFunction> new_object() const override;
-      std::unique_ptr<HashFunction> copy_state() const override;
-
-      std::string provider() const override;
-
-      void clear() override;
-   private:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t output[]) override;
-
-   public:
       using digest_type = std::array<uint32_t, 5>;
+      static constexpr const char* NAME = "SHA-1";
       static constexpr MD_Endian ENDIAN = MD_Endian::Big;
       static constexpr size_t BLOCK_BYTES = 64;
       static constexpr size_t FINAL_DIGEST_BYTES = sizeof(digest_type);
@@ -64,8 +49,12 @@ class SHA_1 final : public HashFunction
                                     const uint8_t blocks[],
                                     size_t block_count);
 #endif
+   };
 
-      MD_Hash<SHA_1> m_md;
+class SHA_1 final : public MD_Hash_Adapter<SHA_1, SHA_1_Impl>
+   {
+   public:
+      std::string provider() const override;
    };
 
 }

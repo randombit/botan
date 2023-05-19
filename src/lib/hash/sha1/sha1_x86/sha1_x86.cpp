@@ -18,9 +18,9 @@
 namespace Botan {
 
 BOTAN_FUNC_ISA("sha,ssse3,sse4.1")
-void SHA_1::sha1_compress_x86(uint32_t digest[5],
-                                const uint8_t input[],
-                                size_t blocks)
+void SHA_1_Impl::sha1_compress_x86(uint32_t digest[5],
+                                   const uint8_t input[],
+                                   size_t blocks)
    {
    const __m128i MASK = _mm_set_epi64x(0x0001020304050607, 0x08090a0b0c0d0e0f);
    const __m128i* input_mm = reinterpret_cast<const __m128i*>(input);

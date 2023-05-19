@@ -20,27 +20,27 @@ namespace Botan {
 /*
 * SHA-224 / SHA-256 compression function
 */
-void SHA_256::compress_n(SHA_256::digest_type& digest,
-                         const uint8_t input[], size_t blocks)
+void SHA_256_Impl::compress_n(SHA_256_Impl::digest_type& digest,
+                              const uint8_t input[], size_t blocks)
    {
 #if defined(BOTAN_HAS_SHA2_32_X86)
    if(CPUID::has_intel_sha())
       {
-      return SHA_256::compress_digest_x86(digest.data(), input, blocks);
+      return SHA_256_Impl::compress_digest_x86(digest.data(), input, blocks);
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
    if(CPUID::has_bmi2())
       {
-      return SHA_256::compress_digest_x86_bmi2(digest.data(), input, blocks);
+      return SHA_256_Impl::compress_digest_x86_bmi2(digest.data(), input, blocks);
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32_ARMV8)
    if(CPUID::has_arm_sha2())
       {
-      return SHA_256::compress_digest_armv8(digest.data(), input, blocks);
+      return SHA_256_Impl::compress_digest_armv8(digest.data(), input, blocks);
       }
 #endif
 
@@ -148,22 +148,7 @@ void SHA_256::compress_n(SHA_256::digest_type& digest,
       }
    }
 
-void SHA_224::add_data(const uint8_t input[], size_t length)
-   {
-   m_md.add_data(input, length);
-   }
-
-void SHA_224::final_result(uint8_t output[])
-   {
-   m_md.final_result(output);
-   }
-
-void SHA_224::clear()
-   {
-   m_md.clear();
-   }
-
-void SHA_224::init(SHA_224::digest_type& digest)
+void SHA_224_Impl::init(SHA_224_Impl::digest_type& digest)
    {
    const uint32_t SHA_224_IV[8] = {
       0xC1059ED8, 0x367CD507, 0x3070DD17, 0xF70E5939,
@@ -173,22 +158,7 @@ void SHA_224::init(SHA_224::digest_type& digest)
    copy_mem(digest.data(), SHA_224_IV, 8);
    }
 
-void SHA_256::add_data(const uint8_t input[], size_t length)
-   {
-   m_md.add_data(input, length);
-   }
-
-void SHA_256::final_result(uint8_t output[])
-   {
-   m_md.final_result(output);
-   }
-
-void SHA_256::clear()
-   {
-   m_md.clear();
-   }
-
-void SHA_256::init(SHA_256::digest_type& digest)
+void SHA_256_Impl::init(SHA_256_Impl::digest_type& digest)
    {
    const uint32_t SHA_256_IV[8] = {
       0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
@@ -227,26 +197,6 @@ std::string sha256_provider()
    }
 
 }
-
-std::unique_ptr<HashFunction> SHA_224::new_object() const
-   {
-   return std::make_unique<SHA_224>();
-   }
-
-std::unique_ptr<HashFunction> SHA_224::copy_state() const
-   {
-   return std::make_unique<SHA_224>(*this);
-   }
-
-std::unique_ptr<HashFunction> SHA_256::new_object() const
-   {
-   return std::make_unique<SHA_256>();
-   }
-
-std::unique_ptr<HashFunction> SHA_256::copy_state() const
-   {
-   return std::make_unique<SHA_256>(*this);
-   }
 
 std::string SHA_224::provider() const
    {

@@ -16,25 +16,11 @@ namespace Botan {
 /**
 * Whirlpool
 */
-class Whirlpool final : public HashFunction
+class Whirlpool_Impl final
    {
    public:
-      Whirlpool() {}
-
-      std::string name() const override { return "Whirlpool"; }
-      size_t output_length() const override { return 64; }
-      size_t hash_block_size() const override { return 64; }
-
-      std::unique_ptr<HashFunction> new_object() const override;
-      std::unique_ptr<HashFunction> copy_state() const override;
-
-      void clear() override;
-   private:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t output[]) override;
-
-   public:
       using digest_type = std::array<uint64_t, 8>;
+      static constexpr const char* NAME = "Whirlpool";
       static constexpr MD_Endian ENDIAN = MD_Endian::Big;
       static constexpr size_t BLOCK_BYTES = 64;
       static constexpr size_t FINAL_DIGEST_BYTES = 64;
@@ -42,9 +28,9 @@ class Whirlpool final : public HashFunction
 
       static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks);
       static void init(digest_type& digest);
-
-      MD_Hash<Whirlpool> m_md;
    };
+
+class Whirlpool final : public MD_Hash_Adapter<Whirlpool, Whirlpool_Impl> {};
 
 }
 

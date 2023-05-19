@@ -46,7 +46,7 @@ inline void II(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M)
 
 }
 
-void MD5::compress_n(MD5::digest_type& digest, const uint8_t input[], size_t blocks)
+void MD5_Impl::compress_n(MD5_Impl::digest_type& digest, const uint8_t input[], size_t blocks)
    {
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3];
 
@@ -101,35 +101,10 @@ void MD5::compress_n(MD5::digest_type& digest, const uint8_t input[], size_t blo
       }
    }
 
-void MD5::init(MD5::digest_type& digest)
+void MD5_Impl::init(MD5_Impl::digest_type& digest)
    {
    const uint32_t MD5_INIT[4] = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476 };
    copy_mem(digest.data(), MD5_INIT, 4);
-   }
-
-void MD5::add_data(const uint8_t input[], size_t length)
-   {
-   m_md.add_data(input, length);
-   }
-
-void MD5::final_result(uint8_t output[])
-   {
-   m_md.final_result(output);
-   }
-
-void MD5::clear()
-   {
-   m_md.clear();
-   }
-
-std::unique_ptr<HashFunction> MD5::new_object() const
-   {
-   return std::make_unique<MD5>();
-   }
-
-std::unique_ptr<HashFunction> MD5::copy_state() const
-   {
-   return std::make_unique<MD5>(*this);
    }
 
 }

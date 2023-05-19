@@ -77,7 +77,7 @@ inline void HH4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
 /*
 * MD4 Compression Function
 */
-void MD4::compress_n(MD4::digest_type& digest, const uint8_t input[], size_t blocks)
+void MD4_Impl::compress_n(MD4_Impl::digest_type& digest, const uint8_t input[], size_t blocks)
    {
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3];
 
@@ -124,38 +124,13 @@ void MD4::compress_n(MD4::digest_type& digest, const uint8_t input[], size_t blo
       }
    }
 
-void MD4::init(MD4::digest_type& digest)
+void MD4_Impl::init(MD4_Impl::digest_type& digest)
    {
    const uint32_t MD4_IV[4] = {
       0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476
    };
 
    copy_mem(digest.data(), MD4_IV, 4);
-   }
-
-void MD4::add_data(const uint8_t input[], size_t length)
-   {
-   m_md.add_data(input, length);
-   }
-
-void MD4::final_result(uint8_t output[])
-   {
-   m_md.final_result(output);
-   }
-
-void MD4::clear()
-   {
-   m_md.clear();
-   }
-
-std::unique_ptr<HashFunction> MD4::new_object() const
-   {
-   return std::make_unique<MD4>();
-   }
-
-std::unique_ptr<HashFunction> MD4::copy_state() const
-   {
-   return std::make_unique<MD4>(*this);
    }
 
 }

@@ -20,9 +20,9 @@ flags, GCC and Clang use the BMI2 instructions without further help.
 
 Likely instruction scheduling could be improved by using inline asm.
 */
-void SHA_256::compress_digest_x86_bmi2(uint32_t digest[8],
-                                       const uint8_t input[],
-                                       size_t blocks)
+void SHA_256_Impl::compress_digest_x86_bmi2(uint32_t digest[8],
+                                            const uint8_t input[],
+                                            size_t blocks)
    {
    uint32_t A = digest[0], B = digest[1], C = digest[2],
             D = digest[3], E = digest[4], F = digest[5],

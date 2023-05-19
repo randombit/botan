@@ -16,27 +16,11 @@ namespace Botan {
 /**
 * SHA-512
 */
-class SHA_512 final : public HashFunction
+class SHA_512_Impl final
    {
    public:
-      SHA_512() {}
-
-      std::string name() const override { return "SHA-512"; }
-      size_t output_length() const override { return 64; }
-      size_t hash_block_size() const override { return 128; }
-
-      std::unique_ptr<HashFunction> new_object() const override;
-      std::unique_ptr<HashFunction> copy_state() const override;
-      std::string provider() const override;
-
-      void clear() override;
-
-   private:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t output[]) override;
-
-   public:
-      using digest_type = std::array<uint64_t, 16>;
+      using digest_type = std::array<uint64_t, 8>;
+      static constexpr const char* NAME = "SHA-512";
       static constexpr MD_Endian ENDIAN = MD_Endian::Big;
       static constexpr size_t BLOCK_BYTES = 128;
       static constexpr size_t FINAL_DIGEST_BYTES = 64;
@@ -56,86 +40,66 @@ class SHA_512 final : public HashFunction
                                        const uint8_t input[],
                                        size_t blocks);
 #endif
-
-      MD_Hash<SHA_512> m_md;
    };
 
 /**
 * SHA-384
 */
-class SHA_384 final : public HashFunction
+class SHA_384_Impl final
    {
    public:
-      SHA_384() {}
-
-      std::string name() const override { return "SHA-384"; }
-      size_t output_length() const override { return 48; }
-      size_t hash_block_size() const override { return 128; }
-
-      std::unique_ptr<HashFunction> new_object() const override;
-      std::unique_ptr<HashFunction> copy_state() const override;
-      std::string provider() const override;
-
-      void clear() override;
-   private:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t output[]) override;
-
-   public:
-      using digest_type = std::array<uint64_t, 16>;
-      static constexpr MD_Endian ENDIAN = MD_Endian::Big;
-      static constexpr size_t BLOCK_BYTES = 128;
+      using digest_type = SHA_512_Impl::digest_type;
+      static constexpr const char* NAME = "SHA-384";
+      static constexpr MD_Endian ENDIAN = SHA_512_Impl::ENDIAN;
+      static constexpr size_t BLOCK_BYTES = SHA_512_Impl::BLOCK_BYTES;
       static constexpr size_t FINAL_DIGEST_BYTES = 48;
-      static constexpr size_t CTR_BYTES = 16;
+      static constexpr size_t CTR_BYTES = SHA_512_Impl::CTR_BYTES;
 
       /*
       * Perform a SHA-512 compression. For internal use
       */
       static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks)
-         { SHA_512::compress_n(digest, input, blocks); }
+         { SHA_512_Impl::compress_n(digest, input, blocks); }
       static void init(digest_type& digest);
-
-   private:
-      MD_Hash<SHA_384> m_md;
    };
 
 /**
 * SHA-512/256
 */
-class SHA_512_256 final : public HashFunction
+class SHA_512_256_Impl final
    {
    public:
-      SHA_512_256() {}
-
-      std::string name() const override { return "SHA-512-256"; }
-      size_t output_length() const override { return 32; }
-      size_t hash_block_size() const override { return 128; }
-
-      std::unique_ptr<HashFunction> new_object() const override;
-      std::unique_ptr<HashFunction> copy_state() const override;
-      std::string provider() const override;
-
-      void clear() override;
-   private:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t output[]) override;
-
-   public:
-      using digest_type = std::array<uint64_t, 16>;
-      static constexpr MD_Endian ENDIAN = MD_Endian::Big;
-      static constexpr size_t BLOCK_BYTES = 128;
+      using digest_type = SHA_512_Impl::digest_type;
+      static constexpr const char* NAME = "SHA-512-256";
+      static constexpr MD_Endian ENDIAN = SHA_512_Impl::ENDIAN;
+      static constexpr size_t BLOCK_BYTES = SHA_512_Impl::BLOCK_BYTES;
       static constexpr size_t FINAL_DIGEST_BYTES = 32;
-      static constexpr size_t CTR_BYTES = 16;
+      static constexpr size_t CTR_BYTES = SHA_512_Impl::CTR_BYTES;
 
       /*
       * Perform a SHA-512 compression. For internal use
       */
       static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks)
-         { SHA_512::compress_n(digest, input, blocks); }
+         { SHA_512_Impl::compress_n(digest, input, blocks); }
       static void init(digest_type& digest);
+   };
 
-   private:
-      MD_Hash<SHA_512_256> m_md;
+class SHA_512 final : public MD_Hash_Adapter<SHA_512, SHA_512_Impl>
+   {
+   public:
+      std::string provider() const override;
+   };
+
+class SHA_384 final : public MD_Hash_Adapter<SHA_384, SHA_384_Impl>
+   {
+   public:
+      std::string provider() const override;
+   };
+
+class SHA_512_256 final : public MD_Hash_Adapter<SHA_512_256, SHA_512_256_Impl>
+   {
+   public:
+      std::string provider() const override;
    };
 
 }

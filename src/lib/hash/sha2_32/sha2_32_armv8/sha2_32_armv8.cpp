@@ -19,7 +19,7 @@ namespace Botan {
 */
 //static
 BOTAN_FUNC_ISA("+crypto")
-void SHA_256::compress_digest_armv8(uint32_t digest[8], const uint8_t input8[], size_t blocks)
+void SHA_256_Impl::compress_digest_armv8(uint32_t digest[8], const uint8_t input8[], size_t blocks)
    {
    alignas(64) static const uint32_t K[] = {
       0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,

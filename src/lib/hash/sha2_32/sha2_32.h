@@ -17,27 +17,11 @@ namespace Botan {
 /**
 * SHA-256
 */
-class SHA_256 final : public HashFunction
+class SHA_256_Impl final
    {
    public:
-      SHA_256() : m_md() {}
-
-      std::string name() const override { return "SHA-256"; }
-      size_t output_length() const override { return 32; }
-      size_t hash_block_size() const override { return 64; }
-      std::unique_ptr<HashFunction> new_object() const override;
-      std::unique_ptr<HashFunction> copy_state() const override;
-
-      void clear() override;
-
-      std::string provider() const override;
-
-   private:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t output[]) override;
-
-   public:
       using digest_type = std::array<uint32_t, 8>;
+      static constexpr const char* NAME = "SHA-256";
       static constexpr MD_Endian ENDIAN = MD_Endian::Big;
       static constexpr size_t BLOCK_BYTES = 64;
       static constexpr size_t FINAL_DIGEST_BYTES = sizeof(digest_type);
@@ -50,7 +34,6 @@ class SHA_256 final : public HashFunction
       static void init(digest_type& digest);
 
    private:
-
 #if defined(BOTAN_HAS_SHA2_32_ARMV8)
       static void compress_digest_armv8(uint32_t digest[8],
                                         const uint8_t input[],
@@ -68,47 +51,36 @@ class SHA_256 final : public HashFunction
                                       const uint8_t input[],
                                       size_t blocks);
 #endif
-
-      MD_Hash<SHA_256> m_md;
    };
 
 /**
 * SHA-224
 */
-class SHA_224 final : public HashFunction
+class SHA_224_Impl final
    {
    public:
-      SHA_224() : m_md() {}
-
-      std::string name() const override { return "SHA-224"; }
-      size_t output_length() const override { return 28; }
-      size_t hash_block_size() const override { return 64; }
-      std::unique_ptr<HashFunction> new_object() const override;
-      std::unique_ptr<HashFunction> copy_state() const override;
-
-      void clear() override;
-
-      std::string provider() const override;
-   private:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t output[]) override;
-
-   public:
-      static constexpr MD_Endian ENDIAN = MD_Endian::Big;
-      static constexpr size_t BLOCK_BYTES = 64;
+      using digest_type = SHA_256_Impl::digest_type;
+      static constexpr const char* NAME = "SHA-224";
+      static constexpr MD_Endian ENDIAN = SHA_256_Impl::ENDIAN;
+      static constexpr size_t BLOCK_BYTES = SHA_256_Impl::BLOCK_BYTES;
       static constexpr size_t FINAL_DIGEST_BYTES = 28;
       static constexpr size_t CTR_BYTES = 8;
-      using digest_type = std::array<uint32_t, 8>;
 
-      /*
-      * Perform a SHA-256 compression. For internal use
-      */
       static void compress_n(digest_type& digest, const uint8_t input[], size_t blocks)
-         { SHA_256::compress_n(digest, input, blocks); }
+         { SHA_256_Impl::compress_n(digest, input, blocks); }
       static void init(digest_type& digest);
+   };
 
-   private:
-      MD_Hash<SHA_224> m_md;
+class SHA_256 final : public MD_Hash_Adapter<SHA_256, SHA_256_Impl>
+   {
+   public:
+      std::string provider() const override;
+   };
+
+class SHA_224 final : public MD_Hash_Adapter<SHA_224, SHA_224_Impl>
+   {
+   public:
+      std::string provider() const override;
    };
 
 }

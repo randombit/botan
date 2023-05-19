@@ -66,7 +66,7 @@ inline uint32_t SM3_E(uint32_t W0, uint32_t W7, uint32_t W13, uint32_t W3, uint3
 /*
 * SM3 Compression Function
 */
-void SM3::compress_n(SM3::digest_type& digest, const uint8_t input[], size_t blocks)
+void SM3_Impl::compress_n(SM3_Impl::digest_type& digest, const uint8_t input[], size_t blocks)
    {
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3],
             E = digest[4], F = digest[5], G = digest[6], H = digest[7];
@@ -220,7 +220,7 @@ void SM3::compress_n(SM3::digest_type& digest, const uint8_t input[], size_t blo
       }
    }
 
-void SM3::init(SM3::digest_type& digest)
+void SM3_Impl::init(SM3_Impl::digest_type& digest)
    {
    const uint32_t SM3_IV[8] = {
       0x7380166f, 0x4914b2b9, 0x172442d7, 0xda8a0600,
@@ -228,31 +228,6 @@ void SM3::init(SM3::digest_type& digest)
    };
 
    copy_mem(digest.data(), SM3_IV, 8);
-   }
-
-void SM3::add_data(const uint8_t input[], size_t length)
-   {
-   m_md.add_data(input, length);
-   }
-
-void SM3::final_result(uint8_t output[])
-   {
-   m_md.final_result(output);
-   }
-
-void SM3::clear()
-   {
-   m_md.clear();
-   }
-
-std::unique_ptr<HashFunction> SM3::new_object() const
-   {
-   return std::make_unique<SM3>();
-   }
-
-std::unique_ptr<HashFunction> SM3::copy_state() const
-   {
-   return std::make_unique<SM3>(*this);
    }
 
 }
