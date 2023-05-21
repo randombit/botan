@@ -13,7 +13,11 @@ namespace Botan {
 Only encryption is supported since the inverse round function would
 require a different instruction
 */
+#if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+BOTAN_FUNC_ISA("crypto")
+#else
 BOTAN_FUNC_ISA("+crypto")
+#endif
 void SHACAL2::armv8_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint32_t* input32 = reinterpret_cast<const uint32_t*>(in);

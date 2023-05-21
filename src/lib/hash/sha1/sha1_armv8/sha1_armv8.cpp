@@ -16,7 +16,11 @@ namespace Botan {
 * SHA-1 using CPU instructions in ARMv8
 */
 //static
+#if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+BOTAN_FUNC_ISA("crypto")
+#else
 BOTAN_FUNC_ISA("+crypto")
+#endif
 void SHA_1::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t input8[], size_t blocks)
    {
    uint32x4_t ABCD;
