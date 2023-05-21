@@ -886,12 +886,12 @@ int botan_pubkey_kyber768_get_pubkey(botan_pubkey_t key,
    }
 
 int botan_privkey_load_kyber1024(botan_privkey_t* key,
-                                const uint8_t privkey[3186])
+                                const uint8_t privkey[3168])
    {
 #if defined(BOTAN_HAS_KYBER)
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 3186);
+      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 3168);
       auto kyber1024 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber1024);
       *key = new botan_privkey_struct(std::move(kyber1024));
       return BOTAN_FFI_SUCCESS;
@@ -920,14 +920,14 @@ int botan_pubkey_load_kyber1024(botan_pubkey_t* key,
    }
 
 int botan_privkey_kyber1024_get_privkey(botan_privkey_t key,
-                                       uint8_t output[3186])
+                                       uint8_t output[3168])
    {
 #if defined(BOTAN_HAS_KYBER)
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       if(auto kyber1024 = dynamic_cast<const Botan::Kyber_PrivateKey*>(&k))
          {
          const auto kyber1024_key = kyber1024->raw_private_key_bits();
-         if(kyber1024_key.size() != 3186)
+         if(kyber1024_key.size() != 3168)
             return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
          Botan::copy_mem(output, kyber1024_key.data(), kyber1024_key.size());
          return BOTAN_FFI_SUCCESS;
