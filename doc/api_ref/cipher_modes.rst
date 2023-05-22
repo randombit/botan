@@ -15,114 +15,13 @@ All cipher mode implementations are are derived from the base class
    Using an unauthenticted cipher mode without combining it with a
    :ref:`mac` is insecure. Prefer using an :ref:`aead`.
 
-.. cpp:class:: Cipher_Mode
+API Overview
+------------
 
-  .. cpp:function:: void set_key(const uint8_t* key, size_t length)
+.. container:: toggle
 
-    Set the symmetric key to be used.
-
-  .. cpp:function:: bool valid_keylength(size_t length) const
-
-     This function returns true if and only if *length* is a valid
-     keylength for the algorithm.
-
-  .. cpp:function:: size_t minimum_keylength() const
-
-     Return the smallest key length (in bytes) that is acceptable for the
-     algorithm.
-
-  .. cpp:function:: size_t maximum_keylength() const
-
-     Return the largest key length (in bytes) that is acceptable for the
-     algorithm.
-
-  .. cpp:function:: size_t default_nonce_length() const
-
-    Return the default (preferable) nonce size for this cipher mode.
-
-  .. cpp:function:: bool valid_nonce_length(size_t nonce_len) const
-
-    Return true if *nonce_len* is a valid length for a nonce with this
-    algorithm.
-
-  .. cpp:function:: bool authenticated() const
-
-    Return true if this cipher mode is authenticated
-
-  .. cpp:function:: size_t tag_size() const
-
-    Return the length in bytes of the authentication tag this algorithm
-    generates. If the mode is not authenticated, this will return 0. If the mode
-    is authenticated, it will return some positive value (typically somewhere
-    between 8 and 16).
-
-  .. cpp:function:: void clear()
-
-    Clear all internal state. The object will act exactly like one which was
-    just allocated.
-
-  .. cpp:function:: void reset()
-
-    Reset all message state. For example if you called :cpp:func:`start_msg`,
-    then :cpp:func:`process` to process some ciphertext, but then encounter an
-    IO error and must abandon the current message, you can call `reset`. The
-    object will retain the key (unlike calling :cpp:func:`clear` which also
-    resets the key) but the nonce and current message state will be erased.
-
-  .. cpp:function:: void start_msg(const uint8_t* nonce, size_t nonce_len)
-
-    Set up for processing a new message. This function must be called with a new
-    random value for each message. For almost all modes (excepting SIV), if the
-    same nonce is ever used twice with the same key, the encryption scheme loses
-    its confidentiality and/or authenticity properties.
-
-  .. cpp:function:: void start(const std::vector<uint8_t> nonce)
-
-    Acts like :cpp:func:`start_msg`\ (nonce.data(), nonce.size()).
-
-  .. cpp:function:: void start(const uint8_t* nonce, size_t nonce_len)
-
-    Acts like :cpp:func:`start_msg`\ (nonce, nonce_len).
-
-  .. cpp:function:: virtual size_t update_granularity() const
-
-    The :cpp:class:`Cipher_Mode` interface requires message processing in multiples of the block size.
-    Returns size of required blocks to update. Will return 1 if the mode implementation
-    does not require buffering.
-
-  .. cpp:function:: virtual size_t ideal_granularity() const
-
-    Returns a multiple of update_granularity sized for ideal performance.
-
-    In fact this is not truly the "ideal" buffer size but just reflects the
-    smallest possible buffer that can reasonably take advantage of available
-    parallelism (due to SIMD execution, etc). If you are concerned about
-    performance, it may be advisable to take this return value and scale it to
-    approximately 4 KB, and use buffers of that size.
-
-  .. cpp:function:: virtual size_t process(uint8_t* msg, size_t msg_len)
-
-    Process msg in place and returns the number of bytes written. *msg* must
-    be a multiple of :cpp:func:`update_granularity`.
-
-  .. cpp:function:: void update(secure_vector<uint8_t>& buffer, size_t offset = 0)
-
-    Continue processing a message in the buffer in place. The passed buffer's
-    size must be a multiple of :cpp:func:`update_granularity`.  The first
-    *offset* bytes of the buffer will be ignored.
-
-  .. cpp:function:: size_t minimum_final_size() const
-
-    Returns the minimum size needed for :cpp:func:`finish`. This is used for
-    example when processing an AEAD message, to ensure the tag is available. In
-    that case, the encryption side will return 0 (since the tag is generated,
-    rather than being provided) while the decryption mode will return the size
-    of the tag.
-
-  .. cpp:function:: void finish(secure_vector<uint8_t>& final_block, size_t offset = 0)
-
-    Finalize the message processing with a final block of at least :cpp:func:`minimum_final_size` size.
-    The first *offset* bytes of the passed final block will be ignored.
+   .. doxygenclass:: Botan::Cipher_Mode
+      :members: create,create_or_throw,set_key,minimum_keylength,maximum_keylength,default_nonce_length,authenticated,tag_size,start,update_granularity,ideal_granularity,requires_entire_message,process,update,finish
 
 Code Example
 ---------------------
@@ -203,102 +102,13 @@ encryption, message authentication, and the ability to authenticate additional
 data that is not included in the ciphertext (such as a sequence number or
 header). It is a subclass of :cpp:class:`Cipher_Mode`.
 
-.. cpp:class:: AEAD_Mode
+API Overview
+~~~~~~~~~~~~
 
-  .. cpp:function:: void set_key(const SymmetricKey& key)
+.. container:: toggle
 
-       Set the key
-
-  .. cpp:function:: Key_Length_Specification key_spec() const
-
-       Return the key length specification
-
-  .. cpp:function:: void set_associated_data(const uint8_t ad[], size_t ad_len)
-
-       Set any associated data for this message. For maximum portability between
-       different modes, this must be called after :cpp:func:`set_key` and before
-       :cpp:func:`start`.
-
-       If the associated data does not change, it is not necessary to call this
-       function more than once, even across multiple calls to :cpp:func:`start`
-       and :cpp:func:`finish`.
-
-  .. cpp:function:: void start(const uint8_t nonce[], size_t nonce_len)
-
-       Start processing a message, using *nonce* as the unique per-message
-       value. It does not need to be random, simply unique (per key).
-
-       .. warning::
-          With almost all AEADs, if the same nonce is ever used to encrypt two
-          different messages under the same key, all security is lost. If
-          reliably generating unique nonces is difficult in your environment,
-          use SIV mode which retains security even if nonces are repeated.
-
-  .. cpp:function:: void update(secure_vector<uint8_t>& buffer, size_t offset = 0)
-
-       Continue processing a message. The *buffer* is an in/out parameter and
-       may be resized. In particular, some modes require that all input be
-       consumed before any output is produced; with these modes, *buffer* will
-       be returned empty.
-
-       On input, the buffer must be sized in blocks of size
-       :cpp:func:`update_granularity`. For instance if the update granularity
-       was 64, then *buffer* could be 64, 128, 192, ... bytes.
-
-       The first *offset* bytes of *buffer* will be ignored (this allows in
-       place processing of a buffer that contains an initial plaintext header)
-
-  .. cpp:function:: void finish(secure_vector<uint8_t>& buffer, size_t offset = 0)
-
-       Complete processing a message with a final input of *buffer*, which is
-       treated the same as with :cpp:func:`update`. It must contain at least
-       :cpp:func:`final_minimum_size` bytes.
-
-       Note that if you have the entire message in hand, calling finish without
-       ever calling update is both efficient and convenient.
-
-       .. note::
-
-          During decryption, if the supplied authentication tag does not
-          validate, finish will throw an instance of Invalid_Authentication_Tag
-          (aka Integrity_Failure, which was the name for this exception in
-          versions before 2.10, a typedef is included for compatability).
-
-          If this occurs, all plaintext previously output via calls to update
-          must be destroyed and not used in any way that an attacker could
-          observe the effects of. This could be anything from echoing the
-          plaintext back (perhaps in an error message), or by making an external
-          RPC whose destination or contents depend on the plaintext. The only
-          thing you can do is buffer it, and in the event of an invalid tag,
-          erase the previously decrypted content from memory.
-
-          One simply way to assure this could never happen is to never
-          call update, and instead always marshal the entire message
-          into a single buffer and call finish on it when decrypting.
-
-  .. cpp:function:: size_t update_granularity() const
-
-       The AEAD interface requires :cpp:func:`update` be called with blocks of
-       this size. This will be 1, if the mode can process any length inputs.
-
-  .. cpp:function:: size_t final_minimum_size() const
-
-       The AEAD interface requires :cpp:func:`finish` be called with at least
-       this many bytes (which may be zero, or greater than
-       :cpp:func:`update_granularity`)
-
-  .. cpp:function:: bool valid_nonce_length(size_t nonce_len) const
-
-       Returns true if *nonce_len* is a valid nonce length for this scheme. For
-       EAX and GCM, any length nonces are allowed. OCB allows any value between
-       8 and 15 bytes.
-
-  .. cpp:function:: size_t default_nonce_length() const
-
-       Returns a reasonable length for the nonce, typically either 96
-       bits, or the only supported length for modes which don't
-       support 96 bit nonces.
-
+   .. doxygenclass:: Botan::AEAD_Mode
+      :members: create,create_or_throw,set_associated_data,set_associated_data_n,final_minimum_size,maximum_associated_data_inputs
 
 Available AEAD Modes
 -------------------------
