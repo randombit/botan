@@ -130,8 +130,6 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param rng random number generator
      * @param bits size in bits
      * @param set_high_bit if true, the highest bit is always set
-     *
-     * @see randomize
      */
      BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit = true);
 
