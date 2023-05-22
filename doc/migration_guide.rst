@@ -7,6 +7,13 @@ This guide attempts to be, but is not, complete. If you run into a problem while
 converting code that does not seem to be described here, please open an issue on
 Github.
 
+Documentation
+-------------
+
+Most of the API references are now powered by `Breathe
+<https://github.com/breathe-doc/breathe>`_. Without Breathe the documentation
+will lack almost all API details and will be much less helpful.
+
 Headers
 --------
 
@@ -157,6 +164,8 @@ private_key_for()
 Applications must now provide a `std::shared_ptr<>` to the requested private key
 object instead of a raw pointer to better communicate the implementation's
 life-time expectations of this private key object.
+
+.. _session_handling_with_tls_13:
 
 Session and Ticket Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

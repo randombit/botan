@@ -18,11 +18,15 @@ namespace Botan {
 namespace TLS {
 
 enum class Version_Code: uint16_t {
-   TLS_V11            = 0x0302,  // not supported by Botan
+   /// not supported by Botan any longer
+   TLS_V11            = 0x0302,
+
    TLS_V12            = 0x0303,
    TLS_V13            = 0x0304,
    DTLS_V12           = 0xFEFD,
-   DTLS_V13           = 0xFEFC,  // not supported by Botan
+
+   /// not supported by Botan yet
+   DTLS_V13           = 0xFEFC,
 };
 
 /**
@@ -34,6 +38,9 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       using enum Version_Code;
 
       /**
+      * Returns the latest version of the TLS protocol known to the library
+      * (currently TLS v1.3)
+      *
       * @return latest known TLS version
       */
       static Protocol_Version latest_tls_version()
@@ -46,6 +53,9 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
          }
 
       /**
+      * Returns the latest version of the DTLS protocol known to the library
+      * (currently DTLS v1.2)
+      *
       * @return latest known DTLS version
       */
       static Protocol_Version latest_dtls_version()
@@ -96,6 +106,10 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       uint16_t version_code() const { return m_version; }
 
       /**
+      * Generate a human readable version string.
+      *
+      * for instance "TLS v1.1" or "DTLS v1.0".
+      *
       * @return human-readable description of this version
       */
       std::string to_string() const;
