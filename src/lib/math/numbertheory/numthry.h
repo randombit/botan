@@ -102,7 +102,10 @@ BigInt BOTAN_PUBLIC_API(3,0) sqrt_modulo_prime(const BigInt& x, const BigInt& p)
 size_t BOTAN_PUBLIC_API(2,0) low_zero_bits(const BigInt& x);
 
 /**
-* Check for primality
+* Check for primality using probabilistic algorithms. I.e, there is some
+* non-zero probability that true will be returned even if *n* is actually
+* composite.
+*
 * @param n a positive integer to test for primality
 * @param rng a random number generator
 * @param prob chance of false positive is bounded by 1/2**prob

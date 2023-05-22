@@ -51,6 +51,9 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
 
       /**
       * Construct Domain paramers from specified parameters
+      *
+      * This is used for example to create custom (application-specific) curves.
+      *
       * @param p the elliptic curve p
       * @param a the elliptic curve a param
       * @param b the elliptic curve b param
@@ -87,7 +90,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       explicit EC_Group(const OID& oid);
 
       /**
-      * Create an EC domain from PEM encoding (as from PEM_encode), or
+      * Create an EC domain from PEM encoding (as from PEM_encode()), or
       * from an OID name (eg "secp256r1", or "1.2.840.10045.3.1.7")
       * @param pem_or_oid PEM-encoded data, or an OID
 

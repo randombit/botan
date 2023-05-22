@@ -19,84 +19,6 @@ class :cpp:class:`StreamCipher` (`botan/stream_cipher.h`).
    of initialization vectors. Otherwise the keystream will be reused, which causes
    the security of the cipher to completely fail.
 
-.. cpp:class:: StreamCipher
-
-  .. cpp:function:: std::string name() const
-
-     Returns a human-readable string of the name of this algorithm.
-
-  .. cpp:function:: void clear()
-
-     Clear the key.
-
-  .. cpp:function:: std::unique_ptr<StreamCipher> new_object() const
-
-     Return a newly allocated object of the same type as this one.
-     The new object is unkeyed.
-
-  .. cpp:function:: void set_key(const uint8_t* key, size_t length)
-
-     Set the stream cipher key. If the length is not accepted, an
-     ``Invalid_Key_Length`` exception is thrown.
-
-  .. cpp:function:: bool valid_keylength(size_t length) const
-
-     This function returns true if and only if *length* is a valid
-     keylength for the algorithm.
-
-  .. cpp:function:: size_t minimum_keylength() const
-
-     Return the smallest key length (in bytes) that is acceptable for the
-     algorithm.
-
-  .. cpp:function:: size_t maximum_keylength() const
-
-     Return the largest key length (in bytes) that is acceptable for the
-     algorithm.
-
-  .. cpp:function:: bool valid_iv_length(size_t iv_len) const
-
-     This function returns true if and only if *length* is a valid IV length for
-     the stream cipher. Some ciphers do not support IVs at all, and will return
-     false for any value except zero.
-
-  .. cpp:function:: size_t default_iv_length() const
-
-     Returns some default IV size, normally the largest IV supported by the cipher.
-     If this function returns zero, then IVs are not supported and any call to
-     ``set_iv`` with a non-empty value will fail.
-
-  .. cpp:function:: void set_iv(const uint8_t*, size_t len)
-
-     Load IV into the stream cipher state. This should happen after the key is
-     set and before any operation (encrypt/decrypt/seek) is called.
-
-     If the cipher does not support IVs, then a call with ``len`` equal to zero
-     will be accepted and any other length will cause a ``Invalid_IV_Length``
-     exception.
-
-  .. cpp:function:: void seek(uint64_t offset)
-
-     Sets the state of the stream cipher and keystream according to the passed
-     *offset*, exactly as if *offset* bytes had first been encrypted. The key
-     and (if required) the IV have to be set before this can be called. Not all
-     ciphers support seeking; such objects will throw ``Not_Implemented`` in
-     this case.
-
-  .. cpp:function:: void cipher(const uint8_t* in, uint8_t* out, size_t n)
-
-     Processes *n* bytes plain/ciphertext from *in* and writes the result to *out*.
-
-  .. cpp:function:: void cipher1(uint8_t* inout, size_t n)
-
-     Processes *n* bytes plain/ciphertext in place. Acts like :cpp:func:`cipher`\ (inout, inout, n).
-
-  .. cpp:function:: void encipher(std::vector<uint8_t> inout)
-  .. cpp:function:: void encrypt(std::vector<uint8_t> inout)
-  .. cpp:function:: void decrypt(std::vector<uint8_t> inout)
-
-     Processes plain/ciphertext *inout* in place. Acts like :cpp:func:`cipher`\ (inout.data(), inout.data(), inout.size()).
-
 Code Example
 -----------------
 
@@ -104,6 +26,12 @@ The following code encrypts a provided plaintext using ChaCha20.
 
 .. literalinclude:: /../src/examples/chacha.cpp
    :language: cpp
+
+API Overview
+------------
+
+.. doxygenclass:: Botan::StreamCipher
+   :members: set_key,minimum_keylength,maximum_keylength,default_iv_length,set_iv,seek,cipher,cipher1,encipher,encrypt,decrypt,keystream_bytes, write_keystream
 
 Available Stream Ciphers
 ----------------------------

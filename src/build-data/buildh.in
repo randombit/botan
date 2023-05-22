@@ -24,9 +24,18 @@
  * @{
  */
 
+/// The major version of the release
 #define BOTAN_VERSION_MAJOR %{version_major}
+/// The minor version of the release
 #define BOTAN_VERSION_MINOR %{version_minor}
+/// The patch version of the release
 #define BOTAN_VERSION_PATCH %{version_patch}
+
+/**
+ * Expands to an integer of the form YYYYMMDD if this is an official
+ * release, or 0 otherwise. For instance, 1.10.1, which was released
+ * on July 11, 2011, has a `BOTAN_VERSION_DATESTAMP` of 20110711.
+ */
 #define BOTAN_VERSION_DATESTAMP %{version_datestamp}
 
 %{if version_suffix}
@@ -36,8 +45,20 @@
 
 #define BOTAN_VERSION_RELEASE_TYPE "%{release_type}"
 
+/**
+ * A macro expanding to a string that is set to a revision identifier
+ * corresponding to the source, or "unknown" if this could not be
+ * determined. It is set for all official releases, and for builds that
+ * originated from within a git checkout.
+ */
 #define BOTAN_VERSION_VC_REVISION "%{version_vc_rev}"
 
+/**
+ * A macro expanding to a string that is set at build time using the
+ * `--distribution-info` option. It allows a packager of the library
+ * to specify any distribution-specific patches. If no value is given
+ * at build time, the value is the string "unspecified".
+ */
 #define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
 
 /**

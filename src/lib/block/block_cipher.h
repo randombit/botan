@@ -74,61 +74,20 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       virtual std::string provider() const { return "base"; }
 
       /**
-      * Encrypt a block.
-      * @param in The plaintext block to be encrypted as a byte array.
-      * Must be of length block_size().
-      * @param out The byte array designated to hold the encrypted block.
-      * Must be of length block_size().
-      */
-      void encrypt(const uint8_t in[], uint8_t out[]) const
-         { encrypt_n(in, out, 1); }
-
-      /**
-      * Decrypt a block.
-      * @param in The ciphertext block to be decypted as a byte array.
-      * Must be of length block_size().
-      * @param out The byte array designated to hold the decrypted block.
-      * Must be of length block_size().
-      */
-      void decrypt(const uint8_t in[], uint8_t out[]) const
-         { decrypt_n(in, out, 1); }
-
-      /**
-      * Encrypt a block.
-      * @param block the plaintext block to be encrypted
-      * Must be of length block_size(). Will hold the result when the function
-      * has finished.
-      */
-      void encrypt(uint8_t block[]) const { encrypt_n(block, block, 1); }
-
-      /**
-      * Decrypt a block.
-      * @param block the ciphertext block to be decrypted
-      * Must be of length block_size(). Will hold the result when the function
-      * has finished.
-      */
-      void decrypt(uint8_t block[]) const { decrypt_n(block, block, 1); }
-
-      /**
-      * Encrypt one or more blocks
-      * @param block the input/output buffer (multiple of block_size())
+      * Encrypt one or more blocks in place. The @p block will hold the result
+      * when the function returns.
+      * @param block the plaintext block to be encrypted (multiple of
+      *              block_size())
       */
       void encrypt(std::span<uint8_t> block) const
          {
          return encrypt_n(block.data(), block.data(), block.size() / block_size());
          }
+      void encrypt(uint8_t block[]) const
+         { encrypt_n(block, block, 1); }
 
       /**
-      * Decrypt one or more blocks
-      * @param block the input/output buffer (multiple of block_size())
-      */
-      void decrypt(std::span<uint8_t> block) const
-         {
-         return decrypt_n(block.data(), block.data(), block.size() / block_size());
-         }
-
-      /**
-      * Encrypt one or more blocks
+      * Encrypt one or more blocks.
       * @param in the input buffer (multiple of block_size())
       * @param out the output buffer (same size as in)
       */
@@ -136,9 +95,22 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
          {
          return encrypt_n(in.data(), out.data(), in.size() / block_size());
          }
+      void encrypt(const uint8_t in[], uint8_t out[]) const
+         { encrypt_n(in, out, 1); }
 
       /**
-      * Decrypt one or more blocks
+      * Decrypt one or more blocks in place. The @p block will hold the result
+      * when the function returns.
+      * @param block the input/output buffer (multiple of block_size())
+      */
+      void decrypt(std::span<uint8_t> block) const
+         {
+         return decrypt_n(block.data(), block.data(), block.size() / block_size());
+         }
+      void decrypt(uint8_t block[]) const { decrypt_n(block, block, 1); }
+
+      /**
+      * Decrypt one or more blocks.
       * @param in the input buffer (multiple of block_size())
       * @param out the output buffer (same size as in)
       */
@@ -146,6 +118,8 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
          {
          return decrypt_n(in.data(), out.data(), in.size() / block_size());
          }
+      void decrypt(const uint8_t in[], uint8_t out[]) const
+         { decrypt_n(in, out, 1); }
 
       /**
       * Encrypt one or more blocks

@@ -20,67 +20,6 @@ several times is equivalent to calling it once with all of the arguments
 concatenated. After completing a hash computation (eg using ``final``), the
 internal state is reset to begin hashing a new message.
 
-.. cpp:class:: HashFunction
-
-  .. cpp:function:: static std::unique_ptr<HashFunction> create(const std::string& name)
-
-    Return a newly allocated hash function object, or nullptr if the
-    name is not recognized.
-
-  .. cpp:function:: static std::unique_ptr<HashFunction> create_or_throw(const std::string& name)
-
-    Like ``create`` except that it will throw an exception instead of
-    returning nullptr.
-
-  .. cpp:function:: size_t output_length()
-
-    Return the size (in *bytes*) of the output of this function.
-
-  .. cpp:function:: void update(const uint8_t* input, size_t length)
-
-    Updates the computation with *input*.
-
-  .. cpp:function:: void update(uint8_t input)
-
-    Updates the computation with *input*.
-
-  .. cpp:function:: void update(const std::vector<uint8_t>& input)
-
-    Updates the computation with *input*.
-
-  .. cpp:function:: void update(const std::string& input)
-
-    Updates the computation with *input*.
-
-  .. cpp:function:: void final(uint8_t* out)
-
-    Finalize the calculation and place the result into ``out``.
-    For the argument taking an array, exactly ``output_length`` bytes will
-    be written. After you call ``final``, the algorithm is reset to
-    its initial state, so it may be reused immediately.
-
-  .. cpp:function:: secure_vector<uint8_t> final()
-
-    Similar to the other function of the same name, except it returns
-    the result in a newly allocated vector.
-
-  .. cpp:function:: secure_vector<uint8_t> process(const uint8_t in[], size_t length)
-
-     Equivalent to calling ``update`` followed by ``final``.
-
-  .. cpp:function:: secure_vector<uint8_t> process(const std::string& in)
-
-     Equivalent to calling ``update`` followed by ``final``.
-
-  .. cpp:function:: std::unique_ptr<HashFunction> new_object()
-
-     Return a newly allocated HashFunction object of the same type as this one.
-
-  .. cpp:function:: std::unique_ptr<HashFunction> copy_state()
-
-     Return a newly allocated HashFunction object of the same type as this one,
-     whose internal state matches the current state of this.
-
 Code Example
 ------------
 
@@ -88,6 +27,14 @@ Assume we want to calculate the SHA-256, SHA-384, and SHA-3 hash digests of the 
 
 .. literalinclude:: /../src/examples/hash.cpp
    :language: cpp
+
+API Overview
+------------
+
+.. container:: toggle
+
+   .. doxygenclass:: Botan::HashFunction
+      :members: output_length,update,final,process,new_object,copy_state
 
 Available Hash Functions
 ------------------------------
@@ -283,6 +230,14 @@ Available if ``BOTAN_HAS_COMB4P`` is defined.
 This combines two cryptographic hashes in such a way that preimage and collision
 attacks are provably at least as hard as a preimage or collision attack on the
 strongest hash.
+
+Truncate
+^^^^^^^^
+
+Available if ``BOTAN_HAS_TRUNCATED_HASH`` is defined.
+
+Truncates an underlying hash function output to the given number of bits by
+cutting off the unwanted least significant bits.
 
 Checksums
 ----------------

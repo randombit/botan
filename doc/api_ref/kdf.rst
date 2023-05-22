@@ -22,53 +22,6 @@ v2 MessageKey". This labeling ensures that if you accidentally use the same
 input key and salt in some other context, you still use different keys in the
 two contexts.
 
-.. cpp:class:: KDF
-
-  .. cpp:function:: std::unique_ptr<KDF> KDF::create(const std::string& algo)
-
-      Create a new KDF object. Returns nullptr if the named key derivation
-      function was not available
-
-  .. cpp:function:: std::unique_ptr<KDF> KDF::create_or_throw(const std::string& algo)
-
-      Create a new KDF object. Throws an exception if the named key derivation
-      function was not available
-
-  .. cpp:function:: template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>> \
-      T derive_key(size_t key_len, \
-                   std::span<const uint8_t> secret, \
-                   std::span<const uint8_t> salt, \
-                   std::span<const uint8_t> label) const
-
-      This version is parameterized to the output buffer type, so it can be used
-      to return a ``std::vector``, a ``secure_vector``, or anything else
-      satisfying the ``resizable_byte_buffer`` concept.
-
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-                                    const uint8_t secret[], \
-                                    size_t secret_len, \
-                                    const uint8_t salt[], \
-                                    size_t salt_len, \
-                                    const uint8_t label[], \
-                                    size_t label_len) const
-
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const std::vector<uint8_t>& secret, \
-     const std::vector<uint8_t>& salt, \
-     const std::vector<uint8_t>& label) const
-
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const std::vector<uint8_t>& secret, \
-     const uint8_t* salt, size_t salt_len) const
-
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const uint8_t* secret, size_t secret_len, \
-     const std::string& salt) const
-
-   All variations on the same theme. Deterministically creates a
-   uniform random value from *secret*, *salt*, and *label*, whose
-   meaning is described above.
-
 Code Example
 ------------
 
@@ -76,6 +29,14 @@ An example demonstrating using the API to hash a secret using HKDF
 
 .. literalinclude:: /../src/examples/kdf.cpp
    :language: cpp
+
+API Overview
+------------
+
+.. container:: toggle
+
+   .. doxygenclass:: Botan::KDF
+      :members: derive_key
 
 
 Available KDFs
