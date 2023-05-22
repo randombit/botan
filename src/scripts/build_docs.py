@@ -171,7 +171,7 @@ def main(args=None):
         cmds.append(['doxygen', os.path.join(cfg['build_dir'], 'botan.doxy')])
 
     if with_sphinx:
-        sphinx_build = ['sphinx-build', '-q', '-c', cfg['sphinx_config_dir']]
+        sphinx_build = ['sphinx-build', '-q', '-c', cfg['sphinx_config_dir'], '-j', 'auto']
 
         cmds.append(sphinx_build + ['-b', 'html', handbook_src, handbook_output])
 
