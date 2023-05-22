@@ -20,115 +20,27 @@ representing the general algorithm, such as "PBKDF2(SHA-256)", or "Scrypt", and
 specified with all parameters (say "Scrypt" with ``N`` = 8192, ``r`` = 64, and
 ``p`` = 8) and which can be used to derive keys.
 
-.. cpp:class:: PasswordHash
+API Overview
+^^^^^^^^^^^^
 
-   .. cpp:function:: void hash(std::span<uint8_t> out, \
-                               std::string_view password, \
-                               std::span<uint8> salt)
+.. container:: toggle
 
-      Derive a key from the specified *password* and *salt*, placing it into *out*.
+   .. doxygenclass:: Botan::PasswordHash
+      :members:
 
-   .. cpp:function:: void hash(std::span<uint8_t> out, \
-                               std::string_view password, \
-                               std::span<const uint8> salt, \
-                               std::span<const uint8> ad, \
-                               std::span<const uint8> key)
+PasswordHashFamily
+------------------
 
-      Derive a key from the specified *password*, *salt*, associated data (*ad*), and
-      secret *key*, placing it into *out*. The *ad* and *key* are both allowed
-      to be empty. Currently non-empty AD/key is only supported with Argon2.
+The ``PasswordHashFamily`` creates specific instances of ``PasswordHash`` by
+tuning the algoritm's parameters to the application's needs.
 
-   .. cpp:function:: void derive_key(uint8_t out[], size_t out_len, \
-                     const char* password, const size_t password_len, \
-                     const uint8_t salt[], size_t salt_len) const
+API Overview
+^^^^^^^^^^^^
 
-      Same functionality as the 3 argument variant of :cpp:func:`PasswordHash::hash`.
+.. container:: toggle
 
-   .. cpp:function:: void derive_key(uint8_t out[], size_t out_len, \
-                     const char* password, const size_t password_len, \
-                     const uint8_t salt[], size_t salt_len, \
-                     const uint8_t ad[], size_t ad_len, \
-                     const uint8_t key[], size_t key_len) const
-
-       Same functionality as the 5 argument variant of :cpp:func:`PasswordHash::hash`.
-
-   .. cpp:function:: std::string to_string() const
-
-      Return a descriptive string including the parameters (iteration count, etc)
-
-   .. cpp:function:: size_t iterations() const
-
-      Return the iteration parameter
-
-   .. cpp:function:: size_t memory_param() const
-
-      Return the memory usage parameter, or 0 if the algorithm does not offer
-      a memory usage option.
-
-   .. cpp:function:: size_t parallelism() const
-
-      Returns the parallelism parameter, or 0 if the algorithm does not offer a
-      parallelism option.
-
-   .. cpp:function:: size_t total_memory_usage() const
-
-      Return a guesstimate of the total number of bytes of memory consumed when
-      running this algorithm. If the function is not intended to be memory-hard
-      and uses an effictively fixed amount of memory when running, this function
-      returns 0.
-
-   .. cpp:function:: bool supports_keyed_operation() const
-
-      Returns true if this password hash supports supplying a secret key
-      to :cpp:func:`PasswordHash::hash`.
-
-   .. cpp:function:: bool supports_associated_data() const
-
-      Returns true if this password hash supports supplying associated data
-      to :cpp:func:`PasswordHash::hash`.
-
-The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
-
-.. cpp:class:: PasswordHashFamily
-
-   .. cpp:function:: static std::unique_ptr<PasswordHashFamily> create(const std::string& what)
-
-      For example "PBKDF2(SHA-256)", "Scrypt", "Argon2id". Returns null if the
-      algorithm is not available.
-
-   .. cpp:function:: std::unique_ptr<PasswordHash> default_params() const
-
-      Create a default instance of the password hashing algorithm. Be warned the
-      value returned here may change from release to release.
-
-   .. cpp:function:: std::unique_ptr<PasswordHash> tune( \
-                     size_t output_len, \
-                     std::chrono::milliseconds msec, \
-                     size_t max_memory_usage_mb = 0, \
-                     std::chrono::milliseconds tuning_msec = std::chrono::milliseconds(10)) const
-
-      Return a password hash instance tuned to run for approximately ``msec``
-      milliseconds when producing an output of length ``output_len``. (Accuracy
-      may vary, use the command line utility ``botan pbkdf_tune`` to check.)
-
-      The parameters will be selected to use at most *max_memory_usage_mb* megabytes
-      of memory, or if left as zero any size is allowed.
-
-      This function works by runing a short tuning loop to estimate the
-      performance of the algorithm, then scaling the parameters appropriately to
-      hit the target size. The length of time the tuning loop runs can be
-      controlled using the *tuning_msec* parameter.
-
-   .. cpp:function:: std::unique_ptr<PasswordHash> from_params( \
-         size_t i1, size_t i2 = 0, size_t i3 = 0) const
-
-      Create a password hash using some scheme specific format. Parameters are as follows:
-
-      * For PBKDF2, PGP-S2K, and Bcrypt-PBKDF, ``i1`` is iterations
-      * Scrypt uses ``i1`` == ``N``, ``i2`` == ``r``, and ``i3`` == ``p``
-      * Argon2 family uses ``i1`` == ``M``, ``i2`` == ``t``, and ``i3`` == ``p``
-
-      All unneeded parameters should be set to 0 or left blank.
+   .. doxygenclass:: Botan::PasswordHashFamily
+      :members: create,create_or_throw,default_params,tune,from_iterations,from_params
 
 Code Example
 ------------
@@ -249,46 +161,10 @@ In addition, this API requires the passphrase be entered as a
 ``std::string``, which means the secret will be stored in memory that
 will not be zeroed.
 
-.. cpp:class:: PBKDF
+API Overview
+^^^^^^^^^^^^
 
-   .. cpp:function:: static std::unique_ptr<PBKDF> create(const std::string& algo_spec, \
-                                                          const std::string& provider = "")
+.. container:: toggle
 
-      Return a newly created PBKDF object. The name should be in the
-      format "PBKDF2(HASHNAME)", "PBKDF2(HMAC(HASHNAME))", or
-      "OpenPGP-S2K".  Returns null if the algorithm is not available.
-
-   .. cpp:function:: void pbkdf_iterations(uint8_t out[], size_t out_len, \
-                            const std::string& passphrase, \
-                            const uint8_t salt[], size_t salt_len, \
-                            size_t iterations) const
-
-      Run the PBKDF algorithm for the specified number of iterations,
-      with the given salt, and write output to the buffer.
-
-   .. cpp:function:: void pbkdf_timed(uint8_t out[], size_t out_len, \
-                         const std::string& passphrase, \
-                         const uint8_t salt[], size_t salt_len, \
-                         std::chrono::milliseconds msec, \
-                         size_t& iterations) const
-
-      Choose (via short run-time benchmark) how many iterations to perform
-      in order to run for roughly msec milliseconds. Writes the number
-      of iterations used to reference argument.
-
-   .. cpp:function:: OctetString derive_key( \
-               size_t output_len, const std::string& passphrase, \
-               const uint8_t* salt, size_t salt_len, \
-               size_t iterations) const
-
-   Computes a key from *passphrase* and the *salt* (of length
-   *salt_len* bytes) using an algorithm-specific interpretation of
-   *iterations*, producing a key of length *output_len*.
-
-   Use an iteration count of at least 10000. The salt should be
-   randomly chosen by a good random number generator (see
-   :ref:`random_number_generators` for how), or at the very least
-   unique to this usage of the passphrase.
-
-   If you call this function again with the same parameters, you will
-   get the same key.
+   .. doxygenclass:: Botan::PBKDF
+      :members: pbkdf,pbkdf_iterations,pbkdf_timed,derive_key

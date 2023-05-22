@@ -92,19 +92,9 @@ hybrid approach which is thought to be highly secure. The algorithm designers
 recommend using Argon2id with ``t`` and ``p`` both equal to 1 and ``M`` set to
 the largest amount of memory usable in your environment.
 
-.. cpp:function:: std::string argon2_generate_pwhash(const char* password, size_t password_len, \
-                          RandomNumberGenerator& rng, \
-                          size_t p, size_t M, size_t t, \
-                          size_t y = 2, size_t salt_len = 16, size_t output_len = 32)
+.. doxygenfunction:: Botan::argon2_generate_pwhash
 
-   Generate an Argon2 hash of the specified password. The ``y`` parameter specifies
-   the variant: 0 for Argon2d, 1 for Argon2i, and 2 for Argon2id.
-
-.. cpp:function:: bool argon2_check_pwhash(const char* password, size_t password_len, \
-                                           const std::string& hash)
-
-   Verify an Argon2 password hash against the provided password. Returns false if
-   the input hash seems malformed or if the computed hash does not match.
+.. doxygenfunction:: Botan::argon2_check_pwhash
 
 Bcrypt
 ----------------------------------------
@@ -134,48 +124,9 @@ Bcrypt provides outputs that look like this::
    might cause interop problems if another library needs to validate the
    password hashes.)
 
-.. cpp:function:: std::string generate_bcrypt(const std::string& password, \
-                    RandomNumberGenerator& rng, \
-                    uint16_t work_factor = 12, \
-                    char bcrypt_version = "a")
+.. doxygenfunction:: Botan::generate_bcrypt
 
-   Takes the password to hash, a rng, and a work factor.
-   The resulting password hash is returned as a string.
-
-   Higher work factors increase the amount of time the algorithm runs,
-   increasing the cost of cracking attempts. The increase is exponential, so a
-   work factor of 12 takes roughly twice as long as work factor 11. The default
-   work factor was set to 10 up until the 2.8.0 release.
-
-   It is recommended to set the work factor as high as your system can tolerate
-   (from a performance and latency perspective) since higher work factors greatly
-   improve the security against GPU-based attacks.  For example, for protecting
-   high value administrator passwords, consider using work factor 15 or 16; at
-   these work factors each bcrypt computation takes several seconds. Since admin
-   logins will be relatively uncommon, it might be acceptable for each login
-   attempt to take some time. As of 2018, a good password cracking rig (with 8
-   NVIDIA 1080 cards) can attempt about 1 billion bcrypt computations per month
-   for work factor 13. For work factor 12, it can do twice as many.  For work
-   factor 15, it can do only one quarter as many attempts.
-
-   Due to bugs affecting various implementations of bcrypt, several different
-   variants of the algorithm are defined. As of 2.7.0 Botan supports generating
-   (or checking) the 2a, 2b, and 2y variants.  Since Botan has never been
-   affected by any of the bugs which necessitated these version upgrades, all
-   three versions are identical beyond the version identifier. Which variant to
-   use is controlled by the ``bcrypt_version`` argument.
-
-   The bcrypt work factor must be at least 4 (though at this work factor bcrypt
-   is not very secure). The bcrypt format allows up to 31, but Botan currently
-   rejects all work factors greater than 18 since even that work factor requires
-   roughly 15 seconds of computation on a fast machine.
-
-.. cpp:function:: bool check_bcrypt(const std::string& password, \
-   const std::string& hash)
-
-   Takes a password and a bcrypt output and returns true if the
-   password is the same as the one that was used to generate the
-   bcrypt hash.
+.. doxygenfunction:: Botan::check_bcrypt
 
 .. _passhash9:
 
@@ -198,18 +149,6 @@ being a widely used password hash. Prefer bcrypt or Argon2.
    This password format string ("$9$") conflicts with the format used
    for scrypt password hashes on Cisco systems.
 
-.. cpp:function:: std::string generate_passhash9(const std::string& password, \
-   RandomNumberGenerator& rng, uint16_t work_factor = 15, uint8_t alg_id = 4)
+.. doxygenfunction:: Botan::generate_passhash9
 
-   Functions much like ``generate_bcrypt``. The last parameter,
-   ``alg_id``, specifies which PRF to use. Currently defined values are
-   0: HMAC(SHA-1), 1: HMAC(SHA-256), 2: CMAC(Blowfish), 3: HMAC(SHA-384), 4: HMAC(SHA-512)
-
-   The work factor must be greater than zero and less than 512. This performs
-   10000 * ``work_factor`` PBKDF2 iterations, using 96 bits of salt taken from
-   ``rng``. Using work factor of 10 or more is recommended.
-
-.. cpp:function:: bool check_passhash9(const std::string& password, \
-   const std::string& hash)
-
-   Functions much like ``check_bcrypt``
+.. doxygenfunction:: Botan::check_passhash9

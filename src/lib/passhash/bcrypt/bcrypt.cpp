@@ -153,7 +153,7 @@ std::string make_bcrypt(std::string_view pass,
 
 }
 
-std::string generate_bcrypt(std::string_view pass,
+std::string generate_bcrypt(std::string_view password,
                             RandomNumberGenerator& rng,
                             uint16_t work_factor,
                             char version)
@@ -168,7 +168,7 @@ std::string generate_bcrypt(std::string_view pass,
 
    std::vector<uint8_t> salt;
    rng.random_vec(salt, 16);
-   return make_bcrypt(pass, salt, work_factor, version);
+   return make_bcrypt(password, salt, work_factor, version);
    }
 
 bool check_bcrypt(std::string_view pass, std::string_view hash)

@@ -26,74 +26,6 @@ The Botan MAC computation is split into five stages.
 #. Process data.
 #. Finalize the MAC computation.
 
-.. cpp:class:: MessageAuthenticationCode
-
-  .. cpp:function:: std::string name() const
-
-     Returns a human-readable string of the name of this algorithm.
-
-  .. cpp:function:: void clear()
-
-     Clear the key.
-
-  .. cpp:function:: std::unique_ptr<MessageAuthenticationCode> new_object() const
-
-     Return a newly allocated object of the same type as this one.
-     The new object is unkeyed.
-
-  .. cpp:function:: void set_key(const uint8_t* key, size_t length)
-
-    Set the shared MAC key for the calculation. This function has to be called before the data is processed.
-
-  .. cpp:function:: bool valid_keylength(size_t length) const
-
-     This function returns true if and only if *length* is a valid
-     keylength for the algorithm.
-
-  .. cpp:function:: size_t minimum_keylength() const
-
-     Return the smallest key length (in bytes) that is acceptable for the
-     algorithm.
-
-  .. cpp:function:: size_t maximum_keylength() const
-
-     Return the largest key length (in bytes) that is acceptable for the
-     algorithm.
-
-  .. cpp:function:: void start(const uint8_t* nonce, size_t nonce_len)
-
-    Set the IV for the MAC calculation. Note that not all MAC algorithms require an IV.
-    If an IV is required, the function has to be called before the data is processed.
-    For algorithms that don't require it, the call can be omitted, or else called
-    with ``nonce_len`` of zero.
-
-  .. cpp:function:: void update(const uint8_t* input, size_t length)
-
-     Process the passed data.
-
-  .. cpp:function:: void update(const secure_vector<uint8_t>& in)
-
-    Process the passed data.
-
-  .. cpp:function:: void update(uint8_t in)
-
-    Process a single byte.
-
-  .. cpp:function:: void final(uint8_t* out)
-
-    Complete the MAC computation and write the calculated tag to the passed byte array.
-
-  .. cpp:function:: secure_vector<uint8_t> final()
-
-    Complete the MAC computation and return the calculated tag.
-
-  .. cpp:function:: bool verify_mac(const uint8_t* mac, size_t length)
-
-    Finalize the current MAC computation and compare the result to the passed
-    ``mac``. Returns ``true``, if the verification is successful and false
-    otherwise.
-
-
 Code Examples
 ------------------------
 
@@ -114,6 +46,12 @@ data to demonstrate a MAC verification failure.
 
 .. literalinclude:: /../src/examples/cmac.cpp
    :language: cpp
+
+API Overview
+------------
+
+.. doxygenclass:: Botan::MessageAuthenticationCode
+   :members: create,create_or_throw,set_key,minimum_keylength,maximum_keylength,start,update,final,verify_mac
 
 Available MACs
 ------------------------------------------
