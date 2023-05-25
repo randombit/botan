@@ -9,15 +9,14 @@
 #define BOTAN_MLOCK_ALLOCATOR_H_
 
 #include <botan/types.h>
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace Botan {
 
 class Memory_Pool;
 
-class mlock_allocator final
-   {
+class mlock_allocator final {
    public:
       static mlock_allocator& instance();
 
@@ -36,8 +35,8 @@ class mlock_allocator final
    private:
       std::unique_ptr<Memory_Pool> m_pool;
       std::vector<void*> m_locked_pages;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

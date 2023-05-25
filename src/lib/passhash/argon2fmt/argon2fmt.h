@@ -14,13 +14,15 @@ namespace Botan {
 
 class RandomNumberGenerator;
 
-std::string BOTAN_PUBLIC_API(2,11)
-   argon2_generate_pwhash(const char* password, size_t password_len,
-                          RandomNumberGenerator& rng,
-                          size_t p, size_t M, size_t t,
-                          uint8_t y = 2,
-                          size_t salt_len = 16,
-                          size_t output_len = 32);
+std::string BOTAN_PUBLIC_API(2, 11) argon2_generate_pwhash(const char* password,
+                                                           size_t password_len,
+                                                           RandomNumberGenerator& rng,
+                                                           size_t p,
+                                                           size_t M,
+                                                           size_t t,
+                                                           uint8_t y = 2,
+                                                           size_t salt_len = 16,
+                                                           size_t output_len = 32);
 
 /**
 * Check a previously created password hash
@@ -28,9 +30,8 @@ std::string BOTAN_PUBLIC_API(2,11)
 * @param password_len the length of password
 * @param hash the stored hash to check against
 */
-bool BOTAN_PUBLIC_API(2,11) argon2_check_pwhash(const char* password, size_t password_len,
-                                                std::string_view hash);
+bool BOTAN_PUBLIC_API(2, 11) argon2_check_pwhash(const char* password, size_t password_len, std::string_view hash);
 
-}
+}  // namespace Botan
 
 #endif

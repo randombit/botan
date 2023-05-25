@@ -7,75 +7,59 @@
 
 #include <botan/internal/sha2_64.h>
 
-#include <botan/internal/sha2_64_f.h>
-#include <botan/internal/loadstor.h>
-#include <botan/internal/rotate.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/cpuid.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
+#include <botan/internal/sha2_64_f.h>
 
 namespace Botan {
 
 namespace {
 
-std::string sha512_provider()
-   {
+std::string sha512_provider() {
 #if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has_bmi2())
-      {
+   if(CPUID::has_bmi2()) {
       return "bmi2";
-      }
+   }
 #endif
 
    return "base";
-   }
-
 }
 
-std::unique_ptr<HashFunction> SHA_384::copy_state() const
-   {
-   return std::make_unique<SHA_384>(*this);
-   }
+}  // namespace
 
-std::unique_ptr<HashFunction> SHA_512::copy_state() const
-   {
-   return std::make_unique<SHA_512>(*this);
-   }
+std::unique_ptr<HashFunction> SHA_384::copy_state() const { return std::make_unique<SHA_384>(*this); }
 
-std::unique_ptr<HashFunction> SHA_512_256::copy_state() const
-   {
-   return std::make_unique<SHA_512_256>(*this);
-   }
+std::unique_ptr<HashFunction> SHA_512::copy_state() const { return std::make_unique<SHA_512>(*this); }
+
+std::unique_ptr<HashFunction> SHA_512_256::copy_state() const { return std::make_unique<SHA_512_256>(*this); }
 
 /*
 * SHA-{384,512} Compression Function
 */
 //static
-void SHA_512::compress_digest(secure_vector<uint64_t>& digest,
-                              const uint8_t input[], size_t blocks)
-   {
+void SHA_512::compress_digest(secure_vector<uint64_t>& digest, const uint8_t input[], size_t blocks) {
 #if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has_bmi2())
-      {
+   if(CPUID::has_bmi2()) {
       return compress_digest_bmi2(digest, input, blocks);
-      }
+   }
 #endif
 
-   uint64_t A = digest[0], B = digest[1], C = digest[2],
-            D = digest[3], E = digest[4], F = digest[5],
-            G = digest[6], H = digest[7];
+   uint64_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4], F = digest[5], G = digest[6],
+            H = digest[7];
 
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      uint64_t W00 = load_be<uint64_t>(input,  0);
-      uint64_t W01 = load_be<uint64_t>(input,  1);
-      uint64_t W02 = load_be<uint64_t>(input,  2);
-      uint64_t W03 = load_be<uint64_t>(input,  3);
-      uint64_t W04 = load_be<uint64_t>(input,  4);
-      uint64_t W05 = load_be<uint64_t>(input,  5);
-      uint64_t W06 = load_be<uint64_t>(input,  6);
-      uint64_t W07 = load_be<uint64_t>(input,  7);
-      uint64_t W08 = load_be<uint64_t>(input,  8);
-      uint64_t W09 = load_be<uint64_t>(input,  9);
+   for(size_t i = 0; i != blocks; ++i) {
+      uint64_t W00 = load_be<uint64_t>(input, 0);
+      uint64_t W01 = load_be<uint64_t>(input, 1);
+      uint64_t W02 = load_be<uint64_t>(input, 2);
+      uint64_t W03 = load_be<uint64_t>(input, 3);
+      uint64_t W04 = load_be<uint64_t>(input, 4);
+      uint64_t W05 = load_be<uint64_t>(input, 5);
+      uint64_t W06 = load_be<uint64_t>(input, 6);
+      uint64_t W07 = load_be<uint64_t>(input, 7);
+      uint64_t W08 = load_be<uint64_t>(input, 8);
+      uint64_t W09 = load_be<uint64_t>(input, 9);
       uint64_t W10 = load_be<uint64_t>(input, 10);
       uint64_t W11 = load_be<uint64_t>(input, 11);
       uint64_t W12 = load_be<uint64_t>(input, 12);
@@ -174,58 +158,32 @@ void SHA_512::compress_digest(secure_vector<uint64_t>& digest,
       H = (digest[7] += H);
 
       input += 128;
-      }
    }
+}
 
 #undef SHA2_64_F
 
-std::string SHA_512_256::provider() const
-   {
-   return sha512_provider();
-   }
+std::string SHA_512_256::provider() const { return sha512_provider(); }
 
-std::string SHA_384::provider() const
-   {
-   return sha512_provider();
-   }
+std::string SHA_384::provider() const { return sha512_provider(); }
 
-std::string SHA_512::provider() const
-   {
-   return sha512_provider();
-   }
+std::string SHA_512::provider() const { return sha512_provider(); }
 
-void SHA_512_256::compress_n(const uint8_t input[], size_t blocks)
-   {
+void SHA_512_256::compress_n(const uint8_t input[], size_t blocks) {
    SHA_512::compress_digest(m_digest, input, blocks);
-   }
+}
 
-void SHA_384::compress_n(const uint8_t input[], size_t blocks)
-   {
-   SHA_512::compress_digest(m_digest, input, blocks);
-   }
+void SHA_384::compress_n(const uint8_t input[], size_t blocks) { SHA_512::compress_digest(m_digest, input, blocks); }
 
-void SHA_512::compress_n(const uint8_t input[], size_t blocks)
-   {
-   SHA_512::compress_digest(m_digest, input, blocks);
-   }
+void SHA_512::compress_n(const uint8_t input[], size_t blocks) { SHA_512::compress_digest(m_digest, input, blocks); }
 
-void SHA_512_256::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
+void SHA_512_256::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
 
-void SHA_384::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
+void SHA_384::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
 
-void SHA_512::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
+void SHA_512::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
 
-void SHA_512_256::clear()
-   {
+void SHA_512_256::clear() {
    MDx_HashFunction::clear();
    m_digest[0] = 0x22312194FC2BF72C;
    m_digest[1] = 0x9F555FA3C84C64C2;
@@ -235,10 +193,9 @@ void SHA_512_256::clear()
    m_digest[5] = 0xBE5E1E2553863992;
    m_digest[6] = 0x2B0199FC2C85B8AA;
    m_digest[7] = 0x0EB72DDC81C52CA2;
-   }
+}
 
-void SHA_384::clear()
-   {
+void SHA_384::clear() {
    MDx_HashFunction::clear();
    m_digest[0] = 0xCBBB9D5DC1059ED8;
    m_digest[1] = 0x629A292A367CD507;
@@ -248,10 +205,9 @@ void SHA_384::clear()
    m_digest[5] = 0x8EB44A8768581511;
    m_digest[6] = 0xDB0C2E0D64F98FA7;
    m_digest[7] = 0x47B5481DBEFA4FA4;
-   }
+}
 
-void SHA_512::clear()
-   {
+void SHA_512::clear() {
    MDx_HashFunction::clear();
    m_digest[0] = 0x6A09E667F3BCC908;
    m_digest[1] = 0xBB67AE8584CAA73B;
@@ -261,6 +217,6 @@ void SHA_512::clear()
    m_digest[5] = 0x9B05688C2B3E6C1F;
    m_digest[6] = 0x1F83D9ABFB41BD6B;
    m_digest[7] = 0x5BE0CD19137E2179;
-   }
-
 }
+
+}  // namespace Botan

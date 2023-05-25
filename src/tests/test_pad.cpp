@@ -14,53 +14,42 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
 
-class Cipher_Mode_Padding_Tests final : public Text_Based_Test
-   {
+class Cipher_Mode_Padding_Tests final : public Text_Based_Test {
    public:
       Cipher_Mode_Padding_Tests() : Text_Based_Test("pad.vec", "In,Blocksize", "Out") {}
 
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) override
-         {
-         const std::vector<uint8_t> input    = vars.get_req_bin("In");
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
+         const std::vector<uint8_t> input = vars.get_req_bin("In");
          const std::vector<uint8_t> expected = vars.get_opt_bin("Out");
          const size_t block_size = vars.get_req_sz("Blocksize");
 
          std::string algo = header;
 
          auto underscore = algo.find('_');
-         if(underscore != std::string::npos)
-            {
-            if(algo.substr(underscore + 1, std::string::npos) != "Invalid")
-               {
+         if(underscore != std::string::npos) {
+            if(algo.substr(underscore + 1, std::string::npos) != "Invalid") {
                throw Test_Error("Unexpected padding header " + header);
-               }
-            algo = algo.substr(0, underscore);
             }
+            algo = algo.substr(0, underscore);
+         }
 
          Test::Result result(algo);
 
          auto pad = Botan::BlockCipherModePaddingMethod::create(algo);
 
-         if(!pad)
-            {
+         if(!pad) {
             result.test_failure("Invalid padding method: " + algo);
             return result;
-            }
+         }
 
-         if(expected.empty())
-            {
+         if(expected.empty()) {
             // This is an unpad an invalid input and ensure we reject
-            if(pad->unpad(input.data(), block_size) != block_size)
-               {
+            if(pad->unpad(input.data(), block_size) != block_size) {
                result.test_failure("Did not reject invalid padding", Botan::hex_encode(input));
-               }
-            else
-               {
+            } else {
                result.test_success("Rejected invalid padding");
-               }
             }
-         else
-            {
+         } else {
             // This is a pad plaintext and unpad valid padding round trip test
             Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
             pad->add_padding(buf, input.size() % block_size, block_size);
@@ -70,16 +59,16 @@ class Cipher_Mode_Padding_Tests final : public Text_Based_Test
 
             const size_t last_block = (buf.size() < block_size) ? 0 : buf.size() - block_size;
             const size_t pad_bytes = block_size - pad->unpad(&buf[last_block], block_size);
-            buf.resize(buf.size() - pad_bytes); // remove padding
+            buf.resize(buf.size() - pad_bytes);  // remove padding
             result.test_eq("unpad", buf, input);
-            }
+         }
 
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("modes", "bc_pad", Cipher_Mode_Padding_Tests);
 
 #endif
 
-}
+}  // namespace Botan_Tests

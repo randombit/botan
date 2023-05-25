@@ -7,15 +7,15 @@
 #ifndef BOTAN_ASN1_OBJECT_TYPES_H_
 #define BOTAN_ASN1_OBJECT_TYPES_H_
 
-#include <botan/secmem.h>
 #include <botan/exceptn.h>
-#include <string_view>
-#include <vector>
-#include <string>
+#include <botan/secmem.h>
 #include <chrono>
-#include <unordered_map>
-#include <optional>
 #include <iosfwd>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
 
 namespace Botan {
 
@@ -26,71 +26,60 @@ class DER_Encoder;
 * ASN.1 Class Tags
 */
 enum class ASN1_Class : uint32_t {
-   Universal        = 0b0000'0000,
-   Application      = 0b0100'0000,
-   ContextSpecific  = 0b1000'0000,
-   Private          = 0b1100'0000,
+   Universal = 0b0000'0000,
+   Application = 0b0100'0000,
+   ContextSpecific = 0b1000'0000,
+   Private = 0b1100'0000,
 
-   Constructed      = 0b0010'0000,
+   Constructed = 0b0010'0000,
    ExplicitContextSpecific = Constructed | ContextSpecific,
 
-   NoObject        = 0xFF00
+   NoObject = 0xFF00
 };
 
 /**
 * ASN.1 Type Tags
 */
 enum class ASN1_Type : uint32_t {
-   Eoc              = 0x00,
-   Boolean          = 0x01,
-   Integer          = 0x02,
-   BitString        = 0x03,
-   OctetString      = 0x04,
-   Null             = 0x05,
-   ObjectId         = 0x06,
-   Enumerated       = 0x0A,
-   Sequence         = 0x10,
-   Set              = 0x11,
+   Eoc = 0x00,
+   Boolean = 0x01,
+   Integer = 0x02,
+   BitString = 0x03,
+   OctetString = 0x04,
+   Null = 0x05,
+   ObjectId = 0x06,
+   Enumerated = 0x0A,
+   Sequence = 0x10,
+   Set = 0x11,
 
-   Utf8String       = 0x0C,
-   NumericString    = 0x12,
-   PrintableString  = 0x13,
-   TeletexString    = 0x14,
-   Ia5String        = 0x16,
-   VisibleString    = 0x1A,
-   UniversalString  = 0x1C,
-   BmpString        = 0x1E,
+   Utf8String = 0x0C,
+   NumericString = 0x12,
+   PrintableString = 0x13,
+   TeletexString = 0x14,
+   Ia5String = 0x16,
+   VisibleString = 0x1A,
+   UniversalString = 0x1C,
+   BmpString = 0x1E,
 
-   UtcTime          = 0x17,
-   GeneralizedTime  = 0x18,
+   UtcTime = 0x17,
+   GeneralizedTime = 0x18,
 
-   NoObject         = 0xFF00,
+   NoObject = 0xFF00,
 };
 
-inline bool intersects(ASN1_Class x, ASN1_Class y)
-   {
-   return static_cast<uint32_t>(x) & static_cast<uint32_t>(y);
-   }
+inline bool intersects(ASN1_Class x, ASN1_Class y) { return static_cast<uint32_t>(x) & static_cast<uint32_t>(y); }
 
-inline ASN1_Type operator|(ASN1_Type x, ASN1_Type y)
-   {
+inline ASN1_Type operator|(ASN1_Type x, ASN1_Type y) {
    return static_cast<ASN1_Type>(static_cast<uint32_t>(x) | static_cast<uint32_t>(y));
-   }
+}
 
-inline ASN1_Class operator|(ASN1_Class x, ASN1_Class y)
-   {
+inline ASN1_Class operator|(ASN1_Class x, ASN1_Class y) {
    return static_cast<ASN1_Class>(static_cast<uint32_t>(x) | static_cast<uint32_t>(y));
-   }
+}
 
-inline uint32_t operator|(ASN1_Type x, ASN1_Class y)
-   {
-   return static_cast<uint32_t>(x) | static_cast<uint32_t>(y);
-   }
+inline uint32_t operator|(ASN1_Type x, ASN1_Class y) { return static_cast<uint32_t>(x) | static_cast<uint32_t>(y); }
 
-inline uint32_t operator|(ASN1_Class x, ASN1_Type y)
-   {
-    return static_cast<uint32_t>(x) | static_cast<uint32_t>(y);
-   }
+inline uint32_t operator|(ASN1_Class x, ASN1_Type y) { return static_cast<uint32_t>(x) | static_cast<uint32_t>(y); }
 
 std::string BOTAN_UNSTABLE_API asn1_tag_to_string(ASN1_Type type);
 std::string BOTAN_UNSTABLE_API asn1_class_to_string(ASN1_Class type);
@@ -98,8 +87,7 @@ std::string BOTAN_UNSTABLE_API asn1_class_to_string(ASN1_Class type);
 /**
 * Basic ASN.1 Object Interface
 */
-class BOTAN_PUBLIC_API(2,0) ASN1_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) ASN1_Object {
    public:
       /**
       * Encode whatever this object is into to
@@ -122,15 +110,14 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Object
 
       ASN1_Object() = default;
       ASN1_Object(const ASN1_Object&) = default;
-      ASN1_Object & operator=(const ASN1_Object&) = default;
+      ASN1_Object& operator=(const ASN1_Object&) = default;
       virtual ~ASN1_Object() = default;
-   };
+};
 
 /**
 * BER Encoded Object
 */
-class BOTAN_PUBLIC_API(2,0) BER_Object final
-   {
+class BOTAN_PUBLIC_API(2, 0) BER_Object final {
    public:
       BER_Object() : m_type_tag(ASN1_Type::NoObject), m_class_tag(ASN1_Class::Universal) {}
 
@@ -147,17 +134,18 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
       uint32_t tagging() const { return type_tag() | class_tag(); }
 
       ASN1_Type type_tag() const { return m_type_tag; }
+
       ASN1_Class class_tag() const { return m_class_tag; }
 
       ASN1_Type type() const { return m_type_tag; }
+
       ASN1_Class get_class() const { return m_class_tag; }
 
       const uint8_t* bits() const { return m_value.data(); }
 
       size_t length() const { return m_value.size(); }
 
-      void assert_is_a(ASN1_Type type_tag, ASN1_Class class_tag,
-                       std::string_view descr = "object") const;
+      void assert_is_a(ASN1_Type type_tag, ASN1_Class class_tag, std::string_view descr = "object") const;
 
       bool is_a(ASN1_Type type_tag, ASN1_Class class_tag) const;
 
@@ -172,12 +160,11 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
 
       void set_tagging(ASN1_Type type_tag, ASN1_Class class_tag);
 
-      uint8_t* mutable_bits(size_t length)
-         {
+      uint8_t* mutable_bits(size_t length) {
          m_value.resize(length);
          return m_value.data();
-         }
-   };
+      }
+};
 
 /*
 * ASN.1 Utility Functions
@@ -196,33 +183,29 @@ std::string to_string(const BER_Object& obj);
 */
 bool maybe_BER(DataSource& src);
 
-}
+}  // namespace ASN1
 
 /**
 * General BER Decoding Error Exception
 */
-class BOTAN_PUBLIC_API(2,0) BER_Decoding_Error : public Decoding_Error
-   {
+class BOTAN_PUBLIC_API(2, 0) BER_Decoding_Error : public Decoding_Error {
    public:
       explicit BER_Decoding_Error(std::string_view);
-   };
+};
 
 /**
 * Exception For Incorrect BER Taggings
 */
-class BOTAN_PUBLIC_API(2,0) BER_Bad_Tag final : public BER_Decoding_Error
-   {
+class BOTAN_PUBLIC_API(2, 0) BER_Bad_Tag final : public BER_Decoding_Error {
    public:
       BER_Bad_Tag(std::string_view msg, uint32_t tagging);
-   };
+};
 
 /**
 * This class represents ASN.1 object identifiers.
 */
-class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
    public:
-
       /**
       * Create an uninitialied OID object
       */
@@ -237,20 +220,16 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       /**
       * Initialize an OID from a sequence of integer values
       */
-      explicit OID(std::initializer_list<uint32_t> init) : m_id(init)
-         {
-         BOTAN_ARG_CHECK(m_id.size() > 2 && m_id[0] <= 2 && (m_id[0] != 2 || m_id[1] <= 39),
-                         "Invalid OID");
-         }
+      explicit OID(std::initializer_list<uint32_t> init) : m_id(init) {
+         BOTAN_ARG_CHECK(m_id.size() > 2 && m_id[0] <= 2 && (m_id[0] != 2 || m_id[1] <= 39), "Invalid OID");
+      }
 
       /**
       * Initialize an OID from a vector of integer values
       */
-      explicit OID(std::vector<uint32_t>&& init) : m_id(init)
-         {
-         BOTAN_ARG_CHECK(m_id.size() > 2 && m_id[0] <= 2 && (m_id[0] != 2 || m_id[1] <= 39),
-                         "Invalid OID");
-         }
+      explicit OID(std::vector<uint32_t>&& init) : m_id(init) {
+         BOTAN_ARG_CHECK(m_id.size() > 2 && m_id[0] <= 2 && (m_id[0] != 2 || m_id[1] <= 39), "Invalid OID");
+      }
 
       /**
       * Construct an OID from a string.
@@ -321,17 +300,14 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       * Compare two OIDs.
       * @return true if they are equal, false otherwise
       */
-      bool operator==(const OID& other) const
-         {
-         return m_id == other.m_id;
-         }
+      bool operator==(const OID& other) const { return m_id == other.m_id; }
 
    private:
       std::unordered_map<std::string, std::string> load_oid2str_map();
       std::unordered_map<std::string, OID> load_str2oid_map();
 
       std::vector<uint32_t> m_id;
-   };
+};
 
 std::ostream& operator<<(std::ostream& out, const OID& oid);
 
@@ -341,10 +317,7 @@ std::ostream& operator<<(std::ostream& out, const OID& oid);
 * @param b the second OID
 * @return true if a is not equal to b
 */
-inline bool operator!=(const OID& a, const OID& b)
-   {
-   return !(a == b);
-   }
+inline bool operator!=(const OID& a, const OID& b) { return !(a == b); }
 
 /**
 * Compare two OIDs.
@@ -352,13 +325,12 @@ inline bool operator!=(const OID& a, const OID& b)
 * @param b the second OID
 * @return true if a is lexicographically smaller than b
 */
-bool BOTAN_PUBLIC_API(2,0) operator<(const OID& a, const OID& b);
+bool BOTAN_PUBLIC_API(2, 0) operator<(const OID& a, const OID& b);
 
 /**
 * Time (GeneralizedTime/UniversalTime)
 */
-class BOTAN_PUBLIC_API(2,0) ASN1_Time final : public ASN1_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) ASN1_Time final : public ASN1_Object {
    public:
       /// DER encode a ASN1_Time
       void encode_into(DER_Encoder&) const override;
@@ -407,17 +379,17 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Time final : public ASN1_Object
       uint32_t m_minute = 0;
       uint32_t m_second = 0;
       ASN1_Type m_tag = ASN1_Type::NoObject;
-   };
+};
 
 /*
 * Comparison Operations
 */
-bool BOTAN_PUBLIC_API(2,0) operator==(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2,0) operator!=(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2,0) operator<=(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2,0) operator>=(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2,0) operator<(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2,0) operator>(const ASN1_Time&, const ASN1_Time&);
+bool BOTAN_PUBLIC_API(2, 0) operator==(const ASN1_Time&, const ASN1_Time&);
+bool BOTAN_PUBLIC_API(2, 0) operator!=(const ASN1_Time&, const ASN1_Time&);
+bool BOTAN_PUBLIC_API(2, 0) operator<=(const ASN1_Time&, const ASN1_Time&);
+bool BOTAN_PUBLIC_API(2, 0) operator>=(const ASN1_Time&, const ASN1_Time&);
+bool BOTAN_PUBLIC_API(2, 0) operator<(const ASN1_Time&, const ASN1_Time&);
+bool BOTAN_PUBLIC_API(2, 0) operator>(const ASN1_Time&, const ASN1_Time&);
 
 typedef ASN1_Time X509_Time;
 
@@ -425,8 +397,7 @@ typedef ASN1_Time X509_Time;
 * ASN.1 string type
 * This class normalizes all inputs to a UTF-8 std::string
 */
-class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) ASN1_String final : public ASN1_Object {
    public:
       void encode_into(DER_Encoder&) const override;
       void decode_from(BER_Decoder&) override;
@@ -444,22 +415,21 @@ class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
       */
       static bool is_string_type(ASN1_Type tag);
 
-      bool operator==(const ASN1_String& other) const
-         { return value() == other.value(); }
+      bool operator==(const ASN1_String& other) const { return value() == other.value(); }
 
       explicit ASN1_String(std::string_view utf8 = "");
       ASN1_String(std::string_view utf8, ASN1_Type tag);
+
    private:
       std::vector<uint8_t> m_data;
       std::string m_utf8_str;
       ASN1_Type m_tag;
-   };
+};
 
 /**
 * Algorithm Identifier
 */
-class BOTAN_PUBLIC_API(2,0) AlgorithmIdentifier final : public ASN1_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) AlgorithmIdentifier final : public ASN1_Object {
    public:
       enum Encoding_Option { USE_NULL_PARAM, USE_EMPTY_PARAM };
 
@@ -475,40 +445,36 @@ class BOTAN_PUBLIC_API(2,0) AlgorithmIdentifier final : public ASN1_Object
       AlgorithmIdentifier(std::string_view oid_name, const std::vector<uint8_t>& params);
 
       const OID& oid() const { return m_oid; }
+
       const std::vector<uint8_t>& parameters() const { return m_parameters; }
 
       BOTAN_DEPRECATED("Use AlgorithmIdentifier::oid")
+
       const OID& get_oid() const { return m_oid; }
 
       BOTAN_DEPRECATED("Use AlgorithmIdentifier::parameters")
+
       const std::vector<uint8_t>& get_parameters() const { return m_parameters; }
 
       bool parameters_are_null() const;
+
       bool parameters_are_empty() const { return m_parameters.empty(); }
 
-      bool parameters_are_null_or_empty() const
-         {
-         return parameters_are_empty() || parameters_are_null();
-         }
+      bool parameters_are_null_or_empty() const { return parameters_are_empty() || parameters_are_null(); }
 
-      bool empty() const
-         {
-         return m_oid.empty() && m_parameters.empty();
-         }
+      bool empty() const { return m_oid.empty() && m_parameters.empty(); }
 
    private:
       OID m_oid;
       std::vector<uint8_t> m_parameters;
-   };
+};
 
 /*
 * Comparison Operations
 */
-bool BOTAN_PUBLIC_API(2,0) operator==(const AlgorithmIdentifier&,
-                                      const AlgorithmIdentifier&);
-bool BOTAN_PUBLIC_API(2,0) operator!=(const AlgorithmIdentifier&,
-                                      const AlgorithmIdentifier&);
+bool BOTAN_PUBLIC_API(2, 0) operator==(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
+bool BOTAN_PUBLIC_API(2, 0) operator!=(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
 
-}
+}  // namespace Botan
 
 #endif

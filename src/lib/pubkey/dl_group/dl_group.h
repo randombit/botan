@@ -41,8 +41,7 @@ enum class DL_Group_Format {
 * modulus p, a generator g, and (optionally) a prime q which is a
 * factor of (p-1). In most cases g generates the order-q subgroup.
 */
-class BOTAN_PUBLIC_API(2,0) DL_Group final
-   {
+class BOTAN_PUBLIC_API(2, 0) DL_Group final {
    public:
       /**
       * Determine the prime creation for DL groups.
@@ -86,8 +85,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * @param qbits the number of bits of q. Leave it as 0 to have
       * the value determined according to pbits.
       */
-      DL_Group(RandomNumberGenerator& rng, PrimeType type,
-               size_t pbits, size_t qbits = 0);
+      DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, size_t qbits = 0);
 
       /**
       * Create a DSA group with a given seed.
@@ -96,9 +94,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * @param pbits the desired bit size of the prime p
       * @param qbits the desired bit size of the prime q.
       */
-      DL_Group(RandomNumberGenerator& rng,
-               const std::vector<uint8_t>& seed,
-               size_t pbits = 1024, size_t qbits = 0);
+      DL_Group(RandomNumberGenerator& rng, const std::vector<uint8_t>& seed, size_t pbits = 1024, size_t qbits = 0);
 
       /**
       * Create a DL group.
@@ -123,9 +119,9 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       /**
       * Decode a BER-encoded DL group param
       */
-      template<typename Alloc>
-         DL_Group(const std::vector<uint8_t, Alloc>& ber, DL_Group_Format format) :
-         DL_Group(ber.data(), ber.size(), format) {}
+      template <typename Alloc>
+      DL_Group(const std::vector<uint8_t, Alloc>& ber, DL_Group_Format format) :
+            DL_Group(ber.data(), ber.size(), format) {}
 
       /**
       * Get the prime p.
@@ -359,22 +355,19 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       static std::shared_ptr<DL_Group_Data> DL_group_info(std::string_view name);
 
    private:
-      static std::shared_ptr<DL_Group_Data> load_DL_group_info(const char* p_str,
-                                                               const char* q_str,
-                                                               const char* g_str);
+      static std::shared_ptr<DL_Group_Data> load_DL_group_info(const char* p_str, const char* q_str, const char* g_str);
 
-      static std::shared_ptr<DL_Group_Data> load_DL_group_info(const char* p_str,
-                                                               const char* g_str);
+      static std::shared_ptr<DL_Group_Data> load_DL_group_info(const char* p_str, const char* g_str);
 
-      static std::shared_ptr<DL_Group_Data>
-         BER_decode_DL_group(const uint8_t data[], size_t data_len,
-                             DL_Group_Format format,
-                             DL_Group_Source source);
+      static std::shared_ptr<DL_Group_Data> BER_decode_DL_group(const uint8_t data[],
+                                                                size_t data_len,
+                                                                DL_Group_Format format,
+                                                                DL_Group_Source source);
 
       const DL_Group_Data& data() const;
       std::shared_ptr<DL_Group_Data> m_data;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

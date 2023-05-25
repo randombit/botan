@@ -9,11 +9,11 @@
 #define BOTAN_PARSING_UTILS_H_
 
 #include <botan/types.h>
-#include <string_view>
-#include <string>
-#include <vector>
 #include <istream>
 #include <map>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace Botan {
 
@@ -22,8 +22,7 @@ namespace Botan {
 * @param scan_name the name
 * @return the name components
 */
-std::vector<std::string>
-parse_algorithm_name(std::string_view scan_name);
+std::vector<std::string> parse_algorithm_name(std::string_view scan_name);
 
 /**
 * Split a string
@@ -31,8 +30,7 @@ parse_algorithm_name(std::string_view scan_name);
 * @param delim the delimitor
 * @return string split by delim
 */
-BOTAN_TEST_API std::vector<std::string> split_on(
-   std::string_view str, char delim);
+BOTAN_TEST_API std::vector<std::string> split_on(std::string_view str, char delim);
 
 /**
 * Join a string
@@ -40,8 +38,7 @@ BOTAN_TEST_API std::vector<std::string> split_on(
 * @param delim the delimitor
 * @return string joined by delim
 */
-std::string string_join(const std::vector<std::string>& strs,
-                        char delim);
+std::string string_join(const std::vector<std::string>& strs, char delim);
 
 /**
 * Convert a decimal string to a number
@@ -97,10 +94,8 @@ std::string tolower_string(std::string_view s);
 * Check if the given hostname is a match for the specified wildcard
 */
 BOTAN_TEST_API
-bool host_wildcard_match(std::string_view wildcard,
-                         std::string_view host);
+bool host_wildcard_match(std::string_view wildcard, std::string_view host);
 
-
-}
+}  // namespace Botan
 
 #endif

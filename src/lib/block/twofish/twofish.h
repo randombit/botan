@@ -15,17 +15,19 @@ namespace Botan {
 /**
 * Twofish, an AES finalist
 */
-class Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
-   {
+class Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8> {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
+
       std::string name() const override { return "Twofish"; }
+
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Twofish>(); }
 
       bool has_keying_material() const override;
+
    private:
       void key_schedule(const uint8_t[], size_t) override;
 
@@ -40,8 +42,8 @@ class Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
       static const uint8_t POLY_TO_EXP[255];
 
       secure_vector<uint32_t> m_SB, m_RK;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

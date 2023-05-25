@@ -7,18 +7,18 @@
 */
 
 #include "tests.h"
-#include <functional>
-#include <ctime>
-#include <botan/internal/loadstor.h>
-#include <botan/internal/calendar.h>
-#include <botan/internal/rounding.h>
-#include <botan/internal/ct_utils.h>
-#include <botan/internal/bit_ops.h>
-#include <botan/internal/cpuid.h>
-#include <botan/internal/charset.h>
-#include <botan/internal/parsing.h>
-#include <botan/internal/fmt.h>
 #include <botan/version.h>
+#include <botan/internal/bit_ops.h>
+#include <botan/internal/calendar.h>
+#include <botan/internal/charset.h>
+#include <botan/internal/cpuid.h>
+#include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/parsing.h>
+#include <botan/internal/rounding.h>
+#include <ctime>
+#include <functional>
 
 #if defined(BOTAN_HAS_POLY_DBL)
    #include <botan/internal/poly_dbl.h>
@@ -32,56 +32,46 @@ namespace Botan_Tests {
 
 namespace {
 
-class Utility_Function_Tests final : public Text_Based_Test
-   {
+class Utility_Function_Tests final : public Text_Based_Test {
    public:
       Utility_Function_Tests() : Text_Based_Test("util.vec", "In1,In2,Out") {}
 
-      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override {
          Test::Result result("Util " + algo);
 
-         if(algo == "round_up")
-            {
+         if(algo == "round_up") {
             const size_t x = vars.get_req_sz("In1");
             const size_t to = vars.get_req_sz("In2");
 
             result.test_eq(algo, Botan::round_up(x, to), vars.get_req_sz("Out"));
 
-            try
-               {
+            try {
                Botan::round_up(x, 0);
                result.test_failure("round_up did not reject invalid input");
-               }
-            catch(std::exception&) {}
-            }
-         else if(algo == "round_down")
-            {
+            } catch(std::exception&) {}
+         } else if(algo == "round_down") {
             const size_t x = vars.get_req_sz("In1");
             const size_t to = vars.get_req_sz("In2");
 
             result.test_eq(algo, Botan::round_down<size_t>(x, to), vars.get_req_sz("Out"));
             result.test_eq(algo, Botan::round_down<size_t>(x, 0), x);
-            }
-
-         return result;
          }
 
-      std::vector<Test::Result> run_final_tests() override
-         {
+         return result;
+      }
+
+      std::vector<Test::Result> run_final_tests() override {
          std::vector<Test::Result> results;
 
          results.push_back(test_loadstore());
 
          return results;
-         }
+      }
 
-      static Test::Result test_loadstore()
-         {
+      static Test::Result test_loadstore() {
          Test::Result result("Util load/store");
 
-         const std::vector<uint8_t> membuf =
-            Botan::hex_decode("00112233445566778899AABBCCDDEEFF");
+         const std::vector<uint8_t> membuf = Botan::hex_decode("00112233445566778899AABBCCDDEEFF");
          const uint8_t* mem = membuf.data();
 
          const uint16_t in16 = 0x1234;
@@ -133,10 +123,9 @@ class Utility_Function_Tests final : public Text_Based_Test
          result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem + 7, 0), 0xEEDDCCBBAA998877);
          result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem + 5, 0), 0xCCBBAA9988776655);
 
-         uint8_t outbuf[16] = { 0 };
+         uint8_t outbuf[16] = {0};
 
-         for(size_t offset = 0; offset != 7; ++offset)
-            {
+         for(size_t offset = 0; offset != 7; ++offset) {
             uint8_t* out = outbuf + offset;
 
             Botan::store_be(in16, out);
@@ -178,19 +167,17 @@ class Utility_Function_Tests final : public Text_Based_Test
             result.test_is_eq<uint8_t>(out[5], 0xEF);
             result.test_is_eq<uint8_t>(out[6], 0xCD);
             result.test_is_eq<uint8_t>(out[7], 0xAB);
-            }
+         }
 
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_SMOKE_TEST("utils", "util", Utility_Function_Tests);
 
-class CT_Mask_Tests final : public Test
-   {
+class CT_Mask_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          Test::Result result("CT utils");
 
          result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(0).value(), 0xFF);
@@ -219,57 +206,43 @@ class CT_Mask_Tests final : public Test
          result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFFFFFF, 5).value(), 0x00000000);
          result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(5, 0xFFFFFFFF).value(), 0xFFFFFFFF);
 
-         for(auto bad_input : { 0, 1 })
-            {
-            for(size_t input_length : { 0, 1, 2, 32 })
-               {
-               for(size_t offset = 0; offset != input_length + 1; ++offset)
-                  {
+         for(auto bad_input : {0, 1}) {
+            for(size_t input_length : {0, 1, 2, 32}) {
+               for(size_t offset = 0; offset != input_length + 1; ++offset) {
                   const auto mask = Botan::CT::Mask<uint8_t>::expand(static_cast<uint8_t>(bad_input));
 
                   std::vector<uint8_t> input(input_length);
                   rng().randomize(input.data(), input.size());
 
-                  auto output = Botan::CT::copy_output(mask,
-                                                       input.data(),
-                                                       input.size(),
-                                                       offset);
+                  auto output = Botan::CT::copy_output(mask, input.data(), input.size(), offset);
 
                   result.test_eq_sz("CT::copy_output capacity", output.capacity(), input.size());
 
-                  if(bad_input)
-                     {
+                  if(bad_input) {
                      result.confirm("If bad input, no output", output.empty());
-                     }
-                  else
-                     {
-                     if(offset >= input_length)
-                        {
+                  } else {
+                     if(offset >= input_length) {
                         result.confirm("If offset is too large, output is empty", output.empty());
-                        }
-                     else
-                        {
+                     } else {
                         result.test_eq_sz("CT::copy_output length", output.size(), input.size() - offset);
 
                         for(size_t i = 0; i != output.size(); ++i)
                            result.test_eq_sz("CT::copy_output offset", output[i], input[i + offset]);
-                        }
                      }
                   }
                }
             }
+         }
 
          return {result};
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "ct_utils", CT_Mask_Tests);
 
-class BitOps_Tests final : public Test
-   {
+class BitOps_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
          results.push_back(test_power_of_2());
@@ -277,16 +250,15 @@ class BitOps_Tests final : public Test
          results.push_back(test_sig_bytes());
 
          return results;
-         }
-   private:
-      template<typename T>
-      void test_ctz(Test::Result& result, T val, size_t expected)
-         {
-         result.test_eq("ctz(" + std::to_string(val) + ")", Botan::ctz<T>(val), expected);
-         }
+      }
 
-      Test::Result test_ctz()
-         {
+   private:
+      template <typename T>
+      void test_ctz(Test::Result& result, T val, size_t expected) {
+         result.test_eq("ctz(" + std::to_string(val) + ")", Botan::ctz<T>(val), expected);
+      }
+
+      Test::Result test_ctz() {
          Test::Result result("ctz");
          test_ctz<uint32_t>(result, 0, 32);
          test_ctz<uint32_t>(result, 1, 0);
@@ -296,17 +268,14 @@ class BitOps_Tests final : public Test
          test_ctz<uint32_t>(result, 0x80000000, 31);
 
          return result;
-         }
+      }
 
-      template<typename T>
-      void test_sig_bytes(Test::Result& result, T val, size_t expected)
-         {
-         result.test_eq("significant_bytes(" + std::to_string(val) + ")",
-                        Botan::significant_bytes<T>(val), expected);
-         }
+      template <typename T>
+      void test_sig_bytes(Test::Result& result, T val, size_t expected) {
+         result.test_eq("significant_bytes(" + std::to_string(val) + ")", Botan::significant_bytes<T>(val), expected);
+      }
 
-      Test::Result test_sig_bytes()
-         {
+      Test::Result test_sig_bytes() {
          Test::Result result("significant_bytes");
          test_sig_bytes<uint32_t>(result, 0, 0);
          test_sig_bytes<uint32_t>(result, 1, 1);
@@ -325,16 +294,14 @@ class BitOps_Tests final : public Test
          test_sig_bytes<uint64_t>(result, 0x100000000, 5);
 
          return result;
-         }
+      }
 
-      template<typename T>
-      void test_power_of_2(Test::Result& result, T val, bool expected)
-         {
+      template <typename T>
+      void test_power_of_2(Test::Result& result, T val, bool expected) {
          result.test_eq("power_of_2(" + std::to_string(val) + ")", Botan::is_power_of_2<T>(val), expected);
-         }
+      }
 
-      Test::Result test_power_of_2()
-         {
+      Test::Result test_power_of_2() {
          Test::Result result("is_power_of_2");
 
          test_power_of_2<uint32_t>(result, 0, false);
@@ -355,22 +322,20 @@ class BitOps_Tests final : public Test
          test_power_of_2<uint64_t>(result, 0x100000000000, true);
 
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "bit_ops", BitOps_Tests);
 
 #if defined(BOTAN_HAS_POLY_DBL)
 
-class Poly_Double_Tests final : public Text_Based_Test
-   {
+class Poly_Double_Tests final : public Text_Based_Test {
    public:
       Poly_Double_Tests() : Text_Based_Test("poly_dbl.vec", "In,Out") {}
 
-      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("Polynomial doubling");
-         const std::vector<uint8_t> in  = vars.get_req_bin("In");
+         const std::vector<uint8_t> in = vars.get_req_bin("In");
          const std::vector<uint8_t> out = vars.get_req_bin("Out");
 
          std::vector<uint8_t> b = in;
@@ -378,22 +343,19 @@ class Poly_Double_Tests final : public Text_Based_Test
 
          result.test_eq("Expected value", b, out);
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "poly_dbl", Poly_Double_Tests);
 
 #endif
 
-class Version_Tests final : public Test
-   {
+class Version_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          Test::Result result("Versions");
 
-         result.confirm("Version datestamp matches macro",
-                        Botan::version_datestamp() == BOTAN_VERSION_DATESTAMP);
+         result.confirm("Version datestamp matches macro", Botan::version_datestamp() == BOTAN_VERSION_DATESTAMP);
 
          const char* version_cstr = Botan::version_cstr();
          std::string version_str = Botan::version_string();
@@ -403,25 +365,22 @@ class Version_Tests final : public Test
          std::string sversion_str = Botan::short_version_string();
          result.test_eq("Same short version string", sversion_str, std::string(sversion_cstr));
 
-         std::string expected_sversion =
-            std::to_string(BOTAN_VERSION_MAJOR) + "." +
-            std::to_string(BOTAN_VERSION_MINOR) + "." +
-            std::to_string(BOTAN_VERSION_PATCH);
+         std::string expected_sversion = std::to_string(BOTAN_VERSION_MAJOR) + "." +
+                                         std::to_string(BOTAN_VERSION_MINOR) + "." +
+                                         std::to_string(BOTAN_VERSION_PATCH);
 
 #if defined(BOTAN_VERSION_SUFFIX)
          expected_sversion += BOTAN_VERSION_SUFFIX_STR;
 #endif
 
-         result.test_eq("Short version string has expected format",
-                        sversion_str, expected_sversion);
+         result.test_eq("Short version string has expected format", sversion_str, expected_sversion);
 
          const std::string version_check_ok =
             Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
 
          result.confirm("Correct version no warning", version_check_ok.empty());
 
-         const std::string version_check_bad =
-            Botan::runtime_version_check(1, 19, 42);
+         const std::string version_check_bad = Botan::runtime_version_check(1, 19, 42);
 
          const std::string expected_error =
             "Warning: linked version (" + sversion_str + ") does not match version built against (1.19.42)\n";
@@ -429,42 +388,36 @@ class Version_Tests final : public Test
          result.test_eq("Expected warning text", version_check_bad, expected_error);
 
          return {result};
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "versioning", Version_Tests);
 
-class Date_Format_Tests final : public Text_Based_Test
-   {
+class Date_Format_Tests final : public Text_Based_Test {
    public:
       Date_Format_Tests() : Text_Based_Test("dates.vec", "Date") {}
 
-      static std::vector<uint32_t> parse_date(const std::string& s)
-         {
+      static std::vector<uint32_t> parse_date(const std::string& s) {
          const std::vector<std::string> parts = Botan::split_on(s, ',');
-         if(parts.size() != 6)
-            {
+         if(parts.size() != 6) {
             throw Test_Error("Bad date format '" + s + "'");
-            }
+         }
 
          std::vector<uint32_t> u32s;
          u32s.reserve(parts.size());
-         for(const auto& sub : parts)
-            {
+         for(const auto& sub : parts) {
             u32s.push_back(Botan::to_u32bit(sub));
-            }
-         return u32s;
          }
+         return u32s;
+      }
 
-      Test::Result run_one_test(const std::string& type, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
          const std::string date_str = vars.get_req_str("Date");
          Test::Result result("Date parsing");
 
          const std::vector<uint32_t> d = parse_date(date_str);
 
-         if(type == "valid" || type == "valid.not_std" || type == "valid.64_bit_time_t")
-            {
+         if(type == "valid" || type == "valid.not_std" || type == "valid.64_bit_time_t") {
             Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]);
             result.test_is_eq(date_str + " year", c.year(), d[0]);
             result.test_is_eq(date_str + " month", c.month(), d[1]);
@@ -473,12 +426,10 @@ class Date_Format_Tests final : public Text_Based_Test
             result.test_is_eq(date_str + " minute", c.minutes(), d[4]);
             result.test_is_eq(date_str + " second", c.seconds(), d[5]);
 
-            if(type == "valid.not_std" || (type == "valid.64_bit_time_t" && c.year() > 2037 && sizeof(std::time_t) == 4))
-               {
+            if(type == "valid.not_std" ||
+               (type == "valid.64_bit_time_t" && c.year() > 2037 && sizeof(std::time_t) == 4)) {
                result.test_throws("valid but out of std::timepoint range", [c]() { c.to_std_timepoint(); });
-               }
-            else
-               {
+            } else {
                Botan::calendar_point c2(c.to_std_timepoint());
                result.test_is_eq(date_str + " year", c2.year(), d[0]);
                result.test_is_eq(date_str + " month", c2.month(), d[1]);
@@ -486,39 +437,32 @@ class Date_Format_Tests final : public Text_Based_Test
                result.test_is_eq(date_str + " hour", c2.hour(), d[3]);
                result.test_is_eq(date_str + " minute", c2.minutes(), d[4]);
                result.test_is_eq(date_str + " second", c2.seconds(), d[5]);
-               }
             }
-         else if(type == "invalid")
-            {
+         } else if(type == "invalid") {
             result.test_throws("invalid date", [d]() { Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]); });
-            }
-         else
-            {
+         } else {
             throw Test_Error("Unexpected header '" + type + "' in date format tests");
-            }
-
-         return result;
          }
 
-      std::vector<Test::Result> run_final_tests() override
-         {
+         return result;
+      }
+
+      std::vector<Test::Result> run_final_tests() override {
          Test::Result result("calendar_point::to_string");
          Botan::calendar_point d(2008, 5, 15, 9, 30, 33);
          // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
          result.test_eq("calendar_point::to_string", d.to_string(), "2008-05-15T09:30:33");
          return {result};
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "util_dates", Date_Format_Tests);
 
-class Charset_Tests final : public Text_Based_Test
-   {
+class Charset_Tests final : public Text_Based_Test {
    public:
       Charset_Tests() : Text_Based_Test("charset.vec", "In,Out") {}
 
-      Test::Result run_one_test(const std::string& type, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
          Test::Result result("Charset");
 
          const std::vector<uint8_t> in = vars.get_req_bin("In");
@@ -528,62 +472,50 @@ class Charset_Tests final : public Text_Based_Test
 
          std::string converted;
 
-         if(type == "UCS2-UTF8")
-            {
+         if(type == "UCS2-UTF8") {
             converted = Botan::ucs2_to_utf8(in.data(), in.size());
-            }
-         else if(type == "UCS4-UTF8")
-            {
+         } else if(type == "UCS4-UTF8") {
             converted = Botan::ucs4_to_utf8(in.data(), in.size());
-            }
-         else if(type == "LATIN1-UTF8")
-            {
+         } else if(type == "LATIN1-UTF8") {
             converted = Botan::latin1_to_utf8(in.data(), in.size());
-            }
-         else
-            {
+         } else {
             throw Test_Error("Unexpected header '" + type + "' in charset tests");
-            }
+         }
 
-         result.test_eq("string converted successfully", std::vector<uint8_t>(converted.begin(), converted.end()), expected);
+         result.test_eq(
+            "string converted successfully", std::vector<uint8_t>(converted.begin(), converted.end()), expected);
 
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "charset", Charset_Tests);
 
-class Hostname_Tests final : public Text_Based_Test
-   {
+class Hostname_Tests final : public Text_Based_Test {
    public:
-      Hostname_Tests() : Text_Based_Test("hostnames.vec", "Issued,Hostname")
-         {}
+      Hostname_Tests() : Text_Based_Test("hostnames.vec", "Issued,Hostname") {}
 
-      Test::Result run_one_test(const std::string& type, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
          Test::Result result("Hostname Matching");
 
          const std::string issued = vars.get_req_str("Issued");
          const std::string hostname = vars.get_req_str("Hostname");
          const bool expected = (type == "Invalid") ? false : true;
 
-         const std::string what = hostname + ((expected == true) ?
-                                              " matches " : " does not match ") + issued;
+         const std::string what = hostname + ((expected == true) ? " matches " : " does not match ") + issued;
          result.test_eq(what, Botan::host_wildcard_match(issued, hostname), expected);
 
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "hostname", Hostname_Tests);
 
-class ReadKV_Tests final : public Text_Based_Test
-   {
+class ReadKV_Tests final : public Text_Based_Test {
    public:
       ReadKV_Tests() : Text_Based_Test("utils/read_kv.vec", "Input,Expected") {}
 
-      Test::Result run_one_test(const std::string& status, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& status, const VarMap& vars) override {
          Test::Result result("read_kv");
 
          const bool is_valid = (status == "Valid");
@@ -591,120 +523,98 @@ class ReadKV_Tests final : public Text_Based_Test
          const std::string input = vars.get_req_str("Input");
          const std::string expected = vars.get_req_str("Expected");
 
-         if(is_valid)
-            {
+         if(is_valid) {
             confirm_kv(result, Botan::read_kv(input), split_group(expected));
-            }
-         else
-            {
+         } else {
             // In this case "expected" is the expected exception message
-            result.test_throws("Invalid key value input throws exception",
-                               expected,
-                               [&]() { Botan::read_kv(input); });
-            }
-         return result;
+            result.test_throws("Invalid key value input throws exception", expected, [&]() { Botan::read_kv(input); });
          }
+         return result;
+      }
 
    private:
-
-      static std::vector<std::string> split_group(const std::string& str)
-         {
+      static std::vector<std::string> split_group(const std::string& str) {
          std::vector<std::string> elems;
-         if(str.empty()) return elems;
+         if(str.empty())
+            return elems;
 
          std::string substr;
-         for(auto i = str.begin(); i != str.end(); ++i)
-            {
-            if(*i == '|')
-               {
+         for(auto i = str.begin(); i != str.end(); ++i) {
+            if(*i == '|') {
                elems.push_back(substr);
                substr.clear();
-               }
-            else
-               {
+            } else {
                substr += *i;
-               }
             }
+         }
 
          if(!substr.empty())
             elems.push_back(substr);
 
          return elems;
-         }
+      }
 
       static void confirm_kv(Test::Result& result,
-                      const std::map<std::string, std::string>& kv,
-                      const std::vector<std::string>& expected)
-         {
+                             const std::map<std::string, std::string>& kv,
+                             const std::vector<std::string>& expected) {
          if(!result.test_eq("expected size", expected.size() % 2, size_t(0)))
             return;
 
-         for(size_t i = 0; i != expected.size(); i += 2)
-            {
+         for(size_t i = 0; i != expected.size(); i += 2) {
             auto j = kv.find(expected[i]);
-            if(result.confirm("Found key", j != kv.end()))
-               {
-               result.test_eq("Matching value", j->second, expected[i+1]);
-               }
+            if(result.confirm("Found key", j != kv.end())) {
+               result.test_eq("Matching value", j->second, expected[i + 1]);
             }
-
-         result.test_eq("KV has same size as expected", kv.size(), expected.size()/2);
          }
-   };
+
+         result.test_eq("KV has same size as expected", kv.size(), expected.size() / 2);
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "util_read_kv", ReadKV_Tests);
 
-class CPUID_Tests final : public Test
-   {
+class CPUID_Tests final : public Test {
    public:
-
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          Test::Result result("CPUID");
 
          result.confirm("Endian is either little or big",
                         Botan::CPUID::is_big_endian() || Botan::CPUID::is_little_endian());
 
-         if(Botan::CPUID::is_little_endian())
-            {
+         if(Botan::CPUID::is_little_endian()) {
             result.test_eq("If endian is little, it is not also big endian", Botan::CPUID::is_big_endian(), false);
-            }
-         else
-            {
+         } else {
             result.test_eq("If endian is big, it is not also little endian", Botan::CPUID::is_little_endian(), false);
-            }
+         }
 
          const std::string cpuid_string = Botan::CPUID::to_string();
          result.test_success("CPUID::to_string doesn't crash");
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-         if(Botan::CPUID::has_sse2())
-            {
+         if(Botan::CPUID::has_sse2()) {
             result.confirm("Output string includes sse2", cpuid_string.find("sse2") != std::string::npos);
 
             Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SSE2_BIT);
 
             result.test_eq("After clearing cpuid bit, has_sse2 returns false", Botan::CPUID::has_sse2(), false);
 
-            Botan::CPUID::initialize(); // reset state
+            Botan::CPUID::initialize();  // reset state
             result.test_eq("After reinitializing, has_sse2 returns true", Botan::CPUID::has_sse2(), true);
-            }
+         }
 #endif
 
          return {result};
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "cpuid", CPUID_Tests);
 
 #if defined(BOTAN_HAS_UUID)
 
-class UUID_Tests : public Test
-   {
+class UUID_Tests : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          Test::Result result("UUID");
 
          const Botan::UUID empty_uuid;
@@ -731,24 +641,27 @@ class UUID_Tests : public Test
          const std::string uuid_r1_str = random_uuid1.to_string();
          result.confirm("UUID from string matches", Botan::UUID(uuid_r1_str) == random_uuid1);
 
-         class AllSame_RNG : public Botan::RandomNumberGenerator
-            {
+         class AllSame_RNG : public Botan::RandomNumberGenerator {
             public:
                explicit AllSame_RNG(uint8_t b) : m_val(b) {}
 
-               void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override
-                  {
-                  for(auto& byte : output)
-                     { byte = m_val; }
+               void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override {
+                  for(auto& byte : output) {
+                     byte = m_val;
                   }
+               }
 
                std::string name() const override { return "zeros"; }
+
                bool accepts_input() const override { return false; }
+
                void clear() override {}
+
                bool is_seeded() const override { return true; }
+
             private:
                uint8_t m_val;
-            };
+         };
 
          AllSame_RNG zeros(0x00);
          const Botan::UUID zero_uuid(zeros);
@@ -759,17 +672,14 @@ class UUID_Tests : public Test
          result.test_eq("Ones UUID matches expected", ones_uuid.to_string(), "FFFFFFFF-FFFF-4FFF-BFFF-FFFFFFFFFFFF");
 
          return {result};
-         }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "uuid", UUID_Tests);
 
-class Formatter_Tests : public Test
-   {
+class Formatter_Tests : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          Test::Result result("Format utility");
 
          /*
@@ -786,13 +696,13 @@ class Formatter_Tests : public Test
          result.test_eq("test 5", Botan::fmt("{} == '{}'", 5, "five"), "5 == 'five'");
 
          return {result};
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "fmt", Formatter_Tests);
 
 #endif
 
-}
+}  // namespace
 
-}
+}  // namespace Botan_Tests

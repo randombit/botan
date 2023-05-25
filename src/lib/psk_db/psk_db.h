@@ -9,8 +9,8 @@
 
 #include <botan/secmem.h>
 #include <memory>
-#include <string>
 #include <set>
+#include <string>
 
 namespace Botan {
 
@@ -22,8 +22,7 @@ class MessageAuthenticationCode;
 * It might be implemented as a plaintext storage or via some mechanism
 * that encrypts the keys and/or values.
 */
-class BOTAN_PUBLIC_API(2,4) PSK_Database
-   {
+class BOTAN_PUBLIC_API(2, 4) PSK_Database {
    public:
       /**
       * Return the set of names for which get() will return a value.
@@ -56,27 +55,24 @@ class BOTAN_PUBLIC_API(2,4) PSK_Database
       /**
       * Get a PSK in the form of a string (eg if the PSK is a password)
       */
-      std::string get_str(std::string_view name) const
-         {
+      std::string get_str(std::string_view name) const {
          secure_vector<uint8_t> psk = get(name);
          return std::string(cast_uint8_ptr_to_char(psk.data()), psk.size());
-         }
+      }
 
-      void set_str(std::string_view name, std::string_view psk)
-         {
+      void set_str(std::string_view name, std::string_view psk) {
          set(name, cast_char_ptr_to_uint8(psk.data()), psk.size());
-         }
+      }
 
-      template<typename Alloc>
-      void set_vec(std::string_view name,
-                   const std::vector<uint8_t, Alloc>& psk)
+      template <typename Alloc>
+      void set_vec(std::string_view name, const std::vector<uint8_t, Alloc>& psk)
 
-         {
+      {
          set(name, psk.data(), psk.size());
-         }
+      }
 
       virtual ~PSK_Database() = default;
-   };
+};
 
 /**
 * A mixin for an encrypted PSK database.
@@ -87,8 +83,7 @@ class BOTAN_PUBLIC_API(2,4) PSK_Database
 * Subclasses must implement the virtual calls to handle storing and
 * getting raw (base64 encoded) values.
 */
-class BOTAN_PUBLIC_API(2,4) Encrypted_PSK_Database : public PSK_Database
-   {
+class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database : public PSK_Database {
    public:
       /**
       * @param master_key specifies the master key used to encrypt all
@@ -139,18 +134,18 @@ class BOTAN_PUBLIC_API(2,4) Encrypted_PSK_Database : public PSK_Database
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<MessageAuthenticationCode> m_hmac;
       secure_vector<uint8_t> m_wrap_key;
-   };
+};
 
 class SQL_Database;
 
-class BOTAN_PUBLIC_API(2,4) Encrypted_PSK_Database_SQL : public Encrypted_PSK_Database
-   {
+class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database_SQL : public Encrypted_PSK_Database {
    public:
       Encrypted_PSK_Database_SQL(const secure_vector<uint8_t>& master_key,
                                  std::shared_ptr<SQL_Database> db,
                                  std::string_view table_name);
 
       ~Encrypted_PSK_Database_SQL();
+
    private:
       void kv_set(std::string_view index, std::string_view value) override;
       std::string kv_get(std::string_view index) const override;
@@ -159,8 +154,8 @@ class BOTAN_PUBLIC_API(2,4) Encrypted_PSK_Database_SQL : public Encrypted_PSK_Da
 
       std::shared_ptr<SQL_Database> m_db;
       const std::string m_table_name;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

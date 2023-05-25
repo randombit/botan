@@ -9,16 +9,16 @@
 #ifndef BOTAN_TLS_CHANNEL_IMPL_12_H_
 #define BOTAN_TLS_CHANNEL_IMPL_12_H_
 
-#include <botan/tls_session.h>
 #include <botan/tls_alert.h>
-#include <botan/tls_session_manager.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_session.h>
+#include <botan/tls_session_manager.h>
 #include <botan/internal/tls_channel_impl.h>
 #include <functional>
-#include <vector>
-#include <string>
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace Botan {
 
@@ -37,14 +37,13 @@ class Policy;
 /**
 * Generic interface for TLSv.12 endpoint
 */
-class Channel_Impl_12 : public Channel_Impl
-   {
+class Channel_Impl_12 : public Channel_Impl {
    public:
-      typedef std::function<void (const uint8_t[], size_t)> output_fn;
-      typedef std::function<void (const uint8_t[], size_t)> data_cb;
-      typedef std::function<void (Alert, const uint8_t[], size_t)> alert_cb;
-      typedef std::function<bool (const Session&)> handshake_cb;
-      typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
+      typedef std::function<void(const uint8_t[], size_t)> output_fn;
+      typedef std::function<void(const uint8_t[], size_t)> data_cb;
+      typedef std::function<void(Alert, const uint8_t[], size_t)> alert_cb;
+      typedef std::function<bool(const Session&)> handshake_cb;
+      typedef std::function<void(const Handshake_Message&)> handshake_msg_cb;
 
       /**
       * Set up a new TLS session
@@ -95,6 +94,7 @@ class Channel_Impl_12 : public Channel_Impl
       bool is_closed() const override;
 
       bool is_closed_for_reading() const override { return is_closed(); }
+
       bool is_closed_for_writing() const override { return is_closed(); }
 
       /**
@@ -109,9 +109,7 @@ class Channel_Impl_12 : public Channel_Impl
       * @param length the length of the desired key in bytes
       * @return key of length bytes
       */
-      SymmetricKey key_material_export(std::string_view label,
-                                       std::string_view context,
-                                       size_t length) const override;
+      SymmetricKey key_material_export(std::string_view label, std::string_view context, size_t length) const override;
 
       /**
       * Attempt to renegotiate the session
@@ -144,10 +142,10 @@ class Channel_Impl_12 : public Channel_Impl
 
    protected:
       virtual void process_handshake_msg(const Handshake_State* active_state,
-                                 Handshake_State& pending_state,
-                                 Handshake_Type type,
-                                 const std::vector<uint8_t>& contents,
-                                 bool epoch0_restart) = 0;
+                                         Handshake_State& pending_state,
+                                         Handshake_Type type,
+                                         const std::vector<uint8_t>& contents,
+                                         bool epoch0_restart) = 0;
 
       Handshake_State& create_handshake_state(Protocol_Version version);
       virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<class Handshake_IO> io) = 0;
@@ -185,15 +183,12 @@ class Channel_Impl_12 : public Channel_Impl
    private:
       void send_record(Record_Type record_type, const std::vector<uint8_t>& record);
 
-      void send_record_under_epoch(uint16_t epoch, Record_Type record_type,
-                                   const std::vector<uint8_t>& record);
+      void send_record_under_epoch(uint16_t epoch, Record_Type record_type, const std::vector<uint8_t>& record);
 
-      void send_record_array(uint16_t epoch, Record_Type record_type,
-                             const uint8_t input[], size_t length);
+      void send_record_array(uint16_t epoch, Record_Type record_type, const uint8_t input[], size_t length);
 
-      void write_record(Connection_Cipher_State* cipher_state,
-                        uint16_t epoch, Record_Type type,
-                        const uint8_t input[], size_t length);
+      void write_record(
+         Connection_Cipher_State* cipher_state, uint16_t epoch, Record_Type type, const uint8_t input[], size_t length);
 
       void reset_state();
 
@@ -246,10 +241,10 @@ class Channel_Impl_12 : public Channel_Impl
       secure_vector<uint8_t> m_record_buf;
 
       bool m_has_been_closed;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

@@ -18,8 +18,7 @@ namespace Botan::TLS {
 /**
 * SSL/TLS Server 1.3 implementation
 */
-class Server_Impl_13 : public Channel_Impl_13
-   {
+class Server_Impl_13 : public Channel_Impl_13 {
    public:
       explicit Server_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                               const std::shared_ptr<Session_Manager>& session_manager,
@@ -59,8 +58,8 @@ class Server_Impl_13 : public Channel_Impl_13
       Handshake_Transitions m_transitions;
 
       std::optional<Session> m_resumed_session;
-   };
+};
 
-}
+}  // namespace Botan::TLS
 
 #endif

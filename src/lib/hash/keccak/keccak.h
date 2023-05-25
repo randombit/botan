@@ -17,10 +17,8 @@ namespace Botan {
 /**
 * Keccak[1600], a SHA-3 candidate
 */
-class Keccak_1600 final : public HashFunction
-   {
+class Keccak_1600 final : public HashFunction {
    public:
-
       /**
       * @param output_bits the size of the hash output; must be one of
       *                    224, 256, 384, or 512
@@ -28,6 +26,7 @@ class Keccak_1600 final : public HashFunction
       explicit Keccak_1600(size_t output_bits = 512);
 
       size_t hash_block_size() const override { return m_bitrate / 8; }
+
       size_t output_length() const override { return m_output_bits / 8; }
 
       std::unique_ptr<HashFunction> new_object() const override;
@@ -42,8 +41,8 @@ class Keccak_1600 final : public HashFunction
       size_t m_output_bits, m_bitrate;
       secure_vector<uint64_t> m_S;
       size_t m_S_pos;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -9,51 +9,47 @@
 
 #include <botan/gost_3410.h>
 
+#include <botan/ber_dec.h>
+#include <botan/der_enc.h>
+#include <botan/reducer.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/point_mul.h>
-#include <botan/internal/fmt.h>
-#include <botan/reducer.h>
-#include <botan/der_enc.h>
-#include <botan/ber_dec.h>
 
 namespace Botan {
 
-std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const
-   {
+std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const {
    const BigInt x = public_point().get_affine_x();
    const BigInt y = public_point().get_affine_y();
 
    size_t part_size = std::max(x.bytes(), y.bytes());
 
-   std::vector<uint8_t> bits(2*part_size);
+   std::vector<uint8_t> bits(2 * part_size);
 
    x.binary_encode(&bits[part_size - x.bytes()]);
-   y.binary_encode(&bits[2*part_size - y.bytes()]);
+   y.binary_encode(&bits[2 * part_size - y.bytes()]);
 
    // Keys are stored in little endian format (WTF)
-   for(size_t i = 0; i != part_size / 2; ++i)
-      {
-      std::swap(bits[i], bits[part_size-1-i]);
-      std::swap(bits[part_size+i], bits[2*part_size-1-i]);
-      }
+   for(size_t i = 0; i != part_size / 2; ++i) {
+      std::swap(bits[i], bits[part_size - 1 - i]);
+      std::swap(bits[part_size + i], bits[2 * part_size - 1 - i]);
+   }
 
    std::vector<uint8_t> output;
    DER_Encoder(output).encode(bits, ASN1_Type::OctetString);
    return output;
-   }
+}
 
-std::string GOST_3410_PublicKey::algo_name() const
-   {
+std::string GOST_3410_PublicKey::algo_name() const {
    const size_t p_bits = domain().get_p_bits();
 
    if(p_bits == 256 || p_bits == 512)
       return fmt("GOST-34.10-2012-{}", p_bits);
    else
       throw Encoding_Error("GOST-34.10-2012 is not defined for parameters of this size");
-   }
+}
 
-AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
-   {
+AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const {
    std::vector<uint8_t> params;
 
    const OID gost_oid = object_identifier();
@@ -62,11 +58,9 @@ AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    DER_Encoder(params).start_sequence().encode(domain_oid).end_cons();
 
    return AlgorithmIdentifier(gost_oid, params);
-   }
+}
 
-GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
-                                         std::span<const uint8_t> key_bits)
-   {
+GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    OID ecc_param_id;
 
    // The parameters also includes hash and cipher OIDs
@@ -81,84 +75,69 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    secure_vector<uint8_t> bits;
    BER_Decoder(key_bits).decode(bits, ASN1_Type::OctetString);
 
-   if(bits.size() != 2*(p_bits/8))
+   if(bits.size() != 2 * (p_bits / 8))
       throw Decoding_Error("GOST-34.10-2020 invalid encoding of public key");
 
    const size_t part_size = bits.size() / 2;
 
    // Keys are stored in little endian format (WTF)
-   for(size_t i = 0; i != part_size / 2; ++i)
-      {
-      std::swap(bits[i], bits[part_size-1-i]);
-      std::swap(bits[part_size+i], bits[2*part_size-1-i]);
-      }
+   for(size_t i = 0; i != part_size / 2; ++i) {
+      std::swap(bits[i], bits[part_size - 1 - i]);
+      std::swap(bits[part_size + i], bits[2 * part_size - 1 - i]);
+   }
 
    BigInt x(bits.data(), part_size);
    BigInt y(&bits[part_size], part_size);
 
    m_public_key = domain().point(x, y);
 
-   BOTAN_ASSERT(m_public_key.on_the_curve(),
-                "Loaded GOST 34.10 public key is on the curve");
-   }
+   BOTAN_ASSERT(m_public_key.on_the_curve(), "Loaded GOST 34.10 public key is on the curve");
+}
 
-GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng,
-                                           const EC_Group& domain,
-                                           const BigInt& x) :
-   EC_PrivateKey(rng, domain, x)
-   {
+GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x) :
+      EC_PrivateKey(rng, domain, x) {
    const size_t p_bits = m_domain_params.get_p_bits();
-   if(p_bits != 256 && p_bits != 512)
-      {
+   if(p_bits != 256 && p_bits != 512) {
       throw Decoding_Error(fmt("GOST-34.10-2012 is not defined for parameters of size {}", p_bits));
-      }
    }
+}
 
-std::unique_ptr<Public_Key> GOST_3410_PrivateKey::public_key() const
-   {
+std::unique_ptr<Public_Key> GOST_3410_PrivateKey::public_key() const {
    return std::make_unique<GOST_3410_PublicKey>(domain(), public_point());
-   }
+}
 
 namespace {
 
-BigInt decode_le(const uint8_t msg[], size_t msg_len)
-   {
+BigInt decode_le(const uint8_t msg[], size_t msg_len) {
    secure_vector<uint8_t> msg_le(msg, msg + msg_len);
 
    for(size_t i = 0; i != msg_le.size() / 2; ++i)
-      std::swap(msg_le[i], msg_le[msg_le.size()-1-i]);
+      std::swap(msg_le[i], msg_le[msg_le.size() - 1 - i]);
 
    return BigInt(msg_le.data(), msg_le.size());
-   }
+}
 
 /**
 * GOST-34.10 signature operation
 */
-class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash
-   {
+class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
-      GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410,
-                                    std::string_view emsa) :
-         PK_Ops::Signature_with_Hash(emsa),
-         m_group(gost_3410.domain()),
-         m_x(gost_3410.private_value())
-         {}
+      GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410, std::string_view emsa) :
+            PK_Ops::Signature_with_Hash(emsa), m_group(gost_3410.domain()), m_x(gost_3410.private_value()) {}
 
-      size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
+      size_t signature_length() const override { return 2 * m_group.get_order_bytes(); }
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                      RandomNumberGenerator& rng) override;
+      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
 
    private:
       const EC_Group m_group;
       const BigInt& m_x;
       std::vector<BigInt> m_ws;
-   };
+};
 
-AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const
-   {
+AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const {
    const std::string hash_fn = hash_function();
 
    const size_t p_bits = m_group.get_p_bits();
@@ -177,12 +156,11 @@ AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const
       throw Not_Implemented("No encoding defined for GOST with " + hash_fn);
 
    return AlgorithmIdentifier(oid_name, AlgorithmIdentifier::USE_EMPTY_PARAM);
-   }
+}
 
-secure_vector<uint8_t>
-GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
-                                        RandomNumberGenerator& rng)
-   {
+secure_vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[],
+                                                               size_t msg_len,
+                                                               RandomNumberGenerator& rng) {
    const BigInt k = m_group.random_scalar(rng);
 
    BigInt e = decode_le(msg, msg_len);
@@ -191,21 +169,17 @@ GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    if(e.is_zero())
       e = BigInt::one();
 
-   const BigInt r = m_group.mod_order(
-      m_group.blinded_base_point_multiply_x(k, rng, m_ws));
+   const BigInt r = m_group.mod_order(m_group.blinded_base_point_multiply_x(k, rng, m_ws));
 
-   const BigInt s = m_group.mod_order(
-      m_group.multiply_mod_order(r, m_x) +
-      m_group.multiply_mod_order(k, e));
+   const BigInt s = m_group.mod_order(m_group.multiply_mod_order(r, m_x) + m_group.multiply_mod_order(k, e));
 
    if(r == 0 || s == 0)
       throw Internal_Error("GOST 34.10 signature generation failed, r/s equal to zero");
 
    return BigInt::encode_fixed_length_int_pair(s, r, m_group.get_order_bytes());
-   }
+}
 
-std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id)
-   {
+std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
    if(!alg_id.parameters_are_empty())
       throw Decoding_Error("Unexpected non-empty AlgorithmIdentifier parameters for GOST 34.10 signature");
 
@@ -220,39 +194,34 @@ std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id)
       return "SHA-256";
 
    throw Decoding_Error(fmt("Unknown OID ({}) for GOST 34.10 signatures", alg_id.oid()));
-   }
+}
 
 /**
 * GOST-34.10 verification operation
 */
-class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_Hash
-   {
+class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
+      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, std::string_view padding) :
+            PK_Ops::Verification_with_Hash(padding),
+            m_group(gost.domain()),
+            m_gy_mul(m_group.get_base_point(), gost.public_point()) {}
 
-      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost,
-                                       std::string_view padding) :
-         PK_Ops::Verification_with_Hash(padding),
-         m_group(gost.domain()),
-         m_gy_mul(m_group.get_base_point(), gost.public_point())
-         {}
+      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const AlgorithmIdentifier& alg_id) :
+            PK_Ops::Verification_with_Hash(gost_hash_from_algid(alg_id)),
+            m_group(gost.domain()),
+            m_gy_mul(m_group.get_base_point(), gost.public_point()) {}
 
-      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost,
-                                       const AlgorithmIdentifier& alg_id) :
-         PK_Ops::Verification_with_Hash(gost_hash_from_algid(alg_id)),
-         m_group(gost.domain()),
-         m_gy_mul(m_group.get_base_point(), gost.public_point())
-         {}
+      bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) override;
 
-      bool verify(const uint8_t msg[], size_t msg_len,
-                  const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
       const EC_Point_Multi_Point_Precompute m_gy_mul;
-   };
+};
 
-bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
-                                              const uint8_t sig[], size_t sig_len)
-   {
+bool GOST_3410_Verification_Operation::verify(const uint8_t msg[],
+                                              size_t msg_len,
+                                              const uint8_t sig[],
+                                              size_t sig_len) {
    if(sig_len != m_group.get_order_bytes() * 2)
       return false;
 
@@ -277,41 +246,34 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_le
    const EC_Point R = m_gy_mul.multi_exp(z1, z2);
 
    if(R.is_zero())
-     return false;
+      return false;
 
    return (R.get_affine_x() == r);
-   }
-
 }
 
-std::unique_ptr<PK_Ops::Verification>
-GOST_3410_PublicKey::create_verification_op(std::string_view params,
-                                            std::string_view provider) const
-   {
+}  // namespace
+
+std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_verification_op(std::string_view params,
+                                                                                  std::string_view provider) const {
    if(provider == "base" || provider.empty())
       return std::make_unique<GOST_3410_Verification_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
-   }
+}
 
-std::unique_ptr<PK_Ops::Verification>
-GOST_3410_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
-                                             std::string_view provider) const
-   {
+std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_x509_verification_op(
+   const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
    if(provider == "base" || provider.empty())
       return std::make_unique<GOST_3410_Verification_Operation>(*this, signature_algorithm);
 
    throw Provider_Not_Found(algo_name(), provider);
-   }
+}
 
-
-std::unique_ptr<PK_Ops::Signature>
-GOST_3410_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                          std::string_view params,
-                                          std::string_view provider) const
-   {
+std::unique_ptr<PK_Ops::Signature> GOST_3410_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                                                             std::string_view params,
+                                                                             std::string_view provider) const {
    if(provider == "base" || provider.empty())
       return std::make_unique<GOST_3410_Signature_Operation>(*this, params);
    throw Provider_Not_Found(algo_name(), provider);
-   }
-
 }
+
+}  // namespace Botan

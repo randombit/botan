@@ -9,16 +9,15 @@
 #ifndef BOTAN_SHAKE_CIPHER_H_
 #define BOTAN_SHAKE_CIPHER_H_
 
-#include <botan/stream_cipher.h>
 #include <botan/secmem.h>
+#include <botan/stream_cipher.h>
 
 namespace Botan {
 
 /**
 * Base class for SHAKE-based XOFs presented as a stream cipher
 */
-class SHAKE_Cipher : public StreamCipher
-   {
+class SHAKE_Cipher : public StreamCipher {
    protected:
       explicit SHAKE_Cipher(size_t shake_rate);
 
@@ -27,7 +26,6 @@ class SHAKE_Cipher : public StreamCipher
       * Seeking is not supported, this function will throw
       */
       void seek(uint64_t offset) override final;
-
 
       void clear() override final;
 
@@ -53,35 +51,29 @@ class SHAKE_Cipher : public StreamCipher
    protected:
       size_t m_shake_rate;
 
-      secure_vector<uint64_t> m_state; // internal state
-      secure_vector<uint8_t> m_buffer; // ciphertext buffer
-      size_t m_buf_pos; // position in m_buffer
-   };
+      secure_vector<uint64_t> m_state;  // internal state
+      secure_vector<uint8_t> m_buffer;  // ciphertext buffer
+      size_t m_buf_pos;                 // position in m_buffer
+};
 
-class SHAKE_128_Cipher final : public SHAKE_Cipher
-   {
+class SHAKE_128_Cipher final : public SHAKE_Cipher {
    public:
       SHAKE_128_Cipher();
 
-      std::string name() const override
-         { return "SHAKE-128"; }
+      std::string name() const override { return "SHAKE-128"; }
 
-      std::unique_ptr<StreamCipher> new_object() const override
-         { return std::make_unique<SHAKE_128_Cipher>(); }
-   };
+      std::unique_ptr<StreamCipher> new_object() const override { return std::make_unique<SHAKE_128_Cipher>(); }
+};
 
-class SHAKE_256_Cipher final : public SHAKE_Cipher
-   {
+class SHAKE_256_Cipher final : public SHAKE_Cipher {
    public:
       SHAKE_256_Cipher();
 
-      std::string name() const override
-         { return "SHAKE-256"; }
+      std::string name() const override { return "SHAKE-256"; }
 
-      std::unique_ptr<StreamCipher> new_object() const override
-         { return std::make_unique<SHAKE_256_Cipher>(); }
-   };
+      std::unique_ptr<StreamCipher> new_object() const override { return std::make_unique<SHAKE_256_Cipher>(); }
+};
 
-}
+}  // namespace Botan
 
 #endif

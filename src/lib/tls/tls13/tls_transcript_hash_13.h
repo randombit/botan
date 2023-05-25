@@ -13,9 +13,9 @@
 #include <botan/tls_magic.h>
 
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
-#include <span>
 
 namespace Botan::TLS {
 
@@ -25,8 +25,7 @@ namespace Botan::TLS {
  * utilized hash algorithm might become evident only after receiving
  * a server hello message.
  */
-class BOTAN_TEST_API Transcript_Hash_State
-   {
+class BOTAN_TEST_API Transcript_Hash_State {
    public:
       Transcript_Hash_State() = default;
       Transcript_Hash_State(std::string_view algo_spec);
@@ -42,8 +41,7 @@ class BOTAN_TEST_API Transcript_Hash_State
        * the previously used object in client and server implementations.
        */
       static Transcript_Hash_State recreate_after_hello_retry_request(
-                        std::string_view algo_spec,
-                        const Transcript_Hash_State& prev_transcript_hash_state);
+         std::string_view algo_spec, const Transcript_Hash_State& prev_transcript_hash_state);
 
       Transcript_Hash_State& operator=(const Transcript_Hash_State&) = delete;
 
@@ -93,8 +91,8 @@ class BOTAN_TEST_API Transcript_Hash_State
       Transcript_Hash m_current;
       Transcript_Hash m_previous;
       Transcript_Hash m_truncated;
-   };
+};
 
-}
+}  // namespace Botan::TLS
 
-#endif // BOTAN_TLS_TRANSCRIPT_HASH_13_H_
+#endif  // BOTAN_TLS_TRANSCRIPT_HASH_13_H_

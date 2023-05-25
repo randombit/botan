@@ -8,11 +8,11 @@
 #ifndef BOTAN_CREDENTIALS_MANAGER_H_
 #define BOTAN_CREDENTIALS_MANAGER_H_
 
-#include <botan/pk_keys.h>
-#include <botan/x509cert.h>
 #include <botan/asn1_obj.h>
 #include <botan/certstor.h>
+#include <botan/pk_keys.h>
 #include <botan/symkey.h>
+#include <botan/x509cert.h>
 #include <string>
 
 namespace Botan {
@@ -28,8 +28,7 @@ class BigInt;
 * and "tls-server". Context represents a hostname, email address,
 * username, or other identifier.
 */
-class BOTAN_PUBLIC_API(2,0) Credentials_Manager
-   {
+class BOTAN_PUBLIC_API(2, 0) Credentials_Manager {
    public:
       virtual ~Credentials_Manager() = default;
 
@@ -42,9 +41,8 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       * @param context specifies a context relative to type. For instance
       *        for type "tls-client", context specifies the servers name.
       */
-      virtual std::vector<Certificate_Store*> trusted_certificate_authorities(
-         const std::string& type,
-         const std::string& context);
+      virtual std::vector<Certificate_Store*> trusted_certificate_authorities(const std::string& type,
+                                                                              const std::string& context);
 
       /**
       * Return a cert chain we can use, ordered from leaf to root,
@@ -95,11 +93,10 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       *
       * @param context specifies a context relative to type.
       */
-      virtual std::vector<X509_Certificate> cert_chain(
-         const std::vector<std::string>& cert_key_types,
-         const std::vector<AlgorithmIdentifier>& cert_signature_schemes,
-         const std::string& type,
-         const std::string& context);
+      virtual std::vector<X509_Certificate> cert_chain(const std::vector<std::string>& cert_key_types,
+                                                       const std::vector<AlgorithmIdentifier>& cert_signature_schemes,
+                                                       const std::string& type,
+                                                       const std::string& context);
 
       /**
       * Return a cert chain we can use, ordered from leaf to root,
@@ -130,18 +127,16 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       * This function should either return null or throw an exception if
       * the key is unavailable.
       */
-      virtual std::shared_ptr<Private_Key>
-         private_key_for(const X509_Certificate& cert,
-                         const std::string& type,
-                         const std::string& context);
+      virtual std::shared_ptr<Private_Key> private_key_for(const X509_Certificate& cert,
+                                                           const std::string& type,
+                                                           const std::string& context);
 
       /**
       * @param type specifies the type of operation occurring
       * @param context specifies a context relative to type.
       * @return the PSK identity hint for this type/context
       */
-      virtual std::string psk_identity_hint(const std::string& type,
-                                            const std::string& context);
+      virtual std::string psk_identity_hint(const std::string& type, const std::string& context);
 
       /**
       * @param type specifies the type of operation occurring
@@ -161,11 +156,9 @@ class BOTAN_PUBLIC_API(2,0) Credentials_Manager
       * @return the PSK used for identity, or throw an exception if no
       * key exists
       */
-      virtual SymmetricKey psk(const std::string& type,
-                               const std::string& context,
-                               const std::string& identity);
-   };
+      virtual SymmetricKey psk(const std::string& type, const std::string& context, const std::string& identity);
+};
 
-}
+}  // namespace Botan
 
 #endif

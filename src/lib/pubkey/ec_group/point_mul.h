@@ -13,21 +13,21 @@ namespace Botan {
 
 class Modular_Reducer;
 
-class EC_Point_Base_Point_Precompute final
-   {
+class EC_Point_Base_Point_Precompute final {
    public:
-      EC_Point_Base_Point_Precompute(const EC_Point& base_point,
-                                     const Modular_Reducer& mod_order);
+      EC_Point_Base_Point_Precompute(const EC_Point& base_point, const Modular_Reducer& mod_order);
 
       EC_Point mul(const BigInt& k,
                    RandomNumberGenerator& rng,
                    const BigInt& group_order,
                    std::vector<BigInt>& ws) const;
+
    private:
       const EC_Point& m_base_point;
       const Modular_Reducer& m_mod_order;
 
       enum { WINDOW_BITS = 3 };
+
       enum { WINDOW_SIZE = (1 << WINDOW_BITS) - 1 };
 
       const size_t m_p_words;
@@ -36,19 +36,17 @@ class EC_Point_Base_Point_Precompute final
       * This is a table of T_size * 3*p_word words
       */
       std::vector<word> m_W;
-   };
+};
 
-class EC_Point_Var_Point_Precompute final
-   {
+class EC_Point_Var_Point_Precompute final {
    public:
-      EC_Point_Var_Point_Precompute(const EC_Point& point,
-                                    RandomNumberGenerator& rng,
-                                    std::vector<BigInt>& ws);
+      EC_Point_Var_Point_Precompute(const EC_Point& point, RandomNumberGenerator& rng, std::vector<BigInt>& ws);
 
       EC_Point mul(const BigInt& k,
                    RandomNumberGenerator& rng,
                    const BigInt& group_order,
                    std::vector<BigInt>& ws) const;
+
    private:
       const CurveGFp m_curve;
       const size_t m_p_words;
@@ -61,25 +59,23 @@ class EC_Point_Var_Point_Precompute final
       * categorically.)
       */
       secure_vector<word> m_T;
-   };
+};
 
-class EC_Point_Multi_Point_Precompute final
-   {
+class EC_Point_Multi_Point_Precompute final {
    public:
-      EC_Point_Multi_Point_Precompute(const EC_Point& g1,
-                                      const EC_Point& g2);
+      EC_Point_Multi_Point_Precompute(const EC_Point& g1, const EC_Point& g2);
 
       /*
       * Return (g1*k1 + g2*k2)
       * Not constant time, intended to use with public inputs
       */
-      EC_Point multi_exp(const BigInt& k1,
-                         const BigInt& k2) const;
+      EC_Point multi_exp(const BigInt& k1, const BigInt& k2) const;
+
    private:
       std::vector<EC_Point> m_M;
       bool m_no_infinity;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

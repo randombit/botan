@@ -16,8 +16,7 @@ namespace Botan {
 * Combines two hash functions using a Feistel scheme. Described in
 * "On the Security of Hash Function Combiners", Anja Lehmann
 */
-class Comb4P final : public HashFunction
-   {
+class Comb4P final : public HashFunction {
    public:
       /**
       * @param h1 the first hash
@@ -27,10 +26,7 @@ class Comb4P final : public HashFunction
 
       size_t hash_block_size() const override;
 
-      size_t output_length() const override
-         {
-         return m_hash1->output_length() + m_hash2->output_length();
-         }
+      size_t output_length() const override { return m_hash1->output_length() + m_hash2->output_length(); }
 
       std::unique_ptr<HashFunction> new_object() const override;
 
@@ -39,6 +35,7 @@ class Comb4P final : public HashFunction
       std::string name() const override;
 
       void clear() override;
+
    private:
       Comb4P() = default;
 
@@ -46,8 +43,8 @@ class Comb4P final : public HashFunction
       void final_result(uint8_t out[]) override;
 
       std::unique_ptr<HashFunction> m_hash1, m_hash2;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

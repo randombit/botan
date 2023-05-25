@@ -28,11 +28,8 @@ namespace Botan {
          padding chars will be applied if needed
 * @return number of bytes written to output
 */
-size_t BOTAN_PUBLIC_API(2,0) base64_encode(char output[],
-                               const uint8_t input[],
-                               size_t input_length,
-                               size_t& input_consumed,
-                               bool final_inputs);
+size_t BOTAN_PUBLIC_API(2, 0)
+   base64_encode(char output[], const uint8_t input[], size_t input_length, size_t& input_consumed, bool final_inputs);
 
 /**
 * Perform base64 encoding
@@ -40,18 +37,14 @@ size_t BOTAN_PUBLIC_API(2,0) base64_encode(char output[],
 * @param input_length length of input in bytes
 * @return base64adecimal representation of input
 */
-std::string BOTAN_PUBLIC_API(2,0) base64_encode(const uint8_t input[],
-                                    size_t input_length);
+std::string BOTAN_PUBLIC_API(2, 0) base64_encode(const uint8_t input[], size_t input_length);
 
 /**
 * Perform base64 encoding
 * @param input some input
 * @return base64adecimal representation of input
 */
-inline std::string base64_encode(std::span<const uint8_t> input)
-   {
-   return base64_encode(input.data(), input.size());
-   }
+inline std::string base64_encode(std::span<const uint8_t> input) { return base64_encode(input.data(), input.size()); }
 
 /**
 * Perform base64 decoding
@@ -68,12 +61,12 @@ inline std::string base64_encode(std::span<const uint8_t> input)
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-size_t BOTAN_PUBLIC_API(2,0) base64_decode(uint8_t output[],
-                               const char input[],
-                               size_t input_length,
-                               size_t& input_consumed,
-                               bool final_inputs,
-                               bool ignore_ws = true);
+size_t BOTAN_PUBLIC_API(2, 0) base64_decode(uint8_t output[],
+                                            const char input[],
+                                            size_t input_length,
+                                            size_t& input_consumed,
+                                            bool final_inputs,
+                                            bool ignore_ws = true);
 
 /**
 * Perform base64 decoding
@@ -84,10 +77,8 @@ size_t BOTAN_PUBLIC_API(2,0) base64_decode(uint8_t output[],
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-size_t BOTAN_PUBLIC_API(2,0) base64_decode(uint8_t output[],
-                               const char input[],
-                               size_t input_length,
-                               bool ignore_ws = true);
+size_t BOTAN_PUBLIC_API(2, 0)
+   base64_decode(uint8_t output[], const char input[], size_t input_length, bool ignore_ws = true);
 
 /**
 * Perform base64 decoding
@@ -97,9 +88,7 @@ size_t BOTAN_PUBLIC_API(2,0) base64_decode(uint8_t output[],
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-size_t BOTAN_PUBLIC_API(3,0) base64_decode(uint8_t output[],
-                                           std::string_view input,
-                                           bool ignore_ws = true);
+size_t BOTAN_PUBLIC_API(3, 0) base64_decode(uint8_t output[], std::string_view input, bool ignore_ws = true);
 
 /**
 * Perform base64 decoding
@@ -109,9 +98,7 @@ size_t BOTAN_PUBLIC_API(3,0) base64_decode(uint8_t output[],
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-size_t BOTAN_PUBLIC_API(3,0) base64_decode(std::span<uint8_t> output,
-                                           std::string_view input,
-                                           bool ignore_ws = true);
+size_t BOTAN_PUBLIC_API(3, 0) base64_decode(std::span<uint8_t> output, std::string_view input, bool ignore_ws = true);
 
 /**
 * Perform base64 decoding
@@ -121,9 +108,8 @@ size_t BOTAN_PUBLIC_API(3,0) base64_decode(std::span<uint8_t> output,
                    exception if whitespace is encountered
 * @return decoded base64 output
 */
-secure_vector<uint8_t> BOTAN_PUBLIC_API(2,0) base64_decode(const char input[],
-                                           size_t input_length,
-                                           bool ignore_ws = true);
+secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 0)
+   base64_decode(const char input[], size_t input_length, bool ignore_ws = true);
 
 /**
 * Perform base64 decoding
@@ -132,23 +118,22 @@ secure_vector<uint8_t> BOTAN_PUBLIC_API(2,0) base64_decode(const char input[],
                    exception if whitespace is encountered
 * @return decoded base64 output
 */
-secure_vector<uint8_t> BOTAN_PUBLIC_API(3,0) base64_decode(std::string_view input,
-                                                           bool ignore_ws = true);
+secure_vector<uint8_t> BOTAN_PUBLIC_API(3, 0) base64_decode(std::string_view input, bool ignore_ws = true);
 
 /**
 * Calculate the size of output buffer for base64_encode
 * @param input_length the length of input in bytes
 * @return the size of output buffer in bytes
 */
-size_t BOTAN_PUBLIC_API(2,1) base64_encode_max_output(size_t input_length);
+size_t BOTAN_PUBLIC_API(2, 1) base64_encode_max_output(size_t input_length);
 
 /**
 * Calculate the size of output buffer for base64_decode
 * @param input_length the length of input in bytes
 * @return the size of output buffer in bytes
 */
-size_t BOTAN_PUBLIC_API(2,1) base64_decode_max_output(size_t input_length);
+size_t BOTAN_PUBLIC_API(2, 1) base64_decode_max_output(size_t input_length);
 
-}
+}  // namespace Botan
 
 #endif

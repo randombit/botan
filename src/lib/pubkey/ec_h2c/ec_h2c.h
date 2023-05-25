@@ -7,8 +7,8 @@
 #ifndef BOTAN_ECC_HASH_TO_CURVE_H_
 #define BOTAN_ECC_HASH_TO_CURVE_H_
 
-#include <botan/types.h>
 #include <botan/ec_point.h>
+#include <botan/types.h>
 #include <string_view>
 
 namespace Botan {
@@ -26,7 +26,6 @@ void BOTAN_TEST_API expand_message_xmd(std::string_view hash_fn,
                                        const uint8_t domain_sep[],
                                        size_t domain_sep_len);
 
-
 /**
 * Hash an input onto an elliptic curve point using the
 * methods from draft-irtf-cfrg-hash-to-curve
@@ -42,6 +41,6 @@ EC_Point hash_to_curve_sswu(const EC_Group& group,
                             size_t domain_sep_len,
                             bool random_oracle);
 
-}
+}  // namespace Botan
 
 #endif

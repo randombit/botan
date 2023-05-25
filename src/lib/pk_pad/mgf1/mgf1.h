@@ -22,10 +22,8 @@ class HashFunction;
 * @param out output buffer. The buffer is XORed with the output of MGF1.
 * @param out_len size of the output buffer in bytes
 */
-void mgf1_mask(HashFunction& hash,
-                         const uint8_t in[], size_t in_len,
-                         uint8_t out[], size_t out_len);
+void mgf1_mask(HashFunction& hash, const uint8_t in[], size_t in_len, uint8_t out[], size_t out_len);
 
-}
+}  // namespace Botan
 
 #endif

@@ -10,18 +10,17 @@
 
 #include <botan/buf_comp.h>
 #include <botan/sym_algo.h>
-#include <string>
-#include <span>
 #include <memory>
+#include <span>
+#include <string>
 
 namespace Botan {
 
 /**
 * This class represents Message Authentication Code (MAC) objects.
 */
-class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computation,
-                                            public SymmetricAlgorithm
-   {
+class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computation,
+                                                         public SymmetricAlgorithm {
    public:
       /**
       * Create an instance based on a name
@@ -30,9 +29,8 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * @param provider provider implementation to use
       * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<MessageAuthenticationCode>
-         create(std::string_view algo_spec,
-                std::string_view provider = "");
+      static std::unique_ptr<MessageAuthenticationCode> create(std::string_view algo_spec,
+                                                               std::string_view provider = "");
 
       /*
       * Create an instance based on a name
@@ -41,9 +39,8 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * @param provider provider implementation to use
       * Throws a Lookup_Error if algo/provider combination cannot be found
       */
-      static std::unique_ptr<MessageAuthenticationCode>
-         create_or_throw(std::string_view algo_spec,
-                         std::string_view provider = "");
+      static std::unique_ptr<MessageAuthenticationCode> create_or_throw(std::string_view algo_spec,
+                                                                        std::string_view provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -65,28 +62,19 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       *
       * @param nonce the message nonce bytes
       */
-      void start(std::span<const uint8_t> nonce)
-         {
-         start_msg(nonce.data(), nonce.size());
-         }
+      void start(std::span<const uint8_t> nonce) { start_msg(nonce.data(), nonce.size()); }
 
       /**
       * Begin processing a message.
       * @param nonce the per message nonce
       * @param nonce_len length of nonce
       */
-      void start(const uint8_t nonce[], size_t nonce_len)
-         {
-         start_msg(nonce, nonce_len);
-         }
+      void start(const uint8_t nonce[], size_t nonce_len) { start_msg(nonce, nonce_len); }
 
       /**
       * Begin processing a message.
       */
-      void start()
-         {
-         return start_msg(nullptr, 0);
-         }
+      void start() { return start_msg(nullptr, 0); }
 
       /**
       * Verify a MAC.
@@ -94,20 +82,14 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * @param length the length of param in
       * @return true if the MAC is valid, false otherwise
       */
-      bool verify_mac(const uint8_t in[], size_t length)
-         {
-         return verify_mac_result(in, length);
-         }
+      bool verify_mac(const uint8_t in[], size_t length) { return verify_mac_result(in, length); }
 
       /**
       * Verify a MAC.
       * @param in the MAC to verify as a byte array
       * @return true if the MAC is valid, false otherwise
       */
-      bool verify_mac(std::span<const uint8_t> in)
-         {
-         return verify_mac_result(in.data(), in.size());
-         }
+      bool verify_mac(std::span<const uint8_t> in) { return verify_mac_result(in.data(), in.size()); }
 
       /**
       * @return new object representing the same algorithm as *this
@@ -117,10 +99,7 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       /**
       * Get a new object representing the same algorithm as *this
       */
-      MessageAuthenticationCode* clone() const
-         {
-         return this->new_object().release();
-         }
+      MessageAuthenticationCode* clone() const { return this->new_object().release(); }
 
       /**
       * @return provider information about this implementation. Default is "base",
@@ -149,10 +128,10 @@ class BOTAN_PUBLIC_API(2,0) MessageAuthenticationCode : public Buffered_Computat
       * Verify the MACs final result
       */
       virtual bool verify_mac_result(const uint8_t in[], size_t length);
-   };
+};
 
 typedef MessageAuthenticationCode MAC;
 
-}
+}  // namespace Botan
 
 #endif

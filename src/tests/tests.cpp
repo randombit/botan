@@ -6,14 +6,14 @@
 
 #include "tests.h"
 
-#include <sstream>
+#include <botan/hex.h>
+#include <botan/internal/cpuid.h>
+#include <botan/internal/filesystem.h>
+#include <botan/internal/parsing.h>
+#include <botan/internal/stl_util.h>
 #include <fstream>
 #include <iomanip>
-#include <botan/hex.h>
-#include <botan/internal/parsing.h>
-#include <botan/internal/filesystem.h>
-#include <botan/internal/stl_util.h>
-#include <botan/internal/cpuid.h>
+#include <sstream>
 
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/bigint.h>
@@ -29,388 +29,319 @@
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-  #include <version>
-  #if defined(__cpp_lib_filesystem)
-    #include <filesystem>
-  #endif
+   #include <version>
+   #if defined(__cpp_lib_filesystem)
+      #include <filesystem>
+   #endif
 #endif
 
 namespace Botan_Tests {
 
-void Test::Result::merge(const Result& other, bool ignore_test_name)
-   {
-   if(who() != other.who())
-      {
+void Test::Result::merge(const Result& other, bool ignore_test_name) {
+   if(who() != other.who()) {
       if(!ignore_test_name)
          throw Test_Error("Merging tests from different sources");
 
       // When deliberately merging results with different names, the code location is
       // likely inconsistent and must be discarded.
       m_where.reset();
-      }
-   else
-      {
+   } else {
       m_where = other.m_where;
-      }
+   }
 
    m_timestamp = std::min(m_timestamp, other.m_timestamp);
    m_ns_taken += other.m_ns_taken;
    m_tests_passed += other.m_tests_passed;
    m_fail_log.insert(m_fail_log.end(), other.m_fail_log.begin(), other.m_fail_log.end());
    m_log.insert(m_log.end(), other.m_log.begin(), other.m_log.end());
-   }
+}
 
-void Test::Result::start_timer()
-   {
-   if(m_started == 0)
-      {
+void Test::Result::start_timer() {
+   if(m_started == 0) {
       m_started = Test::timestamp();
-      }
    }
+}
 
-void Test::Result::end_timer()
-   {
-   if(m_started > 0)
-      {
+void Test::Result::end_timer() {
+   if(m_started > 0) {
       m_ns_taken += Test::timestamp() - m_started;
       m_started = 0;
-      }
    }
+}
 
-void Test::Result::test_note(const std::string& note, const char* extra)
-   {
-   if(!note.empty())
-      {
+void Test::Result::test_note(const std::string& note, const char* extra) {
+   if(!note.empty()) {
       std::ostringstream out;
       out << who() << " " << note;
-      if(extra)
-         {
+      if(extra) {
          out << ": " << extra;
-         }
-      m_log.push_back(out.str());
       }
+      m_log.push_back(out.str());
    }
+}
 
-void Test::Result::note_missing(const std::string& whatever)
-   {
+void Test::Result::note_missing(const std::string& whatever) {
    static std::set<std::string> s_already_seen;
 
-   if(!s_already_seen.contains(whatever))
-      {
+   if(!s_already_seen.contains(whatever)) {
       test_note("Skipping tests due to missing " + whatever);
       s_already_seen.insert(whatever);
-      }
    }
+}
 
-bool Test::Result::ThrowExpectations::check(const std::string& test_name, Test::Result& result)
-   {
+bool Test::Result::ThrowExpectations::check(const std::string& test_name, Test::Result& result) {
    m_consumed = true;
 
-   try
-      {
+   try {
       m_fn();
       if(!m_expect_success)
          return result.test_failure(test_name + " failed to throw expected exception");
-      }
-   catch(const std::exception& ex)
-      {
+   } catch(const std::exception& ex) {
       if(m_expect_success)
          return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
       if(m_expected_exception_type.has_value() && m_expected_exception_type.value() != typeid(ex))
-         return result.test_failure(test_name +  " threw unexpected exception: " + ex.what());
+         return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
       if(m_expected_message.has_value() && m_expected_message.value() != ex.what())
          return result.test_failure(test_name + " threw exception with unexpected message (expected: '" +
                                     m_expected_message.value() + "', got: '" + ex.what() + "')");
-      }
-   catch(...)
-      {
+   } catch(...) {
       if(m_expect_success || m_expected_exception_type.has_value() || m_expected_message.has_value())
          return result.test_failure(test_name + " threw unexpected unknown exception");
-      }
+   }
 
    return result.test_success(test_name + " behaved as expected");
-   }
+}
 
-bool Test::Result::test_throws(const std::string& what, const std::function<void ()>& fn)
-   {
+bool Test::Result::test_throws(const std::string& what, const std::function<void()>& fn) {
    return ThrowExpectations(fn).check(what, *this);
-   }
+}
 
-bool Test::Result::test_throws(const std::string& what, const std::string& expected, const std::function<void ()>& fn)
-   {
-   return ThrowExpectations(fn)
-          .expect_message(expected)
-          .check(what, *this);
-   }
+bool Test::Result::test_throws(const std::string& what, const std::string& expected, const std::function<void()>& fn) {
+   return ThrowExpectations(fn).expect_message(expected).check(what, *this);
+}
 
-bool Test::Result::test_no_throw(const std::string& what, const std::function<void ()>& fn)
-   {
-   return ThrowExpectations(fn)
-          .expect_success()
-          .check(what, *this);
-   }
+bool Test::Result::test_no_throw(const std::string& what, const std::function<void()>& fn) {
+   return ThrowExpectations(fn).expect_success().check(what, *this);
+}
 
-bool Test::Result::test_success(const std::string& note)
-   {
-   if(Test::options().log_success())
-      {
+bool Test::Result::test_success(const std::string& note) {
+   if(Test::options().log_success()) {
       test_note(note);
-      }
+   }
    ++m_tests_passed;
    return true;
-   }
+}
 
-bool Test::Result::test_failure(const std::string& what, const std::string& error)
-   {
+bool Test::Result::test_failure(const std::string& what, const std::string& error) {
    return test_failure(who() + " " + what + " with error " + error);
-   }
+}
 
-void Test::Result::test_failure(const std::string& what, const uint8_t buf[], size_t buf_len)
-   {
-   test_failure(who() + ": " + what +
-                " buf len " + std::to_string(buf_len) +
-                " value " + Botan::hex_encode(buf, buf_len));
-   }
+void Test::Result::test_failure(const std::string& what, const uint8_t buf[], size_t buf_len) {
+   test_failure(who() + ": " + what + " buf len " + std::to_string(buf_len) + " value " +
+                Botan::hex_encode(buf, buf_len));
+}
 
-bool Test::Result::test_failure(const std::string& err)
-   {
+bool Test::Result::test_failure(const std::string& err) {
    m_fail_log.push_back(err);
 
-   if(Test::options().abort_on_first_fail() && m_who != "Failing Test")
-      {
+   if(Test::options().abort_on_first_fail() && m_who != "Failing Test") {
       std::abort();
-      }
-   return false;
    }
+   return false;
+}
 
 bool Test::Result::test_ne(const std::string& what,
-                           const uint8_t produced[], size_t produced_len,
-                           const uint8_t expected[], size_t expected_len)
-   {
-   if(produced_len == expected_len && Botan::same_mem(produced, expected, expected_len))
-      {
+                           const uint8_t produced[],
+                           size_t produced_len,
+                           const uint8_t expected[],
+                           size_t expected_len) {
+   if(produced_len == expected_len && Botan::same_mem(produced, expected, expected_len)) {
       return test_failure(who() + ": " + what + " produced matching");
-      }
-   return test_success();
    }
+   return test_success();
+}
 
-bool Test::Result::test_eq(const char* producer, const std::string& what,
-                           const uint8_t produced[], size_t produced_size,
-                           const uint8_t expected[], size_t expected_size)
-   {
-   if(produced_size == expected_size && Botan::same_mem(produced, expected, expected_size))
-      {
+bool Test::Result::test_eq(const char* producer,
+                           const std::string& what,
+                           const uint8_t produced[],
+                           size_t produced_size,
+                           const uint8_t expected[],
+                           size_t expected_size) {
+   if(produced_size == expected_size && Botan::same_mem(produced, expected, expected_size)) {
       return test_success();
-      }
+   }
 
    std::ostringstream err;
 
    err << who();
 
-   if(producer)
-      {
+   if(producer) {
       err << " producer '" << producer << "'";
-      }
+   }
 
    err << " unexpected result for " << what;
 
-   if(produced_size != expected_size)
-      {
+   if(produced_size != expected_size) {
       err << " produced " << produced_size << " bytes expected " << expected_size;
-      }
+   }
 
    std::vector<uint8_t> xor_diff(std::min(produced_size, expected_size));
    size_t bytes_different = 0;
 
-   for(size_t i = 0; i != xor_diff.size(); ++i)
-      {
+   for(size_t i = 0; i != xor_diff.size(); ++i) {
       xor_diff[i] = produced[i] ^ expected[i];
       bytes_different += (xor_diff[i] > 0);
-      }
+   }
 
    err << "\nProduced: " << Botan::hex_encode(produced, produced_size)
        << "\nExpected: " << Botan::hex_encode(expected, expected_size);
 
-   if(bytes_different > 0)
-      {
+   if(bytes_different > 0) {
       err << "\nXOR Diff: " << Botan::hex_encode(xor_diff);
-      }
+   }
 
    return test_failure(err.str());
-   }
+}
 
-bool Test::Result::test_is_nonempty(const std::string& what_is_it, const std::string& to_examine)
-   {
-   if(to_examine.empty())
-      {
+bool Test::Result::test_is_nonempty(const std::string& what_is_it, const std::string& to_examine) {
+   if(to_examine.empty()) {
       return test_failure(what_is_it + " was empty");
-      }
+   }
    return test_success();
-   }
+}
 
-bool Test::Result::test_eq(const std::string& what, const std::string& produced, const std::string& expected)
-   {
+bool Test::Result::test_eq(const std::string& what, const std::string& produced, const std::string& expected) {
    return test_is_eq(what, produced, expected);
-   }
+}
 
-bool Test::Result::test_eq(const std::string& what, const char* produced, const char* expected)
-   {
+bool Test::Result::test_eq(const std::string& what, const char* produced, const char* expected) {
    return test_is_eq(what, std::string(produced), std::string(expected));
-   }
+}
 
-bool Test::Result::test_eq(const std::string& what, size_t produced, size_t expected)
-   {
+bool Test::Result::test_eq(const std::string& what, size_t produced, size_t expected) {
    return test_is_eq(what, produced, expected);
-   }
+}
 
-bool Test::Result::test_eq_sz(const std::string& what, size_t produced, size_t expected)
-   {
+bool Test::Result::test_eq_sz(const std::string& what, size_t produced, size_t expected) {
    return test_is_eq(what, produced, expected);
-   }
+}
 
 bool Test::Result::test_eq(const std::string& what,
                            const Botan::OctetString& produced,
-                           const Botan::OctetString& expected)
-   {
+                           const Botan::OctetString& expected) {
    std::ostringstream out;
    out << m_who << " " << what;
 
-   if(produced == expected)
-      {
+   if(produced == expected) {
       out << " produced expected result " << produced.to_string();
       return test_success(out.str());
-      }
-   else
-      {
+   } else {
       out << " produced unexpected result '" << produced.to_string() << "' expected '" << expected.to_string() << "'";
       return test_failure(out.str());
-      }
    }
+}
 
-bool Test::Result::test_lt(const std::string& what, size_t produced, size_t expected)
-   {
-   if(produced >= expected)
-      {
+bool Test::Result::test_lt(const std::string& what, size_t produced, size_t expected) {
+   if(produced >= expected) {
       std::ostringstream err;
       err << m_who << " " << what;
       err << " unexpected result " << produced << " >= " << expected;
       return test_failure(err.str());
-      }
-
-   return test_success();
    }
 
-bool Test::Result::test_lte(const std::string& what, size_t produced, size_t expected)
-   {
-   if(produced > expected)
-      {
+   return test_success();
+}
+
+bool Test::Result::test_lte(const std::string& what, size_t produced, size_t expected) {
+   if(produced > expected) {
       std::ostringstream err;
       err << m_who << " " << what << " unexpected result " << produced << " > " << expected;
       return test_failure(err.str());
-      }
-
-   return test_success();
    }
 
-bool Test::Result::test_gte(const std::string& what, size_t produced, size_t expected)
-   {
-   if(produced < expected)
-      {
+   return test_success();
+}
+
+bool Test::Result::test_gte(const std::string& what, size_t produced, size_t expected) {
+   if(produced < expected) {
       std::ostringstream err;
       err << m_who;
       err << " " << what;
       err << " unexpected result " << produced << " < " << expected;
       return test_failure(err.str());
-      }
-
-   return test_success();
    }
 
-bool Test::Result::test_gt(const std::string& what, size_t produced, size_t expected)
-   {
-   if(produced <= expected)
-      {
+   return test_success();
+}
+
+bool Test::Result::test_gt(const std::string& what, size_t produced, size_t expected) {
+   if(produced <= expected) {
       std::ostringstream err;
       err << m_who;
       err << " " << what;
       err << " unexpected result " << produced << " <= " << expected;
       return test_failure(err.str());
-      }
+   }
 
    return test_success();
-   }
+}
 
-bool Test::Result::test_ne(const std::string& what, const std::string& str1, const std::string& str2)
-   {
-   if(str1 != str2)
-      {
+bool Test::Result::test_ne(const std::string& what, const std::string& str1, const std::string& str2) {
+   if(str1 != str2) {
       return test_success(str1 + " != " + str2);
-      }
+   }
 
    return test_failure(who() + " " + what + " produced matching strings " + str1);
-   }
+}
 
-bool Test::Result::test_ne(const std::string& what, size_t produced, size_t expected)
-   {
-   if(produced != expected)
-      {
+bool Test::Result::test_ne(const std::string& what, size_t produced, size_t expected) {
+   if(produced != expected) {
       return test_success();
-      }
+   }
 
    std::ostringstream err;
    err << who() << " " << what << " produced " << produced << " unexpected value";
    return test_failure(err.str());
-   }
+}
 
 #if defined(BOTAN_HAS_BIGINT)
-bool Test::Result::test_eq(const std::string& what, const BigInt& produced, const BigInt& expected)
-   {
+bool Test::Result::test_eq(const std::string& what, const BigInt& produced, const BigInt& expected) {
    return test_is_eq(what, produced, expected);
-   }
+}
 
-bool Test::Result::test_ne(const std::string& what, const BigInt& produced, const BigInt& expected)
-   {
-   if(produced != expected)
-      {
+bool Test::Result::test_ne(const std::string& what, const BigInt& produced, const BigInt& expected) {
+   if(produced != expected) {
       return test_success();
-      }
+   }
 
    std::ostringstream err;
    err << who() << " " << what << " produced " << produced << " prohibited value";
    return test_failure(err.str());
-   }
+}
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
-bool Test::Result::test_eq(const std::string& what,
-                           const Botan::EC_Point& a, const Botan::EC_Point& b)
-   {
+bool Test::Result::test_eq(const std::string& what, const Botan::EC_Point& a, const Botan::EC_Point& b) {
    //return test_is_eq(what, a, b);
-   if(a == b)
-      {
+   if(a == b) {
       return test_success();
-      }
+   }
 
    std::ostringstream err;
    err << who() << " " << what << " a=(" << a.get_affine_x() << "," << a.get_affine_y() << ")"
        << " b=(" << b.get_affine_x() << "," << b.get_affine_y();
    return test_failure(err.str());
-   }
+}
 #endif
 
-bool Test::Result::test_eq(const std::string& what, bool produced, bool expected)
-   {
+bool Test::Result::test_eq(const std::string& what, bool produced, bool expected) {
    return test_is_eq(what, produced, expected);
-   }
+}
 
-bool Test::Result::test_rc_init(const std::string& func, int rc)
-   {
-   if(rc == 0)
-      {
+bool Test::Result::test_rc_init(const std::string& func, int rc) {
+   if(rc == 0) {
       return test_success();
-      }
-   else
-      {
+   } else {
       std::ostringstream msg;
       msg << m_who;
       msg << " " << func;
@@ -426,130 +357,105 @@ bool Test::Result::test_rc_init(const std::string& func, int rc)
       else
          this->test_failure(msg.str());
       return false;
-      }
    }
+}
 
-bool Test::Result::test_rc(const std::string& func, int expected, int rc)
-   {
-   if(expected != rc)
-      {
+bool Test::Result::test_rc(const std::string& func, int expected, int rc) {
+   if(expected != rc) {
       std::ostringstream err;
       err << m_who;
       err << " call to " << func << " unexpectedly returned " << rc;
       err << " but expecting " << expected;
       return test_failure(err.str());
-      }
+   }
 
    return test_success();
-   }
+}
 
-std::vector<std::string> Test::possible_providers(const std::string& /*unused*/)
-   {
-   return Test::provider_filter({ "base" });
-   }
+std::vector<std::string> Test::possible_providers(const std::string& /*unused*/) {
+   return Test::provider_filter({"base"});
+}
 
 //static
-std::string Test::format_time(uint64_t ns)
-   {
+std::string Test::format_time(uint64_t ns) {
    std::ostringstream o;
 
-   if(ns > 1000000000)
-      {
+   if(ns > 1000000000) {
       o << std::setprecision(2) << std::fixed << ns / 1000000000.0 << " sec";
-      }
-   else
-      {
+   } else {
       o << std::setprecision(2) << std::fixed << ns / 1000000.0 << " msec";
-      }
+   }
 
    return o.str();
-   }
+}
 
-Test::Result::Result(std::string who, const std::vector<Result>& downstream_results)
-   : Result(std::move(who))
-   {
+Test::Result::Result(std::string who, const std::vector<Result>& downstream_results) : Result(std::move(who)) {
    for(const auto& result : downstream_results)
       merge(result, true /* ignore non-matching test names */);
-   }
+}
 
 // TODO: this should move to `StdoutReporter`
-std::string Test::Result::result_string() const
-   {
+std::string Test::Result::result_string() const {
    const bool verbose = Test::options().verbose();
 
-   if(tests_run() == 0 && !verbose)
-      {
+   if(tests_run() == 0 && !verbose) {
       return "";
-      }
+   }
 
    std::ostringstream report;
 
    report << who() << " ran ";
 
-   if(tests_run() == 0)
-      {
+   if(tests_run() == 0) {
       report << "ZERO";
-      }
-   else
-      {
+   } else {
       report << tests_run();
-      }
+   }
    report << " tests";
 
-   if(m_ns_taken > 0)
-      {
+   if(m_ns_taken > 0) {
       report << " in " << format_time(m_ns_taken);
-      }
+   }
 
-   if(tests_failed())
-      {
+   if(tests_failed()) {
       report << " " << tests_failed() << " FAILED";
-      }
-   else
-      {
+   } else {
       report << " all ok";
-      }
+   }
 
    report << "\n";
 
-   for(size_t i = 0; i != m_fail_log.size(); ++i)
-      {
+   for(size_t i = 0; i != m_fail_log.size(); ++i) {
       report << "Failure " << (i + 1) << ": " << m_fail_log[i];
-      if(m_where)
-         {
+      if(m_where) {
          report << " (at " << m_where->path << ":" << m_where->line << ")";
-         }
-       report << "\n";
       }
+      report << "\n";
+   }
 
-   if(!m_fail_log.empty() || tests_run() == 0 || verbose)
-      {
-      for(size_t i = 0; i != m_log.size(); ++i)
-         {
+   if(!m_fail_log.empty() || tests_run() == 0 || verbose) {
+      for(size_t i = 0; i != m_log.size(); ++i) {
          report << "Note " << (i + 1) << ": " << m_log[i] << "\n";
-         }
       }
+   }
 
    return report.str();
-   }
+}
 
 namespace {
 
-class Test_Registry
-   {
+class Test_Registry {
    public:
-      static Test_Registry& instance()
-         {
+      static Test_Registry& instance() {
          static Test_Registry registry;
          return registry;
-         }
+      }
 
       void register_test(std::string category,
                          std::string name,
                          bool smoke_test,
                          bool needs_serialization,
-                         std::function<std::unique_ptr<Test>()> maker_fn)
-         {
+                         std::function<std::unique_ptr<Test>()> maker_fn) {
          if(m_tests.contains(name))
             throw Test_Error("Duplicate registration of test '" + name + "'");
 
@@ -567,89 +473,72 @@ class Test_Registry
 
          m_tests.emplace(name, std::move(maker_fn));
          m_categories.emplace(std::move(category), std::move(name));
-         }
+      }
 
-      std::unique_ptr<Test> get_test(const std::string& test_name) const
-         {
+      std::unique_ptr<Test> get_test(const std::string& test_name) const {
          auto i = m_tests.find(test_name);
-         if(i != m_tests.end())
-            {
+         if(i != m_tests.end()) {
             return i->second();
-            }
+         }
          return nullptr;
-         }
+      }
 
-      std::set<std::string> registered_tests() const
-         {
-         return Botan::map_keys_as_set(m_tests);
-         }
+      std::set<std::string> registered_tests() const { return Botan::map_keys_as_set(m_tests); }
 
-      std::set<std::string> registered_test_categories() const
-         {
-         return Botan::map_keys_as_set(m_categories);
-         }
+      std::set<std::string> registered_test_categories() const { return Botan::map_keys_as_set(m_categories); }
 
-      std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested, const std::set<std::string>& to_be_skipped)
-         {
+      std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested,
+                                                       const std::set<std::string>& to_be_skipped) {
          std::vector<std::string> result;
 
          // TODO: this is O(n^2), but we have a relatively small number of tests.
-         auto insert_if_not_exists_and_not_skipped = [&](const std::string& test_name)
-            {
+         auto insert_if_not_exists_and_not_skipped = [&](const std::string& test_name) {
             if(!Botan::value_exists(result, test_name) && to_be_skipped.find(test_name) == to_be_skipped.end())
                result.push_back(test_name);
-            };
+         };
 
-         if(requested.empty())
-            {
+         if(requested.empty()) {
             /*
             If nothing was requested on the command line, run everything. First
             run the "essentials" to smoke test, then everything else in
             alphabetical order.
             */
             result = m_smoke_tests;
-            for(const auto& [test_name, _] : m_tests)
-               { insert_if_not_exists_and_not_skipped(test_name); }
+            for(const auto& [test_name, _] : m_tests) {
+               insert_if_not_exists_and_not_skipped(test_name);
             }
-         else
-            {
-            for(const auto& r : requested)
-               {
-               if(m_tests.find(r) != m_tests.end())
-                  { insert_if_not_exists_and_not_skipped(r); }
-               else if(auto elems = m_categories.equal_range(r); elems.first != m_categories.end())
-                  {
-                  for(;elems.first != elems.second; ++elems.first)
-                     {
+         } else {
+            for(const auto& r : requested) {
+               if(m_tests.find(r) != m_tests.end()) {
+                  insert_if_not_exists_and_not_skipped(r);
+               } else if(auto elems = m_categories.equal_range(r); elems.first != m_categories.end()) {
+                  for(; elems.first != elems.second; ++elems.first) {
                      insert_if_not_exists_and_not_skipped(elems.first->second);
-                     }
                   }
-               else
-                  {
+               } else {
                   throw Botan_Tests::Test_Error("Unknown test suite or category: " + r);
-                  }
                }
             }
+         }
 
          return result;
-         }
+      }
 
-      bool needs_serialization(const std::string& test_name) const
-         {
+      bool needs_serialization(const std::string& test_name) const {
          return Botan::value_exists(m_mutexed_tests, test_name);
-         }
+      }
 
    private:
       Test_Registry() = default;
 
    private:
-      std::map<std::string, std::function<std::unique_ptr<Test> ()>> m_tests;
+      std::map<std::string, std::function<std::unique_ptr<Test>()>> m_tests;
       std::multimap<std::string, std::string> m_categories;
       std::vector<std::string> m_smoke_tests;
       std::vector<std::string> m_mutexed_tests;
-   };
+};
 
-}
+}  // namespace
 
 // static Test:: functions
 
@@ -658,67 +547,54 @@ void Test::register_test(std::string category,
                          std::string name,
                          bool smoke_test,
                          bool needs_serialization,
-                         std::function<std::unique_ptr<Test> ()> maker_fn)
-   {
-   Test_Registry::instance().register_test(std::move(category), std::move(name), smoke_test, needs_serialization, std::move(maker_fn));
-   }
+                         std::function<std::unique_ptr<Test>()> maker_fn) {
+   Test_Registry::instance().register_test(
+      std::move(category), std::move(name), smoke_test, needs_serialization, std::move(maker_fn));
+}
 
 //static
-uint64_t Test::timestamp()
-   {
+uint64_t Test::timestamp() {
    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-   }
+}
 
 //static
-std::vector<Test::Result> Test::flatten_result_lists(std::vector<std::vector<Test::Result>> result_lists)
-   {
+std::vector<Test::Result> Test::flatten_result_lists(std::vector<std::vector<Test::Result>> result_lists) {
    std::vector<Test::Result> results;
-   for(auto& result_list : result_lists)
-      {
-      for(auto& result : result_list)
-         {
+   for(auto& result_list : result_lists) {
+      for(auto& result : result_list) {
          results.emplace_back(std::move(result));
-         }
       }
+   }
    return results;
-   }
+}
 
 //static
-std::set<std::string> Test::registered_tests()
-   {
-   return Test_Registry::instance().registered_tests();
-   }
-
+std::set<std::string> Test::registered_tests() { return Test_Registry::instance().registered_tests(); }
 
 //static
-std::set<std::string> Test::registered_test_categories()
-   {
+std::set<std::string> Test::registered_test_categories() {
    return Test_Registry::instance().registered_test_categories();
-   }
+}
 
 //static
-std::unique_ptr<Test> Test::get_test(const std::string& test_name)
-   {
+std::unique_ptr<Test> Test::get_test(const std::string& test_name) {
    return Test_Registry::instance().get_test(test_name);
-   }
+}
 
 //static
-bool Test::test_needs_serialization(const std::string& test_name)
-   {
+bool Test::test_needs_serialization(const std::string& test_name) {
    return Test_Registry::instance().needs_serialization(test_name);
-   }
+}
 
 //static
 std::vector<std::string> Test::filter_registered_tests(const std::vector<std::string>& requested,
-                                                       const std::set<std::string>& to_be_skipped)
-   {
+                                                       const std::set<std::string>& to_be_skipped) {
    return Test_Registry::instance().filter_registered_tests(requested, to_be_skipped);
-   }
+}
 
 //static
-std::string Test::temp_file_name(const std::string& basename)
-   {
+std::string Test::temp_file_name(const std::string& basename) {
    // TODO add a --tmp-dir option to the tests to specify where these files go
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
@@ -729,10 +605,9 @@ std::string Test::temp_file_name(const std::string& basename)
    int fd = ::mkstemp(&mkstemp_basename[0]);
 
    // error
-   if(fd < 0)
-      {
+   if(fd < 0) {
       return "";
-      }
+   }
 
    ::close(fd);
 
@@ -741,12 +616,11 @@ std::string Test::temp_file_name(const std::string& basename)
    // For now just create the temp in the current working directory
    return basename;
 #endif
-   }
+}
 
-bool Test::copy_file(const std::string& from, const std::string& to)
-   {
+bool Test::copy_file(const std::string& from, const std::string& to) {
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && defined(__cpp_lib_filesystem)
-   std::error_code ec; // don't throw, just return false on error
+   std::error_code ec;  // don't throw, just return false on error
    return std::filesystem::copy_file(from, to, std::filesystem::copy_options::overwrite_existing, ec);
 #else
    // TODO: implement fallbacks to POSIX or WIN32
@@ -754,48 +628,41 @@ bool Test::copy_file(const std::string& from, const std::string& to)
    BOTAN_UNUSED(from, to);
    throw Botan::No_Filesystem_Access();
 #endif
-   }
+}
 
-std::string Test::read_data_file(const std::string& path)
-   {
+std::string Test::read_data_file(const std::string& path) {
    const std::string fsname = Test::data_file(path);
    std::ifstream file(fsname.c_str());
-   if(!file.good())
-      {
+   if(!file.good()) {
       throw Test_Error("Error reading from " + fsname);
-      }
-
-   return std::string((std::istreambuf_iterator<char>(file)),
-                      std::istreambuf_iterator<char>());
    }
 
-std::vector<uint8_t> Test::read_binary_data_file(const std::string& path)
-   {
+   return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+}
+
+std::vector<uint8_t> Test::read_binary_data_file(const std::string& path) {
    const std::string fsname = Test::data_file(path);
    std::ifstream file(fsname.c_str(), std::ios::binary);
-   if(!file.good())
-      {
+   if(!file.good()) {
       throw Test_Error("Error reading from " + fsname);
-      }
+   }
 
    std::vector<uint8_t> contents;
 
-   while(file.good())
-      {
+   while(file.good()) {
       std::vector<uint8_t> buf(4096);
       file.read(reinterpret_cast<char*>(buf.data()), buf.size());
       const size_t got = static_cast<size_t>(file.gcount());
 
-      if(got == 0 && file.eof())
-         {
+      if(got == 0 && file.eof()) {
          break;
-         }
-
-      contents.insert(contents.end(), buf.data(), buf.data() + got);
       }
 
-   return contents;
+      contents.insert(contents.end(), buf.data(), buf.data() + got);
    }
+
+   return contents;
+}
 
 // static member variables of Test
 
@@ -803,305 +670,221 @@ Test_Options Test::m_opts;
 std::shared_ptr<Botan::RandomNumberGenerator> Test::m_test_rng;
 
 //static
-void Test::set_test_options(const Test_Options& opts)
-   {
-   m_opts = opts;
-   }
+void Test::set_test_options(const Test_Options& opts) { m_opts = opts; }
 
 //static
-void Test::set_test_rng(std::shared_ptr<Botan::RandomNumberGenerator> rng)
-   {
-   m_test_rng = std::move(rng);
-   }
+void Test::set_test_rng(std::shared_ptr<Botan::RandomNumberGenerator> rng) { m_test_rng = std::move(rng); }
 
 //static
-std::string Test::data_file(const std::string& what)
-   {
-   return Test::data_dir() + "/" + what;
-   }
+std::string Test::data_file(const std::string& what) { return Test::data_dir() + "/" + what; }
 
 //static
-std::string Test::data_file_as_temporary_copy(const std::string &what)
-   {
+std::string Test::data_file_as_temporary_copy(const std::string& what) {
    auto tmp_basename = what;
    std::replace(tmp_basename.begin(), tmp_basename.end(), '/', '_');
    auto temp_file = temp_file_name("tmp-" + tmp_basename);
-   if(temp_file.empty())
-      { return ""; }
-   if(!Test::copy_file(data_file(what), temp_file))
-      { return ""; }
+   if(temp_file.empty()) {
+      return "";
+   }
+   if(!Test::copy_file(data_file(what), temp_file)) {
+      return "";
+   }
    return temp_file;
-   }
+}
 
 //static
-std::vector<std::string> Test::provider_filter(const std::vector<std::string>& in)
-   {
-   if(m_opts.provider().empty())
-      {
+std::vector<std::string> Test::provider_filter(const std::vector<std::string>& in) {
+   if(m_opts.provider().empty()) {
       return in;
-      }
-   for(auto&& provider : in)
-      {
-      if(provider == m_opts.provider())
-         {
-         return std::vector<std::string> { provider };
-         }
-      }
-   return std::vector<std::string> {};
    }
+   for(auto&& provider : in) {
+      if(provider == m_opts.provider()) {
+         return std::vector<std::string>{provider};
+      }
+   }
+   return std::vector<std::string>{};
+}
 
 //static
-Botan::RandomNumberGenerator& Test::rng()
-   {
-   if(!m_test_rng)
-      {
+Botan::RandomNumberGenerator& Test::rng() {
+   if(!m_test_rng) {
       throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
-      }
+   }
    return *m_test_rng;
-   }
+}
 
 //static
-std::shared_ptr<Botan::RandomNumberGenerator> Test::rng_as_shared()
-   {
-   if(!m_test_rng)
-      {
+std::shared_ptr<Botan::RandomNumberGenerator> Test::rng_as_shared() {
+   if(!m_test_rng) {
       throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
-      }
-   return m_test_rng;
    }
+   return m_test_rng;
+}
 
-std::string Test::random_password()
-   {
+std::string Test::random_password() {
    const size_t len = 1 + Test::rng().next_byte() % 32;
    return Botan::hex_encode(Test::rng().random_vec(len));
-   }
+}
 
-std::vector<std::vector<uint8_t>> VarMap::get_req_bin_list(const std::string& key) const
-   {
+std::vector<std::vector<uint8_t>> VarMap::get_req_bin_list(const std::string& key) const {
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       throw Test_Error("Test missing variable " + key);
-      }
+   }
 
    std::vector<std::vector<uint8_t>> bin_list;
 
-   for(auto&& part : Botan::split_on(i->second, ','))
-      {
-      try
-         {
+   for(auto&& part : Botan::split_on(i->second, ',')) {
+      try {
          bin_list.push_back(Botan::hex_decode(part));
-         }
-      catch(std::exception& e)
-         {
+      } catch(std::exception& e) {
          std::ostringstream oss;
-         oss << "Bad input '" << part << "'" << " in binary list key " << key << " - " << e.what();
+         oss << "Bad input '" << part << "'"
+             << " in binary list key " << key << " - " << e.what();
          throw Test_Error(oss.str());
-         }
       }
+   }
 
    return bin_list;
+}
+
+std::vector<uint8_t> VarMap::get_req_bin(const std::string& key) const {
+   auto i = m_vars.find(key);
+   if(i == m_vars.end()) {
+      throw Test_Error("Test missing variable " + key);
    }
 
-std::vector<uint8_t> VarMap::get_req_bin(const std::string& key) const
-   {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
-      throw Test_Error("Test missing variable " + key);
-      }
-
-   try
-      {
+   try {
       return Botan::hex_decode(i->second);
-      }
-   catch(std::exception& e)
-      {
+   } catch(std::exception& e) {
       std::ostringstream oss;
-      oss << "Bad input '" << i->second << "'" << " for key " << key << " - " << e.what();
+      oss << "Bad input '" << i->second << "'"
+          << " for key " << key << " - " << e.what();
       throw Test_Error(oss.str());
-      }
    }
+}
 
-std::string VarMap::get_opt_str(const std::string& key, const std::string& def_value) const
-   {
+std::string VarMap::get_opt_str(const std::string& key, const std::string& def_value) const {
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       return def_value;
-      }
+   }
    return i->second;
+}
+
+bool VarMap::get_req_bool(const std::string& key) const {
+   auto i = m_vars.find(key);
+   if(i == m_vars.end()) {
+      throw Test_Error("Test missing variable " + key);
    }
 
-bool VarMap::get_req_bool(const std::string& key) const
-   {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
-      throw Test_Error("Test missing variable " + key);
-      }
-
-   if(i->second == "true")
-      {
+   if(i->second == "true") {
       return true;
-      }
-   else if(i->second == "false")
-      {
+   } else if(i->second == "false") {
       return false;
-      }
-   else
-      {
+   } else {
       throw Test_Error("Invalid boolean for key '" + key + "' value '" + i->second + "'");
-      }
    }
+}
 
-size_t VarMap::get_req_sz(const std::string& key) const
-   {
+size_t VarMap::get_req_sz(const std::string& key) const {
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       throw Test_Error("Test missing variable " + key);
-      }
-   return Botan::to_u32bit(i->second);
    }
+   return Botan::to_u32bit(i->second);
+}
 
-uint8_t VarMap::get_req_u8(const std::string& key) const
-   {
+uint8_t VarMap::get_req_u8(const std::string& key) const {
    const size_t s = this->get_req_sz(key);
-   if(s > 256)
-      {
+   if(s > 256) {
       throw Test_Error("Invalid " + key + " expected uint8_t got " + std::to_string(s));
-      }
+   }
    return static_cast<uint8_t>(s);
-   }
+}
 
-uint32_t VarMap::get_req_u32(const std::string& key) const
-   {
-   return static_cast<uint32_t>(get_req_sz(key));
-   }
+uint32_t VarMap::get_req_u32(const std::string& key) const { return static_cast<uint32_t>(get_req_sz(key)); }
 
-uint64_t VarMap::get_req_u64(const std::string& key) const
-   {
+uint64_t VarMap::get_req_u64(const std::string& key) const {
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       throw Test_Error("Test missing variable " + key);
-      }
-   try
-      {
-      return std::stoull(i->second);
-      }
-   catch(std::exception&)
-      {
-      throw Test_Error("Invalid u64 value '" + i->second + "'");
-      }
    }
+   try {
+      return std::stoull(i->second);
+   } catch(std::exception&) { throw Test_Error("Invalid u64 value '" + i->second + "'"); }
+}
 
-size_t VarMap::get_opt_sz(const std::string& key, const size_t def_value) const
-   {
+size_t VarMap::get_opt_sz(const std::string& key, const size_t def_value) const {
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       return def_value;
-      }
+   }
    return Botan::to_u32bit(i->second);
-   }
+}
 
-uint64_t VarMap::get_opt_u64(const std::string& key, const uint64_t def_value) const
-   {
+uint64_t VarMap::get_opt_u64(const std::string& key, const uint64_t def_value) const {
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       return def_value;
-      }
-   try
-      {
+   }
+   try {
       return std::stoull(i->second);
-      }
-   catch(std::exception&)
-      {
-      throw Test_Error("Invalid u64 value '" + i->second + "'");
-      }
-   }
+   } catch(std::exception&) { throw Test_Error("Invalid u64 value '" + i->second + "'"); }
+}
 
-std::vector<uint8_t> VarMap::get_opt_bin(const std::string& key) const
-   {
+std::vector<uint8_t> VarMap::get_opt_bin(const std::string& key) const {
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       return std::vector<uint8_t>();
-      }
+   }
 
-   try
-      {
+   try {
       return Botan::hex_decode(i->second);
-      }
-   catch(std::exception&)
-      {
-      throw Test_Error("Test invalid hex input '" + i->second + "'" +
-                       + " for key " + key);
-      }
-   }
+   } catch(std::exception&) { throw Test_Error("Test invalid hex input '" + i->second + "'" + +" for key " + key); }
+}
 
-std::string VarMap::get_req_str(const std::string& key) const
-   {
+std::string VarMap::get_req_str(const std::string& key) const {
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       throw Test_Error("Test missing variable " + key);
-      }
-   return i->second;
    }
+   return i->second;
+}
 
 #if defined(BOTAN_HAS_BIGINT)
-Botan::BigInt VarMap::get_req_bn(const std::string& key) const
-   {
+Botan::BigInt VarMap::get_req_bn(const std::string& key) const {
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       throw Test_Error("Test missing variable " + key);
-      }
-
-   try
-      {
-      return Botan::BigInt(i->second);
-      }
-   catch(std::exception&)
-      {
-      throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
-      }
    }
 
-Botan::BigInt VarMap::get_opt_bn(const std::string& key,
-                                 const Botan::BigInt& def_value) const
+   try {
+      return Botan::BigInt(i->second);
+   } catch(std::exception&) { throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key); }
+}
 
-   {
+Botan::BigInt VarMap::get_opt_bn(const std::string& key, const Botan::BigInt& def_value) const
+
+{
    auto i = m_vars.find(key);
-   if(i == m_vars.end())
-      {
+   if(i == m_vars.end()) {
       return def_value;
-      }
-
-   try
-      {
-      return Botan::BigInt(i->second);
-      }
-   catch(std::exception&)
-      {
-      throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
-      }
    }
+
+   try {
+      return Botan::BigInt(i->second);
+   } catch(std::exception&) { throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key); }
+}
 #endif
 
 Text_Based_Test::Text_Based_Test(const std::string& data_src,
                                  const std::string& required_keys_str,
                                  const std::string& optional_keys_str) :
-   m_data_src(data_src)
-   {
-   if(required_keys_str.empty())
-      {
+      m_data_src(data_src) {
+   if(required_keys_str.empty()) {
       throw Test_Error("Invalid test spec");
-      }
+   }
 
    std::vector<std::string> required_keys = Botan::split_on(required_keys_str, ',');
    std::vector<std::string> optional_keys = Botan::split_on(optional_keys_str, ',');
@@ -1109,203 +892,161 @@ Text_Based_Test::Text_Based_Test(const std::string& data_src,
    m_required_keys.insert(required_keys.begin(), required_keys.end());
    m_optional_keys.insert(optional_keys.begin(), optional_keys.end());
    m_output_key = required_keys.at(required_keys.size() - 1);
-   }
+}
 
-std::string Text_Based_Test::get_next_line()
-   {
-   while(true)
-      {
-      if(m_cur == nullptr || m_cur->good() == false)
-         {
-         if(m_srcs.empty())
-            {
-            if(m_first)
-               {
+std::string Text_Based_Test::get_next_line() {
+   while(true) {
+      if(m_cur == nullptr || m_cur->good() == false) {
+         if(m_srcs.empty()) {
+            if(m_first) {
                const std::string full_path = Test::data_dir() + "/" + m_data_src;
-               if(full_path.find(".vec") != std::string::npos)
-                  {
+               if(full_path.find(".vec") != std::string::npos) {
                   m_srcs.push_back(full_path);
-                  }
-               else
-                  {
+               } else {
                   const auto fs = Botan::get_files_recursive(full_path);
                   m_srcs.assign(fs.begin(), fs.end());
-                  if(m_srcs.empty())
-                     {
+                  if(m_srcs.empty()) {
                      throw Test_Error("Error reading test data dir " + full_path);
-                     }
                   }
+               }
 
                m_first = false;
-               }
-            else
-               {
-               return ""; // done
-               }
+            } else {
+               return "";  // done
             }
+         }
 
          m_cur = std::make_unique<std::ifstream>(m_srcs[0]);
          m_cur_src_name = m_srcs[0];
 
          // Reinit cpuid on new file if needed
-         if(m_cpu_flags.empty() == false)
-            {
+         if(m_cpu_flags.empty() == false) {
             m_cpu_flags.clear();
             Botan::CPUID::initialize();
-            }
-
-         if(!m_cur->good())
-            {
-            throw Test_Error("Could not open input file '" + m_cur_src_name);
-            }
-
-         m_srcs.pop_front();
          }
 
-      while(m_cur->good())
-         {
+         if(!m_cur->good()) {
+            throw Test_Error("Could not open input file '" + m_cur_src_name);
+         }
+
+         m_srcs.pop_front();
+      }
+
+      while(m_cur->good()) {
          std::string line;
          std::getline(*m_cur, line);
 
-         if(line.empty())
-            {
+         if(line.empty()) {
             continue;
-            }
+         }
 
-         if(line[0] == '#')
-            {
-            if(line.compare(0, 6, "#test ") == 0)
-               {
+         if(line[0] == '#') {
+            if(line.compare(0, 6, "#test ") == 0) {
                return line;
-               }
-            else
-               {
+            } else {
                continue;
-               }
             }
+         }
 
          return line;
-         }
       }
    }
+}
 
 namespace {
 
 // strips leading and trailing but not internal whitespace
-std::string strip_ws(const std::string& in)
-   {
+std::string strip_ws(const std::string& in) {
    const char* whitespace = " ";
 
    const auto first_c = in.find_first_not_of(whitespace);
-   if(first_c == std::string::npos)
-      {
+   if(first_c == std::string::npos) {
       return "";
-      }
+   }
 
    const auto last_c = in.find_last_not_of(whitespace);
 
    return in.substr(first_c, last_c - first_c + 1);
-   }
-
-std::vector<uint64_t>
-parse_cpuid_bits(const std::vector<std::string>& tok)
-   {
-   std::vector<uint64_t> bits;
-   for(size_t i = 1; i < tok.size(); ++i)
-      {
-      const std::vector<Botan::CPUID::CPUID_bits> more = Botan::CPUID::bit_from_string(tok[i]);
-      bits.insert(bits.end(), more.begin(), more.end());
-      }
-
-   return bits;
-   }
-
 }
 
-bool Text_Based_Test::skip_this_test(const std::string& /*header*/,
-                                     const VarMap& /*vars*/)
-   {
-   return false;
+std::vector<uint64_t> parse_cpuid_bits(const std::vector<std::string>& tok) {
+   std::vector<uint64_t> bits;
+   for(size_t i = 1; i < tok.size(); ++i) {
+      const std::vector<Botan::CPUID::CPUID_bits> more = Botan::CPUID::bit_from_string(tok[i]);
+      bits.insert(bits.end(), more.begin(), more.end());
    }
 
-std::vector<Test::Result> Text_Based_Test::run()
-   {
+   return bits;
+}
+
+}  // namespace
+
+bool Text_Based_Test::skip_this_test(const std::string& /*header*/, const VarMap& /*vars*/) { return false; }
+
+std::vector<Test::Result> Text_Based_Test::run() {
    std::vector<Test::Result> results;
 
    std::string header, header_or_name = m_data_src;
    VarMap vars;
    size_t test_cnt = 0;
 
-   while(true)
-      {
+   while(true) {
       const std::string line = get_next_line();
-      if(line.empty()) // EOF
-         {
+      if(line.empty())  // EOF
+      {
          break;
-         }
+      }
 
-      if(line.compare(0, 6, "#test ") == 0)
-         {
+      if(line.compare(0, 6, "#test ") == 0) {
          std::vector<std::string> pragma_tokens = Botan::split_on(line.substr(6), ' ');
 
-         if(pragma_tokens.empty())
-            {
+         if(pragma_tokens.empty()) {
             throw Test_Error("Empty pragma found in " + m_cur_src_name);
-            }
+         }
 
-         if(pragma_tokens[0] != "cpuid")
-            {
+         if(pragma_tokens[0] != "cpuid") {
             throw Test_Error("Unknown test pragma '" + line + "' in " + m_cur_src_name);
-            }
+         }
 
          m_cpu_flags = parse_cpuid_bits(pragma_tokens);
 
          continue;
-         }
-      else if(line[0] == '#')
-         {
+      } else if(line[0] == '#') {
          throw Test_Error("Unknown test pragma '" + line + "' in " + m_cur_src_name);
-         }
+      }
 
-      if(line[0] == '[' && line[line.size() - 1] == ']')
-         {
+      if(line[0] == '[' && line[line.size() - 1] == ']') {
          header = line.substr(1, line.size() - 2);
          header_or_name = header;
          test_cnt = 0;
          vars.clear();
          continue;
-         }
+      }
 
       const std::string test_id = "test " + std::to_string(test_cnt);
 
       auto equal_i = line.find_first_of('=');
 
-      if(equal_i == std::string::npos)
-         {
-         results.push_back(Test::Result::Failure(header_or_name,
-                                                 "invalid input '" + line + "'"));
+      if(equal_i == std::string::npos) {
+         results.push_back(Test::Result::Failure(header_or_name, "invalid input '" + line + "'"));
          continue;
-         }
+      }
 
       std::string key = strip_ws(std::string(line.begin(), line.begin() + equal_i - 1));
       std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
       if(!m_required_keys.contains(key) && !m_optional_keys.contains(key))
-         results.push_back(Test::Result::Failure(header_or_name,
-                                                 test_id + " failed unknown key " + key));
+         results.push_back(Test::Result::Failure(header_or_name, test_id + " failed unknown key " + key));
 
       vars.add(key, val);
 
-      if(key == m_output_key)
-         {
-         try
-            {
-            for(auto& req_key: m_required_keys)
-               {
+      if(key == m_output_key) {
+         try {
+            for(auto& req_key : m_required_keys) {
                if(!vars.has_key(req_key))
-                  results.push_back(Test::Result::Failure(header_or_name,
-                                                          test_id + " missing required key " + req_key));
-               }
+                  results.push_back(
+                     Test::Result::Failure(header_or_name, test_id + " missing required key " + req_key));
+            }
 
             if(skip_this_test(header, vars))
                continue;
@@ -1315,98 +1056,82 @@ std::vector<Test::Result> Text_Based_Test::run()
             uint64_t start = Test::timestamp();
 
             Test::Result result = run_one_test(header, vars);
-            if(!m_cpu_flags.empty())
-               {
-               for(auto const& cpuid_u64 : m_cpu_flags)
-                  {
+            if(!m_cpu_flags.empty()) {
+               for(const auto& cpuid_u64 : m_cpu_flags) {
                   Botan::CPUID::CPUID_bits cpuid_bit = static_cast<Botan::CPUID::CPUID_bits>(cpuid_u64);
-                  if(Botan::CPUID::has_cpuid_bit(cpuid_bit))
-                     {
+                  if(Botan::CPUID::has_cpuid_bit(cpuid_bit)) {
                      Botan::CPUID::clear_cpuid_bit(cpuid_bit);
                      // now re-run the test
                      result.merge(run_one_test(header, vars));
-                     }
                   }
-               Botan::CPUID::initialize();
                }
+               Botan::CPUID::initialize();
+            }
             result.set_ns_consumed(Test::timestamp() - start);
 
-            if(result.tests_failed())
-               {
+            if(result.tests_failed()) {
                std::ostringstream oss;
                oss << "Test # " << test_cnt << " ";
                if(!header.empty())
                   oss << header << " ";
                oss << "failed ";
 
-               for(const auto& k: m_required_keys)
+               for(const auto& k : m_required_keys)
                   oss << k << "=" << vars.get_req_str(k) << " ";
 
                result.test_note(oss.str());
-               }
-            results.push_back(result);
             }
-         catch(std::exception& e)
-            {
+            results.push_back(result);
+         } catch(std::exception& e) {
             std::ostringstream oss;
             oss << "Test # " << test_cnt << " ";
             if(!header.empty())
                oss << header << " ";
 
-            for(const auto& k: m_required_keys)
+            for(const auto& k : m_required_keys)
                oss << k << "=" << vars.get_req_str(k) << " ";
 
             oss << "failed with exception '" << e.what() << "'";
 
             results.push_back(Test::Result::Failure(header_or_name, oss.str()));
-            }
+         }
 
-         if(clear_between_callbacks())
-            {
+         if(clear_between_callbacks()) {
             vars.clear();
-            }
          }
       }
+   }
 
-   if(results.empty())
-      {
+   if(results.empty()) {
       return results;
-      }
+   }
 
-   try
-      {
+   try {
       std::vector<Test::Result> final_tests = run_final_tests();
       results.insert(results.end(), final_tests.begin(), final_tests.end());
-      }
-   catch(std::exception& e)
-      {
-      results.push_back(Test::Result::Failure(header_or_name,
-                                              "run_final_tests exception " + std::string(e.what())));
-      }
+   } catch(std::exception& e) {
+      results.push_back(Test::Result::Failure(header_or_name, "run_final_tests exception " + std::string(e.what())));
+   }
 
    m_first = true;
 
    return results;
-   }
+}
 
-std::map<std::string, std::string> Test_Options::report_properties() const
-   {
+std::map<std::string, std::string> Test_Options::report_properties() const {
    std::map<std::string, std::string> result;
 
-   for(const auto& prop : m_report_properties)
-      {
+   for(const auto& prop : m_report_properties) {
       const auto colon = prop.find(':');
       // props without a colon separator or without a name are not allowed
-      if(colon == std::string::npos || colon == 0)
-         {
+      if(colon == std::string::npos || colon == 0) {
          throw Test_Error("--report-properties should be of the form <key>:<value>,<key>:<value>,...");
-         }
-
-      result.insert_or_assign(prop.substr(0, colon),
-                              prop.substr(colon + 1, prop.size() - colon - 1));
       }
 
-   return result;
+      result.insert_or_assign(prop.substr(0, colon), prop.substr(colon + 1, prop.size() - colon - 1));
    }
 
+   return result;
 }
+
+}  // namespace Botan_Tests

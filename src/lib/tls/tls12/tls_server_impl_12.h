@@ -9,8 +9,8 @@
 #ifndef BOTAN_TLS_SERVER_IMPL_12_H_
 #define BOTAN_TLS_SERVER_IMPL_12_H_
 
-#include <botan/tls_policy.h>
 #include <botan/credentials_manager.h>
+#include <botan/tls_policy.h>
 #include <botan/internal/tls_channel_impl_12.h>
 #include <vector>
 
@@ -20,12 +20,10 @@ namespace TLS {
 
 class Server_Handshake_State;
 
-
 /**
 * SSL/TLS Server 1.2 implementation
 */
-class Server_Impl_12 : public Channel_Impl_12
-   {
+class Server_Impl_12 : public Channel_Impl_12 {
    public:
       typedef std::function<std::string(std::vector<std::string>)> next_protocol_fn;
 
@@ -69,11 +67,9 @@ class Server_Impl_12 : public Channel_Impl_12
       */
       std::string application_protocol() const override { return m_next_protocol; }
 
-      std::vector<X509_Certificate>
-      get_peer_cert_chain(const Handshake_State& state) const override;
+      std::vector<X509_Certificate> get_peer_cert_chain(const Handshake_State& state) const override;
 
-      void initiate_handshake(Handshake_State& state,
-                              bool force_full_renegotiation) override;
+      void initiate_handshake(Handshake_State& state, bool force_full_renegotiation) override;
 
       void process_handshake_msg(const Handshake_State* active_state,
                                  Handshake_State& pending_state,
@@ -86,11 +82,9 @@ class Server_Impl_12 : public Channel_Impl_12
                                     const std::vector<uint8_t>& contents,
                                     bool epoch0_restart);
 
-      void process_certificate_msg(Server_Handshake_State& pending_state,
-                                   const std::vector<uint8_t>& contents);
+      void process_certificate_msg(Server_Handshake_State& pending_state, const std::vector<uint8_t>& contents);
 
-      void process_client_key_exchange_msg(Server_Handshake_State& pending_state,
-                                           const std::vector<uint8_t>& contents);
+      void process_client_key_exchange_msg(Server_Handshake_State& pending_state, const std::vector<uint8_t>& contents);
 
       void process_change_cipher_spec_msg(Server_Handshake_State& pending_state);
 
@@ -102,8 +96,7 @@ class Server_Impl_12 : public Channel_Impl_12
                                 Handshake_Type type,
                                 const std::vector<uint8_t>& contents);
 
-      void session_resume(Server_Handshake_State& pending_state,
-                          const Session_with_Handle& session_info);
+      void session_resume(Server_Handshake_State& pending_state, const Session_with_Handle& session_info);
 
       void session_create(Server_Handshake_State& pending_state);
 
@@ -111,10 +104,10 @@ class Server_Impl_12 : public Channel_Impl_12
 
       std::shared_ptr<Credentials_Manager> m_creds;
       std::string m_next_protocol;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

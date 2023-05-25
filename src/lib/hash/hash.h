@@ -18,17 +18,14 @@ namespace Botan {
 /**
 * This class represents hash function (message digest) objects
 */
-class BOTAN_PUBLIC_API(2,0) HashFunction : public Buffered_Computation
-   {
+class BOTAN_PUBLIC_API(2, 0) HashFunction : public Buffered_Computation {
    public:
       /**
       * Create an instance based on a name, or return null if the
       * algo/provider combination cannot be found. If provider is
       * empty then best available is chosen.
       */
-      static std::unique_ptr<HashFunction>
-         create(std::string_view algo_spec,
-                std::string_view provider = "");
+      static std::unique_ptr<HashFunction> create(std::string_view algo_spec, std::string_view provider = "");
 
       /**
       * Create an instance based on a name
@@ -37,9 +34,7 @@ class BOTAN_PUBLIC_API(2,0) HashFunction : public Buffered_Computation
       * @param provider provider implementation to use
       * Throws Lookup_Error if not found.
       */
-      static std::unique_ptr<HashFunction>
-         create_or_throw(std::string_view algo_spec,
-                         std::string_view provider = "");
+      static std::unique_ptr<HashFunction> create_or_throw(std::string_view algo_spec, std::string_view provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -89,12 +84,9 @@ class BOTAN_PUBLIC_API(2,0) HashFunction : public Buffered_Computation
       /**
       * @return new object representing the same algorithm as *this
       */
-      HashFunction* clone() const
-         {
-         return this->new_object().release();
-         }
-   };
+      HashFunction* clone() const { return this->new_object().release(); }
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -20,15 +20,11 @@ namespace Botan {
 *
 * This is exposed as the "Raw" padding scheme for signatures.
 */
-class RawHashFunction : public HashFunction
-   {
+class RawHashFunction : public HashFunction {
    public:
-      RawHashFunction(std::unique_ptr<HashFunction> hash) :
-         RawHashFunction(hash->name(), hash->output_length())
-         {}
+      RawHashFunction(std::unique_ptr<HashFunction> hash) : RawHashFunction(hash->name(), hash->output_length()) {}
 
-      RawHashFunction(std::string_view name, size_t output_length) :
-         m_name(name), m_output_length(output_length) {}
+      RawHashFunction(std::string_view name, size_t output_length) : m_name(name), m_output_length(output_length) {}
 
       void add_data(const uint8_t input[], size_t length) override;
 
@@ -43,12 +39,13 @@ class RawHashFunction : public HashFunction
       size_t output_length() const override;
 
       std::string name() const override { return m_name; }
+
    private:
       const std::string m_name;
       const size_t m_output_length;
       std::vector<uint8_t> m_bits;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

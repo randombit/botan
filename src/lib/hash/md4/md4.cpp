@@ -7,23 +7,19 @@
 
 #include <botan/internal/md4.h>
 
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> MD4::copy_state() const
-   {
-   return std::make_unique<MD4>(*this);
-   }
+std::unique_ptr<HashFunction> MD4::copy_state() const { return std::make_unique<MD4>(*this); }
 
 namespace {
 
-inline void FF4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
-                uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
+inline void FF4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D, uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
 
-   {
+{
    A += choose(B, C, D) + M0;
    A = rotl<3>(A);
 
@@ -35,12 +31,11 @@ inline void FF4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
 
    B += choose(C, D, A) + M3;
    B = rotl<19>(B);
-   }
+}
 
-inline void GG4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
-                uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
+inline void GG4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D, uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
 
-   {
+{
    /*
    These are choose(D, B | C, B & C) but the below expression
    takes advantage of the fact that B & C is a subset of B | C
@@ -58,12 +53,11 @@ inline void GG4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
 
    B += ((C & D) | (A & (C | D))) + M3 + 0x5A827999;
    B = rotl<13>(B);
-   }
+}
 
-inline void HH4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
-                uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
+inline void HH4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D, uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
 
-   {
+{
    A += (B ^ C ^ D) + M0 + 0x6ED9EBA1;
    A = rotl<3>(A);
 
@@ -75,19 +69,17 @@ inline void HH4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
 
    B += (A ^ C ^ D) + M3 + 0x6ED9EBA1;
    B = rotl<15>(B);
-   }
-
 }
+
+}  // namespace
 
 /*
 * MD4 Compression Function
 */
-void MD4::compress_n(const uint8_t input[], size_t blocks)
-   {
+void MD4::compress_n(const uint8_t input[], size_t blocks) {
    uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3];
 
-   for(size_t i = 0; i != blocks; ++i)
-      {
+   for(size_t i = 0; i != blocks; ++i) {
       uint32_t M00 = load_le<uint32_t>(input, 0);
       uint32_t M01 = load_le<uint32_t>(input, 1);
       uint32_t M02 = load_le<uint32_t>(input, 2);
@@ -126,27 +118,23 @@ void MD4::compress_n(const uint8_t input[], size_t blocks)
       D = (m_digest[3] += D);
 
       input += hash_block_size();
-      }
    }
+}
 
 /*
 * Copy out the digest
 */
-void MD4::copy_out(uint8_t output[])
-   {
-   copy_out_vec_le(output, output_length(), m_digest);
-   }
+void MD4::copy_out(uint8_t output[]) { copy_out_vec_le(output, output_length(), m_digest); }
 
 /*
 * Clear memory of sensitive data
 */
-void MD4::clear()
-   {
+void MD4::clear() {
    MDx_HashFunction::clear();
    m_digest[0] = 0x67452301;
    m_digest[1] = 0xEFCDAB89;
    m_digest[2] = 0x98BADCFE;
    m_digest[3] = 0x10325476;
-   }
-
 }
+
+}  // namespace Botan

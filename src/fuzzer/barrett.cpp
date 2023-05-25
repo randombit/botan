@@ -10,14 +10,13 @@
 #include <botan/reducer.h>
 #include <botan/internal/divide.h>
 
-void fuzz(const uint8_t in[], size_t len)
-   {
+void fuzz(const uint8_t in[], size_t len) {
    static const size_t max_bits = 4096;
 
    if(len <= 4)
       return;
 
-   if(len > 2*(max_bits/8))
+   if(len > 2 * (max_bits / 8))
       return;
 
    const size_t x_len = 2 * ((len + 2) / 3);
@@ -39,12 +38,11 @@ void fuzz(const uint8_t in[], size_t len)
 
    const Botan::BigInt ct = ct_modulo(x, p);
 
-   if(ref != z || ref != ct)
-      {
+   if(ref != z || ref != ct) {
       FUZZER_WRITE_AND_CRASH("X = " << x << "\n"
-                             << "P = " << p << "\n"
-                             << "Barrett = " << z << "\n"
-                             << "Ct = " << ct << "\n"
-                             << "Ref = " << ref << "\n");
-      }
+                                    << "P = " << p << "\n"
+                                    << "Barrett = " << z << "\n"
+                                    << "Ct = " << ct << "\n"
+                                    << "Ref = " << ref << "\n");
    }
+}

@@ -8,8 +8,8 @@
 #ifndef BOTAN_EMSA_X931_H_
 #define BOTAN_EMSA_X931_H_
 
-#include <botan/internal/emsa.h>
 #include <botan/hash.h>
+#include <botan/internal/emsa.h>
 
 namespace Botan {
 
@@ -18,8 +18,7 @@ namespace Botan {
 * Useful for Rabin-Williams, also sometimes used with RSA in
 * odd protocols.
 */
-class EMSA_X931 final : public EMSA
-   {
+class EMSA_X931 final : public EMSA {
    public:
       /**
       * @param hash the hash function to use
@@ -29,21 +28,20 @@ class EMSA_X931 final : public EMSA
       std::string name() const override;
 
       std::string hash_function() const override { return m_hash->name(); }
+
    private:
       void update(const uint8_t[], size_t) override;
       std::vector<uint8_t> raw_data() override;
 
-      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t,
-                                     RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t, RandomNumberGenerator& rng) override;
 
-      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&,
-                  size_t) override;
+      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&, size_t) override;
 
       std::vector<uint8_t> m_empty_hash;
       std::unique_ptr<HashFunction> m_hash;
       uint8_t m_hash_id;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -21,8 +21,7 @@ class GHASH;
 /**
 * GCM Mode
 */
-class GCM_Mode : public AEAD_Mode
-   {
+class GCM_Mode : public AEAD_Mode {
    public:
       void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
 
@@ -45,6 +44,7 @@ class GCM_Mode : public AEAD_Mode
       std::string provider() const override final;
 
       bool has_keying_material() const override final;
+
    protected:
       GCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size);
 
@@ -57,63 +57,60 @@ class GCM_Mode : public AEAD_Mode
 
       std::unique_ptr<StreamCipher> m_ctr;
       std::unique_ptr<GHASH> m_ghash;
+
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
 
       void key_schedule(const uint8_t key[], size_t length) override;
 
       secure_vector<uint8_t> m_y0;
-   };
+};
 
 /**
 * GCM Encryption
 */
-class GCM_Encryption final : public GCM_Mode
-   {
+class GCM_Encryption final : public GCM_Mode {
    public:
       /**
       * @param cipher the 128 bit block cipher to use
       * @param tag_size is how big the auth tag will be
       */
       GCM_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
-         GCM_Mode(std::move(cipher), tag_size) {}
+            GCM_Mode(std::move(cipher), tag_size) {}
 
-      size_t output_length(size_t input_length) const override
-         { return input_length + tag_size(); }
+      size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
 
       size_t minimum_final_size() const override { return 0; }
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
 /**
 * GCM Decryption
 */
-class GCM_Decryption final : public GCM_Mode
-   {
+class GCM_Decryption final : public GCM_Mode {
    public:
       /**
       * @param cipher the 128 bit block cipher to use
       * @param tag_size is how big the auth tag will be
       */
       GCM_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
-         GCM_Mode(std::move(cipher), tag_size) {}
+            GCM_Mode(std::move(cipher), tag_size) {}
 
-      size_t output_length(size_t input_length) const override
-         {
+      size_t output_length(size_t input_length) const override {
          BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
          return input_length - tag_size();
-         }
+      }
 
       size_t minimum_final_size() const override { return tag_size(); }
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

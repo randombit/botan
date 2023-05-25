@@ -8,10 +8,8 @@
 
 namespace Botan {
 
-const char* to_string(Certificate_Status_Code code)
-   {
-   switch(code)
-      {
+const char* to_string(Certificate_Status_Code code) {
+   switch(code) {
       case Certificate_Status_Code::VERIFIED:
          return "Verified";
       case Certificate_Status_Code::OCSP_RESPONSE_GOOD:
@@ -118,10 +116,10 @@ const char* to_string(Certificate_Status_Code code)
       case Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS:
          return "Certificate signature has invalid parameters";
 
-      // intentionally no default so we are warned if new enum values are added
-      }
-
-   return nullptr;
+         // intentionally no default so we are warned if new enum values are added
    }
 
+   return nullptr;
 }
+
+}  // namespace Botan

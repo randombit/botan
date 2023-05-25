@@ -12,8 +12,7 @@
 
 namespace Botan {
 
-class SipHash final : public MessageAuthenticationCode
-   {
+class SipHash final : public MessageAuthenticationCode {
    public:
       SipHash(size_t c = 2, size_t d = 4) : m_C(c), m_D(d) {}
 
@@ -26,10 +25,8 @@ class SipHash final : public MessageAuthenticationCode
 
       bool has_keying_material() const override;
 
-      Key_Length_Specification key_spec() const override
-         {
-         return Key_Length_Specification(16);
-         }
+      Key_Length_Specification key_spec() const override { return Key_Length_Specification(16); }
+
    private:
       void add_data(const uint8_t[], size_t) override;
       void final_result(uint8_t[]) override;
@@ -41,8 +38,8 @@ class SipHash final : public MessageAuthenticationCode
       uint64_t m_mbuf = 0;
       size_t m_mbuf_pos = 0;
       uint8_t m_words = 0;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

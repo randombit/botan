@@ -11,16 +11,15 @@
 
 #include <botan/certstor.h>
 
-#include <vector>
-#include <memory>
 #include <map>
+#include <memory>
+#include <vector>
 
 namespace Botan {
 /**
 * Certificate Store that is backed by a file of PEMs of trusted CAs.
 */
-class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certificate_Store
-   {
+class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certificate_Store {
    public:
       /**
       * Construct a new Certificate_Store given a file path to a file including
@@ -46,19 +45,18 @@ class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certific
       * Find all certificates with a given Subject DN.
       * Subject DN and even the key identifier might not be unique.
       */
-      std::vector<X509_Certificate> find_all_certs(
-               const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const override;
+      std::vector<X509_Certificate> find_all_certs(const X509_DN& subject_dn,
+                                                   const std::vector<uint8_t>& key_id) const override;
 
       /**
       * Find a certificate by searching for one with a matching SHA-1 hash of
       * public key.
       * @return a matching certificate or nullptr otherwise
       */
-      std::optional<X509_Certificate>
-      find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
-      std::optional<X509_Certificate>
-      find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
+         const std::vector<uint8_t>& subject_hash) const override;
 
       /**
        * Fetching CRLs is not supported by this certificate store. This will
@@ -71,7 +69,7 @@ class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certific
       std::map<X509_DN, std::vector<X509_Certificate>> m_dn_to_cert;
       std::map<std::vector<uint8_t>, std::optional<X509_Certificate>> m_pubkey_sha1_to_cert;
       std::map<std::vector<uint8_t>, std::optional<X509_Certificate>> m_subject_dn_sha256_to_cert;
-   };
-}
+};
+}  // namespace Botan
 
 #endif

@@ -10,38 +10,36 @@
 #define BOTAN_DATA_SINK_H_
 
 #include <botan/filter.h>
-#include <memory>
 #include <iosfwd>
+#include <memory>
 
 namespace Botan {
 
 /**
 * This class represents abstract data sink objects.
 */
-class BOTAN_PUBLIC_API(2,0) DataSink : public Filter
-   {
+class BOTAN_PUBLIC_API(2, 0) DataSink : public Filter {
    public:
       bool attachable() override { return false; }
+
       DataSink() = default;
       virtual ~DataSink() = default;
 
       DataSink& operator=(const DataSink&) = delete;
       DataSink(const DataSink&) = delete;
-   };
+};
 
 /**
 * This class represents a data sink which writes its output to a stream.
 */
-class BOTAN_PUBLIC_API(2,0) DataSink_Stream final : public DataSink
-   {
+class BOTAN_PUBLIC_API(2, 0) DataSink_Stream final : public DataSink {
    public:
       /**
       * Construct a DataSink_Stream from a stream.
       * @param stream the stream to write to
       * @param name identifier
       */
-      DataSink_Stream(std::ostream& stream,
-                      std::string_view name = "<std::ostream>");
+      DataSink_Stream(std::ostream& stream, std::string_view name = "<std::ostream>");
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
@@ -51,8 +49,7 @@ class BOTAN_PUBLIC_API(2,0) DataSink_Stream final : public DataSink
       * @param use_binary indicates whether to treat the file
       * as a binary file or not
       */
-      DataSink_Stream(std::string_view pathname,
-                      bool use_binary = false);
+      DataSink_Stream(std::string_view pathname, bool use_binary = false);
 #endif
 
       std::string name() const override { return m_identifier; }
@@ -69,8 +66,8 @@ class BOTAN_PUBLIC_API(2,0) DataSink_Stream final : public DataSink
       // May be null, if m_sink was an external reference
       std::unique_ptr<std::ostream> m_sink_memory;
       std::ostream& m_sink;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

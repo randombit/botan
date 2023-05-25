@@ -9,14 +9,14 @@
 #ifndef BOTAN_TLS_SESSION_STATE_H_
 #define BOTAN_TLS_SESSION_STATE_H_
 
-#include <botan/x509cert.h>
-#include <botan/tls_version.h>
-#include <botan/tls_ciphersuite.h>
-#include <botan/tls_magic.h>
-#include <botan/tls_server_info.h>
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
 #include <botan/symkey.h>
+#include <botan/tls_ciphersuite.h>
+#include <botan/tls_magic.h>
+#include <botan/tls_server_info.h>
+#include <botan/tls_version.h>
+#include <botan/x509cert.h>
 
 #include <algorithm>
 #include <chrono>
@@ -40,14 +40,12 @@ using Session_Ticket = Strong<std::vector<uint8_t>, struct Session_Ticket_>;
 ///        either a ticket for stateless resumption or a database handle.
 using Opaque_Session_Handle = Strong<std::vector<uint8_t>, struct Opaque_Session_Handle_>;
 
-inline auto operator<(const Session_ID& id1, const Session_ID& id2)
-   {
+inline auto operator<(const Session_ID& id1, const Session_ID& id2) {
    // TODO: C++20 better use std::lexicographical_compare_three_way
    //       that was not available on all target platforms at the time
    //       of this writing.
-   return std::lexicographical_compare(id1.begin(), id1.end(),
-                                       id2.begin(), id2.end());
-   }
+   return std::lexicographical_compare(id1.begin(), id1.end(), id2.begin(), id2.end());
+}
 
 /**
  * @brief Helper class to embody a session handle in all protocol versions
@@ -65,15 +63,13 @@ inline auto operator<(const Session_ID& id1, const Session_ID& id2)
  * Note that all information stored in a Session_Handle might be transmitted in
  * unprotected form. Hence, it should not contain any confidential information.
  */
-class BOTAN_PUBLIC_API(3, 0) Session_Handle
-   {
+class BOTAN_PUBLIC_API(3, 0) Session_Handle {
    public:
       /**
        * Constructs a Session_Handle from a session ID which is an
        * arbitrary byte vector that must be 32 bytes long at most.
        */
-      Session_Handle(Session_ID id) : m_handle(std::move(id))
-         { validate_constraints(); }
+      Session_Handle(Session_ID id) : m_handle(std::move(id)) { validate_constraints(); }
 
       /**
        * Constructs a Session_Handle from a session ticket which is a
@@ -84,8 +80,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Handle
        * Note that (for technical reasons) we enforce that tickets are
        * longer than 32 bytes.
        */
-      Session_Handle(Session_Ticket ticket) : m_handle(std::move(ticket))
-         { validate_constraints(); }
+      Session_Handle(Session_Ticket ticket) : m_handle(std::move(ticket)) { validate_constraints(); }
 
       /**
        * Constructs a Session_Handle from an Opaque_Handle such as TLS 1.3
@@ -93,11 +88,12 @@ class BOTAN_PUBLIC_API(3, 0) Session_Handle
        * Session_ID or a Session_Ticket and it is up to the Session_Manager
        * to figure out what it actually is.
        */
-      Session_Handle(Opaque_Session_Handle ticket) : m_handle(std::move(ticket))
-         { validate_constraints(); }
+      Session_Handle(Opaque_Session_Handle ticket) : m_handle(std::move(ticket)) { validate_constraints(); }
 
       bool is_id() const { return std::holds_alternative<Session_ID>(m_handle); }
+
       bool is_ticket() const { return std::holds_alternative<Session_Ticket>(m_handle); }
+
       bool is_opaque_handle() const { return std::holds_alternative<Opaque_Session_Handle>(m_handle); }
 
       /**
@@ -129,7 +125,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Handle
 
    private:
       std::variant<Session_ID, Session_Ticket, Opaque_Session_Handle> m_handle;
-   };
+};
 
 class Client_Hello_13;
 class Server_Hello_13;
@@ -140,8 +136,7 @@ class Callbacks;
  * persisted for resumption and presented to the application as
  * a summary of a specific just-established TLS session.
  */
-class BOTAN_PUBLIC_API(3,0) Session_Base
-   {
+class BOTAN_PUBLIC_API(3, 0) Session_Base {
    public:
       Session_Base(std::chrono::system_clock::time_point start_time,
                    Protocol_Version version,
@@ -151,16 +146,16 @@ class BOTAN_PUBLIC_API(3,0) Session_Base
                    bool extended_master_secret,
                    bool encrypt_then_mac,
                    std::vector<X509_Certificate> peer_certs,
-                   Server_Information server_info)
-         : m_start_time(start_time)
-         , m_version(version)
-         , m_ciphersuite(ciphersuite)
-         , m_connection_side(connection_side)
-         , m_srtp_profile(srtp_profile)
-         , m_extended_master_secret(extended_master_secret)
-         , m_encrypt_then_mac(encrypt_then_mac)
-         , m_peer_certs(std::move(peer_certs))
-         , m_server_info(std::move(server_info)) {}
+                   Server_Information server_info) :
+            m_start_time(start_time),
+            m_version(version),
+            m_ciphersuite(ciphersuite),
+            m_connection_side(connection_side),
+            m_srtp_profile(srtp_profile),
+            m_extended_master_secret(extended_master_secret),
+            m_encrypt_then_mac(encrypt_then_mac),
+            m_peer_certs(std::move(peer_certs)),
+            m_server_info(std::move(server_info)) {}
 
    protected:
       Session_Base() {}
@@ -231,15 +226,13 @@ class BOTAN_PUBLIC_API(3,0) Session_Base
 
       std::vector<X509_Certificate> m_peer_certs;
       Server_Information m_server_info;
-   };
-
+};
 
 /**
  * Summarizes the negotiated features after a TLS handshake. Applications may
  * query those in Callbacks::tls_session_established().
  */
-class BOTAN_PUBLIC_API(3,0) Session_Summary : public Session_Base
-   {
+class BOTAN_PUBLIC_API(3, 0) Session_Summary : public Session_Base {
    public:
       /**
        * The Session_ID negotiated during the handshake.
@@ -256,10 +249,15 @@ class BOTAN_PUBLIC_API(3,0) Session_Summary : public Session_Base
       const std::optional<Session_Ticket>& session_ticket() const { return m_session_ticket; }
 
       bool psk_used() const { return m_psk_used; }
+
       bool was_resumption() const { return m_was_resumption; }
+
       std::string kex_algo() const { return m_kex_algo; }
+
       std::string cipher_algo() const { return ciphersuite().cipher_algo(); }
+
       std::string mac_algo() const { return ciphersuite().mac_algo(); }
+
       std::string prf_algo() const { return ciphersuite().prf_algo(); }
 
    private:
@@ -279,6 +277,7 @@ class BOTAN_PUBLIC_API(3,0) Session_Summary : public Session_Base
 #endif
 
       void set_session_id(Session_ID id) { m_session_id = std::move(id); }
+
       void set_session_ticket(Session_Ticket ticket) { m_session_ticket = std::move(ticket); }
 
    private:
@@ -288,15 +287,13 @@ class BOTAN_PUBLIC_API(3,0) Session_Summary : public Session_Base
       bool m_psk_used;
       bool m_was_resumption;
       std::string m_kex_algo;
-   };
-
+};
 
 /**
  * Represents a session's negotiated features along with all resumption
  * information to re-establish a TLS connection later on.
  */
-class BOTAN_PUBLIC_API(3,0) Session final : public Session_Base
-   {
+class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
    public:
       /**
       * New TLS 1.2 session (sets session start time)
@@ -366,8 +363,7 @@ class BOTAN_PUBLIC_API(3,0) Session final : public Session_Base
       /**
       * Encrypt a session (useful for serialization or session tickets)
       */
-      std::vector<uint8_t> encrypt(const SymmetricKey& key,
-                                RandomNumberGenerator& rng) const;
+      std::vector<uint8_t> encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const;
 
       /**
       * Decrypt a session created by encrypt
@@ -375,10 +371,9 @@ class BOTAN_PUBLIC_API(3,0) Session final : public Session_Base
       * @param ctext_size the size of ctext in bytes
       * @param key the same key used by the encrypting side
       */
-      static inline Session decrypt(const uint8_t ctext[],
-                                    size_t ctext_size,
-                                    const SymmetricKey& key)
-         { return Session::decrypt(std::span(ctext, ctext_size), key); }
+      static inline Session decrypt(const uint8_t ctext[], size_t ctext_size, const SymmetricKey& key) {
+         return Session::decrypt(std::span(ctext, ctext_size), key);
+      }
 
       /**
       * Decrypt a session created by encrypt
@@ -441,10 +436,7 @@ class BOTAN_PUBLIC_API(3,0) Session final : public Session_Base
       //            - compression method (always 0)
       //            - fragment size (always 0)
       //            - SRP identifier (always "")
-      enum
-         {
-         TLS_SESSION_PARAM_STRUCT_VERSION = 20230222
-         };
+      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20230222 };
 
       secure_vector<uint8_t> m_master_secret;
 
@@ -452,19 +444,18 @@ class BOTAN_PUBLIC_API(3,0) Session final : public Session_Base
       uint32_t m_max_early_data_bytes;
       uint32_t m_ticket_age_add;
       std::chrono::seconds m_lifetime_hint;
-   };
+};
 
 /**
  * Helper struct to conveniently pass a Session and its Session_Handle around
  */
-struct BOTAN_PUBLIC_API(3, 0) Session_with_Handle
-   {
-   Session session;
-   Session_Handle handle;
-   };
+struct BOTAN_PUBLIC_API(3, 0) Session_with_Handle {
+      Session session;
+      Session_Handle handle;
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

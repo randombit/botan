@@ -10,32 +10,32 @@
 
 #include <botan/hash.h>
 #include <botan/internal/threefish_512.h>
-#include <string>
 #include <memory>
+#include <string>
 
 namespace Botan {
 
 /**
 * Skein-512, a SHA-3 candidate
 */
-class Skein_512 final : public HashFunction
-   {
+class Skein_512 final : public HashFunction {
    public:
       /**
       * @param output_bits the output size of Skein in bits
       * @param personalization is a string that will parameterize the
       * hash output
       */
-      Skein_512(size_t output_bits = 512,
-                std::string_view personalization = "");
+      Skein_512(size_t output_bits = 512, std::string_view personalization = "");
 
       size_t hash_block_size() const override { return 64; }
+
       size_t output_length() const override { return m_output_bits / 8; }
 
       std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
       std::string name() const override;
       void clear() override;
+
    private:
       enum type_code {
          SKEIN_KEY = 0,
@@ -63,8 +63,8 @@ class Skein_512 final : public HashFunction
       secure_vector<uint64_t> m_T;
       secure_vector<uint8_t> m_buffer;
       size_t m_buf_pos;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

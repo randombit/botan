@@ -17,13 +17,12 @@ namespace Botan {
 * operating system. For instance might be instantiated by /dev/urandom
 * or CryptGenRandom.
 */
-BOTAN_PUBLIC_API(2,0) RandomNumberGenerator& system_rng();
+BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator& system_rng();
 
 /*
 * Instantiable reference to the system RNG.
 */
-class BOTAN_PUBLIC_API(2,0) System_RNG final : public RandomNumberGenerator
-   {
+class BOTAN_PUBLIC_API(2, 0) System_RNG final : public RandomNumberGenerator {
    public:
       std::string name() const override { return system_rng().name(); }
 
@@ -34,11 +33,11 @@ class BOTAN_PUBLIC_API(2,0) System_RNG final : public RandomNumberGenerator
       void clear() override { system_rng().clear(); }
 
    protected:
-      void fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) override
-         { system_rng().randomize_with_input(out, in); }
+      void fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) override {
+         system_rng().randomize_with_input(out, in);
+      }
+};
 
-   };
-
-}
+}  // namespace Botan
 
 #endif

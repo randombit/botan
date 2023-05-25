@@ -19,39 +19,33 @@
 
 namespace Botan {
 
-std::unique_ptr<Dilithium_Symmetric_Primitives> Dilithium_Symmetric_Primitives::create(DilithiumMode mode)
-   {
+std::unique_ptr<Dilithium_Symmetric_Primitives> Dilithium_Symmetric_Primitives::create(DilithiumMode mode) {
 #if BOTAN_HAS_DILITHIUM
-   if(mode.is_modern())
-      { return std::make_unique<Dilithium_Common_Symmetric_Primitives>(); }
+   if(mode.is_modern()) {
+      return std::make_unique<Dilithium_Common_Symmetric_Primitives>();
+   }
 #endif
 
 #if BOTAN_HAS_DILITHIUM_AES
-   if(mode.is_aes())
-      { return std::make_unique<Dilithium_AES_Symmetric_Primitives>(); }
+   if(mode.is_aes()) {
+      return std::make_unique<Dilithium_AES_Symmetric_Primitives>();
+   }
 #endif
 
    throw Not_Implemented("requested Dilithium mode is not enabled in this build");
-   }
+}
 
-
-DilithiumModeConstants::DilithiumModeConstants(DilithiumMode mode)
-   : m_mode(mode)
-   , m_symmetric_primitives(Dilithium_Symmetric_Primitives::create(mode))
-   {
-   if(mode.is_modern())
-      {
+DilithiumModeConstants::DilithiumModeConstants(DilithiumMode mode) :
+      m_mode(mode), m_symmetric_primitives(Dilithium_Symmetric_Primitives::create(mode)) {
+   if(mode.is_modern()) {
       m_stream128_blockbytes = DilithiumModeConstants::SHAKE128_RATE;
       m_stream256_blockbytes = DilithiumModeConstants::SHAKE256_RATE;
-      }
-   else
-      {
+   } else {
       m_stream128_blockbytes = AES256CTR_BLOCKBYTES;
       m_stream256_blockbytes = AES256CTR_BLOCKBYTES;
-      }
+   }
 
-   switch(m_mode.mode())
-      {
+   switch(m_mode.mode()) {
       case Botan::DilithiumMode::Dilithium4x4:
       case Botan::DilithiumMode::Dilithium4x4_AES:
          m_k = 4;
@@ -100,25 +94,22 @@ DilithiumModeConstants::DilithiumModeConstants(DilithiumMode mode)
          m_polyeta_packedbytes = 96;
          m_poly_uniform_eta_nblocks = ((136 + m_stream128_blockbytes - 1) / m_stream128_blockbytes);
          break;
-      }
+   }
 
-   if(m_gamma1 == (1 << 17))
-      {
+   if(m_gamma1 == (1 << 17)) {
       m_poly_uniform_gamma1_nblocks = (576 + m_stream256_blockbytes - 1) / m_stream256_blockbytes;
-      }
-   else
-      {
+   } else {
       BOTAN_ASSERT_NOMSG(m_gamma1 == (1 << 19));
       m_poly_uniform_gamma1_nblocks = (640 + m_stream256_blockbytes - 1) / m_stream256_blockbytes;
-      }
+   }
 
    // For all modes the same calculation
    m_polyvech_packedbytes = m_omega + m_k;
    m_poly_uniform_nblocks = ((768 + m_stream128_blockbytes - 1) / m_stream128_blockbytes);
    m_public_key_bytes = DilithiumModeConstants::SEEDBYTES + m_k * DilithiumModeConstants::POLYT1_PACKEDBYTES;
    m_crypto_bytes = DilithiumModeConstants::SEEDBYTES + m_l * m_polyz_packedbytes + m_polyvech_packedbytes;
-   m_private_key_bytes = (3 * DilithiumModeConstants::SEEDBYTES + m_l * m_polyeta_packedbytes \
-                          + m_k * m_polyeta_packedbytes + m_k * DilithiumModeConstants::POLYT0_PACKEDBYTES);
-   }
+   m_private_key_bytes = (3 * DilithiumModeConstants::SEEDBYTES + m_l * m_polyeta_packedbytes +
+                          m_k * m_polyeta_packedbytes + m_k * DilithiumModeConstants::POLYT0_PACKEDBYTES);
+}
 
 }  // namespace Botan

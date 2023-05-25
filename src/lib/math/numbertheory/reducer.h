@@ -15,8 +15,7 @@ namespace Botan {
 /**
 * Modular Reducer (using Barrett's technique)
 */
-class BOTAN_PUBLIC_API(2,0) Modular_Reducer final
-   {
+class BOTAN_PUBLIC_API(2, 0) Modular_Reducer final {
    public:
       const BigInt& get_modulus() const { return m_modulus; }
 
@@ -28,31 +27,27 @@ class BOTAN_PUBLIC_API(2,0) Modular_Reducer final
       * @param y the second operand
       * @return (x * y) % p
       */
-      BigInt multiply(const BigInt& x, const BigInt& y) const
-         { return reduce(x * y); }
+      BigInt multiply(const BigInt& x, const BigInt& y) const { return reduce(x * y); }
 
       /**
       * Multiply mod p
       * @return (x * y * z) % p
       */
-      BigInt multiply(const BigInt& x, const BigInt& y, const BigInt& z) const
-         { return multiply(x, multiply(y, z)); }
+      BigInt multiply(const BigInt& x, const BigInt& y, const BigInt& z) const { return multiply(x, multiply(y, z)); }
 
       /**
       * Square mod p
       * @param x the value to square
       * @return (x * x) % p
       */
-      BigInt square(const BigInt& x) const
-         { return reduce(Botan::square(x)); }
+      BigInt square(const BigInt& x) const { return reduce(Botan::square(x)); }
 
       /**
       * Cube mod p
       * @param x the value to cube
       * @return (x * x * x) % p
       */
-      BigInt cube(const BigInt& x) const
-         { return multiply(x, this->square(x)); }
+      BigInt cube(const BigInt& x) const { return multiply(x, this->square(x)); }
 
       /**
       * Low level reduction function. Mostly for internal use.
@@ -65,12 +60,14 @@ class BOTAN_PUBLIC_API(2,0) Modular_Reducer final
       bool initialized() const { return (m_mod_words != 0); }
 
       Modular_Reducer() { m_mod_words = 0; }
+
       explicit Modular_Reducer(const BigInt& mod);
+
    private:
       BigInt m_modulus, m_mu;
       size_t m_mod_words;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

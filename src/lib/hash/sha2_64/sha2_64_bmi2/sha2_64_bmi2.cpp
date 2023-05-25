@@ -6,32 +6,28 @@
 
 #include <botan/internal/sha2_64.h>
 
-#include <botan/internal/sha2_64_f.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/internal/bit_ops.h>
+#include <botan/internal/sha2_64_f.h>
 
 namespace Botan {
 
-void SHA_512::compress_digest_bmi2(secure_vector<uint64_t>& digest,
-                                   const uint8_t input[], size_t blocks)
-   {
-   uint64_t A = digest[0], B = digest[1], C = digest[2],
-          D = digest[3], E = digest[4], F = digest[5],
-          G = digest[6], H = digest[7];
+void SHA_512::compress_digest_bmi2(secure_vector<uint64_t>& digest, const uint8_t input[], size_t blocks) {
+   uint64_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4], F = digest[5], G = digest[6],
+            H = digest[7];
 
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      uint64_t W00 = load_be<uint64_t>(input,  0);
-      uint64_t W01 = load_be<uint64_t>(input,  1);
-      uint64_t W02 = load_be<uint64_t>(input,  2);
-      uint64_t W03 = load_be<uint64_t>(input,  3);
-      uint64_t W04 = load_be<uint64_t>(input,  4);
-      uint64_t W05 = load_be<uint64_t>(input,  5);
-      uint64_t W06 = load_be<uint64_t>(input,  6);
-      uint64_t W07 = load_be<uint64_t>(input,  7);
-      uint64_t W08 = load_be<uint64_t>(input,  8);
-      uint64_t W09 = load_be<uint64_t>(input,  9);
+   for(size_t i = 0; i != blocks; ++i) {
+      uint64_t W00 = load_be<uint64_t>(input, 0);
+      uint64_t W01 = load_be<uint64_t>(input, 1);
+      uint64_t W02 = load_be<uint64_t>(input, 2);
+      uint64_t W03 = load_be<uint64_t>(input, 3);
+      uint64_t W04 = load_be<uint64_t>(input, 4);
+      uint64_t W05 = load_be<uint64_t>(input, 5);
+      uint64_t W06 = load_be<uint64_t>(input, 6);
+      uint64_t W07 = load_be<uint64_t>(input, 7);
+      uint64_t W08 = load_be<uint64_t>(input, 8);
+      uint64_t W09 = load_be<uint64_t>(input, 9);
       uint64_t W10 = load_be<uint64_t>(input, 10);
       uint64_t W11 = load_be<uint64_t>(input, 11);
       uint64_t W12 = load_be<uint64_t>(input, 12);
@@ -130,9 +126,9 @@ void SHA_512::compress_digest_bmi2(secure_vector<uint64_t>& digest,
       H = (digest[7] += H);
 
       input += 128;
-      }
    }
+}
 
 #undef SHA2_64_F
 
-}
+}  // namespace Botan

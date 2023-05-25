@@ -10,12 +10,12 @@
 #ifndef BOTAN_TYPES_H_
 #define BOTAN_TYPES_H_
 
-#include <botan/build.h> // IWYU pragma: export
-#include <botan/compiler.h> // IWYU pragma: export
-#include <botan/assert.h> // IWYU pragma: export
-#include <cstddef> // IWYU pragma: export
-#include <cstdint> // IWYU pragma: export
-#include <memory> // IWYU pragma: export
+#include <botan/assert.h>    // IWYU pragma: export
+#include <botan/build.h>     // IWYU pragma: export
+#include <botan/compiler.h>  // IWYU pragma: export
+#include <cstddef>           // IWYU pragma: export
+#include <cstdint>           // IWYU pragma: export
+#include <memory>            // IWYU pragma: export
 
 namespace Botan {
 
@@ -72,13 +72,13 @@ namespace Botan {
 * </dl>
 */
 
-using std::uint8_t;
-using std::uint16_t;
-using std::uint32_t;
-using std::uint64_t;
 using std::int32_t;
 using std::int64_t;
 using std::size_t;
+using std::uint16_t;
+using std::uint32_t;
+using std::uint64_t;
+using std::uint8_t;
 
 #if !defined(BOTAN_IS_BEING_BUILT)
 /*
@@ -86,28 +86,27 @@ using std::size_t;
 * or code. They are kept only for compatability with software
 * written against older versions.
 */
-using byte   = std::uint8_t;
+using byte = std::uint8_t;
 using u16bit = std::uint16_t;
 using u32bit = std::uint32_t;
 using u64bit = std::uint64_t;
 using s32bit = std::int32_t;
 #endif
 
-#if (BOTAN_MP_WORD_BITS == 32)
-  typedef uint32_t word;
-#elif (BOTAN_MP_WORD_BITS == 64)
-  typedef uint64_t word;
+#if(BOTAN_MP_WORD_BITS == 32)
+typedef uint32_t word;
+#elif(BOTAN_MP_WORD_BITS == 64)
+typedef uint64_t word;
 #else
-  #error BOTAN_MP_WORD_BITS must be 32 or 64
+   #error BOTAN_MP_WORD_BITS must be 32 or 64
 #endif
 
 /*
 * Should this assert fail on your system please contact the developers
 * for assistance in porting.
 */
-static_assert(sizeof(std::size_t) == 8 || sizeof(std::size_t) == 4,
-              "This platform has an unexpected size for size_t");
+static_assert(sizeof(std::size_t) == 8 || sizeof(std::size_t) == 4, "This platform has an unexpected size for size_t");
 
-}
+}  // namespace Botan
 
 #endif

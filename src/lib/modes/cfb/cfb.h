@@ -9,16 +9,15 @@
 #ifndef BOTAN_MODE_CFB_H_
 #define BOTAN_MODE_CFB_H_
 
-#include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
+#include <botan/cipher_mode.h>
 
 namespace Botan {
 
 /**
 * CFB Mode
 */
-class CFB_Mode : public Cipher_Mode
-   {
+class CFB_Mode : public Cipher_Mode {
    public:
       std::string name() const override final;
 
@@ -41,13 +40,16 @@ class CFB_Mode : public Cipher_Mode
       void reset() override final;
 
       bool has_keying_material() const override final;
+
    protected:
       CFB_Mode(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits);
 
       void shift_register();
 
       size_t feedback() const { return m_feedback_bytes; }
+
       const BlockCipher& cipher() const { return *m_cipher; }
+
       size_t block_size() const { return m_block_size; }
 
       secure_vector<uint8_t> m_state;
@@ -61,13 +63,12 @@ class CFB_Mode : public Cipher_Mode
       std::unique_ptr<BlockCipher> m_cipher;
       const size_t m_block_size;
       const size_t m_feedback_bytes;
-   };
+};
 
 /**
 * CFB Encryption
 */
-class CFB_Encryption final : public CFB_Mode
-   {
+class CFB_Encryption final : public CFB_Mode {
    public:
       /**
       * If feedback_bits is zero, cipher->block_size() bytes will be used.
@@ -76,18 +77,17 @@ class CFB_Encryption final : public CFB_Mode
       * must be a multiple of 8
       */
       CFB_Encryption(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
-         CFB_Mode(std::move(cipher), feedback_bits) {}
+            CFB_Mode(std::move(cipher), feedback_bits) {}
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
 /**
 * CFB Decryption
 */
-class CFB_Decryption final : public CFB_Mode
-   {
+class CFB_Decryption final : public CFB_Mode {
    public:
       /**
       * If feedback_bits is zero, cipher->block_size() bytes will be used.
@@ -96,13 +96,13 @@ class CFB_Decryption final : public CFB_Mode
       * must be a multiple of 8
       */
       CFB_Decryption(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
-         CFB_Mode(std::move(cipher), feedback_bits) {}
+            CFB_Mode(std::move(cipher), feedback_bits) {}
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

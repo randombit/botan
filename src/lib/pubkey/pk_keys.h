@@ -8,12 +8,12 @@
 #ifndef BOTAN_PK_KEYS_H_
 #define BOTAN_PK_KEYS_H_
 
-#include <botan/secmem.h>
 #include <botan/asn1_obj.h>
 #include <botan/pk_ops_fwd.h>
-#include <string_view>
-#include <string>
+#include <botan/secmem.h>
 #include <span>
+#include <string>
+#include <string_view>
 
 namespace Botan {
 
@@ -52,8 +52,7 @@ enum class PublicKeyOperation {
 *
 * This is derived for both public and private keys
 */
-class BOTAN_PUBLIC_API(3,0) Asymmetric_Key
-   {
+class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key {
    public:
       virtual ~Asymmetric_Key() = default;
 
@@ -100,13 +99,12 @@ class BOTAN_PUBLIC_API(3,0) Asymmetric_Key
       * of operation.
       */
       virtual bool supports_operation(PublicKeyOperation op) const = 0;
-   };
+};
 
 /*
 * Public Key Base Class.
 */
-class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
-   {
+class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
    public:
       /**
       * Return an integer value best approximating the length of the
@@ -119,10 +117,7 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       /**
       * Deprecated version of object_identifier
       */
-      BOTAN_DEPRECATED("Use object_identifier") OID get_oid() const
-         {
-         return this->object_identifier();
-         }
+      BOTAN_DEPRECATED("Use object_identifier") OID get_oid() const { return this->object_identifier(); }
 
       /*
       * Test the key values for consistency.
@@ -131,8 +126,7 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       * of the test
       * @return true if the test is passed
       */
-      virtual bool check_key(RandomNumberGenerator& rng,
-                             bool strong) const = 0;
+      virtual bool check_key(RandomNumberGenerator& rng, bool strong) const = 0;
 
       /**
       * @return X.509 AlgorithmIdentifier for this key
@@ -181,10 +175,9 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       */
       virtual size_t message_part_size() const { return 0; }
 
-      virtual Signature_Format default_x509_signature_format() const
-         {
+      virtual Signature_Format default_x509_signature_format() const {
          return (this->message_parts() >= 2) ? Signature_Format::DerSequence : Signature_Format::Standard;
-         }
+      }
 
       /**
       * This is an internal library function exposed on key types.
@@ -198,10 +191,9 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::Encryption>
-         create_encryption_op(RandomNumberGenerator& rng,
-                              std::string_view params,
-                              std::string_view provider) const;
+      virtual std::unique_ptr<PK_Ops::Encryption> create_encryption_op(RandomNumberGenerator& rng,
+                                                                       std::string_view params,
+                                                                       std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -212,9 +204,8 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(std::string_view params,
-                                  std::string_view provider) const;
+      virtual std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
+                                                                               std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -224,9 +215,8 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(std::string_view params,
-                                std::string_view provider) const;
+      virtual std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
+                                                                           std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -240,16 +230,14 @@ class BOTAN_PUBLIC_API(2,0) Public_Key : public virtual Asymmetric_Key
       *
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::Verification>
-         create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
-                                     std::string_view provider) const;
-   };
+      virtual std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(
+         const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const;
+};
 
 /**
 * Private Key Base Class
 */
-class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
-   {
+class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
    public:
       /**
       * @return BER encoded private key bits
@@ -282,8 +270,7 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       * @return PKCS #8 AlgorithmIdentifier for this key
       * Might be different from the X.509 identifier, but normally is not
       */
-      virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const
-         { return algorithm_identifier(); }
+      virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const { return algorithm_identifier(); }
 
       /**
       * Indicates if this key is stateful, ie that performing a private
@@ -311,10 +298,9 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       * @param provider the provider to use
       *
       */
-      virtual std::unique_ptr<PK_Ops::Decryption>
-         create_decryption_op(RandomNumberGenerator& rng,
-                              std::string_view params,
-                              std::string_view provider) const;
+      virtual std::unique_ptr<PK_Ops::Decryption> create_decryption_op(RandomNumberGenerator& rng,
+                                                                       std::string_view params,
+                                                                       std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -328,10 +314,9 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::KEM_Decryption>
-         create_kem_decryption_op(RandomNumberGenerator& rng,
-                                  std::string_view params,
-                                  std::string_view provider) const;
+      virtual std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
+                                                                               std::string_view params,
+                                                                               std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -345,10 +330,9 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             std::string_view params,
-                             std::string_view provider) const;
+      virtual std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
+                                                                     std::string_view params,
+                                                                     std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -362,35 +346,28 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::Key_Agreement>
-         create_key_agreement_op(RandomNumberGenerator& rng,
-                                 std::string_view params,
-                                 std::string_view provider) const;
-   };
+      virtual std::unique_ptr<PK_Ops::Key_Agreement> create_key_agreement_op(RandomNumberGenerator& rng,
+                                                                             std::string_view params,
+                                                                             std::string_view provider) const;
+};
 
 /**
 * PK Secret Value Derivation Key
 */
-class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement_Key : public virtual Private_Key
-   {
+class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement_Key : public virtual Private_Key {
    public:
       /*
       * @return public component of this key
       */
       virtual std::vector<uint8_t> public_value() const = 0;
-   };
+};
 
-std::string BOTAN_PUBLIC_API(2,4)
-   create_hex_fingerprint(const uint8_t bits[], size_t len,
-                          std::string_view hash_name);
+std::string BOTAN_PUBLIC_API(2, 4) create_hex_fingerprint(const uint8_t bits[], size_t len, std::string_view hash_name);
 
-inline std::string create_hex_fingerprint(std::span<const uint8_t> vec,
-                                          std::string_view hash_name)
-   {
+inline std::string create_hex_fingerprint(std::span<const uint8_t> vec, std::string_view hash_name) {
    return create_hex_fingerprint(vec.data(), vec.size(), hash_name);
-   }
-
-
 }
+
+}  // namespace Botan
 
 #endif

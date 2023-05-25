@@ -7,31 +7,30 @@
 
 #include <botan/tls_signature_scheme.h>
 
+#include <botan/der_enc.h>
 #include <botan/ec_group.h>
+#include <botan/hash.h>
+#include <botan/hex.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_version.h>
-#include <botan/internal/stl_util.h>
 #include <botan/internal/pss_params.h>
-#include <botan/hash.h>
-#include <botan/der_enc.h>
-#include <botan/hex.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan::TLS {
 
-const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes()
-   {
+const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes() {
    /*
    * This is ordered in some approximate order of preference
    */
    static const std::vector<Signature_Scheme> all_schemes = {
 
-// EdDSA 25519 is currently not supported as a signature scheme for certificates
-// certificate authentication.
-// See: https://github.com/randombit/botan/pull/2958#discussion_r851294715
-//
-// #if defined(BOTAN_HAS_ED25519)
-//       EDDSA_25519,
-// #endif
+      // EdDSA 25519 is currently not supported as a signature scheme for certificates
+      // certificate authentication.
+      // See: https://github.com/randombit/botan/pull/2958#discussion_r851294715
+      //
+      // #if defined(BOTAN_HAS_ED25519)
+      //       EDDSA_25519,
+      // #endif
 
       RSA_PSS_SHA384,
       RSA_PSS_SHA256,
@@ -47,35 +46,22 @@ const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes()
    };
 
    return all_schemes;
-   }
+}
 
+Signature_Scheme::Signature_Scheme() : m_code(NONE) {}
 
-Signature_Scheme::Signature_Scheme()
-   : m_code(NONE)
-   {}
+Signature_Scheme::Signature_Scheme(uint16_t wire_code) : Signature_Scheme(Signature_Scheme::Code(wire_code)) {}
 
-Signature_Scheme::Signature_Scheme(uint16_t wire_code)
-   : Signature_Scheme(Signature_Scheme::Code(wire_code))
-   {}
+Signature_Scheme::Signature_Scheme(Signature_Scheme::Code wire_code) : m_code(wire_code) {}
 
-Signature_Scheme::Signature_Scheme(Signature_Scheme::Code wire_code)
-   : m_code(wire_code)
-   {}
-
-bool Signature_Scheme::is_available() const noexcept
-   {
+bool Signature_Scheme::is_available() const noexcept {
    return value_exists(Signature_Scheme::all_available_schemes(), *this);
-   }
+}
 
-bool Signature_Scheme::is_set() const noexcept
-   {
-   return m_code != NONE;
-   }
+bool Signature_Scheme::is_set() const noexcept { return m_code != NONE; }
 
-std::string Signature_Scheme::to_string() const noexcept
-   {
-   switch(m_code)
-      {
+std::string Signature_Scheme::to_string() const noexcept {
+   switch(m_code) {
       case RSA_PKCS1_SHA1:
          return "RSA_PKCS1_SHA1";
       case RSA_PKCS1_SHA256:
@@ -108,13 +94,11 @@ std::string Signature_Scheme::to_string() const noexcept
 
       default:
          return "Unknown signature scheme: " + std::to_string(m_code);
-      }
    }
+}
 
-std::string Signature_Scheme::hash_function_name() const noexcept
-   {
-   switch(m_code)
-      {
+std::string Signature_Scheme::hash_function_name() const noexcept {
+   switch(m_code) {
       case RSA_PKCS1_SHA1:
       case ECDSA_SHA1:
          return "SHA-1";
@@ -140,13 +124,11 @@ std::string Signature_Scheme::hash_function_name() const noexcept
 
       default:
          return "Unknown hash function";
-      }
    }
+}
 
-std::string Signature_Scheme::padding_string() const noexcept
-   {
-   switch(m_code)
-      {
+std::string Signature_Scheme::padding_string() const noexcept {
+   switch(m_code) {
       case RSA_PKCS1_SHA1:
          return "EMSA_PKCS1(SHA-1)";
       case RSA_PKCS1_SHA256:
@@ -179,13 +161,11 @@ std::string Signature_Scheme::padding_string() const noexcept
 
       default:
          return "Unknown padding";
-      }
    }
+}
 
-std::string Signature_Scheme::algorithm_name() const noexcept
-   {
-   switch(m_code)
-      {
+std::string Signature_Scheme::algorithm_name() const noexcept {
+   switch(m_code) {
       case RSA_PKCS1_SHA1:
       case RSA_PKCS1_SHA256:
       case RSA_PKCS1_SHA384:
@@ -209,23 +189,21 @@ std::string Signature_Scheme::algorithm_name() const noexcept
 
       default:
          return "Unknown algorithm";
-      }
    }
+}
 
-AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept
-   {
-   switch(m_code)
-      {
+AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept {
+   switch(m_code) {
       // case ECDSA_SHA1:  not defined
       case ECDSA_SHA256:
-         return { "ECDSA", EC_Group("secp256r1").DER_encode(EC_Group_Encoding::NamedCurve) };
+         return {"ECDSA", EC_Group("secp256r1").DER_encode(EC_Group_Encoding::NamedCurve)};
       case ECDSA_SHA384:
-         return { "ECDSA", EC_Group("secp384r1").DER_encode(EC_Group_Encoding::NamedCurve) };
+         return {"ECDSA", EC_Group("secp384r1").DER_encode(EC_Group_Encoding::NamedCurve)};
       case ECDSA_SHA512:
-         return { "ECDSA", EC_Group("secp521r1").DER_encode(EC_Group_Encoding::NamedCurve) };
+         return {"ECDSA", EC_Group("secp521r1").DER_encode(EC_Group_Encoding::NamedCurve)};
 
       case EDDSA_25519:
-         return { "Ed25519", AlgorithmIdentifier::USE_EMPTY_PARAM };
+         return {"Ed25519", AlgorithmIdentifier::USE_EMPTY_PARAM};
 
       case RSA_PKCS1_SHA1:
       case RSA_PKCS1_SHA256:
@@ -234,17 +212,15 @@ AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept
       case RSA_PSS_SHA256:
       case RSA_PSS_SHA384:
       case RSA_PSS_SHA512:
-         return { "RSA", AlgorithmIdentifier::USE_NULL_PARAM };
+         return {"RSA", AlgorithmIdentifier::USE_NULL_PARAM};
 
       default:
          return AlgorithmIdentifier();
-      }
    }
+}
 
-AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
-   {
-   switch(m_code)
-      {
+AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept {
+   switch(m_code) {
       case RSA_PKCS1_SHA1:
          return AlgorithmIdentifier(OID::from_string("RSA/EMSA3(SHA-1)"), AlgorithmIdentifier::USE_NULL_PARAM);
       case RSA_PKCS1_SHA256:
@@ -264,25 +240,20 @@ AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept
          return AlgorithmIdentifier(OID::from_string("ECDSA/SHA-512"), AlgorithmIdentifier::USE_EMPTY_PARAM);
 
       case RSA_PSS_SHA256:
-         return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
-                                    PSS_Params("SHA-256", 32).serialize());
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"), PSS_Params("SHA-256", 32).serialize());
       case RSA_PSS_SHA384:
-         return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
-                                    PSS_Params("SHA-384", 48).serialize());
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"), PSS_Params("SHA-384", 48).serialize());
       case RSA_PSS_SHA512:
-         return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"),
-                                    PSS_Params("SHA-512", 64).serialize());
+         return AlgorithmIdentifier(OID::from_string("RSA/EMSA4"), PSS_Params("SHA-512", 64).serialize());
 
       default:
          // Note that Ed25519 and Ed448 end up here
          return AlgorithmIdentifier();
-      }
    }
+}
 
-std::optional<Signature_Format> Signature_Scheme::format() const noexcept
-   {
-   switch(m_code)
-      {
+std::optional<Signature_Format> Signature_Scheme::format() const noexcept {
+   switch(m_code) {
       case RSA_PKCS1_SHA1:
       case RSA_PKCS1_SHA256:
       case RSA_PKCS1_SHA384:
@@ -302,11 +273,10 @@ std::optional<Signature_Format> Signature_Scheme::format() const noexcept
 
       default:
          return std::nullopt;
-      }
    }
+}
 
-bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_version) const noexcept
-   {
+bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_version) const noexcept {
    // RFC 8446 4.4.3:
    //   The SHA-1 algorithm MUST NOT be used in any signatures of
    //   CertificateVerify messages.
@@ -320,18 +290,14 @@ bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_versi
    //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
    //
    // Note that this is enforced for TLS 1.3 and above only.
-   if(!protocol_version.is_pre_tls_13() &&
-       (m_code == RSA_PKCS1_SHA1   ||
-        m_code == RSA_PKCS1_SHA256 ||
-        m_code == RSA_PKCS1_SHA384 ||
-        m_code == RSA_PKCS1_SHA512))
+   if(!protocol_version.is_pre_tls_13() && (m_code == RSA_PKCS1_SHA1 || m_code == RSA_PKCS1_SHA256 ||
+                                            m_code == RSA_PKCS1_SHA384 || m_code == RSA_PKCS1_SHA512))
       return false;
 
    return true;
-   }
+}
 
-bool Signature_Scheme::is_suitable_for(const Private_Key &private_key) const noexcept
-   {
+bool Signature_Scheme::is_suitable_for(const Private_Key& private_key) const noexcept {
    if(algorithm_name() != private_key.algo_name())
       return false;
 
@@ -350,14 +316,14 @@ bool Signature_Scheme::is_suitable_for(const Private_Key &private_key) const noe
       return false;
 
    return true;
-   }
+}
 
-std::vector<AlgorithmIdentifier> to_algorithm_identifiers(const std::vector<Signature_Scheme>& schemes)
-   {
+std::vector<AlgorithmIdentifier> to_algorithm_identifiers(const std::vector<Signature_Scheme>& schemes) {
    std::vector<AlgorithmIdentifier> result;
-   std::transform(schemes.begin(), schemes.end(), std::back_inserter(result),
-                  [](const auto& scheme) { return scheme.algorithm_identifier(); });
+   std::transform(schemes.begin(), schemes.end(), std::back_inserter(result), [](const auto& scheme) {
+      return scheme.algorithm_identifier();
+   });
    return result;
-   }
+}
 
-}  // Botan::TLS
+}  // namespace Botan::TLS

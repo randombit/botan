@@ -1,33 +1,28 @@
 #include "botan/cipher_mode.h"
 #include "botan/hex.h"
 #include <botan/aead.h>
-#include <botan/rsa.h>
 #include <botan/auto_rng.h>
-#include <botan/secmem.h>
 #include <botan/pubkey.h>
+#include <botan/rsa.h>
+#include <botan/secmem.h>
 
 #include <iostream>
 
 struct EncryptedData {
-   Botan::secure_vector<uint8_t> ciphertext;
-   std::vector<uint8_t>          nonce;
-   std::vector<uint8_t>          encryptedKey;
+      Botan::secure_vector<uint8_t> ciphertext;
+      std::vector<uint8_t> nonce;
+      std::vector<uint8_t> encryptedKey;
 };
 
 namespace {
 
-std::unique_ptr<Botan::Private_Key>
-generate_keypair(const size_t                  bits,
-                 Botan::RandomNumberGenerator& rng)
-{
+std::unique_ptr<Botan::Private_Key> generate_keypair(const size_t bits, Botan::RandomNumberGenerator& rng) {
    return std::make_unique<Botan::RSA_PrivateKey>(rng, bits);
 }
 
-
 EncryptedData encrypt(const Botan::secure_vector<uint8_t>& data,
-                      std::unique_ptr<Botan::Public_Key>   pubkey,
-                      Botan::RandomNumberGenerator&        rng)
-{
+                      std::unique_ptr<Botan::Public_Key> pubkey,
+                      Botan::RandomNumberGenerator& rng) {
    auto sym_cipher = Botan::AEAD_Mode::create_or_throw("AES-256/GCM", Botan::Cipher_Dir::Encryption);
 
    EncryptedData d;
@@ -49,12 +44,9 @@ EncryptedData encrypt(const Botan::secure_vector<uint8_t>& data,
    return d;
 }
 
-
-Botan::secure_vector<uint8_t>
-decrypt(const EncryptedData&          encdata,
-        const Botan::Private_Key&     privkey,
-        Botan::RandomNumberGenerator& rng)
-{
+Botan::secure_vector<uint8_t> decrypt(const EncryptedData& encdata,
+                                      const Botan::Private_Key& privkey,
+                                      Botan::RandomNumberGenerator& rng) {
    Botan::secure_vector<uint8_t> plaintext = encdata.ciphertext;
 
    // decrypt the symmetric key
@@ -70,24 +62,21 @@ decrypt(const EncryptedData&          encdata,
    return plaintext;
 }
 
-
 template <typename Out, typename In>
-Out as(const In& data)
-{
+Out as(const In& data) {
    return Out(data.data(), data.data() + data.size());
 }
 
-}
+}  // namespace
 
-int main()
-{
+int main() {
    Botan::AutoSeeded_RNG rng;
 
    const auto privkey = generate_keypair(2048 /*  bits */, rng);
 
    const std::string plaintext = "The quick brown fox jumps over the lazy dog.";
-   const auto ciphertext       = encrypt(as<Botan::secure_vector<uint8_t>>(plaintext), privkey->public_key(), rng);
-   const auto new_plaintext    = decrypt(ciphertext, *privkey, rng);
+   const auto ciphertext = encrypt(as<Botan::secure_vector<uint8_t>>(plaintext), privkey->public_key(), rng);
+   const auto new_plaintext = decrypt(ciphertext, *privkey, rng);
 
    std::cout << as<std::string>(new_plaintext) << std::endl;
 

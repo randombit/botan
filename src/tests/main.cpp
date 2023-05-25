@@ -8,38 +8,33 @@
 #include "runner/test_runner.h"
 #include "tests.h"
 #include <iostream>
-#include <vector>
-#include <string>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include <botan/version.h>
 
 namespace {
 
-void print_item_list(std::ostringstream& err, const std::set<std::string>& list)
-   {
+void print_item_list(std::ostringstream& err, const std::set<std::string>& list) {
    size_t line_len = 0;
 
-   for(auto const& item : list)
-         {
-         err << item << " ";
-         line_len += item.size() + 1;
+   for(const auto& item : list) {
+      err << item << " ";
+      line_len += item.size() + 1;
 
-         if(line_len > 64)
-            {
-            err << "\n";
-            line_len = 0;
-            }
-         }
-
-      if(line_len > 0)
-         {
+      if(line_len > 64) {
          err << "\n";
-         }
+         line_len = 0;
+      }
    }
 
-std::string help_text(const std::string& spec)
-   {
+   if(line_len > 0) {
+      err << "\n";
+   }
+}
+
+std::string help_text(const std::string& spec) {
    std::ostringstream err;
 
    err << "Usage: " << spec << "\n\n"
@@ -55,16 +50,14 @@ std::string help_text(const std::string& spec)
    print_item_list(err, Botan_Tests::Test::registered_test_categories());
 
    return err.str();
-   }
-
 }
 
-int main(int argc, char* argv[])
-   {
+}  // namespace
+
+int main(int argc, char* argv[]) {
    std::cerr << Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
 
-   try
-      {
+   try {
       const std::string arg_spec =
          "botan-test --verbose --help --data-dir= --pkcs11-lib= --provider= "
          "--log-success --abort-on-first-fail --no-avoid-undefined --skip-tests= "
@@ -75,52 +68,43 @@ int main(int argc, char* argv[])
 
       parser.parse_args(std::vector<std::string>(argv + 1, argv + argc));
 
-      if(parser.flag_set("help"))
-         {
+      if(parser.flag_set("help")) {
          std::cout << help_text(arg_spec);
          return 0;
-         }
+      }
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_HAS_THREAD_UTILS)
       /*
       The mlock pool becomes a major contention point when many threads are running,
       so disable it unless it was explicitly asked for via setting the env variable
       */
-      if(parser.get_arg_sz("test-threads") != 1)
-         {
+      if(parser.get_arg_sz("test-threads") != 1) {
          ::setenv("BOTAN_MLOCK_POOL_SIZE", "0", /*overwrite=*/0);
-         }
+      }
 #endif
 
-      const Botan_Tests::Test_Options opts(
-         parser.get_arg_list("suites"),
-         parser.get_arg_list("skip-tests"),
-         parser.get_arg_or("data-dir", "src/tests/data"),
-         parser.get_arg("pkcs11-lib"),
-         parser.get_arg("provider"),
-         parser.get_arg("drbg-seed"),
-         parser.get_arg("test-results-dir"),
-         parser.get_arg_list("report-properties"),
-         parser.get_arg_sz("test-runs"),
-         parser.get_arg_sz("test-threads"),
-         parser.flag_set("verbose"),
-         parser.flag_set("log-success"),
-         parser.flag_set("run-online-tests"),
-         parser.flag_set("run-long-tests"),
-         parser.flag_set("run-memory-intensive-tests"),
-         parser.flag_set("abort-on-first-fail"));
+      const Botan_Tests::Test_Options opts(parser.get_arg_list("suites"),
+                                           parser.get_arg_list("skip-tests"),
+                                           parser.get_arg_or("data-dir", "src/tests/data"),
+                                           parser.get_arg("pkcs11-lib"),
+                                           parser.get_arg("provider"),
+                                           parser.get_arg("drbg-seed"),
+                                           parser.get_arg("test-results-dir"),
+                                           parser.get_arg_list("report-properties"),
+                                           parser.get_arg_sz("test-runs"),
+                                           parser.get_arg_sz("test-threads"),
+                                           parser.flag_set("verbose"),
+                                           parser.flag_set("log-success"),
+                                           parser.flag_set("run-online-tests"),
+                                           parser.flag_set("run-long-tests"),
+                                           parser.flag_set("run-memory-intensive-tests"),
+                                           parser.flag_set("abort-on-first-fail"));
 
       Botan_Tests::Test_Runner tests(std::cout);
 
       return tests.run(opts) ? 0 : 1;
-      }
-   catch(std::exception& e)
-      {
-      std::cerr << "Exiting with error: " << e.what() << std::endl;
-      }
-   catch(...)
-      {
+   } catch(std::exception& e) { std::cerr << "Exiting with error: " << e.what() << std::endl; } catch(...) {
       std::cerr << "Exiting with unknown exception" << std::endl;
-      }
-   return 2;
    }
+   return 2;
+}

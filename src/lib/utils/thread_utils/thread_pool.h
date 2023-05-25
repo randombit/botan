@@ -8,22 +8,21 @@
 #define BOTAN_THREAD_POOL_H_
 
 #include <botan/types.h>
-#include <functional>
-#include <deque>
-#include <vector>
-#include <memory>
-#include <utility>
-#include <type_traits>
-#include <mutex>
-#include <thread>
-#include <future>
 #include <condition_variable>
+#include <deque>
+#include <functional>
+#include <future>
+#include <memory>
+#include <mutex>
 #include <optional>
+#include <thread>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace Botan {
 
-class BOTAN_TEST_API Thread_Pool final
-   {
+class BOTAN_TEST_API Thread_Pool final {
    public:
       /**
       * Return an instance to a shared thread pool
@@ -44,9 +43,7 @@ class BOTAN_TEST_API Thread_Pool final
       * @param pool_size number of threads in the pool, if 0
       *        then some default value is chosen.
       */
-      Thread_Pool(size_t pool_size = 0) :
-         Thread_Pool(std::optional<size_t>(pool_size))
-         {}
+      Thread_Pool(size_t pool_size = 0) : Thread_Pool(std::optional<size_t>(pool_size)) {}
 
       ~Thread_Pool() { shutdown(); }
 
@@ -63,19 +60,18 @@ class BOTAN_TEST_API Thread_Pool final
       /*
       * Enqueue some work
       */
-      void queue_thunk(const std::function<void ()>&);
+      void queue_thunk(const std::function<void()>&);
 
-      template<class F, class... Args>
-      auto run(F&& f, Args&&... args) -> std::future<typename std::invoke_result<F, Args...>::type>
-         {
+      template <class F, class... Args>
+      auto run(F&& f, Args&&... args) -> std::future<typename std::invoke_result<F, Args...>::type> {
          using return_type = typename std::invoke_result<F, Args...>::type;
 
          auto future_work = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-         auto task = std::make_shared<std::packaged_task<return_type ()>>(future_work);
+         auto task = std::make_shared<std::packaged_task<return_type()>>(future_work);
          auto future_result = task->get_future();
          queue_thunk([task]() { (*task)(); });
          return future_result;
-         }
+      }
 
    private:
       void worker_thread();
@@ -85,10 +81,10 @@ class BOTAN_TEST_API Thread_Pool final
 
       std::mutex m_mutex;
       std::condition_variable m_more_tasks;
-      std::deque<std::function<void ()>> m_tasks;
+      std::deque<std::function<void()>> m_tasks;
       bool m_shutdown;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

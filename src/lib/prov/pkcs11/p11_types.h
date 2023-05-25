@@ -10,9 +10,9 @@
 #define BOTAN_P11_TYPES_H_
 
 #include <botan/p11.h>
-#include <string>
-#include <memory>
 #include <functional>
+#include <memory>
+#include <string>
 #include <utility>
 
 namespace Botan {
@@ -25,15 +25,16 @@ namespace PKCS11 {
 * Loads the PKCS#11 shared library
 * Calls C_Initialize on load and C_Finalize on destruction
 */
-class BOTAN_PUBLIC_API(2,0) Module final
-   {
+class BOTAN_PUBLIC_API(2, 0) Module final {
    public:
       /**
       * Loads the shared library and calls C_Initialize
       * @param file_path the path to the PKCS#11 shared library
       * @param init_args flags to use for `C_Initialize`
       */
-      Module(std::string_view file_path, C_InitializeArgs init_args = { nullptr, nullptr, nullptr, nullptr, static_cast< CK_FLAGS >(Flag::OsLockingOk), nullptr });
+      Module(std::string_view file_path,
+             C_InitializeArgs init_args = {
+                nullptr, nullptr, nullptr, nullptr, static_cast<CK_FLAGS>(Flag::OsLockingOk), nullptr});
 
       Module(Module&& other) noexcept;
       Module& operator=(Module&& other) = delete;
@@ -50,31 +51,27 @@ class BOTAN_PUBLIC_API(2,0) Module final
       * Reloads the module and reinitializes it
       * @param init_args flags to use for `C_Initialize`
       */
-      void reload(C_InitializeArgs init_args = { nullptr, nullptr, nullptr, nullptr, static_cast< CK_FLAGS >(Flag::OsLockingOk), nullptr });
+      void reload(C_InitializeArgs init_args = {
+                     nullptr, nullptr, nullptr, nullptr, static_cast<CK_FLAGS>(Flag::OsLockingOk), nullptr});
 
-      inline LowLevel* operator->() const
-         {
-         return m_low_level.get();
-         }
+      inline LowLevel* operator->() const { return m_low_level.get(); }
 
       /// @return general information about Cryptoki
-      inline Info get_info() const
-         {
+      inline Info get_info() const {
          Info info;
          m_low_level->C_GetInfo(&info);
          return info;
-         }
+      }
 
    private:
       const std::string m_file_path;
       FunctionListPtr m_func_list = nullptr;
       std::unique_ptr<Dynamically_Loaded_Library> m_library;
       std::unique_ptr<LowLevel> m_low_level = nullptr;
-   };
+};
 
 /// Represents a PKCS#11 Slot, i.e., a card reader
-class BOTAN_PUBLIC_API(2,0) Slot final
-   {
+class BOTAN_PUBLIC_API(2, 0) Slot final {
    public:
       /**
       * @param module the PKCS#11 module to use
@@ -83,16 +80,10 @@ class BOTAN_PUBLIC_API(2,0) Slot final
       Slot(Module& module, SlotId slot_id);
 
       /// @return a reference to the module that is used
-      inline Module& module() const
-         {
-         return m_module;
-         }
+      inline Module& module() const { return m_module; }
 
       /// @return the slot id
-      inline SlotId slot_id() const
-         {
-         return m_slot_id;
-         }
+      inline SlotId slot_id() const { return m_slot_id; }
 
       /**
       * Get available slots
@@ -124,11 +115,10 @@ class BOTAN_PUBLIC_API(2,0) Slot final
    private:
       const std::reference_wrapper<Module> m_module;
       const SlotId m_slot_id;
-   };
+};
 
 /// Represents a PKCS#11 session
-class BOTAN_PUBLIC_API(2,0) Session final
-   {
+class BOTAN_PUBLIC_API(2, 0) Session final {
    public:
       /**
       * @param slot the slot to use
@@ -158,22 +148,13 @@ class BOTAN_PUBLIC_API(2,0) Session final
       ~Session() noexcept;
 
       /// @return a reference to the slot
-      inline const Slot& slot() const
-         {
-         return m_slot;
-         }
+      inline const Slot& slot() const { return m_slot; }
 
       /// @return the session handle of this session
-      inline SessionHandle handle() const
-         {
-         return m_handle;
-         }
+      inline SessionHandle handle() const { return m_handle; }
 
       /// @return a reference to the used module
-      inline Module& module() const
-         {
-         return m_slot.module();
-         }
+      inline Module& module() const { return m_slot.module(); }
 
       /// @return the released session handle
       SessionHandle release();
@@ -201,9 +182,9 @@ class BOTAN_PUBLIC_API(2,0) Session final
       const Slot& m_slot;
       SessionHandle m_handle;
       bool m_logged_in;
-   };
+};
 
-}
-}
+}  // namespace PKCS11
+}  // namespace Botan
 
 #endif

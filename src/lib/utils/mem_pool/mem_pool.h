@@ -7,18 +7,17 @@
 #ifndef BOTAN_MEM_POOL_H_
 #define BOTAN_MEM_POOL_H_
 
-#include <botan/types.h>
 #include <botan/mutex.h>
-#include <vector>
+#include <botan/types.h>
 #include <deque>
 #include <map>
+#include <vector>
 
 namespace Botan {
 
 class Bucket;
 
-class BOTAN_TEST_API Memory_Pool final
-   {
+class BOTAN_TEST_API Memory_Pool final {
    public:
       /**
       * Initialize a memory pool. The memory is not owned by *this,
@@ -27,8 +26,7 @@ class BOTAN_TEST_API Memory_Pool final
       * @param page_size the system page size, each page should
       *        point to exactly this much memory.
       */
-      Memory_Pool(const std::vector<void*>& pages,
-                  size_t page_size);
+      Memory_Pool(const std::vector<void*>& pages, size_t page_size);
 
       ~Memory_Pool();
 
@@ -51,8 +49,8 @@ class BOTAN_TEST_API Memory_Pool final
       std::map<size_t, std::deque<Bucket>> m_buckets_for;
       uintptr_t m_min_page_ptr;
       uintptr_t m_max_page_ptr;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

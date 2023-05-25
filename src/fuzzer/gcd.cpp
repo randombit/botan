@@ -10,26 +10,22 @@
 
 namespace {
 
-Botan::BigInt ref_gcd(Botan::BigInt a,
-                      Botan::BigInt b)
-   {
+Botan::BigInt ref_gcd(Botan::BigInt a, Botan::BigInt b) {
    Botan::BigInt t;
-   while(b != 0)
-      {
+   while(b != 0) {
       t = a % b;
       t.swap(b);
       t.swap(a);
-      }
-   return a;
    }
-
+   return a;
 }
 
-void fuzz(const uint8_t in[], size_t len)
-   {
+}  // namespace
+
+void fuzz(const uint8_t in[], size_t len) {
    static const size_t max_bits = 4096;
 
-   if(2*len*8 > max_bits)
+   if(2 * len * 8 > max_bits)
       return;
 
    const Botan::BigInt x = Botan::BigInt::decode(in, len / 2);
@@ -38,11 +34,10 @@ void fuzz(const uint8_t in[], size_t len)
    const Botan::BigInt ref = ref_gcd(x, y);
    const Botan::BigInt lib = Botan::gcd(x, y);
 
-   if(ref != lib)
-      {
+   if(ref != lib) {
       FUZZER_WRITE_AND_CRASH("X = " << x << "\n"
-                             << "Y = " << y << "\n"
-                             << "L = " << lib << "\n"
-                             << "R = " << ref << "\n");
-      }
+                                    << "Y = " << y << "\n"
+                                    << "L = " << lib << "\n"
+                                    << "R = " << ref << "\n");
    }
+}

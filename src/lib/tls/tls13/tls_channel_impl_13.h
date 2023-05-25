@@ -10,19 +10,18 @@
 #ifndef BOTAN_TLS_CHANNEL_IMPL_13_H_
 #define BOTAN_TLS_CHANNEL_IMPL_13_H_
 
-#include <botan/internal/tls_channel_impl.h>
-#include <botan/internal/tls_record_layer_13.h>
-#include <botan/internal/tls_handshake_layer_13.h>
-#include <botan/internal/tls_transcript_hash_13.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/tls_channel_impl.h>
+#include <botan/internal/tls_handshake_layer_13.h>
+#include <botan/internal/tls_record_layer_13.h>
+#include <botan/internal/tls_transcript_hash_13.h>
 
 namespace Botan::TLS {
 
 /**
 * Generic interface for TLS 1.3 endpoint
 */
-class Channel_Impl_13 : public Channel_Impl
-   {
+class Channel_Impl_13 : public Channel_Impl {
    protected:
       /**
        * Helper class to coalesce handshake messages into a single TLS record
@@ -32,11 +31,9 @@ class Channel_Impl_13 : public Channel_Impl
        * Note that implementations should use the derived classes that either
        * aggregate conventional Handshake messages or Post-Handshake messages.
        */
-      class AggregatedMessages
-         {
+      class AggregatedMessages {
          public:
-            AggregatedMessages(Channel_Impl_13& channel,
-                               Handshake_Layer& handshake_layer);
+            AggregatedMessages(Channel_Impl_13& channel, Handshake_Layer& handshake_layer);
 
             AggregatedMessages(const AggregatedMessages&) = delete;
             AggregatedMessages& operator=(const AggregatedMessages&) = delete;
@@ -60,15 +57,14 @@ class Channel_Impl_13 : public Channel_Impl
 
             Channel_Impl_13& m_channel;
             Handshake_Layer& m_handshake_layer;
-         };
+      };
 
       /**
        * Aggregate conventional handshake messages. This will update the given
        * Transcript_Hash_State accordingly as individual messages are added to
        * the aggregation.
        */
-      class AggregatedHandshakeMessages : public AggregatedMessages
-         {
+      class AggregatedHandshakeMessages : public AggregatedMessages {
          public:
             AggregatedHandshakeMessages(Channel_Impl_13& channel,
                                         Handshake_Layer& handshake_layer,
@@ -83,19 +79,18 @@ class Channel_Impl_13 : public Channel_Impl
 
          private:
             Transcript_Hash_State& m_transcript_hash;
-         };
+      };
 
       /**
        * Aggregate post-handshake messages. In contrast to ordinary handshake
        * messages this does not maintain a Transcript_Hash_State.
        */
-      class AggregatedPostHandshakeMessages : public AggregatedMessages
-         {
+      class AggregatedPostHandshakeMessages : public AggregatedMessages {
          public:
             using AggregatedMessages::AggregatedMessages;
 
             AggregatedPostHandshakeMessages& add(Post_Handshake_Message_13 message);
-         };
+      };
 
    public:
       /**
@@ -147,8 +142,8 @@ class Channel_Impl_13 : public Channel_Impl
       bool is_closed() const override { return is_closed_for_reading() && is_closed_for_writing(); }
 
       bool is_closed_for_reading() const override { return !m_can_read; }
-      bool is_closed_for_writing() const override { return !m_can_write; }
 
+      bool is_closed_for_writing() const override { return !m_can_write; }
 
       /**
       * Key material export (RFC 5705)
@@ -157,17 +152,14 @@ class Channel_Impl_13 : public Channel_Impl
       * @param length the length of the desired key in bytes
       * @return key of length bytes
       */
-      SymmetricKey key_material_export(std::string_view label,
-                                       std::string_view context,
-                                       size_t length) const override;
+      SymmetricKey key_material_export(std::string_view label, std::string_view context, size_t length) const override;
 
       /**
       * Attempt to renegotiate the session
       */
-      void renegotiate(bool/* unused */) override
-         {
+      void renegotiate(bool /* unused */) override {
          throw Invalid_Argument("renegotiation is not allowed in TLS 1.3");
-         }
+      }
 
       /**
       * Attempt to update the session's traffic key material
@@ -181,12 +173,11 @@ class Channel_Impl_13 : public Channel_Impl
       * @return true iff the counterparty supports the secure
       * renegotiation extensions.
       */
-      bool secure_renegotiation_supported() const override
-         {
+      bool secure_renegotiation_supported() const override {
          // Secure renegotiation is not supported in TLS 1.3, though BoGo
          // tests expect us to claim that it is available.
          return true;
-         }
+      }
 
       /**
       * Perform a handshake timeout check. This does nothing unless
@@ -222,43 +213,38 @@ class Channel_Impl_13 : public Channel_Impl
        */
       void opportunistically_update_traffic_keys() { m_opportunistic_key_update = true; }
 
-      template<typename... MsgTs>
-      std::vector<uint8_t> send_handshake_message(const std::variant<MsgTs...>& message)
-         {
-         return aggregate_handshake_messages()
-                   .add(generalize_to<Handshake_Message_13_Ref>(message))
-                   .send();
-         }
+      template <typename... MsgTs>
+      std::vector<uint8_t> send_handshake_message(const std::variant<MsgTs...>& message) {
+         return aggregate_handshake_messages().add(generalize_to<Handshake_Message_13_Ref>(message)).send();
+      }
 
-      template<typename MsgT>
-      std::vector<uint8_t> send_handshake_message(std::reference_wrapper<MsgT> message)
-         {
+      template <typename MsgT>
+      std::vector<uint8_t> send_handshake_message(std::reference_wrapper<MsgT> message) {
          return send_handshake_message(generalize_to<Handshake_Message_13_Ref>(message));
-         }
+      }
 
-      std::vector<uint8_t> send_post_handshake_message(Post_Handshake_Message_13 message)
-         {
-         return aggregate_post_handshake_messages()
-                   .add(std::move(message))
-                   .send();
-         }
+      std::vector<uint8_t> send_post_handshake_message(Post_Handshake_Message_13 message) {
+         return aggregate_post_handshake_messages().add(std::move(message)).send();
+      }
 
       void send_dummy_change_cipher_spec();
 
-      AggregatedHandshakeMessages aggregate_handshake_messages()
-         {
+      AggregatedHandshakeMessages aggregate_handshake_messages() {
          return AggregatedHandshakeMessages(*this, m_handshake_layer, m_transcript_hash);
-         }
+      }
 
-      AggregatedPostHandshakeMessages aggregate_post_handshake_messages()
-         {
+      AggregatedPostHandshakeMessages aggregate_post_handshake_messages() {
          return AggregatedPostHandshakeMessages(*this, m_handshake_layer);
-         }
+      }
 
       Callbacks& callbacks() const { return *m_callbacks; }
+
       Session_Manager& session_manager() { return *m_session_manager; }
+
       Credentials_Manager& credentials_manager() { return *m_credentials_manager; }
+
       RandomNumberGenerator& rng() { return *m_rng; }
+
       const Policy& policy() const { return *m_policy; }
 
    private:
@@ -297,8 +283,8 @@ class Channel_Impl_13 : public Channel_Impl
        * @param incoming_limit  the maximal number of plaintext bytes to be
        *                        accepted in a received protected record
        */
-      void set_record_size_limits(const uint16_t outgoing_limit,
-                                  const uint16_t incoming_limit);
+      void set_record_size_limits(const uint16_t outgoing_limit, const uint16_t incoming_limit);
+
    private:
       /* callbacks */
       std::shared_ptr<Callbacks> m_callbacks;
@@ -319,7 +305,7 @@ class Channel_Impl_13 : public Channel_Impl
       bool m_opportunistic_key_update;
       bool m_first_message_sent;
       bool m_first_message_received;
-   };
-}
+};
+}  // namespace Botan::TLS
 
 #endif

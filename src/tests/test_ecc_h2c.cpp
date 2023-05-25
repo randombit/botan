@@ -17,15 +17,13 @@ namespace {
 
 #if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
 
-class ECC_H2C_XMD_Tests final : public Text_Based_Test
-   {
+class ECC_H2C_XMD_Tests final : public Text_Based_Test {
    public:
       ECC_H2C_XMD_Tests() : Text_Based_Test("pubkey/ec_h2c_xmd.vec", "Domain,Input,Output") {}
 
       bool clear_between_callbacks() const override { return false; }
 
-      Test::Result run_one_test(const std::string& hash, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& hash, const VarMap& vars) override {
          Test::Result result("ECC hash to curve XMD " + hash);
 
          const std::string domain = vars.get_req_str("Domain");
@@ -33,7 +31,9 @@ class ECC_H2C_XMD_Tests final : public Text_Based_Test
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          std::vector<uint8_t> output(expected.size());
-         Botan::expand_message_xmd(hash, output.data(), output.size(),
+         Botan::expand_message_xmd(hash,
+                                   output.data(),
+                                   output.size(),
                                    reinterpret_cast<const uint8_t*>(input.data()),
                                    input.size(),
                                    reinterpret_cast<const uint8_t*>(domain.data()),
@@ -41,21 +41,18 @@ class ECC_H2C_XMD_Tests final : public Text_Based_Test
 
          result.test_eq("XMD output", output, expected);
          return result;
-         }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("ec_h2c", "ec_h2c_xmd", ECC_H2C_XMD_Tests);
 
-class ECC_H2C_Tests final : public Text_Based_Test
-   {
+class ECC_H2C_Tests final : public Text_Based_Test {
    public:
       ECC_H2C_Tests() : Text_Based_Test("pubkey/ec_h2c.vec", "Group,Hash,Domain,Input,PointX,PointY") {}
 
       bool clear_between_callbacks() const override { return false; }
 
-      Test::Result run_one_test(const std::string& method, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& method, const VarMap& vars) override {
          const std::string group_id = vars.get_req_str("Group");
 
          Test::Result result("ECC hash to curve " + method + " " + group_id);
@@ -69,11 +66,8 @@ class ECC_H2C_Tests final : public Text_Based_Test
 
          Botan::EC_Group group(group_id);
 
-         const auto point = group.hash_to_curve(hash,
-                                                reinterpret_cast<const uint8_t*>(input.data()),
-                                                input.size(),
-                                                domain,
-                                                random_oracle);
+         const auto point = group.hash_to_curve(
+            hash, reinterpret_cast<const uint8_t*>(input.data()), input.size(), domain, random_oracle);
 
          result.confirm("Generated point is on the curve", point.on_the_curve());
 
@@ -81,13 +75,13 @@ class ECC_H2C_Tests final : public Text_Based_Test
          result.test_eq("Affine Y", point.get_affine_y(), exp_point_y);
 
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("ec_h2c", "ec_h2c_kat", ECC_H2C_Tests);
 
 #endif
 
-}
+}  // namespace
 
-}
+}  // namespace Botan_Tests

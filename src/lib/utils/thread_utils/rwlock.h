@@ -8,16 +8,15 @@
 #define BOTAN_RWLOCK_H_
 
 #include <botan/types.h>
-#include <mutex>
 #include <condition_variable>
+#include <mutex>
 
 namespace Botan {
 
 /**
 * A read-write lock. Writers are favored.
 */
-class BOTAN_TEST_API RWLock final
-   {
+class BOTAN_TEST_API RWLock final {
    public:
       RWLock();
 
@@ -26,6 +25,7 @@ class BOTAN_TEST_API RWLock final
 
       void lock_shared();
       void unlock_shared();
+
    private:
       std::mutex m_mutex;
       std::condition_variable m_gate1;
@@ -35,8 +35,8 @@ class BOTAN_TEST_API RWLock final
       // 2**31 concurrent readers should be enough for anyone
       static const uint32_t is_writing = static_cast<uint32_t>(1) << 31;
       static const uint32_t readers_mask = ~is_writing;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

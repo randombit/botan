@@ -9,9 +9,9 @@
 #ifndef BOTAN_TPM_H_
 #define BOTAN_TPM_H_
 
+#include <botan/bigint.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
-#include <botan/bigint.h>
 #include <botan/rng.h>
 #include <botan/uuid.h>
 #include <functional>
@@ -21,12 +21,12 @@
 
 namespace Botan {
 
-class BOTAN_PUBLIC_API(2,0) TPM_Error final : public Exception
-   {
+class BOTAN_PUBLIC_API(2, 0) TPM_Error final : public Exception {
    public:
       TPM_Error(std::string_view err) : Exception(err) {}
+
       ErrorType error_type() const noexcept override { return ErrorType::TPMError; }
-   };
+};
 
 /**
 * Creates a connection to the TPM. All other TPM types take and hold
@@ -38,14 +38,13 @@ class BOTAN_PUBLIC_API(2,0) TPM_Error final : public Exception
 *
 * TODO: handling owner password?
 */
-class BOTAN_PUBLIC_API(2,0) TPM_Context final
-   {
+class BOTAN_PUBLIC_API(2, 0) TPM_Context final {
    public:
       /**
       * User callback for getting the PIN. Will be passed the best available
       * description of what we are attempting to load.
       */
-      typedef std::function<std::string (std::string)> pin_cb;
+      typedef std::function<std::string(std::string)> pin_cb;
 
       TPM_Context(pin_cb cb, const char* srk_password);
 
@@ -57,26 +56,23 @@ class BOTAN_PUBLIC_API(2,0) TPM_Context final
       // Uses Tspi_TPM_StirRandom to add data to TPM's internal pool
       void stir_random(const uint8_t in[], size_t in_len);
 
-      std::string get_user_pin(const std::string& who)
-         {
-         return m_pin_cb(who);
-         }
+      std::string get_user_pin(const std::string& who) { return m_pin_cb(who); }
 
       uint32_t current_counter();
 
       TSS_HCONTEXT handle() const { return m_ctx; }
+
       TSS_HKEY srk() const { return m_srk; }
 
    private:
-      std::function<std::string (std::string)> m_pin_cb;
+      std::function<std::string(std::string)> m_pin_cb;
       TSS_HCONTEXT m_ctx;
       TSS_HKEY m_srk;
       TSS_HTPM m_tpm;
       TSS_HPOLICY m_srk_policy;
-   };
+};
 
-class BOTAN_PUBLIC_API(2,0) TPM_RNG final : public Hardware_RNG
-   {
+class BOTAN_PUBLIC_API(2, 0) TPM_RNG final : public Hardware_RNG {
    public:
       TPM_RNG(TPM_Context& ctx) : m_ctx(ctx) {}
 
@@ -87,14 +83,15 @@ class BOTAN_PUBLIC_API(2,0) TPM_RNG final : public Hardware_RNG
       bool is_seeded() const override { return true; }
 
    private:
-      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override
-         {
-         if(!input.empty())
-            { m_ctx.stir_random(input.data(), input.size()); }
-
-         if(!output.empty())
-            { m_ctx.gen_random(output.data(), output.size()); }
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override {
+         if(!input.empty()) {
+            m_ctx.stir_random(input.data(), input.size());
          }
+
+         if(!output.empty()) {
+            m_ctx.gen_random(output.data(), output.size());
+         }
+      }
 
    private:
       TPM_Context& m_ctx;
@@ -106,8 +103,7 @@ enum class TPM_Storage_Type { User, System };
 * Also implements the public interface, but does not have usable
 * TODO: derive from RSA_PublicKey???
 */
-class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey final : public Private_Key
-   {
+class BOTAN_PUBLIC_API(2, 0) TPM_PrivateKey final : public Private_Key {
    public:
       // TODO: key import?
 
@@ -121,12 +117,9 @@ class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey final : public Private_Key
       // "tpmkey:uuid=79f07ca9-73ac-478a-9093-11ca6702e774;storage=user"
       //TPM_PrivateKey(TPM_Context& ctx, std::string_view tpm_url);
 
-      TPM_PrivateKey(TPM_Context& ctx,
-                     std::string_view uuid,
-                     TPM_Storage_Type storage_type);
+      TPM_PrivateKey(TPM_Context& ctx, std::string_view uuid, TPM_Storage_Type storage_type);
 
-      TPM_PrivateKey(TPM_Context& ctx,
-                     const std::vector<uint8_t>& blob);
+      TPM_PrivateKey(TPM_Context& ctx, const std::vector<uint8_t>& blob);
 
       /**
       * If the key is not currently registered under a known UUID,
@@ -167,17 +160,13 @@ class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey final : public Private_Key
 
       BigInt get_e() const;
 
-      std::string algo_name() const override { return "RSA"; } // ???
+      std::string algo_name() const override { return "RSA"; }  // ???
 
-      bool supports_operation(PublicKeyOperation op) const override
-         {
-         return (op == PublicKeyOperation::Signature);
-         }
+      bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 
-      std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             std::string_view params,
-                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
+                                                             std::string_view params,
+                                                             std::string_view provider) const override;
 
    private:
       TPM_Context& m_ctx;
@@ -189,11 +178,11 @@ class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey final : public Private_Key
 
       // Lazily computed in get_n, get_e
       mutable BigInt m_n, m_e;
-   };
+};
 
 // TODO: NVRAM interface
 // TODO: PCR measurement, writing, key locking
 
-}
+}  // namespace Botan
 
 #endif

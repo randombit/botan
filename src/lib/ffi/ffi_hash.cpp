@@ -6,8 +6,8 @@
 
 #include <botan/ffi.h>
 
-#include <botan/internal/ffi_util.h>
 #include <botan/hash.h>
+#include <botan/internal/ffi_util.h>
 
 extern "C" {
 
@@ -15,8 +15,7 @@ using namespace Botan_FFI;
 
 BOTAN_FFI_DECLARE_STRUCT(botan_hash_struct, Botan::HashFunction, 0x1F0A4F84);
 
-int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
-   {
+int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags) {
    return ffi_guard_thunk(__func__, [=]() -> int {
       if(hash == nullptr || hash_name == nullptr || *hash_name == 0)
          return BOTAN_FFI_ERROR_NULL_POINTER;
@@ -29,35 +28,28 @@ int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
 
       *hash = new botan_hash_struct(std::move(h));
       return BOTAN_FFI_SUCCESS;
-      });
-   }
+   });
+}
 
-int botan_hash_destroy(botan_hash_t hash)
-   {
-   return BOTAN_FFI_CHECKED_DELETE(hash);
-   }
+int botan_hash_destroy(botan_hash_t hash) { return BOTAN_FFI_CHECKED_DELETE(hash); }
 
-int botan_hash_output_length(botan_hash_t hash, size_t* out)
-   {
+int botan_hash_output_length(botan_hash_t hash, size_t* out) {
    if(out == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_VISIT(hash, [=](const auto& h) { *out = h.output_length(); });
-   }
+}
 
-int botan_hash_block_size(botan_hash_t hash, size_t* out)
-   {
+int botan_hash_block_size(botan_hash_t hash, size_t* out) {
    if(out == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_VISIT(hash, [=](const auto& h) { *out = h.hash_block_size(); });
-   }
+}
 
-int botan_hash_clear(botan_hash_t hash)
-   {
+int botan_hash_clear(botan_hash_t hash) {
    return BOTAN_FFI_VISIT(hash, [](auto& h) { h.clear(); });
-   }
+}
 
-int botan_hash_update(botan_hash_t hash, const uint8_t* buf, size_t len)
-   {
+int botan_hash_update(botan_hash_t hash, const uint8_t* buf, size_t len) {
    if(len == 0)
       return 0;
 
@@ -65,28 +57,22 @@ int botan_hash_update(botan_hash_t hash, const uint8_t* buf, size_t len)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
    return BOTAN_FFI_VISIT(hash, [=](auto& h) { h.update(buf, len); });
-   }
+}
 
-int botan_hash_final(botan_hash_t hash, uint8_t out[])
-   {
+int botan_hash_final(botan_hash_t hash, uint8_t out[]) {
    if(out == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_VISIT(hash, [=](auto& h) { h.final(out); });
-   }
+}
 
-int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source)
-   {
-   return BOTAN_FFI_VISIT(source, [=](const auto& src) {
-      *dest = new botan_hash_struct(src.copy_state()); });
-   }
+int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source) {
+   return BOTAN_FFI_VISIT(source, [=](const auto& src) { *dest = new botan_hash_struct(src.copy_state()); });
+}
 
-int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len)
-   {
+int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len) {
    if(name_len == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
-   return BOTAN_FFI_VISIT(hash, [=](const auto& h) {
-      return write_str_output(name, name_len, h.name()); });
-   }
-
+   return BOTAN_FFI_VISIT(hash, [=](const auto& h) { return write_str_output(name, name_len, h.name()); });
+}
 }

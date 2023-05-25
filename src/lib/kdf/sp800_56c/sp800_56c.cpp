@@ -11,21 +11,20 @@
 
 namespace Botan {
 
-std::string SP800_56C::name() const
-   {
-   return fmt("SP800-56C({})", m_prf->name());
-   }
+std::string SP800_56C::name() const { return fmt("SP800-56C({})", m_prf->name()); }
 
-std::unique_ptr<KDF> SP800_56C::new_object() const
-   {
+std::unique_ptr<KDF> SP800_56C::new_object() const {
    return std::make_unique<SP800_56C>(m_prf->new_object(), m_exp->new_object());
-   }
+}
 
-void SP800_56C::kdf(uint8_t key[], size_t key_len,
-                    const uint8_t secret[], size_t secret_len,
-                    const uint8_t salt[], size_t salt_len,
-                    const uint8_t label[], size_t label_len) const
-   {
+void SP800_56C::kdf(uint8_t key[],
+                    size_t key_len,
+                    const uint8_t secret[],
+                    size_t secret_len,
+                    const uint8_t salt[],
+                    size_t salt_len,
+                    const uint8_t label[],
+                    size_t label_len) const {
    // Randomness Extraction
    secure_vector<uint8_t> k_dk;
 
@@ -35,6 +34,6 @@ void SP800_56C::kdf(uint8_t key[], size_t key_len,
 
    // Key Expansion
    m_exp->kdf(key, key_len, k_dk.data(), k_dk.size(), nullptr, 0, label, label_len);
-   }
-
 }
+
+}  // namespace Botan

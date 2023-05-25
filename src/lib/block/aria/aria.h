@@ -23,66 +23,72 @@ namespace Botan {
 /**
 * ARIA-128
 */
-class ARIA_128 final : public Block_Cipher_Fixed_Params<16, 16>
-   {
+class ARIA_128 final : public Block_Cipher_Fixed_Params<16, 16> {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
+
       std::string name() const override { return "ARIA-128"; }
+
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<ARIA_128>(); }
 
       bool has_keying_material() const override;
+
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
       // Encryption and Decryption round keys.
       secure_vector<uint32_t> m_ERK, m_DRK;
-   };
+};
 
 /**
 * ARIA-192
 */
-class ARIA_192 final : public Block_Cipher_Fixed_Params<16, 24>
-   {
+class ARIA_192 final : public Block_Cipher_Fixed_Params<16, 24> {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
+
       std::string name() const override { return "ARIA-192"; }
+
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<ARIA_192>(); }
 
       bool has_keying_material() const override;
+
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
       // Encryption and Decryption round keys.
       secure_vector<uint32_t> m_ERK, m_DRK;
-   };
+};
 
 /**
 * ARIA-256
 */
-class ARIA_256 final : public Block_Cipher_Fixed_Params<16, 32>
-   {
+class ARIA_256 final : public Block_Cipher_Fixed_Params<16, 32> {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
+
       std::string name() const override { return "ARIA-256"; }
+
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<ARIA_256>(); }
 
       bool has_keying_material() const override;
+
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
       // Encryption and Decryption round keys.
       secure_vector<uint32_t> m_ERK, m_DRK;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

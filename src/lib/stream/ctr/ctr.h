@@ -16,8 +16,7 @@ namespace Botan {
 /**
 * CTR-BE (Counter mode, big-endian)
 */
-class CTR_BE final : public StreamCipher
-   {
+class CTR_BE final : public StreamCipher {
    public:
       size_t default_iv_length() const override;
 
@@ -43,6 +42,7 @@ class CTR_BE final : public StreamCipher
       CTR_BE(std::unique_ptr<BlockCipher> cipher, size_t ctr_size);
 
       void seek(uint64_t offset) override;
+
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;
       void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) override;
@@ -59,8 +59,8 @@ class CTR_BE final : public StreamCipher
       secure_vector<uint8_t> m_counter, m_pad;
       std::vector<uint8_t> m_iv;
       size_t m_pad_pos;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

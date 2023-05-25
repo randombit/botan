@@ -17,8 +17,7 @@ class Stateful_RNG;
 /**
 * A userspace PRNG
 */
-class BOTAN_PUBLIC_API(2,0) AutoSeeded_RNG final : public RandomNumberGenerator
-   {
+class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator {
    public:
       bool is_seeded() const override;
 
@@ -56,8 +55,7 @@ class BOTAN_PUBLIC_API(2,0) AutoSeeded_RNG final : public RandomNumberGenerator
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
-                     size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+      AutoSeeded_RNG(RandomNumberGenerator& underlying_rng, size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
 
       /**
       * Create an AutoSeeded_RNG which will get seed material from a set of
@@ -67,8 +65,7 @@ class BOTAN_PUBLIC_API(2,0) AutoSeeded_RNG final : public RandomNumberGenerator
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      AutoSeeded_RNG(Entropy_Sources& entropy_sources,
-                     size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+      AutoSeeded_RNG(Entropy_Sources& entropy_sources, size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
 
       /**
       * Create an AutoSeeded_RNG which will get seed material from both an
@@ -91,8 +88,8 @@ class BOTAN_PUBLIC_API(2,0) AutoSeeded_RNG final : public RandomNumberGenerator
 
    private:
       std::unique_ptr<Stateful_RNG> m_rng;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

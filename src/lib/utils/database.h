@@ -8,40 +8,31 @@
 #ifndef BOTAN_SQL_DATABASE_H_
 #define BOTAN_SQL_DATABASE_H_
 
-#include <botan/types.h>
 #include <botan/exceptn.h>
-#include <string>
+#include <botan/types.h>
 #include <chrono>
+#include <string>
 #include <vector>
 
 namespace Botan {
 
-class BOTAN_PUBLIC_API(2,0) SQL_Database
-   {
+class BOTAN_PUBLIC_API(2, 0) SQL_Database {
    public:
-
-      class BOTAN_PUBLIC_API(2,0) SQL_DB_Error final : public Exception
-         {
+      class BOTAN_PUBLIC_API(2, 0) SQL_DB_Error final : public Exception {
          public:
-            explicit SQL_DB_Error(std::string_view what) :
-               Exception("SQL database", what),
-               m_rc(0)
-               {}
+            explicit SQL_DB_Error(std::string_view what) : Exception("SQL database", what), m_rc(0) {}
 
-            SQL_DB_Error(std::string_view what, int rc) :
-               Exception("SQL database", what),
-               m_rc(rc)
-               {}
+            SQL_DB_Error(std::string_view what, int rc) : Exception("SQL database", what), m_rc(rc) {}
 
             ErrorType error_type() const noexcept override { return ErrorType::DatabaseError; }
 
             int error_code() const noexcept override { return m_rc; }
+
          private:
             int m_rc;
-         };
+      };
 
-      class BOTAN_PUBLIC_API(2,0) Statement
-         {
+      class BOTAN_PUBLIC_API(2, 0) Statement {
          public:
             /* Bind statement parameters */
             virtual void bind(int column, std::string_view str) = 0;
@@ -68,7 +59,7 @@ class BOTAN_PUBLIC_API(2,0) SQL_Database
             virtual bool step() = 0;
 
             virtual ~Statement() = default;
-         };
+      };
 
       /*
       * Create a new statement for execution.
@@ -89,6 +80,6 @@ class BOTAN_PUBLIC_API(2,0) SQL_Database
       virtual ~SQL_Database() = default;
 };
 
-}
+}  // namespace Botan
 
 #endif

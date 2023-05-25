@@ -8,12 +8,12 @@
 #ifndef BOTAN_TLS_CIPHER_SUITES_H_
 #define BOTAN_TLS_CIPHER_SUITES_H_
 
-#include <botan/types.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_version.h>
+#include <botan/types.h>
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
 
 namespace Botan {
 
@@ -22,8 +22,7 @@ namespace TLS {
 /**
 * Ciphersuite Information
 */
-class BOTAN_PUBLIC_API(2,0) Ciphersuite final
-   {
+class BOTAN_PUBLIC_API(2, 0) Ciphersuite final {
    public:
       /**
       * Convert an SSL/TLS ciphersuite to algorithm fields
@@ -108,10 +107,7 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       */
       std::string mac_algo() const { return m_mac_algo; }
 
-      std::string prf_algo() const
-         {
-         return kdf_algo_to_string(m_prf_algo);
-         }
+      std::string prf_algo() const { return kdf_algo_to_string(m_prf_algo); }
 
       /**
       * @return cipher key length used by this ciphersuite
@@ -134,10 +130,10 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       bool usable_in_version(Protocol_Version version) const;
 
       bool operator<(const Ciphersuite& o) const { return ciphersuite_code() < o.ciphersuite_code(); }
+
       bool operator<(const uint16_t c) const { return ciphersuite_code() < c; }
 
    private:
-
       bool is_usable() const;
 
       Ciphersuite(uint16_t ciphersuite_code,
@@ -150,19 +146,18 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
                   size_t mac_keylen,
                   KDF_Algo prf_algo,
                   Nonce_Format nonce_format) :
-         m_ciphersuite_code(ciphersuite_code),
-         m_iana_id(iana_id),
-         m_auth_method(auth_method),
-         m_kex_algo(kex_algo),
-         m_prf_algo(prf_algo),
-         m_nonce_format(nonce_format),
-         m_cipher_algo(cipher_algo),
-         m_mac_algo(mac_algo),
-         m_cipher_keylen(cipher_keylen),
-         m_mac_keylen(mac_keylen)
-         {
+            m_ciphersuite_code(ciphersuite_code),
+            m_iana_id(iana_id),
+            m_auth_method(auth_method),
+            m_kex_algo(kex_algo),
+            m_prf_algo(prf_algo),
+            m_nonce_format(nonce_format),
+            m_cipher_algo(cipher_algo),
+            m_mac_algo(mac_algo),
+            m_cipher_keylen(cipher_keylen),
+            m_mac_keylen(mac_keylen) {
          m_usable = is_usable();
-         }
+      }
 
       uint16_t m_ciphersuite_code = 0;
 
@@ -184,10 +179,10 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       size_t m_mac_keylen;
 
       bool m_usable = false;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

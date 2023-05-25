@@ -9,8 +9,8 @@
 #ifndef BOTAN_PKCS10_H_
 #define BOTAN_PKCS10_H_
 
-#include <botan/x509_obj.h>
 #include <botan/pkix_enums.h>
+#include <botan/x509_obj.h>
 #include <vector>
 
 namespace Botan {
@@ -25,8 +25,7 @@ class AlternativeName;
 /**
 * PKCS #10 Certificate Request.
 */
-class BOTAN_PUBLIC_API(2,0) PKCS10_Request final : public X509_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) PKCS10_Request final : public X509_Object {
    public:
       /**
       * Get the subject public key.
@@ -141,8 +140,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS10_Request final : public X509_Object
       const PKCS10_Data& data() const;
 
       std::shared_ptr<PKCS10_Data> m_data;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

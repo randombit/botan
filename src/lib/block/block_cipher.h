@@ -9,9 +9,9 @@
 #define BOTAN_BLOCK_CIPHER_H_
 
 #include <botan/sym_algo.h>
-#include <string_view>
-#include <string>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace Botan {
@@ -19,10 +19,8 @@ namespace Botan {
 /**
 * This class represents a block cipher object.
 */
-class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
-   {
+class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
    public:
-
       /**
       * Create an instance based on a name
       * If provider is empty then best available is chosen.
@@ -30,18 +28,14 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * @param provider provider implementation to choose
       * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<BlockCipher>
-         create(std::string_view algo_spec,
-                std::string_view provider = "");
+      static std::unique_ptr<BlockCipher> create(std::string_view algo_spec, std::string_view provider = "");
 
       /**
       * Create an instance based on a name, or throw if the
       * algo/provider combination cannot be found. If provider is
       * empty then best available is chosen.
       */
-      static std::unique_ptr<BlockCipher>
-         create_or_throw(std::string_view algo_spec,
-                         std::string_view provider = "");
+      static std::unique_ptr<BlockCipher> create_or_throw(std::string_view algo_spec, std::string_view provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -62,10 +56,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       /**
       * @return prefererred parallelism of this cipher in bytes
       */
-      size_t parallel_bytes() const
-         {
-         return parallelism() * block_size() * BOTAN_BLOCK_CIPHER_PAR_MULT;
-         }
+      size_t parallel_bytes() const { return parallelism() * block_size() * BOTAN_BLOCK_CIPHER_PAR_MULT; }
 
       /**
       * @return provider information about this implementation. Default is "base",
@@ -80,8 +71,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * @param out The byte array designated to hold the encrypted block.
       * Must be of length block_size().
       */
-      void encrypt(const uint8_t in[], uint8_t out[]) const
-         { encrypt_n(in, out, 1); }
+      void encrypt(const uint8_t in[], uint8_t out[]) const { encrypt_n(in, out, 1); }
 
       /**
       * Decrypt a block.
@@ -90,8 +80,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * @param out The byte array designated to hold the decrypted block.
       * Must be of length block_size().
       */
-      void decrypt(const uint8_t in[], uint8_t out[]) const
-         { decrypt_n(in, out, 1); }
+      void decrypt(const uint8_t in[], uint8_t out[]) const { decrypt_n(in, out, 1); }
 
       /**
       * Encrypt a block.
@@ -113,39 +102,35 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * Encrypt one or more blocks
       * @param block the input/output buffer (multiple of block_size())
       */
-      void encrypt(std::span<uint8_t> block) const
-         {
+      void encrypt(std::span<uint8_t> block) const {
          return encrypt_n(block.data(), block.data(), block.size() / block_size());
-         }
+      }
 
       /**
       * Decrypt one or more blocks
       * @param block the input/output buffer (multiple of block_size())
       */
-      void decrypt(std::span<uint8_t> block) const
-         {
+      void decrypt(std::span<uint8_t> block) const {
          return decrypt_n(block.data(), block.data(), block.size() / block_size());
-         }
+      }
 
       /**
       * Encrypt one or more blocks
       * @param in the input buffer (multiple of block_size())
       * @param out the output buffer (same size as in)
       */
-      void encrypt(std::span<const uint8_t> in, std::span<uint8_t> out) const
-         {
+      void encrypt(std::span<const uint8_t> in, std::span<uint8_t> out) const {
          return encrypt_n(in.data(), out.data(), in.size() / block_size());
-         }
+      }
 
       /**
       * Decrypt one or more blocks
       * @param in the input buffer (multiple of block_size())
       * @param out the output buffer (same size as in)
       */
-      void decrypt(std::span<const uint8_t> in, std::span<uint8_t> out) const
-         {
+      void decrypt(std::span<const uint8_t> in, std::span<uint8_t> out) const {
          return decrypt_n(in.data(), out.data(), in.size() / block_size());
-         }
+      }
 
       /**
       * Encrypt one or more blocks
@@ -153,8 +138,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * @param out the output buffer (same size as in)
       * @param blocks the number of blocks to process
       */
-      virtual void encrypt_n(const uint8_t in[], uint8_t out[],
-                             size_t blocks) const = 0;
+      virtual void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const = 0;
 
       /**
       * Decrypt one or more blocks
@@ -162,48 +146,37 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
       * @param out the output buffer (same size as in)
       * @param blocks the number of blocks to process
       */
-      virtual void decrypt_n(const uint8_t in[], uint8_t out[],
-                             size_t blocks) const = 0;
+      virtual void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const = 0;
 
-      virtual void encrypt_n_xex(uint8_t data[],
-                                 const uint8_t mask[],
-                                 size_t blocks) const
-         {
+      virtual void encrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
          const size_t BS = block_size();
          xor_buf(data, mask, blocks * BS);
          encrypt_n(data, data, blocks);
          xor_buf(data, mask, blocks * BS);
-         }
+      }
 
-      virtual void decrypt_n_xex(uint8_t data[],
-                                 const uint8_t mask[],
-                                 size_t blocks) const
-         {
+      virtual void decrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
          const size_t BS = block_size();
          xor_buf(data, mask, blocks * BS);
          decrypt_n(data, data, blocks);
          xor_buf(data, mask, blocks * BS);
-         }
+      }
 
       /**
       * @return new object representing the same algorithm as *this
       */
       virtual std::unique_ptr<BlockCipher> new_object() const = 0;
 
-      BlockCipher* clone() const
-         {
-         return this->new_object().release();
-         }
+      BlockCipher* clone() const { return this->new_object().release(); }
 
       virtual ~BlockCipher() = default;
-   };
+};
 
 /**
 * Tweakable block ciphers allow setting a tweak which is a non-keyed
 * value which affects the encryption/decryption operation.
 */
-class BOTAN_PUBLIC_API(2,8) Tweakable_Block_Cipher : public BlockCipher
-   {
+class BOTAN_PUBLIC_API(2, 8) Tweakable_Block_Cipher : public BlockCipher {
    public:
       /**
       * Set the tweak value. This must be called after setting a key. The value
@@ -212,43 +185,34 @@ class BOTAN_PUBLIC_API(2,8) Tweakable_Block_Cipher : public BlockCipher
       * an unsupported length, Invalid_Argument will be thrown.
       */
       virtual void set_tweak(const uint8_t tweak[], size_t len) = 0;
-   };
+};
 
 /**
 * Represents a block cipher with a single fixed block size
 */
-template<size_t BS, size_t KMIN, size_t KMAX = 0, size_t KMOD = 1, typename BaseClass = BlockCipher>
-class Block_Cipher_Fixed_Params : public BaseClass
-   {
+template <size_t BS, size_t KMIN, size_t KMAX = 0, size_t KMOD = 1, typename BaseClass = BlockCipher>
+class Block_Cipher_Fixed_Params : public BaseClass {
    public:
       enum { BLOCK_SIZE = BS };
+
       size_t block_size() const final override { return BS; }
 
       // override to take advantage of compile time constant block size
-      void encrypt_n_xex(uint8_t data[],
-                         const uint8_t mask[],
-                         size_t blocks) const final override
-         {
+      void encrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const final override {
          xor_buf(data, mask, blocks * BS);
          this->encrypt_n(data, data, blocks);
          xor_buf(data, mask, blocks * BS);
-         }
+      }
 
-      void decrypt_n_xex(uint8_t data[],
-                         const uint8_t mask[],
-                         size_t blocks) const final override
-         {
+      void decrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const final override {
          xor_buf(data, mask, blocks * BS);
          this->decrypt_n(data, data, blocks);
          xor_buf(data, mask, blocks * BS);
-         }
+      }
 
-      Key_Length_Specification key_spec() const final override
-         {
-         return Key_Length_Specification(KMIN, KMAX, KMOD);
-         }
-   };
+      Key_Length_Specification key_spec() const final override { return Key_Length_Specification(KMIN, KMAX, KMOD); }
+};
 
-}
+}  // namespace Botan
 
 #endif

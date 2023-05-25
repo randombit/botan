@@ -16,18 +16,22 @@ namespace Botan {
 /**
 * GOST 34.11
 */
-class GOST_34_11 final : public HashFunction
-   {
+class GOST_34_11 final : public HashFunction {
    public:
-      std::string name() const override { return "GOST-R-34.11-94" ; }
+      std::string name() const override { return "GOST-R-34.11-94"; }
+
       size_t output_length() const override { return 32; }
+
       size_t hash_block_size() const override { return 32; }
+
       std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<GOST_34_11>(); }
+
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 
       GOST_34_11();
+
    private:
       void compress_n(const uint8_t input[], size_t blocks);
 
@@ -38,8 +42,8 @@ class GOST_34_11 final : public HashFunction
       secure_vector<uint8_t> m_buffer, m_sum, m_hash;
       size_t m_position;
       uint64_t m_count;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -14,23 +14,22 @@
 
 namespace Botan {
 
-struct CommonCryptor_Opts
-   {
-   CCAlgorithm algo;
-   CCMode mode;
-   CCPadding padding;
-   size_t block_size;
-   Key_Length_Specification key_spec{0};
-   };
+struct CommonCryptor_Opts {
+      CCAlgorithm algo;
+      CCMode mode;
+      CCPadding padding;
+      size_t block_size;
+      Key_Length_Specification key_spec{0};
+};
 
 CommonCryptor_Opts commoncrypto_opts_from_algo_name(std::string_view algo_name);
 CommonCryptor_Opts commoncrypto_opts_from_algo(std::string_view algo);
 
-void commoncrypto_adjust_key_size(const uint8_t key[], size_t length,
+void commoncrypto_adjust_key_size(const uint8_t key[],
+                                  size_t length,
                                   const CommonCryptor_Opts& opts,
                                   secure_vector<uint8_t>& full_key);
 
-
-}
+}  // namespace Botan
 
 #endif

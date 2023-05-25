@@ -17,8 +17,7 @@ struct sqlite3_stmt;
 
 namespace Botan {
 
-class BOTAN_PUBLIC_API(2,0) Sqlite3_Database final : public SQL_Database
-   {
+class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
    public:
       /**
        * Create a new SQLite database handle from a file.
@@ -42,8 +41,7 @@ class BOTAN_PUBLIC_API(2,0) Sqlite3_Database final : public SQL_Database
       bool is_threadsafe() const override;
 
    private:
-      class Sqlite3_Statement final : public Statement
-         {
+      class Sqlite3_Statement final : public Statement {
          public:
             void bind(int column, std::string_view val) override;
             void bind(int column, size_t val) override;
@@ -60,13 +58,14 @@ class BOTAN_PUBLIC_API(2,0) Sqlite3_Database final : public SQL_Database
 
             Sqlite3_Statement(sqlite3* db, std::string_view base_sql);
             ~Sqlite3_Statement();
+
          private:
             sqlite3_stmt* m_stmt;
-         };
+      };
 
       sqlite3* m_db;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

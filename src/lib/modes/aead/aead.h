@@ -21,8 +21,7 @@ namespace Botan {
 * which is not included in the ciphertext (for instance a sequence
 * number).
 */
-class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
-   {
+class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
    public:
       /**
       * Create an AEAD mode
@@ -57,10 +56,9 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       *
       * @param ad the associated data
       */
-      void set_associated_data(std::span<const uint8_t> ad)
-         { set_associated_data_n(0, ad); }
-      void set_associated_data(const uint8_t ad[], size_t ad_len)
-         { set_associated_data(std::span(ad, ad_len)); }
+      void set_associated_data(std::span<const uint8_t> ad) { set_associated_data_n(0, ad); }
+
+      void set_associated_data(const uint8_t ad[], size_t ad_len) { set_associated_data(std::span(ad, ad_len)); }
 
       /**
       * Set associated data that is not included in the ciphertext but
@@ -108,12 +106,11 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       *
       * @param ad the associated data
       */
-      template<typename Alloc>
+      template <typename Alloc>
       BOTAN_DEPRECATED("Simply use set_associated_data")
-      void set_associated_data_vec(const std::vector<uint8_t, Alloc>& ad)
-         {
+      void set_associated_data_vec(const std::vector<uint8_t, Alloc>& ad) {
          set_associated_data(ad);
-         }
+      }
 
       /**
       * Set associated data that is not included in the ciphertext but
@@ -125,10 +122,8 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       * @param ad the associated data
       */
       BOTAN_DEPRECATED("Please use set_associated_data")
-      void set_ad(std::span<const uint8_t> ad)
-         {
-         set_associated_data(ad);
-         }
+
+      void set_ad(std::span<const uint8_t> ad) { set_associated_data(ad); }
 
       /**
       * @return default AEAD nonce size (a commonly supported value among AEAD
@@ -137,7 +132,7 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       size_t default_nonce_length() const override { return 12; }
 
       virtual ~AEAD_Mode() = default;
-   };
+};
 
 /**
 * Get an AEAD mode by name (eg "AES-128/GCM" or "Serpent/EAX")
@@ -145,11 +140,11 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
 * @param direction Cipher_Dir::Encryption or Cipher_Dir::Decryption
 */
 BOTAN_DEPRECATED("Use AEAD_Mode::create")
-inline AEAD_Mode* get_aead(std::string_view name, Cipher_Dir direction)
-   {
-   return AEAD_Mode::create(name, direction, "").release();
-   }
 
+inline AEAD_Mode* get_aead(std::string_view name, Cipher_Dir direction) {
+   return AEAD_Mode::create(name, direction, "").release();
 }
+
+}  // namespace Botan
 
 #endif

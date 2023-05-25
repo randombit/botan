@@ -13,7 +13,6 @@
 extern "C" {
 
 BOTAN_FFI_DECLARE_STRUCT(botan_rng_struct, Botan::RandomNumberGenerator, 0x4901F9C1);
-
 }
 
 #endif

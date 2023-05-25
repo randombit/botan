@@ -23,8 +23,7 @@ class PK_Signer;
 * This class represents abstract X.509 signed objects as in the X.500
 * SIGNED macro
 */
-class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) X509_Object : public ASN1_Object {
    public:
       /**
       * The underlying data that is to be or was signed
@@ -99,8 +98,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
 
       virtual std::string PEM_label() const = 0;
 
-      virtual std::vector<std::string> alternate_PEM_labels() const
-         { return std::vector<std::string>(); }
+      virtual std::vector<std::string> alternate_PEM_labels() const { return std::vector<std::string>(); }
 
       virtual ~X509_Object() = default;
 
@@ -114,14 +112,12 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       * @param padding_algo specifies the padding method
       * @return a PK_Signer object for generating signatures
       */
-      static std::unique_ptr<PK_Signer>
-         choose_sig_format(const Private_Key& key,
-                           RandomNumberGenerator& rng,
-                           std::string_view hash_fn,
-                           std::string_view padding_algo);
+      static std::unique_ptr<PK_Signer> choose_sig_format(const Private_Key& key,
+                                                          RandomNumberGenerator& rng,
+                                                          std::string_view hash_fn,
+                                                          std::string_view padding_algo);
 
    protected:
-
       X509_Object() = default;
 
       /**
@@ -135,8 +131,8 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       AlgorithmIdentifier m_sig_algo;
       std::vector<uint8_t> m_tbs_bits;
       std::vector<uint8_t> m_sig;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

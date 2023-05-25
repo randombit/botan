@@ -10,46 +10,31 @@
 
 namespace Botan {
 
-void RawHashFunction::add_data(const uint8_t input[], size_t length)
-   {
-   m_bits += std::make_pair(input, length);
-   }
+void RawHashFunction::add_data(const uint8_t input[], size_t length) { m_bits += std::make_pair(input, length); }
 
-void RawHashFunction::final_result(uint8_t out[])
-   {
-   if(m_output_length > 0 && m_bits.size() != m_output_length)
-      {
+void RawHashFunction::final_result(uint8_t out[]) {
+   if(m_output_length > 0 && m_bits.size() != m_output_length) {
       m_bits.clear();
-      throw Invalid_Argument("Raw padding was configured to use a " +
-                             std::to_string(m_output_length) +
-                             " byte hash but instead was used for a " +
-                             std::to_string(m_bits.size()) + " byte hash");
-      }
+      throw Invalid_Argument("Raw padding was configured to use a " + std::to_string(m_output_length) +
+                             " byte hash but instead was used for a " + std::to_string(m_bits.size()) + " byte hash");
+   }
 
    copy_mem(out, m_bits.data(), m_bits.size());
    m_bits.clear();
-   }
+}
 
-void RawHashFunction::clear()
-   {
-   m_bits.clear();
-   }
+void RawHashFunction::clear() { m_bits.clear(); }
 
-std::unique_ptr<HashFunction> RawHashFunction::copy_state() const
-   {
-   return std::make_unique<RawHashFunction>(*this);
-   }
+std::unique_ptr<HashFunction> RawHashFunction::copy_state() const { return std::make_unique<RawHashFunction>(*this); }
 
-std::unique_ptr<HashFunction> RawHashFunction::new_object() const
-   {
+std::unique_ptr<HashFunction> RawHashFunction::new_object() const {
    return std::make_unique<RawHashFunction>(m_name, m_output_length);
-   }
+}
 
-size_t RawHashFunction::output_length() const
-   {
+size_t RawHashFunction::output_length() const {
    if(m_output_length > 0)
       return m_output_length;
    return m_bits.size();
-   }
-
 }
+
+}  // namespace Botan

@@ -13,8 +13,7 @@
 
 namespace Botan {
 
-class Semaphore final
-   {
+class Semaphore final {
    public:
       explicit Semaphore(int value = 0) : m_value(value), m_wakeups(0) {}
 
@@ -27,8 +26,8 @@ class Semaphore final
       int m_wakeups;
       std::mutex m_mutex;
       std::condition_variable m_cond;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

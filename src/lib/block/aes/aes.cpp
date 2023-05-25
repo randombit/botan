@@ -6,11 +6,11 @@
 
 #include <botan/internal/aes.h>
 
-#include <botan/internal/loadstor.h>
-#include <botan/internal/cpuid.h>
-#include <botan/internal/rotate.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/cpuid.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
 
 namespace Botan {
 
@@ -81,8 +81,7 @@ like MUX, NOR, NAND, etc and so in practice in bitsliced software, its size is
 actually a bit larger than this circuit, as few CPUs have such instructions and
 otherwise they must be emulated using a sequence of available bit operations.
 */
-void AES_SBOX(uint32_t V[8])
-   {
+void AES_SBOX(uint32_t V[8]) {
    const uint32_t U0 = V[0];
    const uint32_t U1 = V[1];
    const uint32_t U2 = V[2];
@@ -214,15 +213,14 @@ void AES_SBOX(uint32_t V[8])
    V[5] = S5;
    V[6] = S6;
    V[7] = S7;
-   }
+}
 
 /*
 A circuit for inverse AES Sbox of size 121 and depth 21 from
 http://www.cs.yale.edu/homes/peralta/CircuitStuff/CMT.html
 http://www.cs.yale.edu/homes/peralta/CircuitStuff/Sinv.txt
 */
-void AES_INV_SBOX(uint32_t V[8])
-   {
+void AES_INV_SBOX(uint32_t V[8]) {
    const uint32_t U0 = V[0];
    const uint32_t U1 = V[1];
    const uint32_t U2 = V[2];
@@ -362,10 +360,9 @@ void AES_INV_SBOX(uint32_t V[8])
    V[5] = S5;
    V[6] = S6;
    V[7] = S7;
-   }
+}
 
-inline void bit_transpose(uint32_t B[8])
-   {
+inline void bit_transpose(uint32_t B[8]) {
    swap_bits<uint32_t>(B[1], B[0], 0x55555555, 1);
    swap_bits<uint32_t>(B[3], B[2], 0x55555555, 1);
    swap_bits<uint32_t>(B[5], B[4], 0x55555555, 1);
@@ -380,10 +377,9 @@ inline void bit_transpose(uint32_t B[8])
    swap_bits<uint32_t>(B[5], B[1], 0x0F0F0F0F, 4);
    swap_bits<uint32_t>(B[6], B[2], 0x0F0F0F0F, 4);
    swap_bits<uint32_t>(B[7], B[3], 0x0F0F0F0F, 4);
-   }
+}
 
-inline void ks_expand(uint32_t B[8], const uint32_t K[], size_t r)
-   {
+inline void ks_expand(uint32_t B[8], const uint32_t K[], size_t r) {
    /*
    This is bit_transpose of K[r..r+4] || K[r..r+4], we can save some computation
    due to knowing the first and second halves are the same data.
@@ -406,57 +402,50 @@ inline void ks_expand(uint32_t B[8], const uint32_t K[], size_t r)
    swap_bits<uint32_t>(B[5], B[1], 0x0F0F0F0F, 4);
    swap_bits<uint32_t>(B[6], B[2], 0x0F0F0F0F, 4);
    swap_bits<uint32_t>(B[7], B[3], 0x0F0F0F0F, 4);
-   }
+}
 
-inline void shift_rows(uint32_t B[8])
-   {
+inline void shift_rows(uint32_t B[8]) {
    // 3 0 1 2 7 4 5 6 10 11 8 9 14 15 12 13 17 18 19 16 21 22 23 20 24 25 26 27 28 29 30 31
 #if defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
-   for(size_t i = 0; i != 8; i += 2)
-      {
-      uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i+1];
+   for(size_t i = 0; i != 8; i += 2) {
+      uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i + 1];
       x = bit_permute_step<uint64_t>(x, 0x0022331100223311, 2);
       x = bit_permute_step<uint64_t>(x, 0x0055005500550055, 1);
       B[i] = static_cast<uint32_t>(x >> 32);
-      B[i+1] = static_cast<uint32_t>(x);
-      }
+      B[i + 1] = static_cast<uint32_t>(x);
+   }
 #else
-   for(size_t i = 0; i != 8; ++i)
-      {
+   for(size_t i = 0; i != 8; ++i) {
       uint32_t x = B[i];
       x = bit_permute_step<uint32_t>(x, 0x00223311, 2);
       x = bit_permute_step<uint32_t>(x, 0x00550055, 1);
       B[i] = x;
-      }
-#endif
    }
+#endif
+}
 
-inline void inv_shift_rows(uint32_t B[8])
-   {
+inline void inv_shift_rows(uint32_t B[8]) {
    // Inverse of shift_rows, just inverting the steps
 
 #if defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
-   for(size_t i = 0; i != 8; i += 2)
-      {
-      uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i+1];
+   for(size_t i = 0; i != 8; i += 2) {
+      uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i + 1];
       x = bit_permute_step<uint64_t>(x, 0x0055005500550055, 1);
       x = bit_permute_step<uint64_t>(x, 0x0022331100223311, 2);
       B[i] = static_cast<uint32_t>(x >> 32);
-      B[i+1] = static_cast<uint32_t>(x);
-      }
+      B[i + 1] = static_cast<uint32_t>(x);
+   }
 #else
-   for(size_t i = 0; i != 8; ++i)
-      {
+   for(size_t i = 0; i != 8; ++i) {
       uint32_t x = B[i];
       x = bit_permute_step<uint32_t>(x, 0x00550055, 1);
       x = bit_permute_step<uint32_t>(x, 0x00223311, 2);
       B[i] = x;
-      }
-#endif
    }
+#endif
+}
 
-inline void mix_columns(uint32_t B[8])
-   {
+inline void mix_columns(uint32_t B[8]) {
    // carry high bits in B[0] to positions in 0x1b == 0b11011
    const uint32_t X2[8] = {
       B[1],
@@ -469,15 +458,13 @@ inline void mix_columns(uint32_t B[8])
       B[0],
    };
 
-   for(size_t i = 0; i != 8; i++)
-      {
+   for(size_t i = 0; i != 8; i++) {
       const uint32_t X3 = B[i] ^ X2[i];
       B[i] = X2[i] ^ rotr<8>(B[i]) ^ rotr<16>(B[i]) ^ rotr<24>(X3);
-      }
    }
+}
 
-void inv_mix_columns(uint32_t B[8])
-   {
+void inv_mix_columns(uint32_t B[8]) {
    /*
    OpenSSL's bsaes implementation credits Jussi Kivilinna with the lovely
    matrix decomposition
@@ -502,42 +489,36 @@ void inv_mix_columns(uint32_t B[8])
       B[1],
    };
 
-   for(size_t i = 0; i != 8; i++)
-      {
+   for(size_t i = 0; i != 8; i++) {
       const uint32_t X5 = X4[i] ^ B[i];
       B[i] = X5 ^ rotr<16>(X4[i]);
-      }
+   }
 
    mix_columns(B);
-   }
+}
 
 /*
 * AES Encryption
 */
-void aes_encrypt_n(const uint8_t in[], uint8_t out[],
-                   size_t blocks,
-                   const secure_vector<uint32_t>& EK)
-   {
+void aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vector<uint32_t>& EK) {
    BOTAN_ASSERT(EK.size() == 44 || EK.size() == 52 || EK.size() == 60, "Key was set");
 
    const size_t rounds = (EK.size() - 4) / 4;
 
-   uint32_t KS[13*8] = { 0 }; // actual maximum is (rounds - 1) * 8
-   for(size_t i = 0; i < rounds - 1; i += 1)
-      {
-      ks_expand(&KS[8*i], EK.data(), 4*i + 4);
-      }
+   uint32_t KS[13 * 8] = {0};  // actual maximum is (rounds - 1) * 8
+   for(size_t i = 0; i < rounds - 1; i += 1) {
+      ks_expand(&KS[8 * i], EK.data(), 4 * i + 4);
+   }
 
    const size_t BLOCK_SIZE = 16;
-   const size_t BITSLICED_BLOCKS = 8*sizeof(uint32_t) / BLOCK_SIZE;
+   const size_t BITSLICED_BLOCKS = 8 * sizeof(uint32_t) / BLOCK_SIZE;
 
-   while(blocks > 0)
-      {
+   while(blocks > 0) {
       const size_t this_loop = std::min(blocks, BITSLICED_BLOCKS);
 
-      uint32_t B[8] = { 0 };
+      uint32_t B[8] = {0};
 
-      load_be(B, in, this_loop*4);
+      load_be(B, in, this_loop * 4);
 
       CT::poison(B, 8);
 
@@ -546,15 +527,14 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
 
       bit_transpose(B);
 
-      for(size_t r = 0; r != rounds - 1; ++r)
-         {
+      for(size_t r = 0; r != rounds - 1; ++r) {
          AES_SBOX(B);
          shift_rows(B);
          mix_columns(B);
 
          for(size_t i = 0; i != 8; ++i)
-            B[i] ^= KS[8*r + i];
-         }
+            B[i] ^= KS[8 * r + i];
+      }
 
       // Final round:
       AES_SBOX(B);
@@ -562,61 +542,56 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
       bit_transpose(B);
 
       for(size_t i = 0; i != 8; ++i)
-         B[i] ^= EK[4*rounds + i % 4];
+         B[i] ^= EK[4 * rounds + i % 4];
 
       CT::unpoison(B, 8);
 
-      copy_out_be(out, this_loop*4*sizeof(uint32_t), B);
+      copy_out_be(out, this_loop * 4 * sizeof(uint32_t), B);
 
       in += this_loop * BLOCK_SIZE;
       out += this_loop * BLOCK_SIZE;
       blocks -= this_loop;
-      }
    }
+}
 
 /*
 * AES Decryption
 */
-void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
-                   const secure_vector<uint32_t>& DK)
-   {
+void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vector<uint32_t>& DK) {
    BOTAN_ASSERT(DK.size() == 44 || DK.size() == 52 || DK.size() == 60, "Key was set");
 
    const size_t rounds = (DK.size() - 4) / 4;
 
-   uint32_t KS[13*8] = { 0 }; // actual maximum is (rounds - 1) * 8
-   for(size_t i = 0; i < rounds - 1; i += 1)
-      {
-      ks_expand(&KS[8*i], DK.data(), 4*i + 4);
-      }
+   uint32_t KS[13 * 8] = {0};  // actual maximum is (rounds - 1) * 8
+   for(size_t i = 0; i < rounds - 1; i += 1) {
+      ks_expand(&KS[8 * i], DK.data(), 4 * i + 4);
+   }
 
    const size_t BLOCK_SIZE = 16;
-   const size_t BITSLICED_BLOCKS = 8*sizeof(uint32_t) / BLOCK_SIZE;
+   const size_t BITSLICED_BLOCKS = 8 * sizeof(uint32_t) / BLOCK_SIZE;
 
-   while(blocks > 0)
-      {
+   while(blocks > 0) {
       const size_t this_loop = std::min(blocks, BITSLICED_BLOCKS);
 
-      uint32_t B[8] = { 0 };
+      uint32_t B[8] = {0};
 
       CT::poison(B, 8);
 
-      load_be(B, in, this_loop*4);
+      load_be(B, in, this_loop * 4);
 
       for(size_t i = 0; i != 8; ++i)
          B[i] ^= DK[i % 4];
 
       bit_transpose(B);
 
-      for(size_t r = 0; r != rounds - 1; ++r)
-         {
+      for(size_t r = 0; r != rounds - 1; ++r) {
          AES_INV_SBOX(B);
          inv_shift_rows(B);
          inv_mix_columns(B);
 
          for(size_t i = 0; i != 8; ++i)
-            B[i] ^= KS[8*r + i];
-         }
+            B[i] ^= KS[8 * r + i];
+      }
 
       // Final round:
       AES_INV_SBOX(B);
@@ -624,29 +599,27 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       bit_transpose(B);
 
       for(size_t i = 0; i != 8; ++i)
-         B[i] ^= DK[4*rounds + i % 4];
+         B[i] ^= DK[4 * rounds + i % 4];
 
       CT::unpoison(B, 8);
 
-      copy_out_be(out, this_loop*4*sizeof(uint32_t), B);
+      copy_out_be(out, this_loop * 4 * sizeof(uint32_t), B);
 
       in += this_loop * BLOCK_SIZE;
       out += this_loop * BLOCK_SIZE;
       blocks -= this_loop;
-      }
    }
+}
 
-inline uint32_t xtime32(uint32_t s)
-   {
+inline uint32_t xtime32(uint32_t s) {
    const uint32_t lo_bit = 0x01010101;
    const uint32_t mask = 0x7F7F7F7F;
    const uint32_t poly = 0x1B;
 
    return ((s & mask) << 1) ^ (((s >> 7) & lo_bit) * poly);
-   }
+}
 
-inline uint32_t InvMixColumn(uint32_t s1)
-   {
+inline uint32_t InvMixColumn(uint32_t s1) {
    const uint32_t s2 = xtime32(s1);
    const uint32_t s4 = xtime32(s2);
    const uint32_t s8 = xtime32(s4);
@@ -656,41 +629,46 @@ inline uint32_t InvMixColumn(uint32_t s1)
    const uint32_t s14 = s8 ^ s4 ^ s2;
 
    return s14 ^ rotr<8>(s9) ^ rotr<16>(s13) ^ rotr<24>(s11);
-   }
+}
 
-void InvMixColumn_x4(uint32_t x[4])
-   {
+void InvMixColumn_x4(uint32_t x[4]) {
    x[0] = InvMixColumn(x[0]);
    x[1] = InvMixColumn(x[1]);
    x[2] = InvMixColumn(x[2]);
    x[3] = InvMixColumn(x[3]);
-   }
+}
 
-uint32_t SE_word(uint32_t x)
-   {
-   uint32_t I[8] = { 0 };
+uint32_t SE_word(uint32_t x) {
+   uint32_t I[8] = {0};
 
    for(size_t i = 0; i != 8; ++i)
-      I[i] = (x >> (7-i)) & 0x01010101;
+      I[i] = (x >> (7 - i)) & 0x01010101;
 
    AES_SBOX(I);
 
    x = 0;
 
    for(size_t i = 0; i != 8; ++i)
-      x |= ((I[i] & 0x01010101) << (7-i));
+      x |= ((I[i] & 0x01010101) << (7 - i));
 
    return x;
-   }
+}
 
-void aes_key_schedule(const uint8_t key[], size_t length,
+void aes_key_schedule(const uint8_t key[],
+                      size_t length,
                       secure_vector<uint32_t>& EK,
                       secure_vector<uint32_t>& DK,
-                      bool bswap_keys = false)
-   {
-   static const uint32_t RC[10] = {
-      0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
-      0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
+                      bool bswap_keys = false) {
+   static const uint32_t RC[10] = {0x01000000,
+                                   0x02000000,
+                                   0x04000000,
+                                   0x08000000,
+                                   0x10000000,
+                                   0x20000000,
+                                   0x40000000,
+                                   0x80000000,
+                                   0x1B000000,
+                                   0x36000000};
 
    const size_t X = length / 4;
 
@@ -710,321 +688,283 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    for(size_t i = 0; i != X; ++i)
       EK[i] = load_be<uint32_t>(key, i);
 
-   for(size_t i = X; i < 4*(rounds+1); i += X)
-      {
-      EK[i] = EK[i-X] ^ RC[(i-X)/X] ^ rotl<8>(SE_word(EK[i-1]));
+   for(size_t i = X; i < 4 * (rounds + 1); i += X) {
+      EK[i] = EK[i - X] ^ RC[(i - X) / X] ^ rotl<8>(SE_word(EK[i - 1]));
 
-      for(size_t j = 1; j != X && (i+j) < EK.size(); ++j)
-         {
-         EK[i+j] = EK[i+j-X];
+      for(size_t j = 1; j != X && (i + j) < EK.size(); ++j) {
+         EK[i + j] = EK[i + j - X];
 
          if(X == 8 && j == 4)
-            EK[i+j] ^= SE_word(EK[i+j-1]);
+            EK[i + j] ^= SE_word(EK[i + j - 1]);
          else
-            EK[i+j] ^= EK[i+j-1];
-         }
+            EK[i + j] ^= EK[i + j - 1];
       }
+   }
 
-   for(size_t i = 0; i != 4*(rounds+1); i += 4)
-      {
-      DK[i  ] = EK[4*rounds - i  ];
-      DK[i+1] = EK[4*rounds - i+1];
-      DK[i+2] = EK[4*rounds - i+2];
-      DK[i+3] = EK[4*rounds - i+3];
-      }
+   for(size_t i = 0; i != 4 * (rounds + 1); i += 4) {
+      DK[i] = EK[4 * rounds - i];
+      DK[i + 1] = EK[4 * rounds - i + 1];
+      DK[i + 2] = EK[4 * rounds - i + 2];
+      DK[i + 3] = EK[4 * rounds - i + 3];
+   }
 
-   for(size_t i = 4; i != 4*rounds; i += 4)
-      {
+   for(size_t i = 4; i != 4 * rounds; i += 4) {
       InvMixColumn_x4(&DK[i]);
-      }
+   }
 
-   if(bswap_keys)
-      {
+   if(bswap_keys) {
       // HW AES on little endian needs the subkeys to be byte reversed
       for(size_t i = 0; i != EK.size(); ++i)
          EK[i] = reverse_bytes(EK[i]);
       for(size_t i = 0; i != DK.size(); ++i)
          DK[i] = reverse_bytes(DK[i]);
-      }
+   }
 
    CT::unpoison(EK.data(), EK.size());
    CT::unpoison(DK.data(), DK.size());
    CT::unpoison(key, length);
-   }
+}
 
-size_t aes_parallelism()
-   {
+size_t aes_parallelism() {
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
-      return 4; // pipelined
-      }
+   if(CPUID::has_hw_aes()) {
+      return 4;  // pipelined
+   }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
-      return 2; // pipelined
-      }
+   if(CPUID::has_vperm()) {
+      return 2;  // pipelined
+   }
 #endif
 
    // bitsliced:
    return 2;
-   }
+}
 
-const char* aes_provider()
-   {
+const char* aes_provider() {
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
+   if(CPUID::has_hw_aes()) {
       return "cpu";
-      }
+   }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
+   if(CPUID::has_vperm()) {
       return "vperm";
-      }
+   }
 #endif
 
    return "base";
-   }
-
 }
 
+}  // namespace
+
 std::string AES_128::provider() const { return aes_provider(); }
+
 std::string AES_192::provider() const { return aes_provider(); }
+
 std::string AES_256::provider() const { return aes_provider(); }
 
 size_t AES_128::parallelism() const { return aes_parallelism(); }
+
 size_t AES_192::parallelism() const { return aes_parallelism(); }
+
 size_t AES_256::parallelism() const { return aes_parallelism(); }
 
 bool AES_128::has_keying_material() const { return !m_EK.empty(); }
+
 bool AES_192::has_keying_material() const { return !m_EK.empty(); }
+
 bool AES_256::has_keying_material() const { return !m_EK.empty(); }
 
-void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
+void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
+   if(CPUID::has_hw_aes()) {
       return hw_aes_encrypt_n(in, out, blocks);
-      }
+   }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
+   if(CPUID::has_vperm()) {
       return vperm_encrypt_n(in, out, blocks);
-      }
+   }
 #endif
 
    aes_encrypt_n(in, out, blocks, m_EK);
-   }
-
-void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
-   assert_key_material_set();
-
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
-      return hw_aes_decrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
-      return vperm_decrypt_n(in, out, blocks);
-      }
-#endif
-
-   aes_decrypt_n(in, out, blocks, m_DK);
-   }
-
-void AES_128::key_schedule(const uint8_t key[], size_t length)
-   {
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
-      {
-      return aesni_key_schedule(key, length);
-      }
-#endif
-
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
-      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
-      return vperm_key_schedule(key, length);
-      }
-#endif
-
-   aes_key_schedule(key, length, m_EK, m_DK);
-   }
-
-void AES_128::clear()
-   {
-   zap(m_EK);
-   zap(m_DK);
-   }
-
-void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
-   assert_key_material_set();
-
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
-      return hw_aes_encrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
-      return vperm_encrypt_n(in, out, blocks);
-      }
-#endif
-
-   aes_encrypt_n(in, out, blocks, m_EK);
-   }
-
-void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
-   assert_key_material_set();
-
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
-      return hw_aes_decrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
-      return vperm_decrypt_n(in, out, blocks);
-      }
-#endif
-
-   aes_decrypt_n(in, out, blocks, m_DK);
-   }
-
-void AES_192::key_schedule(const uint8_t key[], size_t length)
-   {
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
-      {
-      return aesni_key_schedule(key, length);
-      }
-#endif
-
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
-      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
-      return vperm_key_schedule(key, length);
-      }
-#endif
-
-   aes_key_schedule(key, length, m_EK, m_DK);
-   }
-
-void AES_192::clear()
-   {
-   zap(m_EK);
-   zap(m_DK);
-   }
-
-void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
-   assert_key_material_set();
-
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
-      return hw_aes_encrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
-      return vperm_encrypt_n(in, out, blocks);
-      }
-#endif
-
-   aes_encrypt_n(in, out, blocks, m_EK);
-   }
-
-void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
-   assert_key_material_set();
-
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
-      return hw_aes_decrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
-      return vperm_decrypt_n(in, out, blocks);
-      }
-#endif
-
-   aes_decrypt_n(in, out, blocks, m_DK);
-   }
-
-void AES_256::key_schedule(const uint8_t key[], size_t length)
-   {
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
-      {
-      return aesni_key_schedule(key, length);
-      }
-#endif
-
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   if(CPUID::has_hw_aes())
-      {
-      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm())
-      {
-      return vperm_key_schedule(key, length);
-      }
-#endif
-
-   aes_key_schedule(key, length, m_EK, m_DK);
-   }
-
-void AES_256::clear()
-   {
-   zap(m_EK);
-   zap(m_DK);
-   }
-
 }
+
+void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   assert_key_material_set();
+
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes()) {
+      return hw_aes_decrypt_n(in, out, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm()) {
+      return vperm_decrypt_n(in, out, blocks);
+   }
+#endif
+
+   aes_decrypt_n(in, out, blocks, m_DK);
+}
+
+void AES_128::key_schedule(const uint8_t key[], size_t length) {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni()) {
+      return aesni_key_schedule(key, length);
+   }
+#endif
+
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes()) {
+      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
+   }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm()) {
+      return vperm_key_schedule(key, length);
+   }
+#endif
+
+   aes_key_schedule(key, length, m_EK, m_DK);
+}
+
+void AES_128::clear() {
+   zap(m_EK);
+   zap(m_DK);
+}
+
+void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   assert_key_material_set();
+
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes()) {
+      return hw_aes_encrypt_n(in, out, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm()) {
+      return vperm_encrypt_n(in, out, blocks);
+   }
+#endif
+
+   aes_encrypt_n(in, out, blocks, m_EK);
+}
+
+void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   assert_key_material_set();
+
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes()) {
+      return hw_aes_decrypt_n(in, out, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm()) {
+      return vperm_decrypt_n(in, out, blocks);
+   }
+#endif
+
+   aes_decrypt_n(in, out, blocks, m_DK);
+}
+
+void AES_192::key_schedule(const uint8_t key[], size_t length) {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni()) {
+      return aesni_key_schedule(key, length);
+   }
+#endif
+
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes()) {
+      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
+   }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm()) {
+      return vperm_key_schedule(key, length);
+   }
+#endif
+
+   aes_key_schedule(key, length, m_EK, m_DK);
+}
+
+void AES_192::clear() {
+   zap(m_EK);
+   zap(m_DK);
+}
+
+void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   assert_key_material_set();
+
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes()) {
+      return hw_aes_encrypt_n(in, out, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm()) {
+      return vperm_encrypt_n(in, out, blocks);
+   }
+#endif
+
+   aes_encrypt_n(in, out, blocks, m_EK);
+}
+
+void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   assert_key_material_set();
+
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes()) {
+      return hw_aes_decrypt_n(in, out, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm()) {
+      return vperm_decrypt_n(in, out, blocks);
+   }
+#endif
+
+   aes_decrypt_n(in, out, blocks, m_DK);
+}
+
+void AES_256::key_schedule(const uint8_t key[], size_t length) {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni()) {
+      return aesni_key_schedule(key, length);
+   }
+#endif
+
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes()) {
+      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
+   }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm()) {
+      return vperm_key_schedule(key, length);
+   }
+#endif
+
+   aes_key_schedule(key, length, m_EK, m_DK);
+}
+
+void AES_256::clear() {
+   zap(m_EK);
+   zap(m_DK);
+}
+
+}  // namespace Botan

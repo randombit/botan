@@ -12,21 +12,21 @@
 #ifndef BOTAN_TLS_EXTENSIONS_H_
 #define BOTAN_TLS_EXTENSIONS_H_
 
+#include <botan/pkix_types.h>
+#include <botan/secmem.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_magic.h>
-#include <botan/tls_version.h>
-#include <botan/secmem.h>
-#include <botan/pkix_types.h>
-#include <botan/tls_signature_scheme.h>
 #include <botan/tls_session.h>
+#include <botan/tls_signature_scheme.h>
+#include <botan/tls_version.h>
 
 #include <algorithm>
+#include <memory>
 #include <optional>
+#include <set>
+#include <string>
 #include <variant>
 #include <vector>
-#include <string>
-#include <set>
-#include <memory>
 
 namespace Botan {
 
@@ -41,56 +41,52 @@ class Cipher_State;
 class Ciphersuite;
 class Transcript_Hash_State;
 
-enum class PSK_Key_Exchange_Mode : uint8_t {
-   PSK_KE = 0,
-   PSK_DHE_KE = 1
-};
+enum class PSK_Key_Exchange_Mode : uint8_t { PSK_KE = 0, PSK_DHE_KE = 1 };
 
 #endif
 class Policy;
 class TLS_Data_Reader;
 
 enum class Extension_Code : uint16_t {
-   ServerNameIndication                = 0,
-   CertificateStatusRequest            = 5,
+   ServerNameIndication = 0,
+   CertificateStatusRequest = 5,
 
-   SupportedGroups                     = 10,
-   EcPointFormats                      = 11,
-   SignatureAlgorithms                 = 13,
-   CertSignatureAlgorithms             = 50,
-   UseSrtp                             = 14,
+   SupportedGroups = 10,
+   EcPointFormats = 11,
+   SignatureAlgorithms = 13,
+   CertSignatureAlgorithms = 50,
+   UseSrtp = 14,
    ApplicationLayerProtocolNegotiation = 16,
 
    // SignedCertificateTimestamp          = 18,  // NYI
 
-   EncryptThenMac                      = 22,
-   ExtendedMasterSecret                = 23,
+   EncryptThenMac = 22,
+   ExtendedMasterSecret = 23,
 
-   RecordSizeLimit                     = 28,
+   RecordSizeLimit = 28,
 
-   SessionTicket                       = 35,
+   SessionTicket = 35,
 
-   SupportedVersions                   = 43,
+   SupportedVersions = 43,
 #if defined(BOTAN_HAS_TLS_13)
-   PresharedKey                        = 41,
-   EarlyData                           = 42,
-   Cookie                              = 44,
+   PresharedKey = 41,
+   EarlyData = 42,
+   Cookie = 44,
 
-   PskKeyExchangeModes                 = 45,
-   CertificateAuthorities              = 47,
+   PskKeyExchangeModes = 45,
+   CertificateAuthorities = 47,
    // OidFilters                          = 48,  // NYI
 
-   KeyShare                            = 51,
+   KeyShare = 51,
 #endif
 
-   SafeRenegotiation                   = 65281,
+   SafeRenegotiation = 65281,
 };
 
 /**
 * Base class representing a TLS extension of some kind
 */
-class BOTAN_UNSTABLE_API Extension
-   {
+class BOTAN_UNSTABLE_API Extension {
    public:
       /**
       * @return code number of the extension
@@ -113,24 +109,20 @@ class BOTAN_UNSTABLE_API Extension
       virtual bool is_implemented() const { return true; }
 
       virtual ~Extension() = default;
-   };
+};
 
 /**
 * Server Name Indicator extension (RFC 3546)
 */
-class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension
-   {
+class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::ServerNameIndication; }
+      static Extension_Code static_type() { return Extension_Code::ServerNameIndication; }
 
       Extension_Code type() const override { return static_type(); }
 
-      explicit Server_Name_Indicator(std::string_view host_name) :
-         m_sni_host_name(host_name) {}
+      explicit Server_Name_Indicator(std::string_view host_name) : m_sni_host_name(host_name) {}
 
-      Server_Name_Indicator(TLS_Data_Reader& reader,
-                            uint16_t extension_size);
+      Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t extension_size);
 
       std::string host_name() const { return m_sni_host_name; }
 
@@ -140,45 +132,39 @@ class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension
 
    private:
       std::string m_sni_host_name;
-   };
+};
 
 /**
 * Renegotiation Indication Extension (RFC 5746)
 */
-class BOTAN_UNSTABLE_API Renegotiation_Extension final : public Extension
-   {
+class BOTAN_UNSTABLE_API Renegotiation_Extension final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::SafeRenegotiation; }
+      static Extension_Code static_type() { return Extension_Code::SafeRenegotiation; }
 
       Extension_Code type() const override { return static_type(); }
 
       Renegotiation_Extension() = default;
 
-      explicit Renegotiation_Extension(const std::vector<uint8_t>& bits) :
-         m_reneg_data(bits) {}
+      explicit Renegotiation_Extension(const std::vector<uint8_t>& bits) : m_reneg_data(bits) {}
 
-      Renegotiation_Extension(TLS_Data_Reader& reader,
-                             uint16_t extension_size);
+      Renegotiation_Extension(TLS_Data_Reader& reader, uint16_t extension_size);
 
-      const std::vector<uint8_t>& renegotiation_info() const
-         { return m_reneg_data; }
+      const std::vector<uint8_t>& renegotiation_info() const { return m_reneg_data; }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
-      bool empty() const override { return false; } // always send this
+      bool empty() const override { return false; }  // always send this
+
    private:
       std::vector<uint8_t> m_reneg_data;
-   };
+};
 
 /**
 * ALPN (RFC 7301)
 */
-class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public Extension
-   {
+class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::ApplicationLayerProtocolNegotiation; }
+      static Extension_Code static_type() { return Extension_Code::ApplicationLayerProtocolNegotiation; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -190,33 +176,30 @@ class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public 
       * Single protocol, used by server
       */
       explicit Application_Layer_Protocol_Notification(std::string_view protocol) :
-         m_protocols(1, std::string(protocol)) {}
+            m_protocols(1, std::string(protocol)) {}
 
       /**
       * List of protocols, used by client
       */
       explicit Application_Layer_Protocol_Notification(const std::vector<std::string>& protocols) :
-         m_protocols(protocols) {}
+            m_protocols(protocols) {}
 
-      Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
-                                              uint16_t extension_size,
-                                              Connection_Side from);
+      Application_Layer_Protocol_Notification(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return m_protocols.empty(); }
+
    private:
       std::vector<std::string> m_protocols;
-   };
+};
 
 /**
 * Session Ticket Extension (RFC 5077)
 */
-class BOTAN_UNSTABLE_API Session_Ticket_Extension final : public Extension
-   {
+class BOTAN_UNSTABLE_API Session_Ticket_Extension final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::SessionTicket; }
+      static Extension_Code static_type() { return Extension_Code::SessionTicket; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -233,8 +216,7 @@ class BOTAN_UNSTABLE_API Session_Ticket_Extension final : public Extension
       /**
       * Extension with ticket, used by client
       */
-      explicit Session_Ticket_Extension(Session_Ticket session_ticket) :
-         m_ticket(std::move(session_ticket)) {}
+      explicit Session_Ticket_Extension(Session_Ticket session_ticket) : m_ticket(std::move(session_ticket)) {}
 
       /**
       * Deserialize a session ticket
@@ -244,19 +226,17 @@ class BOTAN_UNSTABLE_API Session_Ticket_Extension final : public Extension
       std::vector<uint8_t> serialize(Connection_Side) const override { return m_ticket.get(); }
 
       bool empty() const override { return false; }
+
    private:
       Session_Ticket m_ticket;
-   };
-
+};
 
 /**
 * Supported Groups Extension (RFC 7919)
 */
-class BOTAN_UNSTABLE_API Supported_Groups final : public Extension
-   {
+class BOTAN_UNSTABLE_API Supported_Groups final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::SupportedGroups; }
+      static Extension_Code static_type() { return Extension_Code::SupportedGroups; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -268,13 +248,13 @@ class BOTAN_UNSTABLE_API Supported_Groups final : public Extension
 
       explicit Supported_Groups(const std::vector<Group_Params>& groups);
 
-      Supported_Groups(TLS_Data_Reader& reader,
-                       uint16_t extension_size);
+      Supported_Groups(TLS_Data_Reader& reader, uint16_t extension_size);
 
       bool empty() const override { return m_groups.empty(); }
+
    private:
       std::vector<Group_Params> m_groups;
-   };
+};
 
 // previously Supported Elliptic Curves Extension (RFC 4492)
 //using Supported_Elliptic_Curves = Supported_Groups;
@@ -282,27 +262,23 @@ class BOTAN_UNSTABLE_API Supported_Groups final : public Extension
 /**
 * Supported Point Formats Extension (RFC 4492)
 */
-class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension
-   {
+class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension {
    public:
       enum ECPointFormat : uint8_t {
          UNCOMPRESSED = 0,
          ANSIX962_COMPRESSED_PRIME = 1,
-         ANSIX962_COMPRESSED_CHAR2 = 2, // don't support these curves
+         ANSIX962_COMPRESSED_CHAR2 = 2,  // don't support these curves
       };
 
-      static Extension_Code static_type()
-         { return Extension_Code::EcPointFormats; }
+      static Extension_Code static_type() { return Extension_Code::EcPointFormats; }
 
       Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
-      explicit Supported_Point_Formats(bool prefer_compressed) :
-         m_prefers_compressed(prefer_compressed) {}
+      explicit Supported_Point_Formats(bool prefer_compressed) : m_prefers_compressed(prefer_compressed) {}
 
-      Supported_Point_Formats(TLS_Data_Reader& reader,
-                              uint16_t extension_size);
+      Supported_Point_Formats(TLS_Data_Reader& reader, uint16_t extension_size);
 
       bool empty() const override { return false; }
 
@@ -310,16 +286,14 @@ class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension
 
    private:
       bool m_prefers_compressed = false;
-   };
+};
 
 /**
 * Signature Algorithms Extension for TLS 1.2 (RFC 5246)
 */
-class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
-   {
+class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::SignatureAlgorithms; }
+      static Extension_Code static_type() { return Extension_Code::SignatureAlgorithms; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -329,14 +303,13 @@ class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
 
       bool empty() const override { return m_schemes.empty(); }
 
-      explicit Signature_Algorithms(std::vector<Signature_Scheme> schemes) :
-         m_schemes(std::move(schemes)) {}
+      explicit Signature_Algorithms(std::vector<Signature_Scheme> schemes) : m_schemes(std::move(schemes)) {}
 
-      Signature_Algorithms(TLS_Data_Reader& reader,
-                           uint16_t extension_size);
+      Signature_Algorithms(TLS_Data_Reader& reader, uint16_t extension_size);
+
    private:
       std::vector<Signature_Scheme> m_schemes;
-   };
+};
 
 /**
 * Signature_Algorithms_Cert for TLS 1.3 (RFC 8446)
@@ -351,11 +324,9 @@ class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
 * RFC 8446 4.2.3
 *    TLS 1.2 implementations SHOULD also process this extension.
 */
-class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
-   {
+class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::CertSignatureAlgorithms; }
+      static Extension_Code static_type() { return Extension_Code::CertSignatureAlgorithms; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -365,23 +336,20 @@ class BOTAN_UNSTABLE_API Signature_Algorithms_Cert final : public Extension
 
       bool empty() const override { return m_schemes.empty(); }
 
-      explicit Signature_Algorithms_Cert(std::vector<Signature_Scheme> schemes)
-         : m_schemes(std::move(schemes)) {}
+      explicit Signature_Algorithms_Cert(std::vector<Signature_Scheme> schemes) : m_schemes(std::move(schemes)) {}
 
       Signature_Algorithms_Cert(TLS_Data_Reader& reader, uint16_t extension_size);
 
    private:
       std::vector<Signature_Scheme> m_schemes;
-   };
+};
 
 /**
 * Used to indicate SRTP algorithms for DTLS (RFC 5764)
 */
-class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension
-   {
+class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::UseSrtp; }
+      static Extension_Code static_type() { return Extension_Code::UseSrtp; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -396,18 +364,17 @@ class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension
       explicit SRTP_Protection_Profiles(uint16_t pp) : m_pp(1, pp) {}
 
       SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint16_t extension_size);
+
    private:
       std::vector<uint16_t> m_pp;
-   };
+};
 
 /**
 * Extended Master Secret Extension (RFC 7627)
 */
-class BOTAN_UNSTABLE_API Extended_Master_Secret final : public Extension
-   {
+class BOTAN_UNSTABLE_API Extended_Master_Secret final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::ExtendedMasterSecret; }
+      static Extension_Code static_type() { return Extension_Code::ExtendedMasterSecret; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -418,16 +385,14 @@ class BOTAN_UNSTABLE_API Extended_Master_Secret final : public Extension
       Extended_Master_Secret() = default;
 
       Extended_Master_Secret(TLS_Data_Reader& reader, uint16_t extension_size);
-   };
+};
 
 /**
 * Encrypt-then-MAC Extension (RFC 7366)
 */
-class BOTAN_UNSTABLE_API Encrypt_then_MAC final : public Extension
-   {
+class BOTAN_UNSTABLE_API Encrypt_then_MAC final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::EncryptThenMac; }
+      static Extension_Code static_type() { return Extension_Code::EncryptThenMac; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -438,18 +403,16 @@ class BOTAN_UNSTABLE_API Encrypt_then_MAC final : public Extension
       Encrypt_then_MAC() = default;
 
       Encrypt_then_MAC(TLS_Data_Reader& reader, uint16_t extension_size);
-   };
+};
 
 class Certificate_Status_Request_Internal;
 
 /**
 * Certificate Status Request (RFC 6066)
 */
-class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
-   {
+class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::CertificateStatusRequest; }
+      static Extension_Code static_type() { return Extension_Code::CertificateStatusRequest; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -480,16 +443,14 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
 
    private:
       std::unique_ptr<Certificate_Status_Request_Internal> m_impl;
-   };
+};
 
 /**
 * Supported Versions from RFC 8446
 */
-class BOTAN_UNSTABLE_API Supported_Versions final : public Extension
-   {
+class BOTAN_UNSTABLE_API Supported_Versions final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::SupportedVersions; }
+      static Extension_Code static_type() { return Extension_Code::SupportedVersions; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -499,21 +460,17 @@ class BOTAN_UNSTABLE_API Supported_Versions final : public Extension
 
       Supported_Versions(Protocol_Version version, const Policy& policy);
 
-      Supported_Versions(Protocol_Version version)
-         {
-         m_versions.push_back(version);
-         }
+      Supported_Versions(Protocol_Version version) { m_versions.push_back(version); }
 
-      Supported_Versions(TLS_Data_Reader& reader,
-                         uint16_t extension_size,
-                         Connection_Side from);
+      Supported_Versions(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
 
       bool supports(Protocol_Version version) const;
 
       const std::vector<Protocol_Version>& versions() const { return m_versions; }
+
    private:
       std::vector<Protocol_Version> m_versions;
-   };
+};
 
 using Named_Group = Group_Params;
 
@@ -522,11 +479,9 @@ using Named_Group = Group_Params;
 *
 * TODO: the record size limit is currently not honored by the TLS 1.2 stack
 */
-class BOTAN_UNSTABLE_API Record_Size_Limit final : public Extension
-   {
+class BOTAN_UNSTABLE_API Record_Size_Limit final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::RecordSizeLimit; }
+      static Extension_Code static_type() { return Extension_Code::RecordSizeLimit; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -542,7 +497,7 @@ class BOTAN_UNSTABLE_API Record_Size_Limit final : public Extension
 
    private:
       uint16_t m_limit;
-   };
+};
 
 using Named_Group = Group_Params;
 
@@ -550,11 +505,9 @@ using Named_Group = Group_Params;
 /**
 * Cookie from RFC 8446 4.2.2
 */
-class BOTAN_UNSTABLE_API Cookie final : public Extension
-   {
+class BOTAN_UNSTABLE_API Cookie final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::Cookie; }
+      static Extension_Code static_type() { return Extension_Code::Cookie; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -566,21 +519,18 @@ class BOTAN_UNSTABLE_API Cookie final : public Extension
 
       explicit Cookie(const std::vector<uint8_t>& cookie);
 
-      explicit Cookie(TLS_Data_Reader& reader,
-                      uint16_t extension_size);
+      explicit Cookie(TLS_Data_Reader& reader, uint16_t extension_size);
 
    private:
       std::vector<uint8_t> m_cookie;
-   };
+};
 
 /**
 * Pre-Shared Key Exchange Modes from RFC 8446 4.2.9
 */
-class BOTAN_UNSTABLE_API PSK_Key_Exchange_Modes final : public Extension
-   {
+class BOTAN_UNSTABLE_API PSK_Key_Exchange_Modes final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::PskKeyExchangeModes; }
+      static Extension_Code static_type() { return Extension_Code::PskKeyExchangeModes; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -590,24 +540,20 @@ class BOTAN_UNSTABLE_API PSK_Key_Exchange_Modes final : public Extension
 
       const std::vector<PSK_Key_Exchange_Mode>& modes() const { return m_modes; }
 
-      explicit PSK_Key_Exchange_Modes(std::vector<PSK_Key_Exchange_Mode> modes)
-         : m_modes(std::move(modes)) {}
+      explicit PSK_Key_Exchange_Modes(std::vector<PSK_Key_Exchange_Mode> modes) : m_modes(std::move(modes)) {}
 
       explicit PSK_Key_Exchange_Modes(TLS_Data_Reader& reader, uint16_t extension_size);
 
    private:
       std::vector<PSK_Key_Exchange_Mode> m_modes;
-   };
-
+};
 
 /**
  * Certificate Authorities Extension from RFC 8446 4.2.4
  */
-class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension
-   {
+class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::CertificateAuthorities; }
+      static Extension_Code static_type() { return Extension_Code::CertificateAuthorities; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -615,23 +561,22 @@ class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension
 
       bool empty() const override { return m_distinguished_names.empty(); }
 
-      const std::vector<X509_DN>& distinguished_names() const
-         { return m_distinguished_names; }
+      const std::vector<X509_DN>& distinguished_names() const { return m_distinguished_names; }
 
       Certificate_Authorities(TLS_Data_Reader& reader, uint16_t extension_size);
       explicit Certificate_Authorities(std::vector<X509_DN> acceptable_DNs);
 
    private:
       std::vector<X509_DN> m_distinguished_names;
-   };
+};
 
 /**
  * Pre-Shared Key extension from RFC 8446 4.2.11
  */
-class BOTAN_UNSTABLE_API PSK final : public Extension
-   {
+class BOTAN_UNSTABLE_API PSK final : public Extension {
    public:
       static Extension_Code static_type() { return Extension_Code::PresharedKey; }
+
       Extension_Code type() const override { return static_type(); }
 
       std::vector<uint8_t> serialize(Connection_Side side) const override;
@@ -641,8 +586,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension
        * Note that this destructs the list of offered PSKs and its cipher states
        * and must therefore not be called more than once.
        */
-      std::unique_ptr<Cipher_State> select_cipher_state(const PSK& server_psk,
-                                                        const Ciphersuite& cipher);
+      std::unique_ptr<Cipher_State> select_cipher_state(const PSK& server_psk, const Ciphersuite& cipher);
 
       /**
        * Selects one of the offered PSKs that is compatible with \p cipher.
@@ -703,16 +647,14 @@ class BOTAN_UNSTABLE_API PSK final : public Extension
    private:
       class PSK_Internal;
       std::unique_ptr<PSK_Internal> m_impl;
-   };
+};
 
 /**
 * Key_Share from RFC 8446 4.2.8
 */
-class BOTAN_UNSTABLE_API Key_Share final : public Extension
-   {
+class BOTAN_UNSTABLE_API Key_Share final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::KeyShare; }
+      static Extension_Code static_type() { return Extension_Code::KeyShare; }
 
       Extension_Code type() const override { return static_type(); }
 
@@ -724,14 +666,20 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension
        * Perform key exchange with the peer's key share.
        * This method can be called on a ClientHello's Key_Share with a ServerHello's Key_Share or vice versa.
        */
-      secure_vector<uint8_t> exchange(const Key_Share& peer_keyshare, const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng) const;
+      secure_vector<uint8_t> exchange(const Key_Share& peer_keyshare,
+                                      const Policy& policy,
+                                      Callbacks& cb,
+                                      RandomNumberGenerator& rng) const;
 
       /**
        * Update a ClientHello's Key_Share to comply with a HelloRetryRequest.
        *
        * This will create new Key_Share_Entries and should only be called on a ClientHello Key_Share with a HelloRetryRequest Key_Share.
        */
-      void retry_offer(const Key_Share& retry_request_keyshare, const std::vector<Named_Group>& supported_groups, Callbacks& cb, RandomNumberGenerator& rng);
+      void retry_offer(const Key_Share& retry_request_keyshare,
+                       const std::vector<Named_Group>& supported_groups,
+                       Callbacks& cb,
+                       RandomNumberGenerator& rng);
 
       /**
        * @return key exchange groups the peer offered key share entries for
@@ -748,9 +696,7 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension
        */
       void erase();
 
-      Key_Share(TLS_Data_Reader& reader,
-                uint16_t extension_size,
-                Handshake_Type message_type);
+      Key_Share(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type);
 
       // constructor used for ClientHello msg
       Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng);
@@ -767,52 +713,45 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension
    private:
       class Key_Share_Impl;
       std::unique_ptr<Key_Share_Impl> m_impl;
-   };
+};
 
 /**
  * Indicates usage or support of early data as described in RFC 8446 4.2.10.
  */
-class BOTAN_UNSTABLE_API EarlyDataIndication final : public Extension
-   {
+class BOTAN_UNSTABLE_API EarlyDataIndication final : public Extension {
    public:
-      static Extension_Code static_type()
-         { return Extension_Code::EarlyData; }
+      static Extension_Code static_type() { return Extension_Code::EarlyData; }
 
       Extension_Code type() const override { return static_type(); }
+
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override;
 
-      std::optional<uint32_t> max_early_data_size() const
-         { return m_max_early_data_size; }
+      std::optional<uint32_t> max_early_data_size() const { return m_max_early_data_size; }
 
-      EarlyDataIndication(TLS_Data_Reader& reader,
-                          uint16_t extension_size,
-                          Handshake_Type message_type);
+      EarlyDataIndication(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type);
 
       /**
        * The max_early_data_size is exclusively provided by servers when using
        * this extension in the NewSessionTicket message! Otherwise it stays
        * std::nullopt and results in an empty extension. (RFC 8446 4.2.10).
        */
-      EarlyDataIndication(std::optional<uint32_t> max_early_data_size = std::nullopt)
-         : m_max_early_data_size(std::move(max_early_data_size)) {}
+      EarlyDataIndication(std::optional<uint32_t> max_early_data_size = std::nullopt) :
+            m_max_early_data_size(std::move(max_early_data_size)) {}
 
    private:
       std::optional<uint32_t> m_max_early_data_size;
-   };
+};
 
 #endif
 
 /**
 * Unknown extensions are deserialized as this type
 */
-class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
-   {
+class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension {
    public:
-      Unknown_Extension(Extension_Code type,
-                        TLS_Data_Reader& reader,
-                        uint16_t extension_size);
+      Unknown_Extension(Extension_Code type, TLS_Data_Reader& reader, uint16_t extension_size);
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
@@ -827,65 +766,45 @@ class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
    private:
       Extension_Code m_type;
       std::vector<uint8_t> m_value;
-   };
+};
 
 /**
 * Represents a block of extensions in a hello message
 */
-class BOTAN_UNSTABLE_API Extensions final
-   {
+class BOTAN_UNSTABLE_API Extensions final {
    public:
       std::set<Extension_Code> extension_types() const;
 
-      const std::vector<std::unique_ptr<Extension>>& all() const
-         {
-         return m_extensions;
-         }
+      const std::vector<std::unique_ptr<Extension>>& all() const { return m_extensions; }
 
-      template<typename T>
-      T* get() const
-         {
+      template <typename T>
+      T* get() const {
          return dynamic_cast<T*>(get(T::static_type()));
-         }
+      }
 
-      template<typename T>
-      bool has() const
-         {
+      template <typename T>
+      bool has() const {
          return get<T>() != nullptr;
-         }
+      }
 
-      bool has(Extension_Code type) const
-         {
-         return get(type) != nullptr;
-         }
+      bool has(Extension_Code type) const { return get(type) != nullptr; }
 
-      size_t size() const
-         {
-         return m_extensions.size();
-         }
+      size_t size() const { return m_extensions.size(); }
 
       void add(std::unique_ptr<Extension> extn);
 
-      void add(Extension* extn)
-         {
-         add(std::unique_ptr<Extension>(extn));
-         }
+      void add(Extension* extn) { add(std::unique_ptr<Extension>(extn)); }
 
-      Extension* get(Extension_Code type) const
-         {
-         const auto i = std::find_if(m_extensions.cbegin(), m_extensions.cend(),
-                                     [type](const auto &ext) {
-                                        return ext->type() == type;
-                                     });
+      Extension* get(Extension_Code type) const {
+         const auto i = std::find_if(
+            m_extensions.cbegin(), m_extensions.cend(), [type](const auto& ext) { return ext->type() == type; });
 
          return (i != m_extensions.end()) ? i->get() : nullptr;
-         }
+      }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const;
 
-      void deserialize(TLS_Data_Reader& reader,
-                       const Connection_Side from,
-                       const Handshake_Type message_type);
+      void deserialize(TLS_Data_Reader& reader, const Connection_Side from, const Handshake_Type message_type);
 
       /**
        * @param allowed_extensions        extension types that are allowed
@@ -900,29 +819,27 @@ class BOTAN_UNSTABLE_API Extensions final
        * @returns true if this contains any extensions implemented by Botan that
        *          are not contained in @p allowed_extensions.
        */
-      bool contains_implemented_extensions_other_than(const std::set<Extension_Code>& allowed_extensions) const
-         {
+      bool contains_implemented_extensions_other_than(const std::set<Extension_Code>& allowed_extensions) const {
          return contains_other_than(allowed_extensions, true);
-         }
+      }
 
       /**
        * Take the extension with the given type out of the extensions list.
        * Returns a nullptr if the extension didn't exist.
        */
-      template<typename T>
-      decltype(auto) take()
-         {
+      template <typename T>
+      decltype(auto) take() {
          std::unique_ptr<T> out_ptr;
 
          auto ext = take(T::static_type());
-         if (ext != nullptr) {
+         if(ext != nullptr) {
             out_ptr.reset(dynamic_cast<T*>(ext.get()));
             BOTAN_ASSERT_NOMSG(out_ptr != nullptr);
             ext.release();
          }
 
          return out_ptr;
-         }
+      }
 
       /**
        * Take the extension with the given type out of the extensions list.
@@ -937,29 +854,25 @@ class BOTAN_UNSTABLE_API Extensions final
       *
       * Note: not used internally, might be used in Callbacks::tls_modify_extensions()
       */
-      bool remove_extension(Extension_Code type)
-         {
-         return take(type) != nullptr;
-         }
+      bool remove_extension(Extension_Code type) { return take(type) != nullptr; }
 
       Extensions() = default;
       Extensions(Extensions&&) = default;
       Extensions& operator=(Extensions&&) = default;
 
-      Extensions(TLS_Data_Reader& reader, Connection_Side side, Handshake_Type message_type)
-         {
+      Extensions(TLS_Data_Reader& reader, Connection_Side side, Handshake_Type message_type) {
          deserialize(reader, side, message_type);
-         }
+      }
 
    private:
       Extensions(const Extensions&) = delete;
       Extensions& operator=(const Extensions&) = delete;
 
       std::vector<std::unique_ptr<Extension>> m_extensions;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

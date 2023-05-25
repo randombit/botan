@@ -16,14 +16,13 @@ namespace Botan {
 /**
 * Swap a 16 bit integer
 */
-inline constexpr uint16_t reverse_bytes(uint16_t x)
-   {
+inline constexpr uint16_t reverse_bytes(uint16_t x) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_bswap16)
    return __builtin_bswap16(x);
 #else
    return static_cast<uint16_t>((x << 8) | (x >> 8));
 #endif
-   }
+}
 
 /**
 * Swap a 32 bit integer
@@ -31,18 +30,14 @@ inline constexpr uint16_t reverse_bytes(uint16_t x)
 * We cannot use MSVC's _byteswap_ulong because it does not consider
 * the builtin to be constexpr.
 */
-inline constexpr uint32_t reverse_bytes(uint32_t x)
-   {
+inline constexpr uint32_t reverse_bytes(uint32_t x) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_bswap32)
    return __builtin_bswap32(x);
 #else
    // MSVC at least recognizes this as a bswap
-   return ((x & 0x000000FF) << 24) |
-          ((x & 0x0000FF00) <<  8) |
-          ((x & 0x00FF0000) >>  8) |
-          ((x & 0xFF000000) >> 24);
+   return ((x & 0x000000FF) << 24) | ((x & 0x0000FF00) << 8) | ((x & 0x00FF0000) >> 8) | ((x & 0xFF000000) >> 24);
 #endif
-   }
+}
 
 /**
 * Swap a 64 bit integer
@@ -50,8 +45,7 @@ inline constexpr uint32_t reverse_bytes(uint32_t x)
 * We cannot use MSVC's _byteswap_uint64 because it does not consider
 * the builtin to be constexpr.
 */
-inline constexpr uint64_t reverse_bytes(uint64_t x)
-   {
+inline constexpr uint64_t reverse_bytes(uint64_t x) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_bswap64)
    return __builtin_bswap64(x);
 #else
@@ -63,20 +57,19 @@ inline constexpr uint64_t reverse_bytes(uint64_t x)
 
    return (static_cast<uint64_t>(lo) << 32) | hi;
 #endif
-   }
+}
 
 /**
 * Swap 4 Ts in an array
 */
-template<typename T>
-inline constexpr void bswap_4(T x[4])
-   {
+template <typename T>
+inline constexpr void bswap_4(T x[4]) {
    x[0] = reverse_bytes(x[0]);
    x[1] = reverse_bytes(x[1]);
    x[2] = reverse_bytes(x[2]);
    x[3] = reverse_bytes(x[3]);
-   }
-
 }
+
+}  // namespace Botan
 
 #endif

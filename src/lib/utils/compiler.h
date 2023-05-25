@@ -17,7 +17,7 @@
 * @param maj The major version this public API was released in
 * @param min The minor version this public API was released in
 */
-#define BOTAN_PUBLIC_API(maj,min) BOTAN_DLL
+#define BOTAN_PUBLIC_API(maj, min) BOTAN_DLL
 
 /**
 * Used to annotate API exports which are public, but are now deprecated
@@ -47,58 +47,58 @@
 * They are only exported if the fuzzers are being built
 */
 #if defined(BOTAN_FUZZERS_ARE_BEING_BUILT)
-  #define BOTAN_FUZZER_API BOTAN_DLL
+   #define BOTAN_FUZZER_API BOTAN_DLL
 #else
-  #define BOTAN_FUZZER_API
+   #define BOTAN_FUZZER_API
 #endif
 
 /*
 * Define BOTAN_COMPILER_HAS_BUILTIN
 */
 #if defined(__has_builtin)
-  #define BOTAN_COMPILER_HAS_BUILTIN(x) __has_builtin(x)
+   #define BOTAN_COMPILER_HAS_BUILTIN(x) __has_builtin(x)
 #else
-  #define BOTAN_COMPILER_HAS_BUILTIN(x) 0
+   #define BOTAN_COMPILER_HAS_BUILTIN(x) 0
 #endif
 
 /*
 * Define BOTAN_COMPILER_HAS_ATTRIBUTE
 */
 #if defined(__has_attribute)
-  #define BOTAN_COMPILER_HAS_ATTRIBUTE(x) __has_attribute(x)
-  #define BOTAN_COMPILER_ATTRIBUTE(x) __attribute__((x))
+   #define BOTAN_COMPILER_HAS_ATTRIBUTE(x) __has_attribute(x)
+   #define BOTAN_COMPILER_ATTRIBUTE(x) __attribute__((x))
 #else
-  #define BOTAN_COMPILER_HAS_ATTRIBUTE(x) 0
-  #define BOTAN_COMPILER_ATTRIBUTE(x) /**/
+   #define BOTAN_COMPILER_HAS_ATTRIBUTE(x) 0
+   #define BOTAN_COMPILER_ATTRIBUTE(x) /**/
 #endif
 
 /*
 * Define BOTAN_FUNC_ISA
 */
 #if BOTAN_COMPILER_HAS_ATTRIBUTE(target)
-  #define BOTAN_FUNC_ISA(isa) BOTAN_COMPILER_ATTRIBUTE(target(isa))
+   #define BOTAN_FUNC_ISA(isa) BOTAN_COMPILER_ATTRIBUTE(target(isa))
 #else
-  #define BOTAN_FUNC_ISA(isa)
+   #define BOTAN_FUNC_ISA(isa)
 #endif
 
 /*
 * Define BOTAN_MALLOC_FN
 */
 #if BOTAN_COMPILER_HAS_ATTRIBUTE(malloc)
-  #define BOTAN_MALLOC_FN BOTAN_COMPILER_ATTRIBUTE(malloc)
+   #define BOTAN_MALLOC_FN BOTAN_COMPILER_ATTRIBUTE(malloc)
 #elif defined(_MSC_VER)
-  #define BOTAN_MALLOC_FN __declspec(restrict)
+   #define BOTAN_MALLOC_FN __declspec(restrict)
 #else
-  #define BOTAN_MALLOC_FN
+   #define BOTAN_MALLOC_FN
 #endif
 
 /*
 * Define BOTAN_EARLY_INIT
 */
 #if BOTAN_COMPILER_HAS_ATTRIBUTE(init_priority)
-  #define BOTAN_EARLY_INIT(prio) BOTAN_COMPILER_ATTRIBUTE(init_priority(prio))
+   #define BOTAN_EARLY_INIT(prio) BOTAN_COMPILER_ATTRIBUTE(init_priority(prio))
 #else
-  #define BOTAN_EARLY_INIT(prio) /**/
+   #define BOTAN_EARLY_INIT(prio) /**/
 #endif
 
 /*
@@ -106,33 +106,35 @@
 */
 #if !defined(BOTAN_NO_DEPRECATED_WARNINGS) && !defined(BOTAN_AMALGAMATION_H_)
 
-  #define BOTAN_DEPRECATED(msg) [[deprecated(msg)]]
+   #define BOTAN_DEPRECATED(msg) [[deprecated(msg)]]
 
-  #if !defined(BOTAN_IS_BEING_BUILT)
-    #if defined(__clang__)
-      #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("message \"this header is deprecated\"")
-      #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) _Pragma("message \"this header will be made internal in the future\"")
-    #elif defined(_MSC_VER)
-      #define BOTAN_DEPRECATED_HEADER(hdr) __pragma(message("this header is deprecated"))
-      #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) __pragma(message("this header will be made internal in the future"))
-    #elif defined(__GNUC__)
-      #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("GCC warning \"this header is deprecated\"")
-      #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) _Pragma("GCC warning \"this header will be made internal in the future\"")
-    #endif
-  #endif
+   #if !defined(BOTAN_IS_BEING_BUILT)
+      #if defined(__clang__)
+         #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("message \"this header is deprecated\"")
+         #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) \
+            _Pragma("message \"this header will be made internal in the future\"")
+      #elif defined(_MSC_VER)
+         #define BOTAN_DEPRECATED_HEADER(hdr) __pragma(message("this header is deprecated"))
+         #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) __pragma(message("this header will be made internal in the future"))
+      #elif defined(__GNUC__)
+         #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("GCC warning \"this header is deprecated\"")
+         #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) \
+            _Pragma("GCC warning \"this header will be made internal in the future\"")
+      #endif
+   #endif
 
 #endif
 
 #if !defined(BOTAN_DEPRECATED)
-  #define BOTAN_DEPRECATED(msg)
+   #define BOTAN_DEPRECATED(msg)
 #endif
 
 #if !defined(BOTAN_DEPRECATED_HEADER)
-  #define BOTAN_DEPRECATED_HEADER(hdr)
+   #define BOTAN_DEPRECATED_HEADER(hdr)
 #endif
 
 #if !defined(BOTAN_FUTURE_INTERNAL_HEADER)
-  #define BOTAN_FUTURE_INTERNAL_HEADER(hdr)
+   #define BOTAN_FUTURE_INTERNAL_HEADER(hdr)
 #endif
 
 /*
@@ -140,15 +142,15 @@
 */
 #if !defined(BOTAN_FORCE_INLINE)
 
-  #if BOTAN_COMPILER_HAS_ATTRIBUTE(always_inline)
-    #define BOTAN_FORCE_INLINE inline BOTAN_COMPILER_ATTRIBUTE(always_inline)
+   #if BOTAN_COMPILER_HAS_ATTRIBUTE(always_inline)
+      #define BOTAN_FORCE_INLINE inline BOTAN_COMPILER_ATTRIBUTE(always_inline)
 
-  #elif defined (_MSC_VER)
-    #define BOTAN_FORCE_INLINE __forceinline
+   #elif defined(_MSC_VER)
+      #define BOTAN_FORCE_INLINE __forceinline
 
-  #else
-    #define BOTAN_FORCE_INLINE inline
-  #endif
+   #else
+      #define BOTAN_FORCE_INLINE inline
+   #endif
 
 #endif
 
@@ -157,34 +159,36 @@
 */
 #if !defined(BOTAN_PARALLEL_SIMD_FOR)
 
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
-  #define BOTAN_PARALLEL_SIMD_FOR _Pragma("GCC ivdep") for
-#else
-  #define BOTAN_PARALLEL_SIMD_FOR for
-#endif
+   #if defined(BOTAN_BUILD_COMPILER_IS_GCC)
+      #define BOTAN_PARALLEL_SIMD_FOR _Pragma("GCC ivdep") for
+   #else
+      #define BOTAN_PARALLEL_SIMD_FOR for
+   #endif
 
 #endif
 
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC)
-  #define BOTAN_DIAGNOSTIC_PUSH                           _Pragma("GCC diagnostic push")
-  #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
-  #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
-  #define BOTAN_DIAGNOSTIC_POP                            _Pragma("GCC diagnostic pop")
+   #define BOTAN_DIAGNOSTIC_PUSH _Pragma("GCC diagnostic push")
+   #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS \
+      _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+   #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+   #define BOTAN_DIAGNOSTIC_POP _Pragma("GCC diagnostic pop")
 #elif defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-  #define BOTAN_DIAGNOSTIC_PUSH                           _Pragma("clang diagnostic push")
-  #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
-  #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
-  #define BOTAN_DIAGNOSTIC_POP                            _Pragma("clang diagnostic pop")
+   #define BOTAN_DIAGNOSTIC_PUSH _Pragma("clang diagnostic push")
+   #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS \
+      _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
+   #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+   #define BOTAN_DIAGNOSTIC_POP _Pragma("clang diagnostic pop")
 #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-  #define BOTAN_DIAGNOSTIC_PUSH                           __pragma(warning(push))
-  #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS __pragma(warning(disable : 4996))
-  #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE __pragma(warning(disable : 4250))
-  #define BOTAN_DIAGNOSTIC_POP                            __pragma(warning(pop))
+   #define BOTAN_DIAGNOSTIC_PUSH __pragma(warning(push))
+   #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS __pragma(warning(disable : 4996))
+   #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE __pragma(warning(disable : 4250))
+   #define BOTAN_DIAGNOSTIC_POP __pragma(warning(pop))
 #else
-  #define BOTAN_DIAGNOSTIC_PUSH
-  #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
-  #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
-  #define BOTAN_DIAGNOSTIC_POP
+   #define BOTAN_DIAGNOSTIC_PUSH
+   #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+   #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+   #define BOTAN_DIAGNOSTIC_POP
 #endif
 
 #endif

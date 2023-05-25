@@ -22,8 +22,7 @@ class GHASH;
 * GMAC requires a unique initialization vector be used for each message.
 * This must be provided via the MessageAuthenticationCode::start() API
 */
-class GMAC final : public MessageAuthenticationCode
-   {
+class GMAC final : public MessageAuthenticationCode {
    public:
       void clear() override;
       std::string name() const override;
@@ -59,7 +58,7 @@ class GMAC final : public MessageAuthenticationCode
       secure_vector<uint8_t> m_H;
       size_t m_aad_buf_pos;
       bool m_initialized;
-   };
+};
 
-}
+}  // namespace Botan
 #endif

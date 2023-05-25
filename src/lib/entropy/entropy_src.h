@@ -8,11 +8,11 @@
 #ifndef BOTAN_ENTROPY_H_
 #define BOTAN_ENTROPY_H_
 
-#include <botan/secmem.h>
 #include <botan/rng.h>
-#include <string>
+#include <botan/secmem.h>
 #include <chrono>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace Botan {
@@ -22,8 +22,7 @@ class RandomNumberGenerator;
 /**
 * Abstract interface to a source of entropy
 */
-class BOTAN_PUBLIC_API(2,0) Entropy_Source
-   {
+class BOTAN_PUBLIC_API(2, 0) Entropy_Source {
    public:
       /**
       * Return a new entropy source of a particular type, or null
@@ -51,10 +50,9 @@ class BOTAN_PUBLIC_API(2,0) Entropy_Source
       Entropy_Source& operator=(const Entropy_Source& other) = delete;
 
       virtual ~Entropy_Source() = default;
-   };
+};
 
-class BOTAN_PUBLIC_API(2,0) Entropy_Sources final
-   {
+class BOTAN_PUBLIC_API(2, 0) Entropy_Sources final {
    public:
       static Entropy_Sources& global_sources();
 
@@ -62,9 +60,7 @@ class BOTAN_PUBLIC_API(2,0) Entropy_Sources final
 
       std::vector<std::string> enabled_sources() const;
 
-      size_t poll(RandomNumberGenerator& rng,
-                  size_t bits,
-                  std::chrono::milliseconds timeout);
+      size_t poll(RandomNumberGenerator& rng, size_t bits, std::chrono::milliseconds timeout);
 
       /**
       * Poll just a single named source. Ordinally only used for testing
@@ -80,8 +76,8 @@ class BOTAN_PUBLIC_API(2,0) Entropy_Sources final
 
    private:
       std::vector<std::unique_ptr<Entropy_Source>> m_srcs;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

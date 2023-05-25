@@ -10,9 +10,9 @@
 
 #include <botan/concepts.h>
 #include <botan/sym_algo.h>
-#include <string_view>
-#include <string>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace Botan {
@@ -20,8 +20,7 @@ namespace Botan {
 /**
 * Base class for all stream ciphers
 */
-class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
-   {
+class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
    public:
       virtual ~StreamCipher() = default;
 
@@ -32,9 +31,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param provider provider implementation to use
       * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<StreamCipher>
-         create(std::string_view algo_spec,
-                std::string_view provider = "");
+      static std::unique_ptr<StreamCipher> create(std::string_view algo_spec, std::string_view provider = "");
 
       /**
       * Create an instance based on a name
@@ -43,9 +40,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param provider provider implementation to use
       * Throws a Lookup_Error if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<StreamCipher>
-         create_or_throw(std::string_view algo_spec,
-                         std::string_view provider = "");
+      static std::unique_ptr<StreamCipher> create_or_throw(std::string_view algo_spec, std::string_view provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -58,8 +53,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param out the byte array to hold the output, i.e. the ciphertext
       * @param len the length of both in and out in bytes
       */
-      void cipher(const uint8_t in[], uint8_t out[], size_t len)
-         { cipher_bytes(in, out, len); }
+      void cipher(const uint8_t in[], uint8_t out[], size_t len) { cipher_bytes(in, out, len); }
 
       /**
       * Encrypt or decrypt a message
@@ -67,12 +61,11 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param out the byte array to hold the output, i.e. the ciphertext
       *            with at least the same size as @p in
       */
-      void cipher(std::span<const uint8_t> in, std::span<uint8_t> out)
-         {
+      void cipher(std::span<const uint8_t> in, std::span<uint8_t> out) {
          BOTAN_ARG_CHECK(in.size() <= out.size(),
                          "Output buffer of stream cipher must be at least as long as input buffer");
          cipher_bytes(in.data(), out.data(), in.size());
-         }
+      }
 
       /**
       * Write keystream bytes to a buffer
@@ -82,8 +75,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param out the byte array to hold the keystream
       * @param len the length of out in bytes
       */
-      void write_keystream(uint8_t out[], size_t len)
-         { generate_keystream(out, len); }
+      void write_keystream(uint8_t out[], size_t len) { generate_keystream(out, len); }
 
       /**
       * Fill a given buffer with keystream bytes
@@ -92,21 +84,19 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       *
       * @param out the byte array to hold the keystream
       */
-      void write_keystream(std::span<uint8_t> out)
-         { generate_keystream(out.data(), out.size()); }
+      void write_keystream(std::span<uint8_t> out) { generate_keystream(out.data(), out.size()); }
 
       /**
       * Get @p bytes from the keystream
       *
       * @param bytes The number of bytes to be produced
       */
-      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
-      T keystream_bytes(size_t bytes)
-         {
+      template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T keystream_bytes(size_t bytes) {
          T out(bytes);
          write_keystream(out);
          return out;
-         }
+      }
 
       /**
       * Encrypt or decrypt a message
@@ -114,40 +104,35 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param buf the plaintext / ciphertext
       * @param len the length of buf in bytes
       */
-      void cipher1(uint8_t buf[], size_t len)
-         { cipher(buf, buf, len); }
+      void cipher1(uint8_t buf[], size_t len) { cipher(buf, buf, len); }
 
       /**
       * Encrypt or decrypt a message
       * The message is encrypted/decrypted in place.
       * @param buf the plaintext / ciphertext
       */
-      void cipher1(std::span<uint8_t> buf)
-         { cipher(buf, buf); }
+      void cipher1(std::span<uint8_t> buf) { cipher(buf, buf); }
 
       /**
       * Encrypt a message
       * The message is encrypted/decrypted in place.
       * @param inout the plaintext / ciphertext
       */
-      void encipher(std::span<uint8_t> inout)
-         { cipher(inout.data(), inout.data(), inout.size()); }
+      void encipher(std::span<uint8_t> inout) { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
       * Encrypt a message
       * The message is encrypted in place.
       * @param inout the plaintext / ciphertext
       */
-      void encrypt(std::span<uint8_t> inout)
-         { cipher(inout.data(), inout.data(), inout.size()); }
+      void encrypt(std::span<uint8_t> inout) { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
       * Decrypt a message in place
       * The message is decrypted in place.
       * @param inout the plaintext / ciphertext
       */
-      void decrypt(std::span<uint8_t> inout)
-         { cipher(inout.data(), inout.data(), inout.size()); }
+      void decrypt(std::span<uint8_t> inout) { cipher(inout.data(), inout.data(), inout.size()); }
 
       /**
       * Return the optimium buffer size to use with this cipher
@@ -169,15 +154,13 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      void set_iv(const uint8_t iv[], size_t iv_len)
-         { set_iv_bytes(iv, iv_len); }
+      void set_iv(const uint8_t iv[], size_t iv_len) { set_iv_bytes(iv, iv_len); }
 
       /**
       * Resync the cipher using the IV
       * @param iv the initialization vector
       */
-      void set_iv(std::span<const uint8_t> iv)
-         { set_iv_bytes(iv.data(), iv.size()); }
+      void set_iv(std::span<const uint8_t> iv) { set_iv_bytes(iv.data(), iv.size()); }
 
       /**
       * Return the default (preferred) nonce length
@@ -196,10 +179,7 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       /**
       * @return a new object representing the same algorithm as *this
       */
-      StreamCipher* clone() const
-         {
-         return this->new_object().release();
-         }
+      StreamCipher* clone() const { return this->new_object().release(); }
 
       /**
       * @return new object representing the same algorithm as *this
@@ -227,18 +207,17 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       /**
       * Write keystream bytes to a buffer
       */
-      virtual void generate_keystream(uint8_t out[], size_t len)
-         {
+      virtual void generate_keystream(uint8_t out[], size_t len) {
          clear_mem(out, len);
          cipher1(out, len);
-         }
+      }
 
       /**
       * Resync the cipher using the IV
       */
       virtual void set_iv_bytes(const uint8_t iv[], size_t iv_len) = 0;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

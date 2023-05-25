@@ -10,23 +10,21 @@
 #include "fuzzers.h"
 
 #include <botan/ec_group.h>
-#include <botan/reducer.h>
 #include <botan/numthry.h>
+#include <botan/reducer.h>
 
 namespace {
 
-inline std::ostream& operator<<(std::ostream& o, const Botan::EC_Point& point)
-   {
+inline std::ostream& operator<<(std::ostream& o, const Botan::EC_Point& point) {
    o << point.get_affine_x() << "," << point.get_affine_y();
    return o;
-   }
+}
 
 Botan::BigInt decompress_point(bool yMod2,
                                const Botan::BigInt& x,
                                const Botan::BigInt& curve_p,
                                const Botan::BigInt& curve_a,
-                               const Botan::BigInt& curve_b)
-   {
+                               const Botan::BigInt& curve_b) {
    Botan::BigInt xpow3 = x * x * x;
 
    Botan::BigInt g = curve_a * x;
@@ -43,11 +41,9 @@ Botan::BigInt decompress_point(bool yMod2,
       z = curve_p - z;
 
    return z;
-   }
+}
 
-void check_ecc_math(const Botan::EC_Group& group,
-                    const uint8_t in[], size_t len)
-   {
+void check_ecc_math(const Botan::EC_Group& group, const uint8_t in[], size_t len) {
    // These depend only on the group, which is also static
    static const Botan::EC_Point base_point = group.get_base_point();
 
@@ -90,8 +86,7 @@ void check_ecc_math(const Botan::EC_Group& group,
    FUZZER_ASSERT_EQUAL(S1, S2);
    FUZZER_ASSERT_EQUAL(S1, S3);
 
-   try
-      {
+   try {
       const auto yp = decompress_point(true, a, group.get_p(), group.get_a(), group.get_b());
       const auto pt_p = group.blinded_var_point_multiply(group.point(a, yp), b, fuzzer_rng(), ws);
 
@@ -99,10 +94,9 @@ void check_ecc_math(const Botan::EC_Group& group,
       const auto pt_n = group.blinded_var_point_multiply(group.point(a, yn), b, fuzzer_rng(), ws);
 
       FUZZER_ASSERT_EQUAL(pt_p, -pt_n);
-      }
-   catch(...) {}
-   }
-
+   } catch(...) {}
 }
+
+}  // namespace
 
 #endif

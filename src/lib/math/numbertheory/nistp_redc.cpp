@@ -7,46 +7,61 @@
 
 #include <botan/internal/curve_nistp.h>
 
-#include <botan/internal/mp_core.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mp_core.h>
 
 namespace Botan {
 
-const BigInt& prime_p521()
-   {
-   static const BigInt p521("0x1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-                               "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+const BigInt& prime_p521() {
+   static const BigInt p521(
+      "0x1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+      "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
    return p521;
-   }
+}
 
-void redc_p521(BigInt& x, secure_vector<word>& ws)
-   {
+void redc_p521(BigInt& x, secure_vector<word>& ws) {
    BOTAN_DEBUG_ASSERT(x.is_positive());
 
    const size_t p_full_words = 521 / BOTAN_MP_WORD_BITS;
    const size_t p_top_bits = 521 % BOTAN_MP_WORD_BITS;
    const size_t p_words = p_full_words + 1;
 
-#if (BOTAN_MP_WORD_BITS == 64)
-   static const word p521_words[p_words] = {
-      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-      0x1FF };
+#if(BOTAN_MP_WORD_BITS == 64)
+   static const word p521_words[p_words] = {0xFFFFFFFFFFFFFFFF,
+                                            0xFFFFFFFFFFFFFFFF,
+                                            0xFFFFFFFFFFFFFFFF,
+                                            0xFFFFFFFFFFFFFFFF,
+                                            0xFFFFFFFFFFFFFFFF,
+                                            0xFFFFFFFFFFFFFFFF,
+                                            0xFFFFFFFFFFFFFFFF,
+                                            0xFFFFFFFFFFFFFFFF,
+                                            0x1FF};
 #else
-   static const word p521_words[p_words] = {
-      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-      0x1FF };
+   static const word p521_words[p_words] = {0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0xFFFFFFFF,
+                                            0x1FF};
 #endif
 
    if(ws.size() < p_words + 1)
       ws.resize(p_words + 1);
 
    clear_mem(ws.data(), ws.size());
-   bigint_shr2(ws.data(), x.data(), std::min(x.size(), 2*p_words), p_full_words, p_top_bits);
+   bigint_shr2(ws.data(), x.data(), std::min(x.size(), 2 * p_words), p_full_words, p_top_bits);
 
    x.mask_bits(521);
    x.grow_to(p_words);
@@ -75,7 +90,7 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    const auto needs_reduction = is_p521 | bit_522_set;
 
    bigint_cnd_sub(needs_reduction.value(), x.mutable_data(), p521_words, p_words);
-   }
+}
 
 namespace {
 
@@ -83,54 +98,50 @@ namespace {
 * Treating this MPI as a sequence of 32-bit words in big-endian
 * order, return word i. The array is assumed to be large enough.
 */
-inline uint32_t get_uint32(const word xw[], size_t i)
-   {
-#if (BOTAN_MP_WORD_BITS == 32)
+inline uint32_t get_uint32(const word xw[], size_t i) {
+#if(BOTAN_MP_WORD_BITS == 32)
    return xw[i];
 #else
-   return static_cast<uint32_t>(xw[i/2] >> ((i % 2)*32));
+   return static_cast<uint32_t>(xw[i / 2] >> ((i % 2) * 32));
 #endif
-   }
-
-inline void set_words(word x[], size_t i, uint32_t R0, uint32_t R1)
-   {
-#if (BOTAN_MP_WORD_BITS == 32)
-   x[i] = R0;
-   x[i+1] = R1;
-#else
-   x[i/2] = (static_cast<uint64_t>(R1) << 32) | R0;
-#endif
-   }
-
 }
 
-const BigInt& prime_p192()
-   {
+inline void set_words(word x[], size_t i, uint32_t R0, uint32_t R1) {
+#if(BOTAN_MP_WORD_BITS == 32)
+   x[i] = R0;
+   x[i + 1] = R1;
+#else
+   x[i / 2] = (static_cast<uint64_t>(R1) << 32) | R0;
+#endif
+}
+
+}  // namespace
+
+const BigInt& prime_p192() {
    static const BigInt p192("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF");
    return p192;
-   }
+}
 
-void redc_p192(BigInt& x, secure_vector<word>& ws)
-   {
+void redc_p192(BigInt& x, secure_vector<word>& ws) {
    BOTAN_DEBUG_ASSERT(x.is_positive());
 
    BOTAN_UNUSED(ws);
 
    static const size_t p192_limbs = 192 / BOTAN_MP_WORD_BITS;
 
-   x.grow_to(2*p192_limbs);
+   x.grow_to(2 * p192_limbs);
    word* xw = x.mutable_data();
 
-   const uint64_t X00 = get_uint32(xw,  0);
-   const uint64_t X01 = get_uint32(xw,  1);
-   const uint64_t X02 = get_uint32(xw,  2);
-   const uint64_t X03 = get_uint32(xw,  3);
-   const uint64_t X04 = get_uint32(xw,  4);
-   const uint64_t X05 = get_uint32(xw,  5);
-   const uint64_t X06 = get_uint32(xw,  6);
-   const uint64_t X07 = get_uint32(xw,  7);
-   const uint64_t X08 = get_uint32(xw,  8);
-   const uint64_t X09 = get_uint32(xw,  9);
+   const uint64_t X00 = get_uint32(xw, 0);
+   const uint64_t X01 = get_uint32(xw, 1);
+   const uint64_t X02 = get_uint32(xw, 2);
+   const uint64_t X03 = get_uint32(xw, 3);
+   const uint64_t X04 = get_uint32(xw, 4);
+   const uint64_t X05 = get_uint32(xw, 5);
+   const uint64_t X06 = get_uint32(xw, 6);
+   const uint64_t X07 = get_uint32(xw, 7);
+   const uint64_t X08 = get_uint32(xw, 8);
+   const uint64_t X09 = get_uint32(xw, 9);
    const uint64_t X10 = get_uint32(xw, 10);
    const uint64_t X11 = get_uint32(xw, 11);
 
@@ -180,7 +191,7 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    This is a table of (i*P-192) % 2**192 for i in 1...3
    */
    static const word p192_mults[3][p192_limbs] = {
-#if (BOTAN_MP_WORD_BITS == 64)
+#if(BOTAN_MP_WORD_BITS == 64)
       {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFF},
       {0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFD, 0xFFFFFFFFFFFFFFFF},
       {0xFFFFFFFFFFFFFFFD, 0xFFFFFFFFFFFFFFFC, 0xFFFFFFFFFFFFFFFF},
@@ -199,35 +210,33 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    word borrow = bigint_sub2(x.mutable_data(), p192_limbs + 1, p192_mults[S], p192_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
    bigint_cnd_add(borrow, x.mutable_data(), p192_limbs + 1, p192_mults[0], p192_limbs);
-   }
+}
 
-const BigInt& prime_p224()
-   {
+const BigInt& prime_p224() {
    static const BigInt p224("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000001");
    return p224;
-   }
+}
 
-void redc_p224(BigInt& x, secure_vector<word>& ws)
-   {
+void redc_p224(BigInt& x, secure_vector<word>& ws) {
    BOTAN_DEBUG_ASSERT(x.is_positive());
 
    static const size_t p224_limbs = (BOTAN_MP_WORD_BITS == 32) ? 7 : 4;
 
    BOTAN_UNUSED(ws);
 
-   x.grow_to(2*p224_limbs);
+   x.grow_to(2 * p224_limbs);
    word* xw = x.mutable_data();
 
-   const int64_t X00 = get_uint32(xw,  0);
-   const int64_t X01 = get_uint32(xw,  1);
-   const int64_t X02 = get_uint32(xw,  2);
-   const int64_t X03 = get_uint32(xw,  3);
-   const int64_t X04 = get_uint32(xw,  4);
-   const int64_t X05 = get_uint32(xw,  5);
-   const int64_t X06 = get_uint32(xw,  6);
-   const int64_t X07 = get_uint32(xw,  7);
-   const int64_t X08 = get_uint32(xw,  8);
-   const int64_t X09 = get_uint32(xw,  9);
+   const int64_t X00 = get_uint32(xw, 0);
+   const int64_t X01 = get_uint32(xw, 1);
+   const int64_t X02 = get_uint32(xw, 2);
+   const int64_t X03 = get_uint32(xw, 3);
+   const int64_t X04 = get_uint32(xw, 4);
+   const int64_t X05 = get_uint32(xw, 5);
+   const int64_t X06 = get_uint32(xw, 6);
+   const int64_t X07 = get_uint32(xw, 7);
+   const int64_t X08 = get_uint32(xw, 8);
+   const int64_t X09 = get_uint32(xw, 9);
    const int64_t X10 = get_uint32(xw, 10);
    const int64_t X11 = get_uint32(xw, 11);
    const int64_t X12 = get_uint32(xw, 12);
@@ -283,14 +292,14 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    set_words(xw, 6, R0, 0);
 
    static const word p224_mults[3][p224_limbs] = {
-#if (BOTAN_MP_WORD_BITS == 64)
-    {0x0000000000000001, 0xFFFFFFFF00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
-    {0x0000000000000002, 0xFFFFFFFE00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
-    {0x0000000000000003, 0xFFFFFFFD00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
+#if(BOTAN_MP_WORD_BITS == 64)
+      {0x0000000000000001, 0xFFFFFFFF00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
+      {0x0000000000000002, 0xFFFFFFFE00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
+      {0x0000000000000003, 0xFFFFFFFD00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
 #else
-    {0x00000001, 0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-    {0x00000002, 0x00000000, 0x00000000, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-    {0x00000003, 0x00000000, 0x00000000, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}
+      {0x00000001, 0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+      {0x00000002, 0x00000000, 0x00000000, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+      {0x00000003, 0x00000000, 0x00000000, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}
 #endif
 
    };
@@ -303,35 +312,33 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    word borrow = bigint_sub2(x.mutable_data(), p224_limbs + 1, p224_mults[S], p224_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
    bigint_cnd_add(borrow, x.mutable_data(), p224_limbs + 1, p224_mults[0], p224_limbs);
-   }
+}
 
-const BigInt& prime_p256()
-   {
+const BigInt& prime_p256() {
    static const BigInt p256("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
    return p256;
-   }
+}
 
-void redc_p256(BigInt& x, secure_vector<word>& ws)
-   {
+void redc_p256(BigInt& x, secure_vector<word>& ws) {
    BOTAN_DEBUG_ASSERT(x.is_positive());
 
    static const size_t p256_limbs = (BOTAN_MP_WORD_BITS == 32) ? 8 : 4;
 
    BOTAN_UNUSED(ws);
 
-   x.grow_to(2*p256_limbs);
+   x.grow_to(2 * p256_limbs);
    word* xw = x.mutable_data();
 
-   const int64_t X00 = get_uint32(xw,  0);
-   const int64_t X01 = get_uint32(xw,  1);
-   const int64_t X02 = get_uint32(xw,  2);
-   const int64_t X03 = get_uint32(xw,  3);
-   const int64_t X04 = get_uint32(xw,  4);
-   const int64_t X05 = get_uint32(xw,  5);
-   const int64_t X06 = get_uint32(xw,  6);
-   const int64_t X07 = get_uint32(xw,  7);
-   const int64_t X08 = get_uint32(xw,  8);
-   const int64_t X09 = get_uint32(xw,  9);
+   const int64_t X00 = get_uint32(xw, 0);
+   const int64_t X01 = get_uint32(xw, 1);
+   const int64_t X02 = get_uint32(xw, 2);
+   const int64_t X03 = get_uint32(xw, 3);
+   const int64_t X04 = get_uint32(xw, 4);
+   const int64_t X05 = get_uint32(xw, 5);
+   const int64_t X06 = get_uint32(xw, 6);
+   const int64_t X07 = get_uint32(xw, 7);
+   const int64_t X08 = get_uint32(xw, 8);
+   const int64_t X09 = get_uint32(xw, 9);
    const int64_t X10 = get_uint32(xw, 10);
    const int64_t X11 = get_uint32(xw, 11);
    const int64_t X12 = get_uint32(xw, 12);
@@ -343,11 +350,11 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    const int64_t S0 = 0xFFFFFFFA + X00 + X08 + X09 - (X11 + X12 + X13) - X14;
    const int64_t S1 = 0xFFFFFFFF + X01 + X09 + X10 - X12 - (X13 + X14 + X15);
    const int64_t S2 = 0xFFFFFFFF + X02 + X10 + X11 - (X13 + X14 + X15);
-   const int64_t S3 = 0x00000005 + X03 + (X11 + X12)*2 + X13 - X15 - X08 - X09;
-   const int64_t S4 = 0x00000000 + X04 + (X12 + X13)*2 + X14 - X09 - X10;
-   const int64_t S5 = 0x00000000 + X05 + (X13 + X14)*2 + X15 - X10 - X11;
-   const int64_t S6 = 0x00000006 + X06 + X13 + X14*3 + X15*2 - X08 - X09;
-   const int64_t S7 = 0xFFFFFFFA + X07 + X15*3 + X08 - X10 - (X11 + X12 + X13);
+   const int64_t S3 = 0x00000005 + X03 + (X11 + X12) * 2 + X13 - X15 - X08 - X09;
+   const int64_t S4 = 0x00000000 + X04 + (X12 + X13) * 2 + X14 - X09 - X10;
+   const int64_t S5 = 0x00000000 + X05 + (X13 + X14) * 2 + X15 - X10 - X11;
+   const int64_t S6 = 0x00000006 + X06 + X13 + X14 * 3 + X15 * 2 - X08 - X09;
+   const int64_t S7 = 0xFFFFFFFA + X07 + X15 * 3 + X08 - X10 - (X11 + X12 + X13);
 
    int64_t S = 0;
 
@@ -392,13 +399,13 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    S >>= 32;
    set_words(xw, 6, R0, R1);
 
-   S += 5; // the top digits of 6*P-256
+   S += 5;  // the top digits of 6*P-256
 
    /*
    This is a table of (i*P-256) % 2**256 for i in 1...10
    */
    static const word p256_mults[11][p256_limbs] = {
-#if (BOTAN_MP_WORD_BITS == 64)
+#if(BOTAN_MP_WORD_BITS == 64)
       {0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF, 0x0000000000000000, 0xFFFFFFFF00000001},
       {0xFFFFFFFFFFFFFFFE, 0x00000001FFFFFFFF, 0x0000000000000000, 0xFFFFFFFE00000002},
       {0xFFFFFFFFFFFFFFFD, 0x00000002FFFFFFFF, 0x0000000000000000, 0xFFFFFFFD00000003},
@@ -433,35 +440,34 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    word borrow = bigint_sub2(x.mutable_data(), p256_limbs + 1, p256_mults[S], p256_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
    bigint_cnd_add(borrow, x.mutable_data(), p256_limbs + 1, p256_mults[0], p256_limbs);
-   }
+}
 
-const BigInt& prime_p384()
-   {
-   static const BigInt p384("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF");
+const BigInt& prime_p384() {
+   static const BigInt p384(
+      "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF");
    return p384;
-   }
+}
 
-void redc_p384(BigInt& x, secure_vector<word>& ws)
-   {
+void redc_p384(BigInt& x, secure_vector<word>& ws) {
    BOTAN_DEBUG_ASSERT(x.is_positive());
 
    BOTAN_UNUSED(ws);
 
    static const size_t p384_limbs = (BOTAN_MP_WORD_BITS == 32) ? 12 : 6;
 
-   x.grow_to(2*p384_limbs);
+   x.grow_to(2 * p384_limbs);
    word* xw = x.mutable_data();
 
-   const int64_t X00 = get_uint32(xw,  0);
-   const int64_t X01 = get_uint32(xw,  1);
-   const int64_t X02 = get_uint32(xw,  2);
-   const int64_t X03 = get_uint32(xw,  3);
-   const int64_t X04 = get_uint32(xw,  4);
-   const int64_t X05 = get_uint32(xw,  5);
-   const int64_t X06 = get_uint32(xw,  6);
-   const int64_t X07 = get_uint32(xw,  7);
-   const int64_t X08 = get_uint32(xw,  8);
-   const int64_t X09 = get_uint32(xw,  9);
+   const int64_t X00 = get_uint32(xw, 0);
+   const int64_t X01 = get_uint32(xw, 1);
+   const int64_t X02 = get_uint32(xw, 2);
+   const int64_t X03 = get_uint32(xw, 3);
+   const int64_t X04 = get_uint32(xw, 4);
+   const int64_t X05 = get_uint32(xw, 5);
+   const int64_t X06 = get_uint32(xw, 6);
+   const int64_t X07 = get_uint32(xw, 7);
+   const int64_t X08 = get_uint32(xw, 8);
+   const int64_t X09 = get_uint32(xw, 9);
    const int64_t X10 = get_uint32(xw, 10);
    const int64_t X11 = get_uint32(xw, 11);
    const int64_t X12 = get_uint32(xw, 12);
@@ -482,9 +488,9 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    const int64_t S1 = 0x00000000 + X01 + X13 + X22 + X23 - X12 - X20;
    const int64_t S2 = 0x00000000 + X02 + X14 + X23 - X13 - X21;
    const int64_t S3 = 0xFFFFFFFF + X03 + X12 + X15 + X20 + X21 - X14 - X22 - X23;
-   const int64_t S4 = 0xFFFFFFFE + X04 + X12 + X13 + X16 + X20 + X21*2 + X22 - X15 - X23*2;
-   const int64_t S5 = 0xFFFFFFFF + X05 + X13 + X14 + X17 + X21 + X22*2 + X23 - X16;
-   const int64_t S6 = 0xFFFFFFFF + X06 + X14 + X15 + X18 + X22 + X23*2 - X17;
+   const int64_t S4 = 0xFFFFFFFE + X04 + X12 + X13 + X16 + X20 + X21 * 2 + X22 - X15 - X23 * 2;
+   const int64_t S5 = 0xFFFFFFFF + X05 + X13 + X14 + X17 + X21 + X22 * 2 + X23 - X16;
+   const int64_t S6 = 0xFFFFFFFF + X06 + X14 + X15 + X18 + X22 + X23 * 2 - X17;
    const int64_t S7 = 0xFFFFFFFF + X07 + X15 + X16 + X19 + X23 - X18;
    const int64_t S8 = 0xFFFFFFFF + X08 + X16 + X17 + X20 - X19;
    const int64_t S9 = 0xFFFFFFFF + X09 + X17 + X18 + X21 - X20;
@@ -559,24 +565,99 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    This is a table of (i*P-384) % 2**384 for i in 1...4
    */
    static const word p384_mults[5][p384_limbs] = {
-#if (BOTAN_MP_WORD_BITS == 64)
-      {0x00000000FFFFFFFF, 0xFFFFFFFF00000000, 0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF},
-      {0x00000001FFFFFFFE, 0xFFFFFFFE00000000, 0xFFFFFFFFFFFFFFFD, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF},
-      {0x00000002FFFFFFFD, 0xFFFFFFFD00000000, 0xFFFFFFFFFFFFFFFC, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF},
-      {0x00000003FFFFFFFC, 0xFFFFFFFC00000000, 0xFFFFFFFFFFFFFFFB, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF},
-      {0x00000004FFFFFFFB, 0xFFFFFFFB00000000, 0xFFFFFFFFFFFFFFFA, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF},
+#if(BOTAN_MP_WORD_BITS == 64)
+      {0x00000000FFFFFFFF,
+       0xFFFFFFFF00000000,
+       0xFFFFFFFFFFFFFFFE,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF},
+      {0x00000001FFFFFFFE,
+       0xFFFFFFFE00000000,
+       0xFFFFFFFFFFFFFFFD,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF},
+      {0x00000002FFFFFFFD,
+       0xFFFFFFFD00000000,
+       0xFFFFFFFFFFFFFFFC,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF},
+      {0x00000003FFFFFFFC,
+       0xFFFFFFFC00000000,
+       0xFFFFFFFFFFFFFFFB,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF},
+      {0x00000004FFFFFFFB,
+       0xFFFFFFFB00000000,
+       0xFFFFFFFFFFFFFFFA,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF,
+       0xFFFFFFFFFFFFFFFF},
 
 #else
-      {0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFFFF,
-       0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-      {0xFFFFFFFE, 0x00000001, 0x00000000, 0xFFFFFFFE, 0xFFFFFFFD, 0xFFFFFFFF,
-       0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-      {0xFFFFFFFD, 0x00000002, 0x00000000, 0xFFFFFFFD, 0xFFFFFFFC, 0xFFFFFFFF,
-       0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-      {0xFFFFFFFC, 0x00000003, 0x00000000, 0xFFFFFFFC, 0xFFFFFFFB, 0xFFFFFFFF,
-       0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-      {0xFFFFFFFB, 0x00000004, 0x00000000, 0xFFFFFFFB, 0xFFFFFFFA, 0xFFFFFFFF,
-       0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+      {0xFFFFFFFF,
+       0x00000000,
+       0x00000000,
+       0xFFFFFFFF,
+       0xFFFFFFFE,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF},
+      {0xFFFFFFFE,
+       0x00000001,
+       0x00000000,
+       0xFFFFFFFE,
+       0xFFFFFFFD,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF},
+      {0xFFFFFFFD,
+       0x00000002,
+       0x00000000,
+       0xFFFFFFFD,
+       0xFFFFFFFC,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF},
+      {0xFFFFFFFC,
+       0x00000003,
+       0x00000000,
+       0xFFFFFFFC,
+       0xFFFFFFFB,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF},
+      {0xFFFFFFFB,
+       0x00000004,
+       0x00000000,
+       0xFFFFFFFB,
+       0xFFFFFFFA,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF,
+       0xFFFFFFFF},
 #endif
    };
 
@@ -588,6 +669,6 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    word borrow = bigint_sub2(x.mutable_data(), p384_limbs + 1, p384_mults[S], p384_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
    bigint_cnd_add(borrow, x.mutable_data(), p384_limbs + 1, p384_mults[0], p384_limbs);
-   }
-
 }
+
+}  // namespace Botan

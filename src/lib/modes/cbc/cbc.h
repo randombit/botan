@@ -9,8 +9,8 @@
 #ifndef BOTAN_MODE_CBC_H_
 #define BOTAN_MODE_CBC_H_
 
-#include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
+#include <botan/cipher_mode.h>
 #include <botan/internal/mode_pad.h>
 
 namespace Botan {
@@ -18,8 +18,7 @@ namespace Botan {
 /**
 * CBC Mode
 */
-class CBC_Mode : public Cipher_Mode
-   {
+class CBC_Mode : public Cipher_Mode {
    public:
       std::string name() const override final;
 
@@ -38,17 +37,16 @@ class CBC_Mode : public Cipher_Mode
       void reset() override;
 
       bool has_keying_material() const override final;
+
    protected:
-      CBC_Mode(std::unique_ptr<BlockCipher> cipher,
-               std::unique_ptr<BlockCipherModePaddingMethod> padding);
+      CBC_Mode(std::unique_ptr<BlockCipher> cipher, std::unique_ptr<BlockCipherModePaddingMethod> padding);
 
       const BlockCipher& cipher() const { return *m_cipher; }
 
-      const BlockCipherModePaddingMethod& padding() const
-         {
+      const BlockCipherModePaddingMethod& padding() const {
          BOTAN_ASSERT_NONNULL(m_padding);
          return *m_padding;
-         }
+      }
 
       size_t block_size() const { return m_block_size; }
 
@@ -65,21 +63,19 @@ class CBC_Mode : public Cipher_Mode
       std::unique_ptr<BlockCipherModePaddingMethod> m_padding;
       secure_vector<uint8_t> m_state;
       size_t m_block_size;
-   };
+};
 
 /**
 * CBC Encryption
 */
-class CBC_Encryption : public CBC_Mode
-   {
+class CBC_Encryption : public CBC_Mode {
    public:
       /**
       * @param cipher block cipher to use
       * @param padding padding method to use
       */
-      CBC_Encryption(std::unique_ptr<BlockCipher> cipher,
-                     std::unique_ptr<BlockCipherModePaddingMethod> padding) :
-         CBC_Mode(std::move(cipher), std::move(padding)) {}
+      CBC_Encryption(std::unique_ptr<BlockCipher> cipher, std::unique_ptr<BlockCipherModePaddingMethod> padding) :
+            CBC_Mode(std::move(cipher), std::move(padding)) {}
 
       size_t output_length(size_t input_length) const override;
 
@@ -88,20 +84,17 @@ class CBC_Encryption : public CBC_Mode
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
 /**
 * CBC Encryption with ciphertext stealing (CBC-CS3 variant)
 */
-class CTS_Encryption final : public CBC_Encryption
-   {
+class CTS_Encryption final : public CBC_Encryption {
    public:
       /**
       * @param cipher block cipher to use
       */
-      explicit CTS_Encryption(std::unique_ptr<BlockCipher> cipher) :
-         CBC_Encryption(std::move(cipher), nullptr)
-         {}
+      explicit CTS_Encryption(std::unique_ptr<BlockCipher> cipher) : CBC_Encryption(std::move(cipher), nullptr) {}
 
       size_t output_length(size_t input_length) const override;
 
@@ -111,23 +104,19 @@ class CTS_Encryption final : public CBC_Encryption
 
    private:
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
 /**
 * CBC Decryption
 */
-class CBC_Decryption : public CBC_Mode
-   {
+class CBC_Decryption : public CBC_Mode {
    public:
       /**
       * @param cipher block cipher to use
       * @param padding padding method to use
       */
-      CBC_Decryption(std::unique_ptr<BlockCipher> cipher,
-                     std::unique_ptr<BlockCipherModePaddingMethod> padding) :
-         CBC_Mode(std::move(cipher), std::move(padding)),
-         m_tempbuf(ideal_granularity())
-         {}
+      CBC_Decryption(std::unique_ptr<BlockCipher> cipher, std::unique_ptr<BlockCipherModePaddingMethod> padding) :
+            CBC_Mode(std::move(cipher), std::move(padding)), m_tempbuf(ideal_granularity()) {}
 
       size_t output_length(size_t input_length) const override;
 
@@ -140,20 +129,17 @@ class CBC_Decryption : public CBC_Mode
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       secure_vector<uint8_t> m_tempbuf;
-   };
+};
 
 /**
 * CBC Decryption with ciphertext stealing (CBC-CS3 variant)
 */
-class CTS_Decryption final : public CBC_Decryption
-   {
+class CTS_Decryption final : public CBC_Decryption {
    public:
       /**
       * @param cipher block cipher to use
       */
-      explicit CTS_Decryption(std::unique_ptr<BlockCipher> cipher) :
-         CBC_Decryption(std::move(cipher), nullptr)
-         {}
+      explicit CTS_Decryption(std::unique_ptr<BlockCipher> cipher) : CBC_Decryption(std::move(cipher), nullptr) {}
 
       size_t minimum_final_size() const override;
 
@@ -161,8 +147,8 @@ class CTS_Decryption final : public CBC_Decryption
 
    private:
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -25,8 +25,7 @@ namespace Botan {
 * cannot be used for verification until its domain parameters are set
 * by calling the corresponding member function.
 */
-class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
-   {
+class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
    public:
       EC_PublicKey(const EC_PublicKey& other) = default;
       EC_PublicKey& operator=(const EC_PublicKey& other) = default;
@@ -44,8 +43,7 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
 
       std::vector<uint8_t> public_key_bits() const override;
 
-      bool check_key(RandomNumberGenerator& rng,
-                     bool strong) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       /**
       * Get the domain parameters of this key.
@@ -71,22 +69,19 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
       * Return the DER encoding of this keys domain in whatever format
       * is preset for this particular key
       */
-      std::vector<uint8_t> DER_domain() const
-         { return domain().DER_encode(domain_format()); }
+      std::vector<uint8_t> DER_domain() const { return domain().DER_encode(domain_format()); }
 
       /**
       * Get the domain parameter encoding to be used when encoding this key.
       * @result the encoding to use
       */
-      EC_Group_Encoding domain_format() const
-         { return m_domain_encoding; }
+      EC_Group_Encoding domain_format() const { return m_domain_encoding; }
 
       /**
       * Get the point encoding method to be used when encoding this key.
       * @result the encoding to use
       */
-      EC_Point_Format point_encoding() const
-         { return m_point_encoding; }
+      EC_Point_Format point_encoding() const { return m_point_encoding; }
 
       size_t key_length() const override;
       size_t estimated_strength() const override;
@@ -99,25 +94,22 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
       * @param dom_par EC domain parameters
       * @param pub_point public point on the curve
       */
-      EC_PublicKey(const EC_Group& dom_par,
-                   const EC_Point& pub_point);
+      EC_PublicKey(const EC_Group& dom_par, const EC_Point& pub_point);
 
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits DER encoded public key bits
       */
-      EC_PublicKey(const AlgorithmIdentifier& alg_id,
-                   std::span<const uint8_t> key_bits);
+      EC_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
-      EC_PublicKey() : m_domain_params{}, m_public_key{}, m_domain_encoding(EC_Group_Encoding::Explicit)
-      {}
+      EC_PublicKey() : m_domain_params{}, m_public_key{}, m_domain_encoding(EC_Group_Encoding::Explicit) {}
 
       EC_Group m_domain_params;
       EC_Point m_public_key;
       EC_Group_Encoding m_domain_encoding;
       EC_Point_Format m_point_encoding = EC_Point_Format::Uncompressed;
-   };
+};
 
 /**
 * This abstract class represents ECC private keys
@@ -126,9 +118,8 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
-class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
-                                public virtual Private_Key
-   {
+class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
+                                             public virtual Private_Key {
    public:
       secure_vector<uint8_t> private_key_bits() const override final;
 
@@ -158,7 +149,7 @@ class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
       EC_PrivateKey(RandomNumberGenerator& rng,
                     const EC_Group& domain,
                     const BigInt& x,
-                    bool with_modular_inverse=false);
+                    bool with_modular_inverse = false);
 
       /*
       * Creates a new private key object from the
@@ -171,15 +162,15 @@ class BOTAN_PUBLIC_API(2,0) EC_PrivateKey : public virtual EC_PublicKey,
       */
       EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                     std::span<const uint8_t> key_bits,
-                    bool with_modular_inverse=false);
+                    bool with_modular_inverse = false);
 
       EC_PrivateKey() = default;
 
       BigInt m_private_key;
-   };
+};
 
 BOTAN_DIAGNOSTIC_POP
 
-}
+}  // namespace Botan
 
 #endif

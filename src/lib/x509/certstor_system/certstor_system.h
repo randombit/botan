@@ -11,23 +11,20 @@
 
 namespace Botan {
 
-class BOTAN_PUBLIC_API(2,11) System_Certificate_Store final : public Certificate_Store
-   {
+class BOTAN_PUBLIC_API(2, 11) System_Certificate_Store final : public Certificate_Store {
    public:
-
       System_Certificate_Store();
 
-      std::optional<X509_Certificate>
-         find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const override;
+      std::optional<X509_Certificate> find_cert(const X509_DN& subject_dn,
+                                                const std::vector<uint8_t>& key_id) const override;
 
-      std::vector<X509_Certificate>
-         find_all_certs(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const override;
+      std::vector<X509_Certificate> find_all_certs(const X509_DN& subject_dn,
+                                                   const std::vector<uint8_t>& key_id) const override;
 
-      std::optional<X509_Certificate>
-         find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
-      std::optional<X509_Certificate>
-         find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
+         const std::vector<uint8_t>& subject_hash) const override;
 
       std::optional<X509_CRL> find_crl_for(const X509_Certificate& subject) const override;
 
@@ -35,8 +32,8 @@ class BOTAN_PUBLIC_API(2,11) System_Certificate_Store final : public Certificate
 
    private:
       std::shared_ptr<Certificate_Store> m_system_store;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -10,8 +10,8 @@
 
 #include <botan/hash.h>
 #include <botan/sym_algo.h>
-#include <string>
 #include <memory>
+#include <string>
 
 namespace Botan {
 
@@ -20,8 +20,8 @@ class BLAKE2bMAC;
 /**
 * BLAKE2B
 */
-class BLAKE2b final : public HashFunction, public SymmetricAlgorithm
-   {
+class BLAKE2b final : public HashFunction,
+                      public SymmetricAlgorithm {
    public:
       /**
       * @param output_bits the output size of BLAKE2b in bits
@@ -29,7 +29,9 @@ class BLAKE2b final : public HashFunction, public SymmetricAlgorithm
       explicit BLAKE2b(size_t output_bits = 512);
 
       size_t hash_block_size() const override { return 128; }
+
       size_t output_length() const override { return m_output_bits / 8; }
+
       size_t key_size() const { return m_key_size; }
 
       Key_Length_Specification key_spec() const override;
@@ -64,8 +66,8 @@ class BLAKE2b final : public HashFunction, public SymmetricAlgorithm
 
       size_t m_key_size;
       secure_vector<uint8_t> m_padded_key_buffer;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

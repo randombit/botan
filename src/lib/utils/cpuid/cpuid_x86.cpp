@@ -12,15 +12,15 @@
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-#include <immintrin.h>
+   #include <immintrin.h>
 
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-  #include <intrin.h>
-#elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
-  #include <ia32intrin.h>
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-  #include <cpuid.h>
-#endif
+   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+      #include <intrin.h>
+   #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
+      #include <ia32intrin.h>
+   #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+      #include <cpuid.h>
+   #endif
 
 #endif
 
@@ -30,56 +30,45 @@ namespace Botan {
 
 namespace {
 
-void invoke_cpuid(uint32_t type, uint32_t out[4])
-   {
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC) || defined(BOTAN_BUILD_COMPILER_IS_INTEL)
+void invoke_cpuid(uint32_t type, uint32_t out[4]) {
+   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC) || defined(BOTAN_BUILD_COMPILER_IS_INTEL)
    __cpuid((int*)out, type);
 
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-   __get_cpuid(type, out, out+1, out+2, out+3);
+   #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+   __get_cpuid(type, out, out + 1, out + 2, out + 3);
 
-#elif defined(BOTAN_USE_GCC_INLINE_ASM)
-   asm("cpuid\n\t"
-       : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3])
-       : "0" (type));
+   #elif defined(BOTAN_USE_GCC_INLINE_ASM)
+   asm("cpuid\n\t" : "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) : "0"(type));
 
-#else
-   #warning "No way of calling x86 cpuid instruction for this compiler"
+   #else
+      #warning "No way of calling x86 cpuid instruction for this compiler"
    clear_mem(out, 4);
-#endif
-   }
-
-BOTAN_FUNC_ISA("xsave")
-uint64_t xgetbv()
-   {
-   return _xgetbv(0);
-   }
-
-void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4])
-   {
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-   __cpuidex((int*)out, type, level);
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-   __cpuid_count(type, level, out[0], out[1], out[2], out[3]);
-
-#elif defined(BOTAN_USE_GCC_INLINE_ASM)
-   asm("cpuid\n\t"
-       : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3])     \
-       : "0" (type), "2" (level));
-
-#else
-   #warning "No way of calling x86 cpuid instruction for this compiler"
-   clear_mem(out, 4);
-#endif
-   }
-
+   #endif
 }
 
-uint32_t CPUID::CPUID_Data::detect_cpu_features()
-   {
+BOTAN_FUNC_ISA("xsave") uint64_t xgetbv() { return _xgetbv(0); }
+
+void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4]) {
+   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   __cpuidex((int*)out, type, level);
+
+   #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+   __cpuid_count(type, level, out[0], out[1], out[2], out[3]);
+
+   #elif defined(BOTAN_USE_GCC_INLINE_ASM)
+   asm("cpuid\n\t" : "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) : "0"(type), "2"(level));
+
+   #else
+      #warning "No way of calling x86 cpuid instruction for this compiler"
+   clear_mem(out, 4);
+   #endif
+}
+
+}  // namespace
+
+uint32_t CPUID::CPUID_Data::detect_cpu_features() {
    uint32_t features_detected = 0;
-   uint32_t cpuid[4] = { 0 };
+   uint32_t cpuid[4] = {0};
    bool has_os_ymm_support = false;
    bool has_os_zmm_support = false;
 
@@ -88,8 +77,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
 
    const uint32_t max_supported_sublevel = cpuid[0];
 
-   if(max_supported_sublevel >= 1)
-      {
+   if(max_supported_sublevel >= 1) {
       // CPUID 1: feature bits
       invoke_cpuid(1, cpuid);
       const uint64_t flags0 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[3];
@@ -118,20 +106,16 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
       if(flags0 & x86_CPUID_1_bits::RDRAND)
          features_detected |= CPUID::CPUID_RDRAND_BIT;
 
-      if((flags0 & x86_CPUID_1_bits::AVX) &&
-         (flags0 & x86_CPUID_1_bits::OSXSAVE))
-         {
+      if((flags0 & x86_CPUID_1_bits::AVX) && (flags0 & x86_CPUID_1_bits::OSXSAVE)) {
          const uint64_t xcr_flags = xgetbv();
-         if((xcr_flags & 0x6) == 0x6)
-            {
+         if((xcr_flags & 0x6) == 0x6) {
             has_os_ymm_support = true;
             has_os_zmm_support = (xcr_flags & 0xE0) == 0xE0;
-            }
          }
       }
+   }
 
-   if(max_supported_sublevel >= 7)
-      {
+   if(max_supported_sublevel >= 7) {
       clear_mem(cpuid, 4);
       invoke_cpuid_sublevel(7, 0, cpuid);
 
@@ -169,22 +153,15 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
       We only set the BMI bit if both BMI1 and BMI2 are supported, since
       typically we want to use both extensions in the same code.
       */
-      if((flags7 & x86_CPUID_7_bits::BMI1) && (flags7 & x86_CPUID_7_bits::BMI2))
-         {
+      if((flags7 & x86_CPUID_7_bits::BMI1) && (flags7 & x86_CPUID_7_bits::BMI2)) {
          features_detected |= CPUID::CPUID_BMI_BIT;
-         }
+      }
 
-      if((flags7 & x86_CPUID_7_bits::AVX512_F) && has_os_zmm_support)
-         {
-         const uint64_t AVX512_PROFILE_FLAGS =
-            x86_CPUID_7_bits::AVX512_F |
-            x86_CPUID_7_bits::AVX512_DQ |
-            x86_CPUID_7_bits::AVX512_IFMA |
-            x86_CPUID_7_bits::AVX512_BW |
-            x86_CPUID_7_bits::AVX512_VL |
-            x86_CPUID_7_bits::AVX512_VBMI |
-            x86_CPUID_7_bits::AVX512_VBMI2 |
-            x86_CPUID_7_bits::AVX512_VBITALG;
+      if((flags7 & x86_CPUID_7_bits::AVX512_F) && has_os_zmm_support) {
+         const uint64_t AVX512_PROFILE_FLAGS = x86_CPUID_7_bits::AVX512_F | x86_CPUID_7_bits::AVX512_DQ |
+                                               x86_CPUID_7_bits::AVX512_IFMA | x86_CPUID_7_bits::AVX512_BW |
+                                               x86_CPUID_7_bits::AVX512_VL | x86_CPUID_7_bits::AVX512_VBMI |
+                                               x86_CPUID_7_bits::AVX512_VBMI2 | x86_CPUID_7_bits::AVX512_VBITALG;
 
          /*
          We only enable AVX512 support if all of the above flags are available
@@ -202,33 +179,31 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
          above flags and having AVX512 penalties, but maybe you should not have
          bought such a processor.
          */
-         if((flags7 & AVX512_PROFILE_FLAGS) == AVX512_PROFILE_FLAGS)
-            {
+         if((flags7 & AVX512_PROFILE_FLAGS) == AVX512_PROFILE_FLAGS) {
             features_detected |= CPUID::CPUID_AVX512_BIT;
 
             if(flags7 & x86_CPUID_7_bits::AVX512_VAES)
                features_detected |= CPUID::CPUID_AVX512_AES_BIT;
             if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL)
                features_detected |= CPUID::CPUID_AVX512_CLMUL_BIT;
-            }
          }
       }
+   }
 
    /*
    * If we don't have access to CPUID, we can still safely assume that
    * any x86-64 processor has SSE2 and RDTSC
    */
-#if defined(BOTAN_TARGET_ARCH_IS_X86_64)
-   if(features_detected == 0)
-      {
+   #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
+   if(features_detected == 0) {
       features_detected |= CPUID::CPUID_SSE2_BIT;
       features_detected |= CPUID::CPUID_RDTSC_BIT;
-      }
-#endif
+   }
+   #endif
 
    return features_detected;
-   }
+}
 
 #endif
 
-}
+}  // namespace Botan

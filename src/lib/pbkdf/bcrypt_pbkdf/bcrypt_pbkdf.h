@@ -17,8 +17,7 @@ namespace Botan {
 /**
 * Bcrypt-PBKDF key derivation function
 */
-class BOTAN_PUBLIC_API(2,11) Bcrypt_PBKDF final : public PasswordHash
-   {
+class BOTAN_PUBLIC_API(2, 11) Bcrypt_PBKDF final : public PasswordHash {
    public:
       Bcrypt_PBKDF(size_t iterations);
 
@@ -28,9 +27,12 @@ class BOTAN_PUBLIC_API(2,11) Bcrypt_PBKDF final : public PasswordHash
       /**
       * Derive a new key under the current Bcrypt-PBKDF parameter set
       */
-      void derive_key(uint8_t out[], size_t out_len,
-                      const char* password, size_t password_len,
-                      const uint8_t salt[], size_t salt_len) const override;
+      void derive_key(uint8_t out[],
+                      size_t out_len,
+                      const char* password,
+                      size_t password_len,
+                      const uint8_t salt[],
+                      size_t salt_len) const override;
 
       std::string to_string() const override;
 
@@ -44,10 +46,9 @@ class BOTAN_PUBLIC_API(2,11) Bcrypt_PBKDF final : public PasswordHash
 
    private:
       size_t m_iterations;
-   };
+};
 
-class BOTAN_PUBLIC_API(2,11) Bcrypt_PBKDF_Family final : public PasswordHashFamily
-   {
+class BOTAN_PUBLIC_API(2, 11) Bcrypt_PBKDF_Family final : public PasswordHashFamily {
    public:
       Bcrypt_PBKDF_Family() {}
 
@@ -62,26 +63,26 @@ class BOTAN_PUBLIC_API(2,11) Bcrypt_PBKDF_Family final : public PasswordHashFami
 
       std::unique_ptr<PasswordHash> from_iterations(size_t iter) const override;
 
-      std::unique_ptr<PasswordHash> from_params(
-         size_t i, size_t, size_t) const override;
-   };
+      std::unique_ptr<PasswordHash> from_params(size_t i, size_t, size_t) const override;
+};
 
 /**
 * Bcrypt PBKDF compatible with OpenBSD bcrypt_pbkdf
 */
 BOTAN_DEPRECATED("Use PasswordHashFamily+PasswordHash")
-inline void bcrypt_pbkdf(uint8_t output[], size_t output_len,
-                         const char* password, size_t password_len,
-                         const uint8_t salt[], size_t salt_len,
-                         size_t rounds)
-   {
+
+inline void bcrypt_pbkdf(uint8_t output[],
+                         size_t output_len,
+                         const char* password,
+                         size_t password_len,
+                         const uint8_t salt[],
+                         size_t salt_len,
+                         size_t rounds) {
    auto pwdhash_fam = PasswordHashFamily::create_or_throw("Bcrypt-PBKDF");
    auto pwdhash = pwdhash_fam->from_params(rounds);
-   pwdhash->derive_key(output, output_len,
-                       password, password_len,
-                       salt, salt_len);
-   }
-
+   pwdhash->derive_key(output, output_len, password, password_len, salt, salt_len);
 }
+
+}  // namespace Botan
 
 #endif

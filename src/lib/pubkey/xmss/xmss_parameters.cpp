@@ -13,69 +13,84 @@
 
 #include <botan/xmss_parameters.h>
 
-#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
-XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(std::string_view param_set)
-   {
-   if(param_set == "XMSS-SHA2_10_256")
-      { return XMSS_SHA2_10_256; }
-   if(param_set == "XMSS-SHA2_16_256")
-      { return XMSS_SHA2_16_256; }
-   if(param_set == "XMSS-SHA2_20_256")
-      { return XMSS_SHA2_20_256; }
-   if(param_set == "XMSS-SHA2_10_512")
-      { return XMSS_SHA2_10_512; }
-   if(param_set == "XMSS-SHA2_16_512")
-      { return XMSS_SHA2_16_512; }
-   if(param_set == "XMSS-SHA2_20_512")
-      { return XMSS_SHA2_20_512; }
-   if(param_set == "XMSS-SHAKE_10_256")
-      { return XMSS_SHAKE_10_256; }
-   if(param_set == "XMSS-SHAKE_16_256")
-      { return XMSS_SHAKE_16_256; }
-   if(param_set == "XMSS-SHAKE_20_256")
-      { return XMSS_SHAKE_20_256; }
-   if(param_set == "XMSS-SHAKE_10_512")
-      { return XMSS_SHAKE_10_512; }
-   if(param_set == "XMSS-SHAKE_16_512")
-      { return XMSS_SHAKE_16_512; }
-   if(param_set == "XMSS-SHAKE_20_512")
-      { return XMSS_SHAKE_20_512; }
-   if(param_set == "XMSS-SHA2_10_192")
-      { return XMSS_SHA2_10_192; }
-   if(param_set == "XMSS-SHA2_16_192")
-      { return XMSS_SHA2_16_192; }
-   if(param_set == "XMSS-SHA2_20_192")
-      { return XMSS_SHA2_20_192; }
-   if(param_set == "XMSS-SHAKE256_10_256")
-      { return XMSS_SHAKE256_10_256; }
-   if(param_set == "XMSS-SHAKE256_16_256")
-      { return XMSS_SHAKE256_16_256; }
-   if(param_set == "XMSS-SHAKE256_20_256")
-      { return XMSS_SHAKE256_20_256; }
-   if(param_set == "XMSS-SHAKE256_10_192")
-      { return XMSS_SHAKE256_10_192; }
-   if(param_set == "XMSS-SHAKE256_16_192")
-      { return XMSS_SHAKE256_16_192; }
-   if(param_set == "XMSS-SHAKE256_20_192")
-      { return XMSS_SHAKE256_20_192; }
+XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(std::string_view param_set) {
+   if(param_set == "XMSS-SHA2_10_256") {
+      return XMSS_SHA2_10_256;
+   }
+   if(param_set == "XMSS-SHA2_16_256") {
+      return XMSS_SHA2_16_256;
+   }
+   if(param_set == "XMSS-SHA2_20_256") {
+      return XMSS_SHA2_20_256;
+   }
+   if(param_set == "XMSS-SHA2_10_512") {
+      return XMSS_SHA2_10_512;
+   }
+   if(param_set == "XMSS-SHA2_16_512") {
+      return XMSS_SHA2_16_512;
+   }
+   if(param_set == "XMSS-SHA2_20_512") {
+      return XMSS_SHA2_20_512;
+   }
+   if(param_set == "XMSS-SHAKE_10_256") {
+      return XMSS_SHAKE_10_256;
+   }
+   if(param_set == "XMSS-SHAKE_16_256") {
+      return XMSS_SHAKE_16_256;
+   }
+   if(param_set == "XMSS-SHAKE_20_256") {
+      return XMSS_SHAKE_20_256;
+   }
+   if(param_set == "XMSS-SHAKE_10_512") {
+      return XMSS_SHAKE_10_512;
+   }
+   if(param_set == "XMSS-SHAKE_16_512") {
+      return XMSS_SHAKE_16_512;
+   }
+   if(param_set == "XMSS-SHAKE_20_512") {
+      return XMSS_SHAKE_20_512;
+   }
+   if(param_set == "XMSS-SHA2_10_192") {
+      return XMSS_SHA2_10_192;
+   }
+   if(param_set == "XMSS-SHA2_16_192") {
+      return XMSS_SHA2_16_192;
+   }
+   if(param_set == "XMSS-SHA2_20_192") {
+      return XMSS_SHA2_20_192;
+   }
+   if(param_set == "XMSS-SHAKE256_10_256") {
+      return XMSS_SHAKE256_10_256;
+   }
+   if(param_set == "XMSS-SHAKE256_16_256") {
+      return XMSS_SHAKE256_16_256;
+   }
+   if(param_set == "XMSS-SHAKE256_20_256") {
+      return XMSS_SHAKE256_20_256;
+   }
+   if(param_set == "XMSS-SHAKE256_10_192") {
+      return XMSS_SHAKE256_10_192;
+   }
+   if(param_set == "XMSS-SHAKE256_16_192") {
+      return XMSS_SHAKE256_16_192;
+   }
+   if(param_set == "XMSS-SHAKE256_20_192") {
+      return XMSS_SHAKE256_20_192;
+   }
 
    throw Lookup_Error(fmt("Unknown XMSS algorithm param '{}'", param_set));
-   }
+}
 
-XMSS_Parameters::XMSS_Parameters(std::string_view param_set)
-   : XMSS_Parameters(XMSS_Parameters::xmss_id_from_string(param_set))
-   {
-   }
+XMSS_Parameters::XMSS_Parameters(std::string_view param_set) :
+      XMSS_Parameters(XMSS_Parameters::xmss_id_from_string(param_set)) {}
 
-XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
-   : m_oid(oid)
-   {
-   switch(oid)
-      {
+XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid) : m_oid(oid) {
+   switch(oid) {
       case XMSS_SHA2_10_256:
          m_element_size = 32;
          m_hash_id_size = 32;
@@ -310,7 +325,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
 
       default:
          throw Not_Implemented("Algorithm id does not match any known XMSS algorithm id:" + std::to_string(oid));
-      }
    }
-
 }
+
+}  // namespace Botan

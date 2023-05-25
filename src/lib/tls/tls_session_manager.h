@@ -9,9 +9,9 @@
 #ifndef BOTAN_TLS_SESSION_MANAGER_H_
 #define BOTAN_TLS_SESSION_MANAGER_H_
 
-#include <botan/types.h>
-#include <botan/tls_session.h>
 #include <botan/mutex.h>
+#include <botan/tls_session.h>
+#include <botan/types.h>
 
 #if defined(BOTAN_HAS_TLS_13)
    #include <botan/tls_ticket_13.h>
@@ -19,8 +19,8 @@
 
 #include <chrono>
 #include <map>
-#include <variant>
 #include <utility>
+#include <variant>
 
 namespace Botan {
 class RandomNumberGenerator;
@@ -42,8 +42,7 @@ class Policy;
 * recursive mutex (via Session_Manager::mutex()). Derived classes may simply
 * reuse this for their own locking.
 */
-class BOTAN_PUBLIC_API(3, 0) Session_Manager
-   {
+class BOTAN_PUBLIC_API(3, 0) Session_Manager {
    public:
       Session_Manager(const std::shared_ptr<RandomNumberGenerator>& rng);
 
@@ -68,10 +67,9 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        * @return a Session_Handle containing either an ID or a ticket
        *         if the session was saved, otherwise std::nullopt
        */
-      virtual std::optional<Session_Handle> establish(
-         const Session& session,
-         const std::optional<Session_ID>& id = std::nullopt,
-         bool tls12_no_ticket = false);
+      virtual std::optional<Session_Handle> establish(const Session& session,
+                                                      const std::optional<Session_ID>& id = std::nullopt,
+                                                      bool tls12_no_ticket = false);
 
       /**
        * @brief Save a Session under a Session_Handle (TLS Client)
@@ -117,11 +115,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        *
        * @note if no PSK is chosen, the server will attempt a regular handshake.
        */
-      virtual std::optional<std::pair<Session, uint16_t>>
-            choose_from_offered_tickets(const std::vector<Ticket>& tickets,
-                                        std::string_view hash_function,
-                                        Callbacks& callbacks,
-                                        const Policy& policy);
+      virtual std::optional<std::pair<Session, uint16_t>> choose_from_offered_tickets(
+         const std::vector<Ticket>& tickets,
+         std::string_view hash_function,
+         Callbacks& callbacks,
+         const Policy& policy);
 #endif
 
       /**
@@ -147,9 +145,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        * @return           the obtained session or std::nullopt if no session
        *                   was found or the policy checks failed
        */
-      virtual std::optional<Session> retrieve(const Session_Handle& handle,
-                                              Callbacks& callbacks,
-                                              const Policy& policy);
+      virtual std::optional<Session> retrieve(const Session_Handle& handle, Callbacks& callbacks, const Policy& policy);
 
       /**
        * @brief Find all sessions that match a given server @p info
@@ -184,8 +180,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
        *                   such session exists or passed the policy validation
        */
       virtual std::vector<Session_with_Handle> find(const Server_Information& info,
-                                                                   Callbacks& callbacks,
-                                                                   const Policy& policy);
+                                                    Callbacks& callbacks,
+                                                    const Policy& policy);
 
       /**
        * Remove a specific session from the cache, if it exists.
@@ -279,8 +275,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager
 
    private:
       recursive_mutex_type m_mutex;
-   };
+};
 
-}
+}  // namespace Botan::TLS
 
 #endif

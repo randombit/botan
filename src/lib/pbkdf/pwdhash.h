@@ -8,11 +8,11 @@
 #define BOTAN_PWDHASH_H_
 
 #include <botan/types.h>
-#include <string>
-#include <memory>
-#include <vector>
 #include <chrono>
+#include <memory>
 #include <span>
+#include <string>
+#include <vector>
 
 namespace Botan {
 
@@ -22,8 +22,7 @@ namespace Botan {
 * Converts a password into a key using a salt and iterated hashing to
 * make brute force attacks harder.
 */
-class BOTAN_PUBLIC_API(2,8) PasswordHash
-   {
+class BOTAN_PUBLIC_API(2, 8) PasswordHash {
    public:
       virtual ~PasswordHash() = default;
 
@@ -79,14 +78,9 @@ class BOTAN_PUBLIC_API(2,8) PasswordHash
       * This function is const, but is not thread safe. Different threads should
       * either use unique objects, or serialize all access.
       */
-      void hash(std::span<uint8_t> out,
-                std::string_view password,
-                std::span<const uint8_t> salt)
-         {
-         this->derive_key(out.data(), out.size(),
-                          password.data(), password.size(),
-                          salt.data(), salt.size());
-         }
+      void hash(std::span<uint8_t> out, std::string_view password, std::span<const uint8_t> salt) {
+         this->derive_key(out.data(), out.size(), password.data(), password.size(), salt.data(), salt.size());
+      }
 
       /**
       * Hash a password into a bitstring
@@ -104,14 +98,18 @@ class BOTAN_PUBLIC_API(2,8) PasswordHash
                 std::string_view password,
                 std::span<const uint8_t> salt,
                 std::span<const uint8_t> associated_data,
-                std::span<const uint8_t> key)
-         {
-         this->derive_key(out.data(), out.size(),
-                          password.data(), password.size(),
-                          salt.data(), salt.size(),
-                          associated_data.data(), associated_data.size(),
-                          key.data(), key.size());
-         }
+                std::span<const uint8_t> key) {
+         this->derive_key(out.data(),
+                          out.size(),
+                          password.data(),
+                          password.size(),
+                          salt.data(),
+                          salt.size(),
+                          associated_data.data(),
+                          associated_data.size(),
+                          key.data(),
+                          key.size());
+      }
 
       /**
       * Derive a key from a password
@@ -126,9 +124,12 @@ class BOTAN_PUBLIC_API(2,8) PasswordHash
       * This function is const, but is not thread safe. Different threads should
       * either use unique objects, or serialize all access.
       */
-      virtual void derive_key(uint8_t out[], size_t out_len,
-                              const char* password, size_t password_len,
-                              const uint8_t salt[], size_t salt_len) const = 0;
+      virtual void derive_key(uint8_t out[],
+                              size_t out_len,
+                              const char* password,
+                              size_t password_len,
+                              const uint8_t salt[],
+                              size_t salt_len) const = 0;
 
       /**
       * Derive a key from a password plus additional data and/or a secret key
@@ -150,15 +151,19 @@ class BOTAN_PUBLIC_API(2,8) PasswordHash
       * This function is const, but is not thread safe. Different threads should
       * either use unique objects, or serialize all access.
       */
-      virtual void derive_key(uint8_t out[], size_t out_len,
-                              const char* password, size_t password_len,
-                              const uint8_t salt[], size_t salt_len,
-                              const uint8_t ad[], size_t ad_len,
-                              const uint8_t key[], size_t key_len) const;
-   };
+      virtual void derive_key(uint8_t out[],
+                              size_t out_len,
+                              const char* password,
+                              size_t password_len,
+                              const uint8_t salt[],
+                              size_t salt_len,
+                              const uint8_t ad[],
+                              size_t ad_len,
+                              const uint8_t key[],
+                              size_t key_len) const;
+};
 
-class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
-   {
+class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily {
    public:
       /**
       * Create an instance based on a name
@@ -167,17 +172,15 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       * @param provider provider implementation to choose
       * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<PasswordHashFamily> create(std::string_view algo_spec,
-                                                        std::string_view provider = "");
+      static std::unique_ptr<PasswordHashFamily> create(std::string_view algo_spec, std::string_view provider = "");
 
       /**
       * Create an instance based on a name, or throw if the
       * algo/provider combination cannot be found. If provider is
       * empty then best available is chosen.
       */
-      static std::unique_ptr<PasswordHashFamily>
-         create_or_throw(std::string_view algo_spec,
-                         std::string_view provider = "");
+      static std::unique_ptr<PasswordHashFamily> create_or_throw(std::string_view algo_spec,
+                                                                 std::string_view provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -203,10 +206,11 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       * limit at all.
       * @param tuning_msec how long to run the tuning loop
       */
-      virtual std::unique_ptr<PasswordHash> tune(size_t output_length,
-                                                 std::chrono::milliseconds msec,
-                                                 size_t max_memory_usage_mb = 0,
-                                                 std::chrono::milliseconds tuning_msec = std::chrono::milliseconds(10)) const = 0;
+      virtual std::unique_ptr<PasswordHash> tune(
+         size_t output_length,
+         std::chrono::milliseconds msec,
+         size_t max_memory_usage_mb = 0,
+         std::chrono::milliseconds tuning_msec = std::chrono::milliseconds(10)) const = 0;
 
       /**
       * Return some default parameter set for this PBKDF that should be good
@@ -232,12 +236,9 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       *
       * All unneeded parameters should be set to 0 or left blank.
       */
-      virtual std::unique_ptr<PasswordHash> from_params(
-         size_t i1,
-         size_t i2 = 0,
-         size_t i3 = 0) const = 0;
-   };
+      virtual std::unique_ptr<PasswordHash> from_params(size_t i1, size_t i2 = 0, size_t i3 = 0) const = 0;
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -20,13 +20,12 @@
 #include <botan/internal/shake.h>
 
 #include <array>
-#include <vector>
 #include <span>
+#include <vector>
 
 namespace Botan::Dilithium {
 
-class Polynomial
-   {
+class Polynomial {
    public:
       // public member is on purpose
       std::array<int32_t, Botan::DilithiumModeConstants::N> m_coeffs;
@@ -35,27 +34,23 @@ class Polynomial
       * Adds two polynomials element-wise. Does not perform a reduction after the addition.
       * Therefore this operation might cause an integer overflow.
       */
-      Polynomial& operator+=(const Polynomial& other)
-         {
-         for(size_t i = 0; i < this->m_coeffs.size(); ++i)
-            {
+      Polynomial& operator+=(const Polynomial& other) {
+         for(size_t i = 0; i < this->m_coeffs.size(); ++i) {
             this->m_coeffs[i] = this->m_coeffs[i] + other.m_coeffs[i];
-            }
-         return *this;
          }
+         return *this;
+      }
 
       /**
       * Subtracts two polynomials element-wise. Does not perform a reduction after the subtraction.
       * Therefore this operation might cause an integer underflow.
       */
-      Polynomial& operator-=(const Polynomial& other)
-         {
-         for(size_t i = 0; i < this->m_coeffs.size(); ++i)
-            {
+      Polynomial& operator-=(const Polynomial& other) {
+         for(size_t i = 0; i < this->m_coeffs.size(); ++i) {
             this->m_coeffs[i] = this->m_coeffs[i] - other.m_coeffs[i];
-            }
-         return *this;
          }
+         return *this;
+      }
 
       /***************************************************
       * Name:        rej_uniform
@@ -72,24 +67,20 @@ class Polynomial
       * Returns number of sampled coefficients. Can be smaller than len if not enough
       * random bytes were given.
       **************************************************/
-      static size_t rej_uniform(Polynomial& p, size_t position, size_t len, const uint8_t* buf,
-                                size_t buflen)
-         {
+      static size_t rej_uniform(Polynomial& p, size_t position, size_t len, const uint8_t* buf, size_t buflen) {
          size_t ctr = 0, pos = 0;
-         while(ctr < len && pos + 3 <= buflen)
-            {
+         while(ctr < len && pos + 3 <= buflen) {
             uint32_t t = buf[pos++];
             t |= static_cast<uint32_t>(buf[pos++]) << 8;
             t |= static_cast<uint32_t>(buf[pos++]) << 16;
             t &= 0x7FFFFF;
 
-            if(t < DilithiumModeConstants::Q)
-               {
+            if(t < DilithiumModeConstants::Q) {
                p.m_coeffs[position + ctr++] = static_cast<int32_t>(t);
-               }
             }
-         return ctr;
          }
+         return ctr;
+      }
 
       /*************************************************
       * Name:        rej_eta
@@ -107,48 +98,40 @@ class Polynomial
       * Returns number of sampled coefficients. Can be smaller than len if not enough
       * random bytes were given.
       **************************************************/
-      static size_t rej_eta(Polynomial& a, size_t offset,
-                            size_t len, const secure_vector<uint8_t>& buf,
-                            size_t buflen, const DilithiumModeConstants& mode)
-         {
+      static size_t rej_eta(Polynomial& a,
+                            size_t offset,
+                            size_t len,
+                            const secure_vector<uint8_t>& buf,
+                            size_t buflen,
+                            const DilithiumModeConstants& mode) {
          size_t ctr = 0, pos = 0;
-         while(ctr < len && pos < buflen)
-            {
+         while(ctr < len && pos < buflen) {
             uint32_t t0 = buf[pos] & 0x0F;
             uint32_t t1 = buf[pos++] >> 4;
 
-            switch(mode.eta())
-               {
-               case DilithiumEta::Eta2:
-                  {
-                  if(t0 < 15)
-                     {
+            switch(mode.eta()) {
+               case DilithiumEta::Eta2: {
+                  if(t0 < 15) {
                      t0 = t0 - (205 * t0 >> 10) * 5;
                      a.m_coeffs[offset + ctr++] = 2 - t0;
-                     }
-                  if(t1 < 15 && ctr < len)
-                     {
+                  }
+                  if(t1 < 15 && ctr < len) {
                      t1 = t1 - (205 * t1 >> 10) * 5;
                      a.m_coeffs[offset + ctr++] = 2 - t1;
-                     }
                   }
-               break;
-               case DilithiumEta::Eta4:
-                  {
-                  if(t0 < 9)
-                     {
+               } break;
+               case DilithiumEta::Eta4: {
+                  if(t0 < 9) {
                      a.m_coeffs[offset + ctr++] = 4 - t0;
-                     }
-                  if(t1 < 9 && ctr < len)
-                     {
-                     a.m_coeffs[offset + ctr++] = 4 - t1;
-                     }
                   }
-               break;
-               }
+                  if(t1 < 9 && ctr < len) {
+                     a.m_coeffs[offset + ctr++] = 4 - t1;
+                  }
+               } break;
             }
-         return ctr;
          }
+         return ctr;
+      }
 
       /*************************************************
       * Name:        fill_poly_uniform_eta
@@ -162,9 +145,10 @@ class Polynomial
       *              - uint16_t nonce: 2-byte nonce
       *              - const DilithiumModeConstants& mode: Mode dependent values.
       **************************************************/
-      static void fill_poly_uniform_eta(Polynomial& a, const secure_vector<uint8_t>& seed,
-                                        uint16_t nonce, const DilithiumModeConstants& mode)
-         {
+      static void fill_poly_uniform_eta(Polynomial& a,
+                                        const secure_vector<uint8_t>& seed,
+                                        uint16_t nonce,
+                                        const DilithiumModeConstants& mode) {
          BOTAN_ASSERT_NOMSG(seed.size() == DilithiumModeConstants::CRHBYTES);
 
          auto xof = mode.XOF_256(seed, nonce);
@@ -173,12 +157,12 @@ class Polynomial
          xof->write_keystream(buf.data(), buf.size());
          size_t ctr = Polynomial::rej_eta(a, 0, DilithiumModeConstants::N, buf, buf.size(), mode);
 
-         while(ctr < DilithiumModeConstants::N)
-            {
+         while(ctr < DilithiumModeConstants::N) {
             xof->write_keystream(buf.data(), mode.stream256_blockbytes());
             ctr += Polynomial::rej_eta(a, ctr, DilithiumModeConstants::N - ctr, buf, mode.stream256_blockbytes(), mode);
-            }
          }
+      }
+
       /*************************************************
       * Name:        power2round
       *
@@ -191,12 +175,11 @@ class Polynomial
       *
       * Returns a1.
       **************************************************/
-      static int32_t power2round(int32_t& a0, int32_t a)
-         {
+      static int32_t power2round(int32_t& a0, int32_t a) {
          int32_t a1 = (a + (1 << (DilithiumModeConstants::D - 1)) - 1) >> DilithiumModeConstants::D;
          a0 = a - (a1 << DilithiumModeConstants::D);
          return a1;
-         }
+      }
 
       /*************************************************
       * Name:        fill_polys_power2round
@@ -210,13 +193,11 @@ class Polynomial
       *              - Polynomial& a0: pointer to output polynomial with coefficients c0
       *              - const Polynomial& a: pointer to input polynomial
       **************************************************/
-      static void fill_polys_power2round(Polynomial& a1, Polynomial& a0, const Polynomial& a)
-         {
-         for(size_t i = 0; i < DilithiumModeConstants::N; ++i)
-            {
+      static void fill_polys_power2round(Polynomial& a1, Polynomial& a0, const Polynomial& a) {
+         for(size_t i = 0; i < DilithiumModeConstants::N; ++i) {
             a1.m_coeffs[i] = Polynomial::power2round(a0.m_coeffs[i], a.m_coeffs[i]);
-            }
          }
+      }
 
       /*************************************************
       * Name:        challenge
@@ -229,8 +210,7 @@ class Polynomial
       *              - const uint8_t mu[]: byte array containing seed of length SEEDBYTES
       *           - const DilithiumModeConstants& mode: reference to dilihtium mode values
       **************************************************/
-      static Polynomial poly_challenge(const uint8_t* seed, const DilithiumModeConstants& mode)
-         {
+      static Polynomial poly_challenge(const uint8_t* seed, const DilithiumModeConstants& mode) {
          Polynomial c;
 
          SHAKE_256 shake256_hasher(DilithiumModeConstants::SHAKE256_RATE * 8);
@@ -238,31 +218,26 @@ class Polynomial
          auto buf = shake256_hasher.final();
 
          uint64_t signs = 0;
-         for(size_t i = 0; i < 8; ++i)
-            {
+         for(size_t i = 0; i < 8; ++i) {
             signs |= static_cast<uint64_t>(buf[i]) << 8 * i;
-            }
+         }
          size_t pos = 8;
 
-         for(size_t i = 0; i < DilithiumModeConstants::N; ++i)
-            {
+         for(size_t i = 0; i < DilithiumModeConstants::N; ++i) {
             c.m_coeffs[i] = 0;
-            }
-         for(size_t i = DilithiumModeConstants::N - mode.tau(); i < DilithiumModeConstants::N; ++i)
-            {
+         }
+         for(size_t i = DilithiumModeConstants::N - mode.tau(); i < DilithiumModeConstants::N; ++i) {
             size_t b;
-            do
-               {
+            do {
                b = buf[pos++];
-               }
-            while(b > i);
+            } while(b > i);
 
             c.m_coeffs[i] = c.m_coeffs[b];
             c.m_coeffs[b] = 1 - 2 * (signs & 1);
             signs >>= 1;
-            }
-         return c;
          }
+         return c;
+      }
 
       /*************************************************
       * Name:        poly_chknorm
@@ -275,29 +250,25 @@ class Polynomial
       *
       * Returns false if norm is strictly smaller than B <= (Q-1)/8 and true otherwise.
       **************************************************/
-      static bool poly_chknorm(const Polynomial& a, size_t B)
-         {
-         if(B > (DilithiumModeConstants::Q - 1) / 8)
-            {
+      static bool poly_chknorm(const Polynomial& a, size_t B) {
+         if(B > (DilithiumModeConstants::Q - 1) / 8) {
             return true;
-            }
+         }
 
          /* It is ok to leak which coefficient violates the bound since
          the probability for each coefficient is independent of secret
          data but we must not leak the sign of the centralized representative. */
-         for(const auto& coeff : a.m_coeffs)
-            {
+         for(const auto& coeff : a.m_coeffs) {
             /* Absolute value */
             size_t t = coeff >> 31;
             t = coeff - (t & 2 * coeff);
 
-            if(t >= B)
-               {
+            if(t >= B) {
                return true;
-               }
             }
-         return false;
          }
+         return false;
+      }
 
       /*************************************************
       * Name:        make_hint
@@ -312,16 +283,14 @@ class Polynomial
       *
       * Returns 1 if overflow.
       **************************************************/
-      static int32_t make_hint(size_t a0, size_t a1, const DilithiumModeConstants& mode)
-         {
+      static int32_t make_hint(size_t a0, size_t a1, const DilithiumModeConstants& mode) {
          const auto gamma2 = mode.gamma2();
          const auto Q_gamma2 = DilithiumModeConstants::Q - gamma2;
-         if(a0 <= gamma2 || a0 > Q_gamma2 || (a0 == Q_gamma2 && a1 == 0))
-            {
+         if(a0 <= gamma2 || a0 > Q_gamma2 || (a0 == Q_gamma2 && a1 == 0)) {
             return 0;
-            }
-         return 1;
          }
+         return 1;
+      }
 
       /*************************************************
       * Name:        generate_hint_polynomial
@@ -337,19 +306,19 @@ class Polynomial
       *
       * Returns number of 1 bits.
       **************************************************/
-      static size_t generate_hint_polynomial(Polynomial& h, const Polynomial& a0,
-                                             const Polynomial& a1, const DilithiumModeConstants& mode)
-         {
+      static size_t generate_hint_polynomial(Polynomial& h,
+                                             const Polynomial& a0,
+                                             const Polynomial& a1,
+                                             const DilithiumModeConstants& mode) {
          size_t s = 0;
 
-         for(size_t i = 0; i < DilithiumModeConstants::N; ++i)
-            {
+         for(size_t i = 0; i < DilithiumModeConstants::N; ++i) {
             h.m_coeffs[i] = Polynomial::make_hint(a0.m_coeffs[i], a1.m_coeffs[i], mode);
             s += h.m_coeffs[i];
-            }
+         }
 
          return s;
-         }
+      }
 
       /*************************************************
       * Name:        decompose
@@ -366,25 +335,21 @@ class Polynomial
       *
       * Returns a1.
       **************************************************/
-      static int32_t decompose(int32_t* a0, int32_t a, const DilithiumModeConstants& mode)
-         {
+      static int32_t decompose(int32_t* a0, int32_t a, const DilithiumModeConstants& mode) {
          int32_t a1 = (a + 127) >> 7;
-         if(mode.gamma2() == (DilithiumModeConstants::Q - 1) / 32)
-            {
+         if(mode.gamma2() == (DilithiumModeConstants::Q - 1) / 32) {
             a1 = (a1 * 1025 + (1 << 21)) >> 22;
             a1 &= 15;
-            }
-         else
-            {
+         } else {
             BOTAN_ASSERT_NOMSG(mode.gamma2() == (DilithiumModeConstants::Q - 1) / 88);
             a1 = (a1 * 11275 + (1 << 23)) >> 24;
             a1 ^= ((43 - a1) >> 31) & a1;
-            }
+         }
 
          *a0 = a - a1 * 2 * static_cast<int32_t>(mode.gamma2());
          *a0 -= (((DilithiumModeConstants::Q - 1) / 2 - *a0) >> 31) & DilithiumModeConstants::Q;
          return a1;
-         }
+      }
 
       /*************************************************
       * Name:        use_hint
@@ -397,32 +362,28 @@ class Polynomial
       *
       * Returns corrected high bits.
       **************************************************/
-      static int32_t use_hint(int32_t a, size_t hint, const DilithiumModeConstants& mode)
-         {
+      static int32_t use_hint(int32_t a, size_t hint, const DilithiumModeConstants& mode) {
          int32_t a0;
 
          int32_t a1 = Polynomial::decompose(&a0, a, mode);
-         if(hint == 0)
-            {
+         if(hint == 0) {
             return a1;
-            }
+         }
 
-
-         if(mode.gamma2() == ((DilithiumModeConstants::Q - 1) / 32))
-            {
-            if(a0 > 0)
-               { return (a1 + 1) & 15; }
-            else
-               { return (a1 - 1) & 15; }
+         if(mode.gamma2() == ((DilithiumModeConstants::Q - 1) / 32)) {
+            if(a0 > 0) {
+               return (a1 + 1) & 15;
+            } else {
+               return (a1 - 1) & 15;
             }
-         else
-            {
-            if(a0 > 0)
-               { return (a1 == 43) ? 0 : a1 + 1; }
-            else
-               { return (a1 == 0) ? 43 : a1 - 1; }
+         } else {
+            if(a0 > 0) {
+               return (a1 == 43) ? 0 : a1 + 1;
+            } else {
+               return (a1 == 0) ? 43 : a1 - 1;
             }
          }
+      }
 
       /*************************************************
       * Name:        poly_use_hint
@@ -435,14 +396,14 @@ class Polynomial
       *           - const DilithiumModeConstants& mode: reference to dilihtium mode values
       *
       **************************************************/
-      static void poly_use_hint(Polynomial& b, const Polynomial& a, const Polynomial& h,
-                                const DilithiumModeConstants& mode)
-         {
-         for(size_t i = 0; i < DilithiumModeConstants::N; ++i)
-            {
+      static void poly_use_hint(Polynomial& b,
+                                const Polynomial& a,
+                                const Polynomial& h,
+                                const DilithiumModeConstants& mode) {
+         for(size_t i = 0; i < DilithiumModeConstants::N; ++i) {
             b.m_coeffs[i] = Polynomial::use_hint(a.m_coeffs[i], h.m_coeffs[i], mode);
-            }
          }
+      }
 
       /*************************************************
       * Name:        montgomery_reduce
@@ -454,12 +415,11 @@ class Polynomial
       *
       * Returns r.
       **************************************************/
-      int32_t montgomery_reduce(int64_t a) const
-         {
+      int32_t montgomery_reduce(int64_t a) const {
          int32_t t = static_cast<int32_t>(static_cast<int64_t>(static_cast<int32_t>(a)) * DilithiumModeConstants::QINV);
-         t = (a - static_cast<int64_t>(t)*DilithiumModeConstants::Q) >> 32;
+         t = (a - static_cast<int64_t>(t) * DilithiumModeConstants::Q) >> 32;
          return t;
-         }
+      }
 
       /*************************************************
       * Name:        poly_pointwise_montgomery
@@ -474,13 +434,11 @@ class Polynomial
       *              - const Polynomial& a: reference to first input polynomial
       *              - const Polynomial& b: reference  to second input polynomial
       **************************************************/
-      void poly_pointwise_montgomery(Polynomial& output, const Polynomial& second) const
-         {
-         for(size_t i = 0; i < DilithiumModeConstants::N; ++i)
-            {
+      void poly_pointwise_montgomery(Polynomial& output, const Polynomial& second) const {
+         for(size_t i = 0; i < DilithiumModeConstants::N; ++i) {
             output.m_coeffs[i] = montgomery_reduce(static_cast<int64_t>(m_coeffs[i]) * second.m_coeffs[i]);
-            }
          }
+      }
 
       /*************************************************
       * Name:        ntt
@@ -490,25 +448,21 @@ class Polynomial
       *
       * Arguments:   - Polynomial& a: input/output coefficient Polynomial
       **************************************************/
-      void ntt()
-         {
+      void ntt() {
          size_t j;
          size_t k = 0;
 
-         for(size_t len = 128; len > 0; len >>= 1)
-            {
-            for(size_t start = 0; start < DilithiumModeConstants::N; start = j + len)
-               {
+         for(size_t len = 128; len > 0; len >>= 1) {
+            for(size_t start = 0; start < DilithiumModeConstants::N; start = j + len) {
                int32_t zeta = DilithiumModeConstants::ZETAS[++k];
-               for(j = start; j < start + len; ++j)
-                  {
+               for(j = start; j < start + len; ++j) {
                   int32_t t = montgomery_reduce(static_cast<int64_t>(zeta) * m_coeffs[j + len]);
                   m_coeffs[j + len] = m_coeffs[j] - t;
                   m_coeffs[j] = m_coeffs[j] + t;
-                  }
                }
             }
          }
+      }
 
       /*************************************************
       * Name:        poly_reduce
@@ -520,15 +474,13 @@ class Polynomial
       *
       * Arguments:   - Polynomial &a: reference to input polynomial
       **************************************************/
-      void poly_reduce()
-         {
-         for(auto& i : m_coeffs)
-            {
+      void poly_reduce() {
+         for(auto& i : m_coeffs) {
             int32_t t = (i + (1 << 22)) >> 23;
             t = i - t * DilithiumModeConstants::Q;
             i = t;
-            }
          }
+      }
 
       /*************************************************
       * Name:        invntt_tomont
@@ -539,31 +491,26 @@ class Polynomial
       *              Q in absolute value. Output coefficient are smaller than Q in
       *              absolute value.
       **************************************************/
-      void invntt_tomont()
-         {
+      void invntt_tomont() {
          size_t j;
-         int32_t f = 41978; // mont^2/256
+         int32_t f = 41978;  // mont^2/256
          size_t k = 256;
-         for(size_t len = 1; len < DilithiumModeConstants::N; len <<= 1)
-            {
-            for(size_t start = 0; start < DilithiumModeConstants::N; start = j + len)
-               {
+         for(size_t len = 1; len < DilithiumModeConstants::N; len <<= 1) {
+            for(size_t start = 0; start < DilithiumModeConstants::N; start = j + len) {
                int32_t zeta = -DilithiumModeConstants::ZETAS[--k];
-               for(j = start; j < start + len; ++j)
-                  {
+               for(j = start; j < start + len; ++j) {
                   int32_t t = m_coeffs[j];
                   m_coeffs[j] = t + m_coeffs[j + len];
                   m_coeffs[j + len] = t - m_coeffs[j + len];
                   m_coeffs[j + len] = montgomery_reduce(static_cast<int64_t>(zeta) * m_coeffs[j + len]);
-                  }
                }
             }
-
-         for(j = 0; j < DilithiumModeConstants::N; ++j)
-            {
-            m_coeffs[j] = montgomery_reduce(static_cast<int64_t>(f) * m_coeffs[j]);
-            }
          }
+
+         for(j = 0; j < DilithiumModeConstants::N; ++j) {
+            m_coeffs[j] = montgomery_reduce(static_cast<int64_t>(f) * m_coeffs[j]);
+         }
+      }
 
       /*************************************************
       * Name:        poly_invntt_tomont
@@ -574,10 +521,7 @@ class Polynomial
       *
       * Arguments:   - Polynomial& a: reference to input/output polynomial
       **************************************************/
-      void poly_invntt_tomont()
-         {
-         invntt_tomont();
-         }
+      void poly_invntt_tomont() { invntt_tomont(); }
 
       /*************************************************
       * Name:        cadd_q
@@ -586,13 +530,11 @@ class Polynomial
       *              coefficient is negative.
       *           Add Q if input coefficient is negative.
       **************************************************/
-      void cadd_q()
-         {
-         for(auto& i : m_coeffs)
-            {
+      void cadd_q() {
+         for(auto& i : m_coeffs) {
             i += (i >> 31) & DilithiumModeConstants::Q;
-            }
          }
+      }
 
       /*************************************************
       * Name:        poly_uniform_gamma1
@@ -605,13 +547,11 @@ class Polynomial
       *              - uint16_t nonce: 16-bit nonce
       *              - const DilithiumModeConstants& mode: reference to dilihtium mode values
       **************************************************/
-      void poly_uniform_gamma1(const secure_vector<uint8_t>& seed, uint16_t nonce,
-                               const DilithiumModeConstants& mode)
-         {
+      void poly_uniform_gamma1(const secure_vector<uint8_t>& seed, uint16_t nonce, const DilithiumModeConstants& mode) {
          auto buf = mode.ExpandMask(seed, nonce);
 
          Polynomial::polyz_unpack(*this, buf.data(), mode);
-         }
+      }
 
       /*************************************************
       * Name:        poly_decompose
@@ -626,13 +566,11 @@ class Polynomial
       *              - Polynomial& a0: reference to output polynomial with coefficients c0
       *              - const DilithiumModeConstants& mode: reference to dilihtium mode values
       **************************************************/
-      void poly_decompose(Polynomial& a1, Polynomial& a0, const DilithiumModeConstants& mode) const
-         {
-         for(size_t i = 0; i < DilithiumModeConstants::N; ++i)
-            {
+      void poly_decompose(Polynomial& a1, Polynomial& a0, const DilithiumModeConstants& mode) const {
+         for(size_t i = 0; i < DilithiumModeConstants::N; ++i) {
             a1.m_coeffs[i] = Polynomial::decompose(&a0.m_coeffs[i], m_coeffs[i], mode);
-            }
          }
+      }
 
       /*************************************************
       * Name:        poly_shiftl
@@ -642,13 +580,11 @@ class Polynomial
       *
       * Arguments:   - Polynomial& a: pointer to input/output polynomial
       **************************************************/
-      void poly_shiftl()
-         {
-         for(size_t i = 0; i < m_coeffs.size(); ++i)
-            {
+      void poly_shiftl() {
+         for(size_t i = 0; i < m_coeffs.size(); ++i) {
             m_coeffs[i] <<= DilithiumModeConstants::D;
-            }
          }
+      }
 
       /*************************************************
       * Name:        polyw1_pack
@@ -660,29 +596,23 @@ class Polynomial
       *                            POLYW1_PACKEDBYTES bytes
       *           - const DilithiumModeConstants& mode: reference to dilihtium mode values
       **************************************************/
-      void polyw1_pack(uint8_t* r, const DilithiumModeConstants& mode)
-         {
-         if(mode.gamma2() == (DilithiumModeConstants::Q - 1) / 88)
-            {
-            for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i)
-               {
+      void polyw1_pack(uint8_t* r, const DilithiumModeConstants& mode) {
+         if(mode.gamma2() == (DilithiumModeConstants::Q - 1) / 88) {
+            for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i) {
                r[3 * i + 0] = static_cast<uint8_t>(m_coeffs[4 * i + 0]);
                r[3 * i + 0] |= static_cast<uint8_t>(m_coeffs[4 * i + 1] << 6);
                r[3 * i + 1] = static_cast<uint8_t>(m_coeffs[4 * i + 1] >> 2);
                r[3 * i + 1] |= static_cast<uint8_t>(m_coeffs[4 * i + 2] << 4);
                r[3 * i + 2] = static_cast<uint8_t>(m_coeffs[4 * i + 2] >> 4);
                r[3 * i + 2] |= static_cast<uint8_t>(m_coeffs[4 * i + 3] << 2);
-               }
             }
-         else
-            {
+         } else {
             BOTAN_ASSERT_NOMSG(mode.gamma2() == (DilithiumModeConstants::Q - 1) / 32);
-            for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i)
-               {
+            for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i) {
                r[i] = static_cast<uint8_t>(m_coeffs[2 * i + 0] | (m_coeffs[2 * i + 1] << 4));
-               }
             }
          }
+      }
 
       /*************************************************
       * Name:        polyeta_unpack
@@ -693,16 +623,12 @@ class Polynomial
       *              - const uint8_t *a: byte array with bit-packed_t1 polynomial
       *           - const DilithiumModeConstants& mode: reference to dilihtium mode values
       **************************************************/
-      static Polynomial polyeta_unpack(std::span<const uint8_t> a, const DilithiumModeConstants& mode)
-         {
+      static Polynomial polyeta_unpack(std::span<const uint8_t> a, const DilithiumModeConstants& mode) {
          Polynomial r;
 
-         switch(mode.eta())
-            {
-            case DilithiumEta::Eta2:
-               {
-               for(size_t i = 0; i < DilithiumModeConstants::N / 8; ++i)
-                  {
+         switch(mode.eta()) {
+            case DilithiumEta::Eta2: {
+               for(size_t i = 0; i < DilithiumModeConstants::N / 8; ++i) {
                   r.m_coeffs[8 * i + 0] = (a[3 * i + 0] >> 0) & 7;
                   r.m_coeffs[8 * i + 1] = (a[3 * i + 0] >> 3) & 7;
                   r.m_coeffs[8 * i + 2] = ((a[3 * i + 0] >> 6) | (a[3 * i + 1] << 2)) & 7;
@@ -720,24 +646,20 @@ class Polynomial
                   r.m_coeffs[8 * i + 5] = static_cast<uint8_t>(mode.eta()) - r.m_coeffs[8 * i + 5];
                   r.m_coeffs[8 * i + 6] = static_cast<uint8_t>(mode.eta()) - r.m_coeffs[8 * i + 6];
                   r.m_coeffs[8 * i + 7] = static_cast<uint8_t>(mode.eta()) - r.m_coeffs[8 * i + 7];
-                  }
                }
-            break;
-            case DilithiumEta::Eta4:
-               {
-               for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i)
-                  {
+            } break;
+            case DilithiumEta::Eta4: {
+               for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i) {
                   r.m_coeffs[2 * i + 0] = a[i] & 0x0F;
                   r.m_coeffs[2 * i + 1] = a[i] >> 4;
                   r.m_coeffs[2 * i + 0] = static_cast<uint8_t>(mode.eta()) - r.m_coeffs[2 * i + 0];
                   r.m_coeffs[2 * i + 1] = static_cast<uint8_t>(mode.eta()) - r.m_coeffs[2 * i + 1];
-                  }
                }
-            break;
-            }
+            } break;
+         }
 
          return r;
-         }
+      }
 
       /*************************************************
       * Name:        polyeta_pack
@@ -749,16 +671,12 @@ class Polynomial
       *              - const Polynomial& a: pointer to input polynomial
       *           - const DilithiumModeConstants& mode: reference for dilithium mode values
       **************************************************/
-      void polyeta_pack(uint8_t* r, const DilithiumModeConstants& mode) const
-         {
+      void polyeta_pack(uint8_t* r, const DilithiumModeConstants& mode) const {
          uint8_t t[8];
 
-         switch(mode.eta())
-            {
-            case DilithiumEta::Eta2:
-               {
-               for(size_t i = 0; i < DilithiumModeConstants::N / 8; ++i)
-                  {
+         switch(mode.eta()) {
+            case DilithiumEta::Eta2: {
+               for(size_t i = 0; i < DilithiumModeConstants::N / 8; ++i) {
                   t[0] = static_cast<uint8_t>(mode.eta() - m_coeffs[8 * i + 0]);
                   t[1] = static_cast<uint8_t>(mode.eta() - m_coeffs[8 * i + 1]);
                   t[2] = static_cast<uint8_t>(mode.eta() - m_coeffs[8 * i + 2]);
@@ -771,21 +689,18 @@ class Polynomial
                   r[3 * i + 0] = (t[0] >> 0) | (t[1] << 3) | (t[2] << 6);
                   r[3 * i + 1] = (t[2] >> 2) | (t[3] << 1) | (t[4] << 4) | (t[5] << 7);
                   r[3 * i + 2] = (t[5] >> 1) | (t[6] << 2) | (t[7] << 5);
-                  }
                }
-            break;
-            case DilithiumEta::Eta4:
-               {
-               for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i)
-                  {
+            } break;
+            case DilithiumEta::Eta4: {
+               for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i) {
                   t[0] = static_cast<uint8_t>(mode.eta() - m_coeffs[2 * i + 0]);
                   t[1] = static_cast<uint8_t>(mode.eta() - m_coeffs[2 * i + 1]);
                   r[i] = static_cast<uint8_t>(t[0] | (t[1] << 4));
-                  }
                }
-            break;
-            }
+            } break;
          }
+      }
+
       /*************************************************
       * Name:        polyt0_unpack
       *
@@ -794,12 +709,10 @@ class Polynomial
       * Arguments:   - poly *r: pointer to output polynomial
       *              - const uint8_t *a: byte array with bit-packed_t1 polynomial
       **************************************************/
-      static Polynomial polyt0_unpack(std::span<const uint8_t> a)
-         {
+      static Polynomial polyt0_unpack(std::span<const uint8_t> a) {
          Polynomial r;
 
-         for(size_t i = 0; i < DilithiumModeConstants::N / 8; ++i)
-            {
+         for(size_t i = 0; i < DilithiumModeConstants::N / 8; ++i) {
             r.m_coeffs[8 * i + 0] = a[13 * i + 0];
             r.m_coeffs[8 * i + 0] |= static_cast<uint32_t>(a[13 * i + 1]) << 8;
             r.m_coeffs[8 * i + 0] &= 0x1FFF;
@@ -844,10 +757,10 @@ class Polynomial
             r.m_coeffs[8 * i + 5] = (1 << (DilithiumModeConstants::D - 1)) - r.m_coeffs[8 * i + 5];
             r.m_coeffs[8 * i + 6] = (1 << (DilithiumModeConstants::D - 1)) - r.m_coeffs[8 * i + 6];
             r.m_coeffs[8 * i + 7] = (1 << (DilithiumModeConstants::D - 1)) - r.m_coeffs[8 * i + 7];
-            }
+         }
 
          return r;
-         }
+      }
 
       /*************************************************
       * Name:        polyt0_pack
@@ -858,11 +771,9 @@ class Polynomial
       *                            POLYT0_PACKEDBYTES bytes
       *              - const Polynomial& a: reference to input polynomial
       **************************************************/
-      void polyt0_pack(uint8_t* r) const
-         {
+      void polyt0_pack(uint8_t* r) const {
          uint32_t t[8];
-         for(size_t i = 0; i < DilithiumModeConstants::N / 8; ++i)
-            {
+         for(size_t i = 0; i < DilithiumModeConstants::N / 8; ++i) {
             t[0] = (1 << (DilithiumModeConstants::D - 1)) - m_coeffs[8 * i + 0];
             t[1] = (1 << (DilithiumModeConstants::D - 1)) - m_coeffs[8 * i + 1];
             t[2] = (1 << (DilithiumModeConstants::D - 1)) - m_coeffs[8 * i + 2];
@@ -892,8 +803,8 @@ class Polynomial
             r[13 * i + 11] = static_cast<uint8_t>(t[6] >> 10);
             r[13 * i + 11] |= static_cast<uint8_t>(t[7] << 3);
             r[13 * i + 12] = static_cast<uint8_t>(t[7] >> 5);
-            }
          }
+      }
 
       /*************************************************
       * Name:        polyz_unpack
@@ -905,12 +816,9 @@ class Polynomial
       *              - const uint8_t *a: byte array with bit-packed_t1 polynomial
       *              - const DilithiumModeConstants& mode: reference to dilihtium mode values
       **************************************************/
-      static void polyz_unpack(Polynomial& r, const uint8_t* a, const DilithiumModeConstants& mode)
-         {
-         if(mode.gamma1() == (1 << 17))
-            {
-            for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i)
-               {
+      static void polyz_unpack(Polynomial& r, const uint8_t* a, const DilithiumModeConstants& mode) {
+         if(mode.gamma1() == (1 << 17)) {
+            for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i) {
                r.m_coeffs[4 * i + 0] = a[9 * i + 0];
                r.m_coeffs[4 * i + 0] |= static_cast<uint32_t>(a[9 * i + 1]) << 8;
                r.m_coeffs[4 * i + 0] |= static_cast<uint32_t>(a[9 * i + 2]) << 16;
@@ -935,12 +843,9 @@ class Polynomial
                r.m_coeffs[4 * i + 1] = static_cast<uint32_t>(mode.gamma1()) - r.m_coeffs[4 * i + 1];
                r.m_coeffs[4 * i + 2] = static_cast<uint32_t>(mode.gamma1()) - r.m_coeffs[4 * i + 2];
                r.m_coeffs[4 * i + 3] = static_cast<uint32_t>(mode.gamma1()) - r.m_coeffs[4 * i + 3];
-               }
             }
-         else if(mode.gamma1() == (1 << 19))
-            {
-            for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i)
-               {
+         } else if(mode.gamma1() == (1 << 19)) {
+            for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i) {
                r.m_coeffs[2 * i + 0] = a[5 * i + 0];
                r.m_coeffs[2 * i + 0] |= static_cast<uint32_t>(a[5 * i + 1]) << 8;
                r.m_coeffs[2 * i + 0] |= static_cast<uint32_t>(a[5 * i + 2]) << 16;
@@ -953,9 +858,9 @@ class Polynomial
 
                r.m_coeffs[2 * i + 0] = static_cast<uint32_t>(mode.gamma1()) - r.m_coeffs[2 * i + 0];
                r.m_coeffs[2 * i + 1] = static_cast<uint32_t>(mode.gamma1()) - r.m_coeffs[2 * i + 1];
-               }
             }
          }
+      }
 
       /*************************************************
       * Name:        polyz_pack
@@ -967,13 +872,10 @@ class Polynomial
       *                            POLYZ_PACKEDBYTES bytes
       *           - const DilithiumModeConstants& mode: reference to dilihtium mode values
       **************************************************/
-      void polyz_pack(uint8_t* r, const DilithiumModeConstants& mode) const
-         {
+      void polyz_pack(uint8_t* r, const DilithiumModeConstants& mode) const {
          uint32_t t[4];
-         if(mode.gamma1() == (1 << 17))
-            {
-            for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i)
-               {
+         if(mode.gamma1() == (1 << 17)) {
+            for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i) {
                t[0] = static_cast<uint32_t>(mode.gamma1()) - m_coeffs[4 * i + 0];
                t[1] = static_cast<uint32_t>(mode.gamma1()) - m_coeffs[4 * i + 1];
                t[2] = static_cast<uint32_t>(mode.gamma1()) - m_coeffs[4 * i + 2];
@@ -991,12 +893,9 @@ class Polynomial
                r[9 * i + 6] |= static_cast<uint8_t>(t[3] << 6);
                r[9 * i + 7] = static_cast<uint8_t>(t[3] >> 2);
                r[9 * i + 8] = static_cast<uint8_t>(t[3] >> 10);
-               }
             }
-         else if(mode.gamma1() == (1 << 19))
-            {
-            for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i)
-               {
+         } else if(mode.gamma1() == (1 << 19)) {
+            for(size_t i = 0; i < DilithiumModeConstants::N / 2; ++i) {
                t[0] = static_cast<uint32_t>(mode.gamma1()) - m_coeffs[2 * i + 0];
                t[1] = static_cast<uint32_t>(mode.gamma1()) - m_coeffs[2 * i + 1];
 
@@ -1006,9 +905,9 @@ class Polynomial
                r[5 * i + 2] |= static_cast<uint8_t>(t[1] << 4);
                r[5 * i + 3] = static_cast<uint8_t>(t[1] >> 4);
                r[5 * i + 4] = static_cast<uint8_t>(t[1] >> 12);
-               }
             }
          }
+      }
 
       /*************************************************
       * Name:        polyt1_unpack
@@ -1019,16 +918,14 @@ class Polynomial
       * Arguments:   - Polynomial& r: pointer to output polynomial
       *              - const uint8_t *a: byte array with bit-packed_t1 polynomial
       **************************************************/
-      static void polyt1_unpack(Polynomial& r, const uint8_t* a)
-         {
-         for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i)
-            {
+      static void polyt1_unpack(Polynomial& r, const uint8_t* a) {
+         for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i) {
             r.m_coeffs[4 * i + 0] = ((a[5 * i + 0] >> 0) | (static_cast<uint32_t>(a[5 * i + 1]) << 8)) & 0x3FF;
             r.m_coeffs[4 * i + 1] = ((a[5 * i + 1] >> 2) | (static_cast<uint32_t>(a[5 * i + 2]) << 6)) & 0x3FF;
             r.m_coeffs[4 * i + 2] = ((a[5 * i + 2] >> 4) | (static_cast<uint32_t>(a[5 * i + 3]) << 4)) & 0x3FF;
             r.m_coeffs[4 * i + 3] = ((a[5 * i + 3] >> 6) | (static_cast<uint32_t>(a[5 * i + 4]) << 2)) & 0x3FF;
-            }
          }
+      }
 
       /*************************************************
       * Name:        polyt1_pack
@@ -1039,22 +936,20 @@ class Polynomial
       * Arguments:   - uint8_t *r: pointer to output byte array with at least
       *                            POLYT1_PACKEDBYTES bytes
       **************************************************/
-      void polyt1_pack(uint8_t* r) const
-         {
-         for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i)
-            {
+      void polyt1_pack(uint8_t* r) const {
+         for(size_t i = 0; i < DilithiumModeConstants::N / 4; ++i) {
             r[5 * i + 0] = static_cast<uint8_t>((m_coeffs[4 * i + 0] >> 0));
             r[5 * i + 1] = static_cast<uint8_t>((m_coeffs[4 * i + 0] >> 8) | (m_coeffs[4 * i + 1] << 2));
             r[5 * i + 2] = static_cast<uint8_t>((m_coeffs[4 * i + 1] >> 6) | (m_coeffs[4 * i + 2] << 4));
             r[5 * i + 3] = static_cast<uint8_t>((m_coeffs[4 * i + 2] >> 4) | (m_coeffs[4 * i + 3] << 6));
             r[5 * i + 4] = static_cast<uint8_t>((m_coeffs[4 * i + 3] >> 2));
-            }
          }
+      }
 
       Polynomial() = default;
-   };
-class PolynomialVector
-   {
+};
+
+class PolynomialVector {
    public:
       // public member is on purpose
       std::vector<Polynomial> m_vec;
@@ -1062,29 +957,23 @@ class PolynomialVector
    public:
       PolynomialVector() = default;
 
-      PolynomialVector& operator+=(const PolynomialVector& other)
-         {
+      PolynomialVector& operator+=(const PolynomialVector& other) {
          BOTAN_ASSERT_NOMSG(m_vec.size() != other.m_vec.size());
-         for(size_t i = 0; i < m_vec.size(); ++i)
-            {
+         for(size_t i = 0; i < m_vec.size(); ++i) {
             this->m_vec[i] += other.m_vec[i];
-            }
-         return *this;
          }
+         return *this;
+      }
 
-      PolynomialVector& operator-=(const PolynomialVector& other)
-         {
+      PolynomialVector& operator-=(const PolynomialVector& other) {
          BOTAN_ASSERT_NOMSG(m_vec.size() == other.m_vec.size());
-         for(size_t i = 0; i < this->m_vec.size(); ++i)
-            {
+         for(size_t i = 0; i < this->m_vec.size(); ++i) {
             this->m_vec[i] -= other.m_vec[i];
-            }
+         }
          return *this;
-         }
+      }
 
-      explicit PolynomialVector(size_t size) : m_vec(size)
-         {
-         }
+      explicit PolynomialVector(size_t size) : m_vec(size) {}
 
       /*************************************************
       * Name:        poly_uniform
@@ -1099,10 +988,10 @@ class PolynomialVector
       * Return Polynomial
       **************************************************/
       static Polynomial poly_uniform(const std::vector<uint8_t>& seed,
-                                     uint16_t nonce, const DilithiumModeConstants& mode)
-         {
+                                     uint16_t nonce,
+                                     const DilithiumModeConstants& mode) {
          Polynomial sample_poly;
-         size_t buflen = mode.poly_uniform_nblocks()*mode.stream128_blockbytes();
+         size_t buflen = mode.poly_uniform_nblocks() * mode.stream128_blockbytes();
 
          std::vector<uint8_t> buf(buflen + 2);
 
@@ -1111,29 +1000,27 @@ class PolynomialVector
 
          size_t ctr = Polynomial::rej_uniform(sample_poly, 0, DilithiumModeConstants::N, buf.data(), buflen);
          size_t off;
-         while(ctr < DilithiumModeConstants::N)
-            {
+         while(ctr < DilithiumModeConstants::N) {
             off = buflen % 3;
-            for(size_t i = 0; i < off; ++i)
-               {
+            for(size_t i = 0; i < off; ++i) {
                buf[i] = buf[buflen - off + i];
-               }
+            }
 
             xof->write_keystream(buf.data() + off, mode.stream128_blockbytes());
             buflen = mode.stream128_blockbytes() + off;
             ctr += Polynomial::rej_uniform(sample_poly, ctr, DilithiumModeConstants::N - ctr, buf.data(), buflen);
-            }
+         }
          return sample_poly;
-         }
+      }
 
-      static void fill_polyvec_uniform_eta(PolynomialVector& v, const secure_vector<uint8_t>& seed,
-                                           uint16_t nonce, const DilithiumModeConstants& mode)
-         {
-         for(size_t i = 0; i < v.m_vec.size(); ++i)
-            {
+      static void fill_polyvec_uniform_eta(PolynomialVector& v,
+                                           const secure_vector<uint8_t>& seed,
+                                           uint16_t nonce,
+                                           const DilithiumModeConstants& mode) {
+         for(size_t i = 0; i < v.m_vec.size(); ++i) {
             Polynomial::fill_poly_uniform_eta(v.m_vec[i], seed, nonce++, mode);
-            }
          }
+      }
 
       /*************************************************
       * Name:        polyvec_pointwise_acc_montgomery
@@ -1147,20 +1034,19 @@ class PolynomialVector
       *              - const Polynomial &v: pointer to second input vector
       **************************************************/
       static void polyvec_pointwise_acc_montgomery(Polynomial& w,
-            const PolynomialVector& u, const PolynomialVector& v)
-         {
+                                                   const PolynomialVector& u,
+                                                   const PolynomialVector& v) {
          BOTAN_ASSERT_NOMSG(u.m_vec.size() == v.m_vec.size());
          BOTAN_ASSERT_NOMSG(!u.m_vec.empty() && !v.m_vec.empty());
 
          u.m_vec[0].poly_pointwise_montgomery(w, v.m_vec[0]);
 
-         for(size_t i = 1; i < v.m_vec.size(); ++i)
-            {
+         for(size_t i = 1; i < v.m_vec.size(); ++i) {
             Polynomial t;
             u.m_vec[i].poly_pointwise_montgomery(t, v.m_vec[i]);
             w += t;
-            }
          }
+      }
 
       /*************************************************
       * Name:        fill_polyvecs_power2round
@@ -1176,72 +1062,63 @@ class PolynomialVector
       *                              coefficients a0
       *              - const PolynomialVector& v: reference to input vector
       **************************************************/
-      static void fill_polyvecs_power2round(PolynomialVector& v1, PolynomialVector& v0, const PolynomialVector& v)
-         {
+      static void fill_polyvecs_power2round(PolynomialVector& v1, PolynomialVector& v0, const PolynomialVector& v) {
          BOTAN_ASSERT((v1.m_vec.size() == v0.m_vec.size()) && (v1.m_vec.size() == v.m_vec.size()),
                       "possible buffer overflow! Wrong PolynomialVector sizes.");
-         for(size_t i = 0; i < v1.m_vec.size(); ++i)
-            {
+         for(size_t i = 0; i < v1.m_vec.size(); ++i) {
             Polynomial::fill_polys_power2round(v1.m_vec[i], v0.m_vec[i], v.m_vec[i]);
-            }
          }
+      }
 
-      static bool unpack_sig(std::array<uint8_t, DilithiumModeConstants::SEEDBYTES>& c, PolynomialVector& z,
-                             PolynomialVector& h, const std::vector<uint8_t>& sig, const DilithiumModeConstants& mode)
-         {
+      static bool unpack_sig(std::array<uint8_t, DilithiumModeConstants::SEEDBYTES>& c,
+                             PolynomialVector& z,
+                             PolynomialVector& h,
+                             const std::vector<uint8_t>& sig,
+                             const DilithiumModeConstants& mode) {
          //const auto& mode = m_pub_key.m_public->mode();
-         BOTAN_ASSERT(sig.size() == mode.crypto_bytes(),
-                      "invalid signature size");
+         BOTAN_ASSERT(sig.size() == mode.crypto_bytes(), "invalid signature size");
          size_t position = 0;
 
          std::copy(sig.begin(), sig.begin() + c.size(), c.begin());
 
          position += DilithiumModeConstants::SEEDBYTES;
 
-         for(size_t i = 0; i < mode.l(); ++i)
-            {
-            Polynomial::polyz_unpack(z.m_vec[i], sig.data()+ position + i*mode.polyz_packedbytes(), mode);
-            }
-         position += mode.l()*mode.polyz_packedbytes();
+         for(size_t i = 0; i < mode.l(); ++i) {
+            Polynomial::polyz_unpack(z.m_vec[i], sig.data() + position + i * mode.polyz_packedbytes(), mode);
+         }
+         position += mode.l() * mode.polyz_packedbytes();
 
          /* Decode h */
          size_t k = 0;
-         for(size_t i = 0; i < mode.k(); ++i)
-            {
-            for(size_t j = 0; j < DilithiumModeConstants::N; ++j)
-               {
+         for(size_t i = 0; i < mode.k(); ++i) {
+            for(size_t j = 0; j < DilithiumModeConstants::N; ++j) {
                h.m_vec[i].m_coeffs[j] = 0;
-               }
+            }
 
-            if(sig[position + mode.omega() + i] < k || sig[position + mode.omega() + i] > mode.omega())
-               {
+            if(sig[position + mode.omega() + i] < k || sig[position + mode.omega() + i] > mode.omega()) {
                return true;
-               }
+            }
 
-            for(size_t j = k; j < sig[position + mode.omega() + i]; ++j)
-               {
+            for(size_t j = k; j < sig[position + mode.omega() + i]; ++j) {
                /* Coefficients are ordered for strong unforgeability */
-               if(j > k && sig[position + j] <= sig[position + j - 1])
-                  {
+               if(j > k && sig[position + j] <= sig[position + j - 1]) {
                   return true;
-                  }
-               h.m_vec[i].m_coeffs[sig[position + j]] = 1;
                }
+               h.m_vec[i].m_coeffs[sig[position + j]] = 1;
+            }
 
             k = sig[position + mode.omega() + i];
-            }
+         }
 
          /* Extra indices are zero for strong unforgeability */
-         for(size_t j = k; j < mode.omega(); ++j)
-            {
-            if(sig[position + j])
-               {
+         for(size_t j = k; j < mode.omega(); ++j) {
+            if(sig[position + j]) {
                return true;
-               }
             }
+         }
 
          return false;
-         }
+      }
 
       /*************************************************
       * Name:        generate_hint_polyvec
@@ -1255,18 +1132,18 @@ class PolynomialVector
       *
       * Returns number of 1 bits.
       **************************************************/
-      static size_t generate_hint_polyvec(PolynomialVector& h, const PolynomialVector& v0,
-                                          const PolynomialVector& v1, const DilithiumModeConstants& mode)
-         {
+      static size_t generate_hint_polyvec(PolynomialVector& h,
+                                          const PolynomialVector& v0,
+                                          const PolynomialVector& v1,
+                                          const DilithiumModeConstants& mode) {
          size_t s = 0;
 
-         for(size_t i = 0; i < h.m_vec.size(); ++i)
-            {
+         for(size_t i = 0; i < h.m_vec.size(); ++i) {
             s += Polynomial::generate_hint_polynomial(h.m_vec[i], v0.m_vec[i], v1.m_vec[i], mode);
-            }
+         }
 
          return s;
-         }
+      }
 
       /*************************************************
       * Name:        ntt
@@ -1274,13 +1151,11 @@ class PolynomialVector
       * Description: Forward NTT of all polynomials in vector. Output
       *              coefficients can be up to 16*Q larger than input coefficients.
       **************************************************/
-      void ntt()
-         {
-         for(auto& i : m_vec)
-            {
+      void ntt() {
+         for(auto& i : m_vec) {
             i.ntt();
-            }
          }
+      }
 
       /*************************************************
       * Name:        polyveck_decompose
@@ -1297,17 +1172,15 @@ class PolynomialVector
       *                              coefficients a0
       *              - const PolynomialVector& v: reference to input vector
       **************************************************/
-      std::tuple<PolynomialVector, PolynomialVector> polyvec_decompose(const DilithiumModeConstants& mode)
-         {
+      std::tuple<PolynomialVector, PolynomialVector> polyvec_decompose(const DilithiumModeConstants& mode) {
          PolynomialVector v1(mode.k());
          PolynomialVector v0(mode.k());
 
-         for(size_t i = 0; i < m_vec.size(); ++i)
-            {
+         for(size_t i = 0; i < m_vec.size(); ++i) {
             m_vec[i].poly_decompose(v1.m_vec[i], v0.m_vec[i], mode);
-            }
-         return std::make_tuple(v1, v0);
          }
+         return std::make_tuple(v1, v0);
+      }
 
       /*************************************************
       * Name:        reduce
@@ -1315,13 +1188,11 @@ class PolynomialVector
       * Description: Reduce coefficients of polynomials in vector
       *              to representatives in [-6283009,6283007].
       **************************************************/
-      void reduce()
-         {
-         for(auto& i : m_vec)
-            {
+      void reduce() {
+         for(auto& i : m_vec) {
             i.poly_reduce();
-            }
          }
+      }
 
       /*************************************************
       * Name:        invntt_tomont
@@ -1330,13 +1201,11 @@ class PolynomialVector
       *              in vector. Input coefficients need to be less
       *              than 2*Q.
       **************************************************/
-      void invntt_tomont()
-         {
-         for(auto& i : m_vec)
-            {
+      void invntt_tomont() {
+         for(auto& i : m_vec) {
             i.poly_invntt_tomont();
-            }
          }
+      }
 
       /*************************************************
       * Name:        add_polyvec
@@ -1347,15 +1216,12 @@ class PolynomialVector
       * Arguments:   - const PolynomialVector *v: pointer to second summand
       *              - const PolynomialVector *u: pointer to first summand
       **************************************************/
-      void add_polyvec(const PolynomialVector& v)
-         {
-         BOTAN_ASSERT((m_vec.size() == v.m_vec.size()),
-                      "possible buffer overflow! Wrong PolynomialVector sizes.");
-         for(size_t i = 0; i < m_vec.size(); ++i)
-            {
+      void add_polyvec(const PolynomialVector& v) {
+         BOTAN_ASSERT((m_vec.size() == v.m_vec.size()), "possible buffer overflow! Wrong PolynomialVector sizes.");
+         for(size_t i = 0; i < m_vec.size(); ++i) {
             m_vec[i] += v.m_vec[i];
-            }
          }
+      }
 
       /*************************************************
       * Name:        cadd_q
@@ -1363,31 +1229,26 @@ class PolynomialVector
       * Description: For all coefficients of polynomials in vector
       *              add Q if coefficient is negative.
       **************************************************/
-      void cadd_q()
-         {
-         for(auto& i : m_vec)
-            {
+      void cadd_q() {
+         for(auto& i : m_vec) {
             i.cadd_q();
-            }
          }
+      }
 
-      void polyvecl_uniform_gamma1(const secure_vector<uint8_t>& seed, uint16_t nonce,
-                                   const DilithiumModeConstants& mode)
-         {
+      void polyvecl_uniform_gamma1(const secure_vector<uint8_t>& seed,
+                                   uint16_t nonce,
+                                   const DilithiumModeConstants& mode) {
          BOTAN_ASSERT_NOMSG(m_vec.size() <= std::numeric_limits<uint16_t>::max());
-         for(uint16_t i = 0; i < static_cast<uint16_t>(this->m_vec.size()); ++i)
-            {
-            m_vec[i].poly_uniform_gamma1(seed, mode.l()*nonce + i, mode);
-            }
+         for(uint16_t i = 0; i < static_cast<uint16_t>(this->m_vec.size()); ++i) {
+            m_vec[i].poly_uniform_gamma1(seed, mode.l() * nonce + i, mode);
          }
+      }
 
-      void polyvec_pointwise_poly_montgomery(PolynomialVector& r, const Polynomial& a)
-         {
-         for(size_t i = 0; i < m_vec.size(); ++i)
-            {
+      void polyvec_pointwise_poly_montgomery(PolynomialVector& r, const Polynomial& a) {
+         for(size_t i = 0; i < m_vec.size(); ++i) {
             m_vec[i].poly_pointwise_montgomery(r.m_vec[i], a);
-            }
          }
+      }
 
       /*************************************************
       * Name:        polyvecl_chknorm
@@ -1400,17 +1261,14 @@ class PolynomialVector
       * Returns false if norm of all polynomials is strictly smaller than B <= (Q-1)/8
       * and true otherwise.
       **************************************************/
-      bool polyvec_chknorm(size_t bound)
-         {
-         for(auto& i : m_vec)
-            {
-            if(Polynomial::poly_chknorm(i, bound))
-               {
+      bool polyvec_chknorm(size_t bound) {
+         for(auto& i : m_vec) {
+            if(Polynomial::poly_chknorm(i, bound)) {
                return true;
-               }
             }
-         return false;
          }
+         return false;
+      }
 
       /*************************************************
       * Name:        polyvec_shiftl
@@ -1418,13 +1276,11 @@ class PolynomialVector
       * Description: Multiply vector of polynomials by 2^D without modular
       *              reduction. Assumes input coefficients to be less than 2^{31-D}.
       **************************************************/
-      void polyvec_shiftl()
-         {
-         for(auto& i : m_vec)
-            {
+      void polyvec_shiftl() {
+         for(auto& i : m_vec) {
             i.poly_shiftl();
-            }
          }
+      }
 
       /*************************************************
       * Name:        polyvec_use_hint
@@ -1437,101 +1293,88 @@ class PolynomialVector
       *              - const PolynomialVector& h: reference to input hint vector
       *           - const DilithiumModeConstants& mode: reference to dilihtium mode values
       **************************************************/
-      void polyvec_use_hint(PolynomialVector& w, const PolynomialVector& h,
-                            const DilithiumModeConstants& mode)
-         {
-         for(size_t i = 0; i < w.m_vec.size(); ++i)
-            {
+      void polyvec_use_hint(PolynomialVector& w, const PolynomialVector& h, const DilithiumModeConstants& mode) {
+         for(size_t i = 0; i < w.m_vec.size(); ++i) {
             Polynomial::poly_use_hint(w.m_vec[i], m_vec[i], h.m_vec[i], mode);
-            }
          }
+      }
 
-      secure_vector<uint8_t> polyvec_pack_eta(const DilithiumModeConstants& mode) const
-         {
-         secure_vector<uint8_t> packed_eta(mode.polyeta_packedbytes()*m_vec.size());
-         for(size_t i = 0; i < m_vec.size(); ++i)
-            {
-            m_vec[i].polyeta_pack(packed_eta.data() + mode.polyeta_packedbytes()*i, mode);
-            }
+      secure_vector<uint8_t> polyvec_pack_eta(const DilithiumModeConstants& mode) const {
+         secure_vector<uint8_t> packed_eta(mode.polyeta_packedbytes() * m_vec.size());
+         for(size_t i = 0; i < m_vec.size(); ++i) {
+            m_vec[i].polyeta_pack(packed_eta.data() + mode.polyeta_packedbytes() * i, mode);
+         }
          return packed_eta;
-         }
+      }
 
-      static PolynomialVector unpack_eta(std::span<const uint8_t> buffer, size_t size,
-                                         const DilithiumModeConstants& mode)
-         {
+      static PolynomialVector unpack_eta(std::span<const uint8_t> buffer,
+                                         size_t size,
+                                         const DilithiumModeConstants& mode) {
          BOTAN_ARG_CHECK(buffer.size() == mode.polyeta_packedbytes() * size, "Invalid buffer size");
 
          PolynomialVector pv(size);
-         for(size_t i = 0; i < pv.m_vec.size(); ++i)
-            {
-            pv.m_vec[i] = Polynomial::polyeta_unpack(buffer.subspan(i*mode.polyeta_packedbytes(), mode.polyeta_packedbytes()), mode);
-            }
+         for(size_t i = 0; i < pv.m_vec.size(); ++i) {
+            pv.m_vec[i] = Polynomial::polyeta_unpack(
+               buffer.subspan(i * mode.polyeta_packedbytes(), mode.polyeta_packedbytes()), mode);
+         }
          return pv;
-         }
+      }
 
-      secure_vector<uint8_t> polyvec_pack_t0() const
-         {
+      secure_vector<uint8_t> polyvec_pack_t0() const {
          secure_vector<uint8_t> packed_t0(m_vec.size() * DilithiumModeConstants::POLYT0_PACKEDBYTES);
-         for(size_t i = 0; i < m_vec.size(); ++i)
-            {
+         for(size_t i = 0; i < m_vec.size(); ++i) {
             m_vec[i].polyt0_pack(packed_t0.data() + i * DilithiumModeConstants::POLYT0_PACKEDBYTES);
-            }
-         return packed_t0;
          }
+         return packed_t0;
+      }
 
-      static PolynomialVector unpack_t0(std::span<const uint8_t> buffer, const DilithiumModeConstants& mode)
-         {
-         BOTAN_ARG_CHECK(static_cast<int32_t>(buffer.size()) == DilithiumModeConstants::POLYT0_PACKEDBYTES * mode.k(), "Invalid buffer size");
+      static PolynomialVector unpack_t0(std::span<const uint8_t> buffer, const DilithiumModeConstants& mode) {
+         BOTAN_ARG_CHECK(static_cast<int32_t>(buffer.size()) == DilithiumModeConstants::POLYT0_PACKEDBYTES * mode.k(),
+                         "Invalid buffer size");
 
          PolynomialVector t0(mode.k());
-         for(size_t i = 0; i < t0.m_vec.size(); ++i)
-            {
-            t0.m_vec[i] = Polynomial::polyt0_unpack(buffer.subspan(i*DilithiumModeConstants::POLYT0_PACKEDBYTES, DilithiumModeConstants::POLYT0_PACKEDBYTES));
-            }
+         for(size_t i = 0; i < t0.m_vec.size(); ++i) {
+            t0.m_vec[i] = Polynomial::polyt0_unpack(buffer.subspan(i * DilithiumModeConstants::POLYT0_PACKEDBYTES,
+                                                                   DilithiumModeConstants::POLYT0_PACKEDBYTES));
+         }
          return t0;
-         }
+      }
 
-      std::vector<uint8_t> polyvec_pack_t1() const
-         {
+      std::vector<uint8_t> polyvec_pack_t1() const {
          std::vector<uint8_t> packed_t1(m_vec.size() * DilithiumModeConstants::POLYT1_PACKEDBYTES);
-         for(size_t i = 0; i < m_vec.size(); ++i)
-            {
-            m_vec[i].polyt1_pack(packed_t1.data() + i*DilithiumModeConstants::POLYT1_PACKEDBYTES);
-            }
-         return packed_t1;
+         for(size_t i = 0; i < m_vec.size(); ++i) {
+            m_vec[i].polyt1_pack(packed_t1.data() + i * DilithiumModeConstants::POLYT1_PACKEDBYTES);
          }
+         return packed_t1;
+      }
 
-      static PolynomialVector unpack_t1(std::span<const uint8_t> packed_t1, const DilithiumModeConstants& mode)
-         {
-         BOTAN_ARG_CHECK(static_cast<int32_t>(packed_t1.size()) == DilithiumModeConstants::POLYT1_PACKEDBYTES * mode.k(), "Invalid buffer size");
+      static PolynomialVector unpack_t1(std::span<const uint8_t> packed_t1, const DilithiumModeConstants& mode) {
+         BOTAN_ARG_CHECK(
+            static_cast<int32_t>(packed_t1.size()) == DilithiumModeConstants::POLYT1_PACKEDBYTES * mode.k(),
+            "Invalid buffer size");
 
          PolynomialVector t1(mode.k());
-         for(size_t i = 0; i < t1.m_vec.size(); ++i)
-            {
-            Polynomial::polyt1_unpack(t1.m_vec[i], packed_t1.data() + i*DilithiumModeConstants::POLYT1_PACKEDBYTES);
-            }
+         for(size_t i = 0; i < t1.m_vec.size(); ++i) {
+            Polynomial::polyt1_unpack(t1.m_vec[i], packed_t1.data() + i * DilithiumModeConstants::POLYT1_PACKEDBYTES);
+         }
          return t1;
-         }
+      }
 
-      std::vector<uint8_t> polyvec_pack_w1(const DilithiumModeConstants& mode)
-         {
-         std::vector<uint8_t> packed_w1(mode.polyw1_packedbytes()*m_vec.size());
-         for(size_t i = 0; i < m_vec.size(); ++i)
-            {
-            m_vec[i].polyw1_pack(packed_w1.data() + i*mode.polyw1_packedbytes(), mode);
-            }
+      std::vector<uint8_t> polyvec_pack_w1(const DilithiumModeConstants& mode) {
+         std::vector<uint8_t> packed_w1(mode.polyw1_packedbytes() * m_vec.size());
+         for(size_t i = 0; i < m_vec.size(); ++i) {
+            m_vec[i].polyw1_pack(packed_w1.data() + i * mode.polyw1_packedbytes(), mode);
+         }
          return packed_w1;
-         }
+      }
 
-      static PolynomialVector polyvec_unpack_z(const uint8_t* packed_z, const DilithiumModeConstants& mode)
-         {
+      static PolynomialVector polyvec_unpack_z(const uint8_t* packed_z, const DilithiumModeConstants& mode) {
          PolynomialVector z(mode.l());
-         for(size_t i = 0; i < z.m_vec.size(); ++i)
-            {
-            Polynomial::polyz_unpack(z.m_vec[i], packed_z + i*mode.polyz_packedbytes(), mode);
-            }
-         return z;
+         for(size_t i = 0; i < z.m_vec.size(); ++i) {
+            Polynomial::polyz_unpack(z.m_vec[i], packed_z + i * mode.polyz_packedbytes(), mode);
          }
+         return z;
+      }
 
       /*************************************************
       * Name:        generate_polyvec_matrix_pointwise_montgomery
@@ -1543,26 +1386,23 @@ class PolynomialVector
       * Returns a PolynomialVector
       **************************************************/
       static PolynomialVector generate_polyvec_matrix_pointwise_montgomery(const std::vector<PolynomialVector>& mat,
-            const PolynomialVector& v,
-            const DilithiumModeConstants& mode)
-         {
+                                                                           const PolynomialVector& v,
+                                                                           const DilithiumModeConstants& mode) {
          PolynomialVector t(mode.k());
-         for(size_t i = 0; i < mode.k(); ++i)
-            {
+         for(size_t i = 0; i < mode.k(); ++i) {
             PolynomialVector::polyvec_pointwise_acc_montgomery(t.m_vec[i], mat[i], v);
-            }
-         return t;
          }
-   };
-class PolynomialMatrix
-   {
+         return t;
+      }
+};
+
+class PolynomialMatrix {
    private:
       // Matrix of length k holding a polynomialVector of size l, which has N coeffs
       std::vector<PolynomialVector> m_mat;
 
-      explicit PolynomialMatrix(const DilithiumModeConstants& mode) : m_mat(mode.k(), PolynomialVector(mode.l()))
-         {
-         }
+      explicit PolynomialMatrix(const DilithiumModeConstants& mode) : m_mat(mode.k(), PolynomialVector(mode.l())) {}
+
    public:
       PolynomialMatrix() = delete;
 
@@ -1578,26 +1418,20 @@ class PolynomialMatrix
       *              - const DilithiumModeConstants& mode: reference to dilihtium mode values
       * Returns the output matrix mat[k]
       **************************************************/
-      static PolynomialMatrix generate_matrix(const std::vector<uint8_t>& rho, const DilithiumModeConstants& mode)
-         {
+      static PolynomialMatrix generate_matrix(const std::vector<uint8_t>& rho, const DilithiumModeConstants& mode) {
          BOTAN_ASSERT(rho.size() >= DilithiumModeConstants::SEEDBYTES, "wrong byte length for rho/seed");
 
          PolynomialMatrix matrix(mode);
-         for(uint16_t i = 0; i < mode.k(); ++i)
-            {
-            for(uint16_t j = 0; j < mode.l(); ++j)
-               {
+         for(uint16_t i = 0; i < mode.k(); ++i) {
+            for(uint16_t j = 0; j < mode.l(); ++j) {
                matrix.m_mat[i].m_vec[j] = PolynomialVector::poly_uniform(rho, (i << 8) + j, mode);
-               }
             }
+         }
          return matrix;
-         }
+      }
 
-      const std::vector<PolynomialVector>& get_matrix() const
-         {
-         return m_mat;
-         }
-   };
-}
+      const std::vector<PolynomialVector>& get_matrix() const { return m_mat; }
+};
+}  // namespace Botan::Dilithium
 
 #endif

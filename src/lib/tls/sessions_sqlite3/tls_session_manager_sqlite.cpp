@@ -17,12 +17,8 @@ Session_Manager_SQLite::Session_Manager_SQLite(std::string_view passphrase,
                                                std::shared_ptr<RandomNumberGenerator> rng,
                                                std::string_view db_filename,
                                                size_t max_sessions) :
-   Session_Manager_SQL(std::make_shared<Sqlite3_Database>(db_filename),
-                       passphrase,
-                       rng,
-                       max_sessions)
-   {}
+      Session_Manager_SQL(std::make_shared<Sqlite3_Database>(db_filename), passphrase, rng, max_sessions) {}
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan

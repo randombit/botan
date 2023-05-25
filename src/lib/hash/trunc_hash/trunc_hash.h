@@ -6,7 +6,6 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-
 #ifndef BOTAN_TRUNCATED_HASH_H_
 #define BOTAN_TRUNCATED_HASH_H_
 
@@ -21,8 +20,7 @@ namespace Botan {
  * of 8, then the final byte of the output will have some number of trailing
  * bits always set to zero.
  */
-class Truncated_Hash final : public HashFunction
-   {
+class Truncated_Hash final : public HashFunction {
    public:
       void clear() override;
       std::string name() const override;
@@ -45,8 +43,8 @@ class Truncated_Hash final : public HashFunction
 
       std::unique_ptr<HashFunction> m_hash;
       size_t m_output_bits;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

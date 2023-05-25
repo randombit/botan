@@ -17,8 +17,7 @@ namespace Botan {
 */
 //static
 BOTAN_FUNC_ISA("+crypto")
-void SHA_1::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t input8[], size_t blocks)
-   {
+void SHA_1::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t input8[], size_t blocks) {
    uint32x4_t ABCD;
    uint32_t E0;
 
@@ -34,8 +33,7 @@ void SHA_1::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t
    // Intermediate void* cast due to https://llvm.org/bugs/show_bug.cgi?id=20670
    const uint32_t* input32 = reinterpret_cast<const uint32_t*>(reinterpret_cast<const void*>(input8));
 
-   while (blocks)
-      {
+   while(blocks) {
       // Save current hash
       const uint32x4_t ABCD_SAVED = ABCD;
       const uint32_t E0_SAVED = E0;
@@ -193,13 +191,13 @@ void SHA_1::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t
       E0 += E0_SAVED;
       ABCD = vaddq_u32(ABCD_SAVED, ABCD);
 
-      input32 += 64/4;
+      input32 += 64 / 4;
       blocks--;
-      }
+   }
 
    // Save digest
    vst1q_u32(&digest[0], ABCD);
    digest[4] = E0;
-   }
-
 }
+
+}  // namespace Botan

@@ -13,123 +13,87 @@
 namespace Botan {
 
 CFB_Mode::CFB_Mode(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
-   m_cipher(std::move(cipher)),
-   m_block_size(m_cipher->block_size()),
-   m_feedback_bytes(feedback_bits ? feedback_bits / 8 : m_block_size)
-   {
-   if(feedback_bits % 8 || feedback() > m_block_size)
-      {
+      m_cipher(std::move(cipher)),
+      m_block_size(m_cipher->block_size()),
+      m_feedback_bytes(feedback_bits ? feedback_bits / 8 : m_block_size) {
+   if(feedback_bits % 8 || feedback() > m_block_size) {
       throw Invalid_Argument(fmt("{} does not support feedback bits of {}", name(), feedback_bits));
-      }
    }
+}
 
-void CFB_Mode::clear()
-   {
+void CFB_Mode::clear() {
    m_cipher->clear();
    m_keystream.clear();
    reset();
-   }
+}
 
-void CFB_Mode::reset()
-   {
+void CFB_Mode::reset() {
    m_state.clear();
    zeroise(m_keystream);
-   }
+}
 
-std::string CFB_Mode::name() const
-   {
+std::string CFB_Mode::name() const {
    if(feedback() == cipher().block_size())
       return fmt("{}/CFB", cipher().name());
    else
-      return fmt("{}/CFB({})", cipher().name(), feedback()*8);
-   }
+      return fmt("{}/CFB({})", cipher().name(), feedback() * 8);
+}
 
-size_t CFB_Mode::output_length(size_t input_length) const
-   {
-   return input_length;
-   }
+size_t CFB_Mode::output_length(size_t input_length) const { return input_length; }
 
-size_t CFB_Mode::update_granularity() const
-   {
-   return feedback();
-   }
+size_t CFB_Mode::update_granularity() const { return feedback(); }
 
-size_t CFB_Mode::ideal_granularity() const
-   {
+size_t CFB_Mode::ideal_granularity() const {
    // Multiplier here is arbitrary
-   return 16*feedback();
-   }
+   return 16 * feedback();
+}
 
-size_t CFB_Mode::minimum_final_size() const
-   {
-   return 0;
-   }
+size_t CFB_Mode::minimum_final_size() const { return 0; }
 
-Key_Length_Specification CFB_Mode::key_spec() const
-   {
-   return cipher().key_spec();
-   }
+Key_Length_Specification CFB_Mode::key_spec() const { return cipher().key_spec(); }
 
-size_t CFB_Mode::default_nonce_length() const
-   {
-   return block_size();
-   }
+size_t CFB_Mode::default_nonce_length() const { return block_size(); }
 
-bool CFB_Mode::valid_nonce_length(size_t n) const
-   {
-   return (n == 0 || n == block_size());
-   }
+bool CFB_Mode::valid_nonce_length(size_t n) const { return (n == 0 || n == block_size()); }
 
-bool CFB_Mode::has_keying_material() const
-   {
-   return m_cipher->has_keying_material();
-   }
+bool CFB_Mode::has_keying_material() const { return m_cipher->has_keying_material(); }
 
-void CFB_Mode::key_schedule(const uint8_t key[], size_t length)
-   {
+void CFB_Mode::key_schedule(const uint8_t key[], size_t length) {
    m_cipher->set_key(key, length);
    m_keystream.resize(m_cipher->block_size());
-   }
+}
 
-void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
-   {
+void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
    assert_key_material_set();
 
-   if(nonce_len == 0)
-      {
-      if(m_state.empty())
-         {
+   if(nonce_len == 0) {
+      if(m_state.empty()) {
          throw Invalid_State("CFB requires a non-empty initial nonce");
-         }
-      // No reason to encrypt state->keystream_buf, because no change
       }
-   else
-      {
+      // No reason to encrypt state->keystream_buf, because no change
+   } else {
       m_state.assign(nonce, nonce + nonce_len);
       cipher().encrypt(m_state, m_keystream);
       m_keystream_pos = 0;
-      }
    }
+}
 
-void CFB_Mode::shift_register()
-   {
+void CFB_Mode::shift_register() {
    const size_t shift = feedback();
    const size_t carryover = block_size() - shift;
 
-   if(carryover > 0)
-      {
+   if(carryover > 0) {
       copy_mem(m_state.data(), &m_state[shift], carryover);
-      }
+   }
    copy_mem(&m_state[carryover], m_keystream.data(), shift);
    cipher().encrypt(m_state, m_keystream);
    m_keystream_pos = 0;
-   }
+}
 
-size_t CFB_Encryption::process_msg(uint8_t buf[], size_t sz)
-   {
+size_t CFB_Encryption::process_msg(uint8_t buf[], size_t sz) {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_state.empty() == false);
 
@@ -137,8 +101,7 @@ size_t CFB_Encryption::process_msg(uint8_t buf[], size_t sz)
 
    size_t left = sz;
 
-   if(m_keystream_pos != 0)
-      {
+   if(m_keystream_pos != 0) {
       const size_t take = std::min<size_t>(left, shift - m_keystream_pos);
 
       xor_buf(m_keystream.data() + m_keystream_pos, buf, take);
@@ -148,53 +111,44 @@ size_t CFB_Encryption::process_msg(uint8_t buf[], size_t sz)
       left -= take;
       buf += take;
 
-      if(m_keystream_pos == shift)
-         {
+      if(m_keystream_pos == shift) {
          shift_register();
-         }
       }
+   }
 
-   while(left >= shift)
-      {
+   while(left >= shift) {
       xor_buf(m_keystream.data(), buf, shift);
       copy_mem(buf, m_keystream.data(), shift);
 
       left -= shift;
       buf += shift;
       shift_register();
-      }
+   }
 
-   if(left > 0)
-      {
+   if(left > 0) {
       xor_buf(m_keystream.data(), buf, left);
       copy_mem(buf, m_keystream.data(), left);
       m_keystream_pos += left;
-      }
+   }
 
    return sz;
-   }
+}
 
-void CFB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
-   {
-   update(buffer, offset);
-   }
+void CFB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) { update(buffer, offset); }
 
 namespace {
 
-inline void xor_copy(uint8_t buf[], uint8_t key_buf[], size_t len)
-   {
-   for(size_t i = 0; i != len; ++i)
-      {
+inline void xor_copy(uint8_t buf[], uint8_t key_buf[], size_t len) {
+   for(size_t i = 0; i != len; ++i) {
       uint8_t k = key_buf[i];
       key_buf[i] = buf[i];
       buf[i] ^= k;
-      }
    }
-
 }
 
-size_t CFB_Decryption::process_msg(uint8_t buf[], size_t sz)
-   {
+}  // namespace
+
+size_t CFB_Decryption::process_msg(uint8_t buf[], size_t sz) {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_state.empty() == false);
 
@@ -202,8 +156,7 @@ size_t CFB_Decryption::process_msg(uint8_t buf[], size_t sz)
 
    size_t left = sz;
 
-   if(m_keystream_pos != 0)
-      {
+   if(m_keystream_pos != 0) {
       const size_t take = std::min<size_t>(left, shift - m_keystream_pos);
 
       xor_copy(buf, m_keystream.data() + m_keystream_pos, take);
@@ -212,32 +165,26 @@ size_t CFB_Decryption::process_msg(uint8_t buf[], size_t sz)
       left -= take;
       buf += take;
 
-      if(m_keystream_pos == shift)
-         {
+      if(m_keystream_pos == shift) {
          shift_register();
-         }
       }
+   }
 
-   while(left >= shift)
-      {
+   while(left >= shift) {
       xor_copy(buf, m_keystream.data(), shift);
       left -= shift;
       buf += shift;
       shift_register();
-      }
+   }
 
-   if(left > 0)
-      {
+   if(left > 0) {
       xor_copy(buf, m_keystream.data(), left);
       m_keystream_pos += left;
-      }
+   }
 
    return sz;
-   }
-
-void CFB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset)
-   {
-   update(buffer, offset);
-   }
-
 }
+
+void CFB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) { update(buffer, offset); }
+
+}  // namespace Botan

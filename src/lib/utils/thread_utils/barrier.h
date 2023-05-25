@@ -8,8 +8,8 @@
 #ifndef BOTAN_UTIL_BARRIER_H_
 #define BOTAN_UTIL_BARRIER_H_
 
-#include <mutex>
 #include <condition_variable>
+#include <mutex>
 
 namespace Botan {
 
@@ -21,8 +21,7 @@ is reset to zero, and the m_syncs counter is incremented. m_syncs is a
 counter to ensure that wait() can be called after a sync() even if the
 previously sleeping threads have not awoken.)
 */
-class Barrier final
-   {
+class Barrier final {
    public:
       explicit Barrier(int value = 0) : m_value(value), m_syncs(0) {}
 
@@ -35,8 +34,8 @@ class Barrier final
       size_t m_syncs;
       std::mutex m_mutex;
       std::condition_variable m_cond;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

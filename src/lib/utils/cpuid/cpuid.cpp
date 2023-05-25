@@ -7,16 +7,15 @@
 
 #include <botan/internal/cpuid.h>
 
-#include <botan/types.h>
 #include <botan/exceptn.h>
-#include <botan/internal/parsing.h>
+#include <botan/types.h>
 #include <botan/internal/os_utils.h>
+#include <botan/internal/parsing.h>
 #include <ostream>
 
 namespace Botan {
 
-bool CPUID::has_simd_32()
-   {
+bool CPUID::has_simd_32() {
 #if defined(BOTAN_TARGET_SUPPORTS_SSE2)
    return CPUID::has_sse2();
 #elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
@@ -26,18 +25,16 @@ bool CPUID::has_simd_32()
 #else
    return true;
 #endif
-   }
+}
 
 //static
-std::string CPUID::to_string()
-   {
+std::string CPUID::to_string() {
    std::vector<std::string> flags;
 
-   auto append_fn = [&](bool flag, const char* flag_name)
-      {
+   auto append_fn = [&](bool flag, const char* flag_name) {
       if(flag)
          flags.push_back(flag_name);
-      };
+   };
 
    // NOLINTNEXTLINE(*-macro-usage)
 #define CPUID_PRINT(flag) append_fn(has_##flag(), #flag)
@@ -84,37 +81,28 @@ std::string CPUID::to_string()
 #undef CPUID_PRINT
 
    return string_join(flags, ' ');
-   }
+}
 
 //static
-void CPUID::initialize()
-   {
-   state() = CPUID_Data();
-   }
+void CPUID::initialize() { state() = CPUID_Data(); }
 
 namespace {
 
 // Returns true if big-endian
-bool runtime_check_if_big_endian()
-   {
+bool runtime_check_if_big_endian() {
    // Check runtime endian
    const uint32_t endian32 = 0x01234567;
    const uint8_t* e8 = reinterpret_cast<const uint8_t*>(&endian32);
 
    bool is_big_endian = false;
 
-   if(e8[0] == 0x01 && e8[1] == 0x23 && e8[2] == 0x45 && e8[3] == 0x67)
-      {
+   if(e8[0] == 0x01 && e8[1] == 0x23 && e8[2] == 0x45 && e8[3] == 0x67) {
       is_big_endian = true;
-      }
-   else if(e8[0] == 0x67 && e8[1] == 0x45 && e8[2] == 0x23 && e8[3] == 0x01)
-      {
+   } else if(e8[0] == 0x67 && e8[1] == 0x45 && e8[2] == 0x23 && e8[3] == 0x01) {
       is_big_endian = false;
-      }
-   else
-      {
+   } else {
       throw Internal_Error("Unexpected endian at runtime, neither big nor little");
-      }
+   }
 
    // If we were compiled with a known endian, verify it matches at runtime
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
@@ -124,17 +112,15 @@ bool runtime_check_if_big_endian()
 #endif
 
    return is_big_endian;
-   }
-
 }
 
-CPUID::CPUID_Data::CPUID_Data()
-   {
+}  // namespace
+
+CPUID::CPUID_Data::CPUID_Data() {
    m_processor_features = 0;
 
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || \
-    defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
-    defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
+   defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
    m_processor_features = detect_cpu_features();
 
@@ -146,22 +132,17 @@ CPUID::CPUID_Data::CPUID_Data()
       m_processor_features |= CPUID::CPUID_IS_BIG_ENDIAN_BIT;
 
    std::string clear_cpuid_env;
-   if(OS::read_env_variable(clear_cpuid_env, "BOTAN_CLEAR_CPUID"))
-      {
-      for(const auto& cpuid : split_on(clear_cpuid_env, ','))
-         {
-         for(auto& bit: CPUID::bit_from_string(cpuid))
-            {
+   if(OS::read_env_variable(clear_cpuid_env, "BOTAN_CLEAR_CPUID")) {
+      for(const auto& cpuid : split_on(clear_cpuid_env, ',')) {
+         for(auto& bit : CPUID::bit_from_string(cpuid)) {
             const uint32_t cleared = ~static_cast<uint32_t>(bit);
             m_processor_features &= cleared;
-            }
          }
       }
    }
+}
 
-std::vector<CPUID::CPUID_bits>
-CPUID::bit_from_string(std::string_view tok)
-   {
+std::vector<CPUID::CPUID_bits> CPUID::bit_from_string(std::string_view tok) {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    if(tok == "sse2" || tok == "simd")
       return {CPUID::CPUID_SSE2_BIT};
@@ -229,6 +210,6 @@ CPUID::bit_from_string(std::string_view tok)
 #endif
 
    return {};
-   }
-
 }
+
+}  // namespace Botan

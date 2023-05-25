@@ -15,25 +15,27 @@ namespace Botan {
 /**
 * RIPEMD-160
 */
-class RIPEMD_160 final : public MDx_HashFunction
-   {
+class RIPEMD_160 final : public MDx_HashFunction {
    public:
       std::string name() const override { return "RIPEMD-160"; }
+
       size_t output_length() const override { return 20; }
+
       std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<RIPEMD_160>(); }
+
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 
-      RIPEMD_160() : MDx_HashFunction(64, false, true), m_M(16), m_digest(5)
-         { clear(); }
+      RIPEMD_160() : MDx_HashFunction(64, false, true), m_M(16), m_digest(5) { clear(); }
+
    private:
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
 
       secure_vector<uint32_t> m_M, m_digest;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

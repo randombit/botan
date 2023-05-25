@@ -10,22 +10,16 @@
 
 namespace Botan::PKCS11 {
 
-PKCS11_RNG::PKCS11_RNG(Session& session)
-   : m_session(session)
-   {}
+PKCS11_RNG::PKCS11_RNG(Session& session) : m_session(session) {}
 
-void PKCS11_RNG::fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input)
-   {
-   if(!input.empty())
-      {
+void PKCS11_RNG::fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) {
+   if(!input.empty()) {
       module()->C_SeedRandom(m_session.get().handle(), const_cast<uint8_t*>(input.data()), Ulong(input.size()));
-      }
-
-   if(!output.empty())
-      {
-      module()->C_GenerateRandom(m_session.get().handle(), output.data(), Ulong(output.size()));
-      }
    }
 
+   if(!output.empty()) {
+      module()->C_GenerateRandom(m_session.get().handle(), output.data(), Ulong(output.size()));
+   }
 }
 
+}  // namespace Botan::PKCS11

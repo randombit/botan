@@ -18,8 +18,7 @@ namespace Botan::KeyPair {
 bool encryption_consistency_check(RandomNumberGenerator& rng,
                                   const Private_Key& private_key,
                                   const Public_Key& public_key,
-                                  std::string_view padding)
-   {
+                                  std::string_view padding) {
    PK_Encryptor_EME encryptor(public_key, rng, padding);
    PK_Decryptor_EME decryptor(private_key, rng, padding);
 
@@ -40,7 +39,7 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
    std::vector<uint8_t> decrypted = unlock(decryptor.decrypt(ciphertext));
 
    return (plaintext == decrypted);
-   }
+}
 
 /*
 * Check a signature key pair for consistency
@@ -48,8 +47,7 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
 bool signature_consistency_check(RandomNumberGenerator& rng,
                                  const Private_Key& private_key,
                                  const Public_Key& public_key,
-                                 std::string_view padding)
-   {
+                                 std::string_view padding) {
    PK_Signer signer(private_key, rng, padding);
    PK_Verifier verifier(public_key, padding);
 
@@ -58,14 +56,9 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
 
    std::vector<uint8_t> signature;
 
-   try
-      {
+   try {
       signature = signer.sign_message(message, rng);
-      }
-   catch(Encoding_Error&)
-      {
-      return false;
-      }
+   } catch(Encoding_Error&) { return false; }
 
    if(!verifier.verify_message(message, signature))
       return false;
@@ -77,6 +70,6 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
       return false;
 
    return true;
-   }
-
 }
+
+}  // namespace Botan::KeyPair

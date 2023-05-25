@@ -15,9 +15,9 @@
 #include <botan/tls_policy.h>
 #include <botan/tls_server.h>
 #include <botan/tls_session_manager.h>
-#include <botan/tls_session_manager_noop.h>
-#include <botan/tls_session_manager_memory.h>
-#include <botan/tls_session_manager_stateless.h>
 #include <botan/tls_session_manager_hybrid.h>
+#include <botan/tls_session_manager_memory.h>
+#include <botan/tls_session_manager_noop.h>
+#include <botan/tls_session_manager_stateless.h>
 
 #endif

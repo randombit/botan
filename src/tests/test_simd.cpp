@@ -7,29 +7,26 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_SIMD_32)
-   #include <botan/internal/simd_32.h>
    #include <botan/internal/bswap.h>
-   #include <botan/internal/rotate.h>
    #include <botan/internal/cpuid.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/rotate.h>
+   #include <botan/internal/simd_32.h>
 #endif
 
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_SIMD_32)
 
-class SIMD_32_Tests final : public Test
-   {
+class SIMD_32_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          Test::Result result("SIMD_4x32");
 
-         if(Botan::CPUID::has_simd_32() == false)
-            {
+         if(Botan::CPUID::has_simd_32() == false) {
             result.test_note("Skipping SIMD_4x32 tests due to missing CPU support at runtime");
             return {result};
-            }
+         }
 
          const uint32_t pat1 = 0xAABBCCDD;
          const uint32_t pat2 = 0x87654321;
@@ -54,7 +51,9 @@ class SIMD_32_Tests final : public Test
 
          Botan::SIMD_4x32 rol = input.rotl<3>();
 
-         test_eq(result, "rotl", rol,
+         test_eq(result,
+                 "rotl",
+                 rol,
                  Botan::rotl<3>(pat1),
                  Botan::rotl<3>(pat2),
                  Botan::rotl<3>(pat3),
@@ -62,7 +61,9 @@ class SIMD_32_Tests final : public Test
 
          Botan::SIMD_4x32 ror = input.rotr<9>();
 
-         test_eq(result, "rotr", ror,
+         test_eq(result,
+                 "rotr",
+                 ror,
                  Botan::rotr<9>(pat1),
                  Botan::rotr<9>(pat2),
                  Botan::rotr<9>(pat3),
@@ -102,11 +103,12 @@ class SIMD_32_Tests final : public Test
          test_eq(result, "~", blender, 0x7FFFFFF, 0x7FFFFFF, 0x7FFFFFF, 0x7FFFFFF);
 
          blender = input.andc(~blender);
-         test_eq(result, "andc", blender,
-                 ~pat1 & 0xF8000000, ~pat2 & 0xF8000000,
-                 ~pat3 & 0xF8000000, ~pat4 & 0xF8000000);
+         test_eq(
+            result, "andc", blender, ~pat1 & 0xF8000000, ~pat2 & 0xF8000000, ~pat3 & 0xF8000000, ~pat4 & 0xF8000000);
 
-         test_eq(result, "bswap", input.bswap(),
+         test_eq(result,
+                 "bswap",
+                 input.bswap(),
                  Botan::reverse_bytes(pat1),
                  Botan::reverse_bytes(pat2),
                  Botan::reverse_bytes(pat3),
@@ -133,36 +135,35 @@ class SIMD_32_Tests final : public Test
          test_eq(result, "shift right 3", input.shift_elems_right<3>(), pat4, 0, 0, 0);
 
          return {result};
-         }
+      }
 
    private:
-      static void test_eq(Test::Result& result, const std::string& op,
-                   const Botan::SIMD_4x32& simd,
-                   uint32_t exp0, uint32_t exp1, uint32_t exp2, uint32_t exp3)
-         {
+      static void test_eq(Test::Result& result,
+                          const std::string& op,
+                          const Botan::SIMD_4x32& simd,
+                          uint32_t exp0,
+                          uint32_t exp1,
+                          uint32_t exp2,
+                          uint32_t exp3) {
          uint8_t arr_be[16 + 15];
          uint8_t arr_be2[16 + 15];
          uint8_t arr_le[16 + 15];
          uint8_t arr_le2[16 + 15];
 
-         for(size_t misalignment = 0; misalignment != 16; ++misalignment)
-            {
-            uint8_t* mem_be  = arr_be  + misalignment;
+         for(size_t misalignment = 0; misalignment != 16; ++misalignment) {
+            uint8_t* mem_be = arr_be + misalignment;
             uint8_t* mem_be2 = arr_be2 + misalignment;
-            uint8_t* mem_le  = arr_le  + misalignment;
+            uint8_t* mem_le = arr_le + misalignment;
             uint8_t* mem_le2 = arr_le2 + misalignment;
 
             simd.store_be(mem_be);
 
-            result.test_int_eq("SIMD_4x32 " + op + " elem0 BE",
-                               Botan::make_uint32(mem_be[ 0], mem_be[ 1], mem_be[ 2], mem_be[ 3]),
-                               exp0);
-            result.test_int_eq("SIMD_4x32 " + op + " elem1 BE",
-                               Botan::make_uint32(mem_be[ 4], mem_be[ 5], mem_be[ 6], mem_be[ 7]),
-                               exp1);
-            result.test_int_eq("SIMD_4x32 " + op + " elem2 BE",
-                               Botan::make_uint32(mem_be[ 8], mem_be[ 9], mem_be[10], mem_be[11]),
-                               exp2);
+            result.test_int_eq(
+               "SIMD_4x32 " + op + " elem0 BE", Botan::make_uint32(mem_be[0], mem_be[1], mem_be[2], mem_be[3]), exp0);
+            result.test_int_eq(
+               "SIMD_4x32 " + op + " elem1 BE", Botan::make_uint32(mem_be[4], mem_be[5], mem_be[6], mem_be[7]), exp1);
+            result.test_int_eq(
+               "SIMD_4x32 " + op + " elem2 BE", Botan::make_uint32(mem_be[8], mem_be[9], mem_be[10], mem_be[11]), exp2);
             result.test_int_eq("SIMD_4x32 " + op + " elem3 BE",
                                Botan::make_uint32(mem_be[12], mem_be[13], mem_be[14], mem_be[15]),
                                exp3);
@@ -174,15 +175,12 @@ class SIMD_32_Tests final : public Test
 
             simd.store_le(mem_le);
 
-            result.test_int_eq("SIMD_4x32 " + op + " elem0 LE",
-                               Botan::make_uint32(mem_le[ 3], mem_le[ 2], mem_le[ 1], mem_le[ 0]),
-                               exp0);
-            result.test_int_eq("SIMD_4x32 " + op + " elem1 LE",
-                               Botan::make_uint32(mem_le[ 7], mem_le[ 6], mem_le[ 5], mem_le[ 4]),
-                               exp1);
-            result.test_int_eq("SIMD_4x32 " + op + " elem2 LE",
-                               Botan::make_uint32(mem_le[11], mem_le[10], mem_le[ 9], mem_le[ 8]),
-                               exp2);
+            result.test_int_eq(
+               "SIMD_4x32 " + op + " elem0 LE", Botan::make_uint32(mem_le[3], mem_le[2], mem_le[1], mem_le[0]), exp0);
+            result.test_int_eq(
+               "SIMD_4x32 " + op + " elem1 LE", Botan::make_uint32(mem_le[7], mem_le[6], mem_le[5], mem_le[4]), exp1);
+            result.test_int_eq(
+               "SIMD_4x32 " + op + " elem2 LE", Botan::make_uint32(mem_le[11], mem_le[10], mem_le[9], mem_le[8]), exp2);
             result.test_int_eq("SIMD_4x32 " + op + " elem3 LE",
                                Botan::make_uint32(mem_le[15], mem_le[14], mem_le[13], mem_le[12]),
                                exp3);
@@ -191,12 +189,11 @@ class SIMD_32_Tests final : public Test
             const Botan::SIMD_4x32 reloaded_le = Botan::SIMD_4x32::load_le(mem_le);
             reloaded_le.store_le(mem_le2);
             result.test_eq(nullptr, "SIMD_4x32 load_le", mem_le, 16, mem_le2, 16);
-            }
          }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("utils", "simd_32", SIMD_32_Tests);
 #endif
 
-}
+}  // namespace Botan_Tests

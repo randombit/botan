@@ -6,18 +6,14 @@
 
 #include <botan/sodium.h>
 
+#include <botan/mac.h>
 #include <botan/secmem.h>
 #include <botan/stream_cipher.h>
-#include <botan/mac.h>
 
 namespace Botan {
 
-int Sodium::crypto_secretbox_xsalsa20poly1305(uint8_t ctext[],
-                                              const uint8_t ptext[],
-                                              size_t ptext_len,
-                                              const uint8_t nonce[],
-                                              const uint8_t key[])
-   {
+int Sodium::crypto_secretbox_xsalsa20poly1305(
+   uint8_t ctext[], const uint8_t ptext[], size_t ptext_len, const uint8_t nonce[], const uint8_t key[]) {
    if(ptext_len < 32)
       return -1;
 
@@ -37,18 +33,13 @@ int Sodium::crypto_secretbox_xsalsa20poly1305(uint8_t ctext[],
 
    clear_mem(ctext, 16);
    return 0;
-   }
+}
 
-int Sodium::crypto_secretbox_xsalsa20poly1305_open(uint8_t ptext[],
-                                                   const uint8_t ctext[],
-                                                   size_t ctext_len,
-                                                   const uint8_t nonce[],
-                                                   const uint8_t key[])
-   {
-   if(ctext_len < crypto_box_curve25519xsalsa20poly1305_ZEROBYTES)
-      {
+int Sodium::crypto_secretbox_xsalsa20poly1305_open(
+   uint8_t ptext[], const uint8_t ctext[], size_t ctext_len, const uint8_t nonce[], const uint8_t key[]) {
+   if(ctext_len < crypto_box_curve25519xsalsa20poly1305_ZEROBYTES) {
       return -1;
-      }
+   }
 
    auto salsa = StreamCipher::create_or_throw("Salsa20");
    salsa->set_key(key, crypto_secretbox_KEYBYTES);
@@ -69,14 +60,14 @@ int Sodium::crypto_secretbox_xsalsa20poly1305_open(uint8_t ptext[],
 
    clear_mem(ptext, 32);
    return 0;
-   }
+}
 
-int Sodium::crypto_secretbox_detached(uint8_t ctext[], uint8_t mac[],
+int Sodium::crypto_secretbox_detached(uint8_t ctext[],
+                                      uint8_t mac[],
                                       const uint8_t ptext[],
                                       size_t ptext_len,
                                       const uint8_t nonce[],
-                                      const uint8_t key[])
-   {
+                                      const uint8_t key[]) {
    auto salsa = StreamCipher::create_or_throw("Salsa20");
    salsa->set_key(key, crypto_secretbox_KEYBYTES);
    salsa->set_iv(nonce, crypto_secretbox_NONCEBYTES);
@@ -92,15 +83,14 @@ int Sodium::crypto_secretbox_detached(uint8_t ctext[], uint8_t mac[],
    poly1305->final(mac);
 
    return 0;
-   }
+}
 
 int Sodium::crypto_secretbox_open_detached(uint8_t ptext[],
                                            const uint8_t ctext[],
                                            const uint8_t mac[],
                                            size_t ctext_len,
                                            const uint8_t nonce[],
-                                           const uint8_t key[])
-   {
+                                           const uint8_t key[]) {
    auto salsa = StreamCipher::create_or_throw("Salsa20");
    salsa->set_key(key, crypto_secretbox_KEYBYTES);
    salsa->set_iv(nonce, crypto_secretbox_NONCEBYTES);
@@ -119,6 +109,6 @@ int Sodium::crypto_secretbox_open_detached(uint8_t ptext[],
    salsa->cipher(ctext, ptext, ctext_len);
 
    return 0;
-   }
-
 }
+
+}  // namespace Botan

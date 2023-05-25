@@ -18,8 +18,7 @@ namespace {
 
 #if defined(BOTAN_HAS_ASN1)
 
-Test::Result test_OID_to_string()
-   {
+Test::Result test_OID_to_string() {
    /*
    See #2730 and #2237
 
@@ -43,18 +42,16 @@ Test::Result test_OID_to_string()
    call to std::to_string with something else that ignores locale.
    */
 
-   Botan::OID oid{1,2,1000,1001,1002000};
+   Botan::OID oid{1, 2, 1000, 1001, 1002000};
 
    Test::Result result("OID::to_string");
 
-   result.test_eq("OID::to_string behaves as we expect",
-                  oid.to_string(), "1.2.1000.1001.1002000");
+   result.test_eq("OID::to_string behaves as we expect", oid.to_string(), "1.2.1000.1001.1002000");
 
    return result;
-   }
+}
 
-Test::Result test_oid_registration()
-   {
+Test::Result test_oid_registration() {
    Test::Result result("OID add");
 
    const std::string name = "botan-test-oid1";
@@ -69,10 +66,9 @@ Test::Result test_oid_registration()
    result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
 
    return result;
-   }
+}
 
-Test::Result test_add_and_lookup()
-   {
+Test::Result test_add_and_lookup() {
    Test::Result result("OID add with redundant entries");
 
    const std::string name = "botan-test-oid2";
@@ -104,53 +100,41 @@ Test::Result test_add_and_lookup()
    // now second OID maps back to the string as expected:
    result.test_eq("name of OID matches expected", oid2.to_formatted_string(), name);
 
-   try
-      {
+   try {
       Botan::OID::register_oid(oid2, name2);
       result.test_failure("Registration of second name to the same OID was accepted");
-      }
-   catch(Botan::Invalid_State&)
-      {
-      result.test_success("Registration of second name to the same OID fails");
-      }
+   } catch(Botan::Invalid_State&) { result.test_success("Registration of second name to the same OID fails"); }
 
    return result;
-   }
+}
 
-class OID_Tests final : public Test
-   {
+class OID_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
-         std::vector<std::function<Test::Result()>> fns =
-            {
+         std::vector<std::function<Test::Result()>> fns = {
             test_OID_to_string,
             test_oid_registration,
             test_add_and_lookup,
-            };
+         };
 
-         for(size_t i = 0; i != fns.size(); ++i)
-            {
-            try
-               {
-               results.emplace_back(fns[ i ]());
-               }
-            catch(const std::exception& e)
-               {
+         for(size_t i = 0; i != fns.size(); ++i) {
+            try {
+               results.emplace_back(fns[i]());
+            } catch(const std::exception& e) {
                results.emplace_back(Test::Result::Failure("OID tests " + std::to_string(i), e.what()));
-               }
             }
+         }
 
          return results;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("asn1", "oid", OID_Tests);
 
 #endif
 
-}
+}  // namespace
 
-}
+}  // namespace Botan_Tests

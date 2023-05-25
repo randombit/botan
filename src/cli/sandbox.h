@@ -11,22 +11,18 @@
 
 namespace Botan_CLI {
 
-class Sandbox
-   {
+class Sandbox {
    public:
       explicit Sandbox();
       virtual ~Sandbox();
 
       static bool init();
 
-      const std::string& name() const
-         {
-         return m_name;
-         }
+      const std::string& name() const { return m_name; }
 
    private:
       std::string m_name;
-   };
-}
+};
+}  // namespace Botan_CLI
 
 #endif

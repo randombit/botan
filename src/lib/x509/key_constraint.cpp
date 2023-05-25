@@ -13,8 +13,7 @@
 
 namespace Botan {
 
-std::string Key_Constraints::to_string() const
-   {
+std::string Key_Constraints::to_string() const {
    if(this->m_value == Key_Constraints::None)
       return "no_constraints";
 
@@ -52,43 +51,33 @@ std::string Key_Constraints::to_string() const
       return "other_unknown_constraints";
 
    return string_join(str, ',');
-   }
+}
 
 /*
 * Make sure the given key constraints are permitted for the given key type
 */
-bool Key_Constraints::compatible_with(const Public_Key& pub_key) const
-   {
+bool Key_Constraints::compatible_with(const Public_Key& pub_key) const {
    uint32_t permitted = 0;
 
-   if(pub_key.supports_operation(PublicKeyOperation::KeyAgreement))
-      {
-      permitted |= Key_Constraints::KeyAgreement |
-         Key_Constraints::EncipherOnly |
-         Key_Constraints::DecipherOnly;
-      }
-
-   if(pub_key.supports_operation(PublicKeyOperation::Encryption) ||
-      pub_key.supports_operation(PublicKeyOperation::KeyEncapsulation))
-      {
-      permitted |= Key_Constraints::KeyEncipherment |
-         Key_Constraints::DataEncipherment;
-      }
-
-   if(pub_key.supports_operation(PublicKeyOperation::Signature))
-      {
-      permitted |= Key_Constraints::DigitalSignature |
-         Key_Constraints::NonRepudiation |
-         Key_Constraints::KeyCertSign |
-         Key_Constraints::CrlSign;
-      }
-
-   if((m_value & permitted) != m_value)
-      {
-      return false;
-      }
-
-   return true;
+   if(pub_key.supports_operation(PublicKeyOperation::KeyAgreement)) {
+      permitted |= Key_Constraints::KeyAgreement | Key_Constraints::EncipherOnly | Key_Constraints::DecipherOnly;
    }
 
+   if(pub_key.supports_operation(PublicKeyOperation::Encryption) ||
+      pub_key.supports_operation(PublicKeyOperation::KeyEncapsulation)) {
+      permitted |= Key_Constraints::KeyEncipherment | Key_Constraints::DataEncipherment;
+   }
+
+   if(pub_key.supports_operation(PublicKeyOperation::Signature)) {
+      permitted |= Key_Constraints::DigitalSignature | Key_Constraints::NonRepudiation | Key_Constraints::KeyCertSign |
+                   Key_Constraints::CrlSign;
+   }
+
+   if((m_value & permitted) != m_value) {
+      return false;
+   }
+
+   return true;
 }
+
+}  // namespace Botan

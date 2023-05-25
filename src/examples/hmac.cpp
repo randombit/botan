@@ -4,28 +4,28 @@
 
 #include <assert.h>
 
-static std::string compute_mac(const std::string &msg, const Botan::secure_vector<uint8_t> &key) {
-  auto hmac = Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
+static std::string compute_mac(const std::string& msg, const Botan::secure_vector<uint8_t>& key) {
+   auto hmac = Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
 
-  hmac->set_key(key);
-  hmac->update(msg);
+   hmac->set_key(key);
+   hmac->update(msg);
 
-  return Botan::hex_encode(hmac->final());
+   return Botan::hex_encode(hmac->final());
 }
 
 int main() {
-  Botan::AutoSeeded_RNG rng;
+   Botan::AutoSeeded_RNG rng;
 
-  const auto key = rng.random_vec(32); // 256 bit random key
+   const auto key = rng.random_vec(32);  // 256 bit random key
 
-  // "Message" != "Mussage" so tags will also not match
-  std::string tag1 = compute_mac("Message", key);
-  std::string tag2 = compute_mac("Mussage", key);
-  assert(tag1 != tag2);
+   // "Message" != "Mussage" so tags will also not match
+   std::string tag1 = compute_mac("Message", key);
+   std::string tag2 = compute_mac("Mussage", key);
+   assert(tag1 != tag2);
 
-  // Recomputing with original input message results in identical tag
-  std::string tag3 = compute_mac("Message", key);
-  assert(tag1 == tag3);
+   // Recomputing with original input message results in identical tag
+   std::string tag3 = compute_mac("Message", key);
+   assert(tag1 == tag3);
 
-  return 0;
+   return 0;
 }

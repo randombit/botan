@@ -10,36 +10,26 @@
 
 namespace Botan {
 
-std::map<std::string, std::string> read_kv(std::string_view kv)
-   {
+std::map<std::string, std::string> read_kv(std::string_view kv) {
    std::map<std::string, std::string> m;
    if(kv.empty())
       return m;
 
    std::vector<std::string> parts;
 
-   try
-      {
+   try {
       parts = split_on(kv, ',');
-      }
-   catch(std::exception&)
-      {
-      throw Invalid_Argument("Bad KV spec");
-      }
+   } catch(std::exception&) { throw Invalid_Argument("Bad KV spec"); }
 
    bool escaped = false;
    bool reading_key = true;
    std::string cur_key;
    std::string cur_val;
 
-   for(char c : kv)
-      {
-      if(c == '\\' && !escaped)
-         {
+   for(char c : kv) {
+      if(c == '\\' && !escaped) {
          escaped = true;
-         }
-      else if(c == ',' && !escaped)
-         {
+      } else if(c == ',' && !escaped) {
          if(cur_key.empty())
             throw Invalid_Argument("Bad KV spec empty key");
 
@@ -49,15 +39,11 @@ std::map<std::string, std::string> read_kv(std::string_view kv)
          cur_key = "";
          cur_val = "";
          reading_key = true;
-         }
-      else if(c == '=' && !escaped)
-         {
+      } else if(c == '=' && !escaped) {
          if(reading_key == false)
             throw Invalid_Argument("Bad KV spec unexpected equals sign");
          reading_key = false;
-         }
-      else
-         {
+      } else {
          if(reading_key)
             cur_key += c;
          else
@@ -65,22 +51,19 @@ std::map<std::string, std::string> read_kv(std::string_view kv)
 
          if(escaped)
             escaped = false;
-         }
       }
+   }
 
-   if(!cur_key.empty())
-      {
-      if(reading_key == false)
-         {
+   if(!cur_key.empty()) {
+      if(reading_key == false) {
          if(m.find(cur_key) != m.end())
             throw Invalid_Argument("Bad KV spec duplicated key");
          m[cur_key] = cur_val;
-         }
-      else
+      } else
          throw Invalid_Argument("Bad KV spec incomplete string");
-      }
-
-   return m;
    }
 
+   return m;
 }
+
+}  // namespace Botan

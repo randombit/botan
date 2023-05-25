@@ -16,13 +16,13 @@ namespace Botan {
 * Entropy source using the getentropy(2) system call first introduced in
 * OpenBSD 5.6 and added to Solaris 11.3.
 */
-class Getentropy final : public Entropy_Source
-   {
+class Getentropy final : public Entropy_Source {
    public:
       std::string name() const override { return "getentropy"; }
-      size_t poll(RandomNumberGenerator& rng) override;
-   };
 
-}
+      size_t poll(RandomNumberGenerator& rng) override;
+};
+
+}  // namespace Botan
 
 #endif

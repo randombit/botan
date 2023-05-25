@@ -7,9 +7,9 @@
 
 #include <botan/internal/commoncrypto.h>
 
-#include <botan/internal/commoncrypto_utils.h>
-#include <botan/hex.h>
 #include <botan/block_cipher.h>
+#include <botan/hex.h>
+#include <botan/internal/commoncrypto_utils.h>
 
 #include <CommonCrypto/CommonCrypto.h>
 
@@ -17,16 +17,18 @@ namespace Botan {
 
 namespace {
 
-class CommonCrypto_BlockCipher final : public BlockCipher
-   {
+class CommonCrypto_BlockCipher final : public BlockCipher {
    public:
       CommonCrypto_BlockCipher(std::string_view name, const CommonCryptor_Opts& opts);
 
       ~CommonCrypto_BlockCipher();
 
       void clear() override;
+
       std::string provider() const override { return "commoncrypto"; }
+
       std::string name() const override { return m_cipher_name; }
+
       std::unique_ptr<BlockCipher> new_object() const override;
 
       size_t block_size() const override { return m_opts.block_size; }
@@ -35,33 +37,27 @@ class CommonCrypto_BlockCipher final : public BlockCipher
 
       bool has_keying_material() const override { return m_key_set; }
 
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
-         {
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
          assert_key_material_set();
          size_t total_len = blocks * m_opts.block_size;
          size_t out_len = 0;
 
-         CCCryptorStatus status = CCCryptorUpdate(m_encrypt, in, total_len,
-                                  out, total_len, &out_len);
-         if(status != kCCSuccess)
-            {
+         CCCryptorStatus status = CCCryptorUpdate(m_encrypt, in, total_len, out, total_len, &out_len);
+         if(status != kCCSuccess) {
             throw CommonCrypto_Error("CCCryptorUpdate encrypt", status);
-            }
          }
+      }
 
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
-         {
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
          assert_key_material_set();
          size_t total_len = blocks * m_opts.block_size;
          size_t out_len = 0;
 
-         CCCryptorStatus status = CCCryptorUpdate(m_decrypt, in, total_len,
-                                  out, total_len, &out_len);
-         if(status != kCCSuccess)
-            {
+         CCCryptorStatus status = CCCryptorUpdate(m_decrypt, in, total_len, out, total_len, &out_len);
+         if(status != kCCSuccess) {
             throw CommonCrypto_Error("CCCryptorUpdate decrypt", status);
-            }
          }
+      }
 
       void key_schedule(const uint8_t key[], size_t key_len) override;
 
@@ -71,96 +67,73 @@ class CommonCrypto_BlockCipher final : public BlockCipher
       CCCryptorRef m_encrypt = nullptr;
       CCCryptorRef m_decrypt = nullptr;
       bool m_key_set;
-   };
+};
 
-CommonCrypto_BlockCipher::CommonCrypto_BlockCipher(std::string_view algo_name,
-      const CommonCryptor_Opts& opts) :
-   m_cipher_name(algo_name),
-   m_opts(opts),
-   m_key_set(false)
-   {
-   }
+CommonCrypto_BlockCipher::CommonCrypto_BlockCipher(std::string_view algo_name, const CommonCryptor_Opts& opts) :
+      m_cipher_name(algo_name), m_opts(opts), m_key_set(false) {}
 
-CommonCrypto_BlockCipher::~CommonCrypto_BlockCipher()
-   {
-   if(m_encrypt)
-      {
+CommonCrypto_BlockCipher::~CommonCrypto_BlockCipher() {
+   if(m_encrypt) {
       CCCryptorRelease(m_encrypt);
-      }
-   if(m_decrypt)
-      {
-      CCCryptorRelease(m_decrypt);
-      }
    }
+   if(m_decrypt) {
+      CCCryptorRelease(m_decrypt);
+   }
+}
 
 /*
 * Set the key
 */
-void CommonCrypto_BlockCipher::key_schedule(const uint8_t key[], size_t length)
-   {
+void CommonCrypto_BlockCipher::key_schedule(const uint8_t key[], size_t length) {
    secure_vector<uint8_t> full_key(key, key + length);
 
    clear();
    commoncrypto_adjust_key_size(key, length, m_opts, full_key);
 
    CCCryptorStatus status;
-   status = CCCryptorCreate(kCCEncrypt, m_opts.algo, kCCOptionECBMode,
-                            full_key.data(), full_key.size(), nullptr, &m_encrypt);
-   if(status != kCCSuccess)
-      {
+   status =
+      CCCryptorCreate(kCCEncrypt, m_opts.algo, kCCOptionECBMode, full_key.data(), full_key.size(), nullptr, &m_encrypt);
+   if(status != kCCSuccess) {
       throw CommonCrypto_Error("CCCryptorCreate encrypt", status);
-      }
-   status = CCCryptorCreate(kCCDecrypt, m_opts.algo, kCCOptionECBMode,
-                            full_key.data(), full_key.size(), nullptr, &m_decrypt);
-   if(status != kCCSuccess)
-      {
+   }
+   status =
+      CCCryptorCreate(kCCDecrypt, m_opts.algo, kCCOptionECBMode, full_key.data(), full_key.size(), nullptr, &m_decrypt);
+   if(status != kCCSuccess) {
       throw CommonCrypto_Error("CCCryptorCreate decrypt", status);
-      }
+   }
 
    m_key_set = true;
-   }
+}
 
 /*
 * Return a clone of this object
 */
-std::unique_ptr<BlockCipher> CommonCrypto_BlockCipher::new_object() const
-   {
+std::unique_ptr<BlockCipher> CommonCrypto_BlockCipher::new_object() const {
    return std::make_unique<CommonCrypto_BlockCipher>(m_cipher_name, m_opts);
-   }
+}
 
 /*
 * Clear memory of sensitive data
 */
-void CommonCrypto_BlockCipher::clear()
-   {
+void CommonCrypto_BlockCipher::clear() {
    m_key_set = false;
 
-   if(m_encrypt)
-      {
+   if(m_encrypt) {
       CCCryptorRelease(m_encrypt);
       m_encrypt = nullptr;
-      }
+   }
 
-   if(m_decrypt)
-      {
+   if(m_decrypt) {
       CCCryptorRelease(m_decrypt);
       m_decrypt = nullptr;
-      }
    }
 }
+}  // namespace
 
-std::unique_ptr<BlockCipher>
-make_commoncrypto_block_cipher(std::string_view name)
-   {
-   try
-      {
+std::unique_ptr<BlockCipher> make_commoncrypto_block_cipher(std::string_view name) {
+   try {
       CommonCryptor_Opts opts = commoncrypto_opts_from_algo_name(name);
       return std::make_unique<CommonCrypto_BlockCipher>(name, opts);
-      }
-   catch(CommonCrypto_Error& e)
-      {
-      return nullptr;
-      }
-   }
+   } catch(CommonCrypto_Error& e) { return nullptr; }
 }
-
+}  // namespace Botan

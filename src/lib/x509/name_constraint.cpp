@@ -8,57 +8,42 @@
 #include <botan/pkix_types.h>
 
 #include <botan/ber_dec.h>
-#include <botan/internal/loadstor.h>
 #include <botan/x509cert.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
-#include <sstream>
 #include <functional>
+#include <sstream>
 
 namespace Botan {
 
 class DER_Encoder;
 
-GeneralName::GeneralName(const std::string& str) : GeneralName()
-   {
+GeneralName::GeneralName(const std::string& str) : GeneralName() {
    size_t p = str.find(':');
 
-   if(p != std::string::npos)
-      {
+   if(p != std::string::npos) {
       m_type = str.substr(0, p);
       m_name = str.substr(p + 1, std::string::npos);
-      }
-   else
-      {
+   } else {
       throw Invalid_Argument("Failed to decode Name Constraint");
-      }
    }
+}
 
-void GeneralName::encode_into(DER_Encoder& /*to*/) const
-   {
-   throw Not_Implemented("GeneralName encoding");
-   }
+void GeneralName::encode_into(DER_Encoder& /*to*/) const { throw Not_Implemented("GeneralName encoding"); }
 
-void GeneralName::decode_from(BER_Decoder& ber)
-   {
+void GeneralName::decode_from(BER_Decoder& ber) {
    BER_Object obj = ber.get_next_object();
 
-   if(obj.is_a(1, ASN1_Class::ContextSpecific))
-      {
+   if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
       m_type = "RFC822";
       m_name = ASN1::to_string(obj);
-      }
-   else if(obj.is_a(2, ASN1_Class::ContextSpecific))
-      {
+   } else if(obj.is_a(2, ASN1_Class::ContextSpecific)) {
       m_type = "DNS";
       m_name = ASN1::to_string(obj);
-      }
-   else if(obj.is_a(6, ASN1_Class::ContextSpecific))
-      {
+   } else if(obj.is_a(6, ASN1_Class::ContextSpecific)) {
       m_type = "URI";
       m_name = ASN1::to_string(obj);
-      }
-   else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed))
-      {
+   } else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
       m_type = "DN";
       X509_DN dn;
       BER_Decoder dec(obj);
@@ -68,123 +53,91 @@ void GeneralName::decode_from(BER_Decoder& ber)
       ss << dn;
 
       m_name = ss.str();
-      }
-   else if(obj.is_a(7, ASN1_Class::ContextSpecific))
-      {
-      if(obj.length() == 8)
-         {
+   } else if(obj.is_a(7, ASN1_Class::ContextSpecific)) {
+      if(obj.length() == 8) {
          m_type = "IP";
-         m_name = ipv4_to_string(load_be<uint32_t>(obj.bits(), 0)) + "/" +
-                  ipv4_to_string(load_be<uint32_t>(obj.bits(), 1));
-         }
-      else if(obj.length() == 32)
-         {
+         m_name =
+            ipv4_to_string(load_be<uint32_t>(obj.bits(), 0)) + "/" + ipv4_to_string(load_be<uint32_t>(obj.bits(), 1));
+      } else if(obj.length() == 32) {
          throw Decoding_Error("Unsupported IPv6 name constraint");
-         }
-      else
-         {
+      } else {
          throw Decoding_Error("Invalid IP name constraint size " + std::to_string(obj.length()));
-         }
       }
-   else
-      {
+   } else {
       throw Decoding_Error("Found unknown GeneralName type");
-      }
    }
+}
 
-GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) const
-   {
+GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) const {
    std::vector<std::string> nam;
    std::function<bool(const GeneralName*, const std::string&)> match_fn;
 
    const X509_DN& dn = cert.subject_dn();
    const AlternativeName& alt_name = cert.subject_alt_name();
 
-   if(type() == "DNS")
-      {
+   if(type() == "DNS") {
       match_fn = std::mem_fn(&GeneralName::matches_dns);
 
       nam = alt_name.get_attribute("DNS");
 
-      if(nam.empty())
-         {
+      if(nam.empty()) {
          nam = dn.get_attribute("CN");
-         }
       }
-   else if(type() == "DN")
-      {
+   } else if(type() == "DN") {
       match_fn = std::mem_fn(&GeneralName::matches_dn);
 
       nam.push_back(dn.to_string());
 
       const auto alt_dn = alt_name.dn();
-      if(alt_dn.empty() == false)
-         {
+      if(alt_dn.empty() == false) {
          nam.push_back(alt_dn.to_string());
-         }
       }
-   else if(type() == "IP")
-      {
+   } else if(type() == "IP") {
       match_fn = std::mem_fn(&GeneralName::matches_ip);
       nam = alt_name.get_attribute("IP");
-      }
-   else
-      {
+   } else {
       return MatchResult::UnknownType;
-      }
+   }
 
-   if(nam.empty())
-      {
+   if(nam.empty()) {
       return MatchResult::NotFound;
-      }
+   }
 
    bool some = false;
    bool all = true;
 
-   for(const std::string& n: nam)
-      {
+   for(const std::string& n : nam) {
       bool m = match_fn(this, n);
 
       some |= m;
       all &= m;
-      }
-
-   if(all)
-      {
-      return MatchResult::All;
-      }
-   else if(some)
-      {
-      return MatchResult::Some;
-      }
-   else
-      {
-      return MatchResult::None;
-      }
    }
 
-bool GeneralName::matches_dns(const std::string& nam) const
-   {
-   if(nam.size() == name().size())
-      {
+   if(all) {
+      return MatchResult::All;
+   } else if(some) {
+      return MatchResult::Some;
+   } else {
+      return MatchResult::None;
+   }
+}
+
+bool GeneralName::matches_dns(const std::string& nam) const {
+   if(nam.size() == name().size()) {
       return tolower_string(nam) == tolower_string(name());
-      }
-   else if(name().size() > nam.size())
-      {
+   } else if(name().size() > nam.size()) {
       // The constraint is longer than the issued name: not possibly a match
       return false;
-      }
-   else // name.size() < nam.size()
-      {
+   } else  // name.size() < nam.size()
+   {
       // constr is suffix of nam
       const std::string constr = name().front() == '.' ? name() : "." + name();
       const std::string substr = nam.substr(nam.size() - constr.size(), constr.size());
       return tolower_string(constr) == tolower_string(substr);
-      }
    }
+}
 
-bool GeneralName::matches_dn(const std::string& nam) const
-   {
+bool GeneralName::matches_dn(const std::string& nam) const {
    std::stringstream ss(nam);
    std::stringstream tt(name());
    X509_DN nam_dn, my_dn;
@@ -196,22 +149,19 @@ bool GeneralName::matches_dn(const std::string& nam) const
    bool ret = true;
    size_t trys = 0;
 
-   for(const auto& c: my_dn.dn_info())
-      {
+   for(const auto& c : my_dn.dn_info()) {
       auto i = attr.equal_range(c.first);
 
-      if(i.first != i.second)
-         {
+      if(i.first != i.second) {
          trys += 1;
          ret = ret && (i.first->second == c.second.value());
-         }
       }
-
-   return trys > 0 && ret;
    }
 
-bool GeneralName::matches_ip(const std::string& nam) const
-   {
+   return trys > 0 && ret;
+}
+
+bool GeneralName::matches_ip(const std::string& nam) const {
    uint32_t ip = string_to_ipv4(nam);
    std::vector<std::string> p = split_on(name(), '/');
 
@@ -222,54 +172,44 @@ bool GeneralName::matches_ip(const std::string& nam) const
    uint32_t mask = string_to_ipv4(p.at(1));
 
    return (ip & mask) == net;
-   }
+}
 
-std::ostream& operator<<(std::ostream& os, const GeneralName& gn)
-   {
+std::ostream& operator<<(std::ostream& os, const GeneralName& gn) {
    os << gn.type() << ":" << gn.name();
    return os;
-   }
+}
 
-GeneralSubtree::GeneralSubtree(const std::string& str) : GeneralSubtree()
-   {
+GeneralSubtree::GeneralSubtree(const std::string& str) : GeneralSubtree() {
    size_t p0, p1;
    const auto min = std::stoull(str, &p0, 10);
    const auto max = std::stoull(str.substr(p0 + 1), &p1, 10);
    GeneralName gn(str.substr(p0 + p1 + 2));
 
-   if(p0 > 0 && p1 > 0)
-      {
+   if(p0 > 0 && p1 > 0) {
       m_minimum = static_cast<size_t>(min);
       m_maximum = static_cast<size_t>(max);
       m_base = gn;
-      }
-   else
-      {
+   } else {
       throw Invalid_Argument("Failed to decode Name Constraint");
-      }
    }
+}
 
-void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const
-   {
-   throw Not_Implemented("General Subtree encoding");
-   }
+void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const { throw Not_Implemented("General Subtree encoding"); }
 
-void GeneralSubtree::decode_from(BER_Decoder& ber)
-   {
+void GeneralSubtree::decode_from(BER_Decoder& ber) {
    ber.start_sequence()
       .decode(m_base)
       .decode_optional(m_minimum, ASN1_Type(0), ASN1_Class::ContextSpecific, size_t(0))
-   .end_cons();
+      .end_cons();
 
    if(m_minimum != 0)
-     throw Decoding_Error("GeneralSubtree minimum must be 0");
+      throw Decoding_Error("GeneralSubtree minimum must be 0");
 
    m_maximum = std::numeric_limits<std::size_t>::max();
-   }
+}
 
-std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs)
-   {
+std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs) {
    os << gs.minimum() << "," << gs.maximum() << "," << gs.base();
    return os;
-   }
 }
+}  // namespace Botan

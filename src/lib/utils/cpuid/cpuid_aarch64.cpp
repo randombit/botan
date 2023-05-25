@@ -9,34 +9,32 @@
 
 #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
-#include <botan/internal/os_utils.h>
+   #include <botan/internal/os_utils.h>
 
-#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
-  #include <sys/types.h>
-  #include <sys/sysctl.h>
-#endif
+   #if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+      #include <sys/sysctl.h>
+      #include <sys/types.h>
+   #endif
 
 namespace Botan {
 
-#if defined(BOTAN_TARGET_OS_IS_MACOS)
+   #if defined(BOTAN_TARGET_OS_IS_MACOS)
 namespace {
 
-bool sysctlbyname_has_feature(const char* feature_name)
-   {
+bool sysctlbyname_has_feature(const char* feature_name) {
    unsigned int feature;
    size_t size = sizeof(feature);
    ::sysctlbyname(feature_name, &feature, &size, nullptr, 0);
    return (feature == 1);
-   }
-
 }
-#endif
 
-uint32_t CPUID::CPUID_Data::detect_cpu_features()
-   {
+}  // namespace
+   #endif
+
+uint32_t CPUID::CPUID_Data::detect_cpu_features() {
    uint32_t detected_features = 0;
 
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
+   #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    /*
    * On systems with getauxval these bits should normally be defined
    * in bits/auxv.h but some buggy? glibc installs seem to miss them.
@@ -45,23 +43,22 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
    */
 
    enum ARM_hwcap_bit {
-      NEON_bit  = (1 << 1),
-      AES_bit   = (1 << 3),
+      NEON_bit = (1 << 1),
+      AES_bit = (1 << 3),
       PMULL_bit = (1 << 4),
-      SHA1_bit  = (1 << 5),
-      SHA2_bit  = (1 << 6),
-      SHA3_bit  = (1 << 17),
-      SM3_bit  = (1 << 18),
-      SM4_bit  = (1 << 19),
+      SHA1_bit = (1 << 5),
+      SHA2_bit = (1 << 6),
+      SHA3_bit = (1 << 17),
+      SM3_bit = (1 << 18),
+      SM4_bit = (1 << 19),
       SHA2_512_bit = (1 << 21),
       SVE_bit = (1 << 22),
 
-      ARCH_hwcap = 16, // AT_HWCAP
+      ARCH_hwcap = 16,  // AT_HWCAP
    };
 
    const unsigned long hwcap = OS::get_auxval(ARM_hwcap_bit::ARCH_hwcap);
-   if(hwcap & ARM_hwcap_bit::NEON_bit)
-      {
+   if(hwcap & ARM_hwcap_bit::NEON_bit) {
       detected_features |= CPUID::CPUID_ARM_NEON_BIT;
       if(hwcap & ARM_hwcap_bit::AES_bit)
          detected_features |= CPUID::CPUID_ARM_AES_BIT;
@@ -81,9 +78,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
          detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
       if(hwcap & ARM_hwcap_bit::SVE_bit)
          detected_features |= CPUID::CPUID_ARM_SVE_BIT;
-      }
+   }
 
-#elif defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+   #elif defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
 
    // All 64-bit Apple ARM chips have NEON, AES, and SHA support
    detected_features |= CPUID::CPUID_ARM_NEON_BIT;
@@ -92,14 +89,14 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
    detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
    detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
 
-#if defined(BOTAN_TARGET_OS_IS_MACOS)
+      #if defined(BOTAN_TARGET_OS_IS_MACOS)
    if(sysctlbyname_has_feature("hw.optional.armv8_2_sha3"))
-     detected_features |= CPUID::CPUID_ARM_SHA3_BIT;
+      detected_features |= CPUID::CPUID_ARM_SHA3_BIT;
    if(sysctlbyname_has_feature("hw.optional.armv8_2_sha512"))
       detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
-#endif
+      #endif
 
-#elif defined(BOTAN_USE_GCC_INLINE_ASM)
+   #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
    /*
    No getauxval API available, fall back on probe functions. We only
@@ -110,17 +107,34 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
    NEON registers v0-v7 are caller saved in Aarch64
    */
 
-   auto neon_probe  = []() noexcept -> int { asm("and v0.16b, v0.16b, v0.16b"); return 1; };
-   auto aes_probe   = []() noexcept -> int { asm(".word 0x4e284800"); return 1; };
-   auto pmull_probe = []() noexcept -> int { asm(".word 0x0ee0e000"); return 1; };
-   auto sha1_probe  = []() noexcept -> int { asm(".word 0x5e280800"); return 1; };
-   auto sha2_probe  = []() noexcept -> int { asm(".word 0x5e282800"); return 1; };
-   auto sha512_probe = []() noexcept -> int { asm(".long 0xcec08000"); return 1; };
+   auto neon_probe = []() noexcept -> int {
+      asm("and v0.16b, v0.16b, v0.16b");
+      return 1;
+   };
+   auto aes_probe = []() noexcept -> int {
+      asm(".word 0x4e284800");
+      return 1;
+   };
+   auto pmull_probe = []() noexcept -> int {
+      asm(".word 0x0ee0e000");
+      return 1;
+   };
+   auto sha1_probe = []() noexcept -> int {
+      asm(".word 0x5e280800");
+      return 1;
+   };
+   auto sha2_probe = []() noexcept -> int {
+      asm(".word 0x5e282800");
+      return 1;
+   };
+   auto sha512_probe = []() noexcept -> int {
+      asm(".long 0xcec08000");
+      return 1;
+   };
 
    // Only bother running the crypto detection if we found NEON
 
-   if(OS::run_cpu_instruction_probe(neon_probe) == 1)
-      {
+   if(OS::run_cpu_instruction_probe(neon_probe) == 1) {
       detected_features |= CPUID::CPUID_ARM_NEON_BIT;
 
       if(OS::run_cpu_instruction_probe(aes_probe) == 1)
@@ -133,13 +147,13 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features()
          detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
       if(OS::run_cpu_instruction_probe(sha512_probe) == 1)
          detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
-      }
-
-#endif
-
-   return detected_features;
    }
 
+   #endif
+
+   return detected_features;
 }
+
+}  // namespace Botan
 
 #endif

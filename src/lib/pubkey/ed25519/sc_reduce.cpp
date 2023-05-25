@@ -22,8 +22,7 @@ Output:
   Overwrites s in place.
 */
 
-void sc_reduce(uint8_t* s)
-   {
+void sc_reduce(uint8_t* s) {
    const uint32_t MASK = 0x1fffff;
 
    int64_t s0 = MASK & load_3(s);
@@ -53,10 +52,10 @@ void sc_reduce(uint8_t* s)
 
    redc_mul(s11, s12, s13, s14, s15, s16, s23);
    redc_mul(s10, s11, s12, s13, s14, s15, s22);
-   redc_mul( s9, s10, s11, s12, s13, s14, s21);
-   redc_mul( s8,  s9, s10, s11, s12, s13, s20);
-   redc_mul( s7,  s8,  s9, s10, s11, s12, s19);
-   redc_mul( s6,  s7,  s8,  s9, s10, s11, s18);
+   redc_mul(s9, s10, s11, s12, s13, s14, s21);
+   redc_mul(s8, s9, s10, s11, s12, s13, s20);
+   redc_mul(s7, s8, s9, s10, s11, s12, s19);
+   redc_mul(s6, s7, s8, s9, s10, s11, s18);
 
    carry<21>(s6, s7);
    carry<21>(s8, s9);
@@ -154,6 +153,6 @@ void sc_reduce(uint8_t* s)
    s[29] = static_cast<uint8_t>(s11 >> 1);
    s[30] = static_cast<uint8_t>(s11 >> 9);
    s[31] = static_cast<uint8_t>(s11 >> 17);
-   }
-
 }
+
+}  // namespace Botan

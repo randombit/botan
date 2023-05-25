@@ -8,9 +8,9 @@
 #ifndef BOTAN_X509_SELF_H_
 #define BOTAN_X509_SELF_H_
 
-#include <botan/x509cert.h>
 #include <botan/pkcs10.h>
 #include <botan/pkix_types.h>
+#include <botan/x509cert.h>
 
 namespace Botan {
 
@@ -20,8 +20,7 @@ class Private_Key;
 /**
 * Options for X.509 certificates.
 */
-class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
-   {
+class BOTAN_PUBLIC_API(2, 0) X509_Cert_Options final {
    public:
       /**
       * the subject common name
@@ -181,9 +180,8 @@ class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
       * parameter would be "common_name/country/organization/organizational_unit".
       * @param expire_time the expiration time (from the current clock in seconds)
       */
-      X509_Cert_Options(std::string_view opts = "",
-                        uint32_t expire_time = 365 * 24 * 60 * 60);
-   };
+      X509_Cert_Options(std::string_view opts = "", uint32_t expire_time = 365 * 24 * 60 * 60);
+};
 
 namespace X509 {
 
@@ -196,11 +194,11 @@ namespace X509 {
 * @param rng the rng to use
 * @return newly created self-signed certificate
 */
-BOTAN_PUBLIC_API(2,0) X509_Certificate
-create_self_signed_cert(const X509_Cert_Options& opts,
-                        const Private_Key& key,
-                        std::string_view hash_fn,
-                        RandomNumberGenerator& rng);
+BOTAN_PUBLIC_API(2, 0)
+X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
+                                         const Private_Key& key,
+                                         std::string_view hash_fn,
+                                         RandomNumberGenerator& rng);
 
 /**
 * Create a PKCS#10 certificate request.
@@ -210,13 +208,14 @@ create_self_signed_cert(const X509_Cert_Options& opts,
 * @param hash_fn the hash function to use
 * @return newly created PKCS#10 request
 */
-BOTAN_PUBLIC_API(2,0) PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
-                                         const Private_Key& key,
-                                         std::string_view hash_fn,
-                                         RandomNumberGenerator& rng);
+BOTAN_PUBLIC_API(2, 0)
+PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
+                               const Private_Key& key,
+                               std::string_view hash_fn,
+                               RandomNumberGenerator& rng);
 
-}
+}  // namespace X509
 
-}
+}  // namespace Botan
 
 #endif

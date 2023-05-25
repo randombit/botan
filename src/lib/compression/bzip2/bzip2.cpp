@@ -19,26 +19,24 @@ namespace Botan {
 
 namespace {
 
-class Bzip2_Stream : public Zlib_Style_Stream<bz_stream, char, unsigned int>
-   {
+class Bzip2_Stream : public Zlib_Style_Stream<bz_stream, char, unsigned int> {
    public:
-      Bzip2_Stream()
-         {
+      Bzip2_Stream() {
          streamp()->opaque = alloc();
          streamp()->bzalloc = Compression_Alloc_Info::malloc<int>;
          streamp()->bzfree = Compression_Alloc_Info::free;
-         }
+      }
 
       uint32_t run_flag() const override { return BZ_RUN; }
-      uint32_t flush_flag() const override { return BZ_FLUSH; }
-      uint32_t finish_flag() const override { return BZ_FINISH; }
-   };
 
-class Bzip2_Compression_Stream final : public Bzip2_Stream
-   {
+      uint32_t flush_flag() const override { return BZ_FLUSH; }
+
+      uint32_t finish_flag() const override { return BZ_FINISH; }
+};
+
+class Bzip2_Compression_Stream final : public Bzip2_Stream {
    public:
-      explicit Bzip2_Compression_Stream(size_t block_size)
-         {
+      explicit Bzip2_Compression_Stream(size_t block_size) {
          /*
          * Defaults to 900k blocks as the computation cost of
          * compression is not overly affected by the size, though
@@ -51,61 +49,49 @@ class Bzip2_Compression_Stream final : public Bzip2_Stream
 
          if(rc != BZ_OK)
             throw Compression_Error("BZ2_bzCompressInit", ErrorType::Bzip2Error, rc);
-         }
+      }
 
-      ~Bzip2_Compression_Stream()
-         {
-         BZ2_bzCompressEnd(streamp());
-         }
+      ~Bzip2_Compression_Stream() { BZ2_bzCompressEnd(streamp()); }
 
-      bool run(uint32_t flags) override
-         {
+      bool run(uint32_t flags) override {
          int rc = BZ2_bzCompress(streamp(), flags);
 
          if(rc < 0)
             throw Compression_Error("BZ2_bzCompress", ErrorType::Bzip2Error, rc);
 
          return (rc == BZ_STREAM_END);
-         }
-   };
+      }
+};
 
-class Bzip2_Decompression_Stream final : public Bzip2_Stream
-   {
+class Bzip2_Decompression_Stream final : public Bzip2_Stream {
    public:
-      Bzip2_Decompression_Stream()
-         {
+      Bzip2_Decompression_Stream() {
          int rc = BZ2_bzDecompressInit(streamp(), 0, 0);
 
          if(rc != BZ_OK)
             throw Compression_Error("BZ2_bzDecompressInit", ErrorType::Bzip2Error, rc);
-         }
+      }
 
-      ~Bzip2_Decompression_Stream()
-         {
-         BZ2_bzDecompressEnd(streamp());
-         }
+      ~Bzip2_Decompression_Stream() { BZ2_bzDecompressEnd(streamp()); }
 
-      bool run(uint32_t) override
-         {
+      bool run(uint32_t) override {
          int rc = BZ2_bzDecompress(streamp());
 
          if(rc != BZ_OK && rc != BZ_STREAM_END)
             throw Compression_Error("BZ2_bzDecompress", ErrorType::Bzip2Error, rc);
 
          return (rc == BZ_STREAM_END);
-         }
-   };
+      }
+};
 
-}
+}  // namespace
 
-std::unique_ptr<Compression_Stream> Bzip2_Compression::make_stream(size_t comp_level) const
-   {
+std::unique_ptr<Compression_Stream> Bzip2_Compression::make_stream(size_t comp_level) const {
    return std::make_unique<Bzip2_Compression_Stream>(comp_level);
-   }
-
-std::unique_ptr<Compression_Stream> Bzip2_Decompression::make_stream() const
-   {
-   return std::make_unique<Bzip2_Decompression_Stream>();
-   }
-
 }
+
+std::unique_ptr<Compression_Stream> Bzip2_Decompression::make_stream() const {
+   return std::make_unique<Bzip2_Decompression_Stream>();
+}
+
+}  // namespace Botan

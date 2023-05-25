@@ -16,8 +16,7 @@ namespace Botan {
 /**
 * Parallel Hashes
 */
-class Parallel final : public HashFunction
-   {
+class Parallel final : public HashFunction {
    public:
       void clear() override;
       std::string name() const override;
@@ -34,6 +33,7 @@ class Parallel final : public HashFunction
 
       Parallel(const Parallel&) = delete;
       Parallel& operator=(const Parallel&) = delete;
+
    private:
       Parallel() = delete;
 
@@ -41,8 +41,8 @@ class Parallel final : public HashFunction
       void final_result(uint8_t[]) override;
 
       std::vector<std::unique_ptr<HashFunction>> m_hashes;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

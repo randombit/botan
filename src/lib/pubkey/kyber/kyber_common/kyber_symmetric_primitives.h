@@ -14,28 +14,26 @@
 #include <botan/stream_cipher.h>
 
 #include <memory>
+#include <span>
 #include <tuple>
 #include <vector>
-#include <span>
 
 namespace Botan {
 
-class Kyber_XOF
-   {
+class Kyber_XOF {
    public:
       virtual ~Kyber_XOF() {}
 
       virtual void set_position(const std::tuple<uint8_t, uint8_t>& matrix_position) = 0;
 
       virtual void write_output(std::span<uint8_t> out) = 0;
-   };
+};
 
 /**
  * Adapter class that uses polymorphy to distinguish
  * Kyber "modern" from Kyber "90s" modes.
  */
-class Kyber_Symmetric_Primitives
-   {
+class Kyber_Symmetric_Primitives {
    public:
       virtual ~Kyber_Symmetric_Primitives() = default;
 
@@ -45,12 +43,11 @@ class Kyber_Symmetric_Primitives
 
       virtual std::unique_ptr<Kyber_XOF> XOF(std::span<const uint8_t> seed) const = 0;
 
-      virtual secure_vector<uint8_t> PRF(
-         std::span<const uint8_t> seed,
-         const uint8_t nonce,
-         const size_t outlen) const = 0;
-   };
+      virtual secure_vector<uint8_t> PRF(std::span<const uint8_t> seed,
+                                         const uint8_t nonce,
+                                         const size_t outlen) const = 0;
+};
 
-} // namespace Botan
+}  // namespace Botan
 
 #endif

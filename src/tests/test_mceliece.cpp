@@ -10,11 +10,11 @@
 
 #if defined(BOTAN_HAS_MCELIECE)
 
+   #include <botan/hash.h>
+   #include <botan/hex.h>
    #include <botan/mceliece.h>
    #include <botan/pubkey.h>
    #include <botan/internal/loadstor.h>
-   #include <botan/hash.h>
-   #include <botan/hex.h>
 
    #if defined(BOTAN_HAS_HMAC_DRBG)
       #include <botan/hmac_drbg.h>
@@ -28,35 +28,32 @@ namespace {
 
 #if defined(BOTAN_HAS_MCELIECE)
 
-#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_SHA2_64)
-class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
-   {
+   #if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_SHA2_64)
+class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test {
    public:
-      McEliece_Keygen_Encrypt_Test()
-         : Text_Based_Test("pubkey/mce.vec",
-                           "McElieceSeed,KeyN,KeyT,PublicKeyFingerprint,PrivateKeyFingerprint,"
-                           "EncryptPRNGSeed,SharedKey,Ciphertext",
-                           "") {}
+      McEliece_Keygen_Encrypt_Test() :
+            Text_Based_Test("pubkey/mce.vec",
+                            "McElieceSeed,KeyN,KeyT,PublicKeyFingerprint,PrivateKeyFingerprint,"
+                            "EncryptPRNGSeed,SharedKey,Ciphertext",
+                            "") {}
 
-      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
-         {
-         const std::vector<uint8_t> keygen_seed  = vars.get_req_bin("McElieceSeed");
-         const std::vector<uint8_t> fprint_pub   = vars.get_req_bin("PublicKeyFingerprint");
-         const std::vector<uint8_t> fprint_priv  = vars.get_req_bin("PrivateKeyFingerprint");
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
+         const std::vector<uint8_t> keygen_seed = vars.get_req_bin("McElieceSeed");
+         const std::vector<uint8_t> fprint_pub = vars.get_req_bin("PublicKeyFingerprint");
+         const std::vector<uint8_t> fprint_priv = vars.get_req_bin("PrivateKeyFingerprint");
          const std::vector<uint8_t> encrypt_seed = vars.get_req_bin("EncryptPRNGSeed");
-         const std::vector<uint8_t> ciphertext   = vars.get_req_bin("Ciphertext");
-         const std::vector<uint8_t> shared_key   = vars.get_req_bin("SharedKey");
+         const std::vector<uint8_t> ciphertext = vars.get_req_bin("Ciphertext");
+         const std::vector<uint8_t> shared_key = vars.get_req_bin("SharedKey");
          const size_t keygen_n = vars.get_req_sz("KeyN");
          const size_t keygen_t = vars.get_req_sz("KeyT");
 
          Test::Result result("McEliece keygen");
          result.start_timer();
 
-         if(Test::run_long_tests() == false && keygen_n > 3072)
-            {
+         if(Test::run_long_tests() == false && keygen_n > 3072) {
             result.test_note("Skipping because long");
             return result;
-            }
+         }
 
          Botan::HMAC_DRBG rng("SHA-384");
          rng.initialize_with(keygen_seed.data(), keygen_seed.size());
@@ -68,8 +65,7 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
          rng.clear();
          rng.initialize_with(encrypt_seed.data(), encrypt_seed.size());
 
-         try
-            {
+         try {
             Botan::PK_KEM_Encryptor kem_enc(mce_priv, "KDF1(SHA-512)");
             Botan::PK_KEM_Decryptor kem_dec(mce_priv, Test::rng(), "KDF1(SHA-512)");
 
@@ -81,91 +77,70 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
             result.test_eq("ciphertext", encap_key, ciphertext);
             result.test_eq("encrypt shared", prod_shared_key, shared_key);
             result.test_eq("decrypt shared", dec_shared_key, shared_key);
-            }
-         catch(Botan::Lookup_Error&)
-            {
-            }
+         } catch(Botan::Lookup_Error&) {}
 
          result.end_timer();
          return result;
-         }
+      }
 
    private:
-      static std::vector<uint8_t> hash_bytes(const uint8_t b[], size_t len, const std::string& hash_fn = "SHA-256")
-         {
+      static std::vector<uint8_t> hash_bytes(const uint8_t b[], size_t len, const std::string& hash_fn = "SHA-256") {
          auto hash = Botan::HashFunction::create(hash_fn);
          hash->update(b, len);
          std::vector<uint8_t> r(hash->output_length());
          hash->final(r.data());
          return r;
-         }
+      }
 
-      template<typename A>
-      std::vector<uint8_t> hash_bytes(const std::vector<uint8_t, A>& v)
-         {
+      template <typename A>
+      std::vector<uint8_t> hash_bytes(const std::vector<uint8_t, A>& v) {
          return hash_bytes(v.data(), v.size());
-         }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("pubkey", "mce_keygen", McEliece_Keygen_Encrypt_Test);
-#endif
+   #endif
 
+   #if defined(BOTAN_HAS_SHA2_32)
 
-#if defined(BOTAN_HAS_SHA2_32)
-
-class McEliece_Tests final : public Test
-   {
+class McEliece_Tests final : public Test {
    public:
-
-      static std::string fingerprint(const Botan::Private_Key& key, const std::string& hash_algo = "SHA-256")
-         {
+      static std::string fingerprint(const Botan::Private_Key& key, const std::string& hash_algo = "SHA-256") {
          auto hash = Botan::HashFunction::create(hash_algo);
-         if(!hash)
-            {
+         if(!hash) {
             throw Test_Error("Hash " + hash_algo + " not available");
-            }
+         }
 
          hash->update(key.private_key_bits());
          return Botan::hex_encode(hash->final());
-         }
+      }
 
-      static std::string fingerprint(const Botan::Public_Key& key, const std::string& hash_algo = "SHA-256")
-         {
+      static std::string fingerprint(const Botan::Public_Key& key, const std::string& hash_algo = "SHA-256") {
          auto hash = Botan::HashFunction::create(hash_algo);
-         if(!hash)
-            {
+         if(!hash) {
             throw Test_Error("Hash " + hash_algo + " not available");
-            }
+         }
 
          hash->update(key.public_key_bits());
          return Botan::hex_encode(hash->final());
-         }
+      }
 
-      std::vector<Test::Result> run() override
-         {
-         struct keygen_params { size_t code_length, t_min, t_max; };
+      std::vector<Test::Result> run() override {
+         struct keygen_params {
+               size_t code_length, t_min, t_max;
+         };
 
-         const keygen_params param_sets[] =
-            {
-               { 256, 5, 15 },
-               { 512, 5, 33 },
-               { 1024, 15, 35 },
-               { 2048, 33, 50 },
-               { 6624, 110, 115 }
-            };
+         const keygen_params param_sets[] = {
+            {256, 5, 15}, {512, 5, 33}, {1024, 15, 35}, {2048, 33, 50}, {6624, 110, 115}};
 
          std::vector<Test::Result> results;
 
-         for(size_t i = 0; i < sizeof(param_sets) / sizeof(param_sets[0]); ++i)
-            {
-            if(Test::run_long_tests() == false && param_sets[i].code_length >= 2048)
-               {
+         for(size_t i = 0; i < sizeof(param_sets) / sizeof(param_sets[0]); ++i) {
+            if(Test::run_long_tests() == false && param_sets[i].code_length >= 2048) {
                continue;
-               }
+            }
 
-            for(size_t t = param_sets[i].t_min; t <= param_sets[i].t_max; ++t)
-               {
+            for(size_t t = param_sets[i].t_min; t <= param_sets[i].t_max; ++t) {
                Test::Result result("McEliece keygen");
                result.start_timer();
 
@@ -187,20 +162,17 @@ class McEliece_Tests final : public Test
 
                results.push_back(result);
 
-#if defined(BOTAN_HAS_KDF2)
+      #if defined(BOTAN_HAS_KDF2)
                results.push_back(test_kem(sk, pk));
-#endif
-
-               }
+      #endif
             }
-
-         return results;
          }
 
+         return results;
+      }
+
    private:
-      static Test::Result test_kem(const Botan::McEliece_PrivateKey& sk,
-                            const Botan::McEliece_PublicKey& pk)
-         {
+      static Test::Result test_kem(const Botan::McEliece_PrivateKey& sk, const Botan::McEliece_PublicKey& pk) {
          Test::Result result("McEliece KEM");
          result.start_timer();
 
@@ -208,8 +180,7 @@ class McEliece_Tests final : public Test
          Botan::PK_KEM_Decryptor dec_op(sk, Test::rng(), "KDF2(SHA-256)");
 
          const size_t trials = (Test::run_long_tests() ? 30 : 10);
-         for(size_t i = 0; i < trials; i++)
-            {
+         for(size_t i = 0; i < trials; i++) {
             Botan::secure_vector<uint8_t> salt = Test::rng().random_vec(i);
 
             Botan::secure_vector<uint8_t> encap_key, shared_key;
@@ -218,19 +189,18 @@ class McEliece_Tests final : public Test
             Botan::secure_vector<uint8_t> shared_key2 = dec_op.decrypt(encap_key, 64, salt);
 
             result.test_eq("same key", shared_key, shared_key2);
-            }
+         }
          result.end_timer();
          return result;
-         }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("pubkey", "mceliece", McEliece_Tests);
 
-#endif
+   #endif
 
 #endif
 
-}
+}  // namespace
 
-}
+}  // namespace Botan_Tests

@@ -19,8 +19,7 @@ class RandomNumberGenerator;
 /**
 * Blinding Function Object.
 */
-class Blinder final
-   {
+class Blinder final {
    public:
       /**
       * Blind a value.
@@ -51,8 +50,8 @@ class Blinder final
       */
       Blinder(const BigInt& modulus,
               RandomNumberGenerator& rng,
-              std::function<BigInt (const BigInt&)> fwd_func,
-              std::function<BigInt (const BigInt&)> inv_func);
+              std::function<BigInt(const BigInt&)> fwd_func,
+              std::function<BigInt(const BigInt&)> inv_func);
 
       Blinder(const Blinder&) = delete;
 
@@ -65,14 +64,14 @@ class Blinder final
 
       Modular_Reducer m_reducer;
       RandomNumberGenerator& m_rng;
-      std::function<BigInt (const BigInt&)> m_fwd_fn;
-      std::function<BigInt (const BigInt&)> m_inv_fn;
+      std::function<BigInt(const BigInt&)> m_fwd_fn;
+      std::function<BigInt(const BigInt&)> m_inv_fn;
       size_t m_modulus_bits = 0;
 
       mutable BigInt m_e, m_d;
       mutable size_t m_counter = 0;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -14,15 +14,12 @@
 
 #include <botan/concepts.h>
 
-namespace Botan
-{
+namespace Botan {
 
-namespace detail
-{
+namespace detail {
 
 template <typename T>
-class Strong_Base
-   {
+class Strong_Base {
    private:
       T m_value;
 
@@ -36,19 +33,18 @@ class Strong_Base
       explicit Strong_Base(T v) : m_value(std::move(v)) {}
 
       T& get() { return m_value; }
+
       const T& get() const { return m_value; }
-   };
+};
 
 template <typename T>
-class Strong_Adapter : public Strong_Base<T>
-   {
+class Strong_Adapter : public Strong_Base<T> {
    public:
       using Strong_Base<T>::Strong_Base;
-   };
+};
 
 template <concepts::container T>
-class Strong_Adapter<T> : public Strong_Base<T>
-   {
+class Strong_Adapter<T> : public Strong_Base<T> {
    public:
       using value_type = typename T::value_type;
       using size_type = typename T::size_type;
@@ -61,66 +57,65 @@ class Strong_Adapter<T> : public Strong_Base<T>
       using Strong_Base<T>::Strong_Base;
 
       explicit Strong_Adapter(std::span<const value_type> span)
-      requires(concepts::contiguous_container<T>)
-         : Strong_Adapter(T(span.begin(), span.end())) {}
+         requires(concepts::contiguous_container<T>)
+            : Strong_Adapter(T(span.begin(), span.end())) {}
 
       explicit Strong_Adapter(size_t size)
-      requires(concepts::resizable_container<T>)
-         : Strong_Adapter(T(size)) {}
+         requires(concepts::resizable_container<T>)
+            : Strong_Adapter(T(size)) {}
 
       // Disambiguates the usage of string literals, otherwise:
       // Strong_Adapter(std::span<>) and Strong_Adapter(const char*)
       // would be ambiguous.
       explicit Strong_Adapter(const char* str)
-      requires(std::same_as<T, std::string>)
-         : Strong_Adapter(std::string(str)) {}
+         requires(std::same_as<T, std::string>)
+            : Strong_Adapter(std::string(str)) {}
 
    public:
-      decltype(auto) begin() noexcept(noexcept(this->get().begin()))
-         { return this->get().begin(); }
+      decltype(auto) begin() noexcept(noexcept(this->get().begin())) { return this->get().begin(); }
 
-      decltype(auto) begin() const noexcept(noexcept(this->get().begin()))
-         { return this->get().begin(); }
+      decltype(auto) begin() const noexcept(noexcept(this->get().begin())) { return this->get().begin(); }
 
-      decltype(auto) end() noexcept(noexcept(this->get().end()))
-         { return this->get().end(); }
+      decltype(auto) end() noexcept(noexcept(this->get().end())) { return this->get().end(); }
 
-      decltype(auto) end() const noexcept(noexcept(this->get().end()))
-         { return this->get().end(); }
+      decltype(auto) end() const noexcept(noexcept(this->get().end())) { return this->get().end(); }
 
-      decltype(auto) cbegin() noexcept(noexcept(this->get().cbegin()))
-         { return this->get().cbegin(); }
+      decltype(auto) cbegin() noexcept(noexcept(this->get().cbegin())) { return this->get().cbegin(); }
 
-      decltype(auto) cbegin() const noexcept(noexcept(this->get().cbegin()))
-         { return this->get().cbegin(); }
+      decltype(auto) cbegin() const noexcept(noexcept(this->get().cbegin())) { return this->get().cbegin(); }
 
-      decltype(auto) cend() noexcept(noexcept(this->get().cend()))
-         { return this->get().cend(); }
+      decltype(auto) cend() noexcept(noexcept(this->get().cend())) { return this->get().cend(); }
 
-      decltype(auto) cend() const noexcept(noexcept(this->get().cend()))
-         { return this->get().cend(); }
+      decltype(auto) cend() const noexcept(noexcept(this->get().cend())) { return this->get().cend(); }
 
-      size_type size() const noexcept(noexcept(this->get().size()))
-         { return this->get().size(); }
+      size_type size() const noexcept(noexcept(this->get().size())) { return this->get().size(); }
 
       decltype(auto) data() noexcept(noexcept(this->get().data()))
-      requires(concepts::contiguous_container<T>)
-         { return this->get().data(); }
+         requires(concepts::contiguous_container<T>)
+      {
+         return this->get().data();
+      }
 
       decltype(auto) data() const noexcept(noexcept(this->get().data()))
-      requires(concepts::contiguous_container<T>)
-         { return this->get().data(); }
+         requires(concepts::contiguous_container<T>)
+      {
+         return this->get().data();
+      }
 
       bool empty() const noexcept(noexcept(this->get().empty()))
-      requires(concepts::has_empty<T>)
-         { return this->get().empty(); }
+         requires(concepts::has_empty<T>)
+      {
+         return this->get().empty();
+      }
 
       void resize(size_type size) noexcept(noexcept(this->get().resize(size)))
-      requires(concepts::resizable_container<T>)
-         { this->get().resize(size); }
-   };
+         requires(concepts::resizable_container<T>)
+      {
+         this->get().resize(size);
+      }
+};
 
-}
+}  // namespace detail
 
 /**
  * Strong types can be used as wrappers around common types to provide
@@ -133,31 +128,33 @@ class Strong_Adapter<T> : public Strong_Base<T>
  * This implementation was inspired by:
  *   https://stackoverflow.com/a/69030899
  */
-template<typename T, typename TagTypeT>
-class Strong : public detail::Strong_Adapter<T>
-   {
+template <typename T, typename TagTypeT>
+class Strong : public detail::Strong_Adapter<T> {
    public:
       using detail::Strong_Adapter<T>::Strong_Adapter;
 
    private:
       using Tag = TagTypeT;
-   };
+};
 
-template<typename T, typename... Tags>
-requires(concepts::streamable<T>)
-decltype(auto) operator<<(std::ostream& os, const Strong<T, Tags...>& v)
-   { return os << v.get(); }
-
-template<typename T, typename... Tags>
-requires(concepts::equality_comparable<T>)
-bool operator==(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs)
-   { return lhs.get() == rhs.get(); }
-
-template<typename T, typename... Tags>
-requires(concepts::three_way_comparable<T>)
-auto operator<=>(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs)
-   { return lhs.get() <=> rhs.get(); }
-
+template <typename T, typename... Tags>
+   requires(concepts::streamable<T>) decltype(auto)
+operator<<(std::ostream& os, const Strong<T, Tags...>& v) {
+   return os << v.get();
 }
+
+template <typename T, typename... Tags>
+   requires(concepts::equality_comparable<T>) bool
+operator==(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs) {
+   return lhs.get() == rhs.get();
+}
+
+template <typename T, typename... Tags>
+   requires(concepts::three_way_comparable<T>)
+auto operator<=>(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs) {
+   return lhs.get() <=> rhs.get();
+}
+
+}  // namespace Botan
 
 #endif

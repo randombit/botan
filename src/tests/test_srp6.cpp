@@ -7,10 +7,10 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_SRP6)
-   #include <botan/srp6.h>
-   #include <botan/hash.h>
-   #include <botan/dl_group.h>
    #include "test_rng.h"
+   #include <botan/dl_group.h>
+   #include <botan/hash.h>
+   #include <botan/srp6.h>
 #endif
 
 namespace Botan_Tests {
@@ -19,15 +19,13 @@ namespace {
 
 #if defined(BOTAN_HAS_SRP6)
 
-class SRP6_KAT_Tests final : public Text_Based_Test
-   {
+class SRP6_KAT_Tests final : public Text_Based_Test {
    public:
       SRP6_KAT_Tests() : Text_Based_Test("srp6a.vec", "Hash,N,g,I,P,s,v,a,b,A,B,S") {}
 
       bool clear_between_callbacks() const override { return false; }
 
-      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          const std::string hash = vars.get_req_str("Hash");
          const std::string username = vars.get_req_str("I");
          const std::string password = vars.get_req_str("P");
@@ -47,17 +45,15 @@ class SRP6_KAT_Tests final : public Text_Based_Test
 
          Test::Result result("SRP6a " + group_id);
 
-         if(Botan::HashFunction::create(hash) == nullptr)
-            {
+         if(Botan::HashFunction::create(hash) == nullptr) {
             result.test_note("Skipping test as hash function not available");
             return result;
-            }
+         }
 
-         if(N.bits() >= 4096 && !Test::run_long_tests())
-            {
+         if(N.bits() >= 4096 && !Test::run_long_tests()) {
             result.test_note("Skipping test with long SRP modulus");
             return result;
-            }
+         }
 
          Botan::DL_Group group(group_id);
 
@@ -82,30 +78,26 @@ class SRP6_KAT_Tests final : public Text_Based_Test
          result.test_eq("SRP server S", S, exp_S);
 
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("pake", "srp6_kat", SRP6_KAT_Tests);
 
-#if defined(BOTAN_HAS_SHA2_32)
+   #if defined(BOTAN_HAS_SHA2_32)
 
-class SRP6_RT_Tests final : public Test
-   {
+class SRP6_RT_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
          const std::string username = "user";
          const std::string password = "Awellchosen1_to_be_sure_";
          const std::string hash_id = "SHA-256";
 
-         for(size_t b : { 1024, 1536, 2048, 3072, 4096, 6144, 8192 })
-            {
-            if(b >= 4096 && !Test::run_long_tests())
-               {
+         for(size_t b : {1024, 1536, 2048, 3072, 4096, 6144, 8192}) {
+            if(b >= 4096 && !Test::run_long_tests()) {
                continue;
-               }
+            }
 
             const std::string group_id = "modp/srp/" + std::to_string(b);
             Test::Result result("SRP6 " + group_id);
@@ -114,8 +106,7 @@ class SRP6_RT_Tests final : public Test
 
             const size_t trials = 8192 / b;
 
-            for(size_t t = 0; t != trials; ++t)
-               {
+            for(size_t t = 0; t != trials; ++t) {
                std::vector<uint8_t> salt;
                Test::rng().random_vec(salt, 16);
 
@@ -131,21 +122,21 @@ class SRP6_RT_Tests final : public Test
                const Botan::SymmetricKey server_K = server.step2(client.first);
 
                result.test_eq("computed same keys", client.second.bits_of(), server_K.bits_of());
-               }
+            }
             result.end_timer();
             results.push_back(result);
-            }
+         }
 
          return results;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("pake", "srp6_rt", SRP6_RT_Tests);
 
-#endif
+   #endif
 
 #endif
 
-}
+}  // namespace
 
-}
+}  // namespace Botan_Tests

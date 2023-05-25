@@ -8,79 +8,78 @@
 
 #include <botan/internal/os_utils.h>
 
-#include <botan/internal/cpuid.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/cpuid.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-  #include <thread>
+   #include <thread>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
-  #include <string.h>
+   #include <string.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
-  #include <sys/types.h>
-  #include <sys/resource.h>
-  #include <sys/mman.h>
-  #include <signal.h>
-  #include <stdlib.h>
-  #include <setjmp.h>
-  #include <unistd.h>
-  #include <errno.h>
-  #include <termios.h>
-  #undef B0
+   #include <errno.h>
+   #include <setjmp.h>
+   #include <signal.h>
+   #include <stdlib.h>
+   #include <sys/mman.h>
+   #include <sys/resource.h>
+   #include <sys/types.h>
+   #include <termios.h>
+   #include <unistd.h>
+   #undef B0
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
-  #include <emscripten/emscripten.h>
+   #include <emscripten/emscripten.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_IS_ANDROID) || \
-  defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
-  #include <sys/auxv.h>
+   defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
+   #include <sys/auxv.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_AUXINFO)
-  #include <dlfcn.h>
-  #include <elf.h>
+   #include <dlfcn.h>
+   #include <elf.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
-  #define NOMINMAX 1
-  #define _WINSOCKAPI_ // stop windows.h including winsock.h
-  #include <windows.h>
+   #define NOMINMAX 1
+   #define _WINSOCKAPI_  // stop windows.h including winsock.h
+   #include <windows.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_ANDROID)
-  #include <elf.h>
-  extern "C" char **environ;
+   #include <elf.h>
+extern "C" char** environ;
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
-  #include <sys/types.h>
-  #include <sys/sysctl.h>
-  #include <mach/vm_statistics.h>
+   #include <mach/vm_statistics.h>
+   #include <sys/sysctl.h>
+   #include <sys/types.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_PRCTL)
-  #include <sys/prctl.h>
-  #if !defined(PR_SET_VMA)
-    #define PR_SET_VMA 0x53564d41
-    #define PR_SET_VMA_ANON_NAME 0
-  #endif
+   #include <sys/prctl.h>
+   #if !defined(PR_SET_VMA)
+      #define PR_SET_VMA 0x53564d41
+      #define PR_SET_VMA_ANON_NAME 0
+   #endif
 #endif
 
 namespace Botan {
 
 // Not defined in OS namespace for historical reasons
-void secure_scrub_memory(void* ptr, size_t n)
-   {
+void secure_scrub_memory(void* ptr, size_t n) {
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
    ::RtlSecureZeroMemory(ptr, n);
 
@@ -107,23 +106,21 @@ void secure_scrub_memory(void* ptr, size_t n)
    for(size_t i = 0; i != n; ++i)
       p[i] = 0;
 #endif
-   }
+}
 
-uint32_t OS::get_process_id()
-   {
+uint32_t OS::get_process_id() {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    return ::getpid();
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
    return ::GetCurrentProcessId();
 #elif defined(BOTAN_TARGET_OS_IS_LLVM) || defined(BOTAN_TARGET_OS_IS_NONE)
-   return 0; // truly no meaningful value
+   return 0;  // truly no meaningful value
 #else
    #error "Missing get_process_id"
 #endif
-   }
+}
 
-unsigned long OS::get_auxval(unsigned long id)
-   {
+unsigned long OS::get_auxval(unsigned long id) {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
    return ::getauxval(id);
 #elif defined(BOTAN_TARGET_OS_IS_ANDROID) && defined(BOTAN_TARGET_ARCH_IS_ARM32)
@@ -131,19 +128,18 @@ unsigned long OS::get_auxval(unsigned long id)
    if(id == 0)
       return 0;
 
-   char **p = environ;
+   char** p = environ;
 
    while(*p++ != nullptr)
       ;
 
-   Elf32_auxv_t *e = reinterpret_cast<Elf32_auxv_t*>(p);
+   Elf32_auxv_t* e = reinterpret_cast<Elf32_auxv_t*>(p);
 
-   while(e != nullptr)
-      {
+   while(e != nullptr) {
       if(e->a_type == id)
          return e->a_un.a_val;
       e++;
-      }
+   }
 
    return 0;
 #elif defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
@@ -151,21 +147,19 @@ unsigned long OS::get_auxval(unsigned long id)
    ::elf_aux_info(static_cast<int>(id), &auxinfo, sizeof(auxinfo));
    return auxinfo;
 #elif defined(BOTAN_TARGET_OS_HAS_AUXINFO)
-   for (const AuxInfo *auxinfo = static_cast<AuxInfo *>(::_dlauxinfo()); auxinfo != AT_NULL; ++auxinfo)
-      {
-      if (id == auxinfo->a_type)
-          return auxinfo->a_v;
-      }
+   for(const AuxInfo* auxinfo = static_cast<AuxInfo*>(::_dlauxinfo()); auxinfo != AT_NULL; ++auxinfo) {
+      if(id == auxinfo->a_type)
+         return auxinfo->a_v;
+   }
 
    return 0;
 #else
    BOTAN_UNUSED(id);
    return 0;
 #endif
-   }
+}
 
-bool OS::running_in_privileged_state()
-   {
+bool OS::running_in_privileged_state() {
 #if defined(AT_SECURE)
    return OS::get_auxval(AT_SECURE) != 0;
 #elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
@@ -173,10 +167,9 @@ bool OS::running_in_privileged_state()
 #else
    return false;
 #endif
-   }
+}
 
-uint64_t OS::get_cpu_cycle_counter()
-   {
+uint64_t OS::get_cpu_cycle_counter() {
    uint64_t rtc = 0;
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
@@ -186,71 +179,67 @@ uint64_t OS::get_cpu_cycle_counter()
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-   if(CPUID::has_rdtsc())
-      {
+   if(CPUID::has_rdtsc()) {
       uint32_t rtc_low = 0, rtc_high = 0;
-      asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
+      asm volatile("rdtsc" : "=d"(rtc_high), "=a"(rtc_low));
       rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
-      }
+   }
 
-#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   #elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
 
-   for(;;)
-      {
+   for(;;) {
       uint32_t rtc_low = 0, rtc_high = 0, rtc_high2 = 0;
-      asm volatile("mftbu %0" : "=r" (rtc_high));
-      asm volatile("mftb %0" : "=r" (rtc_low));
-      asm volatile("mftbu %0" : "=r" (rtc_high2));
+      asm volatile("mftbu %0" : "=r"(rtc_high));
+      asm volatile("mftb %0" : "=r"(rtc_low));
+      asm volatile("mftbu %0" : "=r"(rtc_high2));
 
-      if(rtc_high == rtc_high2)
-         {
+      if(rtc_high == rtc_high2) {
          rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
          break;
-         }
       }
+   }
 
-#elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
-   asm volatile("rpcc %0" : "=r" (rtc));
+   #elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
+   asm volatile("rpcc %0" : "=r"(rtc));
 
-   // OpenBSD does not trap access to the %tick register
-#elif defined(BOTAN_TARGET_ARCH_IS_SPARC64) && !defined(BOTAN_TARGET_OS_IS_OPENBSD)
-   asm volatile("rd %%tick, %0" : "=r" (rtc));
+      // OpenBSD does not trap access to the %tick register
+   #elif defined(BOTAN_TARGET_ARCH_IS_SPARC64) && !defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   asm volatile("rd %%tick, %0" : "=r"(rtc));
 
-#elif defined(BOTAN_TARGET_ARCH_IS_IA64)
-   asm volatile("mov %0=ar.itc" : "=r" (rtc));
+   #elif defined(BOTAN_TARGET_ARCH_IS_IA64)
+   asm volatile("mov %0=ar.itc" : "=r"(rtc));
 
-#elif defined(BOTAN_TARGET_ARCH_IS_S390X)
-   asm volatile("stck 0(%0)" : : "a" (&rtc) : "memory", "cc");
+   #elif defined(BOTAN_TARGET_ARCH_IS_S390X)
+   asm volatile("stck 0(%0)" : : "a"(&rtc) : "memory", "cc");
 
-#elif defined(BOTAN_TARGET_ARCH_IS_HPPA)
-   asm volatile("mfctl 16,%0" : "=r" (rtc)); // 64-bit only?
+   #elif defined(BOTAN_TARGET_ARCH_IS_HPPA)
+   asm volatile("mfctl 16,%0" : "=r"(rtc));  // 64-bit only?
 
-#else
-   //#warning "OS::get_cpu_cycle_counter not implemented"
-#endif
+   #else
+      //#warning "OS::get_cpu_cycle_counter not implemented"
+   #endif
 
 #endif
 
    return rtc;
-   }
+}
 
-size_t OS::get_cpu_available()
-   {
+size_t OS::get_cpu_available() {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
 
-#if defined(_SC_NPROCESSORS_ONLN)
+   #if defined(_SC_NPROCESSORS_ONLN)
    const long cpu_online = ::sysconf(_SC_NPROCESSORS_ONLN);
    if(cpu_online > 0)
       return static_cast<size_t>(cpu_online);
-#endif
+   #endif
 
-#if defined(_SC_NPROCESSORS_CONF)
+   #if defined(_SC_NPROCESSORS_CONF)
    const long cpu_conf = ::sysconf(_SC_NPROCESSORS_CONF);
    if(cpu_conf > 0)
       return static_cast<size_t>(cpu_conf);
-#endif
+   #endif
 
 #endif
 
@@ -264,10 +253,9 @@ size_t OS::get_cpu_available()
 #endif
 
    return 1;
-   }
+}
 
-uint64_t OS::get_high_resolution_clock()
-   {
+uint64_t OS::get_high_resolution_clock() {
    if(uint64_t cpu_clock = OS::get_cpu_cycle_counter())
       return cpu_clock;
 
@@ -286,54 +274,49 @@ uint64_t OS::get_high_resolution_clock()
 
    // The ordering here is somewhat arbitrary...
    const clockid_t clock_types[] = {
-#if defined(CLOCK_MONOTONIC_HR)
+   #if defined(CLOCK_MONOTONIC_HR)
       CLOCK_MONOTONIC_HR,
-#endif
-#if defined(CLOCK_MONOTONIC_RAW)
+   #endif
+   #if defined(CLOCK_MONOTONIC_RAW)
       CLOCK_MONOTONIC_RAW,
-#endif
-#if defined(CLOCK_MONOTONIC)
+   #endif
+   #if defined(CLOCK_MONOTONIC)
       CLOCK_MONOTONIC,
-#endif
-#if defined(CLOCK_PROCESS_CPUTIME_ID)
+   #endif
+   #if defined(CLOCK_PROCESS_CPUTIME_ID)
       CLOCK_PROCESS_CPUTIME_ID,
-#endif
-#if defined(CLOCK_THREAD_CPUTIME_ID)
+   #endif
+   #if defined(CLOCK_THREAD_CPUTIME_ID)
       CLOCK_THREAD_CPUTIME_ID,
-#endif
+   #endif
    };
 
-   for(clockid_t clock : clock_types)
-      {
+   for(clockid_t clock : clock_types) {
       struct timespec ts;
-      if(::clock_gettime(clock, &ts) == 0)
-         {
+      if(::clock_gettime(clock, &ts) == 0) {
          return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
-         }
       }
+   }
 #endif
 
    // Plain C++11 fallback
    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-   }
+}
 
-uint64_t OS::get_system_timestamp_ns()
-   {
+uint64_t OS::get_system_timestamp_ns() {
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
    struct timespec ts;
-   if(::clock_gettime(CLOCK_REALTIME, &ts) == 0)
-      {
+   if(::clock_gettime(CLOCK_REALTIME, &ts) == 0) {
       return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
-      }
+   }
 #endif
 
    auto now = std::chrono::system_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-   }
+}
 
-size_t OS::system_page_size()
-   {
+size_t OS::system_page_size() {
    const size_t default_page_size = 4096;
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
@@ -350,10 +333,9 @@ size_t OS::system_page_size()
 #else
    return default_page_size;
 #endif
-   }
+}
 
-size_t OS::get_memory_locking_limit()
-   {
+size_t OS::get_memory_locking_limit() {
    /*
    * Linux defaults to only 64 KiB of mlockable memory per process (too small)
    * but BSDs offer a small fraction of total RAM (more than we need). Bound the
@@ -369,36 +351,31 @@ size_t OS::get_memory_locking_limit()
    * unprivileged mlock calls.
    */
 #if defined(RLIMIT_MEMLOCK) && defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-   const size_t mlock_requested = std::min<size_t>(
-      read_env_variable_sz("BOTAN_MLOCK_POOL_SIZE", max_locked_kb),
-      max_locked_kb);
+   const size_t mlock_requested =
+      std::min<size_t>(read_env_variable_sz("BOTAN_MLOCK_POOL_SIZE", max_locked_kb), max_locked_kb);
 
-   if(mlock_requested > 0)
-      {
+   if(mlock_requested > 0) {
       struct ::rlimit limits;
 
       ::getrlimit(RLIMIT_MEMLOCK, &limits);
 
-      if(limits.rlim_cur < limits.rlim_max)
-         {
+      if(limits.rlim_cur < limits.rlim_max) {
          limits.rlim_cur = limits.rlim_max;
          ::setrlimit(RLIMIT_MEMLOCK, &limits);
          ::getrlimit(RLIMIT_MEMLOCK, &limits);
-         }
+      }
 
       return std::min<size_t>(limits.rlim_cur, mlock_requested * 1024);
-      }
+   }
 
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
-   const size_t mlock_requested = std::min<size_t>(
-      read_env_variable_sz("BOTAN_MLOCK_POOL_SIZE", max_locked_kb),
-      max_locked_kb);
+   const size_t mlock_requested =
+      std::min<size_t>(read_env_variable_sz("BOTAN_MLOCK_POOL_SIZE", max_locked_kb), max_locked_kb);
 
    SIZE_T working_min = 0, working_max = 0;
-   if(!::GetProcessWorkingSetSize(::GetCurrentProcess(), &working_min, &working_max))
-      {
+   if(!::GetProcessWorkingSetSize(::GetCurrentProcess(), &working_min, &working_max)) {
       return 0;
-      }
+   }
 
    // According to Microsoft MSDN:
    // The maximum number of pages that a process can lock is equal to the number of pages in its minimum working set minus a small overhead
@@ -407,21 +384,19 @@ size_t OS::get_memory_locking_limit()
    // I've tested this on Windows 8.1 x64, Windows 10 x64 and Windows 7 x86
    // On all three OS the value is 11 instead of 8
    const size_t overhead = OS::system_page_size() * 11;
-   if(working_min > overhead)
-      {
+   if(working_min > overhead) {
       const size_t lockable_bytes = working_min - overhead;
       return std::min<size_t>(lockable_bytes, mlock_requested * 1024);
-      }
+   }
 #else
    // Not supported on this platform
    BOTAN_UNUSED(max_locked_kb);
 #endif
 
    return 0;
-   }
+}
 
-bool OS::read_env_variable(std::string& value_out, std::string_view name_view)
-   {
+bool OS::read_env_variable(std::string& value_out, std::string_view name_view) {
    value_out = "";
 
    if(running_in_privileged_state())
@@ -429,165 +404,155 @@ bool OS::read_env_variable(std::string& value_out, std::string_view name_view)
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    const std::string name(name_view);
-   char val[128] = { 0 };
+   char val[128] = {0};
    size_t req_size = 0;
-   if(getenv_s(&req_size, val, sizeof(val), name.c_str()) == 0)
-      {
+   if(getenv_s(&req_size, val, sizeof(val), name.c_str()) == 0) {
       value_out = std::string(val, req_size);
       return true;
-      }
+   }
 #else
    const std::string name(name_view);
-   if(const char* val = std::getenv(name.c_str()))
-      {
+   if(const char* val = std::getenv(name.c_str())) {
       value_out = val;
       return true;
-      }
+   }
 #endif
 
    return false;
-   }
+}
 
-size_t OS::read_env_variable_sz(std::string_view name, size_t def)
-   {
+size_t OS::read_env_variable_sz(std::string_view name, size_t def) {
    std::string value;
-   if(read_env_variable(value, name) && !value.empty())
-      {
-      try
-         {
+   if(read_env_variable(value, name) && !value.empty()) {
+      try {
          const size_t val = std::stoul(value, nullptr);
          return val;
-         }
-      catch(std::exception&) { /* ignore it */ }
+      } catch(std::exception&) { /* ignore it */
       }
+   }
 
    return def;
-   }
+}
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
 
 namespace {
 
-int get_locked_fd()
-   {
-#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+int get_locked_fd() {
+   #if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
    // On Darwin, tagging anonymous pages allows vmmap to track these.
    // Allowed from 240 to 255 for userland applications
    static constexpr int default_locked_fd = 255;
    int locked_fd = default_locked_fd;
 
-   if(size_t locked_fdl = OS::read_env_variable_sz("BOTAN_LOCKED_FD", default_locked_fd))
-      {
-      if(locked_fdl < 240 || locked_fdl > 255)
-         {
+   if(size_t locked_fdl = OS::read_env_variable_sz("BOTAN_LOCKED_FD", default_locked_fd)) {
+      if(locked_fdl < 240 || locked_fdl > 255) {
          locked_fdl = default_locked_fd;
-         }
-      locked_fd = static_cast<int>(locked_fdl);
       }
-   return VM_MAKE_TAG(locked_fd);
-#else
-   return -1;
-#endif
+      locked_fd = static_cast<int>(locked_fdl);
    }
-
+   return VM_MAKE_TAG(locked_fd);
+   #else
+   return -1;
+   #endif
 }
 
+}  // namespace
+
 #endif
 
-std::vector<void*> OS::allocate_locked_pages(size_t count)
-   {
+std::vector<void*> OS::allocate_locked_pages(size_t count) {
    std::vector<void*> result;
 
-#if (defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)) || defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
+#if(defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)) || \
+   defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
 
    result.reserve(count);
 
    const size_t page_size = OS::system_page_size();
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    static const int locked_fd = get_locked_fd();
-#endif
+   #endif
 
-   for(size_t i = 0; i != count; ++i)
-      {
+   for(size_t i = 0; i != count; ++i) {
       void* ptr = nullptr;
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
 
       int mmap_flags = MAP_PRIVATE;
 
-#if defined(MAP_ANONYMOUS)
+      #if defined(MAP_ANONYMOUS)
       mmap_flags |= MAP_ANONYMOUS;
-#elif defined(MAP_ANON)
+      #elif defined(MAP_ANON)
       mmap_flags |= MAP_ANON;
-#endif
+      #endif
 
-#if defined(MAP_CONCEAL)
+      #if defined(MAP_CONCEAL)
       mmap_flags |= MAP_CONCEAL;
-#elif defined(MAP_NOCORE)
+      #elif defined(MAP_NOCORE)
       mmap_flags |= MAP_NOCORE;
-#endif
+      #endif
 
       int mmap_prot = PROT_READ | PROT_WRITE;
 
-#if defined(PROT_MAX)
+      #if defined(PROT_MAX)
       mmap_prot |= PROT_MAX(mmap_prot);
-#endif
+      #endif
 
-      ptr = ::mmap(nullptr, 3*page_size,
-                   mmap_prot, mmap_flags,
-                   /*fd=*/locked_fd, /*offset=*/0);
+      ptr = ::mmap(nullptr,
+                   3 * page_size,
+                   mmap_prot,
+                   mmap_flags,
+                   /*fd=*/locked_fd,
+                   /*offset=*/0);
 
-      if(ptr == MAP_FAILED)
-         {
+      if(ptr == MAP_FAILED) {
          continue;
-         }
+      }
 
       // lock the data page
-      if(::mlock(static_cast<uint8_t*>(ptr) + page_size, page_size) != 0)
-         {
-         ::munmap(ptr, 3*page_size);
+      if(::mlock(static_cast<uint8_t*>(ptr) + page_size, page_size) != 0) {
+         ::munmap(ptr, 3 * page_size);
          continue;
-         }
+      }
 
-#if defined(MADV_DONTDUMP)
+      #if defined(MADV_DONTDUMP)
       // we ignore errors here, as DONTDUMP is just a bonus
       ::madvise(static_cast<uint8_t*>(ptr) + page_size, page_size, MADV_DONTDUMP);
-#endif
+      #endif
 
-#elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
-      ptr = ::VirtualAlloc(nullptr, 3*page_size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+   #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
+      ptr = ::VirtualAlloc(nullptr, 3 * page_size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
       if(ptr == nullptr)
          continue;
 
-      if(::VirtualLock(static_cast<uint8_t*>(ptr) + page_size, page_size) == 0)
-         {
+      if(::VirtualLock(static_cast<uint8_t*>(ptr) + page_size, page_size) == 0) {
          ::VirtualFree(ptr, 0, MEM_RELEASE);
          continue;
-         }
-#endif
+      }
+   #endif
 
-      std::memset(ptr, 0, 3*page_size); // zero data page and both guard pages
+      std::memset(ptr, 0, 3 * page_size);  // zero data page and both guard pages
 
       // Attempts to name the data page
-      page_named(ptr, 3*page_size);
+      page_named(ptr, 3 * page_size);
       // Make guard page preceeding the data page
       page_prohibit_access(static_cast<uint8_t*>(ptr));
       // Make guard page following the data page
-      page_prohibit_access(static_cast<uint8_t*>(ptr) + 2*page_size);
+      page_prohibit_access(static_cast<uint8_t*>(ptr) + 2 * page_size);
 
       result.push_back(static_cast<uint8_t*>(ptr) + page_size);
-      }
+   }
 #else
    BOTAN_UNUSED(count);
 #endif
 
    return result;
-   }
+}
 
-void OS::page_allow_access(void* page)
-   {
+void OS::page_allow_access(void* page) {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    const size_t page_size = OS::system_page_size();
    ::mprotect(page, page_size, PROT_READ | PROT_WRITE);
@@ -599,10 +564,9 @@ void OS::page_allow_access(void* page)
 #else
    BOTAN_UNUSED(page);
 #endif
-   }
+}
 
-void OS::page_prohibit_access(void* page)
-   {
+void OS::page_prohibit_access(void* page) {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    const size_t page_size = OS::system_page_size();
    ::mprotect(page, page_size, PROT_NONE);
@@ -614,14 +578,12 @@ void OS::page_prohibit_access(void* page)
 #else
    BOTAN_UNUSED(page);
 #endif
-   }
+}
 
-void OS::free_locked_pages(const std::vector<void*>& pages)
-   {
+void OS::free_locked_pages(const std::vector<void*>& pages) {
    const size_t page_size = OS::system_page_size();
 
-   for(size_t i = 0; i != pages.size(); ++i)
-      {
+   for(size_t i = 0; i != pages.size(); ++i) {
       void* ptr = pages[i];
 
       secure_scrub_memory(ptr, page_size);
@@ -632,16 +594,15 @@ void OS::free_locked_pages(const std::vector<void*>& pages)
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
       ::munlock(ptr, page_size);
-      ::munmap(static_cast<uint8_t*>(ptr) - page_size, 3*page_size);
+      ::munmap(static_cast<uint8_t*>(ptr) - page_size, 3 * page_size);
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
       ::VirtualUnlock(ptr, page_size);
       ::VirtualFree(static_cast<uint8_t*>(ptr) - page_size, 0, MEM_RELEASE);
 #endif
-      }
    }
+}
 
-void OS::page_named(void* page, size_t size)
-   {
+void OS::page_named(void* page, size_t size) {
 #if defined(BOTAN_TARGET_OS_HAS_PRCTL)
    static constexpr char name[] = "Botan mlock pool";
    int r = prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, reinterpret_cast<uintptr_t>(page), size, name);
@@ -649,7 +610,7 @@ void OS::page_named(void* page, size_t size)
 #else
    BOTAN_UNUSED(page, size);
 #endif
-   }
+}
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
 
@@ -657,17 +618,13 @@ namespace {
 
 ::sigjmp_buf g_sigill_jmp_buf;
 
-void botan_sigill_handler(int /*unused*/)
-   {
-   siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/1);
-   }
+void botan_sigill_handler(int /*unused*/) { siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/ 1); }
 
-}
+}  // namespace
 
 #endif
 
-int OS::run_cpu_instruction_probe(const std::function<int ()>& probe_fn)
-   {
+int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    volatile int probe_result = -3;
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
@@ -683,18 +640,15 @@ int OS::run_cpu_instruction_probe(const std::function<int ()>& probe_fn)
    if(rc != 0)
       throw System_Error("run_cpu_instruction_probe sigaction failed", errno);
 
-   rc = sigsetjmp(g_sigill_jmp_buf, /*save sigs*/1);
+   rc = sigsetjmp(g_sigill_jmp_buf, /*save sigs*/ 1);
 
-   if(rc == 0)
-      {
+   if(rc == 0) {
       // first call to sigsetjmp
       probe_result = probe_fn();
-      }
-   else if(rc == 1)
-      {
+   } else if(rc == 1) {
       // non-local return from siglongjmp in signal handler: return error
       probe_result = -1;
-      }
+   }
 
    // Restore old SIGILL handler, if any
    rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
@@ -706,16 +660,13 @@ int OS::run_cpu_instruction_probe(const std::function<int ()>& probe_fn)
 #endif
 
    return probe_result;
-   }
+}
 
-std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
-   {
+std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal() {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
-   class POSIX_Echo_Suppression : public Echo_Suppression
-      {
+   class POSIX_Echo_Suppression : public Echo_Suppression {
       public:
-         POSIX_Echo_Suppression()
-            {
+         POSIX_Echo_Suppression() {
             m_stdin_fd = fileno(stdin);
             if(::tcgetattr(m_stdin_fd, &m_old_termios) != 0)
                throw System_Error("Getting terminal status failed", errno);
@@ -726,28 +677,21 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
 
             if(::tcsetattr(m_stdin_fd, TCSANOW, &noecho_flags) != 0)
                throw System_Error("Clearing terminal echo bit failed", errno);
-            }
+         }
 
-         void reenable_echo() override
-            {
-            if(m_stdin_fd > 0)
-               {
+         void reenable_echo() override {
+            if(m_stdin_fd > 0) {
                if(::tcsetattr(m_stdin_fd, TCSANOW, &m_old_termios) != 0)
                   throw System_Error("Restoring terminal echo bit failed", errno);
                m_stdin_fd = -1;
-               }
             }
+         }
 
-         ~POSIX_Echo_Suppression() override
-            {
-            try
-               {
+         ~POSIX_Echo_Suppression() override {
+            try {
                reenable_echo();
-               }
-            catch(...)
-               {
-               }
-            }
+            } catch(...) {}
+         }
 
          POSIX_Echo_Suppression(const POSIX_Echo_Suppression& other) = delete;
          POSIX_Echo_Suppression(POSIX_Echo_Suppression&& other) = delete;
@@ -757,17 +701,15 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
       private:
          int m_stdin_fd;
          struct termios m_old_termios;
-      };
+   };
 
    return std::make_unique<POSIX_Echo_Suppression>();
 
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
 
-   class Win32_Echo_Suppression : public Echo_Suppression
-      {
+   class Win32_Echo_Suppression : public Echo_Suppression {
       public:
-         Win32_Echo_Suppression()
-            {
+         Win32_Echo_Suppression() {
             m_input_handle = ::GetStdHandle(STD_INPUT_HANDLE);
             if(::GetConsoleMode(m_input_handle, &m_console_state) == 0)
                throw System_Error("Getting console mode failed", ::GetLastError());
@@ -775,28 +717,21 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
             DWORD new_mode = ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT;
             if(::SetConsoleMode(m_input_handle, new_mode) == 0)
                throw System_Error("Setting console mode failed", ::GetLastError());
-            }
+         }
 
-         void reenable_echo() override
-            {
-            if(m_input_handle != INVALID_HANDLE_VALUE)
-               {
+         void reenable_echo() override {
+            if(m_input_handle != INVALID_HANDLE_VALUE) {
                if(::SetConsoleMode(m_input_handle, m_console_state) == 0)
                   throw System_Error("Setting console mode failed", ::GetLastError());
                m_input_handle = INVALID_HANDLE_VALUE;
-               }
             }
+         }
 
-         ~Win32_Echo_Suppression() override
-            {
-            try
-               {
+         ~Win32_Echo_Suppression() override {
+            try {
                reenable_echo();
-               }
-            catch(...)
-               {
-               }
-            }
+            } catch(...) {}
+         }
 
          Win32_Echo_Suppression(const Win32_Echo_Suppression& other) = delete;
          Win32_Echo_Suppression(Win32_Echo_Suppression&& other) = delete;
@@ -806,7 +741,7 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
       private:
          HANDLE m_input_handle;
          DWORD m_console_state;
-      };
+   };
 
    return std::make_unique<Win32_Echo_Suppression>();
 
@@ -815,6 +750,6 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
    // Not supported on this platform, return null
    return nullptr;
 #endif
-   }
-
 }
+
+}  // namespace Botan

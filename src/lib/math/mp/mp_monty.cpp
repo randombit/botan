@@ -9,10 +9,10 @@
 
 #include <botan/internal/mp_core.h>
 
-#include <botan/internal/ct_utils.h>
-#include <botan/mem_ops.h>
-#include <botan/exceptn.h>
 #include <botan/assert.h>
+#include <botan/exceptn.h>
+#include <botan/mem_ops.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -28,12 +28,8 @@ namespace Botan {
 * https://eprint.iacr.org/2013/882.pdf
 * https://www.microsoft.com/en-us/research/wp-content/uploads/1996/01/j37acmon.pdf
 */
-void bigint_monty_redc_generic(word z[], size_t z_size,
-                               const word p[], size_t p_size, word p_dash,
-                               word ws[])
-   {
-   BOTAN_ARG_CHECK(z_size >= 2*p_size && p_size > 0,
-                   "Invalid sizes for bigint_monty_redc_generic");
+void bigint_monty_redc_generic(word z[], size_t z_size, const word p[], size_t p_size, word p_dash, word ws[]) {
+   BOTAN_ARG_CHECK(z_size >= 2 * p_size && p_size > 0, "Invalid sizes for bigint_monty_redc_generic");
 
    word w2 = 0, w1 = 0, w0 = 0;
 
@@ -47,12 +43,10 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
    w1 = w2;
    w2 = 0;
 
-   for(size_t i = 1; i != p_size; ++i)
-      {
-      for(size_t j = 0; j < i; ++j)
-         {
-         word3_muladd(&w2, &w1, &w0, ws[j], p[i-j]);
-         }
+   for(size_t i = 1; i != p_size; ++i) {
+      for(size_t j = 0; j < i; ++j) {
+         word3_muladd(&w2, &w1, &w0, ws[j], p[i - j]);
+      }
 
       word3_add(&w2, &w1, &w0, z[i]);
 
@@ -63,27 +57,25 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
       w0 = w1;
       w1 = w2;
       w2 = 0;
+   }
+
+   for(size_t i = 0; i != p_size - 1; ++i) {
+      for(size_t j = i + 1; j != p_size; ++j) {
+         word3_muladd(&w2, &w1, &w0, ws[j], p[p_size + i - j]);
       }
 
-   for(size_t i = 0; i != p_size - 1; ++i)
-      {
-      for(size_t j = i + 1; j != p_size; ++j)
-         {
-         word3_muladd(&w2, &w1, &w0, ws[j], p[p_size + i-j]);
-         }
-
-      word3_add(&w2, &w1, &w0, z[p_size+i]);
+      word3_add(&w2, &w1, &w0, z[p_size + i]);
 
       ws[i] = w0;
 
       w0 = w1;
       w1 = w2;
       w2 = 0;
-      }
+   }
 
-   word3_add(&w2, &w1, &w0, z[2*p_size-1]);
+   word3_add(&w2, &w1, &w0, z[2 * p_size - 1]);
 
-   ws[p_size-1] = w0;
+   ws[p_size - 1] = w0;
    ws[p_size] = w1;
 
    /*
@@ -108,6 +100,6 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
 
    CT::conditional_assign_mem(borrow, z, ws, p_size);
    clear_mem(z + p_size, z_size - p_size);
-   }
-
 }
+
+}  // namespace Botan

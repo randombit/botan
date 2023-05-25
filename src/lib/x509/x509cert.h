@@ -19,23 +19,21 @@ class Extensions;
 class AlternativeName;
 class NameConstraints;
 
-enum class Usage_Type
-   {
-   UNSPECIFIED, // no restrictions
+enum class Usage_Type {
+   UNSPECIFIED,  // no restrictions
    TLS_SERVER_AUTH,
    TLS_CLIENT_AUTH,
    CERTIFICATE_AUTHORITY,
    OCSP_RESPONDER,
    ENCRYPTION
-   };
+};
 
 struct X509_Certificate_Data;
 
 /**
 * This class represents an X.509 Certificate
 */
-class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
    public:
       /**
       * Create a public key object associated with the public key bits in this
@@ -418,7 +416,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       const X509_Certificate_Data& data() const;
 
       std::shared_ptr<X509_Certificate_Data> m_data;
-   };
+};
 
 /**
 * Check two certificates for inequality
@@ -427,8 +425,8 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
 * @return true if the arguments represent different certificates,
 * false if they are binary identical
 */
-BOTAN_PUBLIC_API(2,0) bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2);
+BOTAN_PUBLIC_API(2, 0) bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2);
 
-}
+}  // namespace Botan
 
 #endif

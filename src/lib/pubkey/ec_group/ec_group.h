@@ -10,11 +10,11 @@
 #ifndef BOTAN_ECC_DOMAIN_PARAMETERS_H_
 #define BOTAN_ECC_DOMAIN_PARAMETERS_H_
 
-#include <botan/ec_point.h>
 #include <botan/asn1_obj.h>
+#include <botan/ec_point.h>
 #include <memory>
-#include <span>
 #include <set>
+#include <span>
 
 namespace Botan {
 
@@ -45,10 +45,8 @@ class EC_Group_Data_Map;
 * The internal representation is stored in a shared_ptr, so copying an
 * EC_Group is inexpensive.
 */
-class BOTAN_PUBLIC_API(2,0) EC_Group final
-   {
+class BOTAN_PUBLIC_API(2, 0) EC_Group final {
    public:
-
       /**
       * Construct Domain paramers from specified parameters
       * @param p the elliptic curve p
@@ -76,9 +74,8 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       */
       explicit EC_Group(const uint8_t ber[], size_t ber_len);
 
-      template<typename Alloc>
-         EC_Group(const std::vector<uint8_t, Alloc>& ber) :
-         EC_Group(ber.data(), ber.size()) {}
+      template <typename Alloc>
+      EC_Group(const std::vector<uint8_t, Alloc>& ber) : EC_Group(ber.data(), ber.size()) {}
 
       /**
       * Create an EC domain by OID (or throw if unknown)
@@ -225,10 +222,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       /*
       * Return x^3 modulo the order
       */
-      inline BigInt cube_mod_order(const BigInt& x) const
-         {
-         return multiply_mod_order(x, square_mod_order(x));
-         }
+      inline BigInt cube_mod_order(const BigInt& x) const { return multiply_mod_order(x, square_mod_order(x)); }
 
       /**
       * Check if y is a plausible point on the curve
@@ -262,9 +256,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param ws a temp workspace
       * @return base_point*k
       */
-      EC_Point blinded_base_point_multiply(const BigInt& k,
-                                           RandomNumberGenerator& rng,
-                                           std::vector<BigInt>& ws) const;
+      EC_Point blinded_base_point_multiply(const BigInt& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
 
       /**
       * Blinded point multiplication, attempts resistance to side channels
@@ -275,9 +267,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param ws a temp workspace
       * @return x coordinate of base_point*k
       */
-      BigInt blinded_base_point_multiply_x(const BigInt& k,
-                                           RandomNumberGenerator& rng,
-                                           std::vector<BigInt>& ws) const;
+      BigInt blinded_base_point_multiply_x(const BigInt& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
 
       /**
       * Blinded point multiplication, attempts resistance to side channels
@@ -344,10 +334,9 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
 
       EC_Point OS2ECP(const uint8_t bits[], size_t len) const;
 
-      EC_Point OS2ECP(std::span<const uint8_t> encoded_point) const
-         {
+      EC_Point OS2ECP(std::span<const uint8_t> encoded_point) const {
          return this->OS2ECP(encoded_point.data(), encoded_point.size());
-         }
+      }
 
       bool initialized() const { return (m_data != nullptr); }
 
@@ -355,8 +344,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
        * Verify EC_Group domain
        * @returns true if group is valid. false otherwise
        */
-      bool verify_group(RandomNumberGenerator& rng,
-                        bool strong = false) const;
+      bool verify_group(RandomNumberGenerator& rng, bool strong = false) const;
 
       bool operator==(const EC_Group& other) const;
 
@@ -385,29 +373,25 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
    private:
       static EC_Group_Data_Map& ec_group_data();
 
-      static std::shared_ptr<EC_Group_Data> BER_decode_EC_group(const uint8_t bits[], size_t len,
+      static std::shared_ptr<EC_Group_Data> BER_decode_EC_group(const uint8_t bits[],
+                                                                size_t len,
                                                                 EC_Group_Source source);
 
-      static std::shared_ptr<EC_Group_Data>
-         load_EC_group_info(const char* p,
-                            const char* a,
-                            const char* b,
-                            const char* g_x,
-                            const char* g_y,
-                            const char* order,
-                            const OID& oid);
+      static std::shared_ptr<EC_Group_Data> load_EC_group_info(const char* p,
+                                                               const char* a,
+                                                               const char* b,
+                                                               const char* g_x,
+                                                               const char* g_y,
+                                                               const char* order,
+                                                               const OID& oid);
 
       // Member data
       const EC_Group_Data& data() const;
       std::shared_ptr<EC_Group_Data> m_data;
-   };
+};
 
-inline bool operator!=(const EC_Group& lhs,
-                       const EC_Group& rhs)
-   {
-   return !(lhs == rhs);
-   }
+inline bool operator!=(const EC_Group& lhs, const EC_Group& rhs) { return !(lhs == rhs); }
 
-}
+}  // namespace Botan
 
 #endif

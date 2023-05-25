@@ -11,9 +11,9 @@
 #ifndef BOTAN_TLS_SERVER_H_
 #define BOTAN_TLS_SERVER_H_
 
+#include <botan/credentials_manager.h>
 #include <botan/tls_channel.h>
 #include <botan/tls_policy.h>
-#include <botan/credentials_manager.h>
 #include <vector>
 
 namespace Botan {
@@ -25,8 +25,7 @@ class Channel_Impl;
 /**
 * TLS Server
 */
-class BOTAN_PUBLIC_API(2,0) Server final : public Channel
-   {
+class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
    public:
       /**
       * Server initialization
@@ -55,8 +54,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
              const std::shared_ptr<const Policy>& policy,
              const std::shared_ptr<RandomNumberGenerator>& rng,
              bool is_datagram = false,
-             size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE
-         );
+             size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
       ~Server();
 
@@ -79,9 +77,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
 
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
-      SymmetricKey key_material_export(std::string_view label,
-                                       std::string_view context,
-                                       size_t length) const override;
+      SymmetricKey key_material_export(std::string_view label, std::string_view context, size_t length) const override;
 
       void renegotiate(bool force_full_renegotiation = false) override;
 
@@ -106,9 +102,9 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
 
    private:
       std::unique_ptr<Channel_Impl> m_impl;
-   };
-}
+};
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

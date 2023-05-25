@@ -36,8 +36,7 @@ namespace TLS {
  * TLS 1.2 and TLS 1.3 clients, this is typically a good default option. Combine
  * it with the Session_Manager_SQLite or Session_Manager_In_Memory as needed.
  */
-class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manager
-   {
+class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manager {
    public:
       /**
        * @param stateful_manager the underlying stateful manager instance
@@ -50,11 +49,10 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
        *                       whether to go for self-contained tickets or
        *                       short database handles
        */
-      Session_Manager_Hybrid(
-         std::unique_ptr<Session_Manager> stateful_manager,
-         const std::shared_ptr<Credentials_Manager>& credentials_manager,
-         const std::shared_ptr<RandomNumberGenerator>& rng,
-         bool prefer_tickets = true);
+      Session_Manager_Hybrid(std::unique_ptr<Session_Manager> stateful_manager,
+                             const std::shared_ptr<Credentials_Manager>& credentials_manager,
+                             const std::shared_ptr<RandomNumberGenerator>& rng,
+                             bool prefer_tickets = true);
 
       std::optional<Session_Handle> establish(const Session& session,
                                               const std::optional<Session_ID>& id = std::nullopt,
@@ -66,13 +64,14 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
 
       std::vector<Session_with_Handle> find(const Server_Information& info,
                                             Callbacks& callbacks,
-                                            const Policy& policy) override
-         {
+                                            const Policy& policy) override {
          return m_stateful->find(info, callbacks, policy);
-         }
+      }
 
       void store(const Session& session, const Session_Handle& handle) override { m_stateful->store(session, handle); }
+
       size_t remove(const Session_Handle& handle) override { return m_stateful->remove(handle); }
+
       size_t remove_all() override { return m_stateful->remove_all(); }
 
       bool emits_session_tickets() override;
@@ -83,20 +82,23 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
       // The Hybrid_Session_Manager just delegates to its underlying managers
       // via the public retrieval API. Its own "storage interface" is therefore
       // never called.
-      std::optional<Session> retrieve_one(const Session_Handle&) override
-         { BOTAN_ASSERT(false, "This should never be called"); }
-      std::vector<Session_with_Handle> find_some(const Server_Information&, const size_t) override
-         { BOTAN_ASSERT(false, "This should never be called"); }
+      std::optional<Session> retrieve_one(const Session_Handle&) override {
+         BOTAN_ASSERT(false, "This should never be called");
+      }
+
+      std::vector<Session_with_Handle> find_some(const Server_Information&, const size_t) override {
+         BOTAN_ASSERT(false, "This should never be called");
+      }
 
    private:
       std::unique_ptr<Session_Manager> m_stateful;
       Session_Manager_Stateless m_stateless;
 
       bool m_prefer_tickets;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

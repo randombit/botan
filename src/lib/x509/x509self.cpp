@@ -7,12 +7,12 @@
 
 #include <botan/x509self.h>
 
-#include <botan/x509_key.h>
-#include <botan/x509_ext.h>
-#include <botan/x509_ca.h>
 #include <botan/der_enc.h>
-#include <botan/pubkey.h>
 #include <botan/hash.h>
+#include <botan/pubkey.h>
+#include <botan/x509_ca.h>
+#include <botan/x509_ext.h>
+#include <botan/x509_key.h>
 
 namespace Botan {
 
@@ -21,9 +21,7 @@ namespace {
 /*
 * Load information from the X509_Cert_Options
 */
-void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn,
-               AlternativeName& subject_alt)
-   {
+void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn, AlternativeName& subject_alt) {
    subject_dn.add_attribute("X520.CommonName", opts.common_name);
    subject_dn.add_attribute("X520.Country", opts.country);
    subject_dn.add_attribute("X520.State", opts.state);
@@ -36,13 +34,12 @@ void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn,
 
    subject_dn.add_attribute("X520.SerialNumber", opts.serial_number);
    subject_alt = AlternativeName(opts.email, opts.uri, opts.dns, opts.ip);
-   subject_alt.add_othername(OID::from_string("PKIX.XMPPAddr"),
-                             opts.xmpp, ASN1_Type::Utf8String);
+   subject_alt.add_othername(OID::from_string("PKIX.XMPPAddr"), opts.xmpp, ASN1_Type::Utf8String);
 
    for(const auto& dns : opts.more_dns)
       subject_alt.add_attribute("DNS", dns);
-   }
 }
+}  // namespace
 
 namespace X509 {
 
@@ -52,8 +49,7 @@ namespace X509 {
 X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
                                          const Private_Key& key,
                                          std::string_view hash_fn,
-                                         RandomNumberGenerator& rng)
-   {
+                                         RandomNumberGenerator& rng) {
    const std::vector<uint8_t> pub_key = X509::BER_encode(key);
    auto signer = X509_Object::choose_sig_format(key, rng, hash_fn, opts.padding_scheme);
    const AlgorithmIdentifier sig_algo = signer->algorithm_identifier();
@@ -65,37 +61,28 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 
    Extensions extensions = opts.extensions;
 
-   const auto constraints =
-      opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
+   const auto constraints = opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
    if(!constraints.compatible_with(key))
       throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
 
-   extensions.add_new(
-      std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit),
-      true);
+   extensions.add_new(std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit), true);
 
-   if(!constraints.empty())
-      {
+   if(!constraints.empty()) {
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
-      }
+   }
 
    auto skid = std::make_unique<Cert_Extension::Subject_Key_ID>(pub_key, signer->hash_function());
 
    extensions.add_new(std::make_unique<Cert_Extension::Authority_Key_ID>(skid->get_key_id()));
    extensions.add_new(std::move(skid));
 
-   extensions.add_new(
-      std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt));
+   extensions.add_new(std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt));
 
-   extensions.add_new(
-      std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
+   extensions.add_new(std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
 
-   return X509_CA::make_cert(*signer, rng, sig_algo, pub_key,
-                             opts.start, opts.end,
-                             subject_dn, subject_dn,
-                             extensions);
-   }
+   return X509_CA::make_cert(*signer, rng, sig_algo, pub_key, opts.start, opts.end, subject_dn, subject_dn, extensions);
+}
 
 /*
 * Create a PKCS #10 certificate request
@@ -103,14 +90,12 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
                                const Private_Key& key,
                                std::string_view hash_fn,
-                               RandomNumberGenerator& rng)
-   {
+                               RandomNumberGenerator& rng) {
    X509_DN subject_dn;
    AlternativeName subject_alt;
    load_info(opts, subject_dn, subject_alt);
 
-   const auto constraints =
-      opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
+   const auto constraints = opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
    if(!constraints.compatible_with(key))
       throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
@@ -119,23 +104,16 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    extensions.add_new(std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit));
 
-   if(!constraints.empty())
-      {
+   if(!constraints.empty()) {
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints));
-      }
+   }
 
    extensions.add_new(std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
    extensions.add_new(std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt));
 
-   return PKCS10_Request::create(key,
-                                 subject_dn,
-                                 extensions,
-                                 hash_fn,
-                                 rng,
-                                 opts.padding_scheme,
-                                 opts.challenge);
-   }
-
+   return PKCS10_Request::create(key, subject_dn, extensions, hash_fn, rng, opts.padding_scheme, opts.challenge);
 }
 
-}
+}  // namespace X509
+
+}  // namespace Botan

@@ -9,8 +9,8 @@
 #define BOTAN_SOCKET_H_
 
 #include <botan/types.h>
-#include <string>
 #include <chrono>
+#include <string>
 
 namespace Botan {
 
@@ -24,12 +24,10 @@ namespace OS {
 * this hasn't been tested.
 */
 
-
 /**
 * A wrapper around a simple blocking TCP socket
 */
-class BOTAN_TEST_API Socket
-   {
+class BOTAN_TEST_API Socket {
    public:
       /**
       * The socket will be closed upon destruction
@@ -47,18 +45,17 @@ class BOTAN_TEST_API Socket
       * Returns 0 on EOF. Throws on error.
       */
       virtual size_t read(uint8_t buf[], size_t len) = 0;
-   };
+};
 
 /**
 * Open up a socket. Will throw on error. Returns null if sockets are
 * not available on this platform.
 */
-std::unique_ptr<Socket>
-BOTAN_TEST_API open_socket(std::string_view hostname,
-                           std::string_view service,
-                           std::chrono::milliseconds timeout);
+std::unique_ptr<Socket> BOTAN_TEST_API open_socket(std::string_view hostname,
+                                                   std::string_view service,
+                                                   std::chrono::milliseconds timeout);
 
-} // OS
-} // Botan
+}  // namespace OS
+}  // namespace Botan
 
 #endif

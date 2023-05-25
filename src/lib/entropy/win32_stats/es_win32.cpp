@@ -7,13 +7,12 @@
 #include <botan/internal/es_win32.h>
 
 #define NOMINMAX 1
-#define _WINSOCKAPI_ // stop windows.h including winsock.h
+#define _WINSOCKAPI_  // stop windows.h including winsock.h
 #include <windows.h>
 
 namespace Botan {
 
-size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
-   {
+size_t Win32_EntropySource::poll(RandomNumberGenerator& rng) {
    rng.add_entropy_T(::GetTickCount());
    rng.add_entropy_T(::GetMessagePos());
    rng.add_entropy_T(::GetMessageTime());
@@ -54,6 +53,6 @@ size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
 
    // We assume all of the above is basically junk
    return 0;
-   }
-
 }
+
+}  // namespace Botan

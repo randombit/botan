@@ -10,23 +10,22 @@
 #ifndef BOTAN_TLS_CLIENT_IMPL_13_H_
 #define BOTAN_TLS_CLIENT_IMPL_13_H_
 
+#include <botan/tls_server_info.h>
 #include <botan/internal/tls_channel_impl_13.h>
 #include <botan/internal/tls_handshake_state_13.h>
 #include <botan/internal/tls_handshake_transitions.h>
-#include <botan/tls_server_info.h>
 
 namespace Botan {
 
 class Credentials_Manager;
+
 namespace TLS {
 
 /**
 * SSL/TLS Client 1.3 implementation
 */
-class Client_Impl_13 : public Channel_Impl_13
-   {
+class Client_Impl_13 : public Channel_Impl_13 {
    public:
-
       /**
       * Set up a new TLS client session
       *
@@ -94,10 +93,10 @@ class Client_Impl_13 : public Channel_Impl_13
       bool m_should_send_ccs;
 
       std::optional<Session_with_Handle> m_resumed_session;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

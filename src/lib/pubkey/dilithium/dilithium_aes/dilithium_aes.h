@@ -20,13 +20,12 @@
 
 namespace Botan {
 
-class Dilithium_AES_Symmetric_Primitives : public Dilithium_Symmetric_Primitives
-   {
+class Dilithium_AES_Symmetric_Primitives : public Dilithium_Symmetric_Primitives {
    public:
       // AES mode always uses AES-256, regardless of the XofType
-      std::unique_ptr<StreamCipher> XOF(const XofType /* type */, std::span<const uint8_t> seed,
-                                        uint16_t nonce) const final
-         {
+      std::unique_ptr<StreamCipher> XOF(const XofType /* type */,
+                                        std::span<const uint8_t> seed,
+                                        uint16_t nonce) const final {
          auto cipher = StreamCipher::create_or_throw("CTR(AES-256)");
 
          // Algorithm Spec V. 3.1 Section 5.3
@@ -40,12 +39,12 @@ class Dilithium_AES_Symmetric_Primitives : public Dilithium_Symmetric_Primitives
          cipher->set_key(seed.data(), cipher->key_spec().minimum_keylength());
 
          // The nonce is padded as needed by the CTR_BE mode
-         std::array<uint8_t, 2> iv { get_byte<1>(nonce), get_byte<0>(nonce) };
+         std::array<uint8_t, 2> iv{get_byte<1>(nonce), get_byte<0>(nonce)};
          cipher->set_iv(iv.data(), iv.size());
          return cipher;
-         }
-   };
+      }
+};
 
-} // namespace Botan
+}  // namespace Botan
 
 #endif

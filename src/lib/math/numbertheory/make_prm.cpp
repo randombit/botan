@@ -8,45 +8,38 @@
 #include <botan/internal/primality.h>
 
 #include <botan/numthry.h>
+#include <botan/reducer.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/reducer.h>
 #include <algorithm>
 
 namespace Botan {
 
 namespace {
 
-class Prime_Sieve final
-   {
+class Prime_Sieve final {
    public:
       Prime_Sieve(const BigInt& init_value, size_t sieve_size, word step, bool check_2p1) :
-         m_sieve(std::min(sieve_size, PRIME_TABLE_SIZE)),
-         m_step(step),
-         m_check_2p1(check_2p1)
-         {
+            m_sieve(std::min(sieve_size, PRIME_TABLE_SIZE)), m_step(step), m_check_2p1(check_2p1) {
          for(size_t i = 0; i != m_sieve.size(); ++i)
             m_sieve[i] = init_value % PRIMES[i];
-         }
+      }
 
       size_t sieve_size() const { return m_sieve.size(); }
 
       bool check_2p1() const { return m_check_2p1; }
 
-      bool next()
-         {
+      bool next() {
          auto passes = CT::Mask<word>::set();
-         for(size_t i = 0; i != m_sieve.size(); ++i)
-            {
+         for(size_t i = 0; i != m_sieve.size(); ++i) {
             m_sieve[i] = (m_sieve[i] + m_step) % PRIMES[i];
 
             // If m_sieve[i] == 0 then val % p == 0 -> not prime
             passes &= CT::Mask<word>::expand(m_sieve[i]);
 
-            if(this->check_2p1())
-               {
+            if(this->check_2p1()) {
                /*
                If v % p == (p-1)/2 then 2*v+1 == 0 (mod p)
 
@@ -57,71 +50,60 @@ class Prime_Sieve final
                https://eprint.iacr.org/2003/186.pdf
                */
                passes &= ~CT::Mask<word>::is_equal(m_sieve[i], (PRIMES[i] - 1) / 2);
-               }
             }
+         }
 
          return passes.is_set();
-         }
+      }
 
    private:
       std::vector<word> m_sieve;
       const word m_step;
       const bool m_check_2p1;
-   };
+};
 
 #if defined(BOTAN_ENABLE_DEBUG_ASSERTS)
 
-bool no_small_multiples(const BigInt& v, const Prime_Sieve& sieve)
-   {
+bool no_small_multiples(const BigInt& v, const Prime_Sieve& sieve) {
    const size_t sieve_size = sieve.sieve_size();
    const bool check_2p1 = sieve.check_2p1();
 
    if(v.is_even())
       return false;
 
-   const BigInt v_x2_p1 = 2*v + 1;
+   const BigInt v_x2_p1 = 2 * v + 1;
 
-   for(size_t i = 0; i != sieve_size; ++i)
-      {
+   for(size_t i = 0; i != sieve_size; ++i) {
       if((v % PRIMES[i]) == 0)
          return false;
 
-      if(check_2p1)
-         {
+      if(check_2p1) {
          if(v_x2_p1 % PRIMES[i] == 0)
             return false;
-         }
       }
+   }
 
    return true;
-   }
+}
 
 #endif
 
-}
-
+}  // namespace
 
 /*
 * Generate a random prime
 */
-BigInt random_prime(RandomNumberGenerator& rng,
-                    size_t bits, const BigInt& coprime,
-                    size_t equiv, size_t modulo,
-                    size_t prob)
-   {
-   if(bits <= 1)
-      {
-      throw Invalid_Argument("random_prime: Can't make a prime of " +
-                             std::to_string(bits) + " bits");
-      }
-   if(coprime.is_negative() || (!coprime.is_zero() && coprime.is_even()) || coprime.bits() >= bits)
-      {
+BigInt random_prime(
+   RandomNumberGenerator& rng, size_t bits, const BigInt& coprime, size_t equiv, size_t modulo, size_t prob) {
+   if(bits <= 1) {
+      throw Invalid_Argument("random_prime: Can't make a prime of " + std::to_string(bits) + " bits");
+   }
+   if(coprime.is_negative() || (!coprime.is_zero() && coprime.is_even()) || coprime.bits() >= bits) {
       throw Invalid_Argument("random_prime: invalid coprime");
-      }
-   if(modulo == 0 || modulo >= 100000)
-      {
+   }
+   if(modulo == 0 || modulo >= 100000) {
       throw Invalid_Argument("random_prime: Invalid modulo value");
-      }
+   }
 
    equiv %= modulo;
 
@@ -130,27 +112,18 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
    // Handle small values:
 
-   if(bits <= 16)
-      {
+   if(bits <= 16) {
       if(equiv != 1 || modulo != 2 || coprime != 0)
          throw Not_Implemented("random_prime equiv/modulo/coprime options not usable for small primes");
 
-      if(bits == 2)
-         {
+      if(bits == 2) {
          return BigInt::from_word(((rng.next_byte() % 2) ? 2 : 3));
-         }
-      else if(bits == 3)
-         {
+      } else if(bits == 3) {
          return BigInt::from_word(((rng.next_byte() % 2) ? 5 : 7));
-         }
-      else if(bits == 4)
-         {
+      } else if(bits == 4) {
          return BigInt::from_word(((rng.next_byte() % 2) ? 11 : 13));
-         }
-      else
-         {
-         for(;;)
-            {
+      } else {
+         for(;;) {
             // This is slightly biased, but for small primes it does not seem to matter
             uint8_t b[4];
             rng.randomize(b, 4);
@@ -159,16 +132,15 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
             if(high_bit(small_prime) == bits)
                return BigInt::from_word(small_prime);
-            }
          }
       }
+   }
 
-   const size_t MAX_ATTEMPTS = 32*1024;
+   const size_t MAX_ATTEMPTS = 32 * 1024;
 
    const size_t mr_trials = miller_rabin_test_iterations(bits, prob, true);
 
-   while(true)
-      {
+   while(true) {
       BigInt p(rng, bits);
 
       // Force lowest and two top bits on
@@ -181,8 +153,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
       Prime_Sieve sieve(p, bits, modulo, true);
 
-      for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt)
-         {
+      for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt) {
          p += modulo;
 
          if(!sieve.next())
@@ -196,8 +167,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
          Modular_Reducer mod_p(p);
 
-         if(coprime > 1)
-            {
+         if(coprime > 1) {
             /*
             First do a single M-R iteration to quickly elimate most non-primes,
             before doing the coprimality check which is expensive
@@ -211,7 +181,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
             */
             if(gcd(p - 1, coprime) > 1)
                continue;
-            }
+         }
 
          if(p.bits() > bits)
             break;
@@ -223,16 +193,15 @@ BigInt random_prime(RandomNumberGenerator& rng,
             continue;
 
          return p;
-         }
       }
    }
+}
 
 BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
                           RandomNumberGenerator& prime_test_rng,
                           size_t bits,
                           const BigInt& coprime,
-                          size_t prob)
-   {
+                          size_t prob) {
    if(bits < 512)
       throw Invalid_Argument("generate_rsa_prime bits too small");
 
@@ -244,12 +213,11 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
    if(coprime <= 1 || coprime.is_even() || coprime.bits() > 64)
       throw Invalid_Argument("generate_rsa_prime coprime must be small odd positive integer");
 
-   const size_t MAX_ATTEMPTS = 32*1024;
+   const size_t MAX_ATTEMPTS = 32 * 1024;
 
    const size_t mr_trials = miller_rabin_test_iterations(bits, prob, true);
 
-   while(true)
-      {
+   while(true) {
       BigInt p(keygen_rng, bits);
 
       /*
@@ -269,8 +237,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
       Prime_Sieve sieve(p, bits, step, false);
 
-      for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt)
-         {
+      for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt) {
          p += step;
 
          if(!sieve.next())
@@ -299,24 +266,21 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
          if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, mr_trials) == true)
             return p;
-         }
       }
    }
+}
 
 /*
 * Generate a random safe prime
 */
-BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
-   {
+BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits) {
    if(bits <= 64)
-      throw Invalid_Argument("random_safe_prime: Can't make a prime of " +
-                             std::to_string(bits) + " bits");
+      throw Invalid_Argument("random_safe_prime: Can't make a prime of " + std::to_string(bits) + " bits");
 
    const size_t error_bound = 128;
 
    BigInt q, p;
-   for(;;)
-      {
+   for(;;) {
       /*
       Generate q == 2 (mod 3), since otherwise [in the case of q == 1 (mod 3)],
       2*q+1 == 3 (mod 3) and so certainly not prime.
@@ -324,11 +288,10 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
       q = random_prime(rng, bits - 1, BigInt::zero(), 2, 3, error_bound);
       p = (q << 1) + 1;
 
-      if(is_prime(p, rng, error_bound, true))
-         {
+      if(is_prime(p, rng, error_bound, true)) {
          return p;
-         }
       }
    }
-
 }
+
+}  // namespace Botan

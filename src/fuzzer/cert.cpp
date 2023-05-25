@@ -6,18 +6,15 @@
 
 #include "fuzzers.h"
 
-#include <botan/x509cert.h>
 #include <botan/data_src.h>
+#include <botan/x509cert.h>
 
-void fuzz(const uint8_t in[], size_t len)
-   {
+void fuzz(const uint8_t in[], size_t len) {
    if(len > max_fuzzer_input_size)
       return;
 
-   try
-      {
+   try {
       Botan::DataSource_Memory input(in, len);
       Botan::X509_Certificate cert(input);
-      }
-   catch(Botan::Exception& e) { }
-   }
+   } catch(Botan::Exception& e) {}
+}

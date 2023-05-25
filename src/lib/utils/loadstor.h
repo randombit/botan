@@ -9,9 +9,9 @@
 #ifndef BOTAN_LOAD_STORE_H_
 #define BOTAN_LOAD_STORE_H_
 
+#include <botan/mem_ops.h>
 #include <botan/types.h>
 #include <botan/internal/bswap.h>
-#include <botan/mem_ops.h>
 #include <vector>
 
 #if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
@@ -36,25 +36,23 @@ namespace Botan {
 * @param input the value to extract from
 * @return byte byte_num of input
 */
-template<typename T> inline constexpr uint8_t get_byte_var(size_t byte_num, T input)
-   {
-   return static_cast<uint8_t>(
-      input >> (((~byte_num)&(sizeof(T)-1)) << 3)
-      );
-   }
+template <typename T>
+inline constexpr uint8_t get_byte_var(size_t byte_num, T input) {
+   return static_cast<uint8_t>(input >> (((~byte_num) & (sizeof(T) - 1)) << 3));
+}
 
 /**
 * Byte extraction
 * @param input the value to extract from
 * @return byte byte number B of input
 */
-template<size_t B, typename T> inline constexpr uint8_t get_byte(T input)
-   requires (B < sizeof(T))
-   {
-
+template <size_t B, typename T>
+inline constexpr uint8_t get_byte(T input)
+   requires(B < sizeof(T))
+{
    const size_t shift = ((~B) & (sizeof(T) - 1)) << 3;
    return static_cast<uint8_t>((input >> shift) & 0xFF);
-   }
+}
 
 /**
 * Make a uint16_t from two bytes
@@ -62,10 +60,9 @@ template<size_t B, typename T> inline constexpr uint8_t get_byte(T input)
 * @param i1 the second byte
 * @return i0 || i1
 */
-inline constexpr uint16_t make_uint16(uint8_t i0, uint8_t i1)
-   {
+inline constexpr uint16_t make_uint16(uint8_t i0, uint8_t i1) {
    return static_cast<uint16_t>((static_cast<uint16_t>(i0) << 8) | i1);
-   }
+}
 
 /**
 * Make a uint32_t from four bytes
@@ -75,13 +72,10 @@ inline constexpr uint16_t make_uint16(uint8_t i0, uint8_t i1)
 * @param i3 the fourth byte
 * @return i0 || i1 || i2 || i3
 */
-inline constexpr uint32_t make_uint32(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3)
-   {
-   return ((static_cast<uint32_t>(i0) << 24) |
-           (static_cast<uint32_t>(i1) << 16) |
-           (static_cast<uint32_t>(i2) <<  8) |
+inline constexpr uint32_t make_uint32(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3) {
+   return ((static_cast<uint32_t>(i0) << 24) | (static_cast<uint32_t>(i1) << 16) | (static_cast<uint32_t>(i2) << 8) |
            (static_cast<uint32_t>(i3)));
-   }
+}
 
 /**
 * Make a uint64_t from eight bytes
@@ -95,18 +89,12 @@ inline constexpr uint32_t make_uint32(uint8_t i0, uint8_t i1, uint8_t i2, uint8_
 * @param i7 the eighth byte
 * @return i0 || i1 || i2 || i3 || i4 || i5 || i6 || i7
 */
-inline constexpr uint64_t make_uint64(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3,
-                                      uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7)
-    {
-   return ((static_cast<uint64_t>(i0) << 56) |
-           (static_cast<uint64_t>(i1) << 48) |
-           (static_cast<uint64_t>(i2) << 40) |
-           (static_cast<uint64_t>(i3) << 32) |
-           (static_cast<uint64_t>(i4) << 24) |
-           (static_cast<uint64_t>(i5) << 16) |
-           (static_cast<uint64_t>(i6) <<  8) |
-           (static_cast<uint64_t>(i7)));
-    }
+inline constexpr uint64_t make_uint64(
+   uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3, uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7) {
+   return ((static_cast<uint64_t>(i0) << 56) | (static_cast<uint64_t>(i1) << 48) | (static_cast<uint64_t>(i2) << 40) |
+           (static_cast<uint64_t>(i3) << 32) | (static_cast<uint64_t>(i4) << 24) | (static_cast<uint64_t>(i5) << 16) |
+           (static_cast<uint64_t>(i6) << 8) | (static_cast<uint64_t>(i7)));
+}
 
 /**
 * Load a big-endian word
@@ -114,15 +102,14 @@ inline constexpr uint64_t make_uint64(uint8_t i0, uint8_t i1, uint8_t i2, uint8_
 * @param off an offset into the array
 * @return off'th T of in, as a big-endian value
 */
-template<typename T>
-inline constexpr T load_be(const uint8_t in[], size_t off)
-   {
+template <typename T>
+inline constexpr T load_be(const uint8_t in[], size_t off) {
    in += off * sizeof(T);
    T out = 0;
    for(size_t i = 0; i != sizeof(T); ++i)
       out = static_cast<T>((out << 8) | in[i]);
    return out;
-   }
+}
 
 /**
 * Load a little-endian word
@@ -130,15 +117,14 @@ inline constexpr T load_be(const uint8_t in[], size_t off)
 * @param off an offset into the array
 * @return off'th T of in, as a litte-endian value
 */
-template<typename T>
-inline constexpr T load_le(const uint8_t in[], size_t off)
-   {
+template <typename T>
+inline constexpr T load_le(const uint8_t in[], size_t off) {
    in += off * sizeof(T);
    T out = 0;
    for(size_t i = 0; i != sizeof(T); ++i)
-      out = (out << 8) | in[sizeof(T)-1-i];
+      out = (out << 8) | in[sizeof(T) - 1 - i];
    return out;
-   }
+}
 
 /**
 * Load a big-endian uint16_t
@@ -146,9 +132,8 @@ inline constexpr T load_le(const uint8_t in[], size_t off)
 * @param off an offset into the array
 * @return off'th uint16_t of in, as a big-endian value
 */
-template<>
-inline constexpr uint16_t load_be<uint16_t>(const uint8_t in[], size_t off)
-   {
+template <>
+inline constexpr uint16_t load_be<uint16_t>(const uint8_t in[], size_t off) {
    in += off * sizeof(uint16_t);
 
 #if defined(BOTAN_ENDIAN_N2B)
@@ -158,7 +143,7 @@ inline constexpr uint16_t load_be<uint16_t>(const uint8_t in[], size_t off)
 #else
    return make_uint16(in[0], in[1]);
 #endif
-   }
+}
 
 /**
 * Load a little-endian uint16_t
@@ -166,9 +151,8 @@ inline constexpr uint16_t load_be<uint16_t>(const uint8_t in[], size_t off)
 * @param off an offset into the array
 * @return off'th uint16_t of in, as a little-endian value
 */
-template<>
-inline constexpr uint16_t load_le<uint16_t>(const uint8_t in[], size_t off)
-   {
+template <>
+inline constexpr uint16_t load_le<uint16_t>(const uint8_t in[], size_t off) {
    in += off * sizeof(uint16_t);
 
 #if defined(BOTAN_ENDIAN_N2L)
@@ -178,7 +162,7 @@ inline constexpr uint16_t load_le<uint16_t>(const uint8_t in[], size_t off)
 #else
    return make_uint16(in[1], in[0]);
 #endif
-   }
+}
 
 /**
 * Load a big-endian uint32_t
@@ -186,9 +170,8 @@ inline constexpr uint16_t load_le<uint16_t>(const uint8_t in[], size_t off)
 * @param off an offset into the array
 * @return off'th uint32_t of in, as a big-endian value
 */
-template<>
-inline constexpr uint32_t load_be<uint32_t>(const uint8_t in[], size_t off)
-   {
+template <>
+inline constexpr uint32_t load_be<uint32_t>(const uint8_t in[], size_t off) {
    in += off * sizeof(uint32_t);
 #if defined(BOTAN_ENDIAN_N2B)
    uint32_t x = 0;
@@ -197,7 +180,7 @@ inline constexpr uint32_t load_be<uint32_t>(const uint8_t in[], size_t off)
 #else
    return make_uint32(in[0], in[1], in[2], in[3]);
 #endif
-   }
+}
 
 /**
 * Load a little-endian uint32_t
@@ -205,9 +188,8 @@ inline constexpr uint32_t load_be<uint32_t>(const uint8_t in[], size_t off)
 * @param off an offset into the array
 * @return off'th uint32_t of in, as a little-endian value
 */
-template<>
-inline constexpr uint32_t load_le<uint32_t>(const uint8_t in[], size_t off)
-   {
+template <>
+inline constexpr uint32_t load_le<uint32_t>(const uint8_t in[], size_t off) {
    in += off * sizeof(uint32_t);
 #if defined(BOTAN_ENDIAN_N2L)
    uint32_t x = 0;
@@ -216,7 +198,7 @@ inline constexpr uint32_t load_le<uint32_t>(const uint8_t in[], size_t off)
 #else
    return make_uint32(in[3], in[2], in[1], in[0]);
 #endif
-   }
+}
 
 /**
 * Load a big-endian uint64_t
@@ -224,19 +206,17 @@ inline constexpr uint32_t load_le<uint32_t>(const uint8_t in[], size_t off)
 * @param off an offset into the array
 * @return off'th uint64_t of in, as a big-endian value
 */
-template<>
-inline constexpr uint64_t load_be<uint64_t>(const uint8_t in[], size_t off)
-   {
+template <>
+inline constexpr uint64_t load_be<uint64_t>(const uint8_t in[], size_t off) {
    in += off * sizeof(uint64_t);
 #if defined(BOTAN_ENDIAN_N2B)
    uint64_t x = 0;
    typecast_copy(x, in);
    return BOTAN_ENDIAN_N2B(x);
 #else
-   return make_uint64(in[0], in[1], in[2], in[3],
-                      in[4], in[5], in[6], in[7]);
+   return make_uint64(in[0], in[1], in[2], in[3], in[4], in[5], in[6], in[7]);
 #endif
-   }
+}
 
 /**
 * Load a little-endian uint64_t
@@ -244,19 +224,17 @@ inline constexpr uint64_t load_be<uint64_t>(const uint8_t in[], size_t off)
 * @param off an offset into the array
 * @return off'th uint64_t of in, as a little-endian value
 */
-template<>
-inline constexpr uint64_t load_le<uint64_t>(const uint8_t in[], size_t off)
-   {
+template <>
+inline constexpr uint64_t load_le<uint64_t>(const uint8_t in[], size_t off) {
    in += off * sizeof(uint64_t);
 #if defined(BOTAN_ENDIAN_N2L)
    uint64_t x = 0;
    typecast_copy(x, in);
    return BOTAN_ENDIAN_N2L(x);
 #else
-   return make_uint64(in[7], in[6], in[5], in[4],
-                      in[3], in[2], in[1], in[0]);
+   return make_uint64(in[7], in[6], in[5], in[4], in[3], in[2], in[1], in[0]);
 #endif
-   }
+}
 
 /**
 * Load two little-endian words
@@ -264,12 +242,11 @@ inline constexpr uint64_t load_le<uint64_t>(const uint8_t in[], size_t off)
 * @param x0 where the first word will be written
 * @param x1 where the second word will be written
 */
-template<typename T>
-inline constexpr void load_le(const uint8_t in[], T& x0, T& x1)
-   {
+template <typename T>
+inline constexpr void load_le(const uint8_t in[], T& x0, T& x1) {
    x0 = load_le<T>(in, 0);
    x1 = load_le<T>(in, 1);
-   }
+}
 
 /**
 * Load four little-endian words
@@ -279,15 +256,13 @@ inline constexpr void load_le(const uint8_t in[], T& x0, T& x1)
 * @param x2 where the third word will be written
 * @param x3 where the fourth word will be written
 */
-template<typename T>
-inline constexpr void load_le(const uint8_t in[],
-                    T& x0, T& x1, T& x2, T& x3)
-   {
+template <typename T>
+inline constexpr void load_le(const uint8_t in[], T& x0, T& x1, T& x2, T& x3) {
    x0 = load_le<T>(in, 0);
    x1 = load_le<T>(in, 1);
    x2 = load_le<T>(in, 2);
    x3 = load_le<T>(in, 3);
-   }
+}
 
 /**
 * Load eight little-endian words
@@ -301,11 +276,8 @@ inline constexpr void load_le(const uint8_t in[],
 * @param x6 where the seventh word will be written
 * @param x7 where the eighth word will be written
 */
-template<typename T>
-inline constexpr void load_le(const uint8_t in[],
-                    T& x0, T& x1, T& x2, T& x3,
-                    T& x4, T& x5, T& x6, T& x7)
-   {
+template <typename T>
+inline constexpr void load_le(const uint8_t in[], T& x0, T& x1, T& x2, T& x3, T& x4, T& x5, T& x6, T& x7) {
    x0 = load_le<T>(in, 0);
    x1 = load_le<T>(in, 1);
    x2 = load_le<T>(in, 2);
@@ -314,7 +286,7 @@ inline constexpr void load_le(const uint8_t in[],
    x5 = load_le<T>(in, 5);
    x6 = load_le<T>(in, 6);
    x7 = load_le<T>(in, 7);
-   }
+}
 
 /**
 * Load a variable number of little-endian words
@@ -322,13 +294,9 @@ inline constexpr void load_le(const uint8_t in[],
 * @param in the input array of bytes
 * @param count how many words are in in
 */
-template<typename T>
-inline constexpr void load_le(T out[],
-                    const uint8_t in[],
-                    size_t count)
-   {
-   if(count > 0)
-      {
+template <typename T>
+inline constexpr void load_le(T out[], const uint8_t in[], size_t count) {
+   if(count > 0) {
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
       typecast_copy(out, in, count);
 
@@ -342,13 +310,13 @@ inline constexpr void load_le(T out[],
          bswap_4(out + i);
 
       for(size_t i = 0; i != left; ++i)
-         out[blocks+i] = reverse_bytes(out[blocks+i]);
+         out[blocks + i] = reverse_bytes(out[blocks + i]);
 #else
       for(size_t i = 0; i != count; ++i)
          out[i] = load_le<T>(in, i);
 #endif
-      }
    }
+}
 
 /**
 * Load two big-endian words
@@ -356,12 +324,11 @@ inline constexpr void load_le(T out[],
 * @param x0 where the first word will be written
 * @param x1 where the second word will be written
 */
-template<typename T>
-inline constexpr void load_be(const uint8_t in[], T& x0, T& x1)
-   {
+template <typename T>
+inline constexpr void load_be(const uint8_t in[], T& x0, T& x1) {
    x0 = load_be<T>(in, 0);
    x1 = load_be<T>(in, 1);
-   }
+}
 
 /**
 * Load four big-endian words
@@ -371,15 +338,13 @@ inline constexpr void load_be(const uint8_t in[], T& x0, T& x1)
 * @param x2 where the third word will be written
 * @param x3 where the fourth word will be written
 */
-template<typename T>
-inline constexpr void load_be(const uint8_t in[],
-                    T& x0, T& x1, T& x2, T& x3)
-   {
+template <typename T>
+inline constexpr void load_be(const uint8_t in[], T& x0, T& x1, T& x2, T& x3) {
    x0 = load_be<T>(in, 0);
    x1 = load_be<T>(in, 1);
    x2 = load_be<T>(in, 2);
    x3 = load_be<T>(in, 3);
-   }
+}
 
 /**
 * Load eight big-endian words
@@ -393,11 +358,8 @@ inline constexpr void load_be(const uint8_t in[],
 * @param x6 where the seventh word will be written
 * @param x7 where the eighth word will be written
 */
-template<typename T>
-inline constexpr void load_be(const uint8_t in[],
-                    T& x0, T& x1, T& x2, T& x3,
-                    T& x4, T& x5, T& x6, T& x7)
-   {
+template <typename T>
+inline constexpr void load_be(const uint8_t in[], T& x0, T& x1, T& x2, T& x3, T& x4, T& x5, T& x6, T& x7) {
    x0 = load_be<T>(in, 0);
    x1 = load_be<T>(in, 1);
    x2 = load_be<T>(in, 2);
@@ -406,7 +368,7 @@ inline constexpr void load_be(const uint8_t in[],
    x5 = load_be<T>(in, 5);
    x6 = load_be<T>(in, 6);
    x7 = load_be<T>(in, 7);
-   }
+}
 
 /**
 * Load a variable number of big-endian words
@@ -414,13 +376,9 @@ inline constexpr void load_be(const uint8_t in[],
 * @param in the input array of bytes
 * @param count how many words are in in
 */
-template<typename T>
-inline constexpr void load_be(T out[],
-                    const uint8_t in[],
-                    size_t count)
-   {
-   if(count > 0)
-      {
+template <typename T>
+inline constexpr void load_be(T out[], const uint8_t in[], size_t count) {
+   if(count > 0) {
 #if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
       typecast_copy(out, in, count);
 
@@ -433,21 +391,20 @@ inline constexpr void load_be(T out[],
          bswap_4(out + i);
 
       for(size_t i = 0; i != left; ++i)
-         out[blocks+i] = reverse_bytes(out[blocks+i]);
+         out[blocks + i] = reverse_bytes(out[blocks + i]);
 #else
       for(size_t i = 0; i != count; ++i)
          out[i] = load_be<T>(in, i);
 #endif
-      }
    }
+}
 
 /**
 * Store a big-endian uint16_t
 * @param in the input uint16_t
 * @param out the byte array to write to
 */
-inline constexpr void store_be(uint16_t in, uint8_t out[2])
-   {
+inline constexpr void store_be(uint16_t in, uint8_t out[2]) {
 #if defined(BOTAN_ENDIAN_N2B)
    uint16_t o = BOTAN_ENDIAN_N2B(in);
    typecast_copy(out, o);
@@ -455,15 +412,14 @@ inline constexpr void store_be(uint16_t in, uint8_t out[2])
    out[0] = get_byte<0>(in);
    out[1] = get_byte<1>(in);
 #endif
-   }
+}
 
 /**
 * Store a little-endian uint16_t
 * @param in the input uint16_t
 * @param out the byte array to write to
 */
-inline constexpr void store_le(uint16_t in, uint8_t out[2])
-   {
+inline constexpr void store_le(uint16_t in, uint8_t out[2]) {
 #if defined(BOTAN_ENDIAN_N2L)
    uint16_t o = BOTAN_ENDIAN_N2L(in);
    typecast_copy(out, o);
@@ -471,15 +427,14 @@ inline constexpr void store_le(uint16_t in, uint8_t out[2])
    out[0] = get_byte<1>(in);
    out[1] = get_byte<0>(in);
 #endif
-   }
+}
 
 /**
 * Store a big-endian uint32_t
 * @param in the input uint32_t
 * @param out the byte array to write to
 */
-inline constexpr void store_be(uint32_t in, uint8_t out[4])
-   {
+inline constexpr void store_be(uint32_t in, uint8_t out[4]) {
 #if defined(BOTAN_ENDIAN_B2N)
    uint32_t o = BOTAN_ENDIAN_B2N(in);
    typecast_copy(out, o);
@@ -489,15 +444,14 @@ inline constexpr void store_be(uint32_t in, uint8_t out[4])
    out[2] = get_byte<2>(in);
    out[3] = get_byte<3>(in);
 #endif
-   }
+}
 
 /**
 * Store a little-endian uint32_t
 * @param in the input uint32_t
 * @param out the byte array to write to
 */
-inline constexpr void store_le(uint32_t in, uint8_t out[4])
-   {
+inline constexpr void store_le(uint32_t in, uint8_t out[4]) {
 #if defined(BOTAN_ENDIAN_L2N)
    uint32_t o = BOTAN_ENDIAN_L2N(in);
    typecast_copy(out, o);
@@ -507,15 +461,14 @@ inline constexpr void store_le(uint32_t in, uint8_t out[4])
    out[2] = get_byte<1>(in);
    out[3] = get_byte<0>(in);
 #endif
-   }
+}
 
 /**
 * Store a big-endian uint64_t
 * @param in the input uint64_t
 * @param out the byte array to write to
 */
-inline constexpr void store_be(uint64_t in, uint8_t out[8])
-   {
+inline constexpr void store_be(uint64_t in, uint8_t out[8]) {
 #if defined(BOTAN_ENDIAN_B2N)
    uint64_t o = BOTAN_ENDIAN_B2N(in);
    typecast_copy(out, o);
@@ -529,15 +482,14 @@ inline constexpr void store_be(uint64_t in, uint8_t out[8])
    out[6] = get_byte<6>(in);
    out[7] = get_byte<7>(in);
 #endif
-   }
+}
 
 /**
 * Store a little-endian uint64_t
 * @param in the input uint64_t
 * @param out the byte array to write to
 */
-inline constexpr void store_le(uint64_t in, uint8_t out[8])
-   {
+inline constexpr void store_le(uint64_t in, uint8_t out[8]) {
 #if defined(BOTAN_ENDIAN_L2N)
    uint64_t o = BOTAN_ENDIAN_L2N(in);
    typecast_copy(out, o);
@@ -551,7 +503,7 @@ inline constexpr void store_le(uint64_t in, uint8_t out[8])
    out[6] = get_byte<1>(in);
    out[7] = get_byte<0>(in);
 #endif
-   }
+}
 
 /**
 * Store two little-endian words
@@ -559,12 +511,11 @@ inline constexpr void store_le(uint64_t in, uint8_t out[8])
 * @param x0 the first word
 * @param x1 the second word
 */
-template<typename T>
-inline constexpr void store_le(uint8_t out[], T x0, T x1)
-   {
+template <typename T>
+inline constexpr void store_le(uint8_t out[], T x0, T x1) {
    store_le(x0, out + (0 * sizeof(T)));
    store_le(x1, out + (1 * sizeof(T)));
-   }
+}
 
 /**
 * Store two big-endian words
@@ -572,12 +523,11 @@ inline constexpr void store_le(uint8_t out[], T x0, T x1)
 * @param x0 the first word
 * @param x1 the second word
 */
-template<typename T>
-inline constexpr void store_be(uint8_t out[], T x0, T x1)
-   {
+template <typename T>
+inline constexpr void store_be(uint8_t out[], T x0, T x1) {
    store_be(x0, out + (0 * sizeof(T)));
    store_be(x1, out + (1 * sizeof(T)));
-   }
+}
 
 /**
 * Store four little-endian words
@@ -587,14 +537,13 @@ inline constexpr void store_be(uint8_t out[], T x0, T x1)
 * @param x2 the third word
 * @param x3 the fourth word
 */
-template<typename T>
-inline constexpr void store_le(uint8_t out[], T x0, T x1, T x2, T x3)
-   {
+template <typename T>
+inline constexpr void store_le(uint8_t out[], T x0, T x1, T x2, T x3) {
    store_le(x0, out + (0 * sizeof(T)));
    store_le(x1, out + (1 * sizeof(T)));
    store_le(x2, out + (2 * sizeof(T)));
    store_le(x3, out + (3 * sizeof(T)));
-   }
+}
 
 /**
 * Store four big-endian words
@@ -604,14 +553,13 @@ inline constexpr void store_le(uint8_t out[], T x0, T x1, T x2, T x3)
 * @param x2 the third word
 * @param x3 the fourth word
 */
-template<typename T>
-inline constexpr void store_be(uint8_t out[], T x0, T x1, T x2, T x3)
-   {
+template <typename T>
+inline constexpr void store_be(uint8_t out[], T x0, T x1, T x2, T x3) {
    store_be(x0, out + (0 * sizeof(T)));
    store_be(x1, out + (1 * sizeof(T)));
    store_be(x2, out + (2 * sizeof(T)));
    store_be(x3, out + (3 * sizeof(T)));
-   }
+}
 
 /**
 * Store eight little-endian words
@@ -625,10 +573,8 @@ inline constexpr void store_be(uint8_t out[], T x0, T x1, T x2, T x3)
 * @param x6 the seventh word
 * @param x7 the eighth word
 */
-template<typename T>
-inline constexpr void store_le(uint8_t out[], T x0, T x1, T x2, T x3,
-                                 T x4, T x5, T x6, T x7)
-   {
+template <typename T>
+inline constexpr void store_le(uint8_t out[], T x0, T x1, T x2, T x3, T x4, T x5, T x6, T x7) {
    store_le(x0, out + (0 * sizeof(T)));
    store_le(x1, out + (1 * sizeof(T)));
    store_le(x2, out + (2 * sizeof(T)));
@@ -637,7 +583,7 @@ inline constexpr void store_le(uint8_t out[], T x0, T x1, T x2, T x3,
    store_le(x5, out + (5 * sizeof(T)));
    store_le(x6, out + (6 * sizeof(T)));
    store_le(x7, out + (7 * sizeof(T)));
-   }
+}
 
 /**
 * Store eight big-endian words
@@ -651,10 +597,8 @@ inline constexpr void store_le(uint8_t out[], T x0, T x1, T x2, T x3,
 * @param x6 the seventh word
 * @param x7 the eighth word
 */
-template<typename T>
-inline constexpr void store_be(uint8_t out[], T x0, T x1, T x2, T x3,
-                                 T x4, T x5, T x6, T x7)
-   {
+template <typename T>
+inline constexpr void store_be(uint8_t out[], T x0, T x1, T x2, T x3, T x4, T x5, T x6, T x7) {
    store_be(x0, out + (0 * sizeof(T)));
    store_be(x1, out + (1 * sizeof(T)));
    store_be(x2, out + (2 * sizeof(T)));
@@ -663,13 +607,11 @@ inline constexpr void store_be(uint8_t out[], T x0, T x1, T x2, T x3,
    store_be(x5, out + (5 * sizeof(T)));
    store_be(x6, out + (6 * sizeof(T)));
    store_be(x7, out + (7 * sizeof(T)));
-   }
+}
 
-template<typename T>
-void copy_out_be(uint8_t out[], size_t out_bytes, const T in[])
-   {
-   while(out_bytes >= sizeof(T))
-      {
+template <typename T>
+void copy_out_be(uint8_t out[], size_t out_bytes, const T in[]) {
+   while(out_bytes >= sizeof(T)) {
       store_be(in[0], out);
       out += sizeof(T);
       out_bytes -= sizeof(T);
@@ -678,19 +620,16 @@ void copy_out_be(uint8_t out[], size_t out_bytes, const T in[])
 
    for(size_t i = 0; i != out_bytes; ++i)
       out[i] = get_byte_var(i % 8, in[0]);
-   }
+}
 
-template<typename T, typename Alloc>
-void copy_out_vec_be(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in)
-   {
+template <typename T, typename Alloc>
+void copy_out_vec_be(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in) {
    copy_out_be(out, out_bytes, in.data());
-   }
+}
 
-template<typename T>
-void copy_out_le(uint8_t out[], size_t out_bytes, const T in[])
-   {
-   while(out_bytes >= sizeof(T))
-      {
+template <typename T>
+void copy_out_le(uint8_t out[], size_t out_bytes, const T in[]) {
+   while(out_bytes >= sizeof(T)) {
       store_le(in[0], out);
       out += sizeof(T);
       out_bytes -= sizeof(T);
@@ -699,14 +638,13 @@ void copy_out_le(uint8_t out[], size_t out_bytes, const T in[])
 
    for(size_t i = 0; i != out_bytes; ++i)
       out[i] = get_byte_var(sizeof(T) - 1 - (i % 8), in[0]);
-   }
-
-template<typename T, typename Alloc>
-void copy_out_vec_le(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in)
-   {
-   copy_out_le(out, out_bytes, in.data());
-   }
-
 }
+
+template <typename T, typename Alloc>
+void copy_out_vec_le(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in) {
+   copy_out_le(out, out_bytes, in.data());
+}
+
+}  // namespace Botan
 
 #endif

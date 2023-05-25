@@ -16,78 +16,72 @@ namespace Botan {
 /**
 * SHA-224
 */
-class SHA_224 final : public MDx_HashFunction
-   {
+class SHA_224 final : public MDx_HashFunction {
    public:
       std::string name() const override { return "SHA-224"; }
+
       size_t output_length() const override { return 28; }
+
       std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_224>(); }
+
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 
       std::string provider() const override;
 
-      SHA_224() : MDx_HashFunction(64, true, true), m_digest(8)
-         { clear(); }
+      SHA_224() : MDx_HashFunction(64, true, true), m_digest(8) { clear(); }
+
    private:
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
 
       secure_vector<uint32_t> m_digest;
-   };
+};
 
 /**
 * SHA-256
 */
-class SHA_256 final : public MDx_HashFunction
-   {
+class SHA_256 final : public MDx_HashFunction {
    public:
       std::string name() const override { return "SHA-256"; }
+
       size_t output_length() const override { return 32; }
+
       std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_256>(); }
+
       std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 
       std::string provider() const override;
 
-      SHA_256() : MDx_HashFunction(64, true, true), m_digest(8)
-         { clear(); }
+      SHA_256() : MDx_HashFunction(64, true, true), m_digest(8) { clear(); }
 
       /*
       * Perform a SHA-256 compression. For internal use
       */
-      static void compress_digest(secure_vector<uint32_t>& digest,
-                                  const uint8_t input[],
-                                  size_t blocks);
+      static void compress_digest(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks);
 
    private:
-
 #if defined(BOTAN_HAS_SHA2_32_ARMV8)
-      static void compress_digest_armv8(secure_vector<uint32_t>& digest,
-                                        const uint8_t input[],
-                                        size_t blocks);
+      static void compress_digest_armv8(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks);
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
-      static void compress_digest_x86_bmi2(secure_vector<uint32_t>& digest,
-                                           const uint8_t input[],
-                                           size_t blocks);
+      static void compress_digest_x86_bmi2(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks);
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32_X86)
-      static void compress_digest_x86(secure_vector<uint32_t>& digest,
-                                      const uint8_t input[],
-                                      size_t blocks);
+      static void compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks);
 #endif
 
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
 
       secure_vector<uint32_t> m_digest;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

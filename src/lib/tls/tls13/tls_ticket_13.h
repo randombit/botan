@@ -9,8 +9,8 @@
 #ifndef BOTAN_TLS_13_TICKET_H_
 #define BOTAN_TLS_13_TICKET_H_
 
-#include <botan/types.h>
 #include <botan/tls_session.h>
+#include <botan/types.h>
 
 #include <chrono>
 #include <cstdint>
@@ -26,26 +26,24 @@ namespace Botan::TLS {
  *    The ticket itself is an opaque label. It MAY be either a database
  *    lookup key or a self-encrypted and self-authenticated value.
  */
-class BOTAN_PUBLIC_API(3,0) Ticket
-   {
+class BOTAN_PUBLIC_API(3, 0) Ticket {
    public:
-      Ticket(Opaque_Session_Handle identity, const uint32_t obfuscated_age)
-         : m_identity(std::move(identity))
-         , m_obfuscated_age(obfuscated_age) {}
+      Ticket(Opaque_Session_Handle identity, const uint32_t obfuscated_age) :
+            m_identity(std::move(identity)), m_obfuscated_age(obfuscated_age) {}
 
-      Ticket(Opaque_Session_Handle identity,
-             const std::chrono::milliseconds age,
-             const uint32_t ticket_age_add);
+      Ticket(Opaque_Session_Handle identity, const std::chrono::milliseconds age, const uint32_t ticket_age_add);
 
       const Opaque_Session_Handle& identity() const { return m_identity; }
+
       std::chrono::milliseconds age(const uint32_t ticket_age_add) const;
+
       uint32_t obfuscated_age() const { return m_obfuscated_age; }
 
    private:
       Opaque_Session_Handle m_identity;
       uint32_t m_obfuscated_age;
-   };
+};
 
-}
+}  // namespace Botan::TLS
 
 #endif

@@ -20,8 +20,7 @@ class Handshake_State;
 /**
 * TLS Session Keys
 */
-class Session_Keys final
-   {
+class Session_Keys final {
    public:
       /**
       * @return client AEAD key
@@ -48,15 +47,13 @@ class Session_Keys final
       */
       const secure_vector<uint8_t>& master_secret() const { return m_master_sec; }
 
-      const secure_vector<uint8_t>& aead_key(Connection_Side side) const
-         {
+      const secure_vector<uint8_t>& aead_key(Connection_Side side) const {
          return (side == Connection_Side::Client) ? client_aead_key() : server_aead_key();
-         }
+      }
 
-      const std::vector<uint8_t>& nonce(Connection_Side side) const
-         {
+      const std::vector<uint8_t>& nonce(Connection_Side side) const {
          return (side == Connection_Side::Client) ? client_nonce() : server_nonce();
-         }
+      }
 
       Session_Keys() = default;
 
@@ -65,18 +62,16 @@ class Session_Keys final
       * @param pre_master_secret the pre-master secret
       * @param resuming whether this TLS session is resumed
       */
-      Session_Keys(const Handshake_State* state,
-                   const secure_vector<uint8_t>& pre_master_secret,
-                   bool resuming);
+      Session_Keys(const Handshake_State* state, const secure_vector<uint8_t>& pre_master_secret, bool resuming);
 
    private:
       secure_vector<uint8_t> m_master_sec;
       secure_vector<uint8_t> m_c_aead, m_s_aead;
       std::vector<uint8_t> m_c_nonce, m_s_nonce;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif
