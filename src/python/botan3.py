@@ -940,7 +940,7 @@ def check_bcrypt(passwd, passwd_hash):
 #
 # PBKDF
 #
-def pbkdf(algo, password, out_len, iterations=10000, salt=None):
+def pbkdf(algo, password, out_len, iterations=100000, salt=None):
     if salt is None:
         salt = RandomNumberGenerator().get(12)
 
