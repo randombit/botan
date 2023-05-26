@@ -119,6 +119,10 @@
    #include <botan/dilithium.h>
 #endif
 
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+   #include <botan/sphincsplus.h>
+#endif
+
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/ecdsa.h>
 #endif
@@ -318,7 +322,7 @@ class Speed final : public Command {
          This is not intended to be exhaustive: it just hits the high
          points of the most interesting or widely used algorithms.
          */
-
+         // clang-format off
          return {
             /* Block ciphers */
             "AES-128",
@@ -391,7 +395,9 @@ class Speed final : public Command {
             "Curve25519",
             "McEliece",
             "Kyber",
+            "SPHINCS+"
          };
+         // clang-format on
       }
 
       std::string group() const override { return "misc"; }
@@ -586,6 +592,11 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_XMSS_RFC8391)
             else if(algo == "XMSS") {
                bench_xmss(provider, msec);
+            }
+#endif
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+            else if(algo == "SPHINCS+") {
+               bench_sphincs_plus(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_SCRYPT)
@@ -1953,6 +1964,39 @@ class Speed final : public Command {
             record_result(keygen_timer);
 
             bench_pk_sig(key, mode.to_string(), provider, "", msec);
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+      void bench_sphincs_plus(const std::string& provider, std::chrono::milliseconds msec) {
+         // Sphincs_Parameter_Set set, Sphincs_Hash_Type hash
+         std::vector<std::string> sphincs_params{"SphincsPlus-sha2-128s-r3.1",
+                                                 "SphincsPlus-sha2-128f-r3.1",
+                                                 "SphincsPlus-sha2-192s-r3.1",
+                                                 "SphincsPlus-sha2-192f-r3.1",
+                                                 "SphincsPlus-sha2-256s-r3.1",
+                                                 "SphincsPlus-sha2-256f-r3.1",
+                                                 "SphincsPlus-shake-128s-r3.1",
+                                                 "SphincsPlus-shake-128f-r3.1",
+                                                 "SphincsPlus-shake-192s-r3.1",
+                                                 "SphincsPlus-shake-192f-r3.1",
+                                                 "SphincsPlus-shake-256s-r3.1",
+                                                 "SphincsPlus-shake-256f-r3.1"};
+
+         for(auto params : sphincs_params) {
+            try {
+               auto keygen_timer = make_timer(params, provider, "keygen");
+
+               std::unique_ptr<Botan::Private_Key> key(
+                  keygen_timer->run([&] { return Botan::create_private_key("SPHINCS+", rng(), params); }));
+
+               record_result(keygen_timer);
+               if(bench_pk_sig(*key, params, provider, "", msec) == 1)
+                  break;
+            } catch(Botan::Not_Implemented&) {
+               continue;
+            }
          }
       }
 #endif
