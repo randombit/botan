@@ -15,7 +15,21 @@
 #include <ostream>
 #include <type_traits>
 
-namespace Botan::concepts {
+namespace Botan {
+
+template <typename T, typename Tag, typename... Capabilities>
+class Strong;
+
+template <typename... Ts>
+struct is_strong_type : std::false_type {};
+
+template <typename... Ts>
+struct is_strong_type<Strong<Ts...>> : std::true_type {};
+
+template <typename... Ts>
+constexpr bool is_strong_type_v = is_strong_type<std::remove_const_t<Ts>...>::value;
+
+namespace concepts {
 
 // TODO: C++20 use std::convertible_to<> that was not available in Android NDK
 //       as of this writing. Tested with API Level up to 33.
@@ -97,6 +111,20 @@ concept resizable_byte_buffer =
 template <typename T>
 concept streamable = requires(std::ostream& os, T a) { os << a; };
 
-}  // namespace Botan::concepts
+template <class T>
+concept strong_type = is_strong_type_v<T>;
+
+template <class T>
+concept contiguous_strong_type = strong_type<T> && contiguous_container<T>;
+
+// std::integral is a concept that is shipped with C++20 but Android NDK is not
+// yet there.
+// TODO: C++20 - replace with std::integral
+template <typename T>
+concept integral = std::is_integral_v<T>;
+
+}  // namespace concepts
+
+}  // namespace Botan
 
 #endif

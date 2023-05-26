@@ -71,6 +71,17 @@ std::vector<Test::Result> test_strong_type() {
                             result.test_eq("overloading size", foo(Test_Size(42)), "some size");
                             result.test_eq("overloading size", foo(Test_Length(42)), "some length");
                          }),
+
+      Botan_Tests::CHECK("is_strong_type",
+                         [](auto& result) {
+                            result.confirm("strong type (int)", Botan::is_strong_type_v<Test_Size>);
+                            result.confirm("no strong type (int)", !Botan::is_strong_type_v<size_t>);
+                            result.confirm("strong type (vector)", Botan::is_strong_type_v<Test_Nonce>);
+                            result.confirm("no strong type (vector)", !Botan::is_strong_type_v<std::vector<uint8_t>>);
+                            result.confirm("strong type (const vector)", Botan::is_strong_type_v<const Test_Nonce>);
+                            result.confirm("no strong type (const vector)",
+                                           !Botan::is_strong_type_v<const std::vector<uint8_t>>);
+                         }),
    };
 }
 
