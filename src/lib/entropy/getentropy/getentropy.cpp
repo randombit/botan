@@ -6,12 +6,11 @@
 */
 
 #include <botan/internal/getentropy.h>
+#include <unistd.h>
 
-#if defined(BOTAN_TARGET_OS_IS_OPENBSD) || defined(BOTAN_TARGET_OS_IS_FREEBSD) || defined(BOTAN_TARGET_OS_IS_SOLARIS)
-   #include <unistd.h>
-#else
+// macOS and Android include it in sys/random.h instead
+#if __has_include(<sys/random.h>)
    #include <sys/random.h>
-   #include <sys/types.h>  // older macOS needs this before sys/random.h
 #endif
 
 namespace Botan {
@@ -31,4 +30,5 @@ size_t Getentropy::poll(RandomNumberGenerator& rng) {
 
    return 0;
 }
+
 }  // namespace Botan
