@@ -100,7 +100,7 @@ jobs:
           - target: amalgamation
             compiler: clang
 
-    runs-on: macos-12
+    runs-on: macos-13
 
     steps:
       - uses: actions/checkout@v3
@@ -241,7 +241,7 @@ jobs:
             make_tool: mingw32-make
           - target: cross-ios-arm64
             compiler: clang
-            host_os: macos-12
+            host_os: macos-13
           - target: emscripten
             compiler: emcc
             host_os: ubuntu-22.04
